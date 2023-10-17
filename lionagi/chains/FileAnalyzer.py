@@ -18,9 +18,9 @@ def analyze_file(file: dict, _prompts: dict =prompt, _kwags: dict =config, verbo
     1. file (dict): file or chunk as dict, with keys: folder, file, chunk_id, chunk_size, content
         
     2. _prompts (dict, optional): prompts to use for running the analyze function. Defaults to
-        FileAnalyzer_prompt under config.coder. Need to include keys: system, initial, summary, design, validate, output.
+        FileAnalyzer_prompt under .coder. Need to include keys: system, initial, summary, design, validate, output.
         
-    3. _kwags (dict, optional): Configuration dict for additional kwags to pass into LLM call. Defaults to FileAnalyzer_config under config.coder. Need to include keys: model, sleep, with other optional keys. For detailed kwags check lionagi.session.Session.
+    3. _kwags (dict, optional): Configuration dict for additional kwags to pass into LLM call. Defaults to FileAnalyzer_config under .coder. Need to include keys: model, sleep, with other optional keys. For detailed kwags check lionagi.session.Session.
         
     4. verbose (bool, optional): whether to print out message for successful saving of llm logs to logs. Defaults to False.
 
