@@ -1,4 +1,4 @@
-from lionagi.utils.sys_utils import to_list
+from lionagi.utils.sys_utils import to_list, flatten_list
 from typing import Callable, Any, List
 import copy
 import time
@@ -74,7 +74,7 @@ def m_return(_input: Any, _func: Any):
     _input = to_list(_input)
     _func = to_list(_func)
     assert len(_input) == len(_func), "The number of inputs and functions must be the same."
-    return [l_return(inp, func) for func, inp in zip(_func, _input)]
+    return flatten_list([l_return(inp, func) for func, inp in zip(_func, _input)])
 
 def e_return(_input, _func, flatten_dict=False):
     """
