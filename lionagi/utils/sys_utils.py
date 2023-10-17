@@ -1,7 +1,7 @@
 from collections.abc import Iterable, MutableMapping
 import re
 
-def _flatten_dict(dictionary: dict, parent_key: bool=True, separator: str='_') -> dict:
+def flatten_dict(dictionary: dict, parent_key=None, separator: str='_') -> dict:
     """
     utility function to convert a nested dictionary into a flattened dictionary recursively to the lowest level, return as a flattened dictionary
 
@@ -17,10 +17,10 @@ def _flatten_dict(dictionary: dict, parent_key: bool=True, separator: str='_') -
     for key, value in dictionary.items():
         new_key = str(parent_key) + separator + key if parent_key else key
         if isinstance(value, MutableMapping):
-            items.extend(_flatten_dict(value, new_key, separator).items())
+            items.extend(flatten_dict(value, new_key, separator).items())
         elif isinstance(value, list):
             for k, v in enumerate(value):
-                items.extend(_flatten_dict({str(k): v}, new_key).items())
+                items.extend(flatten_dict({str(k): v}, new_key).items())
         else:
             items.append((new_key, value))
     return dict(items)
@@ -79,7 +79,7 @@ def to_list(_input, flatten_dict: bool=False) -> list:
         if isinstance(_input, Iterable):
             if isinstance(_input, dict):
                 if flatten_dict:
-                    return [_flatten_dict(_input).items()]
+                    return [flatten_dict(_input).items()]
                 else: 
                     return [(_input).items()]
             elif isinstance(_input, str):
