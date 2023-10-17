@@ -2,8 +2,7 @@ from datetime import datetime
 import pandas as pd
 import os
 
-
-class logger:
+class datalogger:
     def __init__(self, log=None) -> None:
         self.log = log if log else []
     
@@ -15,7 +14,7 @@ class logger:
     def _filepath(dir, filename, timestamp=True):
         os.makedirs(dir, exist_ok=True)
         if timestamp:
-            timestamp = logger._get_timestamp()
+            timestamp = datalogger._get_timestamp()
             return f"{dir}{timestamp}{filename}"
         else:
             return f"{dir}{filename}"
@@ -30,7 +29,7 @@ class logger:
             print(f"{len(df)} logs saved to {file_path}")
 
 
-class llm_logger(logger):        
+class llm_logger(datalogger):        
     def __init__(self, log=None) -> None:
         super().__init__(log=log)
         
@@ -41,7 +40,7 @@ class llm_logger(logger):
         self._to_csv(dir=dir, filename=filename, verbose=verbose, timestamp=timestamp)
 
 
-class data_logger(logger):
+class source_logger(datalogger):
     def __init__(self, log=None) -> None:
         super().__init__(log=log)
         
@@ -50,7 +49,3 @@ class data_logger(logger):
     
     def to_csv(self, dir: str='data/logs/sources/', filename: str='data_log.csv', verbose=True, timestamp=True):
         self._to_csv(dir=dir, filename=filename, verbose=verbose, timestamp=timestamp)
-
-
-llmlog = llm_logger()
-datalog = data_logger()

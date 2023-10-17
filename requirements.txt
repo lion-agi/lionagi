@@ -1,0 +1,5 @@
+pandas>=2.0.3
+openai==0.28.1
+requests==2.31.0
+beautifulsoup4==4.12.2
+feedparser==6.0.10

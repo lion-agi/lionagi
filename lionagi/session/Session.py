@@ -1,12 +1,14 @@
-from Logger import llmlog
+from lionagi.utils.log_utils import llm_logger
 import time
 import os
 import openai
 import dotenv
 import json
+import numpy as np
 dotenv.load_dotenv('.env')
 openai.api_key = os.getenv("OPENAI_API_KEY")
 
+llmlog = llm_logger()
 
 # Messages Handling class - finished debugging
 class Message:
@@ -202,3 +204,124 @@ class Session:
             return self.conversation.responses[-1]['content']
 
 
+
+# ToDo: finish scoring system
+
+class MultiSession:
+    
+    def __init__(self, system, num=3) -> None:
+        self.system = system
+        self.num_conversation = num
+        self.sessions = [Session(system) for _ in range(num)]
+        
+    def initiate(self, 
+            instruction, 
+            system=None, 
+            context=None, 
+            model="gpt-3.5-turbo-16k", 
+            frequency_penalty=0, 
+            function_call=None,
+            functions=None, 
+            n=1,
+            stop=None,
+            stream=False,
+            temperature=1,
+            top_p=1, 
+            sleep=0.1, out=True):
+        for session in self.sessions:        
+            session.initiate(
+                system=system,              
+                instruction=instruction, 
+                context=context,
+                model=model, 
+                frequency_penalty=frequency_penalty, 
+                function_call=function_call,
+                functions=functions, 
+                n=n,
+                stop=stop,
+                stream=stream,
+                temperature=temperature,
+                top_p=top_p, 
+                sleep=sleep)
+        if out:
+            return ([session.conversation.responses[-1]['content'] 
+                     for session in self.sessions])
+
+    def followup(self,
+            instruction,
+            system=None, 
+            context=None, 
+            model="gpt-3.5-turbo-16k", 
+            frequency_penalty=0, 
+            function_call=None,
+            functions=None, 
+            n=1,
+            stop=None,
+            stream=False,
+            temperature=1,
+            top_p=1, 
+            sleep=0.1, 
+            out=True):
+        self.conversation.append_last_response()
+        for session in self.sessions:        
+            session.followup(     
+                system=system,       
+                instruction=instruction, 
+                context=context,
+                model=model, 
+                frequency_penalty=frequency_penalty, 
+                function_call=function_call,
+                functions=functions, 
+                n=n,
+                stop=stop,
+                stream=stream,
+                temperature=temperature,
+                top_p=top_p, 
+                sleep=sleep)
+        if out:
+            return ([session.conversation.responses[-1]['content'] 
+                     for session in self.sessions])
+            
+    # def _score(self,
+    #         score_system,
+    #         score_instruction,
+    #         model="gpt-3.5-turbo-16k", 
+    #         frequency_penalty=0, 
+    #         function_call=None,
+    #         functions=None, 
+    #         n=1,
+    #         stop=None,
+    #         stream=False,
+    #         temperature=1,
+    #         top_p=1, 
+    #         sleep=0.1, 
+    #         num_tries=3):
+    #     scorer = Scorer(score_system)
+    #     scores = []
+    #     for session in self.sessions:
+    #         score = scorer.score(
+    #             instruction=score_instruction, 
+    #             session=session,  
+    #             model=model, 
+    #             frequency_penalty=frequency_penalty, 
+    #             function_call=function_call,
+    #             functions=functions, 
+    #             n=n,
+    #             stop=stop,
+    #             stream=stream,
+    #             temperature=temperature,
+    #             top_p=top_p, 
+    #             sleep=sleep, 
+    #             num_tries=num_tries)
+    #         if isinstance(score, int):
+    #             scores.append(score)
+    #         else:
+    #             scores.append(1)
+    #     return scores
+    
+    # def get_best_response(self, score_system=None, score_instruction=None):
+    #     try: 
+    #         scores = np.array(self._score(score_system=score_system,score_instruction=score_instruction))
+    #         return self.sessions[np.argmax(scores)].conversation.responses[-1]['content']
+    #     except Exception as e:
+    #         raise e

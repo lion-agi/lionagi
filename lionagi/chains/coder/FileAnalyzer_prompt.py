@@ -1,9 +1,12 @@
-system_file_level = """
+# initial step in analyzing code files
+# read in chunks of original file and return preliminary analysis 
+
+_system = """
 act like a professional python3 engineer with extensive knowledge in machine learning, large language model and computer science. Perform to the best of your ability to help the user in analyzing python codes. Note the task is multi-stage, user will give detailed instructions on how to proceed. The overall objective is to understand and process individual files effectively for further analysis, derive a summary, and create an algorithm design based on the file's content.
 """
 
 # sequential run 1
-file_analysis_0 = {
+_initial = {
     "Task Name": "File Reading and Initial Understanding",
     "Task Objective": "",
     "Task Description": """
@@ -18,7 +21,7 @@ file_analysis_0 = {
 
 
 # sequential run 2
-file_analysis_1 = {
+_summarize = {
     "Task Name": "Generating File Summary", 
     "Task Objective": "to generate a concise yet informationally comprehensive summary",
     "Task Requirements": """
@@ -37,7 +40,7 @@ file_analysis_1 = {
 
 
 # sequential run 3
-file_analysis_2 = {
+_design = {
     "Task Name": "Algorithm Design",
     "Task Objective": "to design an algorithm that can perform the same task as the file",
     "Task Description": "Based on the file's content and its summary, propose an algorithmic design or strategy to address the relevant challenges or tasks.",
@@ -46,7 +49,7 @@ file_analysis_2 = {
 
 
 # inidividual run
-file_analysis_3 = {
+_validate = {
     "Task Name": "Output Validation",
     "Task Objective": "to validate the outputs of the file summary, and the algorithm design",
     "Task Description": "Cross-check the proposed algorithm design with the file's content and summary. Highlight any discrepancies or areas of improvement.",
@@ -60,7 +63,7 @@ file_analysis_3 = {
 
 
 # sequential run 4
-file_analysis_4 = {
+_output = {
     "Task Name": "Final output: check and polish",
     "Provided Resources": "another assistant comments",
     "Task Objective": "generate a final output that can be best used by the user as well as further analysis.",
@@ -73,4 +76,13 @@ file_analysis_4 = {
     """
     }
 
-file_analysis_prompts = [system_file_level,file_analysis_0, file_analysis_1, file_analysis_2, file_analysis_3, file_analysis_4]
+
+FileAnalyzerPrompt ={
+    "Prompt Name": "FileAnalyzer",
+    "system": _system,
+    "initial": _initial,
+    "summarize": _summarize,
+    "design": _design,
+    "validate": _validate,
+    "output": _output,  
+}
