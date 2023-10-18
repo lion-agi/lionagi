@@ -82,7 +82,7 @@ def to_list(_input, flat_dict: bool=False, flat=True) -> list:
                 if flat_dict:
                     outs = [flatten_dict(_input).items()]
                 else: 
-                    outs [(_input).items()]
+                    outs = [(_input).items()]
             elif isinstance(_input, str):
                 outs = [_input]
             else:

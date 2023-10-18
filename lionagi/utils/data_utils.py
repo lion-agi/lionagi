@@ -83,7 +83,7 @@ def _read_as_text(filepath, clean=True):
         else:
             return f.read()
         
-def dir_to_files(_dir, _ext, read_as=_read_as_text, flat=True, clean=True, to_csv=False, output_dir='data/logs/sources/', filename='autogen_py.csv', verbose=True, timestamp=True, logger=None):
+def dir_to_files(_dir, _ext, read_as=_read_as_text, flat=True, clean=True, to_csv=False, _project='MSFT_autogen' ,output_dir='data/logs/sources/', filename=None, verbose=True, timestamp=True, logger=None):
     """
     Description: Reads all files of required extension from source folders into a list of dictionaries.
 
@@ -110,12 +110,14 @@ def dir_to_files(_dir, _ext, read_as=_read_as_text, flat=True, clean=True, to_cs
     def _to_dict(_path):
         _folder, _file = _split(_path)
         out = {
+            'project': _project,
             "folder": _folder,
             "file": _file,
             "content": read_as(_path, clean=clean)}
         if len(out['content']) > 0:
             return out
     if to_csv:
+        filename = filename if filename else f"{_project}_sources.csv"
         logger = source_logger() if not logger else logger
         logger.log = l_return(_sources, _to_dict)
         logger.to_csv(dir=output_dir, filename=filename, verbose=verbose, timestamp=timestamp)

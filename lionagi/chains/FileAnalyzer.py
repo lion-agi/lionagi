@@ -1,6 +1,7 @@
 from .coder.FileAnalyzer_prompt import FileAnalyzerPrompt as prompt
 from .coder.FileAnalyzer_config import FileAnalyzerConfig as config
 from lionagi.session.Session import Session, llmlog
+from timeit import default_timer as timer
 
 # ToDo: make this into a class
 # need to make a base class for all chains
@@ -27,6 +28,7 @@ def analyze_file(file: dict, _prompts: dict =prompt, _kwags: dict =config, verbo
     Returns:
         processed file still as dict with additional keys: initial, summary, algo, validation, output for each llm output.
     """
+    start = timer()
     
     if len(llmlog.log) > 0:
         llmlog.to_csv(verbose=False)
@@ -52,12 +54,58 @@ def analyze_file(file: dict, _prompts: dict =prompt, _kwags: dict =config, verbo
 
     context2 = {"file_validation": _validation}
     _output = analyzer.followup(instruction=_prompts['output'], context=context2, temperature=0.6, **_kwags)
+    end = timer()
     
     llmlog.to_csv(verbose=verbose)
-    context0['initial'] = _init
-    context0['summarize'] = _summary
-    context0['algo'] = _algo
-    context0['validation'] = _validation
-    context0['output'] = _output
+    context0['datetime'] = llmlog._get_timestamp()
+    context0['chain_name'] = 'FileAnalyzer'
+    context0['chain_version'] = '0.01'
+    context0['chain_steps'] = 5
+    context0['chian_runtime'] = end - start
     
+    context0['session_1'] = 'analyzer'
+    context0['session_1_system'] = _prompts['system']
+    context0['session_2'] = 'validator'
+    context0['session_2_system'] = _prompts['system']
+    
+    context0['step_1_model'] = _kwags['model']
+    context0['step_1_name'] = 'initial'
+    context0['step_1_session'] = 1
+    context0['step_1_session_type'] = 'initiate'
+    context0['step_1_prompt'] = _prompts['initial']
+    context0['step_1_output'] = _init
+    context0['step_1_context'] = 'all file/chunk level info'
+    
+    context0['step_2_model'] = _kwags['model'] 
+    context0['step_2_name'] = 'summarize'
+    context0['step_2_session'] = 1
+    context0['step_2_session_type'] = 'followup'
+    context0['step_2_prompt'] = _prompts['summarize']
+    context0['step_2_output'] = _summary
+    context0['step_2_context'] = None
+    
+    context0['step_3_model'] = _kwags['model']
+    context0['step_3_name'] = 'algo'
+    context0['step_3_session'] = 1
+    context0['step_3_session_type'] = 'followup'
+    context0['step_3_prompt'] = _prompts['design']
+    context0['step_3_output'] = _algo
+    context0['step_3_context'] = None 
+     
+    context0['step_4_model'] = _kwags['model'] 
+    context0['step_4_name'] = 'validate'
+    context0['step_4_session'] = 2
+    context0['step_4_session_type'] = 'intiate'
+    context0['step_4_prompt'] = _prompts['validate']
+    context0['step_4_output'] = _validation
+    context0['step_4_context'] = ['step_1_context', 'step_2_output', 'step_3_output'] 
+    
+    context0['step_5_model'] = _kwags['model'] 
+    context0['step_5_name'] = 'polish'
+    context0['step_5_session'] = 1
+    context0['step_5_session_type'] = 'followup'
+    context0['step_5_prompt'] = _prompts['output']
+    context0['step_5_output'] = _output
+    context0['step_5_context'] = ['step_4_output']
+
     return context0
