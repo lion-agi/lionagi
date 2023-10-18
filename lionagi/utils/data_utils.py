@@ -211,7 +211,7 @@ def file_to_chunks(_dict: dict, field='content', chunk_size=1500, overlap=0.2, t
         list: A list of dictionaries, each containing a separate chunk and its corresponding details.
     """
     _out = {key:value for key, value in flatten_dict(_dict, seperator=seperator).items() if key != field}
-    _out.update({"chunk_size":chunk_size, "chunk_overlap":overlap, "chunk_threshold": threshold})
+    _out.update({"chunk_overlap":overlap, "chunk_threshold": threshold})
     
     # split text into chunks,
     try: 
@@ -219,7 +219,7 @@ def file_to_chunks(_dict: dict, field='content', chunk_size=1500, overlap=0.2, t
         outs=[]
         for i, j in enumerate(splited_chunks):
             out = _out.copy()
-            out.update({'chunk_id': i, f'chunk_{field}': j})     
+            out.update({'file_chunks':len(splited_chunks)+1, 'chunk_id': i+1, "chunk_size":len(j), f'chunk_{field}': j})     
             outs.append(out)
         return outs
     except Exception as e:

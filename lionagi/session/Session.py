@@ -1,12 +1,8 @@
 from lionagi.utils.log_utils import llm_logger
 import time
-import os
 import openai
-import dotenv
 import json
-import numpy as np
-dotenv.load_dotenv('.env')
-openai.api_key = os.getenv("OPENAI_API_KEY")
+
 
 llmlog = llm_logger()
 

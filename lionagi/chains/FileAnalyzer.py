@@ -36,7 +36,7 @@ def analyze_file(file: dict, _prompts: dict =prompt, _kwags: dict =config, verbo
     
     def _analyze_file(context):
         _init = analyzer.initiate(instruction=_prompts['initial'], context=context, temperature=0.6, **_kwags)
-        _summary = analyzer.followup(instruction=_prompts['summary'], temperature=0.5, **_kwags)
+        _summary = analyzer.followup(instruction=_prompts['summarize'], temperature=0.5, **_kwags)
         _algo = analyzer.followup(instruction=_prompts['design'], temperature=0.7, **_kwags)
         return (_init, _summary, _algo)
         
@@ -55,7 +55,7 @@ def analyze_file(file: dict, _prompts: dict =prompt, _kwags: dict =config, verbo
     
     llmlog.to_csv(verbose=verbose)
     context0['initial'] = _init
-    context0['summary'] = _summary
+    context0['summarize'] = _summary
     context0['algo'] = _algo
     context0['validation'] = _validation
     context0['output'] = _output
