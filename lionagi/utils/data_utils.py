@@ -193,7 +193,7 @@ def _split_text(text: str, chunk_size: int, overlap: float, threshold: int) -> l
         raise ValueError(f"Error splitting text into chunks. {e}")
 
 
-def get_chunks(_dict: dict, field='content',dict_format=None, chunk_size=1500, overlap=0.2, threshold=200) -> list[dict]:
+def get_chunks(_dict: dict, field='content', chunk_size=1500, overlap=0.2, threshold=200) -> list[dict]:
     """
     Summary: 
         Splits texts to chunks from dictionary. This is specifically written for chunking python code files. 
@@ -210,22 +210,17 @@ def get_chunks(_dict: dict, field='content',dict_format=None, chunk_size=1500, o
     Returns:
         list: A list of dictionaries, each containing a separate chunk and its corresponding details.
     """
-
-    _out = {}
-    f = (dict_format if dict_format else 
-         lambda x: {**x,"chunk_size":chunk_size, "chunk_overlap":overlap, "chunk_threshold": threshold})
+    _out = {key:value for key, value in _dict.items() if key != field}
+    _out.update({"chunk_size":chunk_size, "chunk_overlap":overlap, "chunk_threshold": threshold})
     
-    try:
-        _out = f(_dict)
-    except Exception as e:
-        raise ValueError(f"Error in output formatting function. {e}")
-    
-    # split text into chunks, and output as list of dict according to dict_format
+    # split text into chunks,
     try: 
         splited_chunks = _split_text(_dict[field], chunk_size=chunk_size, overlap=overlap, threshold=threshold)
-        if len(splited_chunks) >= 1:
-            outs = ([_out.copy().update({'chunk_id': i, field: j}) 
-                     for i, j in enumerate(splited_chunks)])
-            return outs
+        outs=[]
+        for i, j in enumerate(splited_chunks):
+            out = _out.copy()
+            out.update({'chunk_id': i, field: j})     
+            outs.append(out)
+        return outs
     except Exception as e:
         raise ValueError(f"Error in splitting text. {e}")
