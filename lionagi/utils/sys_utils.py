@@ -3,15 +3,15 @@ import re
 
 def flatten_dict(_dict: dict, parent_key=None, seperator: str='_') -> dict:
     """
-    utility function to convert a nested dictionary into a flattened dictionary recursively to the lowest level, return as a flattened dictionary
+    Utility function to recursively flatten a nested dictionary.
 
-    Args:
-        dictionary (dict): the nested dictionary to be flattened
-        parent_key (bool, optional): add the key of immediate enclosing parent dictionary to the nested dictionary within. Defaults to True
-        separator (str, optional): Seperator between parent key and the next child key. Defaults to '_'.
+    Parameters:
+        nested_dict (dict): The nested dictionary to flatten.
+        parent_key (str, optional): Prefix for keys in the flattened dictionary.
+        separator (str, optional): Separator between parent and child keys.
 
     Returns:
-        dict: a flattened dictionary
+        dict: A flattened dictionary.
     """
     items = []
     for key, value in _dict.items():
@@ -25,34 +25,33 @@ def flatten_dict(_dict: dict, parent_key=None, seperator: str='_') -> dict:
             items.append((new_key, value))
     return dict(items)
 
-def __flatten_list(xs: list):
+def flatten_list_gen(nested_list: list):
     """
-    utility generator to flatten a nested list recursively to the lowest level, return the elements in the flattened list
-
-    Args:
-        xs (list): nested dict to be flattened
-
+    Utility generator to recursively flatten a nested list.
+    
+    Parameters:
+        nested_list (list): The nested list to be flattened.
+        
     Yields:
-        Any: element in the flattened list
+        Element in the flattened list.
     """
-    for x in xs:
-        if isinstance(x, list):
-            yield from __flatten_list(x)
+    for element in nested_list:
+        if isinstance(element, list):
+            yield from flatten_list_gen(element)
         else:
-            yield x
+            yield element
 
-def _flatten_list(_input: list) -> list:
+def flatten_list_filter_none(input_list: list) -> list:
     """
-    Main function for calling _flatten_list
+    Main function for flattening a nested list and filtering out None values.
     
     Args:
-        _input (list): _description_
+        input_list (list): Nested list to be flattened.
 
     Returns:
-        list: _description_
+        list: Flattened list with None values filtered out.
     """
-    return [i for i in __flatten_list(_input) if i is not None]
-
+    return [element for element in flatten_list_gen(input_list) if element is not None]
 
 def to_list(_input, flat_dict: bool=False, flat=True) -> list:
     """
@@ -89,10 +88,9 @@ def to_list(_input, flat_dict: bool=False, flat=True) -> list:
                 outs = [i for i in _input.__iter__()]
         else:
             outs = [_input]
-        return _flatten_list(outs) if flat else outs
+        return flatten_list_filter_none(outs) if flat else outs
     except Exception as e:
         raise ValueError(f"Given input cannot be converted to list. Error: {e}")
-
 
 def str_to_num(_str: str, upper_bound: [int, float]=100, 
                lower_bound: [int, float]=1, _type: type=int):
@@ -122,6 +120,3 @@ def str_to_num(_str: str, upper_bound: [int, float]=100,
             return f"Number {num} greater than upper bound {upper_bound}"
     elif not lower_bound and not upper_bound:
         return num
-    
-
-
