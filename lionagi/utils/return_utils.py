@@ -27,7 +27,7 @@ def create_copies(_input: Any, n: int) -> List[Any]:
     return [copy.deepcopy(_input) for _ in range(n)]
 
 
-def l_return(_input: Any, _func: Any, flatten_dict: bool = False) -> List[Any]:
+def l_return(_input: Any, _func: Any, flatten_dict: bool = False, flatten_list: bool=False) -> List[Any]:
     """
     Apply a function to each element in the list converted from the input.
     
@@ -48,7 +48,10 @@ def l_return(_input: Any, _func: Any, flatten_dict: bool = False) -> List[Any]:
     """
     if isinstance(_func, Callable):
         try:
-            return [_func(i) for i in to_list(_input, flatten_dict=flatten_dict)]
+            if flatten_list: 
+                return flatten_list([_func(i) for i in to_list(_input, flatten_dict=flatten_dict)])
+            else:
+                return [_func(i) for i in to_list(_input, flatten_dict=flatten_dict)]
         except Exception as e:
             raise ValueError(f"Given function cannot be applied to the input. Error: {e}")
     else:
