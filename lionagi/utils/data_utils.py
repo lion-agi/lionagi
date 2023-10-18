@@ -1,10 +1,11 @@
-from .sys_utils import flatten_list, to_list
+from .sys_utils import to_list, flatten_dict
 from .return_utils import l_return
+from .log_utils import source_logger
 from pathlib import Path
 import pandas as pd
 import math
 
-def to_csv(ouputs, filename):
+def to_csv(ouputs, filename, out=False):
     """
     Converts a list of objects to a pandas DataFrame and writes it to a csv file.
     
@@ -15,11 +16,13 @@ def to_csv(ouputs, filename):
     Returns:
         None
     """
-    df = pd.DataFrame([i for i in ouputs if i is not None])
+    df = pd.DataFrame(to_list(ouputs))
     df.reset_index(drop=True, inplace=True)
     df.to_csv(filename)
+    if out: 
+        return df
     
-def _get_files(_dir, _ext, flatten):
+def _get_files(_dir, _ext, flat):
     """
     Fetches the files from the directory with the given extensions. 
     
@@ -36,15 +39,13 @@ def _get_files(_dir, _ext, flatten):
     Returns:
         list: A list of pathlib.Path objects representing the files in the directory with the given extensions.
     """
-    rtn = ''
-    if len(to_list(_ext)) > 0:
+    if len(to_list(_ext, flat=True)) > 0:
         f1 = lambda x: [file for file in [x.glob('**/*' + ext) for ext in _ext]]
         f2 = lambda x: [Path(file) for file in x]
-        rtn = l_return(l_return(_dir, f1)[0], f2)
-        return flatten_list(rtn) if flatten else rtn
+        return l_return(l_return(_dir, f1, flat=True), f2, flat=flat)
 
 
-def _get_all_files(_dir, _ext, flatten_inside=True, faltten_outside=False):
+def _get_all_files(_dir, _ext, flat_inner=True, flat_outer=False):
     """
     Description: This function retrieves all files with the given extension from a particular directory. Results can be flatted or left nested depending on the boolean flags.
 
@@ -57,10 +58,10 @@ def _get_all_files(_dir, _ext, flatten_inside=True, faltten_outside=False):
     Returns:
     list: A list of all files with the given extensions in the directory.
     """
-    a = l_return(_dir, lambda x: _get_files(x, _ext, flatten=flatten_inside))
-    return flatten_list(a) if faltten_outside else a
+    return l_return(_dir, lambda x: _get_files(x, _ext, flat=flat_inner), flat=flat_outer)
+     
 
-def _read_as_text(filepath, clean):
+def _read_as_text(filepath, clean=True):
     """
     Description: Opens a file and reads its content as a text file. Option to clean file content by replacing certain characters.
 
@@ -82,7 +83,7 @@ def _read_as_text(filepath, clean):
         else:
             return f.read()
         
-def dir_to_dict(_dir, _ext, read_as=_read_as_text, flatten=True, clean=True, to_csv=False, output_dir='data/logs/sources/', filename='autogen_py.csv', verbose=True, timestamp=True, logger=None):
+def dir_to_files(_dir, _ext, read_as=_read_as_text, flat=True, clean=True, to_csv=False, output_dir='data/logs/sources/', filename='autogen_py.csv', verbose=True, timestamp=True, logger=None):
     """
     Description: Reads all files of required extension from source folders into a list of dictionaries.
 
@@ -101,7 +102,7 @@ def dir_to_dict(_dir, _ext, read_as=_read_as_text, flatten=True, clean=True, to_
     Returns:
     list: List of dictionary objects with keys - 'folder', 'file', 'content'.
     """
-    _sources = _get_all_files(_dir, _ext, faltten_outside=flatten)    
+    _sources = _get_all_files(_dir, _ext, flat_outer=flat)  
     def _split(_path):
         _folder_name =  str(_path).split('/')[-2]
         _file_name = str(_path).split('/')[-1]
@@ -115,17 +116,16 @@ def dir_to_dict(_dir, _ext, read_as=_read_as_text, flatten=True, clean=True, to_
         if len(out['content']) > 0:
             return out
     if to_csv:
+        logger = source_logger() if not logger else logger
         logger.log = l_return(_sources, _to_dict)
         logger.to_csv(dir=output_dir, filename=filename, verbose=verbose, timestamp=timestamp)
-    if flatten:
-        return l_return(_sources, _to_dict)
+    if flat:
+        return l_return(_sources, _to_dict, flat=True)
     else:
         return l_return(_sources, lambda x: l_return(x, _to_dict))
     
 
-
-
-def _split_text(text: str, chunk_size: int, overlap: float, threshold: int) -> list[str|None]:
+def _chunk_text(text: str, chunk_size: int, overlap: float, threshold: int) -> list[str|None]:
     """
     Summary: 
         Splits text into chunks of equal size with overlap. A basic text spliter. If the file is shorter than chunk_size it won't be chunked, if the last chunk is shorter than threshold it will be merged with the previous chunk.
@@ -193,7 +193,7 @@ def _split_text(text: str, chunk_size: int, overlap: float, threshold: int) -> l
         raise ValueError(f"Error splitting text into chunks. {e}")
 
 
-def get_chunks(_dict: dict, field='content', chunk_size=1500, overlap=0.2, threshold=200) -> list[dict]:
+def file_to_chunks(_dict: dict, field='content', chunk_size=1500, overlap=0.2, threshold=200, seperator='_') -> list[dict]:
     """
     Summary: 
         Splits texts to chunks from dictionary. This is specifically written for chunking python code files. 
@@ -210,16 +210,16 @@ def get_chunks(_dict: dict, field='content', chunk_size=1500, overlap=0.2, thres
     Returns:
         list: A list of dictionaries, each containing a separate chunk and its corresponding details.
     """
-    _out = {key:value for key, value in _dict.items() if key != field}
+    _out = {key:value for key, value in flatten_dict(_dict, seperator=seperator).items() if key != field}
     _out.update({"chunk_size":chunk_size, "chunk_overlap":overlap, "chunk_threshold": threshold})
     
     # split text into chunks,
     try: 
-        splited_chunks = _split_text(_dict[field], chunk_size=chunk_size, overlap=overlap, threshold=threshold)
+        splited_chunks = _chunk_text(_dict[field], chunk_size=chunk_size, overlap=overlap, threshold=threshold)
         outs=[]
         for i, j in enumerate(splited_chunks):
             out = _out.copy()
-            out.update({'chunk_id': i, field: j})     
+            out.update({'chunk_id': i, f'chunk_{field}': j})     
             outs.append(out)
         return outs
     except Exception as e:

@@ -1,4 +1,4 @@
-from lionagi.utils.sys_utils import to_list, flatten_list
+from lionagi.utils.sys_utils import to_list
 from typing import Callable, Any, List
 import copy
 import time
@@ -48,10 +48,7 @@ def l_return(_input: Any, _func: Any, flat_dict: bool = False, flat: bool=False)
     """
     if isinstance(_func, Callable):
         try:
-            if flat: 
-                return flatten_list([_func(i) for i in to_list(_input, flatten_dict=flat_dict)])
-            else:
-                return [_func(i) for i in to_list(_input, flatten_dict=flat_dict)]
+            return [_func(i) for i in to_list(_input=_input, flat_dict=flat_dict, flat=flat)]
         except Exception as e:
             raise ValueError(f"Given function cannot be applied to the input. Error: {e}")
     else:
@@ -77,9 +74,9 @@ def m_return(_input: Any, _func: Any):
     _input = to_list(_input)
     _func = to_list(_func)
     assert len(_input) == len(_func), "The number of inputs and functions must be the same."
-    return flatten_list([l_return(inp, func) for func, inp in zip(_func, _input)])
+    return to_list([l_return(inp, func) for func, inp in zip(_func, _input)])
 
-def e_return(_input, _func, flatten_dict=False):
+def e_return(_input, _func, flat=False):
     """
     Generate multiple outputs by applying multiple functions to multiple copies of the input.
     
@@ -96,7 +93,7 @@ def e_return(_input, _func, flatten_dict=False):
             A list containing lists of return values for each function applied.
     """
     f = lambda x, y: m_return(create_copies(x,len(to_list(y))), y)
-    return [f(inp, _func) for inp in to_list(_input, flatten_dict=flatten_dict)]
+    return to_list([f(inp, _func) for inp in to_list(_input)], flat=flat)
 
 
 def hold_call(x, f, hold=5, msg=None, ignore=False, **kwags):

@@ -25,7 +25,7 @@ def flatten_dict(dictionary: dict, parent_key=None, separator: str='_') -> dict:
             items.append((new_key, value))
     return dict(items)
 
-def _flatten_list(xs: list):
+def __flatten_list(xs: list):
     """
     utility generator to flatten a nested list recursively to the lowest level, return the elements in the flattened list
 
@@ -37,11 +37,11 @@ def _flatten_list(xs: list):
     """
     for x in xs:
         if isinstance(x, list):
-            yield from _flatten_list(x)
+            yield from __flatten_list(x)
         else:
             yield x
 
-def flatten_list(_input: list) -> list:
+def _flatten_list(_input: list) -> list:
     """
     Main function for calling _flatten_list
     
@@ -51,10 +51,10 @@ def flatten_list(_input: list) -> list:
     Returns:
         list: _description_
     """
-    return [i for i in _flatten_list(_input) if i is not None]
+    return [i for i in __flatten_list(_input) if i is not None]
 
 
-def to_list(_input, flatten_dict: bool=False) -> list:
+def to_list(_input, flat_dict: bool=False, flat=True) -> list:
     """
     Function to convert the input into a list. If the input is Iterable (e.g. set, tuple),
     each item in the iterable will be an element in the list. If the input is a dictionary,
@@ -76,18 +76,20 @@ def to_list(_input, flatten_dict: bool=False) -> list:
         ValueError: If input can't be converted to list.
     """
     try:
+        outs = []
         if isinstance(_input, Iterable):
             if isinstance(_input, dict):
-                if flatten_dict:
-                    return [flatten_dict(_input).items()]
+                if flat_dict:
+                    outs = [flatten_dict(_input).items()]
                 else: 
-                    return [(_input).items()]
+                    outs [(_input).items()]
             elif isinstance(_input, str):
-                return [_input]
+                outs = [_input]
             else:
-                return [i for i in _input.__iter__()]
+                outs = [i for i in _input.__iter__()]
         else:
-            return [_input]
+            outs = [_input]
+        return _flatten_list(outs) if flat else outs
     except Exception as e:
         raise ValueError(f"Given input cannot be converted to list. Error: {e}")
 
