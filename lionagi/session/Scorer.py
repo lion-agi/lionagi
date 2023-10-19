@@ -1,4 +1,5 @@
-from lionagi.session.Session import Session
+from .Session import Session
+from lionagi.utils.sys_utils import str_to_num
 
 class Scorer(Session):
     
@@ -32,7 +33,7 @@ class Scorer(Session):
             temperature=temperature,
             top_p=top_p, 
             sleep=sleep)
-        score = self.str_to_num(self.conversation.responses[-1]['content'])
+        score = str_to_num(self.conversation.responses[-1]['content'])
         if isinstance(score, int):
             return score
         else: 

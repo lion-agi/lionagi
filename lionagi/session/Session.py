@@ -1,8 +1,7 @@
 from lionagi.utils.log_utils import llm_logger
-import time
 import openai
 import json
-
+import asyncio
 
 llmlog = llm_logger()
 
@@ -62,21 +61,23 @@ class Conversation:
     def change_system(self, system):
         self.system = system
         self.messages[0] = self.message.to_dict(system=system)
-
-    def get_OpenAI_ChatCompletion(self, model, 
-                frequency_penalty=0, 
-                function_call=None,
-                functions=None, 
-                n=1,
-                stop=None,
-                stream=False,
-                temperature=1,
-                top_p=1, 
-                sleep=0.1):
-        completion = ""
+        
+    async def get_OpenAI_ChatCompletion(
+        self,
+        model,
+        frequency_penalty=0,
+        function_call=None,
+        functions=None,
+        n=1,
+        stop=None,
+        stream=False,
+        temperature=1,
+        top_p=1,
+        sleep=0.1,
+    ):
         messages = self.messages
         if (stream and (function_call or functions)):
-            completion = openai.ChatCompletion.create(
+            completion = await openai.ChatCompletion.acreate(
                 messages=messages,
                 model=model,
                 frequency_penalty=frequency_penalty,
@@ -87,9 +88,10 @@ class Conversation:
                 stream=True,
                 temperature=temperature,
                 top_p=top_p)
-            completion = completion.choices[0]            
+            completion = completion.choices[0]
+            
         elif stream:
-            completion = openai.ChatCompletion.create(
+            completion = await openai.ChatCompletion.acreate(
                 messages=messages,
                 model=model,
                 frequency_penalty=frequency_penalty,
@@ -98,9 +100,10 @@ class Conversation:
                 stream=True,
                 temperature=temperature,
                 top_p=top_p)
-            completion = completion.choices[0]
+            completion = completion.choices[0]        
+
         elif function_call or functions:
-            completion = openai.ChatCompletion.create(
+            completion = await openai.ChatCompletion.acreate(
                 messages=messages,
                 model=model,
                 frequency_penalty=frequency_penalty,
@@ -112,7 +115,7 @@ class Conversation:
                 top_p=top_p)
             completion = completion.choices[0]
         else:
-            completion = openai.ChatCompletion.create(
+            completion = await openai.ChatCompletion.acreate(
                 messages=messages,
                 model=model,
                 frequency_penalty=frequency_penalty,
@@ -121,22 +124,23 @@ class Conversation:
                 temperature=temperature,
                 top_p=top_p)
             completion = completion.choices[0]
-        response = {"role": "assistant", "content": completion.message['content']}
+            
+        response = {"role": "assistant", "content": completion.message["content"]}
         self.responses.append(response)
         llmlog(self.messages, completion)
         self.response_counts += 1
-        time.sleep(sleep)
+        await asyncio.sleep(sleep)
     
     def append_last_response(self):
         self.add_messages(response=self.responses[-1])
-
-
+    
+    
 class Session:
     
     def __init__(self, system) -> None:
         self.conversation = Conversation(system=system)
 
-    def initiate(self, 
+    async def initiate(self, 
             instruction, 
             system=None, 
             context=None, 
@@ -152,7 +156,7 @@ class Session:
             sleep=0.1, out=True):
         system = system if system else self.conversation.system
         self.conversation.initiate_conversation(system, instruction, context)
-        self.conversation.get_OpenAI_ChatCompletion(
+        await self.conversation.get_OpenAI_ChatCompletion(
             model=model, 
             frequency_penalty=frequency_penalty, 
             function_call=function_call,
@@ -166,7 +170,7 @@ class Session:
         if out:
             return self.conversation.responses[-1]['content']
 
-    def followup(self,
+    async def followup(self,
             instruction,
             system=None, 
             context=None, 
@@ -185,7 +189,7 @@ class Session:
         if system:
             self.conversation.change_system(system)
         self.conversation.add_messages(instruction=instruction, context=context)
-        self.conversation.get_OpenAI_ChatCompletion(
+        await self.conversation.get_OpenAI_ChatCompletion(
             model=model, 
             frequency_penalty=frequency_penalty, 
             function_call=function_call,
@@ -201,123 +205,5 @@ class Session:
 
 
 
-# ToDo: finish scoring system
 
-class MultiSession:
-    
-    def __init__(self, system, num=3) -> None:
-        self.system = system
-        self.num_conversation = num
-        self.sessions = [Session(system) for _ in range(num)]
-        
-    def initiate(self, 
-            instruction, 
-            system=None, 
-            context=None, 
-            model="gpt-3.5-turbo-16k", 
-            frequency_penalty=0, 
-            function_call=None,
-            functions=None, 
-            n=1,
-            stop=None,
-            stream=False,
-            temperature=1,
-            top_p=1, 
-            sleep=0.1, out=True):
-        for session in self.sessions:        
-            session.initiate(
-                system=system,              
-                instruction=instruction, 
-                context=context,
-                model=model, 
-                frequency_penalty=frequency_penalty, 
-                function_call=function_call,
-                functions=functions, 
-                n=n,
-                stop=stop,
-                stream=stream,
-                temperature=temperature,
-                top_p=top_p, 
-                sleep=sleep)
-        if out:
-            return ([session.conversation.responses[-1]['content'] 
-                     for session in self.sessions])
 
-    def followup(self,
-            instruction,
-            system=None, 
-            context=None, 
-            model="gpt-3.5-turbo-16k", 
-            frequency_penalty=0, 
-            function_call=None,
-            functions=None, 
-            n=1,
-            stop=None,
-            stream=False,
-            temperature=1,
-            top_p=1, 
-            sleep=0.1, 
-            out=True):
-        self.conversation.append_last_response()
-        for session in self.sessions:        
-            session.followup(     
-                system=system,       
-                instruction=instruction, 
-                context=context,
-                model=model, 
-                frequency_penalty=frequency_penalty, 
-                function_call=function_call,
-                functions=functions, 
-                n=n,
-                stop=stop,
-                stream=stream,
-                temperature=temperature,
-                top_p=top_p, 
-                sleep=sleep)
-        if out:
-            return ([session.conversation.responses[-1]['content'] 
-                     for session in self.sessions])
-            
-    # def _score(self,
-    #         score_system,
-    #         score_instruction,
-    #         model="gpt-3.5-turbo-16k", 
-    #         frequency_penalty=0, 
-    #         function_call=None,
-    #         functions=None, 
-    #         n=1,
-    #         stop=None,
-    #         stream=False,
-    #         temperature=1,
-    #         top_p=1, 
-    #         sleep=0.1, 
-    #         num_tries=3):
-    #     scorer = Scorer(score_system)
-    #     scores = []
-    #     for session in self.sessions:
-    #         score = scorer.score(
-    #             instruction=score_instruction, 
-    #             session=session,  
-    #             model=model, 
-    #             frequency_penalty=frequency_penalty, 
-    #             function_call=function_call,
-    #             functions=functions, 
-    #             n=n,
-    #             stop=stop,
-    #             stream=stream,
-    #             temperature=temperature,
-    #             top_p=top_p, 
-    #             sleep=sleep, 
-    #             num_tries=num_tries)
-    #         if isinstance(score, int):
-    #             scores.append(score)
-    #         else:
-    #             scores.append(1)
-    #     return scores
-    
-    # def get_best_response(self, score_system=None, score_instruction=None):
-    #     try: 
-    #         scores = np.array(self._score(score_system=score_system,score_instruction=score_instruction))
-    #         return self.sessions[np.argmax(scores)].conversation.responses[-1]['content']
-    #     except Exception as e:
-    #         raise e
