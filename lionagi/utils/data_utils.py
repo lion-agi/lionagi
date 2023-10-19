@@ -226,3 +226,35 @@ def file_to_chunks(_dict: dict, field='content', chunk_size=1500, overlap=0.2, t
         return outs
     except Exception as e:
         raise ValueError(f"Error in splitting text. {e}")
+    
+# get index of elements in a list according to their concecutive cumulative sum of length
+# according some upper threshold, and return lists of indices as bins
+def get_bins(items, upper=7500):
+    current = 0
+    bins = []
+    bin = []
+    for idx, item in enumerate(items):
+        if current + len(item) < upper:
+            bin.append(idx)
+            current += len(item)
+        elif current + len(item) >= upper:
+            bins.append(bin)
+            bin = [idx]
+            current = len(item)
+        if idx == len(items) - 1 and len(bin) > 0:
+            bins.append(bin)
+    return bins
+
+# extract useful fields from each chunk within a bin, 
+# return as a dictionary with keys as chunk0_in_bin, chunk1_in_bin, etc.
+def get_fields(df0):
+    out = {}
+    for i in range(len(df0)):
+        a = {}
+        a.update({"folder": str(df0.folder[i])})
+        a.update({"file": str(df0.file[i])})
+        a.update({"file_chunks": str(df0.file_chunks[i])})
+        a.update({"chunk_id": str(df0.chunk_id[i])})
+        a.update({"chunk_analysis": str(df0.step_5_output[i])})
+        out[f'chunk{i}_in_bin'] = a
+    return out
