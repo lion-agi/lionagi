@@ -1,5 +1,7 @@
 from .Session import Session
 from lionagi.utils.sys_utils import str_to_num
+from lionagi.utils.return_utils import hold_call
+import numpy as np
 
 class Scorer(Session):
     
@@ -33,7 +35,9 @@ class Scorer(Session):
             temperature=temperature,
             top_p=top_p, 
             sleep=sleep)
-        score = str_to_num(self.conversation.responses[-1]['content'])
+        
+        f = lambda x: str_to_num(x['content'], upper_bound=100, lower_bound=1, _type=int)
+        score = hold_call(input_=self.conversation.responses[-1], func=f, hold=0)
         if isinstance(score, int):
             return score
         else: 
@@ -74,3 +78,9 @@ class Scorer(Session):
                 print(f"Attempt {i+1} of {num_tries}")
                 continue
 
+    async def get_best_response(self, score_system=None, score_instruction=None):
+        try: 
+            scores = np.array(await self._score(score_system=score_system, score_instruction=score_instruction))
+            return self.sessions[np.argmax(scores)].conversation.responses[-1]['content']
+        except Exception as e:
+            raise e
