@@ -145,7 +145,7 @@ class Session(SessionConfig):
             "n": config['n']}
         
         for key in ["stream", "stop", "function_call","functions"]:
-            if key in config.keys():
+            if config[key] is True:
                 payload.update({key: config[key]})
 
         # Use the RateLimitedAPIService for API call

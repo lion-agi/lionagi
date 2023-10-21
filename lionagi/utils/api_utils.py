@@ -34,7 +34,12 @@ class StatusTracker:
     num_other_errors: int = 0
     time_of_last_rate_limit_error: int = 0
 
+
 # Class definition
+import asyncio
+import logging
+import time
+
 class RateLimitedAPIService:
     """
     A class to handle rate-limited API service calls.
@@ -193,10 +198,8 @@ class RateLimitedAPIService:
 
 api_service = RateLimitedAPIService(
     api_key=os.getenv('OPENAI_API_KEY'),
-    max_requests_per_minute=10000,
-    max_tokens_per_minute=150000,
+    max_requests_per_minute=5000,
+    max_tokens_per_minute=100000,
     token_encoding_name="utf-8",
     max_attempts=3,
 )
-
-status_tracker = StatusTracker()

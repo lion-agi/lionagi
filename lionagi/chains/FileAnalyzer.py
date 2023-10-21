@@ -6,7 +6,7 @@ from timeit import default_timer as timer
 # ToDo: make this into a class
 # need to make a base class for all chains
 
-def analyze_file(file: dict, _prompts: dict =prompt, _kwags: dict =config, verbose: bool =False):
+async def analyze_file(file: dict, _prompts: dict =prompt, _kwags: dict =config, verbose: bool =False):
     """
     Preliminary analysis of a file or chunk, LLM flow:
     1. init: initial reading and understanding the file (analyzer.initiate)
@@ -36,27 +36,30 @@ def analyze_file(file: dict, _prompts: dict =prompt, _kwags: dict =config, verbo
     analyzer = Session(_prompts['system'])
     validator = Session(_prompts['system'])
     
-    def _analyze_file(context):
-        _init = analyzer.initiate(instruction=_prompts['initial'], context=context, temperature=0.6, **_kwags)
-        _summary = analyzer.followup(instruction=_prompts['summarize'], temperature=0.5, **_kwags)
-        _algo = analyzer.followup(instruction=_prompts['design'], temperature=0.7, **_kwags)
+    async def _analyze_file(context):
+        _init = await analyzer.initiate(instruction=_prompts['initial'], context=context, temperature=0.6, **_kwags)
+        _summary = await analyzer.followup(instruction=_prompts['summarize'], temperature=0.5, **_kwags)
+        _algo = await analyzer.followup(instruction=_prompts['design'], temperature=0.7, **_kwags)
         return (_init, _summary, _algo)
         
-    def _validate_file(context):
-        _validation = validator.initiate(instruction=_prompts['validate'], context=context, temperature=0.4, **_kwags)
+    async def _validate_file(context):
+        _validation = await validator.initiate(instruction=_prompts['validate'], context=context, temperature=0.4, **_kwags)
         return _validation
     
     context0 = {**file}
-    _init, _summary, _algo = [str(i).replace("\n", " ") for i in _analyze_file(context0)]
+    aa = await _analyze_file(context0)
+    _init, _summary, _algo = [str(i).replace("\n", " ") for i in aa]
     
     context1 = {**file,'summary': _summary,'algo': _algo}
-    _validation = str(_validate_file(context1)).replace('\n', ' ')
+    _validation = await _validate_file(context1)
+    _validation = str(_validation).replace('\n', ' ')
 
     context2 = {"file_validation": _validation}
-    _output = analyzer.followup(instruction=_prompts['output'], context=context2, temperature=0.6, **_kwags)
+    _output = await analyzer.followup(instruction=_prompts['output'], context=context2, temperature=0.6, **_kwags)
     end = timer()
     
     llmlog.to_csv(verbose=verbose)
+    if verbose: print(f"Finished in {end - start} seconds.")
     context0['datetime'] = llmlog._get_timestamp()
     context0['chain_name'] = 'FileAnalyzer'
     context0['chain_version'] = '0.01'

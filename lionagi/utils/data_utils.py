@@ -1,4 +1,4 @@
-from .sys_utils import to_list, flatten_dict
+from .sys_utils import to_lst, flatten_dict
 from .return_utils import l_return
 from .log_utils import source_logger
 from pathlib import Path
@@ -16,7 +16,7 @@ def to_csv(ouputs, filename, out=False):
     Returns:
         None
     """
-    df = pd.DataFrame(to_list(ouputs))
+    df = pd.DataFrame(to_lst(ouputs))
     df.reset_index(drop=True, inplace=True)
     df.to_csv(filename)
     if out: 
@@ -39,7 +39,7 @@ def _get_files(_dir, _ext, flat):
     Returns:
         list: A list of pathlib.Path objects representing the files in the directory with the given extensions.
     """
-    if len(to_list(_ext, flat=True)) > 0:
+    if len(to_lst(_ext, flat=True)) > 0:
         f1 = lambda x: [file for file in [x.glob('**/*' + ext) for ext in _ext]]
         f2 = lambda x: [Path(file) for file in x]
         return l_return(l_return(_dir, f1, flat=True), f2, flat=flat)
@@ -83,7 +83,7 @@ def _read_as_text(filepath, clean=True):
         else:
             return f.read()
         
-def dir_to_files(_dir, _ext, read_as=_read_as_text, flat=True, clean=True, to_csv=False, _project='MSFT_autogen' ,output_dir='data/logs/sources/', filename=None, verbose=True, timestamp=True, logger=None):
+def dir_to_files(_dir, _ext, read_as=_read_as_text, flat=True, clean=True, to_csv=False, _project="null" ,output_dir='data/logs/sources/', filename=None, verbose=True, timestamp=True, logger=None):
     """
     Description: Reads all files of required extension from source folders into a list of dictionaries.
 
@@ -116,15 +116,17 @@ def dir_to_files(_dir, _ext, read_as=_read_as_text, flat=True, clean=True, to_cs
             "content": read_as(_path, clean=clean)}
         if len(out['content']) > 0:
             return out
+    
+    logs = l_return(_sources, _to_dict, flat=True)
     if to_csv:
         filename = filename if filename else f"{_project}_sources.csv"
         logger = source_logger() if not logger else logger
-        logger.log = l_return(_sources, _to_dict)
+        logger.log = logs
         logger.to_csv(dir=output_dir, filename=filename, verbose=verbose, timestamp=timestamp)
     if flat:
-        return l_return(_sources, _to_dict, flat=True)
+        return logs
     else:
-        return l_return(_sources, lambda x: l_return(x, _to_dict))
+        return l_return(_sources, lambda x: l_return(x, _to_dict, flat=True))
     
 
 def _chunk_text(text: str, chunk_size: int, overlap: float, threshold: int) -> list[str|None]:
@@ -195,7 +197,7 @@ def _chunk_text(text: str, chunk_size: int, overlap: float, threshold: int) -> l
         raise ValueError(f"Error splitting text into chunks. {e}")
 
 
-def file_to_chunks(_dict: dict, field='content', chunk_size=1500, overlap=0.2, threshold=200, seperator='_') -> list[dict]:
+def file_to_chunks(_dict: dict, field='content', chunk_size=1500, overlap=0.2, threshold=200, sep='_') -> list[dict]:
     """
     Summary: 
         Splits texts to chunks from dictionary. This is specifically written for chunking python code files. 
@@ -212,7 +214,7 @@ def file_to_chunks(_dict: dict, field='content', chunk_size=1500, overlap=0.2, t
     Returns:
         list: A list of dictionaries, each containing a separate chunk and its corresponding details.
     """
-    _out = {key:value for key, value in flatten_dict(_dict, seperator=seperator).items() if key != field}
+    _out = {key:value for key, value in flatten_dict(_dict, sep=sep).items() if key != field}
     _out.update({"chunk_overlap":overlap, "chunk_threshold": threshold})
     
     # split text into chunks,
