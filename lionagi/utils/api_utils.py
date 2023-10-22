@@ -203,3 +203,5 @@ api_service = RateLimitedAPIService(
     token_encoding_name="utf-8",
     max_attempts=3,
 )
+
+status_tracker = StatusTracker()

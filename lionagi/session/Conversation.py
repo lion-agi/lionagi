@@ -1,6 +1,4 @@
-import openai
 import json
-import asyncio
 
 class Message:
     """
