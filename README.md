@@ -2,7 +2,7 @@
 
 Towards Artificial General Intelligence
 
-a project on building robust tools for developing production ready LLM applications. 
+a data centric project on building robust tools for developing production ready LLM applications. 
 To install download the file as a zip, then
 ```python
 pip install -e dir_to_unzipped_folder
