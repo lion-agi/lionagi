@@ -1,1 +1,4 @@
 pandas>=2.0.3
+beautifulsoup4==4.12.2
+python-dotenv==1.0.0
+feedparser==6.0.10
