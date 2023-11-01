@@ -1,6 +1,6 @@
 import logging
 from .version import __version__
-from .session.session import *
+from .session import *
 from .utils import *
 
 
