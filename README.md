@@ -1,4 +1,4 @@
-# lionagi
+# LionAGI 
 
 Powerful Intelligent Workflow Automation. 
 
