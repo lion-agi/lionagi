@@ -14,7 +14,7 @@ import aiohttp
 import tiktoken
 
 # Local
-from .sys_utils import dict_to_temp_file
+from .sys_utils import dict_to_temp
 
 dotenv.load_dotenv('.env')
 logging.basicConfig(level=logging.INFO)
@@ -267,7 +267,7 @@ def process_api_requests_from_dict(
     max_attempts: int,
     logging_level: int):
     
-    temp_file = dict_to_temp_file(d)  # Assuming dict_to_tempfile is synchronous
+    temp_file = dict_to_temp(d)  # Assuming dict_to_tempfile is synchronous
     
     process_api_requests_from_file(  # Assuming this function is now synchronous
         requests_filepath=temp_file.name,
@@ -452,7 +452,7 @@ async def aprocess_api_requests_from_dict(
     token_encoding_name: str,
     max_attempts: int,
     logging_level: int):
-    temp_file = dict_to_temp_file(d)
+    temp_file = dict_to_temp(d)
     
     await aprocess_api_requests_from_file(
         requests_filepath = temp_file.name,

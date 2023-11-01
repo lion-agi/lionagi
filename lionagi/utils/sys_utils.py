@@ -164,7 +164,7 @@ def to_list(input_: Union[Iterable, Any], flat_dict: bool = False, flat: bool = 
     except Exception as e:
         raise ValueError(f"Input can't be converted to list. Error: {e}")
     
-def convert_str_to_num(str_: str, upper_bound: Union[int, float]=100, 
+def str_to_num(str_: str, upper_bound: Union[int, float]=100, 
                         lower_bound: Union[int, float]=1, type_: type=int, precision: int=None) -> Union[int, float, str]:
     """
     Convert a string to a number within specified bounds.
@@ -184,7 +184,7 @@ def convert_str_to_num(str_: str, upper_bound: Union[int, float]=100,
     - Union[int, float, str]: Converted number or a string indicating out-of-bound value.
 
     Example:
-    >>> convert_str_to_num("abc 123", upper_bound=200)
+    >>> str_to_num("abc 123", upper_bound=200)
     >>> 123  # Output
     """
     try:
@@ -205,7 +205,7 @@ def convert_str_to_num(str_: str, upper_bound: Union[int, float]=100,
     elif num > upper_bound:
         return f"Number {num} greater than upper bound {upper_bound}"
 
-def create_multiple_copies(input_: Any, n: int) -> List[Any]:
+def create_copies(input_: Any, n: int) -> List[Any]:
     """
     Create multiple deep copies of an object.
 
@@ -222,7 +222,7 @@ def create_multiple_copies(input_: Any, n: int) -> List[Any]:
     """
     return [copy.deepcopy(input_) for _ in range(n)]
 
-def dict_to_temp_file(d: Dict[str, Any]) -> tempfile.NamedTemporaryFile:
+def dict_to_temp(d: Dict[str, Any]) -> tempfile.NamedTemporaryFile:
     """
     Save a dictionary to a temporary file.
 
@@ -462,7 +462,7 @@ def e_call(input_: Any, func_: Callable,
     Returns:
         List[Any]: A list of results after applying the functions to the inputs.
     """
-    f = lambda x, y: m_call(create_multiple_copies(x, len(to_list(y))), y, flat_dict=flat_dict, flat=flat, dropna=dropna)
+    f = lambda x, y: m_call(create_copies(x, len(to_list(y))), y, flat_dict=flat_dict, flat=flat, dropna=dropna)
     return to_list([f(inp, func_) for inp in to_list(input_)], flat=flat)
 
 # Asynchronous explode call, applies a list of functions to each element in the input list
@@ -483,7 +483,7 @@ async def ae_call(input_: Any, func_: Callable,
         List[Any]: A list of results after asynchronously applying the functions to the inputs.
     """
     async def async_f(x, y):
-        return await am_call(create_multiple_copies(x, len(to_list(y))), y, flat_dict=flat_dict, flat=flat, dropna=dropna)
+        return await am_call(create_copies(x, len(to_list(y))), y, flat_dict=flat_dict, flat=flat, dropna=dropna)
 
     tasks = [async_f(inp, func_) for inp in to_list(input_)]
     return await asyncio.gather(*tasks)
@@ -705,3 +705,29 @@ def file_to_chunks(d: Dict[str, Any],
     
     except Exception as e:
         raise ValueError(f"An error occurred while chunking the file. {e}")
+
+def get_bins(items: List[str], upper: int = 7500) -> List[List[int]]:
+    """
+    Get index of elements in a list based on their consecutive cumulative sum of length,
+    according to some upper threshold. Return lists of indices as bins.
+    
+    Args:
+    items (List[str]): List of items to be binned.
+    upper (int, optional): Upper threshold for the cumulative sum of the length of items in a bin. Default is 7500.
+    
+    Returns:
+    List[List[int]]: List of lists, where each inner list contains the indices of the items that form a bin.
+    
+    Example:
+    >>> items = ['apple', 'a', 'b', 'banana', 'cheery', 'c', 'd', 'e']
+    >>> upper = 10
+    >>> get_bins(items, upper)
+    [[0, 1, 2], [3], [4, 5, 6, 7]]
+    """
+    bins = []
+    for idx, item in enumerate(items):
+        if idx == 0 or (current := current + len(item)) >= upper:
+            bins.append([])
+            current = len(item)
+        bins[-1].append(idx)
+    return bins
