@@ -416,7 +416,7 @@ def m_call(input_: Any, func_: Callable,
     lst_input = to_list(input_, flat_dict=flat_dict, flat=flat, dropna=dropna)
     lst_func = to_list(func_)
     assert len(lst_input) == len(lst_func), "The number of inputs and functions must be the same."
-    return [l_call(inp, f, flat_dict=flat_dict, flat=flat, dropna=dropna) for f, inp in zip(lst_func, lst_input)]
+    return to_list([l_call(inp, f, flat_dict=flat_dict, flat=flat, dropna=dropna) for f, inp in zip(lst_func, lst_input)], flat=True)
 
 # Asynchronous map call, applies function on each element in a list, element-wise mapped
 async def am_call(input_: Any, func_: Callable, 
@@ -443,7 +443,8 @@ async def am_call(input_: Any, func_: Callable,
     assert len(lst_input) == len(lst_func), "The number of inputs and functions must be the same."
     
     tasks = [al_call(inp, f, flat_dict=flat_dict, flat=flat, dropna=dropna) for f, inp in zip(lst_func, lst_input)]
-    return await asyncio.gather(*tasks)
+    out = await asyncio.gather(*tasks)
+    return to_list(out, flat=True)
 
 # Explode call, applies a list of functions to each element in the input list
 def e_call(input_: Any, func_: Callable, 
