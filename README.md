@@ -1,6 +1,6 @@
 # lionagi
 
-Towards Artificial General Intelligence
+Powerful Intelligent Workflow Automation. 
 
 a data centric project on building robust tools for developing production ready LLM applications. 
 To install download the file as a zip, then
