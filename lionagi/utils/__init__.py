@@ -13,11 +13,14 @@ from .sys_utils import (
     am_call,
     e_call,
     ae_call,
-    dir_to_filepath,
+)
+from .doc_utils import (
+    dir_to_path,
     read_text,
     dir_to_files,
     chunk_text,
     file_to_chunks,
+    files_to_chunks,
     get_bins
 )
 from .log_utils import LLMLogger, SourceLogger
@@ -38,11 +41,12 @@ __all__ = [
     "am_call",
     "e_call",
     "ae_call",
-    "dir_to_filepath",
+    "dir_to_path",
     "read_text",
     "dir_to_files",
     "chunk_text",
     "file_to_chunks",
+    "files_to_chunks",
     "get_bins",
     "LLMLogger",
     "SourceLogger",
