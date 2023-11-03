@@ -1,4 +1,4 @@
-from .message import massenger
+from .Message import massenger
 
 class Conversation:
     """

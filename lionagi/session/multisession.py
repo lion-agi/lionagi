@@ -2,8 +2,8 @@ from typing import Any, Callable, Dict, List, Optional
 import asyncio
 
 from ..utils.sys_utils import create_copies, l_call
-from .configs import SessionConfig
-from .session import Session
+from .SessionConfigs import SessionConfig
+from .Session import Session
 
 class MultiSession(SessionConfig):
     """

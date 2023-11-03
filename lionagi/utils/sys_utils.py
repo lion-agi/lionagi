@@ -1,4 +1,4 @@
-# Standard Library Imports
+from typing import Any, Callable, Dict, Iterable, List, MutableMapping, Union
 import re
 import copy
 import json
@@ -6,12 +6,7 @@ import tempfile
 import csv
 import os
 import time
-
-# Asynchronous Programming
 import asyncio
-
-# Typing Imports
-from typing import Any, Callable, Dict, Iterable, List, MutableMapping, Union
 
 
 def _flatten_dict(d: Dict[str, Any], parent_key: str = "", sep: str = "_"):
