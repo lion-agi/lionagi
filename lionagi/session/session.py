@@ -1,3 +1,5 @@
+import aiohttp
+import asyncio
 from typing import Any, Dict, Optional
 from .SessionConfigs import SessionConfig
 from .Conversation import Conversation
@@ -120,6 +122,7 @@ class Session(SessionConfig):
         """
         messages = self.conversation.messages
         config = {**self.config, **kwargs}
+        request_url = f"https://api.openai.com/v1/chat/completions"
 
         payload: Dict[str, Any] = {
             "messages": messages,
@@ -134,7 +137,7 @@ class Session(SessionConfig):
             if config[key] is True:
                 payload.update({key: config[key]})
 
-        completion = self.api_service.call_api(payload)  # Assuming synchronous
+        completion = self.api_service.call_api(None, request_url, payload)  # Assuming synchronous
         completion = completion["choices"][0]
         llmlog(self.conversation.messages, completion)
         response = {"role": "assistant", "content": completion["message"]["content"]}
@@ -189,6 +192,7 @@ class Session(SessionConfig):
         For argument details, refer to the `call_OpenAI_ChatCompletion` method.
         """
         messages = self.conversation.messages
+        request_url = f"https://api.openai.com/v1/chat/completions"
         config = {**self.config, **kwargs}
         
         payload = {
@@ -203,9 +207,19 @@ class Session(SessionConfig):
             if config[key] is True:
                 payload.update({key: config[key]})
 
-        completion = await self.api_service.call_api(payload)
-        completion = completion['choices'][0]
-        llmlog(self.conversation.messages, completion)
-        response = {"role": "assistant", "content": completion['message']["content"]}
-        self.conversation.responses.append(response)
-        self.conversation.response_counts += 1
+        try:
+            async with aiohttp.ClientSession() as session:
+                completion = await self.api_service.call_api(session, request_url, payload)
+                if "choices" in completion:
+                    completion = completion['choices'][0]
+                    llmlog(self.conversation.messages, completion)
+                    response = {"role": "assistant", "content": completion['message']["content"]}
+                    self.conversation.responses.append(response)
+                    self.conversation.response_counts += 1
+                    await asyncio.sleep(config['sleep'])
+                    self.status_tracker.num_tasks_succeeded += 1
+                else:
+                    self.status_tracker.num_tasks_failed += 1
+        except Exception as e:
+            self.status_tracker.num_tasks_failed += 1
+            raise e

@@ -14,7 +14,7 @@ class SyncAPIService(BaseAPIService):
     def enqueue_request(self, session, request_url, payload):
         self.request_queue.put((session, request_url, payload))
 
-    def call_api(self, request_url, payload):
+    def call_api(self, session, request_url, payload):
         while True:
             if self.available_request_capacity < 1 or self.available_token_capacity < 10:  # Minimum token count
                 time.sleep(1)
