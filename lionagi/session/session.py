@@ -19,7 +19,7 @@ import asyncio
 from typing import Any, Dict, Optional
 from .SessionConfigs import SessionConfig
 from .Conversation import Conversation
-from ..api.BaseService import StatusTracker
+from ..api.base_service import StatusTracker
 from ..api.Services import sync_api_service
 from ..utils.log_utils import LLMLogger
 
