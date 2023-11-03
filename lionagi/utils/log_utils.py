@@ -1,5 +1,6 @@
 import os
 from datetime import datetime
+
 from .sys_utils import to_csv
 
 class DataLogger:
@@ -144,4 +145,3 @@ class SourceLogger(DataLogger):
             logger.to_csv(dir_='data/logs/sources/', filename='data_log.csv', verbose=True, timestamp=True)
         """
         self._to_csv(dir_=dir_, filename=filename, verbose=verbose, timestamp=timestamp)
-

@@ -19,6 +19,32 @@ class StatusTracker:
     num_other_errors: int = 0
     
 class BaseAPIService(ABC):
+    """
+    An abstract base class for API services that includes rate limiting
+    and error handling mechanisms.
+
+    Attributes:
+        api_key (str): The API key used for authentication with the API service.
+        max_requests_per_minute (int): The maximum number of requests allowed per minute.
+        max_tokens_per_minute (int): The maximum number of tokens allowed to be used per minute.
+        token_encoding_name (str): The encoding scheme used for the tokens.
+        max_attempts (int): The maximum number of attempts to try a request.
+        available_request_capacity (int): The current available request capacity.
+        available_token_capacity (int): The current available token capacity.
+        last_update_time (float): The last time the capacities were updated.
+        rate_limit_task (asyncio.Task): The background task that replenishes rate limits.
+
+    Methods:
+        handle_error(self, error, request_json, metadata, save_filepath, status_tracker):
+            Handles errors by decrementing the in-progress task count, incrementing the failed task count,
+            and appending the error to a specified JSONL file.
+
+        append_to_jsonl(self, data, filename):
+            Appends a piece of data to a file in JSON Lines format.
+
+    Raises:
+        NotImplementedError: If an abstract method is not implemented by a subclass.
+    """    
     def __init__(self, api_key, max_requests_per_minute, 
                  max_tokens_per_minute, 
                  token_encoding_name, max_attempts):
@@ -33,6 +59,22 @@ class BaseAPIService(ABC):
         self.rate_limit_task = asyncio.create_task(self.rate_limit_replenisher())
 
     def handle_error(self, error, request_json, metadata, save_filepath, status_tracker):
+        """
+        Handles errors by logging and saving details to a file.
+
+        Args:
+            error (Exception): The exception that occurred.
+            request_json (Dict[str, Any]): The request data that led to the error.
+            metadata (Dict[str, Any]): Additional metadata related to the request.
+            save_filepath (str): The file path to save error details.
+            status_tracker ('StatusTracker'): An object tracking the status of tasks.
+
+        Side effects:
+            Logs an error message.
+            Decrements the number of tasks in progress.
+            Increments the number of tasks failed.
+            Appends error details to the specified file.
+        """        
         status_tracker.num_tasks_in_progress -= 1
         status_tracker.num_tasks_failed += 1
         data = (
@@ -44,6 +86,16 @@ class BaseAPIService(ABC):
         logging.error(f"Request failed after all attempts. Saving errors: {data}")
 
     def append_to_jsonl(self, data, filename):
+        """
+        Appends data to a file in JSON Lines format.
+
+        Args:
+            data (Any): The data to be appended.
+            filename (str): The file to which the data should be appended.
+
+        Side effects:
+            Writes to the specified file.
+        """        
         json_string = json.dumps(data)
         with open(filename, "a") as f:
             f.write(json_string + "\n")
@@ -103,6 +155,9 @@ class BaseAPIService(ABC):
             )
     
     async def rate_limit_replenisher(self):
+        """
+        An asynchronous task that replenishes rate limits based on the set intervals.
+        """
         while True:
             await asyncio.sleep(60)  # Replenish every minute
             self.available_request_capacity = self.max_requests_per_minute
