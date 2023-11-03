@@ -1,11 +1,12 @@
 from typing import Any, Dict, Optional
-
-from ..utils.oai_utils import gpt4_api_service, status_tracker
+from .SessionConfigs import SessionConfig
+from .Conversation import Conversation
+from ..api.BaseService import StatusTracker
+from ..api.Services import sync_api_service
 from ..utils.log_utils import LLMLogger
-from .configs import SessionConfig
-from .conversation import Conversation
 
 llmlog = LLMLogger()
+status_tracker = StatusTracker()
 
 class Session(SessionConfig):
     """
@@ -22,7 +23,7 @@ class Session(SessionConfig):
         followup: Adds a follow-up instruction to the ongoing conversation.
         call_OpenAI_ChatCompletion: Makes an API call to GPT-4 and updates the conversation history.
     """
-    def __init__(self, system, api_service=gpt4_api_service, status_tracker=status_tracker):
+    def __init__(self, system, api_service=sync_api_service, status_tracker=status_tracker):
 
         super().__init__()
         self.conversation = Conversation(system=system)
