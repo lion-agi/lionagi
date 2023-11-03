@@ -639,9 +639,6 @@ async def am_call(input_: Any, func_: Callable,
     return to_list(out, flat=True)
 
 
-# rewrite these documentation to more readable, understandable and easier to follow, lint with pep-8, and Enforce length limit  -------
-
-# Explode call, applies a list of functions to each element in the input list
 def e_call(input_: Any, 
            func_: Callable, 
            flat_dict: bool = False, 
