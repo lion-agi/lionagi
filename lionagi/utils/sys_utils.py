@@ -1,4 +1,3 @@
-from typing import Any, Callable, Dict, Iterable, List, MutableMapping, Union
 import re
 import copy
 import json
@@ -8,133 +7,199 @@ import os
 import time
 import asyncio
 
+from typing import (Any, 
+                    Callable, 
+                    Dict, 
+                    Iterable, 
+                    List, 
+                    MutableMapping, 
+                    Union, 
+                    Generator, 
+                    Optional)
 
-def _flatten_dict(d: Dict[str, Any], parent_key: str = "", sep: str = "_"):
+def _flatten_dict(d: Dict[str, Any], 
+                  parent_key: str = "", 
+                  sep: str = "_") -> Generator:
     """
-    Flatten a nested dictionary recursively (Generator function).
+    Creates a generator that flattens a nested dictionary.
 
-    This generator function takes a dictionary that may contain nested dictionaries as its values
-    and yields key-value pairs where nesting is removed, and keys are composite of 
-    parent and child keys separated by a separator.
+    This function takes a dictionary that may have nested dictionaries as
+    values and flattens it by combining the keys into a single string using
+    a specified separator.
 
     Parameters:
-    - d (Dict[str, Any]): Input dictionary to be flattened.
-    - parent_key (str, optional): Key to be used as parent key in the new flattened dictionary. Defaults to "".
-    - sep (str, optional): Separator to be used between parent and child keys. Defaults to "_".
+        d (Dict[str, Any]): The dictionary to be flattened.
+        parent_key (str, optional): An initial prefix to prepend to keys.
+            Defaults to an empty string.
+        sep (str, optional): The string that separates the concatenated keys.
+            Defaults to an underscore ("_").
 
     Yields:
-    - key-value pairs in flattened form.
+        Tuple[str, Any]: A pair of the new key and its corresponding value in
+        the flattened structure.
 
-    Example:
-    >>> d = {'a': 1, 'b': {'c': 2, 'd': {'e': 3}}}
-    >>> flat_d = dict(_flatten_dict(d))
-    >>> flat_d  # Output: {'a': 1, 'b_c': 2, 'b_d_e': 3}
+    Examples:
+        >>> complex_dict = {'a': 1, 'b': {'c': 2, 'd': {'e': 3}}}
+        >>> flat_items = list(_flatten_dict(complex_dict))
+        >>> print(flat_items)
+        [('a', 1), ('b_c', 2), ('b_d_e', 3)]
+
+    Notes:
+        - Nested dictionaries are expanded and their keys are concatenated.
+        - Lists within the dictionary are enumerated, and their indices become
+          part of the keys.
     """
+    
     for k, v in d.items():
-        new_key = f"{parent_key}{sep}{k}" if parent_key else k  # Generate new key based on parent_key and separator
+        new_key = f"{parent_key}{sep}{k}" if parent_key else k
+        
         if isinstance(v, MutableMapping):
-            # Recursively flatten the nested dictionary and yield from it
-            yield from _flatten_dict(v, new_key, sep)
+            yield from _flatten_dict(v, new_key, sep)   
         elif isinstance(v, list):
-            # If a list is encountered, enumerate through the list and recursively flatten
             for i, item in enumerate(v):
-                yield from _flatten_dict({str(i): item}, new_key)
+                yield from _flatten_dict({str(i): item}, new_key)    
         else:
-            # Yield the key-value pair
             yield (new_key, v)
-            
-def to_flat_dict(d: Dict[str, Any], parent_key: str = "", sep: str = "_") -> Dict[str, Any]:
-    """
-    Flatten a nested dictionary recursively. 
 
-    This function takes a dictionary that may contain nested dictionaries as its values
-    and returns a new dictionary where nesting is removed, and keys are composite of 
-    parent and child keys separated by a separator.
+
+def to_flat_dict(d: Dict[str, Any], 
+                 parent_key: str = "", 
+                 sep: str = "_") -> Dict[str, Any]:
+    """
+    Transforms a nested dictionary into a single-level dictionary with 
+    concatenated keys.
 
     Parameters:
-    - d (Dict[str, Any]): Input dictionary to be flattened.
-    - parent_key (str, optional): Key to be used as parent key in the new flattened dictionary. Defaults to "".
-    - sep (str, optional): Separator to be used between parent and child keys. Defaults to "_".
+        d (Dict[str, Any]): A potentially nested dictionary to be transformed
+            into a flat structure.
+        parent_key (str, optional): A prefix to add to each key in the 
+            flattened dictionary. Default is an empty string.
+        sep (str, optional): A string used to separate the elements of
+            concatenated keys. Default is "_".
 
     Returns:
-    - Dict[str, Any]: Flattened dictionary.
+        Dict[str, Any]: The flattened dictionary where each key represents a 
+        path through the original nested keys.
 
-    Example:
-    >>> d = {'a': 1, 'b': {'c': 2, 'd': {'e': 3}}}
-    >>> flat_d = to_flat_dict(d)
-    >>> flat_d  # Output: {'a': 1, 'b_c': 2, 'b_d_e': 3}
+    Examples:
+        >>> complex_dict = {'a': 1, 'b': {'c': 2, 'd': {'e': 3}}}
+        >>> flat_version = to_flat_dict(complex_dict)
+        >>> print(flat_version)
+        {'a': 1, 'b_c': 2, 'b_d_e': 3}
+
+    Notes:
+        - If `parent_key` is provided, it will be prepended to each key followed
+          by the separator.
+        - The function is particularly useful when dealing with JSON-like data
+          structures that need to be simplified for analysis or storage.
     """
     return dict(_flatten_dict(d, parent_key=parent_key, sep=sep))
 
-def _flatten_list(lst: List[Any]):
+def _flatten_list(lst: List[Any]) -> Generator:
+    
     """
-    Flatten a nested list (Generator function).
+    Generates a sequence of elements by flattening a nested list.
 
-    This generator function takes a list that may contain nested lists as its elements
-    and yields values in a flattened manner.
+    This function takes a list that can contain multiple levels of nested lists
+    and yields each element in a sequential order, regardless of its depth in
+    the original list.
 
     Parameters:
-    - lst (List[Any]): Input list to be flattened.
+        lst (List[Any]): The list to be flattened. It can be a simple list or
+        one with nested sublists.
 
     Yields:
-    - Elements in flattened form.
+        Any: The next element in the flattened version of the original nested
+        list.
 
-    # Examples:
-    >>> list(_flatten_list([1, 2, [3, 4, [5, 6], 7], 8]))
-    [1, 2, 3, 4, 5, 6, 7, 8]
+    Examples:
+        >>> complex_list = [1, [2, [3, 4], 5], 6]
+        >>> flattened_list = list(_flatten_list(complex_list))
+        >>> print(flattened_list)
+        [1, 2, 3, 4, 5, 6]
+
+    Notes:
+        - The function uses recursion to handle lists within lists.
+        - It is a generator function, so it yields elements one by one instead
+          of returning a list.
     """
     for el in lst:
         if isinstance(el, list):
-            # If an element is a list, recursively flatten it and yield from it
             yield from _flatten_list(el)
         else:
-            # Yield the element
             yield el
 
-def to_flat_list(lst: List[Any], dropna: bool = True) -> List[Any]:
-    """
-    Convert to a flat list.
 
-    This function takes a list that may contain nested lists and/or None values
-    and returns a new list where nesting is removed. Optionally, None values can be dropped.
+def _flat_list(lst: List[Any], dropna: bool = True) -> List[Any]:
+    """
+    Flattens a nested list into a single-level list, with an option to exclude None values.
+
+    This function takes a list that may contain other lists as elements and flattens it,
+    producing a one-dimensional list. It can also be configured to omit all None values
+    from the resulting list.
 
     Parameters:
-    - lst (List[Any]): Input list to be flattened.
-    - dropna (bool, optional): Whether to drop None values. Defaults to True.
+        lst (List[Any]): The list to be flattened. It may contain nested lists.
+        dropna (bool, optional): Whether to exclude None values from the flattened list.
+            Defaults to True, which removes None values.
 
     Returns:
-    - List[Any]: Flattened list.
+        List[Any]: A flattened version of the input list. If dropna is True, the resulting
+                   list will not contain any None values.
 
-    Example:
-    >>> to_flat_list([1, None, 2, [3, None, 4, [5, None], 6], 7, None, 8])
-    [1, 2, 3, 4, 5, 6, 7, 8]
+    Examples:
+        >>> example_list = [1, [2, None, [3, None], 4], 5]
+        >>> _flat_list(example_list)
+        [1, 2, 3, 4, 5]
+        
+        >>> _flat_list(example_list, dropna=False)
+        [1, 2, None, 3, None, 4, 5]
+
+    Notes:
+        - This function internally uses a generator to perform the flattening.
+        - Setting dropna to False retains None values, which may be desired if None
+          represents meaningful information, such as missing data.
     """
     if dropna:
         return [el for el in _flatten_list(lst) if el is not None]
     else:
         return list(_flatten_list(lst))
 
-def to_list(input_: Union[Iterable, Any], flat_dict: bool = False, flat: bool = True, dropna: bool = True) -> List[Any]:
-    """
-    Convert various types to a list.
 
-    This function takes an input of various types (iterables, dictionaries, or single values)
-    and converts it into a list. It has options for flattening dictionaries and lists.
+def to_list(input_: Union[Iterable, Any], 
+            flat_dict: bool = False, 
+            flat: bool = True, 
+            dropna: bool = True) -> List[Any]:
+    """
+    Converts input of various types to a list with options for flattening.
+
+    This function accepts an iterable, dictionary, or single value and converts it
+    into a list. It offers options to flatten nested dictionaries into single-key
+    entries and to flatten nested lists.
 
     Parameters:
-    - input_ (Union[Iterable, Any]): Input to be converted to a list.
-    - flat_dict (bool, optional): Whether to flatten dictionaries. Defaults to False.
-    - flat (bool, optional): Whether to return a flattened list. Defaults to True.
-    - dropna (bool, optional): Whether to drop None values. Defaults to True.
+        input_ (Union[Iterable, Any]): The input to be converted to a list.
+        flat_dict (bool, optional): If True, flattens dictionaries such that each
+            key-value pair becomes a single-item dictionary in the list.
+            Defaults to False.
+        flat (bool, optional): If True, flattens any nested lists in the input.
+            Defaults to True.
+        dropna (bool, optional): If True, removes any 'None' values from the list.
+            Defaults to True.
 
     Returns:
-    - List[Any]: Converted list.
+        List[Any]: A list representation of the input. Depending on the flags, this
+            list may be flattened and/or have 'None' values removed.
+
+    Raises:
+        ValueError: If the input is None, callable, or otherwise not convertible to a list.
 
     Examples:
-        >>> to_list({"a": 1, "b": {"c": 2}}, flat_d=True)
-        >>> output: [{'a': 1}, {'b_c': 2}]
+        >>> to_list({"a": 1, "b": {"c": 2}}, flat_dict=True)
+        [{'a': 1}, {'b_c': 2}]
+        
         >>> to_list([1, 2, [3, 4]])
-        >>> output: [1, 2, 3, 4]
+        [1, 2, 3, 4]
     """
     if input_ is None or callable(input_):
         raise ValueError("None or callable types are not supported.")
@@ -153,32 +218,50 @@ def to_list(input_: Union[Iterable, Any], flat_dict: bool = False, flat: bool = 
                 out = [i for i in input_]
         else:
             out = [input_]
-        return to_flat_list(out, dropna=dropna) if flat else out
+        return _flat_list(out, dropna=dropna) if flat else out
     except Exception as e:
         raise ValueError(f"Input can't be converted to list. Error: {e}")
-    
-def str_to_num(str_: str, upper_bound: Union[int, float]=100, 
-                        lower_bound: Union[int, float]=1, type_: type=int, precision: int=None) -> Union[int, float, str]:
-    """
-    Convert a string to a number within specified bounds.
 
-    This function takes a string and extracts numbers from it. 
-    It then converts the extracted number to the specified type 
-    and checks if it falls within the defined bounds.
+
+def str_to_num(str_: str, 
+               upper_bound: Union[int, float]=100, 
+               lower_bound: Union[int, float]=1, 
+               type_: type=int, 
+               precision: int=None) -> Union[int, float, str]:
+    """
+    Converts a numeric string into a number, ensuring it is within specified bounds.
+
+    This function searches for numeric patterns in a string, converts the found number
+    to a specified type, and ensures it lies within an inclusive range defined by
+    `lower_bound` and `upper_bound`. If the type is float and `precision` is specified,
+    the number is rounded to that many decimal places.
 
     Parameters:
-    - str_ (str): Input string containing the number.
-    - upper_bound (Union[int, float], optional): Upper bound for the number. Defaults to 100.
-    - lower_bound (Union[int, float], optional): Lower bound for the number. Defaults to 1.
-    - type_ (type, optional): Type to which the number should be converted. Defaults to int.
-    - precision (int, optional): Number of decimal places if the type is float. Defaults to None.
+        str_ (str): The string to extract the number from.
+        upper_bound (Union[int, float], optional): The maximum allowable number. 
+            Defaults to 100.
+        lower_bound (Union[int, float], optional): The minimum allowable number. 
+            Defaults to 1.
+        type_ (type, optional): The data type to convert the number to. 
+            Defaults to int.
+        precision (int, optional): The number of decimal places for rounding if the 
+            type is float. Only applies when `type_` is float. Defaults to None.
 
     Returns:
-    - Union[int, float, str]: Converted number or a string indicating out-of-bound value.
+        Union[int, float, str]: The number converted from the string, adhering to
+        the specified type and precision, or an explanatory string if the number
+        is out of bounds.
+
+    Raises:
+        ValueError: If the string does not contain a number, or if the number is not
+                    within the specified bounds, or if `upper_bound` is less than 
+                    `lower_bound`.
 
     Example:
-    >>> str_to_num("abc 123", upper_bound=200)
-    >>> 123  # Output
+        >>> str_to_num("The value is 123.45.")
+        123
+        >>> str_to_num("123.45", type_=float, precision=1)
+        123.5
     """
     try:
         numbers = re.findall(r'\d+\.?\d*', str_)
@@ -198,95 +281,148 @@ def str_to_num(str_: str, upper_bound: Union[int, float]=100,
     elif num > upper_bound:
         return f"Number {num} greater than upper bound {upper_bound}"
 
+
 def create_copies(input_: Any, n: int) -> List[Any]:
     """
-    Create multiple deep copies of an object.
+    Creates multiple deep copies of a given object.
+
+    Given an input object, this function generates a list containing a specified
+    number of deep copies of that object. Deep copying ensures that all nested
+    objects are independently duplicated.
 
     Parameters:
-    - input_ (Any): The object to be copied.
-    - n (int): Number of copies.
+        input_ (Any): The object to duplicate.
+        n (int): The number of deep copies to create.
 
     Returns:
-    - List[Any]: List of deep copies.
+        List[Any]: A list containing 'n' deep copies of the 'input_' object.
 
-    Example:
-    >>> create_multiple_copies({"a": 1}, 2)
-    >>> [{"a": 1}, {"a": 1}]  # Output
+    Examples:
+        >>> create_copies({"a": 1}, 2)
+        [{'a': 1}, {'a': 1}]
+
+    Notes:
+        - The 'copy.deepcopy()' function from the 'copy' module is used to create deep copies.
+        - This function can be used with any object that is 'deepcopy' compatible.
     """
     return [copy.deepcopy(input_) for _ in range(n)]
 
 def dict_to_temp(d: Dict[str, Any]) -> tempfile.NamedTemporaryFile:
     """
-    Save a dictionary to a temporary file.
+    Writes a dictionary to a named temporary file in JSON format.
+
+    This function takes a dictionary and saves its JSON representation to a
+    named temporary file, which can be accessed through the file's name attribute.
+    The temporary file is not immediately deleted upon closure, allowing for its
+    use even after the file object is closed.
 
     Parameters:
-    - d (Dict[str, Any]): The dictionary to be saved.
+        d (Dict[str, Any]): The dictionary to serialize and save.
 
     Returns:
-    - tempfile.NamedTemporaryFile: The temporary file object.
+        tempfile.NamedTemporaryFile: A temporary file object that points to the
+                                     file containing the JSON data.
 
-    Example:
-    >>> temp_file = dict_to_temp_file({"a": 1})
-    >>> temp_file.name  # Output will be the temporary file's name.
+    Examples:
+        >>> temp_file = dict_to_temp({"a": 1})
+        >>> print(temp_file.name)  # Displays the path to the temporary file.
     """
     temp = tempfile.NamedTemporaryFile(mode="w", delete=False)
     json.dump(d, temp)
     temp.close()
     return temp
 
-def to_csv(input_, filename, out=False, exist_ok=False):
+
+def to_csv(input_: List[Dict[str, Any]], 
+           filename: str, 
+           out: bool = False,
+           exist_ok: bool = False) -> Optional[List[Dict[str, Any]]]:
     """
-    Converts a list of dictionaries to a CSV file.
-    
+    Converts and writes a list of dictionaries to a CSV file.
+
+    This function expects a uniform list of dictionaries, which it writes
+    to a CSV file with headers corresponding to the dictionary keys. It can
+    also ensure the existence of the directory for the CSV file and
+    optionally return the original data.
+
     Args:
-        input_ (list): List of dictionaries to be converted to CSV.
-        filename (str): Name of the csv file to write the data to.
-        out (bool): Whether to return the list of dictionaries as is.
-        exist_ok (bool): Whether to create the directory if it does not exist.
+        input_ (List[Dict[str, Any]]): A list of dictionaries to be written
+            to a CSV file.
+        filename (str): The file path for the CSV output.
+        out (bool, optional): If True, returns the input list of
+            dictionaries; otherwise, returns None. Defaults to False.
+        exist_ok (bool, optional): If True, will create the directory path
+            for the file if it does not exist. Defaults to False.
 
     Returns:
-        list or None: Returns the list of dictionaries if `out` is True, otherwise None.
+        Optional[List[Dict[str, Any]]]: The list of dictionaries if `out`
+            is True; otherwise, None.
+
+    Raises:
+        FileNotFoundError: If the directory does not exist and `exist_ok`
+            is False.
+
+    Examples:
+        >>> data_dicts = [{'id': 1, 'value': 10}, {'id': 2, 'value': 20}]
+        >>> to_csv(data_dicts, 'output.csv')
+        # CSV file 'output.csv' is created with data from 'data_dicts'.
+
+        >>> to_csv(data_dicts, 'output.csv', out=True)
+        # CSV file 'output.csv' is created, and 'data_dicts' is returned.
     """
-    # Check if the directory exists. If not, create it.
     dir_name = os.path.dirname(filename)
     if dir_name and not os.path.exists(dir_name):
         os.makedirs(dir_name, exist_ok=exist_ok)
-    
-    # Convert input_ to a list of dictionaries
+
     list_of_dicts = input_
-    
-    # Extract headers from the first dictionary, assuming all dictionaries have the same keys
     if list_of_dicts:
         headers = list(list_of_dicts[0].keys())
-        
         with open(filename, 'w', newline='') as csvfile:
             writer = csv.DictWriter(csvfile, fieldnames=headers)
-            
             writer.writeheader()
             for row in list_of_dicts:
                 writer.writerow(row)
-
     if out:
         return list_of_dicts
 
-# Hold call, a delayed call with error handling
-def hold_call(input_, func_, hold=5, msg=None, ignore=False, **kwargs):
+
+def hold_call(input_: Any, 
+              func_: Callable, 
+              hold: int = 5, 
+              msg: Optional[str] = None, 
+              ignore: bool = False, 
+              **kwargs) -> Any:
     """
-    Executes a function after a specified hold time and handles exceptions.
+    Delays function execution with optional error handling.
+
+    Executes `func_` with `input_` after a delay, with optional exception
+    handling. If `ignore` is True, exceptions are caught and logged; 
+    otherwise, they are raised.
 
     Args:
-        input_ (Any): The input to the function.
-        func_ (Callable): The function to execute.
-        hold (int, optional): The time in seconds to wait before executing the function. Defaults to 5.
-        msg (str, optional): The message to display in case of an error.
-        ignore (bool, optional): Whether to ignore errors and print the message. Defaults to False.
-        **kwargs: Additional keyword arguments to pass to the function.
+        input_ (Any): Input to pass to the function.
+        func_ (Callable): Function to be executed.
+        hold (int, optional): Delay before execution in seconds. 
+            Defaults to 5.
+        msg (Optional[str], optional): Error message to display on exception. 
+            If not provided, a default error message is generated.
+        ignore (bool, optional): If True, suppresses and logs exceptions;
+            otherwise, exceptions are raised. Defaults to False.
+        **kwargs: Additional keyword arguments for `func_`.
 
     Returns:
-        Any: The result of the function execution or None if 'ignore' is True and an exception occurs.
+        Any: Result of `func_` if successful, None if ignored on error.
 
     Raises:
-        Exception: If any error occurs during function execution and 'ignore' is False.
+        Exception: If `ignore` is False and an exception occurs.
+    
+    Examples:
+        >>> def add(a: int, b: int) -> int:
+        ...     return a + b
+        >>> hold_call((1, 2), add, hold=2)
+        3
+        >>> hold_call((1, 'a'), add, hold=2, ignore=True, msg="Add failed.")
+        Add failed. Error: ...
     """
     try: 
         time.sleep(hold)
@@ -299,25 +435,44 @@ def hold_call(input_, func_, hold=5, msg=None, ignore=False, **kwargs):
             return None
         else:
             raise Exception(msg)
-        
-# Asynchronous hold call
-async def ahold_call(input_, func_, hold=5, msg=None, ignore=False, **kwargs):
+
+
+async def ahold_call(input_: Any, 
+                     func_: Callable, 
+                     hold: int = 5, 
+                     msg: Optional[str] = None, 
+                     ignore: bool = False, 
+                     **kwargs) -> Any:
     """
-    Asynchronously executes a function after a specified hold time and handles exceptions.
+    Asynchronously calls a function with a delay and optional error handling.
+
+    Waits for a specified duration before calling the provided asynchronous function. 
+    If an error occurs, the behavior is determined by the `ignore` flag; the error is 
+    either logged or raised.
 
     Args:
-        input_ (Any): The input to the function.
-        func_ (Callable): The async function to execute.
-        hold (int, optional): The time in seconds to wait before executing the function. Defaults to 5.
-        msg (str, optional): The message to display in case of an error.
-        ignore (bool, optional): Whether to ignore errors and print the message. Defaults to False.
-        **kwargs: Additional keyword arguments to pass to the function.
+        input_ (Any): Input for the function.
+        func_ (Callable): Async function to call.
+        hold (int, optional): Delay in seconds before calling `func_`. Default is 5.
+        msg (Optional[str], optional): Message to log on error. If None, a default 
+            message is generated. Default is None.
+        ignore (bool, optional): If True, suppresses and logs errors; otherwise, 
+            raises errors. Default is False.
+        **kwargs: Extra arguments for `func_`.
 
     Returns:
-        Any: The result of the function execution or None if 'ignore' is True and an exception occurs.
+        Any: The function's result on success, or None if an error is ignored.
 
     Raises:
-        Exception: If any error occurs during function execution and 'ignore' is False.
+        TypeError: If `func_` is not an asynchronous function.
+        Exception: If an error occurs and `ignore` is False.
+
+    Examples:
+        >>> async def async_add(a, b): return a + b
+        >>> await ahold_call((1, 2), async_add, 2)
+        3
+        >>> await ahold_call((1, 'a'), async_add, 2, ignore=True, msg="Failed.")
+        Failed. Error: ...
     """
     try: 
         if not asyncio.iscoroutinefunction(func_):
@@ -333,25 +488,34 @@ async def ahold_call(input_, func_, hold=5, msg=None, ignore=False, **kwargs):
         else:
             raise Exception(msg)
 
-# List call, applies function on each element in a list
-def l_call(input_: Any, func_: Callable, 
-           flat_dict: bool = False, flat: bool = False, 
+
+def l_call(input_: Any, 
+           func_: Callable, 
+           flat_dict: bool = False, 
+           flat: bool = False, 
            dropna: bool = True) -> List[Any]:
     """
-    Applies a function to each element in a list, where the list is created from the input.
+    Applies a function to elements in a list derived from the input.
+
+    This function converts the input into a list and then applies a provided function 
+    to each element in the list. Options to flatten nested structures within the input 
+    are available.
 
     Args:
-        input_ (Any): The input to convert into a list.
-        func_ (Callable): The function to apply to each element in the list.
-        flat_dict (bool, optional): Whether to flatten dictionaries. Defaults to False.
-        flat (bool, optional): Whether to flatten lists. Defaults to False.
-        dropna (bool, optional): Whether to drop None values. Defaults to True.
+        input_ (Any): Input to be transformed into a list.
+        func_ (Callable): Function to apply to each list element.
+        flat_dict (bool, optional): Flatten dictionaries within the input. 
+            Defaults to False.
+        flat (bool, optional): Flatten nested lists within the input. 
+            Defaults to False.
+        dropna (bool, optional): Exclude None values from the final list. 
+            Defaults to True.
 
     Returns:
-        List[Any]: A list of results after applying the function.
+        List[Any]: Results after the function application.
 
     Raises:
-        ValueError: If the given function is not callable or cannot be applied to the input.
+        ValueError: If the function cannot be applied to the input.
     """
     try:
         lst = to_list(input_, flat_dict=flat_dict, flat=flat, dropna=dropna)
@@ -359,25 +523,34 @@ def l_call(input_: Any, func_: Callable,
     except Exception as e:
         raise ValueError(f"Given function cannot be applied to the input. Error: {e}")
 
-# Asynchronous list call, applies function on each element in a list
-async def al_call(input_: Any, func_: Callable, 
-                  flat_dict: bool = False, flat: bool = False, 
+
+async def al_call(input_: Any, 
+                  func_: Callable, 
+                  flat_dict: bool = False, 
+                  flat: bool = False, 
                   dropna: bool = True) -> List[Any]:
     """
-    Asynchronously applies a function to each element in a list, where the list is created from the input.
+    Asynchronously applies a function to elements in a list from the input.
+
+    Converts the input into a list and applies an asynchronous function to each element. 
+    The function supports flattening of nested lists and dictionaries and can exclude 
+    None values.
 
     Args:
-        input_ (Any): The input to convert into a list.
-        func_ (Callable): The async function to apply to each element in the list.
-        flat_dict (bool, optional): Whether to flatten dictionaries. Defaults to False.
-        flat (bool, optional): Whether to flatten lists. Defaults to False.
-        dropna (bool, optional): Whether to drop None values. Defaults to True.
+        input_ (Any): Input to be converted into a list.
+        func_ (Callable): Async function to apply to each list element.
+        flat_dict (bool, optional): Flatten dictionaries in the input. 
+            Defaults to False.
+        flat (bool, optional): Flatten nested lists in the input. 
+            Defaults to False.
+        dropna (bool, optional): Omit None values from the list. 
+            Defaults to True.
 
     Returns:
-        List[Any]: A list of results after asynchronously applying the function.
+        List[Any]: Async function results for each list element.
 
     Raises:
-        ValueError: If the given function is not callable or cannot be applied to the input.
+        ValueError: If the async function cannot be applied to the input.
     """
     try:
         lst = to_list(input_, flat_dict=flat_dict, flat=flat, dropna=dropna)
@@ -386,95 +559,127 @@ async def al_call(input_: Any, func_: Callable,
     except Exception as e:
         raise ValueError(f"Given function cannot be applied to the input. Error: {e}")
 
-# Map call, applies function on each element in a list, element-wise mapped
-def m_call(input_: Any, func_: Callable, 
-           flat_dict: bool = False, flat: bool = False, 
+
+def m_call(input_: Any, 
+           func_: Callable, 
+           flat_dict: bool = False, 
+           flat: bool = False, 
            dropna: bool=True) -> List[Any]:
     """
-    Applies multiple functions to multiple inputs. Each function is applied to its corresponding input.
+    Element-wise applies functions to the corresponding inputs.
+
+    Each input from the provided list is paired with a corresponding function
+    from the functions list. The function is then applied to its paired input.
 
     Args:
-        input_ (Any): The inputs to be converted into a list.
-        func_ (Callable): The functions to be converted into a list.
-        flat_dict (bool, optional): Whether to flatten dictionaries. Defaults to False.
-        flat (bool, optional): Whether to flatten lists. Defaults to False.
-        dropna (bool, optional): Whether to drop None values. Defaults to True.
+        input_ (Any): Inputs to be converted and processed.
+        func_ (Callable): Functions to be applied to inputs.
+        flat_dict (bool, optional): Flatten input dictionaries. Defaults to False.
+        flat (bool, optional): Flatten input lists. Defaults to False.
+        dropna (bool, optional): Exclude None values. Defaults to True.
 
     Returns:
-        List[Any]: A list of results after applying the functions to the inputs.
+        List[Any]: Results from applying functions to inputs.
 
     Raises:
-        AssertionError: If the number of inputs and functions are not the same.
+        AssertionError: If the count of inputs doesn't match functions.
     """
     lst_input = to_list(input_, flat_dict=flat_dict, flat=flat, dropna=dropna)
     lst_func = to_list(func_)
     assert len(lst_input) == len(lst_func), "The number of inputs and functions must be the same."
-    return to_list([l_call(inp, f, flat_dict=flat_dict, flat=flat, dropna=dropna) for f, inp in zip(lst_func, lst_input)], flat=True)
+    return to_list([l_call(inp, f, flat_dict=flat_dict, flat=flat, dropna=dropna) 
+                    for f, inp in zip(lst_func, lst_input)], flat=True)
 
-# Asynchronous map call, applies function on each element in a list, element-wise mapped
+
 async def am_call(input_: Any, func_: Callable, 
                   flat_dict: bool = False, flat: bool = False, 
                   dropna: bool=True) -> List[Any]:
     """
-    Asynchronously applies multiple functions to multiple inputs. Each function is applied to its corresponding input.
+    Asynchronously element-wise applies functions to corresponding inputs.
+
+    Similar to `m_call`, but each function is applied asynchronously to its
+    corresponding input. This is suited for I/O-bound or high-latency operations.
 
     Args:
-        input_ (Any): The inputs to be converted into a list.
-        func_ (Callable): The functions to be converted into a list.
-        flat_dict (bool, optional): Whether to flatten dictionaries. Defaults to False.
-        flat (bool, optional): Whether to flatten lists. Defaults to False.
-        dropna (bool, optional): Whether to drop None values. Defaults to True.
+        input_ (Any): Inputs for conversion and processing.
+        func_ (Callable): Async functions for input application.
+        flat_dict (bool, optional): Flatten dictionaries in inputs. Defaults to False.
+        flat (bool, optional): Flatten lists in inputs. Defaults to False.
+        dropna (bool, optional): Omit None values from results. Defaults to True.
 
     Returns:
-        List[Any]: A list of results after asynchronously applying the functions to the inputs.
+        List[Any]: Results from async function applications.
 
     Raises:
-        AssertionError: If the number of inputs and functions are not the same.
+        AssertionError: If inputs and functions counts don't align.
     """
     lst_input = to_list(input_, flat_dict=flat_dict, flat=flat, dropna=dropna)
     lst_func = to_list(func_)
-    assert len(lst_input) == len(lst_func), "The number of inputs and functions must be the same."
+    assert len(lst_input) == len(lst_func), "Input and function counts must match."
     
-    tasks = [al_call(inp, f, flat_dict=flat_dict, flat=flat, dropna=dropna) for f, inp in zip(lst_func, lst_input)]
+    tasks = [al_call(inp, f, flat_dict=flat_dict, flat=flat, dropna=dropna) 
+             for f, inp in zip(lst_func, lst_input)]
     out = await asyncio.gather(*tasks)
     return to_list(out, flat=True)
 
+
+# rewrite these documentation to more readable, understandable and easier to follow, lint with pep-8, and Enforce length limit  -------
+
 # Explode call, applies a list of functions to each element in the input list
-def e_call(input_: Any, func_: Callable, 
-           flat_dict: bool = False, flat: bool = False, 
+def e_call(input_: Any, 
+           func_: Callable, 
+           flat_dict: bool = False, 
+           flat: bool = False, 
            dropna: bool = True) -> List[Any]:
     """
-    Applies a list of functions to each element in the input list.
+    Applies each function from a list to every element in the input list.
+
+    The input is converted into a list, and each element of this list is then
+    passed through a series of functions, effectively 'exploding' the list
+    with the results of these function applications.
 
     Args:
-        input_ (Any): The input to be converted into a list.
-        func_ (Callable): The functions to be converted into a list.
-        flat_dict (bool, optional): Whether to flatten dictionaries. Defaults to False.
-        flat (bool, optional): Whether to flatten lists. Defaults to False.
-        dropna (bool, optional): Whether to drop None values. Defaults to True.
+        input_ (Any): Input to convert into a list and process.
+        func_ (Callable): Functions to apply to each input element.
+        flat_dict (bool, optional): Flatten input dictionaries. Defaults to False.
+        flat (bool, optional): Flatten resulting lists. Defaults to False.
+        dropna (bool, optional): Exclude None values from results. Defaults to True.
 
     Returns:
-        List[Any]: A list of results after applying the functions to the inputs.
+        List[Any]: Results from applying each function to input elements.
+
+    Example:
+        >>> e_call([1, 2], [lambda x: x+1, lambda x: x*2])
+        [2, 4, 3, 6]  # Assuming flat=True
     """
-    f = lambda x, y: m_call(create_copies(x, len(to_list(y))), y, flat_dict=flat_dict, flat=flat, dropna=dropna)
+    f = lambda x, y: m_call(create_copies(x, len(to_list(y))), y, 
+                            flat_dict=flat_dict, flat=flat, dropna=dropna)
     return to_list([f(inp, func_) for inp in to_list(input_)], flat=flat)
 
-# Asynchronous explode call, applies a list of functions to each element in the input list
+
 async def ae_call(input_: Any, func_: Callable, 
                   flat_dict: bool = False, flat: bool = False, 
                   dropna: bool = True) -> List[Any]:
     """
-    Asynchronously applies a list of functions to each element in the input list.
+    Asynchronously applies each function from a list to every element in the input list.
+
+    Similar to `e_call` but operates asynchronously. This is particularly beneficial
+    when the functions involve I/O operations or any other high-latency tasks.
 
     Args:
-        input_ (Any): The input to be converted into a list.
-        func_ (Callable): The functions to be converted into a list.
-        flat_dict (bool, optional): Whether to flatten dictionaries. Defaults to False.
-        flat (bool, optional): Whether to flatten lists. Defaults to False.
-        dropna (bool, optional): Whether to drop None values. Defaults to True.
+        input_ (Any): Input to be converted and processed asynchronously.
+        func_ (Callable): Async functions to apply to each input element.
+        flat_dict (bool, optional): Flatten dictionaries in input. Defaults to False.
+        flat (bool, optional): Flatten resulting lists. Defaults to False.
+        dropna (bool, optional): Omit None values from results. Defaults to True.
 
     Returns:
-        List[Any]: A list of results after asynchronously applying the functions to the inputs.
+        List[Any]: Results from applying each function to input elements.
+
+    Example:
+        # Assuming 'async_func' is an async function and flat=True
+        >>> await ae_call([1, 2], [async_func])
+        # Results after asynchronous execution
     """
     async def async_f(x, y):
         return await am_call(create_copies(x, len(to_list(y))), y, flat_dict=flat_dict, flat=flat, dropna=dropna)
