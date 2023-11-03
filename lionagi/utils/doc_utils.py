@@ -228,10 +228,17 @@ def get_bins(items: List[str], upper: int = 7500) -> List[List[int]]:
     >>> get_bins(items, upper)
     [[0, 1, 2], [3], [4, 5, 6, 7]]
     """
+    current = 0
     bins = []
+    bin = []
     for idx, item in enumerate(items):
-        if idx == 0 or (current := current + len(item)) >= upper:
-            bins.append([])
+        if current + len(item) < upper:
+            bin.append(idx)
+            current += len(item)
+        elif current + len(item) >= upper:
+            bins.append(bin)
+            bin = [idx]
             current = len(item)
-        bins[-1].append(idx)
+        if idx == len(items) - 1 and len(bin) > 0:
+            bins.append(bin)
     return bins
