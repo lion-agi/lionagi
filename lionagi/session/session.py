@@ -19,9 +19,9 @@ import asyncio
 from typing import Any, Dict, Optional
 from .SessionConfigs import SessionConfig
 from .Conversation import Conversation
-from ..api.base_service import StatusTracker
+from ..api.BaseService import StatusTracker
 from ..api.Services import sync_api_service
-from ..utils.log_utils import LLMLogger
+from ..utils.LogUtils import LLMLogger
 
 llmlog = LLMLogger()
 status_tracker = StatusTracker()

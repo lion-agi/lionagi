@@ -18,8 +18,8 @@ import math
 from pathlib import Path
 from typing import Any, Dict, List, Union
 
-from .sys_utils import to_list, l_call
-from .log_utils import SourceLogger
+from .SysUtils import to_list, l_call
+from .LogUtils import SourceLogger
 
 
 def dir_to_path(dir_, ext_, recursive=False, flat=True):

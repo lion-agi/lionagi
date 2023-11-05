@@ -1,6 +1,6 @@
 import asyncio
 import logging
-from .base_service import BaseAPIService
+from .BaseService import BaseAPIService
 
 class AsyncAPIService(BaseAPIService):
     """

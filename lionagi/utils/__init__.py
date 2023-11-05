@@ -14,7 +14,7 @@ Copyright 2023 HaiyangLi <ocean@lionagi.ai>
    limitations under the License.
 """
 
-from .sys_utils import (
+from .SysUtils import (
     to_flat_dict, 
     to_list, 
     str_to_num,
@@ -30,7 +30,7 @@ from .sys_utils import (
     e_call,
     ae_call,
 )
-from .doc_utils import (
+from .DocUtils import (
     dir_to_path,
     read_text,
     dir_to_files,
