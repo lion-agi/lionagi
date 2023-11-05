@@ -17,7 +17,7 @@ Copyright 2023 HaiyangLi <ocean@lionagi.ai>
 import os
 from datetime import datetime
 
-from .sys_utils import to_csv
+from .SysUtils import to_csv
 
 class DataLogger:
     def __init__(self, log: list = None) -> None:
