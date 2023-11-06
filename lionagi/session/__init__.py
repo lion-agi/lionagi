@@ -14,7 +14,7 @@ Copyright 2023 HaiyangLi <ocean@lionagi.ai>
    limitations under the License.
 """
 
-from .Session import Session, llmlog
-from .MultiSession import MultiSession
+from .session import Session, llmlog
+from .multisession import MultiSession
 
 __all__ = ["Session", "MultiSession", "llmlog"]

@@ -14,7 +14,7 @@ Copyright 2023 HaiyangLi <ocean@lionagi.ai>
    limitations under the License.
 """
 
-from .Message import massenger
+from .message import massenger
 
 class Conversation:
     """

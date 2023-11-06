@@ -17,11 +17,11 @@ Copyright 2023 HaiyangLi <ocean@lionagi.ai>
 import aiohttp
 import asyncio
 from typing import Any, Dict, Optional
-from .SessionConfigs import SessionConfig
-from .Conversation import Conversation
-from ..api.BaseService import StatusTracker
-from ..api.Services import sync_api_service
-from ..utils.LogUtils import LLMLogger
+from .sessionconfigs import SessionConfig
+from .conversation import Conversation
+from lionagi.api.baseservice import StatusTracker
+from lionagi.api.services import sync_api_service
+from lionagi.utils.logutils import LLMLogger
 
 llmlog = LLMLogger()
 status_tracker = StatusTracker()
