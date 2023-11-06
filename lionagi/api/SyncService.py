@@ -18,7 +18,7 @@ import logging
 import time
 from queue import Queue
 import requests
-from .BaseService import BaseAPIService
+from .baseservice import BaseAPIService
 
 class SyncAPIService(BaseAPIService):
     

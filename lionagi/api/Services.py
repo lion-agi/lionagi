@@ -15,8 +15,8 @@ Copyright 2023 HaiyangLi <ocean@lionagi.ai>
 """
 
 import os
-from .SyncService import SyncAPIService
-from .AsyncService import AsyncAPIService
+from .syncservice import SyncAPIService
+from .asyncservice import AsyncAPIService
 
 async_api_service = AsyncAPIService(
     api_key=os.getenv("OPENAI_API_KEY"),
