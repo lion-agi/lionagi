@@ -17,7 +17,7 @@ Copyright 2023 HaiyangLi <ocean@lionagi.ai>
 from typing import Any, Callable, Dict, List, Optional
 import asyncio
 
-from lionagi.utils.sysutils import create_copies, l_call
+from ..utils.sysutils import create_copies, l_call
 from .sessionconfigs import SessionConfig
 from .session import Session
 
