@@ -19,9 +19,9 @@ import asyncio
 from typing import Any, Dict, Optional
 from .sessionconfigs import SessionConfig
 from .conversation import Conversation
-from lionagi.api.baseservice import StatusTracker
-from lionagi.api.services import sync_api_service
-from lionagi.utils.logutils import LLMLogger
+from ..api.baseservice import StatusTracker
+from ..api.services import sync_api_service
+from ..utils.logutils import LLMLogger
 
 llmlog = LLMLogger()
 status_tracker = StatusTracker()
