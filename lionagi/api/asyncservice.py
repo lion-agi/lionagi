@@ -3,36 +3,16 @@ import logging
 from .baseservice import BaseAPIService
 
 class AsyncAPIService(BaseAPIService):
-    """
-    Asynchronous API Service for handling API requests concurrently.
-    Inherits from BaseAPIService.
-    """
 
     def __init__(self, api_key, max_requests_per_minute, 
                  max_tokens_per_minute, token_encoding_name, max_attempts):
-        """
-        Initialize the async API service with the given parameters.
-        
-        Parameters:
-        api_key (str): The API key for authentication.
-        max_requests_per_minute (int): Maximum number of API requests per minute.
-        max_tokens_per_minute (int): Maximum number of tokens that can be used per minute.
-        token_encoding_name (str): The encoding name for tokens.
-        max_attempts (int): Maximum number of attempts for an API call.
-        """        
+      
         super().__init__(api_key, max_requests_per_minute, 
                          max_tokens_per_minute, token_encoding_name, max_attempts)
         self.request_queue = asyncio.Queue()
 
     async def enqueue_request(self, session, request_url, payload):
-        """
-        Enqueue a request for processing.
-        
-        Parameters:
-        session (ClientSession): The session for making HTTP requests.
-        request_url (str): The URL to which the request is made.
-        payload (dict): The payload of the request.
-        """
+
         await self.request_queue.put((session, request_url, payload))
 
     async def process_requests(self):

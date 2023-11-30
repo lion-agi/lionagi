@@ -213,11 +213,11 @@ class Session(SessionConfig):
         
         payload = {
             "messages": messages,
-            "model": config['model'],
-            "frequency_penalty": config['frequency_penalty'],
-            "temperature": config['temperature'],
-            "top_p": config['top_p'],
-            "n": config['n']}
+            "model": config.get('model'),
+            "frequency_penalty": config.get('frequency_penalty'),
+            "temperature": config.get('temperature'),
+            "top_p": config.get('top_p'),
+            "n": config.get('n')}
         
         for key in ["stream", "stop", "function_call","functions"]:
             if config[key] is True:

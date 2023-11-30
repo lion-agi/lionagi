@@ -17,32 +17,7 @@ Copyright 2023 HaiyangLi <ocean@lionagi.ai>
 import json
 
 class Message:
-    """
-    Represents a single message in a conversation, which can be a system message,
-    an instruction, or a response.
-    
-    Attributes:
-        role (str): The role associated with the message. Can be 'system', 'user', or 'assistant'.
-        content (Any): The content of the message. This can be any data structure.
-    Methods:
-        _create_message: Internal method to populate the `role` and `content` attributes.
-        __call__: Creates a dictionary representation of the message when the object is called.
-    Sample Usages:
-        ```python
-        # Create a system message
-        msg = Message()
-        print(msg(system="System maintenance scheduled."))
-        
-        # Create a user instruction message with context
-        msg = Message()
-        print(msg(instruction="Open file.", context={"filename": "example.txt"}))
-        
-        # Create an assistant response message
-        msg = Message()
-        print(msg(response={"content": "File opened successfully."}))
-        ```
-    """
-    
+
     def __init__(self, role=None, content=None) -> None:
         self.role = role
         self.content = content
