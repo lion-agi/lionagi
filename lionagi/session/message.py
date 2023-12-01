@@ -1,6 +1,8 @@
 from datetime import datetime
 import json
-from ..new_utils.log_util import DataLogger
+from ..utils.log_util import DataLogger
+
+msglogger = DataLogger()
 
 class Message:
     def __init__(self) -> None:
@@ -8,7 +10,7 @@ class Message:
         self.role = None
         self.content = None
         self.sender = None
-        self.logger = DataLogger()
+        self.logger = msglogger
 
     def __call__(self, system=None, instruction=None, response=None, context=None, sender=None):
         

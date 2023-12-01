@@ -4,9 +4,9 @@ from typing import Any
 
 from .conversation import Conversation
 from ..config.llmconfig import llmconfig
-from ..new_utils.log_util import DataLogger
-from ..new_utils.api_util import StatusTracker
-from ..new_api.OAIService import OpenAIService
+from ..utils.log_util import DataLogger
+from ..utils.api_util import StatusTracker
+from ..api.OAIService import OpenAIService
 
 status_tracker = StatusTracker()
 
