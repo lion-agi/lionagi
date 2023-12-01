@@ -11,7 +11,7 @@ class DataLogger:
         self.log = log if log else []
 
     @staticmethod
-    def generate_id() -> str:
+    def _generate_id() -> str:
         current_time = datetime.now().isoformat().encode('utf-8')
         random_bytes = os.urandom(16)
         return hashlib.sha256(current_time + random_bytes).hexdigest()[:16]
@@ -39,3 +39,4 @@ class DataLogger:
         self.log = []
         if verbose:
             print(f"{n_logs} logs saved to {filepath}")
+            
