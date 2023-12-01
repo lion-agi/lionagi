@@ -12,7 +12,8 @@ __version__ = version["__version__"]
 install_requires = [
     "aiohttp",
     "python-dotenv",
-    "tiktoken"
+    "tiktoken", 
+    "httpx"
 ]
 
 
