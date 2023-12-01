@@ -2,7 +2,6 @@ from datetime import datetime
 import json
 from ..utils.log_util import DataLogger
 
-msglogger = DataLogger()
 
 class Message:
     def __init__(self) -> None:
@@ -10,7 +9,7 @@ class Message:
         self.role = None
         self.content = None
         self.sender = None
-        self.logger = msglogger
+        self.logger = DataLogger()
 
     def __call__(self, system=None, instruction=None, response=None, context=None, sender=None):
         
@@ -35,7 +34,6 @@ class Message:
             "role": self.role,
             "content": json.dumps(self.content) if isinstance(self.content, dict) else self.content
             }
-        
         
         a = {**out, **{
             "id": self.logger.generate_id(),
