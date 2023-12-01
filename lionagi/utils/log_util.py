@@ -1,7 +1,9 @@
-from .sys_util import to_csv
 import os
-from datetime import datetime
 import hashlib
+from datetime import datetime
+
+from .sys_util import to_csv
+
 
 class DataLogger:
     def __init__(self, dir_= None, log: list = None) -> None:

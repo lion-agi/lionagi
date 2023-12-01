@@ -3,8 +3,9 @@ from pathlib import Path
 from typing import Any, Dict, List, Union
 
 from .sys_util import to_list, l_call
-from . import SourceLogger
+from .log_util import DataLogger
 
+# logger needs re-examine 
 
 def dir_to_path(dir_, ext_, recursive=False, flat=True):
 
@@ -52,7 +53,7 @@ def dir_to_files(dir_, ext_, recursive=False, reader=read_text,
     
     if to_csv:
         filename = filename if filename else f"{project}_sources.csv"
-        logger = SourceLogger() if not logger else logger
+        logger = DataLogger() if not logger else logger
         logger.log = logs
         logger.to_csv(dir_=output_dir, filename=filename, verbose=verbose, timestamp=timestamp)
 
