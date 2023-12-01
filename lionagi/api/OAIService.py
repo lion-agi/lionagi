@@ -2,7 +2,7 @@ import asyncio
 import httpx
 import logging
 import tiktoken
-from .BaseService import RateLimiter, BaseAPIService, StatusTracker
+from .baseService import RateLimiter, BaseAPIService, StatusTracker
 from abc import ABC, abstractmethod
 
 class BaseAPIService(ABC):
@@ -105,6 +105,7 @@ class OpenAIService(BaseAPIService):
     def __init__(self, api_key, rate_limiter, token_encoding_name, max_attempts, status_tracker):
         super().__init__(api_key, rate_limiter, token_encoding_name, max_attempts, status_tracker)
 
+    # need correcting
     async def call_api_endpoint(self, endpoint: str, **kwargs):
         # Let each endpoint method handle token counting based on request specifics
         tokens_used = kwargs.pop('tokens_used', 0)
