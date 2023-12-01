@@ -53,8 +53,7 @@ def dir_to_files(dir_, ext_, recursive=False, reader=read_text,
     
     if to_csv:
         filename = filename if filename else f"{project}_sources.csv"
-        logger = DataLogger() if not logger else logger
-        logger.log = logs
+        logger = DataLogger(log=logs) if not logger else logger
         logger.to_csv(dir_=output_dir, filename=filename, verbose=verbose, timestamp=timestamp)
 
     return logs
@@ -188,8 +187,7 @@ def files_to_chunks(d,
     
     if to_csv:
         filename = filename if filename else f"{project}_sources.csv"
-        logger = SourceLogger() if not logger else logger
-        logger.log = logs
+        logger = DataLogger(log=logs) if not logger else logger
         logger.to_csv(dir_=output_dir, filename=filename, verbose=verbose, timestamp=timestamp)
 
     return logs

@@ -36,7 +36,7 @@ class Message:
             }
         
         a = {**out, **{
-            "id": self.logger.generate_id(),
+            "id": self.logger._generate_id(),
             "timestamp": self.timestamp.isoformat(),
             "sender": self.sender
         }}
