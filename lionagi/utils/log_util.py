@@ -1,6 +1,7 @@
 import os
 import hashlib
 from datetime import datetime
+from collections import deque
 
 from .sys_util import to_csv
 
@@ -8,7 +9,7 @@ from .sys_util import to_csv
 class DataLogger:
     def __init__(self, dir_= None, log: list = None) -> None:
         self.dir_ = dir_
-        self.log = log if log else []
+        self.log = deque(log) if log else deque()
 
     @staticmethod
     def _generate_id() -> str:
@@ -32,11 +33,12 @@ class DataLogger:
     def __call__(self, entry):
         self.log.append(entry)
 
-    def _to_csv(self, dir_: str, filename: str, verbose: bool, timestamp: bool):
+    def to_csv(self, dir_: str, filename: str, verbose: bool, timestamp: bool):
         filepath = self._filepath(dir_=dir_, filename=filename, timestamp=timestamp)
-        to_csv(self.log, filepath)
-        n_logs = len(self.log)
-        self.log = []
+        log_list = list(self.log)
+        to_csv(log_list, filepath)
+        n_logs = len(log_list)
+        self.log = deque()
         if verbose:
             print(f"{n_logs} logs saved to {filepath}")
             
