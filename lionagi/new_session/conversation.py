@@ -1,6 +1,9 @@
 from .message import Message
 
 class Conversation:
+    
+    response_counts = 0
+    
     def __init__(self, messages=None) -> None:
         self.messages = messages or []
         self.msg = Message()

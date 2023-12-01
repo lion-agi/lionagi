@@ -1,3 +1,10 @@
+import asyncio
+import httpx
+import logging
+import tiktoken
+from .BaseService import RateLimiter, BaseAPIService, StatusTracker
+from abc import ABC, abstractmethod
+
 class BaseAPIService(ABC):
     def __init__(self, rate_limiter: RateLimiter, api_key: str, token_encoding_name: str, max_attempts: int, status_tracker: StatusTracker):
         self.rate_limiter = rate_limiter
@@ -9,14 +16,6 @@ class BaseAPIService(ABC):
     @abstractmethod
     async def call_api_endpoint(self, endpoint:str, **kwargs):
         pass
-
-
-import asyncio
-import httpx
-import logging
-import tiktoken
-from .BaseService import RateLimiter, BaseAPIService, StatusTracker
-
 
 class OpenAIRateLimiter(RateLimiter):
     def __init__(self, max_requests_per_minute: int, max_tokens_per_minute: int):
@@ -100,7 +99,6 @@ class OpenAIRateLimiter(RateLimiter):
                 f'API endpoint "{api_endpoint}" not implemented in this script'
             )
         
-
 class OpenAIService(BaseAPIService):
     base_url = "https://api.openai.com/v1/"
 

@@ -1,10 +1,11 @@
-from ..utils.sysutils import to_csv
+from .sysutils import to_csv
 import os
 from datetime import datetime
 import hashlib
 
 class DataLogger:
-    def __init__(self, log: list = None) -> None:
+    def __init__(self, dir_= None, log: list = None) -> None:
+        self.dir_ = dir_
         self.log = log if log else []
 
     @staticmethod
