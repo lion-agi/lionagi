@@ -31,12 +31,16 @@ class Message:
                 self.role = "system"
                 self.sender = sender or "system"
                 self.content = system
-        a = {
+        out = {
+            "role": self.role,
+            "content": json.dumps(self.content) if isinstance(self.content, dict) else self.content
+            }
+        
+        
+        a = {**out, **{
             "id": self.logger.generate_id(),
             "timestamp": self.timestamp.isoformat(),
-            "role": self.role,
-            "content": json.dumps(self.content) if isinstance(self.content, dict) else self.content,
             "sender": self.sender
-        }
+        }}
         self.logger(a)
-        return a
+        return out

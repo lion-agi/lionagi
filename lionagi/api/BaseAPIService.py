@@ -49,7 +49,7 @@ class BaseAPIService(ABC):
         self.queue = queue or AsyncQueue()
         
     @abstractmethod
-    async def call_api_endpoint(self) -> Any:
+    async def call_api(self) -> Any:
         """Abstract method to call the API endpoint. Must be implemented by subclasses."""
         pass
 

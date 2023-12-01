@@ -39,7 +39,7 @@ class OpenAIRateLimiter(RateLimiter):
             self.available_request_capacity = self.max_requests_per_minute
             self.available_token_capacity = self.max_tokens_per_minute
             
-    def num_tokens_consumed_from_request(self, payload: dict, api_endpoint: str) -> int:
+    def calculate_num_token(self, payload: dict, api_endpoint: str, token_encoding_name: str) -> int:
         """
         Calculate the number of tokens that a request will consume.
 
@@ -54,7 +54,7 @@ class OpenAIRateLimiter(RateLimiter):
             TypeError: If the payload format is not as expected.
             NotImplementedError: If the API endpoint isn't accounted for in the calculations.
         """
-        encoding = tiktoken.get_encoding(self.token_encoding_name)
+        encoding = tiktoken.get_encoding(token_encoding_name)
         if api_endpoint.endswith("completions"):
             max_tokens = payload.get("max_tokens", 15)
             n = payload.get("n", 1)
@@ -155,16 +155,16 @@ class OpenAIService(BaseAPIService):
             asyncio.TimeoutError: If the request attempts exceed the maximum limit.
         """
         while True:
-            if self.available_request_capacity < 1 or self.available_token_capacity < 10:  # Minimum token count
+            if self.rate_limiter.available_request_capacity < 1 or self.rate_limiter.available_token_capacity < 10:  # Minimum token count
                 await asyncio.sleep(1)  # Wait for capacity
                 continue
             
             endpoint = self.api_endpoint_from_url(request_url)
-            required_tokens = self.rate_limiter.num_tokens_consumed_from_request(payload, endpoint)
+            required_tokens = self.rate_limiter.calculate_num_token(payload, endpoint, self.token_encoding_name)
             
-            if self.available_token_capacity >= required_tokens:
-                self.available_request_capacity -= 1
-                self.available_token_capacity -= required_tokens
+            if self.rate_limiter.available_token_capacity >= required_tokens:
+                self.rate_limiter.available_request_capacity -= 1
+                self.rate_limiter.available_token_capacity -= required_tokens
 
                 request_headers = {"Authorization": f"Bearer {self.api_key}"}
                 attempts_left = self.max_attempts
