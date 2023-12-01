@@ -43,7 +43,7 @@ class RateLimiter(ABC):
         pass
     
     @abstractmethod
-    def calculate_num_token(self) -> int:
+    def calculate_num_token(self, payload: dict, api_endpoint: str, token_encoding_name: str) -> int:
         """
         Calculate the number of tokens needed based on some criteria.
 
