@@ -22,7 +22,7 @@ setuptools.setup(
     version=__version__,
     author="LionAGI",
     author_email="ocean@lionagi.ai",
-    description="Powerful intelligent workflow automation.",
+    description="Towards general automated intelligence.",
     packages=setuptools.find_packages(include=["lionagi*"]),
     install_requires=install_requires,
     classifiers=[
