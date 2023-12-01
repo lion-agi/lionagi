@@ -39,7 +39,7 @@ class OpenAIRateLimiter(RateLimiter):
             self.available_request_capacity = self.max_requests_per_minute
             self.available_token_capacity = self.max_tokens_per_minute
             
-    def num_tokens_consumed_from_request(self, payload: dict, api_endpoint: str) -> int:
+    def calculate_num_token(self, payload: dict, api_endpoint: str) -> int:
         """
         Calculate the number of tokens that a request will consume.
 
@@ -160,7 +160,7 @@ class OpenAIService(BaseAPIService):
                 continue
             
             endpoint = self.api_endpoint_from_url(request_url)
-            required_tokens = self.rate_limiter.num_tokens_consumed_from_request(payload, endpoint)
+            required_tokens = self.rate_limiter.calculate_num_token(payload, endpoint)
             
             if self.available_token_capacity >= required_tokens:
                 self.available_request_capacity -= 1

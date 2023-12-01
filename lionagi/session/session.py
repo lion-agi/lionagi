@@ -6,13 +6,13 @@ from .conversation import Conversation
 from ..config.llmconfig import llmconfig
 from ..utils.log_util import DataLogger
 from ..utils.api_util import StatusTracker
-from ..api.OAIService import OpenAIService
+from ..config.oaiconfig import OAIService
 
 status_tracker = StatusTracker()
 
 class Session():
     
-    def __init__(self, system, dir=None, llmconfig=llmconfig, api_service=OpenAIService()):
+    def __init__(self, system, dir=None, llmconfig=llmconfig, api_service=OAIService):
         self.conversation = Conversation()
         self.system = system
         self.llmconfig = llmconfig
