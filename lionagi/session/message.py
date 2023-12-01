@@ -35,10 +35,10 @@ class Message:
             "content": json.dumps(self.content) if isinstance(self.content, dict) else self.content
             }
         
-        a = {**out, **{
+        a = {**{
             "id": self.logger._generate_id(),
             "timestamp": self.timestamp.isoformat(),
             "sender": self.sender
-        }}
+        }, **out}
         self.logger(a)
         return out
