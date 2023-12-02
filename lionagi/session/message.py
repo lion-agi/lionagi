@@ -5,7 +5,6 @@ from ..utils.log_util import DataLogger
 
 class Message:
     def __init__(self) -> None:
-        self.timestamp = datetime.now()
         self.role = None
         self.content = None
         self.sender = None
@@ -16,7 +15,6 @@ class Message:
         if sum(map(bool, [system, instruction, response])) > 1:
             raise ValueError("Message cannot have more than one role.")
         else:
-            self.timestamp = datetime.now()
             if response:
                 self.role = "assistant"
                 self.sender = sender or "assistant"
@@ -38,7 +36,7 @@ class Message:
         
         a = {**{
             "id": self.logger._generate_id(),
-            "timestamp": self.timestamp.isoformat(),
+            "timestamp": datetime.now().isoformat(),
             "sender": self.sender
         }, **out}
         self.logger(a)
