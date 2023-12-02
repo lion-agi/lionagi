@@ -1,59 +1,79 @@
 import asyncio
 import logging
 import tiktoken
-from typing import Optional
+from typing import Optional, NoReturn, Dict, Any
 
-from .StatusTracker import StatusTracker
-from .AsyncQueue import AsyncQueue
-from .BaseAPIService import BaseAPIService
-from .RateLimiter import RateLimiter
+from ..utils.api_util import AsyncQueue, StatusTracker, RateLimiter, BaseAPIService
 
 
 class OpenAIRateLimiter(RateLimiter):
     """
-    A specialized RateLimiter for OpenAI API.
+    A specialized RateLimiter for managing requests to the OpenAI API.
 
-    Extends the generic RateLimiter to apply replenishing logic specific to
-    OpenAI's rate limits.
+    Extends the generic RateLimiter to enforce specific rate-limiting rules and limits
+    as required by the OpenAI API. This includes maximum requests and tokens per minute
+    and replenishing these limits at regular intervals.
+
+    Attributes:
+        max_requests_per_minute (int): Maximum number of requests allowed per minute.
+        max_tokens_per_minute (int): Maximum number of tokens allowed per minute.
+
+    Methods:
+        rate_limit_replenisher: Coroutine to replenish rate limits over time.
+        calculate_num_token: Calculates the required tokens for a request.
     """
-    
-    def __init__(self, max_requests_per_minute: int, max_tokens_per_minute: int):
+
+    def __init__(self, max_requests_per_minute: int, max_tokens_per_minute: int) -> None:
         """
-        Initialize the rate limiter with specific limits for OpenAI API.
+        Initializes the rate limiter with specific limits for OpenAI API.
 
         Args:
-            max_requests_per_minute: The maximum number of requests allowed per minute.
-            max_tokens_per_minute: The maximum number of tokens allowed per minute.
+            max_requests_per_minute (int): The maximum number of requests allowed per minute.
+            max_tokens_per_minute (int): The maximum number of tokens that can accumulate per minute.
         """
         super().__init__(max_requests_per_minute, max_tokens_per_minute)
     
-    async def rate_limit_replenisher(self, interval: int = 60) -> None:
+    async def rate_limit_replenisher(self) -> NoReturn:
         """
-        Replenish the rate limits at a regular interval.
+        Asynchronously replenishes the rate limit capacities at regular intervals.
 
-        Args:
-            interval: The interval (in seconds) at which to replenish the rate limits.
+        This coroutine runs indefinitely, replenishing the available request and token capacities
+        based on the maximum limits defined for the OpenAI API. This task should run in the background
+        to consistently reset the capacities.
+
+        Example:
+            >>> rate_limiter = OpenAIRateLimiter(100, 200)
+            >>> asyncio.create_task(rate_limiter.rate_limit_replenisher())
+            # This will start the background task for rate limit replenishment.
         """
-        while not self._stop_event.is_set():
-            await asyncio.sleep(interval)
+        while True:
+            await asyncio.sleep(60)  # Replenishes every 60 seconds
             self.available_request_capacity = self.max_requests_per_minute
             self.available_token_capacity = self.max_tokens_per_minute
             
-    def calculate_num_token(self, payload: dict, api_endpoint: str, token_encoding_name: str) -> int:
+    def calculate_num_token(self, payload: Dict[str, Any], 
+                            api_endpoint: str, token_encoding_name: str) -> int:
         """
-        Calculate the number of tokens that a request will consume.
+        Calculates the number of tokens required for a request based on the payload and API endpoint.
+
+        The token calculation logic might vary based on different API endpoints and payload content.
+        This method should be implemented in a subclass to provide the specific calculation logic
+        for the OpenAI API.
 
         Args:
-            payload: The payload of the request to be sent to the API.
-            api_endpoint: The endpoint of the API to which the request will be sent.
+            payload (Dict[str, Any]): The payload of the request.
+            api_endpoint (str): The specific API endpoint for the request.
 
         Returns:
-            The number of tokens the request will consume.
+            int: The estimated number of tokens required for the request.
 
-        Raises:
-            TypeError: If the payload format is not as expected.
-            NotImplementedError: If the API endpoint isn't accounted for in the calculations.
+        Example:
+            >>> rate_limiter = OpenAIRateLimiter(100, 200)
+            >>> payload = {'prompt': 'Translate the following text:', 'max_tokens': 50}
+            >>> rate_limiter.calculate_num_token(payload, 'completions')
+            # Expected token calculation for the given payload and endpoint.
         """
+
         encoding = tiktoken.get_encoding(token_encoding_name)
         if api_endpoint.endswith("completions"):
             max_tokens = payload.get("max_tokens", 15)
@@ -103,11 +123,19 @@ class OpenAIRateLimiter(RateLimiter):
                 f'API endpoint "{api_endpoint}" not implemented in this script'
             )
             
+
 class OpenAIService(BaseAPIService):
     """
     Service class for interacting with the OpenAI API.
 
-    Provides methods for calling the API endpoints and handling response data.
+    This class provides methods for calling OpenAI's API endpoints, handling the responses,
+    and managing rate limits and asynchronous tasks associated with API calls.
+
+    Attributes:
+        base_url (str): The base URL for OpenAI's API.
+
+    Methods:
+        call_api: Call an API endpoint with a payload and handle the response.
     """
 
     base_url = "https://api.openai.com/v1/"
@@ -122,37 +150,53 @@ class OpenAIService(BaseAPIService):
         queue: Optional[AsyncQueue] = None
     ):
         """
-        Initialize the OpenAI service with an API key and configuration.
+        Initializes the OpenAI service with configuration for API interaction.
 
         Args:
-            api_key: The API key for authenticating with OpenAI.
-            token_encoding_name: The name of the text encoding used by OpenAI.
-            max_attempts: The maximum number of attempts for calling an API endpoint.
-            status_tracker: An optional tracker for API call outcomes.
-            rate_limiter: An optional rate limiter specific to OpenAI's limits.
-            queue: An optional queue for managing asynchronous API calls.
-        """
-        super().__init__(api_key=api_key, 
-                         token_encoding_name=token_encoding_name, 
-                         max_attempts=max_attempts, 
-                         status_tracker=status_tracker, 
-                         rate_limiter=rate_limiter,  
-                         queue=queue)
+            api_key (str): The API key for authenticating with OpenAI.
+            token_encoding_name (str): The name of the text encoding used by OpenAI.
+            max_attempts (int): The maximum number of attempts for calling an API endpoint.
+            status_tracker (Optional[StatusTracker]): Tracker for API call outcomes.
+            rate_limiter (Optional[OpenAIRateLimiter]): Rate limiter for OpenAI's limits.
+            queue (Optional[AsyncQueue]): Queue for managing asynchronous API calls.
 
-    async def call_api(self, session, request_url: str, payload: dict) -> Optional[dict]:
+        Example:
+            >>> service = OpenAIService(
+            ...     api_key="api-key-123",
+            ...     token_encoding_name="utf-8",
+            ...     max_attempts=5,
+            ...     status_tracker=None,
+            ...     rate_limiter=OpenAIRateLimiter(100, 200),
+            ...     queue=AsyncQueue()
+            ... )
+            # Service is configured for interacting with OpenAI API.
         """
-        Call the OpenAI API with a given payload and handle the response.
+        super().__init__(api_key, token_encoding_name, max_attempts, 
+                         status_tracker, rate_limiter, queue)
+
+    async def call_api(self, session, request_url: str, payload: Dict[str, any]) -> Optional[Dict[str, any]]:
+        """
+        Call an OpenAI API endpoint with a specific payload and handle the response.
 
         Args:
-            session: The session object used to make HTTP requests.
-            request_url: The full URL of the API endpoint to call.
-            payload: The payload to send in the API request.
+            session: The session object for making HTTP requests.
+            request_url (str): The full URL of the OpenAI API endpoint to be called.
+            payload (Dict[str, any]): The payload to send with the API request.
 
         Returns:
-            A dictionary with the response data from the API call or None if failed.
+            Optional[Dict[str, any]]: The response data from the API call or None if the call fails.
 
         Raises:
-            asyncio.TimeoutError: If the request attempts exceed the maximum limit.
+            asyncio.TimeoutError: If the request attempts exceed the configured maximum limit.
+
+        Example:
+            >>> session = aiohttp.ClientSession()
+            >>> response = await service.call_api(
+            ...     session,
+            ...     "https://api.openai.com/v1/engines",
+            ...     {"model": "davinci"}
+            ... )
+            # Calls the specified API endpoint with the given payload.
         """
         while True:
             if self.rate_limiter.available_request_capacity < 1 or self.rate_limiter.available_token_capacity < 10:  # Minimum token count
