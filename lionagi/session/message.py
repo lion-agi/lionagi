@@ -1,5 +1,6 @@
 from datetime import datetime
 import json
+from ..utils.sys_util import generate_id
 from ..utils.log_util import DataLogger
 
 
@@ -64,7 +65,7 @@ class Message:
             }
         
         a = {**{
-            "id": self.logger._generate_id(),
+            "id": generate_id(),
             "timestamp": datetime.now().isoformat(),
             "sender": self.sender
         }, **out}
