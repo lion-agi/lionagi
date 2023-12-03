@@ -5,9 +5,20 @@ from typing import Any, Dict, List, Union
 from .sys_util import to_list, l_call
 from .log_util import DataLogger
 
-# logger needs re-examine 
 
 def dir_to_path(dir_, ext_, recursive=False, flat=True):
+    """
+    Get a list of file paths in the specified directory with the given extension.
+
+    Args:
+        dir_: The directory path.
+        ext_: The file extension to filter.
+        recursive: If True, search for files recursively in subdirectories.
+        flat: If True, flatten the result into a single list.
+
+    Example:
+        >>> files = dir_to_path(dir_='my_directory', ext_='.txt', recursive=True, flat=True)
+    """
 
     def _dir_to_path(ext, recursive=recursive):
         tem = '**/*' if recursive else '*'
@@ -16,6 +27,19 @@ def dir_to_path(dir_, ext_, recursive=False, flat=True):
     return to_list(l_call(ext_, _dir_to_path, flat=True), flat=flat)
 
 def read_text(file_path_: str, clean: bool = True) -> str:
+    """
+    Read the content of a text file and optionally clean it by removing specified characters.
+
+    Args:
+        file_path_ (str): The path to the text file.
+        clean (bool): If True, clean the content by replacing specified characters.
+
+    Returns:
+        str: The content of the text file.
+
+    Example:
+        >>> content = read_text(file_path_='example.txt', clean=True)
+    """
 
     with open(file_path_, 'r') as f:
         content = f.read()
@@ -30,6 +54,26 @@ def dir_to_files(dir_, ext_, recursive=False, reader=read_text,
                  clean=True, to_csv=False, project='project',
                  output_dir='data/logs/sources/', filename=None, 
                  verbose=True, timestamp=True, logger=None):
+    """
+    Read and process files in the specified directory with the given extension.
+
+    Args:
+        dir_: The directory path.
+        ext_: The file extension to filter.
+        recursive (bool): If True, search for files recursively in subdirectories.
+        reader: The function to read and process the content of each file.
+        clean: If True, clean the content by replacing specified characters.
+        to_csv: If True, export the processed data to a CSV file.
+        project: The name of the project.
+        output_dir: The directory path for exporting the CSV file.
+        filename: The name of the CSV file.
+        verbose: If True, print a verbose message after export.
+        timestamp: If True, include a timestamp in the exported file name.
+        logger: An optional DataLogger instance for logging.
+
+    Example:
+        >>> logs = dir_to_files(dir_='my_directory', ext_='.txt', to_csv=True)
+    """
 
     sources = dir_to_path(dir_, ext_, recursive=recursive)
     
@@ -134,7 +178,6 @@ def file_to_chunks(d: Dict[str, Any],
         chunk_size (int, optional): Size of each text chunk in characters. Defaults to 1500.
         overlap (float, optional): Percentage of overlap between adjacent chunks, in the range [0, 1]. Defaults to 0.2.
         threshold (int, optional): Minimum size for the last chunk. If smaller, it will be merged with the previous chunk. Defaults to 200.
-        sep (str, optional): Separator used in flattening the dictionary. Defaults to '_'.
         
     Raises:
         ValueError: If any error occurs during the chunking process.
@@ -181,6 +224,23 @@ def files_to_chunks(d,
                    verbose=True, 
                    timestamp=True, 
                    logger=None):
+    """
+        Splits text from a specified dictionary field into chunks and returns a list of dictionaries.
+
+    Args:
+        d (Dict[str, Any]): The input dictionary containing the text field to be chunked.
+        field (str, optional): The dictionary key corresponding to the text field. Defaults to 'content'.
+        chunk_size (int, optional): Size of each text chunk in characters. Defaults to 1500.
+        overlap (float, optional): Percentage of overlap between adjacent chunks, in the range [0, 1]. Defaults to 0.2.
+        threshold (int, optional): Minimum size for the last chunk. If smaller, it will be merged with the previous chunk. Defaults to 200.
+        to_csv: If True, export the processed data to a CSV file.
+        project: The name of the project.
+        output_dir: The directory path for exporting the CSV file.
+        filename: The name of the CSV file.
+        verbose: If True, print a verbose message after export.
+        timestamp: If True, include a timestamp in the exported file name.
+        logger: An optional DataLogger instance for logging.
+    """
     
     f = lambda x: file_to_chunks(x, field=field, chunk_size=chunk_size, overlap=overlap, threshold=threshold)
     logs = to_list(l_call(d, f))
