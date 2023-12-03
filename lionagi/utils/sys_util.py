@@ -23,29 +23,34 @@ import re
 import tempfile
 import time
 import hashlib
-import datetime
+from datetime import datetime
 from collections.abc import Generator, Iterable, MutableMapping
 from typing import Any, Callable, Dict, List, Optional, Tuple, Union
 
 
-def _flatten_dict(d: Dict[str, Any], parent_key: str = '', sep: str = '_'):
+def flatten_dict(d: Dict[str, Any], parent_key: str = '', sep: str = '_'):
     for k, v in d.items():
         new_key = f'{parent_key}{sep}{k}' if parent_key else k
         if isinstance(v, MutableMapping):
-            yield from _flatten_dict(v, new_key, sep=sep)
+            yield from flatten_dict(v, new_key, sep=sep)
         elif isinstance(v, list):
             for i, item in enumerate(v):
                 if isinstance(item, MutableMapping):
-                    yield from _flatten_dict(item, f'{new_key}{sep}{i}', sep=sep)
+                    yield from flatten_dict(item, f'{new_key}{sep}{i}', sep=sep)
                 else:
                     yield (f'{new_key}{sep}{i}', item)
         else:
             yield (new_key, v)
-            
-def _flatten_list(lst: List[Any], dropna: bool = True):
+
+
+def to_flat_dict(d, parent_key='', sep='_'):
+    return dict(flatten_dict(d, parent_key=parent_key, sep=sep))
+
+
+def flatten_list(lst: List[Any], dropna: bool = True):
     for el in lst:
         if isinstance(el, list):
-            yield from _flatten_list(el, dropna=dropna)
+            yield from flatten_list(el, dropna=dropna)
         else:
             if el is not None or not dropna:
                 yield el
@@ -57,7 +62,7 @@ def to_list(input_: Union[Iterable, Any], flat_dict: bool = False, flat: bool = 
     try:
         if isinstance(input_, dict):
             if flat_dict:
-                input_ = dict(_flatten_dict(input_))  # Flatten and convert to dictionary first
+                input_ = dict(flatten_dict(input_))  # Flatten and convert to dictionary first
                 return [{k: v} for k, v in input_.items()]
             out = [input_]
         elif isinstance(input_, Iterable) and not isinstance(input_, str):
@@ -66,7 +71,7 @@ def to_list(input_: Union[Iterable, Any], flat_dict: bool = False, flat: bool = 
             out = [input_]
         
         if flat: # Flatten if necessary
-            out = list(_flatten_list(out, dropna=dropna))
+            out = list(flatten_list(out, dropna=dropna))
 
         return out
     except TypeError as e:
@@ -149,7 +154,7 @@ def hold_call(input_: Any,
               **kwargs) -> Any:
     try:
         time.sleep(hold)
-        return func_(*input_, **kwargs)
+        return func_(input_, **kwargs)
     except Exception as e:
         if msg:
             print(f"{msg} Error: {e}")
@@ -243,7 +248,7 @@ async def ae_call(input_: Any, func_: Callable,
     return await asyncio.gather(*tasks)
 
 def get_timestamp() -> str:
-    return datetime.now().strftime("%Y_%m_%d_%H_%M_%S_")
+    return datetime.now().isoformat().replace(":", "_").replace(".", "_")
 
 def generate_id() -> str:
     current_time = datetime.now().isoformat().encode('utf-8')
