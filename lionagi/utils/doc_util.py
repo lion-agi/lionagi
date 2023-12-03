@@ -96,7 +96,7 @@ def dir_to_files(dir_, ext_, recursive=False, reader=read_text,
     logs = to_list(l_call(sources, to_dict, flat=True), dropna=True)
     
     if to_csv:
-        filename = filename if filename else f"{project}_sources.csv"
+        filename = filename or f"{project}_sources.csv"
         logger = DataLogger(log=logs) if not logger else logger
         logger.to_csv(dir_=output_dir, filename=filename, verbose=verbose, timestamp=timestamp)
 
@@ -164,7 +164,7 @@ def chunk_text(text: str, chunk_size: int, overlap: float,
     except Exception as e:
         raise ValueError(f"An error occurred while chunking the text. {e}")
 
-def file_to_chunks(d: Dict[str, Any], 
+def _file_to_chunks(d: Dict[str, Any], 
                    field: str = 'content', 
                    chunk_size: int = 1500, 
                    overlap: float = 0.2, 
@@ -212,7 +212,7 @@ def file_to_chunks(d: Dict[str, Any],
     except Exception as e:
         raise ValueError(f"An error occurred while chunking the file. {e}")
     
-def files_to_chunks(d, 
+def file_to_chunks(d, 
                    field: str = 'content', 
                    chunk_size: int = 1500, 
                    overlap: float = 0.2, 
@@ -220,6 +220,7 @@ def files_to_chunks(d,
                    to_csv=False, 
                    project='project',
                    output_dir='data/logs/sources/', 
+                   chunk_func = _file_to_chunks,
                    filename=None, 
                    verbose=True, 
                    timestamp=True, 
@@ -242,8 +243,8 @@ def files_to_chunks(d,
         logger: An optional DataLogger instance for logging.
     """
     
-    f = lambda x: file_to_chunks(x, field=field, chunk_size=chunk_size, overlap=overlap, threshold=threshold)
-    logs = to_list(l_call(d, f))
+    f = lambda x: chunk_func(x, field=field, chunk_size=chunk_size, overlap=overlap, threshold=threshold)
+    logs = to_list(l_call(d, f), flat=True)
     
     if to_csv:
         filename = filename if filename else f"{project}_sources.csv"
