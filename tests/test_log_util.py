@@ -1,11 +1,9 @@
 import unittest
 from lionagi.utils.log_util import DataLogger
-from lionagi.utils.sys_util import to_csv, make_filepath
 from unittest.mock import patch
 import os
 import csv
 import tempfile
-from datetime import datetime
 
 class TestDataLogger(unittest.TestCase):
     """
