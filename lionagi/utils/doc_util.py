@@ -6,7 +6,7 @@ from .sys_util import to_list, l_call
 from .log_util import DataLogger
 
 
-def dir_to_path(dir: str, ext: str, recursive: bool = False, flat: bool = True):
+def dir_to_path(dir: str, ext, recursive: bool = False, flat: bool = True):
     """
     Retrieves a list of file paths in the specified directory with the given extension.
 

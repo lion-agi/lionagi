@@ -302,15 +302,19 @@ def to_csv(input: List[Dict[str, Any]],
         >>> data = [{'name': 'Alice', 'age': 30}, {'name': 'Bob', 'age': 25}]
         >>> to_csv(data, 'people.csv')
     """
-    if os.path.exists(filepath) and not file_exist_ok:
-        raise FileExistsError(f"File already exists: {filepath}")
-    elif not os.path.exists(filepath):
-        os.makedirs(filepath, exist_ok=True)
-        
+
+    if not os.path.exists(os.path.dirname(filepath)) and os.path.dirname(filepath) != '':
+        if file_exist_ok:
+            os.makedirs(os.path.dirname(filepath), exist_ok=True)
+        else:
+            raise FileNotFoundError(f"The directory {os.path.dirname(filepath)} does not exist.")
+
     with open(filepath, 'w', newline='') as csv_file:
         writer = csv.DictWriter(csv_file, fieldnames=input[0].keys())
         writer.writeheader()
         writer.writerows(input)
+
+
 
 def append_to_jsonl(data: Any, filepath: str) -> None:
     """
