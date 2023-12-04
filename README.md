@@ -4,7 +4,7 @@ Towards Automated General Intelligence.
 
 
 
-LionAGI is a data centric project for production ready applications that uses AI tools, such as LLM (Large Language Model). 
+LionAGI is a data centric project for production ready applications that use AI tools, such as LLM (Large Language Model). 
 
 LionAGI enables powerful and robust intelligent workflow automation
 
