@@ -5,7 +5,7 @@ import unittest
 from typing import Any, Callable, Optional
 from unittest.mock import MagicMock
 
-from ..lionagi.utils.sys_util import flatten_dict, flatten_list, to_list, str_to_num, make_copy, to_temp, to_csv, hold_call, ahold_call, l_call, al_call, m_call, am_call, e_call, ae_call, get_timestamp, generate_id, make_filepath, to_jsonl
+from ..lionagi.utils.sys_util import _flatten_dict, _flatten_list, to_list, str_to_num, make_copy, to_temp, to_csv, hold_call, ahold_call, l_call, al_call, m_call, am_call, e_call, ae_call, get_timestamp, generate_id, make_filepath, to_jsonl
 
 
 import unittest
@@ -18,66 +18,66 @@ class TestFlattenDict(unittest.TestCase):
         """Test flattening of a simple dictionary."""
         d = {'a': 1, 'b': {'c': 2, 'd': 3}}
         expected_output = [('a', 1), ('b_c', 2), ('b_d', 3)]
-        self.assertEqual(list(flatten_dict(d)), expected_output)
+        self.assertEqual(list(_flatten_dict(d)), expected_output)
 
     def test_flatten_dict_nested(self):
         """Test flattening of a nested dictionary."""
         d = {'a': {'b': {'c': {'d': 1}}}}
         expected_output = [('a_b_c_d', 1)]
-        self.assertEqual(list(flatten_dict(d)), expected_output)
+        self.assertEqual(list(_flatten_dict(d)), expected_output)
 
     def test_flatten_dict_with_list(self):
         """Test flattening of a dictionary with list values."""
         d = {'a': 1, 'b': [2, {'c': 3}]}
         expected_output = [('a', 1), ('b_0', 2), ('b_1_c', 3)]
-        self.assertEqual(list(flatten_dict(d)), expected_output)
+        self.assertEqual(list(_flatten_dict(d)), expected_output)
 
     def test_flatten_dict_with_custom_separator(self):
         """Test flattening of a dictionary with a custom separator."""
         d = {'a': {'b': 1}, 'c': {'d': 2}}
         expected_output = [('a-b', 1), ('c-d', 2)]
-        self.assertEqual(list(flatten_dict(d, sep='-')), expected_output)
+        self.assertEqual(list(_flatten_dict(d, sep='-')), expected_output)
 
     def test_flatten_dict_empty(self):
         """Test flattening of an empty dictionary."""
         d = {}
         expected_output = []
-        self.assertEqual(list(flatten_dict(d)), expected_output)
+        self.assertEqual(list(_flatten_dict(d)), expected_output)
 
 class TestFlattenList(unittest.TestCase):
     def test_flatten_list_simple(self):
         """Test flattening of a flat list."""
         lst = [1, 2, 3, 4]
         expected_output = [1, 2, 3, 4]
-        self.assertEqual(list(flatten_list(lst)), expected_output)
+        self.assertEqual(list(_flatten_list(lst)), expected_output)
 
     def test_flatten_list_nested(self):
         """Test flattening of a nested list."""
         lst = [1, [2, [3, 4]]]
         expected_output = [1, 2, 3, 4]
-        self.assertEqual(list(flatten_list(lst)), expected_output)
+        self.assertEqual(list(_flatten_list(lst)), expected_output)
 
     def test_flatten_list_with_none(self):
         """Test flattening of a list containing None."""
         lst = [None, 1, [2, None], [3, [4, None]]]
         expected_output_with_none = [None, 1, 2, None, 3, 4, None]
         expected_output_without_none = [1, 2, 3, 4]
-        self.assertEqual(list(flatten_list(lst, dropna=False)), expected_output_with_none)
-        self.assertEqual(list(flatten_list(lst, dropna=True)), expected_output_without_none)
+        self.assertEqual(list(_flatten_list(lst, dropna=False)), expected_output_with_none)
+        self.assertEqual(list(_flatten_list(lst, dropna=True)), expected_output_without_none)
 
     def test_flatten_list_empty(self):
         """Test flattening of an empty list."""
         lst = []
         expected_output = []
-        self.assertEqual(list(flatten_list(lst)), expected_output)
+        self.assertEqual(list(_flatten_list(lst)), expected_output)
 
     def test_flatten_list_all_none(self):
         """Test flattening of a list with all elements set to None."""
         lst = [None, [None, [None]]]
         expected_output_with_none = [None, None, None]
         expected_output_without_none = []
-        self.assertEqual(list(flatten_list(lst, dropna=False)), expected_output_with_none)
-        self.assertEqual(list(flatten_list(lst, dropna=True)), expected_output_without_none)
+        self.assertEqual(list(_flatten_list(lst, dropna=False)), expected_output_with_none)
+        self.assertEqual(list(_flatten_list(lst, dropna=True)), expected_output_without_none)
         
 class TestStrToNum(unittest.TestCase):
     def test_str_to_num_valid_int(self):
