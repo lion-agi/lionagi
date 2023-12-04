@@ -44,7 +44,7 @@ class Session():
         self.conversation = Conversation()
         self.system = system
         self.llmconfig = llmconfig
-        self.logger = DataLogger(dir_=dir)
+        self.logger = DataLogger(dir=dir)
         self.api_service = api_service
     
     async def initiate(self, instruction, system=None, context=None, out=True, **kwargs) -> Any:
