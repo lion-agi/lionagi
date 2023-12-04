@@ -12,7 +12,7 @@ LionAGI enables powerful and robust intelligent workflow automation
 - Concurrent API calls to OpenAI with custom rate limits for maximum throughput
 - Intuitive interaction with LLM for rapid workflow creation
 
-Currently, LionAGI only natively support OpenAI API calls, support for LLM providers as well as open source will be integrated in future releases.  
+Currently, LionAGI only natively support OpenAI API calls, support for other LLM providers as well as open source will be integrated in future releases.  
 
 To install download the file as a zip, then
 ```python
