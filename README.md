@@ -61,12 +61,12 @@ LionAGI is released under the [MIT License](https://github.com/lion-agi/lionagi/
 When referencing LionAGI in your projects or research, please cite:
 
 ```bibtex
-@misc{LionAGI,
+@software{Li_LionAGI_2023,
   author = {Haiyang Li},
-  title = {LionAGI: Towards Automated Intelligence},
+  month = {12},
   year = {2023},
-  howpublished = {\url{https://github.com/lion-agi/lionagi}}
+  title = {LionAGI: Towards Automated Intelligence},
+  url = {https://github.com/lion-agi/lionagi},
 }
 ```
-
 Thank you for choosing LionAGI. 
