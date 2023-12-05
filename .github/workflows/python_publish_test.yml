@@ -6,7 +6,7 @@
 # separate terms of service, privacy policy, and support
 # documentation.
 
-name: Upload Python Package on TestPyPI
+name: Upload Python Package on TestPyPI1
 
 on:
   release:
@@ -39,7 +39,7 @@ jobs:
         pip install build twine
     - name: Build package
       run: python -m build
-    - name: Upload Python Package on TestPyPI
+    - name: Upload Python Package on TestPyPI1
       uses: pypa/gh-action-pypi-publish@27b31702a0e7fc50959f5ad993c78deac1bdfc29
       with:
         user: __token__
