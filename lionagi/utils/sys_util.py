@@ -246,7 +246,7 @@ def make_copy(input: Any, n: int) -> Any:
 def to_temp(input: Any, 
             flatten_dict: bool = False, 
             flat: bool = False, 
-            dropna: bool = False) -> tempfile._TemporaryFileWrapper:
+            dropna: bool = False):
     """
     Converts input to a list and writes it to a temporary file in JSON format, with flattening options.
 
@@ -261,9 +261,6 @@ def to_temp(input: Any,
 
     Raises:
         TypeError: If the input is not JSON serializable.
-
-    Returns:
-        tempfile._TemporaryFileWrapper: A temporary file with the JSON serialized data.
 
     Example:
         >>> temp_file = to_temp({'a': 1, 'b': [2, 3]}, flatten_dict=True)
@@ -598,9 +595,9 @@ def e_call(input: Any,
 
     Example:
         >>> def square(x):
-        ...     return [i * i for i in x]
+        ...     return x**2
         >>> e_call([1, 2, 3], [square])
-        [[1, 4, 9]]
+        [[1], [4], [9]]
     """
 
     f = lambda x, y: m_call(make_copy(x, len(to_list(y))), y, 
@@ -609,9 +606,9 @@ def e_call(input: Any,
 
 async def ae_call(input_: Any, 
                   func_: Callable, 
-                  flat_dict: bool = False, 
+                  flatten_dict: bool = False,
                   flat: bool = False, 
-                  dropna: bool = True) -> List[Any]:
+                  dropna: bool = True):
     """
     Asynchronously applies each function in a list of functions to all elements in the input.
 
@@ -626,17 +623,14 @@ async def ae_call(input_: Any,
         flat (bool, optional): Whether the output list should be flattened. Defaults to True.
         dropna (bool, optional): Whether to drop None values during flattening. Defaults to True.
 
-    Returns:
-        List[Any]: A list of results after asynchronously applying each function to the input.
-
     Example:
         >>> async def async_square(x):
-        ...     return [i * i for i in x]
+        ...     return x**2
         >>> asyncio.run(ae_call([1, 2, 3], [async_square]))
         [[1, 4, 9]]
     """
     async def async_f(x, y):
-        return await am_call(make_copy(x, len(to_list(y))), y, flat_dict=flat_dict, flat=flat, dropna=dropna)
+        return await am_call(make_copy(x, len(to_list(y))), y, flatten_dict=flatten_dict, flat=flat, dropna=dropna)
 
     tasks = [async_f(inp, func_) for inp in to_list(input_)]
     return await asyncio.gather(*tasks)
