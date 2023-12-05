@@ -46,17 +46,8 @@ Visit our notebooks for our examples.
 
 ### Community
 
-We encourage contributions to LionAGI and invite you to enrich its features and capabilities. Review our [contribution guidelines](https://github.com/lion-agi/lionagi/CONTRIBUTING.md) for more information. Engage with us and other community members on [Discord](https://discord.gg/your-invite-link).
+We encourage contributions to LionAGI and invite you to enrich its features and capabilities. Engage with us and other community members on Discord
 
-### License
-
-LionAGI is released under the [MIT License](https://github.com/lion-agi/lionagi/LICENSE).
-
-### Contact
-
-- Official Discord Channel
-- [ocean@lionagi.ai](mailto:ocean@lionagi.ai)
-- [GitHub Repository](https://github.com/lion-agi/lionagi)
 
 ### Citation
 
