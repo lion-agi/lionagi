@@ -126,10 +126,6 @@ def chunk_text(input: str, chunk_size: int, overlap: float,
         
     Returns:
         List[Union[str, None]]: List of text chunks.
-        
-    Example:
-        >>> chunk_text("This is a test string.", 10, 0.2, 5)
-        ['This is a t', ' a test str', 'est string.']
     """
     
     try:
@@ -234,7 +230,7 @@ def file_to_chunks(input,
         Splits text from a specified dictionary field into chunks and returns a list of dictionaries.
 
     Args:
-        d (Dict[str, Any]): The input dictionary containing the text field to be chunked.
+        input (List[Dict[str, Any]]): The input dictionaries containing the text field to be chunked.
         field (str, optional): The dictionary key corresponding to the text field. Defaults to 'content'.
         chunk_size (int, optional): Size of each text chunk in characters. Defaults to 1500.
         overlap (float, optional): Percentage of overlap between adjacent chunks, in the range [0, 1]. Defaults to 0.2.
