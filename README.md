@@ -63,3 +63,6 @@ When referencing LionAGI in your projects or research, please cite:
 }
 ```
 Thank you for choosing LionAGI. 
+
+### Requirements
+Python 3.9 or higher. 
