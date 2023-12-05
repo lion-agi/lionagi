@@ -1,3 +1,5 @@
+python version >= 3.9
+
 # LionAGI
 **Towards Automated General Intelligence**
 
