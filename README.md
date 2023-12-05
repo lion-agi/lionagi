@@ -8,7 +8,7 @@ LionAGI is a Python package that combines data manipulation with AI tools, aimin
 Install LionAGI with pip:
 
 ```bash
-pip install lionagi==0.0.100
+pip install lionagi
 ```
 Download the `.env_template` file, input your OPENAI_API_KEY, save the file, rename as `.env` and put in your project's root directory. 
 
