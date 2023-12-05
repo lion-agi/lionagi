@@ -18,8 +18,8 @@ class TestDataLogger(unittest.TestCase):
         os.rmdir(self.temp_dir)
 
     def test_init(self):
-        logger = DataLogger(dir_='test_dir', log=[1, 2, 3])
-        self.assertEqual(logger.dir_, 'test_dir')
+        logger = DataLogger(dir='test_dir', log=[1, 2, 3])
+        self.assertEqual(logger.dir, 'test_dir')
         self.assertListEqual(list(logger.log), [1, 2, 3])
 
     def test_call(self):
@@ -28,10 +28,10 @@ class TestDataLogger(unittest.TestCase):
         self.assertListEqual(list(logger.log), ['new entry'])
 
     def test_to_csv(self):
-        logger = DataLogger(dir_=self.temp_dir, log=[{'id': 1, 'value': 10}, {'id': 2, 'value':20}])
+        logger = DataLogger(dir=self.temp_dir, log=[{'id': 1, 'value': 10}, {'id': 2, 'value':20}])
 
         with patch('builtins.print') as mock_print:
-            logger.to_csv(dir_=self.temp_dir, filename='test.csv', timestamp=False)
+            logger.to_csv(dir=self.temp_dir, filename='test.csv', timestamp=False)
 
         csv_filepath = self.temp_dir+'test.csv'
         mock_print.assert_called_with(f"2 logs saved to {csv_filepath}")
@@ -51,7 +51,7 @@ class TestDataLogger(unittest.TestCase):
     def test_set_dir(self):
         logger = DataLogger()
         logger.set_dir('new_test_dir')
-        self.assertEqual(logger.dir_, 'new_test_dir')
+        self.assertEqual(logger.dir, 'new_test_dir')
 
 if __name__ == '__main__':
     unittest.main()
