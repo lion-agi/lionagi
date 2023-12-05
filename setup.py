@@ -20,7 +20,7 @@ install_requires = [
 setuptools.setup(
     name="lionagi",
     version=__version__,
-    author="LionAGI",
+    author="HaiyangLi",
     author_email="ocean@lionagi.ai",
     description="Towards automated general intelligence.",
     packages=setuptools.find_packages(include=["lionagi*"]),
