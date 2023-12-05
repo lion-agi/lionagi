@@ -36,7 +36,8 @@ calculator = li.Session(system=system)
 
 # run a LLM API call
 result = await calculator.initiate(instruction=instruction,
-                                   context=context, model="gpt-4-1106-preview")
+                                   context=context,
+                                   model="gpt-4-1106-preview")
 
 print(f"Calculation Result: {result}")
 ```
