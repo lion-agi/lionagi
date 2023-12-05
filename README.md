@@ -1,7 +1,7 @@
 # LionAGI
 **Towards Automated General Intelligence**
 
-LionAGI is a Python package that combines data manipulation with AI tools, aiming to simplify the integration of advanced machine learning tools, such as Large Language Models (i.e. OpenAI's GPT).
+LionAGI is a Python package that combines data manipulation with AI tools, aiming to simplify the integration of advanced machine learning tools, such as Large Language Models (i.e. OpenAI's GPT), with production level data centric projects. 
 
 Install LionAGI with pip:
 
@@ -9,19 +9,27 @@ Install LionAGI with pip:
 pip install lionagi
 ```
 Download the `.env_template` file, input your OPENAI_API_KEY, save the file, rename as `.env` and put in your project's root directory. 
+
 ### Features
 
+- Robust performance. LionAGI is written in almost pure python. With minimum external dependency (aiohttp, httpx, python-dotenv, tiktoken)
 - Efficient data operations for reading, chunking, binning, writing, storing and managing data.
-- Robust integration with LLM services like OpenAI with configurable rate limiting concurrent API calls for efficiency and maximum throughput. 
+- Fast interaction with LLM services like OpenAI with configurable rate limiting concurrent API calls for maximum throughput. 
 - Create a production ready LLM application in hours. Intuitive workflow management to streamline and expedite the process from idea to market.
 
-Currently, LionAGI only natively support OpenAI API calls, support for other LLM providers as well as open source will be integrated in future releases.
+---
+Currently, LionAGI only natively support OpenAI API calls, support for other LLM providers as well as open source models will be integrated in future releases. LionAGI is designed to be async only, please check python documentation [here](https://docs.python.org/3/library/asyncio.html)
 
+
+**Notice**: 
+* calling API with maximum throughput over large set of data with advanced models i.e. gpt-4 can get **EXPENSIVE IN JUST SECONDS**,
+* please know what you are doing, and check the usage on OpenAI regularly
+* default rate limits are set to be **tier 1** of OpenAI model `gpt-4-1104-preview`, please check the [OpenAI usage limit documentation](https://platform.openai.com/docs/guides/rate-limits?context=tier-free) you can modify token rate parameters to fit different use cases. 
 
 
 ### Quick Start
 
-The following simplified example demonstrates how to use LionAGI to perform a calculation by handling a workflow:
+The following example shows how to use LionAGI's `Session` object to interact with `gpt-4` model:
 
 ```python
 import lionagi as li
