@@ -13,7 +13,7 @@ from lionagi.utils.doc_util import (
 )
 
 
-class TestYourModule(unittest.TestCase):
+class Test_doc_util(unittest.TestCase):
     def setUp(self):
         # Create a temporary directory for testing
         self.temp_dir = tempfile.TemporaryDirectory()
