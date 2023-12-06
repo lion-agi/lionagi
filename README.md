@@ -1,6 +1,9 @@
-<img src="https://github.com/lion-agi/lionagi/assets/122793010/513b609a-ed70-44d3-95c2-1c934900ff30" alt="drawing" width="30"/> https://pypi.org/project/lionagi/
+![GitHub License](https://img.shields.io/github/license/lion-agi/lionagi?labelColor=233476aa&color=231fc935) ![PyPI - Version](https://img.shields.io/pypi/v/lionagi?color=231fc935) ![PyPI - Downloads](https://img.shields.io/pypi/dm/lionagi?labelColor=%233476aa&color=%231fc935)
 
-
+- PyPI: https://pypi.org/project/lionagi/
+- Documentation: TODO
+- Website: TODO
+  
 # LionAGI
 **Towards Automated General Intelligence**
 
@@ -27,7 +30,8 @@ Currently, LionAGI only natively support OpenAI API calls, support for other LLM
 **Notice**: 
 * calling API with maximum throughput over large set of data with advanced models i.e. gpt-4 can get **EXPENSIVE IN JUST SECONDS**,
 * please know what you are doing, and check the usage on OpenAI regularly
-* default rate limits are set to be **tier 1** of OpenAI model `gpt-4-1104-preview`, please check the [OpenAI usage limit documentation](https://platform.openai.com/docs/guides/rate-limits?context=tier-free) you can modify token rate parameters to fit different use cases. 
+* default rate limits are set to be **tier 1** of OpenAI model `gpt-4-1104-preview`, please check the [OpenAI usage limit documentation](https://platform.openai.com/docs/guides/rate-limits?context=tier-free) you can modify token rate parameters to fit different use cases.
+* Documentation is under process
 
 
 ### Quick Start
@@ -68,11 +72,9 @@ When referencing LionAGI in your projects or research, please cite:
   author = {Haiyang Li},
   month = {12},
   year = {2023},
-  title = {LionAGI: Towards Automated Intelligence},
+  title = {LionAGI: Towards Automated General Intelligence},
   url = {https://github.com/lion-agi/lionagi},
 }
-```
-Thank you for choosing LionAGI. 
-
+``` 
 ### Requirements
 Python 3.9 or higher. 
