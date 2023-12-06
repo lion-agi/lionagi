@@ -1,5 +1,5 @@
 import unittest
-from lionagi.utils.log_util import DataLogger
+from ..lionagi.utils.log_util import DataLogger
 from unittest.mock import patch
 import os
 import csv
