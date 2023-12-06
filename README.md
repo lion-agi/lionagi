@@ -1,4 +1,6 @@
-<img src="https://github.com/lion-agi/lionagi/assets/122793010/513b609a-ed70-44d3-95c2-1c934900ff30" alt="drawing" width="30"/> https://pypi.org/project/lionagi/
+![GitHub License](https://img.shields.io/github/license/lion-agi/lionagi?labelColor=233476aa&color=231fc935) ![PyPI - Version](https://img.shields.io/pypi/v/lionagi?color=231fc935) ![PyPI - Downloads](https://img.shields.io/pypi/dm/lionagi?labelColor=%233476aa&color=%231fc935)
+
+PyPI: https://pypi.org/project/lionagi/
 
 
 # LionAGI
@@ -71,8 +73,6 @@ When referencing LionAGI in your projects or research, please cite:
   title = {LionAGI: Towards Automated Intelligence},
   url = {https://github.com/lion-agi/lionagi},
 }
-```
-Thank you for choosing LionAGI. 
-
+``` 
 ### Requirements
 Python 3.9 or higher. 
