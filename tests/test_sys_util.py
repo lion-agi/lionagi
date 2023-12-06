@@ -2,7 +2,7 @@ import unittest
 import asyncio
 import os
 from tempfile import NamedTemporaryFile
-from ..lionagi.utils.sys_util import (
+from lionagi.utils.sys_util import (
     to_flat_dict,
     to_list,
     str_to_num,
