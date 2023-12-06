@@ -1,4 +1,5 @@
-python version >= 3.9
+<img src="https://github.com/lion-agi/lionagi/assets/122793010/513b609a-ed70-44d3-95c2-1c934900ff30" alt="drawing" width="30"/> https://pypi.org/project/lionagi/
+
 
 # LionAGI
 **Towards Automated General Intelligence**
