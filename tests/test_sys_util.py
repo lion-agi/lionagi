@@ -1,8 +1,12 @@
+import sys
+import os
 import unittest
+
+sys.path.append(os.path.dirname(os.path.abspath(__file__)))
 import asyncio
 import os
 from tempfile import NamedTemporaryFile
-from lionagi import (
+from ..lionagi.utils.api_util import (
     to_flat_dict,
     to_list,
     str_to_num,

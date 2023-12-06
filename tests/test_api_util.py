@@ -1,6 +1,9 @@
+import sys
 import os
 import unittest
 import asyncio
+
+sys.path.append(os.path.dirname(os.path.abspath(__file__)))
 
 from lionagi import BaseAPIService, StatusTracker, AsyncQueue, RateLimiter
 
