@@ -8,9 +8,6 @@
 
 name: Upload Python Package to TestPyPI
 
-env: 
-  GLOBAL_ENV_VAR: release
-
 on:
   release:
     types: [published]
@@ -28,8 +25,6 @@ jobs:
 
     steps:
     - uses: actions/checkout@v3
-    - name: set up env
-      run: echo $GLOBAL_ENV_VAR
     - name: Set up Python
       uses: actions/setup-python@v3
       with:
