@@ -2,7 +2,6 @@
 
 PyPI: https://pypi.org/project/lionagi/
 
-
 # LionAGI
 **Towards Automated General Intelligence**
 
@@ -29,7 +28,8 @@ Currently, LionAGI only natively support OpenAI API calls, support for other LLM
 **Notice**: 
 * calling API with maximum throughput over large set of data with advanced models i.e. gpt-4 can get **EXPENSIVE IN JUST SECONDS**,
 * please know what you are doing, and check the usage on OpenAI regularly
-* default rate limits are set to be **tier 1** of OpenAI model `gpt-4-1104-preview`, please check the [OpenAI usage limit documentation](https://platform.openai.com/docs/guides/rate-limits?context=tier-free) you can modify token rate parameters to fit different use cases. 
+* default rate limits are set to be **tier 1** of OpenAI model `gpt-4-1104-preview`, please check the [OpenAI usage limit documentation](https://platform.openai.com/docs/guides/rate-limits?context=tier-free) you can modify token rate parameters to fit different use cases.
+* Documentation is under process
 
 
 ### Quick Start
