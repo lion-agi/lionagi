@@ -72,7 +72,7 @@ When referencing LionAGI in your projects or research, please cite:
   author = {Haiyang Li},
   month = {12},
   year = {2023},
-  title = {LionAGI: Towards Automated Intelligence},
+  title = {LionAGI: Towards Automated General Intelligence},
   url = {https://github.com/lion-agi/lionagi},
 }
 ``` 
