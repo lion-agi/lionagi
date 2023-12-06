@@ -177,7 +177,7 @@ class RateLimiter(ABC):
         calculate_num_token: Method to calculate required tokens for a request.
     """
     
-    async def __init__(self, max_requests_per_minute: int, max_tokens_per_minute: int) -> None:
+    def __init__(self, max_requests_per_minute: int, max_tokens_per_minute: int) -> None:
         """
         Initializes the RateLimiter with specified maximum request and token limits.
 
@@ -198,7 +198,6 @@ class RateLimiter(ABC):
         self.max_tokens_per_minute = max_tokens_per_minute
         self.available_request_capacity = max_requests_per_minute
         self.available_token_capacity = max_tokens_per_minute
-        self.rate_limit_replenisher_task = asyncio.create_task(await self.rate_limit_replenisher())
     
     @abstractmethod
     async def rate_limit_replenisher(self) -> NoReturn:
