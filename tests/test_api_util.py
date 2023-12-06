@@ -3,7 +3,14 @@ import os
 import unittest
 import asyncio
 
-sys.path.append(os.path.dirname(os.path.abspath(__file__)))
+# Get the current directory of the script
+current_dir = os.path.dirname(os.path.abspath(__file__))
+
+# Move up one level to get the desired root directory
+desired_root_dir = os.path.dirname(current_dir)
+
+# Add the desired root directory to sys.path
+sys.path.append(desired_root_dir)
 
 from lionagi import BaseAPIService, StatusTracker, AsyncQueue, RateLimiter
 
