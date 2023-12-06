@@ -1,5 +1,5 @@
-![GitHub License](https://img.shields.io/github/license/lion-agi/lionagi?labelColor=233476aa&color=231fc935) ![PyPI - Version](https://img.shields.io/pypi/v/lionagi?color=231fc935) ![PyPI - Downloads](https://img.shields.io/pypi/dm/lionagi?labelColor=%233476aa&color=%231fc935)
- 
+![GitHub License](https://img.shields.io/github/license/lion-agi/lionagi?labelColor=233476aa&color=231fc935)
+
 - PyPI: https://pypi.org/project/lionagi/
 - Documentation: TODO
 - Website: TODO
