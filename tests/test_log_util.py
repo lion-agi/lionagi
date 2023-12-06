@@ -1,4 +1,8 @@
+import sys
+import os
 import unittest
+
+sys.path.append(os.path.dirname(os.path.abspath(__file__)))
 from lionagi import DataLogger
 from unittest.mock import patch
 import os
