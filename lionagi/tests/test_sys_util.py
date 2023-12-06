@@ -13,7 +13,7 @@ sys.path.append(desired_root_dir)
 import asyncio
 import os
 from tempfile import NamedTemporaryFile
-from lionagi import (
+from utils.api_util import (
     to_flat_dict,
     to_list,
     str_to_num,
