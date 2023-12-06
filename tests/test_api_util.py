@@ -2,7 +2,7 @@ import os
 import unittest
 import asyncio
 
-from ..lionagi.utils.api_util import BaseAPIService, StatusTracker, AsyncQueue, RateLimiter
+from lionagi.utils.api_util import BaseAPIService, StatusTracker, AsyncQueue, RateLimiter
 
 class MockAPIService(BaseAPIService):
     async def call_api_endpoint(self):
