@@ -35,7 +35,7 @@ class Test_doc_util(unittest.TestCase):
 
     def test_dir_to_path(self):
         # Mock the 'glob' method to avoid actual file system operations
-        with patch('lionagi.utils.doc_util.Path.glob') as mock_glob:
+        with patch('utils.doc_util.Path.glob') as mock_glob:
             mock_glob.return_value = [Path(self.temp_dir.name) / 'file1.txt', Path(self.temp_dir.name) / 'file2.txt']
             result = dir_to_path(dir=self.temp_dir.name, ext='.txt', recursive=True, flat=True)
         expected_result = [Path(self.temp_dir.name) / 'file1.txt', Path(self.temp_dir.name) / 'file2.txt']
