@@ -3,7 +3,7 @@
 
 
 - PyPI: https://pypi.org/project/lionagi/
-- Documentation: TODO
+- Documentation: https://lionagi.readthedocs.io/en/latest/
 - Website: TODO
   
 # LionAGI
