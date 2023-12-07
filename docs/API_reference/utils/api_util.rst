@@ -1,5 +1,5 @@
 API Util
 ========
 
-.. automodule:: lionagi.utils
+.. automodule:: lionagi.utils.api_util
   :members:
