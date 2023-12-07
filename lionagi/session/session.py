@@ -3,12 +3,14 @@ import asyncio
 from typing import Any
 
 from .conversation import Conversation
-from ..config.llmconfig import llmconfig
+from ..api.oai_config import oai_llmconfig
 from ..utils.log_util import DataLogger
 from ..utils.api_util import StatusTracker
-from ..config.oaiconfig import OAIService
+from ..api.oai_service import OpenAIService
+
 
 status_tracker = StatusTracker()
+OAIService = OpenAIService()
 
 class Session():
     """
@@ -31,7 +33,7 @@ class Session():
         call_chatcompletion: Make an asynchronous call to the chat completion API.
     """
     
-    def __init__(self, system, dir=None, llmconfig=llmconfig, api_service=OAIService):
+    def __init__(self, system, dir=None, llmconfig=oai_llmconfig, api_service=OAIService):
         """
         Initialize a Session object.
 
@@ -100,7 +102,7 @@ class Session():
         """
         # currently only openai chat completions are supported
         messages = self.conversation.messages
-        request_url = f"https://api.openai.com/v1/chat/completions"
+        
         config = {**self.llmconfig, **kwargs}
         
         payload = {
@@ -119,7 +121,7 @@ class Session():
             if config[key] is True:
                 payload.update({key: config[key]})
     
-        return (payload, request_url)
+        return payload
     
     async def call_chatcompletion(self, delay=1, **kwargs):
         """
@@ -130,10 +132,13 @@ class Session():
             kwargs: Additional keyword arguments for customization.
         """
         # currently only openai chat completions are supported
-        payload, request_url = self.create_payload_chatcompletion(**kwargs)
+        
+        endpoint = f"chat/completions"
         try:
             async with aiohttp.ClientSession() as session:
-                completion = await self.api_service.call_api(session, request_url, payload)
+                completion = await self.api_service.call_api(
+                                session, endpoint,
+                                self.create_payload_chatcompletion(**kwargs))
                 if "choices" in completion:
                     completion = completion['choices'][0]       # currently can only call one completion at a time, n has to be 1
                     self.logger({"input":self.conversation.messages, "output": completion})

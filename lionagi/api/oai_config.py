@@ -1,4 +1,4 @@
-llmconfig = {
+oai_llmconfig = {
     "model": "gpt-4-1106-preview",
     "frequency_penalty": 0,
     "max_tokens": 4000,

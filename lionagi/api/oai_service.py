@@ -1,7 +1,11 @@
+import os
+import dotenv
 import asyncio
 import logging
 import tiktoken
 from typing import Optional, NoReturn, Dict, Any
+
+dotenv.load_dotenv()
 
 from ..utils.api_util import AsyncQueue, StatusTracker, RateLimiter, BaseAPIService
 
@@ -52,8 +56,8 @@ class OpenAIRateLimiter(RateLimiter):
             self.available_request_capacity = self.max_requests_per_minute
             self.available_token_capacity = self.max_tokens_per_minute
             
-    def calculate_num_token(self, payload: Dict[str, Any], 
-                            api_endpoint: str, token_encoding_name: str) -> int:
+    def calculate_num_token(self, payload: Dict[str, Any] =None, 
+                            api_endpoint: str =None, token_encoding_name: str =None) -> int:
         """
         Calculates the number of tokens required for a request based on the payload and API endpoint.
 
@@ -143,11 +147,13 @@ class OpenAIService(BaseAPIService):
 
     def __init__(
         self,
-        api_key: str,
-        token_encoding_name: str,
-        max_attempts: int,
+        api_key: str = None,
+        token_encoding_name: str = "cl100k_base",
+        max_attempts: int = 3,
+        max_requests_per_minute: int = 50,
+        max_tokens_per_minute: int = 20_000,
+        ratelimiter = OpenAIRateLimiter,
         status_tracker: Optional[StatusTracker] = None,
-        rate_limiter: Optional[OpenAIRateLimiter] = None,
         queue: Optional[AsyncQueue] = None
     ):
         """
@@ -172,10 +178,13 @@ class OpenAIService(BaseAPIService):
             ... )
             # Service is configured for interacting with OpenAI API.
         """
+        api_key = api_key or os.getenv("OPENAI_API_KEY")
         super().__init__(api_key, token_encoding_name, max_attempts, 
-                         status_tracker, rate_limiter, queue)
+                         max_requests_per_minute, max_tokens_per_minute,
+                         ratelimiter, status_tracker, queue)
+        
 
-    async def call_api(self, session, request_url: str, payload: Dict[str, any]) -> Optional[Dict[str, any]]:
+    async def call_api(self, http_session, endpoint, payload: Dict[str, any] =None) -> Optional[Dict[str, any]]:
         """
         Call an OpenAI API endpoint with a specific payload and handle the response.
 
@@ -199,12 +208,13 @@ class OpenAIService(BaseAPIService):
             ... )
             # Calls the specified API endpoint with the given payload.
         """
+        endpoint = self.api_endpoint_from_url(self.base_url+endpoint)
+        
         while True:
             if self.rate_limiter.available_request_capacity < 1 or self.rate_limiter.available_token_capacity < 10:  # Minimum token count
                 await asyncio.sleep(1)  # Wait for capacity
                 continue
             
-            endpoint = self.api_endpoint_from_url(request_url)
             required_tokens = self.rate_limiter.calculate_num_token(payload, endpoint, self.token_encoding_name)
             
             if self.rate_limiter.available_token_capacity >= required_tokens:
@@ -216,8 +226,8 @@ class OpenAIService(BaseAPIService):
 
                 while attempts_left > 0:
                     try:
-                        async with session.post(
-                            url=request_url, headers=request_headers, json=payload
+                        async with http_session.post(
+                            url=(self.base_url+endpoint), headers=request_headers, json=payload
                         ) as response:
                             response_json = await response.json()
 
@@ -239,4 +249,3 @@ class OpenAIService(BaseAPIService):
                 break
             else:
                 await asyncio.sleep(1)  # Wait for token capacity
-                
