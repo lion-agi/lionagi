@@ -5,6 +5,7 @@
 - PyPI: https://pypi.org/project/lionagi/
 - Documentation: https://lionagi.readthedocs.io/en/latest/  （still a lot TODO）
 - Website: TODO
+- Discord: [Join Our Discord](https://discord.gg/ACnynvvPjt)
   
 # LionAGI
 **Towards Automated General Intelligence**
@@ -77,6 +78,11 @@ When referencing LionAGI in your projects or research, please cite:
   title = {LionAGI: Towards Automated General Intelligence},
   url = {https://github.com/lion-agi/lionagi},
 }
-``` 
+```
+
+## Star History
+![Star History Chart](https://api.star-history.com/svg?repos=lion-agi/lionagi&type=Date)
+
 ### Requirements
 Python 3.9 or higher. 
+
