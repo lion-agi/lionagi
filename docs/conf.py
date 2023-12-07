@@ -1,4 +1,4 @@
-import lionagi.version
+import .lionagi.version
 
 ver = lionagi.version.__version__
 
