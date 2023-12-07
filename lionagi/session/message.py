@@ -71,3 +71,6 @@ class Message:
         }, **out}
         self.logger(a)
         return out
+    
+    def _to_csv(self, dir, filename, verbose=True, timestamp=True, dir_exist_ok=True, file_exist_ok=False):
+        self.logger.to_csv(dir, filename, verbose, timestamp, dir_exist_ok, file_exist_ok)

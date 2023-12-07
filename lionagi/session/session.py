@@ -151,3 +151,15 @@ class Session():
         except Exception as e:
             status_tracker.num_tasks_failed += 1
             raise e
+    
+    def messages_to_csv(self, dir=None, filename="_messages.csv", **kwags):
+        dir = dir or self.logger.dir
+        if dir is None:
+            raise ValueError("No directory specified.")
+        self.conversation.msg._to_csv(dir=dir, filename=filename, **kwags)
+        
+    def log_to_csv(self, dir=None, filename="_llmlog.csv", **kwags):
+        dir = dir or self.logger.dir
+        if dir is None:
+            raise ValueError("No directory specified.")
+        self.logger.to_csv(dir=dir, filename=filename, **kwags)
