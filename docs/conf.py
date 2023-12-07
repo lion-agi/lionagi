@@ -1,6 +1,6 @@
-import .lionagi.version
+from ..version import __version__
 
-ver = lionagi.version.__version__
+ver = __version__
 
 # Configuration file for the Sphinx documentation builder.
 
