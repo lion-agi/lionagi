@@ -30,5 +30,6 @@ templates_path = ["_templates"]
 
 # -- Options for HTML output
 html_title = project + " " + version
+html_theme = 'sphinx_rtd_theme'
 
 
