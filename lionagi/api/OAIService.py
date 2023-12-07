@@ -1,7 +1,11 @@
+import os
+import dotenv
 import asyncio
 import logging
 import tiktoken
 from typing import Optional, NoReturn, Dict, Any
+
+dotenv.load_dotenv()
 
 from ..utils.api_util import AsyncQueue, StatusTracker, RateLimiter, BaseAPIService
 
@@ -23,7 +27,7 @@ class OpenAIRateLimiter(RateLimiter):
         calculate_num_token: Calculates the required tokens for a request.
     """
 
-    def __init__(self, max_requests_per_minute: int, max_tokens_per_minute: int) -> None:
+    def __init__(self, max_requests_per_minute: int =50, max_tokens_per_minute: int =20_000) -> None:
         """
         Initializes the rate limiter with specific limits for OpenAI API.
 
@@ -143,11 +147,12 @@ class OpenAIService(BaseAPIService):
 
     def __init__(
         self,
-        api_key: str,
-        token_encoding_name: str,
-        max_attempts: int,
+        api_key: str = None,
+        token_encoding_name: str = "cl100k_base",
+        max_attempts: int = 3,
+        max_requests_per_minute: int = 50,
+        max_tokens_per_minute: int = 20_000,
         status_tracker: Optional[StatusTracker] = None,
-        rate_limiter: Optional[OpenAIRateLimiter] = None,
         queue: Optional[AsyncQueue] = None
     ):
         """
@@ -172,8 +177,10 @@ class OpenAIService(BaseAPIService):
             ... )
             # Service is configured for interacting with OpenAI API.
         """
-        super().__init__(api_key, token_encoding_name, max_attempts, 
-                         status_tracker, rate_limiter, queue)
+        api_key = api_key or os.getenv("OPENAI_API_KEY")
+        super().__init__(api_key, token_encoding_name, max_attempts, status_tracker, queue)
+        self.rate_limiter = OpenAIRateLimiter(max_requests_per_minute, max_tokens_per_minute)
+        
 
     async def call_api(self, session, request_url: str, payload: Dict[str, any]) -> Optional[Dict[str, any]]:
         """
@@ -239,4 +246,3 @@ class OpenAIService(BaseAPIService):
                 break
             else:
                 await asyncio.sleep(1)  # Wait for token capacity
-                

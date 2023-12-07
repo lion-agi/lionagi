@@ -6,9 +6,11 @@ from .conversation import Conversation
 from ..config.llmconfig import llmconfig
 from ..utils.log_util import DataLogger
 from ..utils.api_util import StatusTracker
-from ..config.oaiconfig import OAIService
+from ..api.OAIService import OpenAIService
+
 
 status_tracker = StatusTracker()
+OAIService = OpenAIService()
 
 class Session():
     """

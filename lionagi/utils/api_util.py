@@ -272,9 +272,8 @@ class BaseAPIService(ABC):
         api_key: str,
         token_encoding_name: str,
         max_attempts: int,
-        status_tracker: Optional[StatusTracker],
-        rate_limiter: RateLimiter,
-        queue: Optional[AsyncQueue]
+        status_tracker: Optional[StatusTracker] = None,
+        queue: Optional[AsyncQueue] = None,        
     ) -> None:
         """
         Initializes the BaseAPIService with necessary configuration.
@@ -299,7 +298,6 @@ class BaseAPIService(ABC):
         self.token_encoding_name = token_encoding_name
         self.max_attempts = max_attempts
         self.status_tracker = status_tracker or StatusTracker()
-        self.rate_limiter = rate_limiter
         self.queue = queue or AsyncQueue()
         
     @abstractmethod
