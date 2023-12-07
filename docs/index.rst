@@ -87,4 +87,5 @@ Python 3.9 or higher.
   :hidden:
 
   API_reference/utils_index.rst
+  API_reference/session_index.rst
 
