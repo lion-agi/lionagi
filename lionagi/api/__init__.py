@@ -1,6 +1,7 @@
-from .OAIService import OpenAIRateLimiter, OpenAIService
+from .oai_service import OpenAIService
+from .oai_config import oai_llmconfig
 
 __all__ = [
-    "OpenAIRateLimiter",
+    "oai_llmconfig",
     "OpenAIService",
 ]
