@@ -150,8 +150,8 @@ class OpenAIService(BaseAPIService):
         api_key: str = None,
         token_encoding_name: str = "cl100k_base",
         max_attempts: int = 3,
-        max_requests_per_minute: int = 50,
-        max_tokens_per_minute: int = 20_000,
+        max_requests_per_minute: int = 500,
+        max_tokens_per_minute: int = 150_000,
         ratelimiter = OpenAIRateLimiter,
         status_tracker: Optional[StatusTracker] = None,
         queue: Optional[AsyncQueue] = None
