@@ -79,3 +79,13 @@ When referencing LionAGI in your projects or research, please cite:
 Requirements
 ************
 Python 3.9 or higher. 
+
+
+.. toctree::
+  :maxdepth: 1
+  :caption: API Reference
+  :hidden:
+
+  API_reference/utils_index.rst
+  API_reference/session_index.rst
+
