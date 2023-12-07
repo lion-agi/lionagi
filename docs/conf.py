@@ -13,8 +13,8 @@ project = "lionagi"
 copyright = "2023, Haiyang Li"
 author = "Haiyang Li"
 
-version = version
-release = version
+version = __version__
+release = __version__
 
 # -- General configuration
 extensions = [
