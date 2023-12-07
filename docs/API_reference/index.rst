@@ -1,7 +1,7 @@
 Utils
 =====
 
-.. toctree:
+.. toctree::
   :maxdepth: 1
 
   utils/api_util.rst
