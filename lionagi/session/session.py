@@ -109,7 +109,6 @@ class Session():
             "messages": messages,
             "model": config.get('model'),
             "frequency_penalty": config.get('frequency_penalty'),
-            "max_tokens": config.get('max_tokens'),
             "n": config.get('n'),
             "presence_penalty": config.get('presence_penalty'),
             "response_format": config.get('response_format'),
@@ -117,7 +116,7 @@ class Session():
             "top_p": config.get('top_p'),
             }
         
-        for key in ["seed", "stop", "stream", "tools", "tool_choice", "user"]:
+        for key in ["seed", "stop", "stream", "tools", "tool_choice", "user", "max_tokens"]:
             if config[key] is True:
                 payload.update({key: config[key]})
     
