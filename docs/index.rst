@@ -86,8 +86,5 @@ Python 3.9 or higher.
   :caption: API Reference
   :hidden:
 
-  API_reference/utils/api_util.rst
-  API_reference/utils/doc_util.rst
-  API_reference/utils/log_util.rst
-  API_reference/utils/sys_util.rst
+  API_reference/index.rst
 
