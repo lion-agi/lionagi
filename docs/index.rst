@@ -82,4 +82,9 @@ Python 3.9 or higher.
 
 
 .. toctree::
-  API Reference
+  :maxdepth: 1
+  :caption: API Reference
+  :hidden:
+
+  API_reference/utils/api_util.rst
+
