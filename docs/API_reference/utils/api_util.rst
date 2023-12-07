@@ -4,4 +4,4 @@ API Util
 .. autosummary::
   :toctree: generated
 
-  lionagi.lionagi.utils.api_util
+  lionagi.utils.api_util
