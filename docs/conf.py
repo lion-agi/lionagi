@@ -1,6 +1,10 @@
-from ..version import __version__
+import os
+import sys
 
-ver = __version__
+sys.path.insert(0, os.path.abspath("../"))
+
+with open("../lionagi/version.py") as v:
+    exec(v.read())
 
 # Configuration file for the Sphinx documentation builder.
 
@@ -9,8 +13,8 @@ project = "lionagi"
 copyright = "2023, Haiyang Li"
 author = "Haiyang Li"
 
-version = ver
-release = ver
+version = version
+release = version
 
 # -- General configuration
 extensions = [
