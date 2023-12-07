@@ -4,8 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name="lionagi"
-author="HaiyangLi"
-author_email="ocean@lionagi.ai"
+authors=[{name = "Haiyang Li", email="ocean@lionagi.ai"}]
 description="Towards automated general intelligence."
 dynamic = ["version"]
 readme = "README.md"
