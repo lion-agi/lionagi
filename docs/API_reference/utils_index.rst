@@ -2,7 +2,7 @@ API Reference
 =====
 
 Utils
-******
+=
 
 .. toctree::
 
