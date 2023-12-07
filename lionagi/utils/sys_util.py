@@ -312,7 +312,6 @@ def to_csv(input: List[Dict[str, Any]],
         writer.writerows(input)
 
 
-
 def append_to_jsonl(data: Any, filepath: str) -> None:
     """
     Appends data to a JSON lines (jsonl) file.

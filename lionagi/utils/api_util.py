@@ -215,7 +215,8 @@ class RateLimiter(ABC):
             ...
             >>> limiter = MyRateLimiter(100, 200)
         """
-        pass
+        
+        ...
     
     @abstractmethod
     def calculate_num_token(self, payload: Dict[str, Any], api_endpoint: str) -> int:
@@ -241,7 +242,8 @@ class RateLimiter(ABC):
             >>> limiter.calculate_num_token({'data': '12345'}, 'api/send')
             0
         """
-        pass
+        
+        ...
 
 class BaseAPIService(ABC):
     """
@@ -272,8 +274,11 @@ class BaseAPIService(ABC):
         api_key: str,
         token_encoding_name: str,
         max_attempts: int,
+        max_requests_per_minute: int,
+        max_tokens_per_minute: int,
+        ratelimiter,
         status_tracker: Optional[StatusTracker] = None,
-        queue: Optional[AsyncQueue] = None,        
+        queue: Optional[AsyncQueue] = None,       
     ) -> None:
         """
         Initializes the BaseAPIService with necessary configuration.
@@ -299,6 +304,7 @@ class BaseAPIService(ABC):
         self.max_attempts = max_attempts
         self.status_tracker = status_tracker or StatusTracker()
         self.queue = queue or AsyncQueue()
+        self.rate_limiter = ratelimiter(max_requests_per_minute, max_tokens_per_minute)
         
     @abstractmethod
     async def call_api(self) -> Any:
@@ -314,7 +320,8 @@ class BaseAPIService(ABC):
             ...         # Implementation details here
             ...
         """
-        pass
+        
+        ...
 
     def handle_error(
         self,
@@ -343,19 +350,6 @@ class BaseAPIService(ABC):
         )
         self.append_to_jsonl(data, save_filepath)
         logging.error(f"Request failed after all attempts. Saving errors: {data}")
-
-    @staticmethod
-    def append_to_jsonl(data: Any, filename: str) -> None:
-        """
-        Appends the given data to the specified JSONL file.
-        
-        Args:
-            data (Any): The data to be appended in JSON Lines format.
-            filename (str): The file path to the JSONL file.
-        """
-        json_string = json.dumps(data)
-        with open(filename, "a") as f:
-            f.write(json_string + "\n")
 
     @staticmethod
     def api_endpoint_from_url(request_url: str) -> str:
