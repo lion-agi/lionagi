@@ -86,5 +86,5 @@ Python 3.9 or higher.
   :caption: API Reference
   :hidden:
 
-  API_reference/index.rst
+  API_reference/utils_index.rst
 
