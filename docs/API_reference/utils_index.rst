@@ -1,8 +1,5 @@
-API Reference
-=====
-
 Utils
-=
+=====
 
 .. toctree::
 
