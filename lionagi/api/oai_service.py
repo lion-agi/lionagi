@@ -36,7 +36,8 @@ class OpenAIRateLimiter(RateLimiter):
             max_tokens_per_minute (int): The maximum number of tokens that can accumulate per minute.
         """
         super().__init__(max_requests_per_minute, max_tokens_per_minute)
-        self.rate_limit_replenisher_task = asyncio.create_task(self.rate_limit_replenisher())
+        if not os.getenv('env_readthedocs'):
+            self.rate_limit_replenisher_task = asyncio.create_task(self.rate_limit_replenisher())
     
     async def rate_limit_replenisher(self) -> NoReturn:
         """
