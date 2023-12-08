@@ -64,7 +64,7 @@ Visit our notebooks for our examples.
 
 ### Community
 
-We encourage contributions to LionAGI and invite you to enrich its features and capabilities. Engage with us and other community members on [Discord](https://discord.gg/ACnynvvPjt)
+We encourage contributions to LionAGI and invite you to enrich its features and capabilities. Engage with us and other community members [Join Our Discord](https://discord.gg/AnExZNRRzV)
 
 ### Citation
 
