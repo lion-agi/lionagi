@@ -4,7 +4,11 @@ import sys
 sys.path.insert(0, os.path.abspath("../"))
 
 with open("../lionagi/version.py") as v:
-    exec(v.read())
+    exec(v.read(), globals())
+
+global_version = globals().get("__version__")
+if global_version is None:
+    raise RuntimeError("Version could not be read from lionagi/version.py")
 
 # Configuration file for the Sphinx documentation builder.
 
@@ -13,8 +17,8 @@ project = "lionagi"
 copyright = "2023, Haiyang Li"
 author = "Haiyang Li"
 
-version = __version__
-release = __version__
+version = global_version
+release = global_version
 
 # -- General configuration
 extensions = [
