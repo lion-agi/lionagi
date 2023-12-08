@@ -1,5 +1,5 @@
-Doc Util
+Sys Util
 ========
 
-.. automodule:: lionagi.utils.doc_util
+.. automodule:: lionagi.utils.sys_util
   :members:
