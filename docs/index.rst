@@ -83,6 +83,13 @@ Python 3.9 or higher.
 
 .. toctree::
    :maxdepth: 1
+   :caption: Get Started
+   :hidden:
+
+   Get_started/installation.rst
+
+.. toctree::
+   :maxdepth: 1
    :caption: API Reference
    :hidden:
 
