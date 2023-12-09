@@ -90,7 +90,7 @@ Python 3.9 or higher.
   API_reference/session_index.rst
   API_reference/api_index.rst
 
-..toctree::
+.. toctree::
   :caption: Notebook Examples
   :hidden:
 
