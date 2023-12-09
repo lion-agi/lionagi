@@ -82,6 +82,7 @@ Python 3.9 or higher.
 
 
 .. toctree::
+  :maxdepth: 1
   :caption: API Reference
   :hidden:
 
@@ -90,6 +91,7 @@ Python 3.9 or higher.
   API_reference/api_index.rst
 
 .. toctree::
+  :maxdepth: 1
   :caption: Notebook Examples
   :hidden:
 
