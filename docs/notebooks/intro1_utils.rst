@@ -3,7 +3,7 @@ LionAGI Introduction 1: Utils
 
 LionAGI is equipped with a set of powerful system tools
 
-.. code:: ipython3
+.. code-block:: python
 
     import lionagi as li
 
@@ -16,7 +16,7 @@ complex data structure
 special function call handlers are designed to reduce that pain to stay
 focus on the workflow
 
-.. code:: ipython3
+.. code-block:: python
 
     # create a test input list
     a = [1,2,3,4,5]
@@ -24,7 +24,7 @@ focus on the workflow
     # create some test functions
     f1 = lambda x: x**2
 
-.. code:: ipython3
+.. code-block:: python
 
     # the first special function calling method is called l_call (list call)
     # you can operate a single function on the whole set of input list
@@ -40,7 +40,7 @@ focus on the workflow
 
 
 
-.. code:: ipython3
+.. code-block:: python
 
     # the second is called m_call (map call) 
     # provide a list of inputs and a list of functions of same length
@@ -68,7 +68,7 @@ focus on the workflow
 
 
 
-.. code:: ipython3
+.. code-block:: python
 
     # e_call, explode call, it creates a 2-dimensional list
     # of each element applied with each function
@@ -91,7 +91,7 @@ focus on the workflow
 Flatten nested dictionary
 ~~~~~~~~~~~~~~~~~~~~~~~~~
 
-.. code:: ipython3
+.. code-block:: python
 
     # get all nested dict outside return as an unnested dict, 
     # preserve parent-child relationship, and key order
@@ -121,7 +121,7 @@ Flatten nested dictionary
 
 
 
-.. code:: ipython3
+.. code-block:: python
 
     li.to_flat_dict(a, sep='.') # change separator
 
@@ -137,7 +137,7 @@ Flatten nested dictionary
 Type conversion and validation
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-.. code:: ipython3
+.. code-block:: python
 
     # to_list can convert given object to list with many special features
     
@@ -153,7 +153,7 @@ Type conversion and validation
 
 
 
-.. code:: ipython3
+.. code-block:: python
 
     a1 = [['a',1, [None,2.0]], True]
     
@@ -168,7 +168,7 @@ Type conversion and validation
 
 
 
-.. code:: ipython3
+.. code-block:: python
 
     # combining to_list calls using different features can be very powerful
     a1 = [['a',1, [None, 2.0]], True] + li.to_list(a, flatten_dict=True)
@@ -193,7 +193,7 @@ Type conversion and validation
 
 
 
-.. code:: ipython3
+.. code-block:: python
 
     # keep all numeric from a string return as a positive int (will have error if encouter .)
     li.str_to_num('1d24e', upper_bound=100, lower_bound=1)
@@ -207,7 +207,7 @@ Type conversion and validation
 
 
 
-.. code:: ipython3
+.. code-block:: python
 
     # keep all numeric from a string return as a positive float (. must be behind a number immiediately)
     li.str_to_num('1d2.4df21234257e', upper_bound=100, lower_bound=0, num_type=float, precision=3)
@@ -224,7 +224,7 @@ Type conversion and validation
 Others
 ~~~~~~
 
-.. code:: ipython3
+.. code-block:: python
 
     # create deep copies of any object
     li.make_copy(a,3)
@@ -240,7 +240,7 @@ Others
 
 
 
-.. code:: ipython3
+.. code-block:: python
 
     len(a)
 
@@ -253,7 +253,7 @@ Others
 
 
 
-.. code:: ipython3
+.. code-block:: python
 
     f = lambda x: li.to_flat_dict(a, sep='.')
     li.hold_call(a, f, sleep=1)
@@ -267,7 +267,7 @@ Others
 
 
 
-.. code:: ipython3
+.. code-block:: python
 
     def ff(x):
         raise Exception('test')
@@ -280,7 +280,7 @@ Others
     exception ignored  Error: test
 
 
-.. code:: ipython3
+.. code-block:: python
 
     li.hold_call(a, ff, sleep=1, ignore_error=False, message='exception not ignored ')
 
