@@ -7,3 +7,4 @@ Jupyter Notebook Examples
    intro2_files.rst
    intro3_session.rst
    intro4_session_advanced.rst
+   intro1_test.rst
