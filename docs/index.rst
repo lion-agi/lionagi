@@ -91,7 +91,10 @@ Python 3.9 or higher.
   API_reference/api_index.rst
 
 .. toctree::
-  :caption: Notebook Examples
+  :maxdepth: 1
+  :caption: API Reference
   :hidden:
 
-  notebook/index.rst
+  API_reference/utils_index.rst
+  API_reference/session_index.rst
+  API_reference/api_index.rst
