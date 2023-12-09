@@ -3,4 +3,4 @@ OpenAI Service
 
 .. toctree::
 
-  api/oai_service.rst
+   api/oai_service.rst
