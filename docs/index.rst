@@ -95,4 +95,4 @@ Python 3.9 or higher.
   :caption: Notebook Examples
   :hidden:
 
-  notebook/index.rst
+  notebooks/index.rst
