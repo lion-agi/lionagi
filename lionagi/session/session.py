@@ -156,6 +156,7 @@ class Session():
         dir = dir or self.logger.dir
         if dir is None:
             raise ValueError("No directory specified.")
+        self.conversation.append_last_response()
         self.conversation.msg._to_csv(dir=dir, filename=filename, **kwags)
         
     def log_to_csv(self, dir=None, filename="_llmlog.csv", **kwags):
