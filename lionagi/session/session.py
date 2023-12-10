@@ -68,7 +68,7 @@ class Session():
             }
         
         for key in ["seed", "stop", "stream", "tools", "tool_choice", "user", "max_tokens"]:
-            if config[key] is True:
+            if bool(config[key]) is True and str(config[key]) != "none":
                 payload.update({key: config[key]})
     
         return payload

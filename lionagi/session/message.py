@@ -21,7 +21,7 @@ class Message:
         else: 
             if response:
                 response = response["message"]
-                if str(response['content']) == "null":
+                if str(response['content']) == "None":
                     try:
                         # currently can only support a single function as tool
                         if response['tool_calls'][0]['type'] == 'function':
