@@ -87,6 +87,8 @@ Python 3.9 or higher.
    :hidden:
 
    Get_started/installation.rst
+   Get_started/quick_start.rst
+   Get_started/config.rst
 
 .. toctree::
    :maxdepth: 1
