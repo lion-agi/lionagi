@@ -5,72 +5,65 @@ from ..utils.log_util import DataLogger
 
 
 class Message:
-    """
-    A class modeling messages in conversations.
 
-    This class is designed to encapsulate messages exchanged between different roles
-    (user, assistant, or system) in a conversation. It includes functionality to process,
-    log, and manage messages.
-
-    Attributes:
-        role: The role of the message (user, assistant, or system).
-        content: The content of the message.
-        sender: The sender of the message.
-        logger: An instance of DataLogger for logging message information.
-
-    Methods:
-        __call__: Process and log a message based on its role.
-    """
     def __init__(self) -> None:
-        """
-        Initialize a Message object with attributes for role, content, sender, and a DataLogger.
-        """
         self.role = None
         self.content = None
-        self.sender = None
-        self.logger = DataLogger()
-
-    def __call__(self, system=None, instruction=None, response=None, context=None, sender=None):
-        """
-        Process and log a message based on the specified role (system, instruction, or response).
-
-        Args:
-            system: The content of the message in the system role.
-            instruction: The content of the message in the user role.
-            response: The content of the message in the assistant role.
-            context: Additional context for the user instruction.
-            sender: The sender of the message.
-        """
+        self.name = None
+        self.metadata = None
+        self._logger = DataLogger()
+    
+    def create_message(self, system=None, instruction=None, context=None, response=None, name=None):
         
-        if sum(map(bool, [system, instruction, response])) > 1:
-            raise ValueError("Message cannot have more than one role.")
-        else:
+        if (system and (response or instruction)) or (response and instruction):
+            raise ValueError("Error: Message cannot have more than one role.")
+        
+        else: 
             if response:
-                self.role = "assistant"
-                self.sender = sender or "assistant"
-                self.content = response['content']
+                response = response["message"]
+                if str(response['content']) == "null":
+                    try:
+                        # currently can only support a single function as tool
+                        if response['tool_calls'][0]['type'] == 'function':
+                            self.role = "tool"
+                            self.name = name or ("func_" + response['tool_calls'][0]['function']['name'])
+                            content = response['tool_calls'][0]['function']['arguments']
+                            self.content = {"function":self.name, "arguments": content}
+                    except:
+                        raise ValueError("Response message must have content from assistant or tools")
+                else:
+                    self.role = "assistant"
+                    self.content = response['content']
+                    self.name = name or "assistant"
             elif instruction:
                 self.role = "user"
-                self.sender = sender or "user"
                 self.content = {"instruction": instruction}
+                self.name = name or "user"
                 if context:
-                    self.content.update(context)
+                    self.content.update({"context": context})
             elif system:
                 self.role = "system"
-                self.sender = sender or "system"
                 self.content = system
+                self.name = name or "system"
+    
+    def to_json(self):
+        
         out = {
             "role": self.role,
             "content": json.dumps(self.content) if isinstance(self.content, dict) else self.content
             }
-        
-        a = {**{
+    
+        self.metadata = {
             "id": create_id(),
             "timestamp": datetime.now().isoformat(),
-            "sender": self.sender
-        }, **out}
-        self.logger(a)
+            "name": self.name}
+        
+        self._logger({**self.metadata, **out})
         return out
+        
+    def __call__(self, system=None, instruction=None, context=None, response=None, name=None):
+        self.create_message(system, instruction, context, response, name)
+        return self.to_json()
     
-    def _to_csv(self, dir, filename, verbose=True, timestamp=True, dir_exist_ok=True, file_exist_ok=False):
-        self.logger.to_csv(dir, filename, verbose, timestamp, dir_exist_ok, file_exist_ok)
+    def to_csv(self, dir=None, filename=None, verbose=True, timestamp=True, dir_exist_ok=True, file_exist_ok=False):
+        self._logger.to_csv(dir, filename, verbose, timestamp, dir_exist_ok, file_exist_ok)
