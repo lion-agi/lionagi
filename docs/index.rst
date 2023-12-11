@@ -89,6 +89,7 @@ Python 3.9 or higher.
    Get_started/installation.rst
    Get_started/quick_start.rst
    Get_started/config.rst
+   Get_started/calculator.rst
 
 .. toctree::
    :maxdepth: 1
