@@ -1,6 +1,6 @@
 from datetime import datetime
 import json
-from ..utils.sys_util import create_id
+from ..utils.sys_util import create_id, l_call
 from ..utils.log_util import DataLogger
 
 
@@ -13,26 +13,24 @@ class Message:
         self.metadata = None
         self._logger = DataLogger()
     
-    def create_message(self, system=None, instruction=None, context=None, response=None, name=None):
-        
-        if (system and (response or instruction)) or (response and instruction):
+    def create_message(self, system=None, instruction=None, context=None, response=None, tool=None, name=None):
+        if sum(l_call([system, instruction, response, tool], bool)) > 1:
             raise ValueError("Error: Message cannot have more than one role.")
         
         else: 
             if response:
+                self.role = "assistant"
                 response = response["message"]
                 if str(response['content']) == "None":
                     try:
-                        # currently can only support a single function as tool
+                        # currently can only support a single function response
                         if response['tool_calls'][0]['type'] == 'function':
-                            self.role = "tool"
                             self.name = name or ("func_" + response['tool_calls'][0]['function']['name'])
                             content = response['tool_calls'][0]['function']['arguments']
                             self.content = {"function":self.name, "arguments": content}
                     except:
-                        raise ValueError("Response message must have content from assistant or tools")
+                        raise ValueError("Response message must be one of regular response or function calling")
                 else:
-                    self.role = "assistant"
                     self.content = response['content']
                     self.name = name or "assistant"
             elif instruction:
@@ -45,6 +43,10 @@ class Message:
                 self.role = "system"
                 self.content = system
                 self.name = name or "system"
+            elif tool:
+                self.role = "tool"
+                self.content = tool
+                self.name = name or "tool"
     
     def to_json(self):
         

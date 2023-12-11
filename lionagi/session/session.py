@@ -77,11 +77,11 @@ class Session():
         endpoint = f"chat/completions"
         try:
             async with aiohttp.ClientSession() as session:
+                payload = self.create_payload_chatcompletion(**kwargs)
                 completion = await self.api_service.call_api(
-                                session, endpoint,
-                                self.create_payload_chatcompletion(**kwargs))
+                                session, endpoint, payload)
                 if "choices" in completion:
-                    self._logger({"input":self.conversation.messages, "output": completion})
+                    self._logger({"input":payload, "output": completion})
                     self.conversation.add_messages(response=completion['choices'][0])
                     self.conversation.responses.append(self.conversation.messages[-1])
                     self.conversation.response_counts += 1
