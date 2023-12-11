@@ -11,13 +11,19 @@ In this example, we will have two steps in the instruction:
 
 .. code-block:: python
 
-   system = "You are asked to perform as a calculator. Think step by step, but return only a numeric value, i.e. int or float, no text."
+   system =
+   '''
+   You are asked to perform as a calculator.
+   Think step by step, but return only a numeric value, i.e. int or float, no text.
+   '''
 
    instruct1 = {
-        "sum the absolute values": "provided with 2 numbers, return the sum of their absolute values. i.e. |x|+|y|",}
+        "sum the absolute values":
+        "provided with 2 numbers, return the sum of their absolute values. i.e. |x|+|y|",}
 
    instruct2 = {
-        "diff the absolute values": "provided with 2 numbers, return the difference of absolute values. i.e. |x|-|y|",}
+        "diff the absolute values":
+        "provided with 2 numbers, return the difference of absolute values. i.e. |x|-|y|",}
 
    instruct3 = {
         "if previous response is positive": "times 2. i.e. *2",
