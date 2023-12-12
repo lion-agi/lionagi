@@ -26,12 +26,12 @@ In the first step, we create a session with the comedian and generate some jokes
 
 Here are the two jokes we get:
 
-.. parsed-literal::
+.. code-block:: markdown
 
    Why did the blue whale and the big shark get kicked out of the bar?
    Because every time they hit the dance floor,it turned into a splash mob!
 
-.. parsed-literal::
+.. code-block:: markdown
 
    The blue whale turned to the shark and said, "I must have had one too many plankton cocktails
    because I'm pretty sure we're supposed to be natural enemies, not dance partners!"
@@ -59,13 +59,13 @@ Now, let's construct a commentator to critique these two jokes.
 
 We have received two comments:
 
-.. parsed-literal::
+.. code-block:: markdown
 
    The whimsy of the first joke hinges on a clever play on words, transforming a common social
    phenomenon into an aquatic pun. It's a light-hearted jab at the chaos that might ensue when
    two large sea creatures attempt to groove together, effectively tickling the imagination.
 
-.. parsed-literal::
+.. code-block:: markdown
 
    Joke 1 offers an amusing visual of a seemingly impossible scenario, blending the mundane
    with the extraordinary to create a scene ripe for comedy. The punchline delivers an unexpected
@@ -96,7 +96,7 @@ Let's take a look at the comedian's responses.
 
 Reflection:
 
-.. parsed-literal::
+.. code-block:: markdown
 
    As the comedian behind the jokes, it makes perfect sense to me that a critic would evaluate them
    in such a way. The detailed analysis of the first joke captures the essence of what I was going
@@ -117,14 +117,14 @@ Reflection:
 
 Revised Joke 1:
 
-.. parsed-literal::
+.. code-block:: markdown
 
    Why did the blue whale and the big shark get kicked out of the bar? Because they turned the dance floor
    into a literal "wave pool"!
 
 Revised Joke 2:
 
-.. parsed-literal::
+.. code-block:: markdown
 
    The blue whale looked at the shark in bewilderment and blurted out, "This is fin-tastic, but if we keep
    this up, we're going to need a bigger sea-quarium!"

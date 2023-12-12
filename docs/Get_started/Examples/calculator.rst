@@ -58,7 +58,7 @@ to be ``20``.
    print(f"step1 result: {step1}")
    print(f"step2 result: {step2}")
 
-.. parsed-literal::
+.. code-block:: markdown
 
    step1 result: 10
    step2 result: 20
@@ -106,7 +106,7 @@ Now, with all the necessary information in hand, let's organize it into contexts
 
 If you print out the ``contexts``, it would be like this:
 
-.. parsed-literal::
+.. code-block:: markdown
 
    {'x': '1', 'y': '2', 'case': '1'}
    {'x': '2', 'y': '4', 'case': '0'}
@@ -143,7 +143,7 @@ Let's check our results:
         print(f"Outputs: {out}")
         print("------\n")
 
-.. parsed-literal::
+.. code-block:: markdown
 
    Inputs: 1, 2, case: 1
 
