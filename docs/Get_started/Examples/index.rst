@@ -7,3 +7,4 @@ applications of LionAGI.
 .. toctree::
 
    calculator.rst
+   comedian.rst
