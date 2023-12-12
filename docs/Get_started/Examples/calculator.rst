@@ -148,24 +148,29 @@ Let's check our results:
    Inputs: 1, 2, case: 1
 
    Outputs: ['-1', '1']
+
    ------
 
    Inputs: 2, 4, case: 0
 
    Outputs: ['6', '12']
+
    ------
 
    Inputs: 3, 5, case: 1
 
    Outputs: ['-2', '0']
+
    ------
 
    Inputs: 4, 2, case: 0
 
    Outputs: ['6', '12']
+
    ------
 
    Inputs: 5, 3, case: 1
 
    Outputs: ['2', '4']
+
    ------
