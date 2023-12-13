@@ -14,7 +14,7 @@ import unittest
 import tempfile
 from unittest.mock import patch
 from pathlib import Path
-from lionagi.utils.doc_util import (
+from utils.doc_util import (
     dir_to_path,
     read_text,
     dir_to_files,
