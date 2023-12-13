@@ -3,108 +3,78 @@ import asyncio
 from typing import Any
 
 from .conversation import Conversation
-from ..api.oai_config import oai_llmconfig
+from ..utils.sys_util import to_list
 from ..utils.log_util import DataLogger
 from ..utils.api_util import StatusTracker
+from ..utils.tool_util import ToolManager
 from ..api.oai_service import OpenAIService
+
+from ..api.oai_config import oai_llmconfig
 
 
 status_tracker = StatusTracker()
 OAIService = OpenAIService()
 
 class Session():
-    """
-    A class representing a conversation session with chat completion capabilities.
-
-    This class manages conversations, interacts with chat completion services (currently OpenAI),
-    and logs the interactions using a DataLogger.
-
-    Attributes:
-        conversation: An instance of the Conversation class for managing messages.
-        system: The system identifier for the conversation session.
-        llmconfig: Configuration parameters for language models.
-        logger: An instance of DataLogger for logging conversation interactions.
-        api_service: An instance of the API service for making asynchronous API calls.
-
-    Methods:
-        initiate: Initiate a conversation session with the given instruction.
-        followup: Continue the conversation session with a follow-up instruction.
-        create_payload_chatcompletion: Create a payload for chat completion API calls.
-        call_chatcompletion: Make an asynchronous call to the chat completion API.
-    """
     
     def __init__(self, system, dir=None, llmconfig=oai_llmconfig, api_service=OAIService):
-        """
-        Initialize a Session object.
-
-        Args:
-            system: The system identifier for the conversation session.
-            dir: The directory for logging interactions.
-            llmconfig: Configuration parameters for language models.
-            api_service: An instance of the API service for making asynchronous API calls.
-        """
         self.conversation = Conversation()
         self.system = system
         self.llmconfig = llmconfig
-        self.logger = DataLogger(dir=dir)
+        self._logger = DataLogger(dir=dir)
+        self.api_service = api_service
+        self.toolmanager = ToolManager()
+    
+    def set_dir(self, dir):
+        self._logger.dir = dir
+    
+    def set_system(self, system):
+        self.conversation.change_system(system)
+    
+    def set_llmconfig(self, llmconfig):
+        self.llmconfig = llmconfig
+    
+    def set_api_service(self, api_service):
         self.api_service = api_service
     
-    async def initiate(self, instruction, system=None, context=None, out=True, **kwargs) -> Any:
-        """
-        Initiate a conversation session with the given instruction.
-
-        Args:
-            instruction: The user's instruction to initiate the conversation.
-            system: The content of the system message.
-            context: Additional context for the user instruction.
-            out: Whether to return the output content.
-
-        Returns:
-            Any: The output content if 'out' is True, otherwise None.
-        """
+    async def _output(self, output, invoke=True, out=True):
+        if invoke:
+            try: 
+                func, args = self.toolmanager._get_function_call(output)
+                outs = await self.toolmanager.ainvoke(func, args)
+                self.conversation.add_messages(tool=outs)
+            except:
+                pass
+        if out:
+            return output
+        
+    def register_tools(self, tools, funcs, update=False, new=False, prefix=None, postfix=None):
+        funcs = to_list(funcs)
+        self.toolmanager.register_tools(tools, funcs, update, new, prefix, postfix)
+    
+    async def initiate(self, instruction, system=None, context=None, out=True, name=None, invoke=True, **kwargs) -> Any:
         config = {**self.llmconfig, **kwargs}
         system = system or self.system
-        self.conversation.initiate_conversation(system=system, instruction=instruction, context=context)
-        
+        self.conversation.initiate_conversation(system=system, instruction=instruction, context=context, name=name)
         await self.call_chatcompletion(**config)
-        if out:
-            return self.conversation.responses[-1]['content']        
+        output = self.conversation.responses[-1]['content']
+        
+        return await self._output(output, invoke, out)
 
-    async def followup(self, instruction, system=None, context=None, out=True, **kwargs) -> Any:
-        """
-        Continue the conversation session with a follow-up instruction.
-
-        Args:
-            instruction: The user's follow-up instruction.
-            system: The content of the system message.
-            context: Additional context for the user instruction.
-            out: Whether to return the output content.
-
-        Returns:
-            Any: The output content if 'out' is True, otherwise None.
-        """
-        self.conversation.append_last_response()
+    async def followup(self, instruction, system=None, context=None, out=True, name=None, invoke=True, **kwargs) -> Any:
         if system:
             self.conversation.change_system(system)
-        self.conversation.add_messages(instruction=instruction, context=context)
-        
+        self.conversation.add_messages(instruction=instruction, context=context, name=name)
         config = {**self.llmconfig, **kwargs}
         await self.call_chatcompletion(**config)
-        if out:
-            return self.conversation.responses[-1]['content']
+        output = self.conversation.responses[-1]['content']
+        
+        return await self._output(output, invoke, out)
     
     def create_payload_chatcompletion(self, **kwargs):
-        """
-        Create a payload for chat completion API calls.
-
-        Args:
-            kwargs: Additional keyword arguments for customization.
-        """
         # currently only openai chat completions are supported
         messages = self.conversation.messages
-        
         config = {**self.llmconfig, **kwargs}
-        
         payload = {
             "messages": messages,
             "model": config.get('model'),
@@ -117,34 +87,23 @@ class Session():
             }
         
         for key in ["seed", "stop", "stream", "tools", "tool_choice", "user", "max_tokens"]:
-            if config[key] is True:
+            if bool(config[key]) is True and str(config[key]) != "none":
                 payload.update({key: config[key]})
-    
         return payload
-    
-    async def call_chatcompletion(self, delay=1, **kwargs):
-        """
-        Make an asynchronous call to the chat completion API.
 
-        Args:
-            delay: The delay (in seconds) between API calls.
-            kwargs: Additional keyword arguments for customization.
-        """
-        # currently only openai chat completions are supported
-        
+    async def call_chatcompletion(self, sleep=0.1,  **kwargs):
         endpoint = f"chat/completions"
         try:
             async with aiohttp.ClientSession() as session:
+                payload = self.create_payload_chatcompletion(**kwargs)
                 completion = await self.api_service.call_api(
-                                session, endpoint,
-                                self.create_payload_chatcompletion(**kwargs))
+                                session, endpoint, payload)
                 if "choices" in completion:
-                    completion = completion['choices'][0]       # currently can only call one completion at a time, n has to be 1
-                    self.logger({"input":self.conversation.messages, "output": completion})
-                    response = {"role": "assistant", "content": completion['message']["content"]}
-                    self.conversation.responses.append(response)
+                    self._logger({"input":payload, "output": completion})
+                    self.conversation.add_messages(response=completion['choices'][0])
+                    self.conversation.responses.append(self.conversation.messages[-1])
                     self.conversation.response_counts += 1
-                    await asyncio.sleep(delay=delay)
+                    await asyncio.sleep(sleep)
                     status_tracker.num_tasks_succeeded += 1
                 else:
                     status_tracker.num_tasks_failed += 1
@@ -153,14 +112,13 @@ class Session():
             raise e
     
     def messages_to_csv(self, dir=None, filename="_messages.csv", **kwags):
-        dir = dir or self.logger.dir
+        dir = dir or self._logger.dir
         if dir is None:
             raise ValueError("No directory specified.")
-        self.conversation.append_last_response()
-        self.conversation.msg._to_csv(dir=dir, filename=filename, **kwags)
+        self.conversation.msg.to_csv(dir=dir, filename=filename, **kwags)
         
     def log_to_csv(self, dir=None, filename="_llmlog.csv", **kwags):
-        dir = dir or self.logger.dir
+        dir = dir or self._logger.dir
         if dir is None:
             raise ValueError("No directory specified.")
-        self.logger.to_csv(dir=dir, filename=filename, **kwags)
+        self._logger.to_csv(dir=dir, filename=filename, **kwags)
