@@ -63,8 +63,8 @@ class Message:
         self._logger({**self.metadata, **out})
         return out
         
-    def __call__(self, system=None, instruction=None, context=None, response=None, name=None):
-        self.create_message(system, instruction, context, response, name)
+    def __call__(self, system=None, instruction=None, context=None, response=None, name=None, tool=None):
+        self.create_message(system, instruction, context, response, tool, name)
         return self.to_json()
     
     def to_csv(self, dir=None, filename=None, verbose=True, timestamp=True, dir_exist_ok=True, file_exist_ok=False):

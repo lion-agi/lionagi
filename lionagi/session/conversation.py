@@ -14,8 +14,9 @@ class Conversation:
         self.add_messages(system=system)
         self.add_messages(instruction=instruction, context=context, name=name)
 
-    def add_messages(self, system=None, instruction=None, context=None, response=None, name=None):
-        msg = self.msg(system=system, instruction=instruction, context=context, response=response, name=name)
+    # modify the message adding to accomodate tools
+    def add_messages(self, system=None, instruction=None, context=None, response=None, tool=None, name=None):
+        msg = self.msg(system=system, instruction=instruction, context=context, response=response, tool=tool, name=name)
         self.messages.append(msg)
 
     def change_system(self, system):

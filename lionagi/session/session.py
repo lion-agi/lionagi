@@ -3,12 +3,13 @@ import asyncio
 from typing import Any
 
 from .conversation import Conversation
+from ..utils.sys_util import to_list
 from ..utils.log_util import DataLogger
 from ..utils.api_util import StatusTracker
-from ..utils.sys_util import l_call
-from ..api.oai_config import oai_llmconfig
-from ..api.oai_service import OpenAIService
 from ..utils.tool_util import ToolManager
+from ..api.oai_service import OpenAIService
+
+from ..api.oai_config import oai_llmconfig
 
 
 status_tracker = StatusTracker()
@@ -36,26 +37,41 @@ class Session():
     def set_api_service(self, api_service):
         self.api_service = api_service
     
-    async def initiate(self, instruction, system=None, context=None, out=True, name=None, functions=None, update=False, new=False, prefix=None, postfix=None, **kwargs) -> Any:
+    async def _output(self, output, invoke=True, out=True):
+        if invoke:
+            try: 
+                func, args = self.toolmanager._get_function_call(output)
+                outs = await self.toolmanager.ainvoke(func, args)
+                self.conversation.add_messages(tool=outs)
+            except:
+                pass
+        if out:
+            return output
+        
+    def register_tools(self, tools, funcs, update=False, new=False, prefix=None, postfix=None):
+        funcs = to_list(funcs)
+        self.toolmanager.register_tools(tools, funcs, update, new, prefix, postfix)
+    
+    async def initiate(self, instruction, system=None, context=None, out=True, name=None, invoke=True, **kwargs) -> Any:
         config = {**self.llmconfig, **kwargs}
         system = system or self.system
         self.conversation.initiate_conversation(system=system, instruction=instruction, context=context, name=name)
-        
         await self.call_chatcompletion(**config)
-        if out:
-            return self.conversation.responses[-1]['content']
+        output = self.conversation.responses[-1]['content']
+        
+        return await self._output(output, invoke, out)
 
-    async def followup(self, instruction, system=None, context=None, out=True, name=None, functions=None, update=False, new=False, prefix=None, postfix=None, **kwargs) -> Any:
+    async def followup(self, instruction, system=None, context=None, out=True, name=None, invoke=True, **kwargs) -> Any:
         if system:
             self.conversation.change_system(system)
         self.conversation.add_messages(instruction=instruction, context=context, name=name)
-        
         config = {**self.llmconfig, **kwargs}
         await self.call_chatcompletion(**config)
-        if out:
-            return self.conversation.responses[-1]['content']
+        output = self.conversation.responses[-1]['content']
+        
+        return await self._output(output, invoke, out)
     
-    def create_payload_chatcompletion(self, functions=None, update=False, new=False, prefix=None, postfix=None, **kwargs):
+    def create_payload_chatcompletion(self, **kwargs):
         # currently only openai chat completions are supported
         messages = self.conversation.messages
         config = {**self.llmconfig, **kwargs}
@@ -73,28 +89,9 @@ class Session():
         for key in ["seed", "stop", "stream", "tools", "tool_choice", "user", "max_tokens"]:
             if bool(config[key]) is True and str(config[key]) != "none":
                 payload.update({key: config[key]})
-    
-        if bool(payload['tools']) is True:
-            for i in payload['tools']: 
-                if not self.toolmanager._name_existed(i):
-                    
-            
-            
-            if not all(l_call(, )):
-                
-            
-            self.toolmanager.register_tools(payload['tools'], functions, update, new, prefix, postfix)
-            if str(payload["tool_choice"]) == "none":
-                payload.update({'tool_choice':"auto"})
-
-            
-                
-                
-    
-    
         return payload
 
-    async def call_chatcompletion(self, sleep=0.1, functions=None, update=False, new=False, prefix=None, postfix=None,  **kwargs):
+    async def call_chatcompletion(self, sleep=0.1,  **kwargs):
         endpoint = f"chat/completions"
         try:
             async with aiohttp.ClientSession() as session:
