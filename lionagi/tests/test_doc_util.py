@@ -14,7 +14,7 @@ import unittest
 import tempfile
 from unittest.mock import patch
 from pathlib import Path
-from utils.doc_util import (
+from lionagi.utils.doc_util import (
     dir_to_path,
     read_text,
     dir_to_files,
@@ -66,8 +66,8 @@ class Test_doc_util(unittest.TestCase):
         self.assertEqual(result, expected_result)
 
     def test_chunk_text(self):
-        result = chunk_text("This is a test string.", 10, 0.2, 1)
-        expected_result =  ['This is a t', ' test string', 'ng.']
+        result = chunk_text("This is a test string.", 10, 0.2, 5)
+        expected_result =  ['This is a t', ' test string.']
         self.assertEqual(result, expected_result)
 
     def test_file_to_chunks(self):

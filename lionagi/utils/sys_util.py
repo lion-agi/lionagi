@@ -670,7 +670,7 @@ def create_id() -> str:
     random_bytes = os.urandom(16)
     return hashlib.sha256(current_time + random_bytes).hexdigest()[:16]
 
-def create_path(dir: str, filename: str, timestamp: bool = True, dir_exist_ok: bool = True) -> str:
+def create_path(dir: str, filename: str, timestamp: bool = True, dir_exist_ok: bool = True, time_prefix=False) -> str:
     """
     Creates a file path by optionally appending a timestamp to the filename.
 
@@ -690,10 +690,14 @@ def create_path(dir: str, filename: str, timestamp: bool = True, dir_exist_ok: b
         >>> create_path('/tmp/', 'log.txt', timestamp=False)
         '/tmp/log.txt'
     """
+    
+    dir = dir + '/' if str(dir)[-1] != '/' else dir
+    filename, ext = filename.split('.')
     os.makedirs(dir, exist_ok=dir_exist_ok)
+    
     if timestamp:
         timestamp = get_timestamp()
-        return f"{dir}{timestamp}{filename}"
+        return f"{dir}{timestamp}_{filename}.{ext}" if time_prefix else f"{dir}{filename}_{timestamp}.{ext}"
     else:
         return f"{dir}{filename}"
     
