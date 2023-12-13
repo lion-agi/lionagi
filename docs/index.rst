@@ -82,11 +82,20 @@ Python 3.9 or higher.
 
 
 .. toctree::
-  :maxdepth: 1
-  :caption: API Reference
-  :hidden:
+   :maxdepth: 1
+   :caption: Get Started
+   :hidden:
 
-  API_reference/utils_index.rst
-  API_reference/session_index.rst
-  API_reference/api_index.rst
+   Get_started/installation.rst
+   Get_started/quick_start.rst
+   Get_started/config.rst
+   Get_started/Examples/index.rst
 
+.. toctree::
+   :maxdepth: 1
+   :caption: API Reference
+   :hidden:
+
+   API_reference/utils_index.rst
+   API_reference/session_index.rst
+   API_reference/api_index.rst

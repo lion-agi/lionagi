@@ -26,7 +26,7 @@ def dir_to_path(dir: str, ext, recursive: bool = False, flat: bool = True):
     def _dir_to_path(ext, recursive=recursive):
         tem = '**/*' if recursive else '*'
         return list(Path(dir).glob(tem + ext))
-    
+
     return to_list(l_call(ext, _dir_to_path, flat=True), flat=flat)
 
 def read_text(filepath: str, clean: bool = True) -> str:
@@ -48,15 +48,15 @@ def read_text(filepath: str, clean: bool = True) -> str:
         content = f.read()
         if clean:
             # Define characters to replace and their replacements
-            replacements = {'\\': ' ', '\\\n': ' ', '\\\t': ' ', '  ': ' ', '\'': ' '}
+            replacements = {'\\': ' ', '\n': ' ', '\t': ' ', '  ': ' ', '\'': ' '}
             for old, new in replacements.items():
                 content = content.replace(old, new)
         return content
 
-def dir_to_files(dir: str, ext: str, recursive: bool = False, 
-                 reader: Callable = read_text, clean: bool = True, 
+def dir_to_files(dir: str, ext: str, recursive: bool = False,
+                 reader: Callable = read_text, clean: bool = True,
                  to_csv: bool = False, project: str = 'project',
-                 output_dir: str = 'data/logs/sources/', filename: Optional[str] = None, 
+                 output_dir: str = 'data/logs/sources/', filename: Optional[str] = None,
                  verbose: bool = True, timestamp: bool = True, logger: Optional[DataLogger] = None):
     """
     Reads and processes files in a specified directory with the given extension.
@@ -81,9 +81,9 @@ def dir_to_files(dir: str, ext: str, recursive: bool = False,
     Examples:
         >>> logs = dir_to_files(dir='my_directory', ext='.txt', to_csv=True)
     """
-    
+
     sources = dir_to_path(dir, ext, recursive)
-    
+
     def split_path(path: Path) -> tuple:
         folder_name = path.parent.name
         file_name = path.name
@@ -99,9 +99,9 @@ def dir_to_files(dir: str, ext: str, recursive: bool = False,
             "file_size": len(str(content)),
             'content': content
         } if content else None
-    
+
     logs = to_list(l_call(sources, to_dict, flat=True), dropna=True)
-    
+
     if to_csv:
         filename = filename or f"{project}_sources.csv"
         logger = DataLogger(dir=output_dir, log=logs) if not logger else logger
@@ -109,7 +109,7 @@ def dir_to_files(dir: str, ext: str, recursive: bool = False,
 
     return logs
 
-def chunk_text(input: str, chunk_size: int, overlap: float, 
+def chunk_text(input: str, chunk_size: int, overlap: float,
                threshold: int) -> List[Union[str, None]]:
     """
     Splits a string into chunks of a specified size, allowing for optional overlap between chunks.
@@ -127,19 +127,19 @@ def chunk_text(input: str, chunk_size: int, overlap: float,
     Returns:
         List[Union[str, None]]: List of text chunks.
     """
-    
+
     try:
         # Ensure text is a string
         if not isinstance(input, str):
             input = str(input)
-        
+
         chunks = []
         n_chunks = math.ceil(len(input) / chunk_size)
         overlap_size = int(chunk_size * overlap / 2)
-        
+
         if n_chunks == 1:
             return [input]
-        
+
         elif n_chunks == 2:
             chunks.append(input[:chunk_size + overlap_size])
             if len(input) - chunk_size > threshold:
@@ -147,28 +147,28 @@ def chunk_text(input: str, chunk_size: int, overlap: float,
             else:
                 return [input]
             return chunks
-        
+
         elif n_chunks > 2:
             chunks.append(input[:chunk_size + overlap_size])
             for i in range(1, n_chunks - 1):
                 start_idx = chunk_size * i - overlap_size
                 end_idx = chunk_size * (i + 1) + overlap_size
                 chunks.append(input[start_idx:end_idx])
-            
+
             if len(input) - chunk_size * (n_chunks - 1) > threshold:
                 chunks.append(input[chunk_size * (n_chunks - 1) - overlap_size:])
             else:
-                chunks[-1] += input[chunk_size * (n_chunks - 1):]
-            
+                chunks[-1] += input[chunk_size * (n_chunks - 1) + overlap_size:]
+
             return chunks
-        
+
     except Exception as e:
         raise ValueError(f"An error occurred while chunking the text. {e}")
 
-def _file_to_chunks(input: Dict[str, Any], 
-                   field: str = 'content', 
-                   chunk_size: int = 1500, 
-                   overlap: float = 0.2, 
+def _file_to_chunks(input: Dict[str, Any],
+                   field: str = 'content',
+                   chunk_size: int = 1500,
+                   overlap: float = 0.2,
                    threshold: int = 200) -> List[Dict[str, Any]]:
     """
     Splits text from a specified dictionary field into chunks and returns a list of dictionaries.
@@ -195,7 +195,7 @@ def _file_to_chunks(input: Dict[str, Any],
     try:
         out = {key: value for key, value in input.items() if key != field}
         out.update({"chunk_overlap": overlap, "chunk_threshold": threshold})
-        
+
         chunks = chunk_text(input[field], chunk_size=chunk_size, overlap=overlap, threshold=threshold)
         logs = []
         for i, chunk in enumerate(chunks):
@@ -209,22 +209,22 @@ def _file_to_chunks(input: Dict[str, Any],
             logs.append(chunk_dict)
 
         return logs
-        
+
     except Exception as e:
         raise ValueError(f"An error occurred while chunking the file. {e}")
-    
-def file_to_chunks(input, 
-                   field: str = 'content', 
-                   chunk_size: int = 1500, 
-                   overlap: float = 0.2, 
-                   threshold: int = 200, 
-                   to_csv=False, 
+
+def file_to_chunks(input,
+                   field: str = 'content',
+                   chunk_size: int = 1500,
+                   overlap: float = 0.2,
+                   threshold: int = 200,
+                   to_csv=False,
                    project='project',
-                   output_dir='data/logs/sources/', 
+                   output_dir='data/logs/sources/',
                    chunk_func = _file_to_chunks,
-                   filename=None, 
-                   verbose=True, 
-                   timestamp=True, 
+                   filename=None,
+                   verbose=True,
+                   timestamp=True,
                    logger=None):
     """
         Splits text from a specified dictionary field into chunks and returns a list of dictionaries.
@@ -243,10 +243,10 @@ def file_to_chunks(input,
         timestamp: If True, include a timestamp in the exported file name.
         logger: An optional DataLogger instance for logging.
     """
-    
+
     f = lambda x: chunk_func(x, field=field, chunk_size=chunk_size, overlap=overlap, threshold=threshold)
     logs = to_list(l_call(input, f), flat=True)
-    
+
     if to_csv:
         filename = filename if filename else f"{project}_sources.csv"
         logger = DataLogger(log=logs) if not logger else logger
