@@ -40,7 +40,7 @@ class Message:
         self.metadata = None
         self._logger = DataLogger()
     
-    def create_message(self, system=None, instruction=None, context=None, response=None, tool=None, name=None):
+    def create_message(self, system=None, instruction=None, context=None, response=None, tool=None, tool_parser=None, name=None):
         """
         Create a message based on the provided information.
 
@@ -83,7 +83,7 @@ class Message:
                 self.name = name or "system"
             elif tool:
                 self.role = "tool"
-                self.content = tool
+                self.content = tool_parser(tool) if tool_parser else tool
                 self.name = name or "tool"
     
     def to_json(self):
