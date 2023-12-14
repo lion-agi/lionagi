@@ -40,7 +40,7 @@ class Message:
         self.metadata = None
         self._logger = DataLogger()
     
-    def create_message(self, system=None, instruction=None, context=None, response=None, tool=None, tool_parser=None, name=None):
+    def create_message(self, system=None, instruction=None, context=None, response=None, name=None):
         """
         Create a message based on the provided information.
 
@@ -52,25 +52,29 @@ class Message:
             tool (dict): The tool information for the message. Default is None.
             name (str): The name associated with the message. Default is None.
         """
-        if sum(l_call([system, instruction, response, tool], bool)) > 1:
+        if sum(l_call([system, instruction, response], bool)) > 1:
             raise ValueError("Error: Message cannot have more than one role.")
         
         else: 
             if response:
                 self.role = "assistant"
-                response = response["message"]
-                if str(response['content']) == "None":
-                    try:
-                        # currently can only support a single function response
-                        if response['tool_calls'][0]['type'] == 'function':
-                            self.name = name or ("func_" + response['tool_calls'][0]['function']['name'])
-                            content = response['tool_calls'][0]['function']['arguments']
-                            self.content = {"function":self.name, "arguments": content}
-                    except:
-                        raise ValueError("Response message must be one of regular response or function calling")
-                else:
-                    self.content = response['content']
-                    self.name = name or "assistant"
+                try:
+                    response = response["message"]
+                    if str(response['content']) == "None":
+                        try:
+                            if response['tool_calls'][0]['type'] == 'function':
+                                self.name = name or ("func_" + response['tool_calls'][0]['function']['name'])
+                                content = response['tool_calls'][0]['function']['arguments']
+                                self.content = {"function":self.name, "arguments": content}
+                        except:
+                            raise ValueError("Response message must be one of regular response or function calling")
+                    else:
+                        self.content = response['content']
+                        self.name = name or "assistant"
+                except:
+                    self.name = name or "func_call"
+                    self.content = {"function call result": response}
+                
             elif instruction:
                 self.role = "user"
                 self.content = {"instruction": instruction}
@@ -81,10 +85,6 @@ class Message:
                 self.role = "system"
                 self.content = system
                 self.name = name or "system"
-            elif tool:
-                self.role = "tool"
-                self.content = tool_parser(tool) if tool_parser else tool
-                self.name = name or "tool"
     
     def to_json(self):
         """
