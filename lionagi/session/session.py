@@ -120,7 +120,7 @@ class Session():
         """
         self.api_service = api_service
     
-    async def _output(self, output, invoke=True, out=True):
+    async def _output(self, output, invoke=True, out=True, tool_parser=None):
         """
         Process the output, invoke tools if needed, and optionally return the output.
 
@@ -136,7 +136,7 @@ class Session():
             try: 
                 func, args = self.toolmanager._get_function_call(output)
                 outs = await self.toolmanager.ainvoke(func, args)
-                self.conversation.add_messages(tool=outs)
+                self.conversation.add_messages(tool=outs, tool_parser=tool_parser)
             except:
                 pass
         if out:
@@ -157,7 +157,7 @@ class Session():
         funcs = to_list(funcs)
         self.toolmanager.register_tools(tools, funcs, update, new, prefix, postfix)
     
-    async def initiate(self, instruction, system=None, context=None, out=True, name=None, invoke=True, **kwargs) -> Any:
+    async def initiate(self, instruction, system=None, context=None, name=None, invoke=True, out=True, tool_parser=None, **kwargs) -> Any:
         """
         Start a new conversation session with the provided instruction.
 
@@ -179,9 +179,9 @@ class Session():
         await self.call_chatcompletion(**config)
         output = self.conversation.responses[-1]['content']
         
-        return await self._output(output, invoke, out)
+        return await self._output(output, invoke, out, tool_parser)
 
-    async def followup(self, instruction, system=None, context=None, out=True, name=None, invoke=True, **kwargs) -> Any:
+    async def followup(self, instruction, system=None, context=None, out=True, name=None, invoke=True, tool_parser=None, **kwargs) -> Any:
         """
         Continue the conversation with the provided instruction.
 
@@ -204,7 +204,7 @@ class Session():
         await self.call_chatcompletion(**config)
         output = self.conversation.responses[-1]['content']
         
-        return await self._output(output, invoke, out)
+        return await self._output(output, invoke, out, tool_parser)
     
     def create_payload_chatcompletion(self, **kwargs):
         """
