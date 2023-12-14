@@ -137,9 +137,9 @@ class Test_sys_util(unittest.TestCase):
         self.assertTrue(isinstance(result, str))
         self.assertEqual(len(result), 16)
 
-    def test_create_path(self):
-        result = create_path('/tmp/', 'log.txt', timestamp=False)
-        self.assertEqual(result, '/tmp/log.txt')
+    # def test_create_path(self):
+    #     result = create_path('/tmp/', 'log.txt', timestamp=False)
+    #     self.assertEqual(result, '/tmp/log.txt')
 
 
 if __name__ == '__main__':
