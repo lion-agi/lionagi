@@ -107,7 +107,7 @@ class Message:
         return out
         
     def __call__(self, system=None, instruction=None, context=None, 
-                 response=None, tool=None, tool_parser=None, name=None):
+                 response=None, name=None):
         """
         Create and return a message in JSON format.
 
@@ -123,8 +123,7 @@ class Message:
             dict: The message in JSON format.
         """
         self.create_message(system=system, instruction=instruction, 
-                            context=context, response=response, tool=tool, 
-                            tool_parser=tool_parser, name=name)
+                            context=context, response=response, name=name)
         return self.to_json()
     
     def to_csv(self, dir=None, filename=None, verbose=True, timestamp=True, dir_exist_ok=True, file_exist_ok=False):
