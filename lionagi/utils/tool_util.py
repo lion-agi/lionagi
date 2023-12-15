@@ -92,32 +92,32 @@ class ToolManager:
         name = f"{prefix or ''}{name}{postfix or '1'}" if new else name                
         self.registry.update(self._to_dict(name, function, content)) 
                 
-    def invoke(self, name, args):
+    def invoke(self, name, **kwargs):
         """
         Invoke a registered function with the provided arguments.
 
         Parameters:
             name (str): The name of the function to invoke.
-            args (dict): The arguments to pass to the function.
+            kwargs (dict): The arguments to pass to the function.
 
         Returns:
             Any: The result of invoking the function.
         """
         if self._name_existed(name):
             try:
-                return self.registry[name](**args)
+                return self.registry[name](**kwargs)
             except Exception as e:
-                raise ValueError(f"Error when invoking function {name} with arguments {args} with error message {e}")
+                raise ValueError(f"Error when invoking function {name} with arguments {kwargs} with error message {e}")
         else: 
             raise ValueError(f"Function {name} is not registered.")
     
-    async def ainvoke(self, name, args):
+    async def ainvoke(self, name, **kwargs):
         """
         Asynchronously invoke a registered function with the provided arguments.
 
         Parameters:
             name (str): The name of the function to invoke.
-            args (dict): The arguments to pass to the function.
+            kwargs (dict): The arguments to pass to the function.
 
         Returns:
             Any: The result of invoking the function asynchronously.
@@ -127,11 +127,11 @@ class ToolManager:
             function = self.registry[name]["function"]
             try:
                 if asyncio.iscoroutinefunction(function):
-                    return await function(**args)
+                    return await function(**kwargs)
                 else:
-                    return function(**args)
+                    return function(**kwargs)
             except Exception as e:
-                raise ValueError(f"Error when invoking function {name} with arguments {args} with error message {e}")
+                raise ValueError(f"Error when invoking function {name} with arguments {kwargs} with error message {e}")
         else: 
             raise ValueError(f"Function {name} is not registered.")
     
