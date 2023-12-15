@@ -1,5 +1,6 @@
 import aiohttp
 import asyncio
+import json
 from typing import Any
 
 from .conversation import Conversation
@@ -120,7 +121,7 @@ class Session():
         """
         self.api_service = api_service
     
-    async def _output(self, output, invoke=True, out=True):
+    async def _output(self, invoke=True, out=True, tool_parser=None):
         """
         Process the output, invoke tools if needed, and optionally return the output.
 
@@ -134,13 +135,14 @@ class Session():
         """
         if invoke:
             try: 
-                func, args = self.toolmanager._get_function_call(output)
+                func, args = self.toolmanager._get_function_call(self.conversation.responses[-1]['content'])
                 outs = await self.toolmanager.ainvoke(func, args)
+                outs = tool_parser(outs) if tool_parser else outs
                 self.conversation.add_messages(response=outs)
             except:
                 pass
         if out:
-            return output
+            return self.conversation.responses[-1]['content']
         
     def register_tools(self, tools, funcs, update=False, new=False, prefix=None, postfix=None):
         """
@@ -157,7 +159,7 @@ class Session():
         funcs = to_list(funcs)
         self.toolmanager.register_tools(tools, funcs, update, new, prefix, postfix)
     
-    async def initiate(self, instruction, system=None, context=None, name=None, invoke=True, out=True, **kwargs) -> Any:
+    async def initiate(self, instruction, system=None, context=None, name=None, invoke=True, out=True, tool_parser=None, **kwargs) -> Any:
         """
         Start a new conversation session with the provided instruction.
 
@@ -177,11 +179,10 @@ class Session():
         system = system or self.system
         self.conversation.initiate_conversation(system=system, instruction=instruction, context=context, name=name)
         await self.call_chatcompletion(**config)
-        output = self.conversation.responses[-1]['content']
         
-        return await self._output(output, invoke, out)
+        return await self._output(invoke, out, tool_parser)
 
-    async def followup(self, instruction, system=None, context=None, out=True, name=None, invoke=True, **kwargs) -> Any:
+    async def followup(self, instruction, system=None, context=None, out=True, name=None, invoke=True, tool_parser=None, **kwargs) -> Any:
         """
         Continue the conversation with the provided instruction.
 
@@ -202,9 +203,9 @@ class Session():
         self.conversation.add_messages(instruction=instruction, context=context, name=name)
         config = {**self.llmconfig, **kwargs}
         await self.call_chatcompletion(**config)
-        output = self.conversation.responses[-1]['content']
+
         
-        return await self._output(output, invoke, out)
+        return await self._output(invoke, out, tool_parser)
     
     def create_payload_chatcompletion(self, **kwargs):
         """
@@ -289,3 +290,18 @@ class Session():
         if dir is None:
             raise ValueError("No directory specified.")
         self._logger.to_csv(dir=dir, filename=filename, **kwags)
+
+    def is_invoked(self):
+        msg = self.conversation.messages[-1]
+        try: 
+            if "function call result" in json.loads(msg['content']).keys():
+                return True
+        except: 
+            return False
+
+    async def auto_followup(self, instruct, num=3, tool_parser=None, **kwags):
+        cont_ = True
+        while num > 0 and cont_ is True:
+            await self.followup(instruct,tool_parser=tool_parser, tool_choice="auto", response_format= {'type':'json_object'}, **kwags)
+            num -= 1
+            cont_ = True if self.is_invoked() else False
