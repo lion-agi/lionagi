@@ -92,7 +92,7 @@ class ToolManager:
         name = f"{prefix or ''}{name}{postfix or '1'}" if new else name                
         self.registry.update(self._to_dict(name, function, content)) 
                 
-    def invoke(self, name, **kwargs):
+    def invoke(self, name, kwargs):
         """
         Invoke a registered function with the provided arguments.
 
@@ -111,7 +111,7 @@ class ToolManager:
         else: 
             raise ValueError(f"Function {name} is not registered.")
     
-    async def ainvoke(self, name, **kwargs):
+    async def ainvoke(self, name, kwargs):
         """
         Asynchronously invoke a registered function with the provided arguments.
 
