@@ -40,7 +40,7 @@ class Conversation:
         self.msg = Message()
         self.responses = []
 
-    def initiate_conversation(self, system, instruction, context=None, name=None):
+    def initiate_conversation(self, system=None, instruction=None, context=None, name=None):
         """
         Initiate a conversation with a system setting and user instruction.
 
@@ -55,7 +55,7 @@ class Conversation:
         self.add_messages(instruction=instruction, context=context, name=name)
 
     # modify the message adding to accomodate tools
-    def add_messages(self, system=None, instruction=None, context=None, response=None, tool=None, name=None):
+    def add_messages(self, system=None, instruction=None, context=None, response=None, name=None):
         """
         Add messages to the conversation, including system setting, user instruction, and assistant response.
 
@@ -67,7 +67,8 @@ class Conversation:
             tool (dict): The tool information for the message. Default is None.
             name (str): The name associated with the message. Default is None.
         """
-        msg = self.msg(system=system, instruction=instruction, context=context, response=response, tool=tool, name=name)
+        msg = self.msg(system=system, instruction=instruction, context=context, 
+                       response=response, name=name)
         self.messages.append(msg)
 
     def change_system(self, system):
