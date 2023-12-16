@@ -192,3 +192,4 @@ class ToolManager:
         """
         funcs = l_call(range(len(tools)), lambda i: self._from_tool(tools[i], functions[i]))
         l_call(range(len(tools)), lambda i: self._register_function(funcs[i][0], funcs[i][1], update=update, new=new, prefix=prefix, postfix=postfix))
+        

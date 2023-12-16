@@ -599,9 +599,9 @@ def e_call(input: Any,
         [[1], [4], [9]]
     """
 
-    f = lambda x, y: m_call(make_copy(x, len(to_list(y))), y, 
+    _f = lambda x, y: m_call(make_copy(x, len(to_list(y))), y, 
                             flatten_dict=flatten_dict, flat=flat, dropna=dropna)
-    return to_list([f(inp, func) for inp in to_list(input)], flat=flat)
+    return to_list([_f(inp, func) for inp in to_list(input)], flat=flat)
 
 async def ae_call(input_: Any, 
                   func_: Callable, 
@@ -628,10 +628,10 @@ async def ae_call(input_: Any,
         >>> asyncio.run(ae_call([1, 2, 3], [async_square]))
         [[1, 4, 9]]
     """
-    async def async_f(x, y):
+    async def _async_f(x, y):
         return await am_call(make_copy(x, len(to_list(y))), y, flatten_dict=flatten_dict, flat=flat, dropna=dropna)
 
-    tasks = [async_f(inp, func_) for inp in to_list(input_)]
+    tasks = [_async_f(inp, func_) for inp in to_list(input_)]
     return await asyncio.gather(*tasks)
 
 def get_timestamp() -> str:

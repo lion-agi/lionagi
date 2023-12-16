@@ -9,12 +9,11 @@ from ..utils.log_util import DataLogger
 from ..utils.api_util import StatusTracker
 from ..utils.tool_util import ToolManager
 from ..api.oai_service import OpenAIService
-
 from ..api.oai_config import oai_llmconfig
-
 
 status_tracker = StatusTracker()
 OAIService = OpenAIService()
+
 
 class Session():
     """
@@ -213,9 +212,17 @@ class Session():
         config = {**self.llmconfig, **kwargs}
         await self._call_chatcompletion(**config)
 
-        
         return await self._output(invoke, out, tool_parser)
-    
+
+    async def auto_followup(self, instruct, num=3, tool_parser=None, **kwags):
+        cont_ = True
+        while num > 0 and cont_ is True:
+            await self.followup(instruct,tool_parser=tool_parser, tool_choice="auto", **kwags)
+            num -= 1
+            cont_ = True if self._is_invoked() else False
+        if num == 0:
+            await self.followup(instruct, **kwags)
+
     def _create_payload_chatcompletion(self, **kwargs):
         """
         Create a payload for chat completion based on the conversation state and configuration.
@@ -299,14 +306,3 @@ class Session():
         if dir is None:
             raise ValueError("No directory specified.")
         self._logger.to_csv(dir=dir, filename=filename, **kwags)
-
-
-
-    async def auto_followup(self, instruct, num=3, tool_parser=None, **kwags):
-        cont_ = True
-        while num > 0 and cont_ is True:
-            await self.followup(instruct,tool_parser=tool_parser, tool_choice="auto", **kwags)
-            num -= 1
-            cont_ = True if self._is_invoked() else False
-        if num == 0:
-            await self.followup(instruct, **kwags)
