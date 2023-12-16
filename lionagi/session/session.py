@@ -9,12 +9,11 @@ from ..utils.log_util import DataLogger
 from ..utils.api_util import StatusTracker
 from ..utils.tool_util import ToolManager
 from ..api.oai_service import OpenAIService
-
 from ..api.oai_config import oai_llmconfig
-
 
 status_tracker = StatusTracker()
 OAIService = OpenAIService()
+
 
 class Session():
     """
@@ -83,7 +82,7 @@ class Session():
         self.llmconfig = llmconfig
         self._logger = DataLogger(dir=dir)
         self.api_service = api_service
-        self.toolmanager = ToolManager()
+        self._toolmanager = ToolManager()
     
     def set_dir(self, dir):
         """
@@ -135,15 +134,24 @@ class Session():
         """
         if invoke:
             try: 
-                func, args = self.toolmanager._get_function_call(self.conversation.responses[-1]['content'])
-                outs = await self.toolmanager.ainvoke(func, args)
+                func, args = self._toolmanager._get_function_call(self.conversation.responses[-1]['content'])
+                outs = await self._toolmanager.ainvoke(func, args)
                 outs = tool_parser(outs) if tool_parser else outs
                 self.conversation.add_messages(response=outs)
             except:
                 pass
         if out:
             return self.conversation.responses[-1]['content']
-        
+    
+    def _is_invoked(self):
+        msg = self.conversation.messages[-1]
+        try: 
+            if "function call result" in json.loads(msg['content']).keys():
+                return True
+        except: 
+            return False    
+    
+
     def register_tools(self, tools, funcs, update=False, new=False, prefix=None, postfix=None):
         """
         Register tools and their corresponding functions.
@@ -157,7 +165,7 @@ class Session():
             postfix (Optional[str]): A postfix to add to the function names.
         """
         funcs = to_list(funcs)
-        self.toolmanager.register_tools(tools, funcs, update, new, prefix, postfix)
+        self._toolmanager.register_tools(tools, funcs, update, new, prefix, postfix)
     
     async def initiate(self, instruction, system=None, context=None, name=None, invoke=True, out=True, tool_parser=None, **kwargs) -> Any:
         """
@@ -178,7 +186,7 @@ class Session():
         config = {**self.llmconfig, **kwargs}
         system = system or self.system
         self.conversation.initiate_conversation(system=system, instruction=instruction, context=context, name=name)
-        await self.call_chatcompletion(**config)
+        await self._call_chatcompletion(**config)
         
         return await self._output(invoke, out, tool_parser)
 
@@ -202,12 +210,20 @@ class Session():
             self.conversation.change_system(system)
         self.conversation.add_messages(instruction=instruction, context=context, name=name)
         config = {**self.llmconfig, **kwargs}
-        await self.call_chatcompletion(**config)
+        await self._call_chatcompletion(**config)
 
-        
         return await self._output(invoke, out, tool_parser)
-    
-    def create_payload_chatcompletion(self, **kwargs):
+
+    async def auto_followup(self, instruct, num=3, tool_parser=None, **kwags):
+        cont_ = True
+        while num > 0 and cont_ is True:
+            await self.followup(instruct,tool_parser=tool_parser, tool_choice="auto", **kwags)
+            num -= 1
+            cont_ = True if self._is_invoked() else False
+        if num == 0:
+            await self.followup(instruct, **kwags)
+
+    def _create_payload_chatcompletion(self, **kwargs):
         """
         Create a payload for chat completion based on the conversation state and configuration.
 
@@ -236,7 +252,7 @@ class Session():
                 payload.update({key: config[key]})
         return payload
 
-    async def call_chatcompletion(self, sleep=0.1,  **kwargs):
+    async def _call_chatcompletion(self, sleep=0.1,  **kwargs):
         """
         Make a call to the chat completion API and process the response.
 
@@ -247,7 +263,7 @@ class Session():
         endpoint = f"chat/completions"
         try:
             async with aiohttp.ClientSession() as session:
-                payload = self.create_payload_chatcompletion(**kwargs)
+                payload = self._create_payload_chatcompletion(**kwargs)
                 completion = await self.api_service.call_api(
                                 session, endpoint, payload)
                 if "choices" in completion:
@@ -290,20 +306,3 @@ class Session():
         if dir is None:
             raise ValueError("No directory specified.")
         self._logger.to_csv(dir=dir, filename=filename, **kwags)
-
-    def is_invoked(self):
-        msg = self.conversation.messages[-1]
-        try: 
-            if "function call result" in json.loads(msg['content']).keys():
-                return True
-        except: 
-            return False
-
-    async def auto_followup(self, instruct, num=3, tool_parser=None, **kwags):
-        cont_ = True
-        while num > 0 and cont_ is True:
-            await self.followup(instruct,tool_parser=tool_parser, tool_choice="auto", **kwags)
-            num -= 1
-            cont_ = True if self.is_invoked() else False
-        if num == 0:
-            await self.followup(instruct, **kwags)

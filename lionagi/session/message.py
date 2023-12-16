@@ -140,3 +140,4 @@ class Message:
             file_exist_ok (bool): Whether to allow the file to exist. Default is False.
         """
         self._logger.to_csv(dir, filename, verbose, timestamp, dir_exist_ok, file_exist_ok)
+        

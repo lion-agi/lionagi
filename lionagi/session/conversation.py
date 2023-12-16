@@ -1,5 +1,6 @@
 from .message import Message
 
+
 class Conversation:
     """
     A class representing a conversation between users and the assistant.
@@ -94,3 +95,4 @@ class Conversation:
         if len(response_indices) >= n:
             first_index_to_keep = response_indices[-n] + 1
             self.messages = [self.system] + self.messages[first_index_to_keep:]
+            

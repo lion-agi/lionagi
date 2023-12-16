@@ -84,13 +84,13 @@ def dir_to_files(dir: str, ext: str, recursive: bool = False,
 
     sources = dir_to_path(dir, ext, recursive)
 
-    def split_path(path: Path) -> tuple:
+    def _split_path(path: Path) -> tuple:
         folder_name = path.parent.name
         file_name = path.name
         return (folder_name, file_name)
 
-    def to_dict(path_: Path) -> Dict[str, Union[str, Path]]:
-        folder, file = split_path(path_)
+    def _to_dict(path_: Path) -> Dict[str, Union[str, Path]]:
+        folder, file = _split_path(path_)
         content = reader(str(path_), clean=clean)
         return {
             'project': project,
@@ -100,7 +100,7 @@ def dir_to_files(dir: str, ext: str, recursive: bool = False,
             'content': content
         } if content else None
 
-    logs = to_list(l_call(sources, to_dict, flat=True), dropna=True)
+    logs = to_list(l_call(sources, _to_dict, flat=True), dropna=True)
 
     if to_csv:
         filename = filename or f"{project}_sources.csv"
@@ -244,8 +244,8 @@ def file_to_chunks(input,
         logger: An optional DataLogger instance for logging.
     """
 
-    f = lambda x: chunk_func(x, field=field, chunk_size=chunk_size, overlap=overlap, threshold=threshold)
-    logs = to_list(l_call(input, f), flat=True)
+    _f = lambda x: chunk_func(x, field=field, chunk_size=chunk_size, overlap=overlap, threshold=threshold)
+    logs = to_list(l_call(input, _f), flat=True)
 
     if to_csv:
         filename = filename if filename else f"{project}_sources.csv"
