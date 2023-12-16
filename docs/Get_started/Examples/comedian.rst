@@ -1,7 +1,7 @@
-Comedian
+Multi-Session Interaction
 ========
 
-Let's do something fun!
+Let's create more sessions.
 
 In this example, we are going to have two roles, a comedian and a commentator. The comedian will start by making two
 jokes. Following that, the commentator will provide the comments. Finally, the comedian will revise the jokes based on
