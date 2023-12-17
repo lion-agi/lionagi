@@ -1,17 +1,12 @@
 ![PyPI - Version](https://img.shields.io/pypi/v/lionagi?labelColor=233476aa&color=231fc935) ![PyPI - Downloads](https://img.shields.io/pypi/dm/lionagi?labelColor=233476aa&color=231fc935) ![GitHub License](https://img.shields.io/github/license/lion-agi/lionagi?labelColor=233476aa&color=231fc935) 
 
-
-
-- PyPI: https://pypi.org/project/lionagi/
-- Documentation: https://lionagi.readthedocs.io/en/latest/
-- Website: https://www.lionagi.ai
-- Discord: [Join Our Discord](https://discord.gg/7RGWqpSxze)
+[PyPI](https://pypi.org/project/lionagi/) | [Documentation](https://lionagi.readthedocs.io/en/latest/) | [Website](https://www.lionagi.ai) | [Discord](https://discord.gg/7RGWqpSxze)
 
   
 # LionAGI
 **Towards Automated General Intelligence**
 
-LionAGI is a Python package that combines data manipulation with AI tools, aiming to simplify the integration of advanced machine learning tools, such as Large Language Models (i.e. OpenAI's GPT), with production level data centric projects. 
+LionAGI is a Python intelligent agent framework that combines data manipulation with AI tools, aiming to simplify the integration of advanced machine learning tools, such as Large Language Models (i.e. OpenAI's GPT), with production level data centric projects. 
 
 Install LionAGI with pip:
 
