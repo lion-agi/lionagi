@@ -214,21 +214,3 @@ With asynchronous programming, executing this workflow becomes a breeze:
 .. [Ref] Tuo Sun, Wanrong Zheng, Shufan Yu, Mengxun Li, Jiarui Ou.
    “ESAN: Efficient Sentiment Analysis Network of A-Shares Research Reports for Stock Price Prediction.”
    `arXiv:2112.11444 <https://arxiv.org/abs/2112.11444>`_
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-

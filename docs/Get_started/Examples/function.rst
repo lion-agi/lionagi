@@ -111,6 +111,3 @@ Let’s check the message records in this session:
      }\n    }\n  ]\n}'}
 
    {'role': 'assistant', 'content': '{"function call result": 12}'}
-
-
-
