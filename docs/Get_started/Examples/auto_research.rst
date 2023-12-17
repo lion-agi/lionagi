@@ -208,7 +208,7 @@ With asynchronous programming, executing this workflow becomes a breeze:
 
    from IPython.display import Markdown
 
-   Markdown(out1[1])
+   Markdown(outs[1])
 
 .. image:: auto_research_result.png
 
