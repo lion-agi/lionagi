@@ -205,6 +205,7 @@ With asynchronous programming, executing this workflow becomes a breeze:
    outs = await li.al_call(abstracts, read_propose)
 
 .. code-block:: python
+
    from IPython.display import Markdown
 
    Markdown(out1[1])
