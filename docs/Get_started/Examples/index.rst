@@ -8,3 +8,4 @@ applications of LionAGI.
 
    calculator.rst
    comedian.rst
+   function.rst
