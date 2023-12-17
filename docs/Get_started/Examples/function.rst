@@ -32,7 +32,7 @@ Here is an example of a function description formatted in the OpenAI schema.
                             "description": "a number to multiply, e.g. 17",
                         },
                     },
-                    # specify which parameters are required for the model to respond when function calling
+                    # specify parameters required for the model to respond when function calling
                     "required": ["number1", "number2"],
                 },
             }
@@ -56,12 +56,16 @@ Let's define the necessary message information we need to pass in for our exampl
 
    system = "you are asked to perform as a function picker and parameter provider"
 
-   task = "Think step by step, understand the following basic math question and provide two numbers as parameters for function calling."
-   # when using respond_mode as json to enforce output format, you need to provide specifying details in instruction
+   task = "Think step by step, understand the following basic math question and \
+           provide two numbers as parameters for function calling."
+   # when using respond_mode as json to enforce output format
+   # you need to provide specifying details in instruction
    json_format = {"number1": "x", "number2": "y"}
    instruct1 = {"Task": task, "json_format": json_format
 
-   question = "There are [basketball, football, backpack, water bottle, strawberry, tennis ball, rockets]. each comes in four different colors, what is the number of unique kinds of ball?"
+   question = "There are [basketball, football, backpack, water bottle, strawberry, tennis ball, \
+               rockets]. each comes in four different colors, \
+               what is the number of unique kinds of ball?"
    context1 = {"Question": question}
 
 With all the necessary information in place, we are now ready to construct the session.
@@ -93,11 +97,18 @@ Let’s check the message records in this session:
 
 .. code-block:: markdown
 
-   {'role': 'system', 'content': 'you are asked to perform as a function picker and parameter provider'}
+   {'role': 'system', 'content': 'you are asked to perform as a function picker and
+     parameter provider'}
 
-   {'role': 'user', 'content': '{"instruction": {"Task": "Think step by step, understand the following basic math question and provide two numbers as parameters for function calling.", "json_format": {"number1": "x", "number2": "y"}}, "context": {"Question": "There are [basketball, football, backpack, water bottle, strawberry, tennis ball, rockets]. each comes in four different colors, what is the number of unique kinds of ball?"}}'}
+   {'role': 'user', 'content': '{"instruction": {"Task": "Think step by step, understand the
+    following basic math question and provide two numbers as parameters for function calling.",
+    "json_format": {"number1": "x", "number2": "y"}}, "context": {"Question": "There are
+    [basketball, football, backpack, water bottle, strawberry, tennis ball, rockets]. each comes
+    in four different colors, what is the number of unique kinds of ball?"}}'}
 
-   {'role': 'assistant', 'content': '\n{\n  "tool_uses": [\n    {\n      "recipient_name": "functions.multiply",\n      "parameters": {\n        "number1": 3,  "number2": 4\n      }\n    }\n  ]\n}'}
+   {'role': 'assistant', 'content': '\n{\n  "tool_uses": [\n    {\n      "recipient_name":
+    "functions.multiply",\n      "parameters": {\n        "number1": 3,  "number2": 4\n
+     }\n    }\n  ]\n}'}
 
    {'role': 'assistant', 'content': '{"function call result": 12}'}
 
