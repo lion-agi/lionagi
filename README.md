@@ -3,8 +3,8 @@
 
 
 - PyPI: https://pypi.org/project/lionagi/
-- Documentation: https://lionagi.readthedocs.io/en/latest/  （still a lot TODO）
-- Website: TODO
+- Documentation: https://lionagi.readthedocs.io/en/latest/
+- Website: https://www.lionagi.ai
 - Discord: [Join Our Discord](https://discord.gg/7RGWqpSxze)
 
   
