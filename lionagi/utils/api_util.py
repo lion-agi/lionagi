@@ -18,19 +18,26 @@ class StatusTracker:
     creation and management of state.
     
     Attributes:
-        num_tasks_started: The number of tasks that have been initiated.
+        num_tasks_started:
+            The number of tasks that have been initiated.
 
-        num_tasks_in_progress: The number of tasks currently being processed.
+        num_tasks_in_progress:
+            The number of tasks currently being processed.
 
-        num_tasks_succeeded: The number of tasks that have completed successfully.
+        num_tasks_succeeded:
+            The number of tasks that have completed successfully.
 
-        num_tasks_failed: The number of tasks that have failed.
+        num_tasks_failed:
+            The number of tasks that have failed.
 
-        num_rate_limit_errors: The number of tasks that failed due to rate limiting.
+        num_rate_limit_errors:
+            The number of tasks that failed due to rate limiting.
 
-        num_api_errors: The number of tasks that failed due to API errors.
+        num_api_errors:
+            The number of tasks that failed due to API errors.
 
-        num_other_errors: The number of tasks that failed due to other errors.
+        num_other_errors:
+            The number of tasks that failed due to other errors.
     """
     num_tasks_started: int = 0
     num_tasks_in_progress: int = 0
@@ -55,17 +62,18 @@ class AsyncQueue:
         _stop_event (asyncio.Event): An event to signal when the queue should stop processing.
 
     Methods:
-        enqueue(item): Add an item to the queue for processing.
-
-        dequeue(): Remove and return an item from the queue.
-
-        join(): Wait until all items in the queue have been processed.
-
-        stop(): Signal to stop processing new items in the queue.
-
-        stopped(): Check if the queue has been signaled to stop.
-
-        process_requests(func): Process items using a provided function.
+        enqueue(item):
+            Add an item to the queue for processing.
+        dequeue():
+            Remove and return an item from the queue.
+        join():
+            Wait until all items in the queue have been processed.
+        stop():
+            Signal to stop processing new items in the queue.
+        stopped():
+            Check if the queue has been signaled to stop.
+        process_requests(func):
+            Process items using a provided function.
     """
 
     def __init__(self) -> None:
