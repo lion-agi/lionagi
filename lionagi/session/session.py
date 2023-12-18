@@ -22,12 +22,18 @@ class Session():
     This class manages the flow of conversation, system settings, and interactions with external tools.
 
     Attributes:
-        conversation (Conversation): An instance of the Conversation class to manage messages.
-        system (str): The current system setting for the conversation.
-        llmconfig (dict): Configuration settings for the language model.
-        _logger (DataLogger): An instance of the DataLogger class for logging conversation details.
-        api_service: An instance of the API service for making calls to the conversational AI model.
-        toolmanager (ToolManager): An instance of the ToolManager class for managing external tools.
+        conversation (Conversation):
+            An instance of the Conversation class to manage messages.
+        system (str):
+            The current system setting for the conversation.
+        llmconfig (dict):
+            Configuration settings for the language model.
+        _logger (DataLogger):
+            An instance of the DataLogger class for logging conversation details.
+        api_service:
+            An instance of the API service for making calls to the conversational AI model.
+        _toolmanager (ToolManager):
+            An instance of the ToolManager class for managing external tools.
 
     Methods:
         set_dir(dir):
@@ -76,8 +82,11 @@ class Session():
 
         Parameters:
             system (str): The initial system setting for the conversation.
+
             dir (Optional[str]): The directory for logging. Default is None.
+
             llmconfig (Optional[dict]): Configuration settings for the language model. Default is oai_llmconfig.
+
             api_service: An instance of the API service for making calls to the conversational AI model.
         """
         self.conversation = Conversation()
@@ -128,8 +137,8 @@ class Session():
         Process the output, invoke tools if needed, and optionally return the output.
 
         Parameters:
-            output: The output to process.
             invoke (bool): Whether to invoke tools based on the output. Default is True.
+
             out (bool): Whether to return the output. Default is True.
 
         Returns:
@@ -147,6 +156,12 @@ class Session():
             return self.conversation.responses[-1]['content']
     
     def _is_invoked(self):
+        """
+        Checks if the current message indicates the invocation of a function call.
+
+        Returns:
+            bool: True if a function call is detected in the content of the last message, False otherwise.
+        """
         msg = self.conversation.messages[-1]
         try: 
             if "function call result" in json.loads(msg['content']).keys():
@@ -160,10 +175,15 @@ class Session():
 
         Parameters:
             tools (list): The list of tool information dictionaries.
+
             funcs (list): The list of corresponding functions.
+
             update (bool): Whether to update existing functions.
+
             new (bool): Whether to create new registries for existing functions.
+
             prefix (Optional[str]): A prefix to add to the function names.
+
             postfix (Optional[str]): A postfix to add to the function names.
         """
         funcs = to_list(funcs)
@@ -174,14 +194,21 @@ class Session():
         Start a new conversation session with the provided instruction.
 
         Parameters:
-            instruction (str): The instruction to initiate the conversation.
+            instruction (Union[str, dict]): The instruction to initiate the conversation.
+
             system (Optional[str]): The system setting for the conversation. Default is None.
+
             context (Optional[dict]): Additional context for the instruction. Default is None.
+
             out (bool): Whether to return the output. Default is True.
+
             name (Optional[str]): The name associated with the instruction. Default is None.
+
             invoke (bool): Whether to invoke tools based on the output. Default is True.
+
             tool_parser (Optional[callable]): A custom tool parser function. Default is None.
-            kwargs: Additional keyword arguments for configuration.
+
+            **kwargs: Additional keyword arguments for configuration.
 
         Returns:
             Any: The processed output.
@@ -198,14 +225,21 @@ class Session():
         Continue the conversation with the provided instruction.
 
         Parameters:
-            instruction (str): The instruction to continue the conversation.
+            instruction (Union[str, dict]): The instruction to continue the conversation.
+
             system (Optional[str]): The system setting for the conversation. Default is None.
+
             context (Optional[dict]): Additional context for the instruction. Default is None.
+
             out (bool): Whether to return the output. Default is True.
+
             name (Optional[str]): The name associated with the instruction. Default is None.
+
             invoke (bool): Whether to invoke tools based on the output. Default is True.
+
             tool_parser (Optional[callable]): A custom tool parser function. Default is None.
-            kwargs: Additional keyword arguments for configuration.
+
+            **kwargs: Additional keyword arguments for configuration.
 
         Returns:
             Any: The processed output.
@@ -218,31 +252,34 @@ class Session():
 
         return await self._output(invoke, out, tool_parser)
 
-    async def auto_followup(self, instruct, num=3, tool_parser=None, **kwags):
+    async def auto_followup(self, instruct, num=3, tool_parser=None, **kwargs):
         """
         Automates the follow-up process for a specified number of times or until the session concludes.
 
         Parameters:
-            instruct (dict): The instruction for the follow-up.
+            instruct (Union[str, dict]): The instruction for the follow-up.
+
             num (int, optional): The number of times to automatically follow up. Defaults to 3.
+
             tool_parser (callable, optional): A custom tool parser function. Defaults to None.
-            **kwags: Additional keyword arguments passed to the underlying `followup` method.
+
+            **kwargs: Additional keyword arguments passed to the underlying `followup` method.
 
         """
         cont_ = True
         while num > 0 and cont_ is True:
-            await self.followup(instruct, tool_parser=tool_parser, tool_choice="auto", **kwags)
+            await self.followup(instruct, tool_parser=tool_parser, tool_choice="auto", **kwargs)
             num -= 1
             cont_ = True if self._is_invoked() else False
         if num == 0:
-            await self.followup(instruct, **kwags)
+            await self.followup(instruct, **kwargs)
 
     def _create_payload_chatcompletion(self, **kwargs):
         """
         Create a payload for chat completion based on the conversation state and configuration.
 
         Parameters:
-            kwargs: Additional keyword arguments for configuration.
+            **kwargs: Additional keyword arguments for configuration.
 
         Returns:
             dict: The payload for chat completion.
@@ -272,7 +309,8 @@ class Session():
 
         Parameters:
             sleep (float): The sleep duration after making the API call. Default is 0.1.
-            kwargs: Additional keyword arguments for configuration.
+
+            **kwargs: Additional keyword arguments for configuration.
         """
         endpoint = f"chat/completions"
         try:
@@ -293,30 +331,35 @@ class Session():
             status_tracker.num_tasks_failed += 1
             raise e
     
-    def messages_to_csv(self, dir=None, filename="_messages.csv", **kwags):
+    def messages_to_csv(self, dir=None, filename="_messages.csv", **kwargs):
         """
         Save conversation messages to a CSV file.
 
         Parameters:
+
             dir (Optional[str]): The directory path for saving the CSV file. Default is None.
+
             filename (Optional[str]): The filename for the CSV file. Default is "_messages.csv".
-            kwargs: Additional keyword arguments for CSV file settings.
+
+            **kwargs: Additional keyword arguments for CSV file settings.
         """
         dir = dir or self._logger.dir
         if dir is None:
             raise ValueError("No directory specified.")
-        self.conversation.msg.to_csv(dir=dir, filename=filename, **kwags)
+        self.conversation.msg.to_csv(dir=dir, filename=filename, **kwargs)
         
-    def log_to_csv(self, dir=None, filename="_llmlog.csv", **kwags):
+    def log_to_csv(self, dir=None, filename="_llmlog.csv", **kwargs):
         """
         Save conversation logs to a CSV file.
 
         Parameters:
             dir (Optional[str]): The directory path for saving the CSV file. Default is None.
+
             filename (Optional[str]): The filename for the CSV file. Default is "_llmlog.csv".
-            kwargs: Additional keyword arguments for CSV file settings.
+
+            **kwargs: Additional keyword arguments for CSV file settings.
         """
         dir = dir or self._logger.dir
         if dir is None:
             raise ValueError("No directory specified.")
-        self._logger.to_csv(dir=dir, filename=filename, **kwags)
+        self._logger.to_csv(dir=dir, filename=filename, **kwargs)
