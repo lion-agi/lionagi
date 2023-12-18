@@ -10,7 +10,8 @@ class ToolManager:
     This class allows the registration of tools and functions, enabling their invocation.
 
     Attributes:
-        registry (dict): A dictionary storing the registered tools and their corresponding functions.
+        registry (dict):
+            A dictionary storing the registered tools and their corresponding functions.
 
     Methods:
         _to_dict(name, function, content=None) -> dict:

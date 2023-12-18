@@ -81,7 +81,6 @@ class DataLogger:
 
         Parameters:
             dir (str): The directory to set for saving log files.
-            
         """
         self.dir = dir
         

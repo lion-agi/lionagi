@@ -344,7 +344,7 @@ def append_to_jsonl(data: Any, filepath: str) -> None:
     Parameters:
         data (Any): Data to be serialized and appended.
 
-       filepath (str): Path to the jsonl file.
+        filepath (str): Path to the jsonl file.
 
     Example:
         >>> append_to_jsonl({"key": "value"}, "data.jsonl")
