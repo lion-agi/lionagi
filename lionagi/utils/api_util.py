@@ -20,22 +20,16 @@ class StatusTracker:
     Attributes:
         num_tasks_started:
             The number of tasks that have been initiated.
-
         num_tasks_in_progress:
             The number of tasks currently being processed.
-
         num_tasks_succeeded:
             The number of tasks that have completed successfully.
-
         num_tasks_failed:
             The number of tasks that have failed.
-
         num_rate_limit_errors:
             The number of tasks that failed due to rate limiting.
-
         num_api_errors:
             The number of tasks that failed due to API errors.
-
         num_other_errors:
             The number of tasks that failed due to other errors.
     """
@@ -57,9 +51,10 @@ class AsyncQueue:
     concurrent task processing in an orderly and controlled manner.
 
     Attributes:
-        queue (asyncio.Queue): A queue to hold items for asynchronous processing.
-
-        _stop_event (asyncio.Event): An event to signal when the queue should stop processing.
+        queue (asyncio.Queue):
+            A queue to hold items for asynchronous processing.
+        _stop_event (asyncio.Event):
+            An event to signal when the queue should stop processing.
 
     Methods:
         enqueue(item):
@@ -189,18 +184,20 @@ class RateLimiter(ABC):
     of requests sent to or received from a network interface controller or an API.
 
     Attributes:
-        max_requests_per_minute (int): Maximum number of requests permitted per minute.
-
-        max_tokens_per_minute (int): Maximum number of tokens that can accumulate per minute.
-
-        available_request_capacity (int): Current number of available request slots.
-
-        available_token_capacity (int): Current number of available tokens.
+        max_requests_per_minute (int):
+            Maximum number of requests permitted per minute.
+        max_tokens_per_minute (int):
+            Maximum number of tokens that can accumulate per minute.
+        available_request_capacity (int):
+            Current number of available request slots.
+        available_token_capacity (int):
+            Current number of available tokens.
 
     Methods:
-        rate_limit_replenisher: Coroutine to replenish rate limits over time.
-
-        calculate_num_token: Method to calculate required tokens for a request.
+        rate_limit_replenisher:
+            Coroutine to replenish rate limits over time.
+        calculate_num_token:
+            Method to calculate required tokens for a request.
     """
     
     def __init__(self, max_requests_per_minute: int, max_tokens_per_minute: int) -> None:
@@ -283,28 +280,30 @@ class BaseAPIService(ABC):
     subclassed for concrete implementations of specific API service interactions.
 
     Attributes:
-        api_key (str): The API key used for authenticating with the API service.
-
-        token_encoding_name (str): The encoding for the API token.
-
-        max_attempts (int): The maximum number of retry attempts for API calls.
-
-        status_tracker (StatusTracker): Tracker for API call statuses.
-
-        rate_limiter (RateLimiter): Limiter to control the rate of API calls.
-
-        queue (AsyncQueue): Queue for managing API call tasks.
+        api_key (str):
+            The API key used for authenticating with the API service.
+        token_encoding_name (str):
+            The encoding for the API token.
+        max_attempts (int):
+            The maximum number of retry attempts for API calls.
+        status_tracker (StatusTracker):
+            Tracker for API call statuses.
+        rate_limiter (RateLimiter):
+            Limiter to control the rate of API calls.
+        queue (AsyncQueue):
+            Queue for managing API call tasks.
 
     Methods:
-        call_api: Abstract method to define API call mechanism in subclasses.
-
-        handle_error: Handle errors by logging and saving details to a JSONL file.
-
-        append_to_jsonl: Append data to a file in JSONL format.
-
-        api_endpoint_from_url: Extract the API endpoint from a URL.
-
-        task_id_generator_function: Generate a sequence of unique task IDs.
+        call_api:
+            Abstract method to define API call mechanism in subclasses.
+        handle_error:
+            Handle errors by logging and saving details to a JSONL file.
+        append_to_jsonl:
+            Append data to a file in JSONL format.
+        api_endpoint_from_url:
+            Extract the API endpoint from a URL.
+        task_id_generator_function:
+            Generate a sequence of unique task IDs.
     """
     
     def __init__(
