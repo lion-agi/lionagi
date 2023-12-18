@@ -296,12 +296,12 @@ def get_bins(input: List[str], upper: int = 7500) -> List[List[int]]:
     according to some upper threshold. Return lists of indices as bins.
     
     Parameters:
-    input (List[str]): List of items to be binned.
+        input (List[str]): List of items to be binned.
 
-    upper (int, optional): Upper threshold for the cumulative sum of the length of items in a bin. Default is 7500.
+        upper (int, optional): Upper threshold for the cumulative sum of the length of items in a bin. Default is 7500.
     
     Returns:
-    List[List[int]]: List of lists, where each inner list contains the indices of the items that form a bin.
+        List[List[int]]: List of lists, where each inner list contains the indices of the items that form a bin.
     
     Example:
     >>> items = ['apple', 'a', 'b', 'banana', 'cheery', 'c', 'd', 'e']
