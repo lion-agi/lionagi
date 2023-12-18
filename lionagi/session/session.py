@@ -54,6 +54,9 @@ class Session():
         followup(instruction, system=None, context=None, out=True, name=None, invoke=True, **kwargs) -> Any:
             Continue the conversation with the provided instruction.
 
+        auto_followup(self, instruct, num=3, tool_parser=None, **kwags):
+            Automates the follow-up process for a specified number of times or until the session concludes.
+
         create_payload_chatcompletion(**kwargs) -> dict:
             Create a payload for chat completion based on the conversation state and configuration.
 
