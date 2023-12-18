@@ -231,7 +231,7 @@ class Session():
         """
         cont_ = True
         while num > 0 and cont_ is True:
-            await self.followup(instruct,tool_parser=tool_parser, tool_choice="auto", **kwags)
+            await self.followup(instruct, tool_parser=tool_parser, tool_choice="auto", **kwags)
             num -= 1
             cont_ = True if self._is_invoked() else False
         if num == 0:

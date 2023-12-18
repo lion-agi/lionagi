@@ -165,7 +165,7 @@ class OpenAIService(BaseAPIService):
             token_encoding_name (str): The name of the text encoding used by OpenAI.
             max_attempts (int): The maximum number of attempts for calling an API endpoint.
             status_tracker (Optional[StatusTracker]): Tracker for API call outcomes.
-            rate_limiter (Optional[OpenAIRateLimiter]): Rate limiter for OpenAI's limits.
+            ratelimiter (Optional[OpenAIRateLimiter]): Rate limiter for OpenAI's limits.
             queue (Optional[AsyncQueue]): Queue for managing asynchronous API calls.
 
         Example:
@@ -183,15 +183,14 @@ class OpenAIService(BaseAPIService):
         super().__init__(api_key, token_encoding_name, max_attempts, 
                          max_requests_per_minute, max_tokens_per_minute,
                          ratelimiter, status_tracker, queue)
-        
 
-    async def call_api(self, http_session, endpoint, payload: Dict[str, any] =None) -> Optional[Dict[str, any]]:
+    async def call_api(self, http_session, endpoint, payload: Dict[str, any] = None) -> Optional[Dict[str, any]]:
         """
         Call an OpenAI API endpoint with a specific payload and handle the response.
 
         Args:
-            session: The session object for making HTTP requests.
-            request_url (str): The full URL of the OpenAI API endpoint to be called.
+            http_session: The session object for making HTTP requests.
+            endpoint (str): The full URL of the OpenAI API endpoint to be called.
             payload (Dict[str, any]): The payload to send with the API request.
 
         Returns:
