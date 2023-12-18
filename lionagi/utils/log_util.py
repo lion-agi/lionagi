@@ -11,17 +11,18 @@ class DataLogger:
     and setting the directory where the logs should be saved.
 
     Attributes:
-        dir (str): The directory where the log files are to be saved.
-
-        log (deque): A deque that stores log entries.
+        dir (str):
+            The directory where the log files are to be saved.
+        log (deque):
+            A deque that stores log entries.
 
     Methods:
-        __call__(entry): Appends a new entry to the log.
-
+        __call__(entry):
+            Appends a new entry to the log.
         to_csv(dir: str, filename: str, verbose: bool, timestamp: bool, dir_exist_ok: bool, file_exist_ok: bool): 
             Converts the log to a CSV format and saves it to a file.
-
-        set_dir(dir: str): Sets the directory for saving log files.
+        set_dir(dir: str):
+            Sets the directory for saving log files.
     """
 
     def __init__(self, dir= None, log: list = None) -> None:
