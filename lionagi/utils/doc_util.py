@@ -12,8 +12,11 @@ def dir_to_path(dir: str, ext, recursive: bool = False, flat: bool = True):
 
     Parameters:
         dir (str): The directory path where to search for files.
+
         ext (str): The file extension to filter by.
+
         recursive (bool, optional): If True, search for files recursively in subdirectories. Defaults to False.
+
         flat (bool, optional): If True, return a flat list of file paths. Defaults to True.
 
     Returns:
@@ -35,6 +38,7 @@ def read_text(filepath: str, clean: bool = True) -> str:
 
     Parameters:
         filepath (str): The path to the text file to be read.
+
         clean (bool, optional): If True, clean the content by removing specific unwanted characters. Defaults to True.
 
     Returns:
@@ -63,16 +67,27 @@ def dir_to_files(dir: str, ext: str, recursive: bool = False,
 
     Parameters:
         dir (str): The directory path where files are located.
+
         ext (str): The file extension to filter by.
+
         recursive (bool, optional): If True, search files recursively in subdirectories. Defaults to False.
+
         reader (Callable, optional): Function used to read and process the content of each file. Defaults to read_text.
+
         clean (bool, optional): If True, cleans the content by removing specified characters. Defaults to True.
+
         to_csv (bool, optional): If True, export the processed data to a CSV file. Defaults to False.
+
         project (str, optional): The name of the project. Defaults to 'project'.
+
         output_dir (str, optional): Directory path for exporting the CSV file. Defaults to 'data/logs/sources/'.
+
         filename (Optional[str], optional): Name of the CSV file, if not provided, a default will be used. Defaults to None.
+
         verbose (bool, optional): If True, print a message upon CSV export. Defaults to True.
+
         timestamp (bool, optional): If True, include a timestamp in the file name. Defaults to True.
+
         logger (Optional[DataLogger], optional): An instance of DataLogger for logging, if not provided, a new one will be created. Defaults to None.
 
     Returns:
@@ -114,14 +129,18 @@ def chunk_text(input: str, chunk_size: int, overlap: float,
     """
     Splits a string into chunks of a specified size, allowing for optional overlap between chunks.
     
-    Args:
+    Parameters:
         input (str): The text to be split into chunks.
+
         chunk_size (int): The size of each chunk in characters.
+
         overlap (float): A value between [0, 1] specifying the percentage of overlap between adjacent chunks.
+
         threshold (int): The minimum size for the last chunk. If the last chunk is smaller than this, it will be merged with the previous chunk.
         
     Raises:
         TypeError: If input text cannot be converted to a string.
+
         ValueError: If any error occurs during the chunking process.
         
     Returns:
@@ -173,11 +192,15 @@ def _file_to_chunks(input: Dict[str, Any],
     """
     Splits text from a specified dictionary field into chunks and returns a list of dictionaries.
     
-    Args:
+    Parameters:
         input (Dict[str, Any]): The input dictionary containing the text field to be chunked.
+
         field (str, optional): The dictionary key corresponding to the text field. Defaults to 'content'.
+
         chunk_size (int, optional): Size of each text chunk in characters. Defaults to 1500.
+
         overlap (float, optional): Percentage of overlap between adjacent chunks, in the range [0, 1]. Defaults to 0.2.
+
         threshold (int, optional): Minimum size for the last chunk. If smaller, it will be merged with the previous chunk. Defaults to 200.
         
     Raises:
@@ -229,19 +252,32 @@ def file_to_chunks(input,
     """
         Splits text from a specified dictionary field into chunks and returns a list of dictionaries.
 
-    Args:
+    Parameters:
         input (List[Dict[str, Any]]): The input dictionaries containing the text field to be chunked.
+
         field (str, optional): The dictionary key corresponding to the text field. Defaults to 'content'.
+
         chunk_size (int, optional): Size of each text chunk in characters. Defaults to 1500.
+
         overlap (float, optional): Percentage of overlap between adjacent chunks, in the range [0, 1]. Defaults to 0.2.
+
         threshold (int, optional): Minimum size for the last chunk. If smaller, it will be merged with the previous chunk. Defaults to 200.
-        to_csv: If True, export the processed data to a CSV file.
-        project: The name of the project.
-        output_dir: The directory path for exporting the CSV file.
-        filename: The name of the CSV file.
-        verbose: If True, print a verbose message after export.
-        timestamp: If True, include a timestamp in the exported file name.
-        logger: An optional DataLogger instance for logging.
+
+        to_csv (bool, optional): If True, export the processed data to a CSV file.
+
+        project (str, optional): The name of the project.
+
+        output_dir (str, optional): The directory path for exporting the CSV file.
+
+        chunk_func (function, optional): The function to be used for chunking. Defaults to _file_to_chunks.
+
+        filename (str, optional): The name of the CSV file.
+
+        verbose (bool, optional): If True, print a verbose message after export.
+
+        timestamp (bool, optional): If True, include a timestamp in the exported file name.
+
+        logger (DataLogger, optional): An optional DataLogger instance for logging.
     """
 
     _f = lambda x: chunk_func(x, field=field, chunk_size=chunk_size, overlap=overlap, threshold=threshold)
@@ -259,8 +295,9 @@ def get_bins(input: List[str], upper: int = 7500) -> List[List[int]]:
     Get index of elements in a list based on their consecutive cumulative sum of length,
     according to some upper threshold. Return lists of indices as bins.
     
-    Args:
+    Parameters:
     input (List[str]): List of items to be binned.
+
     upper (int, optional): Upper threshold for the cumulative sum of the length of items in a bin. Default is 7500.
     
     Returns:

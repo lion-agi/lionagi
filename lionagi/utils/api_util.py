@@ -5,6 +5,8 @@ from abc import ABC, abstractmethod
 from dataclasses import dataclass
 from typing import Any, Callable, Dict, Generator, NoReturn, Optional
 
+from sys_util import append_to_jsonl
+
 
 @dataclass
 class StatusTracker:
@@ -76,7 +78,7 @@ class AsyncQueue:
         """
         Asynchronously add an item to the queue for processing.
 
-        Args:
+        Parameters:
             item (Any): The item to be added to the queue.
 
         Example:
@@ -151,7 +153,7 @@ class AsyncQueue:
         Continuously dequeues items and applies the given function to each. 
         The processing stops when the queue is signaled to stop or a sentinel value (`None`) is dequeued.
 
-        Args:
+        Parameters:
             func (Callable[[Any], Any]): A coroutine function to process items from the queue.
 
         Example:
@@ -186,8 +188,6 @@ class RateLimiter(ABC):
 
         available_token_capacity (int): Current number of available tokens.
 
-        rate_limit_replenisher_task (asyncio.Task): Background task for replenishing rate limits.
-
     Methods:
         rate_limit_replenisher: Coroutine to replenish rate limits over time.
 
@@ -198,7 +198,7 @@ class RateLimiter(ABC):
         """
         Initializes the RateLimiter with specified maximum request and token limits.
 
-        Args:
+        Parameters:
             max_requests_per_minute (int): Maximum requests allowed per minute.
 
             max_tokens_per_minute (int): Maximum tokens allowed to accumulate per minute.
@@ -244,7 +244,7 @@ class RateLimiter(ABC):
         Subclasses should implement this method to determine the number of tokens needed based
         on the request payload and target endpoint.
 
-        Args:
+        Parameters:
             payload (Dict[str, Any]): Payload of the request.
 
             api_endpoint (str): Target API endpoint for the request.
@@ -307,12 +307,12 @@ class BaseAPIService(ABC):
         max_tokens_per_minute: int,
         ratelimiter,
         status_tracker: Optional[StatusTracker] = None,
-        queue: Optional[AsyncQueue] = None,       
+        queue: Optional[AsyncQueue] = None,
     ) -> None:
         """
         Initializes the BaseAPIService with necessary configuration.
 
-        Args:
+        Parameters:
             api_key (str): The API key for authentication.
 
             token_encoding_name (str): Encoding name for the API token.
@@ -321,7 +321,7 @@ class BaseAPIService(ABC):
 
             status_tracker (Optional[StatusTracker]): Tracker for API call statuses.
 
-            ratelimiter (RateLimiter): Limiter for API call rates.
+            ratelimiter: Limiter for API call rates.
 
             queue (Optional[AsyncQueue]): Queue for managing API tasks.
 
@@ -331,7 +331,7 @@ class BaseAPIService(ABC):
             ...
             >>> service = MyAPIService(api_key="12345", token_encoding_name="utf-8",
             ...                       max_attempts=3, status_tracker=None,
-            ...                       rate_limiter=my_rate_limiter, queue=None)
+            ...                       rate_limiter=ratelimiter, queue=None)
         """
         self.api_key = api_key
         self.token_encoding_name = token_encoding_name
@@ -339,6 +339,7 @@ class BaseAPIService(ABC):
         self.status_tracker = status_tracker or StatusTracker()
         self.queue = queue or AsyncQueue()
         self.rate_limiter = ratelimiter(max_requests_per_minute, max_tokens_per_minute)
+        self.append_to_jsonl = append_to_jsonl
         
     @abstractmethod
     async def call_api(self) -> Any:
@@ -369,13 +370,13 @@ class BaseAPIService(ABC):
         
         Updates the status tracker to indicate the error and saves details to a JSONL file.
         
-        Args:
+        Parameters:
             error (Exception): The exception that was raised during the API call.
 
             payload (Any): The data payload that was used for the API call.
 
             metadata (Any): Additional metadata related to the API call.
-            
+
             save_filepath (str): The file path where error details should be saved.
         """
         self.status_tracker.num_tasks_in_progress -= 1
@@ -393,7 +394,7 @@ class BaseAPIService(ABC):
         """
         Extracts the endpoint from an API request URL.
         
-        Args:
+        Parameters:
             request_url (str): The URL from which to extract the API endpoint.
         
         Returns:
