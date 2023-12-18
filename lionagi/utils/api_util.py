@@ -48,7 +48,7 @@ class AsyncQueue:
 
     Attributes:
         queue (asyncio.Queue): A queue to hold items for asynchronous processing.
-        
+
         _stop_event (asyncio.Event): An event to signal when the queue should stop processing.
 
     Methods:
@@ -179,13 +179,18 @@ class RateLimiter(ABC):
 
     Attributes:
         max_requests_per_minute (int): Maximum number of requests permitted per minute.
+
         max_tokens_per_minute (int): Maximum number of tokens that can accumulate per minute.
+
         available_request_capacity (int): Current number of available request slots.
+
         available_token_capacity (int): Current number of available tokens.
+
         rate_limit_replenisher_task (asyncio.Task): Background task for replenishing rate limits.
 
     Methods:
         rate_limit_replenisher: Coroutine to replenish rate limits over time.
+
         calculate_num_token: Method to calculate required tokens for a request.
     """
     
@@ -195,6 +200,7 @@ class RateLimiter(ABC):
 
         Args:
             max_requests_per_minute (int): Maximum requests allowed per minute.
+
             max_tokens_per_minute (int): Maximum tokens allowed to accumulate per minute.
 
         Example:
@@ -269,17 +275,26 @@ class BaseAPIService(ABC):
 
     Attributes:
         api_key (str): The API key used for authenticating with the API service.
+
         token_encoding_name (str): The encoding for the API token.
+
         max_attempts (int): The maximum number of retry attempts for API calls.
+
         status_tracker (StatusTracker): Tracker for API call statuses.
+
         rate_limiter (RateLimiter): Limiter to control the rate of API calls.
+
         queue (AsyncQueue): Queue for managing API call tasks.
 
     Methods:
         call_api: Abstract method to define API call mechanism in subclasses.
+
         handle_error: Handle errors by logging and saving details to a JSONL file.
+
         append_to_jsonl: Append data to a file in JSONL format.
+
         api_endpoint_from_url: Extract the API endpoint from a URL.
+
         task_id_generator_function: Generate a sequence of unique task IDs.
     """
     
@@ -299,10 +314,15 @@ class BaseAPIService(ABC):
 
         Args:
             api_key (str): The API key for authentication.
+
             token_encoding_name (str): Encoding name for the API token.
+
             max_attempts (int): Maximum number of attempts for an API call.
+
             status_tracker (Optional[StatusTracker]): Tracker for API call statuses.
-            rate_limiter (RateLimiter): Limiter for API call rates.
+
+            ratelimiter (RateLimiter): Limiter for API call rates.
+
             queue (Optional[AsyncQueue]): Queue for managing API tasks.
 
         Example:
@@ -351,8 +371,11 @@ class BaseAPIService(ABC):
         
         Args:
             error (Exception): The exception that was raised during the API call.
+
             payload (Any): The data payload that was used for the API call.
+
             metadata (Any): Additional metadata related to the API call.
+            
             save_filepath (str): The file path where error details should be saved.
         """
         self.status_tracker.num_tasks_in_progress -= 1
