@@ -336,7 +336,6 @@ class Session():
         Save conversation messages to a CSV file.
 
         Parameters:
-
             dir (Optional[str]): The directory path for saving the CSV file. Default is None.
 
             filename (Optional[str]): The filename for the CSV file. Default is "_messages.csv".
