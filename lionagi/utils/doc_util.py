@@ -278,6 +278,9 @@ def file_to_chunks(input,
         timestamp (bool, optional): If True, include a timestamp in the exported file name.
 
         logger (DataLogger, optional): An optional DataLogger instance for logging.
+
+    Returns:
+        List[Dict[str, Any]]: A list of dictionaries representing the processed text chunks.
     """
 
     _f = lambda x: chunk_func(x, field=field, chunk_size=chunk_size, overlap=overlap, threshold=threshold)
