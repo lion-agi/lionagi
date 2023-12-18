@@ -44,7 +44,7 @@ class ToolManager:
         self.registry = {}
         
     @staticmethod
-    def _to_dict(name, function, content=None):
+    def _to_dict(name, func, content=None):
         """
         Convert tool information to a dictionary entry.
 
@@ -56,7 +56,7 @@ class ToolManager:
         Returns:
             dict: A dictionary entry representing the tool.
         """
-        return {name: {"function": function, "content": content or "none"}}
+        return {name: {"function": func, "content": content or "none"}}
 
     def _name_existed(self, name):
         """
@@ -71,7 +71,7 @@ class ToolManager:
         """
         return True if name in self.registry.keys() else False
             
-    def _register_function(self, name, function, content=None, update=False, new=False, prefix=None, postfix=None):
+    def _register_function(self, name, func, content=None, update=False, new=False, prefix=None, postfix=None):
         """
         Register a function with a specified name in the registry.
 
@@ -90,7 +90,7 @@ class ToolManager:
                 raise ValueError(f"Cannot both update and create new registry for existing function {name} at the same time")
             
         name = f"{prefix or ''}{name}{postfix or '1'}" if new else name                
-        self.registry.update(self._to_dict(name, function, content)) 
+        self.registry.update(self._to_dict(name, func, content)) 
                 
     def invoke(self, name, kwargs):
         """
@@ -124,12 +124,12 @@ class ToolManager:
 
         """
         if self._name_existed(name):
-            function = self.registry[name]["function"]
+            func = self.registry[name]["function"]
             try:
-                if asyncio.iscoroutinefunction(function):
-                    return await function(**kwargs)
+                if asyncio.iscoroutinefunction(func):
+                    return await func(**kwargs)
                 else:
-                    return function(**kwargs)
+                    return func(**kwargs)
             except Exception as e:
                 raise ValueError(f"Error when invoking function {name} with arguments {kwargs} with error message {e}")
         else: 
