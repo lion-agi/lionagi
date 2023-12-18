@@ -10,7 +10,8 @@ from sys_util import append_to_jsonl
 
 @dataclass
 class StatusTracker:
-    """Class for keeping track of various task statuses.
+    """
+    Class for keeping track of various task statuses.
     
     This class serves as a simple way to monitor different types of task
     outcomes and errors within a system. It uses dataclasses for easy
