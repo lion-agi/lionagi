@@ -307,9 +307,9 @@ def get_bins(input: List[str], upper: int = 7500) -> List[List[int]]:
         List[List[int]]: List of lists, where each inner list contains the indices of the items that form a bin.
     
     Example:
-    >>> items = ['apple', 'a', 'b', 'banana', 'cheery', 'c', 'd', 'e']
-    >>> upper = 10
-    >>> get_bins(items, upper)
+        >>> items = ['apple', 'a', 'b', 'banana', 'cheery', 'c', 'd', 'e']
+        >>> upper = 10
+        >>> get_bins(items, upper)
     [[0, 1, 2], [3], [4, 5, 6, 7]]
     """
     current = 0
