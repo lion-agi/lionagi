@@ -54,6 +54,9 @@ class Session():
         followup(instruction, system=None, context=None, out=True, name=None, invoke=True, **kwargs) -> Any:
             Continue the conversation with the provided instruction.
 
+        auto_followup(self, instruct, num=3, tool_parser=None, **kwags):
+            Automates the follow-up process for a specified number of times or until the session concludes.
+
         create_payload_chatcompletion(**kwargs) -> dict:
             Create a payload for chat completion based on the conversation state and configuration.
 
@@ -150,7 +153,6 @@ class Session():
                 return True
         except: 
             return False    
-    
 
     def register_tools(self, tools, funcs, update=False, new=False, prefix=None, postfix=None):
         """
@@ -178,6 +180,7 @@ class Session():
             out (bool): Whether to return the output. Default is True.
             name (Optional[str]): The name associated with the instruction. Default is None.
             invoke (bool): Whether to invoke tools based on the output. Default is True.
+            tool_parser (Optional[callable]): A custom tool parser function. Default is None.
             kwargs: Additional keyword arguments for configuration.
 
         Returns:
@@ -201,6 +204,7 @@ class Session():
             out (bool): Whether to return the output. Default is True.
             name (Optional[str]): The name associated with the instruction. Default is None.
             invoke (bool): Whether to invoke tools based on the output. Default is True.
+            tool_parser (Optional[callable]): A custom tool parser function. Default is None.
             kwargs: Additional keyword arguments for configuration.
 
         Returns:
@@ -215,6 +219,16 @@ class Session():
         return await self._output(invoke, out, tool_parser)
 
     async def auto_followup(self, instruct, num=3, tool_parser=None, **kwags):
+        """
+        Automates the follow-up process for a specified number of times or until the session concludes.
+
+        Parameters:
+            instruct (dict): The instruction for the follow-up.
+            num (int, optional): The number of times to automatically follow up. Defaults to 3.
+            tool_parser (callable, optional): A custom tool parser function. Defaults to None.
+            **kwags: Additional keyword arguments passed to the underlying `followup` method.
+
+        """
         cont_ = True
         while num > 0 and cont_ is True:
             await self.followup(instruct,tool_parser=tool_parser, tool_choice="auto", **kwags)
