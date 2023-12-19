@@ -9,24 +9,22 @@ class Conversation:
     user instructions, and assistant responses.
 
     Attributes:
-        response_counts (int): The count of assistant responses in the conversation.
-
-        messages (list): A list to store messages in the conversation.
-
-        msg (Message): An instance of the Message class for creating messages.
-
-        responses (list): A list to store assistant responses in the conversation.
+        response_counts (int):
+            The count of assistant responses in the conversation.
+        messages (list):
+            A list to store messages in the conversation.
+        msg (Message):
+            An instance of the Message class for creating messages.
+        responses (list):
+            A list to store assistant responses in the conversation.
 
     Methods:
         initiate_conversation(system, instruction, context=None, name=None):
             Initiate a conversation with a system setting and user instruction.
-
         add_messages(system, instruction, context=None, response=None, tool=None, name=None):
             Add messages to the conversation, including system setting, user instruction, and assistant response.
-
         change_system(system):
             Change the system setting in the conversation.
-
         keep_last_n_exchanges(n: int):
             Keep the last n exchanges in the conversation.
     """
