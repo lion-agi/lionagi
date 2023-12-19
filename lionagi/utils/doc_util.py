@@ -30,8 +30,11 @@ def dir_to_path(dir: str, ext, recursive: bool = False, flat: bool = True):
         tem = '**/*' if recursive else '*'
         return list(Path(dir).glob(tem + ext))
 
-    return to_list(l_call(ext, _dir_to_path, flat=True), flat=flat)
-
+    try: 
+        return to_list(l_call(ext, _dir_to_path, flat=True), flat=flat)
+    except: 
+        raise ValueError("Invalid directory or extension, please check the path")
+    
 def read_text(filepath: str, clean: bool = True) -> str:
     """
     Reads the content of a text file and optionally cleans it by removing specified characters.
