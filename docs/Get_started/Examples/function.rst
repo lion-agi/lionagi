@@ -61,7 +61,7 @@ Let's define the necessary message information we need to pass in for our exampl
    # when using respond_mode as json to enforce output format
    # you need to provide specifying details in instruction
    json_format = {"number1": "x", "number2": "y"}
-   instruct1 = {"Task": task, "json_format": json_format
+   instruct1 = {"Task": task, "json_format": json_format}
 
    question = "There are [basketball, football, backpack, water bottle, strawberry, tennis ball, \
                rockets]. each comes in four different colors, \
