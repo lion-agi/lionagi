@@ -121,7 +121,7 @@ class ToolManager:
         else: 
             raise ValueError(f"Function {name} is not registered.")
     
-    async def ainvoke(self, name, kwargs):
+    async def ainvoke(self, func_call):
         """
         Asynchronously invoke a registered function with the provided arguments.
 
@@ -134,6 +134,7 @@ class ToolManager:
             Any: The result of invoking the function asynchronously.
 
         """
+        name, kwargs = func_call
         if self._name_existed(name):
             func = self.registry[name]["function"]
             try:
@@ -152,22 +153,20 @@ class ToolManager:
         Extract function name and arguments from a response JSON.
 
         Parameters:
-            response (str): The JSON response containing function information.
+            response (dict): The JSON response containing function information.
 
         Returns:
             Tuple[str, dict]: The function name and its arguments.
         """
         try: 
-            out = json.loads(response)
-            func = out['function'][5:]
-            args = json.loads(out['arguments'])
+            # out = json.loads(response)
+            func = response['function'][5:]
+            args = json.loads(response['arguments'])
             return (func, args)
         except:
             try:
-                out = json.loads(response)
-                out = out['tool_uses'][0]
-                func = out['recipient_name'].split('.')[-1]
-                args = out['parameters']
+                func = response['recipient_name'].split('.')[-1]
+                args = response['parameters']
                 return (func, args)
             except:
                 raise ValueError('response is not a valid function call')

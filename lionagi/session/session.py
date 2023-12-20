@@ -3,8 +3,9 @@ import asyncio
 import json
 from typing import Any
 
+import lionagi
 from .conversation import Conversation
-from ..utils.sys_util import to_list
+from ..utils.sys_util import to_list, l_call, al_call
 from ..utils.log_util import DataLogger
 from ..utils.api_util import StatusTracker
 from ..utils.tool_util import ToolManager
@@ -145,11 +146,22 @@ class Session():
             Any: The processed output.
         """
         if invoke:
-            try: 
-                func, args = self._toolmanager._get_function_call(self.conversation.responses[-1]['content'])
-                outs = await self._toolmanager.ainvoke(func, args)
-                outs = tool_parser(outs) if tool_parser else outs
-                self.conversation.add_messages(response=outs)
+            try:
+                if isinstance(self.conversation.responses[-1]['content'], list):
+                    func_calls = l_call(self.conversation.responses[-1]['content'], self._toolmanager._get_function_call)
+
+                else:
+                    tool_uses = json.loads(self.conversation.responses[-1]['content'])
+                    tool_uses = tool_uses['tool_uses']
+                    func_calls = l_call(tool_uses, self._toolmanager._get_function_call)
+
+                outs = await al_call(func_calls, self._toolmanager.ainvoke)
+                if tool_parser:
+                    outs = l_call(outs, tool_parser)
+                for out, f in zip(outs, func_calls):
+                    response = {"function": f[0], "arguments": f[1], "output": out}
+                    self.conversation.add_messages(response=response)
+
             except:
                 pass
         if out:
@@ -319,7 +331,7 @@ class Session():
                 completion = await self.api_service.call_api(
                                 session, endpoint, payload)
                 if "choices" in completion:
-                    self._logger({"input":payload, "output": completion})
+                    self._logger({"input": payload, "output": completion})
                     self.conversation.add_messages(response=completion['choices'][0])
                     self.conversation.responses.append(self.conversation.messages[-1])
                     self.conversation.response_counts += 1
