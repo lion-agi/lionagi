@@ -26,7 +26,7 @@ class ToolManager:
         invoke(name, args) -> Any:
             Invoke a registered function with the provided arguments.
 
-        ainvoke(name, args) -> Any:
+        ainvoke(func_call) -> Any:
             Asynchronously invoke a registered function with the provided arguments.
 
         _get_function_call(response) -> Tuple[str, dict]:
