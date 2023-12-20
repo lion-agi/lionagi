@@ -54,8 +54,8 @@ followed by dividing them into chunks.
    218 logs saved to data/logs/sources/autodev_lion_chunks
 
 .. note::
-   ``dir_to_files`` and ``file_to_chunks`` are both in our ``doc_util``. For more examples and detailed usage of
-   our ``doc_util``, please refer to our `intro2 notebook <https://github.com/lion-agi/lionagi/blob/main/notebooks/intro2_files.ipynb>`_
+   ``dir_to_files`` and ``file_to_chunks`` are both in ``doc_util``. For more examples and detailed usage of
+   our ``doc_util``, please refer to `intro2 notebook <https://github.com/lion-agi/lionagi/blob/main/notebooks/intro2_files.ipynb>`_
 
 We are going to build a `LlamaIndex <https://www.llamaindex.ai/>`_
 `Query Engine <https://docs.llamaindex.ai/en/stable/understanding/querying/querying.html>`_ with the chunks we just created.
@@ -305,7 +305,7 @@ With all instructions and tools set up, we can define our workflow now.
         # return codes
         return coder.conversation.messages[-1]['content']
 
-How about tasking our developer with designing a File and a Chunk class for us?
+How about tasking our developer with designing a File class and a Chunk class for us?
 
 .. code-block:: python
 
