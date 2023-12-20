@@ -147,13 +147,12 @@ class Session():
         """
         if invoke:
             try:
-                if isinstance(self.conversation.responses[-1]['content'], list):
-                    func_calls = l_call(self.conversation.responses[-1]['content'], self._toolmanager._get_function_call)
+                tool_uses = json.loads(self.conversation.responses[-1]['content'])
+                if 'function_list' in tool_uses.keys():
+                    func_calls = l_call(tool_uses['function_list'], self._toolmanager._get_function_call)
 
                 else:
-                    tool_uses = json.loads(self.conversation.responses[-1]['content'])
-                    tool_uses = tool_uses['tool_uses']
-                    func_calls = l_call(tool_uses, self._toolmanager._get_function_call)
+                    func_calls = l_call(tool_uses['tool_uses'], self._toolmanager._get_function_call)
 
                 outs = await al_call(func_calls, self._toolmanager.ainvoke)
                 if tool_parser:
