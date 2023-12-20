@@ -319,4 +319,4 @@ How about tasking our developer with designing a File and a Chunk class for us?
    response = json.loads(response)
    Markdown(response['function call result']['content'])
 
-.. image:: autogen.png
+.. image:: coder.png
