@@ -106,9 +106,10 @@ Let's try to ask "what is session object made of?" and see what we get.
 
 Next, we'll proceed to create an OAI assistant with code interpreter with `AutoGen <https://microsoft.github.io/autogen/>`_.
 
-To use AutoGen, you first need to download the `OAI_CONFIG_LIST_sample <https://github.com/microsoft/autogen/blob/main/OAI_CONFIG_LIST_sample>`_.
+.. note::
+   To use AutoGen, you first need to download the `OAI_CONFIG_LIST_sample <https://github.com/microsoft/autogen/blob/main/OAI_CONFIG_LIST_sample>`_.
 
-Change your ``api_key``, and rename the file as ``OAI_CONFIG_LIST``, put in the same directory you are working in.
+   Change your ``api_key``, and rename the file as ``OAI_CONFIG_LIST``, put in the same directory you are working in.
 
 .. code-block:: python
 
@@ -129,7 +130,8 @@ Change your ``api_key``, and rename the file as ``OAI_CONFIG_LIST``, put in the 
         "OAI_CONFIG_LIST",
         file_location=".",
         filter_dict={
-            "model": ["gpt-3.5-turbo", "gpt-35-turbo", "gpt-4", "gpt4", "gpt-4-32k", "gpt-4-turbo"],
+            "model":
+            ["gpt-3.5-turbo", "gpt-35-turbo", "gpt-4", "gpt4", "gpt-4-32k", "gpt-4-turbo"],
         },
    )
 
@@ -166,7 +168,8 @@ adhering to the OpenAI schema.
             "type": "function",
             "function": {
                 "name": "query_lionagi_codebase",
-                "description": "Perform a query to a QA bot with access to a vector index built with package lionagi codebase",
+                "description": "Perform a query to a QA bot with access to a vector index built \
+                                with package lionagi codebase",
                 "parameters": {
                     "type": "object",
                     "properties": {
@@ -185,7 +188,8 @@ adhering to the OpenAI schema.
             "type": "function",
             "function": {
                 "name": "code_pure_python",
-                "description": "Give an instruction to a coding assistant to write pure python codes",
+                "description": "Give an instruction to a coding assistant to write pure \
+                                python codes",
                 "parameters": {
                     "type": "object",
                     "properties": {
@@ -209,9 +213,12 @@ Let's craft prompts for solving coding tasks.
 
    system = {
         "persona": "a helpful software engineer",
-        "requirements": "think step by step before returning a thoughtful answer that follows the instruction with clearly, precisely worded answer with a humble yet confident tone",
+        "requirements": "think step by step before returning a thoughtful answer that follows \
+                         the instruction with clearly, precisely worded answer with a humble \
+                         yet confident tone",
         "responsibilities": f"you are asked to help with coding on the python package of lionagi",
-        "tools": "provided with a QA bot for grounding responses, and a coding assistant to write pure python codes"
+        "tools": "provided with a QA bot for grounding responses, and a coding assistant to write \
+                  pure python codes"
    }
 
    function_call1 = {
@@ -241,14 +248,19 @@ Let's craft prompts for solving coding tasks.
         "task step": "1",
         "task name": "understand user requirements",
         "task objective": "get a comprehensive understanding of the task given",
-        "task description": "user provided you with a task, please understand the task, propose plans on delivering it"
+        "task description": "user provided you with a task, please understand the task, propose \
+                             plans on delivering it"
     }
 
    instruct2 = {
         "task step": "2",
         "task name": "propose a pure python solution",
-        "task objective": "give detailed instruction on how to achieve above task with pure python as if to a coding bot",
-        "task description": "you are responsible for further customizing the coding task into our lionagi package requirements, you are provided with a QA bot, please keep on asking questions if there are anything unclear, your instruction should focus on functionalities and coding logic",
+        "task objective": "give detailed instruction on how to achieve above task with pure \
+        python as if to a coding bot",
+        "task description": "you are responsible for further customizing the coding task into our \
+                             lionagi package requirements, you are provided with a QA bot, please \
+                             keep on asking questions if there are anything unclear, your \
+                             instruction should focus on functionalities and coding logic",
         "function_call": function_call1
    }
 
@@ -256,7 +268,12 @@ Let's craft prompts for solving coding tasks.
         "task step": "3",
         "task name": "write pure python codes",
         "task objective": "write runnable python codes",
-        "task description": "from your improved understanding of the task, please instruct the coding assistant on writing pure python codes. you will reply with the full implementation if the coding assistant succeed, which you need to return the full implementation in a well structured py format, run it once more if report back 'failed', and return 'Task failed' with most recent effort, after the second failed attempt ",
+        "task description": "from your improved understanding of the task, please instruct the \
+                             coding assistant on writing pure python codes. you will reply with \
+                             the full implementation if the coding assistant succeed, which you \
+                             need to return the full implementation in a well structured py \
+                             format, run it once more if report back 'failed', and return 'Task \
+                             failed' with most recent effort, after the second failed attempt ",
         "function_call": function_call2
    }
 
