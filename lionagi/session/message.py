@@ -81,7 +81,7 @@ class Message:
                                 tool_count += 1
 
                             self.name = name or "func_request"
-                            self.content = func_list
+                            self.content = {'function_list': func_list}
                         except:
                             raise ValueError("Response message must be one of regular response or function calling")
                     else:
