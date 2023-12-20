@@ -81,19 +81,17 @@ We are going to build a `LlamaIndex <https://www.llamaindex.ai/>`_
    query_engine = index1.as_query_engine(include_text=False,
 			                             response_mode="tree_summarize")
 
-Let's try to ask "what is session object made of?" and see what we get.
+Let's try to ask how session works and see what we get.
 
 .. code-block:: python
 
-   response = query_engine.query("what is session object made of?")
+   response = query_engine.query("Think step by step, explain how \
+                                  session works in details.")
 
-   print(response.response)
+   from IPython.display import Markdown
+   Markdown(response.response)
 
-.. code-block:: markdown
-
-   The `Session` object is made of a class that represents a conversation
-   session with a conversational AI system. This class manages the interactions
-   within the session.
+.. image:: session.png
 
 .. code-block:: python
 
