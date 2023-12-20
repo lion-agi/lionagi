@@ -126,9 +126,7 @@ class ToolManager:
         Asynchronously invoke a registered function with the provided arguments.
 
         Parameters:
-            name (str): The name of the function to invoke.
-
-            kwargs (dict): The arguments to pass to the function.
+            func_call (Tuple[str, dict]): The name of the function and the arguments to pass.
 
         Returns:
             Any: The result of invoking the function asynchronously.
