@@ -11,14 +11,18 @@ class DataLogger:
     and setting the directory where the logs should be saved.
 
     Attributes:
-        dir (str): The directory where the log files are to be saved.
-        log (deque): A deque that stores log entries.
+        dir (str):
+            The directory where the log files are to be saved.
+        log (deque):
+            A deque that stores log entries.
 
     Methods:
-        __call__(entry): Appends a new entry to the log.
+        __call__(entry):
+            Appends a new entry to the log.
         to_csv(dir: str, filename: str, verbose: bool, timestamp: bool, dir_exist_ok: bool, file_exist_ok: bool): 
             Converts the log to a CSV format and saves it to a file.
-        set_dir(dir: str): Sets the directory for saving log files.
+        set_dir(dir: str):
+            Sets the directory for saving log files.
     """
 
     def __init__(self, dir= None, log: list = None) -> None:
@@ -27,6 +31,7 @@ class DataLogger:
 
         Parameters:
             dir (str, optional): The directory where the log files will be saved. Defaults to None.
+
             log (list, optional): An initial list of log entries. Defaults to an empty deque.
         """
         self.dir = dir
@@ -47,14 +52,20 @@ class DataLogger:
 
         Parameters:
             dir (str): The directory where the CSV file will be saved.
+
             filename (str): The name of the CSV file.
+
             verbose (bool, optional): If True, prints a message after saving the log. Defaults to True.
+
             timestamp (bool, optional): If True, appends a timestamp to the filename. Defaults to True.
+
             dir_exist_ok (bool, optional): If True, overrides the existing directory if needed. Defaults to True.
+
             file_exist_ok (bool, optional): If True, overrides the existing file if needed. Defaults to False.
 
         Postconditions:
             Saves the log entries to a CSV file and clears the `log` attribute.
+
             Optionally prints a message with the number of log entries saved and the file path.
         """
         filepath = create_path(dir=dir, filename=filename, timestamp=timestamp, dir_exist_ok=dir_exist_ok)

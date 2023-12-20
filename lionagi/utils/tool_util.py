@@ -10,7 +10,8 @@ class ToolManager:
     This class allows the registration of tools and functions, enabling their invocation.
 
     Attributes:
-        registry (dict): A dictionary storing the registered tools and their corresponding functions.
+        registry (dict):
+            A dictionary storing the registered tools and their corresponding functions.
 
     Methods:
         _to_dict(name, function, content=None) -> dict:
@@ -50,7 +51,9 @@ class ToolManager:
 
         Parameters:
             name (str): The name of the tool.
-            function (callable): The function associated with the tool.
+
+            func (callable): The function associated with the tool.
+
             content (Optional[str]): Additional content for the tool.
 
         Returns:
@@ -77,11 +80,17 @@ class ToolManager:
 
         Parameters:
             name (str): The name of the function.
-            function (callable): The function to register.
+
+            func (callable): The function to register.
+
             content (Optional[str]): Additional content for the function.
+
             update (bool): Whether to update an existing function with the same name.
+
             new (bool): Whether to create a new registry for an existing function.
+
             prefix (Optional[str]): A prefix to add to the function name.
+
             postfix (Optional[str]): A postfix to add to the function name.
 
         """
@@ -98,6 +107,7 @@ class ToolManager:
 
         Parameters:
             name (str): The name of the function to invoke.
+
             kwargs (dict): The arguments to pass to the function.
 
         Returns:
@@ -117,6 +127,7 @@ class ToolManager:
 
         Parameters:
             name (str): The name of the function to invoke.
+
             kwargs (dict): The arguments to pass to the function.
 
         Returns:
@@ -168,6 +179,7 @@ class ToolManager:
 
         Parameters:
             tool (dict): The tool information.
+
             func (callable): The function associated with the tool.
 
         Returns:
@@ -183,10 +195,15 @@ class ToolManager:
 
         Parameters:
             tools (list): The list of tool information dictionaries.
+
             functions (list): The list of corresponding functions.
+
             update (bool): Whether to update existing functions.
+
             new (bool): Whether to create new registries for existing functions.
+
             prefix (Optional[str]): A prefix to add to the function names.
+
             postfix (Optional[str]): A postfix to add to the function names.
 
         """
