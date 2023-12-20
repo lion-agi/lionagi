@@ -281,17 +281,28 @@ With all instructions and tools set up, we can define our workflow now.
 
 .. code-block:: python
 
+   # solve a coding task in pure python
    async def solve_in_python(context, num=10):
+
+        # set up session and register both tools to session
         coder = li.Session(system, dir=dir)
         coder.register_tools(tools=tools, funcs=funcs)
 
+        # initiate should not use tools
         await coder.initiate(instruct1, context=context, temperature=0.7)
+
+         # auto_followup with QA bot tool
         await coder.auto_followup(instruct2, num=num, temperature=0.6, tools=tool1,
                                   tool_parser=lambda x: x.response)
+
+         # auto_followup with code interpreter tool
         await coder.auto_followup(instruct3, num=2, temperature=0.5, tools=tool2)
 
+        # save to csv
         coder.messages_to_csv()
         coder.log_to_csv()
+
+        # return codes
         return coder.conversation.messages[-1]['content']
 
 How about tasking our developer with designing a File and a Chunk class for us?
