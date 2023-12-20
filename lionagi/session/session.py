@@ -163,7 +163,7 @@ class Session():
                     self.conversation.add_messages(response=response)
 
             except Exception as e:
-                raise ValueError(f"The following error occured in function invoking : {e}")
+                raise ValueError(f"The following error occurred in function invoking : {e}")
 
         if out:
             return self.conversation.responses[-1]['content']
@@ -177,7 +177,7 @@ class Session():
         """
         msg = self.conversation.messages[-1]
         try: 
-            if "function call result" in json.loads(msg['content']).keys():
+            if json.loads(msg['content']).keys() >= {'function', 'arguments', 'output'}:
                 return True
         except: 
             return False    
