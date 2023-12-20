@@ -50,8 +50,9 @@ followed by dividing them into chunks.
 
 .. code-block:: markdown
 
-   19 logs saved to data/logs/sources/autodev_lion_sources
-   218 logs saved to data/logs/sources/autodev_lion_chunks
+   119 logs saved to data/logs/sources/autodev_lion_sources_2023-12-19T15_19_50_968750.csv
+   221 logs saved to data/logs/sources/autodev_lion_sources_2023-12-19T15_19_50_970987.csv
+
 
 .. note::
    ``dir_to_files`` and ``file_to_chunks`` are both in ``doc_util``. For more examples and detailed usage of
