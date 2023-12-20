@@ -50,7 +50,7 @@ followed by dividing them into chunks.
 
 .. code-block:: markdown
 
-   119 logs saved to data/logs/sources/autodev_lion_sources_2023-12-19T15_19_50_968750.csv
+   19 logs saved to data/logs/sources/autodev_lion_sources_2023-12-19T15_19_50_968750.csv
    221 logs saved to data/logs/sources/autodev_lion_sources_2023-12-19T15_19_50_970987.csv
 
 
