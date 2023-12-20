@@ -162,8 +162,8 @@ class Session():
                     response = {"function": f[0], "arguments": f[1], "output": out}
                     self.conversation.add_messages(response=response)
 
-            except Exception as e:
-                raise ValueError(f"The following error occurred in function invoking : {e}")
+            except:
+                pass
 
         if out:
             return self.conversation.responses[-1]['content']
