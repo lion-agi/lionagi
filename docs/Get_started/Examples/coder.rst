@@ -341,4 +341,3 @@ How about tasking our developer with designing a File class and a Chunk class fo
    response = json.loads(response)
    Markdown(response['function call result']['content'])
 
-.. image:: coder_PE.png
