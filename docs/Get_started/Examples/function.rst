@@ -110,4 +110,5 @@ Let’s check the message records in this session:
     "functions.multiply",\n      "parameters": {\n        "number1": 3,  "number2": 4\n
      }\n    }\n  ]\n}'}
 
-   {'role': 'assistant', 'content': '{"function call result": 12}'}
+   {'role': 'assistant', 'content': '{"function": "multiply", "arguments": {"number1": 3,
+    "number2": 4}, "output": 12}'}
