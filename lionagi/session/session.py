@@ -52,6 +52,9 @@ class Session():
         _output(output, invoke=True, out=True) -> Any:
             Process the output, invoke tools if needed, and optionally return the output.
 
+        _is_invoked():
+            Checks if the current message indicates the invocation of a function call.
+
         register_tools(tools, funcs, update=False, new=False, prefix=None, postfix=None):
             Register tools and their corresponding functions.
 
@@ -64,10 +67,10 @@ class Session():
         auto_followup(self, instruct, num=3, tool_parser=None, **kwags):
             Automates the follow-up process for a specified number of times or until the session concludes.
 
-        create_payload_chatcompletion(**kwargs) -> dict:
+        _create_payload_chatcompletion(**kwargs) -> dict:
             Create a payload for chat completion based on the conversation state and configuration.
 
-        call_chatcompletion(sleep=0.1, **kwargs) -> None:
+        _call_chatcompletion(sleep=0.1, **kwargs) -> None:
             Make a call to the chat completion API and process the response.
 
         messages_to_csv(dir=None, filename="_messages.csv", **kwargs) -> None:

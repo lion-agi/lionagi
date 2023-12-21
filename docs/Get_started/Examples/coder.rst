@@ -330,3 +330,17 @@ How about tasking our developer with designing a File class and a Chunk class fo
    Markdown(response['function call result']['content'])
 
 .. image:: coder.png
+
+.. tip::
+
+   With a little bit of prompt engineering, the auto developer designed and
+   created two runnable classes based on two existing functions in LionAGI,
+   instead of generic codes from an issue. Check the output.
+
+   .. image:: coder_PE.png
+
+   .. note::
+
+      For more detailed comparison, check our notebooks:
+      `AutoDev <https://github.com/lion-agi/lionagi/blob/main/notebooks/AutoDev_with_llama_autogen_assistant.ipynb>`_
+      and `AutoDev with prompt engineering <https://github.com/lion-agi/lionagi/blob/main/notebooks/AutoDev_with_prompt_engineering.ipynb>`_
