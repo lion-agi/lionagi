@@ -92,7 +92,7 @@ Let's try to ask how session works and see what we get.
    from IPython.display import Markdown
    Markdown(response.response)
 
-.. image:: session.png
+.. image:: session_PE.png
 
 .. code-block:: python
 
@@ -211,68 +211,82 @@ Let's craft prompts for solving coding tasks.
 .. code-block:: python
 
    system = {
-        "persona": "a helpful software engineer",
-        "requirements": "think step by step before returning a thoughtful answer that follows \
-                         the instruction with clearly, precisely worded answer with a humble \
-                         yet confident tone",
-        "responsibilities": f"you are asked to help with coding on the python package of lionagi",
-        "tools": "provided with a QA bot for grounding responses, and a coding assistant to write \
-                  pure python codes"
+        "persona": "A helpful software engineer",
+        "requirements": """
+            Think step-by-step and provide thoughtful, clear, precise answers.
+            Maintain a humble yet confident tone.
+        """,
+        "responsibilities": """
+            Assist with coding in the lionagi Python package.
+        """,
+        "tools": """
+            Use a QA bot for grounding responses and a coding assistant
+            for writing pure Python code.
+        """
    }
 
    function_call1 = {
-        "notice":"""
-            At each task step, identified by step number, you must use the tool
-            at least five times. Notice you are provided with a QA bot as your tool,
-            the bot has access to the source codes via a queriable index that takes
-            natural language query and return a natural language answer. You can
-            decide whether to invoke the function call, you will need to ask the bot
-            when there are things need clarification or further information. you
-            provide the query by asking a question, please use the tool extensively
-            as you can (up to ten times)
-            """,}
+        "notice": """
+            Use the QA bot tool at least five times at each task step,
+            identified by the step number. This bot can query source codes
+            with natural language questions and provides natural language
+            answers. Decide when to invoke function calls. You have to ask
+            the bot for clarifications or additional information as needed,
+            up to ten times if necessary.
+        """
+   }
 
    function_call2 = {
-        "notice":"""
-            At each task step, identified by step number, you must use the tool
-            at least once, and you must use the tool at least once more if the previous
-            run failed. Notice you are provided with a coding assistant as your tool, the
-            bot can write and run python codes in a sandbox environment, it takes natural
-            language instruction, and return with 'success'/'failed'. For the instruction
-            you give, it needs to be very clear and detailed such that an AI coding assistant
-            can produce excellent output.
-            """,}
+        "notice": """
+            Use the coding assistant tool at least once at each task step,
+            and again if a previous run failed. This assistant can write
+            and run Python code in a sandbox environment, responding to
+            natural language instructions with 'success' or 'failed'. Provide
+            clear, detailed instructions for AI-based coding assistance.
+        """
+   }
 
+   # Step 1: Understanding User Requirements
    instruct1 = {
-        "task step": "1",
-        "task name": "understand user requirements",
-        "task objective": "get a comprehensive understanding of the task given",
-        "task description": "user provided you with a task, please understand the task, propose \
-                             plans on delivering it"
+        "task_step": "1",
+        "task_name": "Understand User Requirements",
+        "task_objective": "Comprehend user-provided task fully",
+        "task_description": """
+            Analyze and understand the user's task. Develop plans
+            for approach and delivery.
+        """
     }
 
+   # Step 2: Proposing a Pure Python Solution
    instruct2 = {
-        "task step": "2",
-        "task name": "propose a pure python solution",
-        "task objective": "give detailed instruction on how to achieve above task with pure \
-        python as if to a coding bot",
-        "task description": "you are responsible for further customizing the coding task into our \
-                             lionagi package requirements, you are provided with a QA bot, please \
-                             keep on asking questions if there are anything unclear, your \
-                             instruction should focus on functionalities and coding logic",
+        "task_step": "2",
+        "task_name": "Propose a Pure Python Solution",
+        "task_objective": "Develop a detailed pure Python solution",
+        "task_description": """
+            Customize the coding task for lionagi package requirements.
+            Use a QA bot for clarifications. Focus on functionalities
+            and coding logic. Add lots more details here for
+            more finetuned specifications
+        """,
         "function_call": function_call1
    }
 
+   # Step 3: Writing Pure Python Code
    instruct3 = {
-        "task step": "3",
-        "task name": "write pure python codes",
-        "task objective": "write runnable python codes",
-        "task description": "from your improved understanding of the task, please instruct the \
-                             coding assistant on writing pure python codes. you will reply with \
-                             the full implementation if the coding assistant succeed, which you \
-                             need to return the full implementation in a well structured py \
-                             format, run it once more if report back 'failed', and return 'Task \
-                             failed' with most recent effort, after the second failed attempt ",
+        "task_step": "3",
+        "task_name": "Write Pure Python Code",
+        "task_objective": "Give detailed instruction to a coding bot",
+        "task_description": """
+            Instruct the coding assistant to write executable Python code
+            based on improved task understanding. Provide a complete,
+            well-structured script if successful. If failed, rerun, report
+            'Task failed' and the most recent code attempt after a second
+            failure. Please notice that the coding assistant doesn't have
+            any knowledge of the preceding conversation, please give as much
+            details as possible when giving instruction. You cannot just
+            say things like, as previously described. You must give detailed
+            instruction such that a bot can write it
+        """,
         "function_call": function_call2
    }
 
@@ -309,13 +323,11 @@ How about tasking our developer with designing a File class and a Chunk class fo
 .. code-block:: python
 
    issue = {
-    "raise files and chunks into objects":
-       """
-        files and chunks are currently in dict format, please design classes
-        for them, include all members, methods, staticmethods, class methods
-        ... if needed. please make sure your work has sufficient content,
-        make sure to include typing and docstrings
-       """
+        "raise files and chunks into objects": """
+            files and chunks are currently in dict format, please design classes for them, include all
+            members, methods, staticmethods, class methods... if needed. please make sure your work
+            has sufficient content, make sure to include typing and docstrings
+        """
     }
 .. code-block:: python
 
@@ -329,18 +341,3 @@ How about tasking our developer with designing a File class and a Chunk class fo
    response = json.loads(response)
    Markdown(response['function call result']['content'])
 
-.. image:: coder.png
-
-.. tip::
-
-   With a little bit of prompt engineering, the auto developer designed and
-   created two runnable classes based on two existing functions in LionAGI,
-   instead of generic codes from an issue. Check the output.
-
-   .. image:: coder_PE.png
-
-   .. note::
-
-      For more detailed comparison, check our notebooks:
-      `AutoDev <https://github.com/lion-agi/lionagi/blob/main/notebooks/AutoDev_with_llama_autogen_assistant.ipynb>`_
-      and `AutoDev with prompt engineering <https://github.com/lion-agi/lionagi/blob/main/notebooks/AutoDev_with_prompt_engineering.ipynb>`_
