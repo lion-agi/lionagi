@@ -3,5 +3,5 @@ from .conversation import Conversation
 from .session import Session
 
 __all__ = [
-    "Session",
+    "Session", "Message", "Conversation"
 ]
