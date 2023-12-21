@@ -62,8 +62,8 @@ class OpenAIRateLimiter(RateLimiter):
             self.available_request_capacity = self.max_requests_per_minute
             self.available_token_capacity = self.max_tokens_per_minute
             
-    def calculate_num_token(self, payload: Dict[str, Any] =None, 
-                            api_endpoint: str =None, token_encoding_name: str =None) -> int:
+    def calculate_num_token(self, payload: Dict[str, Any] = None,
+                            api_endpoint: str = None, token_encoding_name: str = None) -> int:
         """
         Calculates the number of tokens required for a request based on the payload and API endpoint.
 
@@ -75,6 +75,8 @@ class OpenAIRateLimiter(RateLimiter):
             payload (Dict[str, Any]): The payload of the request.
 
             api_endpoint (str): The specific API endpoint for the request.
+
+            token_encoding_name (str): The name of the token encoding method.
 
         Returns:
             int: The estimated number of tokens required for the request.

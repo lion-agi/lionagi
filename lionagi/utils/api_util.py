@@ -288,18 +288,18 @@ class BaseAPIService(ABC):
             The maximum number of retry attempts for API calls.
         status_tracker (StatusTracker):
             Tracker for API call statuses.
-        rate_limiter (RateLimiter):
-            Limiter to control the rate of API calls.
         queue (AsyncQueue):
             Queue for managing API call tasks.
+        rate_limiter (RateLimiter):
+            Limiter to control the rate of API calls.
+        append_to_jsonl (callable):
+            Callable for appending data to a file in JSONL format.
 
     Methods:
         call_api:
             Abstract method to define API call mechanism in subclasses.
         handle_error:
             Handle errors by logging and saving details to a JSONL file.
-        append_to_jsonl:
-            Append data to a file in JSONL format.
         api_endpoint_from_url:
             Extract the API endpoint from a URL.
         task_id_generator_function:
