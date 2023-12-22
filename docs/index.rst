@@ -36,22 +36,31 @@ The following example shows how to use LionAGI's ``Session`` object to interact 
 
 .. code-block:: python
 
-  import lionagi as li
+   import lionagi as li
+   import asyncio
+   import os
+   from dotenv import load_dotenv
+   load_dotenv()
 
-  # define system messages, context and user instruction
-  system = "You are a helpful assistant designed to perform calculations."
-  instruction = {"Addition":"Add the two numbers together i.e. x+y"}
-  context = {"x": 10, "y": 5}
+   # define system messages, context and user instruction
+   system = "You are a helpful assistant designed to perform calculations."
+   instruction = {"Addition":"Add the two numbers together i.e. x+y"}
+   context = {"x": 10, "y": 5}
 
-  # Initialize a session with a system message
-  calculator = li.Session(system=system)
+   api_service = li.0penAIService(api_key=os.getenv('OPENAI_API_KEY'))
 
-  # run a LLM API call
-  result = await calculator.initiate(instruction=instruction,
-                                     context=context,
-                                     model="gpt-4-1106-preview")
+   async def main():
+       # Initialize a session with a system message
+       calculator = li.Session(system=system, api_service=api_service)
+       # run a LLM API call
+       result = await calculator.initiate(instruction=instruction,
+                                          context=context,
+                                          model="gpt-4-1106-preview")
 
-  print(f"Calculation Result: {result}")
+       print(f"Calculation Result: {result}")
+
+   if __name__ == "__main__":
+       asyncio.run(main())
 
 Visit our notebooks for our examples. 
 
