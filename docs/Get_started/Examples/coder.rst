@@ -42,11 +42,10 @@ followed by dividing them into chunks.
    import lionagi as li
 
    files = li.dir_to_files(dir=data_dir, ext=ext, clean=True, recursive=True,
-                           project=project_name, to_csv=True, timestamp=False)
+                           project=project_name, to_csv=True)
 
-   chunks = li.file_to_chunks(files, chunk_size=512,  overlap=0.1,
-                              threshold=100, to_csv=True, project=project_name,
-                              filename=f"{project_name}_chunks.csv", timestamp=False)
+   chunks = li.file_to_chunks(files, chunk_size=800,  overlap=0.1,
+                              threshold=100, to_csv=True, project=project_name)
 
 .. code-block:: markdown
 
