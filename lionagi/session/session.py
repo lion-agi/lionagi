@@ -1,9 +1,10 @@
+import os
 import aiohttp
 import asyncio
 import json
 from typing import Any
 
-import lionagi
+
 from .conversation import Conversation
 from ..utils.sys_util import to_list, l_call, al_call
 from ..utils.log_util import DataLogger
@@ -13,7 +14,7 @@ from ..api.oai_service import OpenAIService
 from ..api.oai_config import oai_llmconfig
 
 status_tracker = StatusTracker()
-OAIService = OpenAIService()
+OAIService = OpenAIService(api_key=os.getenv('OPENAI_API_KEY'))
 
 
 class Session():
