@@ -39,7 +39,9 @@ def _flatten_dict(input: Dict[str, Any], parent_key: str = '',
 
     Parameters:
         input (Dict[str, Any]): The dictionary to be flattened.
+
         parent_key (str, optional): Initial key for nested structures. Defaults to ''.
+
         sep (str, optional): Separator for concatenated key. Defaults to '_'.
 
     Yields:
@@ -77,7 +79,9 @@ def to_flat_dict(input: Dict[str, Any], parent_key: str = '', sep: str = '_') ->
 
     Parameters:
         input (Dict[str, Any]): The nested dictionary to flatten.
+
         parent_key (str, optional): Initial key for nested structures. Defaults to ''.
+
         sep (str, optional): Separator for concatenated keys. Defaults to '_'.
 
     Returns:
@@ -99,6 +103,7 @@ def _flatten_list(input: List[Any], dropna: bool = True) -> Generator[Any, None,
 
     Parameters:
         input (List[Any]): The list to be flattened.
+
         dropna (bool, optional): Flag to indicate whether 'None' values should be omitted. Defaults to True.
 
     Yields:
@@ -126,9 +131,16 @@ def to_list(input: Union[Iterable, Any], flatten_dict: bool = False, flat: bool 
 
     Parameters:
         input (Union[Iterable, Any]): The input to convert.
+
         flatten_dict (bool, optional): Flatten dictionary input. Defaults to False.
+
         flat (bool, optional): Flatten the output list. Defaults to True.
+
         dropna (bool, optional): Drop 'None' values during flattening. Defaults to True.
+
+        parent_key (str, optional): The parent key for flattening dictionaries. Defaults to an empty string.
+
+        sep (str, optional): The separator for creating flattened dictionary keys. Defaults to '_'.
 
     Raises:
         ValueError: If input is None, callable, or unconvertible to a list.
@@ -176,9 +188,13 @@ def str_to_num(input: str,
 
     Parameters:
         input (str): String to search for numeric values.
+
         upper_bound (Optional[Union[int, float]]): Upper limit for the numeric value. None for no limit.
+
         lower_bound (Optional[Union[int, float]]): Lower limit for the numeric value. None for no limit.
+
         num_type (type): Desired type for the numeric value (int or float).
+
         precision (Optional[int]): Decimal places for rounding if float. None for no rounding.
 
     Raises:
@@ -226,6 +242,7 @@ def make_copy(input: Any, n: int) -> Any:
 
     Parameters:
         input (Any): The object to be copied.
+
         n (int): The number of deep copies to create.
 
     Raises:
@@ -255,8 +272,11 @@ def to_temp(input: Any,
 
     Parameters:
         input (Any): The data to be converted and written to a file.
+
         flatten_dict (bool, optional): Flatten dictionaries in the input. Defaults to False.
+
         flat (bool, optional): Flatten lists in the input. Defaults to False.
+
         dropna (bool, optional): Exclude 'None' values during flattening. Defaults to False.
 
     Raises:
@@ -289,7 +309,9 @@ def to_csv(input: List[Dict[str, Any]],
 
     Parameters:
         input (List[Dict[str, Any]]): Data to write to the CSV file.
+
         filepath (str): Path of the output CSV file.
+
         file_exist_ok (bool, optional): Create the file if it doesn't exist. Defaults to False.
 
     Raises:
@@ -321,6 +343,7 @@ def append_to_jsonl(data: Any, filepath: str) -> None:
 
     Parameters:
         data (Any): Data to be serialized and appended.
+
         filepath (str): Path to the jsonl file.
 
     Example:
@@ -345,10 +368,15 @@ def hold_call(input: Any,
 
     Parameters:
         input (Any): Input to the function.
+
         func (Callable): Function to execute.
+
         sleep (int, optional): Time in seconds to wait before calling the function. Defaults to 0.1.
+
         message (Optional[str], optional): Message to print on exception. Defaults to None.
+
         ignore_error (bool, optional): If True, ignores exceptions. Defaults to False.
+
         **kwargs: Additional keyword arguments for the function.
 
     Returns:
@@ -388,10 +416,15 @@ async def ahold_call(input: Any,
 
     Parameters:
         input (Any): Input to the function.
+
         func (Callable): Asynchronous function to execute.
+
         sleep (int, optional): Time in seconds to wait before calling the function. Defaults to 5.
+
         message (Optional[str], optional): Message to print on exception. Defaults to None.
+
         ignore_error (bool, optional): If True, ignores exceptions. Defaults to False.
+
         **kwargs: Additional keyword arguments for the function.
 
     Returns:
@@ -432,9 +465,13 @@ def l_call(input: Any,
 
     Parameters:
         input (Any): The input to be converted to a list and processed.
+
         func (Callable): The function to apply to each element of the list.
+
         flatten_dict (bool, optional): If True, flattens dictionaries in the input. Defaults to False.
+
         flat (bool, optional): If True, flattens nested lists in the input. Defaults to False.
+
         dropna (bool, optional): If True, drops None values during flattening. Defaults to True.
 
     Returns:
@@ -469,9 +506,13 @@ async def al_call(input: Any,
 
     Parameters:
         input (Any): The input to be converted to a list and processed.
+
         func (Callable): The asynchronous function to apply to each element of the list.
+
         flatten_dict (bool, optional): If True, flattens dictionaries in the input. Defaults to False.
+
         flat (bool, optional): If True, flattens nested lists in the input. Defaults to False.
+
         dropna (bool, optional): If True, drops None values during flattening. Defaults to True.
 
     Returns:
@@ -507,9 +548,13 @@ def m_call(input: Union[Any, List[Any]],
 
     Parameters:
         input (Union[Any, List[Any]]): The input or list of inputs to be processed.
-        funcs (Union[Callable, List[Callable]]): The function or list of functions to apply.
+
+        func (Union[Callable, List[Callable]]): The function or list of functions to apply.
+
         flatten_dict (bool, optional): Whether to flatten dictionaries in the input. Defaults to False.
+
         flat (bool, optional): Whether the output list should be flattened. Defaults to True.
+
         dropna (bool, optional): Whether to drop None values during flattening. Defaults to True.
 
     Returns:
@@ -544,9 +589,13 @@ async def am_call(input: Union[Any, List[Any]],
 
     Parameters:
         input (Union[Any, List[Any]]): The input or list of inputs to be processed.
-        funcs (Union[Callable, List[Callable]]): The function or list of functions to apply.
+
+        func (Union[Callable, List[Callable]]): The function or list of functions to apply.
+
         flatten_dict (bool, optional): Whether to flatten dictionaries in the input. Defaults to False.
+
         flat (bool, optional): Whether the output list should be flattened. Defaults to True.
+
         dropna (bool, optional): Whether to drop None values during flattening. Defaults to True.
 
     Returns:
@@ -584,9 +633,13 @@ def e_call(input: Any,
 
     Parameters:
         input (Union[Any, List[Any]]): The input or list of inputs to be processed.
-        funcs (Union[Callable, List[Callable]]): The function or list of functions to apply.
+
+        func (Union[Callable, List[Callable]]): The function or list of functions to apply.
+
         flatten_dict (bool, optional): Whether to flatten dictionaries in the input. Defaults to False.
+
         flat (bool, optional): Whether the output list should be flattened. Defaults to True.
+
         dropna (bool, optional): Whether to drop None values during flattening. Defaults to True.
 
     Returns:
@@ -599,9 +652,9 @@ def e_call(input: Any,
         [[1], [4], [9]]
     """
 
-    f = lambda x, y: m_call(make_copy(x, len(to_list(y))), y, 
+    _f = lambda x, y: m_call(make_copy(x, len(to_list(y))), y, 
                             flatten_dict=flatten_dict, flat=flat, dropna=dropna)
-    return to_list([f(inp, func) for inp in to_list(input)], flat=flat)
+    return to_list([_f(inp, func) for inp in to_list(input)], flat=flat)
 
 async def ae_call(input_: Any, 
                   func_: Callable, 
@@ -616,10 +669,14 @@ async def ae_call(input_: Any,
     of different asynchronous transformations to the same input.
 
     Parameters:
-        input (Union[Any, List[Any]]): The input or list of inputs to be processed.
-        funcs (Union[Callable, List[Callable]]): The function or list of functions to apply.
+        input_ (Union[Any, List[Any]]): The input or list of inputs to be processed.
+
+        func_ (Union[Callable, List[Callable]]): The function or list of functions to apply.
+
         flatten_dict (bool, optional): Whether to flatten dictionaries in the input. Defaults to False.
+
         flat (bool, optional): Whether the output list should be flattened. Defaults to True.
+
         dropna (bool, optional): Whether to drop None values during flattening. Defaults to True.
 
     Example:
@@ -628,10 +685,10 @@ async def ae_call(input_: Any,
         >>> asyncio.run(ae_call([1, 2, 3], [async_square]))
         [[1, 4, 9]]
     """
-    async def async_f(x, y):
+    async def _async_f(x, y):
         return await am_call(make_copy(x, len(to_list(y))), y, flatten_dict=flatten_dict, flat=flat, dropna=dropna)
 
-    tasks = [async_f(inp, func_) for inp in to_list(input_)]
+    tasks = [_async_f(inp, func_) for inp in to_list(input_)]
     return await asyncio.gather(*tasks)
 
 def get_timestamp() -> str:
@@ -670,6 +727,7 @@ def create_id() -> str:
     random_bytes = os.urandom(16)
     return hashlib.sha256(current_time + random_bytes).hexdigest()[:16]
 
+
 def create_path(dir: str, filename: str, timestamp: bool = True, dir_exist_ok: bool = True, time_prefix=False) -> str:
     """
     Creates a file path by optionally appending a timestamp to the filename.
@@ -677,11 +735,16 @@ def create_path(dir: str, filename: str, timestamp: bool = True, dir_exist_ok: b
     This function constructs a file path by combining a directory, an optional timestamp,
     and a filename. It also ensures the existence of the directory.
 
-    Args:
-        dir_ (str): The directory in which the file is to be located.
+    Parameters:
+        dir (str): The directory in which the file is to be located.
+
         filename (str): The name of the file.
+
         timestamp (bool, optional): If True, appends a timestamp to the filename. Defaults to True.
+
         dir_exist_ok (bool, optional): If True, creates the directory if it doesn't exist. Defaults to True.
+
+        time_prefix (bool, optional): If True, the timestamp is added as a prefix; otherwise, it's appended. Defaults to False.
 
     Returns:
         str: The full path to the file.

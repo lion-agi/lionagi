@@ -2,7 +2,7 @@ LionAGI
 #######
 **Towards Automated General Intelligence**
 
-LionAGI is a Python package that combines data manipulation with AI tools, aiming to simplify the integration of advanced machine learning tools, such as Large Language Models (i.e. OpenAI's GPT), with production level data centric projects. 
+LionAGI is a Python intelligent agent framework that combines data manipulation with AI tools, aiming to simplify the integration of advanced machine learning tools, such as Large Language Models (i.e. OpenAI's GPT), with production-level data-centric projects.
 
 Install LionAGI with pip:
 
@@ -13,12 +13,12 @@ Download the ``.env_template`` file, input your OPENAI_API_KEY, save the file, r
 Features
 ********
 
-- Robust performance. LionAGI is written in almost pure python. With minimum external dependency (aiohttp, httpx, python-dotenv, tiktoken)
+- Robust performance. LionAGI is written in almost pure python. With minimum external dependency (``aiohttp``, ``httpx``, ``python-dotenv``, ``tiktoken``)
 - Efficient data operations for reading, chunking, binning, writing, storing and managing data.
-- Fast interaction with LLM services like OpenAI with configurable rate limiting concurrent API calls for maximum throughput. 
-- Create a production ready LLM application in hours. Intuitive workflow management to streamline and expedite the process from idea to market.
+- Fast interaction with LLM services like OpenAI with **configurable rate limiting concurrent API calls** for maximum throughput.
+- Create a production ready LLM application **in hours**. Intuitive workflow management to streamline and expedite the process from idea to market.
 
-Currently, LionAGI only natively support OpenAI API calls, support for other LLM providers as well as open source models will be integrated in future releases. LionAGI is designed to be async only, please check python documentation `here <https://docs.python.org/3/library/asyncio.html>`_
+Currently, LionAGI only natively support OpenAI API calls, support for other LLM providers as well as open source models will be integrated in future releases. LionAGI is designed to be async only, please check python official documentation on `how async works <https://docs.python.org/3/library/asyncio.html>`_.
 
 
 **Notice**: 
@@ -36,22 +36,31 @@ The following example shows how to use LionAGI's ``Session`` object to interact 
 
 .. code-block:: python
 
-  import lionagi as li
+   import lionagi as li
+   import asyncio
+   import os
+   from dotenv import load_dotenv
+   load_dotenv()
 
-  # define system messages, context and user instruction
-  system = "You are a helpful assistant designed to perform calculations."
-  instruction = {"Addition":"Add the two numbers together i.e. x+y"}
-  context = {"x": 10, "y": 5}
+   # define system messages, context and user instruction
+   system = "You are a helpful assistant designed to perform calculations."
+   instruction = {"Addition":"Add the two numbers together i.e. x+y"}
+   context = {"x": 10, "y": 5}
 
-  # Initialize a session with a system message
-  calculator = li.Session(system=system)
+   api_service = li.0penAIService(api_key=os.getenv('OPENAI_API_KEY'))
 
-  # run a LLM API call
-  result = await calculator.initiate(instruction=instruction,
-                                     context=context,
-                                     model="gpt-4-1106-preview")
+   async def main():
+       # Initialize a session with a system message
+       calculator = li.Session(system=system, api_service=api_service)
+       # run a LLM API call
+       result = await calculator.initiate(instruction=instruction,
+                                          context=context,
+                                          model="gpt-4-1106-preview")
 
-  print(f"Calculation Result: {result}")
+       print(f"Calculation Result: {result}")
+
+   if __name__ == "__main__":
+       asyncio.run(main())
 
 Visit our notebooks for our examples. 
 

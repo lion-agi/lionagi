@@ -1,5 +1,6 @@
 from .message import Message
 
+
 class Conversation:
     """
     A class representing a conversation between users and the assistant.
@@ -8,21 +9,22 @@ class Conversation:
     user instructions, and assistant responses.
 
     Attributes:
-        response_counts (int): The count of assistant responses in the conversation.
-        messages (list): A list to store messages in the conversation.
-        msg (Message): An instance of the Message class for creating messages.
-        responses (list): A list to store assistant responses in the conversation.
+        response_counts (int):
+            The count of assistant responses in the conversation.
+        messages (list):
+            A list to store messages in the conversation.
+        msg (Message):
+            An instance of the Message class for creating messages.
+        responses (list):
+            A list to store assistant responses in the conversation.
 
     Methods:
         initiate_conversation(system, instruction, context=None, name=None):
             Initiate a conversation with a system setting and user instruction.
-
         add_messages(system, instruction, context=None, response=None, tool=None, name=None):
             Add messages to the conversation, including system setting, user instruction, and assistant response.
-
         change_system(system):
             Change the system setting in the conversation.
-
         keep_last_n_exchanges(n: int):
             Keep the last n exchanges in the conversation.
     """
@@ -46,8 +48,11 @@ class Conversation:
 
         Parameters:
             system (str): The system setting for the conversation.
+
             instruction (str): The user instruction to initiate the conversation.
+
             context (dict): Additional context for the conversation. Default is None.
+
             name (str): The name associated with the user. Default is None.
         """
         self.messages, self.responses = [], []
@@ -61,10 +66,13 @@ class Conversation:
 
         Parameters:
             system (str): The system setting for the message. Default is None.
+
             instruction (str): The instruction content for the message. Default is None.
+
             context (dict): Additional context for the message. Default is None.
+
             response (dict): The response content for the message. Default is None.
-            tool (dict): The tool information for the message. Default is None.
+
             name (str): The name associated with the message. Default is None.
         """
         msg = self.msg(system=system, instruction=instruction, context=context, 
@@ -93,4 +101,5 @@ class Conversation:
         ]
         if len(response_indices) >= n:
             first_index_to_keep = response_indices[-n] + 1
-            self.messages = [self.system] + self.messages[first_index_to_keep:]
+            self.messages = self.messages[0] + self.messages[first_index_to_keep:]
+            

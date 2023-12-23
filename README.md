@@ -1,17 +1,16 @@
 ![PyPI - Version](https://img.shields.io/pypi/v/lionagi?labelColor=233476aa&color=231fc935) ![PyPI - Downloads](https://img.shields.io/pypi/dm/lionagi?labelColor=233476aa&color=231fc935) ![GitHub License](https://img.shields.io/github/license/lion-agi/lionagi?labelColor=233476aa&color=231fc935) 
 
-
-
-- PyPI: https://pypi.org/project/lionagi/
-- Documentation: https://lionagi.readthedocs.io/en/latest/  （still a lot TODO）
-- Website: TODO
-- Discord: [Join Our Discord](https://discord.gg/7RGWqpSxze)
+[PyPI](https://pypi.org/project/lionagi/) | [Documentation](https://lionagi.readthedocs.io/en/latest/) | [Website](https://www.lionagi.ai) | [Discord](https://discord.gg/7RGWqpSxze)
 
   
 # LionAGI
 **Towards Automated General Intelligence**
 
-LionAGI is a Python package that combines data manipulation with AI tools, aiming to simplify the integration of advanced machine learning tools, such as Large Language Models (i.e. OpenAI's GPT), with production level data centric projects. 
+
+LionAGI is a cutting-edge **intelligent agent framework**. It integrates data manipulation with advanced machine learning tools, such as Large Language Models (i.e. OpenAI's GPT). 
+- Designed for data-centric, production-level projects,
+- dramatically lowers the barrier in creating intelligent, automated systems
+- that can understand and interact meaningfully with large volumes of data. 
 
 Install LionAGI with pip:
 
@@ -22,13 +21,13 @@ Download the `.env_template` file, input your OPENAI_API_KEY, save the file, ren
 
 ### Features
 
-- Robust performance. LionAGI is written in almost pure python. With minimum external dependency (aiohttp, httpx, python-dotenv, tiktoken)
+- Robust performance. LionAGI is written in almost pure python. With minimum external dependency (`aiohttp`, `httpx`, `python-dotenv`, `tiktoken`)
 - Efficient data operations for reading, chunking, binning, writing, storing and managing data.
-- Fast interaction with LLM services like OpenAI with configurable rate limiting concurrent API calls for maximum throughput. 
-- Create a production ready LLM application in hours. Intuitive workflow management to streamline and expedite the process from idea to market.
+- Fast interaction with LLM services like OpenAI with **configurable rate limiting concurrent API calls** for maximum throughput. 
+- Create a production ready LLM application **in hours**. Intuitive workflow management to streamline and expedite the process from idea to market.
 
 ---
-Currently, LionAGI only natively support OpenAI API calls, support for other LLM providers as well as open source models will be integrated in future releases. LionAGI is designed to be async only, please check python documentation [here](https://docs.python.org/3/library/asyncio.html)
+Currently, LionAGI only natively support OpenAI API calls, support for other LLM providers as well as open source models will be integrated in future releases. LionAGI is designed to be async only, please check python official documentation on how `async` work: [here](https://docs.python.org/3/library/asyncio.html)
 
 
 **Notice**: 

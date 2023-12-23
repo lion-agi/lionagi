@@ -1,27 +1,37 @@
 import asyncio
-import json
 import logging
 import re
 from abc import ABC, abstractmethod
 from dataclasses import dataclass
 from typing import Any, Callable, Dict, Generator, NoReturn, Optional
 
+from .sys_util import append_to_jsonl
+
+
 @dataclass
 class StatusTracker:
-    """Class for keeping track of various task statuses.
+    """
+    Class for keeping track of various task statuses.
     
     This class serves as a simple way to monitor different types of task
     outcomes and errors within a system. It uses dataclasses for easy
     creation and management of state.
     
     Attributes:
-        num_tasks_started: The number of tasks that have been initiated.
-        num_tasks_in_progress: The number of tasks currently being processed.
-        num_tasks_succeeded: The number of tasks that have completed successfully.
-        num_tasks_failed: The number of tasks that have failed.
-        num_rate_limit_errors: The number of tasks that failed due to rate limiting.
-        num_api_errors: The number of tasks that failed due to API errors.
-        num_other_errors: The number of tasks that failed due to other errors.
+        num_tasks_started:
+            The number of tasks that have been initiated.
+        num_tasks_in_progress:
+            The number of tasks currently being processed.
+        num_tasks_succeeded:
+            The number of tasks that have completed successfully.
+        num_tasks_failed:
+            The number of tasks that have failed.
+        num_rate_limit_errors:
+            The number of tasks that failed due to rate limiting.
+        num_api_errors:
+            The number of tasks that failed due to API errors.
+        num_other_errors:
+            The number of tasks that failed due to other errors.
     """
     num_tasks_started: int = 0
     num_tasks_in_progress: int = 0
@@ -41,16 +51,24 @@ class AsyncQueue:
     concurrent task processing in an orderly and controlled manner.
 
     Attributes:
-        queue (asyncio.Queue): A queue to hold items for asynchronous processing.
-        _stop_event (asyncio.Event): An event to signal when the queue should stop processing.
+        queue (asyncio.Queue):
+            A queue to hold items for asynchronous processing.
+        _stop_event (asyncio.Event):
+            An event to signal when the queue should stop processing.
 
     Methods:
-        enqueue(item): Add an item to the queue for processing.
-        dequeue(): Remove and return an item from the queue.
-        join(): Wait until all items in the queue have been processed.
-        stop(): Signal to stop processing new items in the queue.
-        stopped(): Check if the queue has been signaled to stop.
-        process_requests(func): Process items using a provided function.
+        enqueue(item):
+            Add an item to the queue for processing.
+        dequeue():
+            Remove and return an item from the queue.
+        join():
+            Wait until all items in the queue have been processed.
+        stop():
+            Signal to stop processing new items in the queue.
+        stopped():
+            Check if the queue has been signaled to stop.
+        process_requests(func):
+            Process items using a provided function.
     """
 
     def __init__(self) -> None:
@@ -64,7 +82,7 @@ class AsyncQueue:
         """
         Asynchronously add an item to the queue for processing.
 
-        Args:
+        Parameters:
             item (Any): The item to be added to the queue.
 
         Example:
@@ -139,7 +157,7 @@ class AsyncQueue:
         Continuously dequeues items and applies the given function to each. 
         The processing stops when the queue is signaled to stop or a sentinel value (`None`) is dequeued.
 
-        Args:
+        Parameters:
             func (Callable[[Any], Any]): A coroutine function to process items from the queue.
 
         Example:
@@ -166,23 +184,29 @@ class RateLimiter(ABC):
     of requests sent to or received from a network interface controller or an API.
 
     Attributes:
-        max_requests_per_minute (int): Maximum number of requests permitted per minute.
-        max_tokens_per_minute (int): Maximum number of tokens that can accumulate per minute.
-        available_request_capacity (int): Current number of available request slots.
-        available_token_capacity (int): Current number of available tokens.
-        rate_limit_replenisher_task (asyncio.Task): Background task for replenishing rate limits.
+        max_requests_per_minute (int):
+            Maximum number of requests permitted per minute.
+        max_tokens_per_minute (int):
+            Maximum number of tokens that can accumulate per minute.
+        available_request_capacity (int):
+            Current number of available request slots.
+        available_token_capacity (int):
+            Current number of available tokens.
 
     Methods:
-        rate_limit_replenisher: Coroutine to replenish rate limits over time.
-        calculate_num_token: Method to calculate required tokens for a request.
+        rate_limit_replenisher:
+            Coroutine to replenish rate limits over time.
+        calculate_num_token:
+            Method to calculate required tokens for a request.
     """
     
     def __init__(self, max_requests_per_minute: int, max_tokens_per_minute: int) -> None:
         """
         Initializes the RateLimiter with specified maximum request and token limits.
 
-        Args:
+        Parameters:
             max_requests_per_minute (int): Maximum requests allowed per minute.
+
             max_tokens_per_minute (int): Maximum tokens allowed to accumulate per minute.
 
         Example:
@@ -226,8 +250,9 @@ class RateLimiter(ABC):
         Subclasses should implement this method to determine the number of tokens needed based
         on the request payload and target endpoint.
 
-        Args:
+        Parameters:
             payload (Dict[str, Any]): Payload of the request.
+
             api_endpoint (str): Target API endpoint for the request.
 
         Returns:
@@ -245,6 +270,7 @@ class RateLimiter(ABC):
         
         ...
 
+
 class BaseAPIService(ABC):
     """
     Abstract base class for API services requiring asynchronous operations.
@@ -254,19 +280,30 @@ class BaseAPIService(ABC):
     subclassed for concrete implementations of specific API service interactions.
 
     Attributes:
-        api_key (str): The API key used for authenticating with the API service.
-        token_encoding_name (str): The encoding for the API token.
-        max_attempts (int): The maximum number of retry attempts for API calls.
-        status_tracker (StatusTracker): Tracker for API call statuses.
-        rate_limiter (RateLimiter): Limiter to control the rate of API calls.
-        queue (AsyncQueue): Queue for managing API call tasks.
+        api_key (str):
+            The API key used for authenticating with the API service.
+        token_encoding_name (str):
+            The encoding for the API token.
+        max_attempts (int):
+            The maximum number of retry attempts for API calls.
+        status_tracker (StatusTracker):
+            Tracker for API call statuses.
+        queue (AsyncQueue):
+            Queue for managing API call tasks.
+        rate_limiter (RateLimiter):
+            Limiter to control the rate of API calls.
+        append_to_jsonl (callable):
+            Callable for appending data to a file in JSONL format.
 
     Methods:
-        call_api: Abstract method to define API call mechanism in subclasses.
-        handle_error: Handle errors by logging and saving details to a JSONL file.
-        append_to_jsonl: Append data to a file in JSONL format.
-        api_endpoint_from_url: Extract the API endpoint from a URL.
-        task_id_generator_function: Generate a sequence of unique task IDs.
+        call_api:
+            Abstract method to define API call mechanism in subclasses.
+        handle_error:
+            Handle errors by logging and saving details to a JSONL file.
+        api_endpoint_from_url:
+            Extract the API endpoint from a URL.
+        task_id_generator_function:
+            Generate a sequence of unique task IDs.
     """
     
     def __init__(
@@ -278,17 +315,22 @@ class BaseAPIService(ABC):
         max_tokens_per_minute: int,
         ratelimiter,
         status_tracker: Optional[StatusTracker] = None,
-        queue: Optional[AsyncQueue] = None,       
+        queue: Optional[AsyncQueue] = None,
     ) -> None:
         """
         Initializes the BaseAPIService with necessary configuration.
 
-        Args:
+        Parameters:
             api_key (str): The API key for authentication.
+
             token_encoding_name (str): Encoding name for the API token.
+
             max_attempts (int): Maximum number of attempts for an API call.
+
             status_tracker (Optional[StatusTracker]): Tracker for API call statuses.
-            rate_limiter (RateLimiter): Limiter for API call rates.
+
+            ratelimiter: Limiter for API call rates.
+
             queue (Optional[AsyncQueue]): Queue for managing API tasks.
 
         Example:
@@ -297,7 +339,7 @@ class BaseAPIService(ABC):
             ...
             >>> service = MyAPIService(api_key="12345", token_encoding_name="utf-8",
             ...                       max_attempts=3, status_tracker=None,
-            ...                       rate_limiter=my_rate_limiter, queue=None)
+            ...                       rate_limiter=ratelimiter, queue=None)
         """
         self.api_key = api_key
         self.token_encoding_name = token_encoding_name
@@ -305,6 +347,7 @@ class BaseAPIService(ABC):
         self.status_tracker = status_tracker or StatusTracker()
         self.queue = queue or AsyncQueue()
         self.rate_limiter = ratelimiter(max_requests_per_minute, max_tokens_per_minute)
+        self.append_to_jsonl = append_to_jsonl
         
     @abstractmethod
     async def call_api(self) -> Any:
@@ -335,10 +378,13 @@ class BaseAPIService(ABC):
         
         Updates the status tracker to indicate the error and saves details to a JSONL file.
         
-        Args:
+        Parameters:
             error (Exception): The exception that was raised during the API call.
+
             payload (Any): The data payload that was used for the API call.
+
             metadata (Any): Additional metadata related to the API call.
+
             save_filepath (str): The file path where error details should be saved.
         """
         self.status_tracker.num_tasks_in_progress -= 1
@@ -356,7 +402,7 @@ class BaseAPIService(ABC):
         """
         Extracts the endpoint from an API request URL.
         
-        Args:
+        Parameters:
             request_url (str): The URL from which to extract the API endpoint.
         
         Returns:
