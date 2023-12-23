@@ -6,7 +6,11 @@
 # LionAGI
 **Towards Automated General Intelligence**
 
-LionAGI is a Python intelligent agent framework that combines data manipulation with AI tools, aiming to simplify the integration of advanced machine learning tools, such as Large Language Models (i.e. OpenAI's GPT), with production-level data-centric projects. 
+
+LionAGI is a cutting-edge **intelligent agent framework**. It integrates data manipulation with advanced machine learning tools, such as Large Language Models (i.e. OpenAI's GPT). 
+- Designed for data-centric, production-level projects,
+- dramatically lowers the barrier in creating intelligent, automated systems
+- that can understand and interact meaningfully with large volumes of data. 
 
 Install LionAGI with pip:
 
