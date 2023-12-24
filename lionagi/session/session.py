@@ -1,25 +1,19 @@
 import os
-import aiohttp
-import asyncio
 import json
 from typing import Any
-
 
 from .conversation import Conversation
 from ..utils.sys_util import to_list, l_call, al_call
 from ..utils.log_util import DataLogger
-from ..log.base_log import setup_global_logging
 from ..utils.api_util import StatusTracker
-from ..tools.manager import ToolManager
+from ..utils.tool_util import ToolManager
 from ..api.oai_service import OpenAIService
 from ..api.oai_config import oai_llmconfig
+from ..api.chat_completion import call_chatcompletion
 
-# Call this at the start of your application
-setup_global_logging()
 
 status_tracker = StatusTracker()
 OAIService = OpenAIService(api_key=os.getenv('OPENAI_API_KEY'))
-
 
 class Session():
     """
@@ -209,7 +203,7 @@ class Session():
         funcs = to_list(funcs)
         self._toolmanager.register_tools(tools, funcs, update, new, prefix, postfix)
     
-    async def initiate(self, instruction, system=None, context=None, name=None, invoke=True, out=True, tool_parser=None, **kwargs) -> Any:
+    async def initiate(self, instruction, system=None, context=None, name=None, invoke=True, out=True, tool_parser=None, sleep=0, **kwargs) -> Any:
         """
         Start a new conversation session with the provided instruction.
 
@@ -236,11 +230,14 @@ class Session():
         config = {**self.llmconfig, **kwargs}
         system = system or self.system
         self.conversation.initiate_conversation(system=system, instruction=instruction, context=context, name=name)
-        await self._call_chatcompletion(**config)
+        await call_chatcompletion(api_service=self.api_service,
+                                  sleep=sleep,
+                                  status_tracker=self.status_tracker,
+                                  **config)
         
         return await self._output(invoke, out, tool_parser)
 
-    async def followup(self, instruction, system=None, context=None, out=True, name=None, invoke=True, tool_parser=None, **kwargs) -> Any:
+    async def followup(self, instruction, system=None, context=None, out=True, name=None, invoke=True, tool_parser=None, sleep=0, **kwargs) -> Any:
         """
         Continue the conversation with the provided instruction.
 
@@ -268,7 +265,10 @@ class Session():
             self.conversation.change_system(system)
         self.conversation.add_messages(instruction=instruction, context=context, name=name)
         config = {**self.llmconfig, **kwargs}
-        await self._call_chatcompletion(**config)
+        await call_chatcompletion(api_service=self.api_service,
+                                  sleep=sleep,
+                                  status_tracker=self.status_tracker,
+                                  **config)
 
         return await self._output(invoke, out, tool_parser)
 
@@ -294,62 +294,6 @@ class Session():
         if num == 0:
             await self.followup(instruction, **kwargs)
 
-    def _create_payload_chatcompletion(self, **kwargs):
-        """
-        Create a payload for chat completion based on the conversation state and configuration.
-
-        Parameters:
-            **kwargs: Additional keyword arguments for configuration.
-
-        Returns:
-            dict: The payload for chat completion.
-        """
-        # currently only openai chat completions are supported
-        messages = self.conversation.messages
-        config = {**self.llmconfig, **kwargs}
-        payload = {
-            "messages": messages,
-            "model": config.get('model'),
-            "frequency_penalty": config.get('frequency_penalty'),
-            "n": config.get('n'),
-            "presence_penalty": config.get('presence_penalty'),
-            "response_format": config.get('response_format'),
-            "temperature": config.get('temperature'),
-            "top_p": config.get('top_p'),
-            }
-        
-        for key in ["seed", "stop", "stream", "tools", "tool_choice", "user", "max_tokens"]:
-            if bool(config[key]) is True and str(config[key]) != "none":
-                payload.update({key: config[key]})
-        return payload
-
-    async def _call_chatcompletion(self, sleep=0.1,  **kwargs):
-        """
-        Make a call to the chat completion API and process the response.
-
-        Parameters:
-            sleep (float): The sleep duration after making the API call. Default is 0.1.
-
-            **kwargs: Additional keyword arguments for configuration.
-        """
-        endpoint = f"chat/completions"
-        try:
-            async with aiohttp.ClientSession() as session:
-                payload = self._create_payload_chatcompletion(**kwargs)
-                completion = await self.api_service.call_api(
-                                session, endpoint, payload)
-                if "choices" in completion:
-                    self._logger({"input": payload, "output": completion})
-                    self.conversation.add_messages(response=completion['choices'][0])
-                    self.conversation.responses.append(self.conversation.messages[-1])
-                    self.conversation.response_counts += 1
-                    await asyncio.sleep(sleep)
-                    status_tracker.num_tasks_succeeded += 1
-                else:
-                    status_tracker.num_tasks_failed += 1
-        except Exception as e:
-            status_tracker.num_tasks_failed += 1
-            raise e
     
     def messages_to_csv(self, dir=None, filename="_messages.csv", **kwargs):
         """
