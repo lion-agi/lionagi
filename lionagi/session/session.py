@@ -9,7 +9,7 @@ from .conversation import Conversation
 from ..utils.sys_util import to_list, l_call, al_call
 from ..utils.log_util import DataLogger
 from ..utils.api_util import StatusTracker
-from ..utils.tool_util import ToolManager
+from ..tools.manager import ToolManager
 from ..api.oai_service import OpenAIService
 from ..api.oai_config import oai_llmconfig
 
@@ -268,12 +268,12 @@ class Session():
 
         return await self._output(invoke, out, tool_parser)
 
-    async def auto_followup(self, instruct, num=3, tool_parser=None, **kwargs):
+    async def auto_followup(self, instruction, num=3, tool_parser=None, **kwargs):
         """
         Automates the follow-up process for a specified number of times or until the session concludes.
 
         Parameters:
-            instruct (Union[str, dict]): The instruction for the follow-up.
+            instruction (Union[str, dict]): The instruction for the follow-up.
 
             num (int, optional): The number of times to automatically follow up. Defaults to 3.
 
@@ -284,11 +284,11 @@ class Session():
         """
         cont_ = True
         while num > 0 and cont_ is True:
-            await self.followup(instruct, tool_parser=tool_parser, tool_choice="auto", **kwargs)
+            await self.followup(instruction, tool_parser=tool_parser, tool_choice="auto", **kwargs)
             num -= 1
             cont_ = True if self._is_invoked() else False
         if num == 0:
-            await self.followup(instruct, **kwargs)
+            await self.followup(instruction, **kwargs)
 
     def _create_payload_chatcompletion(self, **kwargs):
         """
