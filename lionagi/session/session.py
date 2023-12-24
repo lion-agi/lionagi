@@ -135,7 +135,7 @@ class Session():
         """
         self.api_service = api_service
     
-    async def _output(self, invoke=True, out=True, tool_parser=None):
+    async def _output(self, invoke=True, out=True):
         """
         Process the output, invoke tools if needed, and optionally return the output.
 
@@ -230,12 +230,8 @@ class Session():
         config = {**self.llmconfig, **kwargs}
         system = system or self.system
         self.conversation.initiate_conversation(system=system, instruction=instruction, context=context, name=name)
-        await call_chatcompletion(api_service=self.api_service,
-                                  sleep=sleep,
-                                  status_tracker=self.status_tracker,
-                                  **config)
-        
-        return await self._output(invoke, out, tool_parser)
+        await call_chatcompletion(self, sleep, **config)
+        return await self._output(invoke, out)
 
     async def followup(self, instruction, system=None, context=None, out=True, name=None, invoke=True, tool_parser=None, sleep=0, **kwargs) -> Any:
         """
@@ -265,14 +261,11 @@ class Session():
             self.conversation.change_system(system)
         self.conversation.add_messages(instruction=instruction, context=context, name=name)
         config = {**self.llmconfig, **kwargs}
-        await call_chatcompletion(api_service=self.api_service,
-                                  sleep=sleep,
-                                  status_tracker=self.status_tracker,
-                                  **config)
+        await call_chatcompletion(self, sleep, **config)
 
-        return await self._output(invoke, out, tool_parser)
+        return await self._output(invoke, out)
 
-    async def auto_followup(self, instruction, num=3, tool_parser=None, **kwargs):
+    async def auto_followup(self, instruction, num=3, **kwargs):
         """
         Automates the follow-up process for a specified number of times or until the session concludes.
 
@@ -288,7 +281,7 @@ class Session():
         """
         cont_ = True
         while num > 0 and cont_ is True:
-            await self.followup(instruction, tool_parser=tool_parser, tool_choice="auto", **kwargs)
+            await self.followup(instruction, tool_choice="auto", **kwargs)
             num -= 1
             cont_ = True if self._is_invoked() else False
         if num == 0:

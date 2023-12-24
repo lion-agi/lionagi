@@ -1,5 +1,4 @@
 from abc import ABC, abstractmethod
-from ..log.base_log import BaseLogger
 
 class BaseTool(ABC):
     def __init__(self):
@@ -109,7 +108,6 @@ import logging
 
 class ToolManager:
     def __init__(self):
-        self.logger = BaseLogger.get_logger(self.__class__.__name__)
         self.registry = {}
 
     def register_tools(self, tools):

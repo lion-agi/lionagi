@@ -30,7 +30,7 @@ def create_payload_chatcompletion(self, **kwargs):
             payload.update({key: config[key]})
     return payload
 
-async def call_chatcompletion(api_service=None, sleep=0.1,status_tracker=None, **kwargs):
+async def call_chatcompletion(session, sleep=0.1,**kwargs):
     """
     Make a call to the chat completion API and process the response.
 
@@ -42,18 +42,18 @@ async def call_chatcompletion(api_service=None, sleep=0.1,status_tracker=None, *
     endpoint = f"chat/completions"
     try:
         async with aiohttp.ClientSession() as session:
-            payload = self.create_payload_chatcompletion(**kwargs)
-            completion = await api_service.call_api(
+            payload = create_payload_chatcompletion(**kwargs)
+            completion = await session.api_service.call_api(
                             session, endpoint, payload)
             if "choices" in completion:
-                self._logger({"input": payload, "output": completion})
-                self.conversation.add_messages(response=completion['choices'][0])
-                self.conversation.responses.append(self.conversation.messages[-1])
-                self.conversation.response_counts += 1
+                session._logger({"input": payload, "output": completion})
+                session.conversation.add_messages(response=completion['choices'][0])
+                session.conversation.responses.append(session.conversation.messages[-1])
+                session.conversation.response_counts += 1
                 await asyncio.sleep(sleep)
-                status_tracker.num_tasks_succeeded += 1
+                session.status_tracker.num_tasks_succeeded += 1
             else:
-                status_tracker.num_tasks_failed += 1
+                session.status_tracker.num_tasks_failed += 1
     except Exception as e:
-        status_tracker.num_tasks_failed += 1
+        session.status_tracker.num_tasks_failed += 1
         raise e
