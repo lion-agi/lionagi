@@ -7,7 +7,7 @@ from typing import Any
 
 from .conversation import Conversation
 from ..utils.sys_util import to_list, l_call, al_call
-from ..utils.log_util import DataLogger
+from ..log.datalogger import DataLogger
 from ..utils.api_util import StatusTracker
 from ..tools.manager import ToolManager
 from ..api.oai_service import OpenAIService

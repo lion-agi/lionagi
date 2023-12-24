@@ -56,3 +56,47 @@ class ToolManager:
                 raise
         else:
             raise KeyError(f"Tool {tool_name} not registered")
+
+
+
+"""
+# ToolManager class with integrated logging
+class ToolManager:
+    def __init__(self):
+        self.logger = BaseLogger.get_logger("ToolManager")
+        self.registry = {}
+
+    def register_tool(self, name, tool):
+        if not isinstance(tool, BaseTool):
+            raise ValueError("Invalid tool type. Must be a subclass of BaseTool.")
+        self.registry[name] = tool
+        self.logger.info(f"Tool registered: {name}")
+
+    def execute_tool(self, name, *args, **kwargs):
+        if name not in self.registry:
+            self.logger.error(f"Tool {name} not found.")
+            raise ValueError(f"Tool {name} not found.")
+        tool = self.registry[name]
+        self.logger.info(f"Executing tool: {name}")
+        return tool.execute(*args, **kwargs)
+
+# Example tool implementation
+class MultiplyTool(BaseTool):
+    def initialize(self):
+        self.logger.info("MultiplyTool initialized")
+
+    def execute(self, x, y):
+        self.logger.info(f"Multiplying {x} and {y}")
+        return x * y
+
+    def shutdown(self):
+        self.logger.info("MultiplyTool shutdown")
+
+# Example usage
+tool_manager = ToolManager()
+multiply_tool = MultiplyTool()
+tool_manager.register_tool("multiplier", multiply_tool)
+result = tool_manager.execute_tool("multiplier", 3, 4)
+print(f"Result: {result}")
+
+"""
