@@ -1,7 +1,7 @@
 from datetime import datetime
 import json
 from ..utils.sys_util import create_id, l_call
-from ..log.data_log import DataLogger
+from ..utils.log_util import DataLogger
 
 
 class Message:

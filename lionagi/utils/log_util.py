@@ -1,5 +1,5 @@
 from collections import deque
-from ..utils.sys_util import to_csv, create_path
+from .sys_util import to_csv, create_path
 
 
 class DataLogger:

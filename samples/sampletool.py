@@ -1,4 +1,4 @@
-from .basetool import BaseTool
+from lionagi.utils.tool_util import BaseTool
 
 class MultiplyTool(BaseTool):
     def initialize(self):

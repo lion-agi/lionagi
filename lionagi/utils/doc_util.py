@@ -3,7 +3,7 @@ from pathlib import Path
 from typing import Any, Dict, List, Union, Callable, Optional
 
 from .sys_util import to_list, l_call
-from ..log.data_log import DataLogger
+from .log_util import DataLogger
 
 
 def dir_to_path(dir: str, ext, recursive: bool = False, flat: bool = True):
