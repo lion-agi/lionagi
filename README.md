@@ -19,6 +19,11 @@ pip install lionagi
 ```
 Download the `.env_template` file, input your OPENAI_API_KEY, save the file, rename as `.env` and put in your project's root directory. 
 
+if you would like to build from source, please download the latest release, 
+
+------**main is under development and will be changed without notice**------
+
+
 ### Features
 
 - Robust performance. LionAGI is written in almost pure python. With minimum external dependency (`aiohttp`, `httpx`, `python-dotenv`, `tiktoken`)
