@@ -16,7 +16,7 @@ Copyright 2023 HaiyangLi <ocean@lionagi.ai>
 
 import logging
 from .version import __version__
-from .session import *
+from .sessions import *
 from .utils import *
 from .api_services import *
 

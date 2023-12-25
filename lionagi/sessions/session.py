@@ -8,7 +8,7 @@ from ..utils.log_util import DataLogger
 from ..utils.api_util import StatusTracker
 from ..utils.tool_util import ToolManager
 from ..api_services.oai_service import OpenAIService
-from ..config.oai_config import oai_llmconfig
+from ..configs.oai_config import oai_llmconfig
 from ..api_endpoints.chat_completion import call_chatcompletion
 
 
