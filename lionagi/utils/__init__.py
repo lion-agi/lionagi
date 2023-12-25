@@ -2,7 +2,7 @@ from .sys_util import to_flat_dict, to_list, str_to_num, make_copy, to_temp, to_
 from .doc_util import dir_to_path, read_text, dir_to_files, file_to_chunks, get_bins
 from .log_util import DataLogger
 from ..tools.manager import ToolManager
-from .api_util import StatusTracker, AsyncQueue, RateLimiter, BaseAPIService
+from ..api_services.util import StatusTracker, AsyncQueue, RateLimiter, BaseAPIService
 
 __all__ = [
     "to_flat_dict", "to_list", "str_to_num", "make_copy", "to_temp", "to_csv", "hold_call", "ahold_call", 

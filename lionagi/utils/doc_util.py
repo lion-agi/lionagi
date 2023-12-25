@@ -4,7 +4,7 @@ from typing import Any, Dict, List, Union, Callable, Optional
 
 from .sys_util import to_list, l_call
 from .log_util import DataLogger
-from .node_util import GraphDataNode
+from ..entities.util import GraphDataNode
 
 
 
