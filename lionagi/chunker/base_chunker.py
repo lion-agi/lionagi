@@ -1,7 +1,14 @@
 from typing import Dict, List, Any
+from abc import abstractclassmethod
+from ..utils import to_list, l_call
+from ..schema import DataNode, DataLogger
 
-from ...sys_util import to_list, l_call
-from ...log_util import DataLogger
+
+class BaseChunker(DataNode):
+    
+    @abstractclassmethod
+    def chunk(self):
+        ...
 
 
 def _file_to_chunks(input: Dict[str, Any],

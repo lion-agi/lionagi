@@ -1,3 +1,8 @@
+from pathlib import Path
+from ..utils import dir_to_path
+
+from typing import Callable, Dict, List, Optional, Union
+
 def dir_to_files(dir: str, ext: str, recursive: bool = False,
                  reader: Callable = read_text, clean: bool = True,
                  to_csv: bool = False, project: str = 'project',
@@ -13,8 +18,6 @@ def dir_to_files(dir: str, ext: str, recursive: bool = False,
     def _to_dict(path_: Path) -> Dict[str, Union[str, Path]]:
         folder, file = _split_path(path_)
         content = reader(str(path_), clean=clean)
-        file_ = File()
-        
         return {
             'project': project,
             'folder': folder,

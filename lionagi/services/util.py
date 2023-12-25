@@ -5,7 +5,7 @@ from abc import ABC, abstractmethod
 from dataclasses import dataclass
 from typing import Any, Callable, Dict, Generator, NoReturn, Optional
 
-from ..sys_util import append_to_jsonl
+from ..utils import append_to_jsonl
 
 
 @dataclass

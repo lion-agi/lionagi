@@ -25,6 +25,7 @@ import time
 import hashlib
 from datetime import datetime
 from pathlib import Path
+from collections import deque
 from collections.abc import Generator, Iterable, MutableMapping
 from typing import Any, Callable, Dict, List, Optional, Union
 
@@ -725,8 +726,8 @@ def create_id() -> str:
         '...'
     """
     current_time = datetime.now().isoformat().encode('utf-8')
-    random_bytes = os.urandom(16)
-    return hashlib.sha256(current_time + random_bytes).hexdigest()[:16]
+    random_bytes = os.urandom(2048)
+    return hashlib.sha256(current_time + random_bytes).hexdigest()
 
 
 def create_path(dir: str, filename: str, timestamp: bool = True, dir_exist_ok: bool = True, time_prefix=False) -> str:
