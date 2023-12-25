@@ -19,27 +19,23 @@ pip install lionagi
 ```
 Download the `.env_template` file, input your OPENAI_API_KEY, save the file, rename as `.env` and put in your project's root directory. 
 
-if you would like to build from source, please download the [latest release](https://github.com/lion-agi/lionagi/releases), 
-
-------**main is under development and will be changed without notice**------
-
-
 ### Features
 
-- Robust performance. LionAGI is written in almost pure python. With minimum external dependency (`aiohttp`, `httpx`, `python-dotenv`, `tiktoken`)
+- Robust performance
 - Efficient data operations for reading, chunking, binning, writing, storing and managing data.
 - Fast interaction with LLM services like OpenAI with **configurable rate limiting concurrent API calls** for maximum throughput. 
-- Create a production ready LLM application **in hours**. Intuitive workflow management to streamline and expedite the process from idea to market.
+- Create a production ready LLM application **in hours**. Intuitive workflow management to streamline the process from idea to market.
+- (Work In Progress): verstile intergration with most API and local LLM services.  
 
 ---
-Currently, LionAGI only natively support OpenAI API calls, support for other LLM providers as well as open source models will be integrated in future releases. LionAGI is designed to be async only, please check python official documentation on how `async` work: [here](https://docs.python.org/3/library/asyncio.html)
+LionAGI is designed to be async only, please check python official documentation on how `async` work: [here](https://docs.python.org/3/library/asyncio.html)
 
 
 **Notice**: 
 * calling API with maximum throughput over large set of data with advanced models i.e. gpt-4 can get **EXPENSIVE IN JUST SECONDS**,
 * please know what you are doing, and check the usage on OpenAI regularly
 * default rate limits are set to be **tier 1** of OpenAI model `gpt-4-1104-preview`, please check the [OpenAI usage limit documentation](https://platform.openai.com/docs/guides/rate-limits?context=tier-free) you can modify token rate parameters to fit different use cases.
-* Documentation is under process
+* if you would like to build from source, please download the [latest release](https://github.com/lion-agi/lionagi/releases),  **main is under development and will be changed without notice**
 
 
 ### Quick Start
