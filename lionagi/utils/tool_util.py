@@ -1,8 +1,6 @@
 from abc import ABC, abstractmethod
 
 class BaseTool(ABC):
-    def __init__(self):
-        self.logger = BaseLogger.get_logger(self.__class__.__name__)
 
     @abstractmethod
     def initialize(self, *args, **kwargs):
