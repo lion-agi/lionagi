@@ -102,3 +102,12 @@ class BaseNode(BaseModel):
         
     def get_content(self):
         return self.content
+
+class DataNode(BaseNode):
+    """
+    Represents a data node.
+
+    Args:
+        BaseNode (lionagi.nodes.base.BaseNode): BaseNode class for data validation.
+    """
+    pass
