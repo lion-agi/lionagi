@@ -18,16 +18,16 @@ import logging
 from .version import __version__
 
 from .chunks import *
-from .endpoints import *
+from .endpoint import *
 from .configs import *
 from .conversations import *
 from .chunks import *
 from .flows import *
 from .relationships import *
-from .services import *
+from .service import *
 from .messages import *
 from .sessions import *
-from .structures import *
+from .structure import *
 from .tools import *
 
 

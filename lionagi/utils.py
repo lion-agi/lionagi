@@ -24,8 +24,6 @@ import tempfile
 import time
 import hashlib
 from datetime import datetime
-from pathlib import Path
-from collections import deque
 from collections.abc import Generator, Iterable, MutableMapping
 from typing import Any, Callable, Dict, List, Optional, Union
 
@@ -729,7 +727,6 @@ def create_id() -> str:
     random_bytes = os.urandom(2048)
     return hashlib.sha256(current_time + random_bytes).hexdigest()
 
-
 def create_path(dir: str, filename: str, timestamp: bool = True, dir_exist_ok: bool = True, time_prefix=False) -> str:
     """
     Creates a file path by optionally appending a timestamp to the filename.
@@ -765,18 +762,6 @@ def create_path(dir: str, filename: str, timestamp: bool = True, dir_exist_ok: b
         return f"{dir}{timestamp}_{filename}.{ext}" if time_prefix else f"{dir}{filename}_{timestamp}.{ext}"
     else:
         return f"{dir}{filename}"
-
-def dir_to_path(dir: str, ext, recursive: bool = False, flat: bool = True):
-
-    def _dir_to_path(ext, recursive=recursive):
-        tem = '**/*' if recursive else '*'
-        return list(Path(dir).glob(tem + ext))
-
-    try: 
-        return to_list(l_call(ext, _dir_to_path, flat=True), flat=flat)
-    except: 
-        raise ValueError("Invalid directory or extension, please check the path")
-    
 
 def get_bins(input: List[str], upper: int = 7500) -> List[List[int]]:
     """
