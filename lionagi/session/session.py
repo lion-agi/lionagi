@@ -9,7 +9,7 @@ from ..utils.api_util import StatusTracker
 from ..utils.tool_util import ToolManager
 from ..api.oai_service import OpenAIService
 from ..api.oai_config import oai_llmconfig
-from ..api.chat_completion import call_chatcompletion
+from ..endpoints.chat_completion import call_chatcompletion
 
 
 status_tracker = StatusTracker()
