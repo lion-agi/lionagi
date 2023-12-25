@@ -109,4 +109,15 @@ class DataNode(BaseNode):
     Args:
         BaseNode (lionagi.nodes.base.BaseNode): BaseNode class for data validation.
     """
-    pass
+    
+    def from_llama(self):
+        ...
+        
+    def to_llama(self):
+        ...
+        
+    def from_langchain(self):
+        ...
+    
+    def to_langchain(self):
+        ...

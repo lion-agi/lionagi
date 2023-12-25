@@ -7,4 +7,4 @@ class Chunk(DataNode):
     Args:
         BaseNode (lionagi.nodes.base.BaseNode): BaseNode class for data validation.
     """
-    pass
+    
