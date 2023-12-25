@@ -17,7 +17,7 @@ Copyright 2023 HaiyangLi <ocean@lionagi.ai>
 import logging
 from .version import __version__
 from .api_services import *
-from .api_endpoints import *
+from .endpoints import *
 from .configs import *
 from .conversations import *
 from .chunks import *
