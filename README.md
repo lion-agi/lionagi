@@ -19,7 +19,7 @@ pip install lionagi
 ```
 Download the `.env_template` file, input your OPENAI_API_KEY, save the file, rename as `.env` and put in your project's root directory. 
 
-if you would like to build from source, please download the latest release, 
+if you would like to build from source, please download the [latest release](https://github.com/lion-agi/lionagi/releases), 
 
 ------**main is under development and will be changed without notice**------
 
