@@ -4,27 +4,30 @@ from typing import Any, Dict, List, Union, Callable, Optional
 
 from .sys_util import to_list, l_call
 from .log_util import DataLogger
+from .node_util import GraphDataNode
+
+
+
+from typing import Dict, List, Optional, Union, Any
+import math
+
+
+
+
+
+class File(GraphDataNode):
+ 
+    pass
+    
+    
+    
+
+
+
+
 
 
 def dir_to_path(dir: str, ext, recursive: bool = False, flat: bool = True):
-    """
-    Retrieves a list of file paths in the specified directory with the given extension.
-
-    Parameters:
-        dir (str): The directory path where to search for files.
-
-        ext (str): The file extension to filter by.
-
-        recursive (bool, optional): If True, search for files recursively in subdirectories. Defaults to False.
-
-        flat (bool, optional): If True, return a flat list of file paths. Defaults to True.
-
-    Returns:
-        List[str]: A list of file paths that match the given extension within the specified directory.
-
-    Example:
-        >>> files = dir_to_path(dir='my_directory', ext='.txt', recursive=True, flat=True)
-    """
 
     def _dir_to_path(ext, recursive=recursive):
         tem = '**/*' if recursive else '*'
@@ -34,22 +37,9 @@ def dir_to_path(dir: str, ext, recursive: bool = False, flat: bool = True):
         return to_list(l_call(ext, _dir_to_path, flat=True), flat=flat)
     except: 
         raise ValueError("Invalid directory or extension, please check the path")
-    
+
+
 def read_text(filepath: str, clean: bool = True) -> str:
-    """
-    Reads the content of a text file and optionally cleans it by removing specified characters.
-
-    Parameters:
-        filepath (str): The path to the text file to be read.
-
-        clean (bool, optional): If True, clean the content by removing specific unwanted characters. Defaults to True.
-
-    Returns:
-        str: The cleaned (if 'clean' is True) or raw content of the text file.
-
-    Example:
-        >>> content = read_text(filepath='example.txt', clean=True)
-    """
 
     with open(filepath, 'r') as f:
         content = f.read()
@@ -65,41 +55,6 @@ def dir_to_files(dir: str, ext: str, recursive: bool = False,
                  to_csv: bool = False, project: str = 'project',
                  output_dir: str = 'data/logs/sources/', filename: Optional[str] = None,
                  verbose: bool = True, timestamp: bool = True, logger: Optional[DataLogger] = None):
-    """
-    Reads and processes files in a specified directory with the given extension.
-
-    Parameters:
-        dir (str): The directory path where files are located.
-
-        ext (str): The file extension to filter by.
-
-        recursive (bool, optional): If True, search files recursively in subdirectories. Defaults to False.
-
-        reader (Callable, optional): Function used to read and process the content of each file. Defaults to read_text.
-
-        clean (bool, optional): If True, cleans the content by removing specified characters. Defaults to True.
-
-        to_csv (bool, optional): If True, export the processed data to a CSV file. Defaults to False.
-
-        project (str, optional): The name of the project. Defaults to 'project'.
-
-        output_dir (str, optional): Directory path for exporting the CSV file. Defaults to 'data/logs/sources/'.
-
-        filename (Optional[str], optional): Name of the CSV file, if not provided, a default will be used. Defaults to None.
-
-        verbose (bool, optional): If True, print a message upon CSV export. Defaults to True.
-
-        timestamp (bool, optional): If True, include a timestamp in the file name. Defaults to True.
-
-        logger (Optional[DataLogger], optional): An instance of DataLogger for logging, if not provided, a new one will be created. Defaults to None.
-
-    Returns:
-        List[Dict[str, Union[str, Path]]]: A list of dictionaries containing file information and content.
-
-    Examples:
-        >>> logs = dir_to_files(dir='my_directory', ext='.txt', to_csv=True)
-    """
-
     sources = dir_to_path(dir, ext, recursive)
 
     def _split_path(path: Path) -> tuple:
@@ -110,6 +65,11 @@ def dir_to_files(dir: str, ext: str, recursive: bool = False,
     def _to_dict(path_: Path) -> Dict[str, Union[str, Path]]:
         folder, file = _split_path(path_)
         content = reader(str(path_), clean=clean)
+        file_ = File()
+        
+        
+        
+        
         return {
             'project': project,
             'folder': folder,
@@ -126,6 +86,27 @@ def dir_to_files(dir: str, ext: str, recursive: bool = False,
         logger.to_csv(dir=output_dir, filename=filename, verbose=verbose, timestamp=timestamp)
 
     return logs
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+    
+
+
+
 
 def chunk_text(input: str, chunk_size: int, overlap: float,
                threshold: int) -> List[Union[str, None]]:
