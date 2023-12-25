@@ -1,0 +1,1 @@
+# represents structured sessions
