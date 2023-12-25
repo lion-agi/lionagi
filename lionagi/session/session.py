@@ -7,9 +7,9 @@ from ..utils.sys_util import to_list, l_call, al_call
 from ..utils.log_util import DataLogger
 from ..utils.api_util import StatusTracker
 from ..utils.tool_util import ToolManager
-from ..api_service.oai_service import OpenAIService
+from ..api_services.oai_service import OpenAIService
 from ..config.oai_config import oai_llmconfig
-from ..endpoints.chat_completion import call_chatcompletion
+from ..api_endpoints.chat_completion import call_chatcompletion
 
 
 status_tracker = StatusTracker()

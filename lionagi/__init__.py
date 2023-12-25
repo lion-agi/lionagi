@@ -18,7 +18,7 @@ import logging
 from .version import __version__
 from .session import *
 from .utils import *
-from .api_service import *
+from .api_services import *
 
 
 logger = logging.getLogger(__name__)
