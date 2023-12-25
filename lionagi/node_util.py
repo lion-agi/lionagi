@@ -1,9 +1,8 @@
 import json
-from typing import Any, Dict, Optional, List, Union
-from uuid import uuid4
-import networkx as nx
-from pydantic import BaseModel, Field
+from typing import Any, Dict, Union
+from .sys_util import create_id
 
+from pydantic import BaseModel, Field
 
 class BaseNode(BaseModel):
     """
@@ -18,7 +17,7 @@ class BaseNode(BaseModel):
         content (Union[str, Dict[str, Any], None]): Content of the node.
         metadata (Dict[str, Any]): Additional metadata about the node.
     """
-    id_: str = Field(default_factory=lambda: str(uuid4()), alias="node_id")
+    id_: str = Field(default_factory=lambda: str(create_id()), alias="node_id")
     content: Union[str, Dict[str, Any], None] = None
     metadata: Dict[str, Any] = Field(default_factory=dict)
 

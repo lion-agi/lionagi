@@ -1,4 +1,4 @@
-from ..chunks.util import DataNode
+from ..node_util import DataNode
 
 class File(DataNode):
     """

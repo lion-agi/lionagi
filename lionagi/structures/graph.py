@@ -1,6 +1,6 @@
 import json
 import networkx as nx
-from .relationships import ConditionalRelationship
+from ..relationships.relationships import ConditionalRelationship
 from ..nodes.base_node import BaseNode
 
 

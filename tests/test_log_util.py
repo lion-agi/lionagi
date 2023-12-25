@@ -10,7 +10,7 @@ desired_root_dir = os.path.dirname(current_dir)
 
 # Add the desired root directory to sys.path
 sys.path.append(desired_root_dir)
-from lionagi.utils.log_util import DataLogger
+from lionagi.log_util import DataLogger
 from unittest.mock import patch
 import os
 import csv

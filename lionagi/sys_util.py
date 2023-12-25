@@ -24,6 +24,7 @@ import tempfile
 import time
 import hashlib
 from datetime import datetime
+from pathlib import Path
 from collections.abc import Generator, Iterable, MutableMapping
 from typing import Any, Callable, Dict, List, Optional, Union
 
@@ -763,4 +764,49 @@ def create_path(dir: str, filename: str, timestamp: bool = True, dir_exist_ok: b
         return f"{dir}{timestamp}_{filename}.{ext}" if time_prefix else f"{dir}{filename}_{timestamp}.{ext}"
     else:
         return f"{dir}{filename}"
+
+def dir_to_path(dir: str, ext, recursive: bool = False, flat: bool = True):
+
+    def _dir_to_path(ext, recursive=recursive):
+        tem = '**/*' if recursive else '*'
+        return list(Path(dir).glob(tem + ext))
+
+    try: 
+        return to_list(l_call(ext, _dir_to_path, flat=True), flat=flat)
+    except: 
+        raise ValueError("Invalid directory or extension, please check the path")
     
+
+def get_bins(input: List[str], upper: int = 7500) -> List[List[int]]:
+    """
+    Get index of elements in a list based on their consecutive cumulative sum of length,
+    according to some upper threshold. Return lists of indices as bins.
+    
+    Parameters:
+        input (List[str]): List of items to be binned.
+
+        upper (int, optional): Upper threshold for the cumulative sum of the length of items in a bin. Default is 7500.
+    
+    Returns:
+        List[List[int]]: List of lists, where each inner list contains the indices of the items that form a bin.
+    
+    Example:
+        >>> items = ['apple', 'a', 'b', 'banana', 'cheery', 'c', 'd', 'e']
+        >>> upper = 10
+        >>> get_bins(items, upper)
+        [[0, 1, 2], [3], [4, 5, 6, 7]]
+    """
+    current = 0
+    bins = []
+    bin = []
+    for idx, item in enumerate(input):
+        if current + len(item) < upper:
+            bin.append(idx)
+            current += len(item)
+        elif current + len(item) >= upper:
+            bins.append(bin)
+            bin = [idx]
+            current = len(item)
+        if idx == len(input) - 1 and len(bin) > 0:
+            bins.append(bin)
+    return bins

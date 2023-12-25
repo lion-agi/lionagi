@@ -1,4 +1,4 @@
-from .util import DataNode
+from ..node_util import DataNode
 
 class Chunk(DataNode):
     """
