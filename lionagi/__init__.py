@@ -20,9 +20,9 @@ from .api_services import *
 from .api_endpoints import *
 from .configs import *
 from .conversations import *
-from .entities import *
+from .chunks import *
 from .flows import *
-from .local_services import *
+from .services import *
 from .messages import *
 from .sessions import *
 from .structures import *
