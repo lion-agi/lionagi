@@ -1,1 +1,1 @@
-# TODO
+# represents structured sessions

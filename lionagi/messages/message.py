@@ -1,3 +1,5 @@
+# represent a single data node with a role 
+
 from datetime import datetime
 import json
 from ..sys_util import create_id, l_call

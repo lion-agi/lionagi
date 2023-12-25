@@ -1,3 +1,5 @@
+# represents a conversation
+
 from ..messages.message import Message
 
 

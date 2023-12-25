@@ -1,3 +1,6 @@
+# represent a chunk of fildata 
+
+
 from ..node_util import DataNode
 
 class Chunk(DataNode):

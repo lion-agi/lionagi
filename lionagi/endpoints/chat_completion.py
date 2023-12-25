@@ -7,7 +7,6 @@ class ChatCompletion(BaseEndpoint):
     
     endpoint = "chat/completions"
     
-    
     def create_payload(self, messages=None, llmconfig=None,  **kwargs):
         config = {**llmconfig, **kwargs}
         payload = {
@@ -37,7 +36,6 @@ class ChatCompletion(BaseEndpoint):
             session.status_tracker.num_tasks_succeeded += 1
         else:
             session.status_tracker.num_tasks_failed += 1
-            
             
     def handle_error(self, error):
         print(f'An error occurred: {error}')

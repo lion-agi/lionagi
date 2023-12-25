@@ -233,7 +233,7 @@ def str_to_num(input: str,
     except ValueError as e:
         raise ValueError(f"Error converting string to number: {e}")
 
-def make_copy(input: Any, n: int) -> Any:
+def create_copy(input: Any, n: int) -> Any:
     """
     Creates a deep copy of the input object a specified number of times.
 
@@ -653,7 +653,7 @@ def e_call(input: Any,
         [[1], [4], [9]]
     """
 
-    _f = lambda x, y: m_call(make_copy(x, len(to_list(y))), y, 
+    _f = lambda x, y: m_call(create_copy(x, len(to_list(y))), y, 
                             flatten_dict=flatten_dict, flat=flat, dropna=dropna)
     return to_list([_f(inp, func) for inp in to_list(input)], flat=flat)
 
@@ -687,7 +687,7 @@ async def ae_call(input_: Any,
         [[1, 4, 9]]
     """
     async def _async_f(x, y):
-        return await am_call(make_copy(x, len(to_list(y))), y, flatten_dict=flatten_dict, flat=flat, dropna=dropna)
+        return await am_call(create_copy(x, len(to_list(y))), y, flatten_dict=flatten_dict, flat=flat, dropna=dropna)
 
     tasks = [_async_f(inp, func_) for inp in to_list(input_)]
     return await asyncio.gather(*tasks)

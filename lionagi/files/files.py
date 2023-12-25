@@ -1,3 +1,5 @@
+# represent a data file 
+
 from ..node_util import DataNode
 
 class File(DataNode):
