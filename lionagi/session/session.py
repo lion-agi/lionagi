@@ -2,7 +2,7 @@ import os
 import json
 from typing import Any
 
-from .conversation import Conversation
+from ..conversations.conversation import Conversation
 from ..utils.sys_util import to_list, l_call, al_call
 from ..utils.log_util import DataLogger
 from ..utils.api_util import StatusTracker

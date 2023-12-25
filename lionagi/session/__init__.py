@@ -1,5 +1,5 @@
-from .message import Message
-from .conversation import Conversation
+from ..messages.message import Message
+from ..conversations.conversation import Conversation
 from .session import Session
 
 __all__ = [
