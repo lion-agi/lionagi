@@ -120,6 +120,14 @@ class DataNode(BaseNode):
         ...
 
 
+class MessageNode(BaseNode):
+    role: str
+    name: str
+    
+    def from_oai(self):
+        ...
+
+
 class File(DataNode):
     """
     Represents a data node.

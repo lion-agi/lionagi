@@ -18,11 +18,11 @@ import logging
 from .version import __version__
 
 from .core import *
-from .datastore import *
+# from .datastore import *
 from .endpoint import *
 from .loader import *
 from .service import *
-from .structure import *
+# from .structure import *
 
 
 

@@ -1,6 +1,6 @@
 from .messages.message import Message
 from .conversations.conversation import Conversation
-from .sessions.session import Session
+from .sessions import Session
 # from .flows.flow import Flow
 
 
