@@ -76,44 +76,93 @@ def query_lionagi_codebase(str_or_query_bundle, optional_param="default"):
     return f"Querying with: {str_or_query_bundle}"
 
 # Accessing the generated schema
-print(query_lionagi_codebase.tool_schema)
+# print(query_lionagi_codebase.tool_schema)
 
-{
-    "type": "function",
-    "function": {
-        "name": "query_lionagi_codebase",
-        "description": "Perform a query to a QA bot with access to a vector index built with package lionagi codebase.",
-        "parameters": {
-            "type": "object",
-            "properties": {
-                "str_or_query_bundle": {
-                    "type": "string",
-                    "description": "Parameter str_or_query_bundle"
-                },
-                "optional_param": {
-                    "type": "string",
-                    "description": "Parameter optional_param"
-                }
-            },
-            "required": ["str_or_query_bundle"]
-        }
-    }
-}
+# {
+#     "type": "function",
+#     "function": {
+#         "name": "query_lionagi_codebase",
+#         "description": "Perform a query to a QA bot with access to a vector index built with package lionagi codebase.",
+#         "parameters": {
+#             "type": "object",
+#             "properties": {
+#                 "str_or_query_bundle": {
+#                     "type": "string",
+#                     "description": "Parameter str_or_query_bundle"
+#                 },
+#                 "optional_param": {
+#                     "type": "string",
+#                     "description": "Parameter optional_param"
+#                 }
+#             },
+#             "required": ["str_or_query_bundle"]
+#         }
+#     }
+# }
+
+
+
+
+
+
+class BaseFuncTool(BaseTool):
+    def __init__(self, func):
+        self.func = func
+
+    def initialize(self, *args, **kwargs):
+        pass
+
+    def execute(self, *args, **kwargs):
+        return self.func(*args, **kwargs)
+
+    def shutdown(self):
+        pass
+
+
+
+
 
 
 import asyncio
 import logging
+from typing import Union, Callable
 
 class ToolManager:
     def __init__(self):
+        self.logger = logging.getLogger("ToolManager")
         self.registry = {}
 
-    def register_tools(self, tools):
-        for name, tool_obj in tools.items():
+    def register_tools(self, tools: list, funcs: list, tool_parsers: Union[list, dict, Callable, None] = None):
+        # for name, tool_obj in tools.items():
+        #     if not isinstance(tool_obj, BaseTool):
+        #         raise TypeError(f"Tool {name} must be an instance of BaseTool")
+        #     self.registry[name] = tool_obj
+        #     self.logger.info(f"Registered tool: {name}")
+        if len(tools) != len(funcs):
+            raise ValueError("Number of tools must match the number of funcs.")
+        for name, tool_obj in zip(tools, funcs):
             if not isinstance(tool_obj, BaseTool):
                 raise TypeError(f"Tool {name} must be an instance of BaseTool")
-            self.registry[name] = tool_obj
+            self.registry[name] = {'func': tool_obj}
             self.logger.info(f"Registered tool: {name}")
+
+        if tool_parsers is not None:
+            if isinstance(tool_parsers, list):
+                if len(tool_parsers) != len(funcs):
+                    raise ValueError("Length of tool_parser list must match the number of tools.")
+                for name, parser in zip(tools, tool_parsers):
+                    self.registry[name]['tool_parser'] = parser
+                    self.logger.info(f"Registered tool parser list item: {name}")
+            if isinstance(tool_parsers, dict):
+                for name, parser in tool_parsers.items():
+                    if name not in self.registry.keys():
+                        raise ValueError(f"Unmatched tool parser: {name}")
+                    self.registry[name]['tool_parser'] = parser
+                    self.logger.info(f"Registered tool parser dict item: {name}")
+            if isinstance(tool_parsers, Callable):
+                for name in self.registry:
+                    self.registry[name]['tool_parser'] = tool_parsers
+                    self.logger.info(f"Registered tool parser function: {name}")
 
     def activate_tool(self, tool_name):
         if tool_name in self.registry:
@@ -127,13 +176,13 @@ class ToolManager:
         if tool_name in self.registry:
             tool = self.registry[tool_name]
             tool.shutdown()
-            self.logger.info(f"Deactivated tool: {tool_name}")
+            # self.logger.info(f"Deactivated tool: {tool_name}")
         else:
             raise KeyError(f"Tool {tool_name} not registered")
 
     def invoke(self, tool_name, *args, **kwargs):
         if tool_name in self.registry:
-            tool = self.registry[tool_name]
+            tool = self.registry[tool_name]['func']
             try:
                 return tool.execute(*args, **kwargs)
             except Exception as e:
@@ -144,7 +193,7 @@ class ToolManager:
 
     async def ainvoke(self, tool_name, *args, **kwargs):
         if tool_name in self.registry:
-            tool = self.registry[tool_name]
+            tool = self.registry[tool_name]['func']
             try:
                 if asyncio.iscoroutinefunction(tool.execute):
                     # Asynchronous execution
