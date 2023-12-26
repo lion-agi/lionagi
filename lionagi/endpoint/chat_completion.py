@@ -41,37 +41,38 @@ class ChatCompletion(BaseEndpoint):
         print(f'An error occurred: {error}')
         # Include more sophisticated error handling as needed
 
-    async def call_api(self, session, **kwargs):
-        payload = self.create_payload(**kwargs)
-        try:
-            async with session.post(self.endpoint, json=payload) as resp:
-                if resp.status == 200:
-                    response_data = await resp.json()
-                    return self.process_response(response_data)
-                else:
-                    # Log the error or pass it to an error handler
-                    self.handle_error(f'API returned {resp.status} status code')
-        except Exception as e:
-            self.handle_error(e)
+# need work
+    # async def call_api(self, session, **kwargs):
+    #     payload = self.create_payload(**kwargs)
+    #     try:
+    #         async with session.post(self.endpoint, json=payload) as resp:
+    #             if resp.status == 200:
+    #                 response_data = await resp.json()
+    #                 return self.process_response(response_data)
+    #             else:
+    #                 # Log the error or pass it to an error handler
+    #                 self.handle_error(f'API returned {resp.status} status code')
+    #     except Exception as e:
+    #         self.handle_error(e)
 
 
 
 
-    async def call_api(self, sleep=0.1,**kwargs):
-        """
-        Make a call to the chat completion API and process the response.
+    # async def call_api(self, sleep=0.1,**kwargs):
+    #     """
+    #     Make a call to the chat completion API and process the response.
 
-        Parameters:
-            sleep (float): The sleep duration after making the API call. Default is 0.1.
+    #     Parameters:
+    #         sleep (float): The sleep duration after making the API call. Default is 0.1.
 
-            **kwargs: Additional keyword arguments for configuration.
-        """
+    #         **kwargs: Additional keyword arguments for configuration.
+    #     """
         
-        try:
-            async with aiohttp.ClientSession() as session:
-                payload = self.create_payload(**kwargs)
-                completion = await api_service.call_api(, self.endpoint, payload)
+    #     try:
+    #         async with aiohttp.ClientSession() as session:
+    #             payload = self.create_payload(**kwargs)
+    #             completion = await api_service.call_api(, self.endpoint, payload)
 
-        except Exception as e:
-            session.status_tracker.num_tasks_failed += 1
-            raise e
+    #     except Exception as e:
+    #         session.status_tracker.num_tasks_failed += 1
+    #         raise e
