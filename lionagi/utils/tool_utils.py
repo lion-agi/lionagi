@@ -1,19 +1,18 @@
 import json
 import asyncio
-from typing import Callable, Any, Dict, Union, Optional
 from .sys_utils import l_call, str_to_num
-from ..schema import BaseNode, SimpleTool
-
-
+from ..schema import BaseNode
 
 
 class ToolManager(BaseNode):
-    registry : Dict = {}
+    
+    def __init__(self):
+        self.registry = {}
 
-    def _name_existed(self, name):
+    def _name_existed(self, name: str):
         return True if name in self.registry.keys() else False
             
-    def _register_tool(self, tool, name=None, update=False, new=False, prefix=None, postfix=None):
+    def _register_tool(self, tool, name: str=None, update=False, new=False, prefix=None, postfix=None):
         
         if self._name_existed(name):
             if update and new:
