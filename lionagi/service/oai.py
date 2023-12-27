@@ -53,7 +53,7 @@ class OpenAIRateLimiter(RateLimiter):
         calculate_num_token: Calculates the required tokens for a request.
     """
 
-    def __init__(self, max_requests_per_minute: int, max_tokens_per_minute: int) -> None:
+    def __init__(self, max_requests_per_minute: int = 500, max_tokens_per_minute: int = 150_000) -> None:
         """
         Initializes the rate limiter with specific limits for OpenAI API.
 
@@ -61,7 +61,8 @@ class OpenAIRateLimiter(RateLimiter):
             max_requests_per_minute (int): The maximum number of requests allowed per minute.
             max_tokens_per_minute (int): The maximum number of tokens that can accumulate per minute.
         """
-        super().__init__(max_requests_per_minute, max_tokens_per_minute)
+        self.max_requests_perminute=max_requests_per_minute
+        self.max_tokens_per_minute=max_tokens_per_minute
         if not os.getenv('env_readthedocs'):
             self.rate_limit_replenisher_task = asyncio.create_task(self.rate_limit_replenisher())
     

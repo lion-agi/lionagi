@@ -195,30 +195,10 @@ class RateLimiter(ABC):
         calculate_num_token:
             Method to calculate required tokens for a request.
     """
-    
-    def __init__(self, max_requests_per_minute: int, max_tokens_per_minute: int) -> None:
-        """
-        Initializes the RateLimiter with specified maximum request and token limits.
-
-        Parameters:
-            max_requests_per_minute (int): Maximum requests allowed per minute.
-
-            max_tokens_per_minute (int): Maximum tokens allowed to accumulate per minute.
-
-        Example:
-            >>> class MyRateLimiter(RateLimiter):
-            ...     async def rate_limit_replenisher(self) -> NoReturn:
-            ...         # Implementation for rate replenishment.
-            ...     def calculate_num_token(self, payload: Dict[str, Any], api_endpoint: str) -> int:
-            ...         # Implementation for token calculation.
-            ...
-            >>> limiter = MyRateLimiter(100, 200)
-        """
-        self.max_requests_per_minute = max_requests_per_minute
-        self.max_tokens_per_minute = max_tokens_per_minute
-        self.available_request_capacity = max_requests_per_minute
-        self.available_token_capacity = max_tokens_per_minute
-    
+    @abstractmethod
+    def __init__(self) -> None:
+        ...
+        
     @abstractmethod
     async def rate_limit_replenisher(self) -> NoReturn:
         ...
@@ -235,11 +215,7 @@ class BaseService(ABC):
         ...
 
     @abstractmethod
-    async def acall(self) -> Any:     
-        ...
-
-    @abstractmethod
-    def call(self) -> Any:
+    async def serve(self) -> Any:     
         ...
 
     @staticmethod

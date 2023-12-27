@@ -1,7 +1,8 @@
 import asyncio
 import aiohttp
-import 
-def _create_payload_chatcompletion(self, **kwargs):
+
+
+def _create_payload_chatcompletion(self, schema, **kwargs):
     """
     Create a payload for chat completion based on the conversation state and configuration.
 
@@ -14,6 +15,9 @@ def _create_payload_chatcompletion(self, **kwargs):
     # currently only openai chat completions are supported
     messages = self.conversation.messages
     config = {**self.llmconfig, **kwargs}
+    
+    
+    
     payload = {
         "messages": messages,
         "model": config.get('model'),
@@ -56,3 +60,12 @@ async def _call_chatcompletion(self, sleep=0.1,  **kwargs):
     except Exception as e:
         status_tracker.num_tasks_failed += 1
         raise e
+
+endpoint, 
+payload = self._create_payload_chatcompletion(**kwargs)
+response = self.call_api()
+return self.process_response(response)
+
+
+async def call():
+    if 

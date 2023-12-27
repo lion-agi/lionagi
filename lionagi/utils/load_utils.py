@@ -151,8 +151,8 @@ def file_to_chunks(input,
                    filename=None,
                    verbose=True,
                    timestamp=True,
-                   logger=None, **kwags):
-    logs = to_list(l_call(input, chunk_func, **kwags), flat=True)
+                   logger=None, **kwargs):
+    logs = to_list(l_call(input, chunk_func, **kwargs), flat=True)
 
     if to_csv:
         filename = filename if filename else f"{project}_sources.csv"

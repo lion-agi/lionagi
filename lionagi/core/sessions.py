@@ -56,7 +56,7 @@ class Session():
         followup(instruction, system=None, context=None, out=True, name=None, invoke=True, **kwargs) -> Any:
             Continue the conversation with the provided instruction.
 
-        auto_followup(self, instruct, num=3, tool_parser=None, **kwags):
+        auto_followup(self, instruct, num=3, tool_parser=None, **kwargs):
             Automates the follow-up process for a specified number of times or until the session concludes.
 
         create_payload_chatcompletion(**kwargs) -> dict:
@@ -220,7 +220,7 @@ class Session():
 
         return await self._output(invoke, out, tool_parser)
 
-    async def auto_followup(self, instruct, num=3, tool_parser=None, **kwags):
+    async def auto_followup(self, instruct, num=3, tool_parser=None, **kwargs):
         """
         Automates the follow-up process for a specified number of times or until the session concludes.
 
@@ -228,19 +228,19 @@ class Session():
             instruct (dict): The instruction for the follow-up.
             num (int, optional): The number of times to automatically follow up. Defaults to 3.
             tool_parser (callable, optional): A custom tool parser function. Defaults to None.
-            **kwags: Additional keyword arguments passed to the underlying `followup` method.
+            **kwargs: Additional keyword arguments passed to the underlying `followup` method.
 
         """
         cont_ = True
         while num > 0 and cont_ is True:
-            await self.followup(instruct,tool_parser=tool_parser, tool_choice="auto", **kwags)
+            await self.followup(instruct,tool_parser=tool_parser, tool_choice="auto", **kwargs)
             num -= 1
             cont_ = True if self._is_invoked() else False
         if num == 0:
-            await self.followup(instruct, **kwags)
+            await self.followup(instruct, **kwargs)
 
 
-    def messages_to_csv(self, dir=None, filename="_messages.csv", **kwags):
+    def messages_to_csv(self, dir=None, filename="_messages.csv", **kwargs):
         """
         Save conversation messages to a CSV file.
 
@@ -252,9 +252,9 @@ class Session():
         dir = dir or self._logger.dir
         if dir is None:
             raise ValueError("No directory specified.")
-        self.conversation.msg.to_csv(dir=dir, filename=filename, **kwags)
+        self.conversation.msg.to_csv(dir=dir, filename=filename, **kwargs)
         
-    def log_to_csv(self, dir=None, filename="_llmlog.csv", **kwags):
+    def log_to_csv(self, dir=None, filename="_llmlog.csv", **kwargs):
         """
         Save conversation logs to a CSV file.
 
@@ -266,4 +266,5 @@ class Session():
         dir = dir or self._logger.dir
         if dir is None:
             raise ValueError("No directory specified.")
-        self._logger.to_csv(dir=dir, filename=filename, **kwags)
+        self._logger.to_csv(dir=dir, filename=filename, **kwargs)
+        

@@ -12,6 +12,7 @@ class BaseNode(BaseModel):
     id_: str = Field(default_factory=lambda: str(create_id()), alias="node_id")
     content: Union[str, Dict[str, Any], None, int] = None
     metadata: Union[Dict[str, Any], None] = Field(default_factory=dict)
+    label: str = None
 
     @classmethod
     def class_name(cls) -> str:
@@ -63,7 +64,6 @@ class BaseNode(BaseModel):
 class ConditionalRelationship(BaseNode):
     target_node_id: str
     condition: Optional(Dict) = None
-    label: str = None
 
     def condition_existed(self, condition_key):
         if self.condition:
@@ -109,7 +109,7 @@ class DataNode(BaseNode):
 class MessageNode(BaseNode):
     role: str
     name: str
-    
+
     # def from_oai(self):
     #     ...
 
