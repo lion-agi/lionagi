@@ -3,13 +3,13 @@ import json
 from typing import Any
 
 from .conversations import Conversation
-from ..utils import to_list, l_call, al_call
+from ..utils.sys_utils import to_list, l_call, al_call
 from ..schema import DataLogger
-from ..service.utils import StatusTracker
+from ..utils.service_utils import StatusTracker
 from ..service.oai import OpenAIService
 from ..llm_configs import oai_llmconfig
 from ..endpoint.chat_completion import ChatCompletion
-from ..tools.utils import ToolManager
+from ..utils.tool_utils import ToolManager
 
 status_tracker = StatusTracker()
 OAIService = OpenAIService(api_key=os.getenv('OPENAI_API_KEY'))

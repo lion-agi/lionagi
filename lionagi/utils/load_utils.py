@@ -1,9 +1,9 @@
 from pathlib import Path
 from typing import Dict, Any, List, Callable, Optional, Union
 from ..schema import Chunk, DataLogger
-from ..utils import l_call, to_list
-from .reader import read_text
-from .chunker import chunk_text
+from .sys_utils import l_call, to_list
+from ..loader.reader import read_text
+from ..loader.chunker import chunk_text
 
 def split_path(path: Path) -> tuple:
     folder_name = path.parent.name

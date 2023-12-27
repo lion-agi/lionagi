@@ -7,7 +7,7 @@ from typing import Optional, NoReturn, Dict, Any
 
 dotenv.load_dotenv()
 
-from .utils import AsyncQueue, StatusTracker, RateLimiter, BaseAPIService
+from ..utils.service_utils import AsyncQueue, StatusTracker, RateLimiter, BaseAPIService
 
 
 class OpenAIRateLimiter(RateLimiter):
