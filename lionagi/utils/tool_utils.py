@@ -32,10 +32,12 @@ class ToolManager(BaseNode):
                 
     async def invoke(self, name, *args, **kwargs):
         if self._name_existed(name):
-            func = self.registry[name]
+            tool = self.registry[name]
+            func = tool.func
+            parser = tool.parser
             try:
                 if asyncio.iscoroutinefunction(func):
-                    return await func(*args, **kwargs)
+                    return await func(*args, **kwargs) if not parser else parser(func(*args, **kwargs))
                 else:
                     return func(*args, **kwargs)
             except Exception as e:
