@@ -1,8 +1,7 @@
 import aiohttp
-from ..llm_configs import oai_schema
 
 
-def create_payload(self, schema=oai_schema, **kwargs):
+def create_payload(self, schema, **kwargs):
     """
     Create a payload for chat completion based on the conversation state and configuration.
 

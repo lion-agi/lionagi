@@ -1,4 +1,5 @@
 from .endpoint_utils import call_api, create_payload
+from ..llm_configs import oai_llmconfig, oai_schema
 
 
 
@@ -21,8 +22,7 @@ def handle_response(session, payload, completion):
 
 
 
-    endpoint, 
-    payload = self._create_payload_chatcompletion(**kwargs)
+    
     response = self.call_api()
     return self.process_response(response)
 
@@ -30,5 +30,6 @@ def handle_response(session, payload, completion):
 
 
 
-async def serve(session, ):
+async def serve(session, endpoint,**kwargs):
+    payload = create_payload(**kwargs)
     
