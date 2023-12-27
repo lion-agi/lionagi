@@ -1,7 +1,7 @@
 import json
 import networkx as nx
 from collections import deque
-from typing import Any, Dict, Optional, Union
+from typing import Any, Dict, Optional, Union, Callable
 
 from pydantic import BaseModel, Field
 from .utils.sys_utils import create_id, create_path, to_csv
@@ -10,20 +10,22 @@ from .utils.sys_utils import create_id, create_path, to_csv
 # checked --------------------------------------------------------
 class BaseNode(BaseModel):
     id_: str = Field(default_factory=lambda: str(create_id()), alias="node_id")
-    content: Union[str, Dict[str, Any], None, int] = None
+    content: Union[str, Dict[str, Any], None, Any] = None
     metadata: Union[Dict[str, Any], None] = Field(default_factory=dict)
-    label: str = None
+    label: Optional[str] = None
 
     @classmethod
     def class_name(cls) -> str:
         return cls.__name__
 
+    # to some structure
     def to_json(self) -> str:
         return json.dumps(self.model_dump(by_alias=True))
 
     def to_dict(self) -> Dict[str, Any]:
         return self.model_dump(by_alias=True)
 
+    # from some structure
     @classmethod
     def from_json(cls, json_str: str) -> "BaseNode":
         data = json.loads(json_str)
@@ -33,11 +35,11 @@ class BaseNode(BaseModel):
     def from_dict(cls, data: Dict[str, Any]) -> "BaseNode":
         return cls(**data)
 
-    def add_meta(self, replace=True, **kwargs) -> None:
+    def add_meta(self, replace=True, **kwags) -> None:
         if replace:
-            self.metadata.update(**kwargs)
+            self.metadata.update(**kwags)
         else: 
-            for k, v in kwargs.items():
+            for k, v in kwags.items():
                 if k in self.metadata.keys():
                     raise ValueError(f"Key already existed")
                 if k not in self.metadata.keys():
@@ -46,7 +48,7 @@ class BaseNode(BaseModel):
     def set_meta(self, metadata_: dict) -> None:
         self.metadata = metadata_
     
-    def set_content(self, content: Union[str, Dict[str, Any], None]):
+    def set_content(self, content: Union[str, Dict[str, Any], None, Any]):
         self.content = content
 
     def set_id(self, id: str):
@@ -216,10 +218,41 @@ class DataLogger:
             dir (str): The directory to set for saving log files.
         """
         self.dir = dir
+        
+        
+class BaseTool(BaseNode):
+    name: str = None
+    func: Callable = None
+    content: Any = None
+    parser: Callable = None
+    
+    def initialize(self):
+        ...
 
-# checked --------------------------------------------------------
+    def execute(self):
+        ...
+
+    def shutdown(self):
+        ...
+
+    def __enter__(self):
+        self.initialize()
+        return self
+
+    def __exit__(self, exc_type, exc_val, exc_tb):
+        """Clean up after context management."""
+        self.shutdown()
+        if exc_type:
+            self.logger.error(f"Exception in {self.__class__.__name__}: {exc_val}", exc_info=True) 
 
 
+class SimpleTool(BaseTool):
+    
+    def execute(self, **kwargs):
+        return self.func(**kwargs)        
+
+
+# checked ------------------------------------------------------
 class Structure:
     def __init__(self):
         self.graph = nx.DiGraph()
@@ -249,3 +282,4 @@ class Structure:
     def from_json(self, data: str) -> None:
         graph_data = json.loads(data)
         self.graph = nx.node_link_graph(graph_data)
+        
