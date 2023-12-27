@@ -33,11 +33,11 @@ class BaseNode(BaseModel):
     def from_dict(cls, data: Dict[str, Any]) -> "BaseNode":
         return cls(**data)
 
-    def add_meta(self, replace=True, **kwags) -> None:
+    def add_meta(self, replace=True, **kwargs) -> None:
         if replace:
-            self.metadata.update(**kwags)
+            self.metadata.update(**kwargs)
         else: 
-            for k, v in kwags.items():
+            for k, v in kwargs.items():
                 if k in self.metadata.keys():
                     raise ValueError(f"Key already existed")
                 if k not in self.metadata.keys():
@@ -63,7 +63,7 @@ class BaseNode(BaseModel):
 
 class ConditionalRelationship(BaseNode):
     target_node_id: str
-    condition: Optional(Dict) = None
+    condition: Optional[Dict] = None
 
     def condition_existed(self, condition_key):
         if self.condition:
@@ -86,20 +86,20 @@ class ConditionalRelationship(BaseNode):
 class DataNode(BaseNode):
     
     ...
-    # def from_llama(self, data_:, **kwags):
+    # def from_llama(self, data_:, **kwargs):
     #     ...
         
-    # def to_llama(self, **kwags):
+    # def to_llama(self, **kwargs):
     #     # to llama_index textnode
     #     ...
         
-    # def from_langchain(self, data_, **kwags):
+    # def from_langchain(self, data_, **kwargs):
     #     ...
     
-    # def to_langchain(self, **kwags):
+    # def to_langchain(self, **kwargs):
     #     ...
         
-    # def to_csv(self, **kwags):
+    # def to_csv(self, **kwargs):
     #     ...
 
     # def __call__(self, file_=None):
@@ -117,10 +117,10 @@ class MessageNode(BaseNode):
 class File(DataNode):
     ...
     
-    # def from_path(self, path_, reader, clean=True, **kwags):
-    #     self.content = reader(path_=path_, clean=clean, **kwags)
+    # def from_path(self, path_, reader, clean=True, **kwargs):
+    #     self.content = reader(path_=path_, clean=clean, **kwargs)
     
-    # def to_chunks(self, chunker, **kwags):
+    # def to_chunks(self, chunker, **kwargs):
     #     ...
 
 
