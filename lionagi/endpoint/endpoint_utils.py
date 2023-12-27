@@ -1,39 +1,36 @@
-import aiohttp
+from abc import ABC, abstractmethod
 
-
-def create_payload(self, schema, **kwargs):
+class RateLimiter(ABC):
     """
-    Create a payload for chat completion based on the conversation state and configuration.
+    An abstract base class for rate limiting mechanisms.
 
-    Parameters:
-        kwargs: Additional keyword arguments for configuration.
+    This class defines a structure for rate limiters, which are used to control the frequency
+    of requests sent to or received from a network interface controller or an API.
 
-    Returns:
-        dict: The payload for chat completion.
+    Attributes:
+        max_requests_per_minute (int):
+            Maximum number of requests permitted per minute.
+        max_tokens_per_minute (int):
+            Maximum number of tokens that can accumulate per minute.
+        available_request_capacity (int):
+            Current number of available request slots.
+        available_token_capacity (int):
+            Current number of available tokens.
+
+    Methods:
+        rate_limit_replenisher:
+            Coroutine to replenish rate limits over time.
+        calculate_num_token:
+            Method to calculate required tokens for a request.
     """
-    # currently only openai chat completions are supported
-    messages = self.conversation.messages
-    config = {**self.llmconfig, **kwargs}
+    @abstractmethod
+    def __init__(self) -> None:
+        ...
+        
+    @abstractmethod
+    async def rate_limit_replenisher(self) -> NoReturn:
+        ...
     
-    payload = {"messages": messages}
-    for key in schema['required']:
-        payload.update({key: config[key]})
-
-    for key in schema['optional']:
-        if bool(config[key]) is True and str(config[key]).lower() != "none":
-            payload.update({key: config[key]})
-    return payload
-
-async def call_api(payload, service, endpoint="chat/completions"):
-    """
-    Make a call to the chat completion API and process the response.
-
-    Parameters:
-        sleep (float): The sleep duration after making the API call. Default is 0.1.
-        kwargs: Additional keyword arguments for configuration.
-    """
-
-    async with aiohttp.ClientSession() as session:
-        completion = await service.call_api(session, endpoint, payload)
-        return completion
-    
+    @abstractmethod
+    def calculate_num_token(self, payload: Dict[str, Any], api_endpoint: str) -> int:
+        ...

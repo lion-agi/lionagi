@@ -2,6 +2,7 @@ import asyncio
 import re
 from abc import ABC, abstractmethod
 from dataclasses import dataclass
+import aiohttp
 from typing import Any, Callable, Dict, Generator, NoReturn
 
 # should be fine ------------------------------------------------------------------
@@ -258,3 +259,11 @@ class BaseService(ABC):
         while True:
             yield task_id
             task_id += 1
+
+
+
+async def call_api(payload, service, endpoint="chat/completions"):
+    async with aiohttp.ClientSession() as session:
+        completion = await service.call_api(session, endpoint, payload)
+        return completion
+
