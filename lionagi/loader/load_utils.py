@@ -2,7 +2,7 @@ import math
 from pathlib import Path
 from typing import Any, Dict, List, Union, Callable, Optional
 
-from .sys_utils import to_list, l_call, hold_call
+from ..utils.sys_utils import to_list, l_call, hold_call
 from ..schema import DataLogger
 
 # should be fine ------------------------------------------------------------------
