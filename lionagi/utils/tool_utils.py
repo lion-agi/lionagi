@@ -1,13 +1,12 @@
 import json
 import asyncio
+from typing import Dict
 from .sys_utils import l_call, str_to_num
 from ..schema import BaseNode
 
 
 class ToolManager(BaseNode):
-    
-    def __init__(self):
-        self.registry = {}
+    registry : Dict = {}
 
     def _name_existed(self, name: str):
         return True if name in self.registry.keys() else False
