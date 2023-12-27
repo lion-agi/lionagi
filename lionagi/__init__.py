@@ -18,13 +18,12 @@ import logging
 from .version import __version__
 
 from .utils import *
-from .core import *
-# from .datastore import *
 from .endpoint import *
 from .loader import *
 from .service import *
+from .core import *
+# from .datastore import *
 # from .structure import *
-
 
 
 logger = logging.getLogger(__name__)

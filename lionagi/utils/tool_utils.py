@@ -1,252 +1,195 @@
-from abc import ABC, abstractmethod
-
-class BaseTool(ABC):
-
-    @abstractmethod
-    def initialize(self, *args, **kwargs):
-        """Initialize the tool with necessary parameters."""
-        pass
-
-    @abstractmethod
-    def execute(self, *args, **kwargs):
-        """Execute the main functionality of the tool."""
-        pass
-
-    @abstractmethod
-    def shutdown(self):
-        """Perform any cleanup necessary and shut down the tool."""
-        pass
-
-    def __enter__(self):
-        """Prepare the tool for context management."""
-        self.initialize()
-        return self
-
-    def __exit__(self, exc_type, exc_val, exc_tb):
-        """Clean up after context management."""
-        self.shutdown()
-        if exc_type:
-            self.logger.error(f"Exception in {self.__class__.__name__}: {exc_val}", exc_info=True)
-
-import inspect
-import functools
-
-def openai_tool_schema_decorator(required_params=None):
-    def decorator(func):
-        @functools.wraps(func)
-        def wrapper(*args, **kwargs):
-            return func(*args, **kwargs)
-
-        function_name = func.__name__
-        function_description = func.__doc__ or "No description provided."
-
-        params = inspect.signature(func).parameters
-        parameters = {}
-        for name, param in params.items():
-            if name == 'self':
-                continue
-            parameters[name] = {
-                "type": "string",  # Simplified for the example
-                "description": f"Parameter {name}"
-            }
-
-        tool_schema = {
-            "type": "function",
-            "function": {
-                "name": function_name,
-                "description": function_description,
-                "parameters": {
-                    "type": "object",
-                    "properties": parameters,
-                    "required": required_params or list(parameters.keys())
-                },
-            }
-        }
-
-        wrapper.tool_schema = tool_schema
-        return wrapper
-    return decorator
-
-@openai_tool_schema_decorator(required_params=["str_or_query_bundle"])
-def query_lionagi_codebase(str_or_query_bundle, optional_param="default"):
-    """
-    Perform a query to a QA bot with access to a vector index 
-    built with package lionagi codebase.
-    """
-    return f"Querying with: {str_or_query_bundle}"
-
-# Accessing the generated schema
-# print(query_lionagi_codebase.tool_schema)
-
-# {
-#     "type": "function",
-#     "function": {
-#         "name": "query_lionagi_codebase",
-#         "description": "Perform a query to a QA bot with access to a vector index built with package lionagi codebase.",
-#         "parameters": {
-#             "type": "object",
-#             "properties": {
-#                 "str_or_query_bundle": {
-#                     "type": "string",
-#                     "description": "Parameter str_or_query_bundle"
-#                 },
-#                 "optional_param": {
-#                     "type": "string",
-#                     "description": "Parameter optional_param"
-#                 }
-#             },
-#             "required": ["str_or_query_bundle"]
-#         }
-#     }
-# }
-
-
-
-
-
-
-class BaseFuncTool(BaseTool):
-    def __init__(self, func):
-        self.func = func
-
-    def initialize(self, *args, **kwargs):
-        pass
-
-    def execute(self, *args, **kwargs):
-        return self.func(*args, **kwargs)
-
-    def shutdown(self):
-        pass
-
-
-
-
-
-
+import json
 import asyncio
-import logging
-from typing import Union, Callable
+from .sys_utils import l_call
+    
 
 class ToolManager:
+    """
+    A manager class for handling and invoking registered tools and functions.
+
+    This class allows the registration of tools and functions, enabling their invocation.
+
+    Attributes:
+        registry (dict): A dictionary storing the registered tools and their corresponding functions.
+
+    Methods:
+        _to_dict(name, function, content=None) -> dict:
+            Convert tool information to a dictionary entry.
+
+        _name_existed(name) -> bool:
+            Check if a given name exists in the registry.
+
+        _register_function(name, function, content=None, update=False, new=False, prefix=None, postfix=None) -> None:
+            Register a function with a specified name in the registry.
+
+        invoke(name, args) -> Any:
+            Invoke a registered function with the provided arguments.
+
+        ainvoke(name, args) -> Any:
+            Asynchronously invoke a registered function with the provided arguments.
+
+        _get_function_call(response) -> Tuple[str, dict]:
+            Extract function name and arguments from a response JSON.
+
+        _from_tool(tool, func) -> Tuple[str, callable, list]:
+            Convert tool information to function registration parameters.
+
+        register_tools(tools, functions, update=False, new=False, prefix=None, postfix=None) -> None:
+            Register multiple tools and their corresponding functions.
+    """
     def __init__(self):
-        self.logger = logging.getLogger("ToolManager")
+        """
+        Initialize a ToolManager object with an empty registry.
+        """
         self.registry = {}
+        
+    @staticmethod
+    def _to_dict(name, func, content=None):
+        """
+        Convert tool information to a dictionary entry.
 
-    def register_tools(self, tools: list, funcs: list, tool_parsers: Union[list, dict, Callable, None] = None):
-        # for name, tool_obj in tools.items():
-        #     if not isinstance(tool_obj, BaseTool):
-        #         raise TypeError(f"Tool {name} must be an instance of BaseTool")
-        #     self.registry[name] = tool_obj
-        #     self.logger.info(f"Registered tool: {name}")
-        if len(tools) != len(funcs):
-            raise ValueError("Number of tools must match the number of funcs.")
-        for name, tool_obj in zip(tools, funcs):
-            if not isinstance(tool_obj, BaseTool):
-                raise TypeError(f"Tool {name} must be an instance of BaseTool")
-            self.registry[name] = {'func': tool_obj}
-            self.logger.info(f"Registered tool: {name}")
+        Parameters:
+            name (str): The name of the tool.
+            function (callable): The function associated with the tool.
+            content (Optional[str]): Additional content for the tool.
 
-        if tool_parsers is not None:
-            if isinstance(tool_parsers, list):
-                if len(tool_parsers) != len(funcs):
-                    raise ValueError("Length of tool_parser list must match the number of tools.")
-                for name, parser in zip(tools, tool_parsers):
-                    self.registry[name]['tool_parser'] = parser
-                    self.logger.info(f"Registered tool parser list item: {name}")
-            if isinstance(tool_parsers, dict):
-                for name, parser in tool_parsers.items():
-                    if name not in self.registry.keys():
-                        raise ValueError(f"Unmatched tool parser: {name}")
-                    self.registry[name]['tool_parser'] = parser
-                    self.logger.info(f"Registered tool parser dict item: {name}")
-            if isinstance(tool_parsers, Callable):
-                for name in self.registry:
-                    self.registry[name]['tool_parser'] = tool_parsers
-                    self.logger.info(f"Registered tool parser function: {name}")
+        Returns:
+            dict: A dictionary entry representing the tool.
+        """
+        return {name: {"function": func, "content": content or "none"}}
 
-    def activate_tool(self, tool_name):
-        if tool_name in self.registry:
-            tool = self.registry[tool_name]
-            tool.initialize()
-            self.logger.info(f"Activated tool: {tool_name}")
-        else:
-            raise KeyError(f"Tool {tool_name} not registered")
+    def _name_existed(self, name):
+        """
+        Check if a given name exists in the registry.
 
-    def deactivate_tool(self, tool_name):
-        if tool_name in self.registry:
-            tool = self.registry[tool_name]
-            tool.shutdown()
-            # self.logger.info(f"Deactivated tool: {tool_name}")
-        else:
-            raise KeyError(f"Tool {tool_name} not registered")
+        Parameters:
+            name (str): The name to check.
 
-    def invoke(self, tool_name, *args, **kwargs):
-        if tool_name in self.registry:
-            tool = self.registry[tool_name]['func']
+        Returns:
+            bool: True if the name exists in the registry, False otherwise.
+
+        """
+        return True if name in self.registry.keys() else False
+            
+    def _register_function(self, name, func, content=None, update=False, new=False, prefix=None, postfix=None):
+        """
+        Register a function with a specified name in the registry.
+
+        Parameters:
+            name (str): The name of the function.
+            function (callable): The function to register.
+            content (Optional[str]): Additional content for the function.
+            update (bool): Whether to update an existing function with the same name.
+            new (bool): Whether to create a new registry for an existing function.
+            prefix (Optional[str]): A prefix to add to the function name.
+            postfix (Optional[str]): A postfix to add to the function name.
+
+        """
+        if self._name_existed(name):
+            if update and new:
+                raise ValueError(f"Cannot both update and create new registry for existing function {name} at the same time")
+            
+        name = f"{prefix or ''}{name}{postfix or '1'}" if new else name                
+        self.registry.update(self._to_dict(name, func, content)) 
+                
+    def invoke(self, name, kwargs):
+        """
+        Invoke a registered function with the provided arguments.
+
+        Parameters:
+            name (str): The name of the function to invoke.
+            kwargs (dict): The arguments to pass to the function.
+
+        Returns:
+            Any: The result of invoking the function.
+        """
+        if self._name_existed(name):
             try:
-                return tool.execute(*args, **kwargs)
+                return self.registry[name](**kwargs)
             except Exception as e:
-                self.logger.error(f"Error executing tool {tool_name}: {e}", exc_info=True)
-                raise
-        else:
-            raise KeyError(f"Tool {tool_name} not registered")
+                raise ValueError(f"Error when invoking function {name} with arguments {kwargs} with error message {e}")
+        else: 
+            raise ValueError(f"Function {name} is not registered.")
+    
+    async def ainvoke(self, name, kwargs):
+        """
+        Asynchronously invoke a registered function with the provided arguments.
 
-    async def ainvoke(self, tool_name, *args, **kwargs):
-        if tool_name in self.registry:
-            tool = self.registry[tool_name]['func']
+        Parameters:
+            name (str): The name of the function to invoke.
+            kwargs (dict): The arguments to pass to the function.
+
+        Returns:
+            Any: The result of invoking the function asynchronously.
+
+        """
+        if self._name_existed(name):
+            func = self.registry[name]["function"]
             try:
-                if asyncio.iscoroutinefunction(tool.execute):
-                    # Asynchronous execution
-                    return await tool.execute(*args, **kwargs)
+                if asyncio.iscoroutinefunction(func):
+                    return await func(**kwargs)
                 else:
-                    # Synchronous execution, but within an async context
-                    return await asyncio.to_thread(tool.execute, *args, **kwargs)
+                    return func(**kwargs)
             except Exception as e:
-                self.logger.error(f"Error executing tool {tool_name} asynchronously: {e}", exc_info=True)
-                raise
-        else:
-            raise KeyError(f"Tool {tool_name} not registered")
+                raise ValueError(f"Error when invoking function {name} with arguments {kwargs} with error message {e}")
+        else: 
+            raise ValueError(f"Function {name} is not registered.")
+    
+    @staticmethod
+    def _get_function_call(response):
+        """
+        Extract function name and arguments from a response JSON.
 
+        Parameters:
+            response (str): The JSON response containing function information.
 
+        Returns:
+            Tuple[str, dict]: The function name and its arguments.
+        """
+        try: 
+            out = json.loads(response)
+            func = out['function'][5:]
+            args = json.loads(out['arguments'])
+            return (func, args)
+        except:
+            try:
+                out = json.loads(response)
+                out = out['tool_uses'][0]
+                func = out['recipient_name'].split('.')[-1]
+                args = out['parameters']
+                return (func, args)
+            except:
+                raise ValueError('response is not a valid function call')
+    
+    @staticmethod
+    def _from_tool(tool, func):
+        """
+        Convert tool information to function registration parameters.
 
-"""
-# ToolManager class with integrated logging
-class ToolManager:
-    def __init__(self):
-        self.logger = BaseLogger.get_logger("ToolManager")
-        self.registry = {}
+        Parameters:
+            tool (dict): The tool information.
+            func (callable): The function associated with the tool.
 
-    def register_tool(self, name, tool):
-        if not isinstance(tool, BaseTool):
-            raise ValueError("Invalid tool type. Must be a subclass of BaseTool.")
-        self.registry[name] = tool
-        self.logger.info(f"Tool registered: {name}")
+        Returns:
+            Tuple[str, callable, list]: The function name, the function, and the list of function parameters.
 
-    def execute_tool(self, name, *args, **kwargs):
-        if name not in self.registry:
-            self.logger.error(f"Tool {name} not found.")
-            raise ValueError(f"Tool {name} not found.")
-        tool = self.registry[name]
-        self.logger.info(f"Executing tool: {name}")
-        return tool.execute(*args, **kwargs)
+        """
+        return (tool['function']['name'], func, 
+                tool['function']['parameters']['properties'].keys())
+        
+    def register_tools(self, tools, functions, update=False, new=False, prefix=None, postfix=None):
+        """
+        Register multiple tools and their corresponding functions.
 
-# Example tool implementation
-class MultiplyTool(BaseTool):
-    def initialize(self):
-        self.logger.info("MultiplyTool initialized")
+        Parameters:
+            tools (list): The list of tool information dictionaries.
+            functions (list): The list of corresponding functions.
+            update (bool): Whether to update existing functions.
+            new (bool): Whether to create new registries for existing functions.
+            prefix (Optional[str]): A prefix to add to the function names.
+            postfix (Optional[str]): A postfix to add to the function names.
 
-    def execute(self, x, y):
-        self.logger.info(f"Multiplying {x} and {y}")
-        return x * y
-
-    def shutdown(self):
-        self.logger.info("MultiplyTool shutdown")
-
-# Example usage
-tool_manager = ToolManager()
-multiply_tool = MultiplyTool()
-tool_manager.register_tool("multiplier", multiply_tool)
-result = tool_manager.execute_tool("multiplier", 3, 4)
-print(f"Result: {result}")
-
-"""
+        """
+        funcs = l_call(range(len(tools)), lambda i: self._from_tool(tools[i], functions[i]))
+        l_call(range(len(tools)), lambda i: self._register_function(funcs[i][0], funcs[i][1], update=update, new=new, prefix=prefix, postfix=postfix))
+        
