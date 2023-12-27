@@ -5,36 +5,22 @@ from typing import Any, Dict, Optional, Union
 from .utils.sys_utils import create_id, create_path, to_csv
 from pydantic import BaseModel, Field
 
+# checked --------------------------------------------------------
 class BaseNode(BaseModel):
-    """
-    Represents the base structure of a graph node.
-
-    Args:
-        BaseModel (pydantic.BaseModel): Pydantic BaseModel class for data validation.
-
-    Attributes:
-        id_ (str): Unique node identifier, auto-generated using uuid4().
-        label (Optional[str]): Optional label for the node.
-        content (Union[str, Dict[str, Any], None]): Content of the node.
-        metadata (Dict[str, Any]): Additional metadata about the node.
-    """
     id_: str = Field(default_factory=lambda: str(create_id()), alias="node_id")
-    label: str = None
-    content: Union[str, Dict[str, Any], None] = None
-    metadata: Dict[str, Any] = Field(default_factory=dict)
+    content: Union[str, Dict[str, Any], None, int] = None
+    metadata: Union[Dict[str, Any], None] = Field(default_factory=dict)
 
     @classmethod
     def class_name(cls) -> str:
         return cls.__name__
 
-    # to some structure
     def to_json(self) -> str:
         return json.dumps(self.model_dump(by_alias=True))
 
     def to_dict(self) -> Dict[str, Any]:
         return self.model_dump(by_alias=True)
 
-    # from some structure
     @classmethod
     def from_json(cls, json_str: str) -> "BaseNode":
         data = json.loads(json_str)
@@ -49,10 +35,12 @@ class BaseNode(BaseModel):
             self.metadata.update(**kwags)
         else: 
             for k, v in kwags.items():
+                if k in self.metadata.keys():
+                    raise ValueError(f"Key already existed")
                 if k not in self.metadata.keys():
                     self.metadata.update({k:v})
     
-    def set_meta(self, metadata_) -> None:
+    def set_meta(self, metadata_: dict) -> None:
         self.metadata = metadata_
     
     def set_content(self, content: Union[str, Dict[str, Any], None]):
@@ -70,95 +58,79 @@ class BaseNode(BaseModel):
     def get_id(self):
         return self.id_
 
-    
-class ConditionalRelationship(BaseModel):
-    """
-    Represents a conditional relationship between two nodes in a graph.
-
-    Attributes:
-        target_node_id (str): Identifier of the target node.
-        properties (Dict[str, Any]): Properties associated with the relationship.
-        condition (Optional[str]): Condition that must be satisfied for the relationship to take effect.
-    """
-    label: Optional[str] = None
+class ConditionalRelationship(BaseNode):
     target_node_id: str
-    properties: Dict[str, Any] = Field(default_factory=dict)
-    condition: Optional[str] = None
+    condition: Optional(Dict) = None
+    label: str = None
 
-    def check_condition(self, context: Dict[str, Any]) -> bool:
-        """
-        Check if the condition is satisfied based on the provided context.
+    def condition_existed(self, condition_key):
+        if self.condition:
+            try:
+                self.condition.get(condition_key)
+                return True
+            except:
+                return False
+        return False
 
-        Args:
-            context (Dict[str, Any]): Context to evaluate the condition against.
-
-        Returns:
-            bool: `True` if condition is satisfied, `False` otherwise.
-        """
-        return context.get(self.condition, False)
+    def get_condition(self, condition_key) -> bool:
+        if self.condition_existed(condition_key=condition_key):
+            a = self.condition.get(condition_key)
+            if a is not None and str(a).strip().lower() != 'none':
+                return a
+        else: 
+            raise ValueError(f"Condition {condition_key} has no value")
 
 
 class DataNode(BaseNode):
-
-    def from_llama(self, data_, **kwags):
-        ...
-        
-    def to_llama(self, **kwags):
-        # to llama_index textnode
-        ...
-        
-    def from_langchain(self, data_, **kwags):
-        ...
     
-    def to_langchain(self, **kwags):
-        ...
+    ...
+    # def from_llama(self, data_:, **kwags):
+    #     ...
         
-    def to_csv(self, **kwags):
-        ...
+    # def to_llama(self, **kwags):
+    #     # to llama_index textnode
+    #     ...
+        
+    # def from_langchain(self, data_, **kwags):
+    #     ...
+    
+    # def to_langchain(self, **kwags):
+    #     ...
+        
+    # def to_csv(self, **kwags):
+    #     ...
 
-    def __call__(self, file_=None):
-        ...
+    # def __call__(self, file_=None):
+    #     ...
 
 
 class MessageNode(BaseNode):
     role: str
     name: str
     
-    def from_oai(self):
-        ...
+    # def from_oai(self):
+    #     ...
 
 
 class File(DataNode):
-    """
-    Represents a data node.
-
-    Args:
-        BaseNode (lionagi.nodes.base.BaseNode): BaseNode class for data validation.
-    """
+    ...
     
-    def from_path(self, path_, reader, clean=True, **kwags):
-        self.content = reader(path_=path_, clean=clean, **kwags)
+    # def from_path(self, path_, reader, clean=True, **kwags):
+    #     self.content = reader(path_=path_, clean=clean, **kwags)
     
-    def to_chunks(self, chunker, **kwags):
-        ...
+    # def to_chunks(self, chunker, **kwags):
+    #     ...
 
 
 class Chunk(DataNode):
-    """
-    Represents a data node.
-
-    Args:
-        BaseNode (lionagi.nodes.base.BaseNode): BaseNode class for data validation.
-    """
-    file: File = None
+    ...    
+    # @classmethod
+    # def from_files(cls, files):
+    #     ...    
     
-    @classmethod
-    def from_files(cls, files):
-        ...    
-    
-    @classmethod
-    def to_files(cls):
-        ...
+    # @classmethod
+    # def to_files(cls):
+    #     ...
     
     
 class DataLogger:
@@ -205,7 +177,7 @@ class DataLogger:
         """
         self.log.append(entry)
 
-    def to_csv(self, dir: str, filename: str, verbose: bool = True, timestamp: bool = True, dir_exist_ok=True, file_exist_ok=False):
+    def to_csv(self,  filename: str, dir: any=None, verbose: bool = True, timestamp: bool = True, dir_exist_ok=True, file_exist_ok=False):
         """
         Converts the log to a CSV format and saves it to a file.
 
@@ -242,3 +214,5 @@ class DataLogger:
             dir (str): The directory to set for saving log files.
         """
         self.dir = dir
+
+# checked --------------------------------------------------------
