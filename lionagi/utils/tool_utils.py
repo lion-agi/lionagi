@@ -1,38 +1,46 @@
 import json
 import asyncio
 from typing import Callable, Any, Dict, Union, Optional
-from .sys_utils import l_call
+from .sys_utils import l_call, str_to_num
+from ..schema import BaseNode, SimpleTool
 
 
-class ToolManager:
-    def __init__(self):
-        self.registry = {}
+
+
+class ToolManager(BaseNode):
+    registry : Dict = {}
         
-    @staticmethod
-    def _to_dict(name, func, content=None):
-        return {name: {"function": func, "content": content or "none"}}
+    def to_dict(name, tool):
+        return {f"{name}": tool}
 
     def _name_existed(self, name):
         return True if name in self.registry.keys() else False
             
-    def _register_function(self, name, func, content=None, update=False, new=False, prefix=None, postfix=None):
+    def _register_function(self, name, tool, parser=None, content=None, update=False, new=False, prefix=None, postfix=None):
         if self._name_existed(name):
             if update and new:
                 raise ValueError(f"Cannot both update and create new registry for existing function {name} at the same time")
             
-        name = f"{prefix or ''}{name}{postfix or '1'}" if new else name                
-        self.registry.update(self._to_dict(name, func, content)) 
+            
+        if len(name) > len(tool.func.__name__):
+            if new and not postfix: 
+                if str_to_num(name, int) is not None:
+            
+        
+        
+        name = f"{prefix or ''}{name}{postfix or i}" if new else name                
+        self.registry.update(self._to_dict(name, func, content, parser)) 
                 
-    async def invoke(self, name, kwargs):
+    async def invoke(self, name, *args, **kwargs):
         if self._name_existed(name):
             func = self.registry[name]["function"]
             try:
                 if asyncio.iscoroutinefunction(func):
-                    return await func(**kwargs)
+                    return await func(*args, **kwargs)
                 else:
-                    return func(**kwargs)
+                    return func(*args, **kwargs)
             except Exception as e:
-                raise ValueError(f"Error when invoking function {name} with arguments {kwargs} with error message {e}")
+                raise ValueError(f"Error when invoking function {name} with arguments {*args, kwargs} with error message {e}")
         else: 
             raise ValueError(f"Function {name} is not registered.")
     

@@ -239,17 +239,14 @@ class BaseTool(BaseNode):
         self.initialize()
         return self
 
-    def __exit__(self, exc_type, exc_val, exc_tb):
-        """Clean up after context management."""
-        self.shutdown()
-        if exc_type:
-            self.logger.error(f"Exception in {self.__class__.__name__}: {exc_val}", exc_info=True) 
-
 
 class SimpleTool(BaseTool):
+    func : Callable = None
+    content: Any = None
+    parser: Any = None
     
-    def execute(self, **kwargs):
-        return self.func(**kwargs)        
+    def execute(self, *args, **kwargs):
+        return self.func(*args, **kwargs)        
 
 
 # checked ------------------------------------------------------
