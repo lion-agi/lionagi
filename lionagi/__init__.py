@@ -17,13 +17,13 @@ Copyright 2023 HaiyangLi <ocean@lionagi.ai>
 import logging
 from .version import __version__
 
-from .core import *
-# from .datastore import *
+from .utils import *
 from .endpoint import *
 from .loader import *
 from .service import *
+from .core import *
+# from .datastore import *
 # from .structure import *
-
 
 
 logger = logging.getLogger(__name__)

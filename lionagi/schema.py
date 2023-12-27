@@ -2,7 +2,7 @@ import json
 from collections import deque
 from typing import Any, Dict, Optional, Union
 
-from .utils import create_id, create_path, to_csv
+from .utils.sys_utils import create_id, create_path, to_csv
 from pydantic import BaseModel, Field
 
 class BaseNode(BaseModel):
