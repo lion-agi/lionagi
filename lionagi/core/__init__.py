@@ -1,5 +1,5 @@
-from .messages.message import Message
-from .conversations.conversation import Conversation
+from .messages import Message
+from .conversations import Conversation
 from .sessions import Session
 # from .flows.flow import Flow
 
