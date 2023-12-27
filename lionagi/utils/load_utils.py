@@ -5,7 +5,7 @@ from typing import Any, Dict, List, Union, Callable, Optional
 from .sys_utils import to_list, l_call
 from ..schema import DataLogger
 
-
+# should be fine ------------------------------------------------------------------
 def _dir_to_path(dir, ext, recursive):
     tem = '**/*' if recursive else '*'
     return list(Path(dir).glob(tem + ext))
@@ -120,7 +120,7 @@ def chunk_text(input: str,
 def _file_to_chunks(input: Dict[str, Any],
                    field: str = 'content',
                    chunk_size: int = 1500,
-                   overlap: float = 0.2,
+                   overlap: float = 0.1,
                    threshold: int = 200) -> List[Dict[str, Any]]:
     try:
         out = {key: value for key, value in input.items() if key != field}
@@ -144,25 +144,19 @@ def _file_to_chunks(input: Dict[str, Any],
         raise ValueError(f"An error occurred while chunking the file. {e}")
 
 def file_to_chunks(input,
-                   field: str = 'content',
-                   chunk_size: int = 1500,
-                   overlap: float = 0.2,
-                   threshold: int = 200,
-                   to_csv=False,
                    project='project',
                    output_dir='data/logs/sources/',
                    chunk_func = _file_to_chunks,
+                   to_csv=False,
                    filename=None,
                    verbose=True,
                    timestamp=True,
-                   logger=None):
-    logs = to_list(l_call(input, chunk_func, field=field, chunk_size=chunk_size, 
-                          overlap=overlap, threshold=threshold), 
-                   flat=True)
+                   logger=None, **kwags):
+    logs = to_list(l_call(input, chunk_func, **kwags), flat=True)
 
     if to_csv:
         filename = filename if filename else f"{project}_sources.csv"
-        logger = DataLogger(log=logs) if not logger else logger
+        logger = logger or DataLogger(log=logs)
         logger.to_csv(dir=output_dir, filename=filename, verbose=verbose, timestamp=timestamp)
 
     return logs

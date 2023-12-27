@@ -7,7 +7,33 @@ from typing import Optional, NoReturn, Dict, Any
 
 dotenv.load_dotenv()
 
-from ..utils.service_utils import AsyncQueue, StatusTracker, RateLimiter, BaseAPIService
+from ..utils.service_utils import AsyncQueue, StatusTracker, RateLimiter, BaseService
+
+
+
+class BaseAPIService(BaseService):
+    
+    def __init__(self, api_key: str = None, 
+                 status_tracker: Optional[StatusTracker] = None,
+                 queue: Optional[AsyncQueue] = None) -> None:
+        self.api_key = api_key
+        self.status_tracker = status_tracker
+        self.queue = queue
+    
+    @staticmethod                    
+    def api_methods(http_session, method="post"):
+        if method not in ["put", "delete", "head", "options", "patch"]:
+            raise ValueError("Invalid request, method must be in ['put', 'delete', 'head', 'options', 'patch']")
+        elif method == "post":
+            return http_session.post
+        elif method == "delete":
+            return http_session.delete
+        elif method == "head":
+            return http_session.head
+        elif method == "options":
+            return http_session.options
+        elif method == "patch":
+            return http_session.patch
 
 
 class OpenAIRateLimiter(RateLimiter):
@@ -157,58 +183,16 @@ class OpenAIService(BaseAPIService):
         status_tracker: Optional[StatusTracker] = None,
         queue: Optional[AsyncQueue] = None
     ):
-        """
-        Initializes the OpenAI service with configuration for API interaction.
-
-        Args:
-            api_key (str): The API key for authenticating with OpenAI.
-            token_encoding_name (str): The name of the text encoding used by OpenAI.
-            max_attempts (int): The maximum number of attempts for calling an API endpoint.
-            status_tracker (Optional[StatusTracker]): Tracker for API call outcomes.
-            rate_limiter (Optional[OpenAIRateLimiter]): Rate limiter for OpenAI's limits.
-            queue (Optional[AsyncQueue]): Queue for managing asynchronous API calls.
-
-        Example:
-            >>> service = OpenAIService(
-            ...     api_key="api-key-123",
-            ...     token_encoding_name="utf-8",
-            ...     max_attempts=5,
-            ...     status_tracker=None,
-            ...     rate_limiter=OpenAIRateLimiter(100, 200),
-            ...     queue=AsyncQueue()
-            ... )
-            # Service is configured for interacting with OpenAI API.
-        """
-        api_key = api_key or os.getenv("OPENAI_API_KEY")
-        super().__init__(api_key, token_encoding_name, max_attempts, 
-                         max_requests_per_minute, max_tokens_per_minute,
-                         ratelimiter, status_tracker, queue)
         
-
-    async def call_api(self, http_session, endpoint, payload: Dict[str, any] =None) -> Optional[Dict[str, any]]:
-        """
-        Call an OpenAI API endpoint with a specific payload and handle the response.
-
-        Args:
-            session: The session object for making HTTP requests.
-            request_url (str): The full URL of the OpenAI API endpoint to be called.
-            payload (Dict[str, any]): The payload to send with the API request.
-
-        Returns:
-            Optional[Dict[str, any]]: The response data from the API call or None if the call fails.
-
-        Raises:
-            asyncio.TimeoutError: If the request attempts exceed the configured maximum limit.
-
-        Example:
-            >>> session = aiohttp.ClientSession()
-            >>> response = await service.call_api(
-            ...     session,
-            ...     "https://api.openai.com/v1/engines",
-            ...     {"model": "davinci"}
-            ... )
-            # Calls the specified API endpoint with the given payload.
-        """
+        api_key = api_key or os.getenv("OPENAI_API_KEY")
+        self.api_key = api_key
+        self.token_encoding_name=token_encoding_name,
+        self.max_attempts = max_attempts,
+        self.status_tracker = status_tracker or StatusTracker()
+        self.queue = queue or AsyncQueue()
+        self.ratelimiter=ratelimiter(max_requests_per_minute, max_tokens_per_minute),
+        
+    async def call_api(self, http_session, endpoint, method="post", payload: Dict[str, any] =None) -> Optional[Dict[str, any]]:
         endpoint = self.api_endpoint_from_url(self.base_url+endpoint)
         
         while True:
@@ -227,7 +211,8 @@ class OpenAIService(BaseAPIService):
 
                 while attempts_left > 0:
                     try:
-                        async with http_session.post(
+                        method = self.api_methods(http_session, method)                         
+                        async with method(
                             url=(self.base_url+endpoint), headers=request_headers, json=payload
                         ) as response:
                             response_json = await response.json()
@@ -249,4 +234,5 @@ class OpenAIService(BaseAPIService):
                 logging.error("API call failed after all attempts.")
                 break
             else:
-                await asyncio.sleep(1)  # Wait for token capacity
+                await asyncio.sleep(1)
+                

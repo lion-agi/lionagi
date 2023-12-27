@@ -1,9 +1,11 @@
 import json
+import networkx as nx
 from collections import deque
 from typing import Any, Dict, Optional, Union
 
-from .utils.sys_utils import create_id, create_path, to_csv
 from pydantic import BaseModel, Field
+from .utils.sys_utils import create_id, create_path, to_csv
+
 
 # checked --------------------------------------------------------
 class BaseNode(BaseModel):
@@ -216,3 +218,34 @@ class DataLogger:
         self.dir = dir
 
 # checked --------------------------------------------------------
+
+
+class Structure:
+    def __init__(self):
+        self.graph = nx.DiGraph()
+
+    def add_node(self, node: BaseNode) -> None:
+        self.graph.add_node(node.id_, content=node.content, metadata=node.metadata)
+
+    def add_relationship(self, source_node_id: str, target_node_id: str, relationship: ConditionalRelationship) -> None:
+        self.graph.add_edge(source_node_id, target_node_id,
+                            label=relationship.label,
+                            properties=relationship.properties,
+                            condition=relationship.condition)
+
+    def remove_relationship(self, source_node_id: str, target_node_id: str) -> None:
+        if self.graph.has_edge(source_node_id, target_node_id):
+            self.graph.remove_edge(source_node_id, target_node_id)
+
+    def get_relationships(self, node_id: str) -> list:
+        return list(self.graph.edges(node_id, data=True))
+
+    def get_conditional_relationships(self, node_id: str) -> list:
+        return [(target_id, data) for _, target_id, data in self.graph.edges(node_id, data=True) if "condition" in data]
+
+    def to_json(self) -> str:
+        return json.dumps(nx.node_link_data(self.graph))
+
+    def from_json(self, data: str) -> None:
+        graph_data = json.loads(data)
+        self.graph = nx.node_link_graph(graph_data)
