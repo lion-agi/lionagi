@@ -1,6 +1,6 @@
 ![PyPI - Version](https://img.shields.io/pypi/v/lionagi?labelColor=233476aa&color=231fc935) [![Downloads](https://static.pepy.tech/badge/lionagi/week)](https://pepy.tech/project/lionagi)
 
-[PyPI](https://pypi.org/project/lionagi/) | [Documentation](https://lionagi.readthedocs.io/en/latest/) | [Website](https://www.lionagi.ai) | [Discord](https://discord.gg/7RGWqpSxze)
+[PyPI](https://pypi.org/project/lionagi/) | [Documentation](https://lionagi.readthedocs.io/en/latest/) | [Discord](https://discord.gg/7RGWqpSxze)
 
   
 # LionAGI
