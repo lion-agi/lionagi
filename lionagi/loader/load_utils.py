@@ -2,10 +2,9 @@ import math
 from pathlib import Path
 from typing import Any, Dict, List, Union, Callable, Optional
 
-from ..utils.sys_utils import to_list, l_call, hold_call
+from ..utils.sys_utils import to_list, l_call
 from ..schema import DataLogger
 
-# should be fine ------------------------------------------------------------------
 def _dir_to_path(dir, ext, recursive):
     tem = '**/*' if recursive else '*'
     return list(Path(dir).glob(tem + ext))

@@ -2,6 +2,14 @@ import asyncio
 import aiohttp
 
 
+
+def 
+
+
+
+
+
+
 def _create_payload_chatcompletion(self, schema, **kwargs):
     """
     Create a payload for chat completion based on the conversation state and configuration.

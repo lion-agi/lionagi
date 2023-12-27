@@ -8,8 +8,8 @@ load_dotenv()
 from .conversations import Conversation
 from ..utils.sys_utils import to_list
 from ..schema import DataLogger
-from ..utils.service_utils import StatusTracker
-from ..utils.tool_utils import ToolManager
+from ..service.service_utils import StatusTracker
+from ..tools.tool_utils import ToolManager
 from ..service.oai import OpenAIService
 from ..llm_configs import oai_llmconfig
 

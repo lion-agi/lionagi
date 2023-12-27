@@ -1,7 +1,7 @@
 import json
 import asyncio
 from typing import Dict
-from .sys_utils import l_call, str_to_num
+from ..utils.sys_utils import l_call, str_to_num
 from ..schema import BaseNode
 
 

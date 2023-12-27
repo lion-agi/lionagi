@@ -7,7 +7,7 @@ from typing import Optional, NoReturn, Dict, Any
 
 dotenv.load_dotenv()
 
-from ..utils.service_utils import AsyncQueue, StatusTracker, RateLimiter, BaseService
+from .service_utils import AsyncQueue, StatusTracker, RateLimiter, BaseService
 
 
 
