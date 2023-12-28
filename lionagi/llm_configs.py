@@ -1,3 +1,8 @@
+oai_schema = {
+    "required" : ["model", "frequency_penalty", "n", "presence_penalty", "response_format", "temperature", "top_p"],
+    "optional": ["seed", "stop", "stream", "tools", "tool_choice", "user", "max_tokens"]
+    }
+
 oai_llmconfig = {
     "model": "gpt-4-1106-preview",
     "frequency_penalty": 0,
