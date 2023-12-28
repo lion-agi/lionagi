@@ -12,7 +12,7 @@ desired_root_dir = os.path.dirname(current_dir)
 sys.path.append(desired_root_dir)
 import asyncio
 import os
-from ..utils.sys_utils import (
+from utils.sys_utils import (
     to_flat_dict,
     to_list,
     str_to_num,
