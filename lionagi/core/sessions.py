@@ -1,19 +1,15 @@
 import json
 from typing import Any
 from dotenv import load_dotenv
-load_dotenv()
 
 from .conversations import Conversation
-from ..utils.sys_utils import to_list
 from ..schema import DataLogger
-from ..service_.service_utils import StatusTracker
 from ..tools.tool_utils import ToolManager
-from ..service_.oai import OpenAIService
+from ..services import OpenAIService
 from ..endpoint.chat_completion import ChatCompletion
-
 from ..llm_configs import oai_llmconfig, oai_schema
 
-status_tracker = StatusTracker()
+load_dotenv()
 OAIService = OpenAIService()
 
 
