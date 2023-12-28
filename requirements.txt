@@ -1,6 +1,5 @@
 aiohttp>=3.9.0
 python-dotenv==1.0.0
-tiktoken==0.5.1
-httpx==0.25.1
+tiktoken==0.5.2
 pydantic==2.5.3
 networkx==3.2.1

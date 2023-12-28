@@ -13,7 +13,6 @@ install_requires = [
     "aiohttp",
     "python-dotenv",
     "tiktoken", 
-    "httpx",
     "pydantic",
     "networkx"
 ]
