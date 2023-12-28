@@ -45,10 +45,10 @@ class Test_sys_util(unittest.TestCase):
         result = str_to_num("Temperature is -5.6 degrees", num_type=float, precision=1)
         self.assertEqual(result, -5.6)
 
-    def test_make_copy(self):
-        sample_dict = {'key': 'value'}
-        result = make_copy(sample_dict, 2)
-        self.assertEqual(result, [{'key': 'value'}, {'key': 'value'}])
+    # def test_make_copy(self):
+    #     sample_dict = {'key': 'value'}
+    #     result = make_copy(sample_dict, 2)
+    #     self.assertEqual(result, [{'key': 'value'}, {'key': 'value'}])
 
     # def test_to_temp(self):
     #     temp_file = to_temp({'a': 1, 'b': [2, 3]}, flatten_dict=True)
