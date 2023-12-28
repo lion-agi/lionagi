@@ -14,7 +14,8 @@ install_requires = [
     "python-dotenv",
     "tiktoken", 
     "httpx",
-    "pydantic"
+    "pydantic",
+    "networkx"
 ]
 
 
