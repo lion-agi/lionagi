@@ -1,9 +1,11 @@
 import asyncio
 import re
 from abc import ABC, abstractmethod
-from dataclasses import dataclass
 import aiohttp
+from dataclasses import dataclass
 from typing import Any, Callable, Dict, Generator, NoReturn
+from ..utils.sys_utils import call_api
+
 
 # should be fine ------------------------------------------------------------------
 @dataclass
@@ -219,51 +221,8 @@ class BaseService(ABC):
     async def serve(self) -> Any:     
         ...
 
-    @staticmethod
-    def api_endpoint_from_url(request_url: str) -> str:
-        """
-        Extracts the endpoint from an API request URL.
-        
-        Parameters:
-            request_url (str): The URL from which to extract the API endpoint.
-        
-        Returns:
-            str: The extracted API endpoint.
-
-        Example:
-            >>> BaseAPIService.api_endpoint_from_url("https://api.example.com/v1/test_endpoint")
-            'test_endpoint'
-        """
-        match = re.search(r"^https://[^/]+/v\d+/(.+)$", request_url)
-        if match:
-            return match.group(1)
-        else:
-            return ""
-
-    @staticmethod
-    def task_id_generator_function() -> Generator[int, None, None]:
-        """
-        Generates a continuous sequence of integers for task IDs.
-        
-        Yields:
-            int: The next task ID in the sequence (0, 1, 2, ...).
-
-        Example:
-            >>> id_gen = BaseAPIService.task_id_generator_function()
-            >>> next(id_gen)
-            0
-            >>> next(id_gen)
-            1
-        """
-        task_id = 0
-        while True:
-            yield task_id
-            task_id += 1
 
 
 
-async def call_api(payload, service, endpoint="chat/completions"):
-    async with aiohttp.ClientSession() as session:
-        completion = await service.call_api(session, endpoint, payload)
-        return completion
+
 

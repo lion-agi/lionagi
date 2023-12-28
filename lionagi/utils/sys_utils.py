@@ -796,3 +796,4 @@ def get_bins(input: List[str], upper: int = 7500) -> List[List[int]]:
         if idx == len(input) - 1 and len(bin) > 0:
             bins.append(bin)
     return bins
+

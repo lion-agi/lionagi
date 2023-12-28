@@ -2,6 +2,7 @@ from .base_endpoint import BaseEndpoint
 
 
 class ChatCompletion(BaseEndpoint):
+    endpoint = "chat/completion"
 
     def create_payload(self, session,  schema, **kwargs):
         # currently only openai  are supported
@@ -18,16 +19,4 @@ class ChatCompletion(BaseEndpoint):
         return payload
     
     def process_response(self, session, payload, completion):
-        try:
-            if "choices" in completion:
-                session._logger({"input":payload, "output": completion})
-                session.conversation.add_messages(response=completion['choices'][0])
-                session.conversation.responses.append(session.conversation.messages[-1])
-                session.conversation.response_counts += 1
-                session.status_tracker.num_tasks_succeeded += 1
-            else:
-                session.status_tracker.num_tasks_failed += 1
-                            
-        except Exception as e:
-            session.status_tracker.num_tasks_failed += 1
-            raise e
+        ...

@@ -3,37 +3,22 @@ import dotenv
 import asyncio
 import logging
 import tiktoken
+import aiohttp
 from typing import Optional, NoReturn, Dict, Any
+
+from .service_utils import BaseAPIService
 
 dotenv.load_dotenv()
 
-from .service_utils import AsyncQueue, StatusTracker, RateLimiter, BaseService
+from .service_utils import RateLimiter
+from .base_service import BaseAPIService
+from .service_utils import StatusTracker, AsyncQueue
 
 
 
-class BaseAPIService(BaseService):
-    
-    def __init__(self, api_key: str = None, 
-                 status_tracker: Optional[StatusTracker] = None,
-                 queue: Optional[AsyncQueue] = None) -> None:
-        self.api_key = api_key
-        self.status_tracker = status_tracker
-        self.queue = queue
-    
-    @staticmethod                    
-    def api_methods(http_session, method="post"):
-        if method not in ["put", "delete", "head", "options", "patch"]:
-            raise ValueError("Invalid request, method must be in ['put', 'delete', 'head', 'options', 'patch']")
-        elif method == "post":
-            return http_session.post
-        elif method == "delete":
-            return http_session.delete
-        elif method == "head":
-            return http_session.head
-        elif method == "options":
-            return http_session.options
-        elif method == "patch":
-            return http_session.patch
+
+
+
 
 
 class OpenAIRateLimiter(RateLimiter):
@@ -181,8 +166,9 @@ class OpenAIService(BaseAPIService):
         max_requests_per_minute: int = 500,
         max_tokens_per_minute: int = 150_000,
         ratelimiter = OpenAIRateLimiter,
-        status_tracker: Optional[StatusTracker] = None,
-        queue: Optional[AsyncQueue] = None
+        status_tracker = None,
+        queue = None,
+        endpoint=None,
     ):
         
         api_key = api_key or os.getenv("OPENAI_API_KEY")
@@ -192,8 +178,10 @@ class OpenAIService(BaseAPIService):
         self.status_tracker = status_tracker or StatusTracker()
         self.queue = queue or AsyncQueue()
         self.ratelimiter=ratelimiter(max_requests_per_minute, max_tokens_per_minute),
+        self.endpoint=endpoint
         
-    async def call_api(self, http_session, endpoint, method="post", payload: Dict[str, any] =None) -> Optional[Dict[str, any]]:
+        
+    async def _call_api(self, http_session, endpoint, method="post", payload: Dict[str, any] =None) -> Optional[Dict[str, any]]:
         endpoint = self.api_endpoint_from_url(self.base_url+endpoint)
         
         while True:
@@ -236,4 +224,28 @@ class OpenAIService(BaseAPIService):
                 break
             else:
                 await asyncio.sleep(1)
-                
+    
+    async def serve(self, schema=None, method="post", session=None, **kwargs):
+        payload = self.endpoint.create_payload(self, schema=schema, **kwargs)
+        
+        async def call_api():
+            endpoint = self.endpoint.endpoint
+            async with aiohttp.ClientSession() as http_session:
+                completion = await self._call_api(http_session=http_session, endpoint=endpoint, payload=payload, method=method)
+                return completion           
+
+        try:
+            completion = await call_api()
+        except Exception as e:
+                self.status_tracker.num_tasks_failed += 1
+                raise e
+        
+        if "choices" in completion:
+            session._logger({"input":payload, "output": completion})
+            session.conversation.add_messages(response=completion['choices'][0])
+            session.conversation.responses.append(self.conversation.messages[-1])
+            session.conversation.response_counts += 1
+            session.status_tracker.num_tasks_succeeded += 1
+        else:
+            session.status_tracker.num_tasks_failed += 1
+            
