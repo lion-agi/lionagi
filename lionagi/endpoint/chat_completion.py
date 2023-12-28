@@ -2,13 +2,11 @@ from .base_endpoint import BaseEndpoint
 
 
 class ChatCompletion(BaseEndpoint):
-    endpoint = "chat/completion"
+    endpoint: str = "chat/completion"
 
-    def create_payload(self, session,  schema, **kwargs):
-        # currently only openai  are supported
-        messages = session.conversation.messages
-        config = {**session.llmconfig, **kwargs}
-        
+    @classmethod
+    def create_payload(scls, messages, llmconfig, schema, **kwargs):
+        config = {**llmconfig, **kwargs}
         payload = {"messages": messages}
         for key in schema['required']:
             payload.update({key: config[key]})

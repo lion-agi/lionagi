@@ -298,8 +298,8 @@ def to_temp(input: Any,
     temp_file.close()
     return temp_file
 
-def to_csv(input: List[Dict[str, Any]],
-           filepath: str,
+def to_csv(input: List[Dict[str, Any]]=None,
+           filepath: str=None,
            file_exist_ok: bool = False) -> None:
     """
     Writes a list of dictionaries to a CSV file, with dictionary keys as headers.

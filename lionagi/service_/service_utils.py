@@ -172,6 +172,19 @@ class AsyncQueue:
                 break
             await func(item)
 
+
+class BaseService(ABC):
+    
+    @abstractmethod
+    def __init__(self) -> None:
+        ...
+
+    @abstractmethod
+    async def serve(self) -> Any:     
+        ...
+
+
+
 class RateLimiter(ABC):
     """
     An abstract base class for rate limiting mechanisms.
@@ -195,31 +208,76 @@ class RateLimiter(ABC):
         calculate_num_token:
             Method to calculate required tokens for a request.
     """
-    @abstractmethod
-    def __init__(self) -> None:
-        ...
-        
+    
+    def __init__(self, max_requests_per_minute: int, max_tokens_per_minute: int) -> None:
+        """
+        Initializes the RateLimiter with specified maximum request and token limits.
+
+        Parameters:
+            max_requests_per_minute (int): Maximum requests allowed per minute.
+
+            max_tokens_per_minute (int): Maximum tokens allowed to accumulate per minute.
+
+        Example:
+            >>> class MyRateLimiter(RateLimiter):
+            ...     async def rate_limit_replenisher(self) -> NoReturn:
+            ...         # Implementation for rate replenishment.
+            ...     def calculate_num_token(self, payload: Dict[str, Any], api_endpoint: str) -> int:
+            ...         # Implementation for token calculation.
+            ...
+            >>> limiter = MyRateLimiter(100, 200)
+        """
+        self.max_requests_per_minute = max_requests_per_minute
+        self.max_tokens_per_minute = max_tokens_per_minute
+        self.available_request_capacity = max_requests_per_minute
+        self.available_token_capacity = max_tokens_per_minute
+    
     @abstractmethod
     async def rate_limit_replenisher(self) -> NoReturn:
+        """
+        Asynchronously replenishes rate limit capacities.
+
+        This coroutine should be implemented to periodically restore `available_request_capacity`
+        and `available_token_capacity` according to specific rules defined in subclasses.
+
+        Example:
+            >>> class MyRateLimiter(RateLimiter):
+            ...     async def rate_limit_replenisher(self) -> NoReturn:
+            ...         while True:
+            ...             # Replenishment logic here
+            ...
+            >>> limiter = MyRateLimiter(100, 200)
+        """
+        
         ...
     
     @abstractmethod
     def calculate_num_token(self, payload: Dict[str, Any], api_endpoint: str) -> int:
+        """
+        Calculates required tokens for a request.
+
+        Subclasses should implement this method to determine the number of tokens needed based
+        on the request payload and target endpoint.
+
+        Parameters:
+            payload (Dict[str, Any]): Payload of the request.
+
+            api_endpoint (str): Target API endpoint for the request.
+
+        Returns:
+            int: Calculated number of tokens required for the request.
+
+        Example:
+            >>> class MyRateLimiter(RateLimiter):
+            ...     def calculate_num_token(self, payload: Dict[str, Any], api_endpoint: str) -> int:
+            ...         return len(payload.get('data', '')) // 10
+            ...
+            >>> limiter = MyRateLimiter(100, 200)
+            >>> limiter.calculate_num_token({'data': '12345'}, 'api/send')
+            0
+        """
+        
         ...
-
-
-class BaseService(ABC):
-    
-    @abstractmethod
-    def __init__(self) -> None:
-        ...
-
-    @abstractmethod
-    async def serve(self) -> Any:     
-        ...
-
-
-
 
 
 

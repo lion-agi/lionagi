@@ -29,18 +29,18 @@ class ToolManager(BaseNode):
         name = f"{prefix or ''}{name}{postfix}" if new else tool.func.__name__                
         self.registry.update({name:tool}) 
                 
-    async def invoke(self, name, *args, **kwargs):
+    async def invoke(self, name, kwargs):
         if self._name_existed(name):
             tool = self.registry[name]
             func = tool.func
             parser = tool.parser
             try:
                 if asyncio.iscoroutinefunction(func):
-                    return await func(*args, **kwargs) if not parser else parser(func(*args, **kwargs))
+                    return await parser(func(**kwargs)) if parser else func(**kwargs)
                 else:
-                    return func(*args, **kwargs)
+                    return parser(func(**kwargs)) if parser else func(**kwargs)
             except Exception as e:
-                raise ValueError(f"Error when invoking function {name} with arguments {*args, kwargs} with error message {e}")
+                raise ValueError(f"Error when invoking function {name} with arguments {kwargs} with error message {e}")
         else: 
             raise ValueError(f"Function {name} is not registered.")
     

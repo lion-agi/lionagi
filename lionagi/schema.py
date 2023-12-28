@@ -181,7 +181,7 @@ class DataLogger:
         """
         self.log.append(entry)
 
-    def to_csv(self,  filename: str, dir: any=None, verbose: bool = True, timestamp: bool = True, dir_exist_ok=True, file_exist_ok=False):
+    def to_csv(self, filename: str, dir=None, verbose: bool = True, timestamp: bool = True, dir_exist_ok=True, file_exist_ok=False):
         """
         Converts the log to a CSV format and saves it to a file.
 
@@ -203,6 +203,7 @@ class DataLogger:
 
             Optionally prints a message with the number of log entries saved and the file path.
         """
+        dir = dir or self.dir
         filepath = create_path(dir=dir, filename=filename, timestamp=timestamp, dir_exist_ok=dir_exist_ok)
         to_csv(list(self.log), filepath, file_exist_ok=file_exist_ok)
         n_logs = len(list(self.log))
@@ -239,15 +240,7 @@ class BaseTool(BaseNode):
         self.initialize()
         return self
 
-
-class SimpleTool(BaseTool):
-    func : Callable = None
-    content: Any = None
-    parser: Any = None
-    
-    def execute(self, *args, **kwargs):
-        return self.func(*args, **kwargs)        
-
+   
 
 # checked ------------------------------------------------------
 class Structure:

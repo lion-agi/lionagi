@@ -8,17 +8,19 @@ class BaseAPIService(BaseService):
     
     def __init__(self, api_key: str = None, 
                  status_tracker = None,
-                 queue = None, endpoint=None, schema=None) -> None:
+                 queue = None, endpoint=None, schema=None, 
+                 ratelimiter=None, max_requests_per_minute=None, max_tokens_per_minute=None) -> None:
         self.api_key = api_key
         self.status_tracker = status_tracker
         self.queue = queue
         self.endpoint=endpoint
         self.schema = schema
+        self.rate_limiter = ratelimiter(max_requests_per_minute, max_tokens_per_minute)
     
     @staticmethod                    
     def api_methods(http_session, method="post"):
-        if method not in ["put", "delete", "head", "options", "patch"]:
-            raise ValueError("Invalid request, method must be in ['put', 'delete', 'head', 'options', 'patch']")
+        if method not in ["post", "delete", "head", "options", "patch"]:
+            raise ValueError("Invalid request, method must be in ['post', 'delete', 'head', 'options', 'patch']")
         elif method == "post":
             return http_session.post
         elif method == "delete":
