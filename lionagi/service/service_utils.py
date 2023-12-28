@@ -1,10 +1,7 @@
 import asyncio
-import re
 from abc import ABC, abstractmethod
-import aiohttp
 from dataclasses import dataclass
-from typing import Any, Callable, Dict, Generator, NoReturn
-from ..utils.sys_utils import call_api
+from typing import Any, Callable, Dict, NoReturn
 
 
 # should be fine ------------------------------------------------------------------

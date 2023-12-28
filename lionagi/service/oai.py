@@ -6,7 +6,7 @@ import tiktoken
 import aiohttp
 from typing import Optional, NoReturn, Dict, Any
 
-from .service_utils import BaseAPIService
+from .base_service import BaseAPIService
 
 dotenv.load_dotenv()
 
