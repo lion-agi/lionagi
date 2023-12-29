@@ -193,9 +193,9 @@ class RateLimiter(ABC):
     of requests sent to or received from a network interface controller or an API.
 
     Attributes:
-        max_requests_per_minute (int):
+        max_requests_per_interval (int):
             Maximum number of requests permitted per minute.
-        max_tokens_per_minute (int):
+        max_tokens_per_interval (int):
             Maximum number of tokens that can accumulate per minute.
         available_request_capacity (int):
             Current number of available request slots.
@@ -209,19 +209,19 @@ class RateLimiter(ABC):
             Method to calculate required tokens for a request.
     """
     
-    def __init__(self, max_requests_per_minute: int, max_tokens_per_minute: int) -> None:
+    def __init__(self, max_requests_per_interval: int, max_tokens_per_interval: int, interval: int) -> None:
         """
         Initializes the RateLimiter with specified maximum request and token limits.
 
         Parameters:
-            max_requests_per_minute (int): Maximum requests allowed per minute.
+            max_requests_per_interval (int): Maximum requests allowed per minute.
 
-            max_tokens_per_minute (int): Maximum tokens allowed to accumulate per minute.
+            max_tokens_per_interval (int): Maximum tokens allowed to accumulate per minute.
         """
-        self.max_requests_per_minute = max_requests_per_minute
-        self.max_tokens_per_minute = max_tokens_per_minute
-        self.available_request_capacity = max_requests_per_minute
-        self.available_token_capacity = max_tokens_per_minute
+        self.max_requests_per_interval = max_requests_per_interval
+        self.max_tokens_per_interval = max_tokens_per_interval
+        self.available_request_capacity = max_requests_per_interval
+        self.available_token_capacity = max_tokens_per_interval
     
     @abstractmethod
     async def rate_limit_replenisher(self) -> NoReturn:        
@@ -230,6 +230,3 @@ class RateLimiter(ABC):
     @abstractmethod
     def calculate_num_token(self, payload: Dict[str, Any], api_endpoint: str) -> int:        
         ...
-
-
-

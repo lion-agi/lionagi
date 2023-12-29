@@ -16,17 +16,6 @@ class BaseEndpoint(abc.ABC):
         """
         pass
 
-    # @abc.abstractmethod
-    # async def call_api(self, session, **kwargs):
-    #     """
-    #     Make a call to the API endpoint and process the response.
-        
-    #     Parameters:
-    #         session: The aiohttp client session.
-    #         **kwargs: Additional keyword arguments for configuration.
-    #     """
-    #     pass
-
     @abc.abstractmethod
     def process_response(self, response):
         """
@@ -40,12 +29,4 @@ class BaseEndpoint(abc.ABC):
 
 
 
-    # @abc.abstractmethod
-    # def handle_error(self, error):
-    #     """
-    #     Handle any errors that occur during the API call.
-        
-    #     Parameters:
-    #         error: The error to handle.
-    #     """
-    #     pass
+    

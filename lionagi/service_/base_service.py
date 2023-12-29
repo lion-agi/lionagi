@@ -11,17 +11,22 @@ from .service_utils import BaseService, RateLimiter, StatusTracker, AsyncQueue
 class BaseAPIRateLimiter(RateLimiter):
 
     def __init__(
-        self, max_requests_per_minute: int, max_tokens_per_minute: int
+        self, 
+        max_requests_per_interval: int, 
+        max_tokens_per_interval: int,
+        interval: int =60
     ) -> None:
-        super().__init__(max_requests_per_minute, max_tokens_per_minute)
-        if not os.getenv('env_readthedocs'):
-            self.rate_limit_replenisher_task = asyncio.create_task(self.rate_limit_replenisher())
+        super().__init__(max_requests_per_interval, max_tokens_per_interval)
+        self.interval = interval
+        self.rate_limit_replenisher_task = asyncio.create_task(
+            self.rate_limit_replenisher.create(max_requests_per_interval, 
+                                               max_tokens_per_interval))
 
     @classmethod
     async def create(
-        cls, max_requests_per_minute: int, max_tokens_per_minute: int
+        cls, max_requests_per_interval: int, max_tokens_per_interval: int
     ) -> None:
-        self = cls(max_requests_per_minute, max_tokens_per_minute)
+        self = cls(max_requests_per_interval, max_tokens_per_interval)
         if not os.getenv("env_readthedocs"):
             self.rate_limit_replenisher_task = await asyncio.create_task(
                 self.rate_limit_replenisher()
@@ -42,9 +47,9 @@ class BaseAPIRateLimiter(RateLimiter):
             # This will start the background task for rate limit replenishment.
         """
         while True:
-            await asyncio.sleep(60)  # Replenishes every 60 seconds
-            self.available_request_capacity = self.max_requests_per_minute
-            self.available_token_capacity = self.max_tokens_per_minute
+            await asyncio.sleep(self.interval)  # Replenishes every 60 seconds
+            self.available_request_capacity = self.max_requests_per_interval
+            self.available_token_capacity = self.max_tokens_per_interval
 
     def calculate_num_token(
         self,
@@ -133,13 +138,13 @@ class BaseAPIService(BaseService):
     def __init__(self, api_key: str = None, 
                  status_tracker = None,
                  queue = None, endpoint=None, schema=None, 
-                 ratelimiter=None, max_requests_per_minute=None, max_tokens_per_minute=None) -> None:
+                 ratelimiter=None, max_requests_per_interval=None, max_tokens_per_interval=None) -> None:
         self.api_key = api_key
         self.status_tracker = status_tracker or StatusTracker()
         self.queue = queue or AsyncQueue()
         self.endpoint=endpoint
         self.schema = schema
-        self.rate_limiter = ratelimiter(max_requests_per_minute, max_tokens_per_minute)
+        self.rate_limiter = ratelimiter(max_requests_per_interval, max_tokens_per_interval)
     
     @staticmethod                    
     def api_methods(http_session, method="post"):

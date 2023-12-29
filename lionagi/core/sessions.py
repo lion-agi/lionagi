@@ -38,10 +38,14 @@ class Session:
     
     async def _output(self, invoke=True, out=True):
         if invoke:
-            try: 
-                func, args = self._toolmanager._get_function_call(self.conversation.responses[-1]['content'])
-                outs = await self._toolmanager.invoke(func, args)
-                self.conversation.add_messages(response=outs)
+            try:
+                async def _try_output():
+                 
+                    func, args = self._toolmanager._get_function_call(self.conversation.responses[-1]['content'])
+                    outs = await self._toolmanager.invoke(func, args)
+                    self.conversation.add_messages(response=outs)
+                
+                
             except:
                 pass
         if out:

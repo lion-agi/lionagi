@@ -1,6 +1,4 @@
-from .base_endpoint import BaseEndpoint
-
-
+from .base_endpoints import BaseEndpoint
 class ChatCompletion(BaseEndpoint):
     endpoint: str = "chat/completion"
 
@@ -15,6 +13,3 @@ class ChatCompletion(BaseEndpoint):
             if bool(config[key]) is True and str(config[key]).lower() != "none":
                 payload.update({key: config[key]})
         return payload
-    
-    def process_response(self, session, payload, completion):
-        ...

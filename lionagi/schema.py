@@ -85,56 +85,6 @@ class ConditionalRelationship(BaseNode):
             raise ValueError(f"Condition {condition_key} has no value")
 
 
-class DataNode(BaseNode):
-    
-    ...
-    # def from_llama(self, data_:, **kwargs):
-    #     ...
-        
-    # def to_llama(self, **kwargs):
-    #     # to llama_index textnode
-    #     ...
-        
-    # def from_langchain(self, data_, **kwargs):
-    #     ...
-    
-    # def to_langchain(self, **kwargs):
-    #     ...
-        
-    # def to_csv(self, **kwargs):
-    #     ...
-
-    # def __call__(self, file_=None):
-    #     ...
-
-
-class MessageNode(BaseNode):
-    role: str
-    name: str
-
-    # def from_oai(self):
-    #     ...
-
-
-class File(DataNode):
-    ...
-    
-    # def from_path(self, path_, reader, clean=True, **kwargs):
-    #     self.content = reader(path_=path_, clean=clean, **kwargs)
-    
-    # def to_chunks(self, chunker, **kwargs):
-    #     ...
-
-
-class Chunk(DataNode):
-    ...    
-    # @classmethod
-    # def from_files(cls, files):
-    #     ...    
-    
-    # @classmethod
-    # def to_files(cls):
-    #     ...
     
     
 class DataLogger:
@@ -219,30 +169,8 @@ class DataLogger:
             dir (str): The directory to set for saving log files.
         """
         self.dir = dir
-        
-        
-class BaseTool(BaseNode):
-    name: str = None
-    func: Callable = None
-    content: Any = None
-    parser: Callable = None
-    
-    def initialize(self):
-        ...
 
-    def execute(self):
-        ...
 
-    def shutdown(self):
-        ...
-
-    def __enter__(self):
-        self.initialize()
-        return self
-
-   
-
-# checked ------------------------------------------------------
 class Structure:
     def __init__(self):
         self.graph = nx.DiGraph()
@@ -272,4 +200,81 @@ class Structure:
     def from_json(self, data: str) -> None:
         graph_data = json.loads(data)
         self.graph = nx.node_link_graph(graph_data)
+
+
+
+
+
+class DataNode(BaseNode):
+    
+    ...
+    # def from_llama(self, data_:, **kwargs):
+    #     ...
         
+    # def to_llama(self, **kwargs):
+    #     # to llama_index textnode
+    #     ...
+        
+    # def from_langchain(self, data_, **kwargs):
+    #     ...
+    
+    # def to_langchain(self, **kwargs):
+    #     ...
+        
+    # def to_csv(self, **kwargs):
+    #     ...
+
+    # def __call__(self, file_=None):
+    #     ...
+
+
+class MessageNode(BaseNode):
+    role: str
+    name: str
+    _logger: 'DataLogger' = DataLogger()
+
+    # def from_oai(self):
+    #     ...
+
+
+class File(DataNode):
+    ...
+    
+    # def from_path(self, path_, reader, clean=True, **kwargs):
+    #     self.content = reader(path_=path_, clean=clean, **kwargs)
+    
+    # def to_chunks(self, chunker, **kwargs):
+    #     ...
+
+
+class Chunk(DataNode):
+    ...    
+    # @classmethod
+    # def from_files(cls, files):
+    #     ...    
+    
+    # @classmethod
+    # def to_files(cls):
+    #     ...
+
+
+
+
+class BaseTool(BaseNode):
+    name: str = None
+    func: Callable = None
+    content: Any = None
+    parser: Callable = None
+    
+    def initialize(self):
+        ...
+
+    def execute(self):
+        ...
+
+    def shutdown(self):
+        ...
+
+    def __enter__(self):
+        self.initialize()
+        return self
