@@ -20,7 +20,7 @@ pip install lionagi
 Download the `.env_template` file, input your appropriate API_KEY, save the file, rename as `.env` and put in your project's root directory. 
 by default we use `OPENAI_API_KEY`.
 
-\*we now also supports all models in [OpenRouter](https://openrouter.ai/models)
+\*we now also supports all models in [OpenRouter](https://openrouter.ai/models)   (not released yet, you can have a preview in `main`)
 
 ### Features
 
