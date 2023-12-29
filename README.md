@@ -71,6 +71,8 @@ print(f"Calculation Result: {result}")
 
 ```python
 # or otherwise, you can use
+import asyncio
+
 async def main():
     calculator = li.Session(system=system)
     result = await calculator.initiate(instruction=instruction,
