@@ -1,5 +1,6 @@
 import abc
 
+
 class BaseEndpoint(abc.ABC):
     endpoint: str = abc.abstractproperty()
 
@@ -26,7 +27,16 @@ class BaseEndpoint(abc.ABC):
         """
         pass
 
-
-
-
-    
+    @classmethod
+    def _create_payload(scls, input_, llmconfig, schema, **kwargs):
+        
+        config = {**llmconfig, **kwargs}
+        payload = {schema["input"]: input_}
+        
+        for key in schema['required']:
+            payload.update({key: config[key]})
+        
+        for key in schema['optional']:
+            if bool(config[key]) is True and str(config[key]).lower() != "none":
+                payload.update({key: config[key]})
+        return payload

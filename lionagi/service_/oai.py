@@ -1,15 +1,12 @@
 from os import getenv
-import dotenv
+from dotenv import load_dotenv
+load_dotenv()
 
+from .base_service import BaseAPIService, BaseAPIRateLimiter
 
-dotenv.load_dotenv()
-
-
-
-
-class OpenRouterService(BaseAPIService):
-
-    base_url = "https://openrouter.ai/api/v1"
+class OpenAIService(BaseAPIService):
+    base_url: str = "https://api.openai.com/v1/"
+    _key_scheme: str = "OPENAI_API_KEY"
 
     def __init__(
         self,
@@ -23,7 +20,7 @@ class OpenRouterService(BaseAPIService):
         queue = None,
     ):
         super().__init__(
-            api_key = api_key or getenv("OPENROUTER_API_KEY"),
+            api_key = api_key or getenv(self._key_scheme),
             status_tracker = status_tracker,
             queue = queue,
             ratelimiter=ratelimiter,
@@ -31,7 +28,16 @@ class OpenRouterService(BaseAPIService):
             max_tokens_per_minute=max_tokens_per_minute),
         self.token_encoding_name=token_encoding_name
         self.max_attempts = max_attempts
-        
-    async def serve(self, payload, endpoint_="chat/completions"):
-        return await self._serve(payload=payload, endpoint_=endpoint_)
-        
+
+    async def serve(self, payload, endpoint_="chat/completions", method="post"):
+        return await self._serve(payload=payload, endpoint_=endpoint_, method=method)
+    
+    async def 
+
+
+
+
+
+
+
+

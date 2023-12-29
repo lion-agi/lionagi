@@ -258,6 +258,12 @@ class Chunk(DataNode):
     #     ...
 
 
+class Embeddings(DataNode):
+    ...
+
+
+
+
 
 
 class BaseTool(BaseNode):
