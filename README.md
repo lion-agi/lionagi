@@ -22,6 +22,11 @@ by default we use `OPENAI_API_KEY`.
 
 \*we now also supports all models in [OpenRouter](https://openrouter.ai/models)   (not released yet, you can have a preview in `main`)
 
+\* https://lionagi.readthedocs.io/en/v0.0.111/ is the the latest stable, please `pip install lionagi==0.0.111` if you find 0.0.112 buggy 
+
+
+
+
 ### Features
 
 - Robust performance
@@ -52,16 +57,29 @@ import lionagi as li
 system = "You are a helpful assistant designed to perform calculations."
 instruction = {"Addition":"Add the two numbers together i.e. x+y"}
 context = {"x": 10, "y": 5}
+```
 
-# Initialize a session with a system message
+```python
+# in interactive environment (.ipynb for example)
 calculator = li.Session(system=system)
-
-# run a LLM API call
 result = await calculator.initiate(instruction=instruction,
                                    context=context,
                                    model="gpt-4-1106-preview")
 
 print(f"Calculation Result: {result}")
+```
+
+```python
+# or otherwise, you can use
+async def main():
+    calculator = li.Session(system=system)
+    result = await calculator.initiate(instruction=instruction,
+                                       context=context, 
+                                       model="gpt-4-1106-preview")
+    print(f"Calculation Result: {result}")
+
+if __name__ == "__main__":
+    asyncio.run(main())
 ```
 
 Visit our notebooks for our examples. 
