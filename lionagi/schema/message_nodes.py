@@ -9,3 +9,9 @@ class MessageNode(BaseNode):
 
     # def from_oai(self):
     #     ...
+    
+    def to_csv(self):
+        pass
+
+    # def to_csv(self, filename=None,dir=None,  verbose=True, timestamp=True, dir_exist_ok=True, file_exist_ok=False):
+    #     self._logger.to_csv(filename,dir=dir, verbose=verbose, timestamp=timestamp, dir_exist_ok=dir_exist_ok, file_exist_ok=file_exist_ok)

@@ -44,13 +44,6 @@ class ToolManager:
         except Exception as e:
             raise ValueError(f"Error invoking function {name}: {str(e)}")
 
-    @staticmethod
-    def parse_function_call(response: str) -> Tuple[str, Dict]:
-        out = json.loads(response)
-        func = out.get('function', '').lstrip('call_')
-        args = json.loads(out.get('arguments', '{}'))
-        return func, args
-
     def register_tools(self, tools: List[BaseTool], update: bool = False, new: bool = False,
                        prefix: Optional[str] = None, postfix: Optional[int] = None):
         for tool in tools:

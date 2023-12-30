@@ -1,73 +1,54 @@
 import math
 from pathlib import Path
-from typing import Any, Dict, List, Union, Callable, Optional
+from typing import List, Union
 
-from .sys_utils import to_list, l_call
-from ..schema.data_logger import DataLogger
+from .type_utils import to_list
+from .call_utils import l_call
 
-def _dir_to_path(dir, ext, recursive):
-    tem = '**/*' if recursive else '*'
-    return list(Path(dir).glob(tem + ext))
+def get_bins(input: List[str], upper: int = 7500) -> List[List[int]]:
+    """
+    Get index of elements in a list based on their consecutive cumulative sum of length,
+    according to some upper threshold. Return lists of indices as bins.
+    
+    Parameters:
+        input (List[str]): List of items to be binned.
 
-def _split_path(path: Path) -> tuple:
-    folder_name = path.parent.name
-    file_name = path.name
-    return (folder_name, file_name)
+        upper (int, optional): Upper threshold for the cumulative sum of the length of items in a bin. Default is 7500.
+    
+    Returns:
+        List[List[int]]: List of lists, where each inner list contains the indices of the items that form a bin.
+    
+    Example:
+        >>> items = ['apple', 'a', 'b', 'banana', 'cheery', 'c', 'd', 'e']
+        >>> upper = 10
+        >>> get_bins(items, upper)
+        [[0, 1, 2], [3], [4, 5, 6, 7]]
+    """
+    current = 0
+    bins = []
+    bin = []
+    for idx, item in enumerate(input):
+        if current + len(item) < upper:
+            bin.append(idx)
+            current += len(item)
+        elif current + len(item) >= upper:
+            bins.append(bin)
+            bin = [idx]
+            current = len(item)
+        if idx == len(input) - 1 and len(bin) > 0:
+            bins.append(bin)
+    return bins
 
 def dir_to_path(dir: str, ext, recursive: bool = False, flat: bool = True):
+    
+    def _dir_to_path():
+        tem = '**/*' if recursive else '*'
+        return list(Path(dir).glob(tem + ext))
+    
     try: 
-        return to_list(l_call(ext, _dir_to_path, flat=True, 
-                              recursive=recursive, dir=dir, ext=ext), 
-                       flat=flat)
+        return to_list(l_call(ext, _dir_to_path, flat=True), flat=flat)
     except: 
         raise ValueError("Invalid directory or extension, please check the path")
-    
-def read_text(filepath: str, clean: bool = True) -> str:
-    with open(filepath, 'r') as f:
-        content = f.read()
-        if clean:
-            # Define characters to replace and their replacements
-            replacements = {'\\': ' ', '\n': ' ', '\t': ' ', '  ': ' ', '\'': ' '}
-            for old, new in replacements.items():
-                content = content.replace(old, new)
-        return content
-
-def dir_to_files(dir: str, 
-                 ext: str, 
-                 recursive: bool = False,
-                 reader: Callable = read_text, 
-                 clean: bool = True,
-                 to_csv: bool = False, 
-                 project: str = 'project',
-                 output_dir: str = 'data/logs/sources/', 
-                 filename: Optional[str] = None,
-                 verbose: bool = True, 
-                 timestamp: bool = True, 
-                 logger: Optional[DataLogger] = None):
-
-    sources = dir_to_path(dir, ext, recursive)
-
-    def _to_dict(path_: Path) -> Dict[str, Union[str, Path]]:
-        folder, file = _split_path(path_)
-        content = reader(str(path_), clean=clean)
-        return {
-            'project': project,
-            'folder': folder,
-            'file': file,
-            "file_size": len(str(content)),
-            'content': content
-        } if content else None
-
-    logs = to_list(l_call(sources, _to_dict, flat=True), dropna=True)
-
-    return logs
-
-
-    if to_csv:
-        filename = filename or f"{project}_sources.csv"
-        logger = DataLogger(dir=output_dir, log=logs) if not logger else logger
-        logger.to_csv(dir=output_dir, filename=filename, verbose=verbose, timestamp=timestamp)
-
 
 def _chunk_n1(input):
     return [input]
@@ -117,47 +98,3 @@ def chunk_text(input: str,
 
     except Exception as e:
         raise ValueError(f"An error occurred while chunking the text. {e}")
-
-def _file_to_chunks(input: Dict[str, Any],
-                   field: str = 'content',
-                   chunk_size: int = 1500,
-                   overlap: float = 0.1,
-                   threshold: int = 200) -> List[Dict[str, Any]]:
-    try:
-        out = {key: value for key, value in input.items() if key != field}
-        out.update({"chunk_overlap": overlap, "chunk_threshold": threshold})
-
-        chunks = chunk_text(input[field], chunk_size=chunk_size, overlap=overlap, threshold=threshold)
-        logs = []
-        for i, chunk in enumerate(chunks):
-            chunk_dict = out.copy()
-            chunk_dict.update({
-                'file_chunks': len(chunks),
-                'chunk_id': i + 1,
-                'chunk_size': len(chunk),
-                f'chunk_{field}': chunk
-            })
-            logs.append(chunk_dict)
-
-        return logs
-
-    except Exception as e:
-        raise ValueError(f"An error occurred while chunking the file. {e}")
-
-def file_to_chunks(input,
-                   project='project',
-                   output_dir='data/logs/sources/',
-                   chunk_func = _file_to_chunks,
-                   to_csv=False,
-                   filename=None,
-                   verbose=True,
-                   timestamp=True,
-                   logger=None, **kwargs):
-    logs = to_list(l_call(input, chunk_func, **kwargs), flat=True)
-
-    if to_csv:
-        filename = filename if filename else f"{project}_sources.csv"
-        logger = logger or DataLogger(log=logs)
-        logger.to_csv(dir=output_dir, filename=filename, verbose=verbose, timestamp=timestamp)
-
-    return logs

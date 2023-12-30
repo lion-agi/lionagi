@@ -1,6 +1,6 @@
 import json
 from ..utils.sys_utils import l_call
-from ..schema import MessageNode
+from ..schema.message_nodes import MessageNode
 
 
 class Message(MessageNode):
@@ -96,5 +96,3 @@ class Message(MessageNode):
                             context=context, response=response, name=name)
         return self._output()
     
-    def to_csv(self, filename=None,dir=None,  verbose=True, timestamp=True, dir_exist_ok=True, file_exist_ok=False):
-        self._logger.to_csv(filename,dir=dir, verbose=verbose, timestamp=timestamp, dir_exist_ok=dir_exist_ok, file_exist_ok=file_exist_ok)
