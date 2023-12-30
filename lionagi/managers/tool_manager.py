@@ -2,7 +2,7 @@ import json
 import asyncio
 from typing import Dict, Any, Optional, List, Tuple
 
-from ..tools.base_tool import BaseTool
+from ..schema.base_tool import BaseTool
 
 
 class ToolManager:

@@ -18,7 +18,7 @@ import os
 import hashlib
 from pathlib import Path
 from datetime import datetime
-from typing import Any
+from typing import Any, List
 
 def create_copy(input: Any, n: int) -> Any:
     """
@@ -124,3 +124,42 @@ def split_path(path: Path) -> tuple:
     folder_name = path.parent.name
     file_name = path.name
     return (folder_name, file_name)
+
+def get_bins(input: List[str], upper: int = 7500) -> List[List[int]]:
+    """
+    Get index of elements in a list based on their consecutive cumulative sum of length,
+    according to some upper threshold. Return lists of indices as bins.
+    
+    Parameters:
+        input (List[str]): List of items to be binned.
+
+        upper (int, optional): Upper threshold for the cumulative sum of the length of items in a bin. Default is 7500.
+    
+    Returns:
+        List[List[int]]: List of lists, where each inner list contains the indices of the items that form a bin.
+    
+    Example:
+        >>> items = ['apple', 'a', 'b', 'banana', 'cheery', 'c', 'd', 'e']
+        >>> upper = 10
+        >>> get_bins(items, upper)
+        [[0, 1, 2], [3], [4, 5, 6, 7]]
+    """
+    current = 0
+    bins = []
+    bin = []
+    
+    for idx, item in enumerate(input):
+        
+        if current + len(item) < upper:
+            bin.append(idx)
+            current += len(item)
+    
+        elif current + len(item) >= upper:
+            bins.append(bin)
+            bin = [idx]
+            current = len(item)
+    
+        if idx == len(input) - 1 and len(bin) > 0:
+            bins.append(bin)
+    
+    return bins
