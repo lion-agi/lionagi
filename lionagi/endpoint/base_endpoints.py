@@ -1,42 +1,48 @@
 import abc
+from typing import Dict
+
+async def serve_endpoint(input_, endpoint, schema, service, method="post", **kwargs):
+    payload = endpoint.create_payload(input_=input_, schema=schema, **kwargs)
+    return await service.serve(payload=payload, endpoint_=schema['endpoint'], method=method)
+
 
 
 class BaseEndpoint(abc.ABC):
+    
+    def __init__(self)
+    
+    
+    
+    llmconfig : Dict
+    
+    
+    
+    
+    
     endpoint: str = abc.abstractproperty()
 
-    @abc.abstractmethod
-    def create_payload(self, **kwargs):
-        """
-        Create a payload for the request based on configuration.
-        
-        Parameters:
-            **kwargs: Additional keyword arguments for configuration.
+    def create_payload(self):
+        ...
 
-        Returns:
-            dict: The payload for the request.
-        """
-        pass
-
-    @abc.abstractmethod
-    def process_response(self, response):
-        """
-        Process the response from the API call.
-        
-        Parameters:
-            response: The response to process.
-        """
-        pass
+    def process_response(self):
+        ...
 
     @classmethod
-    def _create_payload(scls, input_, llmconfig, schema, **kwargs):
+
         
-        config = {**llmconfig, **kwargs}
-        payload = {schema["input"]: input_}
+class ChatCompletion(BaseEndpoint):
+    endpoint: str = "chat/completion"
+
+    @classmethod
+    def create_payload(scls, input_, llmconfig, schema, **kwargs):
+        payload = {"messages": input_}
+        scls._create_payload(input_=payload, llmconfig=llmconfig, schema=schema, **kwargs)
         
-        for key in schema['required']:
-            payload.update({key: config[key]})
-        
-        for key in schema['optional']:
-            if bool(config[key]) is True and str(config[key]).lower() != "none":
-                payload.update({key: config[key]})
-        return payload
+
+class 
+
+
+
+
+
+

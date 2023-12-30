@@ -5,9 +5,7 @@ from .embeddings import Embeddings
 
 
 
-async def serve_endpoint(input_, endpoint, schema, service, method="post", **kwargs):
-    payload = endpoint.create_payload(input_=input_, schema=schema, **kwargs)
-    return await service.serve(payload=payload, endpoint_=schema['endpoint'], method=method)
+
     
 
 

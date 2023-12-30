@@ -29,8 +29,29 @@ class OpenAIService(BaseAPIService):
         self.token_encoding_name=token_encoding_name
         self.max_attempts = max_attempts
 
+
+
     async def serve(self, payload, endpoint_="chat/completions", method="post"):
         return await self._serve(payload=payload, endpoint_=endpoint_, method=method)
+
+    async def serve_ChatCompletion(self, payload):
+        return
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
     
     async def 
 

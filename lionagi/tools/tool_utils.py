@@ -5,7 +5,7 @@ from ..utils.sys_utils import l_call, str_to_num
 from ..schema import BaseNode
 
 
-class ToolManager(BaseNode):
+class ToolManager:
     registry : Dict = {}
 
     def _name_existed(self, name: str):
