@@ -3,7 +3,7 @@ from typing import Any
 from dotenv import load_dotenv
 
 from .conversations import Conversation
-from ..schema import DataLogger
+from ..schema.base_schema import DataLogger
 from ..tools.tool_utils import ToolManager
 from ..services import OpenAIService
 from ..endpoint.chat_completion import ChatCompletion

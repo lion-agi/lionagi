@@ -1,5 +1,5 @@
 from ..utils.call_utils import l_call
-from ..schema import BaseNode, DataLogger
+from ..schema.base_schema import BaseNode, DataLogger
 
 
 class MessageNode(BaseNode):
