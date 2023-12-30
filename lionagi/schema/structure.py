@@ -1,7 +1,7 @@
 from typing import Optional, List, Dict, Any
 from pydantic import Field
 from .base_node import BaseNode
-from .relationships import ConditionalRelationship
+from .relationship import ConditionalRelationship
 
 
 class Structure(BaseNode):
