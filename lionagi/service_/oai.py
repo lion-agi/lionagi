@@ -1,7 +1,4 @@
 from os import getenv
-from dotenv import load_dotenv
-load_dotenv()
-
 from .base_service import BaseAPIService, BaseAPIRateLimiter
 
 class OpenAIService(BaseAPIService):
@@ -30,16 +27,8 @@ class OpenAIService(BaseAPIService):
         self.max_attempts = max_attempts
 
 
-
     async def serve(self, payload, endpoint_="chat/completions", method="post"):
         return await self._serve(payload=payload, endpoint_=endpoint_, method=method)
-
-    async def serve_ChatCompletion(self, payload):
-        return
-
-
-
-
 
 
 
