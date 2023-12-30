@@ -1,7 +1,5 @@
-from typing import Dict, Any, Union, List, Optional, Callable, Tuple
+from typing import Dict, Any, Union, List, Optional
 import tiktoken
-import json
-import asyncio
 
 class PayloadManager:
     def __init__(self, input_: Union[str, List[str]], schema: Dict[str, Any], encoding_name: str) -> None:

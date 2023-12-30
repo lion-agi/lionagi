@@ -23,6 +23,7 @@ import re
 import tempfile
 import time
 import hashlib
+from pathlib import Path
 from datetime import datetime
 from collections.abc import Generator, Iterable, MutableMapping
 from typing import Any, Callable, Dict, List, Optional, Union
@@ -797,3 +798,19 @@ def get_bins(input: List[str], upper: int = 7500) -> List[List[int]]:
             bins.append(bin)
     return bins
 
+def _dir_to_path(dir, ext, recursive):
+    tem = '**/*' if recursive else '*'
+    return list(Path(dir).glob(tem + ext))
+
+def _split_path(path: Path) -> tuple:
+    folder_name = path.parent.name
+    file_name = path.name
+    return (folder_name, file_name)
+
+def dir_to_path(dir: str, ext, recursive: bool = False, flat: bool = True):
+    try: 
+        return to_list(l_call(ext, _dir_to_path, flat=True, 
+                              recursive=recursive, dir=dir, ext=ext), 
+                       flat=flat)
+    except: 
+        raise ValueError("Invalid directory or extension, please check the path")

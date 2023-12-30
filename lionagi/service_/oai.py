@@ -1,5 +1,5 @@
 from os import getenv
-from .base_service import BaseAPIService, BaseAPIRateLimiter
+from .base_api_service import BaseAPIService, BaseAPIRateLimiter
 
 class OpenAIService(BaseAPIService):
     base_url: str = "https://api.openai.com/v1/"
