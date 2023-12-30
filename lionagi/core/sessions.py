@@ -8,7 +8,7 @@ from ..tools.tool_utils import ToolManager
 from ..services import OpenAIService
 from ..endpoint.chat_completion import ChatCompletion
 from ..endpoint.embeddings import Embeddings
-from ..llm_configs import oai_chat_schema, oai_finetune_schema
+from ..configs.oai_configs import oai_chat_schema, oai_finetune_schema
 
 load_dotenv()
 OAIService = OpenAIService()
