@@ -1,6 +1,26 @@
+from typing import Dict, Iterable, List, Any, Callable, Generator, Tuple, Union
 
 
-def flatten_dict(d: dict, parent_key: str = '', sep: str = '_') -> dict:
+def flatten_dict(d: Dict, parent_key: str = '', sep: str = '_') -> Dict:
+    """
+    Flattens a nested dictionary by concatenating keys.
+
+    This function recursively flattens a nested dictionary by concatenating
+    the keys of nested dictionaries with a separator. The default separator
+    is an underscore (_).
+
+    Parameters:
+    d (dict): The dictionary to flatten.
+    
+    parent_key (str, optional): The base key to use for the current level of recursion.
+        Defaults to an empty string, meaning no parent key, key cannot be a number 
+        
+    sep (str, optional): The separator to use when concatenating keys.
+        Defaults to an underscore (_).
+
+    Returns:
+    dict: A new dictionary with flattened keys and corresponding values.
+    """
     items = []
     for k, v in d.items():
         new_key = f"{parent_key}{sep}{k}" if parent_key else k
@@ -10,7 +30,24 @@ def flatten_dict(d: dict, parent_key: str = '', sep: str = '_') -> dict:
             items.append((new_key, v))
     return dict(items)
 
-def flatten_list(l: list, dropna: bool = True) -> list:
+def flatten_list(l: List, dropna: bool = True) -> List:
+    """
+    Flattens a nested list into a single list of values.
+
+    The function iterates over each element in the provided list. If an
+    element is a list itself, the function is called recursively to flatten
+    it. If the element is not a list, it is appended to the result list.
+    Optionally, None values can be dropped from the result list.
+
+    Parameters:
+    l (list): The list to flatten, which may contain nested lists.
+    
+    dropna (bool, optional): Whether to exclude None values from the result list.
+        Defaults to True.
+
+    Returns:
+    list: A new flattened list with or without None values based on the dropna parameter.
+    """
     flat_list = []
     for i in l:
         if isinstance(i, list):
@@ -19,197 +56,197 @@ def flatten_list(l: list, dropna: bool = True) -> list:
             flat_list.append(i)
     return flat_list
 
-def flatten(obj, parent_key='', sep='_', max_depth=None, current_depth=0, logic_func=None):
-    items = []
-    if max_depth is not None and current_depth >= max_depth:
-        return {parent_key: obj} if parent_key else obj
+def change_separator(flat_dict, current_sep, new_sep):
+    """
+    Changes the separator in the keys of a flat dictionary.
+    
+    Parameters:
+    flat_dict (dict): The dictionary with keys containing the current separator.
+    current_sep (str): The current separator used in the dictionary keys.
+    new_sep (str): The new separator to replace the current separator in the dictionary keys.
+    
+    Returns:
+    dict: A new dictionary with the separators in the keys replaced.
+    """
+    return {
+        k.replace(current_sep, new_sep): v 
+        for k, v in flat_dict.items()
+        }
 
-    if isinstance(obj, dict):
-        for k, v in obj.items():
-            new_key = f"{parent_key}{sep}{k}" if parent_key else k
-            if isinstance(v, (dict, list)) and (logic_func is None or logic_func(k, v)):
-                items.extend(flatten(v, new_key, sep, max_depth, current_depth + 1, logic_func).items())
-            else:
-                items.append((new_key, v))
-    elif isinstance(obj, list):
-        for i, item in enumerate(obj):
-            new_key = f"{parent_key}{sep}{i}" if parent_key else str(i)
-            if isinstance(item, (dict, list)) and (logic_func is None or logic_func(i, item)):
-                items.extend(flatten(item, new_key, sep, max_depth, current_depth + 1, logic_func).items())
-            else:
-                items.append((new_key, item))
-    else:
-        return {parent_key: obj}
-
-    return dict(items)
-
-def unflatten_dict(flat_dict, sep='_'):
+def unflatten_dict(flat_dict: Dict, sep: str = '_') -> Dict:
+    """
+    Unflattens a dictionary where keys are strings that represent nested dictionary paths separated by 'sep'.
+    
+    Args:
+    flat_dict (dict): A dictionary with keys as strings that represent paths.
+    sep (str): The separator used in the keys of the flat dictionary.
+    
+    Returns:
+    dict: A nested dictionary unflattened from the keys of the input dictionary.
+    
+    Raises:
+    ValueError: If there are conflicting keys in the path.
+    
+    Example:
+    >>> unflatten_dict({'a_0': 1, 'a_1': 2, 'b_x': 'X', 'b_y': 'Y'})
+    {'a': [1, 2], 'b': {'x': 'X', 'y': 'Y'}}
+    """
     result = {}
     for flat_key, value in flat_dict.items():
         parts = flat_key.split(sep)
         d = result
         for part in parts[:-1]:
             part = int(part) if part.isdigit() else part
-            if part not in d or not isinstance(d[part], (dict, list)):
-                d[part] = [] if isinstance(part, int) else {}
-            d = d[part]
+            if part not in d:
+                if isinstance(d, list):
+                    d.append({})
+                    d = d[-1]
+                else:
+                    d[part] = {}
+            d = d[part] if not isinstance(d, list) else d[-1]
         last_part = parts[-1]
         last_part = int(last_part) if last_part.isdigit() else last_part
-        d[last_part] = value
+        if isinstance(d, list):
+            d.append(value)
+        elif last_part in d:
+            raise ValueError(f"Conflicting keys detected. Key part '{last_part}' is already present.")
+        else:
+            d[last_part] = value
+            
+    # Convert dictionaries with contiguous integer keys starting from 0 to lists
+    def dict_to_list(d: dict) -> dict:
+        """
+        Converts dictionaries with contiguous integer keys starting from 0 into lists.
+        
+        Args:
+        d (dict): A dictionary that may have integer keys suitable for conversion to a list.
+        
+        Returns:
+        dict or list: The input dictionary or a list if the dictionary keys match the criteria.
+        """
+        if isinstance(d, dict) and all(isinstance(k, int) and k >= 0 for k in d.keys()):
+            keys = sorted(d.keys())
+            if keys == list(range(len(keys))):
+                return [dict_to_list(d[k]) for k in keys]
+        if isinstance(d, dict):
+            return {k: dict_to_list(v) for k, v in d.items()}
+        return d
+    
+    result = dict_to_list(result)
     return result
 
-def unflatten_to_list(flat_dict, sep='_'):
-    result_list = []
-    for flat_key, value in flat_dict.items():
-        indices = [int(p) if p.isdigit() else p for p in flat_key.split(sep)]
-        lst = result_list
-        for index in indices[:-1]:
-            while len(lst) <= index:
-                lst.append([])
-            lst = lst[index]
-        lst[indices[-1]] = value
-    return result_list
+def is_flattenable(obj: Any) -> bool:
+    """
+    Determines if the given object contains nested dictionaries or lists, making it suitable for flattening.
+    
+    Args:
+    obj (object): The object to check for flattenable structures.
+    
+    Returns:
+    bool: True if the object can be flattened (contains nested dicts or lists), False otherwise.
+    """
+    if isinstance(obj, dict):
+        return any(isinstance(v, (dict, list)) for v in obj.values())
+    elif isinstance(obj, list):
+        return any(isinstance(i, (dict, list)) for i in obj)
+    return False
 
-def unflatten_complex_structure(flat_obj, sep='_'):
-    if isinstance(flat_obj, dict):
-        return unflatten_dict(flat_obj, sep)
-    elif isinstance(flat_obj, list):
-        return unflatten_to_list({f"{i}": v for i, v in enumerate(flat_obj)}, sep)
-    else:
-        raise TypeError("Object must be a flattened dictionary or list.")
+def flatten_with_custom_logic(obj, logic_func=None, parent_key='', sep='_'):
+    """
+    Recursively flattens a nested dictionary or list and applies custom logic to the keys and values.
 
-def change_separator(flat_dict, current_sep, new_sep):
-    return {k.replace(current_sep, new_sep): v for k, v in flat_dict.items()}
+    Parameters:
+    obj (dict | list): The dictionary or list to flatten.
+    logic_func (callable, optional): A function that takes four arguments (parent_key, key, value, sep)
+        and returns a tuple (new_key, new_value) after applying custom logic.
+    parent_key (str): The base key to use for creating new keys.
+    sep (str): The separator to use when joining nested keys.
 
+    Returns:
+    dict: A flattened dictionary with keys representing the nested paths and values from the original object.
 
+    Example Usage:
+    >>> sample_dict = {'a': 1, 'b': {'c': 2, 'd': {'e': 3}}}
+    >>> flatten_with_custom_logic(sample_dict)
+    {'a': 1, 'b_c': 2, 'b_d_e': 3}
 
+    >>> sample_list = [1, 2, [3, 4]]
+    >>> flatten_with_custom_logic(sample_list)
+    {'0': 1, '1': 2, '2_0': 3, '2_1': 4}
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-from typing import Any, Dict, Union, Iterable, List
-
-def flatten(data, max_depth=None, path_preservation=False, custom_logic=None):
-    def _flatten_dict(d, parent_key='', sep='.'):
-        items = []
-        for k, v in d.items():
+    >>> def custom_logic(parent_key, key, value, sep='_'):
+    ...     new_key = f"{parent_key}{sep}{key}".upper() if parent_key else key.upper()
+    ...     return new_key, value * 2 if isinstance(value, int) else value
+    >>> flatten_with_custom_logic(sample_dict, custom_logic)
+    {'A': 2, 'B_C': 4, 'B_D_E': 6}
+    """
+    items = {}
+    if isinstance(obj, dict):
+        for k, v in obj.items():
             new_key = f"{parent_key}{sep}{k}" if parent_key else k
-            if isinstance(v, MutableMapping):
-                if max_depth is None or max_depth > 1:
-                    items.extend(_flatten_dict(v, new_key, sep=sep).items())
-                else:
-                    items.append((new_key, v))
-            elif isinstance(v, Iterable) and not isinstance(v, (str, bytes)):
-                if max_depth is None or max_depth > 1:
-                    items.extend(_flatten_list(v, new_key, sep=sep).items())
-                else:
-                    items.append((new_key, v))
+            if isinstance(v, (dict, list)):
+                if v:  # Check if the dictionary or list is not empty
+                    items.update(flatten_with_custom_logic(v, logic_func, new_key, sep))
+                else:  # Handle empty dictionaries and lists
+                    items[new_key] = None
             else:
-                items.append((new_key, v))
-        return dict(items)
-
-    def _flatten_list(lst, parent_key='', sep='.'):
-        items = {}
-        for i, v in enumerate(lst):
-            new_key = f"{parent_key}{sep}{i}" if parent_key else str(i)
-            if isinstance(v, MutableMapping):
-                if max_depth is None or max_depth > 1:
-                    items.update(_flatten_dict(v, new_key, sep=sep))
+                if logic_func:
+                    new_key, new_value = logic_func(parent_key, k, v, sep=sep)
                 else:
-                    items[new_key] = v
-            elif isinstance(v, Iterable) and not isinstance(v, (str, bytes)):
-                if max_depth is None or max_depth > 1:
-                    items.update(_flatten_list(v, new_key, sep=sep))
+                    new_value = v
+                items[new_key] = new_value
+    elif isinstance(obj, list):
+        for i, item in enumerate(obj):
+            new_key = f"{parent_key}{sep}{str(i)}" if parent_key else str(i)  # Cast index to string
+            if isinstance(item, (dict, list)):
+                if item:  # Check if the dictionary or list is not empty
+                    items.update(flatten_with_custom_logic(item, logic_func, new_key, sep))
+                else:  # Handle empty lists
+                    items[new_key] = None
+            else:
+                if logic_func:
+                    new_key, new_value = logic_func(parent_key, str(i), item, sep=sep)
                 else:
-                    items[new_key] = v
-            else:
-                items[new_key] = v
-        return items
-
-    if isinstance(data, MutableMapping):
-        return _flatten_dict(data)
-    elif isinstance(data, Iterable) and not isinstance(data, (str, bytes)):
-        return _flatten_list(data)
-    else:
-        raise TypeError('Input data must be a dictionary or an iterable')
-
-def _unflatten_dict(d, sep='.'):
-    result_dict = {}
-    for k, v in d.items():
-        parts = k.split(sep)
-        sub_dict = result_dict
-        for part in parts[:-1]:
-            if part.isdigit():
-                part = int(part)
-                if part not in sub_dict or not isinstance(sub_dict[part], dict):
-                    sub_dict[part] = {}
-            else:
-                if part not in sub_dict:
-                    sub_dict[part] = {}
-            sub_dict = sub_dict[part]
-        last_part = parts[-1]
-        if last_part.isdigit():
-            last_part = int(last_part)
-            sub_dict[last_part] = v
-        else:
-            sub_dict[last_part] = v
-    return result_dict
-
-def unflatten(flat_obj, sep='.'):
-    if isinstance(flat_obj, dict):
-        return _unflatten_dict(flat_obj, sep)
-    else:
-        raise TypeError("Object must be a flattened dictionary.")
-
-def flatten_iterable_to_list(iterable, max_depth=None):
-    if not isinstance(iterable, Iterable) or isinstance(iterable, (str, bytes)):
-        return [iterable]
-    flattened = []
-    for item in iterable:
-        if isinstance(item, Iterable) and not isinstance(item, (str, bytes)):
-            if max_depth is None or max_depth > 1:
-                flattened.extend(flatten_iterable_to_list(item, None if max_depth is None else max_depth-1))
-            else:
-                flattened.append(item)
-        else:
-            flattened.append(item)
-    return flattened
+                    new_value = item
+                items[new_key] = new_value
+    return items
 
 def dynamic_flatten(obj, parent_key='', sep='_', max_depth=None, current_depth=0):
+    """
+    Recursively flattens a nested dictionary or list, while allowing a maximum depth and custom separators.
+
+    Parameters:
+    obj (dict | list): The dictionary or list to flatten.
+    parent_key (str): The base key to use for creating new keys.
+    sep (str): The separator to use when joining nested keys.
+    max_depth (int, optional): The maximum depth to flatten.
+    current_depth (int): The current depth in the recursive call (used internally).
+
+    Returns:
+    dict: A flattened dictionary with keys representing the nested paths and values from the original object.
+
+    Raises:
+    TypeError: If the input object is neither a dictionary nor a list.
+
+    Example Usage:
+    >>> sample_dict = {'a': 1, 'b': {'c': 2, 'd': {'e': 3}}}
+    >>> dynamic_flatten(sample_dict)
+    {'a': 1, 'b_c': 2, 'b_d_e': 3}
+
+    >>> sample_list = [1, 2, [3, 4]]
+    >>> dynamic_flatten(sample_list)
+    {'0': 1, '1': 2, '2_0': 3, '2_1': 4}
+
+    >>> dynamic_flatten(sample_dict, max_depth=1)
+    {'a': 1, 'b_c': 2, 'b_d': {'e': 3}}
+
+    >>> dynamic_flatten(sample_dict, sep='.')
+    {'a': 1, 'b.c': 2, 'b.d.e': 3}
+    """
     items = []
     if isinstance(obj, dict):
+        if not obj and parent_key:
+            items.append((parent_key, obj))
         for k, v in obj.items():
             new_key = f"{parent_key}{sep}{k}" if parent_key else k
             if isinstance(v, (dict, list)) and (max_depth is None or current_depth < max_depth):
@@ -217,6 +254,8 @@ def dynamic_flatten(obj, parent_key='', sep='_', max_depth=None, current_depth=0
             else:
                 items.append((new_key, v))
     elif isinstance(obj, list):
+        if not obj and parent_key:
+            items.append((parent_key, obj))
         for i, item in enumerate(obj):
             new_key = f"{parent_key}{sep}{i}" if parent_key else str(i)
             if isinstance(item, (dict, list)) and (max_depth is None or current_depth < max_depth):
@@ -225,121 +264,80 @@ def dynamic_flatten(obj, parent_key='', sep='_', max_depth=None, current_depth=0
                 items.append((new_key, item))
     else:
         raise TypeError('Input object must be a dictionary or a list')
-    return dict(items)
-from typing import Any, Callable, Dict, List, Union
-
-def dynamic_flatten(
-    obj: Union[Dict, List, Any], 
-    parent_key: str = '', 
-    sep: str = '_', 
-    max_depth: int = None, 
-    current_depth: int = 0, 
-    custom_logic: Callable = None
-) -> Dict:
-    """
-    Dynamically flattens a complex, nested data structure into a single level dictionary.
-    Allows for custom logic to be applied at each level of flattening.
-    """
-    items = []  # List to collect all the items that are being flattened
-
-    # Base case: if max_depth is reached, or the object is not a list or dict, stop the recursion
-    if max_depth is not None and current_depth >= max_depth or not isinstance(obj, (dict, list)):
-        return {parent_key: obj}
-
-    if isinstance(obj, dict):
-        for k, v in obj.items():
-            new_key = f"{parent_key}{sep}{k}" if parent_key else k
-            if custom_logic:  # Apply custom logic if provided
-                new_key, v = custom_logic(new_key, v)
-            items.extend(dynamic_flatten(v, new_key, sep, max_depth, current_depth + 1, custom_logic).items())
-    elif isinstance(obj, list):
-        for i, item in enumerate(obj):
-            new_key = f"{parent_key}{sep}{i}" if parent_key else str(i)
-            items.extend(dynamic_flatten(item, new_key, sep, max_depth, current_depth + 1, custom_logic).items())
     
     return dict(items)
 
+def dynamic_unflatten_dict(flat_dict, sep='_', custom_logic=None, max_depth=None):
+    """
+    Unflattens a dictionary with flat keys into a nested dictionary or list.
 
-def dynamic_unflatten(
-    flat_dict: Dict[str, Any], 
-    sep: str = '_', 
-    custom_logic: Callable = None
-) -> Union[Dict, Any]:
+    :param flat_dict: A dictionary with flat keys that need to be nested.
+    :param sep: The separator used in the flat keys (default is '_').
+    :param custom_logic: A function that customizes the processing of keys.
+                         It takes a key part as input and returns the transformed key part.
+    :param max_depth: The maximum depth to which the dictionary should be nested.
+                      If None, there is no maximum depth.
+    :return: A nested dictionary or list based on the flat input dictionary.
+
+    The function dynamically unflattens a dictionary with keys that represent nested paths.
+    For example, the flat dictionary {'a_b_c': 1, 'a_b_d': 2} would be unflattened to
+    {'a': {'b': {'c': 1, 'd': 2}}}. If the keys can be converted to integers and suggest list indices,
+    the function produces lists instead of dictionaries. For example,
+    {'0_a': 'foo', '1_b': 'bar'} becomes [{'a': 'foo'}, {'b': 'bar'}].
     """
-    Dynamically reconstructs the original structure from a flattened dictionary.
-    Allows for custom logic to be applied during unflattening.
-    """
-    reconstructed = {}
-    for flat_key, value in flat_dict.items():
-        parts = flat_key.split(sep)
-        d = reconstructed
+    
+    def handle_list_insert(sub_obj, part, value):
+        # Ensure part index exists in the list, fill gaps with None
+        while len(sub_obj) <= part:
+            sub_obj.append(None)
+        
+        sub_obj[part] = value
+
+    def insert(sub_obj, parts, value, max_depth, current_depth=0):
         for part in parts[:-1]:
-            part = part if not custom_logic else custom_logic(part)
-            if part.isdigit():
-                part = int(part)  # Convert parts back to integers if possible (for list indices)
-            d = d.setdefault(part, {})
+            # Stop nesting further if max_depth is reached
+            if max_depth is not None and current_depth >= max_depth:
+                sub_obj[part] = {parts[-1]: value}
+                return
+            # Handle integer parts for list insertion
+            if isinstance(part, int):
+                # Ensure part index exists in the list or dict, fill gaps with None
+                while len(sub_obj) <= part:
+                    sub_obj.append(None)
+                if sub_obj[part] is None:
+                    if current_depth < max_depth - 1 if max_depth else True:
+                        sub_obj[part] = [] if isinstance(parts[parts.index(part) + 1], int) else {}
+                sub_obj = sub_obj[part]
+            else:
+                # Handle string parts for dictionary insertion
+                if part not in sub_obj:
+                    sub_obj[part] = {}
+                sub_obj = sub_obj[part]
+            current_depth += 1
+        # Insert the value at the last part
         last_part = parts[-1]
-        last_part = last_part if not custom_logic else custom_logic(last_part)
-        if last_part.isdigit():
-            last_part = int(last_part)
-        d[last_part] = value
-    return reconstructed
-
-
-
-
-
-
-
-
-
-def flatten(obj: Union[dict, list], parent_key: str = '', sep: str = '_', max_depth: int = None, current_depth: int = 0, logic_func: Callable = None) -> Union[dict, list]:
-    items = []
-    if isinstance(obj, dict):
-        for k, v in obj.items():
-            new_key = f"{parent_key}{sep}{k}" if parent_key else k
-            if (isinstance(v, (dict, list)) and 
-                (max_depth is None or current_depth < max_depth) and 
-                (logic_func is None or logic_func(k, v))):
-                items.extend(flatten(v, new_key, sep, max_depth, current_depth + 1, logic_func).items())
-            else:
-                items.append((new_key, v))
-    elif isinstance(obj, list):
-        for i, item in enumerate(obj):
-            new_key = f"{parent_key}{sep}{i}" if parent_key else str(i)
-            if (isinstance(item, (dict, list)) and 
-                (max_depth is None or current_depth < max_depth) and 
-                (logic_func is None or logic_func(i, item))):
-                items.extend(flatten(item, new_key, sep, max_depth, current_depth + 1, logic_func).items())
-            else:
-                items.append((new_key, item))
-    return dict(items) if isinstance(obj, dict) else list(dict(items).values())
-
-
-def _handle_list_in_dict(d, part, next_part):
-    part = int(part)  # Convert to integer index for lists
-    if isinstance(d, dict):
-        d = d.setdefault(part, [])
-    while len(d) < next_part + 1:
-        d.append({})
-    return d
-
-def _unflatten_dict_recursive(flat_dict, sep, d, parts):
-    for part in parts[:-1]:
-        next_part = parts[parts.index(part) + 1]
-        if part.isdigit() and next_part.isdigit():
-            d = _handle_list_in_dict(d, part, int(next_part))
+        if isinstance(last_part, int) and isinstance(sub_obj, list):
+            handle_list_insert(sub_obj, last_part, value, max_depth, current_depth)
         else:
-            d = d.setdefault(part, {})
-    last_key = parts[-1]
-    last_key = int(last_key) if last_key.isdigit() else last_key
-    d[last_key] = flat_dict[sep.join(parts)]
+            sub_obj[last_part] = value
 
-def unflatten_dict(flat_dict: dict, sep: str = '_') -> dict:
-    result = {}
-    for flat_key, value in flat_dict.items():
-        _unflatten_dict_recursive(flat_dict, sep, result, flat_key.split(sep))
-    return result
+    unflattened = {}
+    for composite_key, value in flat_dict.items():
+        parts = composite_key.split(sep)
+        if custom_logic:
+            parts = [custom_logic(part) for part in parts]
+        else:
+            parts = [int(part) if (isinstance(part, int) or part.isdigit()) else part for part in parts]
+        insert(unflattened, parts, value, max_depth)
+
+    # Convert top-level dictionary to a list if all keys are integers
+    if isinstance(unflattened, dict) and all(isinstance(k, int) for k in unflattened.keys()):
+        max_index = max(unflattened.keys(), default=-1)
+        return [unflattened.get(i) for i in range(max_index + 1)]
+    # Return an empty dictionary instead of converting to a list if unflattened is empty
+    if (unflattened == []) or (not unflattened):
+        return {}
+    return unflattened
 
 def _insert_with_dict_handling(lst, indices, value):
     for index in indices[:-1]:
@@ -347,7 +345,7 @@ def _insert_with_dict_handling(lst, indices, value):
             lst.append({} if isinstance(indices[indices.index(index) + 1], str) else [])
         lst = lst[index]
     lst[indices[-1]] = value
-
+    
 def unflatten_to_list(flat_dict: dict, sep: str = '_') -> list:
     result_list = []
     for flat_key, value in flat_dict.items():
@@ -355,333 +353,122 @@ def unflatten_to_list(flat_dict: dict, sep: str = '_') -> list:
         _insert_with_dict_handling(result_list, indices, value)
     return result_list
 
-def unflatten_complex_structure(flat_obj: Union[dict, list], sep: str = '_') -> Union[dict, list]:
-    if isinstance(flat_obj, dict):
-        return unflatten_dict(flat_obj, sep)
-    elif isinstance(flat_obj, list):
-        return unflatten_to_list(dict(enumerate(flat_obj)), sep)
-    else:
-        raise TypeError("Object must be a flattened dictionary or list.")
+def _insert_with_dict_handling(container, indices, value):
+    """
+    Helper function to insert a value into a nested container based on a list of indices.
 
-def change_separator(flat_dict: dict, new_sep: str) -> dict:
-    return {k.replace('_', new_sep): v for k, v in flat_dict.items()}
-
-def get_keys(d: dict) -> List[str]:
-    return list(d.keys())
-
-def is_flattenable(obj: Any) -> bool:
-    if isinstance(obj, dict):
-        return any(isinstance(v, (dict, list)) for v in obj.values())
-    elif isinstance(obj, list):
-        return any(isinstance(i, (dict, list)) for i in obj)
-    return False
-
-def flatten_with_custom_logic(obj: Union[dict, list], logic_func: Callable, parent_key: str = '', sep: str = '_', **kwargs) -> Union[dict, list]:
-    items = []
-    if isinstance(obj, dict):
-        for k, v in obj.items():
-            new_key, new_value = logic_func(parent_key, k, v, **kwargs)
-            if isinstance(v, (dict, list)):
-                items.extend(flatten_with_custom_logic(v, logic_func, new_key, sep, **kwargs).items())
-            else:
-                items.append((new_key, new_value))
-    elif isinstance(obj, list):
-        for i, item in enumerate(obj):
-            new_key, new_value = logic_func(parent_key, None, item, **kwargs)
-            items.append((f"{new_key}{sep}{i}", new_value))
-    return dict(items)
-
-def flatten_with_max_depth(obj: Union[dict, list], max_depth: int, current_depth: int = 0, parent_key: str = '', sep: str = '_', **kwargs) -> dict:
-    items = []
-    if isinstance(obj, dict):
-        for k, v in obj.items():
-            new_key = f"{parent_key}{sep}{k}" if parent_key else k
-            if isinstance(v, (dict, list)) and current_depth < max_depth:
-                items.extend(flatten_with_max_depth(v, max_depth, current_depth + 1, new_key, sep, **kwargs).items())
-            else:
-                items.append((new_key, v))
-    elif isinstance(obj, list):
-        for i, item in enumerate(obj):
-            new_key = f"{parent_key}{sep}{i}" if parent_key else str(i)
-            if isinstance(item, (dict, list)) and current_depth < max_depth:
-                items.extend(flatten_with_max_depth(item, max_depth, current_depth + 1, new_key, sep, **kwargs).items())
-            else:
-                items.append((new_key, item))
-    return dict(items)
-
-def unflatten_dict_with_custom_logic(flat_dict: dict, logic_func: Callable, sep: str = '_') -> dict:
-    reconstructed = {}
-    for flat_key, value in flat_dict.items():
-        parts = flat_key.split(sep)
-        d = reconstructed
-        for part in parts[:-1]:
-            modified_part, _ = logic_func(part, None)  # Modify only the key
-            d = d.setdefault(modified_part, {})
-        last_part = parts[-1]
-        modified_last_part, modified_value = logic_func(last_part, value)
-        d[modified_last_part] = modified_value
-    return reconstructed
-
-def unflatten_complex_structure(flat_obj: Union[dict, list], sep: str = '_', logic_func: Callable = None) -> Union[dict, list]:
-    if isinstance(flat_obj, dict):
-        return unflatten_dict_with_custom_logic(flat_obj, logic_func, sep) if logic_func else unflatten_dict(flat_obj, sep)
-    elif isinstance(flat_obj, list):
-        # Convert list to dict for unflattening
-        indexed_flat_obj = {f"{i}": v for i, v in enumerate(flat_obj)}
-        return unflatten_to_list(indexed_flat_obj, sep)
-    else:
-        raise TypeError("Object must be a flattened dictionary or list.")
-
-def flatten_iterable(iterable: Iterable, max_depth: int = None) -> Iterable:
-
-    def _flatten(input_iterable, current_depth):
-        if max_depth is not None and current_depth >= max_depth:
-            yield input_iterable
+    :param container: The container (list or dict) to insert the value into.
+    :param indices: A list of indices indicating the path to the insertion point.
+    :param value: The value to be inserted.
+    """
+    for i, index in enumerate(indices[:-1]):
+        # Check if index is an integer and ensure the list is long enough
+        if isinstance(index, int):
+            # Extend the list if necessary
+            while len(container) <= index:
+                container.append(None)
+            
+            # Create a nested container if the current position is None
+            if container[index] is None:
+                next_index = indices[i + 1]
+                
+                # Determine the type of the next container based on the next index
+                container[index] = {} if isinstance(next_index, str) else []
+            
+            # Update the reference to point to the nested container
+            container = container[index]
+            
+        # If index is a string, work with dictionaries
         else:
-            for item in input_iterable:
-                if isinstance(item, Iterable) and not isinstance(item, (str, bytes)):
-                    yield from _flatten(item, current_depth + 1)
-                else:
-                    yield item
-    return _flatten(iterable, 0)
-
-def flatten_iterable_to_list(iterable: Iterable, max_depth: int = None) -> List[Any]:
-
-    return list(flatten_iterable(iterable, max_depth))
-
-def flatten_iterable_generator(iterable: Iterable) -> Generator:
-
-    return flatten_iterable(iterable)
-
-def flatten_interface(operation: str, obj: Any, **kwargs) -> Any:
-
-    operations = {
-        'flatten': flatten,
-        'unflatten': unflatten_complex_structure,
-        'flatten_dict': flatten_dict,
-        'flatten_list': flatten_list,
-        'unflatten_dict': unflatten_dict,
-        'unflatten_to_list': unflatten_to_list,
-        'flatten_with_custom_logic': flatten_with_custom_logic,
-        'flatten_with_path_preservation': flatten_with_path_preservation,
-        'flatten_with_max_depth': flatten_with_max_depth,
-        # Add other operations as needed
-    }
-
-    if operation in operations:
-        return operations[operation](obj, **kwargs)
+            if index not in container:
+                container[index] = {}
+            container = container[index]
+    
+    # Insert value at the last index
+    last_index = indices[-1]
+    if isinstance(last_index, int):
+      
+      # Negative indices are not allowed in this context
+        if last_index < 0:
+            raise ValueError("Negative index is not allowed for list unflattening.")
+          
+        while len(container) <= last_index:
+            container.append(None)
+        container[last_index] = value
+        
     else:
-        raise ValueError(f"Unsupported operation: {operation}")
+        if last_index in container and isinstance(container[last_index], list):
+            raise ValueError("Overlapping keys are not allowed.")
+        container[last_index] = value
 
+def unflatten_to_list(flat_dict: Dict[str, Any], sep: str = '_') -> List:
+    """
+    Unflattens a dictionary with keys as string paths into a nested list structure.
 
+    :param flat_dict: The flat dictionary to unflatten.
+    :param sep: The separator used in the flat dictionary keys to indicate nesting.
+    :return: A nested list that represents the unflattened structure.
+    """
+    result_list = []
+    for flat_key, value in flat_dict.items():
+        indices = [int(p) if p.lstrip('-').isdigit() else p for p in flat_key.split(sep)]
+        _insert_with_dict_handling(result_list, indices, value)
+    return result_list
 
-from collections.abc import Iterable
-from typing import Any, Callable, Union, List, Dict
-
-def flatten(obj: Union[Dict, List], parent_key: str = '', sep: str = '_', max_depth: int = None, current_depth: int = 0) -> Dict:
-    items = []
-    if isinstance(obj, dict):
-        for k, v in obj.items():
-            new_key = f"{parent_key}{sep}{k}" if parent_key else k
-            if (isinstance(v, (dict, list)) and (max_depth is None or current_depth < max_depth)):
-                items.extend(flatten(v, new_key, sep, max_depth, current_depth + 1).items())
-            else:
-                items.append((new_key, v))
-    elif isinstance(obj, list):
-        for i, item in enumerate(obj):
-            new_key = f"{parent_key}{sep}{i}" if parent_key else str(i)
-            if (isinstance(item, (dict, list)) and (max_depth is None or current_depth < max_depth)):
-                items.extend(flatten(item, new_key, sep, max_depth, current_depth + 1).items())
-            else:
-                items.append((new_key, item))
-    return dict(items)
-
-def unflatten(flat_dict: Dict[str, Any], sep: str = '_') -> Union[Dict, List]:
-    result = {}
-    for k, v in flat_dict.items():
-        parts = k.split(sep)
-        d = result
-        for key in parts[:-1]:
-            try:
-                key = int(key)  # Convert to integer if possible for list indices
-            except ValueError:
-                pass
-            d = d.setdefault(key, {})
-        last_key = parts[-1]
-        try:
-            last_key = int(last_key)
-            if not isinstance(d, list):
-                d[last_key] = []  # Initialize as list if last_key is int
-        except ValueError:
-            pass
-        d[last_key] = v
-    return result if not isinstance(result, list) else result[0]
 
 def flatten_iterable(iterable: Iterable, max_depth: int = None) -> Generator[Any, None, None]:
-    def _flatten(input_iterable, current_depth):
-        if max_depth is not None and current_depth >= max_depth:
-            yield input_iterable
-        else:
-            for item in input_iterable:
-                if isinstance(item, Iterable) and not isinstance(item, (str, bytes)):
+    """
+    Flattens a nested iterable up to a specified maximum depth.
+
+    Args:
+    iterable: An iterable to flatten.
+    max_depth: The maximum depth to flatten. If None, flattens completely.
+
+    Yields:
+    The flattened elements of the original iterable.
+    """
+    def _flatten(input_iterable: Iterable, current_depth: int) -> Generator[Any, None, None]:
+        if isinstance(input_iterable, Iterable) and not isinstance(input_iterable, (str, bytes)):
+            if max_depth is not None and current_depth >= max_depth:
+                yield input_iterable
+            else:
+                for item in input_iterable:
                     yield from _flatten(item, current_depth + 1)
-                else:
-                    yield item
+        else:
+            yield input_iterable
+
     yield from _flatten(iterable, 0)
 
 def flatten_iterable_to_list(iterable: Iterable, max_depth: int = None) -> List[Any]:
+    """
+    Converts a nested iterable into a flattened list up to a specified maximum depth.
+
+    Args:
+    iterable: An iterable to flatten.
+    max_depth: The maximum depth to flatten. If None, flattens completely.
+
+    Returns:
+    A list containing the flattened elements of the original iterable.
+    """
     return list(flatten_iterable(iterable, max_depth))
 
-def flatten_interface(operation: str, obj: Any, **kwargs) -> Any:
-    operations = {
-        'flatten': flatten,
-        'unflatten': unflatten,
-        'flatten_iterable_to_list': flatten_iterable_to_list,
-        # Add other operations as needed
-    }
-    if operation in operations:
-        return operations[operation](obj, **kwargs)
-    raise ValueError(f"Unsupported operation: {operation}")
+def unflatten_dict_with_custom_logic(
+    flat_dict: Dict[str, Any],
+    logic_func: Callable[[str, Any], Tuple[str, Any]],
+    sep: str = '_'
+) -> Dict[str, Any]:
+    """
+    Unflattens a dictionary with keys as string paths into a nested dictionary structure
+    while applying custom logic to each key and value.
 
-from collections.abc import Iterable
-from typing import List, Any, Union, Callable, Generator, Tuple
+    Args:
+    flat_dict: The flat dictionary to unflatten.
+    logic_func: A function that takes a key and a value and returns a tuple of modified key and value.
+    sep: The separator used in the flat dictionary keys to indicate nesting.
 
-def flatten_dict(d: dict, parent_key: str = '', sep: str = '_') -> dict:
-    items = []
-    for k, v in d.items():
-        new_key = f"{parent_key}{sep}{k}" if parent_key else k
-        if isinstance(v, dict):
-            items.extend(flatten_dict(v, new_key, sep=sep).items())
-        else:
-            items.append((new_key, v))
-    return dict(items)
-
-def flatten_list(l: list, dropna: bool = True) -> list:
-    flat_list = []
-    for i in l:
-        if isinstance(i, list):
-            flat_list.extend(flatten_list(i, dropna))
-        elif i is not None or not dropna:
-            flat_list.append(i)
-    return flat_list
-
-def flatten(obj: Union[dict, list], parent_key: str = '', sep: str = '_', max_depth: int = None, current_depth: int = 0, logic_func: Callable = None) -> Union[dict, list]:
-    items = []
-    if isinstance(obj, dict):
-        for k, v in obj.items():
-            new_key = f"{parent_key}{sep}{k}" if parent_key else k
-            if (isinstance(v, (dict, list)) and 
-                (max_depth is None or current_depth < max_depth) and 
-                (logic_func is None or logic_func(k, v))):
-                items.extend(flatten(v, new_key, sep, max_depth, current_depth + 1, logic_func).items())
-            else:
-                items.append((new_key, v))
-    elif isinstance(obj, list):
-        for i, item in enumerate(obj):
-            new_key = f"{parent_key}{sep}{i}" if parent_key else str(i)
-            if (isinstance(item, (dict, list)) and 
-                (max_depth is None or current_depth < max_depth) and 
-                (logic_func is None or logic_func(i, item))):
-                items.extend(flatten(item, new_key, sep, max_depth, current_depth + 1, logic_func).items())
-            else:
-                items.append((new_key, item))
-    return dict(items) if isinstance(obj, dict) else list(dict(items).values())
-
-def _handle_list_in_dict(d, part, next_part):
-    part = int(part)  # Convert to integer index for lists
-    if isinstance(d, dict):
-        d = d.setdefault(part, [])
-    while len(d) < next_part + 1:
-        d.append({})
-    return d
-
-def _unflatten_dict_recursive(flat_dict, sep, d, parts):
-    for part in parts[:-1]:
-        next_part = parts[parts.index(part) + 1]
-        if part.isdigit() and next_part.isdigit():
-            d = _handle_list_in_dict(d, part, int(next_part))
-        else:
-            d = d.setdefault(part, {})
-    last_key = parts[-1]
-    last_key = int(last_key) if last_key.isdigit() else last_key
-    d[last_key] = flat_dict[sep.join(parts)]
-
-def unflatten_dict(flat_dict: dict, sep: str = '_') -> dict:
-    result = {}
-    for flat_key, value in flat_dict.items():
-        _unflatten_dict_recursive(flat_dict, sep, result, flat_key.split(sep))
-    return result
-
-def _insert_with_dict_handling(lst, indices, value):
-    for index in indices[:-1]:
-        while len(lst) <= index:
-            lst.append({} if isinstance(indices[indices.index(index) + 1], str) else [])
-        lst = lst[index]
-    lst[indices[-1]] = value
-
-def unflatten_to_list(flat_dict: dict, sep: str = '_') -> list:
-    result_list = []
-    for flat_key, value in flat_dict.items():
-        indices = [int(p) if p.isdigit() else p for p in flat_key.split(sep)]
-        _insert_with_dict_handling(result_list, indices, value)
-    return result_list
-
-def unflatten_complex_structure(flat_obj: Union[dict, list], sep: str = '_', logic_func: Callable = None) -> Union[dict, list]:
-    if isinstance(flat_obj, dict):
-        return unflatten_dict_with_custom_logic(flat_obj, logic_func, sep) if logic_func else unflatten_dict(flat_obj, sep)
-    elif isinstance(flat_obj, list):
-        indexed_flat_obj = {f"{i}": v for i, v in enumerate(flat_obj)}
-        return unflatten_to_list(indexed_flat_obj, sep)
-    else:
-        raise TypeError("Object must be a flattened dictionary or list.")
-
-def change_separator(flat_dict: dict, new_sep: str) -> dict:
-    return {k.replace('_', new_sep): v for k, v in flat_dict.items()}
-
-def get_keys(d: dict) -> List[str]:
-    return list(d.keys())
-
-def is_flattenable(obj: Any) -> bool:
-    if isinstance(obj, dict):
-        return any(isinstance(v, (dict, list)) for v in obj.values())
-    elif isinstance(obj, list):
-        return any(isinstance(i, (dict, list)) for i in obj)
-    return False
-
-def flatten_with_custom_logic(obj: Union[dict, list], logic_func: Callable, parent_key: str = '', sep: str = '_', **kwargs) -> Union[dict, list]:
-    items = []
-    if isinstance(obj, dict):
-        for k, v in obj.items():
-            new_key, new_value = logic_func(parent_key, k, v, **kwargs)
-            if isinstance(v, (dict, list)):
-                items.extend(flatten_with_custom_logic(v, logic_func, new_key, sep, **kwargs).items())
-            else:
-                items.append((new_key, new_value))
-    elif isinstance(obj, list):
-        for i, item in enumerate(obj):
-            new_key, new_value = logic_func(parent_key, None, item, **kwargs)
-            items.append((f"{new_key}{sep}{i}", new_value))
-    return dict(items)
-
-def flatten_with_max_depth(obj: Union[dict, list], max_depth: int, current_depth: int = 0, parent_key: str = '', sep: str = '_', **kwargs) -> dict:
-    items = []
-    if isinstance(obj, dict):
-        for k, v in obj.items():
-            new_key = f"{parent_key}{sep}{k}" if parent_key else k
-            if isinstance(v, (dict, list)) and current_depth < max_depth:
-                items.extend(flatten_with_max_depth(v, max_depth, current_depth + 1, new_key, sep, **kwargs).items())
-            else:
-                items.append((new_key, v))
-    elif isinstance(obj, list):
-        for i, item in enumerate(obj):
-            new_key = f"{parent_key}{sep}{i}" if parent_key else str(i)
-            if isinstance(item, (dict, list)) and current_depth < max_depth:
-                items.extend(flatten_with_max_depth(item, max_depth, current_depth + 1, new_key, sep, **kwargs).items())
-            else:
-                items.append((new_key, item))
-    return dict(items)
-
-def unflatten_dict_with_custom_logic(flat_dict: dict, logic_func: Callable, sep: str = '_') -> dict:
+    Returns:
+    A nested dictionary that represents the unflattened structure with modified keys and values.
+    """
     reconstructed = {}
     for flat_key, value in flat_dict.items():
         parts = flat_key.split(sep)
@@ -693,31 +480,3 @@ def unflatten_dict_with_custom_logic(flat_dict: dict, logic_func: Callable, sep:
         modified_last_part, modified_value = logic_func(last_part, value)
         d[modified_last_part] = modified_value
     return reconstructed
-
-def flatten_iterable(iterable: Iterable, max_depth: int = None) -> Iterable:
-    def _flatten(input_iterable, current_depth):
-        if max_depth is not None and current_depth >= max_depth:
-            yield input_iterable
-        else:
-            for item in input_iterable:
-                if isinstance(item, Iterable) and not isinstance(item, (str, bytes)):
-                    yield from _flatten(item, current_depth + 1)
-                else:
-                    yield item
-    return _flatten(iterable, 0)
-
-def flatten_iterable_to_list(iterable: Iterable, max_depth: int = None) -> List[Any]:
-    return list(flatten_iterable(iterable, max_depth))
-
-def flatten_iterable_generator(iterable: Iterable) -> Generator:
-    return flatten_iterable(iterable)
-
-def flatten_with_path_preservation(obj: Union[dict, list], parent_key: str = '', sep: str = '_') -> dict:
-    def logic_func(path, key, value):
-        if path:
-            new_key = f"{path}{sep}{key}" if key is not None else f"{path}{sep}"
-        else:
-            new_key = key if key is not None else ""
-        return new_key, value
-    return flatten_with_custom_logic(obj, logic_func, parent_key, sep)
-
