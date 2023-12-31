@@ -1,8 +1,7 @@
-import json
 import asyncio
-from typing import Dict, Any, Optional, List, Tuple
+from typing import Dict, Any, Optional, List
 
-from ..schema.base_tool import BaseTool
+from ..schema.base_schema import BaseTool
 
 
 class ToolManager:

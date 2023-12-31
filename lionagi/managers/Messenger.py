@@ -64,13 +64,10 @@ class Messenger:
                                   context=context, 
                                   response=response, 
                                   name=name)
-        
         if log_:
             self.log_message(msg)
-        
         if obj:
             return (msg, msg._to_message())
-        
         else:
             return msg._to_message()
     

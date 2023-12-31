@@ -1,53 +1,50 @@
 from os import getenv
-from .base_api_service import BaseAPIService, BaseAPIRateLimiter
+from typing import Dict
+
+from lionagi.service_.base_api_service import BaseAPIService
+from lionagi.configs.oai_configs import oai_schema
+
 
 class OpenAIService(BaseAPIService):
     base_url: str = "https://api.openai.com/v1/"
-    _key_scheme: str = "OPENAI_API_KEY"
-
+    key_scheme: str = "OPENAI_API_KEY"
+    default_schema: Dict = oai_schema['chat']
+    default_endpoint: str = 'chat/completions'
+    
     def __init__(
         self,
-        api_key: str = None,
-        token_encoding_name: str = "cl100k_base",
-        max_attempts: int = 3,
-        max_requests_per_minute: int = 500,
-        max_tokens_per_minute: int = 150_000,
-        ratelimiter = BaseAPIRateLimiter ,
-        status_tracker = None,
-        queue = None,
-    ):
+        api_key: str = None, 
+        max_requests_per_interval=500,
+        max_tokens_per_interval=150_000,
+        interval=60,
+        max_attempts = 3,
+        ):
+        
         super().__init__(
-            api_key = api_key or getenv(self._key_scheme),
-            status_tracker = status_tracker,
-            queue = queue,
-            ratelimiter=ratelimiter,
-            max_requests_per_minute=max_requests_per_minute, 
-            max_tokens_per_minute=max_tokens_per_minute),
-        self.token_encoding_name=token_encoding_name
-        self.max_attempts = max_attempts
+            api_key=api_key or getenv(self._key_scheme),
+            max_requests_per_interval=max_requests_per_interval,
+            max_tokens_per_interval=max_tokens_per_interval,
+            interval=interval, 
+            max_attempts=max_attempts
+            )
 
-
-    async def serve(self, payload, endpoint_="chat/completions", method="post"):
-        return await self._serve(payload=payload, endpoint_=endpoint_, method=method)
-
-
-
-
-
-
-
-
-
-
-
-
-    
-    async def 
-
-
-
-
-
-
-
-
+    async def serve(
+        self, 
+        input_=None, 
+        schema=None, 
+        endpoint_=None, 
+        method="post", 
+        payload: Dict[str, any] =None,
+        encoding_name: str = None,
+        **kwargs
+        ):
+        
+        return await self._serve(
+            input_=input_,
+            schema=schema or self._default_schema,
+            endpoint_=endpoint_ or self._default_endpoint,
+            method=method,
+            payload=payload,
+            encoding_name=encoding_name,
+            **kwargs
+        )

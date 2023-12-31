@@ -1,4 +1,4 @@
-oai_chat_llmconfig = {
+openrouter_chat_llmconfig = {
     "model": "gpt-4-1106-preview",
     "frequency_penalty": 0,
     "max_tokens": None,
@@ -15,14 +15,14 @@ oai_chat_llmconfig = {
     "user": None
     }
 
-oai_chat_schema = {
+openrouter_chat_schema = {
     "required" : ["model", "frequency_penalty", "n", "presence_penalty", "response_format", "temperature", "top_p"],
     "optional": ["seed", "stop", "stream", "tools", "tool_choice", "user", "max_tokens"],
     "input": "messages",
-    "config": oai_chat_llmconfig
+    "config": openrouter_chat_llmconfig
     }
 
-oai_finetune_llmconfig = {
+openrouter_finetune_llmconfig = {
     "model": "gpt-3.5-turbo",
     "hyperparameters": {
         "batch_size": "auto", 
@@ -33,17 +33,17 @@ oai_finetune_llmconfig = {
     "training_file": None,
     }
 
-oai_finetune_schema = {
+openrouter_finetune_schema = {
     "required" : ["model", "training_file"],
     "optional": ["hyperparameters", "suffix", "validate_file"],
     "input": ["training_file"],
-    "config": oai_finetune_llmconfig 
+    "config": openrouter_finetune_llmconfig
 }
 
 
-oai_schema = {
-    
-    "chat": oai_chat_schema,
-    "finetune": oai_finetune_schema
+openrouter_schema = {
+
+    "chat": openrouter_chat_schema,
+    "finetune": openrouter_finetune_schema
     
 }

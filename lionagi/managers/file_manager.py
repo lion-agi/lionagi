@@ -1,10 +1,7 @@
-from typing import List, Union
+from typing import List, Union, Dict, Any
 import math
 
 
-
-    
-    
 def _file_to_chunks(input: Dict[str, Any],
                    field: str = 'content',
                    chunk_size: int = 1500,

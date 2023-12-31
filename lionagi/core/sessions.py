@@ -57,7 +57,6 @@ class Session:
     #                 outs = await self._toolmanager.invoke(func, args)
     #                 self.conversation.add_messages(response=outs)
                 
-                
     #         except:
     #             pass
     #     if out:
@@ -105,8 +104,6 @@ class Session:
     #     if num == 0:
     #         await self.followup(instruct, **kwargs)
 
-
-
     # ------------------------------------------------------ save data---------------------------------
     # def messages_to_csv(self, dir=None, filename="messages.csv", **kwargs):
     #     dir = dir or self._logger.dir
@@ -134,11 +131,6 @@ class Session:
         completion = await self._service.serve(payload=payload, endpoint="embeddings")
         return completion
     
-    
-    
-        
-        
-        
         # if "choices" in completion:
         #     self._logger({"input":payload, "output": completion})
         #     self.conversation.add_messages(response=completion['choices'][0])
@@ -148,6 +140,3 @@ class Session:
         # else:
         #     self._service.status_tracker.num_tasks_failed += 1
             
-
-    
-    
