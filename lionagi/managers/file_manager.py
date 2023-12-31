@@ -2,6 +2,28 @@ from typing import List, Union, Dict, Any
 import math
 
 
+{
+    ".txt": "textreader", 
+    ".py": "codesreader",
+    ".pdf": ...,
+    ".word": ...,
+    ".ipynb": ...,
+    ".csv": ...
+}
+
+
+{
+    "codes": "codesplitter",
+    "word": "wordsplitter",
+    "sentence": "sentencesplitter"
+}
+
+def files_to_chunks(
+    chunkers_ = {}
+    ext = []
+  
+)
+
 def _file_to_chunks(input: Dict[str, Any],
                    field: str = 'content',
                    chunk_size: int = 1500,

@@ -225,13 +225,75 @@ class RateLimiter(ABC):
 
 
 class PayloadMaker:
+    """
+    A class for creating and handling payloads based on given inputs and schemas.
+
+    This class is responsible for generating structured payloads that conform to specified schemas
+    and encoding rules, primarily for network requests or data processing tasks.
+
+    Attributes:
+        input_ (Union[str, List[str]]):
+            The initial input data for payload creation.
+        schema (Dict[str, Any]):
+            A dictionary defining the structure and rules for the payload.
+        encoding (Any):
+            The encoding method used for processing the input data.
+
+    Methods:
+        _create_payload:
+            Generates a payload based on the input data, schema, and additional parameters.
+        _calculate_num_tokens:
+            Determines the number of tokens required for a specific API endpoint.
+        _calculate_tokens_for_encoded_input:
+            Calculates the token count for encoded input data.
+        _calculate_token_chat_completions:
+            Computes the token count for a chat completion payload.
+        _calculate_token_completions:
+            Calculates the token count for a completion payload.
+        _calculate_token_embeddings:
+            Determines the token count for an embeddings payload.
+        _calculate_token_audio:
+            Calculates the token count for an audio payload.
+        _calculate_token_images:
+            Computes the token count for an image payload.
+        _calculate_token_fine_tuning:
+            Calculates the token count for a fine-tuning payload.
+        _calculate_tokens_for_file_field:
+            Determines the token count for a file field in the payload.
+    """
+    
     def __init__(self, input_: Union[str, List[str]], schema: Dict[str, Any], encoding_name: str) -> None:
+        """
+        Initializes the PayloadMaker with specified input data, schema, and encoding method.
+
+        Parameters:
+            input_ (Union[str, List[str]]):
+                The input data to be processed and included in the payload.
+            schema (Dict[str, Any]):
+                The schema dictating the structure and rules for the payload.
+            encoding_name (str):
+                The name of the encoding method to be used for data transformation.
+        """        
         self.input_ = input_
         self.schema = schema
         self.encoding = tiktoken.get_encoding(encoding_name)
 
     def _create_payload(self, input_: Optional[Union[str, List[str]]] = None,
                        schema: Optional[Dict[str, Any]] = None, **kwargs) -> Dict[str, Any]:
+        """
+        Creates a payload based on the provided input data, schema, and additional parameters.
+
+        Parameters:
+            input_ (Optional[Union[str, List[str]]]):
+                The input data; defaults to the instance's input if None.
+            schema (Optional[Dict[str, Any]]):
+                The schema to use; defaults to the instance's schema if None.
+            **kwargs:
+                Additional configuration parameters to override or extend the schema's config.
+
+        Returns:
+            Dict[str, Any]: A dictionary representing the created payload.
+        """
         input_ = self.input_ if input_ is None else input_
         schema = self.schema if schema is None else schema
         config = {**schema.get('config', {}), **kwargs}

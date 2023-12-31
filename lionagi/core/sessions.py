@@ -6,8 +6,6 @@ from .conversations import Conversation
 from ..schema.base_schema import DataLogger
 from ..tools.tool_utils import ToolManager
 from ..services import OpenAIService
-from ..endpoint.chat_completion import ChatCompletion
-from ..endpoint.embeddings import Embeddings
 from ..configs.oai_configs import oai_chat_schema, oai_finetune_schema
 
 load_dotenv()

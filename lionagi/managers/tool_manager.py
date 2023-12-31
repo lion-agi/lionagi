@@ -5,14 +5,64 @@ from ..schema.base_schema import BaseTool
 
 
 class ToolManager:
+    """
+    ToolManager manages the registration and invocation of tools.
+
+    This class provides functionalities to register tools, check for their existence,
+    and invoke them dynamically with specified arguments.
+
+    Attributes:
+        registry (Dict[str, BaseTool]): A dictionary to store registered tools by name.
+    
+    Methods:
+        _name_exists: Checks if a tool name already exists in the registry.
+        
+        _register_tool: Registers a tool in the registry.
+        
+        invoke: Dynamically invokes a registered tool with given arguments.
+        
+        register_tools: Registers multiple tools in the registry.
+    """    
+    
     def __init__(self):
+        """
+        Initializes the ToolManager with an empty registry.
+        """        
         self.registry: Dict[str, BaseTool] = {}
 
     def _name_exists(self, name: str) -> bool:
+        """
+        Checks if a tool name already exists in the registry.
+
+        Parameters:
+            name (str): The name of the tool to check.
+
+        Returns:
+            bool: True if the name exists in the registry, False otherwise.
+        """
         return name in self.registry
 
     def _register_tool(self, tool: BaseTool, name: Optional[str] = None, update: bool = False,
                        new: bool = False, prefix: Optional[str] = None, postfix: Optional[int] = None):
+        """
+        Registers a tool in the registry.
+
+        Parameters:
+            tool (BaseTool): The tool to be registered.
+            
+            name (Optional[str]): The name to register the tool with. Defaults to the tool's function name.
+            
+            update (bool): If True, updates the existing tool. Defaults to False.
+            
+            new (bool): If True, creates a new registry entry. Defaults to False.
+            
+            prefix (Optional[str]): A prefix for the tool name.
+            
+            postfix (Optional[int]): A postfix for the tool name.
+
+        Raises:
+            ValueError: If both update and new are True for an existing function.
+        """
         name = name or tool.func.__name__
         original_name = name
 
@@ -30,6 +80,20 @@ class ToolManager:
         self.registry[name] = tool
 
     async def invoke(self, name: str, kwargs: Dict) -> Any:
+        """
+        Dynamically invokes a registered tool with given arguments.
+
+        Parameters:
+            name (str): The name of the tool to invoke.
+            
+            kwargs (Dict[str, Any]): A dictionary of keyword arguments to pass to the tool.
+
+        Returns:
+            Any: The result of the tool invocation.
+
+        Raises:
+            ValueError: If the tool is not registered or if an error occurs during invocation.
+        """        
         if not self._name_exists(name):
             raise ValueError(f"Function {name} is not registered.")
 
@@ -45,6 +109,20 @@ class ToolManager:
 
     def register_tools(self, tools: List[BaseTool], update: bool = False, new: bool = False,
                        prefix: Optional[str] = None, postfix: Optional[int] = None):
+        """
+        Registers multiple tools in the registry.
+
+        Parameters:
+            tools (List[BaseTool]): A list of tools to register.
+            
+            update (bool): If True, updates existing tools. Defaults to False.
+            
+            new (bool): If True, creates new registry entries. Defaults to False.
+            
+            prefix (Optional[str]): A prefix for the tool names.
+            
+            postfix (Optional[int]): A postfix for the tool names.
+        """        
         for tool in tools:
             self._register_tool(tool, update=update, new=new, prefix=prefix, postfix=postfix)
             

@@ -4,11 +4,19 @@ from pydantic import BaseModel, Field, validator
 
 from ..utils.sys_utils import create_id
 
-
 T = TypeVar('T', bound='BaseNode')
 
 class BaseNode(BaseModel):
+    """
+    BaseNode: A foundational building block for representing a node in a graph-like structure.
 
+    Attributes:
+        id_ (str): Unique identifier for the node, aliased as 'node_id'.
+        content (Optional[Any]): Content or value the node represents.
+        metadata (Dict[str, Any]): A dictionary of metadata related to the node.
+        label (Optional[str]): A label for categorizing or identifying the node.
+        related_nodes (List[str]): A list of identifiers for nodes related to this node.
+    """
     id_: str = Field(default_factory=lambda: str(create_id()), alias="node_id")
     content: Optional[Any] = None
     metadata: Dict[str, Any] = Field(default_factory=dict)
@@ -24,15 +32,41 @@ class BaseNode(BaseModel):
 
     @validator('*', pre=True, each_item=False)
     def non_empty(cls, v):
+        """
+        Validator to ensure no field (str, list, or dict) is empty.
+
+        Args:
+            v: The value of the field being validated.
+
+        Returns:
+            The validated value if not empty.
+
+        Raises:
+            ValueError: If the field is empty.
+        """
         if isinstance(v, (str, list, dict)) and not v:
             raise ValueError("Field must not be empty")
         return v
 
     def to_json(self) -> str:
+        """Converts the node instance into JSON string representation."""
         return self.model_dump_json(by_alias=True)
 
     @classmethod
     def from_json(cls: Type[T], json_str: str, **kwargs) -> T:
+        """
+        Creates a node instance from a JSON string.
+
+        Args:
+            json_str (str): The JSON string representing a node.
+            **kwargs: Additional keyword arguments to pass to json.loads.
+
+        Returns:
+            An instance of BaseNode.
+
+        Raises:
+            ValueError: If the provided string is not valid JSON.
+        """
         try:
             data = json.loads(json_str, **kwargs)
             return cls(**data)
@@ -40,17 +74,36 @@ class BaseNode(BaseModel):
             raise ValueError("Invalid JSON string provided for deserialization.") from e
 
     def to_dict(self) -> Dict[str, Any]:
+        """Converts the node instance into a dictionary representation."""
         return self.model_dump(by_alias=True)
 
     @classmethod
     def from_dict(cls, data: Dict[str, Any]) -> T:
+        """Creates a node instance from a dictionary."""
         return cls(**data)
 
-    def copy(self, deep=True, n=1) -> T:
-        copies = [self.model_copy(deep=deep) for i in range(n)]
-        return copies[0] if n==1 else copies
+    def copy(self, deep: bool = True, n: int = 1) -> T:
+        """
+        Creates a copy of the node instance.
+
+        Args:
+            deep (bool): Whether to make a deep copy.
+            n (int): Number of copies to create.
+
+        Returns:
+            A copy or list of copies of the BaseNode instance.
+        """
+        copies = [self.copy(deep=deep) for _ in range(n)]
+        return copies[0] if n == 1 else copies
 
     def merge_metadata(self, other_metadata: Dict[str, Any], overwrite: bool = True) -> None:
+        """
+        Merges another metadata dictionary into the node's metadata.
+
+        Args:
+            other_metadata (Dict[str, Any]): The metadata to merge in.
+            overwrite (bool): Whether to overwrite existing keys in the metadata.
+        """
         if not overwrite:
             other_metadata = {k: v for k, v in other_metadata.items() if k not in self.metadata}
         self.metadata.update(other_metadata)
@@ -89,9 +142,11 @@ class BaseNode(BaseModel):
         return self.model_dump() == other.model_dump()
 
     def __str__(self) -> str:
+        """Returns a simple string representation of the BaseNode."""
         return f"BaseNode(id={self.id_}, label={self.label})"
 
     def __repr__(self) -> str:
+        """Returns a detailed string representation of the BaseNode."""
         return f"BaseNode(id={self.id_}, content={self.content}, metadata={self.metadata}, label={self.label})"
     
     # Utility Methods
@@ -130,17 +185,54 @@ class BaseTool(BaseNode):
 
     
 class Message(BaseNode):
-    role : str = None
-    name : str = None
+    """
+    Message: A specialized type of BaseNode for handling messages.
+
+    This class represents a message node, extending the BaseNode with additional
+    attributes specific to messages, such as role and name, and provides methods
+    for message-specific operations.
+
+    Attributes:
+        role (Optional[str]): The role of the message, e.g., 'sender', 'receiver'.
+        name (Optional[str]): The name associated with the message, e.g., a user name or system name.
+    """
+    
+    role: Optional[str] = None
+    name: Optional[str] = None
     
     def _to_message(self):
+        """
+        Converts the message node to a dictionary representation suitable for messaging purposes.
+
+        The method serializes the content attribute to a JSON string if it is a dictionary.
+        Otherwise, it keeps the content as is.
+
+        Returns:
+            A dictionary representing the message with 'role' and 'content' keys.
+        """
         out = {
             "role": self.role,
             "content": json.dumps(self.content) if isinstance(self.content, dict) else self.content
             }
         return out
 
-    def _create_role_message(self, role_, content, content_key, name):
+    def _create_role_message(self, role_: str, 
+                             content: Any, 
+                             content_key: str, 
+                             name: Optional[str] = None
+                             ) -> None:
+        """
+        Creates a message with a specific role, content, and an optional name.
+
+        This method sets up the message node with the specified role, content, and name. The content
+        is stored in a dictionary under the provided content_key.
+
+        Args:
+            role_ (str): The role of the message.
+            content (Any): The content of the message.
+            content_key (str): The key under which the content will be stored.
+            name (Optional[str]): The name associated with the message. Defaults to the role if not provided.
+        """
         self.role = role_
         self.content = {content_key: content}
         self.name = name or role_

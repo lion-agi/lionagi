@@ -1,8 +1,25 @@
 import logging
 import re
-from typing import Generator
+from typing import Generator, Callable
         
-def api_methods(http_session, method="post"):
+        
+def api_methods(http_session, method: str = "post") -> Callable:
+    """
+    Retrieves the appropriate HTTP method from an HTTP session object.
+
+    Parameters:
+        http_session: The HTTP session object from which to retrieve the method.
+        method (str): The HTTP method to retrieve. Defaults to 'post'.
+
+    Returns:
+        Callable: The HTTP method function from the session object.
+
+    Raises:
+        ValueError: If the provided method is not one of ['post', 'delete', 'head', 'options', 'patch'].
+
+    Examples:
+        api_method = api_methods(session, "post") # Retrieves the 'post' method from the session
+    """
     if method not in ["post", "delete", "head", "options", "patch"]:
         raise ValueError("Invalid request, method must be in ['post', 'delete', 'head', 'options', 'patch']")
     elif method == "post":
@@ -17,26 +34,70 @@ def api_methods(http_session, method="post"):
         return http_session.patch
 
 def task_id_generator_function() -> Generator[int, None, None]:
+    """
+    A generator function that yields a sequential series of task IDs.
+
+    Yields:
+        int: The next task ID in the sequence, starting from 0.
+
+    Examples:
+        task_id_gen = task_id_generator_function()
+        next(task_id_gen) # Yields 0
+        next(task_id_gen) # Yields 1
+    """
     task_id = 0
     while True:
         yield task_id
         task_id += 1
         
 def api_endpoint_from_url(request_url: str) -> str:
+    """
+    Extracts the API endpoint from a given URL.
+
+    Parameters:
+        request_url (str): The URL from which to extract the API endpoint.
+
+    Returns:
+        str: The extracted API endpoint, or an empty string if no match is found.
+
+    Examples:
+        endpoint = api_endpoint_from_url("https://api.example.com/v1/users")
+        # endpoint will be 'users'
+    """
     match = re.search(r"^https://[^/]+/v\d+/(.+)$", request_url)
-    if match:
-        return match.group(1)
-    else:
-        return ""
+    return match.group(1) if match else ""
     
-def api_error(response_json):
+def api_error(response_json: dict) -> bool:
+    """
+    Logs a warning and returns True if an error is found in the API response.
+
+    Parameters:
+        response_json (dict): The JSON response from the API call.
+
+    Returns:
+        bool: True if an error is present in the response, False otherwise.
+
+    Examples:
+        if api_error(response):
+            # Handle the error
+    """
     if "error" in response_json:
-        logging.warning(
-            f"API call failed with error: {response_json['error']}"
-            )
+        logging.warning(f"API call failed with error: {response_json['error']}")
         return True
-    else:
-        return False
+    return False
     
-def rate_limit_error(response_json):
+def rate_limit_error(response_json: dict) -> bool:
+    """
+    Checks if the API response indicates a rate limit error.
+
+    Parameters:
+        response_json (dict): The JSON response from the API call.
+
+    Returns:
+        bool: True if the response contains a rate limit error message, False otherwise.
+
+    Examples:
+        if rate_limit_error(response):
+            # Handle the rate limit error
+    """
     return "Rate limit" in response_json["error"].get("message", "")
