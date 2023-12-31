@@ -33,22 +33,7 @@ def api_methods(http_session, method: str = "post") -> Callable:
     elif method == "patch":
         return http_session.patch
 
-def task_id_generator_function() -> Generator[int, None, None]:
-    """
-    A generator function that yields a sequential series of task IDs.
 
-    Yields:
-        int: The next task ID in the sequence, starting from 0.
-
-    Examples:
-        task_id_gen = task_id_generator_function()
-        next(task_id_gen) # Yields 0
-        next(task_id_gen) # Yields 1
-    """
-    task_id = 0
-    while True:
-        yield task_id
-        task_id += 1
         
 def api_endpoint_from_url(request_url: str) -> str:
     """

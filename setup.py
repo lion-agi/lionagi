@@ -13,10 +13,8 @@ install_requires = [
     "aiohttp",
     "python-dotenv",
     "tiktoken", 
-    "pydantic",
-    "networkx"
+    "pydantic"
 ]
-
 
 setuptools.setup(
     name="lionagi",
