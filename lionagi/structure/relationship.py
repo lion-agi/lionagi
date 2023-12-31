@@ -29,4 +29,19 @@ class Relationship(BaseNode):
             return self.condition[condition_key]
         else:
             raise ValueError(f"Condition {condition_key} does not exist")
+    
+    def _source_existed(self, obj):
+        return self.source_node_id in obj.keys()
+    
+    def _target_existed(self, obj):
+        return self.target_node_id in obj.keys()
+    
+    def _is_in(self, obj):
+        if self._source_existed(obj) and self._target_existed(obj):
+            return True
+        
+        elif self._source_existed(obj):
+            raise ValueError(f"Target node {self.source_node_id} does not exist")
+        else :
+            raise ValueError(f"Source node {self.target_node_id} does not exist")
         
