@@ -2,7 +2,7 @@ import json
 from typing import Any, Dict, Optional, TypeVar, Type, List, Callable
 from pydantic import BaseModel, Field, validator
 
-from ..utils.sys_utils import create_id
+from lionagi.utils.sys_utils import create_id
 
 T = TypeVar('T', bound='BaseNode')
 
@@ -161,8 +161,16 @@ class BaseNode(BaseModel):
 
 
 class DataNode(BaseNode):
-    
-    ...
+
+    def to_llama_index(self, **kwargs):
+        # to llama_index textnode
+        from lionagi.bridge.llama_index import to_llama_index_textnode
+        return to_llama_index_textnode(self, **kwargs)
+
+    def to_langchain(self, **kwargs):
+        # to langchain document
+        from lionagi.bridge.langchain import to_langchain_document
+        return to_langchain_document(self, **kwargs)
 
 
 class File(DataNode):

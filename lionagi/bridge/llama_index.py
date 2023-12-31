@@ -1,7 +1,7 @@
 import json
 from typing import Union, Callable
 
-from ..schema.base_schema import DataNode
+from lionagi.schema.base_schema import DataNode
 
 
 def from_llama_index(llama_node, **kwargs):

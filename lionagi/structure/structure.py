@@ -1,8 +1,9 @@
 from pydantic import Field
 
-from ..schema.base_schema import BaseNode
+from lionagi.utils.call_utils import l_call
+from lionagi.schema.base_schema import BaseNode
 from .relationship import Relationship
-from ..utils.call_utils import l_call
+
 
 
 class Structure(BaseNode):

@@ -1,7 +1,7 @@
 import asyncio
 from typing import Dict, Any, Optional, List
 
-from ..schema.base_schema import BaseTool
+from lionagi.schema.base_schema import BaseTool
 
 
 class ToolManager:

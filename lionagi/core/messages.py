@@ -1,4 +1,4 @@
-from ..schema.base_schema import Message
+from lionagi.schema.base_schema import Message
 
 
 class Response(Message):

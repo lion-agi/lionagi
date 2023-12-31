@@ -1,4 +1,4 @@
-from .messages import Message
+from lionagi.core.messages import Message
 
 
 class Conversation:

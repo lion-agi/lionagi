@@ -1,47 +1,47 @@
-import json
-from typing import Any
-from dotenv import load_dotenv
+# import json
+# from typing import Any
+# from dotenv import load_dotenv
 
-from .conversations import Conversation
-from ..schema.base_schema import DataLogger
-from ..tools.tool_utils import ToolManager
-from ..services import OpenAIService
-from ..configs.oai_configs import oai_chat_schema, oai_finetune_schema
+# from .conversations import Conversation
+# from ..schema.data_logger import DataLogger
+# from ..managers.tool_manager import ToolManager
+# from ..service_.oai import OpenAIService
+# from ..configs.oai_configs import oai_schema
 
-load_dotenv()
-OAIService = OpenAIService()
+# load_dotenv()
+# OAIService = OpenAIService()
 
 
-class Session:
+# class Session:
 
-    def __init__(self, system, dir=None, schema=oai_chat_schema, service=OAIService, llmconfig=None):
+#     def __init__(self, system, dir=None, schema=oai_chat_schema, service=OAIService, llmconfig=None):
         
-        self.system = system
-        self.conversation = Conversation()
+#         self.system = system
+#         self.conversation = Conversation()
         
-        schema = schema.copy()
-        self.llmconfig = {**schema['config'], **llmconfig}
-        self._schema = schema.update({"config": self.llmconfig})
-        self._service = service
-        self._logger = DataLogger(dir=dir)
-        self._toolmanager = ToolManager()
+#         schema = schema.copy()
+#         self.llmconfig = {**schema['config'], **llmconfig}
+#         self._schema = schema.update({"config": self.llmconfig})
+#         self._service = service
+#         self._logger = DataLogger(dir=dir)
+#         self._toolmanager = ToolManager()
     
-    def set_dir(self, dir):
-        self._logger.dir = dir
+#     def set_dir(self, dir):
+#         self._logger.dir = dir
     
-    def set_system(self, system):
-        self.conversation.change_system(system)
+#     def set_system(self, system):
+#         self.conversation.change_system(system)
     
-    def set_llmconfig(self, llmconfig):
-        self.llmconfig = llmconfig
+#     def set_llmconfig(self, llmconfig):
+#         self.llmconfig = llmconfig
     
-    def set_service(self, service):
-        self._service = service
+#     def set_service(self, service):
+#         self._service = service
     
-    def set_schema(self, schema):
-        if not schema.get('config', None):
-            schema['config'] = {**self._schema['config']}                
-        self._schema = schema
+#     def set_schema(self, schema):
+#         if not schema.get('config', None):
+#             schema['config'] = {**self._schema['config']}                
+#         self._schema = schema
     
     
     # ------------------------------------------------ Tools -------------------------------------------------------   
@@ -116,18 +116,18 @@ class Session:
     #     self._logger.to_csv(dir=dir, filename=filename, **kwargs)
     
     
-    async def call_chatcompletion(self, schema=None, **kwargs):
-        schema = schema or self._schema
-        payload = ChatCompletion.create_payload(input_=self.conversation.messages, 
-                                                schema=schema,
-                                                llmconfig=self.llmconfig,**kwargs)
-        completion = await self._service.serve(payload=payload)
-        return completion
+    # async def call_chatcompletion(self, schema=None, **kwargs):
+    #     schema = schema or self._schema
+    #     payload = ChatCompletion.create_payload(input_=self.conversation.messages, 
+    #                                             schema=schema,
+    #                                             llmconfig=self.llmconfig,**kwargs)
+    #     completion = await self._service.serve(payload=payload)
+    #     return completion
         
-    async def call_embedding(self, input_, schema, **kwargs):
-        payload = Embeddings.create_payload(input_=input_, schema=schema, **kwargs)
-        completion = await self._service.serve(payload=payload, endpoint="embeddings")
-        return completion
+    # async def call_embedding(self, input_, schema, **kwargs):
+    #     payload = Embeddings.create_payload(input_=input_, schema=schema, **kwargs)
+    #     completion = await self._service.serve(payload=payload, endpoint="embeddings")
+    #     return completion
     
         # if "choices" in completion:
         #     self._logger({"input":payload, "output": completion})

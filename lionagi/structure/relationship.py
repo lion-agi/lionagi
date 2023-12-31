@@ -1,6 +1,6 @@
 from pydantic import Field
 
-from ..schema.base_schema import BaseNode
+from lionagi.schema.base_schema import BaseNode
 
 
 class Relationship(BaseNode):

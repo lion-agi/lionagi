@@ -1,7 +1,7 @@
 from os import getenv
 from typing import Dict
 
-from lionagi.service_.base_api_service import BaseAPIService
+from .base_api_service import BaseAPIService
 from lionagi.configs.oai_configs import oai_schema
 
 
