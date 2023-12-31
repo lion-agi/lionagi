@@ -1,48 +1,80 @@
-from typing import List, Optional, Dict, Any
-import networkx as nx
+from pydantic import Field
 
-from ..schema.base_schema import BaseNode, T, Field
+from ..schema.base_schema import BaseNode
 from .relationship import Relationship
-   
+from ..utils.call_utils import l_call
+
+
 class Structure(BaseNode):
-    nodes: List[T] = Field(default_factory=list)
-    relationships: List[Relationship] = Field(default_factory=list)
-    graph: 'nx.Graph' = nx.DiGraph()
+    nodes: dict = Field(default={})
+    relationships: dict = Field(default={})
+    node_relationships: dict = Field(default={})
 
-    def add_node(self, node: T) -> None:
-        self.graph.add_node(node.id_, content=node.content, metadata=node.metadata)
+    def add_node(self, node: BaseNode):
+        self.nodes[node.id_] = node
+        self.node_relationships[node.id_] = {'in': {}, 'out': {}}
 
-    def remove_node(self, node_id: str) -> None:
-        self.nodes = [node for node in self.nodes if node.get_id() != node_id]
-        self.relationships = [rel for rel in self.relationships if rel.target_node_id != node_id and rel.get_id() != node_id]
+    def add_relationship(self, relationships: Relationship):
+        if relationships.source_node_id not in self.node_relationships.keys():
+            raise ValueError(f'node {relationships.source_node_id} is not found.')
+        if relationships.target_node_id not in self.node_relationships.keys():
+            raise ValueError(f'node {relationships.target_node_id} is not found.')
 
-    def get_node(self, node_id: str) -> Optional[T]:
-        return next((node for node in self.nodes if node.get_id() == node_id), None)
+        self.relationships[relationships.id_] = relationships
+        self.node_relationships[relationships.source_node_id]['out'][relationships.id_] = relationships.target_node_id
+        self.node_relationships[relationships.target_node_id]['in'][relationships.id_] = relationships.source_node_id
 
-    def add_relationship(self, relationship: Relationship) -> None:
-        if self.get_node(relationship.get_id()) and self.get_node(relationship.target_node_id):
-            self.relationships.append(relationship)
+    def get_node_relationships(self, node: BaseNode = None, out_edge=True):
+        if node is None:
+            return list(self.relationships.values())
 
-    def remove_relationship(self, relationship_id: str) -> None:
-        self.relationships = [rel for rel in self.relationships if rel.get_id() != relationship_id]
+        if node.id_ not in self.nodes.keys():
+            raise KeyError(f'node {node.id_} is not found')
 
-    def get_relationships(self, node_id: str) -> List[Relationship]:
-        return [rel for rel in self.relationships if rel.get_id() == node_id or rel.target_node_id == node_id]
+        if out_edge:
+            relationship_ids = list(self.node_relationships[node.id_]['out'].keys())
+            relationships = l_call(relationship_ids, lambda i: self.relationships[i])
+            return relationships
+        else:
+            relationship_ids = list(self.node_relationships[node.id_]['in'].keys())
+            relationships = l_call(relationship_ids, lambda i: self.relationships[i])
+            return relationships
 
-    def evaluate_conditions(self, context: Dict[str, Any]) -> List[Relationship]:
-        return [rel for rel in self.relationships if all(rel.evaluate_condition(cond, context) for cond in rel.conditions)]
+    def remove_node(self, node: BaseNode):
+        if node.id_ not in self.nodes.keys():
+            raise KeyError(f'node {node.id_} is not found')
 
-    def add_relationship(self, source_node_id: str, target_node_id: str, relationship: Relationship) -> None:
-        self.graph.add_edge(source_node_id, target_node_id,
-                            label=relationship.label,
-                            properties=relationship.properties,
-                            condition=relationship.condition)
+        out_relationship = self.node_relationships[node.id_]['out']
+        for relationship_id, node_id in out_relationship.items():
+            self.node_relationships[node_id]['in'].pop(relationship_id)
+            self.relationships.pop(relationship_id)
 
-    def remove_relationship(self, source_node_id: str, target_node_id: str) -> None:
-        if self.graph.has_edge(source_node_id, target_node_id):
-            self.graph.remove_edge(source_node_id, target_node_id)
+        in_relationship = self.node_relationships[node.id_]['in']
+        for relationship_id, node_id in in_relationship.items():
+            self.node_relationships[node_id]['out'].pop(relationship_id)
+            self.relationships.pop(relationship_id)
 
-    def get_relationships(self, node_id: str) -> list:
-        return list(self.graph.edges(node_id, data=True))
-    
-    
+        self.node_relationships.pop(node.id_)
+        return self.nodes.pop(node.id_)
+
+    def remove_relationship(self, relationship: Relationship):
+        if relationship.id_ not in self.relationships.keys():
+            raise KeyError(f'relationship {relationship.id_} is not found')
+
+        self.node_relationships[relationship.source_node_id]['out'].pop(relationship.id_)
+        self.node_relationships[relationship.target_node_id]['in'].pop(relationship.id_)
+
+        return self.relationships.pop(relationship.id_)
+
+    def node_exists(self, node: BaseNode):
+        if node.id_ in self.nodes.keys():
+            return True
+        else:
+            return False
+
+    def relationship_exists(self, relationship: Relationship):
+        if relationship.id_ in self.relationships.keys():
+            return True
+        else:
+            return False
+        
