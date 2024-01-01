@@ -1,9 +1,9 @@
 import math
 from pathlib import Path
-from typing import List, Union
+from typing import List, Union, Dict, Any
 
 from .sys_util import to_list
-from .call_util import l_call
+from .call_util import lcall
 
 
 def dir_to_path(dir: str, ext, recursive: bool = False, flat: bool = True):
@@ -13,7 +13,7 @@ def dir_to_path(dir: str, ext, recursive: bool = False, flat: bool = True):
         return list(Path(dir).glob(tem + ext))
     
     try: 
-        return to_list(l_call(ext, _dir_to_path, flat=True), flat=flat)
+        return to_list(lcall(ext, _dir_to_path, flat=True), flat=flat)
     except: 
         raise ValueError("Invalid directory or extension, please check the path")
 
@@ -78,3 +78,42 @@ def read_text(filepath: str, clean: bool = True) -> str:
             for old, new in replacements.items():
                 content = content.replace(old, new)
         return content
+    
+
+def _file_to_chunks(input: Dict[str, Any],
+                   field: str = 'content',
+                   chunk_size: int = 1500,
+                   overlap: float = 0.1,
+                   threshold: int = 200) -> List[Dict[str, Any]]:
+    try:
+        out = {key: value for key, value in input.items() if key != field}
+        out.update({"chunk_overlap": overlap, "chunk_threshold": threshold})
+
+        chunks = chunk_text(input[field], chunk_size=chunk_size, overlap=overlap, threshold=threshold)
+        logs = []
+        for i, chunk in enumerate(chunks):
+            chunk_dict = out.copy()
+            chunk_dict.update({
+                'file_chunks': len(chunks),
+                'chunk_id': i + 1,
+                'chunk_size': len(chunk),
+                f'chunk_{field}': chunk
+            })
+            logs.append(chunk_dict)
+
+        return logs
+
+    except Exception as e:
+        raise ValueError(f"An error occurred while chunking the file. {e}")
+
+def file_to_chunks(input,
+                   project='project',
+                   output_dir='data/logs/sources/',
+                   chunk_func = _file_to_chunks,
+                   to_csv=False,
+                   filename=None,
+                   verbose=True,
+                   timestamp=True,
+                   logger=None, **kwargs):
+    logs = to_list(lcall(input, chunk_func, **kwargs), flat=True)
+    return logs

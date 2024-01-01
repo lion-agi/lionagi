@@ -5,7 +5,7 @@ import logging
 from os import getenv
 from typing import Dict, Optional, Any
 
-from lionagi.utils.api_util import api_methods, api_endpoint_from_url, api_error, rate_limit_error
+from lionagi.utils.api_util import api_methods, api_endpoint_from_url, api_error, api_rate_limit_error
 from lionagi.objs.service_utils import BaseService, StatusTracker, AsyncQueue, PayloadMaker
 from .base_rate_limiter import BaseRateLimiter
 
@@ -167,7 +167,7 @@ class BaseAPIService(BaseService):
                                                 
                         if api_error(response_json=response_json):
                             attempts_left -= 1     
-                            if rate_limit_error(response_json=response_json):
+                            if api_rate_limit_error(response_json=response_json):
                                 await asyncio.sleep(15)
                         else:
                             return response_json

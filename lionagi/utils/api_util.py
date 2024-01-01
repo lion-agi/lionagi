@@ -1,9 +1,9 @@
 import logging
 import re
-from typing import Generator, Callable
+from typing import Callable
         
         
-def api_methods(http_session, method: str = "post") -> Callable:
+def api_method(http_session, method: str = "post") -> Callable:
     """
     Retrieves the appropriate HTTP method from an HTTP session object.
 
@@ -69,7 +69,7 @@ def api_error(response_json: dict) -> bool:
         return True
     return False
     
-def rate_limit_error(response_json: dict) -> bool:
+def api_rate_limit_error(response_json: dict) -> bool:
     """
     Checks if the API response indicates a rate limit error.
 

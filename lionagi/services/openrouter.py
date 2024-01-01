@@ -1,7 +1,7 @@
 from os import getenv
 from typing import Dict
 
-from lionagi.service_.base_api_service import BaseAPIService
+from lionagi.services.base_api_service import BaseAPIService
 from lionagi.configs.openrouter_config import openrouter_schema
 
 class OpenRouterService(BaseAPIService):

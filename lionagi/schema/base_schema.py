@@ -183,7 +183,7 @@ class Chunk(DataNode):
     ...    
 
 
-class BaseTool(BaseNode):
+class Tool(BaseNode):
     name: str = None
     func: Callable = None
     content: Any = None

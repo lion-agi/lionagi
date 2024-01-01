@@ -19,7 +19,7 @@ import copy
 import hashlib
 from pathlib import Path
 from datetime import datetime
-from typing import Any, Generator, List, Optional, Union
+from typing import Any, Generator, List, Optional, Union, MutableMapping, Iterable
 
 def create_copy(input: Any, n: int) -> Any:
     """
@@ -66,7 +66,7 @@ def get_timestamp() -> str:
     """
     return datetime.now().isoformat().replace(":", "_").replace(".", "_")
 
-def create_id() -> str:
+def create_id(n=32) -> str:
     """
     Generates a unique ID based on the current time and random bytes.
 
@@ -83,7 +83,7 @@ def create_id() -> str:
     """
     current_time = datetime.now().isoformat().encode('utf-8')
     random_bytes = os.urandom(2048)
-    return hashlib.sha256(current_time + random_bytes).hexdigest()
+    return hashlib.sha256(current_time + random_bytes).hexdigest()[:n]
 
 def create_path(dir: str, filename: str, timestamp: bool = True, dir_exist_ok: bool = True, time_prefix=False) -> str:
     """
@@ -182,27 +182,19 @@ def task_id_generator() -> Generator[int, None, None]:
         yield task_id
         task_id += 1
 
+def to_list(input: Union[Iterable, Any], flatten: bool = True, dropna: bool = True) -> List[Any]:
+    if input is None:
+        raise ValueError("None type cannot be converted to a list.")
 
-# def to_list(input: Union[Iterable, Any], flatten: bool = True, dropna: bool = True) -> List[Any]:
-#     if input is None:
-#         raise ValueError("None type cannot be converted to a list.")
-
-#     if isinstance(input, MutableMapping):  # Input is a dictionary
-#         # Convert dictionary to list of tuples (key, value) and then flatten if required
-#         iterables = [(k, v) for k, v in input.items()]
-#     elif isinstance(input, Iterable) and not isinstance(input, str):
-#         # Directly use iterables except for strings which should be treated as scalars
-#         iterables = input
-#     else:
-#         # Treat anything else as a single-value iterable
-#         iterables = [input]
-
-#     # Now we need to flatten the iterable if required
-#     if flatten:
-#         return list(_flatten(iterables, dropna))
-#     else:
-#         return list(iterables)
-
+    if isinstance(input, MutableMapping):  # Input is a dictionary
+        # Convert dictionary to list of tuples (key, value) and then flatten if required
+        iterables = [(k, v) for k, v in input.items()]
+    elif isinstance(input, Iterable) and not isinstance(input, str):
+        # Directly use iterables except for strings which should be treated as scalars
+        iterables = input
+    else:
+        # Treat anything else as a single-value iterable
+        iterables = [input]
 
 def str_to_num(input: str, 
                upper_bound: Optional[Union[int, float]] = None, 

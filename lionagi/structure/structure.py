@@ -1,7 +1,5 @@
 from typing import TypeVar
 from pydantic import Field
-
-from lionagi.utils.call_utils import l_call
 from lionagi.schema.base_schema import BaseNode, T
 from .relationship import Relationship
 

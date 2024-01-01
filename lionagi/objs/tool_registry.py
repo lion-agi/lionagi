@@ -1,7 +1,7 @@
 import asyncio
 from typing import Dict, Any, Optional, List
 
-from lionagi.schema.base_schema import BaseTool
+from lionagi.schema.base_schema import Tool
 
 
 class ToolRegistry:
@@ -28,7 +28,7 @@ class ToolRegistry:
         """
         Initializes the ToolManager with an empty registry.
         """        
-        self.registry: Dict[str, BaseTool] = {}
+        self.registry: Dict[str, Tool] = {}
 
     def _name_exists(self, name: str) -> bool:
         """
@@ -42,7 +42,7 @@ class ToolRegistry:
         """
         return name in self.registry
 
-    def _register_tool(self, tool: BaseTool, name: Optional[str] = None, update: bool = False,
+    def _register_tool(self, tool: Tool, name: Optional[str] = None, update: bool = False,
                        new: bool = False, prefix: Optional[str] = None, postfix: Optional[int] = None):
         """
         Registers a tool in the registry.
@@ -107,7 +107,7 @@ class ToolRegistry:
         except Exception as e:
             raise ValueError(f"Error invoking function {name}: {str(e)}")
 
-    def register_tools(self, tools: List[BaseTool], update: bool = False, new: bool = False,
+    def register_tools(self, tools: List[Tool], update: bool = False, new: bool = False,
                        prefix: Optional[str] = None, postfix: Optional[int] = None):
         """
         Registers multiple tools in the registry.

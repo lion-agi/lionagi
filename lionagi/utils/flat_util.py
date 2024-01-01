@@ -339,20 +339,6 @@ def dynamic_unflatten_dict(flat_dict, sep='_', custom_logic=None, max_depth=None
         return {}
     return unflattened
 
-def _insert_with_dict_handling(lst, indices, value):
-    for index in indices[:-1]:
-        while len(lst) <= index:
-            lst.append({} if isinstance(indices[indices.index(index) + 1], str) else [])
-        lst = lst[index]
-    lst[indices[-1]] = value
-    
-def unflatten_to_list(flat_dict: dict, sep: str = '_') -> list:
-    result_list = []
-    for flat_key, value in flat_dict.items():
-        indices = [int(p) if p.isdigit() else p for p in flat_key.split(sep)]
-        _insert_with_dict_handling(result_list, indices, value)
-    return result_list
-
 def _insert_with_dict_handling(container, indices, value):
     """
     Helper function to insert a value into a nested container based on a list of indices.
@@ -414,7 +400,6 @@ def unflatten_to_list(flat_dict: Dict[str, Any], sep: str = '_') -> List:
         indices = [int(p) if p.lstrip('-').isdigit() else p for p in flat_key.split(sep)]
         _insert_with_dict_handling(result_list, indices, value)
     return result_list
-
 
 def flatten_iterable(iterable: Iterable, max_depth: int = None) -> Generator[Any, None, None]:
     """
