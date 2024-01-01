@@ -1,4 +1,8 @@
-![PyPI - Version](https://img.shields.io/pypi/v/lionagi?labelColor=233476aa&color=231fc935) [![Downloads](https://static.pepy.tech/badge/lionagi/week)](https://pepy.tech/project/lionagi)
+![PyPI - Version](https://img.shields.io/pypi/v/lionagi?labelColor=233476aa&color=231fc935)  ![Read the Docs](https://img.shields.io/readthedocs/lionagi)  ![PyPI - License](https://img.shields.io/pypi/l/lionagi?color=231fc935) ![PyPI - Downloads](https://img.shields.io/pypi/dm/lionagi?color=blue)
+
+
+
+
 
 [PyPI](https://pypi.org/project/lionagi/) | [Documentation](https://lionagi.readthedocs.io/en/latest/) | [Discord](https://discord.gg/7RGWqpSxze)
 
@@ -20,23 +24,20 @@ pip install lionagi
 Download the `.env_template` file, input your appropriate API_KEY, save the file, rename as `.env` and put in your project's root directory. 
 by default we use `OPENAI_API_KEY`.
 
-\*we now also supports all models in [OpenRouter](https://openrouter.ai/models)   (not released yet, you can have a preview in `main`)
-
-\* https://lionagi.readthedocs.io/en/v0.0.111/ is the the latest stable, please `pip install lionagi==0.0.111` if you find 0.0.112 buggy 
-
-
-
+- supports all models in [OpenRouter](https://openrouter.ai/models/) (not released yet, you can have a preview in `main`)
+- supports all `langchain` and `llamaindex` splitters, chunkers, and readers (not released yet)
+- [here](https://lionagi.readthedocs.io/en/v0.0.111/) is the the latest stable, please `pip install lionagi==0.0.111` if you find 0.0.112 buggy 
 
 ### Features
-
-- Robust performance
-- Efficient data operations for reading, chunking, binning, writing, storing and managing data.
-- Fast interaction with LLM services like OpenAI with **configurable rate limiting concurrent API calls** for maximum throughput. 
-- Create a production ready LLM application **in hours**. Intuitive workflow management to streamline the process from idea to market.
-- (Work In Progress): verstile intergration with most API and local LLM services.  
-
+- Create a production ready LLM application **in hours**.
+- written in pure python, minimum dependency `aiohttp`, `python-dotenv`, `tiktoken`, `pydantic`
+- Efficient and verstile data operations for reading, chunking, binning, writing, storing and managing data
+- (Work In Progress) support for all `langchain` and `llamaindex` splitters, chunkers, and readers
+- Unified interface with any LLM provider, API or local
+  - Fast and **concurrent** API call with `configurable rate limit`
+  - (Work In Progress) support for hundreds of models both API and local
 ---
-LionAGI is designed to be async only, please check python official documentation on how `async` work: [here](https://docs.python.org/3/library/asyncio.html)
+LionAGI is designed to be `asynchronous` only, please check python official documentation on how `async` work: [here](https://docs.python.org/3/library/asyncio.html)
 
 
 **Notice**: 
