@@ -1,14 +1,99 @@
+from os import getenv
 import asyncio
 import aiohttp
 import logging
 
-from os import getenv
-from typing import Dict, Optional, Any
-
+from typing import Dict, Optional, Any, NoReturn
 from lionagi.utils.api_util import api_method, api_endpoint_from_url, api_error, api_rate_limit_error
 from lionagi.objs import StatusTracker, AsyncQueue, PayloadMaker
-from .base_ import BaseService
-from .base_rate_limiter import BaseRateLimiter
+from lionagi.services.base_ import BaseService, RateLimiter
+
+class BaseRateLimiter(RateLimiter):
+    """
+    BaseRateLimiter extends the RateLimiter class to implement specific rate limiting logic.
+
+    This class provides functionality to manage the rate of requests sent to a network interface
+    or API by controlling the number of requests and tokens within a given time interval.
+
+    Attributes:
+    
+        interval (int): The time interval in seconds for replenishing the rate limit capacity.
+        
+        rate_limit_replenisher_task (asyncio.Task): An asyncio task that runs the rate limit replenisher coroutine.
+
+    Methods:
+    
+        create: Class method to initialize and start the rate limit replenisher task.
+        
+        rate_limit_replenisher: Coroutine that replenishes rate limits at set intervals.
+        
+        _is_busy: Checks if the rate limiter is currently busy.
+        
+        _has_capacity: Checks if there is enough capacity for a request.
+        
+        _reduce_capacity: Reduces the available capacities by the required tokens.
+    """
+
+    def __init__(
+        self, 
+        max_requests_per_interval: int, 
+        max_tokens_per_interval: int,
+        interval: int = 60,
+    ) -> None:
+        """
+        Initializes the BaseRateLimiter with specific rate limits and interval.
+
+        Parameters:
+        
+            max_requests_per_interval (int): Maximum number of requests allowed per interval.
+            
+            max_tokens_per_interval (int): Maximum number of tokens that can be used per interval.
+            
+            interval (int): The time interval in seconds for replenishing rate limits. Defaults to 60 seconds.
+        """
+        
+        super().__init__(max_requests_per_interval, max_tokens_per_interval)
+        self.interval = interval
+        self.rate_limit_replenisher_task = asyncio.create_task(
+            self.rate_limit_replenisher.create(max_requests_per_interval, 
+                                               max_tokens_per_interval))
+
+    @classmethod
+    async def create(
+        cls, max_requests_per_interval: int, max_tokens_per_interval: int
+    ) -> None:
+        """
+        Class method to initialize and start the rate limit replenisher task.
+
+        Parameters:
+            max_requests_per_interval (int): Maximum number of requests allowed per interval.
+            max_tokens_per_interval (int): Maximum number of tokens that can be used per interval.
+
+        Returns:
+            An instance of BaseRateLimiter with the replenisher task running.
+
+        Note:
+            If the environment variable "env_readthedocs" is set, the replenisher task is not started.
+        """
+        self = cls(max_requests_per_interval, max_tokens_per_interval)
+        if not getenv.getenv("env_readthedocs"):
+            self.rate_limit_replenisher_task = await asyncio.create_task(
+                self.rate_limit_replenisher()
+            )
+        return self
+
+    async def rate_limit_replenisher(self) -> NoReturn:
+        """
+        A coroutine that replenishes rate limits at set intervals.
+
+        This coroutine runs in a loop, sleeping for the specified interval and then replenishing
+        the request and token capacities to their maximum values.
+        """
+        while True:
+            await asyncio.sleep(self.interval)  # Replenishes every interval seconds
+            self.available_request_capacity = self.max_requests_per_interval
+            self.available_token_capacity = self.max_tokens_per_interval
+
 
 
 class BaseAPIService(BaseService):

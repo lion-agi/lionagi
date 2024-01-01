@@ -49,3 +49,35 @@ class RateLimiter(ABC):
     @abstractmethod
     async def rate_limit_replenisher(self):        
         ...
+
+    def _is_busy(self) -> bool:
+        """
+        Checks if the rate limiter is currently busy.
+
+        Returns:
+            bool: True if the available request capacity is less than 1 or the available token capacity is less than 10.
+        """
+        return self.available_request_capacity < 1 or self.available_token_capacity < 10
+    
+    def _has_capacity(self, required_tokens: int) -> bool:
+        """
+        Checks if there is enough capacity for a request based on required tokens.
+
+        Parameters:
+            required_tokens (int): The number of tokens required for the request.
+
+        Returns:
+            bool: True if the available token capacity is greater than or equal to the required tokens.
+        """
+        return self.available_token_capacity >= required_tokens
+    
+    def _reduce_capacity(self, required_tokens: int) -> None:
+        """
+        Reduces the available capacities by the required tokens.
+
+        Parameters:
+            required_tokens (int): The number of tokens to reduce from the available capacity.
+        """
+        self.available_request_capacity -= 1
+        self.available_token_capacity -= required_tokens
+        
