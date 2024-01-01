@@ -1,6 +1,6 @@
 from typing import Optional, Any, Union, Dict, Tuple
 
-from lionagi.utils.call_utils import l_call
+from lionagi.utils.call_util import lcall
 from lionagi.schema.data_logger import DataLogger
 from lionagi.core.messages import Message, Response, Instruction, System
 
@@ -98,7 +98,7 @@ class Messenger:
             ValueError: If more than one or none of the message content parameters (system, instruction, response) are provided.
         """
         
-        if sum(l_call([system, instruction, response], bool)) != 1:
+        if sum(lcall([system, instruction, response], bool)) != 1:
             raise ValueError("Error: Message must have one and only one role.")
         
         else:

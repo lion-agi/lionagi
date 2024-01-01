@@ -1,4 +1,4 @@
-from typing import Dict, Iterable, List, Any, Callable, Generator, Tuple, Union
+from typing import Dict, Iterable, List, Any, Callable, Generator, Tuple
 
 
 def flatten_dict(d: Dict, parent_key: str = '', sep: str = '_') -> Dict:

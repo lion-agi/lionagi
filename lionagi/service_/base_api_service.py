@@ -5,8 +5,8 @@ import logging
 from os import getenv
 from typing import Dict, Optional, Any
 
-from lionagi.utils.api_utils import api_methods, api_endpoint_from_url, api_error, rate_limit_error
-from lionagi.utils.service_utils import BaseService, StatusTracker, AsyncQueue, PayloadMaker
+from lionagi.utils.api_util import api_methods, api_endpoint_from_url, api_error, rate_limit_error
+from lionagi.objs.service_utils import BaseService, StatusTracker, AsyncQueue, PayloadMaker
 from .base_rate_limiter import BaseRateLimiter
 
 

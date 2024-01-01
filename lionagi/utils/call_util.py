@@ -2,11 +2,10 @@ import asyncio
 import time
 from typing import Any, Callable, List, Optional, Union
 
-from .sys_utils import create_copy
-from .type_utils import to_list
+from .sys_util import create_copy, to_list
 
 
-def hold_call(input: Any, 
+def hcall(input: Any, 
               func: Callable, 
               sleep: int = 0.1, 
               message: Optional[str] = None, 
@@ -54,7 +53,7 @@ def hold_call(input: Any,
         if not ignore_error:
             raise
 
-async def ahold_call(input: Any, 
+async def ahcall(input: Any, 
                      func: Callable, 
                      sleep: int = 5, 
                      message: Optional[str] = None, 
@@ -104,7 +103,7 @@ async def ahold_call(input: Any,
         if not ignore_error:
             raise
 
-def l_call(input: Any, 
+def lcall(input: Any, 
            func: Callable, 
            flatten_dict: bool = False, 
            flat: bool = False, 
@@ -144,7 +143,7 @@ def l_call(input: Any,
     except Exception as e:
         raise ValueError(f"Given function cannot be applied to the input. Error: {e}")
 
-async def al_call(input: Any, 
+async def alcall(input: Any, 
                   func: Callable, 
                   flatten_dict: bool = False, 
                   flat: bool = False, 
@@ -186,7 +185,7 @@ async def al_call(input: Any,
     except Exception as e:
         raise ValueError(f"Given function cannot be applied to the input. Error: {e}")
 
-def m_call(input: Union[Any, List[Any]], 
+def mcall(input: Union[Any, List[Any]], 
            func: Union[Callable, List[Callable]], 
            flatten_dict: bool = False, 
            flat: bool = True, 
@@ -224,10 +223,10 @@ def m_call(input: Union[Any, List[Any]],
     input = to_list(input, flatten_dict, flat, dropna)
     func = to_list(func)
     assert len(input) == len(func), "The number of inputs and functions must be the same."
-    return to_list([l_call(inp, f, flatten_dict, flat, dropna, **kwargs) 
+    return to_list([lcall(inp, f, flatten_dict, flat, dropna, **kwargs) 
                     for f, inp in zip(func, input)])
 
-async def am_call(input: Union[Any, List[Any]], 
+async def amcall(input: Union[Any, List[Any]], 
                   func: Union[Callable, List[Callable]], 
                   flatten_dict: bool = False, 
                   flat: bool = True, 
@@ -266,12 +265,12 @@ async def am_call(input: Union[Any, List[Any]],
     func = to_list(func)
     assert len(input) == len(func), "Input and function counts must match."
     
-    tasks = [al_call(inp, f, flatten_dict, flat, dropna, **kwargs) 
+    tasks = [alcall(inp, f, flatten_dict, flat, dropna, **kwargs) 
              for f, inp in zip(func, input)]
     out = await asyncio.gather(*tasks)
     return to_list(out, flat=True)
 
-def e_call(input: Any, 
+def ecall(input: Any, 
            func: Callable, 
            flatten_dict: bool = False, 
            flat: bool = False, 
@@ -304,11 +303,11 @@ def e_call(input: Any,
         [[1], [4], [9]]
     """
 
-    _f = lambda x, y: m_call(create_copy(x, len(to_list(y))), y, 
+    _f = lambda x, y: mcall(create_copy(x, len(to_list(y))), y, 
                             flatten_dict=flatten_dict, flat=flat, dropna=dropna, **kwargs)
     return to_list([_f(inp, func) for inp in to_list(input)], flat=flat)
 
-async def ae_call(input_: Any, 
+async def aecall(input_: Any, 
                   func_: Callable, 
                   flatten_dict: bool = False,
                   flat: bool = False, 
@@ -338,7 +337,7 @@ async def ae_call(input_: Any,
         [[1, 4, 9]]
     """
     async def _async_f(x, y):
-        return await am_call(create_copy(x, len(to_list(y))), y, flatten_dict=flatten_dict, flat=flat, dropna=dropna, **kwargs)
+        return await amcall(create_copy(x, len(to_list(y))), y, flatten_dict=flatten_dict, flat=flat, dropna=dropna, **kwargs)
 
     tasks = [_async_f(inp, func_) for inp in to_list(input_)]
     return await asyncio.gather(*tasks)

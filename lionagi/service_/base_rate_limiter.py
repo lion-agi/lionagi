@@ -1,7 +1,7 @@
 from os import getenv
 import asyncio
 from typing import NoReturn
-from lionagi.utils.service_utils import RateLimiter
+from lionagi.objs.service_utils import RateLimiter
 
 class BaseRateLimiter(RateLimiter):
     """

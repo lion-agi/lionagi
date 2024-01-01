@@ -2,7 +2,7 @@ import json
 from typing import Any, Dict, Optional, TypeVar, Type, List, Callable
 from pydantic import BaseModel, Field, validator
 
-from lionagi.utils.sys_utils import create_id
+from lionagi.utils.sys_util import create_id
 
 T = TypeVar('T', bound='BaseNode')
 

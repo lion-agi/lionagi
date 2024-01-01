@@ -4,7 +4,7 @@ from typing import Dict, Any, Optional, List
 from lionagi.schema.base_schema import BaseTool
 
 
-class ToolManager:
+class ToolRegistry:
     """
     ToolManager manages the registration and invocation of tools.
 

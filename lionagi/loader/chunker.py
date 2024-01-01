@@ -3,7 +3,7 @@ from typing import Union, Callable
 
 from ..bridge.langchain import langchain_text_splitter, from_langchain
 from ..bridge.llama_index import llama_index_node_parser, from_llama_index
-from ..utils.call_utils import l_call
+from ..utils.call_util import lcall
 from ..schema import DataNode
 
 
@@ -32,13 +32,13 @@ def chunk(documents,
     if chunker_type == ChunkerType.LANGCHAIN:
         nodes = langchain_text_splitter(documents, chunker, chunker_args, chunker_kwargs)
         if to_datanode:
-            nodes = l_call(nodes, lambda x: DataNode(content=x))
+            nodes = lcall(nodes, lambda x: DataNode(content=x))
         return nodes
 
     elif chunker_type == ChunkerType.LLAMAINDEX:
         nodes = llama_index_node_parser(documents, chunker, chunker_args, chunker_kwargs)
         if to_datanode:
-            nodes = l_call(nodes, from_llama_index)
+            nodes = lcall(nodes, from_llama_index)
         return nodes
 
     else:

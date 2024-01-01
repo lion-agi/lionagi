@@ -1,6 +1,6 @@
 from collections import deque
 from typing import List, Optional
-from lionagi.utils.sys_utils import create_path
+from lionagi.utils.sys_util import create_path
 from lionagi.utils.io_util import to_csv
 
 

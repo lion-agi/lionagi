@@ -33,8 +33,6 @@ def api_methods(http_session, method: str = "post") -> Callable:
     elif method == "patch":
         return http_session.patch
 
-
-        
 def api_endpoint_from_url(request_url: str) -> str:
     """
     Extracts the API endpoint from a given URL.

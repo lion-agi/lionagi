@@ -3,7 +3,7 @@ from typing import Union, Callable
 
 from ..bridge.langchain import langchain_loader, from_langchain
 from ..bridge.llama_index import llama_index_reader, from_llama_index
-from ..utils.sys_utils import l_call
+from ..utils.sys_util import l_call
 
 
 class ReaderType(str, Enum):

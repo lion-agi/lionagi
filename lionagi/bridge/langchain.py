@@ -1,9 +1,9 @@
 import json
-from typing import Union, Callable, List, Dict, Any, Optional
-from lionagi.schema.base_schema import DataNode
+from typing import Union, Callable, List, Dict, Any
+from lionagi.schema.base_schema import T, DataNode
 
 
-def from_langchain(lc_doc: Any) -> DataNode:
+def from_langchain(lc_doc: Any) -> T:
     """
     Converts a langchain document into a DataNode object.
 
@@ -18,7 +18,7 @@ def from_langchain(lc_doc: Any) -> DataNode:
     info_node = {**info_node, **info_json['kwargs']}
     return DataNode(**info_node)
 
-def to_langchain_document(datanode: DataNode, **kwargs: Any) -> Any:
+def to_langchain_document(datanode: T, **kwargs: Any) -> Any:
     """
     Converts a DataNode into a langchain Document.
 
@@ -57,14 +57,14 @@ def langchain_loader(loader: Union[str, Callable],
 
     try:
         if isinstance(loader, str):
-            loader_ = getattr(document_loaders, loader)
+            loader = getattr(document_loaders, loader)
         else:
-            loader_ = loader
+            loader = loader
     except Exception as e:
         raise ValueError(f'Invalid loader: {loader}. Error: {e}')
 
     try:
-        loader_obj = loader_(*loader_args, **loader_kwargs)
+        loader_obj = loader(*loader_args, **loader_kwargs)
         data = loader_obj.load()
         return data
     except Exception as e:
@@ -93,14 +93,14 @@ def langchain_text_splitter(data: str,
 
     try:
         if isinstance(splitter, str):
-            splitter_ = getattr(text_splitter, splitter)
+            splitter = getattr(text_splitter, splitter)
         else:
-            splitter_ = splitter
+            splitter = splitter
     except Exception as e:
         raise ValueError(f'Invalid text splitter: {text_splitter}. Error: {e}')
 
     try:
-        splitter_obj = splitter_(*splitter_args, **splitter_kwargs)
+        splitter_obj = splitter(*splitter_args, **splitter_kwargs)
         chunk = splitter_obj.split_text(data)
         return chunk
     except Exception as e:

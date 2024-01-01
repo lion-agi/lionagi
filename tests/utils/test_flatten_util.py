@@ -1,4 +1,4 @@
-from lionagi.utils.flatten_utils import *
+from lionagi.utils.flat_util import *
 import unittest
 
 class TestFlattenDict(unittest.TestCase): 

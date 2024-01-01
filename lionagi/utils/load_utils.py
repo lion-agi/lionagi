@@ -2,8 +2,8 @@ import math
 from pathlib import Path
 from typing import List, Union
 
-from .type_utils import to_list
-from .call_utils import l_call
+from .sys_util import to_list
+from .call_util import l_call
 
 
 def dir_to_path(dir: str, ext, recursive: bool = False, flat: bool = True):

@@ -1,10 +1,9 @@
-import json
 from typing import Union, Callable, List, Any, Dict
-
-from lionagi.schema.base_schema import DataNode
+from lionagi.schema.base_schema import DataNode, T
 from lionagi.utils.parse_utils import change_key 
 
-def from_llama_index(llama_node: Any, **kwargs: Any) -> DataNode:
+
+def from_llama_index(llama_node: Any, **kwargs: Any) -> T:
     """
     Converts a Llama Index node into a DataNode object.
 
@@ -18,7 +17,7 @@ def from_llama_index(llama_node: Any, **kwargs: Any) -> DataNode:
     llama_dict = llama_node.to_dict(**kwargs)
     return DataNode.from_dict(llama_dict)
 
-def to_llama_index_textnode(datanode: DataNode, **kwargs: Any) -> Any:
+def to_llama_index_textnode(datanode: T, **kwargs: Any) -> Any:
     """
     Converts a DataNode into a Llama Index TextNode.
 
@@ -121,24 +120,24 @@ def llama_index_node_parser(documents: List[Any],
     import llama_index.text_splitter as text_splitter
 
     try:
-        parser_ = getattr(node_parser, parser)
+        parser = getattr(node_parser, parser)
     except:
         try:
             if isinstance(parser, str):
-                parser_ = getattr(text_splitter, parser)
+                parser = getattr(text_splitter, parser)
             else:
-                parser_ = parser
+                parser = parser
         except Exception as e:
             raise ValueError(f'Invalid node parser: {parser}. Error: {e}')
 
     try:
-        parser_obj = parser_(*parser_args, **parser_kwargs)
+        parser_obj = parser(*parser_args, **parser_kwargs)
         nodes = parser_obj.get_nodes_from_documents(documents)
         return nodes
 
     except:
         try:
-            parser_obj = parser_.from_defaults(*parser_args, **parser_kwargs)
+            parser_obj = parser.from_defaults(*parser_args, **parser_kwargs)
             nodes = parser_obj.get_nodes_from_documents(documents)
             return nodes
         except Exception as e:
