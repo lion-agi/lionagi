@@ -5,8 +5,9 @@ import logging
 from os import getenv
 from typing import Dict, Optional, Any
 
-from lionagi.utils.api_util import api_methods, api_endpoint_from_url, api_error, api_rate_limit_error
-from lionagi.objs.service_utils import BaseService, StatusTracker, AsyncQueue, PayloadMaker
+from lionagi.utils.api_util import api_method, api_endpoint_from_url, api_error, api_rate_limit_error
+from lionagi.objs import StatusTracker, AsyncQueue, PayloadMaker
+from .base_ import BaseService
 from .base_rate_limiter import BaseRateLimiter
 
 
@@ -114,7 +115,7 @@ class BaseAPIService(BaseService):
                                endpoint_, 
                                base_url
                                ):
-        method = api_methods(
+        method = api_method(
             http_session=http_session, 
             method=method
         )

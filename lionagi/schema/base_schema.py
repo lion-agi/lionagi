@@ -25,7 +25,7 @@ class BaseNode(BaseModel):
 
     class Config:
         validate_assignment = True
-        anystr_strip_whitespace = True
+        str_strip_whitespace = True
         json_encoders = {
             # Custom encoders for specific types can be placed here
         }
