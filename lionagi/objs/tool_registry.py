@@ -2,6 +2,7 @@ import asyncio
 from typing import Dict, Any, Optional, List
 
 from lionagi.schema.base_tool import Tool
+from lionagi.utils.type_util import to_list
 from lionagi.utils.tool_util import func_to_tool
 
 class ToolRegistry:
@@ -132,6 +133,7 @@ class ToolRegistry:
         self._register_tool(tool=tool, **kwargs)
     
     def register_funcs(self, funcs, parsers=None, **kwargs):
+        funcs, parsers = to_list(funcs), to_list(parsers)
         if parsers is not None and len(parsers) != len(funcs):
             raise ValueError("The number of funcs and tools should be the same")
         parsers = parsers or [None for _ in range(len(funcs))]

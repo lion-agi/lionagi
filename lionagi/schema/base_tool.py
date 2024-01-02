@@ -1,9 +1,9 @@
-from typing import Callable, Any
+from typing import Any
 from .base_schema import BaseNode
 
 class Tool(BaseNode):
     name: str = None
-    func: Callable = None
+    func: Any = None
     content: Any = None
-    parser: Callable = None
+    parser: Any = None
     schema: Any = None
