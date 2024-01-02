@@ -7,7 +7,6 @@ from lionagi.utils.call_util import alcall
 from .conversations import Conversation
 from ..schema.data_logger import DataLogger
 from ..objs.tool_registry import ToolRegistry
-from ..objs.payload_maker import PayloadMaker
 from ..services import OpenAIService
 
 
