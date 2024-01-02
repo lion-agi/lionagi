@@ -190,11 +190,7 @@ class Chunk(DataNode):
     ...    
 
 
-class Tool(BaseNode):
-    name: str = None
-    func: Callable = None
-    content: Any = None
-    parser: Callable = None
+
     
     ...
 

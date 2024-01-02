@@ -1,7 +1,7 @@
 import asyncio
 from typing import Dict, Any, Optional, List
 
-from lionagi.schema.base_schema import Tool
+from lionagi.schema.base_tool import Tool
 
 
 class ToolRegistry:
@@ -125,4 +125,7 @@ class ToolRegistry:
         """        
         for tool in tools:
             self._register_tool(tool, update=update, new=new, prefix=prefix, postfix=postfix)
-            
+
+    def create_tool(self, func_, parser):
+        return Tool._func_to_tool(func_, parser)
+    
