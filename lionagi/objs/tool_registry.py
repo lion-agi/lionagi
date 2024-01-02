@@ -140,3 +140,27 @@ class ToolRegistry:
         
         for i, func in enumerate(funcs):
             self._register_func(func_=func, parser=parsers[i], **kwargs)
+            
+    @staticmethod
+    def get_function_call(response):
+        """
+        Extract function name and arguments from a response JSON.
+
+        Parameters:
+            response (dict): The JSON response containing function information.
+
+        Returns:
+            Tuple[str, dict]: The function name and its arguments.
+        """
+        try: 
+            # out = json.loads(response)
+            func = response['function'][5:]
+            args = json.loads(response['arguments'])
+            return (func, args)
+        except:
+            try:
+                func = response['recipient_name'].split('.')[-1]
+                args = response['parameters']
+                return (func, args)
+            except:
+                raise ValueError('response is not a valid function call')
