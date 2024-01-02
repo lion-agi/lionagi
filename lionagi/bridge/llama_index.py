@@ -1,6 +1,6 @@
 from typing import Union, Callable, List, Any, Dict
 from lionagi.schema.base_schema import DataNode, T
-from lionagi.utils.doc_util import change_key
+from lionagi.utils.sys_util import change_dict_key
 
 
 def from_llama_index(llama_node: Any, **kwargs: Any) -> T:
@@ -32,8 +32,8 @@ def to_llama_index_textnode(datanode: T, **kwargs: Any) -> Any:
     from llama_index.schema import TextNode
 
     dnode = datanode.to_dict()
-    change_key(dnode, old_key='content', new_key='text')
-    change_key(dnode, old_key='node_id', new_key='id_')
+    change_dict_key(dnode, old_key='content', new_key='text')
+    change_dict_key(dnode, old_key='node_id', new_key='id_')
     
     dnode = {**dnode, **kwargs}
     return TextNode.from_dict(dnode)

@@ -1,6 +1,6 @@
 from typing import Union, Callable, List, Dict, Any
 from lionagi.schema.base_schema import T, DataNode
-from lionagi.utils.doc_util import change_key
+from lionagi.utils.sys_util import change_dict_key
 
 
 def from_langchain(lc_doc: Any) -> T:
@@ -32,8 +32,8 @@ def to_langchain_document(datanode: T, **kwargs: Any) -> Any:
     from langchain.schema import Document
 
     dnode = datanode.to_dict()
-    change_key(dnode, old_key='content', new_key='page_content')
-    change_key(dnode, old_key='lc_id', new_key='id_')
+    change_dict_key(dnode, old_key='content', new_key='page_content')
+    change_dict_key(dnode, old_key='lc_id', new_key='id_')
     dnode = {**dnode, **kwargs}
     return Document(**dnode)
 

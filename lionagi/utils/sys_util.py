@@ -16,10 +16,11 @@ Copyright 2023 HaiyangLi <ocean@lionagi.ai>
 import os
 import re
 import copy
+import json
 import hashlib
 from pathlib import Path
 from datetime import datetime
-from typing import Any, Generator, List, Optional, Union, MutableMapping, Iterable
+from typing import Any, Generator, List, Optional, Union, MutableMapping, Iterable, Tuple, Dict
 
 def create_copy(input: Any, n: int) -> Any:
     """
@@ -49,23 +50,6 @@ def create_copy(input: Any, n: int) -> Any:
         raise ValueError(f"'n' must be a positive integer: {n}")
     return copy.deepcopy(input) if n == 1 else [copy.deepcopy(input) for _ in range(n)]
 
-def get_timestamp() -> str:
-    """
-    Generates a current timestamp in a file-safe string format.
-
-    This function creates a timestamp from the current time, formatted in ISO 8601 format, 
-    and replaces characters that are typically problematic in filenames (like colons and periods) 
-    with underscores.
-
-    Returns:
-        str: The current timestamp in a file-safe string format.
-
-    Example:
-        >>> get_timestamp()  # Doctest: +ELLIPSIS
-        '...'
-    """
-    return datetime.now().isoformat().replace(":", "_").replace(".", "_")
-
 def create_id(n=32) -> str:
     """
     Generates a unique ID based on the current time and random bytes.
@@ -84,6 +68,23 @@ def create_id(n=32) -> str:
     current_time = datetime.now().isoformat().encode('utf-8')
     random_bytes = os.urandom(2048)
     return hashlib.sha256(current_time + random_bytes).hexdigest()[:n]
+
+def get_timestamp() -> str:
+    """
+    Generates a current timestamp in a file-safe string format.
+
+    This function creates a timestamp from the current time, formatted in ISO 8601 format, 
+    and replaces characters that are typically problematic in filenames (like colons and periods) 
+    with underscores.
+
+    Returns:
+        str: The current timestamp in a file-safe string format.
+
+    Example:
+        >>> get_timestamp()  # Doctest: +ELLIPSIS
+        '...'
+    """
+    return datetime.now().isoformat().replace(":", "_").replace(".", "_")
 
 def create_path(dir: str, filename: str, timestamp: bool = True, dir_exist_ok: bool = True, time_prefix=False) -> str:
     """
@@ -182,19 +183,19 @@ def task_id_generator() -> Generator[int, None, None]:
         yield task_id
         task_id += 1
 
-def to_list(input: Union[Iterable, Any], flatten: bool = True, dropna: bool = True) -> List[Any]:
-    if input is None:
-        raise ValueError("None type cannot be converted to a list.")
+# def to_list(input: Union[Iterable, Any], flatten: bool = True, dropna: bool = True) -> List[Any]:
+#     if input is None:
+#         raise ValueError("None type cannot be converted to a list.")
 
-    if isinstance(input, MutableMapping):  # Input is a dictionary
-        # Convert dictionary to list of tuples (key, value) and then flatten if required
-        iterables = [(k, v) for k, v in input.items()]
-    elif isinstance(input, Iterable) and not isinstance(input, str):
-        # Directly use iterables except for strings which should be treated as scalars
-        iterables = input
-    else:
-        # Treat anything else as a single-value iterable
-        iterables = [input]
+#     if isinstance(input, MutableMapping):  # Input is a dictionary
+#         # Convert dictionary to list of tuples (key, value) and then flatten if required
+#         iterables = [(k, v) for k, v in input.items()]
+#     elif isinstance(input, Iterable) and not isinstance(input, str):
+#         # Directly use iterables except for strings which should be treated as scalars
+#         iterables = input
+#     else:
+#         # Treat anything else as a single-value iterable
+#         iterables = [input]
 
 def str_to_num(input: str, 
                upper_bound: Optional[Union[int, float]] = None, 
@@ -223,4 +224,12 @@ def str_to_num(input: str,
         return numbers
     except ValueError as e:
         raise ValueError(f"Error converting string to number: {e}")
-    
+
+def change_dict_key(dict_, old_key, new_key):
+    dict_[new_key] = dict_.pop(old_key)
+
+def parse_function_call(response: str) -> Tuple[str, Dict]:
+    out = json.loads(response)
+    func = out.get('function', '').lstrip('call_')
+    args = json.loads(out.get('arguments', '{}'))
+    return func, args

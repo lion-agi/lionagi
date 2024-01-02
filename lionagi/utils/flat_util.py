@@ -267,77 +267,77 @@ def dynamic_flatten(obj, parent_key='', sep='_', max_depth=None, current_depth=0
     
     return dict(items)
 
-def dynamic_unflatten_dict(flat_dict, sep='_', custom_logic=None, max_depth=None):
-    """
-    Unflattens a dictionary with flat keys into a nested dictionary or list.
+# def dynamic_unflatten_dict(flat_dict, sep='_', custom_logic=None, max_depth=None):
+#     """
+#     Unflattens a dictionary with flat keys into a nested dictionary or list.
 
-    :param flat_dict: A dictionary with flat keys that need to be nested.
-    :param sep: The separator used in the flat keys (default is '_').
-    :param custom_logic: A function that customizes the processing of keys.
-                         It takes a key part as input and returns the transformed key part.
-    :param max_depth: The maximum depth to which the dictionary should be nested.
-                      If None, there is no maximum depth.
-    :return: A nested dictionary or list based on the flat input dictionary.
+#     :param flat_dict: A dictionary with flat keys that need to be nested.
+#     :param sep: The separator used in the flat keys (default is '_').
+#     :param custom_logic: A function that customizes the processing of keys.
+#                          It takes a key part as input and returns the transformed key part.
+#     :param max_depth: The maximum depth to which the dictionary should be nested.
+#                       If None, there is no maximum depth.
+#     :return: A nested dictionary or list based on the flat input dictionary.
 
-    The function dynamically unflattens a dictionary with keys that represent nested paths.
-    For example, the flat dictionary {'a_b_c': 1, 'a_b_d': 2} would be unflattened to
-    {'a': {'b': {'c': 1, 'd': 2}}}. If the keys can be converted to integers and suggest list indices,
-    the function produces lists instead of dictionaries. For example,
-    {'0_a': 'foo', '1_b': 'bar'} becomes [{'a': 'foo'}, {'b': 'bar'}].
-    """
+#     The function dynamically unflattens a dictionary with keys that represent nested paths.
+#     For example, the flat dictionary {'a_b_c': 1, 'a_b_d': 2} would be unflattened to
+#     {'a': {'b': {'c': 1, 'd': 2}}}. If the keys can be converted to integers and suggest list indices,
+#     the function produces lists instead of dictionaries. For example,
+#     {'0_a': 'foo', '1_b': 'bar'} becomes [{'a': 'foo'}, {'b': 'bar'}].
+#     """
     
-    def handle_list_insert(sub_obj, part, value):
-        # Ensure part index exists in the list, fill gaps with None
-        while len(sub_obj) <= part:
-            sub_obj.append(None)
+#     def handle_list_insert(sub_obj, part, value):
+#         # Ensure part index exists in the list, fill gaps with None
+#         while len(sub_obj) <= part:
+#             sub_obj.append(None)
         
-        sub_obj[part] = value
+#         sub_obj[part] = value
 
-    def insert(sub_obj, parts, value, max_depth, current_depth=0):
-        for part in parts[:-1]:
-            # Stop nesting further if max_depth is reached
-            if max_depth is not None and current_depth >= max_depth:
-                sub_obj[part] = {parts[-1]: value}
-                return
-            # Handle integer parts for list insertion
-            if isinstance(part, int):
-                # Ensure part index exists in the list or dict, fill gaps with None
-                while len(sub_obj) <= part:
-                    sub_obj.append(None)
-                if sub_obj[part] is None:
-                    if current_depth < max_depth - 1 if max_depth else True:
-                        sub_obj[part] = [] if isinstance(parts[parts.index(part) + 1], int) else {}
-                sub_obj = sub_obj[part]
-            else:
-                # Handle string parts for dictionary insertion
-                if part not in sub_obj:
-                    sub_obj[part] = {}
-                sub_obj = sub_obj[part]
-            current_depth += 1
-        # Insert the value at the last part
-        last_part = parts[-1]
-        if isinstance(last_part, int) and isinstance(sub_obj, list):
-            handle_list_insert(sub_obj, last_part, value, max_depth, current_depth)
-        else:
-            sub_obj[last_part] = value
+#     def insert(sub_obj, parts, value, max_depth, current_depth=0):
+#         for part in parts[:-1]:
+#             # Stop nesting further if max_depth is reached
+#             if max_depth is not None and current_depth >= max_depth:
+#                 sub_obj[part] = {parts[-1]: value}
+#                 return
+#             # Handle integer parts for list insertion
+#             if isinstance(part, int):
+#                 # Ensure part index exists in the list or dict, fill gaps with None
+#                 while len(sub_obj) <= part:
+#                     sub_obj.append(None)
+#                 if sub_obj[part] is None:
+#                     if current_depth < max_depth - 1 if max_depth else True:
+#                         sub_obj[part] = [] if isinstance(parts[parts.index(part) + 1], int) else {}
+#                 sub_obj = sub_obj[part]
+#             else:
+#                 # Handle string parts for dictionary insertion
+#                 if part not in sub_obj:
+#                     sub_obj[part] = {}
+#                 sub_obj = sub_obj[part]
+#             current_depth += 1
+#         # Insert the value at the last part
+#         last_part = parts[-1]
+#         if isinstance(last_part, int) and isinstance(sub_obj, list):
+#             handle_list_insert(sub_obj, last_part, value, max_depth, current_depth)
+#         else:
+#             sub_obj[last_part] = value
 
-    unflattened = {}
-    for composite_key, value in flat_dict.items():
-        parts = composite_key.split(sep)
-        if custom_logic:
-            parts = [custom_logic(part) for part in parts]
-        else:
-            parts = [int(part) if (isinstance(part, int) or part.isdigit()) else part for part in parts]
-        insert(unflattened, parts, value, max_depth)
+#     unflattened = {}
+#     for composite_key, value in flat_dict.items():
+#         parts = composite_key.split(sep)
+#         if custom_logic:
+#             parts = [custom_logic(part) for part in parts]
+#         else:
+#             parts = [int(part) if (isinstance(part, int) or part.isdigit()) else part for part in parts]
+#         insert(unflattened, parts, value, max_depth)
 
-    # Convert top-level dictionary to a list if all keys are integers
-    if isinstance(unflattened, dict) and all(isinstance(k, int) for k in unflattened.keys()):
-        max_index = max(unflattened.keys(), default=-1)
-        return [unflattened.get(i) for i in range(max_index + 1)]
-    # Return an empty dictionary instead of converting to a list if unflattened is empty
-    if (unflattened == []) or (not unflattened):
-        return {}
-    return unflattened
+#     # Convert top-level dictionary to a list if all keys are integers
+#     if isinstance(unflattened, dict) and all(isinstance(k, int) for k in unflattened.keys()):
+#         max_index = max(unflattened.keys(), default=-1)
+#         return [unflattened.get(i) for i in range(max_index + 1)]
+#     # Return an empty dictionary instead of converting to a list if unflattened is empty
+#     if (unflattened == []) or (not unflattened):
+#         return {}
+#     return unflattened
 
 def _insert_with_dict_handling(container, indices, value):
     """
@@ -466,74 +466,74 @@ def unflatten_dict_with_custom_logic(
         d[modified_last_part] = modified_value
     return reconstructed
 
-def dynamic_unflatten(flat_dict, sep='_', custom_logic=None, max_depth=None):
-    """
-    Unflattens a dictionary with flat keys into a nested dictionary or list.
+# def dynamic_unflatten(flat_dict, sep='_', custom_logic=None, max_depth=None):
+#     """
+#     Unflattens a dictionary with flat keys into a nested dictionary or list.
 
-    :param flat_dict: A dictionary with flat keys that need to be nested.
-    :param sep: The separator used in the flat keys (default is '_').
-    :param custom_logic: A function that customizes the processing of keys.
-                         It takes a key part as input and returns the transformed key part.
-    :param max_depth: The maximum depth to which the dictionary should be nested.
-                      If None, there is no maximum depth.
-    :return: A nested dictionary or list based on the flat input dictionary.
+#     :param flat_dict: A dictionary with flat keys that need to be nested.
+#     :param sep: The separator used in the flat keys (default is '_').
+#     :param custom_logic: A function that customizes the processing of keys.
+#                          It takes a key part as input and returns the transformed key part.
+#     :param max_depth: The maximum depth to which the dictionary should be nested.
+#                       If None, there is no maximum depth.
+#     :return: A nested dictionary or list based on the flat input dictionary.
 
-    The function dynamically unflattens a dictionary with keys that represent nested paths.
-    For example, the flat dictionary {'a_b_c': 1, 'a_b_d': 2} would be unflattened to
-    {'a': {'b': {'c': 1, 'd': 2}}}. If the keys can be converted to integers and suggest list indices,
-    the function produces lists instead of dictionaries. For example,
-    {'0_a': 'foo', '1_b': 'bar'} becomes [{'a': 'foo'}, {'b': 'bar'}].
-    """
+#     The function dynamically unflattens a dictionary with keys that represent nested paths.
+#     For example, the flat dictionary {'a_b_c': 1, 'a_b_d': 2} would be unflattened to
+#     {'a': {'b': {'c': 1, 'd': 2}}}. If the keys can be converted to integers and suggest list indices,
+#     the function produces lists instead of dictionaries. For example,
+#     {'0_a': 'foo', '1_b': 'bar'} becomes [{'a': 'foo'}, {'b': 'bar'}].
+#     """
     
-    def handle_list_insert(sub_obj, part, value):
-        # Ensure part index exists in the list, fill gaps with None
-        while len(sub_obj) <= part:
-            sub_obj.append(None)
+#     def handle_list_insert(sub_obj, part, value):
+#         # Ensure part index exists in the list, fill gaps with None
+#         while len(sub_obj) <= part:
+#             sub_obj.append(None)
         
-        sub_obj[part] = value
+#         sub_obj[part] = value
 
-    def insert(sub_obj, parts, value, max_depth, current_depth=0):
-        for part in parts[:-1]:
-            # Stop nesting further if max_depth is reached
-            if max_depth is not None and current_depth >= max_depth:
-                sub_obj[part] = {parts[-1]: value}
-                return
-            # Handle integer parts for list insertion
-            if isinstance(part, int):
-                # Ensure part index exists in the list or dict, fill gaps with None
-                while len(sub_obj) <= part:
-                    sub_obj.append(None)
-                if sub_obj[part] is None:
-                    if current_depth < max_depth - 1 if max_depth else True:
-                        sub_obj[part] = [] if isinstance(parts[parts.index(part) + 1], int) else {}
-                sub_obj = sub_obj[part]
-            else:
-                # Handle string parts for dictionary insertion
-                if part not in sub_obj:
-                    sub_obj[part] = {}
-                sub_obj = sub_obj[part]
-            current_depth += 1
-        # Insert the value at the last part
-        last_part = parts[-1]
-        if isinstance(last_part, int) and isinstance(sub_obj, list):
-            handle_list_insert(sub_obj, last_part, value, max_depth, current_depth)
-        else:
-            sub_obj[last_part] = value
+#     def insert(sub_obj, parts, value, max_depth, current_depth=0):
+#         for part in parts[:-1]:
+#             # Stop nesting further if max_depth is reached
+#             if max_depth is not None and current_depth >= max_depth:
+#                 sub_obj[part] = {parts[-1]: value}
+#                 return
+#             # Handle integer parts for list insertion
+#             if isinstance(part, int):
+#                 # Ensure part index exists in the list or dict, fill gaps with None
+#                 while len(sub_obj) <= part:
+#                     sub_obj.append(None)
+#                 if sub_obj[part] is None:
+#                     if current_depth < max_depth - 1 if max_depth else True:
+#                         sub_obj[part] = [] if isinstance(parts[parts.index(part) + 1], int) else {}
+#                 sub_obj = sub_obj[part]
+#             else:
+#                 # Handle string parts for dictionary insertion
+#                 if part not in sub_obj:
+#                     sub_obj[part] = {}
+#                 sub_obj = sub_obj[part]
+#             current_depth += 1
+#         # Insert the value at the last part
+#         last_part = parts[-1]
+#         if isinstance(last_part, int) and isinstance(sub_obj, list):
+#             handle_list_insert(sub_obj, last_part, value, max_depth, current_depth)
+#         else:
+#             sub_obj[last_part] = value
 
-    unflattened = {}
-    for composite_key, value in flat_dict.items():
-        parts = composite_key.split(sep)
-        if custom_logic:
-            parts = [custom_logic(part) for part in parts]
-        else:
-            parts = [int(part) if (isinstance(part, int) or part.isdigit()) else part for part in parts]
-        insert(unflattened, parts, value, max_depth)
+#     unflattened = {}
+#     for composite_key, value in flat_dict.items():
+#         parts = composite_key.split(sep)
+#         if custom_logic:
+#             parts = [custom_logic(part) for part in parts]
+#         else:
+#             parts = [int(part) if (isinstance(part, int) or part.isdigit()) else part for part in parts]
+#         insert(unflattened, parts, value, max_depth)
 
-    # Convert top-level dictionary to a list if all keys are integers
-    if isinstance(unflattened, dict) and all(isinstance(k, int) for k in unflattened.keys()):
-        max_index = max(unflattened.keys(), default=-1)
-        return [unflattened.get(i) for i in range(max_index + 1)]
-    # Return an empty dictionary instead of converting to a list if unflattened is empty
-    if (unflattened == []) or (not unflattened):
-        return {}
-    return unflattened
+#     # Convert top-level dictionary to a list if all keys are integers
+#     if isinstance(unflattened, dict) and all(isinstance(k, int) for k in unflattened.keys()):
+#         max_index = max(unflattened.keys(), default=-1)
+#         return [unflattened.get(i) for i in range(max_index + 1)]
+#     # Return an empty dictionary instead of converting to a list if unflattened is empty
+#     if (unflattened == []) or (not unflattened):
+#         return {}
+#     return unflattened

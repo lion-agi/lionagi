@@ -53,11 +53,10 @@ def hcall(input: Any,
         if not ignore_error:
             raise
 
-async def ahcall(input: Any, 
-                     func: Callable, 
-                     sleep: int = 5, 
-                     message: Optional[str] = None, 
-                     ignore_error: bool = False, 
+async def ahcall(
+    input: Any, func: Callable, sleep: int = 5, 
+    message: Optional[str] = None, 
+    ignore_error: bool = False, 
                      **kwargs) -> Any:
     """
     Asynchronously executes a function after a specified delay, handling exceptions optionally.
