@@ -75,7 +75,7 @@ def chunk(documents,
     elif chunker_type == ChunkerType.SELFDEFINED:
         try:
             splitter = chunker(*chunker_args, **chunker_kwargs)
-            nodes = splitter.split(documents)
+            nodes = splitter.split(documents, **chunking_kwargs)
         except Exception as e:
             raise ValueError(f'Self defined chunker {chunker} is not valid. Error: {e}')
 
