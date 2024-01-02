@@ -2,7 +2,7 @@ import asyncio
 from typing import Dict, Any, Optional, List
 
 from lionagi.schema.base_tool import Tool
-
+from lionagi.utils.tool_util import func_to_tool
 
 class ToolRegistry:
     """
@@ -42,8 +42,7 @@ class ToolRegistry:
         """
         return name in self.registry
 
-    def _register_tool(self, tool: Tool, name: Optional[str] = None, update: bool = False,
-                       new: bool = False, prefix: Optional[str] = None, postfix: Optional[int] = None):
+    def _register_tool(self, tool: Tool, name: Optional[str] = None, update: bool = False, new: bool = False, prefix: Optional[str] = None, postfix: Optional[int] = None):
         """
         Registers a tool in the registry.
 
@@ -126,6 +125,16 @@ class ToolRegistry:
         for tool in tools:
             self._register_tool(tool, update=update, new=new, prefix=prefix, postfix=postfix)
 
-    def create_tool(self, func_, parser):
-        return Tool._func_to_tool(func_, parser)
+    def _register_func(self, func_, parser=None, **kwargs):
+        # kwargs for _register_tool
+        
+        tool = func_to_tool(func_=func_, parser=parser)
+        self._register_tool(tool=tool, **kwargs)
     
+    def register_funcs(self, funcs, parsers=None, **kwargs):
+        if parsers is not None and len(parsers) != len(funcs):
+            raise ValueError("The number of funcs and tools should be the same")
+        parsers = parsers or [None for _ in range(len(funcs))]
+        
+        for i, func in enumerate(funcs):
+            self._register_func(func_=func, parser=parsers[i], **kwargs)

@@ -189,11 +189,6 @@ class Chunk(DataNode):
 
     ...    
 
-
-
-    
-    ...
-
     
 class Message(BaseNode):
     """

@@ -21,6 +21,7 @@ from .utils import *
 from .schema import *
 from .structure import *
 from .core import *
+from .objs import *
 # from .datastore import *
 # from .structure import *
 
