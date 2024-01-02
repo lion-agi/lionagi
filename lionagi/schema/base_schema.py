@@ -1,10 +1,11 @@
 import json
 from typing import Any, Dict, Optional, TypeVar, Type, List, Callable, Union
-from pydantic import BaseModel, Field, validator, AliasChoices
+from pydantic import BaseModel, Field, AliasChoices
 
 from lionagi.utils.sys_util import create_id
 
 T = TypeVar('T', bound='BaseNode')
+
 
 class BaseNode(BaseModel):
     """
@@ -19,7 +20,7 @@ class BaseNode(BaseModel):
     """
     id_: str = Field(default_factory=lambda: str(create_id()), alias="node_id")
     content: Union[str, Dict[str, Any], None, Any] = Field(default=None,
-                                                           validation_alias=AliasChoices('text', 'page_content'))
+                                                           validation_alias=AliasChoices('text', 'page_content', 'chunk_content'))
     metadata: Dict[str, Any] = Field(default_factory=dict)
     label: Optional[str] = None
     related_nodes: List[str] = Field(default_factory=list)
@@ -29,24 +30,6 @@ class BaseNode(BaseModel):
         populate_by_name = True
         validate_assignment = True
         str_strip_whitespace = True
-
-    @validator('*', pre=True, each_item=False)
-    def non_empty(cls, v):
-        """
-        Validator to ensure no field (str, list, or dict) is empty.
-
-        Args:
-            v: The value of the field being validated.
-
-        Returns:
-            The validated value if not empty.
-
-        Raises:
-            ValueError: If the field is empty.
-        """
-        if isinstance(v, (str, list, dict)) and not v:
-            raise ValueError("Field must not be empty")
-        return v
 
     def to_json(self) -> str:
         """Converts the node instance into JSON string representation."""
@@ -172,12 +155,23 @@ class DataNode(BaseNode):
         from lionagi.bridge.langchain import to_langchain_document
         return to_langchain_document(self, **kwargs)
 
+    @classmethod
+    def from_llama_index(cls, llama_node: Any, **kwargs):
+        llama_dict = llama_node.to_dict(**kwargs)
+        return cls.from_dict(llama_dict)
+
+    @classmethod
+    def from_langchain(cls, lc_doc: Any):
+        info_json = lc_doc.to_json()
+        info_node = {'lc_id': info_json['id']}
+        info_node = {**info_node, **info_json['kwargs']}
+        return cls(**info_node)
+
     def __repr__(self) -> str:
         return f"DataNode(id={self.id_}, content={self.content}, metadata={self.metadata}, label={self.label})"
 
     def __str__(self) -> str:
         return f"DataNode(id={self.id_}, label={self.label})"
-
 
 
 class File(DataNode):

@@ -4,18 +4,25 @@ from typing import List, Union, Dict, Any
 
 from .type_util import to_list
 from .call_util import lcall
+from lionagi.schema.base_schema import DataNode
 
 
-def dir_to_path(dir: str, ext, recursive: bool = False, flat: bool = True):
+def dir_to_path(dir: str, ext, recursive: bool = False, flatten: bool = True):
     
-    def _dir_to_path():
+    def _dir_to_path(ext):
         tem = '**/*' if recursive else '*'
         return list(Path(dir).glob(tem + ext))
     
     try: 
-        return to_list(lcall(ext, _dir_to_path, flat=True), flat=flat)
+        return to_list(lcall(ext, _dir_to_path, flatten=True), flatten=flatten)
     except: 
         raise ValueError("Invalid directory or extension, please check the path")
+
+def dir_to_nodes(dir: str, ext, recursive: bool = False, flatten: bool = True, clean_text: bool = True):
+    path_list = dir_to_path(dir, ext, recursive, flatten)
+    files_info = lcall(path_list, read_text, clean=clean_text)
+    nodes = lcall(files_info, lambda x: DataNode(content=x[0], metadata=x[1]))
+    return nodes
 
 def chunk_text(input: str, 
                chunk_size: int, 
@@ -55,7 +62,7 @@ def chunk_text(input: str,
         if not isinstance(input, str): input = str(input)
         
         n_chunks = math.ceil(len(input) / chunk_size)
-        overlap_size = int(chunk_size * overlap / 2)
+        overlap_size = int(overlap / 2)
 
         if n_chunks == 1: 
             return _chunk_n1()
@@ -69,7 +76,21 @@ def chunk_text(input: str,
     except Exception as e:
         raise ValueError(f"An error occurred while chunking the text. {e}")
 
-def read_text(filepath: str, clean: bool = True) -> str:
+def read_text(filepath: str, clean: bool = True) -> tuple:
+    def _get_metadata():
+        import os
+        from datetime import datetime
+        file = filepath
+        size = os.path.getsize(filepath)
+        creation_date = datetime.fromtimestamp(os.path.getctime(filepath)).date()
+        modified_date = datetime.fromtimestamp(os.path.getmtime(filepath)).date()
+        last_accessed_date = datetime.fromtimestamp(os.path.getatime(filepath)).date()
+        return {'file': str(file),
+                'size': size,
+                'creation_date': str(creation_date),
+                'modified_date': str(modified_date),
+                'last_accessed_date': str(last_accessed_date)}
+
     with open(filepath, 'r') as f:
         content = f.read()
         if clean:
@@ -77,7 +98,8 @@ def read_text(filepath: str, clean: bool = True) -> str:
             replacements = {'\\': ' ', '\n': ' ', '\t': ' ', '  ': ' ', '\'': ' '}
             for old, new in replacements.items():
                 content = content.replace(old, new)
-        return content
+        metadata = _get_metadata()
+        return content, metadata
     
 
 def _file_to_chunks(input: Dict[str, Any],
@@ -115,5 +137,5 @@ def file_to_chunks(input,
                    verbose=True,
                    timestamp=True,
                    logger=None, **kwargs):
-    logs = to_list(lcall(input, chunk_func, **kwargs), flat=True)
+    logs = to_list(lcall(input, chunk_func, **kwargs), flatten=True)
     return logs

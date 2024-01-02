@@ -3,12 +3,13 @@ from typing import Union, Callable
 
 from lionagi.bridge.langchain import langchain_text_splitter, from_langchain
 from lionagi.bridge.llama_index import llama_index_node_parser, from_llama_index
-# from lionagi.utils.call_util import lcall
+from lionagi.utils.call_util import lcall
+from lionagi.utils.load_utils import file_to_chunks
 from lionagi.schema.base_schema import DataNode
 
 
 class ChunkerType(str, Enum):
-    # DEFAULT = 'default'
+    PLAIN = 'plain'
     LANGCHAIN = 'langchain'
     LLAMAINDEX = 'llama_index'
     SELFDEFINED = 'self_defined'
@@ -24,6 +25,19 @@ def datanodes_convert(documents, chunker_type):
     return documents
 
 
+def text_chunker(documents, args, kwargs):
+    def chunk_node(node):
+        chunks = file_to_chunks(node.to_dict(), *args, **kwargs)
+        lcall(chunks, lambda chunk: chunk.pop('node_id'))
+        chunk_nodes = lcall(chunks, lambda x: DataNode(**x))
+        return chunk_nodes
+
+    nodes = []
+    for doc in documents:
+        nodes += chunk_node(doc)
+    return nodes
+
+
 def _datanode_parser(nodes, parser):
     try:
         nodes = parser(nodes)
@@ -32,31 +46,31 @@ def _datanode_parser(nodes, parser):
     return nodes
 
 
-def _to_datanode_temp(nodes, func):
-    output = []
-    for node in nodes:
-        output.append(func(node))
-    return output
-
-
 def chunk(documents,
           chunker,
-          chunker_type=ChunkerType.LLAMAINDEX,
+          chunker_type=ChunkerType.PLAIN,
           chunker_args=[],
           chunker_kwargs={},
           chunking_kwargs={},
           documents_convert_func=None,
           to_datanode: Union[bool, Callable] = True):
+    if chunker_type == ChunkerType.PLAIN:
+        try:
+            if chunker == 'text_chunker':
+                chunker = text_chunker
+            nodes = chunker(documents, chunker_args, chunker_kwargs)
+            return nodes
+        except Exception as e:
+            raise ValueError(f'Reader {chunker} is currently not supported. Error: {e}')
     if chunker_type == ChunkerType.LANGCHAIN:
         if documents_convert_func:
             documents = documents_convert_func(documents, 'langchain')
         nodes = langchain_text_splitter(documents, chunker, chunker_args, chunker_kwargs)
         if isinstance(to_datanode, bool) and to_datanode is True:
-            # nodes = lcall(nodes, from_langchain)
             if isinstance(documents, str):
-                nodes = _to_datanode_temp(nodes, lambda x: DataNode(content=x))
+                nodes = lcall(nodes, lambda x: DataNode(content=x))
             else:
-                nodes = _to_datanode_temp(nodes, from_langchain)
+                nodes = lcall(nodes, from_langchain)
         elif isinstance(to_datanode, Callable):
             nodes = _datanode_parser(nodes, to_datanode)
         return nodes
@@ -66,8 +80,7 @@ def chunk(documents,
             documents = documents_convert_func(documents, 'llama_index')
         nodes = llama_index_node_parser(documents, chunker, chunker_args, chunker_kwargs, chunking_kwargs)
         if isinstance(to_datanode, bool) and to_datanode is True:
-            # nodes = lcall(nodes, from_llama_index)
-            nodes = _to_datanode_temp(nodes, from_llama_index)
+            nodes = lcall(nodes, from_llama_index)
         elif isinstance(to_datanode, Callable):
             nodes = _datanode_parser(nodes, to_datanode)
         return nodes
