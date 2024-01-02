@@ -1,4 +1,5 @@
 import re
+
 from typing import Optional, Union, Iterable
 
 from .flat_util import flatten_list

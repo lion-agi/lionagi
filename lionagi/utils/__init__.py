@@ -5,6 +5,7 @@ from .call_util import hcall, ahcall, lcall, alcall, mcall, amcall, ecall, aecal
 from .io_util import to_temp, to_csv, append_to_jsonl
 from .load_utils import dir_to_path, chunk_text, file_to_chunks
 from .type_util import str_to_num, to_list
+from .tool_util import func_to_schema
 
 __all__ = [
     "api_method",
@@ -54,4 +55,5 @@ __all__ = [
     "file_to_chunks",
     "change_separator",
     "is_flattenable",
+    "func_to_schema"
 ]

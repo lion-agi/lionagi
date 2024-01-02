@@ -1,8 +1,9 @@
 import asyncio
 from typing import Dict, Any, Optional, List
 
-from lionagi.schema.base_schema import Tool
-
+from lionagi.schema.base_tool import Tool
+from lionagi.utils.type_util import to_list
+from lionagi.utils.tool_util import func_to_tool
 
 class ToolRegistry:
     """
@@ -42,8 +43,7 @@ class ToolRegistry:
         """
         return name in self.registry
 
-    def _register_tool(self, tool: Tool, name: Optional[str] = None, update: bool = False,
-                       new: bool = False, prefix: Optional[str] = None, postfix: Optional[int] = None):
+    def _register_tool(self, tool: Tool, name: Optional[str] = None, update: bool = False, new: bool = False, prefix: Optional[str] = None, postfix: Optional[int] = None):
         """
         Registers a tool in the registry.
 
@@ -125,4 +125,42 @@ class ToolRegistry:
         """        
         for tool in tools:
             self._register_tool(tool, update=update, new=new, prefix=prefix, postfix=postfix)
+
+    def _register_func(self, func_, parser=None, **kwargs):
+        # kwargs for _register_tool
+        
+        tool = func_to_tool(func_=func_, parser=parser)
+        self._register_tool(tool=tool, **kwargs)
+    
+    def register_funcs(self, funcs, parsers=None, **kwargs):
+        funcs, parsers = to_list(funcs), to_list(parsers)
+        if parsers is not None and len(parsers) != len(funcs):
+            raise ValueError("The number of funcs and tools should be the same")
+        parsers = parsers or [None for _ in range(len(funcs))]
+        
+        for i, func in enumerate(funcs):
+            self._register_func(func_=func, parser=parsers[i], **kwargs)
             
+    @staticmethod
+    def get_function_call(response):
+        """
+        Extract function name and arguments from a response JSON.
+
+        Parameters:
+            response (dict): The JSON response containing function information.
+
+        Returns:
+            Tuple[str, dict]: The function name and its arguments.
+        """
+        try: 
+            # out = json.loads(response)
+            func = response['function'][5:]
+            args = json.loads(response['arguments'])
+            return (func, args)
+        except:
+            try:
+                func = response['recipient_name'].split('.')[-1]
+                args = response['parameters']
+                return (func, args)
+            except:
+                raise ValueError('response is not a valid function call')
