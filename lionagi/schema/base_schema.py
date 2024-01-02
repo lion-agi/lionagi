@@ -1,6 +1,6 @@
 import json
-from typing import Any, Dict, Optional, TypeVar, Type, List, Callable
-from pydantic import BaseModel, Field, validator
+from typing import Any, Dict, Optional, TypeVar, Type, List, Callable, Union
+from pydantic import BaseModel, Field, validator, AliasChoices
 
 from lionagi.utils.sys_util import create_id
 
@@ -18,17 +18,17 @@ class BaseNode(BaseModel):
         related_nodes (List[str]): A list of identifiers for nodes related to this node.
     """
     id_: str = Field(default_factory=lambda: str(create_id()), alias="node_id")
-    content: Optional[Any] = None
+    content: Union[str, Dict[str, Any], None, Any] = Field(default=None,
+                                                           validation_alias=AliasChoices('text', 'page_content'))
     metadata: Dict[str, Any] = Field(default_factory=dict)
     label: Optional[str] = None
     related_nodes: List[str] = Field(default_factory=list)
 
     class Config:
+        extra = 'allow'
+        populate_by_name = True
         validate_assignment = True
         str_strip_whitespace = True
-        json_encoders = {
-            # Custom encoders for specific types can be placed here
-        }
 
     @validator('*', pre=True, each_item=False)
     def non_empty(cls, v):
@@ -171,6 +171,13 @@ class DataNode(BaseNode):
         # to langchain document
         from lionagi.bridge.langchain import to_langchain_document
         return to_langchain_document(self, **kwargs)
+
+    def __repr__(self) -> str:
+        return f"DataNode(id={self.id_}, content={self.content}, metadata={self.metadata}, label={self.label})"
+
+    def __str__(self) -> str:
+        return f"DataNode(id={self.id_}, label={self.label})"
+
 
 
 class File(DataNode):

@@ -1,6 +1,6 @@
 from typing import Union, Callable, List, Any, Dict
 from lionagi.schema.base_schema import DataNode, T
-from lionagi.utils.parse_utils import change_key 
+from lionagi.utils.doc_util import change_key
 
 
 def from_llama_index(llama_node: Any, **kwargs: Any) -> T:
@@ -44,8 +44,6 @@ def get_llama_reader(reader: Union[str, Callable]) -> Callable:
 
     Parameters:
         reader (Union[str, Callable]): The name of the reader function or the reader function itself.
-        reader_args (List[Any]): Positional arguments to pass to the reader function.
-        reader_kwargs (Dict[str, Any]): Keyword arguments to pass to the reader function.
 
     Returns:
         Callable: The Llama Index reader function.
@@ -53,15 +51,18 @@ def get_llama_reader(reader: Union[str, Callable]) -> Callable:
     Raises:
         ValueError: If the specified reader is invalid.
     """
-    if isinstance(reader, str):
-        
-        if reader == 'SimpleDirectoryReader':
-            from llama_index import SimpleDirectoryReader
-            return SimpleDirectoryReader
+    try:
+        if isinstance(reader, str):
+            if reader == 'SimpleDirectoryReader':
+                from llama_index import SimpleDirectoryReader
+                return SimpleDirectoryReader
+            else:
+                from llama_index import download_loader
+                return download_loader(reader)
         else:
-            from llama_index import download_loader
-            return download_loader(reader)
-    return reader
+            return reader
+    except Exception as e:
+        raise ValueError(f'Invalid reader: {reader}, Error: {e}')
 
 def llama_index_reader(reader: Union[str, Callable], 
                        reader_args: List[Any] = [], 
@@ -84,10 +85,7 @@ def llama_index_reader(reader: Union[str, Callable],
     Raises:
         ValueError: If the specified reader is invalid or if the reader fails to load documents.
     """
-    try:
-        reader = get_llama_reader(reader)
-    except Exception as e:
-        raise ValueError(f'Invalid reader: {reader}, Error: {e}')
+    reader = get_llama_reader(reader)
 
     try:
         loader = reader(*reader_args, **reader_kwargs)
@@ -97,10 +95,27 @@ def llama_index_reader(reader: Union[str, Callable],
     except Exception as e:
         raise ValueError(f'Failed to read. Error: {e}')
 
+def get_llama_parser(parser: Union[str, Callable]) -> Callable:
+    import llama_index.node_parser as node_parser
+    import llama_index.text_splitter as text_splitter
+
+    try:
+        return getattr(node_parser, parser)
+    except Exception as e1:
+        try:
+            if isinstance(parser, str):
+                return getattr(text_splitter, parser)
+            else:
+                return parser
+        except Exception as e2:
+            raise ValueError(f'Invalid node parser: {parser}. Error: {e1}, {e2}')
+
+
 def llama_index_node_parser(documents: List[Any], 
                             parser: Union[str, Callable], 
                             parser_args: List[Any] = [], 
-                            parser_kwargs: Dict[str, Any] = {}) -> List[Any]:
+                            parser_kwargs: Dict[str, Any] = {},
+                            parsing_kwargs: Dict[str, Any] = {}) -> List[Any]:
     """
     Parses documents into nodes using a specified Llama Index node parser.
 
@@ -116,30 +131,18 @@ def llama_index_node_parser(documents: List[Any],
     Raises:
         ValueError: If the specified parser is invalid or if the parser fails to parse the documents.
     """
-    import llama_index.node_parser as node_parser
-    import llama_index.text_splitter as text_splitter
-
-    try:
-        parser = getattr(node_parser, parser)
-    except:
-        try:
-            if isinstance(parser, str):
-                parser = getattr(text_splitter, parser)
-            else:
-                parser = parser
-        except Exception as e:
-            raise ValueError(f'Invalid node parser: {parser}. Error: {e}')
+    parser = get_llama_parser(parser)
 
     try:
         parser_obj = parser(*parser_args, **parser_kwargs)
-        nodes = parser_obj.get_nodes_from_documents(documents)
+        nodes = parser_obj.get_nodes_from_documents(documents, **parsing_kwargs)
         return nodes
 
-    except:
+    except Exception as e1:
         try:
             parser_obj = parser.from_defaults(*parser_args, **parser_kwargs)
-            nodes = parser_obj.get_nodes_from_documents(documents)
+            nodes = parser_obj.get_nodes_from_documents(documents, **parsing_kwargs)
             return nodes
-        except Exception as e:
-            raise ValueError(f'Failed to parse. Error: {e}')
+        except Exception as e2:
+            raise ValueError(f'Failed to parse. Error: {e1}, {e2}')
         
