@@ -124,13 +124,13 @@ class BaseNode(BaseModel):
             return NotImplemented
         return self.model_dump() == other.model_dump()
 
-    def __str__(self) -> str:
-        """Returns a simple string representation of the BaseNode."""
-        return f"BaseNode(id={self.id_}, label={self.label})"
+    # def __str__(self) -> str:
+    #     """Returns a simple string representation of the BaseNode."""
+    #     return f"BaseNode(id={self.id_}, label={self.label})"
 
-    def __repr__(self) -> str:
-        """Returns a detailed string representation of the BaseNode."""
-        return f"BaseNode(id={self.id_}, content={self.content}, metadata={self.metadata}, label={self.label})"
+    # def __repr__(self) -> str:
+    #     """Returns a detailed string representation of the BaseNode."""
+    #     return f"BaseNode(id={self.id_}, content={self.content}, metadata={self.metadata}, label={self.label})"
     
     # Utility Methods
     def is_empty(self) -> bool:
@@ -167,11 +167,11 @@ class DataNode(BaseNode):
         info_node = {**info_node, **info_json['kwargs']}
         return cls(**info_node)
 
-    def __repr__(self) -> str:
-        return f"DataNode(id={self.id_}, content={self.content}, metadata={self.metadata}, label={self.label})"
+    # def __repr__(self) -> str:
+    #     return f"DataNode(id={self.id_}, content={self.content}, metadata={self.metadata}, label={self.label})"
 
-    def __str__(self) -> str:
-        return f"DataNode(id={self.id_}, label={self.label})"
+    # def __str__(self) -> str:
+    #     return f"DataNode(id={self.id_}, label={self.label})"
 
 
 class File(DataNode):
