@@ -20,7 +20,6 @@ from .version import __version__
 from .utils import *
 from .schema import *
 from .structure import *
-from .managers import *
 from .core import *
 # from .datastore import *
 # from .structure import *

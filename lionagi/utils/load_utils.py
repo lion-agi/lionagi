@@ -2,7 +2,7 @@ import math
 from pathlib import Path
 from typing import List, Union, Dict, Any
 
-from .sys_util import to_list
+from .type_util import to_list
 from .call_util import lcall
 
 

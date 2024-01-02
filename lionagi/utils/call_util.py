@@ -2,15 +2,15 @@ import asyncio
 import time
 from typing import Any, Callable, List, Optional, Union
 
-from .sys_util import create_copy, to_list
+from .sys_util import create_copy
+from .type_util import to_list
 
 
-def hcall(input: Any, 
-              func: Callable, 
-              sleep: int = 0.1, 
-              message: Optional[str] = None, 
-              ignore_error: bool = False, 
-              **kwargs) -> Any:
+def hcall(
+    input: Any, func: Callable, sleep: int = 0.1, 
+    message: Optional[str] = None, 
+    ignore_error: bool = False, **kwargs
+    ) -> Any:
     """
     Executes a function after a specified delay, handling exceptions optionally.
 
@@ -54,10 +54,10 @@ def hcall(input: Any,
             raise
 
 async def ahcall(
-    input: Any, func: Callable, sleep: int = 5, 
+    input_: Any, func: Callable, sleep: int = 5, 
     message: Optional[str] = None, 
-    ignore_error: bool = False, 
-                     **kwargs) -> Any:
+    ignore_error: bool = False, **kwargs
+    ) -> Any:
     """
     Asynchronously executes a function after a specified delay, handling exceptions optionally.
 
@@ -93,7 +93,7 @@ async def ahcall(
         if not asyncio.iscoroutinefunction(func):
             raise TypeError(f"The function {func} must be an asynchronous function.")
         await asyncio.sleep(sleep)
-        return await func(input, **kwargs)
+        return await func(input_, **kwargs)
     except Exception as e:
         if message:
             print(f"{message} Error: {e}")
@@ -102,11 +102,10 @@ async def ahcall(
         if not ignore_error:
             raise
 
-def lcall(input: Any, 
-           func: Callable, 
-           flatten_dict: bool = False, 
-           flat: bool = False, 
-           dropna: bool = True, **kwargs) -> List[Any]:
+def lcall(
+    input_: Any, func_: Callable, flatten: bool = False, 
+    dropna: bool = False, **kwargs
+    ) -> List[Any]:
     """
     Applies a function to each element of `input`, after converting it to a list.
 
@@ -137,16 +136,14 @@ def lcall(input: Any,
         [1, 4, 9]
     """
     try:
-        lst = to_list(input, flatten_dict, flat, dropna)
-        return [func(i, **kwargs) for i in lst]
+        lst = to_list(input_=input_, flatten=flatten, dropna=dropna)
+        return [func_(i, **kwargs) for i in lst]
     except Exception as e:
         raise ValueError(f"Given function cannot be applied to the input. Error: {e}")
 
-async def alcall(input: Any, 
-                  func: Callable, 
-                  flatten_dict: bool = False, 
-                  flat: bool = False, 
-                  dropna: bool = True, **kwargs) -> List[Any]:
+async def alcall(
+    input_: Any, func_: Callable, flatten: bool = False, dropna: bool = True, **kwargs
+    ) -> List[Any]:
     """
     Asynchronously applies a function to each element of `input`, after converting it to a list.
 
@@ -178,17 +175,16 @@ async def alcall(input: Any,
         [1, 4, 9]
     """
     try:
-        lst = to_list(input, flatten_dict, flat, dropna)
-        tasks = [func(i, **kwargs) for i in lst]
+        lst = to_list(input_=input_, flatten=flatten, dropna=dropna)
+        tasks = [func_(i, **kwargs) for i in lst]
         return await asyncio.gather(*tasks)
     except Exception as e:
         raise ValueError(f"Given function cannot be applied to the input. Error: {e}")
 
-def mcall(input: Union[Any, List[Any]], 
-           func: Union[Callable, List[Callable]], 
-           flatten_dict: bool = False, 
-           flat: bool = True, 
-           dropna: bool = True, **kwargs) -> List[Any]:
+def mcall(
+    input_: Union[Any, List[Any]], func_: Union[Callable, List[Callable]], 
+    flatten: bool = True, dropna: bool = True, **kwargs
+    ) -> List[Any]:
     """
     Maps multiple functions to corresponding elements of the input.
 
@@ -219,17 +215,21 @@ def mcall(input: Union[Any, List[Any]],
         >>> m_call([1, 2], [add_one, add_one])
         [2, 3]
     """
-    input = to_list(input, flatten_dict, flat, dropna)
-    func = to_list(func)
-    assert len(input) == len(func), "The number of inputs and functions must be the same."
-    return to_list([lcall(inp, f, flatten_dict, flat, dropna, **kwargs) 
-                    for f, inp in zip(func, input)])
+    input_ = to_list(input_=input_, flatten=flatten, dropna=dropna)
+    func_ = to_list(func_)
+    assert len(input_) == len(func_), "The number of inputs and functions must be the same."
+    
+    return to_list(
+        [
+            lcall(input_=inp, func_=f, flatten=flatten, dropna=dropna, **kwargs) 
+            for f, inp in zip(func_, input_)
+        ]
+    )
 
-async def amcall(input: Union[Any, List[Any]], 
-                  func: Union[Callable, List[Callable]], 
-                  flatten_dict: bool = False, 
-                  flat: bool = True, 
-                  dropna: bool = True, **kwargs) -> List[Any]:
+async def amcall(
+    input_: Union[Any, List[Any]], func_: Union[Callable, List[Callable]], 
+    flatten: bool = True, dropna: bool = True, **kwargs
+    ) -> List[Any]:
     """
     Asynchronously applies multiple functions to corresponding elements of the input.
 
@@ -260,20 +260,22 @@ async def amcall(input: Union[Any, List[Any]],
         >>> asyncio.run(am_call([1, 2], [async_add_one, async_add_one]))
         [2, 3]
     """
-    input = to_list(input, flatten_dict, flat, dropna)
-    func = to_list(func)
-    assert len(input) == len(func), "Input and function counts must match."
+    input = to_list(input_=input_, flatten=flatten, dropna=dropna)
+    func_ = to_list(func_)
+    assert len(input) == len(func_), "Input and function counts must match."
     
-    tasks = [alcall(inp, f, flatten_dict, flat, dropna, **kwargs) 
-             for f, inp in zip(func, input)]
+    tasks = [
+        alcall(input_=inp, func_=f, flatten=flatten, dropna=dropna, **kwargs) 
+        for f, inp in zip(func_, input)
+        ]
+    
     out = await asyncio.gather(*tasks)
     return to_list(out, flat=True)
 
-def ecall(input: Any, 
-           func: Callable, 
-           flatten_dict: bool = False, 
-           flat: bool = False, 
-           dropna: bool = True, **kwargs) -> List[Any]:
+def ecall(
+    input_: Union[Any, List[Any]], func_: Union[Callable, List[Callable]], 
+    flatten: bool = True, dropna: bool = True, **kwargs
+    ) -> List[Any]:
     """
     Applies each function in a list of functions to all elements in the input.
 
@@ -302,15 +304,16 @@ def ecall(input: Any,
         [[1], [4], [9]]
     """
 
-    _f = lambda x, y: mcall(create_copy(x, len(to_list(y))), y, 
-                            flatten_dict=flatten_dict, flat=flat, dropna=dropna, **kwargs)
-    return to_list([_f(inp, func) for inp in to_list(input)], flat=flat)
+    _f = lambda x, y: mcall(
+        input_=create_copy(x, len(to_list(y))), func_=y, 
+        flatten=False, dropna=dropna, **kwargs
+        )
+    return [_f(x=inp, y=func_) for inp in to_list(input_)]
 
-async def aecall(input_: Any, 
-                  func_: Callable, 
-                  flatten_dict: bool = False,
-                  flat: bool = False, 
-                  dropna: bool = True, **kwargs):
+async def aecall(
+    input_: Union[Any, List[Any]], func_: Union[Callable, List[Callable]], 
+    dropna: bool = True, **kwargs
+    ) -> List[Any]:
     """
     Asynchronously applies each function in a list of functions to all elements in the input.
 
@@ -336,7 +339,9 @@ async def aecall(input_: Any,
         [[1, 4, 9]]
     """
     async def _async_f(x, y):
-        return await amcall(create_copy(x, len(to_list(y))), y, flatten_dict=flatten_dict, flat=flat, dropna=dropna, **kwargs)
+        return await amcall(
+            create_copy(x, len(to_list(y))), y, flatten=False, dropna=dropna, **kwargs
+            )
 
-    tasks = [_async_f(inp, func_) for inp in to_list(input_)]
+    tasks = [_async_f(inp, func_) for inp in to_list(input_)]    
     return await asyncio.gather(*tasks)
