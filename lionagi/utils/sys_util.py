@@ -185,8 +185,8 @@ def task_id_generator() -> Generator[int, None, None]:
 def change_dict_key(dict_, old_key, new_key):
     dict_[new_key] = dict_.pop(old_key)
 
-def parse_function_call(response: str) -> Tuple[str, Dict]:
-    out = json.loads(response)
-    func = out.get('function', '').lstrip('call_')
-    args = json.loads(out.get('arguments', '{}'))
-    return func, args
+# def parse_function_call(response: str) -> Tuple[str, Dict]:
+#     out = json.loads(response)
+#     func = out.get('function', '').lstrip('call_')
+#     args = json.loads(out.get('arguments', '{}'))
+#     return func, args

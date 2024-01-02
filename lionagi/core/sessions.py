@@ -3,7 +3,7 @@ from typing import Any
 from dotenv import load_dotenv
 
 from lionagi.utils.type_util import to_list
-from lionagi.utils.call_util import alcall
+from lionagi.utils.call_util import alcall, lcall
 from .conversations import Conversation
 from ..schema.data_logger import DataLogger
 from ..objs.tool_registry import ToolRegistry
@@ -50,13 +50,17 @@ class Session:
     async def _output(self, invoke=True, out=True):
         if invoke:
             try:
-                async def _try_output():
-                    func, args = self.tool_registry.get_function_call(self.conversation.responses[-1]['content'])
-                    outs = await self.tool_registry.invoke(func, args)
-                    self.conversation.add_messages(response=outs)
-                
-                outs = alcall()
-                
+                tool_uses = json.loads(self.conversation.responses[-1]['content'])
+                if 'function_list' in tool_uses.keys():
+                    func_calls = await alcall(tool_uses['function_list'], self.tool_registry.get_function_call)
+
+                else:
+                    func_calls = await alcall(tool_uses['tool_uses'], self.tool_registry.get_function_call)
+
+                outs = await alcall(func_calls, self.tool_registry.invoke)
+                for out, f in zip(outs, func_calls):
+                    response = {"function": f[0], "arguments": f[1], "output": out}
+                    self.conversation.add_messages(response=response)
             except:
                 pass
         if out:

@@ -1,5 +1,6 @@
 import asyncio
-from typing import Dict, Any, Optional, List
+import json
+from typing import Dict, Any, Optional, List, Tuple
 
 from lionagi.schema.base_tool import Tool
 from lionagi.utils.type_util import to_list
@@ -79,7 +80,7 @@ class ToolRegistry:
 
         self.registry[name] = tool
 
-    async def invoke(self, name: str, kwargs: Dict) -> Any:
+    async def invoke(self, name_kwargs: Tuple) -> Any:
         """
         Dynamically invokes a registered tool with given arguments.
 
@@ -93,7 +94,8 @@ class ToolRegistry:
 
         Raises:
             ValueError: If the tool is not registered or if an error occurs during invocation.
-        """        
+        """
+        name, kwargs = name_kwargs
         if not self._name_exists(name):
             raise ValueError(f"Function {name} is not registered.")
 
