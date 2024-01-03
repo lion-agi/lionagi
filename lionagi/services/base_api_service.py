@@ -5,7 +5,7 @@ import logging
 
 from typing import Dict, Optional, Any, NoReturn
 from lionagi.utils.api_util import api_method, api_endpoint_from_url, api_error, api_rate_limit_error
-from lionagi.objs import StatusTracker, AsyncQueue, PayloadMaker
+from lionagi.objs import StatusTracker, AsyncQueue
 from lionagi.services.base_ import BaseService, RateLimiter
 
 class BaseRateLimiter(RateLimiter):
@@ -52,15 +52,12 @@ class BaseRateLimiter(RateLimiter):
             interval (int): The time interval in seconds for replenishing rate limits. Defaults to 60 seconds.
         """
         
-        super().__init__(max_requests_per_interval, max_tokens_per_interval)
-        self.interval = interval
-        self.rate_limit_replenisher_task = asyncio.create_task(
-            self.rate_limit_replenisher.create(max_requests_per_interval, 
-                                               max_tokens_per_interval))
+        super().__init__(max_requests_per_interval=max_requests_per_interval, max_tokens_per_interval=max_tokens_per_interval, interval=interval)
+        self.rate_limit_replenisher_task = asyncio.create_task(BaseRateLimiter.create(max_requests_per_interval, max_tokens_per_interval, interval))
 
     @classmethod
     async def create(
-        cls, max_requests_per_interval: int, max_tokens_per_interval: int
+        cls, max_requests_per_interval: int, max_tokens_per_interval: int, interval
     ) -> None:
         """
         Class method to initialize and start the rate limit replenisher task.
@@ -75,7 +72,7 @@ class BaseRateLimiter(RateLimiter):
         Note:
             If the environment variable "env_readthedocs" is set, the replenisher task is not started.
         """
-        self = cls(max_requests_per_interval, max_tokens_per_interval)
+        self = cls(max_requests_per_interval=max_requests_per_interval, max_tokens_per_interval=max_tokens_per_interval, interval=interval)
         if not getenv.getenv("env_readthedocs"):
             self.rate_limit_replenisher_task = await asyncio.create_task(
                 self.rate_limit_replenisher()
@@ -165,8 +162,6 @@ class BaseAPIService(BaseService):
         """   
         self._api_key = api_key
         self.max_attempts = max_attempts
-        
-        self.payload_maker = PayloadMaker()
         self.status_tracker = StatusTracker()
         self.queue = AsyncQueue()
         self.rate_limiter = ratelimiter(
@@ -174,9 +169,8 @@ class BaseAPIService(BaseService):
             max_tokens_per_interval=max_tokens_per_interval, 
             interval=interval)
 
-    def create_payload(self, input_, schema, **kwargs):
-        return self.payload_maker._create_payload(
-            input_=input_, schema=schema, **kwargs)
+    def create_payload(self):
+        ...
 
     def calculate_num_tokens(self, input_, endpoint_, encoding_name):
         self.payload_maker.input_ = input_
@@ -215,17 +209,12 @@ class BaseAPIService(BaseService):
     async def _base_call_api(self,
                              http_session,
                              input_=None,
-                             schema=None, 
                              endpoint_=None, 
                              method="post", 
                              payload: Dict[str, any] =None,
-                             encoding_name: str = None,
-                             **kwargs) -> Optional[Dict[str, any]]:
+                             encoding_name: str = None) -> Optional[Dict[str, any]]:
         
         endpoint_ = api_endpoint_from_url(self.base_url + endpoint_)
-        payload = payload or self.create_payload(input_=input_,
-                                                 schema=schema, 
-                                                 **kwargs)
         if encoding_name:
             self.payload_maker.encoding_name = encoding_name
 
@@ -233,7 +222,7 @@ class BaseAPIService(BaseService):
             if self.is_busy():
                 await asyncio.sleep(1)
                 
-            required_tokens = self.calculate_num_tokens(input_=input_, endpoint_=endpoint_)
+            required_tokens = self.calculate_num_tokens(input_=input_, endpoint_=endpoint_, encoding_name=encoding_name)
 
             if self.has_capacity(required_tokens):
                 self.reduce_capacity(required_tokens)
@@ -270,12 +259,10 @@ class BaseAPIService(BaseService):
     
     async def _serve(self,
                      input_: Optional[Any] = None,
-                     schema: Optional[Dict[str, Any]] = None, 
                      endpoint_: Optional[str] = None, 
                      method: str = "post", 
                      payload: Optional[Dict[str, Any]] = None,
-                     encoding_name: Optional[str] = None,
-                     **kwargs) -> Optional[Any]:
+                     encoding_name: Optional[str] = None) -> Optional[Any]:
         """
         Initiates and manages an API call process.
 
@@ -307,13 +294,11 @@ class BaseAPIService(BaseService):
             async with aiohttp.ClientSession() as http_session:    
                 completion = await self._base_call_api(
                     http_session=http_session,
-                    schema=schema,
                     input_=input_,
                     endpoint_=endpoint_,
                     method=method,
                     payload=payload,
-                    encoding_name=encoding_name,
-                    **kwargs)
+                    encoding_name=encoding_name)
                 return completion
             
         except Exception as e:

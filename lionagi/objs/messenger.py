@@ -149,7 +149,7 @@ class Messenger:
             Union[Message, Tuple[Message, Dict]]: The created message in the specified format.
         """
         
-        msg = self.create_message(system=system, 
+        msg = self._create_message(system=system, 
                                   instruction=instruction, 
                                   context=context, 
                                   response=response, 

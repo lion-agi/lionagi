@@ -1,4 +1,3 @@
-from .messages import Message
 from lionagi.objs.messenger import Messenger as msgr
 
 
@@ -30,7 +29,7 @@ class Conversation:
     """
     response_counts = 0
     
-    def __init__(self, messages) -> None:
+    def __init__(self, messages=None) -> None:
         """
         Initialize a Conversation object.
 

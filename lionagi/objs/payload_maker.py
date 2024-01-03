@@ -1,5 +1,7 @@
 from typing import Any, Dict, Union, List, Optional
 import tiktoken
+from lionagi.configs.oai_configs import oai_schema
+
 
 
 class PayloadMaker:
@@ -18,7 +20,7 @@ class PayloadMaker:
             The encoding method used for processing the input data.
 
     Methods:
-        _create_payload:
+        _make:
             Generates a payload based on the input data, schema, and additional parameters.
         _calculate_num_tokens:
             Determines the number of tokens required for a specific API endpoint.
@@ -40,7 +42,9 @@ class PayloadMaker:
             Determines the token count for a file field in the payload.
     """
     
-    def __init__(self, input_: Union[str, List[str]], schema: Dict[str, Any], encoding_name: str) -> None:
+    def __init__(self, input_: Union[str, List[str]] = None, 
+                 schema: Dict[str, Any]=None, 
+                 encoding_name: str="cl100k_base") -> None:
         """
         Initializes the PayloadMaker with specified input data, schema, and encoding method.
 
@@ -53,7 +57,7 @@ class PayloadMaker:
                 The name of the encoding method to be used for data transformation.
         """        
         self.input_ = input_
-        self.schema = schema
+        self.schema = schema or oai_schema['chat']
         self.encoding = tiktoken.get_encoding(encoding_name)
 
     def make(self, input_: Optional[Union[str, List[str]]] = None,
@@ -76,6 +80,8 @@ class PayloadMaker:
         schema = self.schema if schema is None else schema
         config = {**schema.get('config', {}), **kwargs}
         payload = {schema["input"]: input_}
+        config = config.update({**kwargs})
+        
 
         for key in schema.get('required', []):
             payload[key] = config[key]
@@ -102,7 +108,7 @@ class PayloadMaker:
             raise TypeError('Input must be a string, bytes, or list of strings.')
 
     def _calculate_token_chat_completions(self) -> int:
-        payload = self.create_payload()
+        payload = self.make()
         max_tokens = payload.get("max_tokens", 15)
         n = payload.get("n", 1)
         completion_tokens = max_tokens * n
@@ -111,23 +117,23 @@ class PayloadMaker:
         return num_tokens + 2 + completion_tokens
 
     def _calculate_token_completions(self) -> int:
-        payload = self.create_payload()
+        payload = self.make()
         max_tokens = payload.get("max_tokens", 15)
         n = payload.get("n", 1)
         return self._calculate_tokens_for_encoded_input(payload["prompt"]) + max_tokens * n
 
     def _calculate_token_embeddings(self) -> int:
-        payload = self.create_payload()
+        payload = self.make()
         return self._calculate_tokens_for_encoded_input(payload["input"])
 
     def _calculate_token_audio(self) -> int:
-        return self._calculate_tokens_for_file_field("audio_file", self.create_payload())
+        return self._calculate_tokens_for_file_field("audio_file", self.make())
 
     def _calculate_token_images(self) -> int:
-        return self._calculate_tokens_for_file_field("image_file", self.create_payload())
+        return self._calculate_tokens_for_file_field("image_file", self.make())
 
     def _calculate_token_fine_tuning(self) -> int:
-        return self._calculate_tokens_for_file_field("training_data", self.create_payload())
+        return self._calculate_tokens_for_file_field("training_data", self.make())
 
     def _calculate_tokens_for_file_field(self, field_name: str, payload: Dict[str, Any]) -> int:
         file_data = payload.get(field_name)
