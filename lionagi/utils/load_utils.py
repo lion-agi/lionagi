@@ -14,10 +14,13 @@ def dir_to_path(
     """
     Generates a list of file paths from a directory with the given file extension.
 
-    Args:
-        directory (str): The directory to search for files.
-        extension (str): The file extension to filter by.
+    Parameters:
+        dir (str): The directory to search for files.
+
+        ext (str): The file extension to filter by.
+
         recursive (bool): Whether to search subdirectories recursively. Defaults to False.
+
         flatten (bool): Whether to flatten the list. Defaults to True.
     
     Returns:
@@ -49,10 +52,13 @@ def chunk_text(input: str,
     """
     Chunks the input text into smaller parts, with optional overlap and threshold for final chunk.
 
-    Args:
-        text (str): The input text to chunk.
+    Parameters:
+        input (str): The input text to chunk.
+
         chunk_size (int): The size of each chunk.
+
         overlap (float): The amount of overlap between chunks.
+
         threshold (int): The minimum size of the final chunk.
 
     Returns:
@@ -113,8 +119,9 @@ def read_text(filepath: str, clean: bool = True) -> Tuple[str, dict]:
     """
     Reads text from a file and optionally cleans it, returning the content and metadata.
 
-    Args:
+    Parameters:
         filepath (str): The path to the file to read.
+
         clean (bool): Whether to clean the text by replacing certain characters. Defaults to True.
 
     Returns:
@@ -122,7 +129,9 @@ def read_text(filepath: str, clean: bool = True) -> Tuple[str, dict]:
 
     Raises:
         FileNotFoundError: If the file cannot be found.
+
         PermissionError: If there are permissions issues.
+
         OSError: For other OS-related errors.
     """
     def _get_metadata():

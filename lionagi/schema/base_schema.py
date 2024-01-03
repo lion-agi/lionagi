@@ -12,11 +12,16 @@ class BaseNode(BaseModel):
     BaseNode: A foundational building block for representing a node in a graph-like structure.
 
     Attributes:
-        id_ (str): Unique identifier for the node, aliased as 'node_id'.
-        content (Optional[Any]): Content or value the node represents.
-        metadata (Dict[str, Any]): A dictionary of metadata related to the node.
-        label (Optional[str]): A label for categorizing or identifying the node.
-        related_nodes (List[str]): A list of identifiers for nodes related to this node.
+        id_ (str):
+            Unique identifier for the node, aliased as 'node_id'.
+        content (Optional[Any]):
+            Content or value the node represents.
+        metadata (Dict[str, Any]):
+            A dictionary of metadata related to the node.
+        label (Optional[str]):
+            A label for categorizing or identifying the node.
+        related_nodes (List[str]):
+            A list of identifiers for nodes related to this node.
     """
     id_: str = Field(default_factory=lambda: str(create_id()), alias="node_id")
     content: Union[str, Dict[str, Any], None, Any] = Field(default=None,
@@ -40,8 +45,9 @@ class BaseNode(BaseModel):
         """
         Creates a node instance from a JSON string.
 
-        Args:
+        Parameters:
             json_str (str): The JSON string representing a node.
+
             **kwargs: Additional keyword arguments to pass to json.loads.
 
         Returns:
@@ -69,8 +75,9 @@ class BaseNode(BaseModel):
         """
         Creates a copy of the node instance.
 
-        Args:
+        Parameters:
             deep (bool): Whether to make a deep copy.
+
             n (int): Number of copies to create.
 
         Returns:
@@ -83,8 +90,9 @@ class BaseNode(BaseModel):
         """
         Merges another metadata dictionary into the node's metadata.
 
-        Args:
+        Parameters:
             other_metadata (Dict[str, Any]): The metadata to merge in.
+
             overwrite (bool): Whether to overwrite existing keys in the metadata.
         """
         if not overwrite:
@@ -193,8 +201,10 @@ class Message(BaseNode):
     for message-specific operations.
 
     Attributes:
-        role (Optional[str]): The role of the message, e.g., 'sender', 'receiver'.
-        name (Optional[str]): The name associated with the message, e.g., a user name or system name.
+        role (Optional[str]):
+            The role of the message, e.g., 'sender', 'receiver'.
+        name (Optional[str]):
+            The name associated with the message, e.g., a user name or system name.
     """
     
     role: Optional[str] = None
@@ -227,10 +237,13 @@ class Message(BaseNode):
         This method sets up the message node with the specified role, content, and name. The content
         is stored in a dictionary under the provided content_key.
 
-        Args:
+        Parameters:
             role_ (str): The role of the message.
+
             content (Any): The content of the message.
+
             content_key (str): The key under which the content will be stored.
+
             name (Optional[str]): The name associated with the message. Defaults to the role if not provided.
         """
         self.role = role_

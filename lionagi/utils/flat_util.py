@@ -10,16 +10,16 @@ def flatten_dict(d: Dict, parent_key: str = '', sep: str = '_') -> Dict:
     is an underscore (_).
 
     Parameters:
-    d (dict): The dictionary to flatten.
+        d (dict): The dictionary to flatten.
     
-    parent_key (str, optional): The base key to use for the current level of recursion.
-        Defaults to an empty string, meaning no parent key, key cannot be a number 
+        parent_key (str, optional): The base key to use for the current level of recursion.
+            Defaults to an empty string, meaning no parent key, key cannot be a number
         
-    sep (str, optional): The separator to use when concatenating keys.
-        Defaults to an underscore (_).
+        sep (str, optional): The separator to use when concatenating keys.
+            Defaults to an underscore (_).
 
     Returns:
-    dict: A new dictionary with flattened keys and corresponding values.
+        dict: A new dictionary with flattened keys and corresponding values.
     """
     items = []
     for k, v in d.items():
@@ -40,13 +40,13 @@ def flatten_list(l: List, dropna: bool = True) -> List:
     Optionally, None values can be dropped from the result list.
 
     Parameters:
-    l (list): The list to flatten, which may contain nested lists.
+        l (list): The list to flatten, which may contain nested lists.
     
-    dropna (bool, optional): Whether to exclude None values from the result list.
-        Defaults to True.
+        dropna (bool, optional): Whether to exclude None values from the result list.
+            Defaults to True.
 
     Returns:
-    list: A new flattened list with or without None values based on the dropna parameter.
+        list: A new flattened list with or without None values based on the dropna parameter.
     """
     flat_list = []
     for i in l:
@@ -61,12 +61,14 @@ def change_separator(flat_dict, current_sep, new_sep):
     Changes the separator in the keys of a flat dictionary.
     
     Parameters:
-    flat_dict (dict): The dictionary with keys containing the current separator.
-    current_sep (str): The current separator used in the dictionary keys.
-    new_sep (str): The new separator to replace the current separator in the dictionary keys.
+        flat_dict (dict): The dictionary with keys containing the current separator.
+
+        current_sep (str): The current separator used in the dictionary keys.
+
+        new_sep (str): The new separator to replace the current separator in the dictionary keys.
     
     Returns:
-    dict: A new dictionary with the separators in the keys replaced.
+        dict: A new dictionary with the separators in the keys replaced.
     """
     return {
         k.replace(current_sep, new_sep): v 
@@ -77,15 +79,15 @@ def unflatten_dict(flat_dict: Dict, sep: str = '_') -> Dict:
     """
     Unflattens a dictionary where keys are strings that represent nested dictionary paths separated by 'sep'.
     
-    Args:
-    flat_dict (dict): A dictionary with keys as strings that represent paths.
-    sep (str): The separator used in the keys of the flat dictionary.
+    Parameters:
+        flat_dict (dict): A dictionary with keys as strings that represent paths.
+        sep (str): The separator used in the keys of the flat dictionary.
     
     Returns:
-    dict: A nested dictionary unflattened from the keys of the input dictionary.
+        dict: A nested dictionary unflattened from the keys of the input dictionary.
     
     Raises:
-    ValueError: If there are conflicting keys in the path.
+        ValueError: If there are conflicting keys in the path.
     
     Example:
     >>> unflatten_dict({'a_0': 1, 'a_1': 2, 'b_x': 'X', 'b_y': 'Y'})
@@ -118,11 +120,11 @@ def unflatten_dict(flat_dict: Dict, sep: str = '_') -> Dict:
         """
         Converts dictionaries with contiguous integer keys starting from 0 into lists.
         
-        Args:
-        d (dict): A dictionary that may have integer keys suitable for conversion to a list.
+        Parameters:
+            d (dict): A dictionary that may have integer keys suitable for conversion to a list.
         
         Returns:
-        dict or list: The input dictionary or a list if the dictionary keys match the criteria.
+            dict or list: The input dictionary or a list if the dictionary keys match the criteria.
         """
         if isinstance(d, dict) and all(isinstance(k, int) and k >= 0 for k in d.keys()):
             keys = sorted(d.keys())
@@ -139,11 +141,11 @@ def is_flattenable(obj: Any) -> bool:
     """
     Determines if the given object contains nested dictionaries or lists, making it suitable for flattening.
     
-    Args:
-    obj (object): The object to check for flattenable structures.
+    Parameters:
+        obj (object): The object to check for flattenable structures.
     
     Returns:
-    bool: True if the object can be flattened (contains nested dicts or lists), False otherwise.
+        bool: True if the object can be flattened (contains nested dicts or lists), False otherwise.
     """
     if isinstance(obj, dict):
         return any(isinstance(v, (dict, list)) for v in obj.values())
@@ -156,14 +158,17 @@ def flatten_with_custom_logic(obj, logic_func=None, parent_key='', sep='_'):
     Recursively flattens a nested dictionary or list and applies custom logic to the keys and values.
 
     Parameters:
-    obj (dict | list): The dictionary or list to flatten.
-    logic_func (callable, optional): A function that takes four arguments (parent_key, key, value, sep)
-        and returns a tuple (new_key, new_value) after applying custom logic.
-    parent_key (str): The base key to use for creating new keys.
-    sep (str): The separator to use when joining nested keys.
+        obj (dict | list): The dictionary or list to flatten.
+
+        logic_func (callable, optional): A function that takes four arguments (parent_key, key, value, sep)
+            and returns a tuple (new_key, new_value) after applying custom logic.
+
+        parent_key (str): The base key to use for creating new keys.
+
+        sep (str): The separator to use when joining nested keys.
 
     Returns:
-    dict: A flattened dictionary with keys representing the nested paths and values from the original object.
+        dict: A flattened dictionary with keys representing the nested paths and values from the original object.
 
     Example Usage:
     >>> sample_dict = {'a': 1, 'b': {'c': 2, 'd': {'e': 3}}}
@@ -216,17 +221,21 @@ def dynamic_flatten(obj, parent_key='', sep='_', max_depth=None, current_depth=0
     Recursively flattens a nested dictionary or list, while allowing a maximum depth and custom separators.
 
     Parameters:
-    obj (dict | list): The dictionary or list to flatten.
-    parent_key (str): The base key to use for creating new keys.
-    sep (str): The separator to use when joining nested keys.
-    max_depth (int, optional): The maximum depth to flatten.
-    current_depth (int): The current depth in the recursive call (used internally).
+        obj (dict | list): The dictionary or list to flatten.
+
+        parent_key (str): The base key to use for creating new keys.
+
+        sep (str): The separator to use when joining nested keys.
+
+        max_depth (int, optional): The maximum depth to flatten.
+
+        current_depth (int): The current depth in the recursive call (used internally).
 
     Returns:
-    dict: A flattened dictionary with keys representing the nested paths and values from the original object.
+        dict: A flattened dictionary with keys representing the nested paths and values from the original object.
 
     Raises:
-    TypeError: If the input object is neither a dictionary nor a list.
+        TypeError: If the input object is neither a dictionary nor a list.
 
     Example Usage:
     >>> sample_dict = {'a': 1, 'b': {'c': 2, 'd': {'e': 3}}}
@@ -343,9 +352,10 @@ def _insert_with_dict_handling(container, indices, value):
     """
     Helper function to insert a value into a nested container based on a list of indices.
 
-    :param container: The container (list or dict) to insert the value into.
-    :param indices: A list of indices indicating the path to the insertion point.
-    :param value: The value to be inserted.
+    Parameters:
+        container: The container (list or dict) to insert the value into.
+        indices: A list of indices indicating the path to the insertion point.
+        value: The value to be inserted.
     """
     for i, index in enumerate(indices[:-1]):
         # Check if index is an integer and ensure the list is long enough
@@ -391,9 +401,12 @@ def unflatten_to_list(flat_dict: Dict[str, Any], sep: str = '_') -> List:
     """
     Unflattens a dictionary with keys as string paths into a nested list structure.
 
-    :param flat_dict: The flat dictionary to unflatten.
-    :param sep: The separator used in the flat dictionary keys to indicate nesting.
-    :return: A nested list that represents the unflattened structure.
+    Parameters:
+        flat_dict: The flat dictionary to unflatten.
+        sep: The separator used in the flat dictionary keys to indicate nesting.
+
+    Returns:
+        A nested list that represents the unflattened structure.
     """
     result_list = []
     for flat_key, value in flat_dict.items():
@@ -405,12 +418,13 @@ def flatten_iterable(iterable: Iterable, max_depth: int = None) -> Generator[Any
     """
     Flattens a nested iterable up to a specified maximum depth.
 
-    Args:
-    iterable: An iterable to flatten.
-    max_depth: The maximum depth to flatten. If None, flattens completely.
+    Parameters:
+        iterable: An iterable to flatten.
+
+        max_depth: The maximum depth to flatten. If None, flattens completely.
 
     Yields:
-    The flattened elements of the original iterable.
+        The flattened elements of the original iterable.
     """
     def _flatten(input_iterable: Iterable, current_depth: int) -> Generator[Any, None, None]:
         if isinstance(input_iterable, Iterable) and not isinstance(input_iterable, (str, bytes)):
@@ -428,12 +442,13 @@ def flatten_iterable_to_list(iterable: Iterable, max_depth: int = None) -> List[
     """
     Converts a nested iterable into a flattened list up to a specified maximum depth.
 
-    Args:
-    iterable: An iterable to flatten.
-    max_depth: The maximum depth to flatten. If None, flattens completely.
+    Parameters:
+        iterable: An iterable to flatten.
+
+        max_depth: The maximum depth to flatten. If None, flattens completely.
 
     Returns:
-    A list containing the flattened elements of the original iterable.
+        A list containing the flattened elements of the original iterable.
     """
     return list(flatten_iterable(iterable, max_depth))
 
@@ -446,13 +461,15 @@ def unflatten_dict_with_custom_logic(
     Unflattens a dictionary with keys as string paths into a nested dictionary structure
     while applying custom logic to each key and value.
 
-    Args:
-    flat_dict: The flat dictionary to unflatten.
-    logic_func: A function that takes a key and a value and returns a tuple of modified key and value.
-    sep: The separator used in the flat dictionary keys to indicate nesting.
+    Parameters:
+        flat_dict: The flat dictionary to unflatten.
+
+        logic_func: A function that takes a key and a value and returns a tuple of modified key and value.
+
+        sep: The separator used in the flat dictionary keys to indicate nesting.
 
     Returns:
-    A nested dictionary that represents the unflattened structure with modified keys and values.
+        A nested dictionary that represents the unflattened structure with modified keys and values.
     """
     reconstructed = {}
     for flat_key, value in flat_dict.items():
