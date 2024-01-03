@@ -4,7 +4,7 @@ from dotenv import load_dotenv
 
 from .conversations import Conversation
 from ..schema import DataLogger
-from lionagi.objs.tool_registry import ToolRegistry
+from lionagi.objs.tool_registry import ToolManager
 from ..services import OpenAIService
 from lionagi.configs.oai_configs import oai_schema
 from lionagi.services.chatcompletion import ChatCompletion
@@ -22,7 +22,7 @@ class Session:
         self.llmconfig = llmconfig
         self._logger = DataLogger(dir=dir)
         self.service = service
-        self._toolRegistry = ToolRegistry()
+        self.tool_manager = ToolManager()
     
     def set_dir(self, dir):
         self._logger.dir = dir
@@ -39,8 +39,8 @@ class Session:
     async def _output(self, invoke=True, out=True):
         if invoke:
             try: 
-                func, args = self._toolRegistry._get_function_call(self.conversation.responses[-1]['content'])
-                outs = await self._toolRegistry.invoke(func, args)
+                func, args = self.tool_manager._get_function_call(self.conversation.responses[-1]['content'])
+                outs = await self.tool_manager.invoke(func, args)
                 self.conversation.add_messages(response=outs)
             except:
                 pass
@@ -58,7 +58,7 @@ class Session:
     def register_tools(self, tools, update=False, new=False, prefix=None, postfix=None):
         if not isinstance(tools, list):
             tools=[tools]
-        self._toolRegistry.register_tools(tools=tools, update=update, new=new, prefix=prefix, postfix=postfix)
+        self.tool_manager.register_tools(tools=tools, update=update, new=new, prefix=prefix, postfix=postfix)
     
     async def initiate(self, instruction, system=None, context=None, name=None, invoke=True, out=True, **kwargs) -> Any:
         config = {**self.llmconfig, **kwargs}
