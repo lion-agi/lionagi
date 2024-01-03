@@ -1,7 +1,7 @@
 from datetime import datetime
 import json
-from ..utils.sys_utils import create_id, l_call
-from ..schema import DataLogger
+from lionagi.utils import create_id, lcall
+from lionagi.schema import DataLogger
 
 
 class Message:
@@ -61,7 +61,7 @@ class Message:
 
             name (str): The name associated with the message. Default is None.
         """
-        if sum(l_call([system, instruction, response], bool)) > 1:
+        if sum(lcall([system, instruction, response], bool)) > 1:
             raise ValueError("Error: Message cannot have more than one role.")
         
         else: 

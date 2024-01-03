@@ -5,8 +5,7 @@ import tiktoken
 import logging
 import aiohttp
 from typing import Generator, NoReturn, Dict, Any, Optional
-from .service_utils import BaseService, RateLimiter, StatusTracker, AsyncQueue
-
+from .service_objs import BaseService, RateLimiter, StatusTracker, AsyncQueue
 
 class BaseAPIRateLimiter(RateLimiter):
 
@@ -172,7 +171,7 @@ class BaseAPIService(BaseService):
             task_id += 1
 
     async def _call_api(self, http_session, endpoint_, method="post", payload: Dict[str, any] =None) -> Optional[Dict[str, any]]:
-        endpoint_ = self.api_endpoint_from_url(self.base_url+endpoint_)
+        endpoint_ = self.api_endpoint_from_url("https://api.openai.com/v1/"+endpoint_)
         
         while True:
             if self.rate_limiter.available_request_capacity < 1 or self.rate_limiter.available_token_capacity < 10:  # Minimum token count

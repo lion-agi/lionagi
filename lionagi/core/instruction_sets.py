@@ -1,3 +1,1 @@
-# TODO
-
-# a structured set of instruction nodes
+# dynamically structured preconfigured instructions

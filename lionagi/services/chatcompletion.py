@@ -1,5 +1,6 @@
 import abc
 
+
 class BaseEndpoint(abc.ABC):
     endpoint: str = abc.abstractproperty()
 
@@ -16,17 +17,6 @@ class BaseEndpoint(abc.ABC):
         """
         pass
 
-    # @abc.abstractmethod
-    # async def call_api(self, session, **kwargs):
-    #     """
-    #     Make a call to the API endpoint and process the response.
-        
-    #     Parameters:
-    #         session: The aiohttp client session.
-    #         **kwargs: Additional keyword arguments for configuration.
-    #     """
-    #     pass
-
     @abc.abstractmethod
     def process_response(self, response):
         """
@@ -38,14 +28,21 @@ class BaseEndpoint(abc.ABC):
         pass
 
 
+class ChatCompletion(BaseEndpoint):
+    endpoint: str = "chat/completion"
 
+    @classmethod
+    def create_payload(scls, messages, llmconfig, schema, **kwargs):
+        config = {**llmconfig, **kwargs}
+        payload = {"messages": messages}
+        for key in schema['required']:
+            payload.update({key: config[key]})
 
-    # @abc.abstractmethod
-    # def handle_error(self, error):
-    #     """
-    #     Handle any errors that occur during the API call.
+        for key in schema['optional']:
+            if bool(config[key]) is True and str(config[key]).lower() != "none":
+                payload.update({key: config[key]})
+        return payload
+    
+    def process_response(self, session, payload, completion):
+        ...
         
-    #     Parameters:
-    #         error: The error to handle.
-    #     """
-    #     pass
