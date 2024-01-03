@@ -1,6 +1,14 @@
+import sys
+import os
 import unittest
 
-from ..utils.flat_util import *
+# Get the current directory of the script
+current_dir = os.path.dirname(os.path.abspath(__file__))
+
+# Add the desired root directory to sys.path
+sys.path.append(current_dir)
+
+from utils.flat_util import *
 
 class TestFlattenDict(unittest.TestCase): 
 
