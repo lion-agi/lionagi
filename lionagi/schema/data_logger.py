@@ -32,10 +32,9 @@ class DataLogger:
         Initializes the DataLogger with an optional directory and initial log.
 
         Parameters:
-            dir (Optional[str]): 
-                The directory where CSV files will be saved. Defaults to None.
-            log (Optional[List]): 
-                An initial list of log entries. Defaults to an empty list.
+            dir (Optional[str]): The directory where CSV files will be saved. Defaults to None.
+
+            log (Optional[List]): An initial list of log entries. Defaults to an empty list.
         """        
         self.dir = dir
         self.log = deque(log) if log else deque()
@@ -45,8 +44,7 @@ class DataLogger:
         Adds a new entry to the log.
 
         Parameters:
-            entry: 
-                The data entry to be added to the log.
+            entry: The data entry to be added to the log.
         """        
         self.log.append(entry)
 
@@ -56,21 +54,21 @@ class DataLogger:
         Exports the logged data to a CSV file and optionally clears the log.
 
         Parameters:
-            filename (str): 
-                The name of the CSV file.
-            dir (Optional[str]): 
-                The directory to save the file. Defaults to the instance's dir attribute.
-            verbose (bool): 
-                If True, prints a message upon completion. Defaults to True.
-            timestamp (bool): 
-                If True, appends a timestamp to the filename. Defaults to True.
-            dir_exist_ok (bool): 
-                If True, will not raise an error if the directory already exists. Defaults to True.
-            file_exist_ok (bool): 
-                If True, overwrites the file if it exists. Defaults to False.
+            filename (str): The name of the CSV file.
+
+            dir (Optional[str]): The directory to save the file. Defaults to the instance's dir attribute.
+
+            verbose (bool): If True, prints a message upon completion. Defaults to True.
+
+            timestamp (bool): If True, appends a timestamp to the filename. Defaults to True.
+
+            dir_exist_ok (bool): If True, will not raise an error if the directory already exists. Defaults to True.
+
+            file_exist_ok (bool): If True, overwrites the file if it exists. Defaults to False.
 
         Side Effects:
             Clears the log after saving the CSV file.
+
             Prints a message indicating the save location and number of logs saved if verbose is True.
         """        
         dir = dir or self.dir
@@ -87,8 +85,7 @@ class DataLogger:
         Sets the default directory for saving CSV files.
 
         Parameters:
-            dir (str): 
-                The directory to be set as the default for saving files.
+            dir (str): The directory to be set as the default for saving files.
         """
         self.dir = dir
         
