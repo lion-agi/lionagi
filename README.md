@@ -21,20 +21,17 @@ Install LionAGI with pip:
 ```bash
 pip install lionagi
 ```
-Download the `.env_template` file, input your appropriate API_KEY, save the file, rename as `.env` and put in your project's root directory. 
+Download the `.env_template` file, input your appropriate `API_KEY`, save the file, rename as `.env` and put in your project's root directory. 
 by default we use `OPENAI_API_KEY`.
 
-- supports all models in [OpenRouter](https://openrouter.ai/models/) (not released yet, you can have a preview in `main`)
-- supports all `langchain` and `llamaindex` splitters, chunkers, and readers (not released yet, you can have a preview in `main`)
-- [here](https://lionagi.readthedocs.io/en/v0.0.111/) is the the latest stable, please `pip install lionagi==0.0.111` if you find 0.0.112 buggy 
+
 
 ### Features
-- Create a production ready LLM application **in hours**.
+- Create a production ready LLM application **in hours**, with more than 100 models to choose from
 - written in pure python, minimum dependency `aiohttp`, `python-dotenv`, `tiktoken`, `pydantic`
-- Efficient and verstile data operations for reading, chunking, binning, writing, storing and managing data
-- (Work In Progress) support for all `langchain` and `llamaindex` splitters, chunkers, and readers
+- Efficient and verstile data operations for reading, chunking, binning, writing, storing data with built-in support for `langchain` and `llamaindex`
 - Unified interface with any LLM provider, API or local
-  - Fast and **concurrent** API call with `configurable rate limit`
+  - Fast and **concurrent** API call with **configurable rate limit**
   - (Work In Progress) support for hundreds of models both API and local
 ---
 LionAGI is designed to be `asynchronous` only, please check python official documentation on how `async` work: [here](https://docs.python.org/3/library/asyncio.html)
@@ -73,6 +70,9 @@ print(f"Calculation Result: {result}")
 ```python
 # or otherwise, you can use
 import asyncio
+from dotenv import loadenv
+
+load_dotenv()
 
 async def main():
     calculator = li.Session(system=system)
