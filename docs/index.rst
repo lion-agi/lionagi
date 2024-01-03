@@ -95,6 +95,9 @@ Python 3.9 or higher.
    :caption: API Reference
    :hidden:
 
+   API_reference/core_index.rst
    API_reference/utils_index.rst
-   API_reference/session_index.rst
-   API_reference/api_index.rst
+   API_reference/loader_index.rst
+   API_reference/schema_index.rst
+   API_reference/configs_index.rst
+   API_reference/bridge.rst
