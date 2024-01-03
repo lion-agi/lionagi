@@ -25,7 +25,7 @@ Download the `.env_template` file, input your appropriate API_KEY, save the file
 by default we use `OPENAI_API_KEY`.
 
 - supports all models in [OpenRouter](https://openrouter.ai/models/) (not released yet, you can have a preview in `main`)
-- supports all `langchain` and `llamaindex` splitters, chunkers, and readers (not released yet)
+- supports all `langchain` and `llamaindex` splitters, chunkers, and readers (not released yet, you can have a preview in `main`)
 - [here](https://lionagi.readthedocs.io/en/v0.0.111/) is the the latest stable, please `pip install lionagi==0.0.111` if you find 0.0.112 buggy 
 
 ### Features
