@@ -31,3 +31,4 @@ class OpenAIService(BaseAPIService):
 
     async def serve(self, payload, endpoint_="chat/completions", method="post"):
         return await self._serve(payload=payload, endpoint_=endpoint_, method=method)
+    
