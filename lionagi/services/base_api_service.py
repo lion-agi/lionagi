@@ -13,8 +13,6 @@ class BaseAPIRateLimiter(RateLimiter):
         self, max_requests_per_minute: int, max_tokens_per_minute: int
     ) -> None:
         super().__init__(max_requests_per_minute, max_tokens_per_minute)
-        if not os.getenv('env_readthedocs'):
-            self.rate_limit_replenisher_task = asyncio.create_task(self.rate_limit_replenisher())
 
     @classmethod
     async def create(
