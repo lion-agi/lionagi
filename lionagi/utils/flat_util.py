@@ -13,10 +13,10 @@ def flatten_dict(d: Dict, parent_key: str = '', sep: str = '_') -> Dict:
         d (dict): The dictionary to flatten.
     
         parent_key (str, optional): The base key to use for the current level of recursion.
-            Defaults to an empty string, meaning no parent key, key cannot be a number
+        Defaults to an empty string, meaning no parent key, key cannot be a number
         
         sep (str, optional): The separator to use when concatenating keys.
-            Defaults to an underscore (_).
+        Defaults to an underscore (_).
 
     Returns:
         dict: A new dictionary with flattened keys and corresponding values.
@@ -43,7 +43,7 @@ def flatten_list(l: List, dropna: bool = True) -> List:
         l (list): The list to flatten, which may contain nested lists.
     
         dropna (bool, optional): Whether to exclude None values from the result list.
-            Defaults to True.
+        Defaults to True.
 
     Returns:
         list: A new flattened list with or without None values based on the dropna parameter.
@@ -81,6 +81,7 @@ def unflatten_dict(flat_dict: Dict, sep: str = '_') -> Dict:
     
     Parameters:
         flat_dict (dict): A dictionary with keys as strings that represent paths.
+
         sep (str): The separator used in the keys of the flat dictionary.
     
     Returns:
@@ -161,7 +162,7 @@ def flatten_with_custom_logic(obj, logic_func=None, parent_key='', sep='_'):
         obj (dict | list): The dictionary or list to flatten.
 
         logic_func (callable, optional): A function that takes four arguments (parent_key, key, value, sep)
-            and returns a tuple (new_key, new_value) after applying custom logic.
+        and returns a tuple (new_key, new_value) after applying custom logic.
 
         parent_key (str): The base key to use for creating new keys.
 
@@ -354,7 +355,9 @@ def _insert_with_dict_handling(container, indices, value):
 
     Parameters:
         container: The container (list or dict) to insert the value into.
+
         indices: A list of indices indicating the path to the insertion point.
+
         value: The value to be inserted.
     """
     for i, index in enumerate(indices[:-1]):
@@ -403,6 +406,7 @@ def unflatten_to_list(flat_dict: Dict[str, Any], sep: str = '_') -> List:
 
     Parameters:
         flat_dict: The flat dictionary to unflatten.
+
         sep: The separator used in the flat dictionary keys to indicate nesting.
 
     Returns:

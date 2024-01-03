@@ -110,7 +110,7 @@ def chunk(documents,
         documents_convert_func (Callable): A function to convert documents to a specific format. Defaults to None.
 
         to_datanode (Union[bool, Callable]): Determines whether to convert the result into DataNode instances, or
-                                             a callable to convert the result. Defaults to True.
+        a callable to convert the result. Defaults to True.
     
     Returns:
         List[DataNode]: A list of chunked DataNode instances after applying the chunker.
