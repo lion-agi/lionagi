@@ -9,6 +9,7 @@ def from_llama_index(llama_node: Any, **kwargs: Any) -> T:
 
     Parameters:
         llama_node (Any): The Llama Index node to be converted.
+        
         **kwargs: Additional keyword arguments for JSON serialization.
 
     Returns:
@@ -23,6 +24,7 @@ def to_llama_index_textnode(datanode: T, **kwargs: Any) -> Any:
 
     Parameters:
         datanode (DataNode): The DataNode to be converted.
+        
         **kwargs: Additional keyword arguments to be included in the TextNode.
 
     Returns:
@@ -74,9 +76,13 @@ def llama_index_reader(reader: Union[str, Callable],
 
     Parameters:
         reader (Union[str, Callable]): The name of the reader function or the reader function itself.
+        
         reader_args (List[Any]): Positional arguments to pass to the reader function.
+        
         reader_kwargs (Dict[str, Any]): Keyword arguments to pass to the reader function.
+        
         load_data_args (List[Any]): Positional arguments for the load_data method.
+        
         load_data_kwargs (Dict[str, Any]): Keyword arguments for the load_data method.
 
     Returns:
@@ -121,8 +127,11 @@ def llama_index_node_parser(documents: List[Any],
 
     Parameters:
         documents (List[Any]): The documents to parse.
+        
         parser (Union[str, Callable]): The name of the parser function or the parser function itself.
+        
         parser_args (List[Any]): Positional arguments to pass to the parser function.
+        
         parser_kwargs (Dict[str, Any]): Keyword arguments to pass to the parser function.
 
     Returns:

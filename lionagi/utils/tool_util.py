@@ -1,6 +1,7 @@
 import inspect
 from lionagi.schema.base_tool import Tool
 
+
 def extract_docstring_details(func):
     """
     Extracts detailed descriptions for each parameter and the function from the docstring.

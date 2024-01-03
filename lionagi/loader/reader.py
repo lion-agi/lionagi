@@ -15,6 +15,20 @@ class ReaderType(str, Enum):
 
 
 def _datanode_parser(nodes, parser):
+    """
+    Parses a list of nodes using the given parser function.
+    
+    Args:
+        nodes (List[Any]): The list of nodes to be parsed.
+        
+        parser (Callable): The parser function to transform nodes into DataNode instances.
+    
+    Returns:
+        List[Any]: A list of parsed nodes.
+    
+    Raises:
+        ValueError: If the parser function fails.
+    """
     try:
         nodes = parser(nodes)
     except Exception as e:
@@ -23,6 +37,17 @@ def _datanode_parser(nodes, parser):
 
 
 def text_reader(args, kwargs):
+    """
+    Reads text files from a directory and converts them to DataNode instances.
+    
+    Args:
+        args (List[Any]): Positional arguments for the dir_to_nodes function.
+        
+        kwargs (dict): Keyword arguments for the dir_to_nodes function.
+    
+    Returns:
+        List[Any]: A list of DataNode instances.
+    """
     return dir_to_nodes(*args, **kwargs)
 
 
@@ -33,6 +58,31 @@ def load(reader: Union[str, Callable],
          load_args=[],
          load_kwargs={},
          to_datanode: Union[bool, Callable] = True):
+    """
+    Loads documents using the specified reader and reader type.
+    
+    Args:
+        reader (Union[str, Callable]): The reader function or its name as a string.
+        
+        reader_type (ReaderType): The type of the reader. Defaults to ReaderType.PLAIN.
+        
+        reader_args (List[Any]): Positional arguments for the reader function. Defaults to an empty list.
+        
+        reader_kwargs (dict): Keyword arguments for the reader function. Defaults to an empty dict.
+        
+        load_args (List[Any]): Positional arguments for the loader function. Defaults to an empty list.
+        
+        load_kwargs (dict): Keyword arguments for the loader function. Defaults to an empty dict.
+        
+        to_datanode (Union[bool, Callable]): Determines whether to convert the result into DataNode instances, or
+                                             a callable to convert the result. Defaults to True.
+    
+    Returns:
+        List[Any]: A list of loaded and potentially parsed documents.
+    
+    Raises:
+        ValueError: If the reader fails or an unsupported reader type is provided.
+    """
     if reader_type == ReaderType.PLAIN:
         try:
             if reader == 'text_reader':

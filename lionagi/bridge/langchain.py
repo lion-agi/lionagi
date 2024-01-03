@@ -24,6 +24,7 @@ def to_langchain_document(datanode: T, **kwargs: Any) -> Any:
 
     Parameters:
         datanode (DataNode): The DataNode to be converted.
+        
         **kwargs: Additional keyword arguments to be included in the Document.
 
     Returns:
@@ -45,7 +46,9 @@ def langchain_loader(loader: Union[str, Callable],
 
     Parameters:
         loader (Union[str, Callable]): The name of the loader function or the loader function itself.
+        
         loader_args (List[Any]): Positional arguments to pass to the loader function.
+        
         loader_kwargs (Dict[str, Any]): Keyword arguments to pass to the loader function.
 
     Returns:
