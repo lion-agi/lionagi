@@ -86,6 +86,6 @@ def func_to_schema(func):
     }
     return schema
 
-def func_to_tool(func_, parser=None):
-    schema = func_to_schema(func_)
+def func_to_tool(func_, schema, parser=None):
+    # schema = func_to_schema(func_)
     return Tool(func=func_, parser=parser, schema_=schema)
