@@ -13,8 +13,8 @@ def str_to_num(input_: str,
     """
     Converts the first number in the input string to the specified numeric type.
 
-    Args:
-        input_str (str): The input string to extract the number from.
+    Parameters:
+        input_ (str): The input string to extract the number from.
         
         upper_bound (Optional[Union[int, float]]): The upper bound for the number. Defaults to None.
         
@@ -55,8 +55,8 @@ def to_list(input_: Any, flatten: bool = True, dropna: bool = False) -> List[Any
     """
     Converts the input to a list, optionally flattening it and dropping None values.
 
-    Args:
-        input_item (Any): The input to convert to a list.
+    Parameters:
+        input_ (Any): The input to convert to a list.
         
         flatten (bool): Whether to flatten the input if it is a nested list. Defaults to True.
         

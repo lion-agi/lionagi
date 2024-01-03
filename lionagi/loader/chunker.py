@@ -14,7 +14,7 @@ def datanodes_convert(documents, chunker_type):
     """
     Converts a lionagi DataNode documents to a specific format based on the chunker type.
     
-    Args:
+    Parameters:
         documents (List[DataNode]): A list of DataNode instances to be converted.
         
         chunker_type (ChunkerType): The chunker type to determine the conversion format.
@@ -35,9 +35,11 @@ def text_chunker(documents, args, kwargs):
     """
     Chunks text documents into smaller pieces.
     
-    Args:
+    Parameters:
         documents (List[DataNode]): A list of DataNode instances to be chunked.
+
         args (List[Any]): Positional arguments to be passed to the chunking function.
+
         kwargs (dict): Keyword arguments to be passed to the chunking function.
     
     Returns:
@@ -59,8 +61,9 @@ def _datanode_parser(nodes, parser):
     """
     Parses raw data into DataNode instances using the provided parser function.
     
-    Args:
+    Parameters:
         nodes (List[Any]): A list of raw data to be parsed.
+
         parser (Callable): A function that parses raw data into DataNode instances.
     
     Returns:
@@ -87,14 +90,21 @@ def chunk(documents,
     """
     Chunks documents using the specified chunker and chunker type.
     
-    Args:
+    Parameters:
         documents (List[Any]): A list of documents to be chunked.
+
         chunker (Callable): The chunking function to be used.
+
         chunker_type (ChunkerType): The type of the chunker. Defaults to ChunkerType.PLAIN.
+
         chunker_args (List[Any]): Positional arguments for the chunker function. Defaults to an empty list.
+
         chunker_kwargs (dict): Keyword arguments for the chunker function. Defaults to an empty dict.
+
         chunking_kwargs (dict): Additional keyword arguments for the chunking process. Defaults to an empty dict.
+
         documents_convert_func (Callable): A function to convert documents to a specific format. Defaults to None.
+
         to_datanode (Union[bool, Callable]): Determines whether to convert the result into DataNode instances, or
                                              a callable to convert the result. Defaults to True.
     

@@ -18,7 +18,7 @@ def _datanode_parser(nodes, parser):
     """
     Parses a list of nodes using the given parser function.
     
-    Args:
+    Parameters:
         nodes (List[Any]): The list of nodes to be parsed.
         
         parser (Callable): The parser function to transform nodes into DataNode instances.
@@ -40,7 +40,7 @@ def text_reader(args, kwargs):
     """
     Reads text files from a directory and converts them to DataNode instances.
     
-    Args:
+    Parameters:
         args (List[Any]): Positional arguments for the dir_to_nodes function.
         
         kwargs (dict): Keyword arguments for the dir_to_nodes function.
@@ -61,7 +61,7 @@ def load(reader: Union[str, Callable],
     """
     Loads documents using the specified reader and reader type.
     
-    Args:
+    Parameters:
         reader (Union[str, Callable]): The reader function or its name as a string.
         
         reader_type (ReaderType): The type of the reader. Defaults to ReaderType.PLAIN.

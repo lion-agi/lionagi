@@ -6,11 +6,11 @@ def extract_docstring_details(func):
     """
     Extracts detailed descriptions for each parameter and the function from the docstring.
 
-    Args:
-    - func (function): The function to extract details from.
+    Parameters:
+        func (function): The function to extract details from.
 
     Returns:
-    - Tuple[str, dict]: Function description and a dictionary of parameter descriptions.
+        Tuple[str, dict]: Function description and a dictionary of parameter descriptions.
     """
     docstring = inspect.getdoc(func)
     if not docstring:
@@ -42,11 +42,11 @@ def func_to_schema(func):
     Generates a schema description for a given function, using typing hints and docstrings.
     The schema includes the function's name, description, and parameters.
 
-    Args:
-    - func (function): The function to generate a schema for.
+    Parameters:
+        func (function): The function to generate a schema for.
 
     Returns:
-    - dict: A schema describing the function.
+        dict: A schema describing the function.
     """
     # Extracting function name and docstring details
     func_name = func.__name__

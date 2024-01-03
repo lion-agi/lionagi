@@ -19,17 +19,18 @@ class Session:
     handling the logging of data, and invoking tools as part of the conversation.
 
     Attributes:
-        conversation (Conversation): An object to manage the conversation flow and history.
-        
-        system (str): The name of the system with which the conversation is happening.
-        
-        llmconfig (dict): Configuration for the language model.
-        
-        _logger (DataLogger): An object for logging conversation data.
-        
-        service (OpenAIService): A service object for interacting with OpenAI APIs.
-        
-        tool_manager (ToolManager): An object to manage the registration and invocation of tools.
+        conversation (Conversation):
+            An object to manage the conversation flow and history.
+        system (str):
+            The name of the system with which the conversation is happening.
+        llmconfig (dict):
+            Configuration for the language model.
+        logger_ (DataLogger):
+            An object for logging conversation data.
+        service (OpenAIService):
+            A service object for interacting with OpenAI APIs.
+        tool_manager (ToolManager):
+            An object to manage the registration and invocation of tools.
     """
 
     def __init__(
@@ -39,7 +40,7 @@ class Session:
         """
         Initializes the Session object.
 
-        Args:
+        Parameters:
             system (str): The name of the system with which the session is initiated.
             
             dir (str, optional): The directory for saving logs. Defaults to None.
@@ -60,7 +61,7 @@ class Session:
         """
         Sets the directory where data logs should be saved.
         
-        Args:
+        Parameters:
             dir (str): The path to the directory for saving logs.
         """
         self.logger_.dir = dir
@@ -69,7 +70,7 @@ class Session:
         """
         Changes the system associated with the conversation.
         
-        Args:
+        Parameters:
             system (str): The name of the new system for the conversation.
         """
         self.conversation.change_system(system)
@@ -78,7 +79,7 @@ class Session:
         """
         Updates the language model configuration.
         
-        Args:
+        Parameters:
             llmconfig (dict): The new configuration for the language model.
         """
         self.llmconfig = llmconfig
@@ -87,7 +88,7 @@ class Session:
         """
         Sets the service object used for API interactions.
         
-        Args:
+        Parameters:
             service (OpenAIService): The new service object.
         """
         self.service = service
@@ -96,7 +97,7 @@ class Session:
         """
         Processes the output from the conversation, possibly invoking tools and returning the latest response.
         
-        Args:
+        Parameters:
             invoke (bool): Indicates whether to invoke tools based on the latest response. Defaults to True.
             
             out (bool): Determines whether to return the latest response content. Defaults to True.
@@ -144,11 +145,15 @@ class Session:
         """
         Registers a list of tools to the tool manager and updates the language model configuration.
         
-        Args:
+        Parameters:
             tools: A single tool or a list of tools to be registered.
+
             update (bool): If True, update existing tools. Defaults to False.
+
             new (bool): If True, add as new tools. Defaults to False.
+
             prefix: A prefix added to all tool names. Defaults to None.
+
             postfix: A postfix added to all tool names. Defaults to None.
         """
         if not isinstance(tools, list):
@@ -165,13 +170,19 @@ class Session:
         """
         Initiates a conversation with an instruction and possibly additional context.
         
-        Args:
+        Parameters:
             instruction (str): The initial instruction for the conversation.
+
             system (str, optional): The name of the system to be used. If None, defaults to current system.
+
             context (str, optional): Additional context for the conversation. Defaults to None.
+
             name (str, optional): The name associated with the conversation. Defaults to None.
+
             invoke (bool): Indicates whether to invoke tools. Defaults to True.
+
             out (bool): Determines whether to return the latest response content. Defaults to True.
+
             **kwargs: Additional keyword arguments for language model configuration.
         
         Returns:
@@ -189,13 +200,19 @@ class Session:
         """
         Continues the conversation with a follow-up instruction.
         
-        Args:
+        Parameters:
             instruction (str): The follow-up instruction for the conversation.
+
             system (str, optional): The name of the system to be used. If None, defaults to current system.
+
             context (str, optional): Additional context for the conversation. Defaults to None.
+
             out (bool): Determines whether to return the latest response content. Defaults to True.
+
             name (str, optional): The name associated with the conversation. Defaults to None.
+
             invoke (bool): Indicates whether to invoke tools. Defaults to True.
+
             **kwargs: Additional keyword arguments for language model configuration.
         
         Returns:
@@ -213,9 +230,11 @@ class Session:
         """
         Automatically generates follow-up messages based on whether the last response invoked a tool.
         
-        Args:
+        Parameters:
             instruct (str): The instruction to pass for follow-up.
+
             num (int): The number of follow-ups to attempt. Defaults to 3.
+
             **kwargs: Additional keyword arguments for the follow-up process.
         """
         cont_ = True
@@ -230,9 +249,11 @@ class Session:
         """
         Exports the conversation messages to a CSV file.
         
-        Args:
+        Parameters:
             dir (str, optional): The directory where the CSV should be saved. Defaults to the logger's directory.
+
             filename (str): The name of the CSV file. Defaults to "messages.csv".
+
             **kwargs: Additional keyword arguments passed to the CSV writing function.
         
         Raises:
