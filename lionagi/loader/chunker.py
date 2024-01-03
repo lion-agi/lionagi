@@ -1,10 +1,10 @@
 from enum import Enum
 from typing import Union, Callable
 
-from lionagi.bridge.langchain import langchain_text_splitter, from_langchain
-from lionagi.bridge.llama_index import llama_index_node_parser, from_llama_index
-from lionagi.schema.base_schema import DataNode
-from lionagi.utils import lcall, file_to_chunks
+from ..bridge.langchain import langchain_text_splitter, from_langchain
+from ..bridge.llama_index import llama_index_node_parser, from_llama_index
+from ..schema.base_schema import DataNode
+from ..utils import lcall, file_to_chunks
 
 # define an enum to represent different types of chunkers
 class ChunkerType(str, Enum):

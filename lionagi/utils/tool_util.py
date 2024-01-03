@@ -1,5 +1,5 @@
 import inspect
-from lionagi.schema.base_tool import Tool
+from ..schema.base_tool import Tool
 
 
 def extract_docstring_details(func):

@@ -1,6 +1,6 @@
 from typing import Union, Callable, List, Any, Dict
-from lionagi.schema.base_schema import DataNode, T
-from lionagi.utils.sys_util import change_dict_key
+from ..schema.base_schema import DataNode, T
+from ..utils.sys_util import change_dict_key
 
 
 def from_llama_index(llama_node: Any, **kwargs: Any) -> T:

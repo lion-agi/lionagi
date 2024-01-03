@@ -5,7 +5,7 @@ from typing import List, Union, Dict, Any, Tuple
 from .type_util import to_list
 from .call_util import lcall
 from .io_util import to_csv
-from lionagi.schema.base_schema import DataNode
+from ..schema.base_schema import DataNode
 
 
 def dir_to_path(

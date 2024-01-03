@@ -1,5 +1,5 @@
 from os import getenv
-from lionagi.services.base_api_service import BaseAPIService, BaseAPIRateLimiter
+from .base_api_service import BaseAPIService, BaseAPIRateLimiter
 
 class OpenRouterService(BaseAPIService):
     _key_scheme = "OPENROUTER_API_KEY"

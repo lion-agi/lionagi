@@ -1,6 +1,6 @@
 from os import getenv
 import dotenv
-from lionagi.services.base_api_service import BaseAPIService, BaseAPIRateLimiter
+from .base_api_service import BaseAPIService, BaseAPIRateLimiter
 
 dotenv.load_dotenv()
 
