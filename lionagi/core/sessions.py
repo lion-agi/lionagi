@@ -9,6 +9,8 @@ from ..services import OpenAIService
 from lionagi.configs.oai_configs import oai_schema
 from lionagi.services.chatcompletion import ChatCompletion
 
+from lionagi.utils.call_util import lcall, alcall
+
 load_dotenv()
 OAIService = OpenAIService()
 
@@ -39,9 +41,21 @@ class Session:
     async def _output(self, invoke=True, out=True):
         if invoke:
             try: 
-                func, args = self.tool_manager._get_function_call(self.conversation.responses[-1]['content'])
-                outs = await self.tool_manager.invoke(func, args)
-                self.conversation.add_messages(response=outs)
+                # func, args = self.tool_manager._get_function_call(self.conversation.responses[-1]['content'])
+                # outs = await self.tool_manager.invoke(func, args)
+                # self.conversation.add_messages(response=outs)
+
+                tool_uses = json.loads(self.conversation.responses[-1]['content'])
+                if 'function_list' in tool_uses.keys():
+                    func_calls = lcall(tool_uses['function_list'], self.tool_manager._get_function_call)
+                else:
+                    func_calls = lcall(tool_uses['tool_uses'], self.tool_manager._get_function_call)
+
+                outs = await alcall(func_calls, self.tool_manager.invoke)
+                for out, f in zip(outs, func_calls):
+                    response = {"function": f[0], "arguments": f[1], "output": out}
+                    self.conversation.add_messages(response=response)
+
             except:
                 pass
         if out:
@@ -59,6 +73,11 @@ class Session:
         if not isinstance(tools, list):
             tools=[tools]
         self.tool_manager.register_tools(tools=tools, update=update, new=new, prefix=prefix, postfix=postfix)
+        tools_schema = lcall(tools, lambda tool: tool.to_dict()['schema_'])
+        if self.llmconfig['tools'] is None:
+            self.llmconfig['tools'] = tools_schema
+        else:
+            self.llmconfig['tools'] += tools_schema
     
     async def initiate(self, instruction, system=None, context=None, name=None, invoke=True, out=True, **kwargs) -> Any:
         config = {**self.llmconfig, **kwargs}
