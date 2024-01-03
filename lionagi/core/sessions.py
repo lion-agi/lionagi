@@ -141,7 +141,7 @@ class Session:
         except: 
             return False    
 
-    def register_tools(self, tools, update=False, new=False, prefix=None, postfix=None):
+    def register_tools(self, tools): #, update=False, new=False, prefix=None, postfix=None):
         """
         Registers a list of tools to the tool manager and updates the language model configuration.
         
@@ -158,12 +158,12 @@ class Session:
         """
         if not isinstance(tools, list):
             tools=[tools]
-        self.tool_manager.register_tools(tools=tools, update=update, new=new, prefix=prefix, postfix=postfix)
-        tools_schema = lcall(tools, lambda tool: tool.to_dict()['schema_'])
-        if self.llmconfig['tools'] is None:
-            self.llmconfig['tools'] = tools_schema
-        else:
-            self.llmconfig['tools'] += tools_schema
+        self.tool_manager.register_tools(tools=tools) #, update=update, new=new, prefix=prefix, postfix=postfix)
+        # tools_schema = lcall(tools, lambda tool: tool.to_dict()['schema_'])
+        # if self.llmconfig['tools'] is None:
+        #     self.llmconfig['tools'] = tools_schema
+        # else:
+        #     self.llmconfig['tools'] += tools_schema
     
     async def initiate(self, instruction, system=None, context=None, 
                        name=None, invoke=True, out=True, **kwargs) -> Any:
@@ -188,6 +188,11 @@ class Session:
         Returns:
             The output of the conversation if out is True, otherwise None.
         """
+        if self.tool_manager.registry != {}:
+            if 'tools' not in kwargs:
+                tool_kwarg = {"tools": self.tool_manager.to_tool_schema()}
+                kwargs = {**tool_kwarg, **kwargs}
+
         config = {**self.llmconfig, **kwargs}
         system = system or self.system
         self.conversation.initiate_conversation(system=system, instruction=instruction, context=context, name=name)
@@ -221,6 +226,10 @@ class Session:
         if system:
             self.conversation.change_system(system)
         self.conversation.add_messages(instruction=instruction, context=context, name=name)
+        if self.tool_manager.registry != {}:
+            if 'tools' not in kwargs:
+                tool_kwarg = {"tools": self.tool_manager.to_tool_schema()}
+                kwargs = {**tool_kwarg, **kwargs}
         config = {**self.llmconfig, **kwargs}
         await self.call_chatcompletion(**config)
 
@@ -237,6 +246,11 @@ class Session:
 
             **kwargs: Additional keyword arguments for the follow-up process.
         """
+        if self.tool_manager.registry != {}:
+            if 'tools' not in kwargs:
+                tool_kwarg = {"tools": self.tool_manager.to_tool_schema()}
+                kwargs = {**tool_kwarg, **kwargs}
+
         cont_ = True
         while num > 0 and cont_ is True:
             await self.followup(instruct, tool_choice="auto", **kwargs)
