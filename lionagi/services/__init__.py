@@ -1,10 +1,9 @@
-from .base_api_service import BaseAPIService, BaseRateLimiter
+from .base_api_service import BaseAPIService
 from .oai import OpenAIService
 from .openrouter import OpenRouterService
 
 
 __all__ = [
-    "BaseRateLimiter",
     "BaseAPIService",
     "OpenAIService",
     "OpenRouterService",

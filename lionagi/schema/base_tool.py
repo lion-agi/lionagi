@@ -6,4 +6,4 @@ class Tool(BaseNode):
     func: Any = None
     content: Any = None
     parser: Any = None
-    schema: Any = None
+    schema_: Any = None

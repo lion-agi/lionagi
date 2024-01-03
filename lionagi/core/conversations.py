@@ -1,4 +1,4 @@
-from lionagi.objs.messenger import Messenger as msgr
+from .messages import Message
 
 
 class Conversation:
@@ -37,11 +37,9 @@ class Conversation:
             messages (list): A list of messages to initialize the conversation. Default is None.
 
         """
-        self.responses = []
         self.messages = messages or []
-        self.conversation_messages = []
-        self.msgr = msgr()
-        
+        self.msg = Message()
+        self.responses = []
 
     def initiate_conversation(self, system=None, instruction=None, context=None, name=None):
         """
@@ -53,7 +51,7 @@ class Conversation:
             context (dict): Additional context for the conversation. Default is None.
             name (str): The name associated with the user. Default is None.
         """
-        self.conversation_messages = []
+        self.messages, self.responses = [], []
         self.add_messages(system=system)
         self.add_messages(instruction=instruction, context=context, name=name)
 
@@ -70,14 +68,10 @@ class Conversation:
             tool (dict): The tool information for the message. Default is None.
             name (str): The name associated with the message. Default is None.
         """
-        msgr0, message0 = self.msgr.create_message(
-            system=system, instruction=instruction, context=context, 
-            response=response, name=name, obj=True
-            )
-        
-        self.messages.append(msgr0)
-        self.conversation_messages.append(message0)
-        
+        msg = self.msg(system=system, instruction=instruction, context=context, 
+                       response=response, name=name)
+        self.messages.append(msg)
+
     def change_system(self, system):
         """
         Change the system setting in the conversation.
@@ -85,20 +79,20 @@ class Conversation:
         Parameters:
             system (str): The new system setting for the conversation.
         """
-        self.conversation_messages[0] = self.msgr.create_message(system=system)
+        self.messages[0] = self.msg(system=system)
 
-    # def keep_last_n_exchanges(self, n: int):
-    #     """
-    #     Keep the last n exchanges in the conversation.
+    def keep_last_n_exchanges(self, n: int):
+        """
+        Keep the last n exchanges in the conversation.
 
-    #     Parameters:
-    #         n (int): The number of exchanges to keep.
-    #     """
-    #     # keep last n_exchanges, one exchange is marked by one assistant response
-    #     response_indices = [
-    #         index for index, message in enumerate(self.api_messages[1:]) if message["role"] == "assistant"
-    #     ]
-    #     if len(response_indices) >= n:
-    #         first_index_to_keep = response_indices[-n] + 1
-    #         self.api_messages = [self.system] + self.api_messages[first_index_to_keep:]
+        Parameters:
+            n (int): The number of exchanges to keep.
+        """
+        # keep last n_exchanges, one exchange is marked by one assistant response
+        response_indices = [
+            index for index, message in enumerate(self.messages[1:]) if message["role"] == "assistant"
+        ]
+        if len(response_indices) >= n:
+            first_index_to_keep = response_indices[-n] + 1
+            self.messages = [self.system] + self.messages[first_index_to_keep:]
             
