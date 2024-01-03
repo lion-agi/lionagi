@@ -135,8 +135,8 @@ class Session:
             bool: True if the last message is a function call result, False otherwise.
         """
         msg = self.conversation.messages[-1]
-        try: 
-            if "function call result" in json.loads(msg['content']).keys():
+        try:
+            if json.loads(msg['content']).keys() >= {'function', 'arguments', 'output'}:
                 return True
         except: 
             return False    
