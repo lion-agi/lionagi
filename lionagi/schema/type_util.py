@@ -1,7 +1,8 @@
 import re
+import enum
 from typing import Optional, Union, Iterable, List, Any, Type
 
-from .flat_util import flatten_list
+from ..utils.flat_util import flatten_list
 
 
 def str_to_num(input_: str, 
@@ -79,3 +80,9 @@ def to_list(input_: Any, flatten: bool = True, dropna: bool = False) -> List[Any
     else:
         input_ = [input_]
     return input_
+
+class ChunkerType(str, Enum):
+    PLAIN = 'plain'                 # default
+    LANGCHAIN = 'langchain'         # using langchain functions
+    LLAMAINDEX = 'llama_index'      # using llamaindex functions
+    SELFDEFINED = 'self_defined'    # create custom functions

@@ -3,15 +3,11 @@ from typing import Union, Callable
 
 from ..bridge.langchain import langchain_text_splitter, from_langchain
 from ..bridge.llama_index import llama_index_node_parser, from_llama_index
-from ..schema.base_schema import DataNode
+from ..schema import DataNode
 from ..utils import lcall, file_to_chunks
 
 # define an enum to represent different types of chunkers
-class ChunkerType(str, Enum):
-    PLAIN = 'plain'                 # default
-    LANGCHAIN = 'langchain'         # using langchain functions
-    LLAMAINDEX = 'llama_index'      # using llamaindex functions
-    SELFDEFINED = 'self_defined'    # create custom functions
+
 
 # Function to convert documents to a specific format based on the chunker type
 def datanodes_convert(documents, chunker_type):

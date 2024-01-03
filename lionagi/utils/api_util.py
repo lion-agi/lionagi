@@ -32,23 +32,6 @@ def api_method(http_session, method: str = "post") -> Callable:
         return http_session.options
     elif method == "patch":
         return http_session.patch
-
-def api_endpoint_from_url(request_url: str) -> str:
-    """
-    Extracts the API endpoint from a given URL.
-
-    Parameters:
-        request_url (str): The URL from which to extract the API endpoint.
-
-    Returns:
-        str: The extracted API endpoint, or an empty string if no match is found.
-
-    Examples:
-        endpoint = api_endpoint_from_url("https://api.example.com/v1/users")
-        # endpoint will be 'users'
-    """
-    match = re.search(r"^https://[^/]+/v\d+/(.+)$", request_url)
-    return match.group(1) if match else ""
     
 def api_error(response_json: dict) -> bool:
     """
@@ -84,3 +67,21 @@ def api_rate_limit_error(response_json: dict) -> bool:
             # Handle the rate limit error
     """
     return "Rate limit" in response_json["error"].get("message", "")
+
+# credit to OpenAI for this method
+def api_endpoint_from_url(request_url: str) -> str:
+    """
+    Extracts the API endpoint from a given URL.
+
+    Parameters:
+        request_url (str): The URL from which to extract the API endpoint.
+
+    Returns:
+        str: The extracted API endpoint, or an empty string if no match is found.
+
+    Examples:
+        endpoint = api_endpoint_from_url("https://api.example.com/v1/users")
+        # endpoint will be 'users'
+    """
+    match = re.search(r"^https://[^/]+/v\d+/(.+)$", request_url)
+    return match.group(1) if match else ""

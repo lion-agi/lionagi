@@ -164,6 +164,11 @@ def get_bins(input: List[str], upper: int = 7500) -> List[List[int]]:
     
     return bins
 
+def change_dict_key(dict_, old_key, new_key):
+    dict_[new_key] = dict_.pop(old_key)
+
+
+# credit to OpenAI for the following function
 def task_id_generator() -> Generator[int, None, None]:
     """
     A generator function that yields a sequential series of task IDs.
@@ -181,8 +186,7 @@ def task_id_generator() -> Generator[int, None, None]:
         yield task_id
         task_id += 1
 
-def change_dict_key(dict_, old_key, new_key):
-    dict_[new_key] = dict_.pop(old_key)
+
 
 # def parse_function_call(response: str) -> Tuple[str, Dict]:
 #     out = json.loads(response)

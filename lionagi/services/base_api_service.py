@@ -43,6 +43,7 @@ class BaseAPIRateLimiter(RateLimiter):
             self.available_request_capacity = self.max_requests_per_minute
             self.available_token_capacity = self.max_tokens_per_minute
 
+# credit to OpenAI for the following function
     def calculate_num_token(
         self,
         payload: Dict[str, Any] = None,
