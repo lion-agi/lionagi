@@ -1,7 +1,7 @@
 from collections import deque
 from typing import List, Optional
-from lionagi.utils.sys_util import create_path
-from lionagi.utils.io_util import to_csv
+from ..utils.sys_util import create_path
+from ..utils.io_util import to_csv
 
 
 class DataLogger:

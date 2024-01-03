@@ -1,7 +1,7 @@
 from datetime import datetime
 import json
-from lionagi.utils import create_id, lcall
-from lionagi.schema import DataLogger
+from ..utils import create_id, lcall
+from ..schema import DataLogger
 
 
 class Message:

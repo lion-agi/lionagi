@@ -2,12 +2,12 @@ import json
 from typing import Any
 from dotenv import load_dotenv
 
-from lionagi.schema import DataLogger
-from lionagi.utils import lcall, alcall
-from lionagi.services import OpenAIService, ChatCompletion
-from lionagi.core.conversations import Conversation
-from lionagi.objs.tool_registry import ToolManager
-from lionagi.configs.oai_configs import oai_schema
+from ..schema import DataLogger
+from ..utils import lcall, alcall
+from ..services import OpenAIService, ChatCompletion
+from ..core.conversations import Conversation
+from ..objs.tool_registry import ToolManager
+from ..configs.oai_configs import oai_schema
 
 load_dotenv()
 OAIService = OpenAIService()

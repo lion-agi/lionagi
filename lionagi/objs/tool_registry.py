@@ -1,8 +1,8 @@
 import json
 import asyncio
 from typing import Dict
-from lionagi.utils import lcall, str_to_num
-from lionagi.schema import BaseNode
+from ..utils import lcall, str_to_num
+from ..schema import BaseNode
 
 
 class ToolManager(BaseNode):
