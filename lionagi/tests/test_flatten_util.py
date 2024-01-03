@@ -1,5 +1,16 @@
-from lionagi.utils.flat_util import *
+import sys
+import os
 import unittest
+
+# Get the current directory of the script
+current_dir = os.path.dirname(os.path.abspath(__file__))
+
+# Move up one level to get the desired root directory
+desired_root_dir = os.path.dirname(current_dir)
+
+# Add the desired root directory to sys.path
+sys.path.append(desired_root_dir)
+from utils.flat_util import *
 
 class TestFlattenDict(unittest.TestCase): 
 
