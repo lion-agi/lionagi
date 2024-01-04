@@ -127,10 +127,10 @@ class BaseNode(BaseModel):
     def remove_related_node(self, node_id: str) -> None:
         self.related_nodes = [id_ for id_ in self.related_nodes if id_ != node_id]
 
-    def __eq__(self, other: object) -> bool:
-        if not isinstance(other, T):
-            return NotImplemented
-        return self.model_dump() == other.model_dump()
+    # def __eq__(self, other: object) -> bool:
+    #     if not isinstance(other, T):
+    #         return NotImplemented
+    #     return self.model_dump() == other.model_dump()
 
     # def __str__(self) -> str:
     #     """Returns a simple string representation of the BaseNode."""

@@ -8,6 +8,7 @@ from ..services import OpenAIService, ChatCompletion
 from ..core.conversations import Conversation
 from ..objs.tool_registry import ToolManager
 from ..configs.oai_configs import oai_schema
+from ..schema.base_tool import Tool
 
 load_dotenv()
 OAIService = OpenAIService()
@@ -164,7 +165,35 @@ class Session:
         #     self.llmconfig['tools'] = tools_schema
         # else:
         #     self.llmconfig['tools'] += tools_schema
-    
+
+    def _tool_parser(self, **kwargs):
+        # 1. single schema: dict
+        # 2. tool: Tool
+        # 3. name: str
+        # 4. list: 3 types of lists
+        def tool_check(tool):
+            if isinstance(tool, dict):
+                return tool
+            elif isinstance(tool, Tool):
+                return tool.schema_
+            elif isinstance(tool, str):
+                if self.tool_manager._name_existed():
+                    tool = self.tool_manager.registry[tool]
+                    return tool.schema_
+                else:
+                    raise ValueError(f'Function {tool} is not registered.')
+
+        if 'tools' in kwargs:
+            if not isinstance(kwargs['tools'], list):
+                kwargs['tools']=[kwargs['tools']]
+            kwargs['tools'] = lcall(kwargs['tools'], tool_check)
+
+        else:
+            tool_kwarg = {"tools": self.tool_manager.to_tool_schema_list()}
+            kwargs = {**tool_kwarg, **kwargs}
+
+        return kwargs
+
     async def initiate(self, instruction, system=None, context=None, 
                        name=None, invoke=True, out=True, **kwargs) -> Any:
         """
@@ -188,11 +217,12 @@ class Session:
         Returns:
             The output of the conversation if out is True, otherwise None.
         """
+        # if self.tool_manager.registry != {}:
+        #     if 'tools' not in kwargs:
+        #         tool_kwarg = {"tools": self.tool_manager.to_tool_schema_list()}
+        #         kwargs = {**tool_kwarg, **kwargs}
         if self.tool_manager.registry != {}:
-            if 'tools' not in kwargs:
-                tool_kwarg = {"tools": self.tool_manager.to_tool_schema()}
-                kwargs = {**tool_kwarg, **kwargs}
-
+            kwargs = self._tool_parser(**kwargs)
         config = {**self.llmconfig, **kwargs}
         system = system or self.system
         self.conversation.initiate_conversation(system=system, instruction=instruction, context=context, name=name)
@@ -226,10 +256,16 @@ class Session:
         if system:
             self.conversation.change_system(system)
         self.conversation.add_messages(instruction=instruction, context=context, name=name)
-        if self.tool_manager.registry != {}:
-            if 'tools' not in kwargs:
-                tool_kwarg = {"tools": self.tool_manager.to_tool_schema()}
-                kwargs = {**tool_kwarg, **kwargs}
+
+        if 'tool_parsed' in kwargs:
+            kwargs.pop('tool_parsed')
+        else:
+            if self.tool_manager.registry != {}:
+                kwargs = self._tool_parser(**kwargs)
+        # if self.tool_manager.registry != {}:
+        #     if 'tools' not in kwargs:
+        #         tool_kwarg = {"tools": self.tool_manager.to_tool_schema_list()}
+        #         kwargs = {**tool_kwarg, **kwargs}
         config = {**self.llmconfig, **kwargs}
         await self.call_chatcompletion(**config)
 
@@ -246,18 +282,20 @@ class Session:
 
             **kwargs: Additional keyword arguments for the follow-up process.
         """
+        # if self.tool_manager.registry != {}:
+        #     if 'tools' not in kwargs:
+        #         tool_kwarg = {"tools": self.tool_manager.to_tool_schema_list()}
+        #         kwargs = {**tool_kwarg, **kwargs}
         if self.tool_manager.registry != {}:
-            if 'tools' not in kwargs:
-                tool_kwarg = {"tools": self.tool_manager.to_tool_schema()}
-                kwargs = {**tool_kwarg, **kwargs}
+            kwargs = self._tool_parser(**kwargs)
 
         cont_ = True
         while num > 0 and cont_ is True:
-            await self.followup(instruct, tool_choice="auto", **kwargs)
+            await self.followup(instruct, tool_choice="auto", tool_parsed=True, **kwargs)
             num -= 1
             cont_ = True if self._is_invoked() else False
         if num == 0:
-            await self.followup(instruct, **kwargs)
+            await self.followup(instruct, **kwargs, tool_parsed=True)
 
     def messages_to_csv(self, dir=None, filename="messages.csv", **kwargs):
         """
