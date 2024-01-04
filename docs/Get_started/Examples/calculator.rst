@@ -82,13 +82,13 @@ To get their corresponding ys, we'd like to apply the following functions:
    f4 = lambda x: x//2      # y4 = x4 // 2 = 4 // 2 = 2
    f5 = lambda x: x-2       # y5 = x5 - 2 = 5 - 2 = 3
 
-LionAGI has a helper function  ``m_call`` (map call) to streamline the execution of element-wise functions. Rather than
+LionAGI has a helper function  ``mcall`` (map call) to streamline the execution of element-wise functions. Rather than
 explicitly executing each function on every element, you can achieve it in a single call.
 
 .. code-block:: python
 
    f = [f1,f2,f3,f4,f5]
-   ys = li.m_call(xs, f)
+   ys = li.mcall(xs, f)
 
 Suppose the cases for each pair of x and y are:
 
@@ -97,12 +97,12 @@ Suppose the cases for each pair of x and y are:
    cases = [1, 0, 1, 0, 1]
 
 Now, with all the necessary information in hand, let's organize it into contexts. LionAGI provides a utility function
-``l_call`` (list call) to streamline the application of a single function across an entire input list.
+``lcall`` (list call) to streamline the application of a single function across an entire input list.
 
 .. code-block:: python
 
    f = lambda i: {"x": str(a[i]), "y": str(b[i]), "case": str(cases[i])}
-   contexts = li.l_call(range(5), f)
+   contexts = li.lcall(range(5), f)
 
 If you print out the ``contexts``, it would be like this:
 
@@ -129,10 +129,10 @@ workflow for concurrent execution, running five scenarios in parallel.
         await calculator.initiate(instruct, context=context)    # run the steps
         await calculator.followup(instruct3, temperature=0.5)
 
-        return li.l_call(calculator.conversation.responses, lambda i: i['content'])
+        return li.lcall(calculator.conversation.responses, lambda i: i['content'])
 
    # al_call (async list call): async version of l_call
-   outs = await li.al_call(contexts, calculator_workflow)
+   outs = await li.alcall(contexts, calculator_workflow)
 
 Let's check our results:
 

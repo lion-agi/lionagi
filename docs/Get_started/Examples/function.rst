@@ -70,16 +70,18 @@ Let's define the necessary message information we need to pass in for our exampl
 
 With all the necessary information in place, we are now ready to construct the session.
 
-To ensure effective application of tools within the session, it's crucial to register all the necessary tools.
+To ensure effective management and application of tools within the session, it's crucial to register all the necessary tools.
 Additionally, we need to adjust the llmconfig to accommodate any additional setting requirements.
 
 .. code-block:: python
 
    session = li.Session(system=system)
 
-   session.register_tools(tools, multiply)
+   # created a tool object
+   tool = li.Tool(func=multiply, schema_=tools[0])
+
+   session.register_tools(tool)
    session.llmconfig.update({
-        "tools": tools,
         "temperature":0.35,
         "tool_choice": "auto",
         "response_format": {'type':'json_object'}
@@ -93,7 +95,7 @@ Let’s check the message records in this session:
 
 .. code-block:: python
 
-   li.l_call(session.conversation.messages, lambda x: print(str(x) + '\n'))
+   li.lcall(session.conversation.messages, lambda x: print(str(x) + '\n'))
 
 .. code-block:: markdown
 

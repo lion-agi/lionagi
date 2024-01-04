@@ -63,8 +63,7 @@ Continuing from our exploration in the previous tutorial, let's build another to
                 "required": ["context"],
             }}}]
 
-   tools2 = [tool2[0], tool3[0]]
-   funcs2 = [code_pure_python, improve_prompts]
+   tool3 = li.Tool(func=improve_prompts, schema_=tool3[0])
 
 We also need to make adjustments to the previous instruction3 to integrate the capabilities of our new tool.
 
@@ -96,15 +95,14 @@ Let's update our workflow and run it.
    # solve a coding task in pure python
    async def solve_issue(context):
 
-        coder = li.Session(system, dir=output_dir)
-        coder.register_tools(tools=tools2, funcs=funcs2)
+        coder = li.Session(system, dir=output_dir2)
+        coder.register_tools([tool1, tool2, tool3])
 
         await coder.initiate(instruct1, context=context, temperature=0.7)
-        await coder.auto_followup(instruct2, num=num, temperature=0.6, tools=tool1,
-                                   tool_parser=lambda x: x.response)
+        await coder.auto_followup(instruct2, num=num, temperature=0.6, tools=[tools[0]])
 
         # auto_followup with code interpreter tool
-        await coder.auto_followup(instruct3, num=5, temperature=0.5, tools=[tool2[0], tool3[0]])
+        await coder.auto_followup(instruct3, num=5, temperature=0.5, tools=[tools[1], tool3[0]])
 
         # save to csv
         coder.messages_to_csv()
