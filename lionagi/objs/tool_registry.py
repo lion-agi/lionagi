@@ -6,28 +6,30 @@ from ..schema import BaseNode
 
 
 class ToolManager(BaseNode):
-    registry : Dict = {}
+    registry: Dict = {}
 
     def _name_existed(self, name: str):
         return True if name in self.registry.keys() else False
             
-    def _register_tool(self, tool, name: str=None, update=False, new=False, prefix=None, postfix=None):
+    def _register_tool(self, tool): #,update=False, new=False, prefix=None, postfix=None):
         
-        if self._name_existed(name):
-            if update and new:
-                raise ValueError(f"Cannot both update and create new registry for existing function {name} at the same time")
+        # if self._name_existed(tool.name):
+        #     if update and new:
+        #         raise ValueError(f"Cannot both update and create new registry for existing function {tool.name} at the same time")
 
-            if len(name) > len(tool.func.__name__):
-                if new and not postfix: 
-                    try:
-                        idx = str_to_num(name[-3:], int)
-                        if idx > 0: 
-                            postfix = idx + 1
-                    except:
-                        pass
+            # if len(name) > len(tool.func.__name__):
+            #     if new and not postfix:
+            #         try:
+            #             idx = str_to_num(name[-3:], int)
+            #             if idx > 0:
+            #                 postfix = idx + 1
+            #         except:
+            #             pass
 
-        name = f"{prefix or ''}{name}{postfix}" if new else tool.func.__name__                
-        self.registry.update({name:tool})
+        # name = f"{prefix or ''}{name}{postfix}" if new else tool.func.__name__
+
+        name = tool.schema_['function']['name']
+        self.registry.update({name: tool})
                 
     async def invoke(self, func_call):
         name, kwargs = func_call
@@ -56,24 +58,26 @@ class ToolManager(BaseNode):
         Returns:
             Tuple[str, dict]: The function name and its arguments.
         """
-        try: 
-            # out = json.loads(response)
+        try:
             func = response['function'][5:]
             args = json.loads(response['arguments'])
             return (func, args)
         except:
             try:
-                # out = json.loads(response)
-                # out = out['tool_uses'][0]
                 func = response['recipient_name'].split('.')[-1]
                 args = response['parameters']
                 return (func, args)
             except:
                 raise ValueError('response is not a valid function call')
     
-    def register_tools(self, tools, update=False, new=False, prefix=None, postfix=None ):
-        lcall(tools, self._register_tool, update=update, new=new, prefix=prefix, postfix=postfix)
-        
+    def register_tools(self, tools): #, update=False, new=False, prefix=None, postfix=None ):
+        lcall(tools, self._register_tool) #, update=update, new=new, prefix=prefix, postfix=postfix)
+
+    def to_tool_schema(self):
+        schema_list = []
+        for tool in self.registry.values():
+            schema_list.append(tool.schema_)
+        return schema_list
 
 
 # import asyncio

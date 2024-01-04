@@ -21,6 +21,7 @@ Also, set up some parameters for future reference.
 .. code-block:: python
 
    from pathlib import Path
+   import lionagi as li
 
    # give a project name
    project_name = "autodev_lion"
@@ -34,52 +35,32 @@ Also, set up some parameters for future reference.
    # output dir
    output_dir = "data/log/coder/"
 
-First, we will search for and load all ``.py`` files within our package,
-followed by dividing them into chunks.
-
-.. code-block:: python
-
-   import lionagi as li
-
-   files = li.dir_to_files(dir=data_dir, ext=ext, clean=True, recursive=True,
-                           project=project_name, to_csv=True)
-
-   chunks = li.file_to_chunks(files, chunk_size=800,  overlap=0.1,
-                              threshold=100, to_csv=True, project=project_name)
-
-.. code-block:: markdown
-
-   19 logs saved to data/logs/sources/autodev_lion_sources_2023-12-19T15_19_50_968750.csv
-   221 logs saved to data/logs/sources/autodev_lion_sources_2023-12-19T15_19_50_970987.csv
-
-
-.. note::
-   ``dir_to_files`` and ``file_to_chunks`` are both in ``doc_util``. For more examples and detailed usage of
-   our ``doc_util``, please refer to `intro2 notebook <https://github.com/lion-agi/lionagi/blob/main/notebooks/intro2_files.ipynb>`_
-
 We are going to build a `LlamaIndex <https://www.llamaindex.ai/>`_
-`Query Engine <https://docs.llamaindex.ai/en/stable/understanding/querying/querying.html>`_ with the chunks we just created.
+`Query Engine <https://docs.llamaindex.ai/en/stable/understanding/querying/querying.html>`_ for our codebase query.
 
 .. code-block:: python
 
-   # build nodes from our existing chunks
-   from llama_index.schema import TextNode
-
-   f = lambda content: TextNode(text=content)
-   nodes = li.l_call(chunks, lambda x: f(x["chunk_content"]))
-
-   # build index
-   from llama_index import ServiceContext, VectorStoreIndex
+   from llama_index import SimpleDirectoryReader, ServiceContext, VectorStoreIndex
+   from llama_index.text_splitter import CodeSplitter
    from llama_index.llms import OpenAI
 
-   llm = OpenAI(temperature=0.1, model="gpt-4-1106-preview")
-   service_context = ServiceContext.from_defaults(llm=llm)
-   index1 = VectorStoreIndex(nodes, include_embeddings=True,
-			                 service_context=service_context)
+   splitter = CodeSplitter(
+        language="python",
+        chunk_lines=50,  # lines per chunk
+        chunk_lines_overlap=10,  # lines overlap between chunks
+        max_chars=1500,  # max chars per chunk
+   )
 
-   # set up query engine
-   query_engine = index1.as_query_engine(include_text=False,
-			                             response_mode="tree_summarize")
+   def get_query_engine(dir, splitter):
+        documents = SimpleDirectoryReader(dir, required_exts=[ext], recursive=True).load_data()
+        nodes = splitter.get_nodes_from_documents(documents)
+        llm = OpenAI(temperature=0.1, model="gpt-4-1106-preview")
+        service_context = ServiceContext.from_defaults(llm=llm)
+        index1 = VectorStoreIndex(nodes, include_embeddings=True, service_context=service_context)
+        query_engine = index1.as_query_engine(include_text=True, response_mode="tree_summarize")
+        return query_engine
+
+   query_engine = get_query_engine(dir=data_dir, splitter=splitter)
 
 Let's try to ask how session works and see what we get.
 
@@ -92,15 +73,6 @@ Let's try to ask how session works and see what we get.
    Markdown(response.response)
 
 .. image:: session_PE.png
-
-.. code-block:: python
-
-   print(response.get_formatted_sources())
-
-.. code-block:: markdown
-
-   > Source (Doc id: ad37b387-fd23-453b-af8b-9bfd1c7f8359): from .session import Session __all__ = [ "Session", ]
-   > Source (Doc id: f4aa3ed7-c8dc-45fd-841f-56871fcf8df2): import aiohttp import asyncio import json from typing import Any from .conversation import Conver...
 
 Next, we'll proceed to create an OAI assistant with code interpreter with `AutoGen <https://microsoft.github.io/autogen/>`_.
 
@@ -153,7 +125,7 @@ Next, we'll proceed to create an OAI assistant with code interpreter with `AutoG
         human_input_mode="NEVER"
    )
 
-   async def code_pure_python(instruction):
+   def code_pure_python(instruction):
         user_proxy.initiate_chat(gpt_assistant, message=instruction)
         return gpt_assistant.last_message()
 
@@ -162,7 +134,7 @@ adhering to the OpenAI schema.
 
 .. code-block:: python
 
-   tool1 = [{
+   tools = [{
             "type": "function",
             "function": {
                 "name": "query_lionagi_codebase",
@@ -179,10 +151,8 @@ adhering to the OpenAI schema.
                     "required": ["str_or_query_bundle"],
                 },
             }
-        }
-   ]
-
-   tool2 = [{
+        },
+        {
             "type": "function",
             "function": {
                 "name": "code_pure_python",
@@ -202,8 +172,8 @@ adhering to the OpenAI schema.
         }
    ]
 
-   tools = [tool1[0], tool2[0]]
-   funcs = [query_engine.query, code_pure_python]
+   tool1 = li.Tool(func=query_engine.query, parser=lambda x: x.response, schema_=tools[0])
+   tool2 = li.Tool(func=code_pure_python, schema_=tools[1])
 
 Let's craft prompts for solving coding tasks.
 
@@ -294,21 +264,20 @@ With all instructions and tools set up, we can define our workflow now.
 .. code-block:: python
 
    # solve a coding task in pure python
-   async def solve_in_python(context, num=10):
+   async def solve_in_python(context, num=4):
 
         # set up session and register both tools to session
-        coder = li.Session(system, dir=dir)
-        coder.register_tools(tools=tools, funcs=funcs)
+        coder = li.Session(system, dir=output_dir)
+        coder.register_tools([tool1, tool2])
 
         # initiate should not use tools
         await coder.initiate(instruct1, context=context, temperature=0.7)
 
          # auto_followup with QA bot tool
-        await coder.auto_followup(instruct2, num=num, temperature=0.6, tools=tool1,
-                                  tool_parser=lambda x: x.response)
+        await coder.auto_followup(instruct2, num=num, temperature=0.6, tools=[tools[0]])
 
          # auto_followup with code interpreter tool
-        await coder.auto_followup(instruct3, num=2, temperature=0.5, tools=tool2)
+        await coder.auto_followup(instruct3, num=2, temperature=0.5, tools=[tools[1]])
 
         # save to csv
         coder.messages_to_csv()
@@ -338,6 +307,6 @@ How about tasking our developer with designing a File class and a Chunk class fo
    import json
 
    response = json.loads(response)
-   Markdown(response['function call result']['content'])
+   Markdown(response['output']['content'])
 
 .. image:: coder_PE.png

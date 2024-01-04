@@ -1,20 +1,20 @@
-OpenAI API Calls Configurations
+API Calls Configurations
 ===============================
 
-LionAGI natively supports OpenAI API calls. You have the flexibility to customize models, adjust model parameters, and
-tailor API service settings.
+You The ``Session`` object can be fully customized, including models, model parameters and rate limits, to accustom various usecases.
 
 .. warning::
+
    ❗❗Calling API with maximum throughput over large set of data with advanced models i.e. gpt-4 can
    get **EXPENSIVE IN JUST SECONDS**
 
 
 Most usefully you can customize:
 
-- ``oai_llmconfig``: the default model parameters for every API call
-- ``OpenAIService``: the default settings for the API service
+- ``llmconfig``: the default model parameters for every API call in the session
+- ``api_service``:  rate limit api_service
 
-``oai_llmconfig``
+``llmconfig``
 -----------------
 
 Currently, our default llmconfig for Open AI API calls is
@@ -36,68 +36,43 @@ Currently, our default llmconfig for Open AI API calls is
    'tool_choice': 'none',
    'user': None}
 
-If you wish to change the default behavior, you can update the configuration using ``lionagi.oai_llmconfig``.
-For example:
+if you wish to change the default behavior of a session
+
+- you can either pass in a new llmconfig into the Session
 
 .. code-block:: python
 
-   import lionagi as li
+   llmconfig_ = {...}
+   session = li.Session(system, llmconfig=llmconfig_)
 
-   li.oai_llmconfig['model'] = 'gpt-3.5-turbo'
-
-or
-
-.. code-block:: python
-
-   li.oai_llmconfig.update({'model': 'gpt-3.5-turbo'})
-
-Alternatively, you can make changes in the ``Session``.
-
-- Pass in a new llmconfig into the ``Session``. (Recommended for completely different config)
-
-For example:
+- or update the config in the session directly
 
 .. code-block:: python
 
-   import lionagi as li
+   session.set_llmconfig(llmconfig_)
+   # or
+   session.llmconfig.update(llmconfig_)
 
-   system = 'you are a helpful assistant'
-   customized_llmconfig = {...} # your customized llmconfig setting
 
-   session = li.Session(system=system, llmconfig=customized_llmconfig)
 
-Or
 
-- Update directly in the session.
-
-For example:
-
-.. code-block:: python
-
-   import lionagi as li
-
-   system = 'you are a helpful assistant'
-
-   session = li.Session(system)
-   session.llmconfig.update({"model": "gpt-3.5-turbo", "temperature": 0.5})
-
-``OpenAIService``
+``api_service``
 -----------
 
-``OpenAIService`` provides a foundation for seamless integration and utilization of the API service. By default, the
-rate limits are set to be **tier 1** of OpenAI model `gpt-4-1104-preview`.
+``api_service`` provides a foundation for seamless integration and utilization of the API service. By default, the
+service is set to be OpenAI api service and the rate limits are set to be **tier 1** of OpenAI model ``gpt-4-1104-preview``.
 
 
-You can modify rate limits to fit different cases. For example:
+You may modify rate limits to fit different cases. For example:
 
 .. code-block:: python
 
-   import lionagi as li
+   from lionagi.services import OpenAIService
 
    system = 'you are a helpful assistant'
 
-   api_service = li.OpenAIService(max_requests_per_minute=10, max_tokens_per_minute=10000)
-   session = li.Session(system, api_service)
+   service = OpenAIService(max_requests_per_minute=10, max_tokens_per_minute=10_000)
+   session = li.Session(system, service=service)
 
 .. note::
 
@@ -115,9 +90,14 @@ OPENAI_API_KEY, ensure it is appropriately specified in the configuration.
    # let's say you added the second API key OPENAI_API_KEY2
    api_key2 = os.getenv("OPENAI_API_KEY2")
 
-   api_service = li.OpenAIService(api_key=api_key2)
-   session = li.Session(system, api_service=api_service)
+   service = OpenAIService(api_key=api_key2)
+   session = li.Session(system, service=service)
 
 .. note::
 
    If you wish to apply the same ``api_service`` setting across multiple sessions, make sure to pass it to each of these sessions.
+
+   .. code-block::
+
+      session2 = li.Session(system, service=service)
+      session3 = li.Session(system, service=service)

@@ -75,7 +75,7 @@ def load(reader: Union[str, Callable],
         load_kwargs (dict): Keyword arguments for the loader function. Defaults to an empty dict.
         
         to_datanode (Union[bool, Callable]): Determines whether to convert the result into DataNode instances, or
-                                             a callable to convert the result. Defaults to True.
+        a callable to convert the result. Defaults to True.
     
     Returns:
         List[Any]: A list of loaded and potentially parsed documents.

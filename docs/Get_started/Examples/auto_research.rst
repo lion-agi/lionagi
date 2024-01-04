@@ -50,6 +50,8 @@ The query engine is set up and ready, we can proceed to write the tool descripti
 
 .. code-block:: python
 
+   import lionagi as li
+
    tools = [
         {
             "type": "function",
@@ -75,7 +77,7 @@ The query engine is set up and ready, we can proceed to write the tool descripti
 
    # we will need to register both the function description
    # and actual implementation
-   func = query_engine.query
+   tool = li.Tool(func=query_engine.query, parser=lambda x: x.response, schema_=tools[0])
 
 Central to LionAGI’s power is its facilitation of sophisticated workflow manipulation. Let’s explore how to craft
 prompts and set up a session for an automated research assistant.
@@ -160,7 +162,6 @@ Next, we define and run the workflow that will manage our research session:
 .. code-block:: python
 
    # Research Assistant Workflow
-   import lionagi as li
 
 
    # read an abstract, then check against a vector store of papers, and suggest
@@ -202,7 +203,7 @@ With asynchronous programming, executing this workflow becomes a breeze:
    abstracts = [x.text for x in abstracts][8:13]
 
    # Running the workflow coroutine for each abstract using li.al_call
-   outs = await li.al_call(abstracts, read_propose)
+   outs = await li.alcall(abstracts, read_propose)
 
 .. code-block:: python
 
