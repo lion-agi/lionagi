@@ -1,17 +1,7 @@
 from .base_endpoint import BaseEndpoint
 
-    # @abc.abstractmethod
-    # def process_response(self, response):
-    #     """
-    #     Process the response from the API call.
-        
-    #     Parameters:
-    #         response: The response to process.
-    #     """
-    #     pass
 
-
-class ChatCompletion(BaseEndpoint):
+class Audio(BaseEndpoint):
     endpoint: str = "chat/completions"
 
     @classmethod
@@ -25,7 +15,3 @@ class ChatCompletion(BaseEndpoint):
             if bool(config[key]) is True and str(config[key]).lower() != "none":
                 payload.update({key: config[key]})
         return payload
-    
-    # def process_response(self, session, payload, completion):
-    #     ...
-        
