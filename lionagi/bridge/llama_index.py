@@ -36,6 +36,7 @@ def to_llama_index_textnode(datanode: T, **kwargs: Any) -> Any:
     dnode = datanode.to_dict()
     change_dict_key(dnode, old_key='content', new_key='text')
     change_dict_key(dnode, old_key='node_id', new_key='id_')
+    dnode['text'] = str(dnode['text'])
     
     dnode = {**dnode, **kwargs}
     return TextNode.from_dict(dnode)
