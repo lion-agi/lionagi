@@ -2,8 +2,7 @@ from os import getenv
 from .base_api_service import BaseAPIService, BaseAPIRateLimiter
 
 class OpenRouterService(BaseAPIService):
-    _key_scheme = "OPENROUTER_API_KEY"
-
+    key_scheme = "OPENROUTER_API_KEY"
     base_url = "https://openrouter.ai/api/v1/"
 
     def __init__(
@@ -18,7 +17,7 @@ class OpenRouterService(BaseAPIService):
         queue = None,
     ):
         super().__init__(
-            api_key = api_key or getenv(self._key_scheme),
+            api_key = api_key or getenv(self.key_scheme),
             status_tracker = status_tracker,
             queue = queue,
             ratelimiter=ratelimiter,

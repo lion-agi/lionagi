@@ -277,3 +277,4 @@ class StatusTracker:
     num_rate_limit_errors: int = 0
     num_api_errors: int = 0
     num_other_errors: int = 0
+    
