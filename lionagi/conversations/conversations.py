@@ -1,5 +1,5 @@
 from typing import List, Any
-from .messages import Message, Response
+from ..messages.message import Message, Response
 from ..objs.messenger import Messenger
 from ..structure.structure import Structure
 
