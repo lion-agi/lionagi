@@ -1,13 +1,14 @@
+from typing import List, Any
+from .messages import Message, Response
 from ..objs.messenger import Messenger
+from ..structure.structure import Structure
 
 
-class Conversation:
-    response_counts = 0
-    
-    def __init__(self, messages=None) -> None:
-        self.messages = messages or []
-        self.msgr = Messenger()
-        self.responses = []
+class Conversation(Structure):
+    response_counts : int = 0
+    messages: List[Message] = []
+    msgr : Any = Messenger()
+    responses: List[Response] = []
 
     def initiate_conversation(
         self, 
@@ -31,12 +32,29 @@ class Conversation:
     def change_system(self, system):
         self.messages[0] = self.msgr.create_message(system=system)
 
-    def keep_last_n_exchanges(self, n: int):
-        # keep last n_exchanges, one exchange is marked by one assistant response
-        response_indices = [
-            index for index, message in enumerate(self.messages[1:]) if message["role"] == "assistant"
-        ]
-        if len(response_indices) >= n:
-            first_index_to_keep = response_indices[-n] + 1
-            self.messages = [self.system] + self.messages[first_index_to_keep:]
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+    # def keep_last_n_exchanges(self, n: int):
+    #     # keep last n_exchanges, one exchange is marked by one assistant response
+    #     response_indices = [
+    #         index for index, message in enumerate(self.messages[1:]) if message["role"] == "assistant"
+    #     ]
+    #     if len(response_indices) >= n:
+    #         first_index_to_keep = response_indices[-n] + 1
+    #         self.messages = [self.system] + self.messages[first_index_to_keep:]
             

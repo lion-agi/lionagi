@@ -1,6 +1,6 @@
 from typing import TypeVar, Dict, Optional, Any, Type, Union, List
 from pydantic import Field
-from ..schema.base_schema import BaseNode
+from ..schema import BaseNode
 from .relationship import Relationship
 
 T = TypeVar('T', bound='BaseNode')
