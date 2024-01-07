@@ -34,21 +34,6 @@ class Conversation(Structure):
 
 
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
     # def keep_last_n_exchanges(self, n: int):
     #     # keep last n_exchanges, one exchange is marked by one assistant response
     #     response_indices = [

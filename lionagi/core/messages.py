@@ -2,7 +2,6 @@ import json
 from typing import Any, Optional
 from ..schema import BaseNode
 
-
 class Message(BaseNode):
 
     role: Optional[str] = None
@@ -68,5 +67,4 @@ class Response(Message):
         except:
             self.name = name or "func_call"
             self.content = response
-
         
