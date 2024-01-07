@@ -21,7 +21,7 @@ from .call_util import (
     )
 
 from .io_util import to_temp, to_csv, append_to_jsonl
-from ..loader.load_utils import dir_to_path, dir_to_nodes,  chunk_text, read_text, file_to_chunks
+from ..loaders.load_utils import dir_to_path, dir_to_nodes,  chunk_text, read_text, file_to_chunks
 from ..schema.type_util import str_to_num, to_list
 from ..tools.tool_util import func_to_schema
 

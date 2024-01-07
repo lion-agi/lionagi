@@ -1,7 +1,7 @@
 from typing import List, Any
 from ..messages.message import Message, Response
 from ..objs.messenger import Messenger
-from ..structure.structure import Structure
+from ..structures.structure import Structure
 
 
 class Conversation(Structure):

@@ -19,7 +19,7 @@ from .version import __version__
 
 from .utils import *
 from .schema import *
-from .structure import *
+from .structures import *
 from .core import *
 from .objs import *
 # from .datastore import *

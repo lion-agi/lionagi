@@ -5,7 +5,7 @@ from dotenv import load_dotenv
 from ..schema import DataLogger
 from ..utils import lcall, alcall
 from ..services import OpenAIService, ChatCompletion
-from ..conversations.conversations import Conversation
+from ..conversations.conversation import Conversation
 from ..objs.tool_registry import ToolManager
 from ..configs.oai_configs import oai_schema
 from ..schema.base_tool import Tool
