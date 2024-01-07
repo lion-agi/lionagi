@@ -6,7 +6,7 @@ from ..schema import DataLogger
 from ..utils import lcall, alcall
 from ..services import OpenAIService, ChatCompletion
 from ..conversations.conversation import Conversation
-from ..objs.tool_registry import ToolManager
+from ..objs.tool_manager import ToolManager
 from ..configs.oai_configs import oai_schema
 from ..schema.base_tool import Tool
 
