@@ -3,7 +3,7 @@ import json
 import os
 import tempfile
 from typing import Any, Dict, List
-from .type_util import to_list
+from ..schema.type_util import to_list
 
 
 def to_temp(input: Any, 

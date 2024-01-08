@@ -1,11 +1,26 @@
 import math
+from enum import Enum
 from pathlib import Path
 from typing import List, Union, Dict, Any, Tuple
 
-from .type_util import to_list
-from .call_util import lcall
-from .io_util import to_csv
+from ..schema.type_util import to_list
+from ..utils.call_util import lcall
 from ..schema.base_schema import DataNode
+
+class ReaderType(str, Enum):
+    PLAIN = 'PLAIN'
+    LANGCHAIN = 'langchain'
+    LLAMAINDEX = 'llama_index'
+    SELFDEFINED = 'self_defined'
+
+
+class ChunkerType(str, Enum):
+    PLAIN = 'plain'                 # default
+    LANGCHAIN = 'langchain'         # using langchain functions
+    LLAMAINDEX = 'llama_index'      # using llamaindex functions
+    SELFDEFINED = 'self_defined'    # create custom functions
+    
+    
 
 
 def dir_to_path(

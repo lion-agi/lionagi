@@ -1,7 +1,8 @@
-from typing import Union, Callable, List, Dict, Any
-from ..schema.base_schema import T, DataNode
+from typing import Union, Callable, List, Dict, Any, TypeVar
+from ..schema.base_schema import DataNode
 from ..utils.sys_util import change_dict_key
 
+T = TypeVar('T', bound='DataNode')
 
 def from_langchain(lc_doc: Any) -> T:
     """

@@ -1,7 +1,8 @@
-from typing import Union, Callable, List, Any, Dict
-from ..schema.base_schema import DataNode, T
+from typing import Union, Callable, List, Any, Dict, TypeVar
+from ..schema.base_schema import DataNode
 from ..utils.sys_util import change_dict_key
 
+T = TypeVar('T', bound='DataNode')
 
 def from_llama_index(llama_node: Any, **kwargs: Any) -> T:
     """

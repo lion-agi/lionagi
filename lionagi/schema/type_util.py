@@ -1,7 +1,7 @@
 import re
 from typing import Optional, Union, Iterable, List, Any, Type
 
-from .flat_util import flatten_list
+from ..utils import flatten_list
 
 
 def str_to_num(input_: str, 

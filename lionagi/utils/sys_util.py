@@ -13,6 +13,7 @@ Copyright 2023 HaiyangLi <ocean@lionagi.ai>
    See the License for the specific language governing permissions and
    limitations under the License.
 """
+
 import os
 import copy
 import hashlib
@@ -164,6 +165,27 @@ def get_bins(input: List[str], upper: int = 7500) -> List[List[int]]:
     
     return bins
 
+def change_dict_key(dict_, old_key, new_key):
+    dict_[new_key] = dict_.pop(old_key)
+
+def timestamp_to_datetime(timestamp: int) -> str:
+    if isinstance(timestamp, str):
+        try:
+            timestamp = int(timestamp)
+        except:
+            return timestamp
+    return datetime.fromtimestamp(timestamp).strftime('%Y-%m-%d %H:%M:%S')
+
+# def parse_function_call(response: str) -> Tuple[str, Dict]:
+#     out = json.loads(response)
+#     func = out.get('function', '').lstrip('call_')
+#     args = json.loads(out.get('arguments', '{}'))
+#     return func, args
+
+
+
+# ------------------------------------------------------------------------
+# credit to OpenAI for the following functions
 def task_id_generator() -> Generator[int, None, None]:
     """
     A generator function that yields a sequential series of task IDs.
@@ -180,12 +202,3 @@ def task_id_generator() -> Generator[int, None, None]:
     while True:
         yield task_id
         task_id += 1
-
-def change_dict_key(dict_, old_key, new_key):
-    dict_[new_key] = dict_.pop(old_key)
-
-# def parse_function_call(response: str) -> Tuple[str, Dict]:
-#     out = json.loads(response)
-#     func = out.get('function', '').lstrip('call_')
-#     args = json.loads(out.get('arguments', '{}'))
-#     return func, args

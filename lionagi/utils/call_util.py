@@ -3,7 +3,7 @@ import time
 from typing import Any, Callable, List, Optional, Union
 
 from .sys_util import create_copy
-from .type_util import to_list
+from ..schema.type_util import to_list
 
 
 def hcall(
