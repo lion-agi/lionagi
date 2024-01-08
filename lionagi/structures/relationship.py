@@ -125,4 +125,12 @@ class Relationship(BaseNode):
             raise ValueError(f"Target node {self.source_node_id} does not exist")
         else :
             raise ValueError(f"Source node {self.target_node_id} does not exist")
-        
+
+    def __str__(self) -> str:
+        """Returns a simple string representation of the Relationship."""
+        return f"Relationship (id_={self.id_}, from={self.source_node_id}, to={self.target_node_id}, label={self.label})"
+
+    def __repr__(self) -> str:
+        """Returns a detailed string representation of the Relationship."""
+        return f"Relationship(id_={self.id_}, from={self.source_node_id}, to={self.target_node_id}, content={self.content}, " \
+               f"metadata={self.metadata}, label={self.label})"

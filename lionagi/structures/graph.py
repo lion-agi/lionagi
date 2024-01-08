@@ -77,3 +77,20 @@ class Graph(BaseNode):
             return True
         else:
             return False
+
+    def to_networkx(self, **kwargs):
+        import networkx as nx
+        g = nx.DiGraph(**kwargs)
+        for node_id, node in self.nodes.items():
+            node_info = node.to_dict()
+            node_info.pop('node_id')
+            g.add_node(node_id, **node_info)
+
+        for relationship_id, relationship in self.relationships.items():
+            relationship_info = relationship.to_dict()
+            relationship_info.pop('node_id')
+            source_node_id = relationship_info.pop('source_node_id')
+            target_node_id = relationship_info.pop('target_node_id')
+            g.add_edge(source_node_id, target_node_id, **relationship_info)
+
+        return g
