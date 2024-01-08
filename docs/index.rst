@@ -127,6 +127,6 @@ Python 3.9 or higher.
 
    API_reference/core_index.rst
    API_reference/utils_index.rst
-   API_reference/loader_index.rst
+   API_reference/loaders_index.rst
    API_reference/schema_index.rst
    API_reference/bridge_index.rst
