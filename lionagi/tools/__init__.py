@@ -1,5 +1,5 @@
-from .tool_util import func_to_schema
+from .tool_util import func_to_tool
 
 __all__ = [
-    "func_to_schema"
+    "func_to_tool"
 ]
