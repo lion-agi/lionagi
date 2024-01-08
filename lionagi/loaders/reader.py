@@ -2,7 +2,7 @@ from typing import Union, Callable
 
 from ..bridge import langchain_loader, from_langchain, llama_index_reader, from_llama_index
 from ..utils import lcall
-from .load_utils import dir_to_nodes, ReaderType
+from .load_util import dir_to_nodes, ReaderType
 
 
 def _datanode_parser(nodes, parser):

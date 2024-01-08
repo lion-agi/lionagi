@@ -1,4 +1,4 @@
-from .sessions import Session
+from ..core.sessions import Session
 
 def get_config(temperature, max_tokens, key_scheme, n):
     f = lambda i:{

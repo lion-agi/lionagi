@@ -1,5 +1,5 @@
 from collections import deque
-from typing import List, Optional
+from typing import Optional
 from ..utils.sys_util import create_path
 from ..utils.io_util import to_csv
 

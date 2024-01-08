@@ -3,7 +3,7 @@ import json
 import os
 import tempfile
 from typing import Any, Dict, List
-from ..schema.type_util import to_list
+from .convert_util import to_list
 
 
 def to_temp(input: Any, 
@@ -78,7 +78,6 @@ def to_csv(input: List[Dict[str, Any]]=None,
         writer = csv.DictWriter(csv_file, fieldnames=input[0].keys())
         writer.writeheader()
         writer.writerows(input)
-
 
 def append_to_jsonl(data: Any, filepath: str) -> None:
     """
