@@ -14,12 +14,13 @@ Copyright 2023 HaiyangLi <ocean@lionagi.ai>
    limitations under the License.
 """
 
+# this module has no internal dependency 
 import os
 import copy
 import hashlib
 from pathlib import Path
 from datetime import datetime
-from typing import Any, Generator, List
+from typing import Any, Generator, List, Dict
 
 def create_copy(input: Any, n: int) -> Any:
     """
@@ -176,13 +177,34 @@ def timestamp_to_datetime(timestamp: int) -> str:
             return timestamp
     return datetime.fromtimestamp(timestamp).strftime('%Y-%m-%d %H:%M:%S')
 
+def is_schema(dict_: Dict, schema: Dict):
+    for key, expected_type in schema.items():
+        if not isinstance(dict_[key], expected_type):
+            return False
+    return True
+
+def create_hash(data: str, algorithm: str = 'sha256') -> str:
+    """
+    Generates a hash for the given data using the specified algorithm.
+
+    Parameters:
+        data (str): The data to be hashed.
+        algorithm (str): The hashing algorithm to use (e.g., 'sha256', 'md5').
+
+    Returns:
+        str: The generated hash string.
+    """
+    hasher = hashlib.new(algorithm)
+    hasher.update(data.encode())
+    return hasher.hexdigest()
+
+
+
 # def parse_function_call(response: str) -> Tuple[str, Dict]:
 #     out = json.loads(response)
 #     func = out.get('function', '').lstrip('call_')
 #     args = json.loads(out.get('arguments', '{}'))
 #     return func, args
-
-
 
 # ------------------------------------------------------------------------
 # credit to OpenAI for the following functions

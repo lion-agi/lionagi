@@ -13,7 +13,8 @@ install_requires = [
     "aiohttp",
     "python-dotenv",
     "tiktoken", 
-    "pydantic"
+    "pydantic",
+    "cryptography"
 ]
 
 setuptools.setup(

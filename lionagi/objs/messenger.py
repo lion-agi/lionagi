@@ -1,9 +1,9 @@
 from collections import deque
 from typing import Optional, Any, Union, Dict, Tuple
 
-from ..utils.call_util import lcall
-from ..schema.data_logger import DataLogger
-from ..messages import Message, Response, Instruction, System
+from lionagi.utils.call_util import lcall
+from lionagi.schema.data_logger import DataLogger
+from lionagi.messages import Message, Response, Instruction, System
 
 
 class Messenger:

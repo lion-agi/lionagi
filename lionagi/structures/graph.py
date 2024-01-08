@@ -1,6 +1,6 @@
 from pydantic import Field
 
-from lionagi.schema.base_schema import BaseNode
+from lionagi.schema.base_node import BaseNode
 from .relationship import Relationship
 from lionagi.utils.call_util import lcall
 

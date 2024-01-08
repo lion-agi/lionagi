@@ -1,3 +1,4 @@
+# this module has no internal dependency 
 from typing import Dict, Iterable, List, Any, Callable, Generator, Tuple
 
 
@@ -486,6 +487,43 @@ def unflatten_dict_with_custom_logic(
         modified_last_part, modified_value = logic_func(last_part, value)
         d[modified_last_part] = modified_value
     return reconstructed
+
+def to_list(input_: Any, flatten: bool = True, dropna: bool = False) -> List[Any]:
+    """
+    Converts the input to a list, optionally flattening it and dropping None values.
+
+    Parameters:
+        input_ (Any): The input to convert to a list.
+        
+        flatten (bool): Whether to flatten the input if it is a nested list. Defaults to True.
+        
+        dropna (bool): Whether to drop None values from the list. Defaults to False.
+
+    Returns:
+        List[Any]: The input converted to a list.
+
+    Raises:
+        ValueError: If the input cannot be converted to a list.
+    """
+    if isinstance(input_, list) and flatten:
+        input_ = flatten_list(input_)
+        if dropna:
+            input_ = [i for i in input_ if i is not None]
+    elif isinstance(input_, Iterable) and not isinstance(input_, (str, dict)):
+        try:
+            input_ = list(input_)
+        except:
+            raise ValueError("Input cannot be converted to a list.")
+    else:
+        input_ = [input_]
+    return input_
+
+
+
+
+
+
+
 
 # def dynamic_unflatten(flat_dict, sep='_', custom_logic=None, max_depth=None):
 #     """
