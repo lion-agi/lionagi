@@ -1,5 +1,5 @@
 from typing import Any
-from .base_schema import BaseNode
+from .base_node import BaseNode
 
 class Tool(BaseNode):
     # name: str = None

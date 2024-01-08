@@ -1,5 +1,5 @@
 from typing import Union, Callable, List, Any, Dict, TypeVar
-from ..schema.base_schema import DataNode
+from ..schema.base_node import DataNode
 from ..utils.sys_util import change_dict_key
 
 T = TypeVar('T', bound='DataNode')

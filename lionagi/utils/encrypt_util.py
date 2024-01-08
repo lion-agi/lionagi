@@ -1,6 +1,6 @@
 from cryptography.fernet import Fernet
 
-def generate_key() -> str:
+def generate_encryption_key() -> str:
     """Generates a key for encryption."""
     return Fernet.generate_key().decode()
 

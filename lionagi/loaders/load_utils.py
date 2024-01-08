@@ -5,7 +5,7 @@ from typing import List, Union, Dict, Any, Tuple
 
 from ..schema.type_util import to_list
 from ..utils.call_util import lcall
-from ..schema.base_schema import DataNode
+from ..schema.base_node import DataNode
 
 class ReaderType(str, Enum):
     PLAIN = 'PLAIN'

@@ -106,10 +106,5 @@ class Message(BaseNode):
         )
         return f"Message(role={self.role}, name={self.name}, content='{content_preview}')"
 
-    def __repr__(self):
-        """
-        Official string representation of Message object.
-        Utilizes the json representation of the object for clarity.
-        """
-        return f"{self.__class__.__name__}({self.to_json()})"
+
     
