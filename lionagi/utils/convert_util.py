@@ -1,9 +1,8 @@
+# this module has no internal dependency 
 import inspect
 import re
 import xml.etree.ElementTree as ET
-from typing import Optional, Union, Iterable, List, Any, Type, Dict
-
-from .flat_util import flatten_list
+from typing import Optional, Union, Any, Type, Dict
 
 
 def str_to_num(input_: str, 
@@ -52,36 +51,6 @@ def str_to_num(input_: str,
     except ValueError as e:
         raise ValueError(f"Error converting string to number: {e}")
     
-def to_list(input_: Any, flatten: bool = True, dropna: bool = False) -> List[Any]:
-    """
-    Converts the input to a list, optionally flattening it and dropping None values.
-
-    Parameters:
-        input_ (Any): The input to convert to a list.
-        
-        flatten (bool): Whether to flatten the input if it is a nested list. Defaults to True.
-        
-        dropna (bool): Whether to drop None values from the list. Defaults to False.
-
-    Returns:
-        List[Any]: The input converted to a list.
-
-    Raises:
-        ValueError: If the input cannot be converted to a list.
-    """
-    if isinstance(input_, list) and flatten:
-        input_ = flatten_list(input_)
-        if dropna:
-            input_ = [i for i in input_ if i is not None]
-    elif isinstance(input_, Iterable) and not isinstance(input_, (str, dict)):
-        try:
-            input_ = list(input_)
-        except:
-            raise ValueError("Input cannot be converted to a list.")
-    else:
-        input_ = [input_]
-    return input_
-
 def dict_to_xml(data: Dict[str, Any], root_tag: str = 'node') -> str:
     """
     Helper method to convert a dictionary to an XML string.

@@ -1,3 +1,4 @@
+# this module has no internal dependency 
 from cryptography.fernet import Fernet
 
 def generate_encryption_key() -> str:
