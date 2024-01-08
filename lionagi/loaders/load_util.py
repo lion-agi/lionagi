@@ -1,11 +1,12 @@
+# use utils and schema
 import math
 from enum import Enum
 from pathlib import Path
 from typing import List, Union, Dict, Any, Tuple
 
-from ..utils.convert_util import to_list
+from ..utils.flat_util import to_list
 from ..utils.call_util import lcall
-from ..schema.base_node import DataNode
+from ..schema.data_node import DataNode
 
 class ReaderType(str, Enum):
     PLAIN = 'PLAIN'
