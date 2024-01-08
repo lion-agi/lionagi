@@ -1,4 +1,4 @@
-from .base_endpoint import BaseEndpoint
+from ..objs.abc_objs import BaseEndpoint
 
 
 class ChatCompletion(BaseEndpoint):
