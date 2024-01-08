@@ -3,6 +3,7 @@ import asyncio
 from typing import Dict
 from ..utils import lcall, str_to_num
 from ..schema import BaseNode
+from ..schema.base_tool import Tool
 
 
 class ToolManager(BaseNode):
@@ -28,6 +29,8 @@ class ToolManager(BaseNode):
 
         # name = f"{prefix or ''}{name}{postfix}" if new else tool.func.__name__
 
+        if not isinstance(tool, Tool):
+            raise TypeError('Please register a Tool object.')
         name = tool.schema_['function']['name']
         self.registry.update({name: tool})
                 
@@ -73,7 +76,7 @@ class ToolManager(BaseNode):
     def register_tools(self, tools): #, update=False, new=False, prefix=None, postfix=None ):
         lcall(tools, self._register_tool) #, update=update, new=new, prefix=prefix, postfix=postfix)
 
-    def to_tool_schema(self):
+    def to_tool_schema_list(self):
         schema_list = []
         for tool in self.registry.values():
             schema_list.append(tool.schema_)

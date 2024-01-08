@@ -79,6 +79,25 @@ def langchain_text_splitter(data: Union[str, List],
                             splitter_args: List[Any] = [], 
                             splitter_kwargs: Dict[str, Any] = {}) -> List[str]:
 
+    """
+    Splits text or a list of documents using a specified langchain text splitter.
+
+    Parameters:
+        data (Union[str, List]): The input text or list of documents to be split.
+
+        splitter (Union[str, Callable]): The name of the text splitter function or the function itself.
+
+        splitter_args (List[Any]): Positional arguments to pass to the splitter function.
+
+        splitter_kwargs (Dict[str, Any]): Keyword arguments to pass to the splitter function.
+
+    Returns:
+        List[str]: A list of chunks obtained by splitting the input.
+
+    Raises:
+        ValueError: If the specified text splitter is invalid or if the splitting fails.
+    """
+
     import langchain.text_splitter as text_splitter
 
     try:
