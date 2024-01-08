@@ -1,6 +1,7 @@
 from typing import TypeVar
 from .graph import Graph
 from ..schema import BaseNode
+from .relationship import Relationship
 
 T = TypeVar('T', bound='BaseNode')
 R = TypeVar('R', bound='Relationship')
