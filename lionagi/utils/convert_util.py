@@ -91,7 +91,7 @@ def xml_to_dict(element: ET.Element) -> Dict[str, Any]:
             dict_data[child.tag] = child.text
     return dict_data
 
-def _extract_docstring_details_google(func):
+def extract_docstring_details_google(func):
     docstring = inspect.getdoc(func)
     if not docstring:
         return "No description available.", {}
@@ -124,7 +124,7 @@ def _extract_docstring_details_google(func):
             break
     return func_description, params_description
 
-def _extract_docstring_details_rest(func):
+def extract_docstring_details_rest(func):
     docstring = inspect.getdoc(func)
     if not docstring:
         return "No description available.", {}
@@ -148,9 +148,9 @@ def _extract_docstring_details_rest(func):
 
 def extract_docstring_details(func, style='google'):
     if style == 'google':
-        func_description, params_description = _extract_docstring_details_google(func)
+        func_description, params_description = extract_docstring_details_google(func)
     elif style == 'reST':
-        func_description, params_description = _extract_docstring_details_rest(func)
+        func_description, params_description = extract_docstring_details_rest(func)
     else:
         raise ValueError(f'{style} is not supported. Please choose either "google" or "reST".')
     return func_description, params_description
