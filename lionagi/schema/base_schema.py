@@ -3,7 +3,7 @@ import xml.etree.ElementTree as ET
 from typing import Any, Dict, Optional, TypeVar, Type, List, Callable, Union
 from pydantic import BaseModel, Field, AliasChoices
 
-from ..utils.sys_util import create_id
+from ..utils.sys_util import create_id, is_schema, dict_to_xml, change_dict_key
 
 T = TypeVar('T', bound='BaseNode')
 
@@ -38,7 +38,7 @@ class BaseNode(BaseModel):
         validate_assignment = True
         str_strip_whitespace = True
 
-    # ----------------- construct nodes from [json, dict, xml] ----------------------
+    # ----------------- from-to [json, dict, xml] ----------------------
     @classmethod
     def from_dict(cls, data: Dict[str, Any]) -> T:
         """Creates a node instance from a dictionary."""
@@ -53,8 +53,21 @@ class BaseNode(BaseModel):
         except json.JSONDecodeError as e:
             raise ValueError("Invalid JSON string provided for deserialization.") from e
 
+    @classmethod
+    def from_xml(cls, xml_str: str) -> 'BaseNode':
+        """
+        Creates a BaseNode instance from an XML string.
 
-    # --------------------- convert nodes to [json, dict, xml] -----------------------
+        Parameters:
+            xml_str (str): The XML string representing a BaseNode.
+
+        Returns:
+            BaseNode: An instance of BaseNode created from the XML data.
+        """
+        root = ET.fromstring(xml_str)
+        data = cls._xml_to_dict(root)
+        return cls(**data)
+
     def to_json(self) -> str:
         """Converts the node instance into JSON string representation."""
         return self.model_dump_json(by_alias=True)
@@ -65,8 +78,8 @@ class BaseNode(BaseModel):
     
     def to_xml(self) -> str:
         """Converts the node instance into XML string representation."""
-        return self._dict_to_xml(self.to_dict())
-
+        return dict_to_xml(self.to_dict())
+    
 
     # -------------------------- metadata manipulation -----------------------------------
     def set_meta(self, metadata_: Dict[str, Any]) -> None:
@@ -76,19 +89,22 @@ class BaseNode(BaseModel):
         """Retrieves a value from the metadata by key."""
         return self.metadata.get(key)
 
-    def update_meta_key(self, key: str, value: Any) -> None:
+    def change_meta_key(self, old_key: str, new_key: str) -> None:
         """Updates or adds a key-value pair in the metadata."""
-        self.metadata[key] = value
+        change_dict_key(self.metadata,old_key=old_key, new_key=new_key)
 
     def delete_meta_key(self, key: str) -> None:
         """Deletes a key from the metadata."""
         if key in self.metadata:
             del self.metadata[key]
-
+            
     def merge_metadata(self, other_metadata: Dict[str, Any], overwrite: bool = True) -> None:
         """Merges another dictionary into the node's metadata."""
         if not overwrite:
-            other_metadata = {k: v for k, v in other_metadata.items() if k not in self.metadata}
+            other_metadata = ({
+                k: v for k, v in other_metadata.items() 
+                if k not in self.metadata
+            })
         self.metadata.update(other_metadata)
 
     def clear_metadata(self) -> None:
@@ -96,60 +112,32 @@ class BaseNode(BaseModel):
         self.metadata.clear()
 
     @property
-    def metadata_keys(self) -> List[str]:
+    def meta_keys(self) -> List[str]:
         """Returns a list of all keys currently in the metadata."""
         return list(self.metadata.keys())
 
-    def has_metadata_key(self, key: str) -> bool:
+    def has_meta_key(self, key: str) -> bool:
         """Checks if a certain key exists in the metadata."""
         return key in self.metadata
 
-    def filter_metadata(self, filter_func: Callable[[Any], bool]) -> Dict[str, Any]:
+    def filter_meta(self, filter_func: Callable[[Any], bool]) -> Dict[str, Any]:
         """Filters the metadata based on a provided function or criteria."""
         return {k: v for k, v in self.metadata.items() if filter_func(v)}
 
-    def apply_to_metadata(self, apply_func: Callable[[Any], Any]) -> None:
+    def apply_to_meta(self, apply_func: Callable[[Any], Any]) -> None:
         """Applies a function to the metadata or to specific items within the metadata."""
         for key in self.metadata:
             self.metadata[key] = apply_func(self.metadata[key])
         
-        
-    # ----------------------------------- Data Validation --------------------------------
+    def meta_schema_is_valid(self, schema: Dict[str, type]) -> bool:
+        """Validates the metadata structure against a given schema."""
+        return is_schema(dict_=self.metadata, schema=schema)
 
-    def validate_metadata_structure(self, schema: Dict[str, type]) -> bool:
-        """
-        Validates the metadata structure against a given schema.
-
-        Parameters:
-            schema (Dict[str, type]): A dictionary representing the expected schema 
-                                    with key-value pairs where values are types.
-
-        Returns:
-            bool: True if metadata matches the schema, False otherwise.
-        """
-        for key, expected_type in schema.items():
-            if not isinstance(self.metadata.get(key), expected_type):
-                return False
-        return True
+    def update_meta(self, **kwargs) -> None:
+        self.metadata.update(kwargs)
 
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+    # -------------------------- getters / setters ----------------------------
     def set_content(self, content: Optional[Any]) -> None:
         self.content = content
 
@@ -162,9 +150,6 @@ class BaseNode(BaseModel):
     def get_id(self) -> str:
         return self.id_
 
-    def update_meta(self, **kwargs) -> None:
-        self.metadata.update(kwargs)
-
     def add_related_node(self, node_id: str) -> None:
         if node_id not in self.related_nodes:
             self.related_nodes.append(node_id)
@@ -173,54 +158,13 @@ class BaseNode(BaseModel):
         self.related_nodes = [id_ for id_ in self.related_nodes if id_ != node_id]
 
 
-
-    def _dict_to_xml(data: Dict[str, Any], root_tag: str = 'node') -> str:
+    def __eq__(self, other: 'BaseNode') -> bool:
         """
-        Helper method to convert a dictionary to an XML string.
-
-        Parameters:
-            data (Dict[str, Any]): The dictionary to convert to XML.
-            root_tag (str): The root tag name for the XML.
-
-        Returns:
-            str: An XML string representation of the dictionary.
+        Check if this node is equal to another node in terms of data.
         """
-        root = ET.Element(root_tag)
-        BaseNode._build_xml(root, data)
-        return ET.tostring(root, encoding='unicode')
-    
-    @staticmethod
-    def _build_xml(element: ET.Element, data: Any):
-        """Recursively builds XML elements from data."""
-        if isinstance(data, dict):
-            for key, value in data.items():
-                sub_element = ET.SubElement(element, key)
-                BaseNode._build_xml(sub_element, value)
-        elif isinstance(data, list):
-            for item in data:
-                item_element = ET.SubElement(element, 'item')
-                BaseNode._build_xml(item_element, item)
-        else:
-            element.text = str(data)
+        return (self.id_ == other.id_ and self.data_equals(other))
 
 
-
-
-
-
-
-    # def __eq__(self, other: object) -> bool:
-    #     if not isinstance(other, T):
-    #         return NotImplemented
-    #     return self.model_dump() == other.model_dump()
-
-    # def __str__(self) -> str:
-    #     """Returns a simple string representation of the BaseNode."""
-    #     return f"BaseNode(id={self.id_}, label={self.label})"
-
-    # def __repr__(self) -> str:
-    #     """Returns a detailed string representation of the BaseNode."""
-    #     return f"BaseNode(id={self.id_}, content={self.content}, metadata={self.metadata}, label={self.label})"
     
     # Utility Methods
     def is_empty(self) -> bool:
@@ -247,6 +191,22 @@ class BaseNode(BaseModel):
         copies = [self.copy(deep=deep) for _ in range(n)]
         return copies[0] if n == 1 else copies
 
+    def data_equals(self, other: 'BaseNode') -> bool:
+        """Check if this node is equal to another node in terms of data."""
+        return (
+            self.content == other.content and
+            self.metadata == other.metadata and
+            self.related_nodes == other.related_nodes
+        )
+
+    def is_copy_of(self, other: 'BaseNode') -> bool:
+        """
+        Check if this node is a deep copy of another node.
+        """
+        return (
+            self.data_equals(other) and
+            self is not other
+        )
 
 
 

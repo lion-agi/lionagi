@@ -17,9 +17,10 @@ Copyright 2023 HaiyangLi <ocean@lionagi.ai>
 import os
 import copy
 import hashlib
+import xml.etree.ElementTree as ET
 from pathlib import Path
 from datetime import datetime
-from typing import Any, Generator, List
+from typing import Any, Generator, List, Dict
 
 def create_copy(input: Any, n: int) -> Any:
     """
@@ -181,6 +182,69 @@ def timestamp_to_datetime(timestamp: int) -> str:
 #     func = out.get('function', '').lstrip('call_')
 #     args = json.loads(out.get('arguments', '{}'))
 #     return func, args
+
+
+def is_schema(dict_: Dict, schema: Dict):
+    for key, expected_type in schema.items():
+        if not isinstance(dict_[key], expected_type):
+            return False
+    return True
+
+def dict_to_xml(data: Dict[str, Any], root_tag: str = 'node') -> str:
+    """
+    Helper method to convert a dictionary to an XML string.
+
+    Parameters:
+        data (Dict[str, Any]): The dictionary to convert to XML.
+        root_tag (str): The root tag name for the XML.
+
+    Returns:
+        str: An XML string representation of the dictionary.
+    """
+    root = ET.Element(root_tag)
+    build_xml(root, data)
+    return ET.tostring(root, encoding='unicode')
+
+def build_xml(element: ET.Element, data: Any):
+    """Recursively builds XML elements from data."""
+    if isinstance(data, dict):
+        for key, value in data.items():
+            sub_element = ET.SubElement(element, key)
+            build_xml(sub_element, value)
+    elif isinstance(data, list):
+        for item in data:
+            item_element = ET.SubElement(element, 'item')
+            build_xml(item_element, item)
+    else:
+        element.text = str(data)
+
+
+def xml_to_dict(element: ET.Element) -> Dict[str, Any]:
+    """
+    Helper method to convert an XML element back into a dictionary.
+    """
+    dict_data = {}
+    for child in element:
+        if child.getchildren():
+            dict_data[child.tag] = xml_to_dict(child)
+        else:
+            dict_data[child.tag] = child.text
+    return dict_data
+
+def generate_hash(data: str, algorithm: str = 'sha256') -> str:
+    """
+    Generates a hash for the given data using the specified algorithm.
+
+    Parameters:
+        data (str): The data to be hashed.
+        algorithm (str): The hashing algorithm to use (e.g., 'sha256', 'md5').
+
+    Returns:
+        str: The generated hash string.
+    """
+    hasher = hashlib.new(algorithm)
+    hasher.update(data.encode())
+    return hasher.hexdigest()
 
 
 
