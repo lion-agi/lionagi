@@ -21,11 +21,10 @@ class ChunkerType(str, Enum):
     SELFDEFINED = 'self_defined'    # create custom functions
     
     
-
-
 def dir_to_path(
     dir: str, ext: str, recursive: bool = False, 
-    flatten: bool = True) -> List[Path]:
+    flatten: bool = True
+) -> List[Path]:
     """
     Generates a list of file paths from a directory with the given file extension.
 
@@ -54,7 +53,32 @@ def dir_to_path(
     except: 
         raise ValueError("Invalid directory or extension, please check the path")
 
-def dir_to_nodes(dir: str, ext, recursive: bool = False, flatten: bool = True, clean_text: bool = True):
+def dir_to_nodes(
+    dir: str, ext: Union[List[str], str], 
+    recursive: bool = False, flatten: bool = True, 
+    clean_text: bool = True
+) -> List[DataNode]:
+    """
+    Converts directory contents into DataNode objects based on specified file extensions.
+
+    This function first retrieves a list of file paths from the specified directory, matching the given file extension. It then reads the content of these files, optionally cleaning the text, and converts each file's content into a DataNode object. 
+
+    Parameters:
+        dir (str): The directory path from which to read files.
+        ext: The file extension(s) to include. Can be a single string or a list/tuple of strings.
+        recursive (bool, optional): If True, the function searches for files recursively in subdirectories. Defaults to False.
+        flatten (bool, optional): If True, flattens the directory structure in the returned paths. Defaults to True.
+        clean_text (bool, optional): If True, cleans the text read from files. Defaults to True.
+
+    Returns:
+        list: A list of DataNode objects created from the files in the specified directory.
+
+    Example:
+        nodes = dir_to_nodes("/path/to/dir", ".txt", recursive=True)
+        # This would read all .txt files in /path/to/dir and its subdirectories, 
+        # converting them into DataNode objects.
+    """
+
     path_list = dir_to_path(dir, ext, recursive, flatten)
     files_info = lcall(path_list, read_text, clean=clean_text)
     nodes = lcall(files_info, lambda x: DataNode(content=x[0], metadata=x[1]))
@@ -201,6 +225,8 @@ def _file_to_chunks(input: Dict[str, Any],
     except Exception as e:
         raise ValueError(f"An error occurred while chunking the file. {e}")
 
+
+# needs doing TODO
 def file_to_chunks(input,
                 #    project='project',
                 #    output_dir='data/logs/sources/',

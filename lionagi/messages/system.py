@@ -4,7 +4,7 @@ from .message import Message
 class System(Message):
     
     def _create_message(self, system: Any, name: Optional[str] = None) -> None:
-        self.create_role_message(
+        self._create_roled_message(
             role_="system", 
             content_key="system", 
             content=system, 

@@ -1,4 +1,5 @@
 import json
+import xml.etree.ElementTree as ET
 from typing import Any, Dict, Optional, TypeVar, Type, List, Callable, Union
 from pydantic import BaseModel, Field, AliasChoices
 
@@ -24,86 +25,130 @@ class BaseNode(BaseModel):
             A list of identifiers for nodes related to this node.
     """
     id_: str = Field(default_factory=lambda: str(create_id()), alias="node_id")
-    content: Union[str, Dict[str, Any], None, Any] = Field(default=None,
-                                                           validation_alias=AliasChoices('text', 'page_content', 'chunk_content'))
     metadata: Dict[str, Any] = Field(default_factory=dict)
     label: Optional[str] = None
     related_nodes: List[str] = Field(default_factory=list)
-
+    content: Union[str, Dict[str, Any], None, Any] = Field(
+        default=None, validation_alias=AliasChoices('text', 'page_content', 'chunk_content')
+    )
+    
     class Config:
         extra = 'allow'
         populate_by_name = True
         validate_assignment = True
         str_strip_whitespace = True
 
-    def to_json(self) -> str:
-        """Converts the node instance into JSON string representation."""
-        return self.model_dump_json(by_alias=True)
+    # ----------------- construct nodes from [json, dict, xml] ----------------------
+    @classmethod
+    def from_dict(cls, data: Dict[str, Any]) -> T:
+        """Creates a node instance from a dictionary."""
+        return cls(**data)
 
     @classmethod
     def from_json(cls: Type[T], json_str: str, **kwargs) -> T:
-        """
-        Creates a node instance from a JSON string.
-
-        Parameters:
-            json_str (str): The JSON string representing a node.
-
-            **kwargs: Additional keyword arguments to pass to json.loads.
-
-        Returns:
-            An instance of BaseNode.
-
-        Raises:
-            ValueError: If the provided string is not valid JSON.
-        """
+        """Creates a node instance from a JSON string."""
         try:
             data = json.loads(json_str, **kwargs)
             return cls(**data)
         except json.JSONDecodeError as e:
             raise ValueError("Invalid JSON string provided for deserialization.") from e
 
+
+    # --------------------- convert nodes to [json, dict, xml] -----------------------
+    def to_json(self) -> str:
+        """Converts the node instance into JSON string representation."""
+        return self.model_dump_json(by_alias=True)
+
     def to_dict(self) -> Dict[str, Any]:
         """Converts the node instance into a dictionary representation."""
         return self.model_dump(by_alias=True)
+    
+    def to_xml(self) -> str:
+        """Converts the node instance into XML string representation."""
+        return self._dict_to_xml(self.to_dict())
 
-    @classmethod
-    def from_dict(cls, data: Dict[str, Any]) -> T:
-        """Creates a node instance from a dictionary."""
-        return cls(**data)
 
-    def copy(self, deep: bool = True, n: int = 1) -> T:
-        """
-        Creates a copy of the node instance.
+    # -------------------------- metadata manipulation -----------------------------------
+    def set_meta(self, metadata_: Dict[str, Any]) -> None:
+        self.metadata = metadata_
+        
+    def get_meta_key(self, key: str) -> Any:
+        """Retrieves a value from the metadata by key."""
+        return self.metadata.get(key)
 
-        Parameters:
-            deep (bool): Whether to make a deep copy.
+    def update_meta_key(self, key: str, value: Any) -> None:
+        """Updates or adds a key-value pair in the metadata."""
+        self.metadata[key] = value
 
-            n (int): Number of copies to create.
-
-        Returns:
-            A copy or list of copies of the BaseNode instance.
-        """
-        copies = [self.copy(deep=deep) for _ in range(n)]
-        return copies[0] if n == 1 else copies
+    def delete_meta_key(self, key: str) -> None:
+        """Deletes a key from the metadata."""
+        if key in self.metadata:
+            del self.metadata[key]
 
     def merge_metadata(self, other_metadata: Dict[str, Any], overwrite: bool = True) -> None:
-        """
-        Merges another metadata dictionary into the node's metadata.
-
-        Parameters:
-            other_metadata (Dict[str, Any]): The metadata to merge in.
-
-            overwrite (bool): Whether to overwrite existing keys in the metadata.
-        """
+        """Merges another dictionary into the node's metadata."""
         if not overwrite:
             other_metadata = {k: v for k, v in other_metadata.items() if k not in self.metadata}
         self.metadata.update(other_metadata)
 
-    def set_meta(self, metadata_: Dict[str, Any]) -> None:
-        self.metadata = metadata_
+    def clear_metadata(self) -> None:
+        """Clears all metadata from the node."""
+        self.metadata.clear()
 
-    def get_meta(self) -> Dict[str, Any]:
-        return self.metadata
+    @property
+    def metadata_keys(self) -> List[str]:
+        """Returns a list of all keys currently in the metadata."""
+        return list(self.metadata.keys())
+
+    def has_metadata_key(self, key: str) -> bool:
+        """Checks if a certain key exists in the metadata."""
+        return key in self.metadata
+
+    def filter_metadata(self, filter_func: Callable[[Any], bool]) -> Dict[str, Any]:
+        """Filters the metadata based on a provided function or criteria."""
+        return {k: v for k, v in self.metadata.items() if filter_func(v)}
+
+    def apply_to_metadata(self, apply_func: Callable[[Any], Any]) -> None:
+        """Applies a function to the metadata or to specific items within the metadata."""
+        for key in self.metadata:
+            self.metadata[key] = apply_func(self.metadata[key])
+        
+        
+    # ----------------------------------- Data Validation --------------------------------
+
+    def validate_metadata_structure(self, schema: Dict[str, type]) -> bool:
+        """
+        Validates the metadata structure against a given schema.
+
+        Parameters:
+            schema (Dict[str, type]): A dictionary representing the expected schema 
+                                    with key-value pairs where values are types.
+
+        Returns:
+            bool: True if metadata matches the schema, False otherwise.
+        """
+        for key, expected_type in schema.items():
+            if not isinstance(self.metadata.get(key), expected_type):
+                return False
+        return True
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
     def set_content(self, content: Optional[Any]) -> None:
         self.content = content
@@ -127,6 +172,43 @@ class BaseNode(BaseModel):
     def remove_related_node(self, node_id: str) -> None:
         self.related_nodes = [id_ for id_ in self.related_nodes if id_ != node_id]
 
+
+
+    def _dict_to_xml(data: Dict[str, Any], root_tag: str = 'node') -> str:
+        """
+        Helper method to convert a dictionary to an XML string.
+
+        Parameters:
+            data (Dict[str, Any]): The dictionary to convert to XML.
+            root_tag (str): The root tag name for the XML.
+
+        Returns:
+            str: An XML string representation of the dictionary.
+        """
+        root = ET.Element(root_tag)
+        BaseNode._build_xml(root, data)
+        return ET.tostring(root, encoding='unicode')
+    
+    @staticmethod
+    def _build_xml(element: ET.Element, data: Any):
+        """Recursively builds XML elements from data."""
+        if isinstance(data, dict):
+            for key, value in data.items():
+                sub_element = ET.SubElement(element, key)
+                BaseNode._build_xml(sub_element, value)
+        elif isinstance(data, list):
+            for item in data:
+                item_element = ET.SubElement(element, 'item')
+                BaseNode._build_xml(item_element, item)
+        else:
+            element.text = str(data)
+
+
+
+
+
+
+
     # def __eq__(self, other: object) -> bool:
     #     if not isinstance(other, T):
     #         return NotImplemented
@@ -149,6 +231,23 @@ class BaseNode(BaseModel):
 
     def is_metadata_key_present(self, key: str) -> bool:
         return key in self.metadata
+
+    def copy(self, deep: bool = True, n: int = 1) -> Union[List[T], T]:
+        """
+        Creates a copy of the node instance.
+
+        Parameters:
+            deep (bool): Whether to make a deep copy.
+
+            n (int): Number of copies to create.
+
+        Returns:
+            A copy or list of copies of the BaseNode instance.
+        """
+        copies = [self.copy(deep=deep) for _ in range(n)]
+        return copies[0] if n == 1 else copies
+
+
 
 
 class DataNode(BaseNode):
