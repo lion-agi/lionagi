@@ -4,7 +4,8 @@ from dotenv import load_dotenv
 
 from ..schema import DataLogger
 from ..utils import lcall, alcall
-from ..services import OpenAIService, ChatCompletion
+from ..services import OpenAIService
+from ..endpoints import ChatCompletion
 from ..conversations.conversation import Conversation
 from ..objs.tool_manager import ToolManager
 from ..configs.oai_configs import oai_schema

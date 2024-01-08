@@ -1,17 +1,8 @@
-from enum import Enum
 from typing import Union, Callable
 
-from lionagi.bridge.langchain import langchain_loader, from_langchain
-from lionagi.bridge.llama_index import llama_index_reader, from_llama_index
-from lionagi.utils.call_util import lcall
-from lionagi.loaders.load_utils import dir_to_nodes
-
-
-class ReaderType(str, Enum):
-    PLAIN = 'PLAIN'
-    LANGCHAIN = 'langchain'
-    LLAMAINDEX = 'llama_index'
-    SELFDEFINED = 'self_defined'
+from ..bridge import langchain_loader, from_langchain, llama_index_reader, from_llama_index
+from ..utils import lcall
+from .load_utils import dir_to_nodes, ReaderType
 
 
 def _datanode_parser(nodes, parser):

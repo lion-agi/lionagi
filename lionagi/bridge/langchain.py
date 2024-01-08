@@ -1,6 +1,6 @@
 from typing import Union, Callable, List, Dict, Any
-from lionagi.schema.base_schema import T, DataNode
-from lionagi.utils.sys_util import change_dict_key
+from ..schema.base_schema import T, DataNode
+from ..utils.sys_util import change_dict_key
 
 
 def from_langchain(lc_doc: Any) -> T:

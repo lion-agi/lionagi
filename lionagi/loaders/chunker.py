@@ -1,12 +1,12 @@
-from enum import Enum
 from typing import Union, Callable
 
-from ..bridge.langchain import langchain_text_splitter, from_langchain
-from ..bridge.llama_index import llama_index_node_parser, from_llama_index
-from ..schema import DataNode
 from ..utils import lcall, file_to_chunks
-
-# define an enum to represent different types of chunkers
+from ..schema import DataNode
+from ..bridge import (
+    langchain_text_splitter, from_langchain, 
+    llama_index_node_parser, from_llama_index
+)
+from .load_utils import ChunkerType
 
 
 # Function to convert documents to a specific format based on the chunker type
