@@ -76,7 +76,11 @@ def python_to_json_type(py_type):
         return 'number'
     elif py_type == 'list' or py_type == 'tuple':
         return 'array'
-    if py_type == 'dict':
+    elif py_type == 'bool':
+        return 'boolean'
+    elif py_type == 'dict':
+        return 'object'
+    else:
         return 'object'
 
 
