@@ -9,7 +9,7 @@ from ..schema.base_tool import Tool
 class ToolManager(BaseNode):
     registry: Dict = {}
 
-    def _name_existed(self, name: str):
+    def name_existed(self, name: str):
         return True if name in self.registry.keys() else False
             
     def _register_tool(self, tool): #,update=False, new=False, prefix=None, postfix=None):
@@ -36,7 +36,7 @@ class ToolManager(BaseNode):
                 
     async def invoke(self, func_call):
         name, kwargs = func_call
-        if self._name_existed(name):
+        if self.name_existed(name):
             tool = self.registry[name]
             func = tool.func
             parser = tool.parser
@@ -51,7 +51,7 @@ class ToolManager(BaseNode):
             raise ValueError(f"Function {name} is not registered.")
     
     @staticmethod
-    def _get_function_call(response):
+    def get_function_call(response):
         """
         Extract function name and arguments from a response JSON.
 
