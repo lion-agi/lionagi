@@ -47,7 +47,7 @@ class Session:
                 # outs = await self.tool_manager.invoke(func, args)
                 # self.conversation.add_messages(response=outs)
 
-                tool_uses = json.loads(self.conversation.responses[-1]['content'])
+                tool_uses = json.loads(self.conversation.responses[-1]._to_message()['content'])
                 if 'function_list' in tool_uses.keys():
                     func_calls = lcall(tool_uses['function_list'], self.tool_manager._get_function_call)
                 else:
