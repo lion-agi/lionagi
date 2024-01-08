@@ -2,7 +2,7 @@ import unittest
 from unittest.mock import MagicMock
 
 # Assuming the Python module with the above functions is named 'api_utils'
-from ..utils.api_util import *
+from lionagi.utils.api_util import *
 
 class TestApiUtils(unittest.TestCase):
 

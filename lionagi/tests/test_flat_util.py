@@ -1,6 +1,6 @@
 import unittest
 
-from ..utils.flat_util import *
+from lionagi.utils.flat_util import *
 
 class TestFlattenDict(unittest.TestCase): 
 
