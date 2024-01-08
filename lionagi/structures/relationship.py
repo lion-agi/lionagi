@@ -128,9 +128,9 @@ class Relationship(BaseNode):
 
     def __str__(self) -> str:
         """Returns a simple string representation of the Relationship."""
-        return f"Relationship (id={self.id_}, from={self.source_node_id}, to={self.target_node_id}, label={self.label})"
+        return f"Relationship (id_={self.id_}, from={self.source_node_id}, to={self.target_node_id}, label={self.label})"
 
     def __repr__(self) -> str:
         """Returns a detailed string representation of the Relationship."""
-        return f"Relationship(id={self.id_}, from={self.source_node_id}, to={self.target_node_id}, content={self.content}, " \
+        return f"Relationship(id_={self.id_}, from={self.source_node_id}, to={self.target_node_id}, content={self.content}, " \
                f"metadata={self.metadata}, label={self.label})"
