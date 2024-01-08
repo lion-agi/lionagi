@@ -7,7 +7,5 @@ Utils
    utils/call_util.rst
    utils/flat_util.rst
    utils/io_util.rst
-   utils/load_utils.rst
    utils/sys_util.rst
    utils/tool_util.rst
-   utils/type_util.rst
