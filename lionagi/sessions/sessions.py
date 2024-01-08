@@ -2,14 +2,14 @@ import json
 from typing import Any
 from dotenv import load_dotenv
 
-from ..schema import DataLogger
+from ..schema import DataLogger, Tool
 from ..utils import lcall, alcall
 from ..services import OpenAIService
 from ..endpoints import ChatCompletion
-from ..conversations.conversation import Conversation
 from ..objs.tool_manager import ToolManager
 from ..configs.oai_configs import oai_schema
-from ..schema.base_tool import Tool
+from ..conversations.conversation import Conversation
+
 
 load_dotenv()
 OAIService = OpenAIService()
@@ -61,10 +61,10 @@ class Session:
             except:
                 pass
         if out:
-            return self.conversation.responses[-1]['content']
+            return self.conversation.responses[-1]._to_message()['content']
     
     def _is_invoked(self):
-        msg = self.conversation.messages[-1]
+        msg = self.conversation.messages[-1]._to_message()
         try:
             if json.loads(msg['content']).keys() >= {'function', 'arguments', 'output'}:
                 return True
@@ -173,7 +173,7 @@ class Session:
     #     self.logger_.to_csv(dir=dir, filename=filename, **kwargs)
     
     async def call_chatcompletion(self, schema=oai_schema['chat'], **kwargs):
-        messages = [message.content for message in self.conversation.messages]
+        messages = [message._to_message() for message in self.conversation.messages]
         payload = ChatCompletion.create_payload(messages=messages, schema=schema, llmconfig=self.llmconfig,**kwargs)
         completion = await self.service.serve(payload=payload)
         if "choices" in completion:

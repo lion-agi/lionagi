@@ -1,11 +1,12 @@
 from typing import List, Any
 
+from ..schema import BaseNode
 from ..messages import Message, Response
 from ..objs import Messenger
-from ..structures import Structure
 
 
-class Conversation(Structure):
+
+class Conversation(BaseNode):
     response_counts : int = 0
     messages: List[Message] = []
     msgr : Any = Messenger()
