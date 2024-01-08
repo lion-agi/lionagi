@@ -3,7 +3,7 @@ from typing import Optional, Any, Union, Dict, Tuple
 
 from ..utils.call_util import lcall
 from ..schema.data_logger import DataLogger
-from ..messages.message import Message, Response, Instruction, System
+from ..messages import Message, Response, Instruction, System
 
 
 class Messenger:
