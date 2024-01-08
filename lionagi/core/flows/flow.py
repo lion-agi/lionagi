@@ -1,7 +1,6 @@
-from ..utils import run_session
+from lionagi.structures import Relationship, Structure
 from ..sessions import Session
-from ..structures import Relationship, Structure
-
+from .flow_util import run_session
 
 # represents structured sessions
 

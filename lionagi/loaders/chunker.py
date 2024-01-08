@@ -1,12 +1,9 @@
 # use utils, schema and bridge
 from typing import Union, Callable
 
-from ..utils import lcall
-from ..schema.data_node import DataNode
-from ..bridge import (
-    langchain_text_splitter, from_langchain, 
-    llama_index_node_parser, from_llama_index
-)
+from lionagi.utils import lcall
+from lionagi.schema import DataNode
+from lionagi.bridge import langchain_text_splitter, from_langchain, llama_index_node_parser, from_llama_index
 from .load_util import ChunkerType, file_to_chunks
 
 

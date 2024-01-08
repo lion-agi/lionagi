@@ -1,6 +1,6 @@
 import json
 from typing import Any, Optional
-from ..schema import BaseNode
+from lionagi.schema import BaseNode
 
 class Message(BaseNode):
     """

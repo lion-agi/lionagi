@@ -1,8 +1,8 @@
 from typing import List, Any
 
-from ..schema import BaseNode
-from ..messages import Message, Response
-from ..objs import Messenger
+from lionagi.schema.base_node import BaseNode
+from lionagi.messages import Message, Response
+from lionagi.objs.messenger import Messenger
 
 
 class Conversation(BaseNode):
