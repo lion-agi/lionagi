@@ -8,7 +8,7 @@ from lionagi.utils import to_list, lcall
 from lionagi.schema import DataNode
 
 class ReaderType(str, Enum):
-    PLAIN = 'PLAIN'
+    PLAIN = 'plain'
     LANGCHAIN = 'langchain'
     LLAMAINDEX = 'llama_index'
     SELFDEFINED = 'self_defined'

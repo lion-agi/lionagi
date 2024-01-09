@@ -90,7 +90,7 @@ class Session:
             elif isinstance(tool, Tool):
                 return tool.schema_
             elif isinstance(tool, str):
-                if self.tool_manager.name_existed():
+                if self.tool_manager.name_existed(tool):
                     tool = self.tool_manager.registry[tool]
                     return tool.schema_
                 else:

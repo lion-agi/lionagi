@@ -1,4 +1,5 @@
 from typing import Any
+from pydantic import field_serializer
 from .base_node import BaseNode
 
 class Tool(BaseNode):
@@ -7,3 +8,7 @@ class Tool(BaseNode):
     content: Any = None
     parser: Any = None
     schema_: dict
+
+    @field_serializer('func')
+    def serialize_func(self, func):
+        return func.__name__

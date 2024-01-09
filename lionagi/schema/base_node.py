@@ -241,7 +241,7 @@ class BaseNode(BaseModel):
             str: A string representation of the BaseNode.
         """
         content_preview = (str(self.content)[:75] + '...') if len(str(self.content)) > 75 else str(self.content)
-        return f"BaseNode(id={self.id_}, label={self.label}, content='{content_preview}')"
+        return f"{self.__class__.__name__}(id={self.id_}, label={self.label}, content='{content_preview}')"
 
     def __repr__(self):
         """
