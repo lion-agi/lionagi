@@ -2,7 +2,7 @@
 
 
 
-[PyPI](https://pypi.org/project/lionagi/) | [Documentation](https://lionagi.readthedocs.io/en/latest/) | [Discord](https://discord.gg/7RGWqpSxze)
+[PyPI](https://pypi.org/project/lionagi/) | [Documentation](https://lionagi.readthedocs.io/en/latest/) | [Discord](https://discord.gg/mzDD5JtYRp)
 
   
 # LionAGI
