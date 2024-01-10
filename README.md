@@ -4,6 +4,7 @@
 
 [PyPI](https://pypi.org/project/lionagi/) | [Documentation](https://lionagi.readthedocs.io/en/latest/) | [Discord](https://discord.gg/mzDD5JtYRp)
 
+(Documentation for v0.0.116 is underway)
   
 # LionAGI
 **Towards Automated General Intelligence**
@@ -58,9 +59,9 @@ context = {"x": 10, "y": 5}
 ```python
 # in interactive environment (.ipynb for example)
 calculator = li.Session(system=system)
-result = await calculator.initiate(instruction=instruction,
-                                   context=context,
-                                   model="gpt-4-1106-preview")
+result = await calculator.initiate(
+  instruction=instruction, context=context, model="gpt-4-1106-preview"
+)
 
 print(f"Calculation Result: {result}")
 ```
@@ -68,15 +69,15 @@ print(f"Calculation Result: {result}")
 ```python
 # or otherwise, you can use
 import asyncio
-from dotenv import loadenv
+from dotenv import load_dotenv
 
 load_dotenv()
 
 async def main():
     calculator = li.Session(system=system)
-    result = await calculator.initiate(instruction=instruction,
-                                       context=context, 
-                                       model="gpt-4-1106-preview")
+    result = await calculator.initiate(
+      instruction=instruction, context=context, model="gpt-4-1106-preview"
+    )
     print(f"Calculation Result: {result}")
 
 if __name__ == "__main__":
