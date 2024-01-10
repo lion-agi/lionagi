@@ -115,6 +115,8 @@ class Session:
         #         kwargs = {**tool_kwarg, **kwargs}
         if self.tool_manager.registry != {}:
             kwargs = self._tool_parser(**kwargs)
+        if self.service is not None:
+            await self.service._init()
         config = {**self.llmconfig, **kwargs}
         system = system or self.system
         self.conversation.initiate_conversation(system=system, instruction=instruction, context=context, name=name)
