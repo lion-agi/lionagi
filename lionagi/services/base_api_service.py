@@ -22,7 +22,7 @@ class BaseAPIRateLimiter(RateLimiter):
     ) -> None:
         self = cls(max_requests_per_minute, max_tokens_per_minute)
         if not os.getenv("env_readthedocs"):
-            self.rate_limit_replenisher_task = await asyncio.create_task(
+            self.rate_limit_replenisher_task = asyncio.create_task(
                 self.rate_limit_replenisher()
             )
         return self
@@ -133,13 +133,16 @@ class BaseAPIService(BaseService):
     def __init__(self, api_key: str = None, 
                  status_tracker = None,
                  queue = None, endpoint=None, schema=None, 
-                 ratelimiter=None, max_requests_per_minute=None, max_tokens_per_minute=None) -> None:
+                 ratelimiter=BaseAPIRateLimiter, max_requests_per_minute=None, max_tokens_per_minute=None) -> None:
         self.api_key = api_key
         self.status_tracker = status_tracker or StatusTracker()
         self.queue = queue or AsyncQueue()
         self.endpoint=endpoint
         self.schema = schema
-        self.rate_limiter = ratelimiter(max_requests_per_minute, max_tokens_per_minute)
+        self.max_requests_per_minute = max_requests_per_minute
+        self.max_tokens_per_minute = max_tokens_per_minute
+        self.rate_limiter_class = ratelimiter
+        self.rate_limiter = None
     
     @staticmethod                    
     def api_methods(http_session, method="post"):
@@ -170,6 +173,10 @@ class BaseAPIService(BaseService):
         while True:
             yield task_id
             task_id += 1
+
+    async def _init(self):
+        if self.rate_limiter is None:
+            self.rate_limiter = await self.rate_limiter_class.create(self.max_requests_per_minute, self.max_tokens_per_minute)
 
     async def _call_api(self, http_session, endpoint_, method="post", payload: Dict[str, any] =None) -> Optional[Dict[str, any]]:
         endpoint_ = self.api_endpoint_from_url("https://api.openai.com/v1/"+endpoint_)

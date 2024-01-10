@@ -15,7 +15,7 @@ class OpenAIService(BaseAPIService):
         max_attempts: int = 3,
         max_requests_per_minute: int = 500,
         max_tokens_per_minute: int = 150_000,
-        ratelimiter = BaseAPIRateLimiter ,
+        ratelimiter = BaseAPIRateLimiter,
         status_tracker = None,
         queue = None,
     ):
