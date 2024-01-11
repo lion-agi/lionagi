@@ -1,6 +1,6 @@
 import unittest
 
-from lionagi.utils.flat_util import *
+from lionagi.utils.flat_util__ import *
 
 class TestFlattenDict(unittest.TestCase): 
 
@@ -334,25 +334,25 @@ class TestUnflattenToList(unittest.TestCase):
 class TestFlattenIterable(unittest.TestCase):
 
     def test_flatten_empty_list(self):
-        self.assertEqual(list(flatten_iterable([])), [])
+        self.assertEqual(list(_flatten_iterable_generator([])), [])
 
     def test_flatten_nested_lists(self):
         nested_list = [1, [2, [3, 4], 5], 6]
         expected_flat_list = [1, 2, 3, 4, 5, 6]
-        self.assertEqual(list(flatten_iterable(nested_list)), expected_flat_list)
+        self.assertEqual(list(_flatten_iterable_generator(nested_list)), expected_flat_list)
 
     def test_flatten_nested_tuples(self):
         nested_tuple = (1, (2, (3, 4), 5), 6)
         expected_flat_list = [1, 2, 3, 4, 5, 6]
-        self.assertEqual(list(flatten_iterable(nested_tuple)), expected_flat_list)
+        self.assertEqual(list(_flatten_iterable_generator(nested_tuple)), expected_flat_list)
 
     def test_flatten_with_max_depth(self):
         nested_list = [1, [2, [3, 4], 5], 6]
         expected_flat_list_depth_1 = [1, [2, [3, 4], 5], 6]
-        self.assertEqual(list(flatten_iterable(nested_list, max_depth=1)), expected_flat_list_depth_1)
+        self.assertEqual(list(_flatten_iterable_generator(nested_list, max_depth=1)), expected_flat_list_depth_1)
         
         expected_flat_list_depth_2 = [1, 2, [3, 4], 5, 6]
-        self.assertEqual(list(flatten_iterable(nested_list, max_depth=2)), expected_flat_list_depth_2)
+        self.assertEqual(list(_flatten_iterable_generator(nested_list, max_depth=2)), expected_flat_list_depth_2)
 
     # def test_flatten_strings(self):
     #     nested_list = ["hello", ["world", ["!"]]]
@@ -362,12 +362,12 @@ class TestFlattenIterable(unittest.TestCase):
     def test_flatten_with_non_iterable(self):
         nested_list = [1, [2, 3], 4, "text", 5]
         expected_flat_list = [1, 2, 3, 4, "text", 5]
-        self.assertEqual(list(flatten_iterable(nested_list)), expected_flat_list)
+        self.assertEqual(list(_flatten_iterable_generator(nested_list)), expected_flat_list)
 
     def test_flatten_with_none_max_depth(self):
         nested_list = [1, [2, [3, [4, [5]]]]]
         expected_flat_list = [1, 2, 3, 4, 5]
-        self.assertEqual(list(flatten_iterable(nested_list, max_depth=None)), expected_flat_list)
+        self.assertEqual(list(_flatten_iterable_generator(nested_list, max_depth=None)), expected_flat_list)
 
     def test_flatten_iterable_to_list_function(self):
         nested_list = [1, [2, [3, 4], 5], 6]

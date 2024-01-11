@@ -2,7 +2,7 @@ import unittest
 from cryptography.fernet import Fernet
 
 # Assuming the Python module with the above functions is named 'encryption_utils'
-from lionagi.utils.encrypt_util import generate_encryption_key, encrypt, decrypt
+from lionagi.utils.encrypt_util__ import generate_encryption_key, encrypt, decrypt
 
 class TestEncryptionUtils(unittest.TestCase):
 
