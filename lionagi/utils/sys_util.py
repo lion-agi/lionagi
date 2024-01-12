@@ -617,7 +617,7 @@ def create_hash(data: str, algorithm: str = 'sha256') -> str:
     hasher.update(data.encode())
     return hasher.hexdigest()
 
-def task_id_generator() -> Generator[int, None, None]:
+def _task_id_generator() -> Generator[int, None, None]:
     """
     Generates an infinite sequence of task IDs starting from 0.
 
@@ -722,7 +722,7 @@ def xml_to_dict(element: ET.Element) -> Dict[str, Any]:
     return dict_data
 
 
-def extract_docstring_details_google(func):
+def _extract_docstring_details_google(func):
     """
     Extracts the description and parameter details from a function's docstring in Google style.
 
@@ -768,7 +768,7 @@ def extract_docstring_details_google(func):
 
     return func_description, params_description
 
-def extract_docstring_details_rest(func):
+def _extract_docstring_details_rest(func):
     """
     Extracts the description and parameter details from a function's docstring in 
     reStructuredText (reST) style.
@@ -802,16 +802,16 @@ def extract_docstring_details_rest(func):
 
     return func_description, params_description
 
-def extract_docstring_details(func, style='google'):
+def _extract_docstring_details(func, style='google'):
     if style == 'google':
-        func_description, params_description = extract_docstring_details_google(func)
+        func_description, params_description = _extract_docstring_details_google(func)
     elif style == 'reST':
-        func_description, params_description = extract_docstring_details_rest(func)
+        func_description, params_description = _extract_docstring_details_rest(func)
     else:
         raise ValueError(f'{style} is not supported. Please choose either "google" or "reST".')
     return func_description, params_description
 
-def python_to_json_type(py_type):
+def _python_to_json_type(py_type):
     type_mapping = {
         'str': 'string',
         'int': 'number',
@@ -837,7 +837,7 @@ def func_to_schema(func, style='google'):
     """
     # Extracting function name and docstring details
     func_name = func.__name__
-    func_description, params_description = extract_docstring_details(func, style)
+    func_description, params_description = _extract_docstring_details(func, style)
 
     # Extracting parameters with typing hints
     sig = inspect.signature(func)
@@ -851,7 +851,7 @@ def func_to_schema(func, style='google'):
         # Default type to string and update if type hint is available
         param_type = "string"
         if param.annotation is not inspect.Parameter.empty:
-            param_type = python_to_json_type(param.annotation.__name__)
+            param_type = _python_to_json_type(param.annotation.__name__)
 
         # Extract parameter description from docstring, if available
         param_description = params_description.get(name, "No description available.")
@@ -914,133 +914,79 @@ def append_to_jsonl(data: Any, filepath: str) -> None:
     with open(filepath, "a") as f:
         f.write(json_string + "\n")
 
-def handle_error(value, config):
-    """
-    Handles an error based on a given configuration.
+# def handle_error(value, config):
+#     """
+#     Handles an error based on a given configuration.
 
-    Args:
-        value: The value to check for an error.
-        config (Dict): Configuration for error handling.
+#     Args:
+#         value: The value to check for an error.
+#         config (Dict): Configuration for error handling.
 
-    Returns:
-        The default value from config if value is an exception, else returns value.
-    """
-    if isinstance(value, Exception):
-        if config.get('log', True):
-            print(f"Error: {value}")  # Replace with appropriate logging mechanism
-        return config.get('default', None)
-    return value
+#     Returns:
+#         The default value from config if value is an exception, else returns value.
+#     """
+#     if isinstance(value, Exception):
+#         if config.get('log', True):
+#             print(f"Error: {value}")  # Replace with appropriate logging mechanism
+#         return config.get('default', None)
+#     return value
 
-def validate_type(value, expected_type: Type) -> Any:
-    """
-    Validates the type of a value.
+# def validate_type(value, expected_type: Type) -> Any:
+#     """
+#     Validates the type of a value.
 
-    Args:
-        value: The value to validate.
-        expected_type (Type): The expected type of the value.
+#     Args:
+#         value: The value to validate.
+#         expected_type (Type): The expected type of the value.
 
-    Returns:
-        The value if it is of the expected type.
+#     Returns:
+#         The value if it is of the expected type.
 
-    Raises:
-        TypeError: If the value is not of the expected type.
-    """
-    if not isinstance(value, expected_type):
-        raise TypeError(f"Invalid type: expected {expected_type}, got {type(value)}")
-    return value
+#     Raises:
+#         TypeError: If the value is not of the expected type.
+#     """
+#     if not isinstance(value, expected_type):
+#         raise TypeError(f"Invalid type: expected {expected_type}, got {type(value)}")
+#     return value
 
-def convert_type(value, target_type: Callable) -> Optional[Any]:
-    """
-    Converts the type of a value.
+# def convert_type(value, target_type: Callable) -> Optional[Any]:
+#     """
+#     Converts the type of a value.
 
-    Args:
-        value: The value to convert.
-        target_type (Callable): The target type to convert to.
+#     Args:
+#         value: The value to convert.
+#         target_type (Callable): The target type to convert to.
 
-    Returns:
-        The converted value or None if the conversion fails.
-    """
-    try:
-        return target_type(value)
-    except (ValueError, TypeError) as e:
-        print(f"Conversion error: {e}")  # Replace with appropriate logging mechanism
-        return None
+#     Returns:
+#         The converted value or None if the conversion fails.
+#     """
+#     try:
+#         return target_type(value)
+#     except (ValueError, TypeError) as e:
+#         print(f"Conversion error: {e}")  # Replace with appropriate logging mechanism
+#         return None
 
-def handle_error(value, config: Dict) -> Any:
-    """
-    Handles an error based on the provided configuration.
+# def special_return(value, **config) -> Any:
+#     """
+#     Processes a value through various configurable functions.
 
-    Args:
-        value: The value to check for an error.
-        config (Dict): Configuration dict specifying handling behavior, including logging and default return.
+#     Args:
+#         value: The value to be processed.
+#         **config: Keyword arguments representing the configuration for processing.
 
-    Returns:
-        The default value from config if value is an exception, otherwise the original value.
-    """
-    if isinstance(value, Exception):
-        if config.get('log', True):
-            print(f"Error: {value}")  # Replace with appropriate logging mechanism
-        return config.get('default', None)
-    return value
+#     Returns:
+#         The processed value based on the provided configuration.
+#     """
+#     processing_functions = {
+#         'handle_error': handle_error,
+#         'validate_type': validate_type,
+#         'convert_type': convert_type
+#     }
 
-def validate_type(value, expected_type: Type) -> Any:
-    """
-    Validates the type of a value.
-
-    Args:
-        value: The value to validate.
-        expected_type (Type): The expected type of the value.
-
-    Returns:
-        The original value if it matches the expected type.
-
-    Raises:
-        TypeError: If the value does not match the expected type.
-    """
-    if not isinstance(value, expected_type):
-        raise TypeError(f"Invalid type: expected {expected_type}, got {type(value)}")
-    return value
-
-def convert_type(value, target_type: Callable) -> Any:
-    """
-    Attempts to convert the type of a value.
-
-    Args:
-        value: The value to be converted.
-        target_type (Callable): The target type to which the value should be converted.
-
-    Returns:
-        The converted value, or None if the conversion fails.
-    """
-    
-    try:
-        return target_type(value)
-    
-    except (ValueError, TypeError) as e:
-        print(f"Conversion error: {e}")  # Replace with appropriate logging mechanism
-        return None
-
-def special_return(value, **config) -> Any:
-    """
-    Processes a value through various configurable functions.
-
-    Args:
-        value: The value to be processed.
-        **config: Keyword arguments representing the configuration for processing.
-
-    Returns:
-        The processed value based on the provided configuration.
-    """
-    processing_functions = {
-        'handle_error': handle_error,
-        'validate_type': validate_type,
-        'convert_type': convert_type
-    }
-
-    for key, func in processing_functions.items():
-        if key in config:
-            value = func(value, config[key])
-    return value
+#     for key, func in processing_functions.items():
+#         if key in config:
+#             value = func(value, config[key])
+#     return value
 
 def to_list(input_: Any, flatten: bool = True, dropna: bool = False) -> List[Any]:
     """

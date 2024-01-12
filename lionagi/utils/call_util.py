@@ -191,7 +191,7 @@ async def aecall(input_: Union[Any, List[Any]],
              for inp in inputs for funcs in to_list(func_)]
     return await asyncio.gather(*tasks)
 
-async def parallel_call_limited(funcs: List[Callable[..., Any]], 
+async def parallel_call(funcs: List[Callable[..., Any]], 
                                 inputs: List[Any], 
                                 max_concurrent: int = 5) -> List[Any]:
     """

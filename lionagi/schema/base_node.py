@@ -4,10 +4,8 @@ import xml.etree.ElementTree as ET
 from typing import Any, Dict, Optional, TypeVar, Type, List, Callable, Union
 from pydantic import BaseModel, Field, AliasChoices
 
-from lionagi.utils import (
-    create_id, is_schema, change_dict_key, create_copy, 
-    encrypt, decrypt, dict_to_xml
-)
+from lionagi.utils import create_id, is_schema, change_dict_key, create_copy, dict_to_xml
+from lionagi.utils.encrypt_util import encrypt, decrypt
 
 T = TypeVar('T', bound='BaseNode')
 
