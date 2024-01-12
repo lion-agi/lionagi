@@ -1,286 +1,280 @@
+import aiohttp
+import asyncio
+import hashlib
 import json
-import tempfile
-
 import logging
 import re
-import csv
-from typing import Callable, Any
-from .sys_util import to_list
-        
-        
-def api_method(http_session, method: str = "post") -> Callable:
+from functools import lru_cache
+from typing import Any, Callable, Dict, Optional
+
+# Enable basic logging with a uniform format
+logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
+
+# Global cache for storing API responses
+response_cache = {}
+
+class APIUtil:
     """
-    Retrieves a method (such as POST, DELETE) from the HTTP session object.
-
-    Args:
-        http_session: The session object used for making HTTP requests.
-        
-        method (str, optional): The HTTP method to retrieve. Default is "post".
-
-    Returns:
-        Callable: The HTTP method callable from the session object.
-
-    Raises:
-        ValueError: If the method is not one of ['post', 'delete', 'head', 'options', 'patch'].
-
-    Example:
-        >>> session = requests.Session()
-        >>> post_method = api_method(session, "post")
-        >>> response = post_method(url="https://api.example.com/data", json={"key": "value"})
+    A utility class for assisting with common API usage patterns.
     """
 
-    if method not in ["post", "delete", "head", "options", "patch"]:
-        raise ValueError("Invalid request, method must be in ['post', 'delete', 'head', 'options', 'patch']")
-    elif method == "post":
-        return http_session.post
-    elif method == "delete":
-        return http_session.delete
-    elif method == "head":
-        return http_session.head
-    elif method == "options":
-        return http_session.options
-    elif method == "patch":
-        return http_session.patch
-    
-def api_error(response_json: dict) -> bool:
-    """
-    Checks if the API response contains an error.
+    @staticmethod
+    def api_method(http_session: aiohttp.ClientSession, method: str = "post") -> Callable:
+        """
+        Returns the corresponding HTTP method function from the http_session object.
 
-    Args:
-        response_json (dict): The JSON response returned from an API call.
+        Args:
+            http_session: The session object from the aiohttp library.
+            method: The HTTP method as a string.
 
-    Returns:
-        bool: True if the response contains an error; False otherwise.
+        Returns:
+            The callable for the specified HTTP method.
 
-    Logs a warning if an error is found.
+        Raises:
+            ValueError: If the method is not one of the allowed ones.
 
-    Example:
-        >>> response = requests.post("https://api.example.com/data")
-        >>> if api_error(response.json()):
-        >>>     print("Error occurred in API call")
-    """
+        Examples:
+            >>> session = aiohttp.ClientSession()
+            >>> post_method = APIUtil.api_method(session, "post")
+            >>> print(post_method)
+            <bound method ClientSession._request of <aiohttp.client.ClientSession object at 0x...>>
+        """
+        if method not in ["post", "delete", "head", "options", "patch"]:
+            raise ValueError("Invalid request, method must be in ['post', 'delete', 'head', 'options', 'patch']")
+        return getattr(http_session, method)
 
-    if "error" in response_json:
-        logging.warning(f"API call failed with error: {response_json['error']}")
-        return True
-    return False
-    
-def api_rate_limit_error(response_json: dict) -> bool:
-    """
-    Checks if the API response contains a rate limit error.
+    @staticmethod
+    def api_error(response_json: Dict[str, Any]) -> bool:
+        """
+        Checks if the given response_json dictionary contains an "error" key.
 
-    Args:
-        response_json (dict): The JSON response returned from an API call.
+        Args:
+            response_json: The JSON response as a dictionary.
 
-    Returns:
-        bool: True if the response contains a rate limit error; False otherwise.
+        Returns:
+            True if there is an error, False otherwise.
 
-    Example:
-        >>> response = requests.post("https://api.example.com/data")
-        >>> if api_rate_limit_error(response.json()):
-        >>>     print("Rate limit exceeded for API call")
-    """
+        Examples:
+            >>> response_json_with_error = {"error": "Something went wrong"}
+            >>> APIUtil.api_error(response_json_with_error)
+            True
+            >>> response_json_without_error = {"result": "Success"}
+            >>> APIUtil.api_error(response_json_without_error)
+            False
+        """
+        if "error" in response_json:
+            logging.warning(f"API call failed with error: {response_json['error']}")
+            return True
+        return False
 
-    return "Rate limit" in response_json["error"].get("message", "")
-
-def api_endpoint_from_url(request_url: str) -> str:
-    """
-    Extracts the API endpoint from a URL.
-
-    Args:
-        request_url (str): The full URL from which to extract the endpoint.
-
-    Returns:
-        str: The extracted endpoint from the URL, or an empty string if not found.
-
-    Example:
-        >>> url = "https://api.example.com/v1/users"
-        >>> endpoint = api_endpoint_from_url(url)
-        >>> print(endpoint)  # Output: "users"
-    """
-    match = re.search(r"^https://[^/]+/v\d+/(.+)$", request_url)
-    return match.group(1) if match else ""
-
-def to_temp(input: Any, 
-            flatten_dict: bool = False, 
-            flat: bool = False, 
-            dropna: bool = False) -> tempfile.NamedTemporaryFile:
-    """
-    Writes input data to a temporary file in JSON format.
-
-    Args:
-        input (Any): The data to be written to the temporary file. This can be any data type.
+    @staticmethod
+    def api_rate_limit_error(response_json: Dict[str, Any]) -> bool:
+        """
+        Checks if the error message in the response_json dictionary contains the phrase "Rate limit".
         
-        flatten_dict (bool, optional): If True, flattens dictionary structures in the input. Default is False.
+        Args:
+            response_json: The JSON response as a dictionary.
+
+        Returns:
+            True if the phrase "Rate limit" is found, False otherwise.
+
+        Examples:
+            >>> response_json_with_rate_limit = {"error": {"message": "Rate limit exceeded"}}
+            >>> api_rate_limit_error(response_json_with_rate_limit)
+            True
+            >>> response_json_without_rate_limit = {"error": {"message": "Another error"}}
+            >>> api_rate_limit_error(response_json_without_rate_limit)
+            False
+        """
+        return "Rate limit" in response_json.get("error", {}).get("message", "")
+
+    @staticmethod
+    @lru_cache(maxsize=128)
+    def api_endpoint_from_url(request_url: str) -> str:
+        """
+        Extracts the API endpoint from a given URL using a regular expression.
+
+        Args:
+            request_url: The full URL to the API endpoint.
+
+        Returns:
+            The extracted endpoint or an empty string if the pattern does not match.
+
+        Examples:
+            >>> valid_url = "https://api.example.com/v1/users"
+            >>> api_endpoint_from_url(valid_url)
+            'users'
+            >>> invalid_url = "https://api.example.com/users"
+            >>> api_endpoint_from_url(invalid_url)
+            ''
+        """
+        match = re.search(r"^https://[^/]+/v\d+/(.+)$", request_url)
+        return match.group(1) if match else ""
+
+    @staticmethod
+    async def unified_api_call(http_session: aiohttp.ClientSession, method: str, url: str, **kwargs) -> Any:
+        """
+        Makes an API call and automatically retries on rate limit error.
+
+        Args:
+            http_session: The session object from the aiohttp library.
+            method: The HTTP method as a string.
+            url: The URL to which the request is made.
+            **kwargs: Additional keyword arguments to pass to the API call.
+
+        Returns:
+            The JSON response as a dictionary.
+
+        Examples:
+            >>> session = aiohttp.ClientSession()
+            >>> success_url = "https://api.example.com/v1/success"
+            >>> print(await unified_api_call(session, 'get', success_url))
+            {'result': 'Success'}
+            >>> rate_limit_url = "https://api.example.com/v1/rate_limit"
+            >>> print(await unified_api_call(session, 'get', rate_limit_url))
+            {'error': {'message': 'Rate limit exceeded'}}
+        """
+        api_call = APIUtil.api_method(http_session, method)
+        retry_count = 3
+        retry_delay = 5  # seconds
+
+        for attempt in range(retry_count):
+            async with api_call(url, **kwargs) as response:
+                response_json = await response.json()
+
+                if not APIUtil.api_error(response_json):
+                    return response_json
+
+                if APIUtil.api_rate_limit_error(response_json) and attempt < retry_count - 1:
+                    logging.warning(f"Rate limit error detected. Retrying in {retry_delay} seconds...")
+                    await asyncio.sleep(retry_delay)
+                else:
+                    break
+
+        return response_json
+
+    @staticmethod
+    def get_cache_key(url: str, params: Optional[Dict[str, Any]]) -> str:
+        """
+        Creates a unique cache key based on the URL and parameters.
+        (Other documentation remains unchanged)
+        """
+        param_str = json.dumps(params, sort_keys=True) if params else ""
+        return hashlib.md5((url + param_str).encode('utf-8')).hexdigest()
+
+    @staticmethod
+    async def retry_api_call(http_session: aiohttp.ClientSession, url: str, retries: int = 3, backoff_factor: float = 0.5, **kwargs) -> Any:
+        """
+        Retries an API call on failure, with exponential backoff.
+
+        Args:
+            http_session: The aiohttp client session.
+            url: The URL to make the API call.
+            retries: The number of times to retry.
+            backoff_factor: The backoff factor for retries.
+            **kwargs: Additional arguments for the API call.
+
+        Returns:
+            The response from the API call, if successful; otherwise, None.
+        """
+        for attempt in range(retries):
+            try:
+                async with http_session.get(url, **kwargs) as response:
+                    response.raise_for_status()
+                    return await response.json()
+            except aiohttp.ClientError:
+                if attempt < retries - 1:
+                    delay = backoff_factor * (2 ** attempt)
+                    logging.info(f"Retrying {url} in {delay} seconds...")
+                    await asyncio.sleep(delay)
+                else:
+                    logging.error(f"Failed to retrieve data from {url} after {retries} attempts.")
+                    return None
+
+    @staticmethod
+    async def upload_file_with_retry(http_session: aiohttp.ClientSession, url: str, file_path: str, param_name: str = 'file', additional_data: Dict[str, Any] = None, retries: int = 3) -> Any:
+        """
+        Uploads a file to a specified URL with a retry mechanism for handling failures.
+
+        Args:
+            http_session: The HTTP session object to use for making the request.
+            url: The URL to which the file will be uploaded.
+            file_path: The path to the file that will be uploaded.
+            param_name: The name of the parameter expected by the server for the file upload.
+            additional_data: Additional data to be sent with the upload.
+            retries: The number of times to retry the upload in case of failure.
+
+        Returns:
+            The HTTP response object.
+
+        Examples:
+            >>> session = aiohttp.ClientSession()
+            >>> response = await APIUtil.upload_file_with_retry(session, 'http://example.com/upload', 'path/to/file.txt')
+            >>> response.status
+            200
+        """
+        for attempt in range(retries):
+            try:
+                with open(file_path, 'rb') as file:
+                    files = {param_name: file}
+                    async with http_session.post(url, data=additional_data, files=files) as response:
+                        response.raise_for_status()
+                        return await response.json()
+            except aiohttp.ClientError as e:
+                if attempt == retries - 1:
+                    raise e
+                backoff = 2 ** attempt
+                logging.info(f"Retrying {url} in {backoff} seconds...")
+                await asyncio.sleep(backoff)
+
+    @staticmethod
+    @lru_cache(maxsize=128)
+    async def get_oauth_token_with_cache(http_session: aiohttp.ClientSession, auth_url: str, client_id: str, client_secret: str, scope: str) -> str:
+        """
+        Retrieves an OAuth token from the authentication server and caches it to avoid unnecessary requests.
+
+        Args:
+            http_session: The HTTP session object to use for making the request.
+            auth_url: The URL of the authentication server.
+            client_id: The client ID for OAuth authentication.
+            client_secret: The client secret for OAuth authentication.
+            scope: The scope for which the OAuth token is requested.
+
+        Returns:
+            The OAuth token as a string.
+
+        Examples:
+            >>> session = aiohttp.ClientSession()
+            >>> token = await APIUtil.get_oauth_token_with_cache(session, 'http://auth.example.com', 'client_id', 'client_secret', 'read')
+            >>> token
+            'mock_access_token'
+        """
+        async with http_session.post(auth_url, data={
+            'grant_type': 'client_credentials',
+            'client_id': client_id,
+            'client_secret': client_secret,
+            'scope': scope
+        }) as auth_response:
+            auth_response.raise_for_status()
+            return (await auth_response.json()).get('access_token')
         
-        flat (bool, optional): If True, flattens nested lists in the input. Default is False.
-        
-        dropna (bool, optional): If True, removes None values from the input. Default is False.
+    @staticmethod
+    async def cached_api_call(http_session: aiohttp.ClientSession, url: str, **kwargs) -> Any:
+        """
+        Makes an API call.
 
-    Returns:
-        tempfile.NamedTemporaryFile: A reference to the temporary file containing the input data.
+        Args:
+            http_session: The aiohttp client session.
+            url: The URL for the API call.
+            **kwargs: Additional arguments for the API call.
 
-    Raises:
-        TypeError: If the data provided is not JSON serializable.
-
-    Example:
-        >>> data = {"key": ["value1", "value2"], "key2": "value3"}
-        >>> temp_file = to_temp(data, flatten_dict=True)
-        >>> print(temp_file.name)  # Path to the temporary file
-    """
-    input = to_list(input, flatten=flat, dropna=dropna)
-    if flatten_dict:
-        input = [flatten_dict(item) if isinstance(item, dict) else item for item in input]
-
-    temp_file = tempfile.NamedTemporaryFile(mode='w', delete=False)
-    try:
-        json.dump(input, temp_file)
-    except TypeError as e:
-        temp_file.close()  # Ensuring file closure before raising error
-        raise TypeError(f"Data provided is not JSON serializable: {e}")
-    temp_file.close()
-    return temp_file
-
-
-def build_api_request(http_session, method: str, url: str, headers: dict = None, 
-                      params: dict = None, data: Any = None, json: dict = None
-                      ):
-    """
-    Builds and sends an API request based on specified parameters.
-
-    Args:
-        http_session: The HTTP session object for making requests.
-        
-        method (str): The HTTP method (e.g., 'GET', 'POST').
-        
-        url (str): The URL for the API request.
-        
-        headers (dict, optional): Headers to include in the request.
-        
-        params (dict, optional): Query parameters to include in the request.
-        
-        data (Any, optional): Data to include in the request body.
-        
-        json (dict, optional): JSON data to include in the request body.
-
-    Returns:
-        The response from the API request.
-    """
-    if method not in ["post", "delete", "head", "options", "patch", "get"]:
-        raise ValueError("Invalid request, method must be in ['post', 'delete', 'head', 'options', 'patch', 'get']")
-    request_func = getattr(http_session, method.lower())
-    return request_func(url, headers=headers, params=params, data=data, json=json)
-
-def api_call_with_error_handling(http_session, url, **kwargs):
-    """
-    Performs an API call with enhanced error handling and logging.
-
-    Args:
-        http_session: The HTTP session object for making requests.
-        
-        url (str): The URL for the API request.
-        
-        **kwargs: Additional arguments for the API request (e.g., method, headers).
-
-    Returns:
-        The API response, or None if an error occurs.
-
-    Logs errors instead of raising them for better error management.
-    """
-    try:
-        response = http_session.request(url=url, **kwargs)
-        response.raise_for_status()
-        return response
-    except Exception as e:
-        logging.error(f"API call to {url} failed: {e}")
-        return None
-
-def upload_file(http_session, url: str, file_path: str, param_name: str = 'file', additional_data: dict = None):
-    """
-    Uploads a file to an API.
-
-    Args:
-        http_session: The HTTP session object for making requests.
-        
-        url (str): The URL for the file upload API.
-        
-        file_path (str): The path to the file to be uploaded.
-        
-        param_name (str, optional): The name of the parameter for the file in the API.
-        
-        additional_data (dict, optional): Additional data to include in the request.
-
-    Returns:
-        The response from the file upload request.
-    """
-    with open(file_path, 'rb') as file:
-        files = {param_name: file}
-        return http_session.post(url, files=files, data=additional_data)
-
-def transform_response_to_csv(response: dict, output_file: str) -> None:
-    """
-    Transforms a JSON response to a CSV file.
-
-    Args:
-        response (dict): The JSON response from an API call.
-        
-        output_file (str): The path to the output CSV file.
-
-    Writes the transformed CSV to the specified output file.
-    """
-    if not isinstance(response, (list, dict)):
-        raise ValueError("Response must be a list or dictionary.")
-
-    # Assume the response is a list of dictionaries if it's a list
-    rows = response if isinstance(response, list) else [response]
-    with open(output_file, 'w', newline='') as csvfile:
-        writer = csv.DictWriter(csvfile, fieldnames=rows[0].keys())
-        writer.writeheader()
-        writer.writerows(rows)
-
-def handle_webhook(request_data: dict, validation_func: Callable = None) -> dict:
-    """
-    Handles incoming webhook data with optional validation.
-
-    Args:
-        request_data (dict): The data received from the webhook.
-        
-        validation_func (Callable, optional): A function to validate the webhook data.
-
-    Returns:
-        dict: The processed response data, or an error message if validation fails.
-    """
-    if validation_func and not validation_func(request_data):
-        return {"error": "Invalid webhook data"}
-
-    # Process the webhook data
-    # This is just a placeholder, actual processing depends on webhook requirements
-    processed_data = {"message": "Webhook received successfully", "data": request_data}
-    return processed_data
-
-def get_oauth_token(http_session, auth_url: str, client_id: str, client_secret: str, scope: str) -> str:
-    """
-    Retrieves an OAuth token for API authentication.
-
-    Args:
-        http_session: The HTTP session object for making requests.
-        
-        auth_url (str): The URL to obtain the OAuth token.
-        
-        client_id (str): The client ID for OAuth.
-        
-        client_secret (str): The client secret for OAuth.
-        
-        scope (str): The scope of the access request.
-
-    Returns:
-        str: The obtained OAuth token.
-    """
-    auth_response = http_session.post(auth_url, data={
-        'grant_type': 'client_credentials',
-        'client_id': client_id,
-        'client_secret': client_secret,
-        'scope': scope
-    })
-    auth_response.raise_for_status()
-    return auth_response.json().get('access_token')
+        Returns:
+            The response from the API call, if successful; otherwise, None.
+        """
+        try:
+            async with http_session.get(url, **kwargs) as response:
+                response.raise_for_status()
+                return await response.json()
+        except aiohttp.ClientError as e:
+            logging.error(f"API call to {url} failed: {e}")
+            return None

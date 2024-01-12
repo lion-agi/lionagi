@@ -4,7 +4,7 @@ from .message import Message
 class Instruction(Message):
 
     def _create_message(self, instruction: Any, context=None ,name: Optional[str] = None) -> None:
-        self._create_roled_message(
+        self.__call__(
             role_="user", 
             content_key="instruction", 
             content=instruction, 
