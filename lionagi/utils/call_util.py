@@ -1,8 +1,9 @@
-# use sys_util and flat_util
+from functools import lru_cache
 import asyncio
 import time
 from typing import Any, Callable, List, Optional, Union
 from .sys_util import create_copy, to_list
+
 
 def hcall(input: Any, func: Callable, sleep: int = 0.1,
           message: Optional[str] = None, ignore_error: bool = False, **kwargs) -> Any:
@@ -323,8 +324,80 @@ def call_with_default(func: Callable[..., Any], default: Any, *args, **kwargs) -
     except Exception:
         return default
 
+def batch_call(func: Callable[..., Any], 
+               inputs: List[Any], 
+               batch_size: int, 
+               **kwargs) -> List[Any]:
+    """
+    Processes a list of inputs in batches, applying a function to each item in a batch.
 
+    Args:
+        func (Callable[..., Any]): The function to be applied to each item.
+        inputs (List[Any]): The list of inputs to be processed.
+        batch_size (int): The number of items to include in each batch.
+        **kwargs: Additional keyword arguments to pass to the function.
 
+    Returns:
+        List[Any]: A list of results from applying the function to each item in the batches.
+    """
+    results = []
+    for i in range(0, len(inputs), batch_size):
+        batch = inputs[i:i + batch_size]
+        results.extend([func(item, **kwargs) for item in batch])
+    return results
 
+@lru_cache(maxsize=128)
+def cached_call(func: Callable[..., Any], *args, **kwargs) -> Any:
+    """
+    Caches the results of function calls to reduce redundant computations.
 
+    This function uses a least recently used (LRU) cache to store the results of function calls,
+    improving efficiency for functions with expensive computations.
 
+    Args:
+        func (Callable[..., Any]): The function whose results are to be cached.
+        *args: Positional arguments to pass to the function.
+        **kwargs: Keyword arguments to pass to the function.
+
+    Returns:
+        Any: The cached result of the function call.
+    """
+    return func(*args, **kwargs)
+
+async def async_iterative_call(func: Callable[..., Any], 
+                               inputs: List[Any], 
+                               **kwargs) -> List[Any]:
+    """
+    Asynchronously iterates over a list of inputs, applying a function to each item.
+
+    Args:
+        func (Callable[..., Any]): The asynchronous function to be applied.
+        inputs (List[Any]): The list of inputs to be processed.
+        **kwargs: Additional keyword arguments to pass to the function.
+
+    Returns:
+        List[Any]: A list of results from the asynchronous application of the function.
+    """
+    return await asyncio.gather(*(func(item, **kwargs) for item in inputs))
+
+def call_with_pre_post_processing(func: Callable[..., Any], 
+                                  preprocess: Callable[..., Any], 
+                                  postprocess: Callable[..., Any], 
+                                  *args, **kwargs) -> Any:
+    """
+    Executes a function with defined preprocessing and postprocessing steps.
+
+    Args:
+        func (Callable[..., Any]): The main function to execute.
+        preprocess (Callable[..., Any]): A function to preprocess each argument.
+        postprocess (Callable[..., Any]): A function to postprocess the result.
+        *args: Positional arguments to pass to the main function.
+        **kwargs: Keyword arguments to pass to the main function.
+
+    Returns:
+        Any: The result of the main function after preprocessing and postprocessing.
+    """
+    preprocessed_args = [preprocess(arg) for arg in args]
+    preprocessed_kwargs = {k: preprocess(v) for k, v in kwargs.items()}
+    result = func(*preprocessed_args, **preprocessed_kwargs)
+    return postprocess(result)
