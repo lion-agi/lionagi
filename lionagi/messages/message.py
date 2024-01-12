@@ -105,6 +105,3 @@ class Message(BaseNode):
             else str(self.content)
         )
         return f"Message(role={self.role}, name={self.name}, content='{content_preview}')"
-
-
-    

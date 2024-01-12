@@ -1,348 +1,403 @@
-# use sys_util and flat_util
+from functools import lru_cache
 import asyncio
 import time
 from typing import Any, Callable, List, Optional, Union
-
-from .sys_util import create_copy
-from .flat_util import to_list
+from .sys_util import create_copy, to_list
 
 
-def hcall(
-    input: Any, func: Callable, sleep: int = 0.1, 
-    message: Optional[str] = None, 
-    ignore_error: bool = False, **kwargs
-    ) -> Any:
+def hcall(input: Any, func: Callable, sleep: int = 0.1,
+          message: Optional[str] = None, ignore_error: bool = False, **kwargs) -> Any:
     """
-    Executes a function after a specified delay, handling exceptions optionally.
+    Calls a function with an optional delay and error handling.
 
-    Waits for 'sleep' seconds before calling 'func' with 'input'. Handles exceptions by
-    printing a message and optionally re-raising them.
-
-    Parameters:
-        input (Any): Input to the function.
-
-        func (Callable): Function to execute.
-
-        sleep (int, optional): Time in seconds to wait before calling the function. Defaults to 0.1.
-
-        message (Optional[str], optional): Message to print on exception. Defaults to None.
-
-        ignore_error (bool, optional): If True, ignores exceptions. Defaults to False.
-
-        **kwargs: Additional keyword arguments for the function.
+    Args:
+        input (Any): The input to be passed to the function.
+        func (Callable): The function to be called.
+        sleep (int, optional): Delay before the function call in seconds.
+        message (Optional[str], optional): Custom message for error handling.
+        ignore_error (bool, optional): If False, re-raises the caught exception.
 
     Returns:
-        Any: Result of the function call.
-
-    Raises:
-        Exception: Re-raises the exception unless 'ignore_error' is True.
-
-    Example:
-        >>> def add_one(x):
-        ...     return x + 1
-        >>> hold_call(5, add_one, sleep=2)
-        6
+        Any: The result of the function call.
     """
     try:
         time.sleep(sleep)
         return func(input, **kwargs)
     except Exception as e:
-        if message:
-            print(f"{message} Error: {e}")
-        else:
-            print(f"An error occurred: {e}")
+        err_msg = f"{message} Error: {e}" if message else f"An error occurred: {e}"
+        print(err_msg)
         if not ignore_error:
             raise
 
-async def ahcall(
-    input_: Any, func: Callable, sleep: int = 5, 
-    message: Optional[str] = None, 
-    ignore_error: bool = False, **kwargs
-    ) -> Any:
+async def ahcall(input_: Any, func: Callable, sleep: int = 0.1,
+                 message: Optional[str] = None, ignore_error: bool = False, **kwargs) -> Any:
     """
-    Asynchronously executes a function after a specified delay, handling exceptions optionally.
+    Asynchronously calls a function with an optional delay and error handling.
 
-    Waits for 'sleep' seconds before calling 'func' with 'input'. Handles exceptions by
-    printing a message and optionally re-raising them.
-
-    Parameters:
-        input (Any): Input to the function.
-
-        func (Callable): Asynchronous function to execute.
-
-        sleep (int, optional): Time in seconds to wait before calling the function. Defaults to 5.
-
-        message (Optional[str], optional): Message to print on exception. Defaults to None.
-
-        ignore_error (bool, optional): If True, ignores exceptions. Defaults to False.
-
-        **kwargs: Additional keyword arguments for the function.
+    Args:
+        input_ (Any): The input to be passed to the asynchronous function.
+        func (Callable): The asynchronous function to be called.
+        sleep (int, optional): Delay before the function call in seconds.
+        message (Optional[str], optional): Custom message for error handling.
+        ignore_error (bool, optional): If False, re-raises the caught exception.
 
     Returns:
-        Any: Result of the asynchronous function call.
-
-    Raises:
-        Exception: Re-raises the exception unless 'ignore_error' is True.
-
-    Example:
-        >>> async def async_add_one(x):
-        ...     return x + 1
-        >>> asyncio.run(ahold_call(5, async_add_one, sleep=2))
-        6
+        Any: The result of the function call.
     """
     try:
         if not asyncio.iscoroutinefunction(func):
-            raise TypeError(f"The function {func} must be an asynchronous function.")
+            raise TypeError(f"The function {func.__name__} must be asynchronous.")
         await asyncio.sleep(sleep)
         return await func(input_, **kwargs)
     except Exception as e:
-        if message:
-            print(f"{message} Error: {e}")
-        else:
-            print(f"An error occurred: {e}")
+        err_msg = f"{message} Error: {e}" if message else f"An error occurred: {e}"
+        print(err_msg)
         if not ignore_error:
             raise
 
-def lcall(
-    input_: Any, func_: Callable, flatten: bool = False, 
-    dropna: bool = False, **kwargs
-    ) -> List[Any]:
+def lcall(input_: Any, func_: Callable, flatten: bool = False,
+          dropna: bool = False, **kwargs) -> List[Any]:
     """
-    Applies a function to each element of `input`, after converting it to a list.
+    Applies a function to each element in a list, with options for flattening and dropping NAs.
 
-    This function converts the `input` to a list, with options to flatten structures 
-    and lists, and then applies a given `func` to each element of the list.
-
-    Parameters:
-        input (Any): The input to be converted to a list and processed.
-
-        func (Callable): The function to apply to each element of the list.
-
-        flatten_dict (bool, optional): If True, flattens dictionaries in the input. Defaults to False.
-
-        flat (bool, optional): If True, flattens nested lists in the input. Defaults to False.
-
-        dropna (bool, optional): If True, drops None values during flattening. Defaults to True.
+    Args:
+        input_ (Any): The input, potentially a list, to process.
+        func_ (Callable): The function to be applied to each element.
+        flatten (bool, optional): If True, flattens the input.
+        dropna (bool, optional): If True, drops None values from the list.
+        **kwargs: Additional keyword arguments to pass to the function.
 
     Returns:
-        List[Any]: A list containing the results of applying the `func` to each element.
-
-    Raises:
-        ValueError: If the `func` cannot be applied to the `input`.
-
-    Example:
-        >>> def square(x):
-        ...     return x * x
-        >>> l_call([1, 2, 3], square)
-        [1, 4, 9]
+        List[Any]: A list containing the results of the function call on each element.
     """
     try:
         lst = to_list(input_=input_, flatten=flatten, dropna=dropna)
         return [func_(i, **kwargs) for i in lst]
     except Exception as e:
-        raise ValueError(f"Given function cannot be applied to the input. Error: {e}")
+        raise ValueError(f"Function {func_.__name__} cannot be applied: {e}")
 
-async def alcall(
-    input_: Any, func_: Callable, flatten: bool = False, dropna: bool = True, **kwargs
-    ) -> List[Any]:
+async def alcall(input_: Any, func_: Callable, flatten: bool = False,
+                 dropna: bool = True, **kwargs) -> List[Any]:
     """
-    Asynchronously applies a function to each element of `input`, after converting it to a list.
+    Asynchronously applies a function to each element in a list, with options for flattening and dropping NAs.
 
-    This function converts the `input` to a list, with options to flatten 
-    dictionaries and lists, and then applies a given asynchronous `func` to 
-    each element of the list asynchronously.
-
-    Parameters:
-        input (Any): The input to be converted to a list and processed.
-
-        func (Callable): The asynchronous function to apply to each element of the list.
-
-        flatten_dict (bool, optional): If True, flattens dictionaries in the input. Defaults to False.
-
-        flat (bool, optional): If True, flattens nested lists in the input. Defaults to False.
-
-        dropna (bool, optional): If True, drops None values during flattening. Defaults to True.
+    Args:
+        input_ (Any): The input, potentially a list, to process.
+        func_ (Callable): The asynchronous function to be applied to each element.
+        flatten (bool, optional): If True, flattens the input.
+        dropna (bool, optional): If True, drops None values from the list.
+        **kwargs: Additional keyword arguments to pass to the function.
 
     Returns:
-        List[Any]: A list containing the results of applying the `func` to each element.
-
-    Raises:
-        ValueError: If the `func` cannot be applied to the `input`.
-
-    Example:
-        >>> async def async_square(x):
-        ...     return x * x
-        >>> asyncio.run(al_call([1, 2, 3], async_square))
-        [1, 4, 9]
+        List[Any]: A list containing the results of the asynchronous function call on each element.
     """
     try:
         lst = to_list(input_=input_, flatten=flatten, dropna=dropna)
         tasks = [func_(i, **kwargs) for i in lst]
         return await asyncio.gather(*tasks)
     except Exception as e:
-        raise ValueError(f"Given function cannot be applied to the input. Error: {e}")
+        raise ValueError(f"Function {func_.__name__} cannot be applied: {e}")
 
-def mcall(
-    input_: Union[Any, List[Any]], func_: Union[Callable, List[Callable]], 
-    flatten: bool = True, dropna: bool = True, **kwargs
-    ) -> List[Any]:
+
+def mcall(input_: Union[Any, List[Any]], 
+          func_: Union[Callable, List[Callable]], 
+          flatten: bool = True, 
+          dropna: bool = True, **kwargs) -> List[Any]:
     """
-    Maps multiple functions to corresponding elements of the input.
+    Applies multiple functions to corresponding inputs, potentially in a list format.
 
-    This function applies a list of functions to a list of inputs, with each function
-    being applied to its corresponding input element. It asserts that the number of inputs
-    and functions are the same and raises an error if they are not.
-
-    Parameters:
-        input (Union[Any, List[Any]]): The input or list of inputs to be processed.
-
-        func (Union[Callable, List[Callable]]): The function or list of functions to apply.
-
-        flatten_dict (bool, optional): Whether to flatten dictionaries in the input. Defaults to False.
-
-        flat (bool, optional): Whether the output list should be flattened. Defaults to True.
-
-        dropna (bool, optional): Whether to drop None values during flattening. Defaults to True.
+    Args:
+        input_ (Union[Any, List[Any]]): Input or list of inputs.
+        func_ (Union[Callable, List[Callable]]): Function or list of functions.
+        flatten (bool, optional): If True, flattens the input list.
+        dropna (bool, optional): If True, drops None values from the list.
+        **kwargs: Additional keyword arguments for the function calls.
 
     Returns:
-        List[Any]: A list containing the results from applying each function to its corresponding input.
-
-    Raises:
-        ValueError: If the number of provided inputs and functions are not the same.
-
-    Example:
-        >>> def add_one(x):
-        ...     return x + 1
-        >>> m_call([1, 2], [add_one, add_one])
-        [2, 3]
+        List[Any]: List of results from applying each function to its corresponding input.
     """
-    input_ = to_list(input_=input_, flatten=flatten, dropna=dropna)
-    func_ = to_list(func_)
-    assert len(input_) == len(func_), "The number of inputs and functions must be the same."
+    inputs = to_list(input_=input_, flatten=flatten, dropna=dropna)
+    funcs = to_list(func_)
+    if len(inputs) != len(funcs):
+        raise ValueError("The number of inputs and functions must be the same.")
+
+    return [lcall(input_=inp, func_=f, flatten=False, dropna=dropna, **kwargs)
+            for inp, f in zip(inputs, funcs)]
     
-    return to_list(
-        [
-            lcall(input_=inp, func_=f, flatten=flatten, dropna=dropna, **kwargs) 
-            for f, inp in zip(func_, input_)
-        ]
-    )
-
-async def amcall(
-    input_: Union[Any, List[Any]], func_: Union[Callable, List[Callable]], 
-    flatten: bool = True, dropna: bool = True, **kwargs
-    ) -> List[Any]:
+async def amcall(input_: Union[Any, List[Any]], 
+                 func_: Union[Callable, List[Callable]], 
+                 flatten: bool = True, 
+                 dropna: bool = True, **kwargs) -> List[Any]:
     """
-    Asynchronously applies multiple functions to corresponding elements of the input.
+    Asynchronously applies multiple functions to corresponding inputs, potentially in a list format.
 
-    This asynchronous function maps a list of functions to a list of inputs, with each 
-    function being applied to its corresponding input element asynchronously. It ensures 
-    that the number of inputs and functions are the same, raising a `ValueError` if not.
-
-    Parameters:
-        input (Union[Any, List[Any]]): The input or list of inputs to be processed.
-
-        func (Union[Callable, List[Callable]]): The function or list of functions to apply.
-
-        flatten_dict (bool, optional): Whether to flatten dictionaries in the input. Defaults to False.
-
-        flat (bool, optional): Whether the output list should be flattened. Defaults to True.
-
-        dropna (bool, optional): Whether to drop None values during flattening. Defaults to True.
+    Args:
+        input_ (Union[Any, List[Any]]): Input or list of inputs.
+        func_ (Union[Callable, List[Callable]]): Asynchronous function or list of functions.
+        flatten (bool, optional): If True, flattens the input list.
+        dropna (bool, optional): If True, drops None values from the list.
+        **kwargs: Additional keyword arguments for the function calls.
 
     Returns:
-        List[Any]: A list containing the results from applying each function to its corresponding input.
-
-    Raises:
-        ValueError: If the number of inputs and functions do not match.
-
-    Example:
-        >>> async def async_add_one(x):
-        ...     return x + 1
-        >>> asyncio.run(am_call([1, 2], [async_add_one, async_add_one]))
-        [2, 3]
+        List[Any]: List of results from applying each function to its corresponding input.
     """
-    input = to_list(input_=input_, flatten=flatten, dropna=dropna)
-    func_ = to_list(func_)
-    assert len(input) == len(func_), "Input and function counts must match."
-    
-    tasks = [
-        alcall(input_=inp, func_=f, flatten=flatten, dropna=dropna, **kwargs) 
-        for f, inp in zip(func_, input)
-        ]
-    
-    out = await asyncio.gather(*tasks)
-    return to_list(out, flat=True)
+    inputs = to_list(input_=input_, flatten=flatten, dropna=dropna)
+    funcs = to_list(func_)
+    if len(inputs) != len(funcs):
+        raise ValueError("Input and function counts must match.")
 
-def ecall(
-    input_: Union[Any, List[Any]], func_: Union[Callable, List[Callable]], 
-    flatten: bool = True, dropna: bool = True, **kwargs
-    ) -> List[Any]:
-    """
-    Applies each function in a list of functions to all elements in the input.
-
-    This function expands the input to match the number of functions and then
-    applies each function to the entire input. It is useful for applying a series
-    of different transformations to the same input.
-
-    Parameters:
-        input (Union[Any, List[Any]]): The input or list of inputs to be processed.
-
-        func (Union[Callable, List[Callable]]): The function or list of functions to apply.
-
-        flatten_dict (bool, optional): Whether to flatten dictionaries in the input. Defaults to False.
-
-        flat (bool, optional): Whether the output list should be flattened. Defaults to True.
-
-        dropna (bool, optional): Whether to drop None values during flattening. Defaults to True.
-
-    Returns:
-        List[Any]: A list of results after applying each function to the input.
-
-    Example:
-        >>> def square(x):
-        ...     return x**2
-        >>> e_call([1, 2, 3], [square])
-        [[1], [4], [9]]
-    """
-
-    _f = lambda x, y: mcall(
-        input_=create_copy(x, len(to_list(y))), func_=y, 
-        flatten=False, dropna=dropna, **kwargs
-        )
-    return [_f(x=inp, y=func_) for inp in to_list(input_)]
-
-async def aecall(
-    input_: Union[Any, List[Any]], func_: Union[Callable, List[Callable]], 
-    dropna: bool = True, **kwargs
-    ) -> List[Any]:
-    """
-    Asynchronously applies each function in a list of functions to all elements in the input.
-
-    This asynchronous function expands the input to match the number of functions and 
-    then asynchronously applies each function to the entire input. It is useful for applying a series 
-    of different asynchronous transformations to the same input.
-
-    Parameters:
-        input_ (Union[Any, List[Any]]): The input or list of inputs to be processed.
-
-        func_ (Union[Callable, List[Callable]]): The function or list of functions to apply.
-
-        flatten_dict (bool, optional): Whether to flatten dictionaries in the input. Defaults to False.
-
-        flat (bool, optional): Whether the output list should be flattened. Defaults to True.
-
-        dropna (bool, optional): Whether to drop None values during flattening. Defaults to True.
-
-    Example:
-        >>> async def async_square(x):
-        ...     return x**2
-        >>> asyncio.run(ae_call([1, 2, 3], [async_square]))
-        [[1, 4, 9]]
-    """
-    async def _async_f(x, y):
-        return await amcall(
-            create_copy(x, len(to_list(y))), y, flatten=False, dropna=dropna, **kwargs
-            )
-
-    tasks = [_async_f(inp, func_) for inp in to_list(input_)]    
+    tasks = [alcall(input_=inp, func_=f, flatten=False, dropna=dropna, **kwargs)
+             for inp, f in zip(inputs, funcs)]
     return await asyncio.gather(*tasks)
+
+def ecall(input_: Union[Any, List[Any]], 
+          func_: Union[Callable, List[Callable]], 
+          dropna: bool = True, **kwargs) -> List[Any]:
+    """
+    Applies a list of functions to each input element, creating expanded combinations.
+
+    Args:
+        input_ (Union[Any, List[Any]]): Input or list of inputs.
+        func_ (Union[Callable, List[Callable]]): Function or list of functions.
+        dropna (bool, optional): If True, drops None values from the list.
+        **kwargs: Additional keyword arguments for the function calls.
+
+    Returns:
+        List[Any]: List of results from applying each function to each input.
+    """
+    inputs = to_list(input_)
+    return [mcall(input_=create_copy(inp, len(funcs)), func_=funcs, 
+                  flatten=False, dropna=dropna, **kwargs) 
+            for inp in inputs for funcs in to_list(func_)]
+
+async def aecall(input_: Union[Any, List[Any]], 
+                 func_: Union[Callable, List[Callable]], 
+                 dropna: bool = True, **kwargs) -> List[Any]:
+    """
+    Asynchronously applies a list of functions to each input element, creating expanded combinations.
+
+    Args:
+        input_ (Union[Any, List[Any]]): Input or list of inputs.
+        func_ (Union[Callable, List[Callable]]): Asynchronous function or list of functions.
+        dropna (bool, optional): If True, drops None values from the list.
+        **kwargs: Additional keyword arguments for the function calls.
+
+    Returns:
+        List[Any]: List of results from applying each function to each input.
+    """
+    inputs = to_list(input_)
+    tasks = [amcall(create_copy(inp, len(funcs)), funcs, 
+                    flatten=False, dropna=dropna, **kwargs) 
+             for inp in inputs for funcs in to_list(func_)]
+    return await asyncio.gather(*tasks)
+
+async def parallel_call(funcs: List[Callable[..., Any]], 
+                                inputs: List[Any], 
+                                max_concurrent: int = 5) -> List[Any]:
+    """
+    Execute multiple function calls in parallel with a specified limit on concurrency.
+
+    This function uses an asynchronous semaphore to limit the number of concurrent function 
+    executions, allowing for efficient parallel processing without overloading resources.
+
+    Args:
+        funcs (List[Callable[..., Any]]): List of functions to be executed.
+        inputs (List[Any]): List of inputs, each corresponding to each function.
+        max_concurrent (int): Maximum number of concurrent executions.
+
+    Returns:
+        List[Any]: List of results from each function call.
+    """
+    semaphore = asyncio.Semaphore(max_concurrent)
+
+    async def semaphore_wrapper(func, inp):
+        async with semaphore:
+            return await func(inp)
+
+    tasks = [semaphore_wrapper(func, inp) for func, inp in zip(funcs, inputs)]
+    return await asyncio.gather(*tasks)
+
+def conditional_call(func: Callable[..., Any], 
+                     condition: Callable[..., bool], 
+                     input_: Any, **kwargs) -> Optional[Any]:
+    """
+    Execute a function only if a specified condition is met.
+
+    This function allows conditional execution of another function, where the condition
+    is evaluated before the function execution. If the condition returns True, the function
+    is executed; otherwise, None is returned.
+
+    Args:
+        func (Callable[..., Any]): The function to be executed.
+        condition (Callable[..., bool]): The condition to be evaluated.
+        input_ (Any): Input to the function and condition.
+        **kwargs: Additional keyword arguments to pass to the function.
+
+    Returns:
+        Optional[Any]: The result of the function call if condition is met, otherwise None.
+    """
+    if condition(input_):
+        return func(input_, **kwargs)
+    return None
+
+def dynamic_chain(input_: Any, funcs: List[Callable[..., Any]], **kwargs) -> Any:
+    """
+    Chain multiple functions dynamically, where the output of one function becomes the input of the next.
+
+    This function allows for the creation of a dynamic function chain. Each function in the
+    chain is applied sequentially, with the output of one function becoming the input for the next.
+
+    Args:
+        input_ (Any): The initial input to the chain.
+        funcs (List[Callable[..., Any]]): List of functions to chain.
+        **kwargs: Additional keyword arguments to pass to each function in the chain.
+
+    Returns:
+        Any: The final output after all functions are applied.
+    """
+    result = input_
+    for func in funcs:
+        result = func(result, **kwargs)
+    return result
+
+def call_with_timeout(func: Callable[..., Any], timeout: int, *args, **kwargs) -> Any:
+    """
+    Executes a function call with a specified timeout. If the function execution exceeds 
+    the given timeout, a TimeoutError is raised.
+
+    Args:
+        func (Callable[..., Any]): The function to be executed.
+        timeout (int): Timeout in seconds after which the function call will be aborted.
+        *args: Positional arguments to pass to the function.
+        **kwargs: Keyword arguments to pass to the function.
+
+    Returns:
+        Any: The result of the function call if completed within the timeout, 
+        otherwise raises TimeoutError.
+    """
+    loop = asyncio.get_event_loop()
+    try:
+        return loop.run_until_complete(asyncio.wait_for(func(*args, **kwargs), timeout))
+    except asyncio.TimeoutError:
+        raise TimeoutError(f"Function call timed out after {timeout} seconds.")
+
+def call_with_retry(func: Callable[..., Any], retries: int = 3, delay: int = 2, *args, **kwargs) -> Any:
+    """
+    Retries a function call a specified number of times with a delay between attempts. If all attempts fail, 
+    the function raises the last caught exception.
+
+    Args:
+        func (Callable[..., Any]): The function to be executed.
+        retries (int): Number of times to retry the function call.
+        delay (int): Delay in seconds between retries.
+        *args: Positional arguments to pass to the function.
+        **kwargs: Keyword arguments to pass to the function.
+
+    Returns:
+        Any: The result of the function call if successful within the retry limit, 
+        otherwise raises the last caught exception.
+    """
+    for attempt in range(retries):
+        try:
+            return func(*args, **kwargs)
+        except Exception as e:
+            last_exception = e
+            if attempt < retries - 1:
+                time.sleep(delay)
+    raise last_exception
+
+def call_with_default(func: Callable[..., Any], default: Any, *args, **kwargs) -> Any:
+    """
+    Executes a function call and returns a specified default value if an exception occurs during the function execution.
+
+    Args:
+        func (Callable[..., Any]): The function to be executed.
+        default (Any): Default value to return in case of an exception.
+        *args: Positional arguments to pass to the function.
+        **kwargs: Keyword arguments to pass to the function.
+
+    Returns:
+        Any: The result of the function call if successful, otherwise the specified default value.
+    """
+    try:
+        return func(*args, **kwargs)
+    except Exception:
+        return default
+
+def batch_call(func: Callable[..., Any], 
+               inputs: List[Any], 
+               batch_size: int, 
+               **kwargs) -> List[Any]:
+    """
+    Processes a list of inputs in batches, applying a function to each item in a batch.
+
+    Args:
+        func (Callable[..., Any]): The function to be applied to each item.
+        inputs (List[Any]): The list of inputs to be processed.
+        batch_size (int): The number of items to include in each batch.
+        **kwargs: Additional keyword arguments to pass to the function.
+
+    Returns:
+        List[Any]: A list of results from applying the function to each item in the batches.
+    """
+    results = []
+    for i in range(0, len(inputs), batch_size):
+        batch = inputs[i:i + batch_size]
+        results.extend([func(item, **kwargs) for item in batch])
+    return results
+
+@lru_cache(maxsize=128)
+def cached_call(func: Callable[..., Any], *args, **kwargs) -> Any:
+    """
+    Caches the results of function calls to reduce redundant computations.
+
+    This function uses a least recently used (LRU) cache to store the results of function calls,
+    improving efficiency for functions with expensive computations.
+
+    Args:
+        func (Callable[..., Any]): The function whose results are to be cached.
+        *args: Positional arguments to pass to the function.
+        **kwargs: Keyword arguments to pass to the function.
+
+    Returns:
+        Any: The cached result of the function call.
+    """
+    return func(*args, **kwargs)
+
+async def async_iterative_call(func: Callable[..., Any], 
+                               inputs: List[Any], 
+                               **kwargs) -> List[Any]:
+    """
+    Asynchronously iterates over a list of inputs, applying a function to each item.
+
+    Args:
+        func (Callable[..., Any]): The asynchronous function to be applied.
+        inputs (List[Any]): The list of inputs to be processed.
+        **kwargs: Additional keyword arguments to pass to the function.
+
+    Returns:
+        List[Any]: A list of results from the asynchronous application of the function.
+    """
+    return await asyncio.gather(*(func(item, **kwargs) for item in inputs))
+
+def call_with_pre_post_processing(func: Callable[..., Any], 
+                                  preprocess: Callable[..., Any], 
+                                  postprocess: Callable[..., Any], 
+                                  *args, **kwargs) -> Any:
+    """
+    Executes a function with defined preprocessing and postprocessing steps.
+
+    Args:
+        func (Callable[..., Any]): The main function to execute.
+        preprocess (Callable[..., Any]): A function to preprocess each argument.
+        postprocess (Callable[..., Any]): A function to postprocess the result.
+        *args: Positional arguments to pass to the main function.
+        **kwargs: Keyword arguments to pass to the main function.
+
+    Returns:
+        Any: The result of the main function after preprocessing and postprocessing.
+    """
+    preprocessed_args = [preprocess(arg) for arg in args]
+    preprocessed_kwargs = {k: preprocess(v) for k, v in kwargs.items()}
+    result = func(*preprocessed_args, **preprocessed_kwargs)
+    return postprocess(result)

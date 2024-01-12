@@ -13,33 +13,10 @@ class ChatCompletion(BaseEndpoint):
     endpoint: str = "chat/completions"
 
     @classmethod
-    def create_payload(scls, messages, llmconfig, schema, **kwargs):
-        """
-        Creates a payload for a chat completion request using provided messages, configuration, and schema.
+    def create_payload(scls, messages, imodel, config, schema, **kwargs):
+        config = config or imodel.config
+        config = {**config, **kwargs}
 
-        This method constructs a payload dictionary that includes required and optional parameters 
-        as specified in the schema. Required parameters are extracted from 'llmconfig' and 'kwargs', 
-        while optional parameters are included only if they are truthy and not equal to the string "none".
-
-        Parameters:
-            messages (list): A list of message objects to include in the payload.
-            llmconfig (dict): A dictionary containing configuration settings for the large language model.
-            schema (dict): A dictionary defining required and optional keys for the payload.
-                The 'required' key should map to a list of required parameter names.
-                The 'optional' key should map to a list of optional parameter names.
-            **kwargs: Additional keyword arguments that can override or supplement 'llmconfig'.
-
-        Returns:
-            dict: A dictionary representing the payload for the chat completion request.
-
-        Example:
-            payload = ChatCompletion.create_payload(
-                messages=[{"text": "Hello, world!"}],
-                llmconfig={"max_tokens": 100},
-                schema={"required": ["max_tokens"], "optional": ["temperature"]}
-            )
-        """
-        config = {**llmconfig, **kwargs}
         payload = {"messages": messages}
         for key in schema['required']:
             payload.update({key: config[key]})
