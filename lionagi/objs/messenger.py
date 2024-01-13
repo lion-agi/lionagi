@@ -2,7 +2,7 @@ from collections import deque
 from typing import Optional, Any, Union, Dict, Tuple
 
 from lionagi.utils.call_util import lcall
-from lionagi.schema.data_logger import DataLogger
+from doen_.data_logger import DataLogger
 from lionagi.messages import Message, Response, Instruction, System
 
 

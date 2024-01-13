@@ -1,28 +1,12 @@
 import csv
-import binascii
-from datetime import datetime
-from dateutil import parser
 import io
-from typing import List, Union, Any, Optional
-import unittest
-
 import csv
-import hashlib
 import json
-import logging
 import os
-import re
-import requests
+import yaml
 import tempfile
-import time
 from collections.abc import Iterable
-from functools import lru_cache
-from requests.adapters import HTTPAdapter
-from requests.packages.urllib3.util.retry import Retry
-from typing import Any, Callable, Dict, Optional, Union
-from unittest import TestCase, main
-from unittest.mock import Mock, patch
-
+from typing import Any, Dict, List
 
 def python_obj_to_csv(data: List[dict]) -> str:
     """Convert a list of dictionaries to a CSV formatted string.
@@ -142,3 +126,99 @@ def to_temp(input: Any) -> tempfile.NamedTemporaryFile:
         raise TypeError(f"Data provided is not JSON serializable: {e}")
     temp_file.close()
     return temp_file
+
+import os
+import csv
+import json
+from typing import List, Dict, Any
+
+# Improved to_csv function with reduced memory usage
+def to_csv(input: List[Dict[str, Any]]=None,
+           filepath: str=None,
+           file_exist_ok: bool = False) -> None:
+    if not os.path.exists(os.path.dirname(filepath)) and os.path.dirname(filepath) != '':
+        if file_exist_ok:
+            os.makedirs(os.path.dirname(filepath), exist_ok=True)
+        else:
+            raise FileNotFoundError(f"The directory {os.path.dirname(filepath)} does not exist.")
+
+    with open(filepath, 'w', newline='') as csv_file:
+        writer = csv.DictWriter(csv_file, fieldnames=input[0].keys())
+        writer.writeheader()
+        for row in input:
+            writer.writerow(row)
+
+# Existing append_to_jsonl function
+def append_to_jsonl(data: Any, filepath: str) -> None:
+    json_string = json.dumps(data)
+    with open(filepath, "a") as f:
+        f.write(json_string + "\n")
+
+# New read_csv function
+def read_csv(filepath: str) -> List[Dict[str, Any]]:
+    with open(filepath, 'r', newline='') as csv_file:
+        reader = csv.DictReader(csv_file)
+        return list(reader)
+
+# New read_jsonl function
+def read_jsonl(filepath: str) -> List[Any]:
+    with open(filepath, 'r') as f:
+        return [json.loads(line) for line in f]
+
+# New write_json function
+def write_json(data: List[Dict[str, Any]], filepath: str) -> None:
+    with open(filepath, 'w') as json_file:
+        json.dump(data, json_file, indent=4)
+
+# New read_json function
+def read_json(filepath: str) -> Any:
+    with open(filepath, 'r') as json_file:
+        return json.load(json_file)
+
+# New merge_csv_files function
+def merge_csv_files(filepaths: List[str], output_filepath: str) -> None:
+    merged_data = []
+    fieldnames = set()
+    for filepath in filepaths:
+        with open(filepath, 'r', newline='') as csv_file:
+            reader = csv.DictReader(csv_file)
+            fieldnames.update(reader.fieldnames)
+            for row in reader:
+                merged_data.append(row)
+    fieldnames = list(fieldnames)
+    with open(output_filepath, 'w', newline='') as csv_file:
+        writer = csv.DictWriter(csv_file, fieldnames=fieldnames)
+        writer.writeheader()
+        writer.writerows(merged_data)
+        
+def json_to_yaml(json_data: str) -> str:
+    """Convert JSON formatted string to a YAML formatted string.
+
+    Args:
+        json_data: A string formatted as JSON.
+
+    Returns:
+        A string formatted as YAML.
+
+    Examples:
+        >>> json_to_yaml('{"name": "John", "age": 30}')
+        'name: John\\nage: 30\\n'
+    """
+    parsed_json = json.loads(json_data)
+    return yaml.dump(parsed_json, sort_keys=False)
+
+def csv_to_json(csv_data: str) -> List[dict]:
+    """Convert CSV formatted string to a list of dictionaries.
+
+    Args:
+        csv_data: A string formatted as CSV.
+
+    Returns:
+        A list of dictionaries representing the rows of the CSV.
+
+    Examples:
+        >>> csv_to_json("name,age\\nJohn,30")
+        [{'name': 'John', 'age': '30'}]
+    """
+    reader = csv.DictReader(csv_data.splitlines())
+    return [row for row in reader]

@@ -1,19 +1,9 @@
-from typing import Any, Callable, Type, Optional, List
+import base64
 from functools import reduce
 import binascii
-import csv
 import hashlib
-import io
-import json
-import os
-import re
-import unittest
-import xml.etree.ElementTree as ET
-from datetime import datetime
-from dateutil import parser
 from functools import reduce
-from typing import Any, Callable, Dict, Generator, List, Optional, Type, Union
-from xml.dom import minidom
+from typing import Any, Callable, Dict, List, Optional, Type
 
 def handle_error(value: Any, config: Dict[str, Any]) -> Any:
     """Handle an error by logging and returning a default value if provided.
@@ -149,3 +139,113 @@ def find_depth(nested_list):
         for value in nested_list.values():
             max_depth = max(max_depth, find_depth(value))
     return max_depth + 1
+
+def filter_values(values: List[Any], predicate: Callable[[Any], bool]) -> List[Any]:
+    return [value for value in values if predicate(value)]
+
+def map_values(values: List[Any], function: Callable[[Any], Any]) -> List[Any]:
+    return [function(value) for value in values]
+
+def reduce_values(values: List[Any], function: Callable[[Any, Any], Any], initial: Any) -> Any:
+    return reduce(function, values, initial)
+
+def compose_functions(*functions: Callable) -> Callable:
+    def composed_function(value):
+        for function in reversed(functions):
+            value = function(value)
+        return value
+    return composed_function
+
+def memoize(function: Callable) -> Callable:
+    cache = {}
+    def memoized_function(*args):
+        if args in cache:
+            return cache[args]
+        result = function(*args)
+        cache[args] = result
+        return result
+    return memoized_function
+
+def binary_to_hex(data: bytes) -> str:
+    """Convert binary data to a hexadecimal string representation.
+
+    Args:
+        data: A bytes object containing binary data.
+
+    Returns:
+        A string containing the hexadecimal representation of the binary data.
+
+    Examples:
+        >>> binary_to_hex(b'\x00\x0F')
+        '000f'
+        >>> binary_to_hex(b'hello')
+        '68656c6c6f'
+    """
+    return binascii.hexlify(data).decode()
+
+
+def create_hash(data: str, algorithm: str = 'sha256') -> str:
+    """Create a hash of the given data using the specified algorithm.
+
+    Args:
+        data: The string to hash.
+        algorithm: The hashing algorithm to use (default is 'sha256').
+
+    Returns:
+        The hexadecimal digest of the hash.
+
+    Examples:
+        >>> create_hash('hello')
+        '2cf24dba5fb0a30e26e83b2ac5b9e29e1b161e5c1fa7425e73043362938b9824'
+    """
+    hasher = hashlib.new(algorithm)
+    hasher.update(data.encode())
+    return hasher.hexdigest()
+
+def create_hash(data: str, algorithm: str = 'sha256') -> str:
+    """Create a hash of the given data using the specified algorithm.
+
+    Args:
+        data: The string to hash.
+        algorithm: The hashing algorithm to use (default is 'sha256').
+
+    Returns:
+        The hexadecimal digest of the hash.
+
+    Examples:
+        >>> create_hash('hello')
+        '2cf24dba5fb0a30e26e83b2ac5b9e29e1b161e5c1fa7425e73043362938b9824'
+    """
+    hasher = hashlib.new(algorithm)
+    hasher.update(data.encode())
+    return hasher.hexdigest()
+
+def decode_base64(data: str) -> str:
+    """Decode a base64 encoded string.
+
+    Args:
+        data: A base64 encoded string.
+
+    Returns:
+        A decoded string.
+
+    Examples:
+        >>> decode_base64('SGVsbG8sIFdvcmxkIQ==')
+        'Hello, World!'
+    """
+    return base64.b64decode(data).decode()
+
+def encode_base64(data: str) -> str:
+    """Encode a string using base64 encoding.
+
+    Args:
+        data: A string to be encoded.
+
+    Returns:
+        A base64 encoded string.
+
+    Examples:
+        >>> encode_base64("Hello, World!")
+        'SGVsbG8sIFdvcmxkIQ=='
+    """
+    return base64.b64encode(data.encode()).decode()
