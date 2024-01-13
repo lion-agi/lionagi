@@ -157,7 +157,6 @@ class APIUtil:
     def get_cache_key(url: str, params: Optional[Dict[str, Any]]) -> str:
         """
         Creates a unique cache key based on the URL and parameters.
-        (Other documentation remains unchanged)
         """
         param_str = json.dumps(params, sort_keys=True) if params else ""
         return hashlib.md5((url + param_str).encode('utf-8')).hexdigest()

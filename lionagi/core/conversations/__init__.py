@@ -1,4 +1,4 @@
-from ....work_.conversation import Conversation
+from .conversation import Conversation
 
 __all__ = [
     "Conversation"

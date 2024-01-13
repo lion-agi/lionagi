@@ -1,5 +1,5 @@
 from typing import Any, Optional
-from .message import Message
+from ..lionagi.messages.message import Message
 
 class System(Message):
     
