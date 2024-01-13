@@ -1,3 +1,8 @@
+
+import os
+import csv
+import json
+from typing import List, Dict, Any
 import csv
 import io
 import csv
@@ -127,32 +132,8 @@ def to_temp(input: Any) -> tempfile.NamedTemporaryFile:
     temp_file.close()
     return temp_file
 
-import os
-import csv
-import json
-from typing import List, Dict, Any
 
-# Improved to_csv function with reduced memory usage
-def to_csv(input: List[Dict[str, Any]]=None,
-           filepath: str=None,
-           file_exist_ok: bool = False) -> None:
-    if not os.path.exists(os.path.dirname(filepath)) and os.path.dirname(filepath) != '':
-        if file_exist_ok:
-            os.makedirs(os.path.dirname(filepath), exist_ok=True)
-        else:
-            raise FileNotFoundError(f"The directory {os.path.dirname(filepath)} does not exist.")
 
-    with open(filepath, 'w', newline='') as csv_file:
-        writer = csv.DictWriter(csv_file, fieldnames=input[0].keys())
-        writer.writeheader()
-        for row in input:
-            writer.writerow(row)
-
-# Existing append_to_jsonl function
-def append_to_jsonl(data: Any, filepath: str) -> None:
-    json_string = json.dumps(data)
-    with open(filepath, "a") as f:
-        f.write(json_string + "\n")
 
 # New read_csv function
 def read_csv(filepath: str) -> List[Dict[str, Any]]:
