@@ -138,7 +138,7 @@ class Session:
 
     async def call_chatcompletion(self, schema=oai_schema['chat'], **kwargs):
         messages = [message.msg for message in self.conversation.messages]
-        payload = ChatCompletion.create_payload(messages=messages, schema=schema, llmconfig=self.llmconfig,**kwargs)
+        payload = ChatCompletion.create_payload(messages=messages, schema=schema, config=self.llmconfig,**kwargs)
         completion = await self.service.serve(payload=payload)
         if "choices" in completion:
             self.logger_({"input":payload, "output": completion})

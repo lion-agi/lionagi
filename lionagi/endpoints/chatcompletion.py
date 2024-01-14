@@ -13,7 +13,7 @@ class ChatCompletion(BaseEndpoint):
     endpoint: str = "chat/completions"
 
     @classmethod
-    def create_payload(scls, messages, imodel, config, schema, **kwargs):
+    def create_payload(scls, messages, schema, imodel=None, config=None, **kwargs):
         config = config or imodel.config
         config = {**config, **kwargs}
 
