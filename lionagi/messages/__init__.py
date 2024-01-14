@@ -1,4 +1,4 @@
-from ...done_.message import Message
+from .message import Message
 from .system import System
 from ...work_.instruction import Instruction
 from .response import Response
