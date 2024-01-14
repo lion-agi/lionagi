@@ -46,7 +46,7 @@ class Session:
                 # outs = await self.tool_manager.invoke(func, args)
                 # self.conversation.add_messages(response=outs)
 
-                tool_uses = json.loads(self.conversation.responses[-1].message_content)
+                tool_uses = json.loads(self.conversation.responses[-1].msg_content)
                 if 'function_list' in tool_uses.keys():
                     func_calls = lcall(tool_uses['function_list'], self.tool_manager.get_function_call)
                 else:
@@ -59,10 +59,10 @@ class Session:
             except:
                 pass
         if out:
-            return self.conversation.responses[-1].message_content
+            return self.conversation.responses[-1].msg_content
     
     def _is_invoked(self):
-        content = self.conversation.messages[-1].message_content
+        content = self.conversation.messages[-1].msg_content
         try:
             if json.loads(content).keys() >= {'function', 'arguments', 'output'}:
                 return True
@@ -173,7 +173,7 @@ class Session:
     #     self.logger_.to_csv(dir=dir, filename=filename, **kwargs)
     
     async def call_chatcompletion(self, schema=oai_schema['chat'], **kwargs):
-        messages = [message.message for message in self.conversation.messages]
+        messages = [message.msg for message in self.conversation.messages]
         payload = ChatCompletion.create_payload(messages=messages, schema=schema, llmconfig=self.llmconfig,**kwargs)
         completion = await self.service.serve(payload=payload)
         if "choices" in completion:
