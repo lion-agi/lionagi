@@ -73,37 +73,6 @@ class EncrytionUtil:
             return Fernet.generate_key().decode()
 
     @staticmethod
-    def generate_encryption_key(password: str = None, salt: bytes = None) -> str:
-        """
-        Generate an encryption key.
-
-        Args:
-            password (str, optional): The password to use for the key. If not provided, a random key is generated.
-            salt (bytes, optional): The salt to use for the key. If not provided, a random salt is generated.
-
-        Returns:
-            str: The generated encryption key.
-
-        Example:
-            >>> generate_encryption_key(password="test_password")
-            'esvCExTuhddRb8kSobU_gnNRYObyTRTI2LJF4nYai5I='
-        """
-        if password:
-            if not salt:
-                salt = os.urandom(16)
-            kdf = PBKDF2HMAC(
-                algorithm=hashes.SHA256(),
-                length=32,
-                salt=salt,
-                iterations=100000,
-                backend=default_backend()
-            )
-            key = kdf.derive(password.encode())
-            return urlsafe_b64encode(key).decode()
-        else:
-            return Fernet.generate_key().decode()
-
-    @staticmethod
     def encrypt(data: str, key: str) -> str:
         """
         Encrypt the provided data using the provided key.

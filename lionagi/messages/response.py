@@ -1,5 +1,5 @@
 from typing import Any, Optional, Dict
-from messages import Message
+from .message import Message
 
 class Response(Message):
     metadata: Dict[str, Any] = {}

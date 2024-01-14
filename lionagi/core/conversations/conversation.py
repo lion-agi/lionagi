@@ -4,7 +4,7 @@ from lionagi.messages import Message, Response
 from lionagi.objs.messenger import Messenger
 
 
-class Conversation(BaseNode):
+class Conversation:
     """
     Represents a conversation, encapsulating messages and responses, 
     and providing functionalities for managing and analyzing the conversation flow.
@@ -29,9 +29,11 @@ class Conversation(BaseNode):
     """    
 
     response_counts: int = 0
-    messages: List[Message] = []
-    msgr: Any = Messenger()
-    responses: List[Response] = []
+    
+    def __init__(self, messages=None) -> None:
+        self.messages = messages
+        self.msgr = Messenger()
+        self.responses = []
 
     def initiate_conversation(
         self, system=None, instruction=None, 

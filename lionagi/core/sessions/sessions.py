@@ -42,10 +42,6 @@ class Session:
     async def _output(self, invoke=True, out=True):
         if invoke:
             try: 
-                # func, args = self.tool_manager._get_function_call(self.conversation.responses[-1]['content'])
-                # outs = await self.tool_manager.invoke(func, args)
-                # self.conversation.add_messages(response=outs)
-
                 tool_uses = json.loads(self.conversation.responses[-1].msg_content)
                 if 'function_list' in tool_uses.keys():
                     func_calls = lcall(tool_uses['function_list'], self.tool_manager.get_function_call)
@@ -69,21 +65,13 @@ class Session:
         except: 
             return False    
 
-    def register_tools(self, tools): #, update=False, new=False, prefix=None, postfix=None):
+    def register_tools(self, tools):
         if not isinstance(tools, list):
             tools=[tools]
-        self.tool_manager.register_tools(tools=tools) #, update=update, new=new, prefix=prefix, postfix=postfix)
-        # tools_schema = lcall(tools, lambda tool: tool.to_dict()['schema_'])
-        # if self.llmconfig['tools'] is None:
-        #     self.llmconfig['tools'] = tools_schema
-        # else:
-        #     self.llmconfig['tools'] += tools_schema
+        self.tool_manager.register_tools(tools=tools) 
+
 
     def _tool_parser(self, **kwargs):
-        # 1. single schema: dict
-        # 2. tool: Tool
-        # 3. name: str
-        # 4. list: 3 types of lists
         def tool_check(tool):
             if isinstance(tool, dict):
                 return tool
@@ -109,10 +97,6 @@ class Session:
 
     async def initiate(self, instruction, system=None, context=None, 
                        name=None, invoke=True, out=True, **kwargs) -> Any:
-        # if self.tool_manager.registry != {}:
-        #     if 'tools' not in kwargs:
-        #         tool_kwarg = {"tools": self.tool_manager.to_tool_schema_list()}
-        #         kwargs = {**tool_kwarg, **kwargs}
         if self.tool_manager.registry != {}:
             kwargs = self._tool_parser(**kwargs)
         if self.service is not None:
@@ -135,20 +119,12 @@ class Session:
         else:
             if self.tool_manager.registry != {}:
                 kwargs = self._tool_parser(**kwargs)
-        # if self.tool_manager.registry != {}:
-        #     if 'tools' not in kwargs:
-        #         tool_kwarg = {"tools": self.tool_manager.to_tool_schema_list()}
-        #         kwargs = {**tool_kwarg, **kwargs}
         config = {**self.llmconfig, **kwargs}
         await self.call_chatcompletion(**config)
 
         return await self._output(invoke, out)
 
     async def auto_followup(self, instruct, num=3, **kwargs):
-        # if self.tool_manager.registry != {}:
-        #     if 'tools' not in kwargs:
-        #         tool_kwarg = {"tools": self.tool_manager.to_tool_schema_list()}
-        #         kwargs = {**tool_kwarg, **kwargs}
         if self.tool_manager.registry != {}:
             kwargs = self._tool_parser(**kwargs)
 
@@ -160,18 +136,6 @@ class Session:
         if num == 0:
             await self.followup(instruct, **kwargs, tool_parsed=True)
 
-    # def messages_to_csv(self, dir=None, filename="messages.csv", **kwargs):
-    #     dir = dir or self.logger_.dir
-    #     if dir is None:
-    #         raise ValueError("No directory specified.")
-    #     self.conversation.msg.to_csv(dir=dir, filename=filename, **kwargs)
-        
-    # def log_to_csv(self, dir=None, filename="llmlog.csv", **kwargs):
-    #     dir = dir or self.logger_.dir
-    #     if dir is None:
-    #         raise ValueError("No directory specified.")
-    #     self.logger_.to_csv(dir=dir, filename=filename, **kwargs)
-    
     async def call_chatcompletion(self, schema=oai_schema['chat'], **kwargs):
         messages = [message.msg for message in self.conversation.messages]
         payload = ChatCompletion.create_payload(messages=messages, schema=schema, llmconfig=self.llmconfig,**kwargs)

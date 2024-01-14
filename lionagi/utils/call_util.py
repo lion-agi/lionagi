@@ -1,14 +1,50 @@
+from collections import OrderedDict
 import asyncio
+import functools as ft
 import time
-from functools import lru_cache, wraps
-from typing import Any, Callable, Iterable, List, Optional, Tuple, Union
-from .sys_util import create_copy, to_list
+from typing import Any, Callable, Dict, Iterable, List, Optional, Tuple, Type, Union
+from .sys_util import create_copy
+from .nested_util import _flatten_list
+
+
+def to_list(input_: Any, flatten: bool = True, dropna: bool = False) -> List[Any]:
+    """
+    Converts the input to a list, optionally flattening it and dropping None values.
+
+    Parameters:
+        input_ (Any): The input to convert to a list.
+        
+        flatten (bool): Whether to flatten the input if it is a nested list. Defaults to True.
+        
+        dropna (bool): Whether to drop None values from the list. Defaults to False.
+
+    Returns:
+        List[Any]: The input converted to a list.
+
+    Raises:
+        ValueError: If the input cannot be converted to a list.
+    """
+    if isinstance(input_, list) and flatten:
+        input_ = _flatten_list(input_)
+        if dropna:
+            input_ = [i for i in input_ if i is not None]
+    elif isinstance(input_, Iterable) and not isinstance(input_, (str, dict)):
+        try:
+            input_ = list(input_)
+        except:
+            raise ValueError("Input cannot be converted to a list.")
+    else:
+        input_ = [input_]
+    return input_
+
 
 # list call
-def lcall(input_: Any, func_: Callable, flatten: bool = False,
-          dropna: bool = False, **kwargs) -> List[Any]:
+def lcall(
+    input_: Any, func_: Callable, flatten: bool = False, 
+    dropna: bool = False, **kwargs) -> List[Any]:
     """
-    Applies a function to each element in a list, with options for flattening and dropping NAs.
+    Applies a function to each element in a list, with options for 
+    flattening and dropping NAs.
 
     Args:
         input_ (Any): The input, potentially a list, to process.
@@ -18,15 +54,18 @@ def lcall(input_: Any, func_: Callable, flatten: bool = False,
         **kwargs: Additional keyword arguments to pass to the function.
 
     Returns:
-        List[Any]: A list containing the results of the function call on each element.
+        List[Any]: A list containing the results of the function call on 
+        each element.
     """
     try:
-        lst = to_list(input_=input_, flatten=flatten, dropna=dropna)
+        lst = NestedUtil.to_list(input_=input_, flatten=flatten, dropna=dropna)
         return [func_(i, **kwargs) for i in lst]
     except Exception as e:
         raise ValueError(f"Function {func_.__name__} cannot be applied: {e}")
 
-async def alcall(input_: Any, func_: Callable, flatten: bool = False, dropna: bool = True, **kwargs) -> List[Any]:
+async def alcall(
+    input_: Any, func_: Callable, flatten: bool = False, 
+    dropna: bool = True, **kwargs) -> List[Any]:
     """
     Asynchronously or synchronously applies a function to each element in a list, 
     with options for flattening and dropping NAs.
@@ -54,10 +93,10 @@ async def alcall(input_: Any, func_: Callable, flatten: bool = False, dropna: bo
 # timed call
 def tcall(input_: Any, func: Callable, sleep: float = 0.1,
                   message: Optional[str] = None, ignore_error: bool = False, 
-                  include_timing: bool = False, **kwargs) -> Union[Any, Tuple[Any, float]]:
+                  include_timing: bool = False, **kwargs
+        ) -> Union[Any, Tuple[Any, float]]:
     """
-    Enhanced function to handle both synchronous and asynchronous calls with 
-    optional delay, error handling, and execution timing.
+    Handle both synchronous and asynchronous calls with optional delay, error handling, and execution timing.
 
     Args:
         input_ (Any): The input to be passed to the function.
@@ -264,10 +303,10 @@ def rcall(func: Callable[..., Any], *args, timeout: Optional[int] = None,
 
 
 
-class call_decorator:
+class CallDecorator:
     
     @staticmethod
-    def cache_results(func: Callable) -> Callable:
+    def cache(func: Callable) -> Callable:
         """
         Decorator that caches the results of function calls (both sync and async). 
         If the function is called again with the same arguments, 
@@ -282,11 +321,11 @@ class call_decorator:
 
         if asyncio.iscoroutinefunction(func):
             # Asynchronous function handling
-            @lru_cache(maxsize=None)
+            @ft.lru_cache(maxsize=None)
             async def cached_async(*args, **kwargs) -> Any:
                 return await func(*args, **kwargs)
             
-            @wraps(func)
+            @ft.wraps(func)
             async def async_wrapper(*args, **kwargs) -> Any:
                 return await cached_async(*args, **kwargs)
 
@@ -294,11 +333,11 @@ class call_decorator:
 
         else:
             # Synchronous function handling
-            @lru_cache(maxsize=None)
+            @ft.lru_cache(maxsize=None)
             def cached_sync(*args, **kwargs) -> Any:
                 return func(*args, **kwargs)
             
-            @wraps(func)
+            @ft.wraps(func)
             def sync_wrapper(*args, **kwargs) -> Any:
                 return cached_sync(*args, **kwargs)
 
@@ -326,7 +365,7 @@ class call_decorator:
         This will apply a 5-second timeout to `my_function`.
         """
         def decorator(func: Callable[..., Any]) -> Callable:
-            @wraps(func)
+            @ft.wraps(func)
             def wrapper(*args, **kwargs) -> Any:
                 return rcall(func, *args, timeout=timeout, **kwargs)
             return wrapper
@@ -356,14 +395,14 @@ class call_decorator:
         This will retry `my_function` up to 3 times with increasing delays if it raises an exception.
         """
         def decorator(func: Callable[..., Any]) -> Callable:
-            @wraps(func)
+            @ft.wraps(func)
             def wrapper(*args, **kwargs) -> Any:
                 return rcall(func, *args, retries=retries, initial_delay=initial_delay, backoff_factor=backoff_factor, **kwargs)
             return wrapper
         return decorator
 
     @staticmethod
-    def default_value(default: Any) -> Callable:
+    def default(default: Any) -> Callable:
         """
         Decorator to apply a default value mechanism to a function.
 
@@ -384,7 +423,7 @@ class call_decorator:
         If `my_function` raises an exception, it will return 0 instead of propagating the exception.
         """
         def decorator(func: Callable[..., Any]) -> Callable:
-            @wraps(func)
+            @ft.wraps(func)
             def wrapper(*args, **kwargs) -> Any:
                 return rcall(func, *args, default=default, **kwargs)
             return wrapper
@@ -432,14 +471,14 @@ class call_decorator:
         """
 
         def decorator(func: Callable[..., Any]) -> Callable[..., Any]:
-            @wraps(func)
+            @ft.wraps(func)
             async def async_wrapper(*args, **kwargs) -> Any:
                 preprocessed_args = [preprocess(arg) for arg in args]
                 preprocessed_kwargs = {k: preprocess(v) for k, v in kwargs.items()}
                 result = await func(*preprocessed_args, **preprocessed_kwargs)
                 return postprocess(result)
 
-            @wraps(func)
+            @ft.wraps(func)
             def sync_wrapper(*args, **kwargs) -> Any:
                 preprocessed_args = [preprocess(arg) for arg in args]
                 preprocessed_kwargs = {k: preprocess(v) for k, v in kwargs.items()}
@@ -453,6 +492,226 @@ class call_decorator:
 
         return decorator
 
+    @staticmethod
+    def filter(predicate: Callable[[Any], bool]) -> Callable:
+        """
+        Decorator factory to filter values returned by a function based on a predicate.
+
+        Args:
+            predicate (Callable[[Any], bool]): Predicate function to filter values.
+
+        Returns:
+            Callable: Decorated function that filters its return values.
+        """
+        def decorator(func: Callable[..., List[Any]]) -> Callable:
+            @ft.wraps(func)
+            def wrapper(*args, **kwargs) -> List[Any]:
+                values = func(*args, **kwargs)
+                return [value for value in values if predicate(value)]
+            return wrapper
+        return decorator
+
+    @staticmethod
+    def map(function: Callable[[Any], Any]) -> Callable:
+        """
+        Decorator factory to map values returned by a function using a provided function.
+
+        Args:
+            function (Callable[[Any], Any]): Function to map values.
+
+        Returns:
+            Callable: Decorated function that maps its return values.
+        """
+        def decorator(func: Callable[..., List[Any]]) -> Callable:
+            @ft.wraps(func)
+            def wrapper(*args, **kwargs) -> List[Any]:
+                values = func(*args, **kwargs)
+                return [function(value) for value in values]
+            return wrapper
+        return decorator
+
+    @staticmethod
+    def reduce(function: Callable[[Any, Any], Any], initial: Any) -> Callable:
+        """
+        Decorator factory to reduce values returned by a function to a single value using the provided function.
+
+        Args:
+            function (Callable[[Any, Any], Any]): Reducing function.
+            initial (Any): Initial value for reduction.
+
+        Returns:
+            Callable: Decorated function that reduces its return values.
+        """
+        def decorator(func: Callable[..., List[Any]]) -> Callable:
+            @ft.wraps(func)
+            def wrapper(*args, **kwargs) -> Any:
+                values = func(*args, **kwargs)
+                return ft.reduce(function, values, initial)
+            return wrapper
+        return decorator
+
+    @staticmethod
+    def compose(*functions: Callable[[Any], Any]) -> Callable:
+        """
+        Decorator factory that composes multiple functions. The output of each function is passed as 
+        the input to the next, in the order they are provided.
+
+        Args:
+            *functions: Variable length list of functions to compose.
+
+        Returns:
+            Callable: A new function that is the composition of the given functions.
+        """
+        def decorator(func: Callable) -> Callable:
+            @ft.wraps(func)
+            def wrapper(*args, **kwargs):
+                value = func(*args, **kwargs)
+                for function in reversed(functions):
+                    try:
+                        value = function(value)
+                    except Exception as e:
+                        print(f"Error in function {function.__name__}: {e}")
+                        return None
+                return value
+            return wrapper
+        return decorator
+
+    @staticmethod
+    def memoize(maxsize: int = 10_000) -> Callable:
+        """
+        Decorator factory to memoize function calls. Caches the return values of the function for specific inputs.
+
+        Args:
+            maxsize (int): Maximum size of the cache. Defaults to 10,000.
+
+        Returns:
+            Callable: A memoized version of the function.
+        """
+        def decorator(function: Callable) -> Callable:
+            cache = OrderedDict()
+            
+            @ft.wraps(function)
+            def memoized_function(*args):
+                if args in cache:
+                    cache.move_to_end(args)  # Move the recently accessed item to the end
+                    return cache[args]
+
+                if len(cache) >= maxsize:
+                    cache.popitem(last=False)  # Remove oldest cache entry
+
+                result = function(*args)
+                cache[args] = result
+                return result
+            
+            return memoized_function
+        
+        return decorator
+
+    @staticmethod
+    def validate(**config):
+        """
+        Decorator factory to process the return value of a function using specified validation and conversion functions.
+
+        Args:
+            **config: Configuration dictionary specifying the processing functions and their settings.
+
+        Returns:
+            Callable: A decorator that applies specified processing to the function's return value.
+        """
+        def decorator(func: Callable) -> Callable:
+            @ft.wraps(func)
+            def wrapper(*args, **kwargs) -> Any:
+                value = func(*args, **kwargs)
+                return _process_value(value, config)
+
+            return wrapper
+
+        return decorator
+
+def _handle_error(value: Any, config: Dict[str, Any]) -> Any:
+    """Handle an error by logging and returning a default value if provided.
+
+    Args:
+        value: The value to check for an exception.
+        config: A dictionary with optional keys 'log' and 'default'.
+
+    Returns:
+        The original value or the default value from config if value is an exception.
+
+    Examples:
+        >>> handle_error(ValueError("An error"), {'log': True, 'default': 'default_value'})
+        Error: An error
+        'default_value'
+    """
+    if isinstance(value, Exception):
+        if config.get('log', True):
+            print(f"Error: {value}")  # Replace with appropriate logging mechanism
+        return config.get('default', None)
+    return value
+
+def _validate_type(value: Any, expected_type: Type) -> Any:
+    """Validate the type of value, raise TypeError if not expected type.
+
+    Args:
+        value: The value to validate.
+        expected_type: The type that value is expected to be.
+
+    Returns:
+        The original value if it is of the expected type.
+
+    Raises:
+        TypeError: If value is not of the expected type.
+
+    Examples:
+        >>> validate_type(10, int)
+        10
+        >>> validate_type("10", int)
+        Traceback (most recent call last):
+        ...
+        TypeError: Invalid type: expected <class 'int'>, got <class 'str'>
+    """
+    if not isinstance(value, expected_type):
+        raise TypeError(f"Invalid type: expected {expected_type}, got {type(value)}")
+    return value
+
+def _convert_type(value: Any, target_type: Callable) -> Optional[Any]:
+    """Convert the type of value to target_type, return None if conversion fails.
+
+    Args:
+        value: The value to convert.
+        target_type: The type to convert value to.
+
+    Returns:
+        The converted value or None if conversion fails.
+
+    Examples:
+        >>> convert_type("10", int)
+        10
+        >>> convert_type("abc", int)
+        Conversion error: invalid literal for int() with base 10: 'abc'
+        None
+    """
+    try:
+        return target_type(value)
+    except (ValueError, TypeError) as e:
+        print(f"Conversion error: {e}")  # Replace with appropriate logging mechanism
+        return None
+
+def _process_value(value: Any, config: Dict[str, Any]) -> Any:
+    """
+    Processes a value using a chain of functions defined in config.
+    """
+    processing_functions = {
+        'handle_error': _handle_error,
+        'validate_type': _validate_type,
+        'convert_type': _convert_type
+    }
+
+    for key, func_config in config.items():
+        func = processing_functions.get(key)
+        if func:
+            value = func(value, func_config)
+    return value
 
 
 class Throttle:
@@ -491,7 +750,7 @@ class Throttle:
         Returns:
             Callable[..., Any]: The throttled synchronous function.
         """
-        @wraps(func)
+        @ft.wraps(func)
         def wrapper(*args, **kwargs) -> Any:
             elapsed = time.time() - self.last_called
             if elapsed < self.period:
@@ -511,7 +770,7 @@ class Throttle:
         Returns:
             Callable[..., Any]: The throttled asynchronous function.
         """
-        @wraps(func)
+        @ft.wraps(func)
         async def wrapper(*args, **kwargs) -> Any:
             elapsed = time.time() - self.last_called
             if elapsed < self.period:
@@ -520,4 +779,4 @@ class Throttle:
             return await func(*args, **kwargs)
 
         return wrapper
-
+    
