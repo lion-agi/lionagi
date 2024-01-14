@@ -11,7 +11,7 @@ from cryptography.hazmat.primitives.kdf.pbkdf2 import PBKDF2HMAC
 from typing import Optional
 
 
-class EncrytionUtils:
+class EncrytionUtil:
     """
     A utility class for handling encryption, decryption, file operations, and password strength checking.
     """
@@ -56,7 +56,7 @@ class EncrytionUtils:
             True
         """
         if password:
-            if not EncrytionUtils.password_strength_checker(password):
+            if not EncrytionUtil.password_strength_checker(password):
                 raise ValueError("Password is too weak.")
             if not salt:
                 salt = os.urandom(16)
@@ -157,7 +157,7 @@ class EncrytionUtils:
         if not output_path:
             output_path = file_path + '.enc'
         with open(file_path, 'rb') as file_to_encrypt:
-            encrypted_data = EncrytionUtils.encrypt(file_to_encrypt.read().decode(), key)
+            encrypted_data = EncrytionUtil.encrypt(file_to_encrypt.read().decode(), key)
         with open(output_path, 'wb') as encrypted_file:
             encrypted_file.write(encrypted_data.encode())
 
@@ -177,7 +177,7 @@ class EncrytionUtils:
         if not output_path:
             output_path = encrypted_file_path.replace('.enc', '')
         with open(encrypted_file_path, 'rb') as encrypted_file:
-            decrypted_data = EncrytionUtils.decrypt(encrypted_file.read().decode(), key)
+            decrypted_data = EncrytionUtil.decrypt(encrypted_file.read().decode(), key)
         with open(output_path, 'wb') as decrypted_file:
             decrypted_file.write(decrypted_data.encode())
 
@@ -198,7 +198,7 @@ class EncrytionUtils:
             True
         """
         try:
-            EncrytionUtils.decrypt_file(file_path, key, "temp_decrypted_file")
+            EncrytionUtil.decrypt_file(file_path, key, "temp_decrypted_file")
             os.remove("temp_decrypted_file")
             return True
         except InvalidToken:

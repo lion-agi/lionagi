@@ -8,7 +8,7 @@ from lionagi.services import OpenAIService
 from lionagi.endpoints import ChatCompletion
 from lionagi.objs.tool_manager import ToolManager
 from lionagi.configs.oai_configs import oai_schema
-from lionagi.core.conversation import Conversation
+from lionagi.core.conversations.conversation import Conversation
 
 load_dotenv()
 OAIService = OpenAIService()

@@ -262,150 +262,198 @@ def rcall(func: Callable[..., Any], *args, timeout: Optional[int] = None,
             return default
         raise e
 
-# decorators
-def cache_results(func: Callable) -> Callable:
-    """
-    Decorator that caches the results of function calls (both sync and async). 
-    If the function is called again with the same arguments, 
-    the cached result is returned instead of re-executing the function.
 
-    Args:
-        func (Callable): The function (can be sync or async) whose results need to be cached.
 
-    Returns:
-        Callable: A decorated function with caching applied.
-    """
+class call_decorator:
+    
+    @staticmethod
+    def cache_results(func: Callable) -> Callable:
+        """
+        Decorator that caches the results of function calls (both sync and async). 
+        If the function is called again with the same arguments, 
+        the cached result is returned instead of re-executing the function.
 
-    if asyncio.iscoroutinefunction(func):
-        # Asynchronous function handling
-        @lru_cache(maxsize=None)
-        async def cached_async(*args, **kwargs) -> Any:
-            return await func(*args, **kwargs)
-        
-        @wraps(func)
-        async def async_wrapper(*args, **kwargs) -> Any:
-            return await cached_async(*args, **kwargs)
+        Args:
+            func (Callable): The function (can be sync or async) whose results need to be cached.
 
-        return async_wrapper
+        Returns:
+            Callable: A decorated function with caching applied.
+        """
 
-    else:
-        # Synchronous function handling
-        @lru_cache(maxsize=None)
-        def cached_sync(*args, **kwargs) -> Any:
-            return func(*args, **kwargs)
-        
-        @wraps(func)
-        def sync_wrapper(*args, **kwargs) -> Any:
-            return cached_sync(*args, **kwargs)
+        if asyncio.iscoroutinefunction(func):
+            # Asynchronous function handling
+            @lru_cache(maxsize=None)
+            async def cached_async(*args, **kwargs) -> Any:
+                return await func(*args, **kwargs)
+            
+            @wraps(func)
+            async def async_wrapper(*args, **kwargs) -> Any:
+                return await cached_async(*args, **kwargs)
 
-        return sync_wrapper
+            return async_wrapper
 
-def time_spent(func: Callable[..., Any]) -> Callable[..., Tuple[Any, float]]:
-    """
-    Decorator that measures the execution time of a function.
+        else:
+            # Synchronous function handling
+            @lru_cache(maxsize=None)
+            def cached_sync(*args, **kwargs) -> Any:
+                return func(*args, **kwargs)
+            
+            @wraps(func)
+            def sync_wrapper(*args, **kwargs) -> Any:
+                return cached_sync(*args, **kwargs)
 
-    When applied to a function, it wraps the function call and returns a tuple containing
-    the original function's result and the time taken to execute the function in seconds.
+            return sync_wrapper
 
-    Args:
-        func (Callable[..., Any]): The function to be timed.
+    @staticmethod
+    def timeout(timeout: int) -> Callable:
+        """
+        Decorator to apply a timeout to a function.
 
-    Returns:
-        Callable[..., Tuple[Any, float]]: A wrapper function that returns a tuple of 
-        the function's result and its execution duration in seconds.
-    """
+        If the function's execution time exceeds the specified timeout, it will be terminated, and a TimeoutError is raised.
 
-    @wraps(func)
-    def wrapper(*args, **kwargs) -> Tuple[Any, float]:
-        start_time = time.time()
-        result = func(*args, **kwargs)
-        duration = time.time() - start_time
-        return result, duration
+        Args:
+            timeout (int): Maximum execution time allowed for the function in seconds.
 
-    return wrapper
+        Returns:
+            Callable: A decorated function with a timeout mechanism applied.
 
-def timeout(timeout: int) -> Callable:
-    """
-    Decorator to apply a timeout to a function.
+        Usage:
+            @timeout(5)
+            def my_function(arg1, arg2):
+                # Function implementation
+                pass
 
-    If the function's execution time exceeds the specified timeout, it will be terminated, and a TimeoutError is raised.
+        This will apply a 5-second timeout to `my_function`.
+        """
+        def decorator(func: Callable[..., Any]) -> Callable:
+            @wraps(func)
+            def wrapper(*args, **kwargs) -> Any:
+                return rcall(func, *args, timeout=timeout, **kwargs)
+            return wrapper
+        return decorator
 
-    Args:
-        timeout (int): Maximum execution time allowed for the function in seconds.
+    @staticmethod
+    def retry(retries: int = 3, initial_delay: float = 2.0, backoff_factor: float = 2.0) -> Callable:
+        """
+        Decorator to apply a retry mechanism to a function.
 
-    Returns:
-        Callable: A decorated function with a timeout mechanism applied.
+        If the function raises an exception, it will be retried up to the specified number of times with an exponential backoff delay.
 
-    Usage:
-        @timeout(5)
-        def my_function(arg1, arg2):
-            # Function implementation
-            pass
+        Args:
+            retries (int): Maximum number of retry attempts.
+            initial_delay (float): Initial delay in seconds before the first retry.
+            backoff_factor (float): Factor by which the delay is increased on each retry.
 
-    This will apply a 5-second timeout to `my_function`.
-    """
-    def decorator(func: Callable[..., Any]) -> Callable:
-        @wraps(func)
-        def wrapper(*args, **kwargs) -> Any:
-            return rcall(func, *args, timeout=timeout, **kwargs)
-        return wrapper
-    return decorator
+        Returns:
+            Callable: A decorated function with a retry mechanism applied.
 
-def retry(retries: int = 3, initial_delay: float = 2.0, backoff_factor: float = 2.0) -> Callable:
-    """
-    Decorator to apply a retry mechanism to a function.
+        Usage:
+            @retry(retries=3, initial_delay=1, backoff_factor=2)
+            def my_function(arg1, arg2):
+                # Function implementation
+                pass
 
-    If the function raises an exception, it will be retried up to the specified number of times with an exponential backoff delay.
+        This will retry `my_function` up to 3 times with increasing delays if it raises an exception.
+        """
+        def decorator(func: Callable[..., Any]) -> Callable:
+            @wraps(func)
+            def wrapper(*args, **kwargs) -> Any:
+                return rcall(func, *args, retries=retries, initial_delay=initial_delay, backoff_factor=backoff_factor, **kwargs)
+            return wrapper
+        return decorator
 
-    Args:
-        retries (int): Maximum number of retry attempts.
-        initial_delay (float): Initial delay in seconds before the first retry.
-        backoff_factor (float): Factor by which the delay is increased on each retry.
+    @staticmethod
+    def default_value(default: Any) -> Callable:
+        """
+        Decorator to apply a default value mechanism to a function.
 
-    Returns:
-        Callable: A decorated function with a retry mechanism applied.
+        If the function raises an exception, instead of propagating the exception, it returns a specified default value.
 
-    Usage:
-        @retry(retries=3, initial_delay=1, backoff_factor=2)
-        def my_function(arg1, arg2):
-            # Function implementation
-            pass
+        Args:
+            default (Any): The default value to return in case the function execution fails.
 
-    This will retry `my_function` up to 3 times with increasing delays if it raises an exception.
-    """
-    def decorator(func: Callable[..., Any]) -> Callable:
-        @wraps(func)
-        def wrapper(*args, **kwargs) -> Any:
-            return rcall(func, *args, retries=retries, initial_delay=initial_delay, backoff_factor=backoff_factor, **kwargs)
-        return wrapper
-    return decorator
+        Returns:
+            Callable: A decorated function that returns a default value on failure.
 
-def default_value(default: Any) -> Callable:
-    """
-    Decorator to apply a default value mechanism to a function.
+        Usage:
+            @default_value(default=0)
+            def my_function(arg1, arg2):
+                # Function implementation
+                pass
 
-    If the function raises an exception, instead of propagating the exception, it returns a specified default value.
+        If `my_function` raises an exception, it will return 0 instead of propagating the exception.
+        """
+        def decorator(func: Callable[..., Any]) -> Callable:
+            @wraps(func)
+            def wrapper(*args, **kwargs) -> Any:
+                return rcall(func, *args, default=default, **kwargs)
+            return wrapper
+        return decorator
+    
+    @staticmethod
+    def throttle(period: int) -> Callable:
+        """
+        A decorator factory that creates a throttling decorator for both synchronous and asynchronous functions.
 
-    Args:
-        default (Any): The default value to return in case the function execution fails.
+        Args:
+            period (int): The minimum time period (in seconds) between successive calls of the decorated function.
 
-    Returns:
-        Callable: A decorated function that returns a default value on failure.
+        Returns:
+            Callable: A decorator that applies a throttling mechanism to the decorated function.
 
-    Usage:
-        @default_value(default=0)
-        def my_function(arg1, arg2):
-            # Function implementation
-            pass
+        Usage:
+            @throttle(2)
+            def my_function():
+                # Function implementation
 
-    If `my_function` raises an exception, it will return 0 instead of propagating the exception.
-    """
-    def decorator(func: Callable[..., Any]) -> Callable:
-        @wraps(func)
-        def wrapper(*args, **kwargs) -> Any:
-            return rcall(func, *args, default=default, **kwargs)
-        return wrapper
-    return decorator
+            @throttle(2)
+            async def my_async_function():
+                # Async function implementation
+        """
+        def decorator(func: Callable[..., Any]) -> Callable[..., Any]:
+            throttle_decorator = Throttle(period)
+            if asyncio.iscoroutinefunction(func):
+                return throttle_decorator.__call_async__(func)
+            else:
+                return throttle_decorator(func)
+        return decorator
+
+    @staticmethod
+    def pre_post_process(preprocess: Callable[..., Any], postprocess: Callable[..., Any]) -> Callable:
+        """
+        Decorator factory that applies preprocessing and postprocessing to a function (sync or async).
+
+        Args:
+            preprocess (Callable[..., Any]): A function to preprocess each argument.
+            postprocess (Callable[..., Any]): A function to postprocess the result.
+
+        Returns:
+            Callable: A decorator that applies preprocessing and postprocessing to the decorated function.
+        """
+
+        def decorator(func: Callable[..., Any]) -> Callable[..., Any]:
+            @wraps(func)
+            async def async_wrapper(*args, **kwargs) -> Any:
+                preprocessed_args = [preprocess(arg) for arg in args]
+                preprocessed_kwargs = {k: preprocess(v) for k, v in kwargs.items()}
+                result = await func(*preprocessed_args, **preprocessed_kwargs)
+                return postprocess(result)
+
+            @wraps(func)
+            def sync_wrapper(*args, **kwargs) -> Any:
+                preprocessed_args = [preprocess(arg) for arg in args]
+                preprocessed_kwargs = {k: preprocess(v) for k, v in kwargs.items()}
+                result = func(*preprocessed_args, **preprocessed_kwargs)
+                return postprocess(result)
+
+            if asyncio.iscoroutinefunction(func):
+                return async_wrapper
+            else:
+                return sync_wrapper
+
+        return decorator
+
+
 
 class Throttle:
     """
@@ -473,63 +521,3 @@ class Throttle:
 
         return wrapper
 
-def throttle(period: int) -> Callable:
-    """
-    A decorator factory that creates a throttling decorator for both synchronous and asynchronous functions.
-
-    Args:
-        period (int): The minimum time period (in seconds) between successive calls of the decorated function.
-
-    Returns:
-        Callable: A decorator that applies a throttling mechanism to the decorated function.
-
-    Usage:
-        @throttle(2)
-        def my_function():
-            # Function implementation
-
-        @throttle(2)
-        async def my_async_function():
-            # Async function implementation
-    """
-    def decorator(func: Callable[..., Any]) -> Callable[..., Any]:
-        throttle_decorator = Throttle(period)
-        if asyncio.iscoroutinefunction(func):
-            return throttle_decorator.__call_async__(func)
-        else:
-            return throttle_decorator(func)
-    return decorator
-
-def pre_post_process(preprocess: Callable[..., Any], postprocess: Callable[..., Any]) -> Callable:
-    """
-    Decorator factory that applies preprocessing and postprocessing to a function (sync or async).
-
-    Args:
-        preprocess (Callable[..., Any]): A function to preprocess each argument.
-        postprocess (Callable[..., Any]): A function to postprocess the result.
-
-    Returns:
-        Callable: A decorator that applies preprocessing and postprocessing to the decorated function.
-    """
-
-    def decorator(func: Callable[..., Any]) -> Callable[..., Any]:
-        @wraps(func)
-        async def async_wrapper(*args, **kwargs) -> Any:
-            preprocessed_args = [preprocess(arg) for arg in args]
-            preprocessed_kwargs = {k: preprocess(v) for k, v in kwargs.items()}
-            result = await func(*preprocessed_args, **preprocessed_kwargs)
-            return postprocess(result)
-
-        @wraps(func)
-        def sync_wrapper(*args, **kwargs) -> Any:
-            preprocessed_args = [preprocess(arg) for arg in args]
-            preprocessed_kwargs = {k: preprocess(v) for k, v in kwargs.items()}
-            result = func(*preprocessed_args, **preprocessed_kwargs)
-            return postprocess(result)
-
-        if asyncio.iscoroutinefunction(func):
-            return async_wrapper
-        else:
-            return sync_wrapper
-
-    return decorator

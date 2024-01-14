@@ -1,6 +1,6 @@
 import json
-from typing import Any, Optional, Dict, List
-from lionagi.utils import dynamic_flatten
+from typing import Any, Optional
+from lionagi.utils.nested_util import NestedUtil
 from lionagi.schema import BaseNode
 
 class Message(BaseNode):
@@ -112,7 +112,7 @@ class Message(BaseNode):
         Returns:
             Any: The flattened content of the message.
         """
-        return dynamic_flatten(self.msg_content)
+        return NestedUtil.dynamic_flatten(self.msg_content)
 
     def get_role(self):
         """

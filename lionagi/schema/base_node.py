@@ -4,8 +4,8 @@ import xml.etree.ElementTree as ET
 from typing import Any, Dict, Optional, TypeVar, Type, List, Callable, Union
 from pydantic import BaseModel, Field, AliasChoices
 
-from lionagi.utils import create_id, is_schema, change_dict_key, create_copy, dict_to_xml
-from lionagi.utils.encrypt_util import encrypt, decrypt
+from lionagi.utils.sys_util import create_id, change_dict_key, _is_schema, create_copy
+from lionagi.utils.encrypt_util import EncrytionUtil as eu
 
 T = TypeVar('T', bound='BaseNode')
 
@@ -49,9 +49,6 @@ class BaseNode(BaseModel):
     def to_dict(self) -> Dict[str, Any]:
         return self.model_dump(by_alias=True)
     
-    def to_xml(self) -> str:
-        return dict_to_xml(self.to_dict())
-    
     def set_meta(self, metadata_: Dict[str, Any]) -> None:
         self.metadata = metadata_
         
@@ -91,16 +88,16 @@ class BaseNode(BaseModel):
             self.metadata[key] = apply_func(self.metadata[key])
         
     def meta_schema_is_valid(self, schema: Dict[str, type]) -> bool:
-        return is_schema(dict_=self.metadata, schema=schema)
+        return _is_schema(dict_=self.metadata, schema=schema)
 
     def update_meta(self, **kwargs) -> None:
         self.metadata.update(kwargs)
 
     def encrypt_content(self, key: str) -> None:
-        self.content = encrypt(self.content, key)
+        self.content = eu.encrypt(self.content, key)
 
     def decrypt_content(self, key: str) -> None:
-        self.content = decrypt(self.content, key)
+        self.content = eu.decrypt(self.content, key)
         
     def set_content(self, content: Optional[Any]) -> None:
         self.content = content
