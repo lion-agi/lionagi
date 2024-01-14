@@ -1,6 +1,9 @@
+import base64
+import binascii
+import hashlib
 import os
 import zipfile
-from base64 import urlsafe_b64encode, urlsafe_b64decode
+from base64 import urlsafe_b64encode
 from cryptography.fernet import Fernet, InvalidToken
 from cryptography.hazmat.backends import default_backend
 from cryptography.hazmat.primitives import hashes
@@ -234,3 +237,72 @@ class EncrytionUtils:
             output_path = file_path + '.zip'
         with zipfile.ZipFile(output_path, 'w', zipfile.ZIP_DEFLATED) as zipf:
             zipf.write(file_path)
+
+    @staticmethod
+    def binary_to_hex(data: bytes) -> str:
+        """Convert binary data to a hexadecimal string representation.
+        
+        Args:
+            data: A bytes object containing binary data.
+
+        Returns:
+            A string containing the hexadecimal representation of the binary data.
+
+        Examples:
+            >>> binary_to_hex(b'\x00\x0F')
+            '000f'
+            >>> binary_to_hex(b'hello')
+            '68656c6c6f'
+        """
+        return binascii.hexlify(data).decode()
+
+    @staticmethod
+    def create_hash(data: str, algorithm: str = 'sha256') -> str:
+        """Create a hash of the given data using the specified algorithm.
+
+        Args:
+            data: The string to hash.
+            algorithm: The hashing algorithm to use (default is 'sha256').
+
+        Returns:
+            The hexadecimal digest of the hash.
+
+        Examples:
+            >>> create_hash('hello')
+            '2cf24dba5fb0a30e26e83b2ac5b9e29e1b161e5c1fa7425e73043362938b9824'
+        """
+        hasher = hashlib.new(algorithm)
+        hasher.update(data.encode())
+        return hasher.hexdigest()
+
+    @staticmethod
+    def decode_base64(data: str) -> str:
+        """Decode a base64 encoded string.
+
+        Args:
+            data: A base64 encoded string.
+
+        Returns:
+            A decoded string.
+
+        Examples:
+            >>> decode_base64('SGVsbG8sIFdvcmxkIQ==')
+            'Hello, World!'
+        """
+        return base64.b64decode(data).decode()
+
+    @staticmethod
+    def encode_base64(data: str) -> str:
+        """Encode a string using base64 encoding.
+
+        Args:
+            data: A string to be encoded.
+
+        Returns:
+            A base64 encoded string.
+
+        Examples:
+            >>> encode_base64("Hello, World!")
+            'SGVsbG8sIFdvcmxkIQ=='
+        """
+        return base64.b64encode(data.encode()).decode()

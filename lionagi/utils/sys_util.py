@@ -1,10 +1,76 @@
-import base64
-
-import binascii
-import hashlib
+import re
 from collections import OrderedDict
+from datetime import datetime
+from dateutil import parser
 from functools import reduce, wraps
-from typing import Any, Callable, Dict, List, Optional, Type
+from typing import Any, Callable, Dict, List, Optional, Type, Union
+
+
+def str_to_datetime(datetime_str: str, fmt: Optional[str] = None) -> datetime:
+    """Convert a string representation of a date and time to a datetime object.
+
+    Args:
+        datetime_str: A string representing a date and time.
+        fmt: An optional format string.
+
+    Returns:
+        A datetime object corresponding to the given string.
+
+    Examples:
+        >>> str_to_datetime("2023-01-01 12:00:00")
+        datetime.datetime(2023, 1, 1, 12, 0)
+        >>> str_to_datetime("January 1, 2023, 12:00 PM", "%B %d, %Y, %I:%M %p")
+        datetime.datetime(2023, 1, 1, 12, 0)
+    """
+    if fmt:
+        return datetime.strptime(datetime_str, fmt)
+    else:
+        return parser.parse(datetime_str)
+    
+def str_to_num(input_: str, 
+               upper_bound: Optional[Union[int, float]] = None, 
+               lower_bound: Optional[Union[int, float]] = None, 
+               num_type: Type[Union[int, float]] = int, 
+               precision: Optional[int] = None) -> Union[int, float]:
+    """Convert the first numeric value in the input string to the specified number type.
+
+    Args:
+        input_: The input string containing the numeric value.
+        upper_bound: The upper bound for the numeric value (optional).
+        lower_bound: The lower bound for the numeric value (optional).
+        num_type: The type of number to return (int or float).
+        precision: The number of decimal places to round to if num_type is float (optional).
+
+    Returns:
+        The numeric value converted to the specified type.
+
+    Raises:
+        ValueError: If no numeric values are found or if the number type is invalid.
+
+    Examples:
+        >>> str_to_num('Value is -123.456', num_type=float, precision=2)
+        -123.46
+        >>> str_to_num('Value is 100', upper_bound=99)
+        ValueError: Number 100 is greater than the upper bound of 99.
+    """
+    numbers = re.findall(r'-?\d+\.?\d*', input_)
+    if not numbers:
+        raise ValueError(f"No numeric values found in the string: {input_}")
+    
+    number = numbers[0]
+    if num_type is int:
+        number = int(float(number))
+    elif num_type is float:
+        number = round(float(number), precision) if precision is not None else float(number)
+    else:
+        raise ValueError(f"Invalid number type: {num_type}")
+
+    if upper_bound is not None and number > upper_bound:
+        raise ValueError(f"Number {number} is greater than the upper bound of {upper_bound}.")
+    if lower_bound is not None and number < lower_bound:
+        raise ValueError(f"Number {number} is less than the lower bound of {lower_bound}.")
+
+    return number
 
 
 def find_depth(nested_obj, depth_strategy='uniform', ignore_non_iterable=False):
@@ -48,72 +114,6 @@ def find_depth(nested_obj, depth_strategy='uniform', ignore_non_iterable=False):
         return mixed_depth(nested_obj)
     else:
         raise ValueError("Unsupported depth strategy. Choose 'uniform' or 'mixed'.")
-
-def binary_to_hex(data: bytes) -> str:
-    """Convert binary data to a hexadecimal string representation.
-    
-    Args:
-        data: A bytes object containing binary data.
-
-    Returns:
-        A string containing the hexadecimal representation of the binary data.
-
-    Examples:
-        >>> binary_to_hex(b'\x00\x0F')
-        '000f'
-        >>> binary_to_hex(b'hello')
-        '68656c6c6f'
-    """
-    return binascii.hexlify(data).decode()
-
-
-def create_hash(data: str, algorithm: str = 'sha256') -> str:
-    """Create a hash of the given data using the specified algorithm.
-
-    Args:
-        data: The string to hash.
-        algorithm: The hashing algorithm to use (default is 'sha256').
-
-    Returns:
-        The hexadecimal digest of the hash.
-
-    Examples:
-        >>> create_hash('hello')
-        '2cf24dba5fb0a30e26e83b2ac5b9e29e1b161e5c1fa7425e73043362938b9824'
-    """
-    hasher = hashlib.new(algorithm)
-    hasher.update(data.encode())
-    return hasher.hexdigest()
-
-def decode_base64(data: str) -> str:
-    """Decode a base64 encoded string.
-
-    Args:
-        data: A base64 encoded string.
-
-    Returns:
-        A decoded string.
-
-    Examples:
-        >>> decode_base64('SGVsbG8sIFdvcmxkIQ==')
-        'Hello, World!'
-    """
-    return base64.b64decode(data).decode()
-
-def encode_base64(data: str) -> str:
-    """Encode a string using base64 encoding.
-
-    Args:
-        data: A string to be encoded.
-
-    Returns:
-        A base64 encoded string.
-
-    Examples:
-        >>> encode_base64("Hello, World!")
-        'SGVsbG8sIFdvcmxkIQ=='
-    """
-    return base64.b64encode(data.encode()).decode()
 
 # decorators
 def filter_decorator(predicate: Callable[[Any], bool]) -> Callable:
