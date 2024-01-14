@@ -1,7 +1,7 @@
 from typing import Any, List, Optional
 from lionagi.schema.base_node import BaseNode
 from lionagi.messages import Message, Response
-from lionagi.objs.messenger import Messenger
+from lionagi.messages.messenger import Messenger
 
 
 class Conversation:

@@ -7,7 +7,7 @@ from .sys_util import (
 from .nested_util import (
     nfilter, nset, nget, nmerge, ninsert, 
     flatten, unflatten, is_structure_homogeneous, 
-     get_flattened_keys
+    get_flattened_keys
 )
 
 from .api_util import APIUtil

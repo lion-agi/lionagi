@@ -6,7 +6,7 @@ from lionagi.schema import DataLogger, Tool
 from lionagi.utils import lcall, alcall
 from lionagi.services import OpenAIService
 from lionagi.endpoints import ChatCompletion
-from lionagi.objs.tool_manager import ToolManager
+from lionagi.tools.tool_manager import ToolManager
 from lionagi.configs.oai_configs import oai_schema
 from lionagi.core.conversations.conversation import Conversation
 

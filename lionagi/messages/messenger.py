@@ -1,9 +1,12 @@
 from collections import deque
 from typing import Optional, Any, Union, Dict, Tuple
 
-from lionagi.utils.call_util import lcall
-from lionagi.schema.data_logger import DataLogger
-from lionagi.messages import Message, Response, Instruction, System
+from ..utils.call_util import lcall
+from ..schema.data_logger import DataLogger
+from .message import Message
+from .instruction import Instruction
+from .system import System
+from .response import Response
 
 
 class Messenger:

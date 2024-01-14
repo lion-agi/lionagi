@@ -1,5 +1,5 @@
-from .messenger import Messenger
-from .tool_manager import ToolManager
+from ..messages.messenger import Messenger
+from ..tools.tool_manager import ToolManager
 
 __all__ = [
     'Messenger',
