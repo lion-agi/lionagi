@@ -2,7 +2,7 @@ import asyncio
 import time
 from functools import lru_cache, wraps
 from typing import Any, Callable, Iterable, List, Optional, Tuple, Union
-from ..work_.sys_util import create_copy, to_list
+from .sys_util import create_copy, to_list
 
 # list call
 def lcall(input_: Any, func_: Callable, flatten: bool = False,

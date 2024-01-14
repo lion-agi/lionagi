@@ -106,6 +106,44 @@ def str_to_num(input_: str,
     return number
 
 
+
+
+
+########
+
+import re
+from typing import Optional, Union, Type, Tuple, Dict, Any
+import inspect
+
+def extract_numbers(input_: str) -> list:
+    return re.findall(r'-?\d+\.?\d*', input_)
+
+def convert_to_num_type(number_str: str, num_type: Type[Union[int, float]], precision: Optional[int] = None) -> Union[int, float]:
+    if num_type is int:
+        return int(float(number_str))
+    elif num_type is float:
+        return round(float(number_str), precision) if precision is not None else float(number_str)
+    else:
+        raise ValueError(f"Invalid number type: {num_type}")
+
+def validate_number_bounds(number: Union[int, float], upper_bound: Optional[Union[int, float]], lower_bound: Optional[Union[int, float]]) -> None:
+    if upper_bound is not None and number > upper_bound:
+        raise ValueError(f"Number {number} is greater than the upper bound of {upper_bound}.")
+    if lower_bound is not None and number < lower_bound:
+        raise ValueError(f"Number {number} is less than the lower bound of {lower_bound}.")
+
+def str_to_num(input_: str, upper_bound: Optional[Union[int, float]] = None, lower_bound: Optional[Union[int, float]] = None, num_type: Type[Union[int, float]] = int, precision: Optional[int] = None) -> Union[int, float]:
+    numbers = extract_numbers(input_)
+    if not numbers:
+        raise ValueError(f"No numeric values found in the string: {input_}")
+    
+    number_str = numbers[0]
+    number = convert_to_num_type(number_str, num_type, precision)
+    validate_number_bounds(number, upper_bound, lower_bound)
+
+    return number
+
+
 def _extract_docstring_details_google(func: Type[Any]) -> Tuple[str, Dict[str, str]]:
     """
     Extracts the function description and parameter descriptions from a docstring following the Google style guide.
