@@ -8,6 +8,22 @@ from dateutil import parser
 from functools import reduce, wraps
 from typing import Any, Callable, Dict, List, Optional, Type, Union
 
+def get_timestamp() -> str:
+    """
+    Generates a current timestamp in a file-safe string format.
+
+    This function creates a timestamp from the current time, formatted in ISO 8601 format, 
+    and replaces characters that are typically problematic in filenames (like colons and periods) 
+    with underscores.
+
+    Returns:
+        str: The current timestamp in a file-safe string format.
+
+    Example:
+        >>> get_timestamp()  # Doctest: +ELLIPSIS
+        '...'
+    """
+    return datetime.now().isoformat().replace(":", "_").replace(".", "_")
 
 def create_copy(input: Any, n: int) -> Any:
     """
