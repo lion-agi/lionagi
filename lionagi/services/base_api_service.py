@@ -5,9 +5,9 @@ import tiktoken
 import logging
 import aiohttp
 from typing import Generator, NoReturn, Dict, Any, Optional
-from ..objs.status_tracker import StatusTracker
-from ..objs.abc_objs import  BaseService, RateLimiter
-from ..objs.async_queue import AsyncQueue
+from ..schema.status_tracker import StatusTracker
+from ..schema.abc_objs import  BaseService, RateLimiter
+from ..schema.async_queue import AsyncQueue
 
 class BaseAPIRateLimiter(RateLimiter):
 

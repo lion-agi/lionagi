@@ -58,7 +58,7 @@ def lcall(
         each element.
     """
     try:
-        lst = NestedUtil.to_list(input_=input_, flatten=flatten, dropna=dropna)
+        lst = to_list(input_=input_, flatten=flatten, dropna=dropna)
         return [func_(i, **kwargs) for i in lst]
     except Exception as e:
         raise ValueError(f"Function {func_.__name__} cannot be applied: {e}")
@@ -91,7 +91,7 @@ async def alcall(
         raise ValueError(f"Function {func_.__name__} cannot be applied: {e}")
 
 # timed call
-def tcall(input_: Any, func: Callable, sleep: float = 0.1,
+async def tcall(input_: Any, func: Callable, sleep: float = 0.1,
                   message: Optional[str] = None, ignore_error: bool = False, 
                   include_timing: bool = False, **kwargs
         ) -> Union[Any, Tuple[Any, float]]:
@@ -137,50 +137,9 @@ def tcall(input_: Any, func: Callable, sleep: float = 0.1,
             raise
 
     if asyncio.iscoroutinefunction(func):
-        return asyncio.run(async_call())
+        return await async_call()
     else:
         return sync_call()
-
-# parallel call with control of max_concurrent 
-async def pcall(input_: Any, 
-                       funcs: Union[Callable, List[Callable]], 
-                       max_concurrent: Optional[int] = None,
-                       flatten: bool = False, 
-                       dropna: bool = False, 
-                       **kwargs) -> List[Any]:
-    """
-    A unified function that handles both synchronous and asynchronous function calls
-    on input elements. It can process inputs in parallel or sequentially and can handle
-    both single and multiple functions with corresponding inputs.
-
-    Args:
-        input_ (Any): The input to process, potentially a list.
-        funcs (Union[Callable, List[Callable]]): A function or list of functions to apply.
-        max_concurrent (Optional[int]): Maximum number of concurrent executions for parallel processing.
-        flatten (bool): If True, flattens the input.
-        dropna (bool): If True, drops None values from the list.
-        **kwargs: Additional keyword arguments to pass to the function(s).
-
-    Returns:
-        List[Any]: A list containing the results of function call(s) on input elements.
-    """
-
-    async def async_wrapper(func, item):
-        return await func(item, **kwargs) if asyncio.iscoroutinefunction(func) else func(item, **kwargs)
-
-    try:
-        lst = to_list(input_=input_, flatten=flatten, dropna=dropna)
-        if not isinstance(funcs, list):
-            funcs = [funcs] * len(lst)
-        tasks = [async_wrapper(func, item) for func, item in zip(funcs, lst)]
-        if max_concurrent:
-            semaphore = asyncio.Semaphore(max_concurrent)
-            async with semaphore:
-                return await asyncio.gather(*tasks)
-        else:
-            return await asyncio.gather(*tasks)
-    except Exception as e:
-        raise ValueError(f"Error in unified_call: {e}")
 
 # mapped call
 async def mcall(input_: Union[Any, List[Any]], 
@@ -205,27 +164,13 @@ async def mcall(input_: Union[Any, List[Any]],
     Returns:
         List[Any]: List of results from applying function(s) to input(s).
     """
-
-    async def async_wrapper(func, item):
-        return await func(item, **kwargs) if asyncio.iscoroutinefunction(func) else func(item, **kwargs)
-
-    inputs = to_list(input_, flatten=flatten)
-    if dropna:
-        inputs = [i for i in inputs if i is not None]
-
     if explode:
-        funcs = to_list(funcs)
-        inputs = [create_copy(inp, len(funcs)) for inp in inputs]
-        inputs = [item for sublist in inputs for item in sublist]  # Flatten the list
+        return await _explode_call(input_=input_, funcs=funcs, dropna=dropna, **kwargs)
     else:
-        if not isinstance(funcs, list):
-            funcs = [funcs] * len(inputs)
-
-    tasks = [async_wrapper(f, i) for f, i in zip(funcs, inputs)]
-    return await asyncio.gather(*tasks)
+        return await _mapped_call(input_=input_, funcs=funcs, flatten=flatten, dropna=dropna, **kwargs)
 
 # batch call
-async def bcall(func: Callable[..., Any], inputs: List[Any], batch_size: int, **kwargs) -> List[Any]:
+async def bcall(inputs: List[Any], func: Callable[..., Any], batch_size: int, **kwargs) -> List[Any]:
     """
     Processes a list of inputs in batches, applying a function (sync or async) to each item in a batch.
 
@@ -258,8 +203,7 @@ async def bcall(func: Callable[..., Any], inputs: List[Any], batch_size: int, **
             raise e
     return results
 
-# retry call
-def rcall(func: Callable[..., Any], *args, timeout: Optional[int] = None, 
+async def _rcall(func: Callable[..., Any], *args, timeout: Optional[int] = None, 
                  retries: Optional[int] = None, initial_delay: float = 2.0, 
                  backoff_factor: float = 2.0, default: Optional[Any] = None, 
                  **kwargs) -> Any:
@@ -282,25 +226,23 @@ def rcall(func: Callable[..., Any], *args, timeout: Optional[int] = None,
     async def async_call():
         return await asyncio.wait_for(func(*args, **kwargs), timeout) if timeout else await func(*args, **kwargs)
 
-    try:
-        delay = initial_delay
-        for attempt in range(retries or 1):
-            try:
-                if asyncio.iscoroutinefunction(func):
-                    loop = asyncio.get_event_loop()
-                    return loop.run_until_complete(async_call())
-                else:
-                    return func(*args, **kwargs)
-            except Exception as e:
-                if retries is None or attempt >= retries - 1:
-                    raise e
-                time.sleep(delay)
-                delay *= backoff_factor
-    except Exception as e:
-        if default is not None:
-            return default
-        raise e
+    async def sync_wrapper():
+        return func(*args, **kwargs)
 
+    delay = initial_delay
+    for attempt in range(retries or 1):
+        try:
+            if asyncio.iscoroutinefunction(func) or timeout:
+                return await async_call()
+            else:
+                return await sync_wrapper()
+        except Exception as e:
+            if retries is None or attempt >= retries - 1:
+                if default is not None:
+                    return default
+                raise e
+            await asyncio.sleep(delay)
+            delay *= backoff_factor
 
 
 class CallDecorator:
@@ -348,26 +290,18 @@ class CallDecorator:
         """
         Decorator to apply a timeout to a function.
 
-        If the function's execution time exceeds the specified timeout, it will be terminated, and a TimeoutError is raised.
-
         Args:
             timeout (int): Maximum execution time allowed for the function in seconds.
 
         Returns:
             Callable: A decorated function with a timeout mechanism applied.
-
-        Usage:
-            @timeout(5)
-            def my_function(arg1, arg2):
-                # Function implementation
-                pass
-
-        This will apply a 5-second timeout to `my_function`.
         """
         def decorator(func: Callable[..., Any]) -> Callable:
             @ft.wraps(func)
-            def wrapper(*args, **kwargs) -> Any:
-                return rcall(func, *args, timeout=timeout, **kwargs)
+            async def wrapper(*args, **kwargs) -> Any:
+                if asyncio.iscoroutinefunction(func):
+                    return await _rcall(func, *args, timeout=timeout, **kwargs)
+                return _rcall(func, *args, timeout=timeout, **kwargs)
             return wrapper
         return decorator
 
@@ -376,8 +310,6 @@ class CallDecorator:
         """
         Decorator to apply a retry mechanism to a function.
 
-        If the function raises an exception, it will be retried up to the specified number of times with an exponential backoff delay.
-
         Args:
             retries (int): Maximum number of retry attempts.
             initial_delay (float): Initial delay in seconds before the first retry.
@@ -385,50 +317,36 @@ class CallDecorator:
 
         Returns:
             Callable: A decorated function with a retry mechanism applied.
-
-        Usage:
-            @retry(retries=3, initial_delay=1, backoff_factor=2)
-            def my_function(arg1, arg2):
-                # Function implementation
-                pass
-
-        This will retry `my_function` up to 3 times with increasing delays if it raises an exception.
         """
         def decorator(func: Callable[..., Any]) -> Callable:
             @ft.wraps(func)
-            def wrapper(*args, **kwargs) -> Any:
-                return rcall(func, *args, retries=retries, initial_delay=initial_delay, backoff_factor=backoff_factor, **kwargs)
+            async def wrapper(*args, **kwargs) -> Any:
+                if asyncio.iscoroutinefunction(func):
+                    return await _rcall(func, *args, retries=retries, initial_delay=initial_delay, backoff_factor=backoff_factor, **kwargs)
+                return _rcall(func, *args, retries=retries, initial_delay=initial_delay, backoff_factor=backoff_factor, **kwargs)
             return wrapper
         return decorator
 
     @staticmethod
-    def default(default: Any) -> Callable:
+    def default(default_value: Any) -> Callable:
         """
         Decorator to apply a default value mechanism to a function.
-
-        If the function raises an exception, instead of propagating the exception, it returns a specified default value.
 
         Args:
             default (Any): The default value to return in case the function execution fails.
 
         Returns:
             Callable: A decorated function that returns a default value on failure.
-
-        Usage:
-            @default_value(default=0)
-            def my_function(arg1, arg2):
-                # Function implementation
-                pass
-
-        If `my_function` raises an exception, it will return 0 instead of propagating the exception.
         """
         def decorator(func: Callable[..., Any]) -> Callable:
             @ft.wraps(func)
-            def wrapper(*args, **kwargs) -> Any:
-                return rcall(func, *args, default=default, **kwargs)
+            async def wrapper(*args, **kwargs) -> Any:
+                if asyncio.iscoroutinefunction(func):
+                    return await _rcall(func, *args, default=default_value, **kwargs)
+                return _rcall(func, *args, default=default_value, **kwargs)
             return wrapper
         return decorator
-    
+
     @staticmethod
     def throttle(period: int) -> Callable:
         """
@@ -627,6 +545,27 @@ class CallDecorator:
             return wrapper
 
         return decorator
+    
+    @staticmethod
+    def max_concurrency(limit: int=5):
+        """
+        Decorator to limit the maximum number of concurrent executions of an async function.
+        
+        Args:
+            limit (int): The maximum number of concurrent tasks allowed.
+        """
+
+        def decorator(func: Callable):
+            semaphore = asyncio.Semaphore(limit)
+
+            @ft.wraps(func)
+            async def wrapper(*args, **kwargs):
+                async with semaphore:
+                    return await func(*args, **kwargs)
+
+            return wrapper
+
+        return decorator
 
 def _handle_error(value: Any, config: Dict[str, Any]) -> Any:
     """Handle an error by logging and returning a default value if provided.
@@ -713,6 +652,34 @@ def _process_value(value: Any, config: Dict[str, Any]) -> Any:
             value = func(value, func_config)
     return value
 
+async def _mapped_call(input_: Union[Any, List[Any]], 
+                       funcs: Union[Callable, List[Callable]], 
+                       flatten: bool = True, 
+                       dropna: bool = True, 
+                       **kwargs) -> List[Any]:
+
+    input_ = to_list(input_=input_, flatten=flatten, dropna=dropna)
+    funcs = to_list(funcs)
+    assert len(input_) == len(funcs), "The number of inputs and functions must be the same."
+    return to_list(
+            [
+                await alcall(input_=inp, func_=f, flatten=flatten, dropna=dropna, **kwargs) 
+                for f, inp in zip(funcs, input_)
+            ]
+        )
+    
+async def _explode_call(input_: Union[Any, List[Any]], 
+                       funcs: Union[Callable, List[Callable]], 
+                       dropna: bool = True, 
+                       **kwargs) -> List[Any]:
+
+    async def _async_f(x, y):
+        return await mcall(
+            create_copy(x, len(to_list(y))), y, flatten=False, dropna=dropna, **kwargs
+            )
+
+    tasks = [_async_f(inp, funcs) for inp in to_list(input_)]    
+    return await asyncio.gather(*tasks)
 
 class Throttle:
     """
@@ -779,4 +746,46 @@ class Throttle:
             return await func(*args, **kwargs)
 
         return wrapper
-    
+
+
+
+# # parallel call with control of max_concurrent 
+# async def pcall(input_: Any, 
+#                        funcs: Union[Callable, List[Callable]], 
+#                        max_concurrent: Optional[int] = None,
+#                        flatten: bool = False, 
+#                        dropna: bool = False, 
+#                        **kwargs) -> List[Any]:
+#     """
+#     A unified function that handles both synchronous and asynchronous function calls
+#     on input elements. It can process inputs in parallel or sequentially and can handle
+#     both single and multiple functions with corresponding inputs.
+
+#     Args:
+#         input_ (Any): The input to process, potentially a list.
+#         funcs (Union[Callable, List[Callable]]): A function or list of functions to apply.
+#         max_concurrent (Optional[int]): Maximum number of concurrent executions for parallel processing.
+#         flatten (bool): If True, flattens the input.
+#         dropna (bool): If True, drops None values from the list.
+#         **kwargs: Additional keyword arguments to pass to the function(s).
+
+#     Returns:
+#         List[Any]: A list containing the results of function call(s) on input elements.
+#     """
+
+#     async def async_wrapper(func, item):
+#         return await func(item, **kwargs) if asyncio.iscoroutinefunction(func) else func(item, **kwargs)
+
+#     try:
+#         lst = to_list(input_=input_, flatten=flatten, dropna=dropna)
+#         if not isinstance(funcs, list):
+#             funcs = [funcs] * len(lst)
+#         tasks = [async_wrapper(func, item) for func, item in zip(funcs, lst)]
+#         if max_concurrent:
+#             semaphore = asyncio.Semaphore(max_concurrent)
+#             async with semaphore:
+#                 return await asyncio.gather(*tasks)
+#         else:
+#             return await asyncio.gather(*tasks)
+#     except Exception as e:
+#         raise ValueError(f"Error in unified_call: {e}")

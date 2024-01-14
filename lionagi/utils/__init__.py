@@ -16,7 +16,7 @@ from .io_util import IOUtil
 
 from .call_util import (
     to_list, lcall, alcall, mcall, 
-    pcall, tcall, bcall, rcall, CallDecorator
+    tcall, bcall,  CallDecorator
 )
 
 
@@ -28,6 +28,6 @@ __all__ = [
     "nmerge", "ninsert", "flatten", "unflatten", 
     "is_structure_homogeneous",  "APIUtil", 
     "EncrytionUtil", "IOUtil", "to_list", "lcall", 
-    "alcall", "mcall", "pcall", "tcall", "bcall", 
-    "rcall", "CallDecorator"
+    "alcall", "mcall", "tcall", "bcall", 
+    "CallDecorator"
 ]

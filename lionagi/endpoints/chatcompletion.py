@@ -1,4 +1,4 @@
-from lionagi.objs.abc_objs import BaseEndpoint
+from lionagi.schema.abc_objs import BaseEndpoint
 
 
 class ChatCompletion(BaseEndpoint):
