@@ -2,6 +2,7 @@ import os
 import hashlib
 import re
 import copy
+from pathlib import Path
 from collections import OrderedDict
 from datetime import datetime
 from dateutil import parser
