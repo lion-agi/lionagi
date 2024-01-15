@@ -1,6 +1,8 @@
 from collections import OrderedDict
 import asyncio
 import functools as ft
+from aiocache import cached
+import concurrent.futures
 import time
 from typing import Any, Callable, Dict, Iterable, List, Optional, Tuple, Type, Union
 from .sys_util import create_copy
@@ -26,8 +28,6 @@ def to_list(input_: Any, flatten: bool = True, dropna: bool = False) -> List[Any
     """
     if isinstance(input_, list) and flatten:
         input_ = _flatten_list(input_)
-        if dropna:
-            input_ = [i for i in input_ if i is not None]
     elif isinstance(input_, Iterable) and not isinstance(input_, (str, dict)):
         try:
             input_ = list(input_)
@@ -35,6 +35,8 @@ def to_list(input_: Any, flatten: bool = True, dropna: bool = False) -> List[Any
             raise ValueError("Input cannot be converted to a list.")
     else:
         input_ = [input_]
+    if dropna:
+        input_ = [i for i in input_ if i is not None]
     return input_
 
 
@@ -65,7 +67,7 @@ def lcall(
 
 async def alcall(
     input_: Any, func_: Callable, flatten: bool = False, 
-    dropna: bool = True, **kwargs) -> List[Any]:
+    dropna: bool = False, **kwargs) -> List[Any]:
     """
     Asynchronously or synchronously applies a function to each element in a list, 
     with options for flattening and dropping NAs.
@@ -145,8 +147,8 @@ async def tcall(input_: Any, func: Callable, sleep: float = 0.1,
 async def mcall(input_: Union[Any, List[Any]], 
                        funcs: Union[Callable, List[Callable]], 
                        explode: bool = False,
-                       flatten: bool = True, 
-                       dropna: bool = True, 
+                       flatten: bool = False,
+                       dropna: bool = False,
                        **kwargs) -> List[Any]:
     """
     A unified function that handles both synchronous and asynchronous function calls
@@ -156,7 +158,7 @@ async def mcall(input_: Union[Any, List[Any]],
     Args:
         input_ (Union[Any, List[Any]]): Input or list of inputs.
         funcs (Union[Callable, List[Callable]]): Function or list of functions.
-        expand_combinations (bool, optional): If True, applies each function to each input.
+        explode (bool, optional): If True, applies each function to each input.
         flatten (bool, optional): If True, flattens the input list.
         dropna (bool, optional): If True, drops None values from the list.
         **kwargs: Additional keyword arguments for the function calls.
@@ -203,7 +205,7 @@ async def bcall(inputs: List[Any], func: Callable[..., Any], batch_size: int, **
             raise e
     return results
 
-async def _rcall(func: Callable[..., Any], *args, timeout: Optional[int] = None, 
+async def _rcall(func: Callable[..., Any], *args, timeout: Optional[int] = None,
                  retries: Optional[int] = None, initial_delay: float = 2.0, 
                  backoff_factor: float = 2.0, default: Optional[Any] = None, 
                  **kwargs) -> Any:
@@ -226,16 +228,22 @@ async def _rcall(func: Callable[..., Any], *args, timeout: Optional[int] = None,
     async def async_call():
         return await asyncio.wait_for(func(*args, **kwargs), timeout) if timeout else await func(*args, **kwargs)
 
-    async def sync_wrapper():
-        return func(*args, **kwargs)
+    def sync_call():
+        with concurrent.futures.ThreadPoolExecutor() as executor:
+            future = executor.submit(func, *args, **kwargs)
+            try:
+                return future.result(timeout=timeout)
+            except concurrent.futures.TimeoutError:
+                future.cancel()
+                raise asyncio.TimeoutError("Function call timed out")
 
     delay = initial_delay
     for attempt in range(retries or 1):
         try:
-            if asyncio.iscoroutinefunction(func) or timeout:
+            if asyncio.iscoroutinefunction(func):
                 return await async_call()
             else:
-                return await sync_wrapper()
+                return sync_call()
         except Exception as e:
             if retries is None or attempt >= retries - 1:
                 if default is not None:
@@ -263,7 +271,7 @@ class CallDecorator:
 
         if asyncio.iscoroutinefunction(func):
             # Asynchronous function handling
-            @ft.lru_cache(maxsize=None)
+            @cached(ttl=10 * 60)
             async def cached_async(*args, **kwargs) -> Any:
                 return await func(*args, **kwargs)
             
@@ -298,11 +306,17 @@ class CallDecorator:
         """
         def decorator(func: Callable[..., Any]) -> Callable:
             @ft.wraps(func)
-            async def wrapper(*args, **kwargs) -> Any:
-                if asyncio.iscoroutinefunction(func):
-                    return await _rcall(func, *args, timeout=timeout, **kwargs)
-                return _rcall(func, *args, timeout=timeout, **kwargs)
-            return wrapper
+            async def async_wrapper(*args, **kwargs) -> Any:
+                return await _rcall(func, *args, timeout=timeout, **kwargs)
+
+            @ft.wraps(func)
+            def sync_wrapper(*args, **kwargs) -> Any:
+                return asyncio.run(_rcall(func, *args, timeout=timeout, **kwargs))
+
+            if asyncio.iscoroutinefunction(func):
+                return async_wrapper
+            else:
+                return sync_wrapper
         return decorator
 
     @staticmethod
@@ -320,11 +334,17 @@ class CallDecorator:
         """
         def decorator(func: Callable[..., Any]) -> Callable:
             @ft.wraps(func)
-            async def wrapper(*args, **kwargs) -> Any:
-                if asyncio.iscoroutinefunction(func):
-                    return await _rcall(func, *args, retries=retries, initial_delay=initial_delay, backoff_factor=backoff_factor, **kwargs)
-                return _rcall(func, *args, retries=retries, initial_delay=initial_delay, backoff_factor=backoff_factor, **kwargs)
-            return wrapper
+            async def async_wrapper(*args, **kwargs) -> Any:
+                return await _rcall(func, *args, retries=retries, initial_delay=initial_delay, backoff_factor=backoff_factor, **kwargs)
+
+            @ft.wraps(func)
+            def sync_wrapper(*args, **kwargs) -> Any:
+                return asyncio.run(_rcall(func, *args, retries=retries, initial_delay=initial_delay, backoff_factor=backoff_factor, **kwargs))
+
+            if asyncio.iscoroutinefunction(func):
+                return async_wrapper
+            else:
+                return sync_wrapper
         return decorator
 
     @staticmethod
@@ -340,11 +360,17 @@ class CallDecorator:
         """
         def decorator(func: Callable[..., Any]) -> Callable:
             @ft.wraps(func)
-            async def wrapper(*args, **kwargs) -> Any:
-                if asyncio.iscoroutinefunction(func):
-                    return await _rcall(func, *args, default=default_value, **kwargs)
-                return _rcall(func, *args, default=default_value, **kwargs)
-            return wrapper
+            async def async_wrapper(*args, **kwargs) -> Any:
+                return await _rcall(func, *args, default=default_value, **kwargs)
+
+            @ft.wraps(func)
+            def sync_wrapper(*args, **kwargs) -> Any:
+                return asyncio.run(_rcall(func, *args, default=default_value, **kwargs))
+
+            if asyncio.iscoroutinefunction(func):
+                return async_wrapper
+            else:
+                return sync_wrapper
         return decorator
 
     @staticmethod
@@ -484,32 +510,31 @@ class CallDecorator:
             @ft.wraps(func)
             def wrapper(*args, **kwargs):
                 value = func(*args, **kwargs)
-                for function in reversed(functions):
+                for function in functions:
                     try:
                         value = function(value)
                     except Exception as e:
-                        print(f"Error in function {function.__name__}: {e}")
-                        return None
+                        raise ValueError(f"Error in function {function.__name__}: {e}")
                 return value
             return wrapper
         return decorator
 
     @staticmethod
-    def memoize(maxsize: int = 10_000) -> Callable:
+    def memorize(maxsize: int = 10_000) -> Callable:
         """
-        Decorator factory to memoize function calls. Caches the return values of the function for specific inputs.
+        Decorator factory to memorize function calls. Caches the return values of the function for specific inputs.
 
         Args:
             maxsize (int): Maximum size of the cache. Defaults to 10,000.
 
         Returns:
-            Callable: A memoized version of the function.
+            Callable: A memorized version of the function.
         """
         def decorator(function: Callable) -> Callable:
             cache = OrderedDict()
             
             @ft.wraps(function)
-            def memoized_function(*args):
+            def memorized_function(*args):
                 if args in cache:
                     cache.move_to_end(args)  # Move the recently accessed item to the end
                     return cache[args]
@@ -521,7 +546,7 @@ class CallDecorator:
                 cache[args] = result
                 return result
             
-            return memoized_function
+            return memorized_function
         
         return decorator
 
@@ -646,16 +671,23 @@ def _process_value(value: Any, config: Dict[str, Any]) -> Any:
         'convert_type': _convert_type
     }
 
-    for key, func_config in config.items():
-        func = processing_functions.get(key)
-        if func:
-            value = func(value, func_config)
-    return value
+    try:
+        for key, func_config in config.items():
+            func = processing_functions.get(key)
+            if func:
+                value = func(value, func_config)
+        return value
+    except Exception as e:
+        if 'handle_error' in config.keys():
+            func = processing_functions.get('handle_error')
+            return func(e, config['handle_error'])
+        else:
+            raise e
 
 async def _mapped_call(input_: Union[Any, List[Any]], 
                        funcs: Union[Callable, List[Callable]], 
-                       flatten: bool = True, 
-                       dropna: bool = True, 
+                       flatten: bool = False,
+                       dropna: bool = False,
                        **kwargs) -> List[Any]:
 
     input_ = to_list(input_=input_, flatten=flatten, dropna=dropna)
@@ -670,7 +702,7 @@ async def _mapped_call(input_: Union[Any, List[Any]],
     
 async def _explode_call(input_: Union[Any, List[Any]], 
                        funcs: Union[Callable, List[Callable]], 
-                       dropna: bool = True, 
+                       dropna: bool = False,
                        **kwargs) -> List[Any]:
 
     async def _async_f(x, y):

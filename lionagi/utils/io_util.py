@@ -82,9 +82,10 @@ class IOUtil:
         for filepath in filepaths:
             with open(filepath, 'r', newline='') as csv_file:
                 reader = csv.DictReader(csv_file)
-                fieldnames.update(reader.fieldnames)
-                for row in reader:
-                    merged_data.append(row)
+                if reader.fieldnames is not None:
+                    fieldnames.update(reader.fieldnames)
+                    for row in reader:
+                        merged_data.append(row)
         fieldnames = list(fieldnames)
         with open(output_filepath, 'w', newline='') as csv_file:
             writer = csv.DictWriter(csv_file, fieldnames=fieldnames)
@@ -110,6 +111,8 @@ class IOUtil:
             >>> data = [{'name': 'Alice', 'age': 30}, {'name': 'Bob', 'age': 25}]
             >>> to_csv(data, 'people.csv', file_exist_ok=True)
         """
+        if not input:
+            return
         if not os.path.exists(os.path.dirname(filepath)) and os.path.dirname(filepath) != '':
             if file_exist_ok:
                 os.makedirs(os.path.dirname(filepath), exist_ok=True)

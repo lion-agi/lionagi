@@ -5,13 +5,9 @@ import json
 import logging
 import re
 from functools import lru_cache
+from aiocache import cached
 from typing import Any, Callable, Dict, Optional
 
-# Enable basic logging with a uniform format
-logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
-
-# Global cache for storing API responses
-response_cache = {}
 
 class APIUtil:
     """
@@ -216,7 +212,8 @@ class APIUtil:
             try:
                 with open(file_path, 'rb') as file:
                     files = {param_name: file}
-                    async with http_session.post(url, data=additional_data, files=files) as response:
+                    additional_data = additional_data if additional_data else {}
+                    async with http_session.post(url, data={**files, **additional_data}) as response:
                         response.raise_for_status()
                         return await response.json()
             except aiohttp.ClientError as e:
@@ -227,7 +224,7 @@ class APIUtil:
                 await asyncio.sleep(backoff)
 
     @staticmethod
-    @lru_cache(maxsize=128)
+    @cached(ttl=10 * 60)  # Cache the result for 10 minutes
     async def get_oauth_token_with_cache(http_session: aiohttp.ClientSession, auth_url: str, client_id: str, client_secret: str, scope: str) -> str:
         """
         Retrieves an OAuth token from the authentication server and caches it to avoid unnecessary requests.
@@ -258,6 +255,7 @@ class APIUtil:
             return (await auth_response.json()).get('access_token')
         
     @staticmethod
+    @cached(ttl=10 * 60)
     async def cached_api_call(http_session: aiohttp.ClientSession, url: str, **kwargs) -> Any:
         """
         Makes an API call.

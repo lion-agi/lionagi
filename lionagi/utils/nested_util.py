@@ -166,7 +166,7 @@ def nmerge(iterables: List[Union[Dict, List, Iterable]],
     """
     if _is_homogeneous(iterables, Dict):
         return _merge_dicts(iterables, dict_update, dict_sequence, sequence_separator)
-    elif _is_homogeneous(iterables, (List, Iterable)) and not any(isinstance(it, str) for it in iterables):
+    elif _is_homogeneous(iterables, List) and not any(isinstance(it, (Dict, str)) for it in iterables):
         return _merge_sequences(iterables, sort_list, custom_sort)
     else:
         raise TypeError("All items in the input list must be of the same type, either Dict, List, or Iterable.")
@@ -185,7 +185,7 @@ def flatten(obj: Any, parent_key: str = '', sep: str = '_',
 
 # unflatten dictionary
 def unflatten(
-    flat_dict: Dict[str, Any], sep: str = '_', 
+    flat_dict: Dict[str, Any], sep: str = '_',
     custom_logic: Union[Callable[[str], Any], None] = None, 
     max_depth: Union[int, None] = None
 ) -> Union[Dict, List]:
@@ -211,7 +211,11 @@ def unflatten(
             parts = [custom_logic(part) for part in parts]
         else:
             parts = [int(part) if part.isdigit() else part for part in parts]
-        ninsert(unflattened, parts, value, max_depth)
+
+        if not unflattened and all(isinstance(part, int) for part in parts):
+            unflattened = []
+
+        ninsert(unflattened, parts, value, sep, max_depth)
 
     if isinstance(unflattened, dict) and all(isinstance(k, int) for k in unflattened.keys()):
         max_index = max(unflattened.keys(), default=-1)
@@ -222,11 +226,13 @@ def unflatten(
 
 
 def ninsert(sub_obj: Union[Dict, List], parts: List[Union[str, int]], 
-        value: Any, max_depth: Union[int, None] = None, current_depth: int = 0):
+        value: Any, sep: str = '_', max_depth: Union[int, None] = None, current_depth: int = 0):
     """
     Recursively inserts a value into a nested structure (dictionary or list) based on 
     the specified path (parts).
     """
+    parts_len = len(parts)
+    parts_depth = 0
     for i, part in enumerate(parts[:-1]):
         if max_depth is not None and current_depth >= max_depth:
             break
@@ -244,12 +250,19 @@ def ninsert(sub_obj: Union[Dict, List], parts: List[Union[str, int]],
                 sub_obj[part] = [] if isinstance(next_part, int) else {}
             sub_obj = sub_obj[part]
         current_depth += 1
+        parts_depth += 1
 
-    last_part = parts[-1]
+    if parts_depth < parts_len - 1:
+        last_part = sep.join([str(part) for part in parts[parts_depth:]])
+    else:
+        last_part = parts[-1]
     if isinstance(last_part, int):
         _handle_list_insert(sub_obj, last_part, value)
     else:
-        sub_obj[last_part] = value
+        if isinstance(sub_obj, list):
+            sub_obj.append({last_part: value})
+        else:
+            sub_obj[last_part] = value
         
 def get_flattened_keys(obj: Any, sep: str = '_', max_depth: Union[int, None] = None, 
                     dict_only: bool = False, inplace: bool = False) -> List[str]:
