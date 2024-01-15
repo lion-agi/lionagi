@@ -1,5 +1,6 @@
 import asyncio
 from typing import Any, Callable
+from ..utils.call_util import tcall
 
 class AsyncQueue:
     """
@@ -109,27 +110,48 @@ class AsyncQueue:
         """
         return self._stop_event.is_set()
 
-    async def process_requests(self, func: Callable[[Any], Any]) -> None:
+    # async def process_requests(self, func: Callable[[Any], Any]) -> None:
+    #     """
+    #     Asynchronously process items from the queue using the provided function.
+
+    #     Continuously dequeues items and applies the given function to each. 
+    #     The processing stops when the queue is signaled to stop or a sentinel value (`None`) is dequeued.
+
+    #     Parameters:
+    #         func (Callable[[Any], Any]): A coroutine function to process items from the queue.
+
+    #     Example:
+    #         >>> async def sample_processing(task):
+    #         ...     print("Processing:", task)
+    #         >>> async_queue = AsyncQueue()
+    #         >>> asyncio.run(async_queue.enqueue('Task 1'))
+    #         >>> asyncio.run(async_queue.process_requests(sample_processing))
+    #         Processing: Task 1
+    #     """
+    #     while not self.stopped():
+    #         item = await self.dequeue()
+    #         if item is None:  # Using `None` as a sentinel value to cease processing.
+    #             await self.stop()
+    #             break
+    #         await func(item)
+            
+    async def process_requests(self, func, timeout=None):
         """
-        Asynchronously process items from the queue using the provided function.
-
-        Continuously dequeues items and applies the given function to each. 
-        The processing stops when the queue is signaled to stop or a sentinel value (`None`) is dequeued.
-
-        Parameters:
-            func (Callable[[Any], Any]): A coroutine function to process items from the queue.
-
-        Example:
-            >>> async def sample_processing(task):
-            ...     print("Processing:", task)
-            >>> async_queue = AsyncQueue()
-            >>> asyncio.run(async_queue.enqueue('Task 1'))
-            >>> asyncio.run(async_queue.process_requests(sample_processing))
-            Processing: Task 1
+        Process items with timeout management for each task.
         """
+        tasks = set()
         while not self.stopped():
+            if len(tasks) >= self.max_concurrent_tasks:
+                done, tasks = await asyncio.wait(tasks, return_when=asyncio.FIRST_COMPLETED)
+
             item = await self.dequeue()
-            if item is None:  # Using `None` as a sentinel value to cease processing.
+            if item is None:
                 await self.stop()
                 break
-            await func(item)
+
+            # Wrap the function call with tcall for timeout handling
+            task = asyncio.create_task(tcall(item, func, timeout=timeout))
+            tasks.add(task)
+
+        if tasks:
+            await asyncio.wait(tasks)

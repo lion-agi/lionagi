@@ -2,6 +2,7 @@ import os
 import hashlib
 import re
 import copy
+import json
 from pathlib import Path
 from datetime import datetime
 from dateutil import parser
@@ -267,3 +268,22 @@ def _is_schema(dict_: Dict, schema: Dict):
         if not isinstance(dict_[key], expected_type):
             return False
     return True
+
+def strip_lower(input_: Union[str, List[str]]) -> Union[str, List[str]]:
+    try:
+        return str(input_).strip().lower()
+    except:
+        return False
+
+def as_dict(input_):
+    if isinstance(input_, str):
+        try:
+            return json.loads(input_)
+        except Exception as e:
+            raise f"Could not convert input to dict: {e}"
+    elif isinstance(input_, dict):
+        return input_
+    else:
+        raise f"Could not convert input to dict: {input_}"
+
+

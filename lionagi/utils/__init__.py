@@ -16,7 +16,7 @@ from .io_util import IOUtil
 
 from .call_util import (
     to_list, lcall, alcall, mcall, 
-    tcall, bcall,  CallDecorator
+    tcall, bcall, CallDecorator
 )
 
 

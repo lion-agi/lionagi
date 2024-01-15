@@ -1,4 +1,3 @@
-# uses utils
 import json
 import xml.etree.ElementTree as ET
 from typing import Any, Dict, Optional, TypeVar, Type, List, Callable, Union
@@ -18,7 +17,7 @@ class BaseNode(BaseModel):
     content: Union[str, Dict[str, Any], None, Any] = Field(
         default=None, validation_alias=AliasChoices('text', 'page_content', 'chunk_content')
     )
-    
+
     class Config:
         extra = 'allow'
         populate_by_name = True
@@ -42,6 +41,21 @@ class BaseNode(BaseModel):
         root = ET.fromstring(xml_str)
         data = cls._xml_to_dict(root)
         return cls(**data)
+
+    def to_xml(self) -> str:
+        root = ET.Element(self.__class__.__name__)
+        for attr, value in self.dict().items():
+            child = ET.SubElement(root, attr)
+            child.text = str(value)
+        return ET.tostring(root, encoding='unicode')
+
+    def validate_content(self, schema: Dict[str, type]) -> bool:
+        if not isinstance(self.content, dict):
+            return False
+        return all(isinstance(self.content.get(k), v) for k, v in schema.items())
+
+    def transform_related_nodes(self, transform_func: Callable[[str], str]) -> None:
+        self.related_nodes = [transform_func(node_id) for node_id in self.related_nodes]
 
     def to_json(self) -> str:
         return self.model_dump_json(by_alias=True)
@@ -121,9 +135,6 @@ class BaseNode(BaseModel):
     def is_empty(self) -> bool:
         return not self.content and not self.metadata
 
-    def has_label(self, label: str) -> bool:
-        return self.label == label
-
     def is_metadata_key_present(self, key: str) -> bool:
         return key in self.metadata
 
@@ -148,7 +159,11 @@ class BaseNode(BaseModel):
 
     def __str__(self) -> str:
         content_preview = (str(self.content)[:75] + '...') if len(str(self.content)) > 75 else str(self.content)
-        return f"{self.__class__.__name__}(id={self.id_}, label={self.label}, content='{content_preview}')"
+        metadata_preview = str(self.metadata)[:75] + '...' if len(str(self.metadata)) > 75 else str(self.metadata)
+        related_nodes_preview = ', '.join(self.related_nodes[:3]) + ('...' if len(self.related_nodes) > 3 else '')
+        return (f"{self.__class__.__name__}(id={self.id_}, label={self.label}, "
+                f"content='{content_preview}', metadata='{metadata_preview}', "
+                f"related_nodes=[{related_nodes_preview}])")
 
     def __repr__(self):
         return f"{self.__class__.__name__}({self.to_json()})"
