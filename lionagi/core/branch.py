@@ -1,6 +1,6 @@
 from ..messages.messenger import Messenger
 from ..tools.tool_manager import ToolManager
-from ..core.conversation import Conversation
+from .conversation import Conversation
 
 
 class Branch:

@@ -14,7 +14,9 @@ install_requires = [
     "python-dotenv",
     "tiktoken", 
     "pydantic",
-    "cryptography"
+    "cryptography",
+    "aiocache",
+    "pandas"
 ]
 
 setuptools.setup(
