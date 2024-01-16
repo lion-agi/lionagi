@@ -1,52 +1,52 @@
-from ..messages.messenger import Messenger
-from ..tools.tool_manager import ToolManager
-from .conversation import Conversation
+
+# from ..tools.tool_manager import ToolManager
+# from .conversation import Conversation
 
 
-class Branch:
+# class Branch:
     
-    # instruction set is an object
-    def __init__(self, system=None, instruction_set=None, messages=None) -> None:
-        self.system = system or instruction_set.system or "A helpful assistant"
-        self.instruction_set = Conversation(instruction_set)
-        self.conversation = Conversation(messages)
-        self.msgr = Messenger()
-        self.tool_manager = ToolManager()
+#     # instruction set is an object
+#     def __init__(self, system=None, instruction_set=None, messages=None) -> None:
+#         self.system = system or instruction_set.system or "A helpful assistant"
+#         self.instruction_set = Conversation(instruction_set)
+#         self.conversation = Conversation(messages)
+#         self.msgr = Messenger()
+#         self.tool_manager = ToolManager()
     
-    def handle_instruction():
-        ...
+#     def handle_instruction():
+#         ...
         
-    def send_report():
-        ...
+#     def send_report():
+#         ...
         
-    def handle_error():
-        ...
+#     def handle_error():
+#         ...
     
-    def start():
-        ...
+#     def start():
+#         ...
         
-    def close():
-        ...
+#     def close():
+#         ...
     
     
 
-class Session:
+# class Session:
     
-    def create_branch():
-        ...
+#     def create_branch():
+#         ...
         
-    def start_branch():
-        ...
+#     def start_branch():
+#         ...
         
-    def pause_branch():
-        ...
+#     def pause_branch():
+#         ...
     
-    def central_log():
-        ...
+#     def central_log():
+#         ...
     
-    def end_branch():
-        ...
+#     def end_branch():
+#         ...
     
     
     
-    ...
+#     ...

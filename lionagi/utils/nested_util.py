@@ -358,42 +358,6 @@ def _convert_to_int_if_possible(s: str) -> Union[int, str]:
 def _is_iterable(obj) -> bool:
     return isinstance(obj, Iterable) and not isinstance(obj, str)
 
-
-
-
-
-# @staticmethod
-# def _insert_with_dict_handling(result_list: Union[Dict, List], 
-#                             indices: List[Union[int, str]], 
-#                             value: Any, 
-#                             current_depth: int = 0):
-#     """
-#     Helper function to insert a value into a list or dictionary at a nested location 
-#     defined by indices.
-
-#     Args:
-#         result_list (Union[Dict, List]): The list or dictionary to insert into.
-#         indices (List[Union[int, str]]): The indices defining where to insert the value.
-#         value (Any): The value to insert.
-#         current_depth (int, optional): The current depth in the nested structure. Defaults to 0.
-
-#     Returns:
-#         None: This function modifies the input list or dictionary in place and returns None.
-#     """
-#     for index in indices[:-1]:
-#         if isinstance(result_list, list):
-#             _extend_list_to_index(result_list, index, [])
-#             result_list = result_list[index]
-#         elif isinstance(result_list, dict):
-#             result_list = result_list.setdefault(index, {})
-#         current_depth += 1
-#     last_index = indices[-1]
-#     if isinstance(result_list, list):
-#         _extend_list_to_index(result_list, last_index)
-#         result_list[last_index] = value
-#     else:
-#         result_list[last_index] = value
-
 def _ensure_list_index(lst: List, index: int, default=None) -> None:
     """Ensures that a list is at least as long as a specified index.
 
@@ -707,3 +671,36 @@ def _get_target_container(nested_list: Union[List, Dict], indices: List[Union[in
 #     for key, value in tuples_list:
 #         ninsert(result_dict, key.split('_'), value)
 #     return result_dict
+
+
+# @staticmethod
+# def _insert_with_dict_handling(result_list: Union[Dict, List], 
+#                             indices: List[Union[int, str]], 
+#                             value: Any, 
+#                             current_depth: int = 0):
+#     """
+#     Helper function to insert a value into a list or dictionary at a nested location 
+#     defined by indices.
+
+#     Args:
+#         result_list (Union[Dict, List]): The list or dictionary to insert into.
+#         indices (List[Union[int, str]]): The indices defining where to insert the value.
+#         value (Any): The value to insert.
+#         current_depth (int, optional): The current depth in the nested structure. Defaults to 0.
+
+#     Returns:
+#         None: This function modifies the input list or dictionary in place and returns None.
+#     """
+#     for index in indices[:-1]:
+#         if isinstance(result_list, list):
+#             _extend_list_to_index(result_list, index, [])
+#             result_list = result_list[index]
+#         elif isinstance(result_list, dict):
+#             result_list = result_list.setdefault(index, {})
+#         current_depth += 1
+#     last_index = indices[-1]
+#     if isinstance(result_list, list):
+#         _extend_list_to_index(result_list, last_index)
+#         result_list[last_index] = value
+#     else:
+#         result_list[last_index] = value
