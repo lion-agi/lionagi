@@ -157,6 +157,17 @@ class Graph(BaseNode):
         else:
             return False
 
+    def is_empty(self):
+        if self.nodes:
+            return False
+        else:
+            return True
+
+    def clear(self):
+        self.nodes.clear()
+        self.relationships.clear()
+        self.node_relationships.clear()
+
     def to_networkx(self, **kwargs):
         """
         Converts the graph to a NetworkX graph object.

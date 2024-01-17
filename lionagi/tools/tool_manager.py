@@ -61,7 +61,7 @@ class ToolManager(BaseNode):
             Tuple[str, dict]: The function name and its arguments.
         """
         try:
-            func = response['function'][5:]
+            func = response['action'][7:]
             args = json.loads(response['arguments'])
             return (func, args)
         except:

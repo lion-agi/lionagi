@@ -1,8 +1,14 @@
+import json
 from collections import defaultdict
 from copy import deepcopy
 from itertools import chain
 from typing import Any, Callable, Dict, Generator, List, Tuple, Union, Iterable, Optional
 
+def to_readable_dict(input: Union[Dict, List]):
+    if isinstance(input, dict):
+        return json.dumps(input, indent=4)
+    else:
+        return input
 
 # nested filter (filter nested dict or list)
 def nfilter(collection: Union[Dict, List], condition: Callable[[Any], bool]) -> Union[Dict, List]:

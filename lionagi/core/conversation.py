@@ -1,6 +1,7 @@
 import pandas as pd
+import json
 from datetime import datetime
-from typing import Optional, Dict, Any, Type
+from typing import Optional, Dict, Any
 from .messages import Message
 
 class Conversation:
@@ -10,7 +11,7 @@ class Conversation:
 
     def __init__(self, dir: Optional[str] = None) -> None:
         self.messages = pd.DataFrame(
-            columns=["id_", "role", "name", "timestamp", "content", "type"]
+            columns=["node_id", "role", "name", "timestamp", "content"]
         )
         self.dir = dir
 
@@ -22,10 +23,12 @@ class Conversation:
             message (Message): The message object to be added.
         """
         message_dict = message.to_dict()
+        if isinstance(message_dict['content'], dict):
+            message_dict['content'] = json.dumps(message_dict['content'])
         message_dict['timestamp'] = datetime.now()
         self.messages.loc[len(self.messages)] = message_dict
 
-    def get_messages_by_role(self, role: str) -> pd.DataFrame:
+    def get_message_by_role(self, role: str) -> pd.DataFrame:
         """
         Retrieves messages sent by a specific role.
 
@@ -37,28 +40,28 @@ class Conversation:
         """
         return self.messages[self.messages["role"] == role]
 
-    def reset(self) -> None:
-        """Clears all messages in the DataFrame."""
-        self.messages = pd.DataFrame(columns=self.messages.columns)
+    def last_message(self):
+        if not self.messages.empty:
+            return Message(**self.messages.iloc[-1].to_dict())
 
-    def last_message_of_type(self, message_type: Type[Message]) -> Optional[Message]:
+    def last_message_by_role(self, role: str) -> Optional[Message]:
         """
         Retrieves the last message of a specific type.
 
         Args:
-            message_type (Type[Message]): The message type class.
+            role (str): The role to get messages by.
 
         Returns:
             Optional[Message]: The last message of the given type, if exists.
         """
         filtered_messages = self.messages[
-            self.messages["type"] == message_type.__name__
+            self.messages["role"] == role
         ]
         if not filtered_messages.empty:
             return Message(**filtered_messages.iloc[-1].to_dict())
         return None
 
-    def search_messages(self, keyword: str, case_sensitive: bool = False) -> pd.DataFrame:
+    def search_message(self, keyword: str, case_sensitive: bool = False) -> pd.DataFrame:
         """
         Searches for messages containing a specific keyword.
 
@@ -76,24 +79,6 @@ class Conversation:
             ]
         return self.messages[self.messages["content"].str.contains(keyword)]
 
-    def save_conversation_to_csv(self, filepath: str) -> None:
-        """
-        Saves the conversation to a CSV file.
-
-        Args:
-            filepath (str): The path to the file where the conversation should be saved.
-        """
-        self.messages.to_csv(filepath, index=False)
-
-    def load_conversation_from_csv(self, filepath: str) -> None:
-        """
-        Loads messages from a CSV file into the conversation.
-
-        Args:
-            filepath (str): The path to the file from which to load the conversation.
-        """
-        self.messages = pd.read_csv(filepath)
-
     def delete_message(self, message_id: str) -> bool:
         """
         Deletes a message by its unique identifier.
@@ -105,7 +90,7 @@ class Conversation:
             bool: True if a message was deleted, False otherwise.
         """
         initial_length = len(self.messages)
-        self.messages = self.messages[self.messages["id_"] != message_id]
+        self.messages = self.messages[self.messages["node_id"] != message_id]
         return len(self.messages) < initial_length
 
     def update_message_content(self, message_id: str, new_content: str) -> bool:
@@ -140,16 +125,18 @@ class Conversation:
             return Message.from_json(message_df.iloc[0].to_dict())
         return None
 
-    def summarize_conversation_by_role(self) -> Dict[str, int]:
+    def message_counts(self) -> Dict[str, int]:
         """
         Provides a summary of the conversation grouped by role.
 
         Returns:
             Dict[str, int]: A dictionary with roles as keys and message counts as values.
         """
-        return self.messages["role"].value_counts().to_dict()
+        result = self.messages["role"].value_counts().to_dict()
+        result['total'] = len(self.messages)
+        return result
 
-    def generate_conversation_report(self) -> Dict[str, Any]:
+    def report(self) -> Dict[str, Any]:
         """
         Generates a detailed report of the conversation.
 
@@ -158,13 +145,13 @@ class Conversation:
         """
         return {
             "total_messages": len(self.messages),
-            "summary_by_role": self.summarize_conversation_by_role(),
+            "summary_by_role": self.message_counts(),
             "messages": [
-                Message.from_json(msg).to_plain_text() for _, msg in self.messages.iterrows()
+                msg.to_dict() for _, msg in self.messages.iterrows()
             ],
         }
 
-    def get_conversation_history(
+    def history(
         self, start_date: Optional[datetime] = None, end_date: Optional[datetime] = None
     ) -> pd.DataFrame:
         """
@@ -177,33 +164,20 @@ class Conversation:
         Returns:
             pd.DataFrame: A DataFrame containing the filtered conversation history.
         """
+        if isinstance(start_date, str):
+            start_date = datetime.strptime(start_date, '%Y-%m-%d')
+        if isinstance(end_date, str):
+            end_date = datetime.strptime(end_date, '%Y-%m-%d')
         if start_date and end_date:
             return self.messages[
-                (self.messages["timestamp"] >= start_date)
-                & (self.messages["timestamp"] <= end_date)
+                (self.messages["timestamp"].dt.date >= start_date.date())
+                & (self.messages["timestamp"].dt.date <= end_date.date())
             ]
+        elif start_date:
+            return self.messages[(self.messages["timestamp"].dt.date >= start_date.date())]
+        elif end_date:
+            return self.messages[(self.messages["timestamp"].dt.date <= end_date.date())]
         return self.messages
-
-    def save_conversation_to_json(self, filepath: str) -> None:
-        """
-        Saves the entire conversation as a JSON file.
-
-        Args:
-            filepath (str): The file path where the conversation will be saved.
-        """
-        self.messages.to_json(
-            filepath, orient="records", lines=True, date_format="iso"
-        )
-
-    def load_conversation_from_json(self, filepath: str) -> None:
-        """
-        Loads messages from a JSON file into the conversation.
-
-        Args:
-            filepath (str): The file path from which to load the conversation.
-        """
-        self.reset()
-        self.messages = pd.read_json(filepath, orient="records", lines=True)
 
     def replace_keyword(self, keyword: str, replacement: str, case_sensitive: bool = False) -> None:
         """
@@ -223,28 +197,9 @@ class Conversation:
                 keyword, replacement
             )
 
-    def export_conversation(self, filename: str) -> None:
-        """
-        Exports the conversation to a file.
-
-        Args:
-            filename (str): The filename where the conversation should be exported.
-        """
-        self.messages.to_csv(filename, index=False)
-
-    def import_conversation(self, filename: str) -> None:
-        """
-        Imports messages from a file into the conversation.
-
-        Args:
-            filename (str): The filename from which to import the conversation.
-        """
-        self.reset()
-        self.messages = pd.read_csv(filename)
-
     def clone(self) -> 'Conversation':
         """
-        Creates a shallow copy of the conversation.
+        Creates a deep copy of the conversation.
 
         Returns:
             Conversation: A new Conversation instance with the same messages.
@@ -260,23 +215,64 @@ class Conversation:
         Args:
             other (Conversation): Another Conversation instance to merge with this one.
         """
-        self.messages = pd.concat([self.messages, other.messages]).reset_index(drop=True)
+        self.messages = self.messages.merge(other.messages, how='outer')
 
-    def get_message_count(self) -> int:
-        """
-        Gets the total number of messages in the conversation.
+    # def append(self, other: 'Conversation'):
+    #     self.messages = pd.concat([self.messages, other.messages]).reset_index(drop=True)
 
-        Returns:
-            int: The total number of messages.
+    def rollback(self, steps: int) -> None:
         """
-        return len(self.messages)
-
-    def archive_conversation(self, archive_path: str) -> None:
-        """
-        Archives the entire conversation as a JSON file and resets the conversation.
+        Rollbacks the conversation to a previous state by the given number of steps.
 
         Args:
-            archive_path (str): The file path where the conversation will be saved.
+            steps (int): The number of steps to rollback.
+
+        Raises:
+            ValueError: If steps are negative or exceed the current number of messages.
         """
-        self.save_conversation_to_json(archive_path)
+        if steps < 0 or steps > len(self.messages):
+            raise ValueError("Steps must be a non-negative integer less than or equal to the number of messages.")
+        self.messages = self.messages[:-steps].reset_index(drop=True)
+
+    def reset(self) -> None:
+        """Clears all messages in the DataFrame."""
+        self.messages = pd.DataFrame(columns=self.messages.columns)
+
+    def to_csv(self, filepath: str, **kwargs) -> None:
+        """
+        Saves the conversation to a CSV file.
+
+        Args:
+            filepath (str): The path to the file where the conversation should be saved.
+        """
+        self.messages.to_csv(filepath, **kwargs)
+
+    def from_csv(self, filepath: str, **kwargs) -> None:
+        """
+        Loads messages from a CSV file into the conversation.
+
+        Args:
+            filepath (str): The path to the file from which to load the conversation.
+        """
+        self.messages = pd.read_csv(filepath, **kwargs)
+
+    def to_json(self, filepath: str) -> None:
+        """
+        Saves the entire conversation as a JSON file.
+
+        Args:
+            filepath (str): The file path where the conversation will be saved.
+        """
+        self.messages.to_json(
+            filepath, orient="records", lines=True, date_format="iso"
+        )
+
+    def from_json(self, filepath: str) -> None:
+        """
+        Loads messages from a JSON file into the conversation.
+
+        Args:
+            filepath (str): The file path from which to load the conversation.
+        """
         self.reset()
+        self.messages = pd.read_json(filepath, orient="records", lines=True)
