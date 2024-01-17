@@ -4,10 +4,12 @@ import hashlib
 import json
 import logging
 import re
+import tiktoken
 from functools import lru_cache
 from aiocache import cached
 from typing import Any, Callable, Dict, Optional
 
+from .sys_util import strip_lower
 
 class APIUtil:
     """
@@ -275,3 +277,100 @@ class APIUtil:
         except aiohttp.ClientError as e:
             logging.error(f"API call to {url} failed: {e}")
             return None
+
+    @staticmethod
+    @lru_cache(maxsize=1024)
+    def calculate_num_token(
+        payload: Dict[str, Any] = None,
+        api_endpoint: str = None,
+        token_encoding_name: str = None,
+    ) -> int:
+        """
+        Calculates the number of tokens required for a request based on the payload and API endpoint.
+
+        The token calculation logic might vary based on different API endpoints and payload content.
+        This method should be implemented in a subclass to provide the specific calculation logic
+        for the OpenAI API.
+
+        Parameters:
+            payload (Dict[str, Any]): The payload of the request.
+
+            api_endpoint (str): The specific API endpoint for the request.
+
+            token_encoding_name (str): The name of the token encoding method.
+
+        Returns:
+            int: The estimated number of tokens required for the request.
+
+        Example:
+            >>> rate_limiter = OpenAIRateLimiter(100, 200)
+            >>> payload = {'prompt': 'Translate the following text:', 'max_tokens': 50}
+            >>> rate_limiter.calculate_num_token(payload, 'completions')
+            # Expected token calculation for the given payload and endpoint.
+        """
+
+        encoding = tiktoken.get_encoding(token_encoding_name)
+        if api_endpoint.endswith("completions"):
+            max_tokens = payload.get("max_tokens", 15)
+            n = payload.get("n", 1)
+            completion_tokens = n * max_tokens
+
+            # chat completions
+            if api_endpoint.startswith("chat/"):
+                num_tokens = 0
+                for message in payload["messages"]:
+                    num_tokens += 4  # every message follows <im_start>{role/name}\n{content}<im_end>\n
+                    for key, value in message.items():
+                        num_tokens += len(encoding.encode(value))
+                        if key == "name":  # if there's a name, the role is omitted
+                            num_tokens -= (
+                                1  # role is always required and always 1 token
+                            )
+                num_tokens += 2  # every reply is primed with <im_start>assistant
+                return num_tokens + completion_tokens
+            # normal completions
+            else:
+                prompt = payload["prompt"]
+                if isinstance(prompt, str):  # single prompt
+                    prompt_tokens = len(encoding.encode(prompt))
+                    num_tokens = prompt_tokens + completion_tokens
+                    return num_tokens
+                elif isinstance(prompt, list):  # multiple prompts
+                    prompt_tokens = sum([len(encoding.encode(p)) for p in prompt])
+                    num_tokens = prompt_tokens + completion_tokens * len(prompt)
+                    return num_tokens
+                else:
+                    raise TypeError(
+                        'Expecting either string or list of strings for "prompt" field in completion request'
+                    )
+        elif api_endpoint == "embeddings":
+            input = payload["input"]
+            if isinstance(input, str):  # single input
+                num_tokens = len(encoding.encode(input))
+                return num_tokens
+            elif isinstance(input, list):  # multiple inputs
+                num_tokens = sum([len(encoding.encode(i)) for i in input])
+                return num_tokens
+            else:
+                raise TypeError(
+                    'Expecting either string or list of strings for "inputs" field in embedding request'
+                )
+        else:
+            raise NotImplementedError(
+                f'API endpoint "{api_endpoint}" not implemented in this script'
+            )
+
+    @staticmethod
+    def _create_payload(input_, config, required_, optional_, input_key,**kwargs):
+        config = {**config, **kwargs}
+        payload = {input_key: input_}
+        
+        for key in required_:
+            payload.update({key: config[key]})
+
+        for key in optional_:
+            if bool(config[key]) is True and strip_lower(config[key]) != "none":
+                payload.update({key: config[key]})
+                
+        return payload
+    

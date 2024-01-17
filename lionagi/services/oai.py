@@ -1,34 +1,28 @@
 from os import getenv
-import dotenv
-from .base_api_service import BaseAPIService, BaseAPIRateLimiter
+from ..configs.oai_configs import oai_schema
+from .base_service import BaseService
 
-dotenv.load_dotenv()
-
-class OpenAIService(BaseAPIService):
+class OpenAIService(BaseService):
 
     base_url = "https://api.openai.com/v1/"
+    available_endpoints = ['chat/completions', 'finetune', 'audio_speech', 'audio_transcriptions', 'audio_translations']
+    schema = oai_schema
+    key_scheme = "OPENAI_API_KEY"
 
-    def __init__(
-        self,
-        api_key: str = None,
-        token_encoding_name: str = "cl100k_base",
-        max_attempts: int = 3,
-        max_requests_per_minute: int = 500,
-        max_tokens_per_minute: int = 150_000,
-        ratelimiter = BaseAPIRateLimiter,
-        status_tracker = None,
-        queue = None,
-    ):
+    def __init__(self, api_key = None, key_scheme = None,schema = None):
+        key_scheme = key_scheme or self.key_scheme            
         super().__init__(
-            api_key = api_key or getenv("OPENAI_API_KEY"),
-            status_tracker = status_tracker,
-            queue = queue,
-            ratelimiter=ratelimiter,
-            max_requests_per_minute=max_requests_per_minute, 
-            max_tokens_per_minute=max_tokens_per_minute),
-        self.token_encoding_name=token_encoding_name
-        self.max_attempts = max_attempts
+            api_key = api_key or getenv(key_scheme),
+            schema = schema or self.schema
+        )
 
-    async def serve(self, payload, endpoint_="chat/completions", method="post"):
-        return await self._serve(payload=payload, endpoint_=endpoint_, method=method)
+    async def serve(self, input_, endpoint="chat/completions", method="post"):
+        await self._init()
+        return await self._serve(input_=input_, endpoint=endpoint, method=method)
+    
+    async def serve_chat(self, messages):
+        return await self.serve(input_=messages)
+    
+    async def serve_finetune(self, training_file):
+        return await self.serve(input_=training_file, endpoint="finetune")
     

@@ -205,7 +205,7 @@ async def bcall(inputs: List[Any], func: Callable[..., Any], batch_size: int, **
             raise e
     return results
 
-async def _rcall(func: Callable[..., Any], *args, timeout: Optional[int] = None,
+async def rcall(func: Callable[..., Any], *args, timeout: Optional[int] = None,
                  retries: Optional[int] = None, initial_delay: float = 2.0, 
                  backoff_factor: float = 2.0, default: Optional[Any] = None, 
                  **kwargs) -> Any:
@@ -307,11 +307,11 @@ class CallDecorator:
         def decorator(func: Callable[..., Any]) -> Callable:
             @ft.wraps(func)
             async def async_wrapper(*args, **kwargs) -> Any:
-                return await _rcall(func, *args, timeout=timeout, **kwargs)
+                return await rcall(func, *args, timeout=timeout, **kwargs)
 
             @ft.wraps(func)
             def sync_wrapper(*args, **kwargs) -> Any:
-                return asyncio.run(_rcall(func, *args, timeout=timeout, **kwargs))
+                return asyncio.run(rcall(func, *args, timeout=timeout, **kwargs))
 
             if asyncio.iscoroutinefunction(func):
                 return async_wrapper
@@ -335,11 +335,11 @@ class CallDecorator:
         def decorator(func: Callable[..., Any]) -> Callable:
             @ft.wraps(func)
             async def async_wrapper(*args, **kwargs) -> Any:
-                return await _rcall(func, *args, retries=retries, initial_delay=initial_delay, backoff_factor=backoff_factor, **kwargs)
+                return await rcall(func, *args, retries=retries, initial_delay=initial_delay, backoff_factor=backoff_factor, **kwargs)
 
             @ft.wraps(func)
             def sync_wrapper(*args, **kwargs) -> Any:
-                return asyncio.run(_rcall(func, *args, retries=retries, initial_delay=initial_delay, backoff_factor=backoff_factor, **kwargs))
+                return asyncio.run(rcall(func, *args, retries=retries, initial_delay=initial_delay, backoff_factor=backoff_factor, **kwargs))
 
             if asyncio.iscoroutinefunction(func):
                 return async_wrapper
@@ -361,11 +361,11 @@ class CallDecorator:
         def decorator(func: Callable[..., Any]) -> Callable:
             @ft.wraps(func)
             async def async_wrapper(*args, **kwargs) -> Any:
-                return await _rcall(func, *args, default=default_value, **kwargs)
+                return await rcall(func, *args, default=default_value, **kwargs)
 
             @ft.wraps(func)
             def sync_wrapper(*args, **kwargs) -> Any:
-                return asyncio.run(_rcall(func, *args, default=default_value, **kwargs))
+                return asyncio.run(rcall(func, *args, default=default_value, **kwargs))
 
             if asyncio.iscoroutinefunction(func):
                 return async_wrapper

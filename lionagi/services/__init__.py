@@ -1,4 +1,4 @@
-from .base_api_service import BaseAPIService, BaseAPIRateLimiter
+from .base_service import BaseAPIService, BaseAPIRateLimiter
 from .oai import OpenAIService
 from .openrouter import OpenRouterService
 
