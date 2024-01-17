@@ -73,7 +73,8 @@ class DataLogger:
         dir = dir or self.dir
         filepath = create_path(
             dir=dir, filename=filename, timestamp=timestamp, dir_exist_ok=dir_exist_ok)
-        IOUtil.to_csv(list(self.log), filepath, file_exist_ok=file_exist_ok)
+        # IOUtil.to_csv(list(self.log), filepath, file_exist_ok=file_exist_ok)
+
         n_logs = len(list(self.log))
         self.log = deque()
         if verbose:

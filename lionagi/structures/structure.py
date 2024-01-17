@@ -11,7 +11,7 @@ class Structure(BaseNode):
     """
     Represents the structure of a graph consisting of nodes and relationships.
     """
-    graph: Graph
+    graph: Graph = Graph()
 
     def add_node(self, node: T) -> None:
         """
@@ -50,12 +50,21 @@ class Structure(BaseNode):
     #     if type is list:
     #         return list(obj.values())
     #     return obj
-    
+
     def get_relationships(self) -> list[R]:
         return self.graph.get_node_relationships()
 
-    def get_node_relationships(self, node: T, out_edge=True) -> R:
-        return self.graph.get_node_relationships(node, out_edge)
+    def get_node_relationships(self, node: T, out_edge=True, labels=None) -> R:
+        relationships = self.graph.get_node_relationships(node, out_edge)
+        if labels:
+            if not isinstance(labels, list):
+                labels = [labels]
+            result = []
+            for r in relationships:
+                if r.label in labels:
+                    result.append(r)
+            relationships = result
+        return relationships
 
     def node_exist(self, node: T) -> bool:
         """
@@ -99,4 +108,6 @@ class Structure(BaseNode):
             relationship (R): The relationship instance to be removed.
         """
         return self.graph.remove_relationship(relationship)
-        
+
+    def is_empty(self) -> bool:
+        return self.graph.is_empty()

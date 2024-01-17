@@ -46,7 +46,7 @@ def create_copy(input: Any, n: int) -> Any:
 
     Example:
         >>> sample_dict = {'key': 'value'}
-        >>> make_copy(sample_dict, 2)
+        >>> create_copy(sample_dict, 2)
         [{'key': 'value'}, {'key': 'value'}]
     """
     if not isinstance(n, int) or n < 1:
@@ -263,7 +263,7 @@ def find_depth(nested_obj, depth_strategy='uniform', ignore_non_iterable=False):
     else:
         raise ValueError("Unsupported depth strategy. Choose 'uniform' or 'mixed'.")
 
-def _is_schema(dict_: Dict, schema: Dict):
+def is_schema(dict_: Dict, schema: Dict):
     for key, expected_type in schema.items():
         if not isinstance(dict_[key], expected_type):
             return False

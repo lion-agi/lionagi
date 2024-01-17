@@ -22,9 +22,9 @@ from .utils import *
 from .schema import *
 from .structures import *
 from .loaders import *
-from .messages import *
 from .tools import *
 from .core import *
+from .sessions import *
 
 
 
