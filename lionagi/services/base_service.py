@@ -283,4 +283,3 @@ class BaseService:
                     )
                 if not self.endpoints[endpoint_]._has_initiated:
                     await self.endpoints[endpoint_].init_rate_limiter()
-                    

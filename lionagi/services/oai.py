@@ -26,3 +26,14 @@ class OpenAIService(BaseService):
     async def serve_finetune(self, training_file):
         return await self.serve(input_=training_file, endpoint="finetune")
     
+"""
+from lionagi.services import OpenAIService
+
+service = OpenAIService()
+await service.initiate_endpoint('chat/completions', max_tokens)
+
+await service.serve_chat(input)
+service.serve_finetuning
+service.serve_audio_speech(input, method='')
+
+"""
