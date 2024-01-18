@@ -127,7 +127,7 @@ oai_audio_translations_schema = {
 
 oai_schema = {
     
-    "chat": oai_chat_schema,
+    "chat/completions": oai_chat_schema,
     "finetune": oai_finetune_schema,
     "audio_speech": oai_audio_speech_schema, 
     "audio_transcriptions": oai_audio_transcriptions_schema,

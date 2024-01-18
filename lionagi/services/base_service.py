@@ -1,8 +1,9 @@
 import asyncio
 import logging
+import aiohttp
 from abc import ABC
 from dataclasses import dataclass
-from typing import Any, Dict, NoReturn, Optional, Type
+from typing import Any, Dict, NoReturn, Optional, Type, List, Union
 
 from ..utils import nget, APIUtil
 
@@ -59,7 +60,7 @@ class BaseRateLimiter(ABC):
         asyncio.run(rate_limiter.start_replenishing())
     """
 
-    def __init__(self, max_requests: int, max_tokens: int, interval: int = 60) -> None:
+    def __init__(self, max_requests: int, max_tokens: int, interval: int = 60, token_encoding_name=None) -> None:
         self.interval: int = interval
         self.max_requests: int = max_requests
         self.max_tokens: int = max_tokens
@@ -68,6 +69,7 @@ class BaseRateLimiter(ABC):
         self.rate_limit_replenisher_task: Optional[asyncio.Task[NoReturn]] = None
         self._stop_replenishing: asyncio.Event = asyncio.Event()
         self._lock: asyncio.Lock = asyncio.Lock()
+        self.token_encoding_name = token_encoding_name
 
     async def start_replenishing(self) -> NoReturn:
         """Starts the replenishment of rate limit capacities at regular intervals."""
@@ -111,13 +113,11 @@ class BaseRateLimiter(ABC):
         method="post", 
         payload: Dict[str, any]=None
     ) -> Optional[Dict[str, any]]:
-        endpoint = APIUtil.api_endpoint_from_url(f"https://{base_url}" + endpoint)
-        
+        endpoint = APIUtil.api_endpoint_from_url(base_url + endpoint)
         while True:
             if self.available_request_capacity < 1 or self.available_token_capacity < 10:  # Minimum token count
                 await asyncio.sleep(1)  # Wait for capacity
                 continue
-            
             required_tokens = APIUtil.calculate_num_token(payload, endpoint, self.token_encoding_name)
             
             if await self.request_permission(required_tokens):
@@ -152,9 +152,9 @@ class BaseRateLimiter(ABC):
                 await asyncio.sleep(1)
 
     @classmethod
-    async def create(cls, max_requests: int, max_tokens: int) -> 'BaseRateLimiter':
+    async def create(cls, max_requests: int, max_tokens: int, interval: int = 60, token_encoding_name = None) -> 'BaseRateLimiter':
         """Creates an instance of BaseRateLimiter and starts the replenisher task."""
-        instance = cls(max_requests, max_tokens)
+        instance = cls(max_requests, max_tokens, interval, token_encoding_name)
         instance.rate_limit_replenisher_task = asyncio.create_task(
             instance.start_replenishing()
         )
@@ -172,8 +172,8 @@ class SimpleRateLimiter(BaseRateLimiter):
         asyncio.run(rate_limiter.start_replenishing())
     """
 
-    def __init__(self, max_requests: int, max_tokens: int, interval: int = 60) -> None:
-        super().__init__(max_requests, max_tokens, interval)
+    def __init__(self, max_requests: int, max_tokens: int, interval: int = 60, token_encoding_name=None) -> None:
+        super().__init__(max_requests, max_tokens, interval, token_encoding_name)
 
 
 class EndPoint:
@@ -210,6 +210,7 @@ class EndPoint:
         interval: int = 60,
         endpoint_: Optional[str] = None,
         rate_limiter_class: Type[BaseRateLimiter] = SimpleRateLimiter,
+        token_encoding_name=None,
         config: Dict = None,
     ) -> None:
         self.endpoint = endpoint_ or 'chat/completions'
@@ -217,6 +218,7 @@ class EndPoint:
         self.max_requests = max_requests
         self.max_tokens = max_tokens
         self.interval = interval
+        self.token_encoding_name = token_encoding_name
         self.config = config or {}
         self.rate_limiter: Optional[BaseRateLimiter] = None
         self._has_initialized = False
@@ -224,7 +226,7 @@ class EndPoint:
     async def init_rate_limiter(self) -> None:
         """Initializes the rate limiter for the endpoint."""
         self.rate_limiter = await self.rate_limiter_class.create(
-            self.max_requests, self.max_tokens, self.interval
+            self.max_requests, self.max_tokens, self.interval, self.token_encoding_name
         )
         self._has_initialized = True
 
@@ -254,32 +256,90 @@ class BaseService:
         self,
         api_key: Optional[str] = None,
         schema: Dict[str, Any] = None,
+        token_encoding_name: str = None
     ) -> None:
         self.api_key = api_key
         self.schema = schema or {}
         self.status_tracker = StatusTracker()
         self.endpoints: Dict[str, EndPoint] = {}
+        self.token_encoding_name = token_encoding_name
 
-    async def init_endpoint(self, endpoint_: Optional[str] = None) -> None:
+    async def init_endpoint(self, endpoint_: Optional[Union[List[str], List[EndPoint], str, EndPoint]] = None) -> None:
         """Initializes the specified endpoint or all endpoints if none is specified."""
         
         if endpoint_:
-            if endpoint_ not in self.available_endpoints:
-                raise ValueError (f"Endpoint {endpoint_} not available for service {self.__class__.__name__}")
-            
-            if endpoint_ in self.endpoints and not self.endpoints[endpoint_]._has_initiated:
-                    await self.endpoints[endpoint_].init_rate_limiter()    
+            if not isinstance(endpoint_, list):
+                endpoint_ = [endpoint_]
+            for ep in endpoint_:
+                if ep not in self.available_endpoints:
+                    raise ValueError (f"Endpoint {ep} not available for service {self.__class__.__name__}")
+
+                if ep not in self.endpoints:
+                    endpoint_config = nget(self.schema, [ep, 'config'])
+                    self.schema.get(ep, {})
+                    if isinstance(ep, EndPoint):
+                        self.endpoints[ep.endpoint] = ep
+                    else:
+                        self.endpoints[ep] = EndPoint(
+                            max_requests=endpoint_config.get('max_requests', 1000) if endpoint_config.get('max_requests', 1000) is not None else 1000,
+                            max_tokens=endpoint_config.get('max_tokens', 100000) if endpoint_config.get('max_tokens', 100000) is not None else 100000,
+                            interval=endpoint_config.get('interval', 60) if endpoint_config.get('interval', 60) is not None else 60,
+                            endpoint_=ep,
+                            token_encoding_name=self.token_encoding_name,
+                            config=endpoint_config,
+                        )
+
+                if not self.endpoints[ep]._has_initialized:
+                    await self.endpoints[ep].init_rate_limiter()
+
         else:
-            for endpoint_ in self.available_endpoints:
-                endpoint_config = nget(self.schema, [endpoint_, 'config'])
-                self.schema.get(endpoint_, {})
-                if endpoint_ not in self.endpoints:
-                    self.endpoints[endpoint_] = EndPoint(
+            for ep in self.available_endpoints:
+                endpoint_config = nget(self.schema, [ep, 'config'])
+                self.schema.get(ep, {})
+                if ep not in self.endpoints:
+                    self.endpoints[ep] = EndPoint(
                         max_requests=endpoint_config.get('max_requests', 1000),
                         max_tokens=endpoint_config.get('max_tokens', 100000),
                         interval=endpoint_config.get('interval', 60),
-                        endpoint_=endpoint_,
-                        config=endpoint_config.get('config', {}),
+                        endpoint_=ep,
+                        token_encoding_name=self.token_encoding_name,
+                        config=endpoint_config,
                     )
-                if not self.endpoints[endpoint_]._has_initiated:
-                    await self.endpoints[endpoint_].init_rate_limiter()
+                if not self.endpoints[ep]._has_initialized:
+                    await self.endpoints[ep].init_rate_limiter()
+
+    async def call_api(self, payload, endpoint, method):
+        if endpoint not in self.endpoints.keys():
+            raise ValueError(f'The endpoint {endpoint} has not initialized.')
+        async with aiohttp.ClientSession() as http_session:
+            completion = await self.endpoints[endpoint].rate_limiter._call_api(
+                http_session=http_session, endpoint=endpoint, base_url=self.base_url, api_key=self.api_key,
+                method=method, payload=payload)
+            return completion
+
+
+class PayloadCreation:
+    @classmethod
+    def chat_completion(cls, messages, llmconfig, schema, **kwargs):
+        config = {**llmconfig, **kwargs}
+        payload = {"messages": messages}
+        for key in schema['required']:
+            payload.update({key: config[key]})
+
+        for key in schema['optional']:
+            if bool(config[key]) is True and str(config[key]).lower() != "none":
+                payload.update({key: config[key]})
+        return payload
+
+    @classmethod
+    def fine_tuning(cls, training_file, llmconfig, schema, **kwargs):
+        config = {**llmconfig, **kwargs}
+        payload = {"training_file": training_file}
+        for key in schema['required']:
+            payload.update({key: config[key]})
+
+        for key in schema['optional']:
+            if bool(config[key]) is True and str(config[key]).lower() != "none":
+                payload.update({key: config[key]})
+        return payload
+

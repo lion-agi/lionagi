@@ -6,4 +6,4 @@ cryptography==41.0.7
 aiocache==0.12.2
 pandas>=2.1.0
 transformers==4.36.1
-pytorch>=2.1.0
+torch>=2.1.0

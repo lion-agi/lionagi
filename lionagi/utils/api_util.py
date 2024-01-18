@@ -279,7 +279,7 @@ class APIUtil:
             return None
 
     @staticmethod
-    @lru_cache(maxsize=1024)
+    # @lru_cache(maxsize=1024)
     def calculate_num_token(
         payload: Dict[str, Any] = None,
         api_endpoint: str = None,
