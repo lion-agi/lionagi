@@ -3,7 +3,8 @@ from ..configs.oai_configs import oai_schema
 from .base_service import BaseService, PayloadCreation
 
 class OpenAIService(BaseService):
-    """A service to interact with OpenAI's API endpoints.
+    """
+    A service to interact with OpenAI's API endpoints.
 
     Attributes:
         base_url (str): The base URL for the OpenAI API.
@@ -19,7 +20,6 @@ class OpenAIService(BaseService):
 
         >>> service = OpenAIService()
         >>> asyncio.run(service.serve("Convert this text to speech.", "audio_speech"))
-        ValueError: 'audio_speech' is currently not supported
     """
 
     base_url = "https://api.openai.com/v1/"
@@ -38,6 +38,30 @@ class OpenAIService(BaseService):
         self.active_endpoint = []
 
     async def serve(self, input_, endpoint="chat/completions", method="post", **kwargs):
+        """
+        Serves the input using the specified endpoint and method.
+
+        Args:
+            input_: The input text to be processed.
+            endpoint: The API endpoint to use for processing.
+            method: The HTTP method to use for the request.
+            **kwargs: Additional keyword arguments to pass to the payload creation.
+
+        Returns:
+            A tuple containing the payload and the completion response from the API.
+
+        Raises:
+            ValueError: If the specified endpoint is not supported.
+
+        Examples:
+            >>> service = OpenAIService(api_key="your_api_key")
+            >>> asyncio.run(service.serve("Hello, world!", "chat/completions"))
+            (payload, completion)
+
+            >>> service = OpenAIService()
+            >>> asyncio.run(service.serve("Convert this text to speech.", "audio_speech"))
+            ValueError: 'audio_speech' is currently not supported
+        """
         if endpoint not in self.active_endpoint:
             await self. init_endpoint(endpoint)
         if endpoint == "chat/completions":
@@ -46,6 +70,19 @@ class OpenAIService(BaseService):
             return ValueError(f'{endpoint} is currently not supported')
     
     async def serve_chat(self, messages, **kwargs):
+        """
+        Serves the chat completion request with the given messages.
+
+        Args:
+            messages: The messages to be included in the chat completion.
+            **kwargs: Additional keyword arguments for payload creation.
+
+        Returns:
+            A tuple containing the payload and the completion response from the API.
+
+        Raises:
+            Exception: If the API call fails.
+        """
         if "chat/completions" not in self.active_endpoint:
             await self. init_endpoint("chat/completions")
             self.active_endpoint.append("chat/completions")
