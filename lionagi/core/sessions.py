@@ -53,10 +53,6 @@ class Session:
         self.current_branch = self.branches[self.current_branch_name]
         self.latest_response = None
 
-    @property
-    def conversation(self):
-        return self.current_branch
-
     def new_branch(self, name: str, from_: str) -> None:
         """Creates a new branch based on an existing one.
 
@@ -136,27 +132,28 @@ class Session:
                 print(f'Branch {name} is deleted.')
             return True
 
-    async def call_chatcompletion(self, **kwargs):
+    async def call_chatcompletion(self, branch: Union[str, Branch], **kwargs):
         """Calls the AI service to get a completion for the current conversation.
 
         Args:
+            branch: Branch to run.
             **kwargs: Additional keyword arguments to pass to the AI service.
 
         Raises:
             NotImplementedError: If the AI service does not return a valid response.
         """
 
-        messages = self.current_branch.to_chatcompletion_message()
+        messages = branch.to_chatcompletion_message()
         payload, completion = await self.service.serve_chat(messages=messages, **kwargs)
         if "choices" in completion:
             self.logger_({"input": payload, "output": completion})
             self.latest_response = Response(response=completion['choices'][0])
-            self.current_branch.add_message(self.latest_response)
+            branch.add_message(self.latest_response)
             self.service.status_tracker.num_tasks_succeeded += 1
         else:
             self.service.status_tracker.num_tasks_failed += 1
 
-    async def _output(self, invoke=True, out=True):
+    async def _output(self, branch: Union[str, Branch], invoke=True, out=True):
         """Processes the latest response and optionally invokes tools and returns output.
 
         Args:
@@ -170,11 +167,11 @@ class Session:
         if invoke:
             try:
                 tool_uses = content_
-                func_calls = lcall(tool_uses["action_list"], self.current_branch.tool_manager.get_function_call)
-                outs = await  alcall(func_calls, self.current_branch.tool_manager.invoke)
+                func_calls = lcall(tool_uses["action_list"], branch.tool_manager.get_function_call)
+                outs = await alcall(func_calls, branch.tool_manager.invoke)
                 for out, f in zip(outs, func_calls):
                     response = Response(response={"function": f[0], "arguments": f[1], "output": out})
-                    self.current_branch.add_message(response)
+                    branch.add_message(response)
             except:
                 pass
         if out:
@@ -184,7 +181,8 @@ class Session:
             
             return self.latest_response.content
 
-    def _tool_parser(self, tools: Union[Dict, Tool, List[Tool], str, List[str], List[Dict]], **kwargs) -> Dict:
+    def _tool_parser(self, tools: Union[Dict, Tool, List[Tool], str, List[str], List[Dict]],
+                     branch: Union[str, Branch], **kwargs) -> Dict:
         """Parses tools and returns keyword arguments for tool usage.
 
         Args:
@@ -207,14 +205,14 @@ class Session:
             elif isinstance(tool, Tool):
                 return tool.schema_
             elif isinstance(tool, str):
-                if self.current_branch.tool_manager.name_existed(tool):
-                    tool = self.current_branch.tool_manager.registry[tool]
+                if branch.tool_manager.name_existed(tool):
+                    tool = branch.tool_manager.registry[tool]
                     return tool.schema_
                 else:
                     raise ValueError(f'Function {tool} is not registered.')
 
         if isinstance(tools, bool):
-            tool_kwarg = {"tools": self.current_branch.tool_manager.to_tool_schema_list()}
+            tool_kwarg = {"tools": branch.tool_manager.to_tool_schema_list()}
             kwargs = {**tool_kwarg, **kwargs}
 
         else:
@@ -225,13 +223,13 @@ class Session:
 
         return kwargs
 
-    def _is_invoked(self):
+    def _is_invoked(self, branch: Union[str, Branch]):
         """Checks if the latest message in the current branch has invoked a tool.
 
         Returns:
             bool: True if a tool has been invoked, False otherwise.
         """
-        content = self.current_branch.messages.iloc[-1]['content']
+        content = branch.messages.iloc[-1]['content']
         try:
             if json.loads(content)['action_response'].keys() >= {'function', 'arguments', 'output'}:
                 return True
@@ -247,6 +245,7 @@ class Session:
         invoke: bool = True,
         out: bool = True,
         tools: Union[bool, Tool, List[Tool], str, List[str]] = False,
+        branch: Union[str, Branch] = None,
         **kwargs,
     ) -> Any:
         """Initiates a new conversation or instruction in the current branch.
@@ -259,6 +258,7 @@ class Session:
             invoke: Whether to invoke tools based on the response.
             out: Whether to return the output.
             tools: Tools to be used or a flag indicating whether to use all tools.
+            branch: Branch to run.
             **kwargs: Additional keyword arguments for the AI service.
 
         Returns:
@@ -267,21 +267,27 @@ class Session:
         Raises:
             ValueError: If the tools argument is not in the expected format.
         """
-
+        if not branch:
+            branch = self.current_branch
+        if isinstance(branch, str):
+            if branch in self.branches.keys():
+                branch = self.branches[branch]
+            else:
+                ValueError(f'branch{branch} does not exist')
         if system:
-            self.current_branch.change_system_message(System(system))
+            branch.change_system_message(System(system))
         if isinstance(instruction, Instruction):
-            self.current_branch.add_message(instruction)
+            branch.add_message(instruction)
         else:
             instruct = Instruction(instruction, context, name)
-            self.current_branch.add_message(instruct)
-        if self.current_branch.tool_manager.registry != {}:
+            branch.add_message(instruct)
+        if branch.tool_manager.registry != {}:
             if tools:
-                kwargs = self._tool_parser(tools=tools, **kwargs)
+                kwargs = self._tool_parser(tools=tools, branch=branch, **kwargs)
         config = {**self.llmconfig, **kwargs}
-        await self.call_chatcompletion(**config)
+        await self.call_chatcompletion(branch=branch, **config)
 
-        return await self._output(invoke, out)
+        return await self._output(branch, invoke, out)
 
     async def followup(
         self,
@@ -292,6 +298,7 @@ class Session:
         name: Optional[str] = None,
         invoke: bool = True,
         tools: Union[bool, Tool, List[Tool], str, List[str]] = False,
+        branch: Union[str, Branch] = None,
         **kwargs,
     ) -> Any:
         """Adds a follow-up instruction to the current branch.
@@ -304,6 +311,7 @@ class Session:
             name: Optional name of the entity sending the instruction.
             invoke: Whether to invoke tools based on the response.
             tools: Tools to be used or a flag indicating whether to use all tools.
+            branch: Branch to run.
             **kwargs: Additional keyword arguments for the AI service.
 
         Returns:
@@ -312,53 +320,69 @@ class Session:
         Raises:
             ValueError: If the tools argument is not in the expected format.
         """
+        if not branch:
+            branch = self.current_branch
+        if isinstance(branch, str):
+            if branch in self.branches.keys():
+                branch = self.branches[branch]
+            else:
+                ValueError(f'branch{branch} does not exist')
         if system:
-            self.current_branch.change_system_message(System(system))
+            branch.change_system_message(System(system))
         if isinstance(instruction, Instruction):
-            self.current_branch.add_message(instruction)
+            branch.add_message(instruction)
         else:
             instruct = Instruction(instruction, context, name)
-            self.current_branch.add_message(instruct)
+            branch.add_message(instruct)
 
         if 'tool_parsed' in kwargs:
             kwargs.pop('tool_parsed')
             tool_kwarg = {'tools': tools}
             kwargs = {**tool_kwarg, **kwargs}
         else:
-            if self.current_branch.tool_manager.registry != {}:
+            if branch.tool_manager.registry != {}:
                 if tools:
-                    kwargs = self._tool_parser(tools=tools, **kwargs)
+                    kwargs = self._tool_parser(tools=tools, branch=branch, **kwargs)
         config = {**self.llmconfig, **kwargs}
-        await self.call_chatcompletion(**config)
+        await self.call_chatcompletion(branch=branch, **config)
 
-        return await self._output(invoke, out)
+        return await self._output(branch, invoke, out)
 
     async def auto_followup(
         self,
         instruction: Union[Instruction, str],
         num: int = 3,
         tools: Union[bool, Tool, List[Tool], str, List[str], List[Dict]] = False,
+        branch: Union[str, Branch] = None,
         **kwargs,
     ) -> None:
-        if self.current_branch.tool_manager.registry != {}:
+        if not branch:
+            branch = self.current_branch
+        if isinstance(branch, str):
+            if branch in self.branches.keys():
+                branch = self.branches[branch]
+            else:
+                ValueError(f'branch{branch} does not exist')
+        if branch.tool_manager.registry != {}:
             if tools:
-                kwargs = self._tool_parser(tools=tools, **kwargs)
+                kwargs = self._tool_parser(tools=tools, branch=branch, **kwargs)
 
         cont_ = True
         while num > 0 and cont_ is True:
             if tools:
-                await self.followup(instruction, tool_choice="auto", tool_parsed=True, **kwargs)
+                await self.followup(instruction, tool_choice="auto", tool_parsed=True, branch=branch, **kwargs)
             else:
-                await self.followup(instruction, tool_parsed=True, **kwargs)
+                await self.followup(instruction, tool_parsed=True, branch=branch, **kwargs)
             num -= 1
-            cont_ = True if self._is_invoked() else False
+            cont_ = True if self._is_invoked(branch) else False
         if num == 0:
-            await self.followup(instruction, tool_parsed=True, **kwargs)
+            await self.followup(instruction, tool_parsed=True, branch=branch, **kwargs)
 
     async def instruction_set_auto_followup(
         self,
         instruction_set: InstructionSet,
         num: Union[int, List[int]] = 3,
+        branch: Union[str, Branch] = None,
         **kwargs,
     ) -> None:
         """Automatically follows up an entire set of instructions.
@@ -366,11 +390,19 @@ class Session:
         Args:
             instruction_set: The set of instructions to follow up.
             num: The number of follow-ups to attempt for each instruction or a list of numbers for each instruction.
+            branch: Branch to run.
             **kwargs: Additional keyword arguments for the AI service.
 
         Raises:
             ValueError: If the number of follow-ups does not match the number of instructions.
         """
+        if not branch:
+            branch = self.current_branch
+        if isinstance(branch, str):
+            if branch in self.branches.keys():
+                branch = self.branches[branch]
+            else:
+                ValueError(f'branch{branch} does not exist')
         if isinstance(num, List):
             if len(num) != instruction_set.instruct_len:
                 raise ValueError('Unmatched auto_followup num size and instructions set size')
@@ -380,9 +412,9 @@ class Session:
             num_ = num if isinstance(num, int) else num[i]
             tools = instruction_set.get_tools(current_instruct_node)
             if tools:
-                await self.auto_followup(current_instruct_node, num=num_, tools=tools, **kwargs)
+                await self.auto_followup(current_instruct_node, num=num_, tools=tools, branch=branch, **kwargs)
             else:
-                await self.followup(current_instruct_node)
+                await self.followup(current_instruct_node, branch=branch, **kwargs)
             current_instruct_node = instruction_set.get_next_instruction(current_instruct_node)
 
 #### Branch Methods: effective to current active branch
