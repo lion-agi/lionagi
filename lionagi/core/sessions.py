@@ -53,6 +53,10 @@ class Session:
         self.current_branch = self.branches[self.current_branch_name]
         self.latest_response = None
 
+    @property
+    def conversation(self):
+        return self.current_branch
+
     def new_branch(self, name: str, from_: str) -> None:
         """Creates a new branch based on an existing one.
 

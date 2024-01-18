@@ -153,7 +153,7 @@ class System(Message):
             system (Any): The content of the system message.
             name (Optional[str]): The name of the system.
         """
-        super().__init__(role="system", name=name, content={"system_info": system})
+        super().__init__(role="system", name=name or 'system', content={"system_info": system})
 
 
 class Instruction(Message):
@@ -168,7 +168,7 @@ class Instruction(Message):
             name (Optional[str]): The name of the sender.
         """
 
-        super().__init__(role="user", name=name, content={"instruction": instruction})
+        super().__init__(role="user", name=name or 'user', content={"instruction": instruction})
         if context:
             self.content.update({"context": context})
 
