@@ -46,9 +46,7 @@ Quick Start
 The following example shows how to use LionAGI's ``Session`` object to interact with ``gpt-4`` model:
 
 .. code-block:: python
-
-  import lionagi as li
-
+  
   # define system messages, context and user instruction
   system = "You are a helpful assistant designed to perform calculations."
   instruction = {"Addition":"Add the two numbers together i.e. x+y"}
@@ -57,6 +55,8 @@ The following example shows how to use LionAGI's ``Session`` object to interact 
 .. code-block:: python
 
    # in interactive environment (.ipynb for example)
+   import lionagi as li
+
    calculator = li.Session(system=system)
    result = await calculator.initiate(instruction=instruction,
                                       context=context,
@@ -69,8 +69,9 @@ The following example shows how to use LionAGI's ``Session`` object to interact 
    # or otherwise, you can use
    import asyncio
    from dotenv import loadenv
-
    load_dotenv()
+
+   import lionagi as li
 
    async def main():
        calculator = li.Session(system=system)
