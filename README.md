@@ -47,7 +47,6 @@ LionAGI is designed to be `asynchronous` only, please check python official docu
 The following example shows how to use LionAGI's `Session` object to interact with `gpt-4` model:
 
 ```python
-import lionagi as li
 
 # define system messages, context and user instruction
 system = "You are a helpful assistant designed to perform calculations."
@@ -57,6 +56,8 @@ context = {"x": 10, "y": 5}
 
 ```python
 # in interactive environment (.ipynb for example)
+import lionagi as li
+
 calculator = li.Session(system=system)
 result = await calculator.initiate(
   instruction=instruction, context=context, model="gpt-4-1106-preview"
@@ -71,6 +72,8 @@ import asyncio
 from dotenv import load_dotenv
 
 load_dotenv()
+
+import lionagi as li
 
 async def main():
     calculator = li.Session(system=system)
