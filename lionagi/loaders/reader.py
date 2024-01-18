@@ -1,8 +1,8 @@
 # use utils, schema, and bridge
 from typing import Union, Callable
 
-from lionagi.utils import lcall
-from lionagi.bridge import langchain_loader, from_langchain, llama_index_reader, from_llama_index
+from ..utils import lcall
+from ..bridge import langchain_loader, from_langchain, llama_index_reader, from_llama_index
 from .load_util import dir_to_nodes, ReaderType
 
 

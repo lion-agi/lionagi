@@ -1,6 +1,7 @@
 from typing import Union, Callable, List, Dict, Any, TypeVar
-from lionagi.schema.data_node import DataNode
-from lionagi.utils.sys_util import change_dict_key
+from ..utils.sys_util import change_dict_key
+from ..schema.data_node import DataNode
+
 
 T = TypeVar('T', bound='DataNode')
 
