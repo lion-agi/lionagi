@@ -1,10 +1,11 @@
-from ..tools.tool_manager import ToolManager
-from .conversation import Conversation
-from .messages import Message
-from pandas import DataFrame
 from copy import deepcopy
 from typing import Any, Dict, Union
 from datetime import datetime
+from pandas import DataFrame
+
+from ..tools.tool_manager import ToolManager
+from .messages import Message
+from .conversation import Conversation
 
 
 class Branch(Conversation):
@@ -91,3 +92,4 @@ class Branch(Conversation):
             out = {"role": row['role'], "content": row['content']}
             message.append(out)
         return message
+    

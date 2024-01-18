@@ -1,9 +1,8 @@
 import json
 from typing import Any, Optional
 from lionagi.utils.sys_util import strip_lower
-from lionagi.utils.nested_util import nget
+from lionagi.utils.nested_util import nget, to_readable_dict
 from lionagi.schema import BaseNode
-from lionagi.utils.nested_util import to_readable_dict
 
 
 class Message(BaseNode):
@@ -131,3 +130,4 @@ class Response(Message):
             return func_list
         except:
             raise ValueError("Response message must be one of regular response or function calling")
+        

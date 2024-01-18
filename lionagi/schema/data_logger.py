@@ -1,6 +1,6 @@
 from collections import deque
 from typing import Optional
-from lionagi.utils import create_path, IOUtil
+from ..utils import create_path, IOUtil
 
 
 class DataLogger:
@@ -47,38 +47,39 @@ class DataLogger:
         """        
         self.log.append(entry)
 
-    def to_csv(self, filename: str, dir: Optional[str] = None, verbose: bool = True, 
-               timestamp: bool = True, dir_exist_ok: bool = True, file_exist_ok: bool = False) -> None:
-        """
-        Exports the logged data to a CSV file and optionally clears the log.
+    # need fixing 
+    # def to_csv(self, filename: str, dir: Optional[str] = None, verbose: bool = True, 
+    #            timestamp: bool = True, dir_exist_ok: bool = True, file_exist_ok: bool = False) -> None:
+    #     """
+    #     Exports the logged data to a CSV file and optionally clears the log.
 
-        Parameters:
-            filename (str): The name of the CSV file.
+    #     Parameters:
+    #         filename (str): The name of the CSV file.
 
-            dir (Optional[str]): The directory to save the file. Defaults to the instance's dir attribute.
+    #         dir (Optional[str]): The directory to save the file. Defaults to the instance's dir attribute.
 
-            verbose (bool): If True, prints a message upon completion. Defaults to True.
+    #         verbose (bool): If True, prints a message upon completion. Defaults to True.
 
-            timestamp (bool): If True, appends a timestamp to the filename. Defaults to True.
+    #         timestamp (bool): If True, appends a timestamp to the filename. Defaults to True.
 
-            dir_exist_ok (bool): If True, will not raise an error if the directory already exists. Defaults to True.
+    #         dir_exist_ok (bool): If True, will not raise an error if the directory already exists. Defaults to True.
 
-            file_exist_ok (bool): If True, overwrites the file if it exists. Defaults to False.
+    #         file_exist_ok (bool): If True, overwrites the file if it exists. Defaults to False.
 
-        Side Effects:
-            Clears the log after saving the CSV file.
+    #     Side Effects:
+    #         Clears the log after saving the CSV file.
 
-            Prints a message indicating the save location and number of logs saved if verbose is True.
-        """        
-        dir = dir or self.dir
-        filepath = create_path(
-            dir=dir, filename=filename, timestamp=timestamp, dir_exist_ok=dir_exist_ok)
-        # IOUtil.to_csv(list(self.log), filepath, file_exist_ok=file_exist_ok)
+    #         Prints a message indicating the save location and number of logs saved if verbose is True.
+    #     """        
+    #     dir = dir or self.dir
+    #     filepath = create_path(
+    #         dir=dir, filename=filename, timestamp=timestamp, dir_exist_ok=dir_exist_ok)
+    #     # IOUtil.to_csv(list(self.log), filepath, file_exist_ok=file_exist_ok)
 
-        n_logs = len(list(self.log))
-        self.log = deque()
-        if verbose:
-            print(f"{n_logs} logs saved to {filepath}")
+    #     n_logs = len(list(self.log))
+    #     self.log = deque()
+    #     if verbose:
+    #         print(f"{n_logs} logs saved to {filepath}")
             
     def set_dir(self, dir: str) -> None:
         """

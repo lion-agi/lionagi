@@ -4,8 +4,8 @@ from enum import Enum
 from pathlib import Path
 from typing import List, Union, Dict, Any, Tuple
 
-from lionagi.utils import to_list, lcall
-from lionagi.schema import DataNode
+from ..utils import to_list, lcall
+from ..schema import DataNode
 
 class ReaderType(str, Enum):
     PLAIN = 'plain'

@@ -1,7 +1,4 @@
-
-from .base_model import BaseIntelligentModel
-
-from lionagi.configs import oai_schema
+from ..configs import oai_schema
 
 class BaseIntelligentModel:
     
