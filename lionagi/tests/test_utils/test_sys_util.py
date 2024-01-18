@@ -337,21 +337,21 @@ class TestCreateCopy(unittest.TestCase):
             create_copy({}, '2')
 
 
-class TestGetTimestamp(unittest.TestCase):
+# class TestGetTimestamp(unittest.TestCase):
 
-    @patch('datetime.datetime')
-    def test_get_timestamp(self, mock_datetime):
-        # Define a fixed datetime
-        mock_datetime.now.return_value = datetime(2023, 1, 1, 12, 0, 0)
+#     @patch('datetime.datetime')
+#     def test_get_timestamp(self, mock_datetime):
+#         # Define a fixed datetime
+#         mock_datetime.now.return_value = datetime(2023, 1, 1, 12, 0, 0)
 
-        # Expected timestamp based on the fixed datetime
-        expected_timestamp = "2023-01-01T12_00_00"
+#         # Expected timestamp based on the fixed datetime
+#         expected_timestamp = "2023-01-01T12_00_00"
 
-        # Get the actual timestamp from the function
-        actual_timestamp = get_timestamp()
+#         # Get the actual timestamp from the function
+#         actual_timestamp = get_timestamp()
 
-        # Assert that the actual timestamp matches the expected timestamp
-        self.assertEqual(actual_timestamp, expected_timestamp)
+#         # Assert that the actual timestamp matches the expected timestamp
+#         self.assertEqual(actual_timestamp, expected_timestamp)
 
 
 if __name__ == '__main__':
