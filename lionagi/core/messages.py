@@ -1,6 +1,6 @@
 import json
 from typing import Any, Optional, Dict
-from ..utils.sys_util import strip_lower
+from ..utils.sys_util import strip_lower, as_dict
 from ..utils.nested_util import nget, to_readable_dict
 from ..schema import BaseNode
 
@@ -153,7 +153,7 @@ class System(Message):
             system (Any): The content of the system message.
             name (Optional[str]): The name of the system.
         """
-        super().__init__(role="system", name=name, content={"system_info": system})
+        super().__init__(role="system", name=name or 'system', content={"system_info": system})
 
 
 class Instruction(Message):
@@ -168,22 +168,17 @@ class Instruction(Message):
             name (Optional[str]): The name of the sender.
         """
 
-        super().__init__(role="user", name=name, content={"instruction": instruction})
+        super().__init__(role="user", name=name or 'user', content={"instruction": instruction})
         if context:
             self.content.update({"context": context})
 
 
+
+
 class Response(Message):
-    """Represents a response message."""
 
-    def __init__(self, response: Any, name: Optional[str] = None, content_key=None):
-        """Initialize the Response message.
-
-        Args:
-            response (Any): The content of the response.
-            name (Optional[str]): The name of the sender.
-            content_key (Optional[str]): The key used for response content.
-        """
+    def __init__(self, response: Any, name: Optional[str] = None, content_key=None) -> None:
+        content = ''
         try:
             response = response["message"]
 
@@ -204,12 +199,12 @@ class Response(Message):
                     name = name or "assistant"
 
         except:
-            content_ = response
             name = name or "action_response"
+            content = response
             content_key = content_key or "action_response"
-
-        super().__init__(role="assistant", name=name, content={content_key: content_})
-
+        
+        super().__init__(role="assistant", name=name, content={content_key: content})
+        
     @staticmethod
     def _handle_action_request(response):
         """Handle an action request from the response.
@@ -242,4 +237,4 @@ class Response(Message):
             return func_list
         except:
             raise ValueError("Response message must be one of regular response or function calling")
-        
+

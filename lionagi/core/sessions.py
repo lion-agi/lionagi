@@ -3,6 +3,7 @@ from typing import Any, Union, List, Dict, Union, Optional
 from dotenv import load_dotenv
 
 from ..configs.oai_configs import oai_schema
+from ..utils.nested_util import get_flattened_keys
 from ..utils.call_util import lcall, alcall
 from ..schema import DataLogger, Tool
 from ..services.oai import OpenAIService
@@ -51,6 +52,10 @@ class Session:
         self.current_branch_name = 'main'
         self.current_branch = self.branches[self.current_branch_name]
         self.latest_response = None
+
+    @property
+    def conversation(self):
+        return self.current_branch
 
     def new_branch(self, name: str, from_: str) -> None:
         """Creates a new branch based on an existing one.
@@ -161,9 +166,10 @@ class Session:
         Returns:
             Any: The output of the latest response or tool invocation, if requested.
         """
+        content_ = self.latest_response.content
         if invoke:
             try:
-                tool_uses = self.latest_response.content
+                tool_uses = content_
                 func_calls = lcall(tool_uses["action_list"], self.current_branch.tool_manager.get_function_call)
                 outs = await  alcall(func_calls, self.current_branch.tool_manager.invoke)
                 for out, f in zip(outs, func_calls):
@@ -172,6 +178,10 @@ class Session:
             except:
                 pass
         if out:
+            if len(content_.items()) == 1:
+                key = get_flattened_keys(content_)[0]
+                return content_[key]
+            
             return self.latest_response.content
 
     def _tool_parser(self, tools: Union[Dict, Tool, List[Tool], str, List[str], List[Dict]], **kwargs) -> Dict:
