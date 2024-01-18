@@ -46,18 +46,6 @@ oai_finetune_schema = {
 }
 
 
-
-# Embeddings
-
-
-
-
-
-
-
-
-
-
 # Audio ---- create  speech
 
 oai_audio_speech_llmconfig = {

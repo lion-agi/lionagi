@@ -43,7 +43,7 @@ openrouter_finetune_schema = {
 
 openrouter_schema = {
 
-    "chat": openrouter_chat_schema,
+    "chat/completions": openrouter_chat_schema,
     "finetune": openrouter_finetune_schema
     
 }
