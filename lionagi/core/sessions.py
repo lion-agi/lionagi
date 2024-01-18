@@ -178,7 +178,7 @@ class Session:
             except:
                 pass
         if out:
-            if len(content_.items()) == 1:
+            if len(content_.items()) == 1 and len(get_flattened_keys(content_)) == 1:
                 key = get_flattened_keys(content_)[0]
                 return content_[key]
             

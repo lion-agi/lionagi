@@ -200,7 +200,7 @@ class Response(Message):
 
         except:
             name = name or "action_response"
-            content = response
+            content_ = response
             content_key = content_key or "action_response"
         
         super().__init__(role="assistant", name=name, content={content_key: content_})

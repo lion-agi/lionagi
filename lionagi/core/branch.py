@@ -178,7 +178,7 @@ class Branch(Conversation):
             ],
         }
 
-    def to_chatcompletion_message(self, use_name=False):
+    def to_chatcompletion_message(self):
         """
         Convert the conversation branch to a list of messages for chat completion.
 
@@ -188,8 +188,6 @@ class Branch(Conversation):
         message = []
         for _, row in self.messages.iterrows():
             out = {"role": row['role'], "content": row['content']}
-            if use_name:
-              out.update({"name": row['name']})
             message.append(out)
         return message
     
