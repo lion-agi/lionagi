@@ -106,8 +106,8 @@ class APIUtil:
             >>> api_endpoint_from_url(invalid_url)
             ''
         """
-        match = re.search(r"^https://[^/]+/v\d+/(.+)$", request_url)
-        return match.group(1) if match else ""
+        match = re.search(r"^https://[^/]+(/.+)?/v\d+/(.+)$", request_url)
+        return match.group(2) if match else ""
 
     @staticmethod
     async def unified_api_call(http_session: aiohttp.ClientSession, method: str, url: str, **kwargs) -> Any:
