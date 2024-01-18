@@ -44,22 +44,12 @@ class BaseRateLimiter(ABC):
     the replenishment of request and token capacities at regular intervals.
 
     Attributes:
-        interval (int): The time interval in seconds for replenishing capacities.
-        max_requests (int): The maximum number of requests allowed per interval.
-        max_tokens (int): The maximum number of tokens allowed per interval.
-        available_request_capacity (int): The current available request capacity.
-        available_token_capacity (int): The current available token capacity.
-        rate_limit_replenisher_task (Optional[asyncio.Task[NoReturn]]): The asyncio task for replenishing capacities.
-
-    Examples:
-        # Example usage of a derived class implementing BaseRateLimiter
-        class MyRateLimiter(BaseRateLimiter):
-            async def request_permission(self) -> bool:
-                # Implementation for requesting permission to make an API call
-                pass
-
-        rate_limiter = MyRateLimiter(max_requests=10, max_tokens=100, interval=60)
-        asyncio.run(rate_limiter.start_replenishing())
+        interval: The time interval in seconds for replenishing capacities.
+        max_requests: The maximum number of requests allowed per interval.
+        max_tokens: The maximum number of tokens allowed per interval.
+        available_request_capacity: The current available request capacity.
+        available_token_capacity: The current available token capacity.
+        rate_limit_replenisher_task: The asyncio task for replenishing capacities.
     """
 
     def __init__(self, max_requests: int, max_tokens: int, interval: int = 60, token_encoding_name=None) -> None:
@@ -108,13 +98,28 @@ class BaseRateLimiter(ABC):
     async def _call_api(
         self, 
         http_session, 
-        endpoint, 
-        base_url, 
-        api_key,
-        max_attempts=3, 
-        method="post", 
+        endpoint: str, 
+        base_url: str, 
+        api_key: str,
+        max_attempts: int = 3, 
+        method: str = "post", 
         payload: Dict[str, any]=None
     ) -> Optional[Dict[str, any]]:
+        """
+        Makes an API call to the specified endpoint using the provided HTTP session.
+
+        Args:
+            http_session: The aiohttp client session to use for the API call.
+            endpoint: The API endpoint to call.
+            base_url: The base URL of the API.
+            api_key: The API key for authentication.
+            max_attempts: The maximum number of attempts for the API call.
+            method: The HTTP method to use for the API call.
+            payload: The payload to send with the API call.
+
+        Returns:
+            The JSON response from the API call if successful, otherwise None.
+        """
         endpoint = APIUtil.api_endpoint_from_url(base_url + endpoint)
         while True:
             if self.available_request_capacity < 1 or self.available_token_capacity < 10:  # Minimum token count
@@ -155,7 +160,18 @@ class BaseRateLimiter(ABC):
 
     @classmethod
     async def create(cls, max_requests: int, max_tokens: int, interval: int = 60, token_encoding_name = None) -> 'BaseRateLimiter':
-        """Creates an instance of BaseRateLimiter and starts the replenisher task."""
+        """
+        Creates an instance of BaseRateLimiter and starts the replenisher task.
+
+        Args:
+            max_requests: The maximum number of requests allowed per interval.
+            max_tokens: The maximum number of tokens allowed per interval.
+            interval: The time interval in seconds for replenishing capacities.
+            token_encoding_name: The name of the token encoding to use.
+
+        Returns:
+            An instance of BaseRateLimiter with the replenisher task started.
+        """
         instance = cls(max_requests, max_tokens, interval, token_encoding_name)
         instance.rate_limit_replenisher_task = asyncio.create_task(
             instance.start_replenishing()
@@ -168,14 +184,10 @@ class SimpleRateLimiter(BaseRateLimiter):
     A simple implementation of a rate limiter.
 
     Inherits from BaseRateLimiter and provides a basic rate limiting mechanism.
-
-    Examples:
-        # Example usage of SimpleRateLimiter
-        rate_limiter = SimpleRateLimiter(max_requests=10, max_tokens=100, interval=60)
-        asyncio.run(rate_limiter.start_replenishing())
     """
 
     def __init__(self, max_requests: int, max_tokens: int, interval: int = 60, token_encoding_name=None) -> None:
+        """Initializes the SimpleRateLimiter with the specified parameters."""
         super().__init__(max_requests, max_tokens, interval, token_encoding_name)
 
 
@@ -246,12 +258,6 @@ class BaseService:
         schema (Dict[str, Any]): The schema defining the service's endpoints.
         status_tracker (StatusTracker): The object tracking the status of API calls.
         endpoints (Dict[str, EndPoint]): A dictionary of endpoint objects.
-
-    Examples:
-        # Example usage of BaseService with OpenAIService
-        service = OpenAIService(api_key='your_api_key')
-        asyncio.run(service.init_endpoints())
-        response = asyncio.run(service.serve('data', 'chat/completions'))
     """
 
     base_url: str = ''
@@ -270,7 +276,12 @@ class BaseService:
         self.token_encoding_name = token_encoding_name
 
     async def init_endpoint(self, endpoint_: Optional[Union[List[str], List[EndPoint], str, EndPoint]] = None) -> None:
-        """Initializes the specified endpoint or all endpoints if none is specified."""
+        """
+        Initializes the specified endpoint or all endpoints if none is specified.
+
+        Args:
+            endpoint_: The endpoint(s) to initialize. Can be a string, an EndPoint, a list of strings, or a list of EndPoints.
+        """
         
         if endpoint_:
             if not isinstance(endpoint_, list):
@@ -314,6 +325,20 @@ class BaseService:
                     await self.endpoints[ep].init_rate_limiter()
 
     async def call_api(self, payload, endpoint, method):
+        """
+        Calls the specified API endpoint with the given payload and method.
+
+        Args:
+            payload: The payload to send with the API call.
+            endpoint: The endpoint to call.
+            method: The HTTP method to use for the call.
+
+        Returns:
+            The response from the API call.
+
+        Raises:
+            ValueError: If the endpoint has not been initialized.
+        """
         if endpoint not in self.endpoints.keys():
             raise ValueError(f'The endpoint {endpoint} has not initialized.')
         async with aiohttp.ClientSession() as http_session:
@@ -327,6 +352,18 @@ class PayloadCreation:
     
     @classmethod
     def chat_completion(cls, messages, llmconfig, schema, **kwargs):
+        """
+        Creates a payload for the chat completion operation.
+
+        Args:
+            messages: The messages to include in the chat completion.
+            llmconfig: Configuration for the language model.
+            schema: The schema describing required and optional fields.
+            **kwargs: Additional keyword arguments.
+
+        Returns:
+            The constructed payload.
+        """
         return APIUtil._create_payload(
             input_=messages, 
             config=llmconfig, 
@@ -337,6 +374,18 @@ class PayloadCreation:
 
     @classmethod
     def fine_tuning(cls, training_file, llmconfig, schema, **kwargs):
+        """
+        Creates a payload for the fine-tuning operation.
+
+        Args:
+            training_file: The file containing training data.
+            llmconfig: Configuration for the language model.
+            schema: The schema describing required and optional fields.
+            **kwargs: Additional keyword arguments.
+
+        Returns:
+            The constructed payload.
+        """
         return APIUtil._create_payload(
             input_=training_file, 
             config=llmconfig, 

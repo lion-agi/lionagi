@@ -178,20 +178,16 @@ class Branch(Conversation):
             ],
         }
 
-    def to_chatcompletion_message(self, use_name=False):
+    def to_chatcompletion_message(self):
         """
         Convert the conversation branch to a list of messages for chat completion.
-
-        Args:
-            use_name: A boolean flag to decide whether to use 'name' or 'role' as a key in the output.
 
         Returns:
             A list of dictionaries with 'name' or 'role' and 'content' from the conversation messages.
         """
         message = []
         for _, row in self.messages.iterrows():
-            out = {"name": row['name']} if use_name else {"role": row['role']}
-            out.append({"content": row['content']})
+            out = {"role": row['role'], "content": row['content']}
             message.append(out)
         return message
     
