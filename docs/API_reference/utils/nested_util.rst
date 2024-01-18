@@ -1,4 +1,4 @@
-Nested Data Structure Utilities
+Nested Data
 =========
 
 .. automodule:: lionagi.utils.nested_util

@@ -1,4 +1,4 @@
-API Utilities
+API
 ========
 
 .. automodule:: lionagi.utils.api_util
