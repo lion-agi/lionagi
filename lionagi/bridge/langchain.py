@@ -9,11 +9,17 @@ def from_langchain(lc_doc: Any) -> T:
     """
     Converts a langchain document into a DataNode object.
 
-    Parameters:
+    Args:
         lc_doc (Any): The langchain document to be converted.
 
     Returns:
-        DataNode: A DataNode object created from the langchain document.
+        T: A DataNode object created from the langchain document.
+
+    Examples:
+        >>> lc_doc = LangchainDocument(...)
+        >>> data_node = from_langchain(lc_doc)
+        >>> isinstance(data_node, DataNode)
+        True
     """
     info_json = lc_doc.to_json()
     info_node = {'lc_id': info_json['id']}
@@ -24,13 +30,18 @@ def to_langchain_document(datanode: T, **kwargs: Any) -> Any:
     """
     Converts a DataNode into a langchain Document.
 
-    Parameters:
-        datanode (DataNode): The DataNode to be converted.
-        
+    Args:
+        datanode (T): The DataNode to be converted.
         **kwargs: Additional keyword arguments to be included in the Document.
 
     Returns:
         Any: A langchain Document created from the DataNode.
+
+    Examples:
+        >>> data_node = DataNode(...)
+        >>> lc_document = to_langchain_document(data_node, author="John Doe")
+        >>> isinstance(lc_document, LangchainDocument)
+        True
     """
     from langchain.schema import Document
 
@@ -46,11 +57,9 @@ def langchain_loader(loader: Union[str, Callable],
     """
     Loads data using a specified langchain loader.
 
-    Parameters:
+    Args:
         loader (Union[str, Callable]): The name of the loader function or the loader function itself.
-        
         loader_args (List[Any]): Positional arguments to pass to the loader function.
-        
         loader_kwargs (Dict[str, Any]): Keyword arguments to pass to the loader function.
 
     Returns:
@@ -58,6 +67,11 @@ def langchain_loader(loader: Union[str, Callable],
 
     Raises:
         ValueError: If the specified loader is invalid or if the loader fails to load data.
+
+    Examples:
+        >>> data = langchain_loader("json_loader", loader_args=["data.json"])
+        >>> isinstance(data, dict)
+        True
     """
     import langchain.document_loaders as document_loaders
 
@@ -80,17 +94,13 @@ def langchain_text_splitter(data: Union[str, List],
                             splitter: Union[str, Callable], 
                             splitter_args: List[Any] = [], 
                             splitter_kwargs: Dict[str, Any] = {}) -> List[str]:
-
     """
     Splits text or a list of documents using a specified langchain text splitter.
 
-    Parameters:
+    Args:
         data (Union[str, List]): The input text or list of documents to be split.
-
         splitter (Union[str, Callable]): The name of the text splitter function or the function itself.
-
         splitter_args (List[Any]): Positional arguments to pass to the splitter function.
-
         splitter_kwargs (Dict[str, Any]): Keyword arguments to pass to the splitter function.
 
     Returns:
@@ -149,4 +159,3 @@ def langchain_text_splitter(data: Union[str, List],
 #         return docs
 #     except Exception as e:
 #         raise ValueError(f'Failed to split. Error: {e}')
-#

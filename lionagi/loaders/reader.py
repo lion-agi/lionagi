@@ -1,4 +1,3 @@
-# use utils, schema, and bridge
 from typing import Union, Callable
 
 from ..utils import lcall
@@ -8,18 +7,22 @@ from .load_util import dir_to_nodes, ReaderType
 
 def _datanode_parser(nodes, parser):
     """
-    Parses a list of nodes using the given parser function.
-    
-    Parameters:
-        nodes (List[Any]): The list of nodes to be parsed.
-        
-        parser (Callable): The parser function to transform nodes into DataNode instances.
-    
+    Parses raw data into DataNode instances using the provided parser function.
+
+    Args:
+        nodes: The list of raw data to be parsed.
+        parser: The parser function to transform nodes into DataNode instances.
+
     Returns:
-        List[Any]: A list of parsed nodes.
-    
+        A list of parsed DataNode instances.
+
     Raises:
         ValueError: If the parser function fails.
+
+    Example usage:
+        >>> raw_nodes = [{'content': 'Example content'}]
+        >>> parser = lambda x: [DataNode(**node) for node in x]
+        >>> datanodes = _datanode_parser(raw_nodes, parser)
     """
     try:
         nodes = parser(nodes)
@@ -27,18 +30,21 @@ def _datanode_parser(nodes, parser):
         raise ValueError(f'DataNode parser {parser} failed. Error:{e}')
     return nodes
 
-
 def text_reader(args, kwargs):
     """
     Reads text files from a directory and converts them to DataNode instances.
-    
-    Parameters:
-        args (List[Any]): Positional arguments for the dir_to_nodes function.
-        
-        kwargs (dict): Keyword arguments for the dir_to_nodes function.
-    
+
+    Args:
+        args: Positional arguments for the dir_to_nodes function.
+        kwargs: Keyword arguments for the dir_to_nodes function.
+
     Returns:
-        List[Any]: A list of DataNode instances.
+        A list of DataNode instances.
+
+    Example usage:
+        >>> args = ['path/to/text/files']
+        >>> kwargs = {'file_extension': 'txt'}
+        >>> nodes = text_reader(args, kwargs)
     """
     return dir_to_nodes(*args, **kwargs)
 
@@ -52,28 +58,28 @@ def load(reader: Union[str, Callable],
          to_datanode: Union[bool, Callable] = True):
     """
     Loads documents using the specified reader and reader type.
-    
-    Parameters:
-        reader (Union[str, Callable]): The reader function or its name as a string.
-        
-        reader_type (ReaderType): The type of the reader. Defaults to ReaderType.PLAIN.
-        
-        reader_args (List[Any]): Positional arguments for the reader function. Defaults to an empty list.
-        
-        reader_kwargs (dict): Keyword arguments for the reader function. Defaults to an empty dict.
-        
-        load_args (List[Any]): Positional arguments for the loader function. Defaults to an empty list.
-        
-        load_kwargs (dict): Keyword arguments for the loader function. Defaults to an empty dict.
-        
-        to_datanode (Union[bool, Callable]): Determines whether to convert the result into DataNode instances, or
-        a callable to convert the result. Defaults to True.
-    
+
+    Args:
+        reader: The reader function or its name as a string.
+        reader_type: The type of the reader. Defaults to ReaderType.PLAIN.
+        reader_args: Positional arguments for the reader function. Defaults to an empty list.
+        reader_kwargs: Keyword arguments for the reader function. Defaults to an empty dict.
+        load_args: Positional arguments for the loader function. Defaults to an empty list.
+        load_kwargs: Keyword arguments for the loader function. Defaults to an empty dict.
+        to_datanode: Determines whether to convert the result into DataNode instances, or
+                     a callable to convert the result. Defaults to True.
+
     Returns:
-        List[Any]: A list of loaded and potentially parsed documents.
-    
+        A list of loaded and potentially parsed documents.
+
     Raises:
         ValueError: If the reader fails or an unsupported reader type is provided.
+
+    Example usage:
+        >>> reader = 'text_reader'
+        >>> reader_args = ['path/to/text/files']
+        >>> reader_kwargs = {'file_extension': 'txt'}
+        >>> nodes = load(reader, reader_args=reader_args, reader_kwargs=reader_kwargs)
     """
     if reader_type == ReaderType.PLAIN:
         try:

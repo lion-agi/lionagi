@@ -1,6 +1,6 @@
 from typing import TypeVar
-from .graph import Graph
 from ..schema import BaseNode
+from .graph import Graph
 from .relationship import Relationship
 
 T = TypeVar('T', bound='BaseNode')
@@ -30,26 +30,6 @@ class Structure(BaseNode):
             relationship (R): The relationship instance to be added.
         """
         self.graph.add_relationship(relationship)
-
-    # type can be dict or list
-    # @staticmethod
-    # def _typed_return(type: Type[Union[Dict, List]],
-    #                   obj: Optional[Dict[str, Any]] = None
-    #                   ) -> Union[Dict[str, Any], List[Any]]:
-    #     """
-    #     Returns the object in the specified type format.
-    #
-    #     Args:
-    #         type (Type[Union[Dict, List]]): The type to return the object as (dict or list).
-    #
-    #         obj (Optional[Dict[str, Any]]): The object to be converted.
-    #
-    #     Returns:
-    #         Union[Dict[str, Any], List[Any]]: The object in the specified type format.
-    #     """
-    #     if type is list:
-    #         return list(obj.values())
-    #     return obj
 
     def get_relationships(self) -> list[R]:
         return self.graph.get_node_relationships()
@@ -111,3 +91,23 @@ class Structure(BaseNode):
 
     def is_empty(self) -> bool:
         return self.graph.is_empty()
+
+    # type can be dict or list
+    # @staticmethod
+    # def _typed_return(type: Type[Union[Dict, List]],
+    #                   obj: Optional[Dict[str, Any]] = None
+    #                   ) -> Union[Dict[str, Any], List[Any]]:
+    #     """
+    #     Returns the object in the specified type format.
+    #
+    #     Args:
+    #         type (Type[Union[Dict, List]]): The type to return the object as (dict or list).
+    #
+    #         obj (Optional[Dict[str, Any]]): The object to be converted.
+    #
+    #     Returns:
+    #         Union[Dict[str, Any], List[Any]]: The object in the specified type format.
+    #     """
+    #     if type is list:
+    #         return list(obj.values())
+    #     return obj

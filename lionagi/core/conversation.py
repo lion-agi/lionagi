@@ -8,6 +8,19 @@ from .messages import Message
 class Conversation:
     """
     Manages the flow and archival of a conversation using Pandas DataFrame.
+
+    Attributes:
+        messages (pd.DataFrame): A DataFrame to store messages.
+        dir (Optional[str]): The directory path for saving files, if provided.
+
+    Examples:
+        >>> conv = Conversation()
+        >>> msg = Message(node_id="1", role="user", name="Alice", content="Hi there!")
+        >>> conv.add_message(msg)
+        >>> conv.get_message_by_role("user")
+        >>> conv.last_message()
+        >>> conv.search_message("Hi")
+        >>> conv.message_counts()
     """
 
     def __init__(self, dir: Optional[str] = None) -> None:
@@ -22,6 +35,11 @@ class Conversation:
 
         Args:
             message (Message): The message object to be added.
+
+        Examples:
+            >>> conv = Conversation()
+            >>> msg = Message(node_id="1", role="user", name="Alice", content="Hi there!")
+            >>> conv.add_message(msg)
         """
         message_dict = message.to_dict()
         if isinstance(message_dict['content'], dict):
@@ -38,22 +56,40 @@ class Conversation:
 
         Returns:
             pd.DataFrame: DataFrame of messages matching the role.
+
+        Examples:
+            >>> conv = Conversation()
+            >>> conv.get_message_by_role("user")
         """
         return self.messages[self.messages["role"] == role]
 
     def last_message(self):
+        """
+        Retrieves the last message from the conversation.
+
+        Returns:
+            Message: The last message object, if the DataFrame is not empty.
+
+        Examples:
+            >>> conv = Conversation()
+            >>> conv.last_message()
+        """
         if not self.messages.empty:
             return Message(**self.messages.iloc[-1].to_dict())
 
     def last_message_by_role(self, role: str) -> Optional[Message]:
         """
-        Retrieves the last message of a specific type.
+        Retrieves the last message of a specific role.
 
         Args:
             role (str): The role to get messages by.
 
         Returns:
-            Optional[Message]: The last message of the given type, if exists.
+            Optional[Message]: The last message of the given role, if exists.
+
+        Examples:
+            >>> conv = Conversation()
+            >>> conv.last_message_by_role("user")
         """
         filtered_messages = self.messages[
             self.messages["role"] == role
@@ -72,6 +108,11 @@ class Conversation:
 
         Returns:
             pd.DataFrame: DataFrame of messages containing the keyword.
+
+        Examples:
+            >>> conv = Conversation()
+            >>> conv.search_message("Hi")
+            >>> conv.search_message("Hi", case_sensitive=True)
         """
         if not case_sensitive:
             keyword = keyword.lower()
@@ -89,6 +130,10 @@ class Conversation:
 
         Returns:
             bool: True if a message was deleted, False otherwise.
+
+        Examples:
+            >>> conv = Conversation()
+            >>> conv.delete_message("1")
         """
         initial_length = len(self.messages)
         self.messages = self.messages[self.messages["node_id"] != message_id]
@@ -104,6 +149,10 @@ class Conversation:
 
         Returns:
             bool: True if the content was updated, False otherwise.
+
+        Examples:
+            >>> conv = Conversation()
+            >>> conv.update_message_content("1", "New content")
         """
         index = self.messages.index[self.messages["id_"] == message_id].tolist()
         if index:
@@ -120,20 +169,33 @@ class Conversation:
 
         Returns:
             Optional[Message]: The message if found, None otherwise.
+
+        Examples:
+            >>> conv = Conversation()
+            >>> conv.get_message_by_id("1")
         """
         message_df = self.messages[self.messages["id_"] == message_id]
         if not message_df.empty:
             return Message.from_json(message_df.iloc[0].to_dict())
         return None
 
-    def message_counts(self) -> Dict[str, int]:
+    def message_counts(self, use_name=False) -> Dict[str, int]:
         """
-        Provides a summary of the conversation grouped by role.
+        Provides a summary of message counts in the conversation, optionally grouped by sender's name.
+
+        Args:
+            use_name (bool, optional): If True, groups by sender's name instead of role. Defaults to False.
 
         Returns:
-            Dict[str, int]: A dictionary with roles as keys and message counts as values.
+            Dict[str, int]: A dictionary with roles or names as keys and their associated message counts as values.
+
+        Examples:
+            >>> conv = Conversation()
+            >>> conv.message_counts()  # Group by role
+            >>> conv.message_counts(use_name=True)  # Group by sender's name
         """
-        result = self.messages["role"].value_counts().to_dict()
+        messages = self.messages['name'] if use_name else self.messages['role']
+        result = messages.value_counts().to_dict()
         result['total'] = len(self.messages)
         return result
 
@@ -218,9 +280,6 @@ class Conversation:
         """
         self.messages = self.messages.merge(other.messages, how='outer')
 
-    # def append(self, other: 'Conversation'):
-    #     self.messages = pd.concat([self.messages, other.messages]).reset_index(drop=True)
-
     def rollback(self, steps: int) -> None:
         """
         Rollbacks the conversation to a previous state by the given number of steps.
@@ -277,3 +336,6 @@ class Conversation:
         """
         self.reset()
         self.messages = pd.read_json(filepath, orient="records", lines=True)
+
+    # def append(self, other: 'Conversation'):
+    #     self.messages = pd.concat([self.messages, other.messages]).reset_index(drop=True)

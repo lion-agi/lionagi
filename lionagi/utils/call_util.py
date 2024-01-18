@@ -4,49 +4,16 @@ import functools as ft
 from aiocache import cached
 import concurrent.futures
 import time
-from typing import Any, Callable, Dict, Iterable, List, Optional, Tuple, Type, Union
+from typing import Any, Callable, Dict, List, Optional, Tuple, Type, Union
 from .sys_util import create_copy
-from .nested_util import _flatten_list
+from .nested_util import to_list
 
 
-def to_list(input_: Any, flatten: bool = True, dropna: bool = False) -> List[Any]:
-    """
-    Converts the input to a list, optionally flattening it and dropping None values.
-
-    Parameters:
-        input_ (Any): The input to convert to a list.
-        
-        flatten (bool): Whether to flatten the input if it is a nested list. Defaults to True.
-        
-        dropna (bool): Whether to drop None values from the list. Defaults to False.
-
-    Returns:
-        List[Any]: The input converted to a list.
-
-    Raises:
-        ValueError: If the input cannot be converted to a list.
-    """
-    if isinstance(input_, list) and flatten:
-        input_ = _flatten_list(input_)
-    elif isinstance(input_, Iterable) and not isinstance(input_, (str, dict)):
-        try:
-            input_ = list(input_)
-        except:
-            raise ValueError("Input cannot be converted to a list.")
-    else:
-        input_ = [input_]
-    if dropna:
-        input_ = [i for i in input_ if i is not None]
-    return input_
-
-
-# list call
 def lcall(
     input_: Any, func_: Callable, flatten: bool = False, 
     dropna: bool = False, **kwargs) -> List[Any]:
     """
-    Applies a function to each element in a list, with options for 
-    flattening and dropping NAs.
+    list call: Applies a function to each element in a list, with options for flattening and dropping NAs.
 
     Args:
         input_ (Any): The input, potentially a list, to process.
@@ -56,8 +23,16 @@ def lcall(
         **kwargs: Additional keyword arguments to pass to the function.
 
     Returns:
-        List[Any]: A list containing the results of the function call on 
-        each element.
+        List[Any]: A list containing the results of the function call on each element.
+
+    Raises:
+        ValueError: If the function cannot be applied to an element in the list.
+
+    Examples:
+        >>> lcall([1, 2, 3], lambda x: x + 1)
+        [2, 3, 4]
+        >>> lcall([1, None, 3], lambda x: x + 1, dropna=True)
+        [2, 4]
     """
     try:
         lst = to_list(input_=input_, flatten=flatten, dropna=dropna)
@@ -69,8 +44,7 @@ async def alcall(
     input_: Any, func_: Callable, flatten: bool = False, 
     dropna: bool = False, **kwargs) -> List[Any]:
     """
-    Asynchronously or synchronously applies a function to each element in a list, 
-    with options for flattening and dropping NAs.
+    Async list call: Asynchronously applies a function to each element in a list, with options for flattening and dropping NAs.
 
     Args:
         input_ (Any): The input, potentially a list, to process.
@@ -81,6 +55,16 @@ async def alcall(
 
     Returns:
         List[Any]: A list containing the results of the function call on each element.
+
+    Raises:
+        ValueError: If the function cannot be applied to an element in the list.
+
+    Examples:
+        >>> async def add_one(x): return x + 1
+        >>> asyncio.run(alcall([1, 2, 3], add_one))
+        [2, 3, 4]
+        >>> asyncio.run(alcall([1, None, 3], add_one, dropna=True))
+        [2, 4]
     """
     try:
         lst = to_list(input_=input_, flatten=flatten, dropna=dropna)
@@ -98,7 +82,7 @@ async def tcall(input_: Any, func: Callable, sleep: float = 0.1,
                   include_timing: bool = False, **kwargs
         ) -> Union[Any, Tuple[Any, float]]:
     """
-    Handle both synchronous and asynchronous calls with optional delay, error handling, and execution timing.
+    Timed call: Handle both synchronous and asynchronous calls with optional delay, error handling, and execution timing.
 
     Args:
         input_ (Any): The input to be passed to the function.
@@ -111,6 +95,16 @@ async def tcall(input_: Any, func: Callable, sleep: float = 0.1,
 
     Returns:
         Any: The result of the function call, optionally with execution duration.
+
+    Raises:
+        Exception: If the function raises an exception and ignore_error is False.
+
+    Examples:
+        >>> async def my_func(x): return x * 2
+        >>> asyncio.run(tcall(3, my_func))
+        6
+        >>> asyncio.run(tcall(3, my_func, include_timing=True))
+        (6, <execution_duration>)
     """
     async def async_call() -> Tuple[Any, float]:
         start_time = time.time()
@@ -143,7 +137,6 @@ async def tcall(input_: Any, func: Callable, sleep: float = 0.1,
     else:
         return sync_call()
 
-# mapped call
 async def mcall(input_: Union[Any, List[Any]], 
                        funcs: Union[Callable, List[Callable]], 
                        explode: bool = False,
@@ -151,7 +144,7 @@ async def mcall(input_: Union[Any, List[Any]],
                        dropna: bool = False,
                        **kwargs) -> List[Any]:
     """
-    A unified function that handles both synchronous and asynchronous function calls
+    mapped call: handles both synchronous and asynchronous function calls
     on input elements with additional features such as flattening, dropping NAs, and
     applying multiple functions to each input.
 
@@ -165,25 +158,40 @@ async def mcall(input_: Union[Any, List[Any]],
 
     Returns:
         List[Any]: List of results from applying function(s) to input(s).
+
+    Examples:
+        >>> async def increment(x): return x + 1
+        >>> async def double(x): return x * 2
+        >>> asyncio.run(mcall([1, 2, 3], [increment, double, increment]))
+        [[2], [4], [4]]
+        >>> asyncio.run(mcall([1, 2, 3], [increment, double, increment], explode=True))
+        [[2, 4, 4], [3, 5, 5], [4, 6, 6]]
     """
     if explode:
         return await _explode_call(input_=input_, funcs=funcs, dropna=dropna, **kwargs)
     else:
         return await _mapped_call(input_=input_, funcs=funcs, flatten=flatten, dropna=dropna, **kwargs)
 
-# batch call
 async def bcall(inputs: List[Any], func: Callable[..., Any], batch_size: int, **kwargs) -> List[Any]:
     """
-    Processes a list of inputs in batches, applying a function (sync or async) to each item in a batch.
+    batch call: Processes a list of inputs in batches, applying a function (sync or async) to each item in a batch.
 
     Args:
-        func (Callable[..., Any]): The function (can be sync or async) to be applied to each item.
         inputs (List[Any]): The list of inputs to be processed.
+        func (Callable[..., Any]): The function (can be sync or async) to be applied to each item.
         batch_size (int): The number of items to include in each batch.
         **kwargs: Additional keyword arguments to pass to the function.
 
     Returns:
         List[Any]: A list of results from applying the function to each item in the batches.
+
+    Raises:
+        Exception: If an exception occurs during batch processing.
+
+    Examples:
+        >>> async def add_one(x): return x + 1
+        >>> asyncio.run(bcall([1, 2, 3, 4], add_one, batch_size=2))
+        [2, 3, 4, 5]
     """
 
     async def process_batch(batch: List[Any]) -> List[Any]:
@@ -210,7 +218,7 @@ async def rcall(func: Callable[..., Any], *args, timeout: Optional[int] = None,
                  backoff_factor: float = 2.0, default: Optional[Any] = None, 
                  **kwargs) -> Any:
     """
-    Executes a function with optional timeout, retry, and default value mechanisms.
+    Retry call: Executes a function with optional timeout, retry, and default value mechanisms.
 
     Args:
         func (Callable[..., Any]): The function to be executed.
@@ -224,6 +232,16 @@ async def rcall(func: Callable[..., Any], *args, timeout: Optional[int] = None,
 
     Returns:
         Any: The result of the function call, default value if specified, or raises an exception.
+
+    Raises:
+        Exception: If the function raises an exception beyond the specified retries.
+
+    Examples:
+        >>> async def my_func(x): return x * 2
+        >>> asyncio.run(rcall(my_func, 3))
+        6
+        >>> asyncio.run(rcall(my_func, 3, retries=2, initial_delay=1, backoff_factor=2))
+        6
     """
     async def async_call():
         return await asyncio.wait_for(func(*args, **kwargs), timeout) if timeout else await func(*args, **kwargs)
