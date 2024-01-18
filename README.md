@@ -25,7 +25,7 @@ by default we use `OPENAI_API_KEY`.
 
 
 ### Features
-- Written in pure python, robust and scalable. Create a production ready LLM application **in hours**, with more than 100 models
+- Robust and scalable. Create a production ready LLM application **in hours**, with more than 100 models
 - Efficient and verstile data operations for reading, chunking, binning, writing, storing data with support for `langchain` and `llamaindex`
 - Built-in support for **chain/graph-of-thoughts, ReAct, Concurrent parallel function calling** 
 - Unified interface with any LLM provider, API or local
