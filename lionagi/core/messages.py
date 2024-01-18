@@ -193,11 +193,12 @@ class Response(Message):
                 content_key = content_key or "action_list"
 
             else:
-                if 'tool_uses' in json.loads(response['content']):
-                    content_ = json.loads(response['content'])['tool_uses']
-                    content_key = content_key or "action_list"
-                    name = name or "action_request"
-                else:
+                try:
+                    if 'tool_uses' in json.loads(response['content']):
+                        content_ = json.loads(response['content'])['tool_uses']
+                        content_key = content_key or "action_list"
+                        name = name or "action_request"
+                except:
                     content_ = response['content']
                     content_key = content_key or "response"
                     name = name or "assistant"
