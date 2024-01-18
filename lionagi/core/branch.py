@@ -178,7 +178,7 @@ class Branch(Conversation):
             ],
         }
 
-    def to_chatcompletion_message(self):
+    def to_chatcompletion_message(self, use_name=False):
         """
         Convert the conversation branch to a list of messages for chat completion.
 

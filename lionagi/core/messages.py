@@ -178,7 +178,7 @@ class Instruction(Message):
 class Response(Message):
 
     def __init__(self, response: Any, name: Optional[str] = None, content_key=None) -> None:
-        content = ''
+        content_ = ''
         try:
             response = response["message"]
 
@@ -203,7 +203,7 @@ class Response(Message):
             content = response
             content_key = content_key or "action_response"
         
-        super().__init__(role="assistant", name=name, content={content_key: content})
+        super().__init__(role="assistant", name=name, content={content_key: content_})
         
     @staticmethod
     def _handle_action_request(response):
