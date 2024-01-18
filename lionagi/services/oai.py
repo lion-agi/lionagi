@@ -3,6 +3,24 @@ from ..configs.oai_configs import oai_schema
 from .base_service import BaseService, PayloadCreation
 
 class OpenAIService(BaseService):
+    """A service to interact with OpenAI's API endpoints.
+
+    Attributes:
+        base_url (str): The base URL for the OpenAI API.
+        available_endpoints (list): A list of available API endpoints.
+        schema (dict): The schema configuration for the API.
+        key_scheme (str): The environment variable name for OpenAI API key.
+        token_encoding_name (str): The default token encoding scheme.
+
+    Examples:
+        >>> service = OpenAIService(api_key="your_api_key")
+        >>> asyncio.run(service.serve("Hello, world!", "chat/completions"))
+        (payload, completion)
+
+        >>> service = OpenAIService()
+        >>> asyncio.run(service.serve("Convert this text to speech.", "audio_speech"))
+        ValueError: 'audio_speech' is currently not supported
+    """
 
     base_url = "https://api.openai.com/v1/"
     available_endpoints = ['chat/completions', 'finetune', 'audio_speech', 'audio_transcriptions', 'audio_translations']
@@ -40,18 +58,3 @@ class OpenAIService(BaseService):
         except Exception as e:
             self.status_tracker.num_tasks_failed += 1
             raise e
-    
-    # async def serve_finetune(self, training_file):
-    #     return await self.serve(input_=training_file, endpoint="finetune")
-    
-"""
-from lionagi.services import OpenAIService
-
-service = OpenAIService()
-await service.initiate_endpoint('chat/completions', max_tokens)
-
-await service.serve_chat(input)
-service.serve_finetuning
-service.serve_audio_speech(input, method='')
-
-"""

@@ -4,22 +4,68 @@ from copy import deepcopy
 from itertools import chain
 from typing import Any, Callable, Dict, Generator, List, Tuple, Union, Iterable, Optional
 
-def to_readable_dict(input: Union[Dict, List]):
+def to_list(input_: Any, flatten: bool = True, dropna: bool = False) -> List[Any]:
+    """
+    Converts the input to a list, optionally flattening it and dropping None values.
+
+    Args:
+        input_ (Any): The input to convert to a list.
+        flatten (bool): Whether to flatten the input if it is a nested list. Defaults to True.
+        dropna (bool): Whether to drop None values from the list. Defaults to False.
+
+    Returns:
+        List[Any]: The input converted to a list.
+
+    Raises:
+        ValueError: If the input cannot be converted to a list.
+
+    Examples:
+        >>> to_list([1, [2, [3, 4]], 5])
+        [1, 2, 3, 4, 5]
+        >>> to_list([1, None, 3], dropna=True)
+        [1, 3]
+    """
+    if isinstance(input_, list) and flatten:
+        input_ = _flatten_list(input_)
+    elif isinstance(input_, Iterable) and not isinstance(input_, (str, dict)):
+        try:
+            input_ = list(input_)
+        except:
+            raise ValueError("Input cannot be converted to a list.")
+    else:
+        input_ = [input_]
+    if dropna:
+        input_ = [i for i in input_ if i is not None]
+    return input_
+
+def to_readable_dict(input: Union[Dict, List]) -> Union[str, List]:
+    """
+    Converts a dictionary to a JSON-formatted string with indentation or returns the input list as is.
+
+    Args:
+        input: A dictionary or list.
+
+    Returns:
+        A JSON-formatted string if the input is a dictionary, or the input list as is.
+
+    Examples:
+        >>> to_readable_dict({'a': 1})
+        '{\\n    "a": 1\\n}'
+
+        >>> to_readable_dict([1, 2, 3])
+        [1, 2, 3]
+    """
     if isinstance(input, dict):
         return json.dumps(input, indent=4)
     else:
         return input
 
-# nested filter (filter nested dict or list)
 def nfilter(collection: Union[Dict, List], condition: Callable[[Any], bool]) -> Union[Dict, List]:
-    """Filters a collection (either a dictionary or a list) based on a given condition.
-
-    This static method delegates to either `filter_dict` or `filter_list` based on the
-    type of the collection.
+    """
+    nested filter: Filters a collection (either a dictionary or a list) based on a given condition.
 
     Args:
         collection: A collection to filter, either a dictionary or a list.
-        
         condition: A callable that takes an item (key-value pair for dictionaries, single item for lists)
             and returns a boolean. If True, the item is included in the result.
 
@@ -29,6 +75,12 @@ def nfilter(collection: Union[Dict, List], condition: Callable[[Any], bool]) -> 
     Raises:
         TypeError: If the collection is neither a dictionary nor a list.
 
+    Examples:
+        >>> nfilter({'a': 1, 'b': 2, 'c': 3}, lambda x: x[1] > 1)
+        {'b': 2, 'c': 3}
+
+        >>> nfilter([1, 2, 3, 4], lambda x: x % 2 == 0)
+        [2, 4]
     """
     if isinstance(collection, Dict):
         return _filter_dict(collection, condition)
@@ -37,9 +89,9 @@ def nfilter(collection: Union[Dict, List], condition: Callable[[Any], bool]) -> 
     else:
         raise TypeError("The collection must be either a Dict or a List.")
 
-# nested set, set value in nested dict or list
 def nset(nested_structure: Union[List, Dict], indices: List[Union[int, str]], value: Any) -> None:
-    """Sets a value in a nested list or dictionary structure.
+    """
+    nested set: Sets a value in a nested list or dictionary structure.
 
     Navigates through the nested structure according to the specified indices and sets the
     value at the target location. The indices can be a mix of integers (for lists) and
@@ -47,15 +99,23 @@ def nset(nested_structure: Union[List, Dict], indices: List[Union[int, str]], va
 
     Args:
         nested_structure: The nested list or dictionary structure.
-        
         indices: A list of indices to navigate through the structure.
-        
         value: The value to set at the target location.
 
     Raises:
         ValueError: If the indices list is empty.
-        
         TypeError: If the target container or the last index is of an incorrect type.
+
+    Examples:
+        >>> data = {'a': {'b': [10, 20]}}
+        >>> nset(data, ['a', 'b', 1], 99)
+        >>> data
+        {'a': {'b': [10, 99]}}
+
+        >>> data = [0, [1, 2], 3]
+        >>> nset(data, [1, 1], 99)
+        >>> data
+        [0, [1, 99], 3]
     """
     if not indices:
         raise ValueError("Indices list is empty, cannot determine target container")
@@ -71,21 +131,28 @@ def nset(nested_structure: Union[List, Dict], indices: List[Union[int, str]], va
     else:
         raise TypeError("Cannot set value on non-list/dict element")
 
-# nested get, get a value from a nested structure
 def nget(nested_structure: Union[List, Dict], indices: List[Union[int, str]]) -> Any:
-    """Retrieves a value from a nested list or dictionary structure.
+    """
+    nested get: Retrieves a value from a nested list or dictionary structure.
 
     Navigates through the nested structure using the specified indices and retrieves the value
     at the target location. The indices can be integers for lists and strings for dictionaries.
 
     Args:
         nested_structure: The nested list or dictionary structure.
-        
         indices: A list of indices to navigate through the structure.
 
     Returns:
         The value at the target location, or None if the target cannot be reached or does not exist.
 
+    Examples:
+        >>> data = {'a': {'b': [10, 20]}}
+        >>> nget(data, ['a', 'b', 1])
+        20
+
+        >>> data = [0, [1, 2], 3]
+        >>> nget(data, [1, 0])
+        1
     """
     try:
         target_container = _get_target_container(nested_structure, indices[:-1])
@@ -104,7 +171,6 @@ def is_structure_homogeneous(
     structure: Any, 
     return_structure_type: bool = False
 ) -> Union[bool, Tuple[bool, Optional[type]]]:
-    
     """
     Checks if a nested structure is homogeneous, meaning it doesn't contain a mix of lists and dictionaries.
 
@@ -115,6 +181,13 @@ def is_structure_homogeneous(
     Returns:
         If return_structure_type is False, returns a boolean indicating whether the structure is homogeneous.
         If return_structure_type is True, returns a tuple containing a boolean indicating whether the structure is homogeneous, and the type of the homogeneous structure if it is homogeneous (either list, dict, or None).
+
+    Examples:
+        >>> is_structure_homogeneous({'a': {'b': 1}, 'c': {'d': 2}})
+        True
+
+        >>> is_structure_homogeneous({'a': {'b': 1}, 'c': [1, 2]})
+        False
     """
     def _check_structure(substructure):
         structure_type = None
@@ -149,19 +222,15 @@ def nmerge(iterables: List[Union[Dict, List, Iterable]],
             sequence_separator: str = '_', 
             sort_list: bool = False, 
             custom_sort: Callable[[Any], Any] = None) -> Union[Dict, List]:
-    """Merges a list of dictionaries or sequences into a single dictionary or list.
+    """
+    Merges a list of dictionaries or sequences into a single dictionary or list.
 
     Args:
         iterables: A list of dictionaries or sequences to be merged.
-        
         dict_update: If merging dictionaries, whether to overwrite values of the same key.
-        
         dict_sequence: If merging dictionaries, whether to create unique keys for duplicate keys.
-        
         sequence_separator: Separator for creating unique keys when dict_sequence is True.
-        
         sort_list: If merging sequences, whether to sort the merged list.
-        
         custom_sort: Custom sorting function for sorting the merged sequence.
 
     Returns:
@@ -169,6 +238,13 @@ def nmerge(iterables: List[Union[Dict, List, Iterable]],
 
     Raises:
         TypeError: If the elements of iterables are not all of the same type.
+
+    Examples:
+        >>> nmerge([{'a': 1}, {'b': 2}], dict_update=True)
+        {'a': 1, 'b': 2}
+
+        >>> nmerge([[1, 2], [3, 4]], sort_list=True)
+        [1, 2, 3, 4]
     """
     if _is_homogeneous(iterables, Dict):
         return _merge_dicts(iterables, dict_update, dict_sequence, sequence_separator)
@@ -181,6 +257,37 @@ def nmerge(iterables: List[Union[Dict, List, Iterable]],
 def flatten(obj: Any, parent_key: str = '', sep: str = '_', 
             max_depth: Union[int, None] = None, inplace: bool = False,
             dict_only: bool = False) -> Union[Dict, None]:
+    """
+    Flattens a nested dictionary or list into a flat dictionary with composite keys.
+
+    Args:
+        obj (Any): The dictionary or list to flatten.
+        
+        parent_key (str, optional): The base key to prepend to each key in the flattened dictionary. Defaults to ''.
+        
+        sep (str, optional): Separator to join keys. Defaults to '_'.
+        
+        max_depth (Union[int, None], optional): Maximum depth to flatten. Defaults to None.
+        
+        inplace (bool, optional): If True, the original object is modified in place. Defaults to False.
+        
+        dict_only (bool, optional): If True, only dictionaries are flattened, lists are left as-is. Defaults to False.
+        
+    Returns:
+        Union[Dict, None]: The flattened dictionary, or None if inplace is True and the operation is performed in place.
+    
+    Raises:
+        ValueError: If inplace is True and the provided object is not a dictionary.
+        
+    Examples:
+        >>> nested_dict = {'a': 1, 'b': {'c': 2, 'd': {'e': 3}}}
+        >>> flat_dict = flatten(nested_dict)
+        >>> print(flat_dict)  # Output: {'a': 1, 'b_c': 2, 'b_d_e': 3}
+        
+        >>> nested_list = [{'a': 1}, {'b': 2}]
+        >>> flat_dict = flatten(nested_list)
+        >>> print(flat_dict)  # Output: {'0_a': 1, '1_b': 2}
+    """
     if inplace:
         if not isinstance(obj, dict):
             raise ValueError("Object must be a dictionary when 'inplace' is True.")
@@ -197,18 +304,24 @@ def unflatten(
 ) -> Union[Dict, List]:
     """
     Converts a flat dictionary with composite keys into a nested dictionary or list.
-
+    
     Args:
         flat_dict (Dict[str, Any]): The flat dictionary to unflatten.
-        
         sep (str, optional): Separator used in composite keys. Defaults to '_'.
-        
         custom_logic (Union[Callable[[str], Any], None], optional): Custom function to process parts of the keys. Defaults to None.
-        
         max_depth (Union[int, None], optional): Maximum depth for nesting. Defaults to None.
         
     Returns:
         Union[Dict, List]: The unflattened dictionary or list.
+    
+    Examples:
+        >>> flat_dict = {'a': 1, 'b_c': 2, 'b_d_e': 3}
+        >>> nested_dict = unflatten(flat_dict)
+        >>> print(nested_dict)  # Output: {'a': 1, 'b': {'c': 2, 'd': {'e': 3}}}
+        
+        >>> flat_dict = {'0_a': 1, '1_b': 2}
+        >>> nested_list = unflatten(flat_dict)
+        >>> print(nested_list)  # Output: [{'a': 1}, {'b': 2}]
     """
     unflattened = {}
     for composite_key, value in flat_dict.items():
@@ -234,8 +347,24 @@ def unflatten(
 def ninsert(sub_obj: Union[Dict, List], parts: List[Union[str, int]], 
         value: Any, sep: str = '_', max_depth: Union[int, None] = None, current_depth: int = 0):
     """
-    Recursively inserts a value into a nested structure (dictionary or list) based on 
-    the specified path (parts).
+    Inserts a value into a nested structure (dictionary or list) based on the specified path (parts).
+    
+    Args:
+        sub_obj (Union[Dict, List]): The sub-object (dict or list) to insert into.
+        parts (List[Union[str, int]]): The parts of the key representing the path to insert the value at.
+        value (Any): The value to insert.
+        sep (str, optional): Separator used in composite keys. Defaults to '_'.
+        max_depth (Union[int, None], optional): Maximum depth for nesting. Defaults to None.
+        current_depth (int, optional): The current depth in the nested structure. Defaults to 0.
+    
+    Examples:
+        >>> sub_obj = {}
+        >>> ninsert(sub_obj, ['a', 'b'], 2)
+        >>> print(sub_obj)  # Output: {'a': {'b': 2}}
+        
+        >>> sub_obj = []
+        >>> ninsert(sub_obj, [0, 'a'], 1)
+        >>> print(sub_obj)  # Output: [{'a': 1}]
     """
     parts_len = len(parts)
     parts_depth = 0
@@ -272,6 +401,31 @@ def ninsert(sub_obj: Union[Dict, List], parts: List[Union[str, int]],
         
 def get_flattened_keys(obj: Any, sep: str = '_', max_depth: Union[int, None] = None, 
                     dict_only: bool = False, inplace: bool = False) -> List[str]:
+    """
+    Retrieves a list of keys from a flattened dictionary or list.
+
+    Args:
+        obj (Any): The dictionary or list to retrieve keys from.
+        sep (str, optional): Separator to join keys. Defaults to '_'.
+        max_depth (Union[int, None], optional): Maximum depth to consider for flattening. Defaults to None.
+        dict_only (bool, optional): If True, only dictionaries are considered for flattening. Defaults to False.
+        inplace (bool, optional): If True, the original object is modified in place. Defaults to False.
+        
+    Returns:
+        List[str]: A list of keys from the flattened object.
+        
+    Raises:
+        ValueError: If inplace is True and the provided object is not a dictionary.
+        
+    Examples:
+        >>> nested_dict = {'a': 1, 'b': {'c': 2, 'd': {'e': 3}}}
+        >>> keys = get_flattened_keys(nested_dict)
+        >>> print(keys)  # Output: ['a', 'b_c', 'b_d_e']
+        
+        >>> nested_list = [{'a': 1}, {'b': 2}]
+        >>> keys = get_flattened_keys(nested_list)
+        >>> print(keys)  # Output: ['0_a', '1_b']
+    """
     if inplace:
         obj_copy = deepcopy(obj)
         flatten(obj_copy, sep=sep, max_depth=max_depth, inplace=True, dict_only=dict_only)

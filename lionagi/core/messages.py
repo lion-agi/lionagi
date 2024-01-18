@@ -1,54 +1,125 @@
 import json
-from typing import Any, Optional
-from lionagi.utils.sys_util import strip_lower
-from lionagi.utils.nested_util import nget, to_readable_dict
-from lionagi.schema import BaseNode
+from typing import Any, Optional, Dict
+from ..utils.sys_util import strip_lower
+from ..utils.nested_util import nget, to_readable_dict
+from ..schema import BaseNode
 
 
 class Message(BaseNode):
+    """
+    Represents a message with associated role, name, and content.
+
+    Attributes:
+        role (Optional[str]): The role of the entity sending the message.
+        name (Optional[str]): The name of the entity sending the message.
+        content (Any): The content of the message.
+    """
+    
     role: Optional[str] = None
     name: Optional[str] = None
     
     @property
-    def msg(self):
+    def msg(self) -> Dict[str, Any]:
+        """The message as a dictionary.
+
+        Returns:
+            Dict[str, Any]: The message in dictionary form with 'role' or 'name' as a key.
+        """
         return self._to_message()
         
-    @property 
-    def named_msg(self):
+    @property
+    def named_msg(self) -> Dict[str, Any]:
+        """The message as a dictionary with the sender's name.
+
+        Returns:
+            Dict[str, Any]: The message in dictionary form with 'name' as a key.
+        """
         return self._to_message(use_name=True)
     
     @property
-    def msg_content(self):
+    def msg_content(self) -> Any:
+        """The content of the message.
+
+        Returns:
+            Any: The content of the message.
+        """
         return self.msg['content']
     
     @property
-    def sender(self):
+    def sender(self) -> str:
+        """The name of the sender of the message.
+
+        Returns:
+            Optional[str]: The name of the sender.
+        """
         return self.name
     
     @property
     def readable_content(self) -> str:
+        """The content of the message in a human-readable format.
+
+        Returns:
+            str: The message content as a human-readable string.
+        """
         return to_readable_dict(self.content)
 
     @staticmethod
     def create_system(content: Any, name: Optional[str] = None):
+        """Create a system message.
+
+        Args:
+            content (Any): The content of the system message.
+            name (Optional[str]): The name of the system.
+
+        Returns:
+            System: The created system message.
+        """
         return System(system=content, name=name)
 
     @staticmethod
-    def create_instruction(content: Any, context=None, name: Optional[str] = None):
+    def create_instruction(
+        content: Any, context: Optional[Any] = None, name: Optional[str] = None
+    ) -> "Instruction":
+        """Create an instruction message.
+
+        Args:
+            content (Any): The content of the instruction.
+            context (Optional[Any]): Additional context for the instruction.
+            name (Optional[str]): The name of the sender.
+
+        Returns:
+            Instruction: The created instruction message.
+        """
         return Instruction(instruction=content, context=context, name=name)
 
     @staticmethod
-    def create_response(content: Any, name: Optional[str] = None):
+    def create_response(content: Any, name: Optional[str] = None) -> "Response":
+        """Create a response message.
+
+        Args:
+            content (Any): The content of the response.
+            name (Optional[str]): The name of the sender.
+
+        Returns:
+            Response: The created response message.
+        """
         return Response(response=content, name=name)
     
-    def _to_message(self, use_name=False):
+    def _to_message(self, use_name: bool = False) -> Dict[str, Any]:
+        """Convert the message to a dictionary.
+
+        Args:
+            use_name (bool): Whether to use the sender's name as a key.
+
+        Returns:
+            Dict[str, Any]: The message in dictionary form.
+        """
         out = {"name": self.name} if use_name else {"role": self.role}
         out['content'] = json.dumps(self.content) if isinstance(self.content, dict) else self.content
         return out
 
     def to_plain_text(self) -> str:
-        """
-        Returns the plain text representation of the message content.
+        """Convert the message content to plain text.
 
         Returns:
             str: The plain text content of the message.
@@ -63,27 +134,56 @@ class Message(BaseNode):
             return str(self.content)
 
     def __str__(self) -> str:
+        """String representation of the Message object.
+
+        Returns:
+            str: The string representation of the message.
+        """
         content_preview = self.to_plain_text()[:75] + "..." if len(self.to_plain_text()) > 75 else self.to_plain_text()
         return f"Message(role={self.role}, name={self.name}, content='{content_preview}')"
 
 
 class System(Message):
+    """Represents a system message."""
 
     def __init__(self, system: Any, name: Optional[str] = None):
+        """Initialize the System message.
+
+        Args:
+            system (Any): The content of the system message.
+            name (Optional[str]): The name of the system.
+        """
         super().__init__(role="system", name=name, content={"system_info": system})
 
 
 class Instruction(Message):
+    """Represents an instruction message."""
 
     def __init__(self, instruction: Any, context=None, name: Optional[str] = None):
+        """Initialize the Instruction message.
+
+        Args:
+            instruction (Any): The content of the instruction.
+            context (Optional[Any]): Additional context for the instruction.
+            name (Optional[str]): The name of the sender.
+        """
+
         super().__init__(role="user", name=name, content={"instruction": instruction})
         if context:
             self.content.update({"context": context})
 
 
 class Response(Message):
+    """Represents a response message."""
 
     def __init__(self, response: Any, name: Optional[str] = None, content_key=None):
+        """Initialize the Response message.
+
+        Args:
+            response (Any): The content of the response.
+            name (Optional[str]): The name of the sender.
+            content_key (Optional[str]): The key used for response content.
+        """
         try:
             response = response["message"]
 
@@ -111,6 +211,17 @@ class Response(Message):
 
     @staticmethod
     def _handle_action_request(response):
+        """Handle an action request from the response.
+
+        Args:
+            response (Dict[str, Any]): The response dictionary containing the action request.
+
+        Returns:
+            List[Dict[str, Any]]: The list of actions parsed from the request.
+
+        Raises:
+            ValueError: If the response does not contain valid function calling information.
+        """
         try:
             tool_count = 0
             func_list = []

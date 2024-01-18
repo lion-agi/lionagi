@@ -10,7 +10,8 @@ from ..utils import nget, APIUtil
 
 @dataclass
 class StatusTracker:
-    """Keeps track of various task statuses within a system.
+    """
+    Keeps track of various task statuses within a system.
 
     Attributes:
         num_tasks_started (int): The number of tasks that have been initiated.
@@ -36,7 +37,8 @@ class StatusTracker:
 
 
 class BaseRateLimiter(ABC):
-    """Abstract base class for implementing rate limiters.
+    """
+    Abstract base class for implementing rate limiters.
 
     This class provides the basic structure for rate limiters, including
     the replenishment of request and token capacities at regular intervals.
@@ -162,7 +164,8 @@ class BaseRateLimiter(ABC):
 
 
 class SimpleRateLimiter(BaseRateLimiter):
-    """A simple implementation of a rate limiter.
+    """
+    A simple implementation of a rate limiter.
 
     Inherits from BaseRateLimiter and provides a basic rate limiting mechanism.
 
@@ -177,7 +180,8 @@ class SimpleRateLimiter(BaseRateLimiter):
 
 
 class EndPoint:
-    """Represents an API endpoint with rate limiting capabilities.
+    """
+    Represents an API endpoint with rate limiting capabilities.
 
     This class encapsulates the details of an API endpoint, including its rate limiter.
 
@@ -232,15 +236,16 @@ class EndPoint:
 
 
 class BaseService:
-    """Base class for services that interact with API endpoints.
+    """
+    Base class for services that interact with API endpoints.
 
     This class provides a foundation for services that need to make API calls with rate limiting.
 
     Attributes:
         api_key (Optional[str]): The API key used for authentication.
         schema (Dict[str, Any]): The schema defining the service's endpoints.
-        status_tracker (li.StatusTracker): The object tracking the status of API calls.
-        endpoints (Dict[str, li.EndPoint]): A dictionary of endpoint objects.
+        status_tracker (StatusTracker): The object tracking the status of API calls.
+        endpoints (Dict[str, EndPoint]): A dictionary of endpoint objects.
 
     Examples:
         # Example usage of BaseService with OpenAIService
@@ -319,27 +324,24 @@ class BaseService:
 
 
 class PayloadCreation:
+    
     @classmethod
     def chat_completion(cls, messages, llmconfig, schema, **kwargs):
-        config = {**llmconfig, **kwargs}
-        payload = {"messages": messages}
-        for key in schema['required']:
-            payload.update({key: config[key]})
-
-        for key in schema['optional']:
-            if bool(config[key]) is True and str(config[key]).lower() != "none":
-                payload.update({key: config[key]})
-        return payload
+        return APIUtil._create_payload(
+            input_=messages, 
+            config=llmconfig, 
+            required_=schema['required'], 
+            optional_=schema['optional'],
+            input_key="messages", 
+            **kwargs)
 
     @classmethod
     def fine_tuning(cls, training_file, llmconfig, schema, **kwargs):
-        config = {**llmconfig, **kwargs}
-        payload = {"training_file": training_file}
-        for key in schema['required']:
-            payload.update({key: config[key]})
-
-        for key in schema['optional']:
-            if bool(config[key]) is True and str(config[key]).lower() != "none":
-                payload.update({key: config[key]})
-        return payload
-
+        return APIUtil._create_payload(
+            input_=training_file, 
+            config=llmconfig, 
+            required_=schema['required'], 
+            optional_=schema['optional'],
+            input_key="training_file", 
+            **kwargs)
+        

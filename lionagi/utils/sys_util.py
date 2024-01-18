@@ -8,18 +8,15 @@ from datetime import datetime
 from dateutil import parser
 from typing import Any, Dict, List, Optional, Type, Union
 
+
 def get_timestamp() -> str:
     """
     Generates a current timestamp in a file-safe string format.
 
-    This function creates a timestamp from the current time, formatted in ISO 8601 format, 
-    and replaces characters that are typically problematic in filenames (like colons and periods) 
-    with underscores.
-
     Returns:
-        str: The current timestamp in a file-safe string format.
+        The current timestamp in a file-safe string format.
 
-    Example:
+    Examples:
         >>> get_timestamp()  # Doctest: +ELLIPSIS
         '...'
     """
@@ -29,22 +26,17 @@ def create_copy(input: Any, n: int) -> Any:
     """
     Creates a deep copy of the input object a specified number of times.
 
-    This function makes deep copies of the provided input. If the number of copies ('n') 
-    is greater than 1, a list of deep copies is returned. For a single copy, it returns 
-    the copy directly.
-
-    Parameters:
-        input (Any): The object to be copied.
-
-        n (int): The number of deep copies to create.
+    Args:
+        input: The object to be copied.
+        n: The number of deep copies to create.
 
     Raises:
         ValueError: If 'n' is not a positive integer.
 
     Returns:
-        Any: A deep copy of 'input' or a list of deep copies if 'n' > 1.
+        A deep copy of 'input' or a list of deep copies if 'n' > 1.
 
-    Example:
+    Examples:
         >>> sample_dict = {'key': 'value'}
         >>> create_copy(sample_dict, 2)
         [{'key': 'value'}, {'key': 'value'}]
@@ -57,24 +49,17 @@ def create_path(dir: str, filename: str, timestamp: bool = True, dir_exist_ok: b
     """
     Creates a file path by optionally appending a timestamp to the filename.
 
-    This function constructs a file path by combining a directory, an optional timestamp,
-    and a filename. It also ensures the existence of the directory.
-
-    Parameters:
-        dir (str): The directory in which the file is to be located.
-
-        filename (str): The name of the file.
-
-        timestamp (bool, optional): If True, appends a timestamp to the filename. Defaults to True.
-
-        dir_exist_ok (bool, optional): If True, creates the directory if it doesn't exist. Defaults to True.
-
-        time_prefix (bool, optional): If True, the timestamp is added as a prefix; otherwise, it's appended. Defaults to False.
+    Args:
+        dir: The directory in which the file is to be located.
+        filename: The name of the file.
+        timestamp: If True, appends a timestamp to the filename. Defaults to True.
+        dir_exist_ok: If True, creates the directory if it doesn't exist. Defaults to True.
+        time_prefix: If True, the timestamp is added as a prefix; otherwise, it's appended. Defaults to False.
 
     Returns:
-        str: The full path to the file.
+        The full path to the file.
 
-    Example:
+    Examples:
         >>> create_path('/tmp/', 'log.txt', timestamp=False)
         '/tmp/log.txt'
     """
@@ -90,24 +75,31 @@ def create_path(dir: str, filename: str, timestamp: bool = True, dir_exist_ok: b
         return f"{dir}{filename}"
 
 def split_path(path: Path) -> tuple:
+    """
+    Splits a given path into folder name and file name.
+
+    Args:
+        path: The path to split.
+
+    Returns:
+        A tuple containing the folder name and file name.
+    """
     folder_name = path.parent.name
     file_name = path.name
     return (folder_name, file_name)
 
 def get_bins(input: List[str], upper: int = 7500) -> List[List[int]]:
     """
-    Get index of elements in a list based on their consecutive cumulative sum of length,
-    according to some upper threshold. Return lists of indices as bins.
-    
-    Parameters:
-        input (List[str]): List of items to be binned.
+    Get index of elements in a list based on their consecutive cumulative sum of length.
 
-        upper (int, optional): Upper threshold for the cumulative sum of the length of items in a bin. Default is 7500.
-    
+    Args:
+        input: List of items to be binned.
+        upper: Upper threshold for the cumulative sum of the length of items in a bin.
+
     Returns:
-        List[List[int]]: List of lists, where each inner list contains the indices of the items that form a bin.
-    
-    Example:
+        List of lists, where each inner list contains the indices of the items that form a bin.
+
+    Examples:
         >>> items = ['apple', 'a', 'b', 'banana', 'cheery', 'c', 'd', 'e']
         >>> upper = 10
         >>> get_bins(items, upper)
@@ -134,29 +126,37 @@ def get_bins(input: List[str], upper: int = 7500) -> List[List[int]]:
     return bins
 
 def change_dict_key(dict_, old_key, new_key):
+    """
+    Changes a key in a dictionary to a new key.
+
+    Args:
+        dict_: The dictionary to change the key in.
+        old_key: The old key to be changed.
+        new_key: The new key to change to.
+    """
     dict_[new_key] = dict_.pop(old_key)
 
 def create_id(n=32) -> str:
     """
     Generates a unique ID based on the current time and random bytes.
 
-    This function combines the current time in ISO 8601 format with 16 random bytes
-    to create a unique identifier. The result is hashed using SHA-256 and the first
-    16 characters of the hexadecimal digest are returned.
+    Args:
+        n: Length of the unique identifier to return. Defaults to 32.
 
     Returns:
-        str: A 16-character unique identifier.
+        A unique identifier.
 
-    Example:
+    Examples:
         >>> create_id()  # Doctest: +ELLIPSIS
         '...'
     """
     current_time = datetime.now().isoformat().encode('utf-8')
-    random_bytes = os.urandom(2048)
+    random_bytes = os.urandom(32)
     return hashlib.sha256(current_time + random_bytes).hexdigest()[:n]
 
 def str_to_datetime(datetime_str: str, fmt: Optional[str] = None) -> datetime:
-    """Convert a string representation of a date and time to a datetime object.
+    """
+    Convert a string representation of a date and time to a datetime object.
 
     Args:
         datetime_str: A string representing a date and time.
@@ -181,7 +181,8 @@ def str_to_num(input_: str,
                lower_bound: Optional[Union[int, float]] = None, 
                num_type: Type[Union[int, float]] = int, 
                precision: Optional[int] = None) -> Union[int, float]:
-    """Convert the first numeric value in the input string to the specified number type.
+    """
+    Convert the first numeric value in the input string to the specified number type.
 
     Args:
         input_: The input string containing the numeric value.
@@ -226,13 +227,12 @@ def find_depth(nested_obj, depth_strategy='uniform', ignore_non_iterable=False):
     Calculates the maximum depth of a nested list, dictionary, or a combination of both.
 
     Args:
-        nested_obj (list | dict): The nested object (list or dictionary) to find the depth of.
-        depth_strategy (str): Strategy to calculate depth. 
-                              'uniform' for consistent data types, 'mixed' for mixed types.
-        ignore_non_iterable (bool): If True, non-iterable elements do not count towards depth.
+        nested_obj: The nested object to find the depth of.
+        depth_strategy: Strategy to calculate depth ('uniform' or 'mixed').
+        ignore_non_iterable: If True, non-iterable elements do not count towards depth.
 
     Returns:
-        int: The maximum depth of the nested structure.
+        The maximum depth of the nested structure.
 
     Raises:
         ValueError: If an unsupported depth strategy is specified.
@@ -264,18 +264,49 @@ def find_depth(nested_obj, depth_strategy='uniform', ignore_non_iterable=False):
         raise ValueError("Unsupported depth strategy. Choose 'uniform' or 'mixed'.")
 
 def is_schema(dict_: Dict, schema: Dict):
+    """
+    Checks if a dictionary matches a given schema.
+
+    Args:
+        dict_: The dictionary to check.
+        schema: The schema to validate against.
+
+    Returns:
+        True if the dictionary matches the schema, False otherwise.
+    """
     for key, expected_type in schema.items():
         if not isinstance(dict_[key], expected_type):
             return False
     return True
 
 def strip_lower(input_: Union[str, List[str]]) -> Union[str, List[str]]:
+    """
+    Strips and converts a string or each string in a list to lowercase.
+
+    Args:
+        input_: A string or list of strings to process.
+
+    Returns:
+        The processed string or list of strings, or False on failure.
+    """
     try:
         return str(input_).strip().lower()
     except:
         return False
 
 def as_dict(input_):
+    """
+    Converts a JSON string or a dictionary to a dictionary.
+
+    Args:
+        input_: A JSON string or dictionary to convert.
+
+    Returns:
+        The input converted to a dictionary.
+
+    Raises:
+        ValueError: If the input cannot be converted to a dictionary.
+    """
     if isinstance(input_, str):
         try:
             return json.loads(input_)
@@ -285,5 +316,3 @@ def as_dict(input_):
         return input_
     else:
         raise f"Could not convert input to dict: {input_}"
-
-

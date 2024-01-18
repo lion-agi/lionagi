@@ -18,7 +18,8 @@ class EncrytionUtil:
 
     @staticmethod
     def password_strength_checker(password: str) -> bool:
-        """Check the strength of a password.
+        """
+        Check the strength of a password.
 
         Args:
             password (str): The password to check.
@@ -38,7 +39,8 @@ class EncrytionUtil:
 
     @staticmethod
     def generate_encryption_key(password: Optional[str] = None, salt: Optional[bytes] = None) -> str:
-        """Generate an encryption key from a password and salt.
+        """
+        Generate an encryption key from a password and salt.
 
         Args:
             password (Optional[str]): The password to derive the key from. If None, a random key is generated.
@@ -209,7 +211,8 @@ class EncrytionUtil:
 
     @staticmethod
     def binary_to_hex(data: bytes) -> str:
-        """Convert binary data to a hexadecimal string representation.
+        """
+        Convert binary data to a hexadecimal string representation.
         
         Args:
             data: A bytes object containing binary data.
@@ -227,7 +230,8 @@ class EncrytionUtil:
 
     @staticmethod
     def create_hash(data: str, algorithm: str = 'sha256') -> str:
-        """Create a hash of the given data using the specified algorithm.
+        """
+        Create a hash of the given data using the specified algorithm.
 
         Args:
             data: The string to hash.
@@ -246,7 +250,8 @@ class EncrytionUtil:
 
     @staticmethod
     def decode_base64(data: str) -> str:
-        """Decode a base64 encoded string.
+        """
+        Decode a base64 encoded string.
 
         Args:
             data: A base64 encoded string.
@@ -262,7 +267,8 @@ class EncrytionUtil:
 
     @staticmethod
     def encode_base64(data: str) -> str:
-        """Encode a string using base64 encoding.
+        """
+        Encode a string using base64 encoding.
 
         Args:
             data: A string to be encoded.

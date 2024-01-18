@@ -9,13 +9,16 @@ def from_llama_index(llama_node: Any, **kwargs: Any) -> T:
     """
     Converts a Llama Index node into a DataNode object.
 
-    Parameters:
+    Args:
         llama_node (Any): The Llama Index node to be converted.
-        
         **kwargs: Additional keyword arguments for JSON serialization.
 
     Returns:
-        DataNode: A DataNode object created from the Llama Index node.
+        T: A DataNode object created from the Llama Index node.
+
+    Example:
+        llama_node = LlamaIndexNode(...)
+        datanode = from_llama_index(llama_node, serialize_dates=True)
     """
     llama_dict = llama_node.to_dict(**kwargs)
     return DataNode.from_dict(llama_dict)
@@ -24,15 +27,17 @@ def to_llama_index_textnode(datanode: T, **kwargs: Any) -> Any:
     """
     Converts a DataNode into a Llama Index TextNode.
 
-    Parameters:
-        datanode (DataNode): The DataNode to be converted.
-        
+    Args:
+        datanode (T): The DataNode to be converted.
         **kwargs: Additional keyword arguments to be included in the TextNode.
 
     Returns:
-        TextNode: A Llama Index TextNode created from the DataNode.
+        Any: A Llama Index TextNode created from the DataNode.
+
+    Example:
+        datanode = DataNode(...)
+        textnode = to_llama_index_textnode(datanode, additional_arg=1)
     """
-    # to llama_index textnode
     from llama_index.schema import TextNode
 
     dnode = datanode.to_dict()
@@ -47,7 +52,7 @@ def get_llama_reader(reader: Union[str, Callable]) -> Callable:
     """
     Gets a Llama Index reader function.
 
-    Parameters:
+    Args:
         reader (Union[str, Callable]): The name of the reader function or the reader function itself.
 
     Returns:
@@ -55,6 +60,12 @@ def get_llama_reader(reader: Union[str, Callable]) -> Callable:
 
     Raises:
         ValueError: If the specified reader is invalid.
+
+    Example:
+        reader = get_llama_reader("SimpleDirectoryReader")
+        # or for a custom function
+        def custom_reader(): pass
+        reader = get_llama_reader(custom_reader)
     """
     try:
         if isinstance(reader, str):
@@ -77,15 +88,11 @@ def llama_index_reader(reader: Union[str, Callable],
     """
     Loads documents using a specified Llama Index reader.
 
-    Parameters:
+    Args:
         reader (Union[str, Callable]): The name of the reader function or the reader function itself.
-        
         reader_args (List[Any]): Positional arguments to pass to the reader function.
-        
         reader_kwargs (Dict[str, Any]): Keyword arguments to pass to the reader function.
-        
         load_data_args (List[Any]): Positional arguments for the load_data method.
-        
         load_data_kwargs (Dict[str, Any]): Keyword arguments for the load_data method.
 
     Returns:
@@ -93,6 +100,9 @@ def llama_index_reader(reader: Union[str, Callable],
 
     Raises:
         ValueError: If the specified reader is invalid or if the reader fails to load documents.
+
+    Example:
+        documents = llama_index_reader("SimpleDirectoryReader", reader_args=["/path/to/data"])
     """
     reader = get_llama_reader(reader)
 
@@ -105,6 +115,24 @@ def llama_index_reader(reader: Union[str, Callable],
         raise ValueError(f'Failed to read. Error: {e}')
 
 def get_llama_parser(parser: Union[str, Callable]) -> Callable:
+    """
+    Gets a Llama Index parser function or object.
+
+    Args:
+        parser (Union[str, Callable]): The name of the parser function or the parser function itself.
+
+    Returns:
+        Callable: The Llama Index parser function or object.
+
+    Raises:
+        ValueError: If the specified parser is invalid.
+
+    Example:
+        parser = get_llama_parser("DefaultNodeParser")
+        # or for a custom function
+        def custom_parser(): pass
+        parser = get_llama_parser(custom_parser)
+    """
     import llama_index.node_parser as node_parser
     import llama_index.text_splitter as text_splitter
 
@@ -128,20 +156,21 @@ def llama_index_node_parser(documents: List[Any],
     """
     Parses documents into nodes using a specified Llama Index node parser.
 
-    Parameters:
+    Args:
         documents (List[Any]): The documents to parse.
-        
         parser (Union[str, Callable]): The name of the parser function or the parser function itself.
-        
         parser_args (List[Any]): Positional arguments to pass to the parser function.
-        
         parser_kwargs (Dict[str, Any]): Keyword arguments to pass to the parser function.
+        parsing_kwargs (Dict[str, Any]): Keyword arguments for the parsing process.
 
     Returns:
         List[Any]: A list of nodes parsed from the documents.
 
     Raises:
         ValueError: If the specified parser is invalid or if the parser fails to parse the documents.
+
+    Example:
+        nodes = llama_index_node_parser(documents, "DefaultNodeParser")
     """
     parser = get_llama_parser(parser)
 
