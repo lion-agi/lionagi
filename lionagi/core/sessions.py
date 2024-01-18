@@ -121,7 +121,7 @@ class Session:
     def _is_invoked(self):
         content = self.current_branch.messages.iloc[-1]['content']
         try:
-            if json.loads(content).keys() >= {'function', 'arguments', 'output'}:
+            if json.loads(content)['action_response'].keys() >= {'function', 'arguments', 'output'}:
                 return True
         except:
             return False
@@ -173,7 +173,10 @@ class Session:
 
         cont_ = True
         while num > 0 and cont_ is True:
-            await self.followup(instruction, tool_choice="auto", tool_parsed=True, **kwargs)
+            if tools:
+                await self.followup(instruction, tool_choice="auto", tool_parsed=True, **kwargs)
+            else:
+                await self.followup(instruction, tool_parsed=True, **kwargs)
             num -= 1
             cont_ = True if self._is_invoked() else False
         if num == 0:
@@ -185,12 +188,15 @@ class Session:
             if len(num) != instruction_set.instruct_len:
                 raise ValueError('Unmatched auto_followup num size and instructions set size')
 
-        current_instruct_id = instruction_set.first_instruct
+        current_instruct_node = instruction_set.get_instruction_node(instruction_set.first_instruct)
         for i in range(instruction_set.instruct_len):
             num_ = num if isinstance(num, int) else num[i]
-            instruct_node = instruction_set.get_instruction_node(current_instruct_id)
-            tools = instruction_set.get_tools(instruct_node)
-            await self.auto_followup(instruct_node, num=num_, tools=tools, **kwargs)
+            tools = instruction_set.get_tools(current_instruct_node)
+            if tools:
+                await self.auto_followup(current_instruct_node, num=num_, tools=tools, **kwargs)
+            else:
+                await self.followup(current_instruct_node)
+            current_instruct_node = instruction_set.get_next_intruction_node(current_instruct_node)
 
 #### Branch Methods: effective to current active branch
     def change_system_message(self, system: System):
