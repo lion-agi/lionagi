@@ -181,17 +181,23 @@ class Response(Message):
         content = ''
         try:
             response = response["message"]
-            if str(response['content']) == "None":
-                try:
-                    content = self._parse_func_call(response=response)
-                    content_key = content_key or "action_list"
-                    name = name or 'action_request'
-                except:
-                    raise ValueError("Response message must be one of regular response or function calling")
+
+            if strip_lower(response['content']) == "none":
+                content_ = self._handle_action_request(response)
+                name = name or "action_request"
+                content_key = content_key or "action_list"
+
             else:
-                content = response['content']
-                name = name or "assistant"
-                content_key = content_key or "response"
+                try:
+                    if 'tool_uses' in json.loads(response['content']):
+                        content_ = json.loads(response['content'])['tool_uses']
+                        content_key = content_key or "action_list"
+                        name = name or "action_request"
+                except:
+                    content_ = response['content']
+                    content_key = content_key or "response"
+                    name = name or "assistant"
+
         except:
             name = name or "action_response"
             content = response
@@ -199,98 +205,36 @@ class Response(Message):
         
         super().__init__(role="assistant", name=name, content={content_key: content})
         
-    def _parse_func_call(self, response):   
-        tool_count = 0
-        func_list = []
-        while tool_count < len(response['tool_calls']):
-            if response['tool_calls'][tool_count]['type'] == 'function':
-                func_content = {
-                    "function": ("func_" + response['tool_calls'][tool_count]['function']['name']),
-                    "arguments": response['tool_calls'][tool_count]['function']['arguments']
-                    }
-                func_list.append(func_content)
-            tool_count += 1
-        return func_list
+    @staticmethod
+    def _handle_action_request(response):
+        """Handle an action request from the response.
 
+        Args:
+            response (Dict[str, Any]): The response dictionary containing the action request.
 
+        Returns:
+            List[Dict[str, Any]]: The list of actions parsed from the request.
 
-
-
-
-
-
-
-
-
-
-
-# class Response(Message):
-#     """Represents a response message."""
-
-#     def __init__(self, response: Any, name: Optional[str] = None, content_key=None):
-#         """Initialize the Response message.
-
-#         Args:
-#             response (Any): The content of the response.
-#             name (Optional[str]): The name of the sender.
-#             content_key (Optional[str]): The key used for response content.
-#         """
-#         try:
-#             response = as_dict(response)["message"]
-#             if strip_lower(response['content']) == "none":
-#                 content_ = self._handle_action_request(response)
-#                 name = name or "action_request"
-#                 content_key = content_key or "action_list"
-
-#             else:
-#                 if 'tool_uses' in as_dict(response['content']):
-#                     content_ = as_dict(response['content'])['tool_uses']
-#                     content_key = content_key or "action_list"
-#                     name = name or "action_request"
-#                 else:
-#                     content_ = response['content']
-#                     content_key = content_key or "response"
-#                     name = name or "assistant"
-
-#         except:
-#             content_ = response
-#             name = name or "action_response"
-#             content_key = content_key or "action_response"
-#         super().__init__(role="assistant", name=name, content={content_key: content_})
-
-        
-
-#     @staticmethod
-#     def _handle_action_request(response):
-#         """Handle an action request from the response.
-
-#         Args:
-#             response (Dict[str, Any]): The response dictionary containing the action request.
-
-#         Returns:
-#             List[Dict[str, Any]]: The list of actions parsed from the request.
-
-#         Raises:
-#             ValueError: If the response does not contain valid function calling information.
-#         """
-#         try:
-#             tool_count = 0
-#             func_list = []
-#             while tool_count < len(response['tool_calls']):
-#                 _path = ['tool_calls', tool_count, 'type']
+        Raises:
+            ValueError: If the response does not contain valid function calling information.
+        """
+        try:
+            tool_count = 0
+            func_list = []
+            while tool_count < len(response['tool_calls']):
+                _path = ['tool_calls', tool_count, 'type']
                 
-#                 if nget(response, _path) == 'function':
-#                     _path1 = ['tool_calls', tool_count, 'function', 'name']
-#                     _path2 = ['tool_calls', tool_count, 'function', 'arguments']
+                if nget(response, _path) == 'function':
+                    _path1 = ['tool_calls', tool_count, 'function', 'name']
+                    _path2 = ['tool_calls', tool_count, 'function', 'arguments']
                     
-#                     func_content = {
-#                         "action": ("action_" + nget(response, _path1)),
-#                         "arguments": nget(response, _path2)
-#                         }
-#                     func_list.append(func_content)
-#                 tool_count += 1
-#             return func_list
-#         except:
-#             raise ValueError("Response message must be one of regular response or function calling")
-
+                    func_content = {
+                        "action": ("action_" + nget(response, _path1)),
+                        "arguments": nget(response, _path2)
+                        }
+                    func_list.append(func_content)
+                tool_count += 1
+            return func_list
+        except:
+            raise ValueError("Response message must be one of regular response or function calling")
 
