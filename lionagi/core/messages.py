@@ -178,7 +178,6 @@ class Instruction(Message):
 class Response(Message):
 
     def __init__(self, response: Any, name: Optional[str] = None, content_key=None) -> None:
-        content_ = ''
         try:
             response = response["message"]
 
@@ -193,6 +192,10 @@ class Response(Message):
                         content_ = json.loads(response['content'])['tool_uses']
                         content_key = content_key or "action_list"
                         name = name or "action_request"
+                    else:
+                        content_ = response['content']
+                        content_key = content_key or "response"
+                        name = name or "assistant"
                 except:
                     content_ = response['content']
                     content_key = content_key or "response"
