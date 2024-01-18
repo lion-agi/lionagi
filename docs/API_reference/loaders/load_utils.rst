@@ -1,5 +1,5 @@
 Load Utils
 ==========
 
-.. automodule:: lionagi.loaders.load_utils
+.. automodule:: lionagi.loaders.load_util
    :members:

@@ -6,7 +6,7 @@ from ..configs.oai_configs import oai_schema
 from ..utils.nested_util import get_flattened_keys
 from ..utils.call_util import lcall, alcall
 from ..schema import DataLogger, Tool
-from ..services.oai import OpenAIService
+from .._services.oai import OpenAIService
 from .messages import System, Instruction, Response
 from .instruction_set import InstructionSet
 from .branch import Branch
