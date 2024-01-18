@@ -49,15 +49,14 @@ class Branch(Conversation):
         return False
 
     def clone(self):
-        cloned = Branch()
-        cloned.messages = self.messages.copy()
+        cloned = Branch(self.messages.copy())
         cloned.instruction_sets = deepcopy(self.instruction_sets)
         cloned.tool_manager = ToolManager()
         cloned.tool_manager.registry = deepcopy(self.tool_manager.registry)
         return cloned
 
     def merge(self, branch, update=True):
-        message_copy = self.messages.copy()
+        message_copy = branch.messages.copy()
         branch_system = message_copy.loc[0]
         message_copy.drop(0, inplace=True)
         self.messages = self.messages.merge(message_copy, how='outer')
