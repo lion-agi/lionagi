@@ -1,4 +1,4 @@
-Encryption Utilities
+Encryption
 ========
 
 .. automodule:: lionagi.utils.encrypt_util

@@ -1,4 +1,4 @@
-Base Schema
+Base Node
 ===========
 
 .. automodule:: lionagi.schema.base_node

@@ -1,4 +1,4 @@
-System Utilities
+System
 ========
 
 .. automodule:: lionagi.utils.sys_util
