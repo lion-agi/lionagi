@@ -10,12 +10,12 @@ class OpenRouterService(BaseService):
     token_encoding_name = "cl100k_base"
     
     
-    def __init__(self, api_key = None, key_scheme = None,schema = None, token_encoding_name: str = "cl100k_base"):
+    def __init__(self, api_key = None, key_scheme = None,schema = None, token_encoding_name: str = "cl100k_base", **kwargs):
         key_scheme = key_scheme or self.key_scheme            
         super().__init__(
             api_key = api_key or getenv(key_scheme),
             schema = schema or self.schema,
-            token_encoding_name=token_encoding_name
+            token_encoding_name=token_encoding_name, **kwargs
         )
         self.active_endpoint = []
 

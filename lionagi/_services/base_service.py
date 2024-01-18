@@ -267,13 +267,21 @@ class BaseService:
         self,
         api_key: Optional[str] = None,
         schema: Dict[str, Any] = None,
-        token_encoding_name: str = None
+        token_encoding_name: str = None,
+        max_tokens : int = 100_000,
+        max_requests : int = 1_000,
+        interval: int = 60
     ) -> None:
         self.api_key = api_key
         self.schema = schema or {}
         self.status_tracker = StatusTracker()
         self.endpoints: Dict[str, EndPoint] = {}
         self.token_encoding_name = token_encoding_name
+        self.chat_config_rate_limit = {
+            'max_requests': max_requests,
+            'max_tokens': max_tokens,
+            'interval': interval
+        }
 
     async def init_endpoint(self, endpoint_: Optional[Union[List[str], List[EndPoint], str, EndPoint]] = None) -> None:
         """
@@ -296,14 +304,24 @@ class BaseService:
                     if isinstance(ep, EndPoint):
                         self.endpoints[ep.endpoint] = ep
                     else:
-                        self.endpoints[ep] = EndPoint(
-                            max_requests=endpoint_config.get('max_requests', 1000) if endpoint_config.get('max_requests', 1000) is not None else 1000,
-                            max_tokens=endpoint_config.get('max_tokens', 100000) if endpoint_config.get('max_tokens', 100000) is not None else 100000,
-                            interval=endpoint_config.get('interval', 60) if endpoint_config.get('interval', 60) is not None else 60,
-                            endpoint_=ep,
-                            token_encoding_name=self.token_encoding_name,
-                            config=endpoint_config,
-                        )
+                        if ep == "chat/completions":
+                            self.endpoints[ep] = EndPoint(
+                                max_requests=self.chat_config_rate_limit.get('max_requests', 1000),
+                                max_tokens=self.chat_config_rate_limit.get('max_tokens', 100000),
+                                interval=self.chat_config_rate_limit.get('interval', 60),
+                                endpoint_=ep,
+                                token_encoding_name=self.token_encoding_name,
+                                config=endpoint_config,
+                            )
+                        else:
+                            self.endpoints[ep] = EndPoint(
+                                max_requests=endpoint_config.get('max_requests', 1000) if endpoint_config.get('max_requests', 1000) is not None else 1000,
+                                max_tokens=endpoint_config.get('max_tokens', 100000) if endpoint_config.get('max_tokens', 100000) is not None else 100000,
+                                interval=endpoint_config.get('interval', 60) if endpoint_config.get('interval', 60) is not None else 60,
+                                endpoint_=ep,
+                                token_encoding_name=self.token_encoding_name,
+                                config=endpoint_config,
+                            )
 
                 if not self.endpoints[ep]._has_initialized:
                     await self.endpoints[ep].init_rate_limiter()
