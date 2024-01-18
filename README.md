@@ -4,7 +4,7 @@
 
 [PyPI](https://pypi.org/project/lionagi/) | [Documentation](https://lionagi.readthedocs.io/en/latest/) | [Discord](https://discord.gg/mzDD5JtYRp)
 
-(Documentation for v0.0.116 is underway)
+(Documentation for v0.0.200 is underway)
   
 # LionAGI
 **Towards Automated General Intelligence**
@@ -26,12 +26,12 @@ by default we use `OPENAI_API_KEY`.
 
 
 ### Features
-- Create a production ready LLM application **in hours**, with more than 100 models to choose from
-- written in pure python, minimum dependency `aiohttp`, `python-dotenv`, `tiktoken`, `pydantic`
-- Efficient and verstile data operations for reading, chunking, binning, writing, storing data with built-in support for `langchain` and `llamaindex`
+- Written in pure python, robust and scalable. Create a production ready LLM application **in hours**, with more than 100 models
+- Efficient and verstile data operations for reading, chunking, binning, writing, storing data with support for `langchain` and `llamaindex`
+- Built-in support for **chain/graph-of-thoughts, ReAct, Concurrent parallel function calling** 
 - Unified interface with any LLM provider, API or local
   - Fast and **concurrent** API call with **configurable rate limit**
-  - (Work In Progress) support for hundreds of models both API and local
+  - (Work In Progress) support for models both API and local
 ---
 LionAGI is designed to be `asynchronous` only, please check python official documentation on how `async` work: [here](https://docs.python.org/3/library/asyncio.html)
 
