@@ -191,7 +191,7 @@ class Branch(Conversation):
         message = []
         for _, row in self.messages.iterrows():
             out = {"name": row['name']} if use_name else {"role": row['role']}
-            out.append({"content": row['content']})
+            out.update({"content": row['content']})
             message.append(out)
         return message
     
