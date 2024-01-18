@@ -4,7 +4,6 @@
 
 [PyPI](https://pypi.org/project/lionagi/) | [Documentation](https://lionagi.readthedocs.io/en/latest/) | [Discord](https://discord.gg/mzDD5JtYRp)
 
-(Documentation for v0.0.200 is underway)
   
 # LionAGI
 **Towards Automated General Intelligence**
