@@ -54,6 +54,11 @@ class InstructionSet(Structure):
     def get_instruction_node(self, node_id):
         return self.graph.nodes[node_id]
 
+    def get_next_intruction_node(self, instruct_node: Instruction):
+        relationship = self.get_node_relationships(instruct_node)
+        if relationship:
+            return self.graph.nodes[relationship[0].target_node_id]
+
     def get_tools(self, instruct_node: Instruction):
         relationships = self.get_node_relationships(instruct_node, out_edge=False, labels=['tool'])
         tools = []
