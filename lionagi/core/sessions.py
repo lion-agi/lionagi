@@ -13,7 +13,6 @@ from .branch import Branch
 
 
 load_dotenv()
-OAIService = OpenAIService()
 
 class Session:
     """Manages a session with an AI service, handling branching, merging, and messaging.
@@ -35,7 +34,7 @@ class Session:
         system: str,
         dir: str = None,
         llmconfig: Dict[str, Any] = oai_schema["chat/completions"]["config"],
-        service: OpenAIService = OAIService,
+        service: OpenAIService = OpenAIService(),
     ):
         """Initializes the session with system information, logging directory, and configuration.
 
