@@ -214,7 +214,7 @@ async def bcall(inputs: List[Any], func: Callable[..., Any], batch_size: int, **
     return results
 
 async def rcall(func: Callable[..., Any], *args, timeout: Optional[int] = None,
-                 retries: Optional[int] = None, initial_delay: float = 2.0, 
+                 retries: Optional[int] = 0, initial_delay: float = 2.0,
                  backoff_factor: float = 2.0, default: Optional[Any] = None, 
                  **kwargs) -> Any:
     """
@@ -263,7 +263,7 @@ async def rcall(func: Callable[..., Any], *args, timeout: Optional[int] = None,
             else:
                 return sync_call()
         except Exception as e:
-            if retries is None or attempt >= retries:
+            if attempt >= retries:
                 if default is not None:
                     return default
                 raise e
