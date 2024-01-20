@@ -256,14 +256,14 @@ async def rcall(func: Callable[..., Any], *args, timeout: Optional[int] = None,
                 raise asyncio.TimeoutError("Function call timed out")
 
     delay = initial_delay
-    for attempt in range(retries or 1):
+    for attempt in range((retries+1) or 1):
         try:
             if asyncio.iscoroutinefunction(func):
                 return await async_call()
             else:
                 return sync_call()
         except Exception as e:
-            if retries is None or attempt >= retries - 1:
+            if retries is None or attempt >= retries:
                 if default is not None:
                     return default
                 raise e
