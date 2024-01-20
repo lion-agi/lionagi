@@ -298,7 +298,7 @@ class TestRCall(unittest.IsolatedAsyncioTestCase):
             raise ValueError("Test Error")
         with self.assertRaises(ValueError):
             await call_util.rcall(sync_func, 5, retries=3)
-        self.assertEqual(attempt_count, 3)  # Initial call + 3 retries
+        self.assertEqual(attempt_count, 4)  # Initial call + 3 retries
 
     async def test_default_value_on_exception(self):
         def sync_func(x):
@@ -399,7 +399,7 @@ class TestCallDecorator(unittest.IsolatedAsyncioTestCase):
 
         with self.assertRaises(ValueError):
             test_func()
-        self.assertEqual(attempt, 2)
+        self.assertEqual(attempt, 3)
 
     def test_immediate_success(self):
         attempt = 0
