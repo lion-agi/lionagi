@@ -3,7 +3,7 @@ from datetime import datetime
 from typing import Optional, Dict, Any
 import pandas as pd
 
-from .messages import Message
+from ..messages.messages import Message
 
 class Conversation:
     """

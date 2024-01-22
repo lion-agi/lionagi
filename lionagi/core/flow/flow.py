@@ -1,12 +1,3 @@
-
-
-
-
-
-
-
-
-
 """async def critic_workflow():
 
     @ cd.max_concurrency(limit=3)

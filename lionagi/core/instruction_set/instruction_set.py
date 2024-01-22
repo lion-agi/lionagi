@@ -1,7 +1,7 @@
 from typing import List, Union
-from ..schema import Tool
-from ..structures import Relationship, Structure
-from .messages import Instruction
+from ...schema import Tool
+from ...structures import Relationship, Structure
+from ..messages.messages import Instruction
 
 
 class InstructionSet(Structure):

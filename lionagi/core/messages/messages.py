@@ -1,8 +1,8 @@
 import json
 from typing import Any, Optional, Dict
-from ..utils.sys_util import strip_lower, as_dict
-from ..utils.nested_util import nget, to_readable_dict
-from ..schema import BaseNode
+
+from lionagi.utils import strip_lower, as_dict, nget, to_readable_dict
+from lionagi.schema import BaseNode
 
 
 class Message(BaseNode):

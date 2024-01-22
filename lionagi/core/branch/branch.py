@@ -4,10 +4,10 @@ from typing import Any, Dict, Union, List, Optional
 from datetime import datetime
 import pandas as pd
 
-from ..utils.call_util import lcall
-from ..schema.base_tool import Tool
-from ..tools.tool_manager import ToolManager
-from .messages import Message, Instruction, System
+from ...utils.call_util import lcall
+from ...schema.base_tool import Tool
+from ...tools.tool_manager import ToolManager
+from ..messages.messages import Message, Instruction, System
 from .conversation import Conversation
 
 
@@ -225,8 +225,6 @@ class Branch(Conversation):
         # 2. tool: Tool
         # 3. name: str
         # 4. list: 3 types of lists
-        if not branch:
-            branch = self
         
         def tool_check(tool):
             if isinstance(tool, dict):
@@ -234,15 +232,17 @@ class Branch(Conversation):
             elif isinstance(tool, Tool):
                 return tool.schema_
             elif isinstance(tool, str):
-                if branch.tool_manager.name_existed(tool):
-                    tool = branch.tool_manager.registry[tool]
+                if self.tool_manager.name_existed(tool):
+                    tool = self.tool_manager.registry[tool]
                     return tool.schema_
                 else:
                     raise ValueError(f'Function {tool} is not registered.')
 
         if isinstance(tools, bool):
-            tool_kwarg = {"tools": branch.tool_manager.to_tool_schema_list()}
+            tool_kwarg = {"tools": self.tool_manager.to_tool_schema_list()}
             kwargs = {**tool_kwarg, **kwargs}
+            
+            return kwargs
 
         else:
             if not isinstance(tools, list):
@@ -250,7 +250,7 @@ class Branch(Conversation):
             tool_kwarg = {"tools": lcall(tools, tool_check)}
             kwargs = {**tool_kwarg, **kwargs}
 
-        return kwargs
+            return kwargs
 
     def _to_chatcompletion_message(self):
         """
