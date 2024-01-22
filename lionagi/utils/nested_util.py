@@ -4,6 +4,7 @@ from copy import deepcopy
 from itertools import chain
 from typing import Any, Callable, Dict, Generator, List, Tuple, Union, Iterable, Optional
 
+
 def to_list(input_: Any, flatten: bool = True, dropna: bool = False) -> List[Any]:
     """
     Converts the input to a list, optionally flattening it and dropping None values.
