@@ -1,187 +1,220 @@
-from typing import Any, Union, List, Dict, Optional
+from pathlib import Path
+import json
+from typing import Any, List, Union, Dict, Optional, Tuple
 from dotenv import load_dotenv
-import pandas as pd
-from lionagi.utils import get_flattened_keys, rcall, lcall, alcall
+
+from lionagi.schema import DataLogger, Tool, BaseNode
+from lionagi.utils import strip_lower, as_dict, nget, to_readable_dict, lcall, CallDecorator, create_copy, get_flattened_keys, alcall
 from lionagi.configs.oai_configs import oai_schema
-from lionagi.schema import DataLogger, Tool
-from lionagi._services.oai import OpenAIService
-from ..messages.messages import System, Instruction, Response
-from ..instruction_set.instruction_set import InstructionSet
+
+from datetime import datetime
+import pandas as pd
+
+from ..messages.messages import System, Message, Instruction, Response
+from lionagi.tools.tool_manager import ToolManager
+from ..branch.conversation import Conversation
 from ..branch.branch import Branch
-from .base_session import BaseSession
+from ..._services.oai import OpenAIService
+from ..instruction_set.instruction_set import InstructionSet
 
-load_dotenv()
+            
 
-class Session(BaseSession):
-    """Manages a session with an AI service, handling branching, merging, and messaging.
+OAIService = OpenAIService()
 
-    Attributes:
-        llmconfig (Dict[str, Any]): Configuration for the language model.
-        system, (Union[Dict, Any]): system message
-        logger_ (DataLogger): Logger for the session data.
-        service (OpenAIService): The AI service to interact with.
-        branches (Dict[str, Branch]): Branches for different conversation threads.
-        current_branch_name (str): The name of the active branch.
-        current_branch (Branch): The active branch.
-        latest_response (Response): The latest response received from the AI service.
-    """
+class Session:
+
     def __init__(
         self,
-        system: Union[str, System],
-        dir: str = 'data/logs/',
-        llmconfig: Dict[str, Any] = oai_schema["chat/completions"]["config"],
-        service = OpenAIService(),
-        default_branch=None,
+        system: str,
+        dir: str = None,
+        llmconfig: Dict[str, Any] = None,
+        service  = OAIService,
     ):
-        """Initializes the session with system information, logging directory, and configuration.
 
-        Args:
-            system: System information to initialize the session with.
-            dir: Directory to store session logs.
-            llmconfig: Configuration for the language model.
-            service: The AI service to interact with.
-        """
-        super().__init__(system, default_branch=default_branch or 'main')
-        self.llmconfig = llmconfig
+        self.llmconfig = llmconfig or oai_schema["chat/completions"]["config"]
         self.logger_ = DataLogger(dir=dir)
         self.service = service
-        self.latest_response = None
-        
-    
-    def new_branch(self, branch_name, from_, system=None, tools=None, sys_name=None):
-        self._new_branch(branch_name, from_)
+        self.branches = {"main": Branch()}
+        self.branches['main'].add_message(system=system)
+        self.current_branch_name = 'main'
+        self.current_branch = self.branches[self.current_branch_name]
+
+    def new_branch(self, name: str, system=None, tools=None, sender=None) -> None:
+ 
+        if name in self.branches.keys():
+            raise ValueError(f'Invalid new branch name {name}. Already existed.')
+
+        self.branches[name] = Branch()
         if system:
-            if isinstance(system, (str, dict)):
-                system = System(system, name=sys_name)
-            self.branches[branch_name].change_system_message(system)
+            self.branches[name].change_system_message(system, sender=sender)
         if tools:
-            self.branches[branch_name].register_tools(tools)
-        
+            self.branches[name].register_tools(tools)
 
-    async def _call_chatcompletion(self, branch: Union[str, Branch], **kwargs):
-        """Calls the AI service to get a completion for the current conversation.
+    def switch_branch(self, branch: Union[str, Branch]) -> None:
+        self.current_branch = self.get_branch(branch)
 
-        Args:
-            branch: Branch to run.
-            **kwargs: Additional keyword arguments to pass to the AI service.
 
-        Raises:
-            NotImplementedError: If the AI service does not return a valid response.
-        """
-        branch = self.get_branch(branch=branch)
-        messages_ = branch._to_chatcompletion_message()
-        payload, completion = await self.service.serve_chat(messages=messages_, **kwargs)
-        
+    def merge_branch(
+        self, from_: str, to_: str, update: bool = True, if_delete: bool = False
+    ) -> None:
+
+        if from_ not in self.branches.keys():
+            raise ValueError(f'Invalid source branch name {from_}. Not exist.')
+        if to_ not in self.branches.keys():
+            raise ValueError(f'Invalid target branch name {from_}. Not exist.')
+
+        self.branches[to_].merge(self.branches[from_], update)
+        if if_delete:
+            if from_ == self.current_branch_name:
+                self.current_branch_name = to_
+                self.current_branch = self.branches[to_]
+            self.branches.pop(from_)
+ 
+    def delete_branch(self, name: str, verbose=True) -> bool:
+
+        if name == self.current_branch_name:
+            raise ValueError(f'{name} is the current active branch, please switch to another branch before delete it.')
+        if name not in self.branches.keys():
+            return False
+        else:
+            self.branches.pop(name)
+            if verbose:
+                print(f'Branch {name} is deleted.')
+            return True
+
+    def get_branch(self, branch: Any = None):
+        if branch:
+            if isinstance(branch, Branch):
+                return branch
+            if isinstance(branch, str):
+                if branch in self.branches.keys():
+                    return self.branches[branch]
+                else:
+                    raise ValueError(f'branch{branch} does not exist.')
+        else:
+            return self.current_branch
+
+    async def call_chatcompletion(self, branch_name : Any = None, **kwargs):
+        branch = self.get_branch(branch_name)
+
+        messages = branch.to_chatcompletion_message()
+        payload, completion = await self.service.serve_chat(messages=messages, **kwargs)
         if "choices" in completion:
-            self.logger_.add_entry({"input": str(payload), "output": str(completion)})
-            self.latest_response = Response(response=completion['choices'][0])
-            branch.add_message(self.latest_response)
+            self.logger_.add_entry({"input": payload, "output": completion})
+            branch.add_message(response=completion['choices'][0])
             self.service.status_tracker.num_tasks_succeeded += 1
         else:
             self.service.status_tracker.num_tasks_failed += 1
+
+    async def _output(self, branch_name, invoke=True, out=True):
+        branch = self.get_branch(branch_name)
+        content_ = as_dict(branch.messages.content.iloc[-1])
+        if invoke:
+            try:
+                tool_uses = content_
+                func_calls = lcall(
+                    [as_dict(i) for i in tool_uses["action_list"]], 
+                    branch.tool_manager.get_function_call
+                )
+                outs = await alcall(func_calls, branch.tool_manager.invoke)
+                for out, f in zip(outs, func_calls):
+                    branch.add_message(response={"function": f[0], "arguments": f[1], "output": out})
+            except:
+                pass
+        if out:
+            if len(content_.items()) == 1 and len(get_flattened_keys(content_)) == 1:
+                key = get_flattened_keys(content_)[0]
+                return content_[key]
+            
+            return content_
+
+    def _tool_parser(self, branch_name, tools: Union[Dict, Tool, List[Tool], str, List[str], List[Dict]], **kwargs) -> Dict:
+        branch = self.get_branch(branch_name)
+        def tool_check(tool):
+            if isinstance(tool, dict):
+                return tool
+            elif isinstance(tool, Tool):
+                return tool.schema_
+            elif isinstance(tool, str):
+                if branch.tool_manager.name_existed(tool):
+                    tool = branch.tool_manager.registry[tool]
+                    return tool.schema_
+                else:
+                    raise ValueError(f'Function {tool} is not registered.')
+
+        if isinstance(tools, bool):
+            tool_kwarg = {"tools": branch.tool_manager.to_tool_schema_list()}
+            kwargs = {**tool_kwarg, **kwargs}
+
+        else:
+            if not isinstance(tools, list):
+                tools = [tools]
+            tool_kwarg = {"tools": lcall(tools, tool_check)}
+            kwargs = {**tool_kwarg, **kwargs}
+
+        return kwargs
 
     async def chat(
         self,
         instruction: Union[Instruction, str],
         system: Optional[str] = None,
         context: Optional[Any] = None,
-        name: Optional[str] = None,
-        invoke: bool = True,
         out: bool = True,
+        sender: Optional[str] = None,
+        invoke: bool = True,
         tools: Union[bool, Tool, List[Tool], str, List[str]] = False,
-        branch: Union[str, Branch] = None,
+        branch_name = None,
         **kwargs,
-    ):
-        """
-        Initiates a new conversation or instruction in the current branch.
+    ) -> Any:
 
-        Args:
-            instruction: The instruction to initiate or its content.
-            system: Optional system information to update.
-            context: Optional context for the instruction.
-            name: Optional name of the entity sending the instruction.
-            invoke: Whether to invoke tools based on the response.
-            out: Whether to return the output.
-            tools: Tools to be used or a flag indicating whether to use all tools.
-            branch: Branch to run.
-            **kwargs: Additional keyword arguments for the AI service.
+        branch_name = branch_name or self.current_branch_name
+        branch = self.get_branch(branch_name)
+        if system:
+            branch.change_system_message(system)
+        branch.add_message(instruction=instruction, context=context, sender=sender)
 
-        Returns:
-            Any: The output of the initiation process, if requested.
+        if 'tool_parsed' in kwargs:
+            kwargs.pop('tool_parsed')
+            tool_kwarg = {'tools': tools}
+            kwargs = {**tool_kwarg, **kwargs}
+        else:
+            if branch.tool_manager.registry != {}:
+                if tools:
+                    kwargs = self._tool_parser(branch_name=branch_name, tools=tools, **kwargs)
+        config = {**self.llmconfig, **kwargs}
+        await self.call_chatcompletion(branch_name=branch_name, **config)
 
-        Raises:
-            ValueError: If the tools argument is not in the expected format.
-        """
-        branch = self.get_branch(branch=branch)
-        branch._handle_messages(instruction, system, context, name)
-        if tools:
-            kwargs = branch._get_tools_kwargs(tools, **kwargs)
-        config = {**self.llmconfig}
-        if kwargs is not None:
-            config = {**self.llmconfig, **kwargs}
-        await self._call_chatcompletion(branch, **config)
-        
-        return await self._output(branch, invoke, out)
+        return await self._output(branch_name=branch_name, invoke=invoke, out=out)
 
     async def auto_followup(
         self,
-        instruction: Union[Instruction, str]=None,
-        instruction_set: InstructionSet = None,
+        instruction: Union[Instruction, str],
         num: int = 3,
         tools: Union[bool, Tool, List[Tool], str, List[str], List[Dict]] = False,
-        branch: Union[str, Branch] = None,
-        **kwargs,
-    ):
-        if not any([instruction, instruction_set]):
-            raise ValueError('Either instruction or instruction_set must be provided.')
-        
-        if instruction_set:
-            await self._instruction_set_auto_followup(
-                instruction_set, num=num, branch=branch, **kwargs)
-        else: 
-            await self._instruction_auto_followup(
-                instruction, num=num, tools=tools, branch=branch, **kwargs)
-
-    # update a messages df 
-    def update_branches(self, messages_df, branch=None):
-        if not branch:
-            branch = [value for key, value in self.branches.items()]
-        branch = lcall(branch, self.get_branch)
-        lcall(branch, lambda x: x.merge_messages(messages_df))
-
-    async def _instruction_auto_followup(
-        self,
-        instruction: Union[Instruction, str]=None,
-        num: int = 3,
-        tools: Union[bool, Tool, List[Tool], str, List[str], List[Dict]] = False,
-        branch: Union[str, Branch] = None,
+        branch_name=None,
         **kwargs,
     ) -> None:
-        branch = self.get_branch(branch=branch)
+        branch = self.get_branch(branch_name)
         if branch.tool_manager.registry != {}:
             if tools:
-                kwargs = branch._tool_parser(tools=tools, **kwargs)
+                kwargs = self._tool_parser(branch_name=branch_name, tools=tools, **kwargs)
 
         cont_ = True
         while num > 0 and cont_ is True:
             if tools:
-                await self.chat(
-                    instruction, tool_choice="auto", tool_parsed=True, 
-                    branch=branch, **kwargs)
+                await self.chat(instruction, tool_choice="auto", tool_parsed=True, branch_name=branch_name, **kwargs)
             else:
-                await self.chat(
-                    instruction, tool_parsed=True, branch=branch, **kwargs)
+                await self.chat(instruction, tool_parsed=True, branch_name=branch_name, **kwargs)
             num -= 1
-            cont_ = True if branch._tool_invoked() else False
+            cont_ = True if branch._is_invoked() else False
         if num == 0:
-            await self.chat(
-                instruction, tool_parsed=True, branch=branch, **kwargs)
+            await self.chat(instruction, tool_parsed=True, branch_name=branch_name, **kwargs)
 
-    async def _instruction_set_auto_followup(
+    async def instruction_set_auto_followup(
         self,
         instruction_set: InstructionSet,
         num: Union[int, List[int]] = 3,
-        branch: Union[str, Branch] = None,
+        branch=None,
         **kwargs,
     ) -> None:
         """Automatically follows up an entire set of instructions.
@@ -189,13 +222,12 @@ class Session(BaseSession):
         Args:
             instruction_set: The set of instructions to follow up.
             num: The number of follow-ups to attempt for each instruction or a list of numbers for each instruction.
-            branch: Branch to run.
             **kwargs: Additional keyword arguments for the AI service.
 
         Raises:
             ValueError: If the number of follow-ups does not match the number of instructions.
         """
-        branch = self.get_branch(branch=branch)
+        branch = self.get_branch(branch)
         if isinstance(num, List):
             if len(num) != instruction_set.instruct_len:
                 raise ValueError('Unmatched auto_followup num size and instructions set size')
@@ -207,78 +239,61 @@ class Session(BaseSession):
             if tools:
                 await self.auto_followup(current_instruct_node, num=num_, tools=tools, branch=branch, **kwargs)
             else:
-                await self.followup(current_instruct_node, branch=branch, **kwargs)
+                await self.chat(current_instruct_node, branch_name=branch)
             current_instruct_node = instruction_set.get_next_instruction(current_instruct_node)
 
-    def get_branch(self, branch: Union[str, Branch] = None):
-        if not branch:
-            branch = self.current_branch
-        if isinstance(branch, str):
-            if branch in self.branches.keys():
-                branch = self.branches[branch]
-            else:
-                ValueError(f'branch{branch} does not exist')
-
-        return branch
-
-    def log_to_csv(
-        self, filename: str, file_exist_ok: bool = False, timestamp: bool = True,
-        time_prefix: bool = False, verbose: bool = True, clear: bool = True
-    ):
-        self.logger_.to_csv(
-            filename=filename, file_exist_ok=file_exist_ok, timestamp=timestamp, 
-            time_prefix=time_prefix, verbose=verbose, clear=clear)
-        
-    def log_to_jsonl(
-        self, filename: str, file_exist_ok: bool = False, timestamp: bool = True,
-        time_prefix: bool = False, verbose: bool = True, clear: bool = True
-    ):
-        self.logger_.to_jsonl(
-            filename=filename, file_exist_ok=file_exist_ok, timestamp=timestamp, 
-            time_prefix=time_prefix, verbose=verbose, clear=clear)
-
-    def messages_to_csv(self, branch = None, args=[], **kwargs):
-        # kwargs of pd.DataFrame to_csv
-        
-        if not branch: 
-            dfs = [branch.messages.copy() for key, branch in self.branches.items()]
-            dfs = pd.concat(dfs).drop_duplicates()
-            dfs.reset_index(drop=True, inplace=True)
-            dfs.to_csv(*args, **kwargs)
-            return
-        
-        branch = self.get_branch(branch)
-        branch.messages.to_csv(*args, **kwargs)
-
-    async def _output(self, branch: Union[str, Branch], invoke=True, out=True):
-        """Processes the latest response and optionally invokes tools and returns output.
+#### Branch Methods: effective to current active branch
+    def change_system_message(self, system: System) -> None:
+        """Changes the system message of the current active branch.
 
         Args:
-            invoke: Whether to invoke tools based on the latest response.
-            out: Whether to return the output.
+            system: The new system message.
+        """
+        self.current_branch.change_system_message(system)
+
+    def add_instruction_set(self, name: str, instruction_set: InstructionSet) -> None:
+        """Adds an instruction set to the current active branch.
+
+        Args:
+            name: The name of the instruction set.
+            instruction_set: The instruction set to add.
+        """
+        self.current_branch.add_instruction_set(name, instruction_set)
+
+    def remove_instruction_set(self, name: str) -> bool:
+        """Removes an instruction set from the current active branch.
+
+        Args:
+            name: The name of the instruction set to remove.
 
         Returns:
-            Any: The output of the latest response or tool invocation, if requested.
+            bool: True if the instruction set is removed, False otherwise.
         """
-        content_ = self.latest_response.content
-        if invoke:
-            try:
-                tool_uses = content_
-                func_calls = lcall(tool_uses["action_list"], branch.tool_manager.get_function_call)
-                outs = await alcall(func_calls, branch.tool_manager.invoke)
-                for out, f in zip(outs, func_calls):
-                    response = Response(
-                        response={"function": f[0], "arguments": f[1], "output": out}
-                    )
-                    branch.add_message(response)
-            except:
-                pass
-        if out:
-            if len(content_.items()) == 1 and len(get_flattened_keys(content_)) == 1:
-                key = get_flattened_keys(content_)[0]
-                return content_[key]
-            
-            return self.latest_response.content
+        return self.current_branch.remove_instruction_set(name)
 
-    # def new_cluster():
-    #     ...
+    def register_tools(self, tools: Union[Tool, List[Tool]]) -> None:
+        """Registers one or more tools to the current active branch.
+
+        Args:
+            tools: The tool or list of tools to register.
+        """
+        self.current_branch.register_tools(tools)
+
+    def delete_tool(self, name: str) -> bool:
+        """Deletes a tool from the current active branch.
+
+        Args:
+            name: The name of the tool to delete.
+
+        Returns:
+            bool: True if the tool is deleted, False otherwise.
+        """
+        return self.current_branch.delete_tool(name)
+
+    def describe(self) -> Dict[str, Any]:
+        """Generates a report of the current active branch.
+
+        Returns:
+            Dict[str, Any]: The report of the current active branch.
+        """
+        return self.current_branch.describe()
