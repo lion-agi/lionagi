@@ -1,33 +1,10 @@
-
-from pathlib import Path
 import json
-from typing import Any
-from dotenv import load_dotenv
-
-from lionagi.schema import DataLogger, Tool
-from lionagi.utils import lcall, alcall
-from lionagi.configs.oai_configs import oai_schema
-
-from typing import List, Any, Union, Dict, Optional, Tuple
-from lionagi.schema.base_node import BaseNode
-from datetime import datetime
-import json
-from typing import Any, Optional, Dict
-from lionagi.utils import strip_lower, as_dict, nget, to_readable_dict, lcall, CallDecorator, create_copy, get_flattened_keys
-
-import pandas as pd
-
-import json
-from typing import Any, Optional
-from lionagi.schema import BaseNode
-
-from copy import deepcopy
-from typing import Any, Dict, Union
 from datetime import datetime
 import pandas as pd
-from ..messages.messages import System, Message, Instruction, Response
-
+from typing import Any, Dict,Dict
+from lionagi.utils import as_dict
 from lionagi.tools.tool_manager import ToolManager
+from ..messages.messages import System
 from .conversation import Conversation
 
 
