@@ -74,12 +74,12 @@ class Branch(Conversation):
 
     def clone(self):
         cloned = Branch(
-            dir = create_copy(self._logger.dir),
-            messages=create_copy(self.messages), 
-            instruction_sets=create_copy(self.instruction_sets),
+            dir = self._logger.dir,
+            messages=self.messages.copy(), 
+            instruction_sets=self.instruction_sets.copy(),
             tool_manager=ToolManager()
         )
-        cloned.tool_manager.registry = create_copy(self.tool_manager.registry)
+        cloned.tool_manager.registry = self.tool_manager.registry.copy()
 
         return cloned
 

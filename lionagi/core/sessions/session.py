@@ -39,20 +39,16 @@ class Session:
         self.current_branch_name = 'main'
         self.current_branch = self.branches[self.current_branch_name]
 
-    def new_branch(self, name: str, from_: str, system=None, tools=None, sender=None, verbose=False) -> None:
+    def new_branch(self, name: str, system=None, tools=None, sender=None) -> None:
  
         if name in self.branches.keys():
             raise ValueError(f'Invalid new branch name {name}. Already existed.')
-        if from_ not in self.branches.keys():
-            raise ValueError(f'Invalid source branch name {from_}. Not exist.')
 
-        self.branches[name] = self.branches[from_].clone()
+        self.branches[name] = Branch()
         if system:
             self.branches[name].change_system_message(system, sender=sender)
         if tools:
             self.branches[name].register_tools(tools)
-        if verbose:
-            print(f'Branch {name} has been created from {from_}.')
 
     def switch_branch(self, branch: Union[str, Branch]) -> None:
         self.current_branch = self.get_branch(branch)
@@ -99,8 +95,7 @@ class Session:
             return self.current_branch
 
     async def call_chatcompletion(self, branch_name : Any = None, **kwargs):
-        branch = branch_name
-        branch = self.get_branch(branch)
+        branch = self.get_branch(branch_name)
 
         messages = branch.to_chatcompletion_message()
         payload, completion = await self.service.serve_chat(messages=messages, **kwargs)
@@ -119,11 +114,11 @@ class Session:
                 tool_uses = content_
                 func_calls = lcall(
                     [as_dict(i) for i in tool_uses["action_list"]], 
-                    self.current_branch.tool_manager.get_function_call
+                    branch.tool_manager.get_function_call
                 )
-                outs = await alcall(func_calls, self.current_branch.tool_manager.invoke)
+                outs = await alcall(func_calls, branch.tool_manager.invoke)
                 for out, f in zip(outs, func_calls):
-                    self.current_branch.add_message(response={"function": f[0], "arguments": f[1], "output": out})
+                    branch.add_message(response={"function": f[0], "arguments": f[1], "output": out})
             except:
                 pass
         if out:
@@ -133,22 +128,22 @@ class Session:
             
             return content_
 
-    def _tool_parser(self, tools: Union[Dict, Tool, List[Tool], str, List[str], List[Dict]], **kwargs) -> Dict:
-
+    def _tool_parser(self, branch_name, tools: Union[Dict, Tool, List[Tool], str, List[str], List[Dict]], **kwargs) -> Dict:
+        branch = self.get_branch(branch_name)
         def tool_check(tool):
             if isinstance(tool, dict):
                 return tool
             elif isinstance(tool, Tool):
                 return tool.schema_
             elif isinstance(tool, str):
-                if self.current_branch.tool_manager.name_existed(tool):
-                    tool = self.current_branch.tool_manager.registry[tool]
+                if branch.tool_manager.name_existed(tool):
+                    tool = branch.tool_manager.registry[tool]
                     return tool.schema_
                 else:
                     raise ValueError(f'Function {tool} is not registered.')
 
         if isinstance(tools, bool):
-            tool_kwarg = {"tools": self.current_branch.tool_manager.to_tool_schema_list()}
+            tool_kwarg = {"tools": branch.tool_manager.to_tool_schema_list()}
             kwargs = {**tool_kwarg, **kwargs}
 
         else:
@@ -185,7 +180,7 @@ class Session:
         else:
             if branch.tool_manager.registry != {}:
                 if tools:
-                    kwargs = self._tool_parser(tools=tools, **kwargs)
+                    kwargs = self._tool_parser(branch_name=branch_name, tools=tools, **kwargs)
         config = {**self.llmconfig, **kwargs}
         await self.call_chatcompletion(branch_name=branch_name, **config)
 
@@ -199,11 +194,10 @@ class Session:
         branch_name=None,
         **kwargs,
     ) -> None:
-        branch_name = branch_name or self.current_branch_name
         branch = self.get_branch(branch_name)
         if branch.tool_manager.registry != {}:
             if tools:
-                kwargs = self._tool_parser(tools=tools, **kwargs)
+                kwargs = self._tool_parser(branch_name=branch_name, tools=tools, **kwargs)
 
         cont_ = True
         while num > 0 and cont_ is True:
