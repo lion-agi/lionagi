@@ -5,6 +5,16 @@ import json
 
 
 class Message(BaseNode):
+    """
+    Represents a message in a chatbot-like system, inheriting from BaseNode.
+
+    This class is designed to encapsulate the properties and behaviors of a message,
+    including its role, sender, and content, within a chatbot framework.
+
+    Attributes:
+        role (Optional[str]): The role of the entity sending the message, e.g., 'user', 'system'.
+        sender (Optional[str]): The identifier of the sender of the message.
+    """
 
     role: Optional[str] = None
     sender: Optional[str] = None
@@ -22,6 +32,12 @@ class Message(BaseNode):
         return self.sender
     
     def _to_message(self):
+        """
+        Constructs and returns a dictionary representation of the message.
+
+        Returns:
+            dict: A dictionary representation of the message with 'role' and 'content' keys.
+        """
         out = {
             "role": self.role,
             "content": json.dumps(self.content) if isinstance(self.content, dict) else self.content
@@ -36,6 +52,12 @@ class Message(BaseNode):
         return f"Message(role={self.role}, sender={self.sender}, content='{content_preview}')"
 
 class Instruction(Message):
+    """
+    Represents an instruction message, a specialized subclass of Message.
+
+    This class is specifically used for creating messages that are instructions from the user,
+    including any associated context. It sets the message role to 'user'.
+    """
 
     def __init__(self, instruction: Any, context=None, sender: Optional[str] = None):
         super().__init__(
@@ -45,19 +67,29 @@ class Instruction(Message):
             self.content.update({"context": context})
             
 class System(Message):
-    
-        def __init__(self, system: Any, sender: Optional[str] = None):
-            super().__init__(
-                role="system", sender=sender or 'system', content={"system_info": system}
-            )
+    """
+    Represents a system-related message, a specialized subclass of Message.
+
+    Designed for messages containing system information, this class sets the message role to 'system'.
+    """
+    def __init__(self, system: Any, sender: Optional[str] = None):
+        super().__init__(
+            role="system", sender=sender or 'system', content={"system_info": system}
+        )
             
 class Response(Message):
+    """
+    Represents a response message, a specialized subclass of Message.
+
+    Used for various types of response messages including regular responses, action requests,
+    and action responses. It sets the message role to 'assistant'.
+
+    """
 
     def __init__(self, response: Any, sender: Optional[str] = None) -> None:
+        content_key = ''
         try:
-            content_key = ''
             response = response["message"]
-            content_=''
             if strip_lower(response['content']) == "none":
                 content_ = self._handle_action_request(response)
                 sender = sender or "action_request"
@@ -87,7 +119,18 @@ class Response(Message):
         
     @staticmethod
     def _handle_action_request(response):
+        """
+        Processes an action request response and extracts relevant information.
 
+        Args:
+            response (dict): The response dictionary containing tool calls and other information.
+
+        Returns:
+            list: A list of dictionaries, each representing a function call with action and arguments.
+
+        Raises:
+            ValueError: If the response does not conform to the expected format for action requests.
+        """
         try:
             tool_count = 0
             func_list = []

@@ -14,7 +14,20 @@ load_dotenv()
 OAIService = OpenAIService()
 
 class Session:
+    """
+    Represents a session with conversation branches, tool management, and logging.
 
+    This class encapsulates the management of different conversation branches, each with its own
+    messages, instruction sets, and tools. It also handles logging and interactions with an external service.
+
+    Attributes:
+        branches (Dict): A dictionary of conversation branches.
+        default_branch (Branch): The default branch for the session.
+        default_branch_name (str): The name of the default branch.
+        llmconfig (Dict[str, Any]): Configuration settings for the language model.
+        logger_ (DataLogger): Logger for session data.
+        service: Service used for handling chat completions and other operations.
+    """
     def __init__(
         self,
         system: Union[str, System],
@@ -25,6 +38,18 @@ class Session:
         default_branch=None,
         default_branch_name='main',
     ):
+        """
+        Initialize a Session object.
+
+        Args:
+            system (Union[str, System]): Initial system message or System object for the default branch.
+            dir (str, optional): Directory path for storing logs.
+            llmconfig (Dict[str, Any], optional): Configuration settings for the language model.
+            service (OAIService, optional): Service used for handling chat completions and other operations.
+            branches (optional): Pre-existing branches to initialize in the session.
+            default_branch (optional): Default branch for the session.
+            default_branch_name (str, optional): Name of the default branch, defaults to 'main'.
+        """
 
         self.branches = branches or {}
         self.default_branch = default_branch or Branch()
@@ -42,7 +67,18 @@ class Session:
         tools=None, 
         sender=None, 
     ) -> None:
-        
+        """
+        Create a new branch in the session.
+
+        Args:
+            branch_name (str): Name of the new branch.
+            system (Union[str, System], optional): Initial system message or System object for the new branch.
+            tools (optional): Tools to register with the new branch.
+            sender (optional): Sender of the initial system message.
+
+        Raises:
+            ValueError: If the branch name already exists in the session.
+        """
         new_ = Branch()
         
         if branch_name in self.branches.keys():
@@ -54,8 +90,21 @@ class Session:
             
         self.branches[branch_name] = new_
 
-
     def get_branch(self, branch: Union[Branch, str]=None, get_name=False):
+        """
+        Retrieve a branch from the session.
+
+        Args:
+            branch (Union[Branch, str], optional): The branch or its name to retrieve.
+                                                   Defaults to the default branch if not specified.
+            get_name (bool, optional): If True, returns the name of the branch along with the branch object.
+
+        Returns:
+            Union[Branch, Tuple[Branch, str]]: The branch object or a tuple of the branch object and its name.
+
+        Raises:
+            ValueError: If the branch does not exist in the session.
+        """
         if isinstance(branch, str):
             if branch not in self.branches.keys():
                 raise ValueError(f'Invalid branch name {branch}. Not exist.')
@@ -77,15 +126,31 @@ class Session:
         else:
             raise ValueError(f'Invalid branch input {branch}.')
 
-
     def change_default(self, branch: Union[str, Branch]) -> None:
+        """
+        Change the default branch of the session.
+
+        Args:
+            branch (Union[str, Branch]): The branch or its name to set as the new default.
+        """
         branch_, name_ = self.get_branch(branch, get_name=True)
         self.default_branch = branch_
         self.default_branch_name = name_
-        
 
     def delete_branch(self, branch: Union[Branch, str], verbose=True) -> bool:
+        """
+        Delete a branch from the session.
 
+        Args:
+            branch (Union[Branch, str]): The branch or its name to delete.
+            verbose (bool, optional): If True, prints a message upon successful deletion.
+
+        Returns:
+            bool: True if the branch was deleted, False otherwise.
+
+        Raises:
+            ValueError: If attempting to delete the current active default branch.
+        """
         branch, branch_name = self.get_branch(branch, get_name=True)
         if branch_name == self.default_branch_name:
             raise ValueError(f'{branch_name} is the current active branch, please switch to another branch before delete it.')
@@ -103,7 +168,18 @@ class Session:
         update: bool = True, 
         if_delete: bool = False
     ) -> None:
+        """
+        Merge one branch into another within the session.
 
+        Args:
+            from_ (Union[str, Branch]): The branch or its name to merge from.
+            to_ (Union[str, Branch]): The branch or its name to merge into.
+            update (bool, optional): If True, updates existing elements; keeps only new ones otherwise.
+            if_delete (bool, optional): If True, deletes the 'from' branch after merging.
+
+        Raises:
+            ValueError: If the branch does not exist in the session.
+        """
         from_ = self.get_branch(branch=from_)
         to_, to_name = self.get_branch(branch=to_)
         to_.merge(from_, update=update)
@@ -114,8 +190,16 @@ class Session:
                 self.default_branch = to_
             self.delete_branch(from_, verbose=False)
 
-
     async def call_chatcompletion(self, branch_: Branch = None, **kwargs):
+        """
+        Call the chat completion service for a given branch.
+
+        Args:
+            branch_ (Branch, optional): The branch to use for the chat completion call.
+            **kwargs: Additional keyword arguments to pass to the service.
+
+        This method interacts with the configured service to process chat completions and updates the branch.
+        """
         messages = branch_.to_chatcompletion_message()
         payload, completion = await self.service.serve_chat(messages=messages, **kwargs)
         if "choices" in completion:
@@ -126,6 +210,17 @@ class Session:
             self.service.status_tracker.num_tasks_failed += 1
 
     async def _output(self, branch_: Branch, invoke=True, out=True):
+        """
+        Process and return the output from the latest message in a branch.
+
+        Args:
+            branch_ (Branch): The branch to process.
+            invoke (bool, optional): If True, invokes any actionable responses.
+            out (bool, optional): If True, returns the content of the latest message.
+
+        Returns:
+            Any: The output content from the latest message in the branch.
+        """
         content_ = as_dict(branch_.messages.content.iloc[-1])
         if invoke:
             try:
@@ -147,6 +242,20 @@ class Session:
             return content_
 
     def _tool_parser(self, branch_: Branch, tools: Union[Dict, Tool, List[Tool], str, List[str], List[Dict]], **kwargs) -> Dict:
+        """
+        Parse tools for a given branch.
+
+        Args:
+            branch_ (Branch): The branch to parse tools for.
+            tools (Union[Dict, Tool, List[Tool], str, List[str], List[Dict]]): The tools to parse.
+            **kwargs: Additional keyword arguments.
+
+        Returns:
+            Dict: Parsed tools in a dictionary format.
+
+        Raises:
+            ValueError: If a specified tool is not registered in the branch's tool manager.
+        """
         def tool_check(tool):
             if isinstance(tool, dict):
                 return tool
@@ -183,7 +292,23 @@ class Session:
         branch = None,
         **kwargs,
     ) -> Any:
+        """
+        Conduct a chat session using the specified instruction and branch.
 
+        Args:
+            instruction (Union[Instruction, str]): The instruction for the chat session.
+            system (Optional[str], optional): System message to use for the session.
+            context (Optional[Any], optional): Contextual information for the session.
+            out (bool, optional): If True, outputs the response from the chat session.
+            sender (Optional[str], optional): The sender of the instruction.
+            invoke (bool, optional): If True, invokes any actionable responses.
+            tools (Union[bool, Tool, List[Tool], str, List[str]], optional): Tools to use in the session.
+            branch (optional): The branch to use for the session.
+            **kwargs: Additional keyword arguments for configuration.
+
+        Returns:
+            Any: The result of the chat session, typically the response content.
+        """
         branch = self.get_branch(branch=branch)
         if system:
             branch.change_system_message(system)
@@ -210,6 +335,19 @@ class Session:
         branch=None,
         **kwargs,
     ) -> None:
+        """
+        Automatically follow up on a chat session with additional instructions.
+
+        Args:
+            instruction (Union[Instruction, str]): The initial instruction for the follow-up.
+            num (int, optional): Number of follow-up iterations.
+            tools (Union[bool, Tool, List[Tool], str, List[str], List[Dict]], optional): Tools to use for the follow-ups.
+            branch (optional): The branch to use for the follow-ups.
+            **kwargs: Additional keyword arguments for configuration.
+
+        This method facilitates automatic follow-ups in a chat session based on the provided instruction.
+        """
+
         branch = self.get_branch(branch)
         if branch.tool_manager.registry != {}:
             if tools:
@@ -233,7 +371,8 @@ class Session:
         branch=None,
         **kwargs,
     ) -> None:
-        """Automatically follows up an entire set of instructions.
+        """
+        Automatically follows up an entire set of instructions.
 
         Args:
             instruction_set: The set of instructions to follow up.
@@ -258,7 +397,7 @@ class Session:
                 await self.chat(current_instruct_node, branch=branch)
             current_instruct_node = instruction_set.get_next_instruction(current_instruct_node)
 
-#### Branch Methods: effective to current active branch
+#### Branch Methods: effective to default branch
     def change_system_message(self, system: System) -> None:
         """Changes the system message of the current active branch.
 
