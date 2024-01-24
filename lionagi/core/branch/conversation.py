@@ -1,7 +1,7 @@
 import json
 import pandas as pd
 from datetime import datetime
-from typing import Any, Optional, Dict
+from typing import Any, Optional, Dict, Union
 from lionagi.schema import DataLogger
 from lionagi.utils import lcall
 from ..messages.messages import Message, System, Instruction, Response
@@ -10,47 +10,47 @@ from ..messages.messages import Message, System, Instruction, Response
 
 class Conversation:
     """
-        Represents a conversation with messages, tools, and instructions.
+    Represents a conversation with messages, tools, and instructions.
 
-        A `Conversation` is a container for messages exchanged in a conversation, as well as tools and instructions
-        for interacting with external services or tools.
+    A `Conversation` is a container for messages exchanged in a conversation, as well as tools and instructions
+    for interacting with external services or tools.
 
-        Attributes:
-            messages (pd.DataFrame): A DataFrame containing conversation messages.
-            _logger (DataLogger): An instance of DataLogger for logging.
+    Attributes:
+        messages (pd.DataFrame): A DataFrame containing conversation messages.
+        _logger (DataLogger): An instance of DataLogger for logging.
+    """
 
+    def __init__(self, dir: Optional[str] = None) -> None:
         """
-
-    def __init__(self, dir=None) -> None:
-        """
-        Initializes a Conversation object.
+        Initializes a Conversation object with an empty DataFrame for messages and a DataLogger.
 
         Args:
-            dir (str, optional): The directory path for storing logs.
+            dir (Optional[str]): The directory path for storing logs. Defaults to None.
 
+        Examples:
+            >>> conversation = Conversation(dir='logs/')
         """
         self.messages = pd.DataFrame(columns=["node_id", "role", "sender", "timestamp", "content"])
         self._logger = DataLogger(dir=dir)
 
     def _create_message(
-        self, 
-        system: Optional[Any] = None, 
-        instruction: Optional[Any] = None, 
-        context: Optional[Any] = None, 
-        response: Optional[Any] = None, 
+        self,
+        system: Optional[System] = None,
+        instruction: Optional[Instruction] = None,
+        context: Optional[Union[str, Dict[str, Any]]] = None,
+        response: Optional[Response] = None,
         sender: Optional[str] = None
-        ) -> Message:
+    ) -> Message:
         """
-        Creates a message object based on given input.
+        Creates a Message object based on the given parameters.
 
-        This method is designed to create a message object from the given parameters. It ensures that
-        exactly one of system, instruction, or response is provided to create a valid message.
+        Only one of `system`, `instruction`, or `response` can be provided to create a message.
 
         Args:
-            system (Optional[Any]): The system message content.
-            instruction (Optional[Any]): The instruction content.
-            context (Optional[Any]): The context associated with the instruction.
-            response (Optional[Any]): The response content.
+            system (Optional[System]): The system message content.
+            instruction (Optional[Instruction]): The instruction content.
+            context (Optional[Union[str, Dict[str, Any]]]): The context associated with the instruction.
+            response (Optional[Response]): The response content.
             sender (Optional[str]): The sender of the message.
 
         Returns:
@@ -58,6 +58,10 @@ class Conversation:
 
         Raises:
             ValueError: If more than one or none of the parameters (system, instruction, response) are provided.
+
+        Examples:
+            >>> conversation = Conversation()
+            >>> msg = conversation._create_message(system="System message", sender="system")
         """
         
         if sum(lcall([system, instruction, response], bool)) != 1:
@@ -80,21 +84,27 @@ class Conversation:
             elif system:
                 msg = System(system=system, sender=sender)
             return msg
-
+        
     def add_message(
-        self, system=None, instruction=None, 
-        context=None, response=None, sender=None):
+        self,
+        system: Optional[System] = None,
+        instruction: Optional[Instruction] = None,
+        context: Optional[Union[str, Dict[str, Any]]] = None,
+        response: Optional[Response] = None,
+        sender: Optional[str] = None
+    ) -> None:
         """
-        Adds a message to the conversation.
-
-        This method creates and adds a new message to the conversation's message DataFrame.
-
+        Creates and adds a new message to the conversation's messages DataFrame.
         Args:
-            system: Content for a system message.
-            instruction: Content for an instruction message.
-            context: Context for the instruction message.
-            response: Content for a response message.
-            sender: The sender of the message.
+            system (Optional[System]): Content for a system message.
+            instruction (Optional[Instruction]): Content for an instruction message.
+            context (Optional[Union[str, Dict[str, Any]]]): Context for the instruction message.
+            response (Optional[Response]): Content for a response message.
+            sender (Optional[str]): The sender of the message.
+
+        Examples:
+            >>> conversation = Conversation()
+            >>> conversation.add_message(instruction="What's the weather?", sender="user")
         """
         msg = self._create_message(
             system=system, instruction=instruction, 
@@ -107,23 +117,65 @@ class Conversation:
         self.messages.loc[len(self.messages)] = message_dict
     
     @property
-    def last_row(self):
+    def last_row(self) -> pd.Series:
+        """
+        Retrieves the last row from the messages DataFrame.
+
+        Returns:
+            pd.Series: A Series object representing the last message.
+        """
         return self.messages.iloc[-1]
     
     @property
-    def first_system(self):
+    def first_system(self) -> pd.Series:
+        """
+        Retrieves the first system message from the messages DataFrame.
+
+        Returns:
+            pd.Series: A Series object representing the first system message.
+        """
         return self.messages[self.messages.role == 'system'].iloc[0]
         
     @property
+    def last_response(self) -> pd.Series:
+        """
+        Retrieves the last response message from the messages DataFrame.
 
-    def last_response(self):
+        Returns:
+            pd.Series: A Series object representing the last response message.
+        """
         return self.get_last_row(role='assistant')
     
     @property
-    def last_instruction(self):
-        return self.get_last_row(role='user')
+    def last_instruction(self) -> pd.Series:
+        """
+        Retrieves the last instruction message from the messages DataFrame.
 
-    def get_last_n_row(self, sender=None, role=None, n=1):
+        Returns:
+            pd.Series: A Series object representing the last instruction message.
+        """
+        return self.get_last_row(role='user')
+    
+    def get_last_row(
+        self, 
+        sender: Optional[str] = None, 
+        role: Optional[str] = None, 
+        n: int = 1
+    ) -> Union[pd.DataFrame, pd.Series]:
+        """
+        Retrieves the last n rows from the messages DataFrame filtered by sender or role.
+
+        Args:
+            sender (Optional[str]): The sender filter for the messages.
+            role (Optional[str]): The role filter for the messages.
+            n (int): The number of rows to retrieve.
+
+        Returns:
+            Union[pd.DataFrame, pd.Series]: The last n messages as a DataFrame or a single message as a Series.
+
+        Raises:
+            ValueError: If both sender and role are provided or if none is provided.
+        """
 
         if sum(lcall([sender, role], bool)) != 1:
             raise ValueError("Error: can only get last row by one criteria.")
@@ -132,7 +184,14 @@ class Conversation:
         else:
             return self.messages[self.messages.role == role].iloc[-n:] if n > 1 else self.messages[self.messages.role == role].iloc[-1]
 
-    def get_messages_by(self, node_id=None, role=None, sender=None, timestamp=None ,content=None):
+    def get_messages_by(
+        self, 
+        node_id: Optional[str] = None, 
+        role: Optional[str] = None, 
+        sender: Optional[str] = None, 
+        timestamp: Optional[datetime] = None ,
+        content: Optional[str] = None
+    ) -> pd.DataFrame:
         """
         Retrieves messages filtered by a specific criterion.
 
@@ -162,7 +221,12 @@ class Conversation:
         elif content:
             return self.messages[self.messages["content"] == content]
 
-    def replace_keyword(self, keyword: str, replacement: str, case_sensitive: bool = False) -> None:
+    def replace_keyword(
+        self, 
+        keyword: str, 
+        replacement: str, 
+        case_sensitive: bool = False
+    ) -> None:
         """
         Replaces a keyword in the content of all messages with a replacement string.
 
@@ -180,7 +244,11 @@ class Conversation:
                 keyword, replacement
             )
 
-    def search_keyword(self, keyword: str, case_sensitive: bool = False) -> pd.DataFrame:
+    def search_keyword(
+        self, 
+        keyword: str, 
+        case_sensitive: bool = False
+    ) -> pd.DataFrame:
         """
         Searches for a keyword in the content of all messages and returns the messages containing it.
 
@@ -212,17 +280,28 @@ class Conversation:
         self.messages = self.messages[self.messages["node_id"] != message_id]
         return len(self.messages) < initial_length
 
-    def update_messages_content(self, message_id: str, col: str, value) -> bool:
+    def update_messages_content(
+        self, 
+        message_id: str, 
+        col: str, 
+        value: Any
+    ) -> bool:
         """
         Updates the content of a specific message in the conversation.
 
         Args:
             message_id (str): The ID of the message to be updated.
             col (str): The column of the message that needs to be updated.
-            value: The new value to be set for the specified column.
+            value (Any): The new value to be set for the specified column.
 
         Returns:
             bool: True if the update was successful, False otherwise.
+
+        Examples:
+            >>> conversation = Conversation()
+            >>> conversation.add_message(system="Initial message", sender="system")
+            >>> success = conversation.update_messages_content(
+            ...     message_id="1", col="content", value="Updated message")
         """
         index = self.messages.index[self.messages["id_"] == message_id].tolist()
         if index:
@@ -230,7 +309,7 @@ class Conversation:
             return True
         return False
 
-    def info(self, use_sender=False) -> Dict[str, int]:
+    def info(self, use_sender: bool = False) -> Dict[str, int]:
         """
         Provides a summary of the conversation messages.
 
@@ -251,7 +330,8 @@ class Conversation:
         Describes the conversation with various statistics and information.
 
         Returns:
-            Dict[str, Any]: A dictionary containing information such as total number of messages, summary by role, and individual messages.
+            Dict[str, Any]: A dictionary containing information such as total number of messages, summary by role,
+                            and individual messages.
         """
         return {
             "total_messages": len(self.messages),
@@ -302,8 +382,14 @@ class Conversation:
         cloned.messages = self.messages.copy()
         return cloned
 
+    def merge_conversation(self, other: 'Conversation', update: bool = False) -> None:
+        """
+        Merges another conversation into the current one.
 
-    def merge_conversation(self, other: 'Conversation', update=False) -> None:
+        Args:
+            other (Conversation): The other conversation to merge with the current one.
+            update (bool, optional): If True, updates the first system message before merging. Defaults to False.
+        """
         if update:
             self.first_system = other.first_system.copy()
         df = pd.concat([self.messages.copy(), other.messages.copy()], ignore_index=True)
@@ -370,8 +456,13 @@ class Conversation:
         self.reset()
         self.messages = pd.read_json(filepath, orient="records", lines=True)
 
-    def extend(self, messages: pd.DataFrame):
+    def extend(self, messages: pd.DataFrame) -> None:
+        """
+        Extends the current conversation messages with additional messages from a DataFrame.
+
+        Args:
+            messages (pd.DataFrame): The DataFrame containing messages to be added to the conversation.
+        """
         self.messages = pd.concat([self.messages, messages], ignore_index=True)
         self.messages.drop_duplicates(inplace=True)
         self.messages.reset_index(drop=True, inplace=True)
-

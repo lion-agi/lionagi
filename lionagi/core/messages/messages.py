@@ -1,30 +1,41 @@
-from typing import List, Any, Union, Dict, Optional, Tuple
+from typing import Any, Dict, Optional
 from lionagi.schema.base_node import BaseNode
-from lionagi.utils import strip_lower, as_dict, nget, to_readable_dict, lcall
+from lionagi.utils import strip_lower, nget
 import json
 
 
 class Message(BaseNode):
     """
     Represents a message in a chatbot-like system, inheriting from BaseNode.
-
-    This class is designed to encapsulate the properties and behaviors of a message,
-    including its role, sender, and content, within a chatbot framework.
-
+    
     Attributes:
         role (Optional[str]): The role of the entity sending the message, e.g., 'user', 'system'.
         sender (Optional[str]): The identifier of the sender of the message.
+        content (Any): The actual content of the message.
     """
+
 
     role: Optional[str] = None
     sender: Optional[str] = None
 
     @property
     def msg(self) -> Dict[str, Any]:
+        """
+        Constructs and returns a dictionary representation of the message.
+
+        Returns:
+            A dictionary representation of the message with 'role' and 'content' keys.
+        """
         return self._to_message()
         
     @property
     def msg_content(self) -> Any:
+        """
+        Gets the 'content' field of the message.
+
+        Returns:
+            The 'content' part of the message.
+        """
         return self.msg['content']
     
     @property
@@ -149,6 +160,6 @@ class Response(Message):
                 tool_count += 1
             return func_list
         except:
-            raise ValueError("Response message must be one of regular response or function calling")
-
-        
+            raise ValueError(
+                "Response message must be one of regular response or function calling"
+            )
