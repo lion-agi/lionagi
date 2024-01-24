@@ -5,7 +5,7 @@ from typing import Any, Optional, Dict, Union
 from lionagi.schema import DataLogger
 from lionagi.utils import lcall
 from ..messages.messages import Message, System, Instruction, Response
-
+from ..core_util import sign_message
 
 
 class Conversation:
@@ -144,7 +144,7 @@ class Conversation:
         Returns:
             pd.Series: A Series object representing the last response message.
         """
-        return self.get_last_row(role='assistant')
+        return self.get_last_rows(role='assistant')
     
     @property
     def last_instruction(self) -> pd.Series:
@@ -154,13 +154,14 @@ class Conversation:
         Returns:
             pd.Series: A Series object representing the last instruction message.
         """
-        return self.get_last_row(role='user')
+        return self.get_last_rows(role='user')
     
-    def get_last_row(
+    def get_last_rows(
         self, 
         sender: Optional[str] = None, 
         role: Optional[str] = None, 
-        n: int = 1
+        n: int = 1, 
+        sign_ = False
     ) -> Union[pd.DataFrame, pd.Series]:
         """
         Retrieves the last n rows from the messages DataFrame filtered by sender or role.
@@ -177,14 +178,18 @@ class Conversation:
             ValueError: If both sender and role are provided or if none is provided.
         """
 
+        outs  = ''
         if sum(lcall([sender, role], bool)) != 1:
             raise ValueError("Error: can only get last row by one criteria.")
         if sender:
-            return self.messages[self.messages.sender == sender].iloc[-n:] if n > 1 else self.messages[self.messages.sender == sender].iloc[-1]
+            outs = self.messages[self.messages.sender == sender].iloc[-n:] if n > 1 else self.messages[self.messages.sender == sender].iloc[-1]
         else:
-            return self.messages[self.messages.role == role].iloc[-n:] if n > 1 else self.messages[self.messages.role == role].iloc[-1]
+            outs = self.messages[self.messages.role == role].iloc[-n:] if n > 1 else self.messages[self.messages.role == role].iloc[-1]
 
-    def get_messages_by(
+        return sign_message(outs, sender) if sign_ else outs
+            
+
+    def filter_messages_by(
         self, 
         node_id: Optional[str] = None, 
         role: Optional[str] = None, 
@@ -382,7 +387,7 @@ class Conversation:
         cloned.messages = self.messages.copy()
         return cloned
 
-    def merge_conversation(self, other: 'Conversation', update: bool = False) -> None:
+    def merge_conversation(self, other: 'Conversation', update: bool = False,) -> None:
         """
         Merges another conversation into the current one.
 
@@ -393,7 +398,7 @@ class Conversation:
         if update:
             self.first_system = other.first_system.copy()
         df = pd.concat([self.messages.copy(), other.messages.copy()], ignore_index=True)
-        self.messages = df.drop_duplicates().reset_index(drop=True)
+        self.messages = df.drop_duplicates().reset_index(drop=True, inplace=True)
 
 
     def rollback(self, steps: int) -> None:
