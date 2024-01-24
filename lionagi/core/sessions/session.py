@@ -16,7 +16,20 @@ load_dotenv()
 OAIService = OpenAIService()
 
 class Session:
+    """
+    Represents a session with conversation branches, tool management, and logging.
 
+    This class encapsulates the management of different conversation branches, each with its own
+    messages, instruction sets, and tools. It also handles logging and interactions with an external service.
+
+    Attributes:
+        branches (Dict): A dictionary of conversation branches.
+        default_branch (Branch): The default branch for the session.
+        default_branch_name (str): The name of the default branch.
+        llmconfig (Dict[str, Any]): Configuration settings for the language model.
+        logger_ (DataLogger): Logger for session data.
+        service: Service used for handling chat completions and other operations.
+    """
     def __init__(
         self,
         system: Union[str, System],
@@ -27,6 +40,18 @@ class Session:
         default_branch=None,
         default_branch_name='main',
     ):
+        """
+        Initialize a Session object.
+
+        Args:
+            system (Union[str, System]): Initial system message or System object for the default branch.
+            dir (str, optional): Directory path for storing logs.
+            llmconfig (Dict[str, Any], optional): Configuration settings for the language model.
+            service (OAIService, optional): Service used for handling chat completions and other operations.
+            branches (optional): Pre-existing branches to initialize in the session.
+            default_branch (optional): Default branch for the session.
+            default_branch_name (str, optional): Name of the default branch, defaults to 'main'.
+        """
 
         self.branches = branches or {}
         self.default_branch = default_branch or Branch()
@@ -45,7 +70,18 @@ class Session:
         sender=None,
         service=None,
     ) -> None:
-        
+        """
+        Create a new branch in the session.
+
+        Args:
+            branch_name (str): Name of the new branch.
+            system (Union[str, System], optional): Initial system message or System object for the new branch.
+            tools (optional): Tools to register with the new branch.
+            sender (optional): Sender of the initial system message.
+
+        Raises:
+            ValueError: If the branch name already exists in the session.
+        """
         new_ = Branch()
         if branch_name in self.branches.keys():
             raise ValueError(f'Invalid new branch name {branch_name}. Already existed.')
@@ -57,6 +93,20 @@ class Session:
         self.branches[branch_name] = new_
 
     def get_branch(self, branch: Union[Branch, str]=None, get_name=False):
+        """
+        Retrieve a branch from the session.
+
+        Args:
+            branch (Union[Branch, str], optional): The branch or its name to retrieve.
+                                                   Defaults to the default branch if not specified.
+            get_name (bool, optional): If True, returns the name of the branch along with the branch object.
+
+        Returns:
+            Union[Branch, Tuple[Branch, str]]: The branch object or a tuple of the branch object and its name.
+
+        Raises:
+            ValueError: If the branch does not exist in the session.
+        """
         if isinstance(branch, str):
             if branch not in self.branches.keys():
                 raise ValueError(f'Invalid branch name {branch}. Not exist.')
@@ -79,12 +129,19 @@ class Session:
             raise ValueError(f'Invalid branch input {branch}.')
 
     def change_default(self, branch: Union[str, Branch]) -> None:
+        """
+        Change the default branch of the session.
+
+        Args:
+            branch (Union[str, Branch]): The branch or its name to set as the new default.
+        """
         branch_, name_ = self.get_branch(branch, get_name=True)
         self.default_branch = branch_
         self.default_branch_name = name_
 
     def delete_branch(self, branch: Union[Branch, str], verbose=True) -> bool:
         _, branch_name = self.get_branch(branch, get_name=True)
+
         if branch_name == self.default_branch_name:
             raise ValueError(
                 f'{branch_name} is the current active branch, please switch to another branch before delete it.'
@@ -102,7 +159,18 @@ class Session:
         update: bool = True, 
         del_: bool = False
     ) -> None:
+        """
+        Merge one branch into another within the session.
 
+        Args:
+            from_ (Union[str, Branch]): The branch or its name to merge from.
+            to_ (Union[str, Branch]): The branch or its name to merge into.
+            update (bool, optional): If True, updates existing elements; keeps only new ones otherwise.
+            if_delete (bool, optional): If True, deletes the 'from' branch after merging.
+
+        Raises:
+            ValueError: If the branch does not exist in the session.
+        """
         from_ = self.get_branch(branch=from_)
         to_, to_name = self.get_branch(branch=to_)
         to_.merge_conversation(from_, update=update)
@@ -130,7 +198,7 @@ class Session:
             _new_df.reset_index(drop=True, inplace=True)
             branch_.messages = _new_df
 
-        
+
     async def chat(
         self, 
         instruction: Union[Instruction, str],
@@ -141,6 +209,8 @@ class Session:
         sender: Optional[str] = None,
         invoke: bool = True,
         tools: Union[bool, Tool, List[Tool], str, List[str]] = False,
+      
+
         fallback = None,
         fallback_kwargs ={},
         **kwargs
@@ -162,6 +232,7 @@ class Session:
 
 
 
+
     async def auto_followup(
         self,
         instruction: Union[Instruction, str],
@@ -172,6 +243,8 @@ class Session:
         fallback_kwargs = {},
         **kwargs,
     ) -> None:
+      
+
         branch_ = self.get_branch(to_)
         if fallback:
             try:
@@ -184,9 +257,6 @@ class Session:
         return await branch_.auto_followup(
             instruction=instruction, num=num, tools=tools,**kwargs
         )
-
-
-
 
 
 
