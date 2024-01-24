@@ -1,6 +1,6 @@
 import json
 import asyncio
-from typing import Dict
+from typing import Dict, Union, List
 from lionagi.utils import lcall
 from lionagi.schema import BaseNode, Tool
 
@@ -80,6 +80,31 @@ class ToolManager(BaseNode):
         for tool in self.registry.values():
             schema_list.append(tool.schema_)
         return schema_list
+
+    def _tool_parser(self, tools: Union[Dict, Tool, List[Tool], str, List[str], List[Dict]], **kwargs) -> Dict:
+        def tool_check(tool):
+            if isinstance(tool, dict):
+                return tool
+            elif isinstance(tool, Tool):
+                return tool.schema_
+            elif isinstance(tool, str):
+                if self.name_existed(tool):
+                    tool = self.registry[tool]
+                    return tool.schema_
+                else:
+                    raise ValueError(f'Function {tool} is not registered.')
+
+        if isinstance(tools, bool):
+            tool_kwarg = {"tools": self.to_tool_schema_list()}
+            kwargs = {**tool_kwarg, **kwargs}
+
+        else:
+            if not isinstance(tools, list):
+                tools = [tools]
+            tool_kwarg = {"tools": lcall(tools, tool_check)}
+            kwargs = {**tool_kwarg, **kwargs}
+
+        return kwargs
 
 
 # import asyncio

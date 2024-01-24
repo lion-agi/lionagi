@@ -74,18 +74,30 @@ class Conversation:
             message_dict['content'] = json.dumps(message_dict['content'])
         message_dict['timestamp'] = datetime.now()
         self.messages.loc[len(self.messages)] = message_dict
-
-    @property
-    def last_content(self):
-        return self.messages.iloc[-1]['content']
     
-    def last_row(self, sender=None, role=None):
+    @property
+    def last_row(self):
+        return self.messages.iloc[-1]
+    
+    @property
+    def first_system(self):
+        return self.messages[self.messages.role == 'system'].iloc[0]
+        
+    @property
+    def last_response(self):
+        return self.get_last_row(role='assistant')
+    
+    @property
+    def last_instruction(self):
+        return self.get_last_row(role='user')
+
+    def get_last_n_row(self, sender=None, role=None, n=1):
         if sum(lcall([sender, role], bool)) != 1:
             raise ValueError("Error: can only get last row by one criteria.")
         if sender:
-            return self.messages[self.messages.sender == sender].iloc[-1]
+            return self.messages[self.messages.sender == sender].iloc[-n:] if n > 1 else self.messages[self.messages.sender == sender].iloc[-1]
         else:
-            return self.messages[self.messages.role == role].iloc[-1]
+            return self.messages[self.messages.role == role].iloc[-n:] if n > 1 else self.messages[self.messages.role == role].iloc[-1]
 
     def get_messages_by(self, node_id=None, role=None, sender=None, timestamp=None ,content=None):
         
@@ -138,6 +150,7 @@ class Conversation:
         result['total'] = len(self.messages)
         return result
 
+    @property
     def describe(self) -> Dict[str, Any]:
         return {
             "total_messages": len(self.messages),
@@ -148,33 +161,35 @@ class Conversation:
         }
 
     def history(
-        self, start_date: Optional[datetime] = None, end_date: Optional[datetime] = None
+        self, begin_: Optional[datetime] = None, end_: Optional[datetime] = None
     ) -> pd.DataFrame:
         
-        if isinstance(start_date, str):
-            start_date = datetime.strptime(start_date, '%Y-%m-%d')
-        if isinstance(end_date, str):
-            end_date = datetime.strptime(end_date, '%Y-%m-%d')
-        if start_date and end_date:
+        if isinstance(begin_, str):
+            begin_ = datetime.strptime(begin_, '%Y-%m-%d')
+        if isinstance(end_, str):
+            end_ = datetime.strptime(end_, '%Y-%m-%d')
+        if begin_ and end_:
             return self.messages[
-                (self.messages["timestamp"].dt.date >= start_date.date())
-                & (self.messages["timestamp"].dt.date <= end_date.date())
+                (self.messages["timestamp"].dt.date >= begin_.date())
+                & (self.messages["timestamp"].dt.date <= end_.date())
             ]
-        elif start_date:
-            return self.messages[(self.messages["timestamp"].dt.date >= start_date.date())]
-        elif end_date:
-            return self.messages[(self.messages["timestamp"].dt.date <= end_date.date())]
+        elif begin_:
+            return self.messages[(self.messages["timestamp"].dt.date >= begin_.date())]
+        elif end_:
+            return self.messages[(self.messages["timestamp"].dt.date <= end_.date())]
         return self.messages
 
     def clone(self) -> 'Conversation':
         cloned = Conversation()
         cloned._logger.set_dir(self._logger.dir)
-        cloned.messages = self.messages
         cloned.messages = self.messages.copy()
         return cloned
 
-    def merge(self, other: 'Conversation') -> None:
-        self.messages = self.messages.merge(other.messages, how='outer')
+    def merge_conversation(self, other: 'Conversation', update=False) -> None:
+        if update:
+            self.first_system = other.first_system.copy()
+        df = pd.concat([self.messages.copy(), other.messages.copy()], ignore_index=True)
+        self.messages = df.drop_duplicates().reset_index(drop=True)
 
     def rollback(self, steps: int) -> None:
         if steps < 0 or steps > len(self.messages):
@@ -197,4 +212,8 @@ class Conversation:
     def from_json(self, filepath: str) -> None:
         self.reset()
         self.messages = pd.read_json(filepath, orient="records", lines=True)
- 
+    
+    def extend(self, messages: pd.DataFrame):
+        self.messages = pd.concat([self.messages, messages], ignore_index=True)
+        self.messages.drop_duplicates(inplace=True)
+        self.messages.reset_index(drop=True, inplace=True)
