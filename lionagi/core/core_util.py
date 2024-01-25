@@ -10,7 +10,7 @@ def sign_message(messages, sender: str):
         if not df.loc[i, 'content'].startswith('Sender'):
             df.loc[i, 'content'] = f"Sender {sender}: {df.loc[i, 'content']}"
         else:
-            content = df.loc[i, 'content'].split(':', 1)
+            content = df.loc[i, 'content'].split(':', 1)[1]
             df.loc[i, 'content'] = f"Sender {sender}: {content}"
     return df
 
