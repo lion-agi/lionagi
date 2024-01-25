@@ -59,7 +59,7 @@ context = {"x": 10, "y": 5}
 import lionagi as li
 
 calculator = li.Session(system=system)
-result = await calculator.initiate(
+result = await calculator.chat(
   instruction=instruction, context=context, model="gpt-4-1106-preview"
 )
 
@@ -77,7 +77,7 @@ import lionagi as li
 
 async def main():
     calculator = li.Session(system=system)
-    result = await calculator.initiate(
+    result = await calculator.chat(
       instruction=instruction, context=context, model="gpt-4-1106-preview"
     )
     print(f"Calculation Result: {result}")
