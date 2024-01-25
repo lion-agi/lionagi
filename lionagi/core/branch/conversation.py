@@ -462,13 +462,21 @@ class Conversation:
         self.reset()
         self.messages = pd.read_json(filepath, orient="records", lines=True)
 
-    def extend(self, messages: pd.DataFrame) -> None:
+    def extend(self, messages: pd.DataFrame, **kwargs) -> None:
         """
         Extends the current conversation messages with additional messages from a DataFrame.
 
         Args:
             messages (pd.DataFrame): The DataFrame containing messages to be added to the conversation.
+            kwargs: for pd.df.drop_duplicates
         """
-        self.messages = pd.concat([self.messages, messages], ignore_index=True)
-        self.messages.drop_duplicates(inplace=True)
-        self.messages.reset_index(drop=True, inplace=True)
+        try:
+            if len(messages.dropna(how='all')) > 0 and len(self.messages.dropna(how='all')) > 0:
+                self.messages = pd.concat([self.messages, messages], ignore_index=True)
+                self.messages.drop_duplicates(
+                    inplace=True, subset=['node_id'], keep='first', **kwargs
+                )
+                self.messages.reset_index(drop=True, inplace=True)
+                return
+        except Exception as e:
+            raise ValueError(f"Error in extending messages: {e}")
