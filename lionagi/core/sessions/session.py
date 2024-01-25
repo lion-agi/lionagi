@@ -223,6 +223,7 @@ class Session:
             branch_ = self.get_branch(_to)
             _msg = branch_.messages.copy()
             _new_df = pd.concat([_msg, messages], ignore_index=True)
+            _new_df = _new_df.drop_duplicates()
             _new_df.reset_index(drop=True, inplace=True)
             branch_.messages = _new_df
 
@@ -314,7 +315,6 @@ class Session:
             instruction=instruction, num=num, tools=tools,**kwargs
         )
 
-
     def change_system(self, system: Union[System, str]) -> None:
         """
         Change the system message of the current default branch.
@@ -367,6 +367,7 @@ class Session:
         """
         return self.default_branch.delete_tool(name)
 
+    @property
     def describe(self) -> Dict[str, Any]:
         """
         Generates a report of the current active branch.

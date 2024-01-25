@@ -6,6 +6,7 @@ def sign_message(messages, sender: str):
     if sender is None or strip_lower(sender) == 'none':
         raise ValueError("sender cannot be None")
     df = messages.copy()
+
     for i in df.index:
         if not df.loc[i, 'content'].startswith('Sender'):
             df.loc[i, 'content'] = f"Sender {sender}: {df.loc[i, 'content']}"
@@ -30,3 +31,4 @@ def validate_messages(messages):
         except:
             raise ValueError('Invalid messages dataframe. Content expect json string.')
     return True
+
