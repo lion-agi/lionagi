@@ -251,6 +251,7 @@ class Branch(Conversation):
             ],
         }
 
+# TODO: remove key when sending messages 
     def to_chatcompletion_message(self) -> List[Dict[str, Any]]:
         """
         Convert the conversation into a chat completion message format suitable for the OpenAI API.
@@ -263,7 +264,14 @@ class Branch(Conversation):
         """
         message = []
         for _, row in self.messages.iterrows():
-            out = {"role": row['role'], "content": json.dumps(as_dict(row['content']))}
+            content_ = row['content']
+            if isinstance(content_, str) and not content_.startswith('Sender'):
+                try:
+                    content_ = json.dumps(as_dict(row['content']))
+                except Exception as e:
+                    raise ValueError(f"Error in serealizing, {row['node_id']} {content_}: {e}")
+                
+            out = {"role": row['role'], "content": content_}
             message.append(out)
         return message
 
@@ -431,9 +439,9 @@ class Branch(Conversation):
         cont_ = True
         while num > 0 and cont_ is True:
             if tools:
-                await self.chat(instruction, tool_choice="auto", tool_parsed=True, **kwargs)
+                await self.chat(instruction, tool_choice="auto", tool_parsed=True, out=False, **kwargs)
             else:
-                await self.chat(instruction, tool_parsed=True, **kwargs)
+                await self.chat(instruction, tool_parsed=True,  out=False, **kwargs)
             num -= 1
             cont_ = True if self._is_invoked() else False
         if num == 0:
@@ -443,7 +451,6 @@ class Branch(Conversation):
                 else:
                     return fallback(**fallback_kwargs)
             return await self.chat(instruction, tool_parsed=True, **kwargs)
-        
         
     async def instruction_set_auto_followup(
         self,

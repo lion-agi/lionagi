@@ -87,7 +87,7 @@ class Session:
         if branch_name in self.branches.keys():
             raise ValueError(f'Invalid new branch name {branch_name}. Already existed.')
         if system:
-            new_.change_system_message(system, sender=sender)
+            new_.add_message(system, sender=sender)
         if tools:
             new_.register_tools(tools)    
         new_.service = service or self.service
@@ -216,6 +216,7 @@ class Session:
             sender (Optional[str], optional): The sender's name.
         """
         if sign_: 
+            messages = messages.drop(columns=['sender'], errors='ignore')
             messages = sign_message(messages=messages, sender=sender)
         
         for _to in to_list(to_):

@@ -3,7 +3,7 @@ import pandas as pd
 from datetime import datetime
 from typing import Any, Optional, Dict, Union
 from lionagi.schema import DataLogger
-from lionagi.utils import lcall
+from lionagi.utils import lcall, as_dict
 from ..messages.messages import Message, System, Instruction, Response
 from ..core_util import sign_message
 
@@ -111,7 +111,7 @@ class Conversation:
             context=context, response=response, sender=sender
         )
         message_dict = msg.to_dict()
-        if isinstance(message_dict['content'], dict):
+        if isinstance(as_dict(message_dict['content']), dict):
             message_dict['content'] = json.dumps(message_dict['content'])
         message_dict['timestamp'] = datetime.now()
         self.messages.loc[len(self.messages)] = message_dict
@@ -178,13 +178,14 @@ class Conversation:
             ValueError: If both sender and role are provided or if none is provided.
         """
 
-        outs  = ''
-        if sum(lcall([sender, role], bool)) != 1:
-            raise ValueError("Error: can only get last row by one criteria.")
-        if sender:
-            outs = self.messages[self.messages.sender == sender].iloc[-n:] if n > 1 else self.messages[self.messages.sender == sender].iloc[-1]
+        if sender is None and role is None:
+            outs = self.messages.iloc[-n:]
+        elif sender and role:
+            outs = self.messages[(self.messages['sender'] == sender) & (self.messages['role'] == role)].iloc[-n:]
+        elif sender:
+            outs = self.messages[self.messages['sender'] == sender].iloc[-n:]
         else:
-            outs = self.messages[self.messages.role == role].iloc[-n:] if n > 1 else self.messages[self.messages.role == role].iloc[-1]
+            outs = self.messages[self.messages['role'] == role].iloc[-n:]
 
         return sign_message(outs, sender) if sign_ else outs
             
