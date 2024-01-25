@@ -283,6 +283,7 @@ class BaseService:
             'interval': interval
         }
 
+
     async def init_endpoint(self, endpoint_: Optional[Union[List[str], List[EndPoint], str, EndPoint]] = None) -> None:
         """
         Initializes the specified endpoint or all endpoints if none is specified.
@@ -411,4 +412,3 @@ class PayloadCreation:
             optional_=schema['optional'],
             input_key="training_file", 
             **kwargs)
-        

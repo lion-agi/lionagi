@@ -22,7 +22,7 @@ def get_timestamp() -> str:
     """
     return datetime.now().isoformat().replace(":", "_").replace(".", "_")
 
-def create_copy(input: Any, n: int) -> Any:
+def create_copy(input: Any, n: int = 1) -> Any:
     """
     Creates a deep copy of the input object a specified number of times.
 
