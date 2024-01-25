@@ -112,6 +112,14 @@ class Response(Message):
                         content_ = json.loads(response['content'])['tool_uses']
                         content_key = content_key or "action_list"
                         sender = sender or "action_request"
+                    elif 'response' in json.loads(response['content']):
+                        sender = sender or "assistant"
+                        content_key = content_key or "response"
+                        content_ = json.loads(response['content'])['response']
+                    elif 'action_list' in json.loads(response['content']):
+                        sender = sender or "action_request"
+                        content_key = content_key or "action_list"
+                        content_ = json.loads(response['content'])['action_list']
                     else:
                         content_ = response['content']
                         content_key = content_key or "response"
