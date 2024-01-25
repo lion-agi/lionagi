@@ -5,7 +5,7 @@ from typing import Any, Optional, Dict, Union
 from lionagi.schema import DataLogger
 from lionagi.utils import lcall, as_dict
 from ..messages.messages import Message, System, Instruction, Response
-from ..core_util import sign_message
+from ..core_util import sign_message, validate_messages
 
 
 class Conversation:
@@ -191,12 +191,13 @@ class Conversation:
             
 
     def filter_messages_by(
-        self, 
-        node_id: Optional[str] = None, 
+        self,
         role: Optional[str] = None, 
-        sender: Optional[str] = None, 
-        timestamp: Optional[datetime] = None ,
-        content: Optional[str] = None
+        sender: Optional[str] = None,
+        start_time: Optional[datetime] = None,
+        end_time: Optional[datetime] = None,
+        content_keywords: Union[Optional[str], Optional[list]] = None,
+        case_sensitive: bool = False
     ) -> pd.DataFrame:
         """
         Retrieves messages filtered by a specific criterion.
@@ -214,18 +215,12 @@ class Conversation:
         Raises:
             ValueError: If more than one or none of the filtering criteria are provided.
         """
-        if sum(lcall([node_id, role, sender, timestamp, content], bool)) != 1:
-            raise ValueError("Error: can only get DataFrame by one criteria.")
-        if node_id:
-            return self.messages[self.messages["node_id"] == node_id]
-        elif role:
-            return self.messages[self.messages["role"] == role]
-        elif sender:
-            return self.messages[self.messages["sender"] == sender]
-        elif timestamp:
-            return self.messages[self.messages["timestamp"] == timestamp]
-        elif content:
-            return self.messages[self.messages["content"] == content]
+        outs = self.search_keywords(content_keywords, case_sensitive)
+        outs = outs[outs['role'] == role] if role else outs
+        outs = outs[outs['sender'] == sender] if sender else outs
+        outs = outs[outs['timestamp'] > start_time] if start_time else outs
+        outs = outs[outs['timestamp'] < end_time] if end_time else outs
+        return outs
 
     def replace_keyword(
         self, 
@@ -250,9 +245,9 @@ class Conversation:
                 keyword, replacement
             )
 
-    def search_keyword(
+    def search_keywords(
         self, 
-        keyword: str, 
+        keywords: Union[str, list],
         case_sensitive: bool = False
     ) -> pd.DataFrame:
         """
@@ -265,12 +260,13 @@ class Conversation:
         Returns:
             pd.DataFrame: A DataFrame containing messages with the specified keyword.
         """
+        if isinstance(keywords, list):
+            keywords = '|'.join(keywords)
         if not case_sensitive:
-            keyword = keyword.lower()
             return self.messages[
-                self.messages["content"].str.lower().str.contains(keyword)
+                self.messages["content"].str.contains(keywords, case=False)
             ]
-        return self.messages[self.messages["content"].str.contains(keyword)]
+        return self.messages[self.messages["content"].str.contains(keywords)]
 
     def remove_from_messages(self, message_id: str) -> bool:
         """
@@ -469,6 +465,7 @@ class Conversation:
         Args:
             messages (pd.DataFrame): The DataFrame containing messages to be added to the conversation.
         """
+        validate_messages(messages)
         self.messages = pd.concat([self.messages, messages], ignore_index=True)
         self.messages.drop_duplicates(inplace=True)
         self.messages.reset_index(drop=True, inplace=True)

@@ -210,15 +210,17 @@ class Branch(Conversation):
                 otherwise only add non-existing ones.
 
         """
-        branch_copy = branch.clone()
-        self.merge_conversation(branch_copy, update=update)
-
+        message_copy = branch.messages.copy()
+        branch_system = message_copy.loc[0]
+        message_copy.drop(0, inplace=True)
+        self.messages = self.messages.merge(message_copy, how='outer')
 
         if update:
             self.instruction_sets.update(branch.instruction_sets)
             self.tool_manager.registry.update(
                 branch.tool_manager.registry
             )
+            self.messages.loc[0] = branch_system
         else:
             for key, value in branch.instruction_sets.items():
                 if key not in self.instruction_sets:
@@ -251,7 +253,6 @@ class Branch(Conversation):
             ],
         }
 
-# TODO: remove key when sending messages 
     def to_chatcompletion_message(self) -> List[Dict[str, Any]]:
         """
         Convert the conversation into a chat completion message format suitable for the OpenAI API.
@@ -265,9 +266,11 @@ class Branch(Conversation):
         message = []
         for _, row in self.messages.iterrows():
             content_ = row['content']
-            if isinstance(content_, str) and not content_.startswith('Sender'):
+            if content_.startswith('Sender'):
+                content_ = content_.split(':', 1)[1]
+            if isinstance(content_, str):
                 try:
-                    content_ = json.dumps(as_dict(row['content']))
+                    content_ = json.dumps(as_dict(content_))
                 except Exception as e:
                     raise ValueError(f"Error in serealizing, {row['node_id']} {content_}: {e}")
                 
