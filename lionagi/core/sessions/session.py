@@ -1,4 +1,4 @@
-import pandas as pd
+# import pandas as pd
 from typing import Any, List, Union, Dict, Optional, Callable, Tuple
 from dotenv import load_dotenv
 
@@ -199,33 +199,33 @@ class Session:
                 self.default_branch = to_
             self.delete_branch(from_, verbose=False)
 
-    def send(
-        self, 
-        messages: pd.DataFrame, 
-        to_: Optional[Union[Branch, str, List[str]]] = None, 
-        sign_: bool = False, 
-        sender: Optional[str] = None,
-    ) -> None:
-        """
-        Send messages to one or more branches.
+    # def send(
+    #     self, 
+    #     messages: pd.DataFrame, 
+    #     to_: Optional[Union[Branch, str, List[str]]] = None, 
+    #     sign_: bool = False, 
+    #     sender: Optional[str] = None,
+    # ) -> None:
+    #     """
+    #     Send messages to one or more branches.
 
-        Args:
-            messages (pd.DataFrame): The DataFrame containing messages to send.
-            to_ (Optional[Union[Branch, str, List[str]]], optional): The target branch, branch name, or list of branch names.
-            sign_ (bool, optional): If True, signs the message with the sender's name.
-            sender (Optional[str], optional): The sender's name.
-        """
-        if sign_: 
-            messages = messages.drop(columns=['sender'], errors='ignore')
-            messages = sign_message(messages=messages, sender=sender)
+    #     Args:
+    #         messages (pd.DataFrame): The DataFrame containing messages to send.
+    #         to_ (Optional[Union[Branch, str, List[str]]], optional): The target branch, branch name, or list of branch names.
+    #         sign_ (bool, optional): If True, signs the message with the sender's name.
+    #         sender (Optional[str], optional): The sender's name.
+    #     """
+    #     if sign_: 
+    #         messages = messages.drop(columns=['sender'], errors='ignore')
+    #         messages = sign_message(messages=messages, sender=sender)
         
-        for _to in to_list(to_):
-            branch_ = self.get_branch(_to)
-            _msg = branch_.messages.copy()
-            _new_df = pd.concat([_msg, messages], ignore_index=True)
-            _new_df = _new_df.drop_duplicates()
-            _new_df.reset_index(drop=True, inplace=True)
-            branch_.messages = _new_df
+    #     for _to in to_list(to_):
+    #         branch_ = self.get_branch(_to)
+    #         _msg = branch_.messages.copy()
+    #         _new_df = pd.concat([_msg, messages], ignore_index=True)
+    #         _new_df = _new_df.drop_duplicates()
+    #         _new_df.reset_index(drop=True, inplace=True)
+    #         branch_.messages = _new_df
 
 
     async def chat(

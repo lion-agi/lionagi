@@ -215,7 +215,11 @@ class Conversation:
         Raises:
             ValueError: If more than one or none of the filtering criteria are provided.
         """
-        outs = self.search_keywords(content_keywords, case_sensitive)
+        outs = self.messages.copy()
+        
+        if content_keywords:
+            outs = self.search_keywords(content_keywords, case_sensitive)
+        
         outs = outs[outs['role'] == role] if role else outs
         outs = outs[outs['sender'] == sender] if sender else outs
         outs = outs[outs['timestamp'] > start_time] if start_time else outs
