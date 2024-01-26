@@ -49,12 +49,7 @@ if you wish to change the default behavior of a session
 
 .. code-block:: python
 
-   session.set_llmconfig(llmconfig_)
-   # or
    session.llmconfig.update(llmconfig_)
-
-
-
 
 ``service``
 -----------
@@ -77,7 +72,7 @@ You may modify rate limits to fit different cases. For example:
 
    For more information about rate limits, please check the `OpenAI usage limit documentation <https://platform.openai.com/docs/guides/rate-limits?context=tier-free)>`_
 
-If you have more than one API key, please add them to the `.env` file. To use an API key other than the default
+If you have more than one API key, please add them to the ``.env`` file. To use an API key other than the default
 OPENAI_API_KEY, ensure it is appropriately specified in the configuration.
 
 .. code-block:: python

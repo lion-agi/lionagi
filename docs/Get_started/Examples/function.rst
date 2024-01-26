@@ -14,8 +14,7 @@ Here is an example of a function description formatted in the OpenAI schema.
 
 .. code-block:: python
 
-   tools = [
-        {
+   tool_schema = {
             "type": "function",
             "function": {
                 "name": "multiply",
@@ -37,7 +36,6 @@ Here is an example of a function description formatted in the OpenAI schema.
                 },
             }
         }
-   ]
 
    # register both the function description and actual implementation
    def multiply(number1, number2):
@@ -63,10 +61,16 @@ Let's define the necessary message information we need to pass in for our exampl
    json_format = {"number1": "x", "number2": "y"}
    instruct1 = {"Task": task, "json_format": json_format}
 
-   question = "There are [basketball, football, backpack, water bottle, strawberry, tennis ball, \
+   question1 = "There are [basketball, football, backpack, water bottle, strawberry, tennis ball, \
                rockets]. each comes in four different colors, \
                what is the number of unique kinds of ball?"
-   context1 = {"Question": question}
+   question2 = "There are three fruits in total, each with 2 different colors, how many unique \
+               kinds of fruits are there?"
+
+   context1 = {"Question1": question1, "question2": question2}
+
+   # created a tool object
+   tools = li.Tool(func=multiply, schema_=tool_schema)
 
 With all the necessary information in place, we are now ready to construct the session.
 
@@ -76,41 +80,40 @@ Additionally, we need to adjust the llmconfig to accommodate any additional sett
 .. code-block:: python
 
    session = li.Session(system=system)
-
-   # created a tool object
-   tool = li.Tool(func=multiply, schema_=tools[0])
-
-   session.register_tools(tool)
-   session.llmconfig.update({
-        "temperature":0.35,
-        "tool_choice": "auto",
-        "response_format": {'type':'json_object'}
-   })
+   session.register_tools(tools)
 
 .. code-block:: python
 
-   await session.initiate(instruction=instruct1, context=context1)
+   # by_default, tools are not used, you need to specify
+   # tools = True, allows all tools to be available to use
+   await session.chat(instruction=instruct1,
+                      context=context1,
+                      tools=True,
+                      response_format={'type':"json_object"})
 
 Let’s check the message records in this session:
 
 .. code-block:: python
 
-   li.lcall(session.conversation.messages, lambda x: print(str(x) + '\n'))
+   li.lcall(session.messages.content, lambda x: print(x))
 
 .. code-block:: markdown
 
-   {'role': 'system', 'content': 'you are asked to perform as a function picker and
-     parameter provider'}
+   {"system_info": "you are asked to perform as a function picker and parameter provider"}
 
-   {'role': 'user', 'content': '{"instruction": {"Task": "Think step by step, understand the
-    following basic math question and provide two numbers as parameters for function calling.",
-    "json_format": {"number1": "x", "number2": "y"}}, "context": {"Question": "There are
-    [basketball, football, backpack, water bottle, strawberry, tennis ball, rockets]. each comes
-    in four different colors, what is the number of unique kinds of ball?"}}'}
+   {"instruction": {"Task": "Think step by step, understand the following basic math
+    question and provide parameters for function calling.", "json_format": {"number1": "x",
+    "number2": "y"}}, "context": {"Question1": "There are [basketball, football, backpack,
+    water bottle, strawberry, tennis ball, rockets]. each comes in four different colors,
+    what is the number of unique kinds of ball?", "question2": "There are three fruits in
+    total, each with 2 different colors, how many unique kinds of fruits are there?"}}
 
-   {'role': 'assistant', 'content': '\n{\n  "tool_uses": [\n    {\n      "recipient_name":
-    "functions.multiply",\n      "parameters": {\n        "number1": 3,  "number2": 4\n
-     }\n    }\n  ]\n}'}
+   {"action_list": [{"recipient_name": "functions.multiply", "parameters": {"number1": 3,
+   "number2": 4}}, {"recipient_name": "functions.multiply", "parameters": {"number1": 3,
+   "number2": 2}}]}
 
-   {'role': 'assistant', 'content': '{"function": "multiply", "arguments": {"number1": 3,
-    "number2": 4}, "output": 12}'}
+   {"action_response": {"function": "multiply", "arguments": {"number1": 3, "number2": 4},
+   "output": 12}}
+
+   {"action_response": {"function": "multiply", "arguments": {"number1": 3, "number2": 2},
+   "output": 6}}

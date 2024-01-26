@@ -21,8 +21,8 @@ In the first step, we create a session with the comedian and generate some jokes
 
    comedian = li.Session(sys_comedian)
 
-   joke1 = await comedian.initiate(instruct1)
-   joke2 = await comedian.followup(instruct2)
+   joke1 = await comedian.chat(instruct1)
+   joke2 = await comedian.chat(instruct2)
 
 Here are the two jokes we get:
 
@@ -54,8 +54,8 @@ Now, let's construct a commentator to critique these two jokes.
    critic = li.Session(sys_critic)
 
    # you only need to provide same context once in a conversation
-   comment1 = await critic.initiate(instruct3, context=context)
-   comment2 = await critic.followup(instruct4)
+   comment1 = await critic.chat(instruct3, context=context)
+   comment2 = await critic.chat(instruct4)
 
 We have received two comments:
 
@@ -88,12 +88,13 @@ Let's take a look at the comedian's responses.
    instruct7 = "write joke2 again"
 
    # provide context for the comedian
-   context2 = {"comments": critic.conversation.responses}
+   context2 = {"comments": [i.content for _, i in
+   critic.default_branch.filter_messages_by(sender='assistant').iterrows()]}
 
    # run the instructions
-   reflect = await comedian.followup(instruct5, context=context2)
-   joke11 = await comedian.followup(instruct6)
-   joke22 = await comedian.followup(instruct7)
+   reflect = await comedian.chat(instruct5, context=context2)
+   joke11 = await comedian.chat(instruct6)
+   joke22 = await comedian.chat(instruct7)
 
 Reflection:
 
@@ -131,32 +132,9 @@ Revised Joke 2:
    The blue whale looked at the shark in bewilderment and blurted out, "This is fin-tastic,
    but if we keep this up, we're going to need a bigger sea-quarium!"
 
-If you want to save these messages or llm api logs, do not forget:
+If you want to save these messages, do not forget:
 
 .. code-block:: python
 
-   comedian.messages_to_csv(dir=<target_output_directory>)
-   comedian.log_to_csv(dir=<target_output_directory>)
-
-   critic.messages_to_csv(dir=<target_output_directory>)
-   critic.log_to_csv(dir=<target_output_directory>)
-
-Instead of defining the directory the last step, you can also set it when initializing the sessions. For example,
-
-.. code-block:: python
-
-   comedian = li.Session(sys_comedian, dir="data/logs/comedian/")
-
-   critic = li.Session(sys_critic, dir="data/logs/critic/")
-
-Next time, if you wish to retrieve these saved data, you can use:
-
-.. code-block:: python
-
-   li.dir_to_files(<directory>, <file_extension>)
-
-For example:
-
-.. code-block:: python
-
-   files = li.dir_to_files("data/logs", ".csv")
+   comedian.messages.to_csv('comedian.csv')
+   critic.messages.to_csv('critic.csv')
