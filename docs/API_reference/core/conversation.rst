@@ -1,5 +1,5 @@
 Conversation
 =============
 
-.. automodule:: lionagi.core.conversation
+.. automodule:: lionagi.core.branch.conversation
    :members:

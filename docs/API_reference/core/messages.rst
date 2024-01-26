@@ -1,5 +1,5 @@
 Messages
 ========
 
-.. automodule:: lionagi.core.messages
+.. automodule:: lionagi.core.messages.messages
    :members:

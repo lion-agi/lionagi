@@ -1,5 +1,5 @@
 Sessions
 =======
 
-.. automodule:: lionagi.core.sessions
+.. automodule:: lionagi.core.sessions.session
    :members:
