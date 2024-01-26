@@ -1,7 +1,7 @@
 API Calls Configurations
 ===============================
 
-You The ``Session`` object can be fully customized, including models, model parameters and rate limits, to accustom various usecases.
+The ``Session`` object can be fully customized, including models, model parameters and rate limits, to accustom various usecases.
 
 .. warning::
 
@@ -12,7 +12,7 @@ You The ``Session`` object can be fully customized, including models, model para
 Most usefully you can customize:
 
 - ``llmconfig``: the default model parameters for every API call in the session
-- ``api_service``:  rate limit api_service
+- ``service``:  rate limit LLM services
 
 ``llmconfig``
 -----------------
@@ -56,10 +56,10 @@ if you wish to change the default behavior of a session
 
 
 
-``api_service``
+``service``
 -----------
 
-``api_service`` provides a foundation for seamless integration and utilization of the API service. By default, the
+``service`` provides a foundation for seamless integration and utilization of the LLM service. By default, the
 service is set to be OpenAI api service and the rate limits are set to be **tier 1** of OpenAI model ``gpt-4-1104-preview``.
 
 
@@ -67,11 +67,10 @@ You may modify rate limits to fit different cases. For example:
 
 .. code-block:: python
 
-   from lionagi.services import OpenAIService
 
    system = 'you are a helpful assistant'
 
-   service = OpenAIService(max_requests_per_minute=10, max_tokens_per_minute=10_000)
+   service = li.Services.OpenAI(max_requests=10, max_tokens=10_000， interval=60)
    session = li.Session(system, service=service)
 
 .. note::
@@ -90,12 +89,12 @@ OPENAI_API_KEY, ensure it is appropriately specified in the configuration.
    # let's say you added the second API key OPENAI_API_KEY2
    api_key2 = os.getenv("OPENAI_API_KEY2")
 
-   service = OpenAIService(api_key=api_key2)
+   service = li.Services.OpenAI(api_key=api_key2)
    session = li.Session(system, service=service)
 
 .. note::
 
-   If you wish to apply the same ``api_service`` setting across multiple sessions, make sure to pass it to each of these sessions.
+   If you wish to apply the same ``service`` object across multiple sessions, make sure to pass it to each of these sessions.
 
    .. code-block::
 
