@@ -191,7 +191,7 @@ class Session:
         """
         from_ = self.get_branch(branch=from_)
         to_, to_name = self.get_branch(branch=to_, get_name=True)
-        to_.merge_conversation(from_, update=update)
+        to_.merge_branch(from_, update=update)
         
         if del_:
             if from_ == self.default_branch:
