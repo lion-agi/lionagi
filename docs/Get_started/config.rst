@@ -62,10 +62,9 @@ You may modify rate limits to fit different cases. For example:
 
 .. code-block:: python
 
-
    system = 'you are a helpful assistant'
 
-   service = li.Services.OpenAI(max_requests=10, max_tokens=10_000， interval=60)
+   service = li.Services.OpenAI(max_requests=10, max_tokens=10_000, interval=60)
    session = li.Session(system, service=service)
 
 .. note::
