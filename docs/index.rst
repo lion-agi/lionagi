@@ -58,9 +58,9 @@ The following example shows how to use LionAGI's ``Session`` object to interact 
    import lionagi as li
 
    calculator = li.Session(system=system)
-   result = await calculator.initiate(instruction=instruction,
-                                      context=context,
-                                      model="gpt-4-1106-preview")
+   result = await calculator.chat(instruction=instruction,
+                                  context=context,
+                                  model="gpt-4-1106-preview")
 
    print(f"Calculation Result: {result}")
 
@@ -75,9 +75,9 @@ The following example shows how to use LionAGI's ``Session`` object to interact 
 
    async def main():
        calculator = li.Session(system=system)
-       result = await calculator.initiate(instruction=instruction,
-                                          context=context,
-                                          model="gpt-4-1106-preview")
+       result = await calculator.chat(instruction=instruction,
+                                      context=context,
+                                      model="gpt-4-1106-preview")
        print(f"Calculation Result: {result}")
 
    if __name__ == "__main__":
