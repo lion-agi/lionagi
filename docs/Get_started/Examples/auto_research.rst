@@ -217,7 +217,7 @@ With asynchronous programming, executing this workflow becomes a breeze:
        await li.alcall(abstracts, read_propose), flatten=True
    )[0]
 
-To review the entire result, please refer to:
+To review the entire result, check:
 
 .. code-block:: python
 

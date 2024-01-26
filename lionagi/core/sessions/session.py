@@ -162,7 +162,7 @@ class Session:
 
         if branch_name == self.default_branch_name:
             raise ValueError(
-                f'{branch_name} is the current active branch, please switch to another branch before delete it.'
+                f'{branch_name} is the current default branch, please switch to another branch before delete it.'
             )
         else:
             self.branches.pop(branch_name)
