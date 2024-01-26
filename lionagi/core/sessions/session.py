@@ -32,7 +32,7 @@ class Session:
     """
     def __init__(
         self,
-        system: Union[str, System],
+        system: Optional[Union[str, System]] = None,
         dir: Optional[str] = None,
         llmconfig: Optional[Dict[str, Any]] = None,
         service: OpenAIService = OAIService,
@@ -55,7 +55,8 @@ class Session:
 
         self.branches = branches or {}
         self.default_branch = default_branch or Branch()
-        self.default_branch.add_message(system=system)
+        if system:
+            self.default_branch.add_message(system=system)
         self.default_branch_name = default_branch_name
         self.branches.update({self.default_branch_name: self.default_branch})
         self.llmconfig = llmconfig or oai_schema["chat/completions"]["config"]

@@ -84,7 +84,7 @@ class Branch(Conversation):
         self.status_tracker = StatusTracker()
         self.llmconfig = llmconfig or oai_schema["chat/completions"]["config"]
 
-    def change_system_message(
+    def change_first_system_message(
         self, system: Union[str, Dict[str, Any], System], sender: Optional[str] = None
     ):
         """
@@ -98,9 +98,11 @@ class Branch(Conversation):
             ValueError: If the input cannot be converted into a system message.
 
         Examples:
-            >>> branch.change_system_message("System update", sender="admin")
-            >>> branch.change_system_message({"text": "System reboot", "type": "update"})
+            >>> branch.change_first_system_message("System update", sender="admin")
+            >>> branch.change_first_system_message({"text": "System reboot", "type": "update"})
         """
+        if len(self.messages[self.messages.role == 'system']) == 0:
+            raise ValueError("There is no system message in the messages.")
         if isinstance(system, (str, Dict)):
             system = System(system, sender=sender)
         if isinstance(system, System):
@@ -108,40 +110,40 @@ class Branch(Conversation):
             if sender:
                 message_dict['sender'] = sender
             message_dict['timestamp'] = str(pd.Timestamp.now())
-            self.add_message(system=message_dict)
-            df = self.messages[self.messages.role == 'system']
-            df.loc[0] = message_dict
+            sys_index = self.messages[self.messages.role == 'system'].index
+            self.messages.loc[sys_index[0]] = message_dict
+
         else:
             raise ValueError("Input cannot be converted into a system message.")
 
-    def add_instruction_set(self, name: str, instruction_set: InstructionSet):
-        """
-        Add an instruction set to the conversation.
+    # def add_instruction_set(self, name: str, instruction_set: InstructionSet):
+    #     """
+    #     Add an instruction set to the conversation.
+    #
+    #     Args:
+    #         name (str): The name of the instruction set.
+    #         instruction_set (InstructionSet): The instruction set to add.
+    #
+    #     Examples:
+    #         >>> branch.add_instruction_set("greet", InstructionSet(instructions=["Hello", "Hi"]))
+    #     """
+    #     self.instruction_sets[name] = instruction_set
 
-        Args:
-            name (str): The name of the instruction set.
-            instruction_set (InstructionSet): The instruction set to add.
-
-        Examples:
-            >>> branch.add_instruction_set("greet", InstructionSet(instructions=["Hello", "Hi"]))
-        """
-        self.instruction_sets[name] = instruction_set
-
-    def remove_instruction_set(self, name: str) -> bool:
-        """
-        Remove an instruction set from the conversation.
-
-        Args:
-            name (str): The name of the instruction set to remove.
-
-        Returns:
-            bool: True if the instruction set was removed, False otherwise.
-
-        Examples:
-            >>> branch.remove_instruction_set("greet")
-            True
-        """
-        return self.instruction_sets.pop(name)
+    # def remove_instruction_set(self, name: str) -> bool:
+    #     """
+    #     Remove an instruction set from the conversation.
+    #
+    #     Args:
+    #         name (str): The name of the instruction set to remove.
+    #
+    #     Returns:
+    #         bool: True if the instruction set was removed, False otherwise.
+    #
+    #     Examples:
+    #         >>> branch.remove_instruction_set("greet")
+    #         True
+    #     """
+    #     return self.instruction_sets.pop(name)
 
     def register_tools(self, tools: Union[Tool, List[Tool]]):
         """
@@ -211,8 +213,6 @@ class Branch(Conversation):
 
         """
         message_copy = branch.messages.copy()
-        branch_system = message_copy.loc[0]
-        message_copy.drop(0, inplace=True)
         self.messages = self.messages.merge(message_copy, how='outer')
 
         if update:
@@ -220,7 +220,6 @@ class Branch(Conversation):
             self.tool_manager.registry.update(
                 branch.tool_manager.registry
             )
-            self.messages.loc[0] = branch_system
         else:
             for key, value in branch.instruction_sets.items():
                 if key not in self.instruction_sets:
@@ -364,7 +363,7 @@ class Branch(Conversation):
         config = {**self.llmconfig}
         
         if system:
-            self.change_system_message(system)
+            self.change_first_system_message(system)
         self.add_message(instruction=instruction, context=context, sender=sender)
 
         if 'tool_parsed' in kwargs:
