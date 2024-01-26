@@ -375,4 +375,8 @@ class Session:
         Returns:
             Dict[str, Any]: The report of the current active branch.
         """
-        return self.default_branch.describe()
+        return self.default_branch.describe
+
+    @property
+    def messages(self) -> pd.DataFrame:
+        return self.default_branch.messages
