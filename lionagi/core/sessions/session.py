@@ -316,36 +316,36 @@ class Session:
             instruction=instruction, num=num, tools=tools,**kwargs
         )
 
-    def change_system(self, system: Union[System, str]) -> None:
+    def change_first_system_message(self, system: Union[System, str]) -> None:
         """
         Change the system message of the current default branch.
 
         Args:
             system (Union[System, str]): The new system message or a System object.
         """
-        self.default_branch.change_system_message(system)
+        self.default_branch.change_first_system_message(system)
   
-    def add_instruction_set(self, name: str, instruction_set: InstructionSet) -> None:
-        """
-        Adds an instruction set to the current active branch.
-
-        Args:
-            name (str): The name of the instruction set.
-            instruction_set (InstructionSet): The instruction set to add.
-        """
-        self.default_branch.add_instruction_set(name, instruction_set)
-
-    def remove_instruction_set(self, name: str) -> bool:
-        """
-        Removes an instruction set from the current active branch.
-
-        Args:
-            name (str): The name of the instruction set to remove.
-
-        Returns:
-            bool: True if the instruction set is removed, False otherwise.
-        """
-        return self.default_branch.remove_instruction_set(name)
+    # def add_instruction_set(self, name: str, instruction_set: InstructionSet) -> None:
+    #     """
+    #     Adds an instruction set to the current active branch.
+    #
+    #     Args:
+    #         name (str): The name of the instruction set.
+    #         instruction_set (InstructionSet): The instruction set to add.
+    #     """
+    #     self.default_branch.add_instruction_set(name, instruction_set)
+    #
+    # def remove_instruction_set(self, name: str) -> bool:
+    #     """
+    #     Removes an instruction set from the current active branch.
+    #
+    #     Args:
+    #         name (str): The name of the instruction set to remove.
+    #
+    #     Returns:
+    #         bool: True if the instruction set is removed, False otherwise.
+    #     """
+    #     return self.default_branch.remove_instruction_set(name)
 
     def register_tools(self, tools: Union[Tool, List[Tool]]) -> None:
         """

@@ -2,7 +2,20 @@ import json
 from ..utils import strip_lower
 
 
-def sign_message(messages, sender: str):    
+def sign_message(messages, sender: str):
+    """
+    Sign messages with a sender identifier.
+
+    Args:
+        messages (pd.DataFrame): A DataFrame containing messages with columns 'node_id', 'role', 'sender', 'timestamp', and 'content'.
+        sender (str): The sender identifier to be added to the messages.
+
+    Returns:
+        pd.DataFrame: A new DataFrame with the sender identifier added to each message.
+
+    Raises:
+        ValueError: If the 'sender' is None or 'None'.
+    """
     if sender is None or strip_lower(sender) == 'none':
         raise ValueError("sender cannot be None")
     df = messages.copy()
@@ -17,6 +30,19 @@ def sign_message(messages, sender: str):
 
 
 def validate_messages(messages):
+    """
+    Validate the structure and content of a messages DataFrame.
+
+    Args:
+        messages (pd.DataFrame): A DataFrame containing messages with columns 'node_id', 'role', 'sender', 'timestamp', and 'content'.
+
+    Returns:
+        bool: True if the messages DataFrame is valid; otherwise, raises a ValueError.
+
+    Raises:
+        ValueError: If the DataFrame structure is invalid or if it contains null values, roles other than ["system", "user", "assistant"],
+                    or content that cannot be parsed as JSON strings.
+    """
     if list(messages.columns) != ['node_id', 'role', 'sender', 'timestamp', 'content']:
         raise ValueError('Invalid messages dataframe. Unmatched columns.')
     if messages.isnull().values.any():
