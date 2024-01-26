@@ -17,7 +17,7 @@ LionAGI is a cutting-edge **intelligent agent framework**. It integrates data ma
 Install LionAGI with pip:
 
 ```bash
-pip install lionagi
+pip install lionagi==0.0.203
 ```
 Download the `.env_template` file, input your appropriate `API_KEY`, save the file, rename as `.env` and put in your project's root directory. 
 by default we use `OPENAI_API_KEY`.
