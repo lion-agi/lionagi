@@ -6,6 +6,9 @@ from collections.abc import Iterable
 from typing import Any, Dict, List
 
 class IOUtil:
+    """
+    Utility class for reading and writing data from/to files in various formats.
+    """
     
     @staticmethod
     def read_csv(filepath: str) -> List[Dict[str, Any]]:
