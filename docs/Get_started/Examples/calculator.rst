@@ -45,8 +45,8 @@ Now, we are ready to create our first session:
    import lionagi as li
 
    calculator = li.Session(system)
-   step1 = await calculator.initiate(instruct, context=context)
-   step2 = await calculator.followup(instruct3, temperature=0.5)
+   step1 = await calculator.chat(instruct, context=context)
+   step2 = await calculator.chat(instruct3, temperature=0.5)
 
 In this case, we initialize two numbers, ``x=7`` and ``y=3``. By setting ``case=0``, we opt to follow ``instruct1``, which instructs
 the calculation of the sum of absolute values: ``|x|+|y|``. Given that ``|7|+|3|=10`` resulting in a positive outcome,
@@ -88,7 +88,7 @@ explicitly executing each function on every element, you can achieve it in a sin
 .. code-block:: python
 
    f = [f1,f2,f3,f4,f5]
-   ys = li.mcall(xs, f)
+   ys = await li.mcall(xs, f)
 
 Suppose the cases for each pair of x and y are:
 
@@ -101,7 +101,7 @@ Now, with all the necessary information in hand, let's organize it into contexts
 
 .. code-block:: python
 
-   f = lambda i: {"x": str(a[i]), "y": str(b[i]), "case": str(cases[i])}
+   f = lambda i: {"x": str(xs[i]), "y": str(ys[i]), "case": str(cases[i])}
    contexts = li.lcall(range(5), f)
 
 If you print out the ``contexts``, it would be like this:
@@ -126,15 +126,15 @@ workflow for concurrent execution, running five scenarios in parallel.
         case = int(context.pop("case"))
         instruct = instruct1 if case == 0 else instruct2
 
-        await calculator.initiate(instruct, context=context)    # run the steps
-        await calculator.followup(instruct3, temperature=0.5)
+        step1 = await calculator.chat(instruct, context=context)    # run the steps
+        step2 = await calculator.chat(instruct3, temperature=0.5)
 
-        return li.lcall(calculator.conversation.responses, lambda i: i['content'])
+        return (step1, step2)
 
    # al_call (async list call): async version of l_call
    outs = await li.alcall(contexts, calculator_workflow)
 
-Let's check our results:
+Let’s check our results:
 
 .. code-block:: python
 
@@ -147,30 +147,30 @@ Let's check our results:
 
    Inputs: 1, 2, case: 1
 
-   Outputs: ['-1', '1']
+   Outputs: ('-1', '1')
 
    ------
 
    Inputs: 2, 4, case: 0
 
-   Outputs: ['6', '12']
+   Outputs: ('6', '12')
 
    ------
 
    Inputs: 3, 5, case: 1
 
-   Outputs: ['-2', '0']
+   Outputs: ('-2', '0')
 
    ------
 
    Inputs: 4, 2, case: 0
 
-   Outputs: ['6', '12']
+   Outputs: ('6', '12')
 
    ------
 
    Inputs: 5, 3, case: 1
 
-   Outputs: ['2', '4']
+   Outputs: ('2', '4')
 
    ------

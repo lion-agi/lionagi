@@ -1,4 +1,4 @@
-# import pandas as pd
+import pandas as pd
 from typing import Any, List, Union, Dict, Optional, Callable, Tuple
 from dotenv import load_dotenv
 
@@ -375,4 +375,14 @@ class Session:
         Returns:
             Dict[str, Any]: The report of the current active branch.
         """
-        return self.default_branch.describe()
+        return self.default_branch.describe
+
+    @property
+    def messages(self) -> pd.DataFrame:
+        """
+        Get the DataFrame containing conversation messages.
+
+        Returns:
+            pd.DataFrame: A DataFrame containing conversation messages.
+        """
+        return self.default_branch.messages

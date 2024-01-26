@@ -16,8 +16,8 @@ Start your LionAGI experience with our demo example.
   calculator = li.Session(system=system)
 
   # run a LLM API call
-  result = await calculator.initiate(instruction=instruction,
-                                     context=context)
+  result = await calculator.chat(instruction=instruction,
+                                 context=context)
 
   print(f"Calculation Result: {result}")
 
