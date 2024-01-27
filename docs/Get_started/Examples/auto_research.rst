@@ -217,8 +217,12 @@ With asynchronous programming, executing this workflow becomes a breeze:
        await li.alcall(abstracts, read_propose), flatten=True
    )[0]
 
-To review the entire result, please refer to:
+To review the entire result, check:
 
 .. code-block:: python
 
    researcher.messages
+
+.. [Ref] Pan, Shirui and Luo, Linhao and Wang, Yufei and Chen, Chen and Wang, Jiapu and Wu, Xindong
+   "Unifying Large Language Models and Knowledge Graphs: A Roadmap"
+   `arXiv:2306.08302 <https://arxiv.org/abs/2306.08302>`_

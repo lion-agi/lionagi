@@ -272,6 +272,9 @@ async def rcall(func: Callable[..., Any], *args, timeout: Optional[int] = None,
 
 
 class CallDecorator:
+    """
+    Call Decorator
+    """
     
     @staticmethod
     def cache(func: Callable) -> Callable:

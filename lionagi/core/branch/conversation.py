@@ -35,10 +35,10 @@ class Conversation:
 
     def _create_message(
         self,
-        system: Optional[System] = None,
-        instruction: Optional[Instruction] = None,
+        system: Optional[Union[dict, list, System]] = None,
+        instruction: Optional[Union[dict, list, Instruction]] = None,
         context: Optional[Union[str, Dict[str, Any]]] = None,
-        response: Optional[Response] = None,
+        response: Optional[Union[dict, list, Response]] = None,
         sender: Optional[str] = None
     ) -> Message:
         """
@@ -47,10 +47,10 @@ class Conversation:
         Only one of `system`, `instruction`, or `response` can be provided to create a message.
 
         Args:
-            system (Optional[System]): The system message content.
-            instruction (Optional[Instruction]): The instruction content.
+            system (Optional[Union[dict, list, System]]): The system message content.
+            instruction (Optional[Union[dict, list, Instruction]]): The instruction content.
             context (Optional[Union[str, Dict[str, Any]]]): The context associated with the instruction.
-            response (Optional[Response]): The response content.
+            response (Optional[Union[dict, list, Response]]): The response content.
             sender (Optional[str]): The sender of the message.
 
         Returns:
@@ -87,10 +87,10 @@ class Conversation:
         
     def add_message(
         self,
-        system: Optional[System] = None,
-        instruction: Optional[Instruction] = None,
+        system: Optional[Union[dict, list, System]] = None,
+        instruction: Optional[Union[dict, list, Instruction]] = None,
         context: Optional[Union[str, Dict[str, Any]]] = None,
-        response: Optional[Response] = None,
+        response: Optional[Union[dict, list, Response]] = None,
         sender: Optional[str] = None
     ) -> None:
         """
@@ -170,6 +170,7 @@ class Conversation:
             sender (Optional[str]): The sender filter for the messages.
             role (Optional[str]): The role filter for the messages.
             n (int): The number of rows to retrieve.
+            sign_: If sign messages with a sender identifier.
 
         Returns:
             Union[pd.DataFrame, pd.Series]: The last n messages as a DataFrame or a single message as a Series.
@@ -188,7 +189,6 @@ class Conversation:
             outs = self.messages[self.messages['role'] == role].iloc[-n:]
 
         return sign_message(outs, sender) if sign_ else outs
-            
 
     def filter_messages_by(
         self,
@@ -196,18 +196,19 @@ class Conversation:
         sender: Optional[str] = None,
         start_time: Optional[datetime] = None,
         end_time: Optional[datetime] = None,
-        content_keywords: Union[Optional[str], Optional[list]] = None,
+        content_keywords: Optional[Union[str, list]] = None,
         case_sensitive: bool = False
     ) -> pd.DataFrame:
         """
         Retrieves messages filtered by a specific criterion.
 
         Args:
-            node_id (Optional[str]): The node ID to filter the messages.
             role (Optional[str]): The role to filter the messages.
             sender (Optional[str]): The sender to filter the messages.
-            timestamp (Optional[datetime]): The timestamp to filter the messages.
-            content (Optional[str]): The content to filter the messages.
+            start_time (Optional[datetime]): The start time to filter the messages.
+            end_time (Optional[datetime]): The end time to filter the messages.
+            content_keywords (Optional[Union[str, list]]): The content to filter the messages.
+            case_sensitive (bool): Flag to indicate if the search should be case sensitive. Defaults to False.
 
         Returns:
             pd.DataFrame: A DataFrame containing filtered messages.
@@ -258,7 +259,7 @@ class Conversation:
         Searches for a keyword in the content of all messages and returns the messages containing it.
 
         Args:
-            keyword (str): The keyword to search for.
+            keywords (str): The keywords to search for.
             case_sensitive (bool, optional): Flag to indicate if the search should be case sensitive. Defaults to False.
 
         Returns:
@@ -325,7 +326,7 @@ class Conversation:
         Returns:
             Dict[str, int]: A dictionary containing counts of messages either by role or sender.
         """
-        messages = self.messages['name'] if use_sender else self.messages['role']
+        messages = self.messages['sender'] if use_sender else self.messages['role']
         result = messages.value_counts().to_dict()
         result['total'] = len(self.messages)
         return result
@@ -354,8 +355,8 @@ class Conversation:
         Retrieves a history of messages within a specified date range.
 
         Args:
-            start_date (Optional[datetime], optional): The start date of the message history. Defaults to None.
-            end_date (Optional[datetime], optional): The end date of the message history. Defaults to None.
+            begin_ (Optional[datetime], optional): The start date of the message history. Defaults to None.
+            end_ (Optional[datetime], optional): The end date of the message history. Defaults to None.
 
         Returns:
             pd.DataFrame: A DataFrame containing messages within the specified date range.
@@ -388,19 +389,18 @@ class Conversation:
         cloned.messages = self.messages.copy()
         return cloned
 
-    def merge_conversation(self, other: 'Conversation', update: bool = False,) -> None:
-        """
-        Merges another conversation into the current one.
-
-        Args:
-            other (Conversation): The other conversation to merge with the current one.
-            update (bool, optional): If True, updates the first system message before merging. Defaults to False.
-        """
-        if update:
-            self.first_system = other.first_system.copy()
-        df = pd.concat([self.messages.copy(), other.messages.copy()], ignore_index=True)
-        self.messages = df.drop_duplicates().reset_index(drop=True, inplace=True)
-
+    # def merge_conversation(self, other: 'Conversation', update: bool = False,) -> None:
+    #     """
+    #     Merges another conversation into the current one.
+    #
+    #     Args:
+    #         other (Conversation): The other conversation to merge with the current one.
+    #         update (bool, optional): If True, updates the first system message before merging. Defaults to False.
+    #     """
+    #     if update:
+    #         self.first_system = other.first_system.copy()
+    #     df = pd.concat([self.messages.copy(), other.messages.copy()], ignore_index=True)
+    #     self.messages = df.drop_duplicates().reset_index(drop=True, inplace=True)
 
     def rollback(self, steps: int) -> None:
         """

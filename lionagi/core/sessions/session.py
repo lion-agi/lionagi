@@ -32,7 +32,7 @@ class Session:
     """
     def __init__(
         self,
-        system: Union[str, System],
+        system: Optional[Union[str, System]] = None,
         dir: Optional[str] = None,
         llmconfig: Optional[Dict[str, Any]] = None,
         service: OpenAIService = OAIService,
@@ -55,7 +55,8 @@ class Session:
 
         self.branches = branches or {}
         self.default_branch = default_branch or Branch()
-        self.default_branch.add_message(system=system)
+        if system:
+            self.default_branch.add_message(system=system)
         self.default_branch_name = default_branch_name
         self.branches.update({self.default_branch_name: self.default_branch})
         self.llmconfig = llmconfig or oai_schema["chat/completions"]["config"]
@@ -162,7 +163,7 @@ class Session:
 
         if branch_name == self.default_branch_name:
             raise ValueError(
-                f'{branch_name} is the current active branch, please switch to another branch before delete it.'
+                f'{branch_name} is the current default branch, please switch to another branch before delete it.'
             )
         else:
             self.branches.pop(branch_name)
@@ -315,36 +316,36 @@ class Session:
             instruction=instruction, num=num, tools=tools,**kwargs
         )
 
-    def change_system(self, system: Union[System, str]) -> None:
+    def change_first_system_message(self, system: Union[System, str]) -> None:
         """
         Change the system message of the current default branch.
 
         Args:
             system (Union[System, str]): The new system message or a System object.
         """
-        self.default_branch.change_system_message(system)
+        self.default_branch.change_first_system_message(system)
   
-    def add_instruction_set(self, name: str, instruction_set: InstructionSet) -> None:
-        """
-        Adds an instruction set to the current active branch.
-
-        Args:
-            name (str): The name of the instruction set.
-            instruction_set (InstructionSet): The instruction set to add.
-        """
-        self.default_branch.add_instruction_set(name, instruction_set)
-
-    def remove_instruction_set(self, name: str) -> bool:
-        """
-        Removes an instruction set from the current active branch.
-
-        Args:
-            name (str): The name of the instruction set to remove.
-
-        Returns:
-            bool: True if the instruction set is removed, False otherwise.
-        """
-        return self.default_branch.remove_instruction_set(name)
+    # def add_instruction_set(self, name: str, instruction_set: InstructionSet) -> None:
+    #     """
+    #     Adds an instruction set to the current active branch.
+    #
+    #     Args:
+    #         name (str): The name of the instruction set.
+    #         instruction_set (InstructionSet): The instruction set to add.
+    #     """
+    #     self.default_branch.add_instruction_set(name, instruction_set)
+    #
+    # def remove_instruction_set(self, name: str) -> bool:
+    #     """
+    #     Removes an instruction set from the current active branch.
+    #
+    #     Args:
+    #         name (str): The name of the instruction set to remove.
+    #
+    #     Returns:
+    #         bool: True if the instruction set is removed, False otherwise.
+    #     """
+    #     return self.default_branch.remove_instruction_set(name)
 
     def register_tools(self, tools: Union[Tool, List[Tool]]) -> None:
         """

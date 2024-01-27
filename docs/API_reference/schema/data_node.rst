@@ -1,4 +1,4 @@
-Base Node
+Data Node
 ===========
 
 .. automodule:: lionagi.schema.data_node
