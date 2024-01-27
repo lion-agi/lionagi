@@ -106,8 +106,6 @@ When referencing LionAGI in your projects or research, please cite:
 }
 ```
 
-## Star History
-![Star History Chart](https://api.star-history.com/svg?repos=lion-agi/lionagi&type=Date)
 
 ### Requirements
 Python 3.9 or higher. 
