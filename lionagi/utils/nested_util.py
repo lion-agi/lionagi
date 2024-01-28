@@ -1,43 +1,9 @@
 import json
 from collections import defaultdict
 from copy import deepcopy
-from itertools import chain
+
 from typing import Any, Callable, Dict, Generator, List, Tuple, Union, Iterable, Optional
-
-
-def to_list(input_: Any, flatten: bool = True, dropna: bool = False) -> List[Any]:
-    """
-    Converts the input to a list, optionally flattening it and dropping None values.
-
-    Args:
-        input_ (Any): The input to convert to a list.
-        flatten (bool): Whether to flatten the input if it is a nested list. Defaults to True.
-        dropna (bool): Whether to drop None values from the list. Defaults to False.
-
-    Returns:
-        List[Any]: The input converted to a list.
-
-    Raises:
-        ValueError: If the input cannot be converted to a list.
-
-    Examples:
-        >>> to_list([1, [2, [3, 4]], 5])
-        [1, 2, 3, 4, 5]
-        >>> to_list([1, None, 3], dropna=True)
-        [1, 3]
-    """
-    if isinstance(input_, list) and flatten:
-        input_ = _flatten_list(input_)
-    elif isinstance(input_, Iterable) and not isinstance(input_, (str, dict)):
-        try:
-            input_ = list(input_)
-        except:
-            raise ValueError("Input cannot be converted to a list.")
-    else:
-        input_ = [input_]
-    if dropna:
-        input_ = [i for i in input_ if i is not None]
-    return input_
+from itertools import chain
 
 def to_readable_dict(input: Union[Dict, List]) -> Union[str, List]:
     """
@@ -434,24 +400,11 @@ def get_flattened_keys(obj: Any, sep: str = '_', max_depth: Union[int, None] = N
     else:
         return list(flatten(obj, sep=sep, max_depth=max_depth, dict_only=dict_only).keys())
 
-def _flatten_list(l: List, dropna: bool = True) -> List:
-    """
-    Flattens a nested list into a single-level list.
-
-    Args:
-        l (List): The nested list to flatten.
-        dropna (bool, optional): If True, removes None values from the flattened list. Defaults to True.
-
-    Returns:
-        List: The flattened list, with or without None values based on the dropna parameter.
-    """
-    flattened_list = list(_flatten_list_generator(l, dropna))
-    return _dropna(flattened_list) if dropna else flattened_list
-
-
-def _dynamic_flatten_in_place(obj: Any, parent_key: str = '', sep: str = '_', 
-                            max_depth: Union[int, None] = None, 
-                            current_depth: int = 0, dict_only: bool = False) -> None:
+def _dynamic_flatten_in_place(
+    obj: Any, parent_key: str = '', sep: str = '_', 
+    max_depth: Union[int, None] = None, current_depth: int = 0, 
+    dict_only: bool = False
+) -> None:
     """
     Helper function to flatten the object in place.
 
@@ -503,23 +456,10 @@ def _handle_list_insert(sub_obj: List, part: int, value: Any):
     while len(sub_obj) <= part:
         sub_obj.append(None)
     sub_obj[part] = value
-        
-def _convert_to_int_if_possible(s: str) -> Union[int, str]:
-    """
-    Converts a string to an integer if possible; otherwise, returns the string.
 
-    Args:
-        s (str): The string to convert.
-
-    Returns:
-        Union[int, str]: The converted integer or the original string.
-    """
-    return int(s) if s.lstrip('-').isdigit() else s
-
-def _is_iterable(obj) -> bool:
-    return isinstance(obj, Iterable) and not isinstance(obj, str)
-
-def _ensure_list_index(lst: List, index: int, default=None) -> None:
+def _ensure_list_index(
+    lst: List, index: int, default=None
+) -> None:
     """Ensures that a list is at least as long as a specified index.
 
     This method appends the default value to the list until its length is at least
@@ -615,52 +555,10 @@ def _deep_merge_dicts(dict1: Dict, dict2: Dict) -> Dict:
         else:
             dict1[key] = dict2[key]
     return dict1
-
-def _extend_list_to_index(lst: List[Any], index: int, fill_value: Any = None) -> None:
-    """
-    Extends a list to a specified index with a fill value.
-
-    Args:
-        lst (List[Any]): The list to extend.
-        index (int): The index to extend the list to.
-        fill_value (Any, optional): The value to fill the extended part of the list with. Defaults to None.
-
-    Returns:
-        None: This function modifies the input list in place and returns None.
-    """
-    while len(lst) <= index:
-        lst.append(fill_value)
-            
-def _dropna(l: List) -> List:
-    """
-    Removes None values from a list.
-
-    Args:
-        l (List): The list to remove None values from.
-
-    Returns:
-        List: A new list with None values removed.
-    """
-    return [item for item in l if item is not None]
-
-def _flatten_list_generator(l: List, dropna: bool = True) -> Generator[Any, None, None]:
-    """
-    Generator to flatten a nested list.
-
-    Args:
-        l (List): The nested list to flatten.
-        dropna (bool, optional): If True, removes None values during the flattening process. Defaults to True.
-
-    Yields:
-        Generator[Any, None, None]: Yields elements of the flattened list.
-    """
-    for i in l:
-        if isinstance(i, list):
-            yield from _flatten_list_generator(i, dropna)
-        else:
-            yield i
-            
-def _is_homogeneous(iterables: List[Union[Dict, List, Iterable]], type_check: type) -> bool:
+   
+def _is_homogeneous(
+    iterables: List[Union[Dict, List, Iterable]], type_check: type
+) -> bool:
     """Checks if all elements in a list are of the same specified type.
 
     Args:
@@ -754,7 +652,9 @@ def _filter_list(lst: List[Any], condition: Callable[[Any], bool]) -> List[Any]:
     """
     return [item for item in lst if condition(item)]
 
-def _get_target_container(nested_list: Union[List, Dict], indices: List[Union[int, str]]) -> Union[List, Dict]:
+def _get_target_container(
+    nested_list: Union[List, Dict], indices: List[Union[int, str]]
+) -> Union[List, Dict]:
     current_element = nested_list
     for index in indices:
         if isinstance(current_element, list):
@@ -833,7 +733,6 @@ def _get_target_container(nested_list: Union[List, Dict], indices: List[Union[in
 #         ninsert(result_dict, key.split('_'), value)
 #     return result_dict
 
-
 # @staticmethod
 # def _insert_with_dict_handling(result_list: Union[Dict, List], 
 #                             indices: List[Union[int, str]], 
@@ -865,3 +764,33 @@ def _get_target_container(nested_list: Union[List, Dict], indices: List[Union[in
 #         result_list[last_index] = value
 #     else:
 #         result_list[last_index] = value
+
+# def _convert_to_int_if_possible(s: str) -> Union[int, str]:
+#     """
+#     Converts a string to an integer if possible; otherwise, returns the string.
+
+#     Args:
+#         s (str): The string to convert.
+
+#     Returns:
+#         Union[int, str]: The converted integer or the original string.
+#     """
+#     return int(s) if s.lstrip('-').isdigit() else s
+
+# def _is_iterable(obj) -> bool:
+#     return isinstance(obj, Iterable) and not isinstance(obj, str)
+
+# def _extend_list_to_index(lst: List[Any], index: int, fill_value: Any = None) -> None:
+#     """
+#     Extends a list to a specified index with a fill value.
+
+#     Args:
+#         lst (List[Any]): The list to extend.
+#         index (int): The index to extend the list to.
+#         fill_value (Any, optional): The value to fill the extended part of the list with. Defaults to None.
+
+#     Returns:
+#         None: This function modifies the input list in place and returns None.
+#     """
+#     while len(lst) <= index:
+#         lst.append(fill_value)

@@ -6,7 +6,7 @@ from typing import Any, Callable, Dict, List, Optional, Union
 import asyncio
 from dotenv import load_dotenv
 
-from lionagi.utils import alcall, as_dict, get_flattened_keys, lcall
+from lionagi.utils import as_dict, get_flattened_keys, lcall
 from lionagi.schema import Tool
 from lionagi._services.base_service import StatusTracker
 from lionagi._services.oai import OpenAIService
@@ -387,7 +387,8 @@ class Branch(Conversation):
                         [as_dict(i) for i in tool_uses["action_list"]], 
                         self.tool_manager.get_function_call
                     )
-                    outs = await alcall(func_calls, self.tool_manager.invoke)
+                    tasks = [self.tool_manager.invoke(i) for i in func_calls]
+                    outs = await asyncio.gather(*tasks)
                     for out_, f in zip(outs, func_calls):
                         self.add_message(
                             response={

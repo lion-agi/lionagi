@@ -76,39 +76,39 @@ class TestLCall(unittest.TestCase):
 class TestAlCall(unittest.IsolatedAsyncioTestCase):
 
     async def test_empty_input(self):
-        result = await call_util.alcall([], lambda x: x*2)
+        result = await call_util._alcall([], lambda x: x*2)
         self.assertEqual(result, [])
 
     async def test_single_element_with_async_function(self):
         async def async_func(x):
             return x * 2
-        result = await call_util.alcall(5, async_func)
+        result = await call_util._alcall(5, async_func)
         self.assertEqual(result, [10])
 
     async def test_list_input_with_sync_function(self):
-        result = await call_util.alcall([1, 2, 3], lambda x: x*2)
+        result = await call_util._alcall([1, 2, 3], lambda x: x*2)
         self.assertEqual(result, [2, 4, 6])
 
     async def test_flatten_with_async_function(self):
         async def async_func(x):
             return x * 2
-        result = await call_util.alcall([[1, 2], [3, 4]], async_func, flatten=True)
+        result = await call_util._alcall([[1, 2], [3, 4]], async_func, flatten=True)
         self.assertEqual(result, [2, 4, 6, 8])
 
     async def test_drop_none_with_sync_function(self):
-        result = await call_util.alcall([1, None, 2], lambda x: x, dropna=True)
+        result = await call_util._alcall([1, None, 2], lambda x: x, dropna=True)
         self.assertEqual(result, [1, 2])
 
     async def test_exception_handling_in_async_function(self):
         async def faulty_func(x):
             raise ValueError("Faulty Function")
         with self.assertRaises(ValueError):
-            await call_util.alcall([1, 2, 3], faulty_func)
+            await call_util._alcall([1, 2, 3], faulty_func)
 
     async def test_with_additional_arguments(self):
         async def async_func(x, y):
             return x + y
-        result = await call_util.alcall([1, 2, 3], async_func, y=2)
+        result = await call_util._alcall([1, 2, 3], async_func, y=2)
         self.assertEqual(result, [3, 4, 5])
 
 
@@ -117,20 +117,20 @@ class TestTCall(unittest.IsolatedAsyncioTestCase):
     async def test_sync_function_call(self):
         def sync_func(x):
             return x * 2
-        result = await call_util.tcall(5, sync_func)
+        result = await call_util._tcall(5, sync_func)
         self.assertEqual(result, 10)
 
     async def test_async_function_call(self):
         async def async_func(x):
             return x * 2
-        result = await call_util.tcall(5, async_func)
+        result = await call_util._tcall(5, async_func)
         self.assertEqual(result, 10)
 
     async def test_with_delay(self):
         async def async_func(x):
             return x * 2
         start_time = asyncio.get_event_loop().time()
-        await call_util.tcall(5, async_func, sleep=1)
+        await call_util._tcall(5, async_func, sleep=1)
         elapsed = asyncio.get_event_loop().time() - start_time
         self.assertTrue(elapsed >= 1)
 
@@ -138,25 +138,25 @@ class TestTCall(unittest.IsolatedAsyncioTestCase):
         async def async_func(x):
             raise ValueError("Test Error")
         with self.assertRaises(ValueError):
-            await call_util.tcall(5, async_func, message="Custom Error Message")
+            await call_util._tcall(5, async_func, message="Custom Error Message")
 
     async def test_execution_timing(self):
         async def async_func(x):
             return x * 2
-        result, duration = await call_util.tcall(5, async_func, include_timing=True)
+        result, duration = await call_util._tcall(5, async_func, include_timing=True)
         self.assertEqual(result, 10)
         self.assertIsInstance(duration, float)
 
     async def test_ignore_error(self):
         def sync_func(x):
             raise ValueError("Test Error")
-        result = await call_util.tcall(5, sync_func, ignore_error=True)
+        result = await call_util._tcall(5, sync_func, ignore_error=True)
         self.assertIsNone(result)
 
     async def test_with_additional_arguments(self):
         async def async_func(x, y):
             return x + y
-        result = await call_util.tcall(5, async_func, y=3)
+        result = await call_util._tcall(5, async_func, y=3)
         self.assertEqual(result, 8)
 
 class TestMCall(unittest.IsolatedAsyncioTestCase):
@@ -267,13 +267,13 @@ class TestRCall(unittest.IsolatedAsyncioTestCase):
     async def test_sync_function_without_timeout(self):
         def sync_func(x):
             return x * 2
-        result = await call_util.rcall(sync_func, 5)
+        result = await call_util._rcall(sync_func, 5)
         self.assertEqual(result, 10)
 
     async def test_async_function_without_timeout(self):
         async def async_func(x):
             return x * 2
-        result = await call_util.rcall(async_func, 5)
+        result = await call_util._rcall(async_func, 5)
         self.assertEqual(result, 10)
 
     async def test_timeout(self):
@@ -281,14 +281,14 @@ class TestRCall(unittest.IsolatedAsyncioTestCase):
             await asyncio.sleep(2)
             return x
         with self.assertRaises(asyncio.TimeoutError):
-            await call_util.rcall(async_func, 5, timeout=1)
+            await call_util._rcall(async_func, 5, timeout=1)
 
     async def test_timeout(self):
         def async_func(x):
             time.sleep(2)
             return x
         with self.assertRaises(asyncio.TimeoutError):
-            await call_util.rcall(async_func, 5, timeout=1)
+            await call_util._rcall(async_func, 5, timeout=1)
 
     async def test_retry_mechanism(self):
         attempt_count = 0
@@ -297,20 +297,20 @@ class TestRCall(unittest.IsolatedAsyncioTestCase):
             attempt_count += 1
             raise ValueError("Test Error")
         with self.assertRaises(ValueError):
-            await call_util.rcall(sync_func, 5, retries=3)
+            await call_util._rcall(sync_func, 5, retries=3)
         self.assertEqual(attempt_count, 4)  # Initial call + 3 retries
 
     async def test_default_value_on_exception(self):
         def sync_func(x):
             raise ValueError("Test Error")
-        result = await call_util.rcall(sync_func, 5, default=10)
+        result = await call_util._rcall(sync_func, 5, default=10)
         self.assertEqual(result, 10)
 
     async def test_exception_propagation(self):
         def sync_func(x):
             raise ValueError("Test Error")
         with self.assertRaises(ValueError):
-            await call_util.rcall(sync_func, 5)
+            await call_util._rcall(sync_func, 5)
 
 
 class TestCallDecorator(unittest.IsolatedAsyncioTestCase):
