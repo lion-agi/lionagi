@@ -346,18 +346,3 @@ def is_schema(dict_: Dict, schema: Dict):
         if not isinstance(dict_[key], expected_type):
             return False
     return True
-
-def strip_lower(input_: Union[str, List[str]]) -> Union[str, List[str]]:
-    """
-    Strips and converts a string or each string in a list to lowercase.
-
-    Args:
-        input_: A string or list of strings to process.
-
-    Returns:
-        The processed string or list of strings, or False on failure.
-    """
-    try:
-        return str(input_).strip().lower()
-    except:
-        return False
