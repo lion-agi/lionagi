@@ -1,5 +1,5 @@
 import json
-from ..utils import strip_lower
+from ..utils.sys_util import strip_lower
 
 
 def sign_message(messages, sender: str):

@@ -316,3 +316,15 @@ def as_dict(input_):
         return input_
     else:
         raise f"Could not convert input to dict: {input_}"
+
+def timestamp_to_datetime(timestamp):
+    """
+    Convert a UNIX timestamp to a datetime object.
+
+    Args:
+        timestamp (float): The UNIX timestamp to convert.
+
+    Returns:
+        datetime: The datetime object corresponding to the given UNIX timestamp.
+    """
+    return datetime.fromtimestamp(timestamp)

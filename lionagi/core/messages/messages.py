@@ -1,6 +1,7 @@
 from typing import Any, Dict, Optional
 from lionagi.schema.base_node import BaseNode
-from lionagi.utils import strip_lower, nget
+from lionagi.utils import nget
+from ...utils.sys_util import strip_lower
 import json
 
 
