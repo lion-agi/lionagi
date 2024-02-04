@@ -1,5 +1,6 @@
 from .oai import OpenAIService
 from .openrouter import OpenRouterService
+from .transformers import TransformersService
 
 class Services:
     
@@ -53,3 +54,7 @@ class Services:
             ValueError: 'audio_speech' is currently not supported
         """
         return OpenRouterService(**kwargs)
+
+    @staticmethod
+    def Transformers(**kwargs):
+        return TransformersService(**kwargs)

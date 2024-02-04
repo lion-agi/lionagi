@@ -56,7 +56,7 @@ class Session:
         """
 
         self.branches = branches if isinstance(branches, dict) else {}
-        self.default_branch = default_branch if default_branch else Branch(name=default_branch_name)
+        self.default_branch = default_branch if default_branch else Branch(name=default_branch_name, service=service, llmconfig=llmconfig)
         self.default_branch_name = default_branch_name
         if system:
             self.default_branch.add_message(system=system, sender=sender)
@@ -69,10 +69,6 @@ class Session:
             self.branches[self.default_branch_name] = self.default_branch
         if dir:
             self.default_branch.dir = dir
-        if llmconfig:
-            self.default_branch.llmconfig = llmconfig
-        if service:
-            self.default_branch.service = service
 
         self.branch_manager = BranchManager(self.branches)
         

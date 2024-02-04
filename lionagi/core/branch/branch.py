@@ -11,7 +11,9 @@ from lionagi.utils import alcall, as_dict, get_flattened_keys, lcall
 from lionagi.schema import Tool
 from lionagi._services.base_service import StatusTracker, BaseService
 from lionagi._services.oai import OpenAIService
+from lionagi._services.openrouter import OpenRouterService
 from lionagi.configs.oai_configs import oai_schema
+from lionagi.configs.openrouter_configs import openrouter_schema
 from lionagi.tools.tool_manager import ToolManager
 
 from ..messages.messages import Instruction, System
@@ -86,7 +88,15 @@ class Branch(Conversation):
 
         self.service = service if service else oai_service
         self.status_tracker = StatusTracker()
-        self.llmconfig = llmconfig or oai_schema["chat/completions"]["config"]
+        if llmconfig:
+            self.llmconfig = llmconfig
+        else:
+            if isinstance(service, OpenAIService):
+                self.llmconfig = oai_schema["chat/completions"]["config"]
+            elif isinstance(service, OpenRouterService):
+                self.llmconfig = openrouter_schema["chat/completions"]["config"]
+            else:
+                self.llmconfig = {}
 
         self.name = name
         self.pending_ins = {}
@@ -340,8 +350,6 @@ class Branch(Conversation):
             >>> print(result)
         """
         
-        config = {**self.llmconfig}
-        
         if system:
             self.change_first_system_message(system)
         self.add_message(instruction=instruction, context=context, sender=sender)
@@ -350,12 +358,11 @@ class Branch(Conversation):
             kwargs.pop('tool_parsed')
             tool_kwarg = {'tools': tools}
             kwargs = {**tool_kwarg, **kwargs}
-            config.update(kwargs)
         else:
             if tools and self.has_tools:
                 kwargs = self.tool_manager._tool_parser(tools=tools, **kwargs)
-                config.update(kwargs)
 
+        config = {**self.llmconfig, **kwargs}
         await self.call_chatcompletion(**config)
         
         async def _output():
