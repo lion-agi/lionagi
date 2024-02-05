@@ -1,4 +1,4 @@
-from typing import Union
+from typing import Union, str, Dict, Any
 from transformers import pipeline, Conversation
 
 from .base_service import BaseService
@@ -20,7 +20,7 @@ def force_async(fn):
 
 
 class TransformersService(BaseService):
-    def __init__(self, task: str = None, model: Union = None, config: Union = None, **kwargs):
+    def __init__(self, task: str = None, model: Union[str, Any] = None, config: Union[str, Dict, Any] = None, **kwargs):
         super().__init__()
         self.task = task
         self.model = model

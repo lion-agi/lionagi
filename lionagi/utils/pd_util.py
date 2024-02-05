@@ -1,7 +1,7 @@
 from typing import List, Dict
 import pandas as pd
 from ..schema.data_node import DataNode
-from ..utils.sys_util import timestamp_to_datetime
+from .sys_util import timestamp_to_datetime
 
 def to_pd_df(items: List[Dict], how: str = 'all') -> pd.DataFrame:
     """

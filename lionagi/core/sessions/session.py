@@ -363,28 +363,6 @@ class Session:
         if receive_all:
             for branch in self.branches.values():
                 branch.receive_all()
-  
-    # def add_instruction_set(self, name: str, instruction_set: InstructionSet) -> None:
-    #     """
-    #     Adds an instruction set to the current active branch.
-    #
-    #     Args:
-    #         name (str): The name of the instruction set.
-    #         instruction_set (InstructionSet): The instruction set to add.
-    #     """
-    #     self.default_branch.add_instruction_set(name, instruction_set)
-    #
-    # def remove_instruction_set(self, name: str) -> bool:
-    #     """
-    #     Removes an instruction set from the current active branch.
-    #
-    #     Args:
-    #         name (str): The name of the instruction set to remove.
-    #
-    #     Returns:
-    #         bool: True if the instruction set is removed, False otherwise.
-    #     """
-    #     return self.default_branch.remove_instruction_set(name)
 
     def register_tools(self, tools: Union[Tool, List[Tool]]) -> None:
         """
@@ -426,3 +404,25 @@ class Session:
             pd.DataFrame: A DataFrame containing conversation messages.
         """
         return self.default_branch.messages
+
+    # def add_instruction_set(self, name: str, instruction_set: InstructionSet) -> None:
+    #     """
+    #     Adds an instruction set to the current active branch.
+    #
+    #     Args:
+    #         name (str): The name of the instruction set.
+    #         instruction_set (InstructionSet): The instruction set to add.
+    #     """
+    #     self.default_branch.add_instruction_set(name, instruction_set)
+    #
+    # def remove_instruction_set(self, name: str) -> bool:
+    #     """
+    #     Removes an instruction set from the current active branch.
+    #
+    #     Args:
+    #         name (str): The name of the instruction set to remove.
+    #
+    #     Returns:
+    #         bool: True if the instruction set is removed, False otherwise.
+    #     """
+    #     return self.default_branch.remove_instruction_set(name)

@@ -57,4 +57,3 @@ def validate_messages(messages):
         except:
             raise ValueError('Invalid messages dataframe. Content expect json string.')
     return True
-

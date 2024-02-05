@@ -1,5 +1,5 @@
 openrouter_chat_llmconfig = {
-    "model": "gpt-4-1106-preview",
+    "model": "gpt-4-turbo-preview",
     "frequency_penalty": 0,
     "max_tokens": None,
     "n": 1,
