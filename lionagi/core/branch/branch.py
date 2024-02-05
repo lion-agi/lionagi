@@ -179,7 +179,7 @@ class Branch(Conversation):
             >>> cloned_branch = branch.clone()
         """
         cloned = Branch(
-            dir = self._logger.dir,
+            dir = self.logger.dir,
             messages=self.messages.copy(), 
             instruction_sets=self.instruction_sets.copy(),
             tool_manager=ToolManager()
@@ -298,7 +298,7 @@ class Branch(Conversation):
         messages = self.to_chatcompletion_message()
         payload, completion = await self.service.serve_chat(messages=messages, **kwargs)
         if "choices" in completion:
-            self._logger.add_entry({"input": payload, "output": completion})
+            self.logger.add_entry({"input": payload, "output": completion})
             self.add_message(response=completion['choices'][0])
             self.status_tracker.num_tasks_succeeded += 1
         else:
