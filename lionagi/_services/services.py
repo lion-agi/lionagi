@@ -1,7 +1,3 @@
-from .oai import OpenAIService
-from .openrouter import OpenRouterService
-from .transformers import TransformersService
-
 class Services:
     
     @staticmethod
@@ -28,6 +24,7 @@ class Services:
             >>> asyncio.run(service.serve("Convert this text to speech.", "audio_speech"))
             ValueError: 'audio_speech' is currently not supported
         """
+        from .oai import OpenAIService
         return OpenAIService(**kwargs)
     
     @staticmethod 
@@ -53,8 +50,10 @@ class Services:
             >>> asyncio.run(service.serve("Convert this text to speech.", "audio_speech"))
             ValueError: 'audio_speech' is currently not supported
         """
+        from .openrouter import OpenRouterService
         return OpenRouterService(**kwargs)
 
     @staticmethod
     def Transformers(**kwargs):
+        from .transformers import TransformersService
         return TransformersService(**kwargs)
