@@ -289,9 +289,11 @@ async def rcall(
         raise RuntimeError("rcall failed without catching an exception")
 
 class CallDecorator:
+
     """
     Call Decorators
     """
+
 
     @staticmethod
     def timeout(timeout: int) -> Callable:

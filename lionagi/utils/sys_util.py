@@ -6,7 +6,9 @@ import re
 
 import json
 import logging
-from typing import Any, List, Dict
+
+from typing import Any, List, Dict, Union
+
 
 def get_timestamp() -> str:
     """
@@ -349,3 +351,4 @@ def is_schema(dict_: Dict, schema: Dict):
 
 def timestamp_to_datetime(timestamp):    
     return datetime.fromtimestamp(timestamp)
+
