@@ -290,6 +290,11 @@ async def rcall(
 
 class CallDecorator:
 
+    """
+    Call Decorators
+    """
+
+
     @staticmethod
     def timeout(timeout: int) -> Callable:
         """

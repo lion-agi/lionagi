@@ -6,7 +6,9 @@ import re
 
 import json
 import logging
+
 from typing import Any, List, Dict, Union
+
 
 def get_timestamp() -> str:
     """
@@ -346,3 +348,7 @@ def is_schema(dict_: Dict, schema: Dict):
         if not isinstance(dict_[key], expected_type):
             return False
     return True
+
+def timestamp_to_datetime(timestamp):    
+    return datetime.fromtimestamp(timestamp)
+

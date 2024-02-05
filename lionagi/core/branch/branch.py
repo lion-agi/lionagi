@@ -3,20 +3,25 @@ import json
 import pandas as pd
 
 from typing import Any, Callable, Dict, List, Optional, Union
+from collections import deque
 import asyncio
 from dotenv import load_dotenv
 
 from lionagi.utils import as_dict, get_flattened_keys, lcall
 from lionagi.schema import Tool
-from lionagi._services.base_service import StatusTracker
+from lionagi._services.base_service import StatusTracker, BaseService
 from lionagi._services.oai import OpenAIService
+from lionagi._services.openrouter import OpenRouterService
 from lionagi.configs.oai_configs import oai_schema
+from lionagi.configs.openrouter_configs import openrouter_schema
 from lionagi.tools.tool_manager import ToolManager
 
 from ..messages.messages import Instruction, System
 from ..instruction_set.instruction_set import InstructionSet
 
 from .conversation import Conversation
+from .branch_manager import Request
+from ..core_util import validate_messages
 
 load_dotenv()
 
@@ -51,6 +56,7 @@ class Branch(Conversation):
 
     def __init__(
         self,
+        name: Optional[str] = None,
         dir: Optional[str] = None,
         messages: Optional[pd.DataFrame] = None,
         instruction_sets: Optional[Dict[str, InstructionSet]] = None,
@@ -80,9 +86,21 @@ class Branch(Conversation):
         self.instruction_sets = instruction_sets if instruction_sets else {}
         self.tool_manager = tool_manager if tool_manager else ToolManager()
 
-        self.service=service
+        self.service = service if service else oai_service
         self.status_tracker = StatusTracker()
-        self.llmconfig = llmconfig or oai_schema["chat/completions"]["config"]
+        if llmconfig:
+            self.llmconfig = llmconfig
+        else:
+            if isinstance(service, OpenAIService):
+                self.llmconfig = oai_schema["chat/completions"]["config"]
+            elif isinstance(service, OpenRouterService):
+                self.llmconfig = openrouter_schema["chat/completions"]["config"]
+            else:
+                self.llmconfig = {}
+
+        self.name = name
+        self.pending_ins = {}
+        self.pending_outs = deque()
 
     def change_first_system_message(
         self, system: Union[str, Dict[str, Any], System], sender: Optional[str] = None
@@ -115,35 +133,6 @@ class Branch(Conversation):
 
         else:
             raise ValueError("Input cannot be converted into a system message.")
-
-    # def add_instruction_set(self, name: str, instruction_set: InstructionSet):
-    #     """
-    #     Add an instruction set to the conversation.
-    #
-    #     Args:
-    #         name (str): The name of the instruction set.
-    #         instruction_set (InstructionSet): The instruction set to add.
-    #
-    #     Examples:
-    #         >>> branch.add_instruction_set("greet", InstructionSet(instructions=["Hello", "Hi"]))
-    #     """
-    #     self.instruction_sets[name] = instruction_set
-
-    # def remove_instruction_set(self, name: str) -> bool:
-    #     """
-    #     Remove an instruction set from the conversation.
-    #
-    #     Args:
-    #         name (str): The name of the instruction set to remove.
-    #
-    #     Returns:
-    #         bool: True if the instruction set was removed, False otherwise.
-    #
-    #     Examples:
-    #         >>> branch.remove_instruction_set("greet")
-    #         True
-    #     """
-    #     return self.instruction_sets.pop(name)
 
     def register_tools(self, tools: Union[Tool, List[Tool]]):
         """
@@ -229,6 +218,7 @@ class Branch(Conversation):
                 if key not in self.tool_manager.registry:
                     self.tool_manager.registry[key] = value
 
+    @property
     def messages_describe(self) -> Dict[str, Any]:
         """
         Describe the conversation and its messages.
@@ -360,8 +350,6 @@ class Branch(Conversation):
             >>> print(result)
         """
         
-        config = {**self.llmconfig}
-        
         if system:
             self.change_first_system_message(system)
         self.add_message(instruction=instruction, context=context, sender=sender)
@@ -370,12 +358,11 @@ class Branch(Conversation):
             kwargs.pop('tool_parsed')
             tool_kwarg = {'tools': tools}
             kwargs = {**tool_kwarg, **kwargs}
-            config.update(kwargs)
         else:
             if tools and self.has_tools:
                 kwargs = self.tool_manager._tool_parser(tools=tools, **kwargs)
-                config.update(kwargs)
 
+        config = {**self.llmconfig, **kwargs}
         await self.call_chatcompletion(**config)
         
         async def _output():
@@ -387,6 +374,9 @@ class Branch(Conversation):
                         [as_dict(i) for i in tool_uses["action_list"]], 
                         self.tool_manager.get_function_call
                     )
+                    
+                    # outs = await alcall(func_calls, self.tool_manager.invoke)
+
                     tasks = [self.tool_manager.invoke(i) for i in func_calls]
                     outs = await asyncio.gather(*tasks)
                     for out_, f in zip(outs, func_calls):
@@ -454,50 +444,146 @@ class Branch(Conversation):
                 else:
                     return fallback(**fallback_kwargs)
             return await self.chat(instruction, tool_parsed=True, **kwargs)
-        
-    async def instruction_set_auto_followup(
-        self,
-        instruction_set: InstructionSet,
-        num: Union[int, List[int]] = 3,
-        **kwargs
-    ) -> None:
-        """
-        Automatically perform follow-up chats for an entire instruction set.
 
-        This method asynchronously conducts follow-up chats for each instruction in the provided instruction set,
-        handling tool invocations as specified.
+    def send(self, to_name, title, package):
+        """
+        Send a request package to a specified recipient.
 
         Args:
-            instruction_set (InstructionSet): The instruction set to process.
-            num (Union[int, List[int]]): The maximum number of follow-up chats to perform for each instruction,
-                                          or a list of maximum numbers corresponding to each instruction.
-            **kwargs: Additional keyword arguments to pass to the chat completion service.
+            to_name (str): The name of the recipient.
+            title (str): The title or category of the request (e.g., 'messages', 'tool', 'service', 'llmconfig').
+            package (Any): The actual data or object to be sent. Its expected type depends on the title.
+        """
+        request = Request(from_name=self.name, to_name=to_name, title=title, request=package)
+        self.pending_outs.append(request)
+
+    def receive(self, from_name, messages=True, tool=True, service=True, llmconfig=True):
+        """
+        Process and integrate received request packages based on their titles.
+
+        Args:
+            from_name (str): The name of the sender whose packages are to be processed.
+            messages (bool, optional): If True, processes 'messages' requests.
+            tool (bool, optional): If True, processes 'tool' requests.
+            service (bool, optional): If True, processes 'service' requests.
+            llmconfig (bool, optional): If True, processes 'llmconfig' requests.
 
         Raises:
-            ValueError: If the length of `num` as a list does not match the number of instructions in the set.
-
-        Examples:
-            >>> instruction_set = InstructionSet(instructions=["What's the weather?", "And for tomorrow?"])
-            >>> await branch.instruction_set_auto_followup(instruction_set)
+            ValueError: If no package is found from the specified sender, or if any of the packages have an invalid format.
         """
+        skipped_requests = deque()
+        if from_name not in self.pending_ins:
+            raise ValueError(f'No package from {from_name}')
+        while self.pending_ins[from_name]:
+            request = self.pending_ins[from_name].popleft()
 
-        if isinstance(num, List):
-            if len(num) != instruction_set.instruct_len:
-                raise ValueError(
-                    'Unmatched auto_followup num size and instructions set size'
-                )
-        current_instruct_node = instruction_set.get_instruction_by_id(
-            instruction_set.first_instruct
-        )
-        for i in range(instruction_set.instruct_len):
-            num_ = num if isinstance(num, int) else num[i]
-            tools = instruction_set.get_tools(current_instruct_node)
-            if tools:
-                await self.auto_followup(
-                    current_instruct_node, num=num_, tools=tools, self=self, **kwargs
-                )
+            if request.title == 'messages' and messages:
+                if not isinstance(request.request, pd.DataFrame):
+                    raise ValueError('Invalid messages format')
+                validate_messages(request.request)
+                self.messages = self.messages.merge(request.request, how='outer')
+                continue
+
+            elif request.title == 'tool' and tool:
+                if not isinstance(request.request, Tool):
+                    raise ValueError('Invalid tool format')
+                self.tool_manager.register_tools([request.request])
+
+            elif request.title == 'service' and service:
+                if not isinstance(request.request, BaseService):
+                    raise ValueError('Invalid service format')
+                self.service = request.request
+
+            elif request.title == 'llmconfig' and llmconfig:
+                if not isinstance(request.request, dict):
+                    raise ValueError('Invalid llmconfig format')
+                self.llmconfig.update(request.request)
+
             else:
-                await self.chat(current_instruct_node)
-            current_instruct_node = instruction_set.get_next_instruction(
-                current_instruct_node
-            )
+                skipped_requests.append(request)
+
+        self.pending_ins[from_name] = skipped_requests
+
+    def receive_all(self):
+        """
+        Process all pending incoming requests from all senders.
+        """
+        for key in list(self.pending_ins.keys()):
+            self.receive(key)
+
+
+    # def add_instruction_set(self, name: str, instruction_set: InstructionSet):
+    #     """
+    #     Add an instruction set to the conversation.
+    #
+    #     Args:
+    #         name (str): The name of the instruction set.
+    #         instruction_set (InstructionSet): The instruction set to add.
+    #
+    #     Examples:
+    #         >>> branch.add_instruction_set("greet", InstructionSet(instructions=["Hello", "Hi"]))
+    #     """
+    #     self.instruction_sets[name] = instruction_set
+
+    # def remove_instruction_set(self, name: str) -> bool:
+    #     """
+    #     Remove an instruction set from the conversation.
+    #
+    #     Args:
+    #         name (str): The name of the instruction set to remove.
+    #
+    #     Returns:
+    #         bool: True if the instruction set was removed, False otherwise.
+    #
+    #     Examples:
+    #         >>> branch.remove_instruction_set("greet")
+    #         True
+    #     """
+    #     return self.instruction_sets.pop(name)
+
+    # async def instruction_set_auto_followup(
+    #     self,
+    #     instruction_set: InstructionSet,
+    #     num: Union[int, List[int]] = 3,
+    #     **kwargs
+    # ) -> None:
+    #     """
+    #     Automatically perform follow-up chats for an entire instruction set.
+    #
+    #     This method asynchronously conducts follow-up chats for each instruction in the provided instruction set,
+    #     handling tool invocations as specified.
+    #
+    #     Args:
+    #         instruction_set (InstructionSet): The instruction set to process.
+    #         num (Union[int, List[int]]): The maximum number of follow-up chats to perform for each instruction,
+    #                                       or a list of maximum numbers corresponding to each instruction.
+    #         **kwargs: Additional keyword arguments to pass to the chat completion service.
+    #
+    #     Raises:
+    #         ValueError: If the length of `num` as a list does not match the number of instructions in the set.
+    #
+    #     Examples:
+    #         >>> instruction_set = InstructionSet(instructions=["What's the weather?", "And for tomorrow?"])
+    #         >>> await branch.instruction_set_auto_followup(instruction_set)
+    #     """
+    #
+    #     if isinstance(num, List):
+    #         if len(num) != instruction_set.instruct_len:
+    #             raise ValueError(
+    #                 'Unmatched auto_followup num size and instructions set size'
+    #             )
+    #     current_instruct_node = instruction_set.get_instruction_by_id(
+    #         instruction_set.first_instruct
+    #     )
+    #     for i in range(instruction_set.instruct_len):
+    #         num_ = num if isinstance(num, int) else num[i]
+    #         tools = instruction_set.get_tools(current_instruct_node)
+    #         if tools:
+    #             await self.auto_followup(
+    #                 current_instruct_node, num=num_, tools=tools, self=self, **kwargs
+    #             )
+    #         else:
+    #             await self.chat(current_instruct_node)
+    #         current_instruct_node = instruction_set.get_next_instruction(
+    #             current_instruct_node
+    #         )
