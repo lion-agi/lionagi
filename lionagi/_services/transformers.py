@@ -52,4 +52,3 @@ class TransformersService(BaseService):
         }
 
         return payload, completion
-
