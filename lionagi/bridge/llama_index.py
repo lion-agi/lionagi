@@ -1,5 +1,5 @@
 from typing import Union, Callable, List, Any, Dict, TypeVar
-from ..utils.sys_util import change_dict_key
+from ..utils.sys_util import change_dict_key, install_and_import
 from ..schema.data_node import DataNode
 
 
@@ -38,7 +38,18 @@ def to_llama_index_textnode(datanode: T, **kwargs: Any) -> Any:
         datanode = DataNode(...)
         textnode = to_llama_index_textnode(datanode, additional_arg=1)
     """
-    from llama_index.schema import TextNode
+    try:
+        from llama_index.schema import TextNode
+    except ImportError:
+        try:
+            install_and_import(
+                package_name='llama_index', 
+                module_name='schema',
+                import_name='TextNode'
+            )
+            from llama_index.schema import TextNode
+        except Exception as e:
+            raise ImportError(f'Unable to import required module from llama_index. Please make sure that llama_index is installed. Error: {e}')
 
     dnode = datanode.to_dict()
     change_dict_key(dnode, old_key='content', new_key='text')
@@ -67,14 +78,35 @@ def get_llama_reader(reader: Union[str, Callable]) -> Callable:
         def custom_reader(): pass
         reader = get_llama_reader(custom_reader)
     """
+    
     try:
         if isinstance(reader, str):
             if reader == 'SimpleDirectoryReader':
-                from llama_index import SimpleDirectoryReader
-                return SimpleDirectoryReader
-            else:
-                from llama_index import download_loader
-                return download_loader(reader)
+                try:
+                    from llama_index import SimpleDirectoryReader
+                    return SimpleDirectoryReader
+                except ImportError:
+                    try:
+                        install_and_import(
+                            package_name='llama_index',
+                            import_name='SimpleDirectoryReader'
+                        )
+                        return SimpleDirectoryReader
+                    except Exception as e:
+                        raise ImportError(f'Failed to import SimpleDirectoryReader. Error: {e}')
+            else:                
+                try:
+                    from llama_index import download_loader
+                    return download_loader(reader)
+                except ImportError:
+                    try:
+                        install_and_import(
+                            package_name='llama_index',
+                            import_name='download_loader'
+                        )
+                        return download_loader(reader)
+                    except Exception as e:
+                        raise ImportError(f'Failed to import download_loader from LlamaIndex. Error: {e}')
         else:
             return reader
     except Exception as e:
@@ -133,9 +165,33 @@ def get_llama_parser(parser: Union[str, Callable]) -> Callable:
         def custom_parser(): pass
         parser = get_llama_parser(custom_parser)
     """
-    import llama_index.node_parser as node_parser
-    import llama_index.text_splitter as text_splitter
+    
+    try:
+        import llama_index.node_parser as node_parser
+    except ImportError:
+        try:
+            install_and_import(
+                package_name='llama_index',
+                module_name='node_parser'
+            )
+            import llama_index.node_parser as node_parser
+        except ImportError:
+            raise ImportError('Failed to import Llama Index. Please install Llama Index to use this function.')
+        except Exception as e:
+            raise ValueError(f'Invalid node parser: {parser}. Error: {e}')
 
+    try:
+        import llama_index.text_splitter as text_splitter
+    except ImportError:
+        try:
+            install_and_import(
+                package_name='llama_index',
+                module_name='text_splitter'
+            )
+            import llama_index.text_splitter as text_splitter
+        except ImportError:
+            raise ImportError('Failed to import Llama Index. Please install Llama Index to use this function.')
+        
     try:
         return getattr(node_parser, parser)
     except Exception as e1:

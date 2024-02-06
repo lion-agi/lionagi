@@ -2,6 +2,7 @@ import asyncio
 import functools
 import logging
 import time
+from concurrent.futures import ThreadPoolExecutor
 from typing import Any, Callable, Generator, Iterable, List, Dict, Optional, Tuple
 
 from aiocache import cached
@@ -643,6 +644,17 @@ class CallDecorator:
             reducing the frequency of resource-intensive operations.
         """
         return Throttle(period)
+    
+    @staticmethod
+    def force_async(fn):
+        pool = ThreadPoolExecutor()
+
+        @functools.wraps(fn)
+        def wrapper(*args, **kwargs):
+            future = pool.submit(fn, *args, **kwargs)
+            return asyncio.wrap_future(future)  # make it awaitable
+
+        return wrapper
 
 class Throttle:
     """

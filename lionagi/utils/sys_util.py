@@ -1,4 +1,6 @@
 import os
+import subprocess
+import sys
 import copy
 from datetime import datetime
 import hashlib
@@ -352,3 +354,49 @@ def is_schema(dict_: Dict, schema: Dict):
 def timestamp_to_datetime(timestamp):    
     return datetime.fromtimestamp(timestamp)
 
+def install_and_import(package_name, module_name=None, import_name=None, pip_name=None):
+    
+    """
+    For a simple package import where package name matches pip name
+    import xx
+    install_and_import('xx')
+    
+
+    For importing a module from a package
+    import xx.yy
+    install_and_import('xx', 'yy')
+
+    For importing a specific attribute from a module/sub-module
+    from xx.yy import zz
+    install_and_import('xx', 'yy', 'zz')
+
+    For cases where pip name differs from package name
+    install_and_import('xx', pip_name='different_pip_name')
+
+    For full example with different pip name
+    install_and_import('xx', 'yy', 'zz', 'different_pip_name')
+    """
+    
+    if pip_name is None:
+        pip_name = package_name  # Defaults to package_name if pip_name is not explicitly provided
+    
+    full_import_path = package_name if module_name is None else f"{package_name}.{module_name}"
+    
+    try:
+        if import_name:
+            # For importing a specific name from a module or sub-module
+            module = __import__(full_import_path, fromlist=[import_name])
+            getattr(module, import_name)
+        else:
+            # For importing the module or package itself
+            __import__(full_import_path)
+        print(f"Successfully imported {import_name or full_import_path}.")
+    except ImportError:
+        print(f"Module {full_import_path} or attribute {import_name} not found. Installing {pip_name}...")
+        subprocess.check_call([sys.executable, "-m", "pip", "install", pip_name])
+        # Retry the import after installation
+        if import_name:
+            module = __import__(full_import_path, fromlist=[import_name])
+            getattr(module, import_name)
+        else:
+            __import__(full_import_path)
