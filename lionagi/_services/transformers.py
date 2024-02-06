@@ -1,4 +1,4 @@
-from typing import Union, str, Dict, Any
+from typing import Union, Dict, Any
 from transformers import pipeline, Conversation
 
 from .base_service import BaseService
