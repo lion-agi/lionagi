@@ -31,7 +31,7 @@ class Conversation:
             >>> conversation = Conversation(dir='logs/')
         """
         self.messages = pd.DataFrame(columns=["node_id", "role", "sender", "timestamp", "content"])
-        self._logger = DataLogger(dir=dir)
+        self.logger = DataLogger(dir=dir)
 
     def _create_message(
         self,
@@ -385,7 +385,7 @@ class Conversation:
             Conversation: A new Conversation object that is a clone of the current conversation.
         """
         cloned = Conversation()
-        cloned._logger.set_dir(self._logger.dir)
+        cloned.logger.set_dir(self.logger.dir)
         cloned.messages = self.messages.copy()
         return cloned
 

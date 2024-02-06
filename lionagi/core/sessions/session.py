@@ -2,14 +2,11 @@ import pandas as pd
 from typing import Any, List, Union, Dict, Optional, Callable, Tuple
 from dotenv import load_dotenv
 
-from lionagi.schema import DataLogger, Tool
-from lionagi.utils import to_list
-from lionagi.configs.oai_configs import oai_schema
+from lionagi.schema import Tool
 from lionagi._services.oai import OpenAIService
 from ..messages.messages import System, Instruction
-from ..instruction_set.instruction_set import InstructionSet
 from ..branch.branch import Branch
-from ..core_util import sign_message
+from ..branch.branch_manager import BranchManager
 
             
 load_dotenv()
@@ -33,6 +30,7 @@ class Session:
     def __init__(
         self,
         system: Optional[Union[str, System]] = None,
+        sender: Optional[str] = None,
         dir: Optional[str] = None,
         llmconfig: Optional[Dict[str, Any]] = None,
         service: OpenAIService = OAIService,
@@ -53,46 +51,61 @@ class Session:
             default_branch_name (str, optional): Name of the default branch, defaults to 'main'.
         """
 
-        self.branches = branches or {}
-        self.default_branch = default_branch or Branch()
-        if system:
-            self.default_branch.add_message(system=system)
+        self.branches = branches if isinstance(branches, dict) else {}
+        self.default_branch = default_branch if default_branch else Branch(name=default_branch_name, service=service, llmconfig=llmconfig)
         self.default_branch_name = default_branch_name
-        self.branches.update({self.default_branch_name: self.default_branch})
-        self.llmconfig = llmconfig or oai_schema["chat/completions"]["config"]
-        self.logger_ = DataLogger(dir=dir)
-        self.service = service
+        if system:
+            self.default_branch.add_message(system=system, sender=sender)
+        if self.branches:
+            if self.default_branch_name not in self.branches.keys():
+                raise ValueError('default branch name is not in imported branches')
+            if self.default_branch is not self.branches[self.default_branch_name]:
+                raise ValueError(f'default branch does not match Branch object under {self.default_branch_name}')
+        if not self.branches:
+            self.branches[self.default_branch_name] = self.default_branch
+        if dir:
+            self.default_branch.dir = dir
+
+        self.branch_manager = BranchManager(self.branches)
         
     def new_branch(
         self, 
         branch_name: str,
-        system: Optional[Union[str, System]] = None, 
-        tools: Optional[Union[Tool, List[Tool]]] = None, 
+        dir: Optional[str] = None,
+        messages: Optional[pd.DataFrame] = None,
+        tools: Optional[Union[Tool, List[Tool]]] = None,
+        system: Optional[Union[str, System]] = None,
         sender: Optional[str] = None,
         service: Optional[OpenAIService] = None,
+        llmconfig: Optional[Dict] = None,
     ) -> None:
         """
         Create a new branch in the session.
 
         Args:
             branch_name (str): Name of the new branch.
+            dir (str, optional): Directory path for storing logs.
+            messages (Optional[pd.DataFrame]): A DataFrame containing conversation messages.
             system (Union[str, System], optional): Initial system message or System object for the new branch.
             tools (Optional[Union[Tool, List[Tool]]], optional): Tools to register with the new branch.
             sender (Optional[str], optional): Sender of the initial system message.
             service (OpenAIService, optional): Service used for the new branch if different from the session's service.
+            llmconfig (Dict[str, Any], optional): Configuration settings for the language model.
 
         Raises:
             ValueError: If the branch name already exists in the session.
         """
-        new_ = Branch()
         if branch_name in self.branches.keys():
             raise ValueError(f'Invalid new branch name {branch_name}. Already existed.')
+        new_ = Branch(name=branch_name, dir=dir, messages=messages, service=service, llmconfig=llmconfig)
         if system:
-            new_.add_message(system, sender=sender)
+            new_.add_message(system=system, sender=sender)
         if tools:
-            new_.register_tools(tools)    
-        new_.service = service or self.service
+            new_.register_tools(tools=tools)
         self.branches[branch_name] = new_
+
+        self.branch_manager.sources[branch_name] = new_
+        self.branch_manager.requests[branch_name] = {}
 
     def get_branch(
         self, 
@@ -167,6 +180,8 @@ class Session:
             )
         else:
             self.branches.pop(branch_name)
+            # self.branch_manager.sources.pop(branch_name)
+            self.branch_manager.requests.pop(branch_name)
             if verbose:
                 print(f'Branch {branch_name} is deleted.')
             return True
@@ -199,35 +214,6 @@ class Session:
                 self.default_branch_name = to_name
                 self.default_branch = to_
             self.delete_branch(from_, verbose=False)
-
-    # def send(
-    #     self, 
-    #     messages: pd.DataFrame, 
-    #     to_: Optional[Union[Branch, str, List[str]]] = None, 
-    #     sign_: bool = False, 
-    #     sender: Optional[str] = None,
-    # ) -> None:
-    #     """
-    #     Send messages to one or more branches.
-
-    #     Args:
-    #         messages (pd.DataFrame): The DataFrame containing messages to send.
-    #         to_ (Optional[Union[Branch, str, List[str]]], optional): The target branch, branch name, or list of branch names.
-    #         sign_ (bool, optional): If True, signs the message with the sender's name.
-    #         sender (Optional[str], optional): The sender's name.
-    #     """
-    #     if sign_: 
-    #         messages = messages.drop(columns=['sender'], errors='ignore')
-    #         messages = sign_message(messages=messages, sender=sender)
-        
-    #     for _to in to_list(to_):
-    #         branch_ = self.get_branch(_to)
-    #         _msg = branch_.messages.copy()
-    #         _new_df = pd.concat([_msg, messages], ignore_index=True)
-    #         _new_df = _new_df.drop_duplicates()
-    #         _new_df.reset_index(drop=True, inplace=True)
-    #         branch_.messages = _new_df
-
 
     async def chat(
         self, 
@@ -324,28 +310,59 @@ class Session:
             system (Union[System, str]): The new system message or a System object.
         """
         self.default_branch.change_first_system_message(system)
-  
-    # def add_instruction_set(self, name: str, instruction_set: InstructionSet) -> None:
-    #     """
-    #     Adds an instruction set to the current active branch.
-    #
-    #     Args:
-    #         name (str): The name of the instruction set.
-    #         instruction_set (InstructionSet): The instruction set to add.
-    #     """
-    #     self.default_branch.add_instruction_set(name, instruction_set)
-    #
-    # def remove_instruction_set(self, name: str) -> bool:
-    #     """
-    #     Removes an instruction set from the current active branch.
-    #
-    #     Args:
-    #         name (str): The name of the instruction set to remove.
-    #
-    #     Returns:
-    #         bool: True if the instruction set is removed, False otherwise.
-    #     """
-    #     return self.default_branch.remove_instruction_set(name)
+
+    def collect(self, from_: Union[str, Branch, List[str], List[Branch]] = None):
+        """
+        Collect requests from specified branches or all branches if none specified.
+
+        Args:
+            from_ (Union[str, Branch, List[str], List[Branch]], optional): The source branch(es) from which to collect requests.
+                If None, data is collected from all branches. Can be a single branch or a list of branches.
+        """
+        if from_ is None:
+            for branch in self.branches.keys():
+                self.branch_manager.collect(branch)
+        else:
+            if not isinstance(from_, list):
+                from_ = [from_]
+            for branch in from_:
+                if isinstance(branch, Branch):
+                    branch = branch.name
+                if isinstance(branch, str):
+                    self.branch_manager.collect(branch)
+
+    def send(self, to_: Union[str, Branch, List[str], List[Branch]] = None):
+        """
+        Collect requests from specified branches or all branches if none specified.
+
+        Args:
+            to_ (Union[str, Branch, List[str], List[Branch]], optional): The target branch(es) to which to send requests.
+                If None, requests are sent to all branches. Can be a single branch or a list of branches.
+        """
+        if to_ is None:
+            for branch in self.branches.keys():
+                self.branch_manager.send(branch)
+        else:
+            if not isinstance(to_, list):
+                to_ = [to_]
+            for branch in to_:
+                if isinstance(branch, Branch):
+                    branch = branch.name
+                if isinstance(branch, str):
+                    self.branch_manager.send(branch)
+
+    def collect_send_all(self, receive_all=False):
+        """
+        Collect and send requests across all branches, with an option to invoke receive_all on each branch.
+
+        Args:
+            receive_all (bool, optional): If True, triggers the receive_all method on each branch after sending requests.
+        """
+        self.collect()
+        self.send()
+        if receive_all:
+            for branch in self.branches.values():
+                branch.receive_all()
 
     def register_tools(self, tools: Union[Tool, List[Tool]]) -> None:
         """
@@ -387,3 +404,25 @@ class Session:
             pd.DataFrame: A DataFrame containing conversation messages.
         """
         return self.default_branch.messages
+
+    # def add_instruction_set(self, name: str, instruction_set: InstructionSet) -> None:
+    #     """
+    #     Adds an instruction set to the current active branch.
+    #
+    #     Args:
+    #         name (str): The name of the instruction set.
+    #         instruction_set (InstructionSet): The instruction set to add.
+    #     """
+    #     self.default_branch.add_instruction_set(name, instruction_set)
+    #
+    # def remove_instruction_set(self, name: str) -> bool:
+    #     """
+    #     Removes an instruction set from the current active branch.
+    #
+    #     Args:
+    #         name (str): The name of the instruction set to remove.
+    #
+    #     Returns:
+    #         bool: True if the instruction set is removed, False otherwise.
+    #     """
+    #     return self.default_branch.remove_instruction_set(name)

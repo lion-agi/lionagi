@@ -6,10 +6,10 @@ class AnthropicService(BaseService):
     A service to interact with Anthropic's API endpoints.
 
     Attributes:
-        base_url (str): The base URL for the OpenAI API.
+        base_url (str): The base URL for the Anthropic API.
         available_endpoints (list): A list of available API endpoints.
         schema (dict): The schema configuration for the API.
-        key_scheme (str): The environment variable name for OpenAI API key.
+        key_scheme (str): The environment variable name for Anthropic API key.
         token_encoding_name (str): The default token encoding scheme.
 
     Examples:
