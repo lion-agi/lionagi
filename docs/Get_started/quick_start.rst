@@ -18,7 +18,7 @@ Start your LionAGI experience with our demo example.
    calculator = li.Session(system=system)
    result = await calculator.chat(instruction=instruction,
                                   context=context,
-                                  model="gpt-4-1106-preview")
+                                  model="gpt-4-turbo-preview")
 
    print(f"Calculation Result: {result}")
 
@@ -35,7 +35,7 @@ Start your LionAGI experience with our demo example.
        calculator = li.Session(system=system)
        result = await calculator.chat(instruction=instruction,
                                       context=context,
-                                      model="gpt-4-1106-preview")
+                                      model="gpt-4-turbo-preview")
        print(f"Calculation Result: {result}")
 
    if __name__ == "__main__":
