@@ -1,5 +1,5 @@
 from typing import Union, Callable, List, Dict, Any, TypeVar
-from ..utils.sys_util import change_dict_key
+from ..utils.sys_util import change_dict_key, install_import
 from ..schema.data_node import DataNode
 
 
@@ -43,7 +43,18 @@ def to_langchain_document(datanode: T, **kwargs: Any) -> Any:
         >>> isinstance(lc_document, LangchainDocument)
         True
     """
-    from langchain.schema import Document
+    try:
+        from langchain.schema import Document
+    except ImportError:
+        try:
+            install_import(
+                package_name='langchain', 
+                module_name='schema', 
+                import_name='Document',
+            )
+            from langchain.schema import Document
+        except Exception as e:
+            raise ImportError(f'Unable to import required module from langchain. Please make sure that langchain is installed. Error: {e}')
 
     dnode = datanode.to_dict()
     change_dict_key(dnode, old_key='content', new_key='page_content')
@@ -73,11 +84,24 @@ def langchain_loader(loader: Union[str, Callable],
         >>> isinstance(data, dict)
         True
     """
-    import langchain.document_loaders as document_loaders
-
+    try:
+        import langchain.document_loaders as document_loaders
+    except ImportError:
+        try:
+            install_import(
+                package_name='langchain', 
+                module_name='document_loaders', 
+            )
+            import langchain.document_loaders as document_loaders
+        except Exception as e:
+            raise ImportError(f'Unable to import required module from langchain. Please make sure that langchain is installed. Error: {e}')
+        
     try:
         if isinstance(loader, str):
-            loader = getattr(document_loaders, loader)
+            try:
+                loader = getattr(document_loaders, loader)
+            except ImportError as e:
+                raise ValueError(f'Unable to import {loader} from langchain.document_loaders. Some dependency of LangChain are not installed. Error: {e}')
         else:
             loader = loader
     except Exception as e:
@@ -110,7 +134,17 @@ def langchain_text_splitter(data: Union[str, List],
         ValueError: If the specified text splitter is invalid or if the splitting fails.
     """
 
-    import langchain.text_splitter as text_splitter
+    try:
+        import langchain.text_splitter as text_splitter
+    except ImportError:
+        try:
+            install_import(
+                package_name='langchain', 
+                module_name='text_splitter'
+                )
+            import langchain.text_splitter as text_splitter
+        except Exception as e:
+            raise ImportError(f'Unable to import required module from langchain. Please make sure that langchain is installed. Error: {e}')
 
     try:
         if isinstance(splitter, str):

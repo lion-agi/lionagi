@@ -8,9 +8,9 @@ from ..messages.messages import System, Instruction
 from ..branch.branch import Branch
 from ..branch.branch_manager import BranchManager
 
-            
+
 load_dotenv()
-OAIService = OpenAIService()
+
 
 class Session:
     """
@@ -33,7 +33,7 @@ class Session:
         sender: Optional[str] = None,
         dir: Optional[str] = None,
         llmconfig: Optional[Dict[str, Any]] = None,
-        service: OpenAIService = OAIService,
+        service: OpenAIService = None,
         branches: Optional[Dict[str, Branch]] = None,
         default_branch: Optional[Branch] = None,
         default_branch_name: str = 'main',
@@ -52,6 +52,9 @@ class Session:
         """
 
         self.branches = branches if isinstance(branches, dict) else {}
+        if service is None:
+            service = OpenAIService()
+        
         self.default_branch = default_branch if default_branch else Branch(name=default_branch_name, service=service, llmconfig=llmconfig)
         self.default_branch_name = default_branch_name
         if system:

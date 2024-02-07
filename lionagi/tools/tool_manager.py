@@ -1,7 +1,7 @@
 import json
 import asyncio
 from typing import Dict, Union, List, Tuple, Any
-from lionagi.utils import lcall
+from lionagi.utils.call_util import lcall, is_coroutine_func, _call_handler
 from lionagi.schema import BaseNode, Tool
 
 
@@ -74,10 +74,10 @@ class ToolManager(BaseNode):
             func = tool.func
             parser = tool.parser
             try:
-                if asyncio.iscoroutinefunction(func):
-                    return await parser(func(**kwargs)) if parser else func(**kwargs)
-                else:
-                    return parser(func(**kwargs)) if parser else func(**kwargs)
+                tasks = [await _call_handler(func, **kwargs)]
+                out = await asyncio.gather(*tasks)
+                return parser(out) if parser else out
+            
             except Exception as e:
                 raise ValueError(f"Error when invoking function {name} with arguments {kwargs} with error message {e}")
         else: 

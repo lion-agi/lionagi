@@ -140,7 +140,8 @@ def chunk(documents,
     elif chunker_type == ChunkerType.LLAMAINDEX:
         if documents_convert_func:
             documents = documents_convert_func(documents, 'llama_index')
-        nodes = llama_index_node_parser(documents, chunker, chunker_args, chunker_kwargs, chunking_kwargs)
+        nodes = llama_index_node_parser(documents, chunker, chunker_args, chunker_kwargs, chunking_kwargs)    
+            
         if isinstance(to_datanode, bool) and to_datanode is True:
             nodes = lcall(nodes, from_llama_index)
         elif isinstance(to_datanode, Callable):
