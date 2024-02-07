@@ -117,7 +117,7 @@ class Services:
         return LiteLLMService(**kwargs)
     
     @staticmethod
-    def MlX(**kwargs):
+    def MLX(**kwargs):
         """
         A service to interact with MlX
         
