@@ -89,3 +89,13 @@ class Services:
 
         from .anthropic import AnthropicService
         return AnthropicService(**kwargs)
+
+    @staticmethod
+    def Ollama(**kwargs):
+        from .ollama import OllamaService
+        return OllamaService(**kwargs)
+
+    @staticmethod
+    def LiteLLM(**kwargs):
+        from .litellm import LiteLLMService
+        return LiteLLMService(**kwargs)
