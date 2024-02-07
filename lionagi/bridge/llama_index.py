@@ -1,5 +1,5 @@
 from typing import Union, Callable, List, Any, Dict, TypeVar
-from ..utils.sys_util import change_dict_key, install_and_import
+from ..utils.sys_util import change_dict_key, install_import, is_package_installed
 from ..schema.data_node import DataNode
 
 
@@ -42,7 +42,7 @@ def to_llama_index_textnode(datanode: T, **kwargs: Any) -> Any:
         from llama_index.schema import TextNode
     except ImportError:
         try:
-            install_and_import(
+            install_import(
                 package_name='llama_index', 
                 module_name='schema',
                 import_name='TextNode'
@@ -85,12 +85,13 @@ def get_llama_reader(reader: Union[str, Callable]) -> Callable:
                 try:
                     from llama_index import SimpleDirectoryReader
                     return SimpleDirectoryReader
-                except ImportError:
+                except ImportError or ModuleNotFoundError:
                     try:
-                        install_and_import(
+                        install_import(
                             package_name='llama_index',
                             import_name='SimpleDirectoryReader'
                         )
+                        from llama_index import SimpleDirectoryReader
                         return SimpleDirectoryReader
                     except Exception as e:
                         raise ImportError(f'Failed to import SimpleDirectoryReader. Error: {e}')
@@ -100,7 +101,7 @@ def get_llama_reader(reader: Union[str, Callable]) -> Callable:
                     return download_loader(reader)
                 except ImportError:
                     try:
-                        install_and_import(
+                        install_import(
                             package_name='llama_index',
                             import_name='download_loader'
                         )
@@ -170,7 +171,7 @@ def get_llama_parser(parser: Union[str, Callable]) -> Callable:
         import llama_index.node_parser as node_parser
     except ImportError:
         try:
-            install_and_import(
+            install_import(
                 package_name='llama_index',
                 module_name='node_parser'
             )
@@ -184,7 +185,7 @@ def get_llama_parser(parser: Union[str, Callable]) -> Callable:
         import llama_index.text_splitter as text_splitter
     except ImportError:
         try:
-            install_and_import(
+            install_import(
                 package_name='llama_index',
                 module_name='text_splitter'
             )
@@ -193,7 +194,15 @@ def get_llama_parser(parser: Union[str, Callable]) -> Callable:
             raise ImportError('Failed to import Llama Index. Please install Llama Index to use this function.')
         
     try:
-        return getattr(node_parser, parser)
+        if parser == 'CodeSplitter':
+            if not is_package_installed('tree_sitter_languages'):
+                install_import(package_name='tree_sitter_languages')
+                
+        a = getattr(node_parser, parser)
+        if a is not None:
+            return a
+        else:
+            raise ImportError(f'Failed to import {parser} from Llama Index.')
     except Exception as e1:
         try:
             if isinstance(parser, str):
@@ -228,13 +237,25 @@ def llama_index_node_parser(documents: List[Any],
     Example:
         nodes = llama_index_node_parser(documents, "DefaultNodeParser")
     """
-    parser = get_llama_parser(parser)
 
     try:
+        parser = get_llama_parser(parser)
         parser_obj = parser(*parser_args, **parser_kwargs)
         nodes = parser_obj.get_nodes_from_documents(documents, **parsing_kwargs)
         return nodes
 
+    except ImportError as e:
+        module_name = str(e).split("\'")[-2]
+        try:
+            install_import(package_name=module_name)
+            parser = get_llama_parser(parser)
+            parser_obj = parser(*parser_args, **parser_kwargs)
+            nodes = parser_obj.get_nodes_from_documents(documents, **parsing_kwargs)
+            return nodes
+        except Exception as e:
+            raise ImportError(f'Failed to install and import {module_name}. Error: {e}')
+            
+            
     except Exception as e1:
         try:
             parser_obj = parser.from_defaults(*parser_args, **parser_kwargs)

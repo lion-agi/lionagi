@@ -1,5 +1,5 @@
 from typing import Union, Callable, List, Dict, Any, TypeVar
-from ..utils.sys_util import change_dict_key, install_and_import
+from ..utils.sys_util import change_dict_key, install_import
 from ..schema.data_node import DataNode
 
 
@@ -47,7 +47,7 @@ def to_langchain_document(datanode: T, **kwargs: Any) -> Any:
         from langchain.schema import Document
     except ImportError:
         try:
-            install_and_import(
+            install_import(
                 package_name='langchain', 
                 module_name='schema', 
                 import_name='Document',
@@ -88,7 +88,7 @@ def langchain_loader(loader: Union[str, Callable],
         import langchain.document_loaders as document_loaders
     except ImportError:
         try:
-            install_and_import(
+            install_import(
                 package_name='langchain', 
                 module_name='document_loaders', 
             )
@@ -138,7 +138,7 @@ def langchain_text_splitter(data: Union[str, List],
         import langchain.text_splitter as text_splitter
     except ImportError:
         try:
-            install_and_import(
+            install_import(
                 package_name='langchain', 
                 module_name='text_splitter'
                 )

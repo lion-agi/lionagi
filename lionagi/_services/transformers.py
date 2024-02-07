@@ -1,6 +1,6 @@
 from typing import Union, Dict, Any
 
-from ..utils.sys_util import install_and_import
+from ..utils.sys_util import install_import
 from ..utils.call_util import CallDecorator as cd
 from .base_service import BaseService
 
@@ -10,7 +10,7 @@ class TransformersService(BaseService):
             from transformers import pipeline
         except ImportError:
             try:
-                install_and_import(
+                install_import(
                     package_name='transformers',
                     import_name='pipeline'
                 )
@@ -30,7 +30,7 @@ class TransformersService(BaseService):
             from transformers import Conversation
         except ImportError:
             try:
-                install_and_import(
+                install_import(
                     package_name='transformers',
                     import_name='Conversation'
                 )

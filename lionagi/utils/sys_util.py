@@ -5,6 +5,7 @@ import copy
 from datetime import datetime
 import hashlib
 import re
+import importlib.util
 
 import json
 import logging
@@ -354,7 +355,7 @@ def is_schema(dict_: Dict, schema: Dict):
 def timestamp_to_datetime(timestamp):    
     return datetime.fromtimestamp(timestamp)
 
-def install_and_import(package_name, module_name=None, import_name=None, pip_name=None):
+def install_import(package_name, module_name=None, import_name=None, pip_name=None):
     
     """
     For a simple package import where package name matches pip name
@@ -400,3 +401,7 @@ def install_and_import(package_name, module_name=None, import_name=None, pip_nam
             getattr(module, import_name)
         else:
             __import__(full_import_path)
+            
+def is_package_installed(package_name):
+    package_spec = importlib.util.find_spec(package_name)
+    return package_spec is not None
