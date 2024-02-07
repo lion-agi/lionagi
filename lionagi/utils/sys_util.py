@@ -6,11 +6,20 @@ from datetime import datetime
 import hashlib
 import re
 import importlib.util
-
+import platform
 import json
 import logging
 
 from typing import Any, List, Dict, Union
+
+
+
+def get_cpu_architecture():
+    arch = platform.machine()
+    if 'arm' in arch or 'aarch64' in arch:
+        return 'apple_silicon'
+    else:
+        return 'other_cpu'
 
 
 def get_timestamp() -> str:

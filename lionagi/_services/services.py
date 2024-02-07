@@ -116,3 +116,16 @@ class Services:
         from .litellm import LiteLLMService
         return LiteLLMService(**kwargs)
     
+    @staticmethod
+    def MlX(**kwargs):
+        """
+        A service to interact with MlX
+        
+        Attributes:
+            model (str): name of the model to use
+            kwargs (Optional[Any]): additional kwargs for calling the model
+        """
+        
+        from .mlx_service import MlXService
+        return MlXService(**kwargs)
+    

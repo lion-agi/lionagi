@@ -1,5 +1,4 @@
 from ..utils.sys_util import install_import, is_package_installed
-from ..utils.call_util import CallDecorator as cd
 from .base_service import BaseService
 
 class OllamaService(BaseService):
@@ -20,8 +19,7 @@ class OllamaService(BaseService):
         self.model = model
         self.client = self.ollama.Client(**kwargs)
 
-    @cd.force_async
-    def serve_chat(self, messages, **kwargs):
+    async def serve_chat(self, messages, **kwargs):
         self.ollama.pull(self.model)
         payload = {'messages': messages}
 
