@@ -1,32 +1,28 @@
-import ollama
-
+from ..utils.sys_util import install_import, is_package_installed
+from ..utils.call_util import CallDecorator as cd
 from .base_service import BaseService
-
-import functools
-from concurrent.futures import ThreadPoolExecutor
-import asyncio
-
-
-def force_async(fn):
-    pool = ThreadPoolExecutor()
-
-    @functools.wraps(fn)
-    def wrapper(*args, **kwargs):
-        future = pool.submit(fn, *args, **kwargs)
-        return asyncio.wrap_future(future)  # make it awaitable
-
-    return wrapper
-
 
 class OllamaService(BaseService):
     def __init__(self, model: str = None, **kwargs):
         super().__init__()
+        
+        try: 
+            if not is_package_installed('ollama'):
+                install_import(
+                    package_name='ollama',
+                    import_name='Client'
+                )
+            import ollama    
+            self.ollama = ollama
+        except:
+            raise ImportError(f'Unable to import required module from ollama. Please make sure that ollama is installed.')
+        
         self.model = model
-        self.client = ollama.Client(**kwargs)
+        self.client = self.ollama.Client(**kwargs)
 
-    @force_async
+    @cd.force_async
     def serve_chat(self, messages, **kwargs):
-        ollama.pull(self.model)
+        self.ollama.pull(self.model)
         payload = {'messages': messages}
 
         try:
@@ -36,3 +32,4 @@ class OllamaService(BaseService):
         except Exception as e:
             self.status_tracker.num_tasks_failed += 1
             raise e
+        

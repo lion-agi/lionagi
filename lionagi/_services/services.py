@@ -92,10 +92,27 @@ class Services:
 
     @staticmethod
     def Ollama(**kwargs):
+        """
+        A service to interact with Ollama
+        
+        Attributes:
+            model (str): name of the model to use
+            kwargs (Optional[Any]): additional kwargs for calling the model
+        """
+    
         from .ollama import OllamaService
         return OllamaService(**kwargs)
 
     @staticmethod
     def LiteLLM(**kwargs):
+        """
+        A service to interact with Litellm
+        
+        Attributes:
+            model (str): name of the model to use
+            kwargs (Optional[Any]): additional kwargs for calling the model
+        """
+        
         from .litellm import LiteLLMService
         return LiteLLMService(**kwargs)
+    
