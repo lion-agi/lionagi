@@ -1,4 +1,5 @@
 import pandas as pd
+
 from typing import Any, List, Union, Dict, Optional, Callable, Tuple
 from dotenv import load_dotenv
 
@@ -7,7 +8,6 @@ from lionagi._services.oai import OpenAIService
 from ..messages.messages import System, Instruction
 from ..branch.branch import Branch
 from ..branch.branch_manager import BranchManager
-
 
 load_dotenv()
 
@@ -31,7 +31,6 @@ class Session:
         self,
         system: Optional[Union[str, System]] = None,
         sender: Optional[str] = None,
-        dir: Optional[str] = None,
         llmconfig: Optional[Dict[str, Any]] = None,
         service: OpenAIService = None,
         branches: Optional[Dict[str, Branch]] = None,
@@ -43,7 +42,6 @@ class Session:
 
         Args:
             system (Union[str, System]): Initial system message or System object for the default branch.
-            dir (str, optional): Directory path for storing logs.
             llmconfig (Dict[str, Any], optional): Configuration settings for the language model.
             service (OpenAIService, optional): Service used for handling chat completions and other operations.
             branches (Dict[str, Branch], optional): Pre-existing branches to initialize in the session.
@@ -54,21 +52,11 @@ class Session:
         self.branches = branches if isinstance(branches, dict) else {}
         if service is None:
             service = OpenAIService()
-        
-        self.default_branch = default_branch if default_branch else Branch(name=default_branch_name, service=service, llmconfig=llmconfig)
-        self.default_branch_name = default_branch_name
-        if system:
-            self.default_branch.add_message(system=system, sender=sender)
-        if self.branches:
-            if self.default_branch_name not in self.branches.keys():
-                raise ValueError('default branch name is not in imported branches')
-            if self.default_branch is not self.branches[self.default_branch_name]:
-                raise ValueError(f'default branch does not match Branch object under {self.default_branch_name}')
-        if not self.branches:
-            self.branches[self.default_branch_name] = self.default_branch
-        if dir:
-            self.default_branch.dir = dir
 
+        self._setup_default_branch(
+            default_branch, default_branch_name, service, llmconfig, system, sender)
+        
+        self._verify_default_branch()
         self.branch_manager = BranchManager(self.branches)
         
     def new_branch(
@@ -265,6 +253,26 @@ class Session:
             instruction=instruction, system=system, context=context,
             out=out, sender=sender, invoke=invoke, tools=tools, **kwargs)
 
+    async def ReAct(
+        self,
+        instruction: Union[Instruction, str],
+        context = None,
+        sender = None,
+        to_ = None,
+        system = None,
+        tools = None, 
+        num_rounds: int = 1,
+        fallback: Optional[Callable] = None,
+        fallback_kwargs: Optional[Dict] = None,
+        out=True,
+        **kwargs  
+    ):
+        branch = self.get_branch(to_)
+        return await branch.ReAct(
+            instruction=instruction, context=context, sender=sender, system=system, tools=tools, 
+            num_rounds=num_rounds, fallback=fallback, fallback_kwargs=fallback_kwargs, 
+            out=out, **kwargs
+        )
 
     async def auto_followup(
         self,
@@ -293,16 +301,8 @@ class Session:
         """
         
         branch_ = self.get_branch(to_)
-        if fallback:
-            try:
-                return await branch_.auto_followup(
-                    instruction=instruction, num=num, tools=tools,**kwargs
-                )
-            except:
-                return fallback(**fallback_kwargs)
-        
         return await branch_.auto_followup(
-            instruction=instruction, num=num, tools=tools,**kwargs
+            instruction=instruction, num=num, tools=tools, fallback=fallback, fallback_kwargs=fallback_kwargs, **kwargs
         )
 
     def change_first_system_message(self, system: Union[System, str]) -> None:
@@ -369,7 +369,7 @@ class Session:
 
     def register_tools(self, tools: Union[Tool, List[Tool]]) -> None:
         """
-        Registers one or more tools to the current active branch.
+        Registers one or more tools to the current default branch.
 
         Args:
             tools (Union[Tool, List[Tool]]): The tool or list of tools to register.
@@ -378,7 +378,7 @@ class Session:
 
     def delete_tool(self, name: str) -> bool:
         """
-        Deletes a tool from the current active branch.
+        Deletes a tool from the current default branch.
 
         Args:
             name (str): The name of the tool to delete.
@@ -391,10 +391,10 @@ class Session:
     @property
     def describe(self) -> Dict[str, Any]:
         """
-        Generates a report of the current active branch.
+        Generates a report of the current default branch.
 
         Returns:
-            Dict[str, Any]: The report of the current active branch.
+            Dict[str, Any]: The report of the current default branch.
         """
         return self.default_branch.describe
 
@@ -408,6 +408,60 @@ class Session:
         """
         return self.default_branch.messages
 
+
+    @property
+    def first_system(self) -> pd.Series:
+        """
+        Get the first system message of the current default branch.
+
+        Returns:
+            System: The first system message of the current default branch.
+        """
+        return self.default_branch.first_system
+    
+    @property
+    def last_response(self) -> pd.Series:
+        """
+        Get the last response message of the current default branch.
+
+        Returns:
+            str: The last response message of the current default branch.
+        """
+        return self.default_branch.last_response
+
+
+    @property
+    def last_response_content(self) -> Dict:
+        """
+        Get the last response content of the current default branch.
+
+        Returns:
+            Dict: The last response content of the current default branch.
+        """
+        return self.default_branch.last_response_content
+
+
+    def _verify_default_branch(self):
+        if self.branches:
+            if self.default_branch_name not in self.branches.keys():
+                raise ValueError('default branch name is not in imported branches')
+            if self.default_branch is not self.branches[self.default_branch_name]:
+                raise ValueError(f'default branch does not match Branch object under {self.default_branch_name}')
+            
+        if not self.branches:
+            self.branches[self.default_branch_name] = self.default_branch
+
+    def _setup_default_branch(
+        self, default_branch, default_branch_name, service, llmconfig, system, sender
+    ):
+        self.default_branch = default_branch if default_branch else Branch(
+            name=default_branch_name, service=service, llmconfig=llmconfig
+        )
+        self.default_branch_name = default_branch_name
+        if system:
+            self.default_branch.add_message(system=system, sender=sender)
+
+        self.llmconfig = self.default_branch.llmconfig
     # def add_instruction_set(self, name: str, instruction_set: InstructionSet) -> None:
     #     """
     #     Adds an instruction set to the current active branch.

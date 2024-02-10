@@ -1,5 +1,4 @@
 import json
-
 import pandas as pd
 
 from typing import Any, Callable, Dict, List, Optional, Union
@@ -7,11 +6,13 @@ from collections import deque
 import asyncio
 from dotenv import load_dotenv
 
-from lionagi.utils import as_dict, get_flattened_keys, alcall, lcall, mcall, to_list
+from lionagi.utils import as_dict, get_flattened_keys, alcall, lcall, to_list
+from lionagi.utils.sys_util import is_same_dtype
 from lionagi.schema import Tool
 from lionagi._services.base_service import StatusTracker, BaseService
 from lionagi._services.oai import OpenAIService
 from lionagi._services.openrouter import OpenRouterService
+
 from lionagi.configs.oai_configs import oai_schema
 from lionagi.configs.openrouter_configs import openrouter_schema
 from lionagi.tools.tool_manager import ToolManager
@@ -19,63 +20,25 @@ from lionagi.tools.tool_manager import ToolManager
 from ..messages.messages import Instruction, System
 from ..instruction_set.instruction_set import InstructionSet
 
-from .conversation import Conversation
+from .conversation import Conversation, validate_messages
 from .branch_manager import Request
-from ..core_util import validate_messages
 
 load_dotenv()
 
-oai_service = OpenAIService()
 
 class Branch(Conversation):
-    """
-    Represents a conversation branch with messages, instruction sets, and tool management.
-
-    A `Branch` is a type of conversation that can have messages, system instructions, and registered tools
-    for interacting with external services or tools.
-
-    Attributes:
-        dir (str): The directory path for storing logs.
-        messages (pd.DataFrame): A DataFrame containing conversation messages.
-        instruction_sets (Dict[str, InstructionSet]): A dictionary of instruction sets mapped by their names.
-        tool_manager (ToolManager): An instance of ToolManager for managing tools.
-        service (OpenAIService): An instance of OpenAIService to interact with OpenAI API.
-        status_tracker (StatusTracker): An instance of StatusTracker to keep track of the status.
-        llmconfig (Dict): Configuration for the language model.
-
-    Examples:
-        >>> branch = Branch(dir="path/to/log")
-        >>> branch.add_instruction_set("greet", InstructionSet(instructions=["Hello", "Hi"]))
-        >>> branch.remove_instruction_set("greet")
-        True
-        >>> tool = Tool(name="calculator")
-        >>> branch.register_tools(tool)
-        >>> branch.messages_describe()  # doctest: +SKIP
-        {'total_messages': 0, 'summary_by_role': ..., 'summary_by_sender': ..., 'instruction_sets': {}, 'registered_tools': {'calculator': ...}, 'messages': []}
-    """
-
+    
     def __init__(
         self,
         name: Optional[str] = None,
-        dir: Optional[str] = None,
         messages: Optional[pd.DataFrame] = None,
         instruction_sets: Optional[Dict[str, InstructionSet]] = None,
         tool_manager: Optional[ToolManager] = None,
-        service: OpenAIService = oai_service,
+        service : Optional[BaseService] = None,
         llmconfig: Optional[Dict] = None,
     ):
-        """
-        Initializes a new Branch instance.
 
-        Args:
-            dir (Optional[str]): The directory path for storing logs.
-            messages (Optional[pd.DataFrame]): A DataFrame containing conversation messages.
-            instruction_sets (Optional[Dict[str, InstructionSet]]): A dictionary of instruction sets.
-            tool_manager (Optional[ToolManager]): An instance of ToolManager for managing tools.
-            service (OpenAIService): The OpenAI service instance.
-            llmconfig (Optional[Dict]): Configuration for the language model.
-        """
-        super().__init__(dir)
+        super().__init__()
         self.messages = (
             messages
             if messages is not None
@@ -85,101 +48,67 @@ class Branch(Conversation):
         )
         self.instruction_sets = instruction_sets if instruction_sets else {}
         self.tool_manager = tool_manager if tool_manager else ToolManager()
-
-        self.service = service if service else oai_service
         self.status_tracker = StatusTracker()
-        if llmconfig:
-            self.llmconfig = llmconfig
-        else:
-            if isinstance(service, OpenAIService):
-                self.llmconfig = oai_schema["chat/completions"]["config"]
-            elif isinstance(service, OpenRouterService):
-                self.llmconfig = openrouter_schema["chat/completions"]["config"]
-            else:
-                self.llmconfig = {}
-
+        self._add_service(service, llmconfig)
         self.name = name
         self.pending_ins = {}
         self.pending_outs = deque()
 
-    def change_first_system_message(
-        self, system: Union[str, Dict[str, Any], System], sender: Optional[str] = None
-    ):
-        """
-        Change the system message of the conversation.
+    @property
+    def chat_messages(self):
+        return self._to_chatcompletion_message()
 
-        Args:
-            system (Union[str, Dict[str, Any], System]): The new system message.
-            sender (Optional[str]): The sender of the system message.
+    @property
+    def chat_messages_with_sender(self):
+        return self._to_chatcompletion_message(with_sender=True) 
 
-        Raises:
-            ValueError: If the input cannot be converted into a system message.
+    @property
+    def messages_describe(self) -> Dict[str, Any]:
+        return {
+            "total_messages": len(self.messages),
+            "summary_by_role": self._info(),
+            "summary_by_sender": self._info(use_sender=True),
+            "instruction_sets": self.instruction_sets,
+            "registered_tools": self.tool_manager.registry,
+            "messages": [
+                msg.to_dict() for _, msg in self.messages.iterrows()
+            ],
+        }
 
-        Examples:
-            >>> branch.change_first_system_message("System update", sender="admin")
-            >>> branch.change_first_system_message({"text": "System reboot", "type": "update"})
-        """
-        if len(self.messages[self.messages.role == 'system']) == 0:
-            raise ValueError("There is no system message in the messages.")
-        if isinstance(system, (str, Dict)):
-            system = System(system, sender=sender)
-        if isinstance(system, System):
-            message_dict = system.to_dict()
-            if sender:
-                message_dict['sender'] = sender
-            message_dict['timestamp'] = str(pd.Timestamp.now())
-            sys_index = self.messages[self.messages.role == 'system'].index
-            self.messages.loc[sys_index[0]] = message_dict
+    @property
+    def has_tools(self) -> bool:
+        return self.tool_manager.registry != {}
 
-        else:
-            raise ValueError("Input cannot be converted into a system message.")
+# ----- tool manager methods ----- #
 
     def register_tools(self, tools: Union[Tool, List[Tool]]):
-        """
-        Register one or more tools with the conversation's tool manager.
-
-        Args:
-            tools (Union[Tool, List[Tool]]): The tools to register.
-
-        Examples:
-            >>> tool = Tool(name="calculator")
-            >>> branch.register_tools(tool)
-        """
         if not isinstance(tools, list):
             tools = [tools]
         self.tool_manager.register_tools(tools=tools)
 
-    def delete_tool(self, name: str) -> bool:
-        """
-        Delete a tool from the conversation's tool manager.
-
-        Args:
-            name (str): The name of the tool to delete.
-
-        Returns:
-            bool: True if the tool was deleted, False otherwise.
-
-        Examples:
-            >>> branch.delete_tool("calculator")
-            True
-        """
-        if name in self.tool_manager.registry:
-            self.tool_manager.registry.pop(name)
-            return True
+    def delete_tool(self, tools: Union[Tool, List[Tool], str, List[str]], verbose=True) -> bool:
+        if isinstance(tools, list):
+            if is_same_dtype(tools, str):
+                for tool in tools:
+                    if tool in self.tool_manager.registry:
+                        self.tool_manager.registry.pop(tool)
+                if verbose:
+                    print("tools successfully deleted")
+                return True
+            elif is_same_dtype(tools, Tool):
+                for tool in tools:
+                    if tool.name in self.tool_manager.registry:
+                        self.tool_manager.registry.pop(tool.name)
+                if verbose:
+                    print("tools successfully deleted")
+                return True
+        if verbose:
+            print("tools deletion failed")
         return False
 
+# ----- branch manipulation ----- #
     def clone(self) -> 'Branch':
-        """
-        Create a clone of the conversation.
-
-        Returns:
-            Branch: A new Branch object that is a clone of the current conversation.
-
-        Examples:
-            >>> cloned_branch = branch.clone()
-        """
         cloned = Branch(
-            dir = self.logger.dir,
             messages=self.messages.copy(), 
             instruction_sets=self.instruction_sets.copy(),
             tool_manager=ToolManager()
@@ -192,15 +121,7 @@ class Branch(Conversation):
         return cloned
 
     def merge_branch(self, branch: 'Branch', update: bool = True):
-        """
-        Merge another Branch into this Branch.
 
-        Args:
-            branch (Branch): The Branch to merge into this one.
-            update (bool): If True, update existing instruction sets and tools, 
-                otherwise only add non-existing ones.
-
-        """
         message_copy = branch.messages.copy()
         self.messages = self.messages.merge(message_copy, how='outer')
 
@@ -218,233 +139,8 @@ class Branch(Conversation):
                 if key not in self.tool_manager.registry:
                     self.tool_manager.registry[key] = value
 
-    @property
-    def messages_describe(self) -> Dict[str, Any]:
-        """
-        Describe the conversation and its messages.
 
-        Returns:
-            Dict[str, Any]: A dictionary containing information about the conversation and its messages.
-
-        Examples:
-            >>> description = branch.messages_describe()
-            >>> print(description["total_messages"])
-            0
-        """
-        return {
-            "total_messages": len(self.messages),
-            "summary_by_role": self.info(),
-            "summary_by_sender": self.info(use_sender=True),
-            "instruction_sets": self.instruction_sets,
-            "registered_tools": self.tool_manager.registry,
-            "messages": [
-                msg.to_dict() for _, msg in self.messages.iterrows()
-            ],
-        }
-
-    def to_chatcompletion_message(self) -> List[Dict[str, Any]]:
-        """
-        Convert the conversation into a chat completion message format suitable for the OpenAI API.
-
-        Returns:
-            List[Dict[str, Any]]: A list of messages in chat completion message format.
-
-        Examples:
-            >>> chat_completion_message = branch.to_chatcompletion_message()
-        """
-        message = []
-        for _, row in self.messages.iterrows():
-            content_ = row['content']
-            if content_.startswith('Sender'):
-                content_ = content_.split(':', 1)[1]
-            if isinstance(content_, str):
-                try:
-                    content_ = json.dumps(as_dict(content_))
-                except Exception as e:
-                    raise ValueError(f"Error in serealizing, {row['node_id']} {content_}: {e}")
-                
-            out = {"role": row['role'], "content": content_}
-            message.append(out)
-        return message
-
-    def _is_invoked(self) -> bool:
-        """
-        Check if the conversation has been invoked with an action response.
-
-        Returns:
-            bool: True if the conversation has been invoked, False otherwise.
-
-        """
-        content = self.messages.iloc[-1]['content']
-        try:
-            if (
-                as_dict(content)['action_response'].keys() >= {'function', 'arguments', 'output'}
-            ):
-                return True
-        except:
-            return False
-    
-    async def call_chatcompletion(self, **kwargs):
-        """
-        Call the chat completion service with the current conversation messages.
-
-        This method asynchronously sends the messages to the OpenAI service and updates the conversation
-        with the response.
-
-        Args:
-            **kwargs: Additional keyword arguments to pass to the chat completion service.
-
-        """
-        messages = self.to_chatcompletion_message()
-        payload, completion = await self.service.serve_chat(messages=messages, **kwargs)
-        if "choices" in completion:
-            self.logger.add_entry({"input": payload, "output": completion})
-            self.add_message(response=completion['choices'][0])
-            self.status_tracker.num_tasks_succeeded += 1
-        else:
-            self.status_tracker.num_tasks_failed += 1
-
-    @property
-    def has_tools(self) -> bool:
-        """
-        Check if there are any tools registered in the tool manager.
-
-        Returns:
-            bool: True if there are tools registered, False otherwise.
-
-        """
-        return self.tool_manager.registry != {}
-
-    async def chat(
-        self,
-        instruction: Union[Instruction, str],
-        system: Optional[Union[System, str, Dict[str, Any]]] = None,
-        context: Optional[Any] = None,
-        out: bool = True,
-        sender: Optional[str] = None,
-        invoke: bool = True,
-        tools: Union[bool, Tool, List[Tool], str, List[str]] = False,
-        **kwargs
-    ) -> Any:
-        """
-        Conduct a chat with the conversation, processing instructions and potentially using tools.
-
-        This method asynchronously handles a chat instruction, updates the conversation with the response,
-        and performs tool invocations if specified.
-
-        Args:
-            instruction (Union[Instruction, str]): The chat instruction to process.
-            system (Optional[Union[System, str, Dict[str, Any]]]): The system message to include in the chat.
-            context (Optional[Any]): Additional context to include in the chat.
-            out (bool): If True, return the output of the chat.
-            sender (Optional[str]): The sender of the chat instruction.
-            invoke (bool): If True, invoke tools based on the chat response.
-            tools (Union[bool, Tool, List[Tool], str, List[str]]): Tools to potentially use during the chat.
-            **kwargs: Additional keyword arguments to pass to the chat completion service.
-
-        Returns:
-            Any: The output of the chat, if out is True.
-
-        Examples:
-            >>> result = await branch.chat("What is the weather today?")
-            >>> print(result)
-        """
-        
-        if system:
-            self.change_first_system_message(system)
-        self.add_message(instruction=instruction, context=context, sender=sender)
-
-        if 'tool_parsed' in kwargs:
-            kwargs.pop('tool_parsed')
-            tool_kwarg = {'tools': tools}
-            kwargs = {**tool_kwarg, **kwargs}
-        else:
-            if tools and self.has_tools:
-                kwargs = self.tool_manager._tool_parser(tools=tools, **kwargs)
-
-        config = {**self.llmconfig, **kwargs}
-        await self.call_chatcompletion(**config)
-        
-        async def _output():
-            content_ = as_dict(self.messages.content.iloc[-1])
-            if invoke:
-                try:
-                    tool_uses = content_
-                    func_calls = lcall(
-                        [as_dict(i) for i in tool_uses["action_list"]], 
-                        self.tool_manager.get_function_call
-                    )
-                    
-                    outs = await alcall(func_calls, self.tool_manager.invoke)
-                    
-                    outs = to_list(outs, flatten=True)
-
-                    for out_, f in zip(outs, func_calls):
-                        self.add_message(
-                            response={
-                                "function": f[0], 
-                                "arguments": f[1], 
-                                "output": out_
-                            }
-                        )
-                except:
-                    pass
-            if out:
-                if (
-                    len(content_.items()) == 1 
-                    and len(get_flattened_keys(content_)) == 1
-                ):
-                    key = get_flattened_keys(content_)[0]
-                    return content_[key]
-                return content_
-        
-        return await _output()
-
-    async def auto_followup(
-        self,
-        instruction: Union[Instruction, str],
-        num: int = 3,
-        tools: Union[bool, Tool, List[Tool], str, List[str], List[Dict]] = False,
-        fallback: Optional[Callable] = None,
-        fallback_kwargs: Optional[Dict] = None,
-        **kwargs
-    ) -> None:
-        """
-        Automatically perform follow-up chats based on the conversation state.
-
-        This method asynchronously conducts follow-up chats based on the conversation state and tool invocations,
-        with an optional fallback if the maximum number of follow-ups is reached.
-
-        Args:
-            instruction (Union[Instruction, str]): The chat instruction to process.
-            num (int): The maximum number of follow-up chats to perform.
-            tools (Union[bool, Tool, List[Tool], str, List[str], List[Dict]]): Tools to potentially use during the chats.
-            fallback (Optional[Callable]): A fallback function to call if the maximum number of follow-ups is reached.
-            fallback_kwargs (Optional[Dict]): Keyword arguments to pass to the fallback function.
-            **kwargs: Additional keyword arguments to pass to the chat completion service.
-
-        Examples:
-            >>> await branch.auto_followup("Could you elaborate on that?")
-        """
-        if self.tool_manager.registry != {} and tools:
-            kwargs = self.tool_manager._tool_parser(tools=tools, **kwargs)
-
-        cont_ = True
-        while num > 0 and cont_ is True:
-            if tools:
-                await self.chat(instruction, tool_choice="auto", tool_parsed=True, out=False, **kwargs)
-            else:
-                await self.chat(instruction, tool_parsed=True,  out=False, **kwargs)
-            num -= 1
-            cont_ = True if self._is_invoked() else False
-        if num == 0:
-            if fallback is not None:
-                if asyncio.iscoroutinefunction(fallback):
-                    return await fallback(**fallback_kwargs)
-                else:
-                    return fallback(**fallback_kwargs)
-            return await self.chat(instruction, tool_parsed=True, **kwargs)
-
+# ----- intra-branch communication methods ----- #
     def send(self, to_name, title, package):
         """
         Send a request package to a specified recipient.
@@ -510,6 +206,375 @@ class Branch(Conversation):
         """
         for key in list(self.pending_ins.keys()):
             self.receive(key)
+       
+
+# ----- service methods ----- #
+
+    async def call_chatcompletion(self, sender=None, with_sender=False, **kwargs):
+        messages = self.chat_messages if not with_sender else self.chat_messages_with_sender
+        payload, completion = await self.service.serve_chat(
+            messages=messages, **kwargs)
+        if "choices" in completion:
+            add_msg_config = {"response":completion['choices'][0]}
+            if sender is not None:
+                add_msg_config["sender"] = sender
+                
+            self.add_message(**add_msg_config)
+            self.status_tracker.num_tasks_succeeded += 1
+        else:
+            self.status_tracker.num_tasks_failed += 1
+
+# ----- chat methods ----- #
+
+    async def chat(
+        self,
+        instruction: Union[Instruction, str],
+        context: Optional[Any] = None,
+        sender: Optional[str] = None,
+        system: Optional[Union[System, str, Dict[str, Any]]] = None,
+        tools: Union[bool, Tool, List[Tool], str, List[str]] = False,
+        out: bool = True,
+        invoke: bool = True,
+        **kwargs
+    ) -> Any:
+        
+        if system:
+            self.change_first_system_message(system)
+        self.add_message(instruction=instruction, context=context, sender=sender)
+
+        if 'tool_parsed' in kwargs:
+            kwargs.pop('tool_parsed')
+            tool_kwarg = {'tools': tools}
+            kwargs = {**tool_kwarg, **kwargs}
+        else:
+            if tools and self.has_tools:
+                kwargs = self.tool_manager._tool_parser(tools=tools, **kwargs)
+
+        config = {**self.llmconfig, **kwargs}
+        if sender is not None: 
+            config.update({"sender": sender})
+        
+        await self.call_chatcompletion(**config)
+        
+        async def _output():
+            content_ = as_dict(self.messages.content.iloc[-1])
+            if invoke:
+                try:
+                    tool_uses = content_
+                    func_calls = lcall(
+                        [as_dict(i) for i in tool_uses["action_list"]], 
+                        self.tool_manager.get_function_call
+                    )
+                    
+                    outs = await alcall(func_calls, self.tool_manager.invoke)
+                    outs = to_list(outs, flatten=True)
+
+                    for out_, f in zip(outs, func_calls):
+                        self.add_message(
+                            response={
+                                "function": f[0], 
+                                "arguments": f[1], 
+                                "output": out_
+                            }
+                        )
+                except:
+                    pass
+            if out:
+                if (
+                    len(content_.items()) == 1 
+                    and len(get_flattened_keys(content_)) == 1
+                ):
+                    key = get_flattened_keys(content_)[0]
+                    return content_[key]
+                return content_
+        
+        return await _output()
+
+    async def ReAct(
+        self,
+        instruction: Union[Instruction, str],
+        context = None,
+        sender = None,
+        system = None,
+        tools = None, 
+        num_rounds: int = 1,
+        fallback: Optional[Callable] = None,
+        fallback_kwargs: Optional[Dict] = None,
+        out=True,
+        **kwargs 
+    ):
+        """
+        one reason step and one action step is considered one round. 
+        ReAct will reason then action for specified number of rounds, 
+        and then present final output.
+        
+        so: 1 round, will be 3 messages
+            2 round, will be 5 messages
+        """
+        if tools is not None:
+            if isinstance(tools, list) and isinstance(tools[0], Tool):
+                self.register_tools(tools)
+        
+        if self.tool_manager.registry == {}:
+            raise ValueError("No tools found, You need to register tools for ReAct (reason-action)")
+        
+        else:
+            kwargs = self.tool_manager._tool_parser(tools=True, **kwargs)
+
+        i = 0
+        while i < num_rounds:
+            prompt = f"""
+                you have {(num_rounds-i)*2} step left in current task. reflect, perform 
+                reason for action plan according to available tools only, 
+                apply divide and conquer technique
+            """ 
+            instruct = {"Notice": prompt}
+            
+            if i == 0:
+                instruct["Task"] = instruction
+                await self.chat(
+                    instruction=instruct, context=context, tool_parsed=True,
+                    system=system, out=False, sender=sender, **kwargs
+                )
+        
+            elif i >0:
+                await self.chat(
+                    instruction=instruct, out=False, tool_parsed=True, sender=sender, **kwargs
+                )
+                
+            prompt = f"""
+                you have {(num_rounds-i)*2-1} step left in current task, 
+                invoke tool usage according to plan and perform the actions
+            """
+            await self.chat(prompt, tool_choice="auto", tool_parsed=True, out=False,sender=sender, **kwargs)
+
+            i += 1
+        
+        if self._is_invoked():
+            if fallback is not None:
+                if asyncio.iscoroutinefunction(fallback):
+                    return await fallback(**fallback_kwargs)
+                else:
+                    return fallback(**fallback_kwargs)
+            prompt = """
+                present the final result to user
+            """
+            return await self.chat(prompt, sender=sender, tool_parsed=True, **kwargs)
+        else:
+            if out:
+                return self.last_response_content
+
+    async def auto_ReAct(
+        self,
+        instruction: Union[Instruction, str],
+        context = None,
+        sender = None,
+        system = None,
+        tools = None, 
+        max_rounds: int = 1,
+        
+        fallback: Optional[Callable] = None,
+        fallback_kwargs: Optional[Dict] = None,
+        **kwargs 
+    ):
+        if tools is not None:
+            if isinstance(tools, list) and isinstance(tools[0], Tool):
+                self.register_tools(tools)
+        
+        if self.tool_manager.registry == {}:
+            raise ValueError("No tools found, You need to register tools for ReAct (reason-action)")
+        
+        else:
+            kwargs = self.tool_manager._tool_parser(tools=True, **kwargs)
+
+        i = 0
+        while i < max_rounds:
+            prompt = f"""
+                you have {(max_rounds-i)*2} step left in current task. reflect, perform 
+                reason for action plan according to available tools only, apply divide and conquer technique
+            """ 
+            instruct = {"Notice": prompt}
+            
+            if i == 0:
+                instruct["Task"] = instruction
+                await self.chat(
+                    instruction=instruct, context=context, 
+                    system=system, out=False, sender=sender, **kwargs
+                )
+        
+            elif i >0:
+                await self.chat(
+                    instruction=instruct, out=False, sender=sender, **kwargs
+                )
+                
+            prompt = f"""
+                you have {(max_rounds-i)*2-1} step left in current task, invoke tool usage to perform the action
+            """
+            out = await self.chat(prompt, tool_choice="auto", tool_parsed=True, out=False,sender=sender, **kwargs)
+            if not self._is_invoked():
+                return out
+
+            i += 1
+
+        if self._is_invoked():
+            if fallback is not None:
+                if asyncio.iscoroutinefunction(fallback):
+                    return await fallback(**fallback_kwargs)
+                else:
+                    return fallback(**fallback_kwargs)
+            prompt = """
+                present the final result to user
+            """
+            return await self.chat(prompt, sender=sender, tool_parsed=True, **kwargs)
+
+    async def auto_followup(
+        self,
+        instruction: Union[Instruction, str],
+        context = None,
+        sender = None,
+        system = None,
+        tools: Union[bool, Tool, List[Tool], str, List[str], List[Dict]] = False,
+        max_followup: int = 3,
+        out=True, 
+        **kwargs
+    ) -> None:
+
+        """
+        auto tool usages until LLM decides done. Then presents final results. 
+        """
+
+        if self.tool_manager.registry != {} and tools:
+            kwargs = self.tool_manager._tool_parser(tools=tools, **kwargs)
+
+        n_tries = 0
+        while (max_followup - n_tries) > 0:
+            prompt = f"""
+                In the current task you are allowed a maximum of another {max_followup-n_tries} followup chats. 
+                if further actions are needed, invoke tools usage. If you are done, present the final result 
+                to user without further tool usage
+            """
+            if n_tries > 0:
+                _out = await self.chat(prompt, sender=sender, tool_choice="auto", tool_parsed=True, **kwargs)
+                n_tries += 1
+                
+                if not self._is_invoked():
+                    return _out if out else None
+                                
+            elif n_tries == 0:
+                instruct = {"notice": prompt, "task": instruction}
+                out = await self.chat(
+                    instruct, context=context, system=system, sender=sender, tool_choice="auto", 
+                    tool_parsed=True, **kwargs
+                )
+                n_tries += 1
+                
+                if not self._is_invoked():
+                    return _out if out else None
+
+        if self._is_invoked():
+            """
+            In the current task, you are at your last step, present the final result to user
+            """
+            return await self.chat(instruction, sender=sender, tool_parsed=True, **kwargs)
+
+    async def followup(
+        self,
+        instruction: Union[Instruction, str],
+        context = None,
+        sender = None,
+        system = None,
+        tools: Union[bool, Tool, List[Tool], str, List[str], List[Dict]] = False,
+        max_followup: int = 3,
+        out=True, 
+        **kwargs
+    ) -> None:
+
+        """
+        auto tool usages until LLM decides done. Then presents final results. 
+        """
+
+        if self.tool_manager.registry != {} and tools:
+            kwargs = self.tool_manager._tool_parser(tools=tools, **kwargs)
+
+        n_tries = 0
+        while (max_followup - n_tries) > 0:
+            prompt = f"""
+                In the current task you are allowed a maximum of another {max_followup-n_tries} followup chats. 
+                if further actions are needed, invoke tools usage. If you are done, present the final result 
+                to user without further tool usage.
+            """
+            if n_tries > 0:
+                _out = await self.chat(prompt, sender=sender, tool_choice="auto", tool_parsed=True, **kwargs)
+                n_tries += 1
+                
+                if not self._is_invoked():
+                    return _out if out else None
+                                
+            elif n_tries == 0:
+                instruct = {"notice": prompt, "task": instruction}
+                out = await self.chat(
+                    instruct, context=context, system=system, sender=sender, tool_choice="auto", 
+                    tool_parsed=True, **kwargs
+                )
+                n_tries += 1
+                
+                if not self._is_invoked():
+                    return _out if out else None
+
+    def _add_service(self, service, llmconfig):
+        service = service or OpenAIService()
+        self.service=service
+        if llmconfig:
+            self.llmconfig = llmconfig
+        else:
+            if isinstance(service, OpenAIService):
+                self.llmconfig = oai_schema["chat/completions"]["config"]
+            elif isinstance(service, OpenRouterService):
+                self.llmconfig = openrouter_schema["chat/completions"]["config"]
+            else:
+                self.llmconfig = {}
+
+
+    def _to_chatcompletion_message(self, with_sender=False) -> List[Dict[str, Any]]:
+        message = []
+
+        for _, row in self.messages.iterrows():
+            content_ = row['content']
+            if content_.startswith('Sender'):
+                content_ = content_.split(':', 1)[1]
+                
+            if isinstance(content_, str):
+                try:
+                    content_ = json.dumps(as_dict(content_))
+                except Exception as e:
+                    raise ValueError(f"Error in serealizing, {row['node_id']} {content_}: {e}")
+                
+            out = {"role": row['role'], "content": content_}
+            if with_sender:
+                out['content'] = f"Sender {row['sender']}: {content_}"
+            
+            message.append(out)
+        return message
+
+
+    def _is_invoked(self) -> bool:
+        """
+        Check if the conversation has been invoked with an action response.
+
+        Returns:
+            bool: True if the conversation has been invoked, False otherwise.
+
+        """
+        content = self.messages.iloc[-1]['content']
+        try:
+            if (
+                as_dict(content)['action_response'].keys() >= {'function', 'arguments', 'output'}
+            ):
+                return True
+        except:
+            return False
+
+
 
 
     # def add_instruction_set(self, name: str, instruction_set: InstructionSet):
