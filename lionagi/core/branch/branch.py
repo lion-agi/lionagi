@@ -300,7 +300,6 @@ class Branch(Conversation):
         num_rounds: int = 1,
         fallback: Optional[Callable] = None,
         fallback_kwargs: Optional[Dict] = None,
-        out=True,
         **kwargs 
     ):
         """
@@ -325,31 +324,30 @@ class Branch(Conversation):
         while i < num_rounds:
             prompt = f"""
                 you have {(num_rounds-i)*2} step left in current task. reflect, perform 
-                reason for action plan according to available tools only, 
-                apply divide and conquer technique
+                reason for action plan according to available tools only, apply divide and conquer technique, retain from invoking functions
             """ 
             instruct = {"Notice": prompt}
             
             if i == 0:
                 instruct["Task"] = instruction
                 await self.chat(
-                    instruction=instruct, context=context, tool_parsed=True,
-                    system=system, out=False, sender=sender, **kwargs
+                    instruction=instruct, context=context, 
+                    system=system, sender=sender, **kwargs
                 )
         
             elif i >0:
                 await self.chat(
-                    instruction=instruct, out=False, tool_parsed=True, sender=sender, **kwargs
+                    instruction=instruct, sender=sender, **kwargs
                 )
                 
             prompt = f"""
-                you have {(num_rounds-i)*2-1} step left in current task, 
-                invoke tool usage according to plan and perform the actions
+                you have {(num_rounds-i)*2-1} step left in current task, invoke tool usage according to plan
+                and perform the action
             """
-            await self.chat(prompt, tool_choice="auto", tool_parsed=True, out=False,sender=sender, **kwargs)
+            await self.chat(prompt, tool_choice="auto", tool_parsed=True, sender=sender, **kwargs)
 
             i += 1
-        
+
         if self._is_invoked():
             if fallback is not None:
                 if asyncio.iscoroutinefunction(fallback):
@@ -360,9 +358,6 @@ class Branch(Conversation):
                 present the final result to user
             """
             return await self.chat(prompt, sender=sender, tool_parsed=True, **kwargs)
-        else:
-            if out:
-                return self.last_response_content
 
     async def auto_ReAct(
         self,
@@ -391,7 +386,7 @@ class Branch(Conversation):
         while i < max_rounds:
             prompt = f"""
                 you have {(max_rounds-i)*2} step left in current task. reflect, perform 
-                reason for action plan according to available tools only, apply divide and conquer technique
+                reason for action plan according to available tools only, apply divide and conquer technique, retain from invoking functions
             """ 
             instruct = {"Notice": prompt}
             
@@ -410,9 +405,7 @@ class Branch(Conversation):
             prompt = f"""
                 you have {(max_rounds-i)*2-1} step left in current task, invoke tool usage to perform the action
             """
-            out = await self.chat(prompt, tool_choice="auto", tool_parsed=True, out=False,sender=sender, **kwargs)
-            if not self._is_invoked():
-                return out
+            await self.chat(prompt, tool_choice="auto", tool_parsed=True, out=False,sender=sender, **kwargs)
 
             i += 1
 

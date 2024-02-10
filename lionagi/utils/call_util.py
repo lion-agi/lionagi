@@ -92,7 +92,7 @@ def is_coroutine_func(func: Callable) -> bool:
     return asyncio.iscoroutinefunction(func)
 
 async def alcall(
-    input: Any, func: Callable, flatten: bool = False, **kwargs
+    input: Any = None, func: Callable = None, flatten: bool = False, **kwargs
 )-> List[Any]:
     """
     Asynchronously apply a function to each element in the input.
@@ -111,8 +111,12 @@ async def alcall(
         >>> asyncio.run(alcall([1, 2, 3], square))
         [1, 4, 9]
     """
-    lst = to_list(input=input)
-    tasks = [func(i, **kwargs) for i in lst]
+    if input:
+        lst = to_list(input=input)
+        tasks = [func(i, **kwargs) for i in lst]
+    else:
+        tasks = [func(**kwargs)]
+        
     outs = await asyncio.gather(*tasks)
     return to_list(outs, flatten=flatten)
 
@@ -833,16 +837,14 @@ async def _call_handler(
                 loop = asyncio.get_running_loop()
             except RuntimeError:  # No running event loop
                 loop = asyncio.new_event_loop()
-                asyncio.set_event_loop(loop)
-                # Running the coroutine in the new loop
                 result = loop.run_until_complete(func(*args, **kwargs))
+                
                 loop.close()
                 return result
 
             if loop.is_running():
-                return asyncio.ensure_future(func(*args, **kwargs))
-            else:
                 return await func(*args, **kwargs)
+
         else:
             return func(*args, **kwargs)
 

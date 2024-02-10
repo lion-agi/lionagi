@@ -1,7 +1,7 @@
 import json
 import asyncio
 from typing import Dict, Union, List, Tuple, Any
-from lionagi.utils.call_util import lcall, is_coroutine_func, _call_handler
+from lionagi.utils.call_util import lcall, is_coroutine_func, _call_handler, alcall
 from lionagi.schema import BaseNode, Tool
 
 
@@ -65,9 +65,9 @@ class ToolManager(BaseNode):
             parser = tool.parser
             try:
                 if is_coroutine_func(func):
-                    tasks = [await _call_handler(func, **kwargs)]
+                    tasks = [_call_handler(func, **kwargs)]
                     out = await asyncio.gather(*tasks)
-                    return parser(out) if parser else out
+                    return parser(out[0]) if parser else out[0]
                 else:
                     out = func(**kwargs)
                     return parser(out) if parser else out
