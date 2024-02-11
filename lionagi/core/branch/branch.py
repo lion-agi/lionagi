@@ -27,6 +27,62 @@ load_dotenv()
 
 
 class Branch(Conversation):
+    """
+    Manages a conversation branch within the application, handling messages, instruction sets, 
+    tool registrations, and service interactions for a single conversation flow. Extends the 
+    Conversation class to provide specialized functionalities like message handling, tool 
+    management, and integration with external services.
+
+    Attributes:
+        messages (pd.DataFrame): Dataframe storing conversation messages.
+        instruction_sets (Dict[str, InstructionSet]): Dictionary mapping instruction set names to their instances.
+        tool_manager (ToolManager): Manages tools available within the conversation.
+        status_tracker (StatusTracker): Tracks the status of various tasks within the conversation.
+        name (Optional[str]): Identifier for the branch.
+        pending_ins (Dict): Dictionary storing incoming requests.
+        pending_outs (deque): Queue for outgoing requests.
+        service (BaseService): Service instance for interaction with external services.
+        llmconfig (Dict): Configuration for language model interactions.
+
+    Methods:
+        __init__(self, name=None, messages=None, instruction_sets=None, tool_manager=None, 
+                 service=None, llmconfig=None):
+            Initializes a new Branch instance with optional configurations.
+
+        clone(self) -> 'Branch':
+            Creates a deep copy of the current Branch instance.
+
+        merge_branch(self, branch: 'Branch', update: True):
+            Merges another branch into the current Branch instance.
+
+        send(self, to_name: str, title: str, package: Any):
+            Sends a request package to a specified recipient.
+
+        receive(self, from_name: str, messages=True, tool=True, service=True, llmconfig=True):
+            Processes and integrates received request packages based on their titles.
+
+        receive_all(self):
+            Processes all pending incoming requests from all senders.
+
+        call_chatcompletion(self, sender=None, with_sender=False, **kwargs):
+            Asynchronously calls the chat completion service with the current message queue.
+
+        chat(self, instruction: Union[Instruction, str], context=None, sender=None, system=None, 
+             tools=False, out=True, invoke=True, **kwargs) -> Any:
+            Asynchronously handles a chat interaction within the branch.
+
+        ReAct(self, instruction: Union[Instruction, str], context=None, sender=None, system=None, 
+              tools=None, num_rounds=1, **kwargs):
+            Performs a sequence of reasoning and action based on the given instruction over multiple rounds.
+
+        auto_followup(self, instruction: Union[Instruction, str], context=None, sender=None, 
+                      system=None, tools=False, max_followup=3, out=True, **kwargs) -> None:
+            Automatically performs follow-up actions until a specified condition is met or the maximum number of follow-ups is reached.
+    
+    Note:
+        This class is designed to be used within an asynchronous environment, where methods like
+        `chat`, `ReAct`, and `auto_followup` are particularly useful for handling complex conversation flows.
+    """
     
     def __init__(
         self,
@@ -37,7 +93,17 @@ class Branch(Conversation):
         service : Optional[BaseService] = None,
         llmconfig: Optional[Dict] = None,
     ):
+        """
+        Initializes a new Branch instance.
 
+        Args:
+            name (Optional[str]): Name of the branch, providing an identifier within the conversational system. Defaults to None.
+            messages (Optional[pd.DataFrame]): A pandas DataFrame containing the conversation's messages. Initializes with an empty DataFrame if None. Defaults to None.
+            instruction_sets (Optional[Dict[str, InstructionSet]]): Dictionary mapping instruction set names to InstructionSet objects for conversation flow management. Defaults to {}.
+            tool_manager (Optional[ToolManager]): Manages tools within the branch. Creates a new instance if None. Defaults to None.
+            service (Optional[BaseService]): Interacts with external services. Initializes a default service based on branch configuration if None. Defaults to None.
+            llmconfig (Optional[Dict]): Configuration for language model interactions. Sets up default configuration based on the service type if None. Defaults to None.
+        """
         super().__init__()
         self.messages = (
             messages
@@ -82,11 +148,41 @@ class Branch(Conversation):
 # ----- tool manager methods ----- #
 
     def register_tools(self, tools: Union[Tool, List[Tool]]):
+        """
+        Registers a tool or a list of tools with the branch's tool manager.
+
+        This makes the tools available for use within the conversation.
+
+        Args:
+            tools (Union[Tool, List[Tool]]): A single Tool instance or a list of Tool instances to be registered.
+
+        Examples:
+            >>> branch.register_tools(tool)
+            >>> branch.register_tools([tool1, tool2])
+        """
         if not isinstance(tools, list):
             tools = [tools]
         self.tool_manager.register_tools(tools=tools)
 
     def delete_tool(self, tools: Union[Tool, List[Tool], str, List[str]], verbose=True) -> bool:
+        """
+        Deletes one or more tools from the branch's tool manager registry.
+
+        This can be done using either tool instances or their names.
+
+        Args:
+            tools (Union[Tool, List[Tool], str, List[str]]): A single Tool instance, a list of Tool instances, a tool name, or a list of tool names to be deleted.
+            verbose (bool): If True, prints a success message upon successful deletion. Defaults to True.
+
+        Returns:
+            bool: True if the tool(s) were successfully deleted, False otherwise.
+
+        Examples:
+            >>> branch.delete_tool("tool_name")
+            >>> branch.delete_tool(["tool_name1", "tool_name2"])
+            >>> branch.delete_tool(tool_instance)
+            >>> branch.delete_tool([tool_instance1, tool_instance2])
+        """
         if isinstance(tools, list):
             if is_same_dtype(tools, str):
                 for tool in tools:
@@ -108,6 +204,17 @@ class Branch(Conversation):
 
 # ----- branch manipulation ----- #
     def clone(self) -> 'Branch':
+        """
+        Creates a deep copy of the current Branch instance.
+
+        This method duplicates the Branch's state, including its messages, instruction sets, and tool registrations, but creates a new ToolManager instance for the cloned branch.
+
+        Returns:
+            Branch: A new Branch instance that is a deep copy of the current instance.
+
+        Examples:
+            >>> cloned_branch = branch.clone()
+        """
         cloned = Branch(
             messages=self.messages.copy(), 
             instruction_sets=self.instruction_sets.copy(),
@@ -121,6 +228,18 @@ class Branch(Conversation):
         return cloned
 
     def merge_branch(self, branch: 'Branch', update: bool = True):
+        """
+        Merges another branch into the current Branch instance.
+
+        Incorporates messages, instruction sets, and tool registrations from the specified branch. Optionally updates existing instruction sets and tools if duplicates are found.
+
+        Args:
+            branch (Branch): The branch to merge into the current branch.
+            update (bool): If True, existing instruction sets and tools are updated with those from the merged branch. Defaults to True.
+
+        Examples:
+            >>> branch.merge_branch(another_branch)
+        """
 
         message_copy = branch.messages.copy()
         self.messages = self.messages.merge(message_copy, how='outer')
@@ -143,29 +262,40 @@ class Branch(Conversation):
 # ----- intra-branch communication methods ----- #
     def send(self, to_name, title, package):
         """
-        Send a request package to a specified recipient.
+        Sends a request package to a specified recipient.
+
+        Packages are queued in `pending_outs` for dispatch. The function doesn't immediately send the package but prepares it for delivery.
 
         Args:
-            to_name (str): The name of the recipient.
+            to_name (str): The name of the recipient branch.
             title (str): The title or category of the request (e.g., 'messages', 'tool', 'service', 'llmconfig').
-            package (Any): The actual data or object to be sent. Its expected type depends on the title.
+            package (Any): The actual data or object to be sent, its expected type depends on the title.
+
+        Examples:
+            >>> branch.send("another_branch", "messages", message_dataframe)
+            >>> branch.send("service_branch", "service", service_config)
         """
         request = Request(from_name=self.name, to_name=to_name, title=title, request=package)
         self.pending_outs.append(request)
 
     def receive(self, from_name, messages=True, tool=True, service=True, llmconfig=True):
         """
-        Process and integrate received request packages based on their titles.
+        Processes and integrates received request packages based on their titles.
+
+        Handles incoming requests by updating the branch's state with the received data. It can selectively process requests based on the type specified by the `title` of the request.
 
         Args:
             from_name (str): The name of the sender whose packages are to be processed.
-            messages (bool, optional): If True, processes 'messages' requests.
-            tool (bool, optional): If True, processes 'tool' requests.
-            service (bool, optional): If True, processes 'service' requests.
-            llmconfig (bool, optional): If True, processes 'llmconfig' requests.
+            messages (bool): If True, processes 'messages' requests. Defaults to True.
+            tool (bool): If True, processes 'tool' requests. Defaults to True.
+            service (bool): If True, processes 'service' requests. Defaults to True.
+            llmconfig (bool): If True, processes 'llmconfig' requests. Defaults to True.
 
         Raises:
             ValueError: If no package is found from the specified sender, or if any of the packages have an invalid format.
+
+        Examples:
+            >>> branch.receive("another_branch")
         """
         skipped_requests = deque()
         if from_name not in self.pending_ins:
@@ -202,7 +332,12 @@ class Branch(Conversation):
 
     def receive_all(self):
         """
-        Process all pending incoming requests from all senders.
+        Processes all pending incoming requests from all senders.
+
+        This method iterates through all senders with pending requests and processes each using the `receive` method. It ensures that all queued incoming data is integrated into the branch's state.
+
+        Examples:
+            >>> branch.receive_all()
         """
         for key in list(self.pending_ins.keys()):
             self.receive(key)
@@ -211,6 +346,19 @@ class Branch(Conversation):
 # ----- service methods ----- #
 
     async def call_chatcompletion(self, sender=None, with_sender=False, **kwargs):
+        """
+        Asynchronously calls the chat completion service with the current message queue.
+
+        This method prepares the messages for chat completion, sends the request to the configured service, and handles the response. The method supports additional keyword arguments that are passed directly to the service.
+
+        Args:
+            sender (Optional[str]): The name of the sender to be included in the chat completion request. Defaults to None.
+            with_sender (bool): If True, includes the sender's name in the messages. Defaults to False.
+            **kwargs: Arbitrary keyword arguments passed directly to the chat completion service.
+
+        Examples:
+            >>> await branch.call_chatcompletion()
+        """
         messages = self.chat_messages if not with_sender else self.chat_messages_with_sender
         payload, completion = await self.service.serve_chat(
             messages=messages, **kwargs)
@@ -237,6 +385,27 @@ class Branch(Conversation):
         invoke: bool = True,
         **kwargs
     ) -> Any:
+        """
+        Asynchronously handles a chat interaction within the branch.
+
+        This method adds a new message based on the provided instruction, optionally using specified tools, and processes the chat completion.
+
+        Args:
+            instruction (Union[Instruction, str]): The instruction or query to process.
+            context (Optional[Any]): Additional context for the chat completion request. Defaults to None.
+            sender (Optional[str]): The name of the sender. Defaults to None.
+            system (Optional[Union[System, str, Dict[str, Any]]]): System message or configuration. Defaults to None.
+            tools (Union[bool, Tool, List[Tool], str, List[str]]): Specifies if and which tools to use in the chat. Defaults to False.
+            out (bool): If True, the output of the chat completion is returned. Defaults to True.
+            invoke (bool): If True, invokes any action as determined by the chat completion. Defaults to True.
+            **kwargs: Arbitrary keyword arguments for further customization.
+
+        Returns:
+            Any: The result of the chat interaction, which could be varied based on the input and configuration.
+
+        Examples:
+            >>> result = await branch.chat("How's the weather?")
+        """
         
         if system:
             self.change_first_system_message(system)
@@ -301,12 +470,24 @@ class Branch(Conversation):
         **kwargs 
     ):
         """
-        one reason step and one action step is considered one round. 
-        ReAct will reason then action for specified number of rounds, 
-        and then present final output.
-        
-        so: 1 round, will be 3 messages
-            2 round, will be 5 messages
+        Performs a sequence of reasoning and action based on the given instruction over multiple rounds.
+
+        In each round, the method reflects on the task, devises an action plan using available tools, and invokes the necessary tool usage to execute the plan.
+
+        Args:
+            instruction (Union[Instruction, str]): The initial task or question to start the reasoning and action process.
+            context: Optional context to influence the reasoning process. Defaults to None.
+            sender (Optional[str]): The name of the sender initiating the ReAct process. Defaults to None.
+            system: Optional system message or configuration to be considered during the process. Defaults to None.
+            tools: Specifies the tools to be considered for action plans. Defaults to None.
+            num_rounds (int): The number of reasoning-action rounds to be performed. Defaults to 1.
+            **kwargs: Arbitrary keyword arguments for further customization.
+
+        Returns:
+            The final output after completing the specified number of reasoning-action rounds.
+
+        Examples:
+            >>> await branch.ReAct("Prepare a report on recent sales trends.", num_rounds=2)
         """
         if tools is not None:
             if isinstance(tools, list) and isinstance(tools[0], Tool):
@@ -432,7 +613,25 @@ class Branch(Conversation):
     ) -> None:
 
         """
-        auto tool usages until LLM decides done. Then presents final results. 
+        Automatically performs follow-up actions until a specified condition is met or the maximum number of follow-ups is reached.
+
+        This method allows for iterative refinement and follow-up based on the instruction, using available tools and considering feedback from each step.
+
+        Args:
+            instruction (Union[Instruction, str]): The instruction to initiate the follow-up process.
+            context: Optional context relevant to the follow-up actions. Defaults to None.
+            sender (Optional[str]): The name of the sender. Defaults to None.
+            system: Optional system configuration affecting the follow-up process. Defaults to None.
+            tools (Union[bool, Tool, List[Tool], str, List[str], List[Dict]]): Specifies the tools to be used during follow-up actions. Defaults to False.
+            max_followup (int): The maximum number of follow-up iterations. Defaults to 3.
+            out (bool): If True, the final result is returned. Defaults to True.
+            **kwargs: Arbitrary keyword arguments for additional customization.
+
+        Returns:
+            The final result after all follow-up actions are completed, if `out` is True.
+
+        Examples:
+            >>> await branch.auto_followup("Update the database with new entries.", max_followup=2)
         """
 
         if self.tool_manager.registry != {} and tools:
