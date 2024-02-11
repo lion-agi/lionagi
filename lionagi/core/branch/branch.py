@@ -298,8 +298,6 @@ class Branch(Conversation):
         system = None,
         tools = None, 
         num_rounds: int = 1,
-        fallback: Optional[Callable] = None,
-        fallback_kwargs: Optional[Dict] = None,
         **kwargs 
     ):
         """
@@ -320,105 +318,106 @@ class Branch(Conversation):
         else:
             kwargs = self.tool_manager._tool_parser(tools=True, **kwargs)
 
+        out = ''
         i = 0
         while i < num_rounds:
-            prompt = f"""
+            prompt = f""" 
                 you have {(num_rounds-i)*2} step left in current task. reflect, perform 
-                reason for action plan according to available tools only, apply divide and conquer technique, retain from invoking functions
+                reason for action plan according to available tools only, 
+                apply divide and conquer technique.
             """ 
             instruct = {"Notice": prompt}
             
             if i == 0:
                 instruct["Task"] = instruction
-                await self.chat(
+                out = await self.chat(
                     instruction=instruct, context=context, 
                     system=system, sender=sender, **kwargs
                 )
         
             elif i >0:
-                await self.chat(
+                out = await self.chat(
                     instruction=instruct, sender=sender, **kwargs
                 )
                 
             prompt = f"""
                 you have {(num_rounds-i)*2-1} step left in current task, invoke tool usage according to plan
-                and perform the action
             """
-            await self.chat(prompt, tool_choice="auto", tool_parsed=True, sender=sender, **kwargs)
+            out = await self.chat(prompt, tool_choice="auto", tool_parsed=True, sender=sender, **kwargs)
 
             i += 1
-
-        if self._is_invoked():
-            if fallback is not None:
-                if asyncio.iscoroutinefunction(fallback):
-                    return await fallback(**fallback_kwargs)
-                else:
-                    return fallback(**fallback_kwargs)
-            prompt = """
-                present the final result to user
-            """
-            return await self.chat(prompt, sender=sender, tool_parsed=True, **kwargs)
-
-    async def auto_ReAct(
-        self,
-        instruction: Union[Instruction, str],
-        context = None,
-        sender = None,
-        system = None,
-        tools = None, 
-        max_rounds: int = 1,
-        
-        fallback: Optional[Callable] = None,
-        fallback_kwargs: Optional[Dict] = None,
-        **kwargs 
-    ):
-        if tools is not None:
-            if isinstance(tools, list) and isinstance(tools[0], Tool):
-                self.register_tools(tools)
-        
-        if self.tool_manager.registry == {}:
-            raise ValueError("No tools found, You need to register tools for ReAct (reason-action)")
-        
-        else:
-            kwargs = self.tool_manager._tool_parser(tools=True, **kwargs)
-
-        i = 0
-        while i < max_rounds:
-            prompt = f"""
-                you have {(max_rounds-i)*2} step left in current task. reflect, perform 
-                reason for action plan according to available tools only, apply divide and conquer technique, retain from invoking functions
-            """ 
-            instruct = {"Notice": prompt}
+            if not self._is_invoked():
+                return out
             
-            if i == 0:
-                instruct["Task"] = instruction
-                await self.chat(
-                    instruction=instruct, context=context, 
-                    system=system, out=False, sender=sender, **kwargs
-                )
-        
-            elif i >0:
-                await self.chat(
-                    instruction=instruct, out=False, sender=sender, **kwargs
-                )
-                
-            prompt = f"""
-                you have {(max_rounds-i)*2-1} step left in current task, invoke tool usage to perform the action
-            """
-            await self.chat(prompt, tool_choice="auto", tool_parsed=True, out=False,sender=sender, **kwargs)
-
-            i += 1
 
         if self._is_invoked():
-            if fallback is not None:
-                if asyncio.iscoroutinefunction(fallback):
-                    return await fallback(**fallback_kwargs)
-                else:
-                    return fallback(**fallback_kwargs)
             prompt = """
                 present the final result to user
             """
             return await self.chat(prompt, sender=sender, tool_parsed=True, **kwargs)
+        else:
+            return out
+
+    # async def auto_ReAct(
+    #     self,
+    #     instruction: Union[Instruction, str],
+    #     context = None,
+    #     sender = None,
+    #     system = None,
+    #     tools = None, 
+    #     max_rounds: int = 1,
+        
+    #     fallback: Optional[Callable] = None,
+    #     fallback_kwargs: Optional[Dict] = None,
+    #     **kwargs 
+    # ):
+    #     if tools is not None:
+    #         if isinstance(tools, list) and isinstance(tools[0], Tool):
+    #             self.register_tools(tools)
+        
+    #     if self.tool_manager.registry == {}:
+    #         raise ValueError("No tools found, You need to register tools for ReAct (reason-action)")
+        
+    #     else:
+    #         kwargs = self.tool_manager._tool_parser(tools=True, **kwargs)
+
+    #     i = 0
+    #     while i < max_rounds:
+    #         prompt = f"""
+    #             you have {(max_rounds-i)*2} step left in current task. reflect, perform 
+    #             reason for action plan according to available tools only, apply divide and conquer technique, retain from invoking functions
+    #         """ 
+    #         instruct = {"Notice": prompt}
+            
+    #         if i == 0:
+    #             instruct["Task"] = instruction
+    #             await self.chat(
+    #                 instruction=instruct, context=context, 
+    #                 system=system, out=False, sender=sender, **kwargs
+    #             )
+        
+    #         elif i >0:
+    #             await self.chat(
+    #                 instruction=instruct, out=False, sender=sender, **kwargs
+    #             )
+                
+    #         prompt = f"""
+    #             you have {(max_rounds-i)*2-1} step left in current task, invoke tool usage to perform the action
+    #         """
+    #         await self.chat(prompt, tool_choice="auto", tool_parsed=True, out=False,sender=sender, **kwargs)
+
+    #         i += 1
+
+    #     if self._is_invoked():
+    #         if fallback is not None:
+    #             if asyncio.iscoroutinefunction(fallback):
+    #                 return await fallback(**fallback_kwargs)
+    #             else:
+    #                 return fallback(**fallback_kwargs)
+    #         prompt = """
+    #             present the final result to user
+    #         """
+    #         return await self.chat(prompt, sender=sender, tool_parsed=True, **kwargs)
 
     async def auto_followup(
         self,
@@ -470,49 +469,49 @@ class Branch(Conversation):
             """
             return await self.chat(instruction, sender=sender, tool_parsed=True, **kwargs)
 
-    async def followup(
-        self,
-        instruction: Union[Instruction, str],
-        context = None,
-        sender = None,
-        system = None,
-        tools: Union[bool, Tool, List[Tool], str, List[str], List[Dict]] = False,
-        max_followup: int = 3,
-        out=True, 
-        **kwargs
-    ) -> None:
+    # async def followup(
+    #     self,
+    #     instruction: Union[Instruction, str],
+    #     context = None,
+    #     sender = None,
+    #     system = None,
+    #     tools: Union[bool, Tool, List[Tool], str, List[str], List[Dict]] = False,
+    #     max_followup: int = 3,
+    #     out=True, 
+    #     **kwargs
+    # ) -> None:
 
-        """
-        auto tool usages until LLM decides done. Then presents final results. 
-        """
+    #     """
+    #     auto tool usages until LLM decides done. Then presents final results. 
+    #     """
 
-        if self.tool_manager.registry != {} and tools:
-            kwargs = self.tool_manager._tool_parser(tools=tools, **kwargs)
+    #     if self.tool_manager.registry != {} and tools:
+    #         kwargs = self.tool_manager._tool_parser(tools=tools, **kwargs)
 
-        n_tries = 0
-        while (max_followup - n_tries) > 0:
-            prompt = f"""
-                In the current task you are allowed a maximum of another {max_followup-n_tries} followup chats. 
-                if further actions are needed, invoke tools usage. If you are done, present the final result 
-                to user without further tool usage.
-            """
-            if n_tries > 0:
-                _out = await self.chat(prompt, sender=sender, tool_choice="auto", tool_parsed=True, **kwargs)
-                n_tries += 1
+    #     n_tries = 0
+    #     while (max_followup - n_tries) > 0:
+    #         prompt = f"""
+    #             In the current task you are allowed a maximum of another {max_followup-n_tries} followup chats. 
+    #             if further actions are needed, invoke tools usage. If you are done, present the final result 
+    #             to user without further tool usage.
+    #         """
+    #         if n_tries > 0:
+    #             _out = await self.chat(prompt, sender=sender, tool_choice="auto", tool_parsed=True, **kwargs)
+    #             n_tries += 1
                 
-                if not self._is_invoked():
-                    return _out if out else None
+    #             if not self._is_invoked():
+    #                 return _out if out else None
                                 
-            elif n_tries == 0:
-                instruct = {"notice": prompt, "task": instruction}
-                out = await self.chat(
-                    instruct, context=context, system=system, sender=sender, tool_choice="auto", 
-                    tool_parsed=True, **kwargs
-                )
-                n_tries += 1
+    #         elif n_tries == 0:
+    #             instruct = {"notice": prompt, "task": instruction}
+    #             out = await self.chat(
+    #                 instruct, context=context, system=system, sender=sender, tool_choice="auto", 
+    #                 tool_parsed=True, **kwargs
+    #             )
+    #             n_tries += 1
                 
-                if not self._is_invoked():
-                    return _out if out else None
+    #             if not self._is_invoked():
+    #                 return _out if out else None
 
     def _add_service(self, service, llmconfig):
         service = service or OpenAIService()
