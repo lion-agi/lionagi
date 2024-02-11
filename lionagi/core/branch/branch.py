@@ -3,7 +3,6 @@ import pandas as pd
 
 from typing import Any, Callable, Dict, List, Optional, Union
 from collections import deque
-import asyncio
 from dotenv import load_dotenv
 
 from lionagi.utils import as_dict, get_flattened_keys, alcall, lcall, to_list
@@ -502,10 +501,7 @@ class Branch(Conversation):
         out = ''
         i = 0
         while i < num_rounds:
-            prompt = f""" 
-                you have {(num_rounds-i)*2} step left in current task. reflect, perform 
-                reason for action plan according to available tools only, 
-                apply divide and conquer technique.
+            prompt = f"""you have {(num_rounds-i)*2} step left in current task. if available, integrate previous tool responses. perform reasoning and prepare action plan according to available tools only, apply divide and conquer technique.
             """ 
             instruct = {"Notice": prompt}
             
@@ -522,7 +518,7 @@ class Branch(Conversation):
                 )
                 
             prompt = f"""
-                you have {(num_rounds-i)*2-1} step left in current task, invoke tool usage according to plan
+                you have {(num_rounds-i)*2-1} step left in current task, invoke tool usage to perform actions
             """
             out = await self.chat(prompt, tool_choice="auto", tool_parsed=True, sender=sender, **kwargs)
 
