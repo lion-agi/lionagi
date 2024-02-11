@@ -1,4 +1,5 @@
 import pandas as pd
+
 from typing import Any, List, Union, Dict, Optional, Callable, Tuple
 from dotenv import load_dotenv
 
@@ -8,30 +9,26 @@ from ..messages.messages import System, Instruction
 from ..branch.branch import Branch
 from ..branch.branch_manager import BranchManager
 
-
 load_dotenv()
 
 
 class Session:
     """
-    Represents a session with conversation branches, tool management, and logging.
+    Manages sessions with conversation branches, tool management, and interaction logging.
 
-    This class encapsulates the management of different conversation branches, each with its own
-    messages, instruction sets, and tools. It also handles logging and interactions with an external service.
+    This class orchestrates the handling of different conversation branches, enabling distinct conversational contexts to coexist within a single session. It facilitates the integration with external services for processing chat completions, tool management, and the logging of session activities.
 
     Attributes:
-        branches (Dict[str, Branch]): A dictionary of conversation branches.
-        default_branch (Branch): The default branch for the session.
-        default_branch_name (str): The name of the default branch.
-        llmconfig (Dict[str, Any]): Configuration settings for the language model.
-        logger_ (DataLogger): Logger for session data.
-        service (OpenAIService): Service used for handling chat completions and other operations.
+        branches (Dict[str, Branch]): Maps branch names to Branch instances.
+        default_branch (Branch): The primary branch for the session.
+        default_branch_name (str): Identifier for the default branch.
+        llmconfig (Dict[str, Any]): Configurations for language model interactions.
+        service (OpenAIService): Interface for external service interactions.
     """
     def __init__(
         self,
         system: Optional[Union[str, System]] = None,
         sender: Optional[str] = None,
-        dir: Optional[str] = None,
         llmconfig: Optional[Dict[str, Any]] = None,
         service: OpenAIService = None,
         branches: Optional[Dict[str, Branch]] = None,
@@ -39,36 +36,26 @@ class Session:
         default_branch_name: str = 'main',
     ):
         """
-        Initialize a Session object.
+        Initializes a session with optional settings for branches, service, and language model configurations.
 
         Args:
-            system (Union[str, System]): Initial system message or System object for the default branch.
-            dir (str, optional): Directory path for storing logs.
-            llmconfig (Dict[str, Any], optional): Configuration settings for the language model.
-            service (OpenAIService, optional): Service used for handling chat completions and other operations.
-            branches (Dict[str, Branch], optional): Pre-existing branches to initialize in the session.
-            default_branch (Branch, optional): Default branch for the session.
-            default_branch_name (str, optional): Name of the default branch, defaults to 'main'.
+            system (Optional[Union[str, System]]): Initial system message or configuration.
+            sender (Optional[str]): Identifier for the sender of the system message.
+            llmconfig (Optional[Dict[str, Any]]): Language model configuration settings.
+            service (OpenAIService): External service for chat completions and other operations.
+            branches (Optional[Dict[str, Branch]]): Predefined conversation branches.
+            default_branch (Optional[Branch]): Preselected default branch for the session.
+            default_branch_name (str): Name for the default branch, defaults to 'main'.
         """
 
         self.branches = branches if isinstance(branches, dict) else {}
         if service is None:
             service = OpenAIService()
-        
-        self.default_branch = default_branch if default_branch else Branch(name=default_branch_name, service=service, llmconfig=llmconfig)
-        self.default_branch_name = default_branch_name
-        if system:
-            self.default_branch.add_message(system=system, sender=sender)
-        if self.branches:
-            if self.default_branch_name not in self.branches.keys():
-                raise ValueError('default branch name is not in imported branches')
-            if self.default_branch is not self.branches[self.default_branch_name]:
-                raise ValueError(f'default branch does not match Branch object under {self.default_branch_name}')
-        if not self.branches:
-            self.branches[self.default_branch_name] = self.default_branch
-        if dir:
-            self.default_branch.dir = dir
 
+        self._setup_default_branch(
+            default_branch, default_branch_name, service, llmconfig, system, sender)
+        
+        self._verify_default_branch()
         self.branch_manager = BranchManager(self.branches)
         
     def new_branch(
@@ -83,20 +70,20 @@ class Session:
         llmconfig: Optional[Dict] = None,
     ) -> None:
         """
-        Create a new branch in the session.
+        Creates a new branch within the session.
 
         Args:
-            branch_name (str): Name of the new branch.
-            dir (str, optional): Directory path for storing logs.
-            messages (Optional[pd.DataFrame]): A DataFrame containing conversation messages.
-            system (Union[str, System], optional): Initial system message or System object for the new branch.
-            tools (Optional[Union[Tool, List[Tool]]], optional): Tools to register with the new branch.
-            sender (Optional[str], optional): Sender of the initial system message.
-            service (OpenAIService, optional): Service used for the new branch if different from the session's service.
-            llmconfig (Dict[str, Any], optional): Configuration settings for the language model.
+            branch_name (str): Name for the new branch.
+            dir (Optional[str]): Path for storing branch-related logs.
+            messages (Optional[pd.DataFrame]): Initial set of messages for the branch.
+            tools (Optional[Union[Tool, List[Tool]]]): Tools to register in the new branch.
+            system (Optional[Union[str, System]]): System message or configuration for the branch.
+            sender (Optional[str]): Identifier for the sender of the initial message.
+            service (Optional[OpenAIService]): Service interface specific to the branch.
+            llmconfig (Optional[Dict[str, Any]]): Language model configurations for the branch.
 
         Raises:
-            ValueError: If the branch name already exists in the session.
+            ValueError: If the branch name already exists within the session.
         """
         if branch_name in self.branches.keys():
             raise ValueError(f'Invalid new branch name {branch_name}. Already existed.')
@@ -116,18 +103,19 @@ class Session:
         get_name: bool = False
     ) -> Union[Branch, Tuple[Branch, str]]:
         """
-        Retrieve a branch from the session.
+        Retrieves a branch from the session by name or as a Branch object.
+
+        If no branch is specified, returns the default branch. Optionally, can also return the branch's name.
 
         Args:
-            branch (Optional[Union[Branch, str]], optional): The branch or its name to retrieve.
-                Defaults to the default branch if not specified.
-            get_name (bool, optional): If True, returns the name of the branch along with the branch object.
+            branch (Optional[Union[Branch, str]]): The branch name or Branch object to retrieve. Defaults to None, which refers to the default branch.
+            get_name (bool): If True, also returns the name of the branch alongside the Branch object.
 
         Returns:
-            Union[Branch, Tuple[Branch, str]]: The branch object or a tuple of the branch object and its name.
+            Union[Branch, Tuple[Branch, str]]: The requested Branch object, or a tuple of the Branch object and its name if `get_name` is True.
 
         Raises:
-            ValueError: If the branch does not exist in the session.
+            ValueError: If the specified branch does not exist within the session.
         """
         if isinstance(branch, str):
             if branch not in self.branches.keys():
@@ -152,10 +140,10 @@ class Session:
 
     def change_default(self, branch: Union[str, Branch]) -> None:
         """
-        Change the default branch of the session.
+        Changes the default branch of the session.
 
         Args:
-            branch (Union[str, Branch]): The branch or its name to set as the new default.
+            branch (Union[str, Branch]): The branch name or Branch object to set as the new default branch.
         """
         branch_, name_ = self.get_branch(branch, get_name=True)
         self.default_branch = branch_
@@ -265,6 +253,45 @@ class Session:
             instruction=instruction, system=system, context=context,
             out=out, sender=sender, invoke=invoke, tools=tools, **kwargs)
 
+    async def ReAct(
+        self,
+        instruction: Union[Instruction, str],
+        context = None,
+        sender = None,
+        to_ = None,
+        system = None,
+        tools = None, 
+        num_rounds: int = 1,
+        fallback: Optional[Callable] = None,
+        fallback_kwargs: Optional[Dict] = None,
+        out=True,
+        **kwargs  
+    ):
+        """
+        Performs a sequence of reasoning and action steps in a specified or default branch.
+
+        Args:
+            instruction (Union[Instruction, str]): Instruction to initiate the ReAct process.
+            context: Additional context for reasoning and action. Defaults to None.
+            sender: Identifier for the sender. Defaults to None.
+            to_: Target branch name or object for ReAct. Defaults to the default branch.
+            system: System message or configuration. Defaults to None.
+            tools: Tools to be used for actions. Defaults to None.
+            num_rounds (int): Number of reasoning-action cycles. Defaults to 1.
+            fallback (Optional[Callable]): Fallback function in case of an error. Defaults to None.
+            fallback_kwargs (Optional[Dict]): Arguments for the fallback function. Defaults to None.
+            out (bool): If True, outputs the result of the ReAct process. Defaults to True.
+            **kwargs: Arbitrary keyword arguments for additional customization.
+
+        Returns:
+            The outcome of the ReAct process, depending on the specified branch and instructions.
+        """
+        branch = self.get_branch(to_)
+        return await branch.ReAct(
+            instruction=instruction, context=context, sender=sender, system=system, tools=tools, 
+            num_rounds=num_rounds, fallback=fallback, fallback_kwargs=fallback_kwargs, 
+            out=out, **kwargs
+        )
 
     async def auto_followup(
         self,
@@ -293,16 +320,8 @@ class Session:
         """
         
         branch_ = self.get_branch(to_)
-        if fallback:
-            try:
-                return await branch_.auto_followup(
-                    instruction=instruction, num=num, tools=tools,**kwargs
-                )
-            except:
-                return fallback(**fallback_kwargs)
-        
         return await branch_.auto_followup(
-            instruction=instruction, num=num, tools=tools,**kwargs
+            instruction=instruction, num=num, tools=tools, fallback=fallback, fallback_kwargs=fallback_kwargs, **kwargs
         )
 
     def change_first_system_message(self, system: Union[System, str]) -> None:
@@ -369,7 +388,7 @@ class Session:
 
     def register_tools(self, tools: Union[Tool, List[Tool]]) -> None:
         """
-        Registers one or more tools to the current active branch.
+        Registers one or more tools to the current default branch.
 
         Args:
             tools (Union[Tool, List[Tool]]): The tool or list of tools to register.
@@ -378,7 +397,7 @@ class Session:
 
     def delete_tool(self, name: str) -> bool:
         """
-        Deletes a tool from the current active branch.
+        Deletes a tool from the current default branch.
 
         Args:
             name (str): The name of the tool to delete.
@@ -391,10 +410,10 @@ class Session:
     @property
     def describe(self) -> Dict[str, Any]:
         """
-        Generates a report of the current active branch.
+        Generates a report of the current default branch.
 
         Returns:
-            Dict[str, Any]: The report of the current active branch.
+            Dict[str, Any]: The report of the current default branch.
         """
         return self.default_branch.describe
 
@@ -408,6 +427,60 @@ class Session:
         """
         return self.default_branch.messages
 
+
+    @property
+    def first_system(self) -> pd.Series:
+        """
+        Get the first system message of the current default branch.
+
+        Returns:
+            System: The first system message of the current default branch.
+        """
+        return self.default_branch.first_system
+    
+    @property
+    def last_response(self) -> pd.Series:
+        """
+        Get the last response message of the current default branch.
+
+        Returns:
+            str: The last response message of the current default branch.
+        """
+        return self.default_branch.last_response
+
+
+    @property
+    def last_response_content(self) -> Dict:
+        """
+        Get the last response content of the current default branch.
+
+        Returns:
+            Dict: The last response content of the current default branch.
+        """
+        return self.default_branch.last_response_content
+
+
+    def _verify_default_branch(self):
+        if self.branches:
+            if self.default_branch_name not in self.branches.keys():
+                raise ValueError('default branch name is not in imported branches')
+            if self.default_branch is not self.branches[self.default_branch_name]:
+                raise ValueError(f'default branch does not match Branch object under {self.default_branch_name}')
+            
+        if not self.branches:
+            self.branches[self.default_branch_name] = self.default_branch
+
+    def _setup_default_branch(
+        self, default_branch, default_branch_name, service, llmconfig, system, sender
+    ):
+        self.default_branch = default_branch if default_branch else Branch(
+            name=default_branch_name, service=service, llmconfig=llmconfig
+        )
+        self.default_branch_name = default_branch_name
+        if system:
+            self.default_branch.add_message(system=system, sender=sender)
+
+        self.llmconfig = self.default_branch.llmconfig
     # def add_instruction_set(self, name: str, instruction_set: InstructionSet) -> None:
     #     """
     #     Adds an instruction set to the current active branch.

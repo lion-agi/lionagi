@@ -1,50 +1,44 @@
 import json
 import asyncio
 from typing import Dict, Union, List, Tuple, Any
-from lionagi.utils.call_util import lcall, is_coroutine_func, _call_handler
+from lionagi.utils.call_util import lcall, is_coroutine_func, _call_handler, alcall
 from lionagi.schema import BaseNode, Tool
 
 
 class ToolManager(BaseNode):
     """
-    A manager class to handle registration and invocation of tools that are subclasses of Tool.
+    A manager class for handling the registration and invocation of tools that are subclasses of Tool.
     
+    This class maintains a registry of tool instances, allowing for dynamic invocation based on
+    tool name and provided arguments. It supports both synchronous and asynchronous tool function
+    calls.
+
     Attributes:
-        registry (Dict[str, Tool]): A dictionary to hold registered tools, using their names as keys.
+        registry (Dict[str, Tool]): A dictionary to hold registered tools, keyed by their names.
     """
     registry: Dict = {}
 
     def name_existed(self, name: str) -> bool:
         """
-        Check if a tool name already exists in the registry.
+        Checks if a tool name already exists in the registry.
 
-        Parameters:
+        Args:
             name (str): The name of the tool to check.
 
         Returns:
             bool: True if the name exists, False otherwise.
-
-        Examples:
-            >>> tool_manager.name_existed('existing_tool')
-            True
-            >>> tool_manager.name_existed('nonexistent_tool')
-            False
         """
         return True if name in self.registry.keys() else False
             
     def _register_tool(self, tool: Tool) -> None:
         """
-        Register a new tool in the registry if it's an instance of Tool.
+        Registers a tool in the registry. Raises a TypeError if the object is not an instance of Tool.
 
-        Parameters:
+        Args:
             tool (Tool): The tool instance to register.
 
         Raises:
-            TypeError: If the provided tool is not an instance of Tool.
-
-        Examples:
-            >>> tool_manager._register_tool(Tool())
-            # Tool is registered without any output
+            TypeError: If the provided object is not an instance of Tool.
         """
         if not isinstance(tool, Tool):
             raise TypeError('Please register a Tool object.')
@@ -53,20 +47,16 @@ class ToolManager(BaseNode):
                 
     async def invoke(self, func_call: Tuple[str, Dict[str, Any]]) -> Any:
         """
-        Invoke a registered tool's function with the provided arguments.
+        Invokes a registered tool's function with the given arguments. Supports both coroutine and regular functions.
 
         Args:
-            func_call (Tuple[str, Dict[str, Any]]): A tuple containing the tool's function name and kwargs.
+            func_call (Tuple[str, Dict[str, Any]]): A tuple containing the function name and a dictionary of keyword arguments.
 
         Returns:
-            Any: The result of the tool's function invocation.
+            Any: The result of the function call.
 
         Raises:
-            ValueError: If the function is not registered or an error occurs during invocation.
-
-        Examples:
-            >>> await tool_manager.invoke(('registered_function', {'arg1': 'value1'}))
-            # Result of the registered_function with given arguments
+            ValueError: If the function name is not registered or if there's an error during function invocation.
         """
         name, kwargs = func_call
         if self.name_existed(name):
@@ -74,10 +64,13 @@ class ToolManager(BaseNode):
             func = tool.func
             parser = tool.parser
             try:
-                tasks = [await _call_handler(func, **kwargs)]
-                out = await asyncio.gather(*tasks)
-                return parser(out) if parser else out
-            
+                if is_coroutine_func(func):
+                    tasks = [_call_handler(func, **kwargs)]
+                    out = await asyncio.gather(*tasks)
+                    return parser(out[0]) if parser else out[0]
+                else:
+                    out = func(**kwargs)
+                    return parser(out) if parser else out
             except Exception as e:
                 raise ValueError(f"Error when invoking function {name} with arguments {kwargs} with error message {e}")
         else: 
@@ -86,20 +79,16 @@ class ToolManager(BaseNode):
     @staticmethod
     def get_function_call(response: Dict) -> Tuple[str, Dict]:
         """
-        Extract function name and arguments from a response JSON.
+        Extracts a function call and arguments from a response dictionary.
 
-        Parameters:
-            response (Dict): The JSON response containing function information.
+        Args:
+            response (Dict): The response dictionary containing the function call information.
 
         Returns:
-            Tuple[str, Dict]: The function name and its arguments.
+            Tuple[str, Dict]: A tuple containing the function name and a dictionary of arguments.
 
         Raises:
-            ValueError: If the response is not a valid function call.
-
-        Examples:
-            >>> ToolManager.get_function_call({"action": "execute_add", "arguments": '{"x":1, "y":2}'})
-            ('add', {'x': 1, 'y': 2})
+            ValueError: If the response does not contain valid function call information.
         """
         try:
             func = response['action'][7:]
@@ -115,27 +104,20 @@ class ToolManager(BaseNode):
     
     def register_tools(self, tools: List[Tool]) -> None:
         """
-        Register multiple tools using a given list.
+        Registers multiple tools in the registry.
 
-        Parameters:
-            tools (List[Tool]): A list of Tool instances to register.
-
-        Examples:
-            >>> tool_manager.register_tools([Tool(), Tool()])
-            # Multiple Tool instances registered
+        Args:
+            tools (List[Tool]): A list of tool instances to register.
         """
-        lcall(tools, self._register_tool) #, update=update, new=new, prefix=prefix, postfix=postfix)
+        lcall(tools, self._register_tool) 
 
     def to_tool_schema_list(self) -> List[Dict[str, Any]]:
         """
-        Convert the registry of tools to a list of their schemas.
+        Generates a list of schemas for all registered tools.
 
         Returns:
             List[Dict[str, Any]]: A list of tool schemas.
-
-        Examples:
-            >>> tool_manager.to_tool_schema_list()
-            # Returns a list of registered tool schemas
+        
         """
         schema_list = []
         for tool in self.registry.values():
@@ -144,21 +126,17 @@ class ToolManager(BaseNode):
 
     def _tool_parser(self, tools: Union[Dict, Tool, List[Tool], str, List[str], List[Dict]], **kwargs) -> Dict:
         """
-        Parse tools and additional keyword arguments to form a dictionary used for tool configuration.
+        Parses tool information and generates a dictionary for tool invocation.
 
-        Parameters:
-            tools: A single tool object, a list of tool objects, a tool name, a list of tool names, or a dictionary.
+        Args:
+            tools: Tool information which can be a single Tool instance, a list of Tool instances, a tool name, or a list of tool names.
             **kwargs: Additional keyword arguments.
 
         Returns:
-            Dict: A dictionary of tools and additional keyword arguments.
+            Dict: A dictionary containing tool schema information and any additional keyword arguments.
 
         Raises:
-            ValueError: If a tool name string does not correspond to a registered tool.
-
-        Examples:
-            >>> tool_manager._tool_parser('registered_tool')
-            # Returns a dictionary containing the schema of the registered tool
+            ValueError: If a tool name is provided that is not registered.
         """
         def tool_check(tool):
             if isinstance(tool, dict):
@@ -183,4 +161,3 @@ class ToolManager(BaseNode):
             kwargs = {**tool_kwarg, **kwargs}
             
         return kwargs
-    

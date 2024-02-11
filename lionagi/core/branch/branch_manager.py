@@ -136,4 +136,3 @@ class BranchManager:
                     self.sources[to_name].pending_ins[key] = request
                 else:
                     self.sources[to_name].pending_ins[key].append(request)
-
