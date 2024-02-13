@@ -1,5 +1,6 @@
 from ..utils.sys_util import install_import, is_package_installed
-from .base_service import BaseService
+from ..api_service.services.base_service import BaseService
+from ..api_service.end_points.payload_package import PayloadCreation
 
 class OllamaService(BaseService):
     def __init__(self, model: str = None, **kwargs):

@@ -2,7 +2,8 @@ from typing import Union, Dict, Any
 import subprocess
 
 from ..utils.sys_util import install_import, get_cpu_architecture, is_package_installed
-from .base_service import BaseService
+from ..api_service.services.base_service import BaseService
+from ..api_service.end_points.payload_package import PayloadCreation
 
 
 def get_pytorch_install_command():

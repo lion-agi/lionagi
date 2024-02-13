@@ -1,6 +1,7 @@
 from os import getenv
 from ..configs.oai_configs import oai_schema
-from .base_service import BaseService, PayloadCreation
+from ..api_service.services.base_service import BaseService
+from ..api_service.end_points.payload_package import PayloadCreation
 
 class OpenAIService(BaseService):
 
