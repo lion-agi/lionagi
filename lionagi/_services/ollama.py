@@ -17,14 +17,14 @@ class OllamaService(BaseService):
             raise ImportError(f'Unable to import required module from ollama. Please make sure that ollama is installed.')
         
         self.model = model
-        self.client = self.ollama.Client(**kwargs)
+        self.client = self.ollama.AsyncClient(**kwargs)
 
     async def serve_chat(self, messages, **kwargs):
         self.ollama.pull(self.model)
         payload = {'messages': messages}
 
         try:
-            completion = self.client.chat(model=self.model, messages=messages, **kwargs)
+            completion = await self.client.chat(model=self.model, messages=messages, **kwargs)
             completion['choices'] = [{'message': completion.pop('message')}]
             return payload, completion
         except Exception as e:
