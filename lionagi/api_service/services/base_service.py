@@ -5,7 +5,7 @@ from abc import ABC
 from dataclasses import dataclass
 from typing import Any, Dict, NoReturn, Optional, Type, List, Union
 
-from ...utils import nget, APIUtil
+from ...utils import nget, APIUtil, to_list
 from ..rate_limiter.base_rate_limiter import BaseRateLimiter, SimpleRateLimiter
 from ..obj.status_tracker import StatusTracker
 
@@ -58,8 +58,10 @@ class BaseService:
         """
         
         if endpoint_:
-            if not isinstance(endpoint_, list):
-                endpoint_ = [endpoint_]
+            endpoint_ = to_list(endpoint_, flatten=True, dropna=True)
+            
+            
+            
             for ep in endpoint_:
                 if ep not in self.available_endpoints:
                     raise ValueError (f"Endpoint {ep} not available for service {self.__class__.__name__}")

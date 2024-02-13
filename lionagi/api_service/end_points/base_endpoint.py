@@ -32,8 +32,8 @@ class BaseEndpoint:
 
     def __init__(
         self,
-        max_requests: int = 1000,
-        max_tokens: int = 100000,
+        max_requests: int = 1_000,
+        max_tokens: int = 100_000,
         interval: int = 60,
         endpoint_: Optional[str] = None,
         rate_limiter_class: Type[BaseRateLimiter] = SimpleRateLimiter,
