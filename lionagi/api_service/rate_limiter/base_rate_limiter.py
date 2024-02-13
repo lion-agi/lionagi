@@ -4,6 +4,7 @@ from abc import ABC
 from typing import Dict, NoReturn, Optional
 
 from ...utils import APIUtil
+from lionagi.exceptions import AsyncException
 
 
 class BaseRateLimiter(ABC):
@@ -28,6 +29,7 @@ class BaseRateLimiter(ABC):
                     self.available_token_capacity = self.max_tokens
         except asyncio.CancelledError:
             logging.info("Rate limit replenisher task cancelled.")
+
         except Exception as e:
             logging.error(f"An error occurred in the rate limit replenisher: {e}")
 

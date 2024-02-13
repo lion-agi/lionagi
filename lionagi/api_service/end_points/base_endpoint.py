@@ -58,3 +58,8 @@ class BaseEndpoint:
             self.max_requests, self.max_tokens, self.interval, self.token_encoding_name
         )
         self._has_initialized = True
+
+
+class Embedding(BaseEndpoint):
+    ...
+    

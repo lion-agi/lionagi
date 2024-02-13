@@ -5,7 +5,7 @@ from abc import ABC
 from dataclasses import dataclass
 from typing import Any, Dict, NoReturn, Optional, Type, List, Union
 
-from ...utils import nget, APIUtil, to_list
+from ...utils import nget, APIUtil, to_list, lcall
 from ..rate_limiter.base_rate_limiter import BaseRateLimiter, SimpleRateLimiter
 from ..obj.status_tracker import StatusTracker
 
@@ -42,10 +42,11 @@ class BaseService:
         self.status_tracker = StatusTracker()
         self.endpoints: Dict[str, BaseEndpoint] = {}
         self.token_encoding_name = token_encoding_name
-        self.chat_config_rate_limit = {
+        self.chat_config = {
             'max_requests': max_requests,
             'max_tokens': max_tokens,
-            'interval': interval
+            'interval': interval,
+            "token_encoding_name": token_encoding_name
         }
 
 
@@ -56,27 +57,22 @@ class BaseService:
         Args:
             endpoint_: The endpoint(s) to initialize. Can be a string, an BaseEndpoint, a list of strings, or a list of BaseEndpoints.
         """
-        
+
         if endpoint_:
             endpoint_ = to_list(endpoint_, flatten=True, dropna=True)
             
-            
-            
             for ep in endpoint_:
-                if ep not in self.available_endpoints:
-                    raise ValueError (f"Endpoint {ep} not available for service {self.__class__.__name__}")
-
+                self._check_endpoints(ep)
+            
                 if ep not in self.endpoints:
-                    endpoint_config = nget(self.schema, [ep, 'config'])
-                    self.schema.get(ep, {})
-                    if isinstance(ep, BaseEndpoint):
-                        self.endpoints[ep.endpoint] = ep
-                    else:
+                    endpoint_config = self._get_endpoint(ep)
+
+                    if endpoint_config is not None:
                         if ep == "chat/completions":
                             self.endpoints[ep] = BaseEndpoint(
-                                max_requests=self.chat_config_rate_limit.get('max_requests', 1000),
-                                max_tokens=self.chat_config_rate_limit.get('max_tokens', 100000),
-                                interval=self.chat_config_rate_limit.get('interval', 60),
+                                max_requests=self.chat_config.get('max_requests', 1000),
+                                max_tokens=self.chat_config.get('max_tokens', 100000),
+                                interval=self.chat_config.get('interval', 60),
                                 endpoint_=ep,
                                 token_encoding_name=self.token_encoding_name,
                                 config=endpoint_config,
@@ -133,3 +129,18 @@ class BaseService:
                 http_session=http_session, endpoint=endpoint, base_url=self.base_url, api_key=self.api_key,
                 method=method, payload=payload, **kwargs)
             return completion
+
+    def _check_endpoints(self, endpoint_):
+        f = lambda ep: ValueError (f"Endpoint {ep} not available for service {self.__class__.__name__}")
+        if not endpoint_ in self.available_endpoints:
+            raise f(endpoint_)
+        
+    def _get_endpoint(self, endpoint_):
+        if endpoint_ not in self.endpoints:
+            endpoint_config = nget(self.schema, [endpoint_, 'config'])
+            self.schema.get(endpoint_, {})
+
+            if isinstance(endpoint_, BaseEndpoint):
+                self.endpoints[endpoint_.endpoint] = endpoint_
+            return None
+        return endpoint_config
