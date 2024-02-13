@@ -27,7 +27,11 @@ class OpenRouterService(BaseService):
         else:
             return ValueError(f'{endpoint} is currently not supported')
     
-    async def serve_chat(self, messages, **kwargs):
+    async def serve_chat(self, messages, encode_kwargs={}, **kwargs):
+        """
+        kwargs are for payload creation
+        """
+        
         endpoint = "chat/completions"
         
         if endpoint not in self.active_endpoint:
@@ -37,7 +41,7 @@ class OpenRouterService(BaseService):
             messages, self.endpoints[endpoint].config, self.schema[endpoint], **kwargs)
 
         try:
-            completion = await self.call_api(payload, endpoint, "post")
+            completion = await self.call_api(payload, endpoint, "post", **encode_kwargs)
             return payload, completion
         except Exception as e:
             self.status_tracker.num_tasks_failed += 1
