@@ -14,7 +14,7 @@ from lionagi._services.openrouter import OpenRouterService
 
 from lionagi.configs.oai_configs import oai_schema
 from lionagi.configs.openrouter_configs import openrouter_schema
-from lionagi.tools.tool_manager import ToolManager
+from lionagi.tools.tool_manager import ActionManager
 
 from ..messages.messages import Instruction, System
 from ..instruction_set.instruction_set import InstructionSet
@@ -88,7 +88,7 @@ class Branch(Conversation):
         name: Optional[str] = None,
         messages: Optional[pd.DataFrame] = None,
         instruction_sets: Optional[Dict[str, InstructionSet]] = None,
-        tool_manager: Optional[ToolManager] = None,
+        action_manager: Optional[ActionManager] = None,
         service : Optional[BaseService] = None,
         llmconfig: Optional[Dict] = None,
     ):
@@ -112,7 +112,7 @@ class Branch(Conversation):
             )
         )
         self.instruction_sets = instruction_sets if instruction_sets else {}
-        self.tool_manager = tool_manager if tool_manager else ToolManager()
+        self.action_manager = action_manager if action_manager else ActionManager()
         self.status_tracker = StatusTracker()
         self._add_service(service, llmconfig)
         self.name = name
@@ -134,7 +134,7 @@ class Branch(Conversation):
             "summary_by_role": self._info(),
             "summary_by_sender": self._info(use_sender=True),
             "instruction_sets": self.instruction_sets,
-            "registered_tools": self.tool_manager.registry,
+            "registered_tools": self.action_manager.registry,
             "messages": [
                 msg.to_dict() for _, msg in self.messages.iterrows()
             ],
@@ -142,7 +142,7 @@ class Branch(Conversation):
 
     @property
     def has_tools(self) -> bool:
-        return self.tool_manager.registry != {}
+        return self.action_manager.registry != {}
 
 # ----- tool manager methods ----- #
 
@@ -161,7 +161,7 @@ class Branch(Conversation):
         """
         if not isinstance(tools, list):
             tools = [tools]
-        self.tool_manager.register_tools(tools=tools)
+        self.action_manager.register_tools(tools=tools)
 
     def delete_tool(self, tools: Union[Tool, List[Tool], str, List[str]], verbose=True) -> bool:
         """
@@ -185,15 +185,15 @@ class Branch(Conversation):
         if isinstance(tools, list):
             if is_same_dtype(tools, str):
                 for tool in tools:
-                    if tool in self.tool_manager.registry:
-                        self.tool_manager.registry.pop(tool)
+                    if tool in self.action_manager.registry:
+                        self.action_manager.registry.pop(tool)
                 if verbose:
                     print("tools successfully deleted")
                 return True
             elif is_same_dtype(tools, Tool):
                 for tool in tools:
-                    if tool.name in self.tool_manager.registry:
-                        self.tool_manager.registry.pop(tool.name)
+                    if tool.name in self.action_manager.registry:
+                        self.action_manager.registry.pop(tool.name)
                 if verbose:
                     print("tools successfully deleted")
                 return True
@@ -217,10 +217,10 @@ class Branch(Conversation):
         cloned = Branch(
             messages=self.messages.copy(), 
             instruction_sets=self.instruction_sets.copy(),
-            tool_manager=ToolManager()
+            action_manager=ActionManager()
         )
         tools = [
-            tool for tool in self.tool_manager.registry.values()]
+            tool for tool in self.action_manager.registry.values()]
         
         cloned.register_tools(tools)
 
@@ -245,17 +245,17 @@ class Branch(Conversation):
 
         if update:
             self.instruction_sets.update(branch.instruction_sets)
-            self.tool_manager.registry.update(
-                branch.tool_manager.registry
+            self.action_manager.registry.update(
+                branch.action_manager.registry
             )
         else:
             for key, value in branch.instruction_sets.items():
                 if key not in self.instruction_sets:
                     self.instruction_sets[key] = value
 
-            for key, value in branch.tool_manager.registry.items():
-                if key not in self.tool_manager.registry:
-                    self.tool_manager.registry[key] = value
+            for key, value in branch.action_manager.registry.items():
+                if key not in self.action_manager.registry:
+                    self.action_manager.registry[key] = value
 
 
 # ----- intra-branch communication methods ----- #
@@ -312,7 +312,7 @@ class Branch(Conversation):
             elif request.title == 'tool' and tool:
                 if not isinstance(request.request, Tool):
                     raise ValueError('Invalid tool format')
-                self.tool_manager.register_tools([request.request])
+                self.action_manager.register_tools([request.request])
 
             elif request.title == 'service' and service:
                 if not isinstance(request.request, BaseService):
@@ -416,7 +416,7 @@ class Branch(Conversation):
             kwargs = {**tool_kwarg, **kwargs}
         else:
             if tools and self.has_tools:
-                kwargs = self.tool_manager._tool_parser(tools=tools, **kwargs)
+                kwargs = self.action_manager._tool_parser(tools=tools, **kwargs)
 
         config = {**self.llmconfig, **kwargs}
         if sender is not None: 
@@ -431,10 +431,10 @@ class Branch(Conversation):
                     tool_uses = content_
                     func_calls = lcall(
                         [as_dict(i) for i in tool_uses["action_list"]], 
-                        self.tool_manager.get_function_call
+                        self.action_manager.get_function_call
                     )
                     
-                    outs = await alcall(func_calls, self.tool_manager.invoke)
+                    outs = await alcall(func_calls, self.action_manager.invoke)
                     outs = to_list(outs, flatten=True)
 
                     for out_, f in zip(outs, func_calls):
@@ -492,11 +492,11 @@ class Branch(Conversation):
             if isinstance(tools, list) and isinstance(tools[0], Tool):
                 self.register_tools(tools)
         
-        if self.tool_manager.registry == {}:
+        if self.action_manager.registry == {}:
             raise ValueError("No tools found, You need to register tools for ReAct (reason-action)")
         
         else:
-            kwargs = self.tool_manager._tool_parser(tools=True, **kwargs)
+            kwargs = self.action_manager._tool_parser(tools=True, **kwargs)
 
         out = ''
         i = 0
@@ -630,8 +630,8 @@ class Branch(Conversation):
             >>> await branch.auto_followup("Update the database with new entries.", max_followup=2)
         """
 
-        if self.tool_manager.registry != {} and tools:
-            kwargs = self.tool_manager._tool_parser(tools=tools, **kwargs)
+        if self.action_manager.registry != {} and tools:
+            kwargs = self.action_manager._tool_parser(tools=tools, **kwargs)
 
         n_tries = 0
         while (max_followup - n_tries) > 0:
