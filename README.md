@@ -13,7 +13,10 @@ LionAGI is a cutting-edge **intelligent agent framework**. It integrates data ma
 - Designed for data-centric, production-level projects,
 - Agents directing agents directing agents ... to work
 
-<img width="631" alt="Screenshot 2024-02-14 at 8 57 45 AM" src="https://github.com/lion-agi/lionagi/assets/122793010/14395e2f-9988-465b-873f-04d8868ba8f0">
+<img width="400" alt="192511707932018_ pic" src="https://github.com/lion-agi/lionagi/assets/78745424/f07ce397-5a30-4e80-82b0-8e5ec4b44ef3">
+
+- Use tools in parallel
+<img width="400" alt="192501707932007_ pic" src="https://github.com/lion-agi/lionagi/assets/78745424/fb04e779-b6fa-4500-8f90-d863f4c1a755">
 
 
 - Integrate any Advanced ML Model into your existing workflow
