@@ -38,7 +38,7 @@ class OpenAIService(BaseService):
         )
         self.active_endpoint = []
 
-    async def serve(self, input_, endpoint="chat/completions", method="post", **kwargs):
+    async def serve(self, input_, endpoint="chat/completions", method="post", tokenizer_kwargs={}, **kwargs):
         """
         Serves the input using the specified endpoint and method.
 
@@ -66,11 +66,11 @@ class OpenAIService(BaseService):
         if endpoint not in self.active_endpoint:
             await self. init_endpoint(endpoint)
         if endpoint == "chat/completions":
-            return await self.serve_chat(input_, **kwargs)
+            return await self.serve_chat(input_, tokenizer_kwargs=tokenizer_kwargs, **kwargs)
         else:
             return ValueError(f'{endpoint} is currently not supported')
     
-    async def serve_chat(self, messages, **kwargs):
+    async def serve_chat(self, messages, tokenizer_kwargs={}, **kwargs):
         """
         Serves the chat completion request with the given messages.
 
@@ -91,7 +91,7 @@ class OpenAIService(BaseService):
             messages, self.endpoints["chat/completions"].config, self.schema["chat/completions"], **kwargs)
 
         try:
-            completion = await self.call_api(payload, "chat/completions", "post")
+            completion = await self.call_api(payload, "chat/completions", "post", **tokenizer_kwargs)
             return payload, completion
         except Exception as e:
             self.status_tracker.num_tasks_failed += 1

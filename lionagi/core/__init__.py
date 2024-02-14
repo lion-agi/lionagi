@@ -1,11 +1,9 @@
-from .messages.messages import System, Instruction
+from .core_utils import to_markdown_string
 from .branch.branch import Branch
-from .sessions.session import Session
-
+from .session import Session
 
 __all__  = [
-    'System',
-    'Instruction',
+    'to_markdown_string', # 'to_markdown_string' function
     'Branch',
     'Session'
 ]

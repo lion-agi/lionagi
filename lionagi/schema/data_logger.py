@@ -1,6 +1,6 @@
 from collections import deque
 from typing import Dict, Any
-from ..utils.sys_util import get_timestamp, create_path, as_dict
+from ..utils.sys_util import get_timestamp, create_path, as_dict, to_df
 from ..utils.io_util import IOUtil
 
 
@@ -36,7 +36,7 @@ class DataLogger:
 
             log (Optional[List]): An initial list of log entries. Defaults to an empty list.
         """        
-        self.dir = dir
+        self.dir = dir or 'data/logs/'
         self.log = deque(log) if log else deque()
 
     def add_entry(self, entry: Dict[str, Any], level: str = "INFO") -> None:
@@ -61,12 +61,12 @@ class DataLogger:
         self.dir = dir
 
     def to_csv(
-        self, filename: str, 
+        self, filename: str ='log.csv', 
         file_exist_ok: bool = False,  
         timestamp = True,
         time_prefix: bool = False,
         verbose: bool = True,
-        clear = True
+        clear = True, **kwargs
     ) -> None:
         """
         Exports the logged data to a CSV file, using the provided utilities for path creation and timestamping.
@@ -84,21 +84,26 @@ class DataLogger:
             self.dir, filename, timestamp=timestamp, 
             dir_exist_ok=file_exist_ok, time_prefix=time_prefix
         )
-        IOUtil.to_csv(list(self.log), filepath)
+        
+        try:
+            df = to_df(list(self.log))
+            df.to_csv(filepath, **kwargs)
+            if verbose:
+                print(f"{len(self.log)} logs saved to {filepath}")
+            if clear:
+                self.log.clear()
+        except Exception as e:
+            raise ValueError(f"Error in saving to csv: {e}")
+        
 
-        if verbose:
-            print(f"{len(self.log)} logs saved to {filepath}")
-
-        if clear:
-            self.log.clear()
-
-    def to_jsonl(
-        self, filename: str, 
+    def to_json(
+        self, filename: str = 'log.json', 
         timestamp = False, 
         time_prefix=False,
         file_exist_ok: bool = False, 
         verbose: bool = True, 
-        clear = True
+        clear = True, 
+        **kwargs
     ) -> None:
         """
         Exports the logged data to a JSONL file and optionally clears the log.
@@ -108,19 +113,20 @@ class DataLogger:
             file_exist_ok (bool): If True, creates the directory for the file if it does not exist. Defaults to False.
             verbose (bool): If True, prints a message upon completion. Defaults to True.
         """
-        if not filename.endswith('.jsonl'):
-            filename += '.jsonl'
-
+        if not filename.endswith('.json'):
+            filename += '.json'
+        
         filepath = create_path(
             self.dir, filename, timestamp=timestamp, 
             dir_exist_ok=file_exist_ok, time_prefix=time_prefix
         )
         
-        for entry in self.log:
-            IOUtil.append_to_jsonl(entry, filepath)
-
-        if verbose:
-            print(f"{len(self.log)} logs saved to {filepath}")
-
-        if clear:
-            self.log.clear()
+        try:
+            df = to_df(list(self.log))
+            df.to_json(filepath, **kwargs)
+            if verbose:
+                print(f"{len(self.log)} logs saved to {filepath}")
+            if clear:
+                self.log.clear()
+        except Exception as e:
+            raise ValueError(f"Error in saving to csv: {e}")

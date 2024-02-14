@@ -103,7 +103,7 @@ class BaseRateLimiter(ABC):
         api_key: str,
         max_attempts: int = 3, 
         method: str = "post", 
-        payload: Dict[str, any]=None
+        payload: Dict[str, any]=None, **kwargs
     ) -> Optional[Dict[str, any]]:
         """
         Makes an API call to the specified endpoint using the provided HTTP session.
@@ -125,7 +125,7 @@ class BaseRateLimiter(ABC):
             if self.available_request_capacity < 1 or self.available_token_capacity < 10:  # Minimum token count
                 await asyncio.sleep(1)  # Wait for capacity
                 continue
-            required_tokens = APIUtil.calculate_num_token(payload, endpoint, self.token_encoding_name)
+            required_tokens = APIUtil.calculate_num_token(payload, endpoint, self.token_encoding_name, **kwargs)
             
             if await self.request_permission(required_tokens):
                 request_headers = {"Authorization": f"Bearer {api_key}"}
@@ -343,7 +343,7 @@ class BaseService:
                 if not self.endpoints[ep]._has_initialized:
                     await self.endpoints[ep].init_rate_limiter()
 
-    async def call_api(self, payload, endpoint, method):
+    async def call_api(self, payload, endpoint, method, **kwargs):
         """
         Calls the specified API endpoint with the given payload and method.
 
@@ -363,7 +363,7 @@ class BaseService:
         async with aiohttp.ClientSession() as http_session:
             completion = await self.endpoints[endpoint].rate_limiter._call_api(
                 http_session=http_session, endpoint=endpoint, base_url=self.base_url, api_key=self.api_key,
-                method=method, payload=payload)
+                method=method, payload=payload, **kwargs)
             return completion
 
 
