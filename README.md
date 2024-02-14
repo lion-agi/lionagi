@@ -9,24 +9,19 @@
 **Towards Automated General Intelligence**
 
 
-LionAGI is a cutting-edge **intelligent agent framework**. It integrates data manipulation with advanced machine learning tools, such as Large Language Models (i.e. OpenAI's GPT). 
-- Designed for data-centric, production-level projects,
-- Agents directing agents directing agents ... to work
+LionAGI is an **intelligent agent framework** tailored for **big data analysis** with advanced **machine learning** tools. Designed for data-centric, production-level projects. Lionagi allows flexible and rapid design of agentic workflow, customed for your own data. Lionagi `agents` can manage and direct other agents, can also use multiple different tools in parallel.
+  
+<img width="500" height="500" alt="192511707932018_ pic" src="https://github.com/lion-agi/lionagi/assets/78745424/f07ce397-5a30-4e80-82b0-8e5ec4b44ef3">
+<img width="500" height="500" alt="192501707932007_ pic" src="https://github.com/lion-agi/lionagi/assets/78745424/fb04e779-b6fa-4500-8f90-d863f4c1a755">
 
-<img width="400" alt="192511707932018_ pic" src="https://github.com/lion-agi/lionagi/assets/78745424/f07ce397-5a30-4e80-82b0-8e5ec4b44ef3">
+#### Integrate any Advanced Model into your existing workflow.
 
-- Use tools in parallel
-<img width="400" alt="192501707932007_ pic" src="https://github.com/lion-agi/lionagi/assets/78745424/fb04e779-b6fa-4500-8f90-d863f4c1a755">
-
-
-- Integrate any Advanced ML Model into your existing workflow
-
-<img width="900" alt="Screenshot 2024-02-14 at 8 54 01 AM" src="https://github.com/lion-agi/lionagi/assets/122793010/cfbc403c-cece-49e7-bc3a-015e035d3607">
+<img width="1100" alt="Screenshot 2024-02-14 at 8 54 01 AM" src="https://github.com/lion-agi/lionagi/assets/122793010/cfbc403c-cece-49e7-bc3a-015e035d3607">
 
 
 
 
-Install LionAGI with pip:
+### Install LionAGI with pip:
 
 ```bash
 pip install lionagi
@@ -34,29 +29,26 @@ pip install lionagi
 Download the `.env_template` file, input your appropriate `API_KEY`, save the file, rename as `.env` and put in your project's root directory. 
 by default we use `OPENAI_API_KEY`.
 
+ 
+### Intelligence Services
 
-
-### Features
-- Robust and scalable. Create a production ready LLM application **in hours**, with more than 100 models
-- Efficient and verstile data operations for reading, chunking, binning, writing, storing data with support for `langchain` and `llamaindex`
-- Built-in support for **chain/graph-of-thoughts, ReAct, Concurrent parallel function calling** 
-- Unified interface with any LLM provider, API or local
-  - Fast and **concurrent** API call with **configurable rate limit**
-  - (Work In Progress) support for models both API and local
----
-LionAGI is designed to be `asynchronous` only, please check python official documentation on how `async` work: [here](https://docs.python.org/3/library/asyncio.html)
-
-
-**Notice**: 
-* calling API with maximum throughput over large set of data with advanced models i.e. gpt-4 can get **EXPENSIVE IN JUST SECONDS**,
-* please know what you are doing, and check the usage on OpenAI regularly
-* default rate limits are set to be 1,000 requests, 100,000 tokens per miniute, please check the [OpenAI usage limit documentation](https://platform.openai.com/docs/guides/rate-limits?context=tier-free) you can modify token rate parameters to fit different use cases.
-* if you would like to build from source, please download the [latest release](https://github.com/lion-agi/lionagi/releases),  **main is under development and will be changed without notice**
-
+| Provider | Type | Parallel Chat | Perform Action | Embeddings | MultiModal |
+| ---- | ---- | ---- | ---- | ---- | ---- |
+| OpenAI | API | ✅ | ✅ |  |  |
+| OpenRouter | API | ✅ |  |  |  |
+| Ollama | Local | ✅ |  |  |  |
+| LiteLLM | Mixed | ✅ |  |  |  |
+| HuggingFace | Local | ✅ |  |  |  |
+| MLX | Local | ✅ |  |  |  |
+| Anthropic | API |  |  |  |  |
+| Azure | API |  |  |  |  |
+| Amazon | API |  |  |  |  |
+| Google | API |  |  |  |  |
+| MistralAI | API |  |  |  |  |
 
 ### Quick Start
 
-The following example shows how to use LionAGI's `Session` object to interact with `gpt-4` model:
+The following example shows how to use LionAGI's `Session` object to interact with `gpt-4-turbo` model:
 
 ```python
 
@@ -98,7 +90,18 @@ if __name__ == "__main__":
     asyncio.run(main())
 ```
 
-Visit our notebooks for our examples. 
+Visit our notebooks for examples. 
+
+LionAGI is designed to be `asynchronous` only, please check python official documentation on how `async` work: [here](https://docs.python.org/3/library/asyncio.html)
+
+---
+
+**Notice**: 
+* calling API with maximum throughput over large set of data with advanced models i.e. gpt-4 can get **EXPENSIVE IN JUST SECONDS**,
+* please know what you are doing, and check the usage on OpenAI regularly
+* default rate limits are set to be 1,000 requests, 100,000 tokens per miniute, please check the [OpenAI usage limit documentation](https://platform.openai.com/docs/guides/rate-limits?context=tier-free) you can modify token rate parameters to fit different use cases.
+* if you would like to build from source, please download the [latest release](https://github.com/lion-agi/lionagi/releases),  **main is under development and will be changed without notice**
+
 
 ### Community
 
