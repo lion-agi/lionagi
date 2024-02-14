@@ -38,7 +38,7 @@ LionAGI is designed to be `asynchronous` only, please check python official docu
 **Notice**: 
 * calling API with maximum throughput over large set of data with advanced models i.e. gpt-4 can get **EXPENSIVE IN JUST SECONDS**,
 * please know what you are doing, and check the usage on OpenAI regularly
-* default rate limits are set to be **tier 1** of OpenAI model `gpt-4-1104-preview`, please check the [OpenAI usage limit documentation](https://platform.openai.com/docs/guides/rate-limits?context=tier-free) you can modify token rate parameters to fit different use cases.
+* default rate limits are set to be 1,000 requests, 100,000 tokens per miniute, please check the [OpenAI usage limit documentation](https://platform.openai.com/docs/guides/rate-limits?context=tier-free) you can modify token rate parameters to fit different use cases.
 * if you would like to build from source, please download the [latest release](https://github.com/lion-agi/lionagi/releases),  **main is under development and will be changed without notice**
 
 
@@ -60,7 +60,7 @@ import lionagi as li
 
 calculator = li.Session(system=system)
 result = await calculator.chat(
-  instruction=instruction, context=context, model="gpt-4-1106-preview"
+  instruction=instruction, context=context, model="gpt-4-turbo-preview"
 )
 
 print(f"Calculation Result: {result}")
@@ -78,7 +78,7 @@ import lionagi as li
 async def main():
     calculator = li.Session(system=system)
     result = await calculator.chat(
-      instruction=instruction, context=context, model="gpt-4-1106-preview"
+      instruction=instruction, context=context, model="gpt-4-turbo-preview"
     )
     print(f"Calculation Result: {result}")
 
