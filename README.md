@@ -78,7 +78,7 @@ import lionagi as li
 async def main():
     calculator = li.Session(system=system)
     result = await calculator.chat(
-      instruction=instruction, context=context, model="gpt-4-1106-preview"
+      instruction=instruction, context=context, model="gpt-4-turbo-preview"
     )
     print(f"Calculation Result: {result}")
 
