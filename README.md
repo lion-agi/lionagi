@@ -11,8 +11,17 @@
 
 LionAGI is a cutting-edge **intelligent agent framework**. It integrates data manipulation with advanced machine learning tools, such as Large Language Models (i.e. OpenAI's GPT). 
 - Designed for data-centric, production-level projects,
-- dramatically lowers the barrier in creating intelligent, automated systems
-- that can understand and interact meaningfully with large volumes of data. 
+- Agents directing agents directing agents ... to work
+
+<img width="631" alt="Screenshot 2024-02-14 at 8 57 45 AM" src="https://github.com/lion-agi/lionagi/assets/122793010/14395e2f-9988-465b-873f-04d8868ba8f0">
+
+
+- Integrate any Advanced ML Model into your existing workflow
+
+<img width="900" alt="Screenshot 2024-02-14 at 8 54 01 AM" src="https://github.com/lion-agi/lionagi/assets/122793010/cfbc403c-cece-49e7-bc3a-015e035d3607">
+
+
+
 
 Install LionAGI with pip:
 
