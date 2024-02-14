@@ -11,8 +11,8 @@
 
 LionAGI is an **intelligent agent framework** tailored for **big data analysis** with advanced **machine learning** tools. Designed for data-centric, production-level projects. Lionagi allows flexible and rapid design of agentic workflow, customed for your own data. Lionagi `agents` can manage and direct other agents, can also use multiple different tools in parallel.
   
-<img width="500" height="500" alt="192511707932018_ pic" src="https://github.com/lion-agi/lionagi/assets/78745424/f07ce397-5a30-4e80-82b0-8e5ec4b44ef3">
-<img width="500" height="500" alt="192501707932007_ pic" src="https://github.com/lion-agi/lionagi/assets/78745424/fb04e779-b6fa-4500-8f90-d863f4c1a755">
+<img width="1002" alt="image" src="https://github.com/lion-agi/lionagi/assets/122793010/3fd75c2a-a9e9-4ab4-8ae9-f9cd71c69aec">
+
 
 #### Integrate any Advanced Model into your existing workflow.
 
