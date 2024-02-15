@@ -16,9 +16,7 @@ from .call_util import (
 
 
 __all__ = [
-
-    "is_package_installed", "install_import", "to_df",
-    'get_timestamp', 'create_copy', 'create_path', 'split_path',
+    "to_df",'get_timestamp', 'create_copy', 'create_path', 'split_path',
     'get_bins', 'change_dict_key', 'str_to_num', 'create_id',
     'as_dict', 'to_list', 'to_readable_dict', 'nfilter', 'nset',
     'nget', 'nmerge', 'ninsert', 'flatten', 'unflatten',
