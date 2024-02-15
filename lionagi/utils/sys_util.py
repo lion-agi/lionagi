@@ -11,7 +11,7 @@ import json
 import logging
 
 import pandas as pd
-from typing import Any, List, Dict
+from typing import Any, List, Dict, Union
 
 
 def as_dict(input_: Any) -> Dict[Any, Any]:
@@ -136,8 +136,8 @@ def create_path(
         name, ext = filename, ''
     os.makedirs(dir, exist_ok=dir_exist_ok)
     timestamp_str = get_timestamp() if timestamp else ''
-    filename = f"{timestamp_str}{name}" if time_prefix else f"{name}{timestamp_str}"
-    return f"{dir}{filename}.{ext}" if ext != '' else f"{dir}{filename}"
+    filename = f"{timestamp_str}_{name}" if time_prefix else f"{name}_{timestamp_str}"
+    return f"{dir}{filename}.{ext}" if ext else f"{dir}{filename}"
 
 def get_bins(input: List[str], upper: int) -> List[List[int]]:
     """
