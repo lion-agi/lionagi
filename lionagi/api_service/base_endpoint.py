@@ -1,5 +1,5 @@
 from typing import Any, Dict, NoReturn, Optional, Type, List, Union
-from ..rate_limiter.base_rate_limiter import BaseRateLimiter, SimpleRateLimiter
+from .base_rate_limiter import BaseRateLimiter, SimpleRateLimiter
 
 
 class BaseEndpoint:

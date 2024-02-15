@@ -10,7 +10,7 @@ from .nested_util import (
     is_structure_homogeneous, get_flattened_keys)
 
 from .api_util import APIUtil
-from .encrypt_util import EncrytionUtil
+# from .encrypt_util import EncrytionUtil
 from .io_util import IOUtil
 
 from .call_util import (

@@ -1,6 +1,6 @@
 from os import getenv
-from ..api_service.services.base_service import BaseService
-from ..api_service.end_points.payload_package import PayloadCreation
+from ..api_service.base_service import BaseService
+from ..api_service.payload_package import PayloadCreation
 
 class AnthropicService(BaseService):
     """

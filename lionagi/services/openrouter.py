@@ -1,6 +1,6 @@
 from os import getenv
 from ..configs.openrouter_configs import openrouter_schema
-from ..api_service.services.base_service import BaseService
+from ..api_service.base_service import BaseService
 from ..api_service.end_points.payload_package import PayloadCreation
 
 class OpenRouterService(BaseService):

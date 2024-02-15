@@ -1,5 +1,5 @@
 from ..utils.sys_util import install_import, is_package_installed, as_dict
-from ..api_service.services.base_service import BaseService
+from ..api_service.base_service import BaseService
 from ..api_service.end_points.payload_package import PayloadCreation
 
 

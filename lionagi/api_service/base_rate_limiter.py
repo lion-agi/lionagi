@@ -3,8 +3,7 @@ import logging
 from abc import ABC
 from typing import Dict, NoReturn, Optional
 
-from ...utils import APIUtil
-from lionagi.exceptions import AsyncException
+from ..utils import APIUtil
 
 
 class BaseRateLimiter(ABC):

@@ -5,11 +5,11 @@ from abc import ABC
 from dataclasses import dataclass
 from typing import Any, Dict, NoReturn, Optional, Type, List, Union
 
-from ...utils import nget, APIUtil, to_list, lcall
-from ..rate_limiter.base_rate_limiter import BaseRateLimiter, SimpleRateLimiter
-from ..obj.status_tracker import StatusTracker
+from ..utils import nget, APIUtil, to_list, lcall
+from .base_rate_limiter import BaseRateLimiter, SimpleRateLimiter
+from .status_tracker import StatusTracker
 
-from ..end_points.base_endpoint import BaseEndpoint
+from .base_endpoint import BaseEndpoint
 
 
 class BaseService:
