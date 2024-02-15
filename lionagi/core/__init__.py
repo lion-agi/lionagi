@@ -1,6 +1,6 @@
 from .messages.messages import System, Instruction
-from .branch.branch import Branch
-from .sessions.session import Session
+from ...working.branch import Branch
+from ...working.session import Session
 
 
 __all__  = [

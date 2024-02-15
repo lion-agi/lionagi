@@ -1,7 +1,7 @@
 from typing import Callable, Dict, Any, Optional, Union
 import asyncio
 from lionagi.core.branch.conversation import Conversation
-from lionagi.core.branch.branch import Branch
+from working.branch import Branch
 
 class Agent:
     def __init__(self, name: Optional[str] = None):
