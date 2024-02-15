@@ -1,5 +1,5 @@
 Branch
 =======
 
-.. automodule:: lionagi.core.branch
+.. automodule:: lionagi.core.branch.branch
    :members:

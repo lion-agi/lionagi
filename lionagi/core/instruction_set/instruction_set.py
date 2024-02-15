@@ -1,7 +1,7 @@
 from typing import List, Union
-from lionagi.schema import Tool
-from lionagi.structures import Relationship, Structure
-from lionagi.core.messages import Instruction
+from ...schema import Tool
+from ...structures import Relationship, Structure
+from ..messages.messages import Instruction
 
 
 class InstructionSet(Structure):
