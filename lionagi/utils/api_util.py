@@ -286,6 +286,8 @@ class APIUtil:
         payload: Dict[str, Any] = None,
         api_endpoint: str = None,
         token_encoding_name: str = None,
+        disallowed_special = None,
+        **kwargs
     ) -> int:
         """
         Calculates the number of tokens required for a request based on the payload and API endpoint.
@@ -311,7 +313,10 @@ class APIUtil:
             # Expected token calculation for the given payload and endpoint.
         """
 
-        encoding = tiktoken.get_encoding(token_encoding_name)
+        if disallowed_special:
+            kwargs['disallowed_special'] = disallowed_special
+            
+        encoding = tiktoken.get_encoding(token_encoding_name, **kwargs)
         if api_endpoint.endswith("completions"):
             max_tokens = payload.get("max_tokens", 15)
             n = payload.get("n", 1)

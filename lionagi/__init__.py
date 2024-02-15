@@ -24,7 +24,7 @@ from .structures import *
 from .loaders import *
 from .services import *
 from .tools import *
-from .core import *
+from ..working import *
 
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.INFO)

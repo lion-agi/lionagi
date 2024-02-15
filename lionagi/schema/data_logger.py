@@ -129,3 +129,4 @@ class DataLogger:
                 self.log.clear()
         except Exception as e:
             raise ValueError(f"Error in saving to csv: {e}")
+
