@@ -5,7 +5,7 @@ from pathlib import Path
 from typing import List, Union, Dict, Any, Tuple
 
 from ..utils import to_list, lcall
-from ..schema import DataNode
+from ..schema.base_schema import DataNode
 
 class ReaderType(str, Enum):
     PLAIN = 'plain'

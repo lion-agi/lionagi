@@ -2,7 +2,7 @@ from typing import List, Any
 from pydantic import Field
 
 from ..utils.call_util import lcall
-from ..schema.base_node import BaseNode
+from ..schema.base_schema import BaseNode
 from .relationship import Relationship
 
 

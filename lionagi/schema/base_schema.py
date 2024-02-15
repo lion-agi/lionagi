@@ -1,6 +1,6 @@
 from collections import deque
 from typing import Any, Dict, List, Optional, Type, TypeVar, Union, Callable
-from .utils.sys_util import get_timestamp, create_path, as_dict, to_df, create_id, change_dict_key, is_schema
+from ..utils.sys_util import get_timestamp, create_path, as_dict, to_df, create_id, change_dict_key, is_schema
 import json
 import xml.etree.ElementTree as ET
 
@@ -372,59 +372,6 @@ class BaseNode(BaseModel):
             data[child.tag] = child.text
         return data
 
-
-    # def is_empty(self) -> bool:
-    #     return not self.content and not self.metadata
-
-    # def copy(self, n: int = 1) -> Union[List[T], T]:
-    #     return create_copy(self, n)
-
-    # def data_equals(self, other: 'BaseNode') -> bool:
-    #     return (
-    #         self.content == other.content and
-    #         self.metadata == other.metadata and
-    #         self.related_nodes == other.related_nodes
-    #     )
-
-    # def is_copy_of(self, other: 'BaseNode') -> bool:
-    #     return (
-    #         self.data_equals(other) and
-    #         self is not other
-    #     )
-
-    # def __eq__(self, other: 'BaseNode') -> bool:
-    #     # return (self.id_ == other.id_ and self.data_equals(other))
-    #     return self.id_ == other.id_
-
-
-    # def encrypt_content(self, key: str) -> None:
-    #     """
-    #     Encrypts the node's content.
-
-    #     Args:
-    #         key: The encryption key.
-
-    #     Examples:
-    #         >>> node = BaseNode(content="Sensitive information")
-    #         >>> node.encrypt_content("my_secret_key")
-    #     """
-    #     self.content = EncrytionUtil.encrypt(self.content, key)
-
-    # def decrypt_content(self, key: str) -> None:
-    #     """
-    #     Decrypts the node's content.
-
-    #     Args:
-    #         key: The decryption key.
-
-    #     Examples:
-    #         >>> node = BaseNode(content="Encrypted content")
-    #         >>> node.decrypt_content("my_secret_key")
-    #     """
-    #     self.content = EncrytionUtil.decrypt(self.content, key)
-
-
-
 class Tool(BaseNode):
     """
     A class representing a tool with a function, content, parser, and schema.
@@ -465,8 +412,6 @@ class Tool(BaseNode):
             'my_function'
         """
         return func.__name__
-
-
 
 
 class DataLogger:

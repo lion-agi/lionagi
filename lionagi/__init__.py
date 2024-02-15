@@ -19,12 +19,11 @@ from .version import __version__
 from dotenv import load_dotenv
 
 from .utils import *
-from .schema import *
+from .schema.base_schema import *
 from .structures import *
 from .loaders import *
-from .services import *
+from .api_service import *
 from .tools import *
-from ..working import *
 
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.INFO)
