@@ -5,7 +5,7 @@ import pandas as pd
 from lionagi.utils.sys_util import create_path
 from lionagi.utils import to_list, to_df
 from lionagi.schema import Tool
-from lionagi._services.base_service import BaseService
+from lionagi.iservices.base_service import BaseService
 from lionagi.core.branch import Branch
 from lionagi.core.branch_manager import BranchManager
 from lionagi.core.messages import Instruction, System
