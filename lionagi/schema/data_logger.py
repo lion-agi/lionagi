@@ -1,7 +1,6 @@
 from collections import deque
 from typing import Dict, Any
 from ..utils.sys_util import get_timestamp, create_path, as_dict, to_df
-from ..utils.io_util import IOUtil
 
 
 class DataLogger:

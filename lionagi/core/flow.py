@@ -1,22 +1,25 @@
+from typing import Any, Dict, List, Optional, Union
+from lionagi.utils import as_dict, lcall, to_list, alcall, get_flattened_keys
+from lionagi.schema import Tool
+from lionagi.core.messages import Instruction, System
 
 
-class Flow:
+class ChatFlow:
 
-
-    @classmethod
-    async def _call_chatcompletion(branch, sender=None, with_sender=False, tokenizer_kwargs={}, **kwargs):
+    @staticmethod
+    async def call_chatcompletion(branch, sender=None, with_sender=False, tokenizer_kwargs={}, **kwargs):
         """
         Asynchronously calls the chat completion service with the current message queue.
-
-        This method prepares the messages for chat completion, sends the request to the configured service, and handles the response. The method supports additional keyword arguments that are passed directly to the service.
-
+        
         Args:
-            sender (Optional[str]): The name of the sender to be included in the chat completion request. Defaults to None.
-            with_sender (bool): If True, includes the sender's name in the messages. Defaults to False.
-            **kwargs: Arbitrary keyword arguments passed directly to the chat completion service.
+            branch: The Branch instance calling the service.
+            sender (Optional[str]): The name of the sender to include in chat completions.
+            with_sender (bool): If True, includes sender information in messages.
+            tokenizer_kwargs (dict): Keyword arguments for the tokenizer used in chat completion.
+            **kwargs: Arbitrary keyword arguments for the chat completion service.
 
         Examples:
-            >>> await branch.call_chatcompletion()
+            >>> await ChatFlow.call_chatcompletion(branch, sender="user")
         """
         messages = branch.chat_messages if not with_sender else branch.chat_messages_with_sender
         payload, completion = await branch.service.serve_chat(
@@ -33,10 +36,9 @@ class Flow:
         else:
             branch.status_tracker.num_tasks_failed += 1
 
-# ----- chat methods ----- #
-
+    @staticmethod
     async def chat(
-        self,
+        branch,
         instruction: Union[Instruction, str],
         context: Optional[Any] = None,
         sender: Optional[str] = None,
@@ -44,43 +46,58 @@ class Flow:
         tools: Union[bool, Tool, List[Tool], str, List[str]] = False,
         out: bool = True,
         invoke: bool = True,
-        **kwargs
-    ) -> Any:
+        **kwargs) -> Any:
 
-        
+        """
+        a chat conversation with LLM, processing instructions and system messages, optionally invoking tools.
+
+        Args:
+            branch: The Branch instance to perform chat operations.
+            instruction (Union[Instruction, str]): The instruction for the chat.
+            context (Optional[Any]): Additional context for the chat.
+            sender (Optional[str]): The sender of the chat message.
+            system (Optional[Union[System, str, Dict[str, Any]]]): System message to be processed.
+            tools (Union[bool, Tool, List[Tool], str, List[str]]): Specifies tools to be invoked.
+            out (bool): If True, outputs the chat response.
+            invoke (bool): If True, invokes tools as part of the chat.
+            **kwargs: Arbitrary keyword arguments for chat completion.
+
+        Examples:
+            >>> await ChatFlow.chat(branch, "Ask about user preferences")
+        """
         if system:
-            self.change_first_system_message(system)
-        self.add_message(instruction=instruction, context=context, sender=sender)
+            branch.change_first_system_message(system)
+        branch.add_message(instruction=instruction, context=context, sender=sender)
 
         if 'tool_parsed' in kwargs:
             kwargs.pop('tool_parsed')
             tool_kwarg = {'tools': tools}
             kwargs = {**tool_kwarg, **kwargs}
         else:
-            if tools and self.has_tools:
-                kwargs = self.tool_manager._tool_parser(tools=tools, **kwargs)
+            if tools and branch.has_tools:
+                kwargs = branch.tool_manager._tool_parser(tools=tools, **kwargs)
 
-        config = {**self.llmconfig, **kwargs}
+        config = {**branch.llmconfig, **kwargs}
         if sender is not None: 
             config.update({"sender": sender})
         
-        await self._call_chatcompletion(**config)
+        await branch.call_chatcompletion(**config)
         
         async def _output():
-            content_ = as_dict(self.messages.content.iloc[-1])
+            content_ = as_dict(branch.messages.content.iloc[-1])
             if invoke:
                 try:
                     tool_uses = content_
                     func_calls = lcall(
                         [as_dict(i) for i in tool_uses["action_list"]], 
-                        self.tool_manager.get_function_call
+                        branch.tool_manager.get_function_call
                     )
                     
-                    outs = await alcall(func_calls, self.tool_manager.invoke)
+                    outs = await alcall(func_calls, branch.tool_manager.invoke)
                     outs = to_list(outs, flatten=True)
 
                     for out_, f in zip(outs, func_calls):
-                        self.add_message(
+                        branch.add_message(
                             response={
                                 "function": f[0], 
                                 "arguments": f[1], 
@@ -100,8 +117,9 @@ class Flow:
         
         return await _output()
 
+    @staticmethod
     async def ReAct(
-        self,
+        branch,
         instruction: Union[Instruction, str],
         context = None,
         sender = None,
@@ -110,16 +128,31 @@ class Flow:
         num_rounds: int = 1,
         **kwargs 
     ):
+        """
+        Performs a reason-action cycle with optional tool invocation over multiple rounds.
 
+        Args:
+            branch: The Branch instance to perform ReAct operations.
+            instruction (Union[Instruction, str]): Initial instruction for the cycle.
+            context: Context relevant to the instruction.
+            sender (Optional[str]): Identifier for the message sender.
+            system: Initial system message or configuration.
+            tools: Tools to be registered or used during the cycle.
+            num_rounds (int): Number of reason-action cycles to perform.
+            **kwargs: Additional keyword arguments for customization.
+
+        Examples:
+            >>> await ChatFlow.ReAct(branch, "Analyze user feedback", num_rounds=2)
+        """
         if tools is not None:
             if isinstance(tools, list) and isinstance(tools[0], Tool):
-                self.register_tools(tools)
+                branch.register_tools(tools)
         
-        if self.tool_manager.registry == {}:
+        if branch.tool_manager.registry == {}:
             raise ValueError("No tools found, You need to register tools for ReAct (reason-action)")
         
         else:
-            kwargs = self.tool_manager._tool_parser(tools=True, **kwargs)
+            kwargs = branch.tool_manager._tool_parser(tools=True, **kwargs)
 
         out = ''
         i = 0
@@ -130,35 +163,36 @@ class Flow:
             
             if i == 0:
                 instruct["Task"] = instruction
-                out = await self.chat(
+                out = await branch.chat(
                     instruction=instruct, context=context, 
                     system=system, sender=sender, **kwargs
                 )
         
             elif i >0:
-                out = await self.chat(
+                out = await branch.chat(
                     instruction=instruct, sender=sender, **kwargs
                 )
                 
             prompt = f"""
                 you have {(num_rounds-i)*2-1} step left in current task, invoke tool usage to perform actions
             """
-            out = await self.chat(prompt, tool_choice="auto", tool_parsed=True, sender=sender, **kwargs)
+            out = await branch.chat(prompt, tool_choice="auto", tool_parsed=True, sender=sender, **kwargs)
 
             i += 1
-            if not self._is_invoked():
+            if not branch._is_invoked():
                 return out
     
-        if self._is_invoked():
+        if branch._is_invoked():
             prompt = """
                 present the final result to user
             """
-            return await self.chat(prompt, sender=sender, tool_parsed=True, **kwargs)
+            return await branch.chat(prompt, sender=sender, tool_parsed=True, **kwargs)
         else:
             return out
 
+    @staticmethod
     async def auto_followup(
-        self,
+        branch,
         instruction: Union[Instruction, str],
         context = None,
         sender = None,
@@ -168,11 +202,25 @@ class Flow:
         out=True, 
         **kwargs
     ) -> None:
+        """
+        Automatically performs follow-up actions based on chat interactions and tool invocations.
 
+        Args:
+            branch: The Branch instance to perform follow-up operations.
+            instruction (Union[Instruction, str]): The initial instruction for follow-up.
+            context: Context relevant to the instruction.
+            sender (Optional[str]): Identifier for the message sender.
+            system: Initial system message or configuration.
+            tools: Specifies tools to be considered for follow-up actions.
+            max_followup (int): Maximum number of follow-up chats allowed.
+            out (bool): If True, outputs the result of the follow-up action.
+            **kwargs: Additional keyword arguments for follow-up customization.
 
-
-        if self.tool_manager.registry != {} and tools:
-            kwargs = self.tool_manager._tool_parser(tools=tools, **kwargs)
+        Examples:
+            >>> await ChatFlow.auto_followup(branch, "Finalize report", max_followup=2)
+        """
+        if branch.tool_manager.registry != {} and tools:
+            kwargs = branch.tool_manager._tool_parser(tools=tools, **kwargs)
 
         n_tries = 0
         while (max_followup - n_tries) > 0:
@@ -182,28 +230,28 @@ class Flow:
                 to user without further tool usage
             """
             if n_tries > 0:
-                _out = await self.chat(prompt, sender=sender, tool_choice="auto", tool_parsed=True, **kwargs)
+                _out = await branch.chat(prompt, sender=sender, tool_choice="auto", tool_parsed=True, **kwargs)
                 n_tries += 1
                 
-                if not self._is_invoked():
+                if not branch._is_invoked():
                     return _out if out else None
                                 
             elif n_tries == 0:
                 instruct = {"notice": prompt, "task": instruction}
-                out = await self.chat(
+                out = await branch.chat(
                     instruct, context=context, system=system, sender=sender, tool_choice="auto", 
                     tool_parsed=True, **kwargs
                 )
                 n_tries += 1
                 
-                if not self._is_invoked():
+                if not branch._is_invoked():
                     return _out if out else None
 
-        if self._is_invoked():
+        if branch._is_invoked():
             """
             In the current task, you are at your last step, present the final result to user
             """
-            return await self.chat(instruction, sender=sender, tool_parsed=True, **kwargs)
+            return await branch.chat(instruction, sender=sender, tool_parsed=True, **kwargs)
 
     # async def followup(
     #     self,
@@ -309,9 +357,6 @@ class Flow:
     #             present the final result to user
     #         """
     #         return await self.chat(prompt, sender=sender, tool_parsed=True, **kwargs)
-
-
-
 
 
 # from .sessions import Session

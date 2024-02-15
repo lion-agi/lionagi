@@ -11,7 +11,7 @@ import json
 import logging
 
 import pandas as pd
-from typing import Any, List, Dict, Union
+from typing import Any, List, Dict
 
 
 def as_dict(input_: Any) -> Dict[Any, Any]:

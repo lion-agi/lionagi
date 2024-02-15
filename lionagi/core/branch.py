@@ -5,6 +5,9 @@ from typing import Any, Dict, List, Optional, Union
 
 import pandas as pd
 
+from lionagi.utils.sys_util import create_path, is_same_dtype
+from lionagi.utils import as_dict, lcall,to_df, to_list, CoreUtil
+
 
 from lionagi._services.base_service import BaseService, StatusTracker
 from lionagi._services.oai import OpenAIService
@@ -13,27 +16,23 @@ from lionagi.configs.oai_configs import oai_schema
 from lionagi.configs.openrouter_configs import openrouter_schema
 from lionagi.schema import DataLogger, Tool
 from lionagi.tools.tool_manager import ToolManager
-from lionagi.utils import as_dict, lcall,to_df, to_list
-from lionagi.utils.sys_util import create_path, is_same_dtype
+from lionagi.core.branch_manager import Request
+from lionagi.core.instruction_set import InstructionSet
+from lionagi.core.messages import Instruction, Message, Response, System
+from lionagi.core.flow import ChatFlow
 
-from .branch_manager import Request
-from .core_utils import (get_rows, _remove_message, _update_row,
-                         _remove_last_n_rows, _extend, _replace_keyword,
-                         _search_keywords, _filter_messages_by, validate_messages)
-from .instruction_set import InstructionSet
-from .messages import Instruction, Message, Response, System
-
-
-
-
+OAIService = None
+try:
+    OAIService = OpenAIService()
+except:
+    pass
 
 class Branch:
     _cols = ["node_id", "role", "sender", "timestamp", "content"]
     
     def __init__(self, name: Optional[str] = None, messages: Optional[pd.DataFrame] = None,
                 instruction_sets: Optional[Dict[str, InstructionSet]] = None,
-                tool_manager: Optional[ToolManager] = None, service: Optional[BaseService] = None,
-                llmconfig: Optional[Dict] = None, tools=None, dir=None):
+                tool_manager: Optional[ToolManager] = None, service: Optional[BaseService] = None, llmconfig: Optional[Dict] = None, tools=None, dir=None, logger=None):
         """
         Initializes a new instance of the Branch class.
 
@@ -75,20 +74,39 @@ class Branch:
         self.name = name
         self.pending_ins = {}
         self.pending_outs = deque()
-        self.logger = DataLogger(dir=dir)
+        self.logger = logger or DataLogger(dir=dir)
 
 
 # ---- properties ---- #
     @property
     def chat_messages(self):
+        """
+        Generates chat completion messages without sender information.
+
+        Returns:
+            List[Dict[str, Any]]: A list of dictionaries representing chat messages.
+        """
         return self._to_chatcompletion_message()
 
     @property
     def chat_messages_with_sender(self):
+        """
+        Generates chat completion messages including sender information.
+
+        Returns:
+            List[Dict[str, Any]]: A list of dictionaries representing chat messages with sender details.
+        """
         return self._to_chatcompletion_message(with_sender=True) 
 
     @property
     def messages_describe(self) -> Dict[str, Any]:
+        """
+        Provides a descriptive summary of all messages in the branch.
+
+        Returns:
+            Dict[str, Any]: A dictionary containing summaries of messages by role and sender, 
+            total message count, instruction sets, registered tools, and message details.
+        """
         return {
             "total_messages": len(self.messages),
             "summary_by_role": self._info(),
@@ -102,6 +120,12 @@ class Branch:
 
     @property
     def has_tools(self) -> bool:
+        """
+        Checks if there are any tools registered in the tool manager.
+
+        Returns:
+            bool: True if there are tools registered, False otherwise.
+        """
         return self.tool_manager.registry != {}
 
     @property
@@ -112,7 +136,7 @@ class Branch:
         Returns:
             pd.Series: The last message as a pandas Series.
         """
-        return get_rows(self.messages, n=1, from_='last')
+        return CoreUtil.get_rows(self.messages, n=1, from_='last')
     
     @property
     def first_system(self) -> pd.Series:
@@ -122,7 +146,7 @@ class Branch:
         Returns:
             pd.Series: The first system message as a pandas Series.
         """
-        return get_rows(self.messages, role='system', n=1, from_='front')
+        return CoreUtil.get_rows(self.messages, role='system', n=1, from_='front')
         
     @property
     def last_response(self) -> pd.Series:
@@ -132,7 +156,7 @@ class Branch:
         Returns:
             pd.Series: The last response message as a pandas Series.
         """
-        return get_rows(self.messages, role='assistant', n=1, from_='last')
+        return CoreUtil.get_rows(self.messages, role='assistant', n=1, from_='last')
 
     @property
     def last_response_content(self) -> Dict:
@@ -426,11 +450,128 @@ class Branch:
             time_prefix=time_prefix, verbose=verbose, clear=clear, **kwargs
         )
 
+# ----- chatflow ----#
+    async def call_chatcompletion(self, sender=None, with_sender=False, tokenizer_kwargs={}, **kwargs):
+        """
+        Asynchronously calls the chat completion service with the current message queue.
+
+        This method prepares the messages for chat completion, sends the request to the configured service, and handles the response. The method supports additional keyword arguments that are passed directly to the service.
+
+        Args:
+            sender (Optional[str]): The name of the sender to be included in the chat completion request. Defaults to None.
+            with_sender (bool): If True, includes the sender's name in the messages. Defaults to False.
+            **kwargs: Arbitrary keyword arguments passed directly to the chat completion service.
+
+        Examples:
+            >>> await branch.call_chatcompletion()
+        """
+        await ChatFlow.call_chatcompletion(
+            self, sender=sender, with_sender=with_sender, 
+            tokenizer_kwargs=tokenizer_kwargs, **kwargs
+        )
+    
+    async def chat(
+        self,
+        instruction: Union[Instruction, str],
+        context: Optional[Any] = None,
+        sender: Optional[str] = None,
+        system: Optional[Union[System, str, Dict[str, Any]]] = None,
+        tools: Union[bool, Tool, List[Tool], str, List[str]] = False,
+        out: bool = True,
+        invoke: bool = True,
+        **kwargs) -> Any:
+        """
+        Initiates a chat conversation, processing instructions and system messages, optionally invoking tools.
+
+        Args:
+            branch: The Branch instance to perform chat operations.
+            instruction (Union[Instruction, str]): The instruction for the chat.
+            context (Optional[Any]): Additional context for the chat.
+            sender (Optional[str]): The sender of the chat message.
+            system (Optional[Union[System, str, Dict[str, Any]]]): System message to be processed.
+            tools (Union[bool, Tool, List[Tool], str, List[str]]): Specifies tools to be invoked.
+            out (bool): If True, outputs the chat response.
+            invoke (bool): If True, invokes tools as part of the chat.
+            **kwargs: Arbitrary keyword arguments for chat completion.
+
+        Examples:
+            >>> await ChatFlow.chat(branch, "Ask about user preferences")
+        """
+        return await ChatFlow.chat(
+            self, instruction=instruction, context=context, 
+            sender=sender, system=system, tools=tools, 
+            out=out, invoke=invoke, **kwargs
+        )
+
+    async def ReAct(
+        self,
+        instruction: Union[Instruction, str],
+        context = None,
+        sender = None,
+        system = None,
+        tools = None, 
+        num_rounds: int = 1,
+        **kwargs ):
+        """
+        Performs a reason-action cycle with optional tool invocation over multiple rounds.
+
+        Args:
+            branch: The Branch instance to perform ReAct operations.
+            instruction (Union[Instruction, str]): Initial instruction for the cycle.
+            context: Context relevant to the instruction.
+            sender (Optional[str]): Identifier for the message sender.
+            system: Initial system message or configuration.
+            tools: Tools to be registered or used during the cycle.
+            num_rounds (int): Number of reason-action cycles to perform.
+            **kwargs: Additional keyword arguments for customization.
+
+        Examples:
+            >>> await ChatFlow.ReAct(branch, "Analyze user feedback", num_rounds=2)
+        """
+        return await ChatFlow.ReAct(
+            self, instruction=instruction, context=context, 
+            sender=sender, system=system, tools=tools, 
+            num_rounds=num_rounds, **kwargs
+        )
+
+    async def auto_followup(
+        self,
+        instruction: Union[Instruction, str],
+        context = None,
+        sender = None,
+        system = None,
+        tools: Union[bool, Tool, List[Tool], str, List[str], List[Dict]] = False,
+        max_followup: int = 3,
+        out=True, 
+        **kwargs
+    ) -> None:
+        """
+        Automatically performs follow-up actions based on chat interactions and tool invocations.
+
+        Args:
+            branch: The Branch instance to perform follow-up operations.
+            instruction (Union[Instruction, str]): The initial instruction for follow-up.
+            context: Context relevant to the instruction.
+            sender (Optional[str]): Identifier for the message sender.
+            system: Initial system message or configuration.
+            tools: Specifies tools to be considered for follow-up actions.
+            max_followup (int): Maximum number of follow-up chats allowed.
+            out (bool): If True, outputs the result of the follow-up action.
+            **kwargs: Additional keyword arguments for follow-up customization.
+
+        Examples:
+            >>> await ChatFlow.auto_followup(branch, "Finalize report", max_followup=2)
+        """
+        return await ChatFlow.auto_followup(
+            self, instruction=instruction, context=context, 
+            sender=sender, system=system, tools=tools, 
+            max_followup=max_followup, out=out, **kwargs
+        )
 
 # ---- branch operations ---- #
     def clone(self) -> 'Branch':
         """
-        Creates a deep copy of the current Branch instance.
+        Creates a copy of the current Branch instance.
 
         This method is useful for duplicating the branch's state, including its messages,
         instruction sets, and tool registrations, into a new, independent Branch instance.
@@ -586,7 +727,7 @@ class Branch:
         Examples:
             >>> branch.remove_message("12345")
         """
-        _remove_message(self.messages, node_id)
+        CoreUtil.remove_message(self.messages, node_id)
     
     def update_message(
         self, value: Any, node_id: Optional[str] = None, col: str = 'node_id'
@@ -605,25 +746,23 @@ class Branch:
         Examples:
             >>> conversation.update_message('Updated content', node_id='12345', col='content')
         """
-        return _update_row(self.messages, node_id=node_id, col=col, value=value)
+        return CoreUtil.update_row(self.messages, node_id=node_id, col=col, value=value)
     
     def change_first_system_message(
         self, system: Union[str, Dict[str, Any], System], sender: Optional[str] = None
     ):
         """
-        Updates the first system message in the conversation.
+        Updates the first system message in the branch's conversation.
 
         Args:
-            system (Union[str, Dict[str, Any], System]): The new system message content, which can be a string,
-                                                         a dictionary of message content, or a System object.
-            sender (Optional[str], optional): The sender of the system message. Defaults to None.
+            system (Union[str, Dict[str, Any], System]): The new system message content.
+            sender (Optional[str]): The sender of the system message. Defaults to None.
 
         Raises:
-            ValueError: If there are no system messages in the conversation or if the input cannot be
-                        converted into a system message.
+            ValueError: If there are no system messages in the conversation.
 
         Examples:
-            >>> conversation.change_first_system_message({'content': 'System rebooted'}, sender='system')
+            >>> branch.change_first_system_message({'content': 'System rebooted'}, sender='system')
         """
         if self.len_systems == 0:
             raise ValueError("There is no system message in the messages.")
@@ -655,7 +794,7 @@ class Branch:
         Examples:
             >>> conversation.rollback(2)
         """
-        return _remove_last_n_rows(self.messages, steps)
+        return CoreUtil.remove_last_n_rows(self.messages, steps)
 
     def clear_messages(self) -> None:
         """
@@ -685,7 +824,7 @@ class Branch:
         Examples:
             >>> conversation.replace_keyword('hello', 'hi', col='content')
         """
-        _replace_keyword(
+        CoreUtil.replace_keyword(
             self.messages, keyword, replacement, col=col, 
             case_sensitive=case_sensitive
         )
@@ -710,7 +849,7 @@ class Branch:
         Examples:
             >>> df_matching = conversation.search_keywords('urgent', case_sensitive=True)
         """
-        return _search_keywords(
+        return CoreUtil.search_keywords(
             self.messages, keywords, case_sensitive, reset_index, dropna
         )
         
@@ -726,7 +865,7 @@ class Branch:
             >>> new_messages = pd.DataFrame([...])
             >>> conversation.extend(new_messages)
         """
-        self.messages = _extend(self.messages, messages, **kwargs)
+        self.messages = CoreUtil.extend(self.messages, messages, **kwargs)
         
     def filter_by(
         self,
@@ -754,7 +893,7 @@ class Branch:
         Examples:
             >>> filtered_df = conversation.filter_by(role='user', content_keywords=['urgent', 'immediate'])
         """
-        return _filter_messages_by(
+        return CoreUtil.filter_messages_by(
             self.messages, role=role, sender=sender, 
             start_time=start_time, end_time=end_time, 
             content_keywords=content_keywords, case_sensitive=case_sensitive
@@ -807,7 +946,7 @@ class Branch:
             if request.title == 'messages' and messages:
                 if not isinstance(request.request, pd.DataFrame):
                     raise ValueError('Invalid messages format')
-                validate_messages(request.request)
+                CoreUtil.validate_messages(request.request)
                 self.messages = self.messages.merge(request.request, how='outer')
                 continue
 
@@ -1033,4 +1172,4 @@ class Branch:
     #         current_instruct_node = instruction_set.get_next_instruction(
     #             current_instruct_node
     #         )
-
+    
