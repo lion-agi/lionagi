@@ -85,7 +85,8 @@ LionAGI is designed to be `asynchronous` only, please check python official docu
 * please know what you are doing, and check the usage on OpenAI regularly
 * default rate limits are set to be 1,000 requests, 100,000 tokens per miniute, please check the [OpenAI usage limit documentation](https://platform.openai.com/docs/guides/rate-limits?context=tier-free) you can modify token rate parameters to fit different use cases.
 * if you would like to build from source, please download the [latest release](https://github.com/lion-agi/lionagi/releases),  **main is under development and will be changed without notice**
-
+  
+**we are undergoing major refocus of this package and depreciated plenty features, roadmap is agent only in future**
 
 ### Community
 
