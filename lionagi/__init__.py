@@ -19,7 +19,7 @@ from .version import __version__
 from dotenv import load_dotenv
 
 from .utils import *
-from .schema.base_schema import *
+from .schema import *
 from .structures import *
 from .api_service import *
 from .tools import *
