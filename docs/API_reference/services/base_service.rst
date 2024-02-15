@@ -1,5 +1,5 @@
 Base Services
 =========
 
-.. automodule:: lionagi._services.base_service
+.. automodule:: lionagi.iservices.base_service
    :members:

@@ -1,5 +1,5 @@
 Branch Manager
 =======
 
-.. automodule:: lionagi.core.branch.branch_manager
+.. automodule:: lionagi.core.branch_manager
    :members:
