@@ -1,10 +1,10 @@
+import json
 from typing import Any, Dict, Optional
-from lionagi.schema.base_node import BaseNode
+
 
 from lionagi.utils.sys_util import strip_lower
 from lionagi.utils.nested_util import nget
-
-import json
+from lionagi.schema.base_node import BaseNode
 
 
 class Message(BaseNode):
