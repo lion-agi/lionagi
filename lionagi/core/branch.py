@@ -28,6 +28,25 @@ except:
     pass
 
 class Branch:
+    """
+    Represents a branch in a conversation with messages, instruction sets, and tool management.
+
+    A `Branch` is a subset of a conversation that contains messages, instruction sets, and tools for managing interactions
+    within the conversation. It encapsulates the state and behavior of a specific branch of conversation flow.
+
+    Attributes:
+        _cols (List[str]): A list of column names for the DataFrame containing messages.
+        messages (pd.DataFrame): A DataFrame containing messages for the branch.
+        instruction_sets (Dict[str, InstructionSet]): A dictionary of instruction sets associated with the branch.
+        tool_manager (ToolManager): The tool manager for managing tools within the branch.
+        service (Optional[BaseService]): The service associated with the branch.
+        llmconfig (Optional[Dict]): Configuration for the LLM (Large Language Model) service.
+        name (Optional[str]): The name of the branch.
+        pending_ins (Dict): Dictionary to store pending inputs for the branch.
+        pending_outs (Deque): Queue to store pending outputs for the branch.
+        logger (Optional[DataLogger]): Logger for data logging.
+        status_tracker (StatusTracker): Tracks the status of the branch.
+    """
     _cols = ["node_id", "role", "sender", "timestamp", "content"]
     
     def __init__(self, name: Optional[str] = None, messages: Optional[pd.DataFrame] = None,

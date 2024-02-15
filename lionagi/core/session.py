@@ -12,7 +12,19 @@ from lionagi.core.messages import Instruction, System
 
 
 class Session:
+    """
+    Represents a session for managing conversations and branches.
 
+    A `Session` encapsulates the state and behavior for managing conversations and their branches.
+    It provides functionality for initializing and managing conversation sessions, including setting up default
+    branches, configuring language learning models, managing tools, and handling session data logging.
+
+    Attributes:
+        branches (Dict[str, Branch]): A dictionary of branch instances associated with the session.
+        service (Optional[BaseService]): The external service instance associated with the session.
+        branch_manager (BranchManager): The manager for handling branches within the session.
+        logger (Optional[Any]): The logger instance for session data logging.
+    """
     def __init__(
         self,
         system: Optional[Union[str, System]] = None,
