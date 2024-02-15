@@ -8,9 +8,9 @@ from dotenv import load_dotenv
 from lionagi.utils import as_dict, get_flattened_keys, alcall, lcall, to_list
 from lionagi.utils.sys_util import is_same_dtype
 from lionagi.schema import Tool
-from lionagi._services.base_service import StatusTracker, BaseService
-from lionagi._services.oai import OpenAIService
-from lionagi._services.openrouter import OpenRouterService
+from lionagi.services.base_service import StatusTracker, BaseService
+from lionagi.services.oai import OpenAIService
+from lionagi.services.openrouter import OpenRouterService
 
 from lionagi.configs.oai_configs import oai_schema
 from lionagi.configs.openrouter_configs import openrouter_schema

@@ -4,7 +4,7 @@ from typing import Any, List, Union, Dict, Optional, Callable, Tuple
 from dotenv import load_dotenv
 
 from lionagi.schema import Tool
-from lionagi._services.oai import OpenAIService
+from lionagi.services.oai import OpenAIService
 from ..messages.messages import System, Instruction
 from ..branch.branch import Branch
 from ..branch.branch_manager import BranchManager
