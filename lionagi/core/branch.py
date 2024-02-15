@@ -9,9 +9,9 @@ from lionagi.utils.sys_util import create_path, is_same_dtype
 from lionagi.utils import as_dict, lcall,to_df, to_list, CoreUtil
 
 
-from lionagi.iservices.base_service import BaseService, StatusTracker
-from lionagi.iservices.oai import OpenAIService
-from lionagi.iservices.openrouter import OpenRouterService
+from lionagi.services.base_service import BaseService, StatusTracker
+from lionagi.services.oai import OpenAIService
+from lionagi.services.openrouter import OpenRouterService
 from lionagi.configs.oai_configs import oai_schema
 from lionagi.configs.openrouter_configs import openrouter_schema
 from lionagi.schema import DataLogger, Tool

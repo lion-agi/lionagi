@@ -4,4 +4,4 @@ Core
 .. toctree::
 
    core/branch.rst
-   core/sessions.rst
+   core/session.rst
