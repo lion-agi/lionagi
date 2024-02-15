@@ -16,7 +16,7 @@ Copyright 2023 HaiyangLi <ocean@lionagi.ai>
 
 import logging
 from .version import __version__
-
+from dotenv import load_dotenv
 
 from .utils import *
 from .schema.base_schema import *
@@ -25,7 +25,6 @@ from .loaders import *
 from .api_service import *
 from .tools import *
 
-
-
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.INFO)
+load_dotenv()
