@@ -29,22 +29,6 @@ pip install lionagi
 Download the `.env_template` file, input your appropriate `API_KEY`, save the file, rename as `.env` and put in your project's root directory. 
 by default we use `OPENAI_API_KEY`.
 
- 
-### Intelligence Services
-
-| Provider | Type | Parallel Chat | Perform Action | Embeddings | MultiModal |
-| ---- | ---- | ---- | ---- | ---- | ---- |
-| OpenAI | API | ✅ | ✅ |  |  |
-| OpenRouter | API | ✅ |  |  |  |
-| Ollama | Local | ✅ |  |  |  |
-| LiteLLM | Mixed | ✅ |  |  |  |
-| HuggingFace | Local | ✅ |  |  |  |
-| MLX | Local | ✅ |  |  |  |
-| Anthropic | API |  |  |  |  |
-| Azure | API |  |  |  |  |
-| Amazon | API |  |  |  |  |
-| Google | API |  |  |  |  |
-| MistralAI | API |  |  |  |  |
 
 ### Quick Start
 
