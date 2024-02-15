@@ -10,7 +10,6 @@ from .nested_util import (
     is_structure_homogeneous, get_flattened_keys)
 
 from .api_util import APIUtil
-# from .encrypt_util import EncrytionUtil
 from .io_util import IOUtil
 
 from .call_util import (
@@ -26,6 +25,6 @@ __all__ = [
     'as_dict', 'to_list', 'to_readable_dict', 'nfilter', 'nset',
     'nget', 'nmerge', 'ninsert', 'flatten', 'unflatten',
     'is_structure_homogeneous', 'get_flattened_keys', 'APIUtil',
-    'EncrytionUtil', 'IOUtil', 'lcall', 'alcall', 'mcall', 'tcall',
+    'IOUtil', 'lcall', 'alcall', 'mcall', 'tcall',
     'bcall', 'rcall', 'CallDecorator'
 ]

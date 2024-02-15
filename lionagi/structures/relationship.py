@@ -1,6 +1,6 @@
 from pydantic import Field
 from typing import Dict, Optional, Any
-from ..schema.base_node import BaseNode
+from ..schema.base_schema import BaseNode
 
 
 class Relationship(BaseNode):

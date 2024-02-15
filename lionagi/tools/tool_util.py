@@ -1,4 +1,4 @@
-from ..schema import Tool
+from ..schema.base_schema import Tool
 from lionagi.parsers.function_parsers import _func_to_schema
 
 def func_to_tool(func_, parser=None, docstring_style='google'):
