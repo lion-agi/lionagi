@@ -52,14 +52,21 @@ class Session:
         self.branches = branches if isinstance(branches, dict) else {}
         self.service = service 
         self.setup_default_branch(
-            system, sender, default_branch, default_branch_name, messages, 
-            instruction_sets, tool_manager, service, llmconfig, tools, 
-            dir, logger)
+            system=system, sender=sender, default_branch=default_branch,
+            default_branch_name=default_branch_name, messages=messages,
+            instruction_sets=instruction_sets, tool_manager=tool_manager, 
+            service=service, llmconfig=llmconfig, tools=tools, 
+            dir=dir, logger=logger)
         self.branch_manager = BranchManager(self.branches)
         self.logger = self.default_branch.logger
   
 
 # --- default branch methods ---- #
+
+    @property
+    def messages(self):
+        return self.default_branch.messages
+
     @property
     def messages_describe(self) -> Dict[str, Any]:
         """
@@ -429,6 +436,9 @@ class Session:
             dfs.append(to_df(v.messages))
         return to_df(to_list(dfs, flatten=True, dropna=True))
 
+    def register_tools(self, tools):
+        self.default_branch.register_tools(tools)
+
 # ----- chatflow ----#
     async def call_chatcompletion(self, branch=None, sender=None, with_sender=False, tokenizer_kwargs={}, **kwargs):
         """
@@ -446,7 +456,7 @@ class Session:
         """
         branch = self.get_branch(branch)
         await branch.call_chatcompletion(
-            branch, sender=sender, with_sender=with_sender, 
+            sender=sender, with_sender=with_sender, 
             tokenizer_kwargs=tokenizer_kwargs, **kwargs
         )
     
@@ -480,7 +490,7 @@ class Session:
         """
         branch = self.get_branch(branch)
         return await branch.chat(
-            branch, instruction=instruction, context=context, 
+            instruction=instruction, context=context, 
             sender=sender, system=system, tools=tools, 
             out=out, invoke=invoke, **kwargs
         )
@@ -514,7 +524,7 @@ class Session:
         branch = self.get_branch(branch)
 
         return await branch.ReAct(
-            branch, instruction=instruction, context=context, 
+            instruction=instruction, context=context, 
             sender=sender, system=system, tools=tools, 
             num_rounds=num_rounds, **kwargs
         )
@@ -549,7 +559,7 @@ class Session:
         """
         branch = self.get_branch(branch)
         return await branch.auto_followup(
-            branch, instruction=instruction, context=context, 
+            instruction=instruction, context=context, 
             sender=sender, system=system, tools=tools, 
             max_followup=max_followup, out=out, **kwargs
         )
@@ -591,7 +601,6 @@ class Session:
         new_branch = Branch(
             name=branch_name,
             messages=messages,
-            messages=messages, 
             instruction_sets=instruction_sets, 
             tool_manager=tool_manager, 
             service=service, 
@@ -812,12 +821,12 @@ class Session:
 
     def _setup_default_branch(
         self, system, sender, default_branch, default_branch_name, messages, 
-        instruction_sets, tool_manager, service, llmconfig, tools
+        instruction_sets, tool_manager, service, llmconfig, tools, dir, logger
     ):
         
         branch = default_branch or Branch(
             name=default_branch_name, service=service, llmconfig=llmconfig, tools=tools,
-            tool_manager=tool_manager, instruction_sets=instruction_sets, messages=messages
+            tool_manager=tool_manager, instruction_sets=instruction_sets, messages=messages, dir=dir, logger=logger
         )
         
         self.default_branch = branch

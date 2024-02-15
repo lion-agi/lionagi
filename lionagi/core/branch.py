@@ -60,13 +60,10 @@ class Branch:
             )
         )
         self.tool_manager = tool_manager if tool_manager else ToolManager()
-        if tools is not None:
-            if isinstance(to_list(tools[0]), Tool):
-                self.register_tools(tools)
-            else:
-                raise TypeError(
-                    "Tools must be a list of Tool instances."
-                )
+        try:
+            self.register_tools(tools)
+        except Exception as e:
+            raise TypeError(f"Error in registering tools: {e}")
         
         self.instruction_sets = instruction_sets if instruction_sets else {}
         self.status_tracker = StatusTracker()
