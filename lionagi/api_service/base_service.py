@@ -1,12 +1,6 @@
-import asyncio
-import logging
+from typing import Any, Dict, Optional, List, Union
 import aiohttp
-from abc import ABC
-from dataclasses import dataclass
-from typing import Any, Dict, NoReturn, Optional, Type, List, Union
-
-from ..utils import nget, APIUtil, to_list, lcall
-from .base_rate_limiter import BaseRateLimiter, SimpleRateLimiter
+from ..utils import nget, to_list
 from .status_tracker import StatusTracker
 
 from .base_endpoint import BaseEndpoint
@@ -33,9 +27,9 @@ class BaseService:
         api_key: Optional[str] = None,
         schema: Dict[str, Any] = None,
         token_encoding_name: str = None,
-        max_tokens : int = 100_000,
-        max_requests : int = 1_000,
-        interval: int = 60
+        max_tokens : int = None,
+        max_requests : int = None,
+        interval: int = None
     ) -> None:
         self.api_key = api_key
         self.schema = schema or {}
@@ -43,9 +37,9 @@ class BaseService:
         self.endpoints: Dict[str, BaseEndpoint] = {}
         self.token_encoding_name = token_encoding_name
         self.chat_config = {
-            'max_requests': max_requests,
-            'max_tokens': max_tokens,
-            'interval': interval,
+            'max_requests': max_requests or 1_000,
+            'max_tokens': max_tokens or 100_000,
+            'interval': interval or 60,
             "token_encoding_name": token_encoding_name
         }
 
@@ -70,18 +64,30 @@ class BaseService:
                     if endpoint_config is not None:
                         if ep == "chat/completions":
                             self.endpoints[ep] = BaseEndpoint(
-                                max_requests=self.chat_config.get('max_requests', 1000),
-                                max_tokens=self.chat_config.get('max_tokens', 100000),
-                                interval=self.chat_config.get('interval', 60),
+                                max_requests=self.chat_config.get('max_requests', None),
+                                max_tokens=self.chat_config.get('max_tokens', None),
+                                interval=self.chat_config.get('interval', None),
                                 endpoint_=ep,
                                 token_encoding_name=self.token_encoding_name,
                                 config=endpoint_config,
                             )
                         else:
                             self.endpoints[ep] = BaseEndpoint(
-                                max_requests=endpoint_config.get('max_requests', 1000) if endpoint_config.get('max_requests', 1000) is not None else 1000,
-                                max_tokens=endpoint_config.get('max_tokens', 100000) if endpoint_config.get('max_tokens', 100000) is not None else 100000,
-                                interval=endpoint_config.get('interval', 60) if endpoint_config.get('interval', 60) is not None else 60,
+                                max_requests=(
+                                    endpoint_config.get('max_requests', None) 
+                                    if endpoint_config.get('max_requests', None) is not None 
+                                    else None
+                                ),
+                                max_tokens=(
+                                    endpoint_config.get('max_tokens', None) 
+                                    if endpoint_config.get('max_tokens', None) is not None 
+                                    else None
+                                ),
+                                interval=(
+                                    endpoint_config.get('interval', None) 
+                                    if endpoint_config.get('interval', None) is not None 
+                                    else None
+                                ),
                                 endpoint_=ep,
                                 token_encoding_name=self.token_encoding_name,
                                 config=endpoint_config,
@@ -96,9 +102,9 @@ class BaseService:
                 self.schema.get(ep, {})
                 if ep not in self.endpoints:
                     self.endpoints[ep] = BaseEndpoint(
-                        max_requests=endpoint_config.get('max_requests', 1000),
-                        max_tokens=endpoint_config.get('max_tokens', 100000),
-                        interval=endpoint_config.get('interval', 60),
+                        max_requests=endpoint_config.get('max_requests', None),
+                        max_tokens=endpoint_config.get('max_tokens', None),
+                        interval=endpoint_config.get('interval', None),
                         endpoint_=ep,
                         token_encoding_name=self.token_encoding_name,
                         config=endpoint_config,
@@ -144,3 +150,4 @@ class BaseService:
                 self.endpoints[endpoint_.endpoint] = endpoint_
             return None
         return endpoint_config
+    

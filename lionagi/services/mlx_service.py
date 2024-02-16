@@ -1,4 +1,4 @@
-from ..utils.sys_util import install_import, is_package_installed, as_dict
+from ..utils.sys_util import install_import, is_package_installed, to_dict
 from .base_service import BaseService
 
 
@@ -19,7 +19,7 @@ class MlXService(BaseService):
         self.generate = generate
         
     async def serve_chat(self, messages, **kwargs):
-        prompts = [as_dict(msg['content'])['instruction'] for msg in messages if msg['role'] == 'user']
+        prompts = [to_dict(msg['content'])['instruction'] for msg in messages if msg['role'] == 'user']
         
         payload = {'messages': messages}
         

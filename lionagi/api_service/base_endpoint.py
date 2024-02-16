@@ -1,4 +1,4 @@
-from typing import Any, Dict, NoReturn, Optional, Type, List, Union
+from typing import Dict, Optional, Type
 from .base_rate_limiter import BaseRateLimiter, SimpleRateLimiter
 
 
@@ -58,8 +58,4 @@ class BaseEndpoint:
             self.max_requests, self.max_tokens, self.interval, self.token_encoding_name
         )
         self._has_initialized = True
-
-
-class Embedding(BaseEndpoint):
-    ...
-    
+        

@@ -11,7 +11,7 @@ from aiocache import cached
 from typing import Any, Callable, Dict, Optional
 # from bs4 import BeautifulSoup
 
-from .sys_util import strip_lower
+from ..utils.sys_util import strip_lower
 
 class APIUtil:
     """

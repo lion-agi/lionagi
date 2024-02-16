@@ -1,4 +1,4 @@
-from lionagi.utils.api_util import APIUtil
+from lionagi.api_service.util import APIUtil
 
 class PayloadCreation:
     

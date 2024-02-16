@@ -1,6 +1,6 @@
 from collections import deque
 from typing import Any, Dict, List, Optional, Type, TypeVar, Union, Callable
-from ..utils.sys_util import get_timestamp, create_path, as_dict, to_df, create_id, change_dict_key, is_schema
+from ..utils.sys_util import get_timestamp, create_path, to_dict, to_df, create_id, change_dict_key, is_schema
 import json
 import xml.etree.ElementTree as ET
 
@@ -458,7 +458,7 @@ class DataLogger:
             level (str): The log level for the entry (e.g., "INFO", "ERROR"). Defaults to "INFO".
         """
         self.log.append({
-            "timestamp": get_timestamp(), "level": level, **as_dict(entry)
+            "timestamp": get_timestamp(), "level": level, **to_dict(entry)
         })
         
     def set_dir(self, dir: str) -> None:

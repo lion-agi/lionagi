@@ -6,20 +6,21 @@ from typing import Any, Dict, List, Optional, Union
 import pandas as pd
 
 from lionagi.utils.sys_util import create_path, is_same_dtype
-from lionagi.utils import as_dict, lcall,to_df, to_list, CoreUtil
-
+from lionagi.utils import to_dict, lcall, to_list
+from lionagi.utils.df_util import to_df
 
 from lionagi.services.base_service import BaseService, StatusTracker
 from lionagi.services.oai import OpenAIService
-from lionagi.services.openrouter import OpenRouterService
 from lionagi.configs.oai_configs import oai_schema
-from lionagi.configs.openrouter_configs import openrouter_schema
 from lionagi.schema import DataLogger, Tool
-from lionagi.tools.tool_manager import ToolManager
-from lionagi.core.branch_manager import Request
-from lionagi.core.instruction_set import InstructionSet
-from lionagi.core.messages import Instruction, Message, Response, System
-from lionagi.core.flow import ChatFlow
+from lionagi.actions.managers.action_manager import ToolManager
+from lionagi.core.managers.branch_manager import Request
+from working.instruction_set import InstructionSet
+from lionagi.core.messages.messages import Instruction, Message, Response, System
+from lionagi.core.flow.flow import ChatFlow
+
+from .utils import MessageUtil
+
 
 OAIService = None
 try:
@@ -152,7 +153,7 @@ class Branch:
         Returns:
             pd.Series: The last message as a pandas Series.
         """
-        return CoreUtil.get_rows(self.messages, n=1, from_='last')
+        return MessageUtil.get_message_rows(self.messages, n=1, from_='last')
     
     @property
     def first_system(self) -> pd.Series:
@@ -162,7 +163,7 @@ class Branch:
         Returns:
             pd.Series: The first system message as a pandas Series.
         """
-        return CoreUtil.get_rows(self.messages, role='system', n=1, from_='front')
+        return MessageUtil.get_message_rows(self.messages, role='system', n=1, from_='front')
         
     @property
     def last_response(self) -> pd.Series:
@@ -172,7 +173,7 @@ class Branch:
         Returns:
             pd.Series: The last response message as a pandas Series.
         """
-        return CoreUtil.get_rows(self.messages, role='assistant', n=1, from_='last')
+        return MessageUtil.get_message_rows(self.messages, role='assistant', n=1, from_='last')
 
     @property
     def last_response_content(self) -> Dict:
@@ -182,7 +183,7 @@ class Branch:
         Returns:
             Dict: The content of the last response message as a dictionary
         """
-        return as_dict(self.last_response.content.iloc[-1])
+        return to_dict(self.last_response.content.iloc[-1])
 
     @property
     def action_request(self) -> pd.DataFrame:
@@ -728,7 +729,7 @@ class Branch:
             context=context, response=response, sender=sender
         )
         message_dict = msg.to_dict()
-        if isinstance(as_dict(message_dict['content']), dict):
+        if isinstance(to_dict(message_dict['content']), dict):
             message_dict['content'] = json.dumps(message_dict['content'])
         message_dict['timestamp'] = datetime.now().isoformat()
         self.messages.loc[len(self.messages)] = message_dict
@@ -743,7 +744,7 @@ class Branch:
         Examples:
             >>> branch.remove_message("12345")
         """
-        CoreUtil.remove_message(self.messages, node_id)
+        MessageUtil.remove_message(self.messages, node_id)
     
     def update_message(
         self, value: Any, node_id: Optional[str] = None, col: str = 'node_id'
@@ -762,7 +763,7 @@ class Branch:
         Examples:
             >>> conversation.update_message('Updated content', node_id='12345', col='content')
         """
-        return CoreUtil.update_row(self.messages, node_id=node_id, col=col, value=value)
+        return MessageUtil.update_row(self.messages, node_id=node_id, col=col, value=value)
     
     def change_first_system_message(
         self, system: Union[str, Dict[str, Any], System], sender: Optional[str] = None
@@ -810,7 +811,7 @@ class Branch:
         Examples:
             >>> conversation.rollback(2)
         """
-        return CoreUtil.remove_last_n_rows(self.messages, steps)
+        return MessageUtil.remove_last_n_rows(self.messages, steps)
 
     def clear_messages(self) -> None:
         """
@@ -840,7 +841,7 @@ class Branch:
         Examples:
             >>> conversation.replace_keyword('hello', 'hi', col='content')
         """
-        CoreUtil.replace_keyword(
+        MessageUtil.replace_keyword(
             self.messages, keyword, replacement, col=col, 
             case_sensitive=case_sensitive
         )
@@ -865,7 +866,7 @@ class Branch:
         Examples:
             >>> df_matching = conversation.search_keywords('urgent', case_sensitive=True)
         """
-        return CoreUtil.search_keywords(
+        return MessageUtil.search_keywords(
             self.messages, keywords, case_sensitive, reset_index, dropna
         )
         
@@ -881,7 +882,7 @@ class Branch:
             >>> new_messages = pd.DataFrame([...])
             >>> conversation.extend(new_messages)
         """
-        self.messages = CoreUtil.extend(self.messages, messages, **kwargs)
+        self.messages = MessageUtil.extend(self.messages, messages, **kwargs)
         
     def filter_by(
         self,
@@ -909,7 +910,7 @@ class Branch:
         Examples:
             >>> filtered_df = conversation.filter_by(role='user', content_keywords=['urgent', 'immediate'])
         """
-        return CoreUtil.filter_messages_by(
+        return MessageUtil.filter_messages_by(
             self.messages, role=role, sender=sender, 
             start_time=start_time, end_time=end_time, 
             content_keywords=content_keywords, case_sensitive=case_sensitive
@@ -962,7 +963,7 @@ class Branch:
             if request.title == 'messages' and messages:
                 if not isinstance(request.request, pd.DataFrame):
                     raise ValueError('Invalid messages format')
-                CoreUtil.validate_messages(request.request)
+                MessageUtil.validate_messages(request.request)
                 self.messages = self.messages.merge(request.request, how='outer')
                 continue
 
@@ -1006,8 +1007,8 @@ class Branch:
         else:
             if isinstance(service, OpenAIService):
                 self.llmconfig = oai_schema["chat/completions"]["config"]
-            elif isinstance(service, OpenRouterService):
-                self.llmconfig = openrouter_schema["chat/completions"]["config"]
+            # elif isinstance(service, OpenRouterService):
+            #     self.llmconfig = openrouter_schema["chat/completions"]["config"]
             else:
                 self.llmconfig = {}
 
@@ -1021,7 +1022,7 @@ class Branch:
                 
             if isinstance(content_, str):
                 try:
-                    content_ = json.dumps(as_dict(content_))
+                    content_ = json.dumps(to_dict(content_))
                 except Exception as e:
                     raise ValueError(f"Error in serealizing, {row['node_id']} {content_}: {e}")
                 
@@ -1043,7 +1044,7 @@ class Branch:
         content = self.messages.iloc[-1]['content']
         try:
             if (
-                as_dict(content)['action_response'].keys() >= {'function', 'arguments', 'output'}
+                to_dict(content)['action_response'].keys() >= {'function', 'arguments', 'output'}
             ):
                 return True
         except:

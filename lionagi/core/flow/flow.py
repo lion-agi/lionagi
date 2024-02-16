@@ -1,7 +1,7 @@
 from typing import Any, Dict, List, Optional, Union
-from lionagi.utils import as_dict, lcall, to_list, alcall, get_flattened_keys
+from lionagi.utils import to_dict, lcall, to_list, alcall, get_flattened_keys
 from lionagi.schema import Tool
-from lionagi.core.messages import Instruction, System
+from lionagi.core.messages.messages import Instruction, System
 
 
 class ChatFlow:
@@ -84,12 +84,12 @@ class ChatFlow:
         await branch.call_chatcompletion(**config)
         
         async def _output():
-            content_ = as_dict(branch.messages.content.iloc[-1])
+            content_ = to_dict(branch.messages.content.iloc[-1])
             if invoke:
                 try:
                     tool_uses = content_
                     func_calls = lcall(
-                        [as_dict(i) for i in tool_uses["action_list"]], 
+                        [to_dict(i) for i in tool_uses["action_list"]], 
                         branch.tool_manager.get_function_call
                     )
                     
