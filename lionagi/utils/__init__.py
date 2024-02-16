@@ -2,7 +2,7 @@ from .sys_util import (
     to_dict, clear_dir, change_dict_key, create_copy, 
     create_id, create_path, get_bins, get_timestamp, 
     str_to_num, get_timestamp, strip_lower, install_import, 
-    is_same_dtype, timestamp_to_datetime)
+    is_same_dtype, timestamp_to_datetime, is_schema)
 
 from .nested_util import (
     to_readable_dict, nfilter, nset, nget, 
@@ -19,7 +19,7 @@ from .call_util import (
 
 __all__ = [
     "to_dict", "clear_dir", "change_dict_key", "create_copy", 
-    "create_id", "create_path", "get_bins", "get_timestamp", 
+    "create_id", "create_path", "get_bins", "get_timestamp", "is_schema",
     "str_to_num", "get_timestamp", "strip_lower", "install_import", 
     "is_same_dtype", "timestamp_to_datetime",
     "to_readable_dict", "nfilter", "nset", "nget", 

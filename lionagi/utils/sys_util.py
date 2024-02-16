@@ -9,7 +9,7 @@ import importlib.util
 import platform
 import json
 import logging
-
+import xml.etree.ElementTree as ET
 
 from typing import Any, List, Dict
 
@@ -187,3 +187,10 @@ def _convert_to_num(number_str: str, num_type: type = int, precision: int = None
         return round(float(number_str), precision) if precision is not None else float(number_str)
     else:
         raise ValueError(f"Invalid number type: {num_type}")
+
+@staticmethod
+def xml_to_dict(root: ET.Element) -> Dict[str, Any]:
+    data = {}
+    for child in root:
+        data[child.tag] = child.text
+    return data

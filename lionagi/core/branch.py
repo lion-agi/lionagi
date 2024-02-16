@@ -14,12 +14,11 @@ from lionagi.services.oai import OpenAIService
 from lionagi.configs.oai_configs import oai_schema
 from lionagi.schema import DataLogger, Tool
 from lionagi.actions.managers.action_manager import ActionManager
-from lionagi.core.managers.branch_manager import Request
+from lionagi.core.managers.branch_manager import Mail
 from working.instruction_set import InstructionSet
-from lionagi.core.messages.messages import Instruction, Message, Response, System
-from lionagi.core.flow.flow import ChatFlow
+from lionagi.core.messages import Instruction, BaseMessage, Response, System, MessageField, MessageRoleType, MessageSenderType
+from lionagi.core.flow import ChatFlow
 
-from ..util import MessageUtil
 
 
 OAIService = None
@@ -29,26 +28,14 @@ except:
     pass
 
 class Branch:
-    """
-    Represents a branch in a conversation with messages, instruction sets, and tool management.
-
-    A `Branch` is a subset of a conversation that contains messages, instruction sets, and tools for managing interactions
-    within the conversation. It encapsulates the state and behavior of a specific branch of conversation flow.
-
-    Attributes:
-        _cols (List[str]): A list of column names for the DataFrame containing messages.
-        messages (pd.DataFrame): A DataFrame containing messages for the branch.
-        instruction_sets (Dict[str, InstructionSet]): A dictionary of instruction sets associated with the branch.
-        tool_manager (ToolManager): The tool manager for managing tools within the branch.
-        service (Optional[BaseService]): The service associated with the branch.
-        llmconfig (Optional[Dict]): Configuration for the LLM (Large Language Model) service.
-        name (Optional[str]): The name of the branch.
-        pending_ins (Dict): Dictionary to store pending inputs for the branch.
-        pending_outs (Deque): Queue to store pending outputs for the branch.
-        logger (Optional[DataLogger]): Logger for data logging.
-        status_tracker (StatusTracker): Tracks the status of the branch.
-    """
-    _cols = ["node_id", "role", "sender", "timestamp", "content"]
+    _cols = [
+        MessageField.NODE_ID, 
+        MessageField.ROLE,
+        MessageField.SENDER,
+        MessageField.TIMESTAMP,
+        MessageField.CONTENT,
+        MessageField.RECIPIENT
+    ]
     
     def __init__(self, name: Optional[str] = None, messages: Optional[pd.DataFrame] = None,
                 instruction_sets: Optional[Dict[str, InstructionSet]] = None,
@@ -791,7 +778,7 @@ class Branch:
             system = System(system, sender=sender)
             
         elif isinstance(system, System):
-            message_dict = system.to_dict()
+            message_dict = system.dict()
             if sender:
                 message_dict['sender'] = sender
             message_dict['timestamp'] = datetime.now().isoformat()
@@ -932,7 +919,7 @@ class Branch:
             >>> branch.send("another_branch", "messages", message_dataframe)
             >>> branch.send("service_branch", "service", service_config)
         """
-        request = Request(from_name=self.name, to_name=to_name, title=title, request=package)
+        request = Mail(from_name=self.name, recipient=to_name, category=title, request=package)
         self.pending_outs.append(request)
 
     def receive(self, from_name, messages=True, tool=True, service=True, llmconfig=True):

@@ -7,7 +7,7 @@ from lionagi.utils import to_list, to_df
 from lionagi.schema import Tool
 from lionagi.services.base_service import BaseService
 from lionagi.core.branch.branch import Branch
-from lionagi.core.managers.branch_manager import BranchManager
+from lionagi.core.managers.branch_manager import MailManager
 from lionagi.core.messages.messages import Instruction, System
 
 
@@ -69,7 +69,7 @@ class Session:
             instruction_sets=instruction_sets, tool_manager=tool_manager, 
             service=service, llmconfig=llmconfig, tools=tools, 
             dir=dir, logger=logger)
-        self.branch_manager = BranchManager(self.branches)
+        self.branch_manager = MailManager(self.branches)
         self.logger = self.default_branch.logger
   
 
@@ -624,7 +624,7 @@ class Session:
 
         self.branches[branch_name] = new_branch
         self.branch_manager.sources[branch_name] = new_branch
-        self.branch_manager.requests[branch_name] = {}
+        self.branch_manager.mails[branch_name] = {}
 
     def get_branch(
         self, 
@@ -707,7 +707,7 @@ class Session:
         else:
             self.branches.pop(branch_name)
             # self.branch_manager.sources.pop(branch_name)
-            self.branch_manager.requests.pop(branch_name)
+            self.branch_manager.mails.pop(branch_name)
             if verbose:
                 print(f'Branch {branch_name} is deleted.')
             return True
