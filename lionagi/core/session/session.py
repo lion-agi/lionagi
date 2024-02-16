@@ -614,7 +614,7 @@ class Session:
             name=branch_name,
             messages=messages,
             instruction_sets=instruction_sets, 
-            tool_manager=tool_manager, 
+            action_manager=tool_manager, 
             service=service, 
             llmconfig=llmconfig, 
             tools=tools
@@ -838,7 +838,7 @@ class Session:
         
         branch = default_branch or Branch(
             name=default_branch_name, service=service, llmconfig=llmconfig, tools=tools,
-            tool_manager=tool_manager, instruction_sets=instruction_sets, messages=messages, dir=dir, logger=logger
+            action_manager=tool_manager, instruction_sets=instruction_sets, messages=messages, dir=dir, logger=logger
         )
         
         self.default_branch = branch

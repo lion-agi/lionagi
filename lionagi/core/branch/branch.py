@@ -13,13 +13,13 @@ from lionagi.services.base_service import BaseService, StatusTracker
 from lionagi.services.oai import OpenAIService
 from lionagi.configs.oai_configs import oai_schema
 from lionagi.schema import DataLogger, Tool
-from lionagi.actions_test.managers.action_manager import ToolManager
+from lionagi.actions.managers.action_manager import ActionManager
 from lionagi.core.managers.branch_manager import Request
 from working.instruction_set import InstructionSet
 from lionagi.core.messages.messages import Instruction, Message, Response, System
 from lionagi.core.flow.flow import ChatFlow
 
-from .utils import MessageUtil
+from ..util import MessageUtil
 
 
 OAIService = None
@@ -52,7 +52,7 @@ class Branch:
     
     def __init__(self, name: Optional[str] = None, messages: Optional[pd.DataFrame] = None,
                 instruction_sets: Optional[Dict[str, InstructionSet]] = None,
-                tool_manager: Optional[ToolManager] = None, service: Optional[BaseService] = None, llmconfig: Optional[Dict] = None, tools=None, dir=None, logger=None):
+                action_manager: Optional[ActionManager] = None, service: Optional[BaseService] = None, llmconfig: Optional[Dict] = None, tools=None, dir=None, logger=None):
         """
         Initializes a new instance of the Branch class.
 
@@ -79,7 +79,7 @@ class Branch:
                 columns=["node_id", "role", "sender", "timestamp", "content"]
             )
         )
-        self.tool_manager = tool_manager if tool_manager else ToolManager()
+        self.action_manager = action_manager if action_manager else ActionManager()
         try:
             self.register_tools(tools)
         except Exception as e:
@@ -129,7 +129,7 @@ class Branch:
             "summary_by_role": self._info(),
             "summary_by_sender": self._info(use_sender=True),
             "instruction_sets": self.instruction_sets,
-            "registered_tools": self.tool_manager.registry,
+            "registered_tools": self.action_manager.registry,
             "messages": [
                 msg.to_dict() for _, msg in self.messages.iterrows()
             ],
@@ -143,7 +143,7 @@ class Branch:
         Returns:
             bool: True if there are tools registered, False otherwise.
         """
-        return self.tool_manager.registry != {}
+        return self.action_manager.registry != {}
 
     @property
     def last_message(self) -> pd.Series:
@@ -269,7 +269,7 @@ class Branch:
     @classmethod
     def from_csv(cls, filepath: str, name: Optional[str] = None,
                 instruction_sets: Optional[Dict[str, InstructionSet]] = None,
-                tool_manager: Optional[ToolManager] = None, service: Optional[BaseService] = None,
+                tool_manager: Optional[ActionManager] = None, service: Optional[BaseService] = None,
                 llmconfig: Optional[Dict] = None, tools=None, **kwargs) -> 'Branch':
         """
         Creates a Branch instance from a CSV file containing messages.
@@ -306,7 +306,7 @@ class Branch:
     @classmethod
     def from_json(cls, filepath: str, name: Optional[str] = None,
                 instruction_sets: Optional[Dict[str, InstructionSet]] = None,
-                tool_manager: Optional[ToolManager] = None, service: Optional[BaseService] = None,
+                tool_manager: Optional[ActionManager] = None, service: Optional[BaseService] = None,
                 llmconfig: Optional[Dict] = None, **kwargs) -> 'Branch':
         """
         Creates a Branch instance from a JSON file containing messages.
@@ -603,10 +603,10 @@ class Branch:
         cloned = Branch(
             messages=self.messages.copy(), 
             instruction_sets=self.instruction_sets.copy(),
-            tool_manager=ToolManager()
+            action_manager=ActionManager()
         )
         tools = [
-            tool for tool in self.tool_manager.registry.values()]
+            tool for tool in self.action_manager.registry.values()]
         
         cloned.register_tools(tools)
 
@@ -633,17 +633,17 @@ class Branch:
 
         if update:
             self.instruction_sets.update(branch.instruction_sets)
-            self.tool_manager.registry.update(
-                branch.tool_manager.registry
+            self.action_manager.registry.update(
+                branch.action_manager.registry
             )
         else:
             for key, value in branch.instruction_sets.items():
                 if key not in self.instruction_sets:
                     self.instruction_sets[key] = value
 
-            for key, value in branch.tool_manager.registry.items():
-                if key not in self.tool_manager.registry:
-                    self.tool_manager.registry[key] = value
+            for key, value in branch.action_manager.registry.items():
+                if key not in self.action_manager.registry:
+                    self.action_manager.registry[key] = value
 
 # ----- tool manager methods ----- #
     def register_tools(self, tools: Union[Tool, List[Tool]]) -> None:
@@ -662,7 +662,7 @@ class Branch:
         """
         if not isinstance(tools, list):
             tools = [tools]
-        self.tool_manager.register_tools(tools=tools)
+        self.action_manager.register_tools(tools=tools)
 
     def delete_tool(self, tools: Union[Tool, List[Tool], str, List[str]], verbose=True) -> bool:
         """
@@ -685,15 +685,15 @@ class Branch:
         if isinstance(tools, list):
             if is_same_dtype(tools, str):
                 for tool in tools:
-                    if tool in self.tool_manager.registry:
-                        self.tool_manager.registry.pop(tool)
+                    if tool in self.action_manager.registry:
+                        self.action_manager.registry.pop(tool)
                 if verbose:
                     print("tools successfully deleted")
                 return True
             elif is_same_dtype(tools, Tool):
                 for tool in tools:
-                    if tool.name in self.tool_manager.registry:
-                        self.tool_manager.registry.pop(tool.name)
+                    if tool.name in self.action_manager.registry:
+                        self.action_manager.registry.pop(tool.name)
                 if verbose:
                     print("tools successfully deleted")
                 return True
@@ -970,7 +970,7 @@ class Branch:
             elif request.title == 'tool' and tool:
                 if not isinstance(request.request, Tool):
                     raise ValueError('Invalid tool format')
-                self.tool_manager.register_tools([request.request])
+                self.action_manager.register_tools([request.request])
 
             elif request.title == 'service' and service:
                 if not isinstance(request.request, BaseService):

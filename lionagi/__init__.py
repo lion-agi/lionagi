@@ -22,7 +22,7 @@ from .utils import *
 from .schema import *
 from .structures import *
 from .api_service import *
-from .actions_test import *
+from .actions import *
 
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.INFO)
