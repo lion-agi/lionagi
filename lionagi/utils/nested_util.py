@@ -134,54 +134,6 @@ def nget(nested_structure: Union[List, Dict], indices: List[Union[int, str]]) ->
     except (IndexError, KeyError, TypeError):
         return None
 
-def is_structure_homogeneous(
-    structure: Any, 
-    return_structure_type: bool = False
-) -> Union[bool, Tuple[bool, Optional[type]]]:
-    """
-    Checks if a nested structure is homogeneous, meaning it doesn't contain a mix of lists and dictionaries.
-
-    Args:
-        structure: The nested structure to check.
-        return_structure_type: Flag to indicate whether to return the type of homogeneous structure.
-
-    Returns:
-        If return_structure_type is False, returns a boolean indicating whether the structure is homogeneous.
-        If return_structure_type is True, returns a tuple containing a boolean indicating whether the structure is homogeneous, and the type of the homogeneous structure if it is homogeneous (either list, dict, or None).
-
-    Examples:
-        >>> is_structure_homogeneous({'a': {'b': 1}, 'c': {'d': 2}})
-        True
-
-        >>> is_structure_homogeneous({'a': {'b': 1}, 'c': [1, 2]})
-        False
-    """
-    def _check_structure(substructure):
-        structure_type = None
-        if isinstance(substructure, list):
-            structure_type = list
-            for item in substructure:
-                if not isinstance(item, structure_type) and isinstance(item, (list, dict)):
-                    return False, None
-                result, _ = _check_structure(item)
-                if not result:
-                    return False, None
-        elif isinstance(substructure, dict):
-            structure_type = dict
-            for item in substructure.values():
-                if not isinstance(item, structure_type) and isinstance(item, (list, dict)):
-                    return False, None
-                result, _ = _check_structure(item)
-                if not result:
-                    return False, None
-        return True, structure_type
-
-    is_homogeneous, structure_type = _check_structure(structure)
-    if return_structure_type:
-        return is_homogeneous, structure_type
-    else:
-        return is_homogeneous
-
 # nested merge 
 def nmerge(iterables: List[Union[Dict, List, Iterable]], 
             dict_update: bool = False, 
@@ -670,3 +622,51 @@ def _get_target_container(
         else:
             raise TypeError("Current element is neither a list nor a dictionary")
     return current_element
+
+def _is_structure_homogeneous(
+    structure: Any, 
+    return_structure_type: bool = False
+) -> Union[bool, Tuple[bool, Optional[type]]]:
+    """
+    Checks if a nested structure is homogeneous, meaning it doesn't contain a mix of lists and dictionaries.
+
+    Args:
+        structure: The nested structure to check.
+        return_structure_type: Flag to indicate whether to return the type of homogeneous structure.
+
+    Returns:
+        If return_structure_type is False, returns a boolean indicating whether the structure is homogeneous.
+        If return_structure_type is True, returns a tuple containing a boolean indicating whether the structure is homogeneous, and the type of the homogeneous structure if it is homogeneous (either list, dict, or None).
+
+    Examples:
+        >>> is_structure_homogeneous({'a': {'b': 1}, 'c': {'d': 2}})
+        True
+
+        >>> is_structure_homogeneous({'a': {'b': 1}, 'c': [1, 2]})
+        False
+    """
+    def _check_structure(substructure):
+        structure_type = None
+        if isinstance(substructure, list):
+            structure_type = list
+            for item in substructure:
+                if not isinstance(item, structure_type) and isinstance(item, (list, dict)):
+                    return False, None
+                result, _ = _check_structure(item)
+                if not result:
+                    return False, None
+        elif isinstance(substructure, dict):
+            structure_type = dict
+            for item in substructure.values():
+                if not isinstance(item, structure_type) and isinstance(item, (list, dict)):
+                    return False, None
+                result, _ = _check_structure(item)
+                if not result:
+                    return False, None
+        return True, structure_type
+
+    is_homogeneous, structure_type = _check_structure(structure)
+    if return_structure_type:
+        return is_homogeneous, structure_type
+    else:
+        return is_homogeneous

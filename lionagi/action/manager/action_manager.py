@@ -3,7 +3,7 @@ import asyncio
 import re
 from typing import Dict, Union, List, Tuple, Any, Callable
 from lionagi.utils.call_util import lcall, is_coroutine_func, _call_handler, alcall
-from lionagi.schema.base_schema import BaseNode, Tool
+from lionagi.schema.base_node import BaseNode, Tool
 
 
 class ActionManager:

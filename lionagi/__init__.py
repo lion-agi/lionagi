@@ -21,8 +21,8 @@ from dotenv import load_dotenv
 from .utils import *
 from .schema import *
 from .structures import *
-from .api_service import *
-from .actions import *
+from .service import *
+from .action import *
 
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.INFO)

@@ -4,7 +4,6 @@ from ..directive.executor import SafeEvaluator
 from .base_template import BaseTemplate
 
 
-
 class EvaluableTemplate(BaseTemplate):  # Inherits from Template
     def __init__(self, template_str: str):
         super().__init__(template_str)

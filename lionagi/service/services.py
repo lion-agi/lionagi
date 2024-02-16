@@ -17,7 +17,7 @@ class Services:
             token_encoding_name (str): The default token encoding scheme.
         """
 
-        from .oai import OpenAIService
+        from ..services.oai import OpenAIService
         return OpenAIService(**kwargs)
     
     @staticmethod 
@@ -66,7 +66,7 @@ class Services:
             asynchronous operations.
         """
 
-        from .transformers import TransformersService
+        from ..services.transformers import TransformersService
         return TransformersService(**kwargs)
 
 
@@ -100,7 +100,7 @@ class Services:
             kwargs (Optional[Any]): additional kwargs for calling the model
         """
     
-        from .ollama import OllamaService
+        from ..services.ollama import OllamaService
         return OllamaService(**kwargs)
 
     @staticmethod
@@ -126,6 +126,6 @@ class Services:
             kwargs (Optional[Any]): additional kwargs for calling the model
         """
         
-        from .mlx_service import MlXService
+        from ..services.mlx_service import MlXService
         return MlXService(**kwargs)
     

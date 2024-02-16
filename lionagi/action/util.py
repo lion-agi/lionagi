@@ -1,4 +1,4 @@
-from ..schema.base_schema import Tool
+from ..schema.base_node import Tool
 
 import inspect
 

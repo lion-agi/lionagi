@@ -9,15 +9,15 @@ from lionagi.utils.sys_util import create_path, is_same_dtype
 from lionagi.utils import to_dict, lcall, to_list
 from lionagi.utils.df_util import to_df
 
-from lionagi.services.base_service import BaseService, StatusTracker
+from working.base_service import BaseService, StatusTracker
 from lionagi.services.oai import OpenAIService
-from lionagi.configs.oai_configs import oai_schema
+from lionagi.config.oai_configs import oai_schema
 from lionagi.schema import DataLogger, Tool
-from lionagi.actions.managers.action_manager import ActionManager
-from lionagi.core.managers.branch_manager import Mail
+from lionagi.action.manager.action_manager import ActionManager
+from lionagi.core.manager.branch_manager import Mail
 from working.instruction_set import InstructionSet
 from lionagi.core.messages import Instruction, BaseMessage, Response, System, MessageField, MessageRoleType, MessageSenderType
-from lionagi.core.flow import ChatFlow
+from lionagi.flow.flow import ChatFlow
 
 
 

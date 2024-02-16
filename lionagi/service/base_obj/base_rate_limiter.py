@@ -3,7 +3,7 @@ import logging
 from abc import ABC
 from typing import Dict, NoReturn, Optional
 
-from .util import APIUtil
+from ..util import APIUtil
 
 
 class BaseRateLimiter(ABC):

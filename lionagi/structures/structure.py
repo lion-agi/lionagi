@@ -1,5 +1,5 @@
 from typing import TypeVar
-from ..schema.base_schema import BaseNode
+from ..schema.base_node import BaseNode
 from .graph import Graph
 from .relationship import Relationship
 

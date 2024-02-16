@@ -1,4 +1,6 @@
-class CompositeActionNode:
+from lionagi.schema.base_node import BaseNode
+
+class CompositeActionNode(BaseNode):
     def __init__(self, actions):
         self.actions = actions  # List of actions or other ActionNodes
 

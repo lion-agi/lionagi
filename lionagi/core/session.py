@@ -5,9 +5,9 @@ import pandas as pd
 from lionagi.utils.sys_util import create_path
 from lionagi.utils import to_list, to_df
 from lionagi.schema import Tool
-from lionagi.services.base_service import BaseService
+from working.base_service import BaseService
 from lionagi.core.branch.branch import Branch
-from lionagi.core.managers.branch_manager import MailManager
+from lionagi.core.manager.branch_manager import MailManager
 from lionagi.core.messages.messages import Instruction, System
 
 
