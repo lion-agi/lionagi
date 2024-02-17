@@ -1,6 +1,87 @@
-from ..schema.base_node import Tool
-
 import inspect
+
+from ..schema.base_tool import BaseTool
+
+
+def func_to_tool(func_, parser=None, docstring_style='google'):
+    """
+    Transforms a given function into a Tool object, equipped with a schema derived
+    from its docstring. This process involves parsing the function's docstring based
+    on a specified style ('google' or 'reST') to extract relevant metadata and
+    parameters, which are then used to construct a comprehensive schema for the Tool.
+    This schema facilitates the integration of the function with systems or
+    frameworks that rely on structured metadata for automation, documentation, or
+    interface generation purposes.
+
+    The function to be transformed can be any callable that adheres to the
+    specified docstring conventions. The resulting Tool object encapsulates the
+    original function, allowing it to be utilized within environments that require
+    objects with structured metadata.
+
+    Args:
+        func_ (Callable): The function to be transformed into a Tool object. This
+                          function should have a docstring that follows the
+                          specified docstring style for accurate schema generation.
+        parser (Optional[Any]): An optional parser object associated with the Tool.
+                                This parameter is currently not utilized in the
+                                transformation process but is included for future
+                                compatibility and extension purposes.
+        docstring_style (str): The format of the docstring to be parsed, indicating
+                               the convention used in the function's docstring. 
+                               Supports 'google' for Google-style docstrings and
+                               'reST' for reStructuredText-style docstrings. The
+                               chosen style affects how the docstring is parsed and
+                               how the schema is generated.
+
+    Returns:
+        Tool: An object representing the original function wrapped as a Tool, along
+              with its generated schema. This Tool object can be used in systems that
+              require detailed metadata about functions, facilitating tasks such as
+              automatic documentation generation, user interface creation, or
+              integration with other software tools.
+
+    Examples:
+        >>> def example_function_google(param1: int, param2: str) -> bool:
+        ...     '''
+        ...     An example function using Google style docstrings.
+        ...
+        ...     Args:
+        ...         param1 (int): The first parameter, demonstrating an integer input.
+        ...         param2 (str): The second parameter, demonstrating a string input.
+        ...
+        ...     Returns:
+        ...         bool: A boolean value, illustrating the return type.
+        ...     '''
+        ...     return True
+        ...
+        >>> tool_google = func_to_tool(example_function_google, docstring_style='google')
+        >>> print(isinstance(tool_google, Tool))
+        True
+
+        >>> def example_function_reST(param1: int, param2: str) -> bool:
+        ...     '''
+        ...     An example function using reStructuredText (reST) style docstrings.
+        ...
+        ...     :param param1: The first parameter, demonstrating an integer input.
+        ...     :type param1: int
+        ...     :param param2: The second parameter, demonstrating a string input.
+        ...     :type param2: str
+        ...     :returns: A boolean value, illustrating the return type.
+        ...     :rtype: bool
+        ...     '''
+        ...     return True
+        ...
+        >>> tool_reST = func_to_tool(example_function_reST, docstring_style='reST')
+        >>> print(isinstance(tool_reST, Tool))
+        True
+
+    Note:
+        The transformation process relies heavily on the accuracy and completeness of
+        the function's docstring. Functions with incomplete or incorrectly formatted
+        docstrings may result in incomplete or inaccurate Tool schemas.
+    """
+    schema = _func_to_schema(func_, docstring_style)
+    return BaseTool(func=func_, parser=parser, schema_=schema)
 
 def _extract_docstring_details_google(func):
     """
@@ -239,33 +320,5 @@ def _func_to_schema(func, style='google'):
             "parameters": parameters,
         }
     }
+
     return schema
-
-def func_to_tool(func_, parser=None, docstring_style='google'):
-    """
-    Wraps a function into a Tool object, using the provided docstring style to parse
-    the function's docstring and generate a schema.
-
-    Args:
-        func_ (Callable): The function to wrap into a Tool object.
-        parser (Any): The parser associated with the Tool (not used).
-        docstring_style (str): The docstring format ('google' or 'reST').
-
-    Returns:
-        Tool: A Tool object containing the wrapped function and its schema.
-
-    Examples:
-        >>> def example_function(param1: int, param2: str) -> bool:
-        ...     '''Example function.
-        ...
-        ...     Args:
-        ...         param1 (int): The first parameter.
-        ...         param2 (str): The second parameter.
-        ...     '''
-        ...     return True
-        >>> tool = func_to_tool(example_function)
-        >>> isinstance(tool, Tool)
-        True
-    """
-    schema = _func_to_schema(func_, docstring_style)
-    return Tool(func=func_, parser=parser, schema_=schema)
