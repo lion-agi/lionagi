@@ -73,7 +73,7 @@ class CallDecorator:
         with configurable retries, delay, and exponential backoff.
 
         This decorator is useful for handling operations that may fail due to transient
-        issues, such as network connectivity problems or temporary service
+        issues, such as network connectivity problems or temporary provider
         unavailability. By automatically retrying the function call, it increases the
         robustness of the application without complicating the core logic with retry
         mechanisms.

@@ -1,3 +1,5 @@
+# To-do
+
 import json
 import asyncio
 import re
@@ -87,53 +89,53 @@ class ActionManager:
             
         return kwargs
 
-    def register_tool_with_grammar(self, tool: Tool, grammar: Callable[[str], Tuple[Dict, Dict]]) -> None:
-        """Registers a tool with associated grammar for advanced parsing."""
-        if not isinstance(tool, Tool):
-            raise TypeError("Please register a Tool object.")
-        name = tool.schema_['function']['name']
-        self.registry[name] = {"tool": tool, "grammar": grammar}
-
-    async def invoke_with_grammar(self, func_call: str) -> Any:
-        """Invokes a registered tool using a grammar-based approach for parsing the function call."""
-        for name, data in self.registry.items():
-            tool = data["tool"]
-            grammar = data["grammar"]
-            match = grammar(func_call)
-            if match:
-                args, kwargs = match
-                func = tool.func
-                try:
-                    if is_coroutine_func(func):
-                        return await func(*args, **kwargs)
-                    else:
-                        return func(*args, **kwargs)
-                except Exception as e:
-                    raise ValueError(f"Error when invoking function {name}: {e}")
-        raise ValueError("No registered tool matches the function call.")
-
-    def register_tool_with_grammar(self, tool: Tool, grammar: Callable[[str], Tuple[Dict, Dict]]) -> None:
-        if not isinstance(tool, Tool):
-            raise TypeError("Expected a Tool object for registration.")
-        name = tool.schema_['function']['name']
-        # Ensures each tool is associated with its unique grammar for parsing calls
-        self.registry[name] = {"tool": tool, "grammar": grammar}
-
-    async def invoke_with_grammar(self, func_call: str) -> Any:
-        for name, data in self.registry.items():
-            if "grammar" in data:  # Ensure only tools with grammar are processed
-                tool, grammar = data["tool"], data["grammar"]
-                match = grammar(func_call)
-                if match:
-                    args, kwargs = match
-                    func = tool.func
-                    try:
-                        # Checks if the function is asynchronous and calls it appropriately
-                        if asyncio.iscoroutinefunction(func):
-                            return await func(*args, **kwargs)
-                        else:
-                            return func(*args, **kwargs)
-                    except Exception as e:
-                        raise ValueError(f"Error invoking {name} with {args}, {kwargs}: {e}")
-        raise ValueError(f"No registered tool matches the function call: {func_call}")
-
+    # def register_tool_with_grammar(self, tool: Tool, grammar: Callable[[str], Tuple[Dict, Dict]]) -> None:
+    #     """Registers a tool with associated grammar for advanced parsing."""
+    #     if not isinstance(tool, Tool):
+    #         raise TypeError("Please register a Tool object.")
+    #     name = tool.schema_['function']['name']
+    #     self.registry[name] = {"tool": tool, "grammar": grammar}
+    #
+    # async def invoke_with_grammar(self, func_call: str) -> Any:
+    #     """Invokes a registered tool using a grammar-based approach for parsing the function call."""
+    #     for name, data in self.registry.items():
+    #         tool = data["tool"]
+    #         grammar = data["grammar"]
+    #         match = grammar(func_call)
+    #         if match:
+    #             args, kwargs = match
+    #             func = tool.func
+    #             try:
+    #                 if is_coroutine_func(func):
+    #                     return await func(*args, **kwargs)
+    #                 else:
+    #                     return func(*args, **kwargs)
+    #             except Exception as e:
+    #                 raise ValueError(f"Error when invoking function {name}: {e}")
+    #     raise ValueError("No registered tool matches the function call.")
+    #
+    # def register_tool_with_grammar(self, tool: Tool, grammar: Callable[[str], Tuple[Dict, Dict]]) -> None:
+    #     if not isinstance(tool, Tool):
+    #         raise TypeError("Expected a Tool object for registration.")
+    #     name = tool.schema_['function']['name']
+    #     # Ensures each tool is associated with its unique grammar for parsing calls
+    #     self.registry[name] = {"tool": tool, "grammar": grammar}
+    #
+    # async def invoke_with_grammar(self, func_call: str) -> Any:
+    #     for name, data in self.registry.items():
+    #         if "grammar" in data:  # Ensure only tools with grammar are processed
+    #             tool, grammar = data["tool"], data["grammar"]
+    #             match = grammar(func_call)
+    #             if match:
+    #                 args, kwargs = match
+    #                 func = tool.func
+    #                 try:
+    #                     # Checks if the function is asynchronous and calls it appropriately
+    #                     if asyncio.iscoroutinefunction(func):
+    #                         return await func(*args, **kwargs)
+    #                     else:
+    #                         return func(*args, **kwargs)
+    #                 except Exception as e:
+    #                     raise ValueError(f"Error invoking {name} with {args}, {kwargs}: {e}")
+    #     raise ValueError(f"No registered tool matches the function call: {func_call}")
+    #

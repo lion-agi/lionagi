@@ -3,7 +3,7 @@ from itertools import chain
 from typing import (Any, Callable, Dict, Generator,
                     List, Tuple, Union, Iterable, Optional)
 
-from .utils import create_copy, is_homogeneous
+from .util import create_copy, is_homogeneous
 
 
 def nset(

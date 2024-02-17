@@ -1,4 +1,4 @@
-from lionagi.service.util import APIUtil
+from lionagi.provider.util import APIUtil
 
 class PayloadCreation:
     
@@ -16,7 +16,7 @@ class PayloadCreation:
         Returns:
             The constructed payload.
         """
-        return APIUtil._create_payload(
+        return APIUtil.create_payload(
             input_=messages, 
             config=llmconfig, 
             required_=schema['required'], 
@@ -38,7 +38,7 @@ class PayloadCreation:
         Returns:
             The constructed payload.
         """
-        return APIUtil._create_payload(
+        return APIUtil.create_payload(
             input_=training_file, 
             config=llmconfig, 
             required_=schema['required'], 

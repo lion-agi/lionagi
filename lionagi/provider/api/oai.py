@@ -4,7 +4,7 @@ from .base_service import BaseService, PayloadCreation
 
 class OpenAIService(BaseService):
     """
-    A service to interact with OpenAI's API endpoints.
+    A provider to interact with OpenAI's API endpoints.
 
     Attributes:
         base_url (str): The base URL for the OpenAI API.
@@ -14,12 +14,12 @@ class OpenAIService(BaseService):
         token_encoding_name (str): The default token encoding scheme.
 
     Examples:
-        >>> service = OpenAIService(api_key="your_api_key")
-        >>> asyncio.run(service.serve("Hello, world!", "chat/completions"))
+        >>> provider = OpenAIService(api_key="your_api_key")
+        >>> asyncio.run(provider.serve("Hello, world!", "chat/completions"))
         (payload, completion)
 
-        >>> service = OpenAIService()
-        >>> asyncio.run(service.serve("Convert this text to speech.", "audio_speech"))
+        >>> provider = OpenAIService()
+        >>> asyncio.run(provider.serve("Convert this text to speech.", "audio_speech"))
     """
 
     base_url = "https://api.openai.com/v1/"
@@ -55,12 +55,12 @@ class OpenAIService(BaseService):
             ValueError: If the specified endpoint is not supported.
 
         Examples:
-            >>> service = OpenAIService(api_key="your_api_key")
-            >>> asyncio.run(service.serve("Hello, world!", "chat/completions"))
+            >>> provider = OpenAIService(api_key="your_api_key")
+            >>> asyncio.run(provider.serve("Hello, world!", "chat/completions"))
             (payload, completion)
 
-            >>> service = OpenAIService()
-            >>> asyncio.run(service.serve("Convert this text to speech.", "audio_speech"))
+            >>> provider = OpenAIService()
+            >>> asyncio.run(provider.serve("Convert this text to speech.", "audio_speech"))
             ValueError: 'audio_speech' is currently not supported
         """
         if endpoint not in self.active_endpoint:

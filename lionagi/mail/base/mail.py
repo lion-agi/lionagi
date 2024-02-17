@@ -4,7 +4,7 @@ from enum import Enum
 class MailCategory(str, Enum):
     MESSAGES = 'messages'
     TOOL = 'tool'
-    SERVICE = 'service'
+    SERVICE = 'provider'
     MODEL = 'model'
 
 

@@ -1,6 +1,7 @@
 from typing import Dict, Any
 from collections import deque
 
+
 class MailManager:
 
     def __init__(self, sources: Dict[str, Any]):

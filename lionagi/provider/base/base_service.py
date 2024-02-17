@@ -14,7 +14,7 @@ class BaseService:
 
     Attributes:
         api_key (Optional[str]): The API key used for authentication.
-        schema (Dict[str, Any]): The schema defining the service's endpoints.
+        schema (Dict[str, Any]): The schema defining the provider's endpoints.
         status_tracker (StatusTracker): The object tracking the status of API calls.
         endpoints (Dict[str, BaseEndpoint]): A dictionary of endpoint objects.
     """
@@ -137,7 +137,7 @@ class BaseService:
             return completion
 
     def _check_endpoints(self, endpoint_):
-        f = lambda ep: ValueError (f"Endpoint {ep} not available for service {self.__class__.__name__}")
+        f = lambda ep: ValueError (f"Endpoint {ep} not available for provider {self.__class__.__name__}")
         if not endpoint_ in self.available_endpoints:
             raise f(endpoint_)
         
