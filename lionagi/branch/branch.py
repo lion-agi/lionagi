@@ -4,22 +4,23 @@ from datetime import datetime
 from typing import Any, Dict, List, Optional, Union
 
 import pandas as pd
+from pandas import DataFrame
 
-from lionagi.utils.sys_util import create_path, is_same_dtype
+from lionagi.utils.sys_util import create_path, SysUtil
 from lionagi.utils import to_dict, lcall, to_list
 from lionagi.utils.df_util import to_df
 
 from working.base_service import BaseService, StatusTracker
-from lionagi.services.oai import OpenAIService
+from lionagi.service.integrations.oai import OpenAIService
 from lionagi.config.oai_configs import oai_schema
-from lionagi.schema import DataLogger, Tool
+from lionagi.schema import DataLogger, BaseTool
 from lionagi.action.action_manager import ActionManager
-from lionagi.mail.mail_manager import Mail
+from lionagi.mail.mail import Mail
 from working.instruction_set import InstructionSet
-from lionagi.messages.messages import Instruction, BaseMessage, Response, System, MessageField, MessageRoleType, MessageSenderType
+from lionagi.message.messages import Instruction, BaseMessage, Response, System, MessageField
+from lionagi.message.message_schema import MessageRoleType, MessageSenderType
 from lionagi.flow.flow import ChatFlow
-
-
+from .util import MessageUtil
 
 OAIService = None
 try:
@@ -27,19 +28,23 @@ try:
 except:
     pass
 
+
+# noinspection PyUnresolvedReferences
 class Branch:
     _cols = [
-        MessageField.NODE_ID, 
+        MessageField.NODE_ID,
         MessageField.ROLE,
         MessageField.SENDER,
         MessageField.TIMESTAMP,
         MessageField.CONTENT,
         MessageField.RECIPIENT
     ]
-    
-    def __init__(self, name: Optional[str] = None, messages: Optional[pd.DataFrame] = None,
-                instruction_sets: Optional[Dict[str, InstructionSet]] = None,
-                action_manager: Optional[ActionManager] = None, service: Optional[BaseService] = None, llmconfig: Optional[Dict] = None, tools=None, dir=None, logger=None):
+
+    def __init__(self, name: str | None = None, messages: DataFrame | None = None,
+                 instruction_sets:  dict[str, InstructionSet] | None = None,
+                 action_manager: Optional[ActionManager] = None, service: Optional[BaseService] = None,
+                 llmconfig: Optional[Dict] = None, tools: Any = None, persist_path: (str | Path | None) = None,
+                 logger=None):
         """
         Initializes a new instance of the Branch class.
 
@@ -51,13 +56,13 @@ class Branch:
             service (Optional[BaseService]): The service associated with the branch.
             llmconfig (Optional[Dict]): Configuration for the LLM service.
             tools (Optional[List[Tool]]): Initial list of tools to register with the tool manager.
-            dir (Optional[str]): Directory path for data logging.
+            persist_path (Optional[str]): Directory path for data logging.
 
         Examples:
             >>> branch = Branch(name="CustomerService")
             >>> branch_with_messages = Branch(name="Support", messages=pd.DataFrame(columns=["node_id", "content"]))
         """
-        
+
         self.messages = pd.DataFrame(columns=Branch._cols)
         self.messages = (
             messages
@@ -71,17 +76,16 @@ class Branch:
             self.register_tools(tools)
         except Exception as e:
             raise TypeError(f"Error in registering tools: {e}")
-        
+
         self.instruction_sets = instruction_sets if instruction_sets else {}
         self.status_tracker = StatusTracker()
         self._add_service(service, llmconfig)
         self.name = name
         self.pending_ins = {}
         self.pending_outs = deque()
-        self.logger = logger or DataLogger(dir=dir)
+        self.logger = logger or DataLogger(persist_path=persist_path)
 
-
-# ---- properties ---- #
+    # ---- properties ---- #
     @property
     def chat_messages(self):
         """
@@ -100,7 +104,7 @@ class Branch:
         Returns:
             List[Dict[str, Any]]: A list of dictionaries representing chat messages with sender details.
         """
-        return self._to_chatcompletion_message(with_sender=True) 
+        return self._to_chatcompletion_message(with_sender=True)
 
     @property
     def messages_describe(self) -> Dict[str, Any]:
@@ -141,7 +145,7 @@ class Branch:
             pd.Series: The last message as a pandas Series.
         """
         return MessageUtil.get_message_rows(self.messages, n=1, from_='last')
-    
+
     @property
     def first_system(self) -> pd.Series:
         """
@@ -151,7 +155,7 @@ class Branch:
             pd.Series: The first system message as a pandas Series.
         """
         return MessageUtil.get_message_rows(self.messages, role='system', n=1, from_='front')
-        
+
     @property
     def last_response(self) -> pd.Series:
         """
@@ -181,7 +185,7 @@ class Branch:
             pd.DataFrame: A DataFrame containing all action request messages.
         """
         return to_df(self.messages[self.messages.sender == 'action_request'])
-    
+
     @property
     def action_response(self) -> pd.DataFrame:
         """
@@ -222,9 +226,9 @@ class Branch:
         Returns:
             Dict[str, int]: A dictionary with keys as message roles and values as counts.
         """
-        
+
         return self._info()
-    
+
     @property
     def sender_info(self) -> Dict[str, int]:
         """
@@ -234,7 +238,7 @@ class Branch:
             Dict[str, Any]: A dictionary containing the total number of messages and a summary categorized by sender.
         """
         return self._info(use_sender=True)
-    
+
     @property
     def describe(self) -> Dict[str, Any]:
         """
@@ -248,16 +252,16 @@ class Branch:
             "total_messages": len(self.messages),
             "summary_by_role": self._info(),
             "messages": [
-                msg.to_dict() for _, msg in self.messages.iterrows()
-            ][: self.len_messages -1 if self.len_messages < 5 else 5],
+                            msg.to_dict() for _, msg in self.messages.iterrows()
+                        ][: self.len_messages - 1 if self.len_messages < 5 else 5],
         }
 
-# ---- I/O ---- #
+    # ---- I/O ---- #
     @classmethod
     def from_csv(cls, filepath: str, name: Optional[str] = None,
-                instruction_sets: Optional[Dict[str, InstructionSet]] = None,
-                tool_manager: Optional[ActionManager] = None, service: Optional[BaseService] = None,
-                llmconfig: Optional[Dict] = None, tools=None, **kwargs) -> 'Branch':
+                 instruction_sets: Optional[Dict[str, InstructionSet]] = None,
+                 tool_manager: Optional[ActionManager] = None, service: Optional[BaseService] = None,
+                 llmconfig: Optional[Dict] = None, tools=None, **kwargs) -> 'Branch':
         """
         Creates a Branch instance from a CSV file containing messages.
 
@@ -279,22 +283,22 @@ class Branch:
         """
         df = pd.read_csv(filepath, **kwargs)
         self = cls(
-            name=name, 
-            messages=df, 
-            instruction_sets=instruction_sets, 
-            tool_manager=tool_manager, 
+            name=name,
+            messages=df,
+            instruction_sets=instruction_sets,
+            action_manager=action_manager,
             service=service,
             llmconfig=llmconfig,
             tools=tools
         )
-        
+
         return self
 
     @classmethod
     def from_json(cls, filepath: str, name: Optional[str] = None,
-                instruction_sets: Optional[Dict[str, InstructionSet]] = None,
-                tool_manager: Optional[ActionManager] = None, service: Optional[BaseService] = None,
-                llmconfig: Optional[Dict] = None, **kwargs) -> 'Branch':
+                  instruction_sets: Optional[Dict[str, InstructionSet]] = None,
+                  action_manager: Optional[ActionManager] = None, service: Optional[BaseService] = None,
+                  llmconfig: Optional[Dict] = None, **kwargs) -> 'Branch':
         """
         Creates a Branch instance from a JSON file containing messages.
 
@@ -302,7 +306,7 @@ class Branch:
             filepath (str): Path to the JSON file.
             name (Optional[str]): Name of the branch, default is None.
             instruction_sets (Optional[Dict[str, InstructionSet]]): Instruction sets, default is None.
-            tool_manager (Optional[ToolManager]): Tool manager for the branch, default is None.
+            action_manager (Optional[ToolManager]): Tool manager for the branch, default is None.
             service (Optional[BaseService]): External service for the branch, default is None.
             llmconfig (Optional[Dict]): Configuration for language learning models, default is None.
             **kwargs: Additional keyword arguments for pd.read_json().
@@ -315,19 +319,18 @@ class Branch:
         """
         df = pd.read_json(filepath, **kwargs)
         self = cls(
-            name=name, 
-            messages=df, 
-            instruction_sets=instruction_sets, 
-            tool_manager=tool_manager, 
+            name=name,
+            messages=df,
+            instruction_sets=instruction_sets,
+            action_manager=action_manager,
             service=service,
             llmconfig=llmconfig
         )
         return self
 
-
     def to_csv(self, filename: str = 'messages.csv', file_exist_ok: bool = False,
-            timestamp: bool = True, time_prefix: bool = False,
-            verbose: bool = True, clear: bool = True, **kwargs):
+               timestamp: bool = True, time_prefix: bool = False,
+               verbose: bool = True, clear: bool = True, **kwargs):
         """
         Saves the branch's messages to a CSV file.
 
@@ -341,18 +344,18 @@ class Branch:
             **kwargs: Additional keyword arguments for DataFrame.to_csv().
 
         Examples:
-            >>> branch.to_csv("exported_messages.csv")
-            >>> branch.to_csv("timed_export.csv", timestamp=True, time_prefix=True)
+            >>> branch_.to_csv("exported_messages.csv")
+            >>> branch_.to_csv("timed_export.csv", timestamp=True, time_prefix=True)
         """
-        
+
         if not filename.endswith('.csv'):
             filename += '.csv'
-        
+
         filepath = create_path(
-            self.logger.dir, filename, timestamp=timestamp, 
+            self.logger.dir, filename, timestamp=timestamp,
             dir_exist_ok=file_exist_ok, time_prefix=time_prefix
         )
-        
+
         try:
             self.messages.to_csv(filepath, **kwargs)
             if verbose:
@@ -381,18 +384,18 @@ class Branch:
             >>> branch.to_json("exported_messages.json")
             >>> branch.to_json("timed_export.json", timestamp=True, time_prefix=True)
         """
-        
+
         if not filename.endswith('.json'):
             filename += '.json'
-        
+
         filepath = create_path(
-            self.dir, filename, timestamp=timestamp, 
+            self.dir, filename, timestamp=timestamp,
             dir_exist_ok=file_exist_ok, time_prefix=time_prefix
         )
-        
+
         try:
             self.messages.to_json(
-                filepath, orient="records", lines=True, 
+                filepath, orient="records", lines=True,
                 date_format="iso", **kwargs
             )
             if clear:
@@ -403,7 +406,7 @@ class Branch:
             raise ValueError(f"Error in saving to json: {e}")
 
     def log_to_csv(self, filename: str = 'log.csv', file_exist_ok: bool = False, timestamp: bool = True,
-                time_prefix: bool = False, verbose: bool = True, clear: bool = True, **kwargs):
+                   time_prefix: bool = False, verbose: bool = True, clear: bool = True, **kwargs):
         """
         Saves the branch's log data to a CSV file.
 
@@ -424,7 +427,7 @@ class Branch:
             >>> branch.log_to_csv("detailed_branch_log.csv", timestamp=True, verbose=True)
         """
         self.logger.to_csv(
-            filename=filename, file_exist_ok=file_exist_ok, timestamp=timestamp, 
+            filename=filename, file_exist_ok=file_exist_ok, timestamp=timestamp,
             time_prefix=time_prefix, verbose=verbose, clear=clear, **kwargs
         )
 
@@ -450,45 +453,47 @@ class Branch:
             >>> branch.log_to_json("detailed_branch_log.json", verbose=True, timestamp=True)
         """
         self.logger.to_json(
-            filename=filename, file_exist_ok=file_exist_ok, timestamp=timestamp, 
+            filename=filename, file_exist_ok=file_exist_ok, timestamp=timestamp,
             time_prefix=time_prefix, verbose=verbose, clear=clear, **kwargs
         )
 
-# ----- chatflow ----#
-    async def call_chatcompletion(self, sender=None, with_sender=False, tokenizer_kwargs={}, **kwargs):
+    # ----- chatflow ----#
+    # noinspection PyUnresolvedReferences
+    async def call_chatcompletion(self, sender=None, with_sender=False, tokenizer_kwargs=None, **kwargs):
         """
         Asynchronously calls the chat completion service with the current message queue.
 
         This method prepares the messages for chat completion, sends the request to the configured service, and handles the response. The method supports additional keyword arguments that are passed directly to the service.
 
         Args:
+            tokenizer_kwargs:
             sender (Optional[str]): The name of the sender to be included in the chat completion request. Defaults to None.
             with_sender (bool): If True, includes the sender's name in the messages. Defaults to False.
             **kwargs: Arbitrary keyword arguments passed directly to the chat completion service.
 
-        Examples:
-            >>> await branch.call_chatcompletion()
         """
+        if tokenizer_kwargs is None:
+            tokenizer_kwargs = {}
         await ChatFlow.call_chatcompletion(
-            self, sender=sender, with_sender=with_sender, 
+            self, sender=sender, with_sender=with_sender,
             tokenizer_kwargs=tokenizer_kwargs, **kwargs
         )
-    
+
+    # noinspection PyUnresolvedReferences
     async def chat(
-        self,
-        instruction: Union[Instruction, str],
-        context: Optional[Any] = None,
-        sender: Optional[str] = None,
-        system: Optional[Union[System, str, Dict[str, Any]]] = None,
-        tools: Union[bool, Tool, List[Tool], str, List[str]] = False,
-        out: bool = True,
-        invoke: bool = True,
-        **kwargs) -> Any:
+            self,
+            instruction: Union[Instruction, str],
+            context: Optional[Any] = None,
+            sender: Optional[str] = None,
+            system: Optional[Union[System, str, Dict[str, Any]]] = None,
+            tools: Union[bool, BaseTool, List[BaseTool], str, List[str]] = False,
+            out: bool = True,
+            invoke: bool = True,
+            **kwargs) -> Any:
         """
         Initiates a chat conversation, processing instructions and system messages, optionally invoking tools.
 
         Args:
-            branch: The Branch instance to perform chat operations.
             instruction (Union[Instruction, str]): The instruction for the chat.
             context (Optional[Any]): Additional context for the chat.
             sender (Optional[str]): The sender of the chat message.
@@ -498,29 +503,26 @@ class Branch:
             invoke (bool): If True, invokes tools as part of the chat.
             **kwargs: Arbitrary keyword arguments for chat completion.
 
-        Examples:
-            >>> await ChatFlow.chat(branch, "Ask about user preferences")
         """
         return await ChatFlow.chat(
-            self, instruction=instruction, context=context, 
-            sender=sender, system=system, tools=tools, 
+            self, instruction=instruction, context=context,
+            sender=sender, system=system, tools=tools,
             out=out, invoke=invoke, **kwargs
         )
 
     async def ReAct(
-        self,
-        instruction: Union[Instruction, str],
-        context = None,
-        sender = None,
-        system = None,
-        tools = None, 
-        num_rounds: int = 1,
-        **kwargs ):
+            self,
+            instruction: Union[Instruction, str],
+            context=None,
+            sender=None,
+            system=None,
+            tools=None,
+            num_rounds: int = 1,
+            **kwargs):
         """
         Performs a reason-action cycle with optional tool invocation over multiple rounds.
 
         Args:
-            branch: The Branch instance to perform ReAct operations.
             instruction (Union[Instruction, str]): Initial instruction for the cycle.
             context: Context relevant to the instruction.
             sender (Optional[str]): Identifier for the message sender.
@@ -529,31 +531,28 @@ class Branch:
             num_rounds (int): Number of reason-action cycles to perform.
             **kwargs: Additional keyword arguments for customization.
 
-        Examples:
-            >>> await ChatFlow.ReAct(branch, "Analyze user feedback", num_rounds=2)
         """
         return await ChatFlow.ReAct(
-            self, instruction=instruction, context=context, 
-            sender=sender, system=system, tools=tools, 
+            self, instruction=instruction, context=context,
+            sender=sender, system=system, tools=tools,
             num_rounds=num_rounds, **kwargs
         )
 
     async def auto_followup(
-        self,
-        instruction: Union[Instruction, str],
-        context = None,
-        sender = None,
-        system = None,
-        tools: Union[bool, Tool, List[Tool], str, List[str], List[Dict]] = False,
-        max_followup: int = 3,
-        out=True, 
-        **kwargs
+            self,
+            instruction: Union[Instruction, str],
+            context=None,
+            sender=None,
+            system=None,
+            tools: Union[bool, BaseTool, List[BaseTool], str, List[str], List[Dict]] = False,
+            max_followup: int = 3,
+            out=True,
+            **kwargs
     ) -> None:
         """
         Automatically performs follow-up actions based on chat interactions and tool invocations.
 
         Args:
-            branch: The Branch instance to perform follow-up operations.
             instruction (Union[Instruction, str]): The initial instruction for follow-up.
             context: Context relevant to the instruction.
             sender (Optional[str]): Identifier for the message sender.
@@ -563,16 +562,14 @@ class Branch:
             out (bool): If True, outputs the result of the follow-up action.
             **kwargs: Additional keyword arguments for follow-up customization.
 
-        Examples:
-            >>> await ChatFlow.auto_followup(branch, "Finalize report", max_followup=2)
         """
         return await ChatFlow.auto_followup(
-            self, instruction=instruction, context=context, 
-            sender=sender, system=system, tools=tools, 
+            self, instruction=instruction, context=context,
+            sender=sender, system=system, tools=tools,
             max_followup=max_followup, out=out, **kwargs
         )
 
-# ---- branch operations ---- #
+    # ---- branch operations ---- #
     def clone(self) -> 'Branch':
         """
         Creates a copy of the current Branch instance.
@@ -588,13 +585,13 @@ class Branch:
             >>> assert cloned_branch.messages.equals(original_branch.messages)
         """
         cloned = Branch(
-            messages=self.messages.copy(), 
+            messages=self.messages.copy(),
             instruction_sets=self.instruction_sets.copy(),
             action_manager=ActionManager()
         )
         tools = [
             tool for tool in self.action_manager.registry.values()]
-        
+
         cloned.register_tools(tools)
 
         return cloned
@@ -632,8 +629,8 @@ class Branch:
                 if key not in self.action_manager.registry:
                     self.action_manager.registry[key] = value
 
-# ----- tool manager methods ----- #
-    def register_tools(self, tools: Union[Tool, List[Tool]]) -> None:
+    # ----- tool manager methods ----- #
+    def register_tools(self, tools: Union[BaseTool, List[BaseTool]]) -> None:
         """
         Registers one or more tools with the branch's tool manager.
 
@@ -651,7 +648,8 @@ class Branch:
             tools = [tools]
         self.action_manager.register_tools(tools=tools)
 
-    def delete_tool(self, tools: Union[Tool, List[Tool], str, List[str]], verbose=True) -> bool:
+    def delete_tool(self, tools: Union[bool, BaseTool, List[BaseTool], str, List[str], List[Dict]],
+                    verbose=True) -> bool:
         """
         Deletes one or more tools from the branch's tool manager.
 
@@ -677,7 +675,7 @@ class Branch:
                 if verbose:
                     print("tools successfully deleted")
                 return True
-            elif is_same_dtype(tools, Tool):
+            elif is_same_dtype(tools, _cols):
                 for tool in tools:
                     if tool.name in self.action_manager.registry:
                         self.action_manager.registry.pop(tool.name)
@@ -688,7 +686,7 @@ class Branch:
             print("tools deletion failed")
         return False
 
-# ---- message operations ----#
+    # ---- message operations ----#
     def add_message(self, system: Optional[Union[dict, list, System]] = None,
                     instruction: Optional[Union[dict, list, Instruction]] = None,
                     context: Optional[Union[str, Dict[str, Any]]] = None,
@@ -711,8 +709,8 @@ class Branch:
             >>> branch.add_message(system={'content': 'System initialized'}, sender='system')
             >>> branch.add_message(instruction={'content': 'Please respond'}, sender='user')
         """
-        msg = self._create_message(
-            system=system, instruction=instruction, 
+        msg: BaseMessage = self._create_message(
+            system=system, instruction=instruction,
             context=context, response=response, sender=sender
         )
         message_dict = msg.to_dict()
@@ -720,7 +718,7 @@ class Branch:
             message_dict['content'] = json.dumps(message_dict['content'])
         message_dict['timestamp'] = datetime.now().isoformat()
         self.messages.loc[len(self.messages)] = message_dict
-    
+
     def remove_message(self, node_id: str) -> None:
         """
         Removes a message from the branch's conversation based on its node ID.
@@ -732,9 +730,9 @@ class Branch:
             >>> branch.remove_message("12345")
         """
         MessageUtil.remove_message(self.messages, node_id)
-    
+
     def update_message(
-        self, value: Any, node_id: Optional[str] = None, col: str = 'node_id'
+            self, value: Any, node_id: Optional[str] = None, col: str = 'node_id'
     ) -> None:
         """
         Updates a message in the conversation based on its node_id.
@@ -751,9 +749,9 @@ class Branch:
             >>> conversation.update_message('Updated content', node_id='12345', col='content')
         """
         return MessageUtil.update_row(self.messages, node_id=node_id, col=col, value=value)
-    
+
     def change_first_system_message(
-        self, system: Union[str, Dict[str, Any], System], sender: Optional[str] = None
+            self, system: Union[str, Dict[str, Any], System], sender: Optional[str] = None
     ):
         """
         Updates the first system message in the branch's conversation.
@@ -770,15 +768,15 @@ class Branch:
         """
         if self.len_systems == 0:
             raise ValueError("There is no system message in the messages.")
-        
+
         if not isinstance(system, (str, Dict, System)):
             raise ValueError("Input cannot be converted into a system message.")
-            
+
         elif isinstance(system, (str, Dict)):
             system = System(system, sender=sender)
-            
+
         elif isinstance(system, System):
-            message_dict = system.dict()
+            message_dict = system.to_dict()
             if sender:
                 message_dict['sender'] = sender
             message_dict['timestamp'] = datetime.now().isoformat()
@@ -787,7 +785,7 @@ class Branch:
 
     def rollback(self, steps: int) -> None:
         """
-        Removes the last 'n' messages from the conversation.
+        Removes the last 'num' messages from the conversation.
 
         Args:
             steps (int): The number of messages to remove from the end of the conversation.
@@ -808,13 +806,13 @@ class Branch:
             >>> conversation.clear_messages()
         """
         self.messages = pd.DataFrame(columns=Branch._cols)
-            
+
     def replace_keyword(
-        self,
-        keyword: str, 
-        replacement: str, 
-        col: str = 'content',
-        case_sensitive: bool = False
+            self,
+            keyword: str,
+            replacement: str,
+            col: str = 'content',
+            case_sensitive: bool = False
     ) -> None:
         """
         Replaces all occurrences of a keyword in a specified column of the conversation's messages with a given replacement.
@@ -829,14 +827,14 @@ class Branch:
             >>> conversation.replace_keyword('hello', 'hi', col='content')
         """
         MessageUtil.replace_keyword(
-            self.messages, keyword, replacement, col=col, 
+            self.messages, keyword, replacement, col=col,
             case_sensitive=case_sensitive
         )
-        
+
     def search_keywords(
-        self, 
-        keywords: Union[str, list],
-        case_sensitive: bool = False, reset_index: bool = False, dropna: bool = False
+            self,
+            keywords: Union[str, list],
+            case_sensitive: bool = False, reset_index: bool = False, dropna: bool = False
     ) -> pd.DataFrame:
         """
         Searches for messages containing specified keywords within the conversation.
@@ -856,7 +854,7 @@ class Branch:
         return MessageUtil.search_keywords(
             self.messages, keywords, case_sensitive, reset_index, dropna
         )
-        
+
     def extend(self, messages: pd.DataFrame, **kwargs) -> None:
         """
         Extends the conversation by appending new messages, optionally avoiding duplicates based on specified criteria.
@@ -870,15 +868,15 @@ class Branch:
             >>> conversation.extend(new_messages)
         """
         self.messages = MessageUtil.extend(self.messages, messages, **kwargs)
-        
+
     def filter_by(
-        self,
-        role: Optional[str] = None, 
-        sender: Optional[str] = None,
-        start_time: Optional[datetime] = None,
-        end_time: Optional[datetime] = None,
-        content_keywords: Optional[Union[str, list]] = None,
-        case_sensitive: bool = False
+            self,
+            role: Optional[str] = None,
+            sender: Optional[str] = None,
+            start_time: Optional[datetime] = None,
+            end_time: Optional[datetime] = None,
+            content_keywords: Optional[Union[str, list]] = None,
+            case_sensitive: bool = False
     ) -> pd.DataFrame:
         """
         Filters the conversation's messages based on specified criteria such as role, sender, time range, and keywords.
@@ -898,12 +896,12 @@ class Branch:
             >>> filtered_df = conversation.filter_by(role='user', content_keywords=['urgent', 'immediate'])
         """
         return MessageUtil.filter_messages_by(
-            self.messages, role=role, sender=sender, 
-            start_time=start_time, end_time=end_time, 
+            self.messages, role=role, sender=sender,
+            start_time=start_time, end_time=end_time,
             content_keywords=content_keywords, case_sensitive=case_sensitive
         )
 
-# ----- intra-branch communication methods ----- #
+    # ----- intra-branch communication methods ----- #
     def send(self, to_name, title, package):
         """
         Sends a request package to a specified recipient.
@@ -919,17 +917,17 @@ class Branch:
             >>> branch.send("another_branch", "messages", message_dataframe)
             >>> branch.send("service_branch", "service", service_config)
         """
-        request = Mail(from_name=self.name, recipient=to_name, category=title, request=package)
+        request = Mail(sender=self.name, recipient=to_name, category=title, request=package)
         self.pending_outs.append(request)
 
-    def receive(self, from_name, messages=True, tool=True, service=True, llmconfig=True):
+    def receive(self, sender, messages=True, tool=True, service=True, llmconfig=True):
         """
         Processes and integrates received request packages based on their titles.
 
         Handles incoming requests by updating the branch's state with the received data. It can selectively process requests based on the type specified by the `title` of the request.
 
         Args:
-            from_name (str): The name of the sender whose packages are to be processed.
+            sender (str): The name of the sender whose packages are to be processed.
             messages (bool): If True, processes 'messages' requests. Defaults to True.
             tool (bool): If True, processes 'tool' requests. Defaults to True.
             service (bool): If True, processes 'service' requests. Defaults to True.
@@ -942,10 +940,10 @@ class Branch:
             >>> branch.receive("another_branch")
         """
         skipped_requests = deque()
-        if from_name not in self.pending_ins:
-            raise ValueError(f'No package from {from_name}')
-        while self.pending_ins[from_name]:
-            request = self.pending_ins[from_name].popleft()
+        if sender not in self.pending_ins:
+            raise ValueError(f'No package from {sender}')
+        while self.pending_ins[sender]:
+            request = self.pending_ins[sender].popleft()
 
             if request.title == 'messages' and messages:
                 if not isinstance(request.request, pd.DataFrame):
@@ -955,7 +953,7 @@ class Branch:
                 continue
 
             elif request.title == 'tool' and tool:
-                if not isinstance(request.request, Tool):
+                if not isinstance(request.request, _cols):
                     raise ValueError('Invalid tool format')
                 self.action_manager.register_tools([request.request])
 
@@ -972,7 +970,7 @@ class Branch:
             else:
                 skipped_requests.append(request)
 
-        self.pending_ins[from_name] = skipped_requests
+        self.pending_ins[sender] = skipped_requests
 
     def receive_all(self):
         """
@@ -985,10 +983,10 @@ class Branch:
         """
         for key in list(self.pending_ins.keys()):
             self.receive(key)
-    
+
     def _add_service(self, service, llmconfig):
         service = service or OpenAIService()
-        self.service=service
+        self.service = service
         if llmconfig:
             self.llmconfig = llmconfig
         else:
@@ -1006,17 +1004,17 @@ class Branch:
             content_ = row['content']
             if content_.startswith('Sender'):
                 content_ = content_.split(':', 1)[1]
-                
+
             if isinstance(content_, str):
                 try:
                     content_ = json.dumps(to_dict(content_))
                 except Exception as e:
-                    raise ValueError(f"Error in serealizing, {row['node_id']} {content_}: {e}")
-                
+                    raise ValueError(f"Error in serializing, {row['node_id']} {content_}: {e}")
+
             out = {"role": row['role'], "content": content_}
             if with_sender:
                 out['content'] = f"Sender {row['sender']}: {content_}"
-            
+
             message.append(out)
         return message
 
@@ -1031,19 +1029,19 @@ class Branch:
         content = self.messages.iloc[-1]['content']
         try:
             if (
-                to_dict(content)['action_response'].keys() >= {'function', 'arguments', 'output'}
+                    to_dict(content)['action_response'].keys() >= {'function', 'arguments', 'output'}
             ):
                 return True
-        except:
+        except ValueError:
             return False
 
+    @staticmethod
     def _create_message(
-        self,
-        system: Optional[Union[dict, list, System]] = None,
-        instruction: Optional[Union[dict, list, Instruction]] = None,
-        context: Optional[Union[str, Dict[str, Any]]] = None,
-        response: Optional[Union[dict, list, Response]] = None,
-        sender: Optional[str] = None
+            system: Optional[Union[dict, list, System]] = None,
+            instruction: Optional[Union[dict, list, Instruction]] = None,
+            context: Optional[Union[str, Dict[str, Any]]] = None,
+            response: Optional[Union[dict, list, Response]] = None,
+            sender: Optional[str] = None
     ) -> Message:
         """
         Creates a message object based on the given parameters, ensuring only one message type is specified.
@@ -1063,9 +1061,9 @@ class Branch:
         """
         if sum(lcall([system, instruction, response], bool)) != 1:
             raise ValueError("Error: Message must have one and only one role.")
-        
+
         else:
-            if isinstance(any([system, instruction, response]), Message):
+            if isinstance(any([system, instruction, response]), BaseMessage):
                 if system:
                     return system
                 elif instruction:
@@ -1077,12 +1075,13 @@ class Branch:
             if response:
                 msg = Response(response=response, sender=sender)
             elif instruction:
-                msg = Instruction(instruction=instruction, 
+                msg = Instruction(instruction=instruction,
                                   context=context, sender=sender)
             elif system:
                 msg = System(system=system, sender=sender)
             return msg
 
+    # noinspection PyTestUnpassedFixture
     def _info(self, use_sender: bool = False) -> Dict[str, int]:
         """
         Generates a summary of the conversation's messages, either by role or sender.
@@ -1096,10 +1095,8 @@ class Branch:
         messages = self.messages['sender'] if use_sender else self.messages['role']
         result = messages.value_counts().to_dict()
         result['total'] = len(self.len_messages)
-        
+
         return result
-
-
 
     # def add_instruction_set(self, name: str, instruction_set: InstructionSet):
     #     """
@@ -1176,4 +1173,3 @@ class Branch:
     #         current_instruct_node = instruction_set.get_next_instruction(
     #             current_instruct_node
     #         )
-    

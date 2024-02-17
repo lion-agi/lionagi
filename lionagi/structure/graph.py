@@ -8,12 +8,12 @@ from .relationship import Relationship
 
 class Graph(BaseNode):
     """
-    Represents a graph structure, consisting of nodes and their relationships.
+    Represents a graph structure, consisting of nodes and their relationship.
     
     Attributes:
         nodes (Dict[str, BaseNode]): A dictionary of nodes in the graph.
-        relationships (Dict[str, Relationship]): A dictionary of relationships between nodes in the graph.
-        node_relationships (Dict[str, Dict[str, Dict[str, str]]]): A dictionary tracking the relationships of each node.
+        relationships (Dict[str, Relationship]): A dictionary of relationship between nodes in the graph.
+        node_relationships (Dict[str, Dict[str, Dict[str, str]]]): A dictionary tracking the relationship of each node.
     
     Examples:
         >>> graph = Graph()
@@ -41,7 +41,7 @@ class Graph(BaseNode):
         self.nodes[node.id_] = node
         self.node_relationships[node.id_] = {'in': {}, 'out': {}}
 
-    def add_relationship(self, relationships: Relationship) -> None:
+    def add_relationship(self, relationship: Relationship) -> None:
         """
         Adds a relationship between nodes in the graph.
 
@@ -51,25 +51,25 @@ class Graph(BaseNode):
         Raises:
             KeyError: If either the source or target node of the relationship is not found in the graph.
         """
-        if relationships.source_node_id not in self.node_relationships.keys():
-            raise KeyError(f'node {relationships.source_node_id} is not found.')
-        if relationships.target_node_id not in self.node_relationships.keys():
-            raise KeyError(f'node {relationships.target_node_id} is not found.')
+        if relationship.source_node_id not in self.node_relationships.keys():
+            raise KeyError(f'node {relationship.source_node_id} is not found.')
+        if relationship.target_node_id not in self.node_relationships.keys():
+            raise KeyError(f'node {relationship.target_node_id} is not found.')
 
-        self.relationships[relationships.id_] = relationships
-        self.node_relationships[relationships.source_node_id]['out'][relationships.id_] = relationships.target_node_id
-        self.node_relationships[relationships.target_node_id]['in'][relationships.id_] = relationships.source_node_id
+        self.relationships[relationship.id_] = relationship
+        self.node_relationships[relationship.source_node_id]['out'][relationship.id_] = relationship.target_node_id
+        self.node_relationships[relationship.target_node_id]['in'][relationship.id_] = relationship.source_node_id
 
     def get_node_relationships(self, node: BaseNode = None, out_edge=True) -> List[Relationship]:
         """
-        Retrieves relationships of a specific node or all relationships in the graph.
+        Retrieves relationship of a specific node or all relationship in the graph.
 
         Args:
-            node (Optional[BaseNode]): The node whose relationships to retrieve. If None, retrieves all relationships.
-            out_edge (bool): Whether to retrieve outgoing relationships. If False, retrieves incoming relationships.
+            node (Optional[BaseNode]): The node whose relationship to retrieve. If None, retrieves all relationship.
+            out_edge (bool): Whether to retrieve outgoing relationship. If False, retrieves incoming relationship.
 
         Returns:
-            List[Relationship]: A list of relationships.
+            List[Relationship]: A list of relationship.
 
         Raises:
             KeyError: If the specified node is not found in the graph.
@@ -89,9 +89,9 @@ class Graph(BaseNode):
             relationships = lcall(relationship_ids, lambda i: self.relationships[i])
             return relationships
 
-    def remove_node(self, node: BaseNode)-> BaseNode:
+    def remove_node(self, node: BaseNode) -> BaseNode:
         """
-        Removes a node and its associated relationships from the graph.
+        Removes a node and its associated relationship from the graph.
 
         Args:
             node (BaseNode): The node to remove.
@@ -181,8 +181,8 @@ class Graph(BaseNode):
         else:
             return True
 
-    def clear(self)-> None:
-        """Clears the graph of all nodes and relationships."""
+    def clear(self) -> None:
+        """Clears the graph of all nodes and relationship."""
         self.nodes.clear()
         self.relationships.clear()
         self.node_relationships.clear()
@@ -201,8 +201,8 @@ class Graph(BaseNode):
             >>> graph = Graph()
             >>> nx_graph = graph.to_networkx()
         """
-        import networkx as nx
-        g = nx.DiGraph(**kwargs)
+        from networkx import DiGraph
+        g = DiGraph(**kwargs)
         for node_id, node in self.nodes.items():
             node_info = node.to_dict()
             node_info.pop('node_id')

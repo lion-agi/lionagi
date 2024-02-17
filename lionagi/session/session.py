@@ -642,7 +642,7 @@ class Session:
             Union[Branch, Tuple[Branch, str]]: The branch instance or a tuple of the branch instance and its name.
 
         Raises:
-            ValueError: If the branch name does not exist or the branch input is invalid.
+            ValueError: If the branch name does not exist or the branch input_ is invalid.
 
         Examples:
             >>> branch_instance = session.get_branch("existing_branch_name")
@@ -667,7 +667,7 @@ class Session:
             return self.default_branch
         
         else:
-            raise ValueError(f'Invalid branch input {branch}.')
+            raise ValueError(f'Invalid branch input_ {branch}.')
 
     def change_default_branch(self, branch: Union[str, Branch]) -> None:
         """Change the default branch of the session.

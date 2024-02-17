@@ -104,7 +104,7 @@ class Relationship(BaseNode):
             return self.condition[condition_key]
         else:
             raise ValueError(f"Condition {condition_key} does not exist")
-    
+
     def _source_existed(self, obj: Dict[str, Any]) -> bool:
         """
         Checks if the source node exists in a given object.
@@ -116,7 +116,7 @@ class Relationship(BaseNode):
             bool: True if the source node exists, False otherwise.
         """
         return self.source_node_id in obj.keys()
-    
+
     def _target_existed(self, obj: Dict[str, Any]) -> bool:
         """
         Checks if the target node exists in a given object.
@@ -128,7 +128,7 @@ class Relationship(BaseNode):
             bool: True if the target node exists, False otherwise.
         """
         return self.target_node_id in obj.keys()
-    
+
     def _is_in(self, obj: Dict[str, Any]) -> bool:
         """
         Validates the existence of both source and target nodes in a given object.
@@ -144,10 +144,10 @@ class Relationship(BaseNode):
         """
         if self._source_existed(obj) and self._target_existed(obj):
             return True
-        
+
         elif self._source_existed(obj):
             raise ValueError(f"Target node {self.source_node_id} does not exist")
-        else :
+        else:
             raise ValueError(f"Source node {self.target_node_id} does not exist")
 
     def __str__(self) -> str:
@@ -159,7 +159,8 @@ class Relationship(BaseNode):
             >>> str(relationship)
             'Relationship (id_=None, from=node1, to=node2, label=None)'
         """
-        return f"Relationship (id_={self.id_}, from={self.source_node_id}, to={self.target_node_id}, label={self.label})"
+        return f"Relationship (id_={self.id_}, from={self.source_node_id}, to={self.target_node_id}, " \
+               f"label={self.label})"
 
     def __repr__(self) -> str:
         """
@@ -170,5 +171,5 @@ class Relationship(BaseNode):
             >>> repr(relationship)
             'Relationship(id_=None, from=node1, to=node2, content=None, metadata=None, label=None)'
         """
-        return f"Relationship(id_={self.id_}, from={self.source_node_id}, to={self.target_node_id}, content={self.content}, " \
-               f"metadata={self.metadata}, label={self.label})"
+        return f"Relationship(id_={self.id_}, from={self.source_node_id}, to={self.target_node_id}, " \
+               f"content={self.content}, metadata={self.metadata}, label={self.label})"

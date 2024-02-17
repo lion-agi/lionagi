@@ -1,7 +1,9 @@
 from typing import Any, Dict, List, Optional, Type, TypeVar, Union, Callable
 import pandas as pd
 
-from ..utils import create_id, change_dict_key, is_schema
+from ..utils.sys_util import SysUtil
+from ..utils import create_id
+
 import json
 import xml.etree.ElementTree as ET
 
@@ -17,14 +19,13 @@ class BaseNode(BaseModel):
     This base class is designed to encapsulate a node's attributes, including
     identifiers, metadata, labels, related nodes, and content. It provides methods
     for serialization to and from various formats (e.g., JSON, XML), managing
-    metadata, and relationships between nodes.
+    metadata, and relationship between nodes.
 
-    Attributes:
-        id_ (str): Unique identifier for the node, automatically generated.
-        metadata (Dict[str, Any]): Key-value pairs for additional information about the node.
-        label (Optional[str]): An optional descriptive label for the node.
-        related_nodes (List[str]): Identifiers for nodes related to this node.
-        content (Union[str, Dict[str, Any], None, Any]): Main content of the node, which can be text, structured data, or any serializable format.
+    Attributes: id_ (str): Unique identifier for the node, automatically generated. metadata (Dict[str,
+    Any]): Key-value pairs for additional information about the node. label (Optional[str]): An optional descriptive
+    label for the node. related_nodes (List[str]): Identifiers for nodes related to this node. content (Union[str,
+    Dict[str, Any], None, Any]): Main content of the node, which can be text, structured data, or any serializable
+    format.
 
     Examples:
         Creating a node with custom content:
@@ -34,7 +35,7 @@ class BaseNode(BaseModel):
         Deserializing a node from JSON:
         >>> same_node = BaseNode.from_json(json_str)
     """
-    
+
     id_: str = Field(default_factory=lambda: str(create_id()), alias="node_id")
     metadata: Dict[str, Any] = Field(default_factory=dict)
     label: Optional[str] = None
@@ -50,7 +51,8 @@ class BaseNode(BaseModel):
         validate_return = True
         str_strip_whitespace = True
 
-# ------ constructor methods ------
+    # ------ constructor methods ------
+    # noinspection PyShadowingNames
     @classmethod
     def from_pd_series(cls: Type[T], pd_series: pd.Series) -> T:
         """Creates an instance from a pandas Series.
@@ -80,8 +82,8 @@ class BaseNode(BaseModel):
             BaseNode: A new instance populated with the specified data.
 
         Examples:
-            >>> data = {'content': 'Example content', 'label': 'Example Label'}
-            >>> node = BaseNode.from_dict(data)
+            >>> data_ = {'content': 'Example content', 'label': 'Example Label'}
+            >>> node = BaseNode.from_dict(data_)
         """
         return cls(**data)
 
@@ -101,8 +103,8 @@ class BaseNode(BaseModel):
             ValueError: If the JSON string is invalid.
 
         Examples:
-            >>> json_str = '{"content": "Example content", "label": "Example Label"}'
-            >>> node = BaseNode.from_json(json_str)
+            >>> json_str_ = '{"content": "Example content", "label": "Example Label"}'
+            >>> node = BaseNode.from_json(json_str_)
         """
 
         try:
@@ -126,14 +128,14 @@ class BaseNode(BaseModel):
             BaseNode: A new instance populated with data parsed from the XML string.
 
         Examples:
-            >>> xml_str = '<BaseNode><content>XML content</content><label>XML Label</label></BaseNode>'
-            >>> node = BaseNode.from_xml(xml_str)
+            >>> xml_str_ = '<BaseNode><content>XML content</content><label>XML Label</label></BaseNode>'
+            >>> node = BaseNode.from_xml(xml_str_)
         """
         root = ET.fromstring(xml_str)
         data = cls._xml_to_dict(root)
         return cls(**data)
 
-# ------ conversion methods ------
+    # ------ conversion methods ------
 
     def to_json(self) -> str:
         """
@@ -192,7 +194,7 @@ class BaseNode(BaseModel):
             child = ET.SubElement(root, attr)
             child.text = str(value)
         return ET.tostring(root, encoding='unicode')
-    
+
     def to_pd_series(self) -> pd.Series:
         """
         Converts the node instance to a pandas Series object.
@@ -210,8 +212,7 @@ class BaseNode(BaseModel):
         """
         return pd.Series(self.to_dict())
 
-
-# ------ meta methods -----
+    # ------ meta methods -----
     @property
     def metadata_keys(self) -> List[str]:
         """
@@ -299,7 +300,7 @@ class BaseNode(BaseModel):
             {'creator': 'John Doe'}
         """
         if old_key in self.metadata:
-            change_dict_key(self.metadata, old_key=old_key, new_key=new_key)
+            SysUtil.change_dict_key(self.metadata, old_key=old_key, new_key=new_key)
             return True
         return False
 
@@ -340,20 +341,20 @@ class BaseNode(BaseModel):
         metadata. By default, existing keys will not be overwritten unless explicitly
         specified.
 
-        Args:
-            other_metadata (Dict[str, Any]): The metadata dictionary to merge with the node's metadata.
-            overwrite (bool): Determines whether existing keys should be overwritten by those in `other_metadata`. Defaults to False.
+        Args: additional_metadata (Dict[str, Any]): The metadata dictionary to merge with the node's metadata.
+        overwrite (bool): Determines whether existing keys should be overwritten by those in `other_metadata`.
+        Defaults to False.
 
         Examples:
             >>> node = BaseNode(metadata={"author": "John Doe"})
-            >>> additional_metadata = {"year": 2020, "publisher": "Fiction Press"}
-            >>> node.merge_metadata(additional_metadata, overwrite=True)
+            >>> additional_metadata_ = {"year": 2020, "publisher": "Fiction Press"}
+            >>> node.merge_metadata(additional_metadata_, overwrite=True)
             >>> print(node.metadata)
             {'author': 'John Doe', 'year': 2020, 'publisher': 'Fiction Press'}
         """
         if not overwrite:
             additional_metadata = ({
-                k: v for k, v in additional_metadata.items() 
+                k: v for k, v in additional_metadata.items()
                 if k not in self.metadata
             })
         self.metadata.update(additional_metadata)
@@ -374,7 +375,7 @@ class BaseNode(BaseModel):
             >>> print(node.metadata)
             {}
         """
-        
+
         self.metadata.clear()
 
     def filter_metadata(self, filter_func: Callable[[Any], bool]) -> Dict[str, Any]:
@@ -385,7 +386,7 @@ class BaseNode(BaseModel):
         a new dictionary containing only the entries for which the filter function returns True.
 
         Args:
-            filter_func (Callable[[Any], bool]): A function that takes a metadata value as input
+            filter_func (Callable[[Any], bool]): A function that takes a metadata value as input_
                 and returns True if the entry should be included in the filtered result.
 
         Returns:
@@ -414,17 +415,16 @@ class BaseNode(BaseModel):
             bool: True if the metadata conforms to the schema, False otherwise.
 
         Examples:
-            >>> schema = {"author": str, "year": int, "genre": str}
+            >>> schema_ = {"author": str, "year": int, "genre": str}
             >>> node = BaseNode(metadata={"author": "John Doe", "year": "2020"})
-            >>> is_valid = node.validate_metadata(schema)
+            >>> is_valid = node.validate_metadata(schema_)
             >>> print(is_valid)
             False
         """
-        
-        return is_schema(dict_=self.metadata, schema=schema)
-    
 
-# ----- nodes relationships -----
+        return SysUtil.is_schema(dict_=self.metadata, schema=schema)
+
+    # ----- nodes relationship -----
 
     def add_related_node(self, node_id: str) -> bool:
         """
@@ -458,7 +458,7 @@ class BaseNode(BaseModel):
         Removes a related node ID from the list of related nodes.
 
         This method removes an existing node ID from the node's list of related nodes,
-        if it exists. It facilitates managing dynamic relationships between nodes.
+        if it exists. It facilitates managing dynamic relationship between nodes.
 
         Args:
             node_id (str): The ID of the node to remove from related nodes.
@@ -480,8 +480,7 @@ class BaseNode(BaseModel):
             return True
         return False
 
-
-# ------ utility ------
+    # ------ utility ------
     def validate_content(self, schema: Dict[str, type]) -> bool:
         """
         Validates the node's content against a specified schema.
@@ -498,14 +497,14 @@ class BaseNode(BaseModel):
 
         Examples:
             >>> node = BaseNode(content={"title": "New Beginnings", "year": 2021})
-            >>> schema = {"title": str, "year": int}
-            >>> is_valid = node.validate_content(schema)
+            >>> schema_ = {"title": str, "year": int}
+            >>> is_valid = node.validate_content(schema_)
             >>> print(is_valid)
             True
         """
         if not isinstance(self.content, Dict):
             return False
-        return is_schema(self.content, schema)
+        return SysUtil.is_schema(self.content, schema)
 
     def __str__(self) -> str:
         """

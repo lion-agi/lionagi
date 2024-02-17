@@ -40,10 +40,10 @@ class OpenAIService(BaseService):
 
     async def serve(self, input_, endpoint="chat/completions", method="post", tokenizer_kwargs={}, **kwargs):
         """
-        Serves the input using the specified endpoint and method.
+        Serves the input_ using the specified endpoint and method.
 
         Args:
-            input_: The input text to be processed.
+            input_: The input_ text to be processed.
             endpoint: The API endpoint to use for processing.
             method: The HTTP method to use for the request.
             **kwargs: Additional keyword arguments to pass to the payload creation.

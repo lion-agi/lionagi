@@ -30,7 +30,7 @@ class ChatFlow:
             if sender is not None:
                 add_msg_config["sender"] = sender
 
-            branch.logger.add_entry({"input": payload, "output": completion})
+            branch.logger.add_entry({"input_": payload, "output": completion})
             branch.add_message(**add_msg_config)
             branch.status_tracker.num_tasks_succeeded += 1
         else:
@@ -361,14 +361,14 @@ class ChatFlow:
 
 # from .sessions import Session
 
-# def get_config(temperature, max_tokens, key_scheme, n):
+# def get_config(temperature, max_tokens, key_scheme, num):
 #     f = lambda i:{
 #         "temperature": temperature[i], 
 #         "max_tokens": max_tokens[i],
 #     }
 #     return {
-#         "key": f"{key_scheme}{n+1}", 
-#         "config": f(n)
+#         "key": f"{key_scheme}{num+1}",
+#         "config": f(num)
 #         }
 
 # async def run_workflow(
@@ -398,13 +398,13 @@ class ChatFlow:
 #         return session
     
 # async def run_session(
-#     prompts, dir, llmconfig, key_scheme, num_prompts, 
+#     prompts, directory, llmconfig, key_scheme, num_prompts,
 #     temperature, max_tokens, type_=None, tools=None
 # ):
 #     prompts_ = prompts.copy()
 #     session = Session(
 #         system=prompts_.pop('system', 'You are a helpful assistant'), 
-#         dir = dir,
+#         directory = directory,
 #         llmconfig = llmconfig
 #     )
 #     if tools:

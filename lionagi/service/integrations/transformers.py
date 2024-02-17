@@ -34,11 +34,11 @@ class TransformersService(BaseService):
         except ImportError:
             try: 
                 if not is_package_installed('torch'):
-                    in_ = input("PyTorch is required for transformers. Would you like to install it now? (y/n): ")
+                    in_ = input("PyTorch is required for transformers. Would you like to install it now? (y/num): ")
                     if in_ == 'y':
                         install_pytorch()
                 if not is_package_installed('transformers'):
-                    in_ = input("transformers is required. Would you like to install it now? (y/n): ")
+                    in_ = input("transformers is required. Would you like to install it now? (y/num): ")
                     if in_ == 'y':
                         install_import(
                             package_name='transformers',
@@ -60,7 +60,7 @@ class TransformersService(BaseService):
         conversation = self.pipe(str(messages), **kwargs)
             
         texts = conversation[-1]['generated_text']
-        msgs = str(texts.split(']')[1:]).replace('\\n', '').replace("[\'", "").replace('\\', '')
+        msgs = str(texts.split(']')[1:]).replace('\\num', '').replace("[\'", "").replace('\\', '')
         
         completion = {
                       "model": self.pipe.model,

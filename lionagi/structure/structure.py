@@ -1,7 +1,7 @@
 from typing import TypeVar
-from ..schema.base_node import BaseNode
+
 from .graph import Graph
-from .relationship import Relationship
+from ..schema.base_node import BaseNode
 
 T = TypeVar('T', bound='BaseNode')
 R = TypeVar('R', bound='Relationship')
@@ -9,7 +9,7 @@ R = TypeVar('R', bound='Relationship')
 
 class Structure(BaseNode):
     """
-    Represents the structure of a graph consisting of nodes and relationships.
+    Represents the structure of a graph consisting of nodes and relationship.
     """
     graph: Graph = Graph()
 
@@ -73,7 +73,7 @@ class Structure(BaseNode):
 
     def remove_node(self, node: T) -> T:
         """
-        Removes a node and its associated relationships from the structure.
+        Removes a node and its associated relationship from the structure.
         
         Args:
             node (T): The node instance or node ID to be removed.
@@ -95,7 +95,7 @@ class Structure(BaseNode):
     # type can be dict or list
     # @staticmethod
     # def _typed_return(type: Type[Union[Dict, List]],
-    #                   obj: Optional[Dict[str, Any]] = None
+    #                   nested_structure: Optional[Dict[str, Any]] = None
     #                   ) -> Union[Dict[str, Any], List[Any]]:
     #     """
     #     Returns the object in the specified type format.
@@ -103,11 +103,11 @@ class Structure(BaseNode):
     #     Args:
     #         type (Type[Union[Dict, List]]): The type to return the object as (dict or list).
     #
-    #         obj (Optional[Dict[str, Any]]): The object to be converted.
+    #         nested_structure (Optional[Dict[str, Any]]): The object to be converted.
     #
     #     Returns:
     #         Union[Dict[str, Any], List[Any]]: The object in the specified type format.
     #     """
     #     if type is list:
-    #         return list(obj.values())
-    #     return obj
+    #         return list(nested_structure.values())
+    #     return nested_structure

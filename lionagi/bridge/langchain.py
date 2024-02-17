@@ -122,13 +122,13 @@ def langchain_text_splitter(data: Union[str, List],
     Splits text or a list of documents using a specified langchain text splitter.
 
     Args:
-        data (Union[str, List]): The input text or list of documents to be split.
+        data (Union[str, List]): The input_ text or list of documents to be split.
         splitter (Union[str, Callable]): The name of the text splitter function or the function itself.
         splitter_args (List[Any]): Positional arguments to pass to the splitter function.
         splitter_kwargs (Dict[str, Any]): Keyword arguments to pass to the splitter function.
 
     Returns:
-        List[str]: A list of chunks obtained by splitting the input.
+        List[str]: A list of chunks obtained by splitting the input_.
 
     Raises:
         ValueError: If the specified text splitter is invalid or if the splitting fails.

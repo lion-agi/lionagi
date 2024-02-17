@@ -5,7 +5,7 @@ oai_chat_llmconfig = {
     "model": "gpt-4-turbo-preview",
     "frequency_penalty": 0,
     "max_tokens": None,
-    "n": 1,
+    "num": 1,
     "presence_penalty": 0, 
     "response_format": {"type": "text"}, 
     "seed": None, 
@@ -19,9 +19,9 @@ oai_chat_llmconfig = {
     }
 
 oai_chat_schema = {
-    "required" : ["model", "frequency_penalty", "n", "presence_penalty", "response_format", "temperature", "top_p"],
+    "required" : ["model", "frequency_penalty", "num", "presence_penalty", "response_format", "temperature", "top_p"],
     "optional": ["seed", "stop", "stream", "tools", "tool_choice", "user", "max_tokens"],
-    "input": "messages",
+    "input_": "messages",
     "config": oai_chat_llmconfig
     }
 
@@ -41,7 +41,7 @@ oai_finetune_llmconfig = {
 oai_finetune_schema = {
     "required" : ["model", "training_file"],
     "optional": ["hyperparameters", "suffix", "validate_file"],
-    "input": ["training_file"],
+    "input_": ["training_file"],
     "config": oai_finetune_llmconfig 
 }
 
@@ -57,7 +57,7 @@ oai_audio_speech_llmconfig = {
 oai_audio_speech_schema = {
     "required" : ["model", "voice"],
     "optional": ["response_format", "speed"],
-    "input": "input",
+    "input_": "input_",
     "config": oai_audio_speech_llmconfig
     }
 
@@ -73,7 +73,7 @@ oai_audio_transcriptions_llmconfig = {
 oai_audio_transcriptions_schema = {
     "required" : ["model", "voice"],
     "optional": ["response_format", "language", "prompt", "response_format", "temperature"],
-    "input": "file",
+    "input_": "file",
     "config": oai_audio_transcriptions_llmconfig
     }
 
@@ -89,7 +89,7 @@ oai_audio_translations_llmconfig = {
 oai_audio_translations_schema = {
     "required" : ["model"],
     "optional": ["response_format", "speed", "prompt", "temperature"],
-    "input": "file",
+    "input_": "file",
     "config": oai_audio_translations_llmconfig
     }
 

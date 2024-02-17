@@ -2,7 +2,7 @@ openrouter_chat_llmconfig = {
     "model": "gpt-4-turbo-preview",
     "frequency_penalty": 0,
     "max_tokens": None,
-    "n": 1,
+    "num": 1,
     "presence_penalty": 0, 
     "response_format": {"type": "text"}, 
     "seed": None, 
@@ -16,9 +16,9 @@ openrouter_chat_llmconfig = {
     }
 
 openrouter_chat_schema = {
-    "required" : ["model", "frequency_penalty", "n", "presence_penalty", "response_format", "temperature", "top_p"],
+    "required" : ["model", "frequency_penalty", "num", "presence_penalty", "response_format", "temperature", "top_p"],
     "optional": ["seed", "stop", "stream", "tools", "tool_choice", "user", "max_tokens"],
-    "input": "messages",
+    "input_": "messages",
     "config": openrouter_chat_llmconfig
     }
 
@@ -36,7 +36,7 @@ openrouter_finetune_llmconfig = {
 openrouter_finetune_schema = {
     "required" : ["model", "training_file"],
     "optional": ["hyperparameters", "suffix", "validate_file"],
-    "input": ["training_file"],
+    "input_": ["training_file"],
     "config": openrouter_finetune_llmconfig
 }
 

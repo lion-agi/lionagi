@@ -1,5 +1,6 @@
 from enum import Enum
 
+
 class MailCategory(str, Enum):
     MESSAGES = 'messages'
     TOOL = 'tool'
@@ -22,4 +23,3 @@ class Mail:
         except:
             raise ValueError(f'Invalid request title. Valid titles are {list(MailCategory)}')
         self.request = request
-        

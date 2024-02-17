@@ -10,7 +10,7 @@ from lionagi.utils import get_timestamp, create_path, to_df
 @dataclass
 class DLog:
     """
-    Represents a log entry with input, output, and a timestamp, facilitating structured logging.
+    Represents a log entry with input_, output, and a timestamp, facilitating structured logging.
 
     Attributes:
         input_data (Any): Input data for the log entry.
@@ -24,7 +24,7 @@ class DLog:
 
 class DataLogger:
     """
-    Manages and persists logging of input-output data pairs, offering support for CSV and JSON export formats.
+    Manages and persists logging of input_-output data pairs, offering support for CSV and JSON export formats.
 
     This class accumulates log entries and provides functionalities for exporting these logs to disk.
     It is capable of handling directory creation, supports timestamping for file naming, and is designed
@@ -38,11 +38,11 @@ class DataLogger:
     Examples:
         Initializing DataLogger with a custom directory and filename:
         >>> logger = DataLogger(persist_path='path/to/logs', filename='my_logs')
-        >>> logger.append({'input': 'data1', 'output': 'result1'})
+        >>> logger.append({'input_': 'data1', 'output': 'result1'})
         >>> logger.to_csv('exported_logs.csv')
 
         Appending log entries and saving them:
-        >>> logger.append(input_data="test input", output_data="test output")
+        >>> logger.append(input_data="test input_", output_data="test output")
         >>> logger.to_json('logs.json', clear=True)
     """
 
@@ -81,10 +81,10 @@ class DataLogger:
 
     def append(self, input_data: Any, output_data: Any) -> None:
         """
-        Appends a new log entry with specified input and output data to the log deque.
+        Appends a new log entry with specified input_ and output data to the log deque.
 
         Args:
-            input_data (Any): The input data for the log entry.
+            input_data (Any): The input_ data for the log entry.
             output_data (Any): The output data for the log entry.
         """
         self.log.append(asdict(DLog(input_data=input_data, output_data=output_data)))

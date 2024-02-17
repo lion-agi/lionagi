@@ -46,8 +46,8 @@ def func_to_tool(func_, parser=None, docstring_style='google'):
         ...     An example function using Google style docstrings.
         ...
         ...     Args:
-        ...         param1 (int): The first parameter, demonstrating an integer input.
-        ...         param2 (str): The second parameter, demonstrating a string input.
+        ...         param1 (int): The first parameter, demonstrating an integer input_.
+        ...         param2 (str): The second parameter, demonstrating a string input_.
         ...
         ...     Returns:
         ...         bool: A boolean value, illustrating the return type.
@@ -62,9 +62,9 @@ def func_to_tool(func_, parser=None, docstring_style='google'):
         ...     '''
         ...     An example function using reStructuredText (reST) style docstrings.
         ...
-        ...     :param param1: The first parameter, demonstrating an integer input.
+        ...     :param param1: The first parameter, demonstrating an integer input_.
         ...     :type param1: int
-        ...     :param param2: The second parameter, demonstrating a string input.
+        ...     :param param2: The second parameter, demonstrating a string input_.
         ...     :type param2: str
         ...     :returns: A boolean value, illustrating the return type.
         ...     :rtype: bool

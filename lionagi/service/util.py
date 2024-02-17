@@ -319,14 +319,14 @@ class APIUtil:
         encoding = tiktoken.get_encoding(token_encoding_name, **kwargs)
         if api_endpoint.endswith("completions"):
             max_tokens = payload.get("max_tokens", 15)
-            n = payload.get("n", 1)
+            n = payload.get("num", 1)
             completion_tokens = n * max_tokens
 
             # chat completions
             if api_endpoint.startswith("chat/"):
                 num_tokens = 0
                 for message in payload["messages"]:
-                    num_tokens += 4  # every message follows <im_start>{role/name}\n{content}<im_end>\n
+                    num_tokens += 4  # every message follows <im_start>{role/name}\num{content}<im_end>\num
                     for key, value in message.items():
                         num_tokens += len(encoding.encode(value))
                         if key == "name":  # if there's a name, the role is omitted
@@ -351,8 +351,8 @@ class APIUtil:
                         'Expecting either string or list of strings for "prompt" field in completion request'
                     )
         elif api_endpoint == "embeddings":
-            input = payload["input"]
-            if isinstance(input, str):  # single input
+            input = payload["input_"]
+            if isinstance(input, str):  # single input_
                 num_tokens = len(encoding.encode(input))
                 return num_tokens
             elif isinstance(input, list):  # multiple inputs
