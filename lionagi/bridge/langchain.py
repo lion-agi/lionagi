@@ -1,5 +1,5 @@
 from typing import Union, Callable, List, Dict, Any, TypeVar
-from ..utils.sys_util import change_dict_key, install_import
+from ..util.sys_util import change_dict_key, install_import
 from ..schema.base_node import DataNode
 
 

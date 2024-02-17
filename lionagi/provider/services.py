@@ -3,11 +3,11 @@ class Services:
     @staticmethod
     def OpenAI(**kwargs):
         """
-        A service to interact with OpenAI's API endpoints.
+        A provider to interact with OpenAI's API endpoints.
 
         Attributes:
             api_key (Optional[str]): The API key used for authentication.
-            schema (Dict[str, Any]): The schema defining the service's endpoints.
+            schema (Dict[str, Any]): The schema defining the provider's endpoints.
             status_tracker (StatusTracker): The object tracking the status of API calls.
             endpoints (Dict[str, EndPoint]): A dictionary of endpoint objects.
             base_url (str): The base URL for the OpenAI API.
@@ -23,11 +23,11 @@ class Services:
     @staticmethod 
     def OpenRouter(**kwargs):
         """
-        A service to interact with OpenRouter's API endpoints.
+        A provider to interact with OpenRouter's API endpoints.
 
         Attributes:
             api_key (Optional[str]): The API key used for authentication.
-            schema (Dict[str, Any]): The schema defining the service's endpoints.
+            schema (Dict[str, Any]): The schema defining the provider's endpoints.
             status_tracker (StatusTracker): The object tracking the status of API calls.
             endpoints (Dict[str, EndPoint]): A dictionary of endpoint objects.
             base_url (str): The base URL for the OpenAI API.
@@ -43,7 +43,7 @@ class Services:
     @staticmethod
     def Transformers(**kwargs):
         """
-        A service to interact with Transformers' pipeline
+        A provider to interact with Transformers' pipeline
 
         Attributes:
             task (str): The specific task to be performed by the transformer model. 
@@ -58,7 +58,7 @@ class Services:
         Warnings:
             - Ensure the selected model is suitable for conversational tasks to avoid 
             unexpected behavior.
-            - As this service heavily relies on external libraries (Hugging Face's 
+            - As this provider heavily relies on external libraries (Hugging Face's
             Transformers), ensure they are installed and updated to compatible versions.
 
         Dependencies:
@@ -73,11 +73,11 @@ class Services:
     @staticmethod
     def Anthropic(**kwargs):
         """
-        A service to interact with Anthropic's API endpoints.
+        A provider to interact with Anthropic's API endpoints.
 
         Attributes:
             api_key (Optional[str]): The API key used for authentication.
-            schema (Dict[str, Any]): The schema defining the service's endpoints.
+            schema (Dict[str, Any]): The schema defining the provider's endpoints.
             status_tracker (StatusTracker): The object tracking the status of API calls.
             endpoints (Dict[str, EndPoint]): A dictionary of endpoint objects.
             base_url (str): The base URL for the Anthropic API.
@@ -93,7 +93,7 @@ class Services:
     @staticmethod
     def Ollama(**kwargs):
         """
-        A service to interact with Ollama
+        A provider to interact with Ollama
         
         Attributes:
             model (str): name of the model to use
@@ -106,7 +106,7 @@ class Services:
     @staticmethod
     def LiteLLM(**kwargs):
         """
-        A service to interact with Litellm
+        A provider to interact with Litellm
         
         Attributes:
             model (str): name of the model to use
@@ -119,7 +119,7 @@ class Services:
     @staticmethod
     def MLX(**kwargs):
         """
-        A service to interact with MlX
+        A provider to interact with MlX
         
         Attributes:
             model (str): name of the model to use

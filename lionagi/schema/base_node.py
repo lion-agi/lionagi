@@ -1,8 +1,8 @@
 from typing import Any, Dict, List, Optional, Type, TypeVar, Union, Callable
 import pandas as pd
 
-from ..utils.sys_util import SysUtil
-from ..utils import create_id
+from ..util.sys_util import SysUtil
+from ..util import create_id
 
 import json
 import xml.etree.ElementTree as ET

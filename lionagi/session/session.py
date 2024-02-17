@@ -2,12 +2,12 @@ from collections import deque
 from typing import Any, Dict, List, Optional, Tuple, Union
 
 import pandas as pd
-from lionagi.utils.sys_util import create_path
-from lionagi.utils import to_list, to_df
+from lionagi.util.sys_util import create_path
+from lionagi.util import to_list, to_df
 from lionagi.schema import Tool
 from working.base_service import BaseService
 from lionagi.session.branch.branch import Branch
-from lionagi.mail.mail_manager import MailManager
+from lionagi.mail.base.mail_manager import MailManager
 from lionagi.session.messages.messages import Instruction, System
 
 
@@ -21,7 +21,7 @@ class Session:
 
     Attributes:
         branches (Dict[str, Branch]): A dictionary of branch instances associated with the session.
-        service (Optional[BaseService]): The external service instance associated with the session.
+        service (Optional[BaseService]): The external provider instance associated with the session.
         branch_manager (BranchManager): The manager for handling branches within the session.
         logger (Optional[Any]): The logger instance for session data logging.
     """
@@ -47,7 +47,7 @@ class Session:
             system (Optional[Union[str, System]]): The system message.
             sender (Optional[str]): the default sender name for default branch
             llmconfig (Optional[Dict[str, Any]]): Configuration for language learning models.
-            service (Optional[BaseService]): External service instance.
+            service (Optional[BaseService]): External provider instance.
             branches (Optional[Dict[str, Branch]]): Dictionary of branch instances.
             default_branch (Optional[Branch]): The default branch for the session.
             default_branch_name (Optional[str]): The name of the default branch.
@@ -231,7 +231,7 @@ class Session:
             name (Optional[str]): Name of the branch, default is None.
             instruction_sets (Optional[Dict[str, InstructionSet]]): Instruction sets, default is None.
             tool_manager (Optional[ToolManager]): Tool manager for the branch, default is None.
-            service (Optional[BaseService]): External service for the branch, default is None.
+            service (Optional[BaseService]): External provider for the branch, default is None.
             llmconfig (Optional[Dict]): Configuration for language learning models, default is None.
             tools (Optional[List[Tool]]): Initial list of tools to register, default is None.
             **kwargs: Additional keyword arguments for pd.read_csv().
@@ -282,7 +282,7 @@ class Session:
             name (Optional[str]): Name of the branch, default is None.
             instruction_sets (Optional[Dict[str, InstructionSet]]): Instruction sets, default is None.
             tool_manager (Optional[ToolManager]): Tool manager for the branch, default is None.
-            service (Optional[BaseService]): External service for the branch, default is None.
+            service (Optional[BaseService]): External provider for the branch, default is None.
             llmconfig (Optional[Dict]): Configuration for language learning models, default is None.
             **kwargs: Additional keyword arguments for pd.read_json().
 
@@ -454,14 +454,14 @@ class Session:
 # ----- chatflow ----#
     async def call_chatcompletion(self, branch=None, sender=None, with_sender=False, tokenizer_kwargs={}, **kwargs):
         """
-        Asynchronously calls the chat completion service with the current message queue.
+        Asynchronously calls the chat completion provider with the current message queue.
 
-        This method prepares the messages for chat completion, sends the request to the configured service, and handles the response. The method supports additional keyword arguments that are passed directly to the service.
+        This method prepares the messages for chat completion, sends the request to the configured provider, and handles the response. The method supports additional keyword arguments that are passed directly to the provider.
 
         Args:
             sender (Optional[str]): The name of the sender to be included in the chat completion request. Defaults to None.
             with_sender (bool): If True, includes the sender's name in the messages. Defaults to False.
-            **kwargs: Arbitrary keyword arguments passed directly to the chat completion service.
+            **kwargs: Arbitrary keyword arguments passed directly to the chat completion provider.
 
         Examples:
             >>> await branch.call_chatcompletion()
@@ -598,7 +598,7 @@ class Session:
             messages (Optional[pd.DataFrame]): Initial set of messages for the new branch.
             instruction_sets (Optional[Any]): Instruction sets for the new branch.
             tool_manager (Optional[Any]): Tool manager for handling tools in the new branch.
-            service (Optional[BaseService]): External service instance for the new branch.
+            service (Optional[BaseService]): External provider instance for the new branch.
             llmconfig (Optional[Dict[str, Any]]): Configuration for language learning models in the new branch.
             tools (Optional[List[Tool]]): List of tools available for the new branch.
 

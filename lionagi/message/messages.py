@@ -2,13 +2,30 @@ import json
 from typing import Any, Dict, Optional
 import pandas as pd
 
-from lionagi.utils.sys_util import strip_lower, to_dict
-from lionagi.utils.nested_util import nget
+from lionagi.util import strip_lower, to_dict, nget
 from lionagi.schema import BaseNode
-from .message_schema import MessageField, MessageContentKey, MessageRoleType, MessageSenderType
+from lionagi.message.base.schema import (MessageField, MessageContentKey, MessageRoleType,
+                                         MessageSenderType)
 
 
 class BaseMessage(BaseNode):
+    """
+    the foundational class for all message types, providing common attributes and
+    operations.
+
+    attributes:
+        _role (Optional[str]): The role of the message, indicating its purpose or origin.
+        _sender (Optional[str]): Identifier for the entity that sent the message.
+        recipient (Optional[str]): Identifier for the intended recipient of the message.
+        timestamp (Optional[datetime]): The timestamp when the message was sent.
+
+    Properties:
+        role (str): Accessor and mutator for the message's role.
+        sender (str): Accessor and mutator for the message's sender.
+        content_str (str): Serialize the message's content to a string.
+        dict (Dict[str, Any]): Convert the message's attributes to a dictionary.
+        to_pd_series (pd.Series): Convert the message's attributes to a pandas Series.
+    """
 
     _role = None
     _sender = None
@@ -18,11 +35,11 @@ class BaseMessage(BaseNode):
     @property
     def role(self):
         return self._role
-    
+
     @role.setter
     def role(self, role):
         self._role = role
-    
+
     @property
     def content_str(self):
         if isinstance(self.content, Dict):
@@ -32,40 +49,36 @@ class BaseMessage(BaseNode):
         else:
             try:
                 return str(self.content)
-            except:
+            except ValueError:
+                print(f"Content is not serializable for Node: {self._id}")
                 return 'null'
-                                              
+
     @property
     def dict(self):
         return {
             'node_id': self.id_,
             'metadata': self.metadata or 'null',
             'timestamp': self.timestamp,
-            'labels': self.label or 'null', 
+            'labels': self.label or 'null',
             'role': self.role,
             'sender': self._sender,
             'recipient': self.recipient,
             'content': self.content_str,
             'related_nodes': self.related_nodes or 'null'
         }
-    
+
     @property
     def to_pd_series(self):
         return pd.Series(self.dict)
-    
-    
+
     @property
     def sender(self):
         return self._sender
-    
+
     @sender.setter
     def sender(self, sender):
         self._sender = sender
-    
-    
-    
-    
-    
+
     @property
     def msg_sender(self) -> str:
         """
@@ -75,7 +88,7 @@ class BaseMessage(BaseNode):
             The identifier of the message sender.
         """
         return self.roled_msg[MessageField.SENDER.value]
-    
+
     @property
     def msg_recipient(self) -> str:
         """
@@ -106,10 +119,6 @@ class BaseMessage(BaseNode):
         """
         return pd.Series(self.roled_msg)
 
-
-
-
-
     def add_recipient(self, recipient: str) -> None:
         """
         Updates the recipient identifier for the message.
@@ -118,7 +127,6 @@ class BaseMessage(BaseNode):
             recipient: The new recipient identifier to be assigned to the message.
         """
         self.recipient = recipient
-
 
     def _to_roled_message(self):
         """
@@ -130,17 +138,14 @@ class BaseMessage(BaseNode):
         return {
             MessageField.ROLE.value: self._role.value,
             MessageField.CONTENT.value: (
-                json.dumps(self.content) if isinstance(self.content, dict) 
+                json.dumps(self.content) if isinstance(self.content, dict)
                 else self.content
             )
         }
 
-
-            
-
     def __str__(self):
         content_preview = (
-            (str(self.content)[:75] + '...') if self.content and len(self.content) > 75 
+            (str(self.content)[:75] + '...') if self.content and len(self.content) > 75
             else str(self.content)
         )
         return (
@@ -149,10 +154,10 @@ class BaseMessage(BaseNode):
                 {MessageField.CONTENT.value}='{content_preview or 'none'}, \
                 {MessageField.RECIPIENT.value}={self.recipient or 'none'}, \
                 {MessageField.TIMESTAMP.value}={self.timestamp or 'none'})"
-            )
+        )
+
 
 class Instruction(BaseMessage):
-    
     """
     Represents an instruction message, typically used to convey actions or commands.
 
@@ -170,13 +175,14 @@ class Instruction(BaseMessage):
 
     def __init__(self, instruction: Any, context=None, sender: Optional[str] = None):
         super().__init__(
-            role=MessageRoleType.USER.value, 
-            sender=sender or MessageSenderType.USER.value, 
+            role=MessageRoleType.USER.value,
+            sender=sender or MessageSenderType.USER.value,
             content={MessageContentKey.INSTRUCTION.value: instruction}
         )
         if context:
             self.content.update({'context': context})
-            
+
+
 class System(BaseMessage):
     """
     Represents a system message, typically used to convey system-level information or status.
@@ -194,14 +200,14 @@ class System(BaseMessage):
 
     def __init__(self, system: Any, sender: Optional[str] = None):
         super().__init__(
-            role=MessageRoleType.SYSTEM.value, 
-            sender=sender or MessageSenderType.SYSTEM.value, 
+            role=MessageRoleType.SYSTEM.value,
+            sender=sender or MessageSenderType.SYSTEM.value,
             content={MessageContentKey.SYSTEM.value: system}
         )
 
-            
+
 class Response(BaseMessage):
-    
+
     def __init__(self, response: Any, sender: Optional[str] = None) -> None:
         content_key = ''
         try:
@@ -238,11 +244,11 @@ class Response(BaseMessage):
             sender = sender or "action_response"
             content_ = response
             content_key = content_key or "action_response"
-        
+
         super().__init__(
             role=MessageRoleType.ASSISTANT, sender=sender, content={content_key: content_}
         )
-        
+
     @staticmethod
     def _handle_action_request(response):
         try:
@@ -250,15 +256,15 @@ class Response(BaseMessage):
             func_list = []
             while tool_count < len(response['tool_calls']):
                 _path = ['tool_calls', tool_count, 'type']
-                
+
                 if nget(response, _path) == 'function':
                     _path1 = ['tool_calls', tool_count, 'function', 'name']
                     _path2 = ['tool_calls', tool_count, 'function', 'arguments']
-                    
+
                     func_content = {
                         "action": ("action_" + nget(response, _path1)),
                         "arguments": nget(response, _path2)
-                        }
+                    }
                     func_list.append(func_content)
                 tool_count += 1
             return func_list

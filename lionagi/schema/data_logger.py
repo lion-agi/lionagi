@@ -4,7 +4,7 @@ from dataclasses import dataclass, field, asdict
 from typing import Dict, Optional, Any, Union, List
 from pathlib import Path
 
-from lionagi.utils import get_timestamp, create_path, to_df
+from lionagi.util import get_timestamp, create_path, to_df
 
 
 @dataclass

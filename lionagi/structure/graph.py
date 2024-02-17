@@ -1,7 +1,7 @@
 from typing import List, Any
 from pydantic import Field
 
-from ..utils import lcall
+from ..util import lcall
 from ..schema.base_node import BaseNode
 from .relationship import Relationship
 

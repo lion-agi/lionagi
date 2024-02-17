@@ -1,6 +1,6 @@
 from typing import Union, Callable, List, Any, Dict, TypeVar
-from ..utils.sys_util import change_dict_key, install_import, is_package_installed
-from ..schema.base_schema import DataNode
+from ..util.sys_util import SysUtil
+from ..schema.data_node import DataNode
 
 
 T = TypeVar('T', bound='DataNode')

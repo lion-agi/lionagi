@@ -6,7 +6,7 @@ from typing import Callable, Any, List
 
 from aiocache import cached
 
-from lionagi.utils.call_util import is_coroutine_func, rcall
+from lionagi.util.call_util import is_coroutine_func, rcall
 
 
 class CallDecorator:

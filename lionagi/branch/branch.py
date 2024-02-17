@@ -6,19 +6,17 @@ from typing import Any, Dict, List, Optional, Union
 import pandas as pd
 from pandas import DataFrame
 
-from lionagi.utils.sys_util import create_path, SysUtil
-from lionagi.utils import to_dict, lcall, to_list
-from lionagi.utils.df_util import to_df
+from lionagi.util import to_dict, lcall
+from lionagi.util import to_df
 
 from working.base_service import BaseService, StatusTracker
-from lionagi.service.integrations.oai import OpenAIService
+from lionagi.provider.api.oai import OpenAIService
 from lionagi.config.oai_configs import oai_schema
 from lionagi.schema import DataLogger, BaseTool
-from lionagi.action.action_manager import ActionManager
-from lionagi.mail.mail import Mail
+from lionagi.action.base.action_manager import ActionManager
+from lionagi.mail.base.mail import Mail
 from working.instruction_set import InstructionSet
 from lionagi.message.messages import Instruction, BaseMessage, Response, System, MessageField
-from lionagi.message.message_schema import MessageRoleType, MessageSenderType
 from lionagi.flow.flow import ChatFlow
 from .util import MessageUtil
 
@@ -53,8 +51,8 @@ class Branch:
             messages (Optional[pd.DataFrame]): A DataFrame containing messages for the branch.
             instruction_sets (Optional[Dict[str, InstructionSet]]): A dictionary of instruction sets.
             tool_manager (Optional[ToolManager]): The tool manager for the branch.
-            service (Optional[BaseService]): The service associated with the branch.
-            llmconfig (Optional[Dict]): Configuration for the LLM service.
+            service (Optional[BaseService]): The provider associated with the branch.
+            llmconfig (Optional[Dict]): Configuration for the LLM provider.
             tools (Optional[List[Tool]]): Initial list of tools to register with the tool manager.
             persist_path (Optional[str]): Directory path for data logging.
 
@@ -270,7 +268,7 @@ class Branch:
             name (Optional[str]): Name of the branch, default is None.
             instruction_sets (Optional[Dict[str, InstructionSet]]): Instruction sets, default is None.
             tool_manager (Optional[ToolManager]): Tool manager for the branch, default is None.
-            service (Optional[BaseService]): External service for the branch, default is None.
+            service (Optional[BaseService]): External provider for the branch, default is None.
             llmconfig (Optional[Dict]): Configuration for language learning models, default is None.
             tools (Optional[List[Tool]]): Initial list of tools to register, default is None.
             **kwargs: Additional keyword arguments for pd.read_csv().
@@ -307,7 +305,7 @@ class Branch:
             name (Optional[str]): Name of the branch, default is None.
             instruction_sets (Optional[Dict[str, InstructionSet]]): Instruction sets, default is None.
             action_manager (Optional[ToolManager]): Tool manager for the branch, default is None.
-            service (Optional[BaseService]): External service for the branch, default is None.
+            service (Optional[BaseService]): External provider for the branch, default is None.
             llmconfig (Optional[Dict]): Configuration for language learning models, default is None.
             **kwargs: Additional keyword arguments for pd.read_json().
 
@@ -461,15 +459,15 @@ class Branch:
     # noinspection PyUnresolvedReferences
     async def call_chatcompletion(self, sender=None, with_sender=False, tokenizer_kwargs=None, **kwargs):
         """
-        Asynchronously calls the chat completion service with the current message queue.
+        Asynchronously calls the chat completion provider with the current message queue.
 
-        This method prepares the messages for chat completion, sends the request to the configured service, and handles the response. The method supports additional keyword arguments that are passed directly to the service.
+        This method prepares the messages for chat completion, sends the request to the configured provider, and handles the response. The method supports additional keyword arguments that are passed directly to the provider.
 
         Args:
             tokenizer_kwargs:
             sender (Optional[str]): The name of the sender to be included in the chat completion request. Defaults to None.
             with_sender (bool): If True, includes the sender's name in the messages. Defaults to False.
-            **kwargs: Arbitrary keyword arguments passed directly to the chat completion service.
+            **kwargs: Arbitrary keyword arguments passed directly to the chat completion provider.
 
         """
         if tokenizer_kwargs is None:
@@ -910,12 +908,12 @@ class Branch:
 
         Args:
             to_name (str): The name of the recipient branch.
-            title (str): The title or category of the request (e.g., 'messages', 'tool', 'service', 'llmconfig').
+            title (str): The title or category of the request (e.g., 'messages', 'tool', 'provider', 'llmconfig').
             package (Any): The actual data or object to be sent, its expected type depends on the title.
 
         Examples:
             >>> branch.send("another_branch", "messages", message_dataframe)
-            >>> branch.send("service_branch", "service", service_config)
+            >>> branch.send("service_branch", "provider", service_config)
         """
         request = Mail(sender=self.name, recipient=to_name, category=title, request=package)
         self.pending_outs.append(request)
@@ -930,7 +928,7 @@ class Branch:
             sender (str): The name of the sender whose packages are to be processed.
             messages (bool): If True, processes 'messages' requests. Defaults to True.
             tool (bool): If True, processes 'tool' requests. Defaults to True.
-            service (bool): If True, processes 'service' requests. Defaults to True.
+            service (bool): If True, processes 'provider' requests. Defaults to True.
             llmconfig (bool): If True, processes 'llmconfig' requests. Defaults to True.
 
         Raises:
@@ -957,9 +955,9 @@ class Branch:
                     raise ValueError('Invalid tool format')
                 self.action_manager.register_tools([request.request])
 
-            elif request.title == 'service' and service:
+            elif request.title == 'provider' and service:
                 if not isinstance(request.request, BaseService):
-                    raise ValueError('Invalid service format')
+                    raise ValueError('Invalid provider format')
                 self.service = request.request
 
             elif request.title == 'llmconfig' and llmconfig:
@@ -992,7 +990,7 @@ class Branch:
         else:
             if isinstance(service, OpenAIService):
                 self.llmconfig = oai_schema["chat/completions"]["config"]
-            # elif isinstance(service, OpenRouterService):
+            # elif isinstance(provider, OpenRouterService):
             #     self.llmconfig = openrouter_schema["chat/completions"]["config"]
             else:
                 self.llmconfig = {}
@@ -1143,7 +1141,7 @@ class Branch:
     #         instruction_set (InstructionSet): The instruction set to process.
     #         num (Union[int, List[int]]): The maximum number of follow-up chats to perform for each instruction,
     #                                       or a list of maximum numbers corresponding to each instruction.
-    #         **kwargs: Additional keyword arguments to pass to the chat completion service.
+    #         **kwargs: Additional keyword arguments to pass to the chat completion provider.
     #
     #     Raises:
     #         ValueError: If the length of `num` as a list does not match the number of instructions in the set.

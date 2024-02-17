@@ -1,4 +1,4 @@
-from ..utils.sys_util import install_import, is_package_installed, to_dict
+from lionagi.util.sys_util import install_import, is_package_installed, to_dict
 from .base_service import BaseService
 
 

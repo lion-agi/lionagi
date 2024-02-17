@@ -1,5 +1,5 @@
 from typing import Any, Dict, List, Optional, Union
-from lionagi.utils import to_dict, lcall, to_list, alcall, get_flattened_keys
+from lionagi.util import to_dict, lcall, to_list, alcall, get_flattened_keys
 from lionagi.schema import Tool
 from lionagi.session.messages.messages import Instruction, System
 
@@ -9,14 +9,14 @@ class ChatFlow:
     @staticmethod
     async def call_chatcompletion(branch, sender=None, with_sender=False, tokenizer_kwargs={}, **kwargs):
         """
-        Asynchronously calls the chat completion service with the current message queue.
+        Asynchronously calls the chat completion provider with the current message queue.
         
         Args:
-            branch: The Branch instance calling the service.
+            branch: The Branch instance calling the provider.
             sender (Optional[str]): The name of the sender to include in chat completions.
             with_sender (bool): If True, includes sender information in messages.
             tokenizer_kwargs (dict): Keyword arguments for the tokenizer used in chat completion.
-            **kwargs: Arbitrary keyword arguments for the chat completion service.
+            **kwargs: Arbitrary keyword arguments for the chat completion provider.
 
         Examples:
             >>> await ChatFlow.call_chatcompletion(branch, sender="user")

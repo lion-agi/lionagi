@@ -18,10 +18,10 @@ import logging
 from .version import __version__
 from dotenv import load_dotenv
 
-from .utils import *
+from .util import *
 from .schema import *
 from .structure import *
-from .service import *
+from .provider import *
 from .action import *
 
 logger = logging.getLogger(__name__)

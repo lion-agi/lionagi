@@ -5,7 +5,7 @@ from typing import Union, Optional, Any
 
 from pandas import DataFrame
 
-from ..utils import strip_lower, to_dict, NestedStructUtil, to_df
+from ..util import strip_lower, to_dict, NestedStructUtil, to_df
 
 
 class MessageUtil:

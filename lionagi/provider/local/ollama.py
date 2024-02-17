@@ -1,4 +1,4 @@
-from ..utils.sys_util import install_import, is_package_installed
+from lionagi.util.sys_util import install_import, is_package_installed
 from .base_service import BaseService
 
 class OllamaService(BaseService):
