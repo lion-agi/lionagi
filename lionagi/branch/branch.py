@@ -13,10 +13,10 @@ from working.base_service import BaseService, StatusTracker
 from lionagi.services.oai import OpenAIService
 from lionagi.config.oai_configs import oai_schema
 from lionagi.schema import DataLogger, Tool
-from lionagi.action.manager.action_manager import ActionManager
-from lionagi.core.manager.branch_manager import Mail
+from lionagi.action.action_manager import ActionManager
+from lionagi.mail.mail_manager import Mail
 from working.instruction_set import InstructionSet
-from lionagi.core.messages import Instruction, BaseMessage, Response, System, MessageField, MessageRoleType, MessageSenderType
+from lionagi.messages.messages import Instruction, BaseMessage, Response, System, MessageField, MessageRoleType, MessageSenderType
 from lionagi.flow.flow import ChatFlow
 
 

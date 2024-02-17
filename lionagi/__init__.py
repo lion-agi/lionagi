@@ -20,7 +20,7 @@ from dotenv import load_dotenv
 
 from .utils import *
 from .schema import *
-from .structures import *
+from .structure import *
 from .service import *
 from .action import *
 

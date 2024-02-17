@@ -1,7 +1,7 @@
 from typing import Any, Dict, List, Optional, Union
 from lionagi.utils import to_dict, lcall, to_list, alcall, get_flattened_keys
 from lionagi.schema import Tool
-from lionagi.core.messages.messages import Instruction, System
+from lionagi.session.messages.messages import Instruction, System
 
 
 class ChatFlow:
