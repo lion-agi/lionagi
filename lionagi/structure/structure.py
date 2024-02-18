@@ -1,7 +1,9 @@
 from typing import TypeVar
 
-from .graph import Graph
-from ..schema.base_node import BaseNode
+from ..schema import BaseNode
+from .base import Graph, Relationship
+
+
 
 T = TypeVar('T', bound='BaseNode')
 R = TypeVar('R', bound='Relationship')
@@ -91,23 +93,3 @@ class Structure(BaseNode):
 
     def is_empty(self) -> bool:
         return self.graph.is_empty()
-
-    # type can be dict or list
-    # @staticmethod
-    # def _typed_return(type: Type[Union[Dict, List]],
-    #                   nested_structure: Optional[Dict[str, Any]] = None
-    #                   ) -> Union[Dict[str, Any], List[Any]]:
-    #     """
-    #     Returns the object in the specified type format.
-    #
-    #     Args:
-    #         type (Type[Union[Dict, List]]): The type to return the object as (dict or list).
-    #
-    #         nested_structure (Optional[Dict[str, Any]]): The object to be converted.
-    #
-    #     Returns:
-    #         Union[Dict[str, Any], List[Any]]: The object in the specified type format.
-    #     """
-    #     if type is list:
-    #         return list(nested_structure.values())
-    #     return nested_structure

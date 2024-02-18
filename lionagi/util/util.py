@@ -10,8 +10,6 @@ from typing import Any, List, Dict, Iterable, Type
 import pandas as pd
 from pandas import DataFrame
 
-from .sys_util import SysUtil
-
 
 def create_copy(input_: Any, num: int = 1) -> Any | List[Any]:
     """
@@ -250,7 +248,7 @@ def to_dict(input_: Any) -> Dict[Any, Any]:
 
 
 def to_df(
-        item: List[Dict | DataFrame] | DataFrame,
+        item: List[Dict | DataFrame | pd.Series] | DataFrame,
         how: str = 'all',
         drop_kwargs: Dict[str, Any] | None = None,
         reset_index: bool = True,
@@ -310,10 +308,17 @@ def to_df(
         dfs = ''
 
         if isinstance(item, List):
-            if SysUtil.is_same_dtype(item, DataFrame):
+            if is_homogeneous(item, DataFrame):
                 dfs = pd.concat(item)
-            if SysUtil.is_same_dtype(item, Dict):
+            elif is_homogeneous(item, Dict):
                 dfs = pd.DataFrame(item)
+            elif is_homogeneous(item, pd.Series):
+                dfs = pd.DataFrame(item)
+            else:
+                try:
+                    dfs = pd.DataFrame(item)
+                except Exception:
+                    raise ValueError
 
         elif isinstance(item, pd.DataFrame):
             dfs = item
@@ -416,8 +421,8 @@ def _convert_to_num(number_str: str, num_type: type = int, precision: int = None
 
 
 def is_homogeneous(
-    iterables: Dict | List | Iterable,
-    type_check: Type
+        iterables: Dict | List | Iterable,
+        type_check: Type
 ) -> bool:
     """
     checks if all elements in a list conform to the specified type.

@@ -115,7 +115,7 @@ class SysUtil:
             dict_[new_key] = dict_.pop(old_key)
 
     @staticmethod
-    def create_path(directory: str, filename: str, timestamp: bool = True,
+    def create_path(directory: str | Path, filename: str, timestamp: bool = True,
                     dir_exist_ok: bool = True, time_prefix: bool = False) -> str:
         """
         constructs a file path with optional timestamping and ensures directory creation.

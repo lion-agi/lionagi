@@ -54,7 +54,7 @@ class BaseMessage(BaseNode):
                 return 'null'
 
     @property
-    def dict(self):
+    def dict(self, **kwargs):
         return {
             'node_id': self.id_,
             'metadata': self.metadata or 'null',

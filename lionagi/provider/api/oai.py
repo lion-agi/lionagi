@@ -1,5 +1,6 @@
 from os import getenv
 from lionagi.config.oai_configs import oai_schema
+import tiktoken
 from .base_service import BaseService, PayloadCreation
 
 class OpenAIService(BaseService):

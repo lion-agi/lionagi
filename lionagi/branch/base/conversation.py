@@ -1,89 +1,29 @@
-import json
-from collections import deque
-from datetime import datetime
-from typing import Any, Dict, List, Optional, Union
-
 import pandas as pd
-from pandas import DataFrame
+from typing import Dict, Any, Optional
+from datetime import datetime
+from typing import Dict, Any, Optional
+from datetime import datetime
 
-from lionagi.util import to_dict, lcall
-from lionagi.util import to_df
-
-from working.base_service import BaseService, StatusTracker
-from lionagi.provider.api.oai import OpenAIService
-from lionagi.config.oai_configs import oai_schema
-from lionagi.schema import DataLogger, BaseTool
-from lionagi.action.base.action_manager import ActionManager
-from lionagi.mail.base.base_mail import B
-from working.instruction_set import InstructionSet
-from lionagi.message.messages import Instruction, BaseMessage, Response, System, MessageField
-from lionagi.flow.flow import ChatFlow
-from .util import MessageUtil
-
-OAIService = None
-try:
-    OAIService = OpenAIService()
-except:
-    pass
+from lionagi.schema import BaseNode, DataLogger
 
 
-# noinspection PyUnresolvedReferences
-class Branch:
-    _cols = [
-        MessageField.NODE_ID,
-        MessageField.ROLE,
-        MessageField.SENDER,
-        MessageField.TIMESTAMP,
-        MessageField.CONTENT,
-        MessageField.RECIPIENT
-    ]
+class Conversation(BaseNode):
+    columns = ['node_id', 'sender', 'recipient', 'timestamp',
+               'content', 'role', 'metadata', 'relationships']
 
-    def __init__(self, name: str | None = None, messages: DataFrame | None = None,
-                 instruction_sets:  dict[str, InstructionSet] | None = None,
-                 action_manager: Optional[ActionManager] = None, service: Optional[BaseService] = None,
-                 llmconfig: Optional[Dict] = None, tools: Any = None, persist_path: (str | Path | None) = None,
-                 logger=None):
-        """
-        Initializes a new instance of the Branch class.
+    def __init__(self, messages=None, datalogger=None, persist_path=None, **kwargs):
 
-        Args:
-            name (Optional[str]): The name of the branch.
-            messages (Optional[pd.DataFrame]): A DataFrame containing messages for the branch.
-            instruction_sets (Optional[Dict[str, InstructionSet]]): A dictionary of instruction sets.
-            tool_manager (Optional[ToolManager]): The tool manager for the branch.
-            service (Optional[BaseService]): The provider associated with the branch.
-            llmconfig (Optional[Dict]): Configuration for the LLM provider.
-            tools (Optional[List[Tool]]): Initial list of tools to register with the tool manager.
-            persist_path (Optional[str]): Directory path for data logging.
+        super().__init__(**kwargs)
+        self.messages = messages or pd.DataFrame(columns=self.columns)
 
-        Examples:
-            >>> branch = Branch(name="CustomerService")
-            >>> branch_with_messages = Branch(name="Support", messages=pd.DataFrame(columns=["node_id", "content"]))
-        """
+        if datalogger:
+            if persist_path:
+                self.datalogger = datalogger(persist_path=persist_path)
+            else:
+                self.datalogger = datalogger
+        else:
+            self.datalogger = datalogger or DataLogger(persist_path=persist_path)
 
-        self.messages = pd.DataFrame(columns=Branch._cols)
-        self.messages = (
-            messages
-            if messages is not None
-            else pd.DataFrame(
-                columns=["node_id", "role", "sender", "timestamp", "content"]
-            )
-        )
-        self.action_manager = action_manager if action_manager else ActionManager()
-        try:
-            self.register_tools(tools)
-        except Exception as e:
-            raise TypeError(f"Error in registering tools: {e}")
-
-        self.instruction_sets = instruction_sets if instruction_sets else {}
-        self.status_tracker = StatusTracker()
-        self._add_service(service, llmconfig)
-        self.name = name
-        self.pending_ins = {}
-        self.pending_outs = deque()
-        self.logger = logger or DataLogger(persist_path=persist_path)
-
-    # ---- properties ---- #
     @property
     def chat_messages(self):
         """
@@ -104,35 +44,8 @@ class Branch:
         """
         return self._to_chatcompletion_message(with_sender=True)
 
-    @property
-    def messages_describe(self) -> Dict[str, Any]:
-        """
-        Provides a descriptive summary of all messages in the branch.
 
-        Returns:
-            Dict[str, Any]: A dictionary containing summaries of messages by role and sender, 
-            total message count, instruction sets, registered tools, and message details.
-        """
-        return {
-            "total_messages": len(self.messages),
-            "summary_by_role": self._info(),
-            "summary_by_sender": self._info(use_sender=True),
-            "instruction_sets": self.instruction_sets,
-            "registered_tools": self.action_manager.registry,
-            "messages": [
-                msg.to_dict() for _, msg in self.messages.iterrows()
-            ],
-        }
 
-    @property
-    def has_tools(self) -> bool:
-        """
-        Checks if there are any tools registered in the tool manager.
-
-        Returns:
-            bool: True if there are tools registered, False otherwise.
-        """
-        return self.action_manager.registry != {}
 
     @property
     def last_message(self) -> pd.Series:
@@ -152,7 +65,8 @@ class Branch:
         Returns:
             pd.Series: The first system message as a pandas Series.
         """
-        return MessageUtil.get_message_rows(self.messages, role='system', n=1, from_='front')
+        return MessageUtil.get_message_rows(self.messages, role='system', n=1,
+                                            from_='front')
 
     @property
     def last_response(self) -> pd.Series:
@@ -162,7 +76,8 @@ class Branch:
         Returns:
             pd.Series: The last response message as a pandas Series.
         """
-        return MessageUtil.get_message_rows(self.messages, role='assistant', n=1, from_='last')
+        return MessageUtil.get_message_rows(self.messages, role='assistant', n=1,
+                                            from_='last')
 
     @property
     def last_response_content(self) -> Dict:
@@ -258,7 +173,8 @@ class Branch:
     @classmethod
     def from_csv(cls, filepath: str, name: Optional[str] = None,
                  instruction_sets: Optional[Dict[str, InstructionSet]] = None,
-                 tool_manager: Optional[ActionManager] = None, service: Optional[BaseService] = None,
+                 tool_manager: Optional[ActionManager] = None,
+                 service: Optional[BaseService] = None,
                  llmconfig: Optional[Dict] = None, tools=None, **kwargs) -> 'Branch':
         """
         Creates a Branch instance from a CSV file containing messages.
@@ -295,7 +211,8 @@ class Branch:
     @classmethod
     def from_json(cls, filepath: str, name: Optional[str] = None,
                   instruction_sets: Optional[Dict[str, InstructionSet]] = None,
-                  action_manager: Optional[ActionManager] = None, service: Optional[BaseService] = None,
+                  action_manager: Optional[ActionManager] = None,
+                  service: Optional[BaseService] = None,
                   llmconfig: Optional[Dict] = None, **kwargs) -> 'Branch':
         """
         Creates a Branch instance from a JSON file containing messages.
@@ -403,8 +320,10 @@ class Branch:
         except Exception as e:
             raise ValueError(f"Error in saving to json: {e}")
 
-    def log_to_csv(self, filename: str = 'log.csv', file_exist_ok: bool = False, timestamp: bool = True,
-                   time_prefix: bool = False, verbose: bool = True, clear: bool = True, **kwargs):
+    def log_to_csv(self, filename: str = 'log.csv', file_exist_ok: bool = False,
+                   timestamp: bool = True,
+                   time_prefix: bool = False, verbose: bool = True, clear: bool = True,
+                   **kwargs):
         """
         Saves the branch's log data to a CSV file.
 
@@ -429,8 +348,10 @@ class Branch:
             time_prefix=time_prefix, verbose=verbose, clear=clear, **kwargs
         )
 
-    def log_to_json(self, filename: str = 'log.json', file_exist_ok: bool = False, timestamp: bool = True,
-                    time_prefix: bool = False, verbose: bool = True, clear: bool = True, **kwargs):
+    def log_to_json(self, filename: str = 'log.json', file_exist_ok: bool = False,
+                    timestamp: bool = True,
+                    time_prefix: bool = False, verbose: bool = True, clear: bool = True,
+                    **kwargs):
         """
         Saves the branch's log data to a JSON file.
 
@@ -457,7 +378,8 @@ class Branch:
 
     # ----- chatflow ----#
     # noinspection PyUnresolvedReferences
-    async def call_chatcompletion(self, sender=None, with_sender=False, tokenizer_kwargs=None, **kwargs):
+    async def call_chatcompletion(self, sender=None, with_sender=False,
+                                  tokenizer_kwargs=None, **kwargs):
         """
         Asynchronously calls the chat completion provider with the current message queue.
 
@@ -542,7 +464,8 @@ class Branch:
             context=None,
             sender=None,
             system=None,
-            tools: Union[bool, BaseTool, List[BaseTool], str, List[str], List[Dict]] = False,
+            tools: Union[
+                bool, BaseTool, List[BaseTool], str, List[str], List[Dict]] = False,
             max_followup: int = 3,
             out=True,
             **kwargs
@@ -646,7 +569,8 @@ class Branch:
             tools = [tools]
         self.action_manager.register_tools(tools=tools)
 
-    def delete_tool(self, tools: Union[bool, BaseTool, List[BaseTool], str, List[str], List[Dict]],
+    def delete_tool(self, tools: Union[
+        bool, BaseTool, List[BaseTool], str, List[str], List[Dict]],
                     verbose=True) -> bool:
         """
         Deletes one or more tools from the branch's tool manager.
@@ -746,7 +670,8 @@ class Branch:
         Examples:
             >>> conversation.update_message('Updated content', node_id='12345', col='content')
         """
-        return MessageUtil.update_row(self.messages, node_id=node_id, col=col, value=value)
+        return MessageUtil.update_row(self.messages, node_id=node_id, col=col,
+                                      value=value)
 
     def change_first_system_message(
             self, system: Union[str, Dict[str, Any], System], sender: Optional[str] = None
@@ -1007,7 +932,8 @@ class Branch:
                 try:
                     content_ = json.dumps(to_dict(content_))
                 except Exception as e:
-                    raise ValueError(f"Error in serializing, {row['node_id']} {content_}: {e}")
+                    raise ValueError(
+                        f"Error in serializing, {row['node_id']} {content_}: {e}")
 
             out = {"role": row['role'], "content": content_}
             if with_sender:
@@ -1027,7 +953,8 @@ class Branch:
         content = self.messages.iloc[-1]['content']
         try:
             if (
-                    to_dict(content)['action_response'].keys() >= {'function', 'arguments', 'output'}
+                    to_dict(content)['action_response'].keys() >= {'function',
+                                                                   'arguments', 'output'}
             ):
                 return True
         except ValueError:

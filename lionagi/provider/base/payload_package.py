@@ -1,7 +1,8 @@
 from lionagi.provider.util import APIUtil
 
-class PayloadCreation:
-    
+
+class PayloadPackage:
+
     @classmethod
     def chat_completion(cls, messages, llmconfig, schema, **kwargs):
         """
@@ -17,11 +18,11 @@ class PayloadCreation:
             The constructed payload.
         """
         return APIUtil.create_payload(
-            input_=messages, 
-            config=llmconfig, 
-            required_=schema['required'], 
+            input_=messages,
+            config=llmconfig,
+            required_=schema['required'],
             optional_=schema['optional'],
-            input_key="messages", 
+            input_key="messages",
             **kwargs)
 
     @classmethod
@@ -39,9 +40,9 @@ class PayloadCreation:
             The constructed payload.
         """
         return APIUtil.create_payload(
-            input_=training_file, 
-            config=llmconfig, 
-            required_=schema['required'], 
+            input_=training_file,
+            config=llmconfig,
+            required_=schema['required'],
             optional_=schema['optional'],
-            input_key="training_file", 
+            input_key="training_file",
             **kwargs)
