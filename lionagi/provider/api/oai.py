@@ -46,7 +46,7 @@ class OpenAIService(BaseService):
         Args:
             input_: The input_ text to be processed.
             endpoint: The API endpoint to use for processing.
-            method: The HTTP method to use for the request.
+            method: The HTTP method to use for the package.
             **kwargs: Additional keyword arguments to pass to the payload creation.
 
         Returns:
@@ -73,7 +73,7 @@ class OpenAIService(BaseService):
     
     async def serve_chat(self, messages, tokenizer_kwargs={}, **kwargs):
         """
-        Serves the chat completion request with the given messages.
+        Serves the chat completion package with the given messages.
 
         Args:
             messages: The messages to be included in the chat completion.

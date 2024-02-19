@@ -1,8 +1,7 @@
 from datetime import datetime
 from typing import Dict, Any, Optional
 
-import pandas as pd
-from pandas import DataFrame
+from pandas import DataFrame, Series
 
 from lionagi.schema import BaseNode, DataLogger
 from ..util import MessageUtil, search_keywords, replace_keyword
@@ -10,91 +9,205 @@ from ..util import MessageUtil, search_keywords, replace_keyword
 
 class Conversation(BaseNode):
     """
-    Manages structured conversation data, supporting operations like adding, updating,
-    and retrieving messages. Designed for use in applications involving chat or messaging
-    functionalities.
+    Manages structured conversation data for chat or messaging app functionalities.
+    Provides an interface for adding, updating, retrieving, and manipulating messages
+    stored in a pandas DataFrame. Supports operations like message retrieval by various
+    criteria, manipulation, and exporting data to external formats, making it a versatile
+    component for conversation management.
 
     Attributes:
-        messages (pd.DataFrame): A DataFrame holding the conversation's messages.
-        datalogger (DataLogger): A DataLogger instance for logging conversation activities.
+        messages (DataFrame):
+            Holds the conversation's messages.
 
-    Methods are designed to interact with conversation data, providing functionalities
-    such as message retrieval by various criteria, message manipulation, and exporting
-    conversation data to external formats.
+        datalogger (DataLogger):
+            Instance for logging conversation activities.
+
+        columns (List[str]):
+            Defines the columns of the messages DataFrame.
+            Default columns include 'node_id', 'sender', 'recipient', 'timestamp',
+            'content', 'role', 'metadata', and 'relationships'.
+
+    Properties:
+        chat_messages:
+            Retrieves messages formatted without sender info.
+
+        chat_messages_with_sender:
+            Retrieves messages with sender info.
+
+        last_message:
+            Gets the last message as a pandas Series.
+
+        last_message_content:
+            Extracts content of the last message.
+
+        first_system:
+            Retrieves the first system message.
+
+        last_response:
+            Retrieves the last response message.
+
+        last_response_content:
+            Extracts content of the last response.
+
+        action_request:
+            Retrieves all action request messages.
+
+        action_response:
+            Retrieves all action response messages.
+
+        responses:
+            Retrieves all response messages.
+
+        assistant_responses:
+            Retrieves assistant responses, excluding action messages.
+
+        info:
+            Summarizes messages categorized by role.
+
+        sender_info:
+            Summarizes messages categorized by sender.
+
+        describe:
+            Provides a descriptive summary of the conversation.
+
+    Methods:
+        __init__(self, messages=None, datalogger=None, persist_path=None, **kwargs):
+            Initializes a conversation instance with structured data.
+
+        to_csv(self, filepath='messages.csv', file_exist_ok=False, timestamp=True,
+               time_prefix=False, verbose=True, clear=True, **kwargs):
+            Saves messages to a CSV file.
+
+        to_json(self, filename='messages.json', file_exist_ok=False, timestamp=True,
+                time_prefix=False, verbose=True, clear=True, **kwargs):
+            Saves messages to a JSON file.
+
+        log_to_csv(self, filename='log.csv', file_exist_ok=False, timestamp=True,
+                   time_prefix=False, verbose=True, clear=True, **kwargs):
+            Saves log data to a CSV file.
+
+        log_to_json(self, filename='log.json', file_exist_ok=False, timestamp=True,
+                    time_prefix=False, verbose=True, clear=True, **kwargs):
+            Saves log data to a JSON file.
+
+        add_message(self, system=None, instruction=None, context=None, response=None,
+                    sender=None):
+            Adds a new message to the conversation.
+
+        remove_message(self, node_id):
+            Removes a message by its node ID.
+
+        update_message(self, value, node_id=None, col='node_id'):
+            Updates a specific message detail.
+
+        change_first_system_message(self, system, sender=None):
+            Changes the first system message.
+
+        rollback(self, steps):
+            Removes the last 'n' messages.
+
+        clear_messages(self):
+            Clears all messages, resetting to an empty state.
+
+        replace_keyword(self, keyword, replacement, col='content',
+                        case_sensitive=False):
+            Replaces a keyword in a specified column.
+
+        search_keywords(self, keywords, case_sensitive=False, reset_index=False,
+                        dropna=False):
+            Searches for messages containing specified keywords.
+
+        extend(self, messages, **kwargs):
+            Appends new messages to the conversation.
+
+        filter_by(self, role=None, sender=None, start_time=None, end_time=None,
+                  content_keywords=None, case_sensitive=False):
+            Filters messages based on specified criteria.
+
+    Class Methods:
+        from_csv(cls, **kwargs):
+            Creates an instance from a CSV file.
+
+        from_json(cls, **kwargs):
+            Creates an instance from a JSON file.
+
+    Example Usage:
+        >>> conversation = Conversation()
+        >>> conversation.add_message(response={'text': 'Hello, world!'}, sender='assistant')
+        >>> conversation.to_csv("exported_messages.csv", timestamp=True)
+        >>> conversation.clear_messages()
+
+    Leverages pandas for data manipulation and storage, emphasizing efficient data
+    handling and analysis for conversation management applications.
     """
+
+
     messages: DataFrame
 
     columns = ['node_id', 'sender', 'recipient', 'timestamp',
                'content', 'role', 'metadata', 'relationships']
 
-    class Conversation(BaseNode):
-        columns: List[str] = [
-            'node_id', 'sender', 'recipient', 'timestamp',
-            'content', 'role', 'metadata', 'relationships'
-        ]
+    def __init__(
+            self,
+            messages: Optional[DataFrame] = None,
+            datalogger: Optional[DataLogger] = None,
+            persist_path: Optional[Union[str, Path]] = None,
+            **kwargs
+    ) -> None:
+        """
+        Initializes a conversation instance with structured conversation data.
 
-        def __init__(
-                self,
-                messages: Optional[pd.DataFrame] = None,
-                datalogger: Optional[DataLogger] = None,
-                persist_path: Optional[Union[str, Path]] = None,
-                **kwargs
-        ) -> None:
-            """
-            Initializes a conversation instance with structured conversation data.
+        This constructor initializes a conversation instance, managing structured
+        conversation data, including messages, a data datalogger for activity logging, and
+        a path for persisting data.
 
-            This constructor initializes a conversation instance, managing structured
-            conversation data, including messages, a data logger for activity logging, and
-            a path for persisting data.
+        Args:
+            messages:
+                Initial conversation messages as a pandas DataFrame. If None, an
+                empty DataFrame with predefined columns is used.
+            datalogger:
+                A DataLogger instance for logging conversation activities.
+                If None, a new DataLogger instance is initialized with `persist_path`.
+            persist_path:
+                Path for persisting conversation data and logs.
+                Used by `datalogger` if provided. Defaults to 'data/logs/' if None.
+            **kwargs:
+                Additional keyword arguments for parent class initialization.
 
-            Args:
-                messages:
-                    Initial conversation messages as a pandas DataFrame. If None, an
-                    empty DataFrame with predefined columns is used.
-                datalogger:
-                    A DataLogger instance for logging conversation activities.
-                    If None, a new DataLogger instance is initialized with `persist_path`.
-                persist_path:
-                    Path for persisting conversation data and logs.
-                    Used by `datalogger` if provided. Defaults to 'data/logs/' if None.
-                **kwargs:
-                    Additional keyword arguments for parent class initialization.
-
-            """
-            super().__init__(**kwargs)
-            self.messages = messages or pd.DataFrame(columns=self.columns)
-            self.datalogger = datalogger or DataLogger(persist_path=persist_path)
+        """
+        super().__init__(**kwargs)
+        self.messages = messages or DataFrame(columns=self.columns)
+        self.datalogger = datalogger or DataLogger(persist_path=persist_path)
 
     @property
     def chat_messages(self):
         """
-        Prepares and retrieves chat messages formatted for completion without sender info.
-
-        This property prepares the conversation's chat messages, stripping sender
-        information, suitable for scenarios where sender details are not required.
+        Prepares and retrieves chat messages formatted for chat completion tasks with LLMs
 
         Returns:
-            A list of dictionaries, each representing a chat message without sender
-            information.
+            List[Dict[str, Any]]: A list of dictionaries, each representing a chat
+            message formatted, for LLM processing. Each dictionary contains keys for
+            message attributes such as 'role' and 'content'.
         """
         return self._to_chatcompletion_message()
 
     @property
     def chat_messages_with_sender(self):
         """
-        Prepares and retrieves chat messages formatted for completion, including sender.
-
-        This property prepares the conversation's chat messages for scenarios where
-        including sender details is necessary, formatting each message with sender
-        information.
+        Prepares and retrieves chat messages formatted for chat completion tasks with
+        LLMs, including sender information added into message content to clarify the
+        sender of each message.
 
         Returns:
-            A list of dictionaries, each representing a chat message with sender details.
+            List[Dict[str, Any]]: A list of dictionaries, each representing a chat
+            message formatted, for LLM processing. Each dictionary contains keys for
+            message attributes such as 'role' and 'content'.
+            Each message content includes the sender information.
         """
         return self._to_chatcompletion_message(with_sender=True)
 
     @property
-    def last_message(self) -> pd.Series:
+    def last_message(self) -> Series:
         """
         Retrieves the last message from the conversation as a pandas Series.
 
@@ -108,7 +221,24 @@ class Conversation(BaseNode):
         return MessageUtil.get_message_rows(self.messages, n=1, from_='last')
 
     @property
-    def first_system(self) -> pd.Series:
+    def last_message_content(self):
+        """
+        Extracts and returns the most recent message content in the conversation as a
+        dictionary. Designed for quick access to the last message for processing or
+        analysis.
+        The content is returned in a dictionary format, aiding cases where structured data
+        is involved and might be needed for language models or other processing tasks.
+
+        Returns:
+            Dict[str, Any]: The content of the last message, formatted as a dictionary.
+            Attempts to parse string content as a JSON object for compatibility with
+            structured message formats, facilitating use in subsequent operations.
+        """
+        return to_dict(self.messages.content.iloc[-1])
+
+
+    @property
+    def first_system(self) -> Series:
         """
         Retrieves the first system message from the conversation.
 
@@ -123,7 +253,7 @@ class Conversation(BaseNode):
                                             from_='front')
 
     @property
-    def last_response(self) -> pd.Series:
+    def last_response(self) -> Series:
         """
         Retrieves the last response message from the conversation.
 
@@ -152,9 +282,9 @@ class Conversation(BaseNode):
         return to_dict(self.last_response.content.iloc[-1])
 
     @property
-    def action_request(self) -> pd.DataFrame:
+    def action_request(self) -> DataFrame:
         """
-        Retrieves all action request messages from the conversation.
+        Retrieves all action package messages from the conversation.
 
         Filters the conversation's messages to return only those marked as
         'action_request', facilitating analysis or processing of user-initiated action
@@ -167,7 +297,7 @@ class Conversation(BaseNode):
         return to_df(self.messages[self.messages.sender == 'action_request'])
 
     @property
-    def action_response(self) -> pd.DataFrame:
+    def action_response(self) -> DataFrame:
         """
         Retrieves all action response messages from the conversation.
 
@@ -183,7 +313,7 @@ class Conversation(BaseNode):
         return to_df(self.messages[self.messages.sender == 'action_response'])
 
     @property
-    def responses(self) -> pd.DataFrame:
+    def responses(self) -> DataFrame:
         """
         Retrieves all response messages from the conversation.
 
@@ -197,7 +327,7 @@ class Conversation(BaseNode):
         return to_df(self.messages[self.messages.role == 'assistant'])
 
     @property
-    def assistant_responses(self) -> pd.DataFrame:
+    def assistant_responses(self) -> DataFrame:
         """
         Retrieves all assistant responses, excluding action requests and responses.
 
@@ -232,30 +362,30 @@ class Conversation(BaseNode):
     @property
     def sender_info(self) -> Dict[str, int]:
         """
-        Provides a summary of conversation messages categorized by sender.
+        Summarizes conversation messages by sender.
 
-        This method generates a summary of the conversation, offering a count of messages
-        segmented by the sender, which can be useful for understanding the distribution of
-        message origins within the conversation.
+        Generates a summary of the conversation, providing a count of messages segmented
+        by sender. Useful for analyzing message origin distribution within the conversation.
 
         Returns:
-            A dictionary with keys representing the sender of the messages (e.g., 'user', 'assistant')
-            and values as the count of messages for each sender. Includes a total count of all messages.
+            Dict[str, int]: A dictionary with keys as sender types (e.g., 'user', 'assistant')
+            and values as the count of messages for each sender, including a total message count.
         """
         return self._info(use_sender=True)
 
     @property
     def describe(self) -> Dict[str, Any]:
         """
-        Provides a comprehensive descriptive summary of the conversation.
+        Provides a descriptive summary of the conversation.
 
-        This method compiles a detailed summary of the conversation, including the total
-        number of messages, a breakdown by role, and a preview of the first up to five messages.
+        Compiles a detailed summary, including total message count, breakdown by role, and
+        a preview of the first five messages, if applicable. Useful for a quick overview
+        or detailed analysis of the conversation dynamics.
 
         Returns:
-            A dictionary containing key details of the conversation: total number of messages,
-            a summary by message role, and a list of dictionaries for the first five messages
-            (if applicable), detailing sender, recipient, timestamp, and content.
+            Dict[str, Any]: Key details of the conversation, including total number of messages,
+            summary by role, and a list of dictionaries for the first five messages, detailing
+            sender, recipient, timestamp, and content.
         """
 
         return {
@@ -266,7 +396,57 @@ class Conversation(BaseNode):
                         ][: self.len_messages - 1 if self.len_messages < 5 else 5],
         }
 
-    def to_csv(self, filename: str = 'messages.csv', file_exist_ok: bool = False,
+    @classmethod
+    def _from_csv(cls, filepath: str, read_kwargs=None, **kwargs) -> 'Conversation':
+        read_kwargs = {} if read_kwargs is None else read_kwargs
+        messages = MessageUtil.read_csv(filepath, **read_kwargs)
+        return cls(messages=messages, **kwargs)
+
+    @classmethod
+    def from_csv(cls, **kwargs) -> 'Conversation':
+        """
+        Creates a new Conversation instance from a CSV file.
+
+        This class method reads conversation data from a specified CSV file and initializes
+        a Conversation instance with this data. It allows for additional customization of the CSV
+        reading process through keyword arguments, such as specifying delimiters or which
+        columns to import.
+
+        Args:
+            **kwargs: Keyword arguments for customizing the CSV reading process, passed
+            directly to the internal method responsible for reading the CSV file.
+
+        Returns:
+            Conversation: An instance of Conversation populated with data from the CSV file.
+        """
+        return cls._from_csv(**kwargs)
+
+    @classmethod
+    def from_json(cls, **kwargs) -> 'Conversation':
+        """
+        Creates a new Conversation instance from a JSON file.
+
+        This method reads conversation data from a JSON file and uses it to initialize a
+        Conversation instance. The process can be customized with additional keyword
+        arguments, such as specifying the structure of the JSON data (e.g., 'records',
+        'index').
+
+        Args:
+            **kwargs: Keyword arguments for customizing the JSON reading process, passed
+            directly to the internal method responsible for reading the JSON file.
+
+        Returns:
+            Conversation: An instance populated with data from the JSON file.
+        """
+        return cls._from_json(**kwargs)
+
+    @classmethod
+    def _from_json(cls, filepath: str, read_kwargs=None, **kwargs) -> 'Conversation':
+        read_kwargs = {} if read_kwargs is None else read_kwargs
+        messages = MessageUtil.read_json(filepath, **read_kwargs)
+        return cls(messages=messages, **kwargs)
+
+    def to_csv(self, filepath: str = 'messages.csv', file_exist_ok: bool = False,
                timestamp: bool = True, time_prefix: bool = False,
                verbose: bool = True, clear: bool = True, **kwargs) -> None:
         """
@@ -276,7 +456,7 @@ class Conversation(BaseNode):
         with options for naming, timestamping, and verbosity during the save process.
 
         Args:
-            filename: The name of the output CSV file. Defaults to 'messages.csv'.
+            filepath: The name of the output CSV file. Defaults to 'messages.csv'.
             file_exist_ok: If True, doesn't raise an error if the output directory exists.
             timestamp: If True, appends a timestamp to the filename for uniqueness.
             time_prefix: If True, adds a timestamp prefix to the filename.
@@ -289,11 +469,11 @@ class Conversation(BaseNode):
             >>> conversation.to_csv("backup.csv", timestamp=True, verbose=True)
         """
 
-        if not filename.endswith('.csv'):
-            filename += '.csv'
+        if not filepath.endswith('.csv'):
+            filepath += '.csv'
 
         filepath = create_path(
-            self.logger.dir, filename, timestamp=timestamp,
+            self.logger.dir, filepath, timestamp=timestamp,
             dir_exist_ok=file_exist_ok, time_prefix=time_prefix
         )
 
@@ -318,8 +498,8 @@ class Conversation(BaseNode):
         Args:
             filename: The name of the output JSON file, defaults to 'messages.json'.
             file_exist_ok: Allows existing directory without raising an error if True.
-            timestamp: Appends a timestamp to the filename if True, for uniqueness.
-            time_prefix: Adds a timestamp prefix to the filename if True.
+            timestamp: Appends a timestamp to the filepath if True, for uniqueness.
+            time_prefix: Adds a timestamp prefix to the filepath if True.
             verbose: Prints a message upon successful save if True.
             clear: Clears the messages in the conversation after saving if True.
             **kwargs: Additional arguments passed to `pd.DataFrame.to_json()`.
@@ -361,8 +541,8 @@ class Conversation(BaseNode):
         Args:
             filename: The name of the output CSV file, defaults to 'log.csv'.
             file_exist_ok: If True, won't raise error if output directory exists.
-            timestamp: Appends a unique timestamp to the filename if True.
-            time_prefix: Adds a timestamp prefix to the filename if True.
+            timestamp: Appends a unique timestamp to the filepath if True.
+            time_prefix: Adds a timestamp prefix to the filepath if True.
             verbose: Prints a success message upon completion if True.
             clear: Clears the log after saving if True.
             **kwargs: Additional keyword arguments for `DataFrame.to_csv()`.
@@ -372,7 +552,7 @@ class Conversation(BaseNode):
         """
 
         self.logger.to_csv(
-            filename=filename, file_exist_ok=file_exist_ok, timestamp=timestamp,
+            filepath=filename, file_exist_ok=file_exist_ok, timestamp=timestamp,
             time_prefix=time_prefix, verbose=verbose, clear=clear, **kwargs
         )
 
@@ -388,8 +568,8 @@ class Conversation(BaseNode):
         Args:
             filename: The name of the output JSON file, defaults to 'log.json'.
             file_exist_ok: If True, existing directory issues won't raise an error.
-            timestamp: Appends a timestamp to the filename for uniqueness if True.
-            time_prefix: If True, add a timestamp as a prefix to the filename.
+            timestamp: Appends a timestamp to the filepath for uniqueness if True.
+            time_prefix: If True, add a timestamp as a prefix to the filepath.
             verbose: If True, prints a success message upon file save.
             clear: Clears the conversation log after saving if True.
             **kwargs: Additional keyword arguments for `DataFrame.to_json()`.
@@ -403,24 +583,24 @@ class Conversation(BaseNode):
             time_prefix=time_prefix, verbose=verbose, clear=clear, **kwargs
         )
 
-    def add_message(self, system: Optional[Union[dict, list, System]] = None,
-                    instruction: Optional[Union[dict, list, Instruction]] = None,
-                    context: Optional[Union[str, Dict[str, Any]]] = None,
-                    response: Optional[Union[dict, list, Response]] = None,
+    def add_message(self, system: Optional[Dict | List | System] = None,
+                    instruction: Optional[Dict | List | Instruction] = None,
+                    context: Optional[str | Dict[str, Any]] = None,
+                    response: Optional[Dict | List | Response] = None,
                     sender: Optional[str] = None) -> None:
         """
-        Adds a new message to the conversation.
+        Adds a new message to the conversation with specified details.
 
-        This method allows for adding a new message to the conversation, with the
-        flexibility to specify the type of message (system, instruction, or response),
-        its context, and the sender.
+        Enables adding a message of various types (system, instruction, response) with
+        optional context and sender information. This method is flexible in accepting
+        different formats for message components.
 
         Args:
-            system: A system message, optionally as a dictionary, list, or 'System' object.
-            instruction: An instruction message, optionally as a dictionary, list, or 'Instruction' object.
-            context: Contextual information for the instruction message, if applicable.
-            response: A response message, optionally as a dictionary, list, or 'Response' object.
-            sender: The identifier for the sender of the message.
+            system: Optional system message as dict, list, or System object.
+            instruction: Optional instruction message as dict, list, or Instruction object.
+            context: Optional context for the message, as string or dict.
+            response: Optional response message as dict, list, or Response object.
+            sender: Optional identifier for the message sender.
 
         Examples:
             >>> conversation.add_message(response={'text': 'Hello, world!'}, sender='assistant')
@@ -472,7 +652,7 @@ class Conversation(BaseNode):
         return MessageUtil.update_row(self.messages, node_id=node_id, col=col,
                                       value=value)
 
-    def change_first_system_message(self, system: Union[str, Dict[str, Any], 'System'],
+    def change_first_system_message(self, system: str | Dict[str, Any] | System,
                                     sender: Optional[str] = None) -> None:
         """
         Changes the first system message in the conversation.
@@ -522,7 +702,8 @@ class Conversation(BaseNode):
             steps: The number of messages to remove from the end of the conversation.
 
         Raises:
-            ValueError: If 'steps' is not a positive integer or exceeds the number of messages in the conversation.
+            ValueError: If 'steps' is not a positive integer or exceeds the number of
+            messages in the conversation.
 
         Examples:
             >>> conversation.rollback(2)  # Removes the last two messages
@@ -541,21 +722,21 @@ class Conversation(BaseNode):
             >>> conversation.clear_messages()
         """
 
-        self.messages = pd.DataFrame(columns=Conversation.columns)
+        self.messages = DataFrame(columns=Conversation.columns)
 
     def replace_keyword(self, keyword: str, replacement: str, col: str = 'content',
                         case_sensitive: bool = False) -> None:
         """
-        Replaces all occurrences of a keyword in a specified column of the conversation's messages.
+        Replaces all occurrences of a keyword in a specified column of the messages.
 
-        This method searches for and replaces all instances of a specified keyword within
-        a given column of the conversation's messages, such as the content column.
+        Searches and replaces instances of a keyword in a conversation's message column,
+        like 'content', with an option for case sensitivity.
 
         Args:
-            keyword: The keyword to be replaced.
-            replacement: The string to replace the keyword with.
-            col: The column in which to search and replace the keyword. Defaults to 'content'.
-            case_sensitive: Specifies whether the search should be case-sensitive. Defaults to False.
+            keyword: Keyword to be replaced.
+            replacement: Replacement string.
+            col: Column to search (default: 'content').
+            case_sensitive: If True, search is case-sensitive (default: False).
 
         Examples:
             >>> conversation.replace_keyword('hello', 'hi')
@@ -566,9 +747,9 @@ class Conversation(BaseNode):
             case_sensitive=case_sensitive
         )
 
-    def search_keywords(self, keywords: Union[str, List[str]],
+    def search_keywords(self, keywords: str | List[str],
                         case_sensitive: bool = False,
-                        reset_index: bool = False, dropna: bool = False) -> pd.DataFrame:
+                        reset_index: bool = False, dropna: bool = False) -> DataFrame:
         """
         Searches for messages containing specified keywords within the conversation.
 
@@ -595,7 +776,7 @@ class Conversation(BaseNode):
             self.messages, keywords, case_sensitive, reset_index, dropna
         )
 
-    def extend(self, messages: pd.DataFrame, **kwargs) -> None:
+    def extend(self, messages: DataFrame, **kwargs) -> None:
         """
         Extends the conversation by appending new messages, optionally avoiding duplicates.
 
@@ -619,8 +800,8 @@ class Conversation(BaseNode):
     def filter_by(self, role: Optional[str] = None, sender: Optional[str] = None,
                   start_time: Optional[datetime] = None,
                   end_time: Optional[datetime] = None,
-                  content_keywords: Optional[Union[str, List[str]]] = None,
-                  case_sensitive: bool = False) -> pd.DataFrame:
+                  content_keywords: Optional[str | List[str]] = None,
+                  case_sensitive: bool = False) -> DataFrame:
         """
         Filters the conversation's messages based on specified criteria.
 

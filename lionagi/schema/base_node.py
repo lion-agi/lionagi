@@ -212,6 +212,10 @@ class BaseNode(BaseModel):
         """
         return pd.Series(self.to_dict())
 
+    def clone(self):
+        cls = self.__class__
+        return cls(**self.to_dict())
+
     # ------ meta methods -----
     @property
     def metadata_keys(self) -> List[str]:
@@ -496,8 +500,8 @@ class BaseNode(BaseModel):
             bool: True if the content conforms to the schema, False otherwise.
 
         Examples:
-            >>> node = BaseNode(content={"title": "New Beginnings", "year": 2021})
-            >>> schema_ = {"title": str, "year": int}
+            >>> node = BaseNode(content={"category": "New Beginnings", "year": 2021})
+            >>> schema_ = {"category": str, "year": int}
             >>> is_valid = node.validate_content(schema_)
             >>> print(is_valid)
             True

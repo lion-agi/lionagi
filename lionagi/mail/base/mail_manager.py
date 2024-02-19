@@ -10,6 +10,10 @@ class MailManager:
         for key in self.sources.keys():
             self.mails[key] = {}
 
+    @staticmethod
+    def create_mail(sender, recipient, category, package):
+        return BaseMail(sender, recipient, category, package)
+
     def add_source(self, sources: Dict[str, Any]):
         for key in sources.keys():
             if key in self.sources:

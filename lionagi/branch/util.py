@@ -189,7 +189,7 @@ class MessageUtil:
 
         Examples:
             >>> messages = pd.DataFrame([...])
-            >>> last_message = MessageUtil.get_message_rows(messages, role="user", n=1, from_="last")
+            >>> last_message = MessageUtil.get_message_rows(messages, role="user", n=1, from_branch="last")
         """
 
         outs = ''
@@ -402,6 +402,16 @@ class MessageUtil:
             df[col] = df[col].str.replace(keyword, replacement, case=False, regex=False)
         else:
             df[col] = df[col].str.replace(keyword, replacement, regex=False)
+
+    @staticmethod
+    def read_csv(filepath, **kwargs):
+        df = pd.read_csv(filepath, **kwargs)
+        return to_df(df)
+
+    @staticmethod
+    def read_json(filepath, **kwargs):
+        df = pd.read_json(filepath, **kwargs)
+        return to_df(df)
 
 
 def remove_last_n_rows(df: DataFrame, steps: int) -> DataFrame:

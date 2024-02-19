@@ -41,7 +41,7 @@ class BaseSession:
 
     def get_branch(
             self,
-            branch: (Optional, Branch | str) = None,
+            branch: Optional[Branch | str] = None,
             get_name: bool = False
     ) -> Union[Branch, Tuple[Branch, str]]:
 

@@ -10,18 +10,18 @@ class MailCategory(str, Enum):
 
 class BaseMail:
 
-    def __init__(self, sender, recipient, category, request):
+    def __init__(self, sender, recipient, category, package):
         self.sender = sender
         self.recipient = recipient
         try:
             if isinstance(category, str):
                 category = MailCategory(category)
             if isinstance(category, MailCategory):
-                self.title = category
+                self.category = category
             else:
                 raise ValueError(f'Invalid request title. Valid titles are'
                                  f' {list(MailCategory)}')
         except Exception as e:
             raise ValueError(f'Invalid request title. Valid titles are '
                              f'{list(MailCategory)}, Error: {e}')
-        self.request = request
+        self.package = package

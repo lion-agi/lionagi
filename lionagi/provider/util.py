@@ -19,12 +19,12 @@ class APIUtil:
     and logging API errors, handling API rate limits by retrying calls, extracting endpoints
     from URLs, and caching responses to minimize redundant network traffic. It also offers
     functionality for uploading files with automatic retries on failure and calculating
-    the number of tokens required for a request, which can be useful for rate-limited APIs.
+    the number of tokens required for a package, which can be useful for rate-limited APIs.
 
     The utility functions make extensive use of modern Python asynchronous features,
     enabling efficient and scalable API interactions in concurrent applications. It's
     designed to be used with aiohttp's ClientSession objects, providing a high-level
-    interface for various API request and response operations.
+    interface for various API package and response operations.
 
     Features:
     - Dynamic HTTP method selection based on string input.
@@ -69,11 +69,11 @@ class APIUtil:
         Examples:
             >>> async with aiohttp.ClientSession() as session:
             >>>     post_method = APIUtil.api_method(session, "post")
-            >>>     # Now you can use post_method(url, **kwargs) to make a post request.
+            >>>     # Now you can use post_method(url, **kwargs) to make a post package.
         """
         if method not in ["post", "delete", "head", "options", "patch"]:
             raise ValueError(
-                "Invalid request, method must be in ['post', 'delete', 'head', 'options', 'patch']")
+                "Invalid package, method must be in ['post', 'delete', 'head', 'options', 'patch']")
         return getattr(http_session, method)
 
     @staticmethod
@@ -137,7 +137,7 @@ class APIUtil:
         called based on its URL, especially when caching responses or logging API usage.
 
         Args:
-            request_url (str): The complete URL of the API request.
+            request_url (str): The complete URL of the API package.
 
         Returns:
             str: The API endpoint extracted from the URL. Returns an empty string if the URL
@@ -166,14 +166,14 @@ class APIUtil:
         Asynchronously executes an API call with automatic retry on failure.
 
         This method abstracts the complexity of making HTTP requests and handling common issues
-        like rate limiting. It automatically retries the request based on the specified retry
+        like rate limiting. It automatically retries the package based on the specified retry
         policy if a rate limit error is detected.
 
         Args:
             http_session (aiohttp.ClientSession): The session object to use for making HTTP requests.
-            method (str): The HTTP method (e.g., 'get', 'post') to use for the request.
-            url (str): The URL to which the API request is directed.
-            **kwargs: Additional keyword arguments passed directly to the aiohttp request method.
+            method (str): The HTTP method (e.g., 'get', 'post') to use for the package.
+            url (str): The URL to which the API package is directed.
+            **kwargs: Additional keyword arguments passed directly to the aiohttp package method.
 
         Returns:
             Any: The JSON response from the API call, parsed into a dictionary or list, depending on
@@ -214,15 +214,15 @@ class APIUtil:
     @CallDecorator.cache(ttl=10 * 60)
     def get_cache_key(url: str, params: Optional[Dict[str, Any]]) -> str:
         """
-        Generates a unique cache key for an API request based on the URL and query parameters.
+        Generates a unique cache key for an API package based on the URL and query parameters.
 
-        This method serializes the request URL and parameters into a string and then applies
+        This method serializes the package URL and parameters into a string and then applies
         an MD5 hash to generate a unique key. It's particularly useful for caching responses
         to avoid redundant network calls for identical requests.
 
         Args:
-            url (str): The request URL.
-            params (Optional[Dict[str, Any]]): A dictionary of query parameters included with the request.
+            url (str): The package URL.
+            params (Optional[Dict[str, Any]]): A dictionary of query parameters included with the package.
 
         Returns:
             str: A unique string key derived from the URL and parameters, suitable for use in caching mechanisms.
@@ -247,7 +247,7 @@ class APIUtil:
         uploading files via HTTP. It's designed to work asynchronously with aiohttp's ClientSession.
 
         Args:
-            http_session (aiohttp.ClientSession): The session object to use for making the HTTP request.
+            http_session (aiohttp.ClientSession): The session object to use for making the HTTP package.
             url (str): The URL to which the file will be uploaded.
             file_path (str): The filesystem path to the file that will be uploaded.
             param_name (str): The name of the form field expected by the server for the file upload. Defaults to 'file'.
@@ -298,20 +298,20 @@ class APIUtil:
     # @staticmethod
     # def get_url_response(url: str, timeout: tuple = (1, 1), **kwargs) -> requests.Response:
     #     """
-    #     Sends a GET request to a URL and returns the response.
+    #     Sends a GET package to a URL and returns the response.
 
     #     Args:
-    #         url (str): The URL to send the GET request to.
+    #         url (str): The URL to send the GET package to.
     #         timeout (tuple): A tuple specifying the connection and read timeouts in seconds.
     #                         Defaults to (1, 1).
     #         **kwargs: Additional keyword arguments to be passed to the requests.get() function.
 
     #     Returns:
-    #         requests.Response: A Response object containing the server's response to the GET request.
+    #         requests.Response: A Response object containing the server's response to the GET package.
 
     #     Raises:
     #         TimeoutError: If a timeout occurs while requesting or reading the response.
-    #         Exception: If an error other than a timeout occurs during the request.
+    #         Exception: If an error other than a timeout occurs during the package.
     #     """
     #     try:
     #         response = requests.get(url, timeout=timeout, **kwargs)

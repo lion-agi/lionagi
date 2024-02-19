@@ -3,6 +3,7 @@ from .base import BaseEndpoint, BaseService, BaseRateLimiter, StatusTracker, \
 
 from .util import APIUtil
 
+from .services import Services
 
 __all__ = [
     'BaseEndpoint',
@@ -10,5 +11,6 @@ __all__ = [
     'BaseRateLimiter',
     'StatusTracker',
     'PayloadPackage',
-    'APIUtil'
+    'APIUtil',
+    "Services"
 ]

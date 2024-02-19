@@ -32,7 +32,7 @@ class SysUtil:
     Python package is installed. is_same_dtype: Validates if all elements in a
     container are of the same specified data type. is_schema: Validates if a dictionary
     matches a specified schema. split_path: Separates a file path into its directory
-    and filename components. timestamp_to_datetime: Converts a UNIX timestamp to a
+    and filepath components. timestamp_to_datetime: Converts a UNIX timestamp to a
     `datetime` object. xml_to_dict: Converts an XML ElementTree Element to a dictionary.
     """
 
@@ -121,18 +121,18 @@ class SysUtil:
         constructs a file path with optional timestamping and ensures directory creation.
 
         this function builds a complete file path based on provided directory and
-        filename, with options for adding a timestamp to the filename and ensuring the
+        filepath, with options for adding a timestamp to the filepath and ensuring the
         target directory is created if it does not exist.
 
-        Args: directory (str): The target directory for the file. filename (str): The
+        Args: directory (str): The target directory for the file. filepath (str): The
         name of the file, including an extension if applicable. timestamp (bool): Whether
-        to add a timestamp to the filename. defaults to True. dir_exist_ok (bool): If
+        to add a timestamp to the filepath. defaults to True. dir_exist_ok (bool): If
         True, does not raise an error if the directory already exists. defaults to
         True. time_prefix (bool): If True, adds the timestamp as a prefix to the
-        filename; otherwise, adds it as a suffix.
+        filepath; otherwise, adds it as a suffix.
 
         Returns: str: The fully constructed file path, incorporating the directory,
-        optional timestamp, and filename.
+        optional timestamp, and filepath.
 
         examples:
             >>> SysUtil.create_path('/tmp', 'log.txt', time_prefix=True)
@@ -144,7 +144,7 @@ class SysUtil:
         # Convert directory to pathlib.Path object for robust path handling
         dir_path = Path(directory)
 
-        # Handle filename and extension
+        # Handle filepath and extension
         name, ext = os.path.splitext(filename)
         ext = ext or ''  # Ensure ext is a string, even if empty
 
@@ -175,7 +175,7 @@ class SysUtil:
         characters in the timestamp. Defaults to '_'.
 
         Returns: str: A string representing the current timestamp, formatted with the
-        specified separator for filename compatibility.
+        specified separator for filepath compatibility.
 
         Examples:
             >>> SysUtil.get_timestamp()
@@ -311,13 +311,13 @@ class SysUtil:
 
     @staticmethod
     def split_path(path: str) -> tuple:
-        """Separates a file path into its directory and filename components.
+        """Separates a file path into its directory and filepath components.
 
         Args:
             path (str): The path to split.
 
         Returns:
-            tuple: A tuple containing the directory and filename.
+            tuple: A tuple containing the directory and filepath.
 
         Examples:
             >>> SysUtil.split_path('/path/to/file.txt')

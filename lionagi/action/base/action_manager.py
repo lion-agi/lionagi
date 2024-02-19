@@ -46,12 +46,12 @@ class ActionManager:
         try:
             func = response['action'][7:]
             args = json.loads(response['arguments'])
-            return (func, args)
+            return func, args
         except:
             try:
                 func = response['recipient_name'].split('.')[-1]
                 args = response['parameters']
-                return (func, args)
+                return func, args
             except:
                 raise ValueError('response is not a valid function call')
     

@@ -42,12 +42,12 @@ class BaseRateLimiter(ABC):
     async def request_permission(self, required_tokens) -> bool:
         """Requests permission to make an API call.
 
-        Returns True if the request can be made immediately, otherwise False.
+        Returns True if the package can be made immediately, otherwise False.
         """
         async with self._lock:
             if self.available_request_capacity > 0 and self.available_token_capacity > 0:
                 self.available_request_capacity -= 1
-                self.available_token_capacity -= required_tokens  # Assuming 1 token per request for simplicity
+                self.available_token_capacity -= required_tokens  # Assuming 1 token per package for simplicity
                 return True
             return False
 

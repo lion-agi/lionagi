@@ -4,7 +4,7 @@ from dataclasses import dataclass, asdict
 from pathlib import Path
 from typing import Any, Dict, Optional, Union, List
 
-from lionagi.util import SysUtil, to_df
+from lionagi.util import SysUtil, to_df, to_list
 
 
 @dataclass
@@ -54,7 +54,7 @@ class DLog:
 class DataLogger:
     """
     Manages the accumulation, structuring, and persistence of log entries pertaining to
-    data processing activities within an application. The logger is designed to capture
+    data processing activities within an application. The datalogger is designed to capture
     input-output data pairs across operations, offering functionalities for exporting
     these logs to disk in both CSV and JSON formats.
 
@@ -70,24 +70,24 @@ class DataLogger:
         log (Deque[Dict]): A deque object that acts as the container for log entries.
                            Each log entry is stored as a dictionary, facilitating easy
                            conversion to various data formats.
-        filename (str): The base name used for log files when saved. The actual filename
+        filename (str): The base name used for log files when saved. The actual filepath
                         may include a timestamp or other modifiers based on the class's
                         configuration.
 
     Methods:
-        append: Adds a new log entry to the logger.
+        append: Adds a new log entry to the datalogger.
         to_csv: Exports accumulated log entries to a CSV file.
         to_json: Exports accumulated log entries to a JSON file.
         save_at_exit: Ensures that unsaved log entries are persisted to a CSV file when
                       the program terminates.
 
     Usage Example:
-        >>> logger = DataLogger(persist_path='my/logs/directory', filename='process_logs')
-        >>> logger.append(input_data="Example input", output_data="Example output")
-        >>> logger.to_csv('finalized_logs.csv', clear=True)
+        >>> datalogger = DataLogger(persist_path='my/logs/directory', filepath='process_logs')
+        >>> datalogger.append(input_data="Example input", output_data="Example output")
+        >>> datalogger.to_csv('finalized_logs.csv', clear=True)
 
     This example demonstrates initializing a `DataLogger` with a custom directory and
-    filename, appending a log entry, and then exporting the log to a CSV file.
+    filepath, appending a log entry, and then exporting the log to a CSV file.
     """
 
     def __init__(self, persist_path: str | Path | None = None,
@@ -96,7 +96,7 @@ class DataLogger:
         """
         initializes a DataLogger instance, preparing it for structured logging of data
         processing activities. allows for customization of storage directory, initial
-        logs, and base filename for exports.
+        logs, and base filepath for exports.
 
         Args:
             persist_path (str | Path | None, optional):
@@ -104,9 +104,9 @@ class DataLogger:
                 if not provided, defaults to 'data/logs/' within the current working
                 directory. this path is used for all subsequent log export operations.
             log (list[Dict[str, Any]] | None, optional):
-                An initial collection of log entries to populate the logger. each entry
-                should be a dictionary reflecting the structure used by the logger
-                (input, output, timestamp). if omitted, the logger starts empty.
+                An initial collection of log entries to populate the datalogger. each entry
+                should be a dictionary reflecting the structure used by the datalogger
+                (input, output, timestamp). if omitted, the datalogger starts empty.
             filename (str | None, optional):
                 The base name for exported log files. this name may be augmented with
                 timestamps and format-specific extensions during export operations.
@@ -120,9 +120,15 @@ class DataLogger:
         self.filename = filename or 'log'
         atexit.register(self.save_at_exit)
 
+    def extend(self, logs) -> None:
+        if len(logs) > 0:
+            log1 = to_list(self.logs)
+            log1.extend(to_list(logs))
+            self.log = deque(log1)
+
     def append(self, input_data: Any, output_data: Any) -> None:
         """
-        appends a new log entry, encapsulating input and output data, to the logger's
+        appends a new log entry, encapsulating input and output data, to the datalogger's
         record deque.
 
         Args:
@@ -152,9 +158,9 @@ class DataLogger:
                 If False, raises an error if the directory already exists; otherwise,
                 writes without an error.
             timestamp (bool, optional):
-                If True, appends a current timestamp to the filename for uniqueness.
+                If True, appends a current timestamp to the filepath for uniqueness.
             time_prefix (bool, optional):
-                If True, place the timestamp prefix before the filename; otherwise,
+                If True, place the timestamp prefix before the filepath; otherwise,
                 it's suffixed.
             verbose (bool, optional):
                 If True, print a message upon successful file save, detailing the file
@@ -196,12 +202,12 @@ class DataLogger:
 
         Args:
             filename (str, optional):
-                The filename for the JSON output.'.json' is appended if not specified.
+                The filepath for the JSON output.'.json' is appended if not specified.
                 The file is saved within the designated persisting directory.
             timestamp (bool, optional):
-                If True, adds a timestamp to the filename to ensure uniqueness.
+                If True, adds a timestamp to the filepath to ensure uniqueness.
             time_prefix (bool, optional):
-                Determines the placement of the timestamp in the filename. A prefix if
+                Determines the placement of the timestamp in the filepath. A prefix if
                 True; otherwise, a suffix.
             file_exist_ok (bool, optional):
                 Allows writing to an existing directory without raising an error.
@@ -224,12 +230,12 @@ class DataLogger:
         Examples:
             Default usage saving logs to 'log.json' within the specified persisting
             directory:
-            >>> logger.to_json()
+            >>> datalogger.to_json()
             # Save path: 'data/logs/log.json'
 
-            Custom filename without timestamp, using additional pandas options:
-            >>> logger.to_json(filename='detailed_log.json', orient='records')
-            # Save path: 'data/logs/detailed_log.json'
+            Custom filepath without a timestamp, using additional pandas options:
+            >>> datalogger.to_json(filepath='detailed_log.json', orient='records')
+            # Save a path: 'data/logs/detailed_log.json'
         """
         if not filename.endswith('.json'):
             filename += '.json'
