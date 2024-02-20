@@ -81,7 +81,7 @@
 #             sender=None,
 #             messages: Optional[pd.DataFrame] = None,
 #             instruction_sets=None,
-#             tool_manager=None,
+#             action_manager=None,
 #             service=None,
 #             llmconfig=None,
 #             actions=None,
@@ -94,7 +94,7 @@
 #             name=branch_name,
 #             messages=messages,
 #             instruction_sets=instruction_sets,
-#             action_manager=tool_manager,
+#             action_manager=action_manager,
 #             service=service,
 #             llmconfig=llmconfig,
 #             actions=actions
@@ -183,7 +183,7 @@
 #             default_branch: Optional[Branch] = None,
 #             default_branch_name: str = 'main',
 #             actions=None,
-#             instruction_sets=None, tool_manager=None,
+#             instruction_sets=None, action_manager=None,
 #             **kwargs) -> 'Session':
 #         df = pd.read_csv(filepath, **kwargs)
 #
@@ -197,7 +197,7 @@
 #             default_branch_name=default_branch_name,
 #             actions=actions,
 #             instruction_sets=instruction_sets,
-#             tool_manager=tool_manager,
+#             action_manager=action_manager,
 #             messages=df, **kwargs
 #         )
 #
@@ -215,7 +215,7 @@
 #             default_branch: Optional[Branch] = None,
 #             default_branch_name: str = 'main',
 #             actions=None,
-#             instruction_sets=None, tool_manager=None,
+#             instruction_sets=None, action_manager=None,
 #             **kwargs) -> 'Session':
 #         df = pd.read_json(filepath, **kwargs)
 #         self = cls(
@@ -228,7 +228,7 @@
 #             default_branch_name=default_branch_name,
 #             actions=actions,
 #             instruction_sets=instruction_sets,
-#             tool_manager=tool_manager,
+#             action_manager=action_manager,
 #             messages=df, **kwargs
 #         )
 #

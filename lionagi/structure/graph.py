@@ -1,8 +1,8 @@
 from typing import List, Any
 from pydantic import Field
 
-from ..util import lcall
-from ..schema.base_node import BaseNode
+from lionagi.util import lcall
+from lionagi.schema import BaseNode
 from .relationship import Relationship
 
 

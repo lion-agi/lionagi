@@ -3,7 +3,7 @@ from enum import Enum
 
 class MailCategory(str, Enum):
     MESSAGES = 'messages'
-    TOOL = 'tool'
+    TOOL = 'actions'
     SERVICE = 'provider'
     MODEL = 'model'
 

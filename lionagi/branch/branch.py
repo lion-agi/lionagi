@@ -1,21 +1,24 @@
 from collections import deque
+import json
 from typing import Any, Dict, List, Optional, Union, TypeVar
 
 import pandas as pd
 
-from lionagi.util import to_dict
-from lionagi.schema import BaseTool, BaseMail
+from lionagi.util import to_dict, lcall, to_list
+from lionagi.schema import BaseActionNode, BaseMail
 from lionagi.message import Instruction, System
 from lionagi.action import ActionManager
-from lionagi.provider import StatusTracker
+from lionagi.provider import StatusTracker, Services
+from lionagi.provider.api.oai import OpenAIService
 from lionagi.flow import ChatFlow
 
 from .util import MessageUtil
 from .conversation import Conversation
 
+OAIService = "OpenAI"
 # default service should change to be settable
 try:
-    OAIService = OpenAIService()
+    OAIService = Services.OpenAI()
 except:
     pass
 
@@ -67,7 +70,7 @@ class Branch(Conversation):
             Summarizes the branch's messages, including breakdowns by role and sender.
 
         has_tools:
-            Indicates the presence of registered tools in the action manager.
+            Indicates the presence of registered actions in the action manager.
 
     Methods:
         __init__(self, branch_name=None, system=None, ..., **kwargs):
@@ -77,11 +80,11 @@ class Branch(Conversation):
         merge_branch(self, branch: 'Branch', update: bool = True):
             Combines another branch into this one, merging their data and configurations.
 
-        register_tools(self, tools: Union[BaseTool, List[BaseTool]]):
-            Adds tools to the branch's action manager for additional functionalities.
+        register_tools(self, actions: Union[BaseActionNode, List[BaseActionNode]]):
+            Adds actions to the branch's action manager for additional functionalities.
 
-        delete_tool(self, tools: Union[bool, BaseTool, List[BaseTool], str, List[str], List[Dict[str, Any]]], verbose: bool = True) -> bool:
-            Removes specified tools from the action manager.
+        delete_tool(self, actions: Union[bool, BaseActionNode, List[BaseActionNode], str, List[str], List[Dict[str, Any]]], verbose: bool = True) -> bool:
+            Removes specified actions from the action manager.
 
         send(self, recipient: str, category: str, package: Any):
             Prepares and queues an outgoing package for a recipient.
@@ -101,7 +104,7 @@ class Branch(Conversation):
 
     Example Usage:
         >>> branch = Branch(branch_name="CustomerSupport", sender="SupportBot")
-        >>> branch.register_tools([FAQTool(), BookingTool()])
+        >>> branch.register([FAQTool(), BookingTool()])
         >>> branch.merge_branch(other_branch)
 
     This class leverages the foundational capabilities of the Conversation class,
@@ -109,7 +112,7 @@ class Branch(Conversation):
     """
 
     def __init__(self, branch_name=None, system=None, messages=None, service=None,
-                 sender=None, llmconfig=None, tools=None, datalogger=None,
+                 sender=None, llmconfig=None, actions=None, datalogger=None,
                  persist_path=None, instruction_sets=None, action_manager=None, **kwargs):
         """
         Initializes a Branch instance with advanced conversation management settings.
@@ -131,8 +134,8 @@ class Branch(Conversation):
                 Default sender name for system messages, defaults to 'system'.
             llmconfig:
                 Configuration for the LLM service, tailored for the integrated service.
-            tools:
-                List of BaseTool instances to register with the action manager.
+            actions:
+                List of BaseActionNode instances to register with the action manager.
             datalogger:
                 DataLogger instance for logging activities. If None, initializes a new
                 DataLogger with `persist_path`.
@@ -158,13 +161,13 @@ class Branch(Conversation):
         self.branch_name = branch_name
         self.sender = sender or 'system'
 
-        # add action manager and register tools
+        # add action manager and register actions
         self.action_manager = action_manager if action_manager else ActionManager()
-        if tools:
+        if actions:
             try:
-                self.register_tools(tools)
+                self.register(actions)
             except Exception as e:
-                raise TypeError(f"Error in registering tools: {e}")
+                raise TypeError(f"Error in registering actions: {e}")
 
         # add service and llmconfig
         self.service, self.llmconfig = self._add_service(service, llmconfig)
@@ -183,13 +186,13 @@ class Branch(Conversation):
 
     @classmethod
     def from_csv(cls, filepath, branch_name=None, service=None, llmconfig=None,
-                 tools=None, datalogger=None, persist_path=None, instruction_sets=None,
+                 actions=None, datalogger=None, persist_path=None, instruction_sets=None,
                  action_manager=None, read_kwargs=None, **kwargs):
         """
         Creates a Branch instance from CSV file data, with branch-specific configurations.
 
         Extends Conversation.from_csv by initializing a Branch with additional settings like
-        service and tools, using data loaded from a CSV file. Ideal for quickly setting up a
+        service and actions, using data loaded from a CSV file. Ideal for quickly setting up a
         branch with predefined conversation data and custom functionalities.
 
         Args:
@@ -197,7 +200,7 @@ class Branch(Conversation):
             branch_name: Unique identifier for the branch.
             service: LLM service for natural language processing, defaults to OpenAI.
             llmconfig: Configuration for the LLM service.
-            tools: List of BaseTool instances to register.
+            actions: List of BaseActionNode instances to register.
             datalogger: DataLogger instance for logging activities.
             persist_path: Path for persisting data and logs.
             instruction_sets: Instruction sets for structured interactions.
@@ -214,7 +217,7 @@ class Branch(Conversation):
 
         self = cls._from_csv(
             filepath=filepath, read_kwargs=read_kwargs, branch_name=branch_name,
-            service=service, llmconfig=llmconfig, tools=tools, datalogger=datalogger,
+            service=service, llmconfig=llmconfig, actions=actions, datalogger=datalogger,
             persist_path=persist_path, instruction_sets=instruction_sets,
             action_manager=action_manager, **kwargs)
 
@@ -222,13 +225,13 @@ class Branch(Conversation):
 
     @classmethod
     def from_json(cls, filepath, branch_name=None, service=None, llmconfig=None,
-                  tools=None, datalogger=None, persist_path=None, instruction_sets=None,
+                  actions=None, datalogger=None, persist_path=None, instruction_sets=None,
                   action_manager=None, read_kwargs=None, **kwargs):
         """
         Creates a Branch instance from JSON file data, including branch-specific settings.
 
         Similar to from_csv, this method allows initializing a Branch with data from a JSON
-        file, complemented by additional configurations like LLM service and custom tools.
+        file, complemented by additional configurations like LLM service and custom actions.
         Useful for importing conversation data along with branch enhancements from JSON.
 
         Args:
@@ -236,7 +239,7 @@ class Branch(Conversation):
             branch_name: Identifier for the branch.
             service: Specifies the LLM service, e.g., OpenAI.
             llmconfig: LLM service configuration.
-            tools: Tools to register with the action manager.
+            actions: Tools to register with the action manager.
             datalogger: Instance for logging branch activities.
             persist_path: Storage path for data and logs.
             instruction_sets: Sets of instructions for the branch.
@@ -253,7 +256,7 @@ class Branch(Conversation):
 
         self = cls._from_json(
             filepath=filepath, read_kwargs=read_kwargs, branch_name=branch_name,
-            service=service, llmconfig=llmconfig, tools=tools, datalogger=datalogger,
+            service=service, llmconfig=llmconfig, actions=actions, datalogger=datalogger,
             persist_path=persist_path, instruction_sets=instruction_sets,
             action_manager=action_manager, **kwargs)
 
@@ -266,7 +269,7 @@ class Branch(Conversation):
 
         This property compiles various details about the branch's conversation messages,
         including total message count, a summary by role, a summary by sender, the current
-        instruction sets, and the list of registered tools. It also includes the entire
+        instruction sets, and the list of registered actions. It also includes the entire
         message history formatted as dictionaries.
 
         Returns:
@@ -277,22 +280,22 @@ class Branch(Conversation):
             "summary_by_role": self._info(),
             "summary_by_sender": self._info(use_sender=True),
             "instruction_sets": self.instruction_sets,
-            "registered_tools": self.action_manager.registry,
+            "registered_actions": self.action_manager.registry,
             "messages": [
                 msg.to_dict() for _, msg in self.messages.iterrows()
             ],
         }
 
     @property
-    def has_tools(self) -> bool:
+    def has_actions(self) -> bool:
         """
-        Indicates whether the branch has any tools registered in the action manager.
+        Indicates whether the branch has any actions registered in the action manager.
 
-        Checks the action manager's registry to determine if any tools have been registered,
+        Checks the action manager's registry to determine if any actions have been registered,
         facilitating custom actions or responses within the branch.
 
         Returns:
-            bool: True if there are registered tools, False otherwise.
+            bool: True if there are registered actions, False otherwise.
         """
         return self.action_manager.registry != {}
 
@@ -331,61 +334,61 @@ class Branch(Conversation):
                     self.action_manager.registry[key] = value
 
     # ----- action manager methods ----- #
-    def register_tools(self, tools: Union[BaseTool, List[BaseTool]]) -> None:
+    def register(self, actions: Union[BaseActionNode, List[BaseActionNode]]) -> None:
         """
-        Registers one or more tools with the branch's action manager.
+        Registers one or more actions with the branch's action manager.
 
         Tools enhance the branch's capabilities by providing custom actions or responses.
-        This method supports registering a single tool or a list of tools.
+        This method supports registering a single actions or a list of actions.
 
         Args:
-            tools: A single tool or a list of tools to register.
+            actions: A single actions or a list of actions to register.
 
         Example:
-            >>> branch.register_tools([FAQTool(), BookingTool()])
+            >>> branch.register([FAQTool(), BookingTool()])
         """
 
-        if not isinstance(tools, list):
-            tools = to_list(tools, flatten=True, dropna=True)
-        self.action_manager.register_tools(tools=tools)
+        if not isinstance(actions, list):
+            actions = to_list(actions, flatten=True, dropna=True)
+        self.action_manager.register(actions=actions)
 
-    def delete_tool(self, tools: Union[
-        bool, BaseTool, List[BaseTool], str, List[str], List[Dict[str, Any]]],
-                    verbose: bool = True) -> bool:
+    def delete_actions(self, actions: Union[
+        bool, BaseActionNode, List[BaseActionNode], str, List[str], List[Dict[str, Any]]],
+                       verbose: bool = True) -> bool:
         """
-        Deletes specified tools from the branch's action manager registry.
+        Deletes specified actions from the branch's action manager registry.
 
-        Allows for removal of tools by name or direct tool instances. Supports deletion of
-        single or multiple tools at once. Optionally, prints a success or failure message.
+        Allows for removal of actions by name or direct actions instances. Supports deletion of
+        single or multiple actions at once. Optionally, prints a success or failure message.
 
         Args:
-            tools: A single tool name, tool instance, or a list thereof to be deleted.
+            actions: A single actions name, actions instance, or a list thereof to be deleted.
             verbose: If True, prints a confirmation message upon successful deletion.
 
         Returns:
             bool: True if deletion was successful, False otherwise.
 
         Example:
-            >>> branch.delete_tool("FAQTool", verbose=True)
+            >>> branch.delete_actions("FAQTool", verbose=True)
         """
 
-        if isinstance(tools, list):
-            if is_same_dtype(tools, str):
-                for tool in tools:
-                    if tool in self.action_manager.registry:
-                        self.action_manager.registry.pop(tool)
+        if isinstance(actions, list):
+            if is_same_dtype(actions, str):
+                for act_ in actions:
+                    if act_ in self.action_manager.registry:
+                        self.action_manager.registry.pop(act_)
                 if verbose:
-                    print("tools successfully deleted")
+                    print("actions successfully deleted")
                 return True
-            elif is_same_dtype(tools, _cols):
-                for tool in tools:
-                    if tool.name in self.action_manager.registry:
-                        self.action_manager.registry.pop(tool.name)
+            elif is_same_dtype(actions, _cols):
+                for act_ in actions:
+                    if act_.name in self.action_manager.registry:
+                        self.action_manager.registry.pop(act_.name)
                 if verbose:
-                    print("tools successfully deleted")
+                    print("actions successfully deleted")
                 return True
         if verbose:
-            print("tools deletion failed")
+            print("actions deletion failed")
         return False
 
     def send(self, recipient: str, category: str, package: Any) -> None:
@@ -410,19 +413,19 @@ class Branch(Conversation):
             package=package)
         self.pending_outs.append(mail_)
 
-    def receive(self, sender: str, messages: bool = True, tool: bool = True,
+    def receive(self, sender: str, messages: bool = True, actions: bool = True,
                 service: bool = True, llmconfig: bool = True) -> None:
         """
         Processes incoming packages based on their category, updating the branch state.
 
         Iterates through pending incoming packages from a specified sender, handling
-        each according to its category (e.g., messages, tool, provider, llmconfig).
+        each according to its category (e.g., messages, actions, provider, llmconfig).
         Unsupported or invalid package formats are skipped.
 
         Args:
             sender: The identifier of the sender of the packages.
             messages: If True, processes incoming message packages.
-            tool: If True, processes incoming tool packages.
+            actions: If True, processes incoming actions packages.
             service: If True, processes incoming service packages.
             llmconfig: If True, processes incoming llmconfig packages.
 
@@ -446,10 +449,10 @@ class Branch(Conversation):
                 self.messages = self.messages.merge(mail_.package, how='outer')
                 continue
 
-            elif mail_.category == 'tool' and tool:
+            elif mail_.category == 'actions' and actions:
                 if not isinstance(mail_.package, _cols):
-                    raise ValueError('Invalid tool format')
-                self.action_manager.register_tools([mail_.package])
+                    raise ValueError('Invalid actions format')
+                self.action_manager.register([mail_.package])
 
             elif mail_.category == 'provider' and service:
                 if not isinstance(mail_.package, BaseService):
@@ -502,55 +505,87 @@ class Branch(Conversation):
             return False
 
     # noinspection PyUnresolvedReferences
-    async def chat(self, instruction: Union[Instruction, str],
-                   context: Optional[Any] = None,
-                   sender: Optional[str] = None,
-                   system: Optional[Union[System, str, Dict[str, Any]]] = None,
-                   tools: Union[bool, BaseTool, List[BaseTool], str, List[str]] = False,
-                   out: bool = True, invoke: bool = True, **kwargs) -> Any:
+    async def call_chatcompletion(self, sender=None, with_sender=False,
+                                  tokenizer_kwargs={}, **kwargs):
         """
-        Conducts an asynchronous chat exchange, processing instructions and optionally
-        invoking tools.
+        Asynchronously calls the chat completion service with the current message queue.
+
+        This method prepares the messages for chat completion, sends the request to the configured service, and handles the response. The method supports additional keyword arguments that are passed directly to the service.
 
         Args:
-            instruction: The chat instruction, either as a string or Instruction object.
-            context: Optional context for enriching the chat conversation.
-            sender: Optional identifier for the sender of the chat message.
-            system: Optional system message or configuration for the chat.
-            tools: Specifies tools to invoke as part of the chat session.
-            out: If True, sends the instruction as a system message.
-            invoke: If True, invokes the specified tools.
-            **kwargs: Additional keyword arguments to pass to the model calling.
-        """
+            sender (Optional[str]): The name of the sender to be included in the chat completion request. Defaults to None.
+            with_sender (bool): If True, includes the sender's name in the messages. Defaults to False.
+            **kwargs: Arbitrary keyword arguments passed directly to the chat completion service.
 
+        Examples:
+            >>> await branch.call_chatcompletion()
+        """
+        await ChatFlow.call_chatcompletion(
+            self, sender=sender, with_sender=with_sender,
+            tokenizer_kwargs=tokenizer_kwargs, **kwargs
+        )
+
+    async def chat(
+            self,
+            instruction: Union[Instruction, str],
+            context: Optional[Any] = None,
+            sender: Optional[str] = None,
+            system: Optional[Union[System, str, Dict[str, Any]]] = None,
+            actions: Union[bool, T, List[T], str, List[str]] = False,
+            out: bool = True,
+            invoke: bool = True,
+            **kwargs) -> Any:
+        """
+        Initiates a chat conversation, processing instructions and system messages, optionally invoking actions.
+
+        Args:
+            branch: The Branch instance to perform chat operations.
+            instruction (Union[Instruction, str]): The instruction for the chat.
+            context (Optional[Any]): Additional context for the chat.
+            sender (Optional[str]): The sender of the chat message.
+            system (Optional[Union[System, str, Dict[str, Any]]]): System message to be processed.
+            actions (Union[bool, Tool, List[Tool], str, List[str]]): Specifies actions to be invoked.
+            out (bool): If True, outputs the chat response.
+            invoke (bool): If True, invokes actions as part of the chat.
+            **kwargs: Arbitrary keyword arguments for chat completion.
+
+        Examples:
+            >>> await ChatFlow.chat(branch, "Ask about user preferences")
+        """
         return await ChatFlow.chat(
             self, instruction=instruction, context=context,
-            sender=sender, system=system, tools=tools,
+            sender=sender, system=system, actions=actions,
             out=out, invoke=invoke, **kwargs
         )
 
-    async def ReAct(self, instruction: Union[Instruction, str],
-                    context: Optional[Any] = None,
-                    sender: Optional[str] = None,
-                    system: Optional[Union[System, str, Dict[str, Any]]] = None,
-                    tools: Union[bool, BaseTool, List[BaseTool], str, List[str]] = False,
-                    num_rounds: int = 1, **kwargs) -> Any:
+    async def ReAct(
+            self,
+            instruction: Union[Instruction, str],
+            context=None,
+            sender=None,
+            system=None,
+            actions=None,
+            num_rounds: int = 1,
+            **kwargs):
         """
-        Performs a reason-action cycle with optional tool invocation over multiple rounds,
-        simulating decision-making processes based on initial instructions and available tools.
+        Performs a reason-action cycle with optional actions invocation over multiple rounds.
 
         Args:
-            instruction: Initial instruction for the cycle, as a string or Instruction object.
-            context: Context relevant to the instruction, enhancing the reasoning process.
-            sender: Identifier for the message sender, enriching the conversational context.
-            system: Initial system message or configuration for the chat session.
-            tools: Tools to be invoked during the reason-action cycle.
-            num_rounds (int): Number of reason-action cycles to execute.
-            **kwargs: Additional keyword arguments for customization and tool invocation.
+            branch: The Branch instance to perform ReAct operations.
+            instruction (Union[Instruction, str]): Initial instruction for the cycle.
+            context: Context relevant to the instruction.
+            sender (Optional[str]): Identifier for the message sender.
+            system: Initial system message or configuration.
+            actions: Tools to be registered or used during the cycle.
+            num_rounds (int): Number of reason-action cycles to perform.
+            **kwargs: Additional keyword arguments for customization.
+
+        Examples:
+            >>> await ChatFlow.ReAct(branch, "Analyze user feedback", num_rounds=2)
         """
         return await ChatFlow.ReAct(
             self, instruction=instruction, context=context,
-            sender=sender, system=system, tools=tools,
+            sender=sender, system=system, actions=actions,
             num_rounds=num_rounds, **kwargs
         )
 
@@ -560,29 +595,30 @@ class Branch(Conversation):
             context=None,
             sender=None,
             system=None,
-            tools: Union[
-                bool, BaseTool, List[BaseTool], str, List[str], List[Dict]] = False,
+            actions: Union[bool, T, List[T], str, List[str], List[Dict]] = False,
             max_followup: int = 3,
             out=True,
             **kwargs
-    ) -> Any:
+    ) -> None:
         """
-        Automatically generates follow-up actions based on previous chat interactions
-        and tool invocations.
+        Automatically performs follow-up actions based on chat interactions and actions invocations.
 
         Args:
-            instruction: The initial instruction for follow-up, as a string or Instruction.
-            context: Context relevant to the instruction, supporting the follow-up process.
-            sender: Identifier for the message sender, adding context to the follow-up.
-            system: Initial system message or configuration for the session.
-            tools: Specifies tools to consider for follow-up actions.
+            branch: The Branch instance to perform follow-up operations.
+            instruction (Union[Instruction, str]): The initial instruction for follow-up.
+            context: Context relevant to the instruction.
+            sender (Optional[str]): Identifier for the message sender.
+            system: Initial system message or configuration.
+            actions: Specifies actions to be considered for follow-up actions.
             max_followup (int): Maximum number of follow-up chats allowed.
             out (bool): If True, outputs the result of the follow-up action.
             **kwargs: Additional keyword arguments for follow-up customization.
-        """
 
+        Examples:
+            >>> await ChatFlow.auto_followup(branch, "Finalize report", max_followup=2)
+        """
         return await ChatFlow.auto_followup(
             self, instruction=instruction, context=context,
-            sender=sender, system=system, tools=tools,
+            sender=sender, system=system, actions=actions,
             max_followup=max_followup, out=out, **kwargs
         )

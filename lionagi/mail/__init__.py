@@ -1,3 +1,3 @@
-from .base import BaseMail, MailManager
+from .mail_manager import MailManager
 
-__all__ = ["BaseMail", "MailManager"]
+__all__ = ["MailManager"]

@@ -17,7 +17,7 @@ class Services:
             token_encoding_name (str): The default token encoding scheme.
         """
 
-        from ..services.oai import OpenAIService
+        from .api.oai import OpenAIService
         return OpenAIService(**kwargs)
     
     @staticmethod 
@@ -37,7 +37,7 @@ class Services:
             token_encoding_name (str): The default token encoding scheme.
         """
 
-        from .openrouter import OpenRouterService
+        from .api.openrouter import OpenRouterService
         return OpenRouterService(**kwargs)
 
     @staticmethod
@@ -66,29 +66,29 @@ class Services:
             asynchronous operations.
         """
 
-        from ..services.transformers import TransformersService
+        from .local.transformers import TransformersService
         return TransformersService(**kwargs)
 
-
-    @staticmethod
-    def Anthropic(**kwargs):
-        """
-        A provider to interact with Anthropic's API endpoints.
-
-        Attributes:
-            api_key (Optional[str]): The API key used for authentication.
-            schema (Dict[str, Any]): The schema defining the provider's endpoints.
-            status_tracker (StatusTracker): The object tracking the status of API calls.
-            endpoints (Dict[str, EndPoint]): A dictionary of endpoint objects.
-            base_url (str): The base URL for the Anthropic API.
-            available_endpoints (list): A list of available API endpoints, including 
-                'chat/completions'
-            key_scheme (str): The environment variable name for API key.
-            token_encoding_name (str): The default token encoding scheme.
-        """
-
-        from .anthropic import AnthropicService
-        return AnthropicService(**kwargs)
+    #
+    # @staticmethod
+    # def Anthropic(**kwargs):
+    #     """
+    #     A provider to interact with Anthropic's API endpoints.
+    #
+    #     Attributes:
+    #         api_key (Optional[str]): The API key used for authentication.
+    #         schema (Dict[str, Any]): The schema defining the provider's endpoints.
+    #         status_tracker (StatusTracker): The object tracking the status of API calls.
+    #         endpoints (Dict[str, EndPoint]): A dictionary of endpoint objects.
+    #         base_url (str): The base URL for the Anthropic API.
+    #         available_endpoints (list): A list of available API endpoints, including
+    #             'chat/completions'
+    #         key_scheme (str): The environment variable name for API key.
+    #         token_encoding_name (str): The default token encoding scheme.
+    #     """
+    #
+    #     from .api. import AnthropicService
+    #     return AnthropicService(**kwargs)
 
     @staticmethod
     def Ollama(**kwargs):
@@ -100,22 +100,22 @@ class Services:
             kwargs (Optional[Any]): additional kwargs for calling the model
         """
     
-        from ..services.ollama import OllamaService
+        from .local.ollama import OllamaService
         return OllamaService(**kwargs)
 
-    @staticmethod
-    def LiteLLM(**kwargs):
-        """
-        A provider to interact with Litellm
-        
-        Attributes:
-            model (str): name of the model to use
-            kwargs (Optional[Any]): additional kwargs for calling the model
-        """
-        
-        from .litellm import LiteLLMService
-        return LiteLLMService(**kwargs)
-    
+    # @staticmethod
+    # def LiteLLM(**kwargs):
+    #     """
+    #     A provider to interact with Litellm
+    #
+    #     Attributes:
+    #         model (str): name of the model to use
+    #         kwargs (Optional[Any]): additional kwargs for calling the model
+    #     """
+    #
+    #     from .litellm import LiteLLMService
+    #     return LiteLLMService(**kwargs)
+    #
     @staticmethod
     def MLX(**kwargs):
         """
@@ -126,6 +126,6 @@ class Services:
             kwargs (Optional[Any]): additional kwargs for calling the model
         """
         
-        from ..services.mlx_service import MlXService
+        from .local.mlx_service import MlXService
         return MlXService(**kwargs)
     

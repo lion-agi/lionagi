@@ -1,7 +1,7 @@
 import pandas as pd
 import json
 from datetime import datetime
-from typing import Union, Optional, Any
+from typing import Union, Optional, Any, List
 
 from pandas import DataFrame
 

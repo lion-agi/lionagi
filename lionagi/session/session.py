@@ -1,12 +1,17 @@
 from collections import deque
 from typing import Any, Dict, List, Optional, Tuple, Union
 
-import pandas as pd
+from pandas import DataFrame
+
+
 from lionagi.util import to_list, to_df
-from lionagi.schema import BaseTool, DataLogger
+from lionagi.schema import BaseActionNode, DataLogger
+from lionagi.provider import Services
+from lionagi.action import ActionManager
 from lionagi.branch import Branch
 from lionagi.mail import MailManager
 from lionagi.message import Instruction, System
+
 
 
 class Session:
@@ -64,7 +69,7 @@ class Session:
 
         chat(self, instruction: Union[Instruction, str], **kwargs) -> Any:
             Conducts an asynchronous chat exchange, processing instructions and optionally
-            invoking tools.
+            invoking actions.
 
         auto_followup(self, instruction: Union[Instruction, str], max_followup: int = 3,
                       **kwargs) -> Any:
@@ -82,14 +87,14 @@ class Session:
 
     def __init__(
             self,
+            system: System | str | Dict[str, Any] | None = None,
             default_branch: Branch | None = None,
             default_branch_name: str | None = None,
-            system: System | str | Dict[str, Any] | None = None,
             sender: str | None = None,
             llmconfig: Dict | None = None,
             service: Any = None,
             branches: Dict[str, Branch] | None = None,
-            tools: BaseTool | List[BaseTool] | None = None,
+            actions: BaseActionNode | List[BaseActionNode] | None = None,
             instruction_sets: Dict | None = None,
             action_manager: ActionManager | None = None,
             messages: DataFrame | None = None,
@@ -113,7 +118,7 @@ class Session:
             service (Any): LLM service instance for natural language processing in the default branch.
             branches (Dict[str, Branch] | None): Existing branches to be used instead of creating
                 a new default branch.
-            tools (BaseTool | List[BaseTool] | None): Tools to register with the default branch's
+            actions (BaseTool | List[BaseActionNode] | None): Tools to register with the default branch's
                 action manager.
             instruction_sets (Dict | None): Instruction sets for structured interactions in the default
                 branch.
@@ -133,7 +138,7 @@ class Session:
         self.default_branch = default_branch or Branch(
             sender=sender,
             branch_name=default_branch_name or 'main', system=system, llmconfig=llmconfig,
-            service=service, tools=tools, instruction_sets=instruction_sets,
+            service=service, actions=actions, instruction_sets=instruction_sets,
             persist_path=persist_path, messages=messages, **kwargs)
 
         self.service = self.default_branch.service
@@ -391,7 +396,7 @@ class Session:
             sender: str | None = None,
             llmconfig: Dict | None = None,
             service: Any = None,
-            tools: BaseTool | List[BaseTool] | None = None,
+            actions: BaseActionNode | List[BaseActionNode] | None = None,
             instruction_sets: Dict | None = None,
             action_manager: ActionManager | None = None,
             persist_path: str | None = None,
@@ -412,7 +417,7 @@ class Session:
             sender (str | None): Default sender name for system messages in the default branch.
             llmconfig (Dict | None): Configuration for the LLM service in the default branch.
             service (Any): LLM service instance for natural language processing in the default branch.
-            tools (BaseTool | List[BaseTool] | None): Tools to register with the default branch's
+            actions (BaseActionNode | List[BaseTool] | None): Tools to register with the default branch's
                 action manager.
             instruction_sets (Dict | None): Instruction sets for structured interactions in the
                 default branch.
@@ -436,7 +441,7 @@ class Session:
         default_branch = Branch.from_csv(
             sender=sender,
             filepath=filepath, branch_name=default_branch_name or 'main',
-            system=system, llmconfig=llmconfig, service=service, tools=tools,
+            system=system, llmconfig=llmconfig, service=service, actions=actions,
             instruction_sets=instruction_sets, persist_path=persist_path,
             action_manager=action_manager, read_kwargs=read_kwargs)
 
@@ -456,7 +461,7 @@ class Session:
             sender: str | None = None,
             llmconfig: Dict | None = None,
             service: Any = None,
-            tools: BaseTool | List[BaseTool] | None = None,
+            actions: BaseActionNode | List[BaseActionNode] | None = None,
             instruction_sets: Dict | None = None,
             action_manager: ActionManager | None = None,
             persist_path: str | None = None,
@@ -476,7 +481,7 @@ class Session:
             sender (str | None): Default sender name for system messages in the default branch.
             llmconfig (Dict | None): Configuration for the LLM service in the default branch.
             service (Any): LLM service instance for natural language processing in the default branch.
-            tools (BaseTool | List[BaseTool] | None): Tools to register with the default branch's
+            actions (BaseActionNode | List[BaseTool] | None): Tools to register with the default branch's
                 action manager.
             instruction_sets (Dict | None): Instruction sets for structured interactions in the
                 default branch.
@@ -500,7 +505,7 @@ class Session:
         default_branch = Branch.from_json(
             sender=sender,
             filepath=filepath, branch_name=default_branch_name or 'main',
-            system=system, llmconfig=llmconfig, service=service, tools=tools,
+            system=system, llmconfig=llmconfig, service=service, actions=actions,
             instruction_sets=instruction_sets, persist_path=persist_path,
             action_manager=action_manager, read_kwargs=read_kwargs)
 
@@ -617,20 +622,20 @@ class Session:
                 time_prefix=time_prefix, verbose=verbose, clear=clear, **kwargs
             )
 
-    def register_tools(self, tools):
+    def register_actions(self, actions):
         """
-        Registers one or more tools with the action manager of the default branch. This method
-        allows for the dynamic addition of tools to enhance the conversation capabilities of the
+        Registers one or more actions with the action manager of the default branch. This method
+        allows for the dynamic addition of actions to enhance the conversation capabilities of the
         session's default branch.
 
         Args:
-            tools (Union[BaseTool, List[BaseTool]]): A single tool or a list of tools to be registered.
+            actions (Union[BaseActionNode, List[BaseTool]]): A single actions or a list of actions to be registered.
 
         Example:
-            >>> session.register_tools([new_faq_tool, booking_tool])
+            >>> session.register([new_faq_tool, booking_tool])
         """
 
-        self.default_branch.register_tools(tools)
+        self.default_branch.register_actions(actions)
 
     def new_branch(
             self,
@@ -642,7 +647,7 @@ class Session:
             action_manager: ActionManager | None = None,
             service: Any = None,
             llmconfig: Dict | None = None,
-            tools: BaseTool | List[BaseTool] | None = None,
+            actions: BaseActionNode | List[BaseActionNode] | None = None,
             datalogger: DataLogger | None = None,
             persist_path: str | None = None,
             **kwargs: Any
@@ -663,7 +668,7 @@ class Session:
                 new branch.
             service (Any): LLM service instance for natural language processing in the new branch.
             llmconfig (Dict | None): Configuration for the LLM service in the new branch.
-            tools (BaseTool | List[BaseTool] | None): Tools to register with the new branch's
+            actions (BaseTool | List[BaseActionNode] | None): Tools to register with the new branch's
                 action manager.
             datalogger (DataLogger | None): A DataLogger instance for logging activities in the new branch.
             persist_path (str | None): Path for persisting data and logs related to the new branch.
@@ -688,7 +693,7 @@ class Session:
             sender=sender,
             service=service or self.service,
             llmconfig=llmconfig or self.llmconfig,
-            tools=tools,
+            actions=actions,
             action_manager=action_manager,
             instruction_sets=instruction_sets,
             datalogger=datalogger,
@@ -708,7 +713,7 @@ class Session:
         """
         Retrieves a branch from the session based on its name or direct reference. If no branch
         is specified, returns the default branch. This method facilitates accessing branches for
-        operations like message sending, logging, and tool management.
+        operations like message sending, logging, and actions management.
 
         Args:
             branch (str | Branch | None): The name of the branch or the Branch instance to retrieve.
@@ -848,14 +853,14 @@ class Session:
             self.delete_branch(from_branch, verbose=False)
 
     def collect(self,
-                from_: str | Branch | list[str] | list[Branch] | None = None) -> None:
+                sender: str | Branch | list[str] | list[Branch] | None = None) -> None:
         """
         Initiates the collection of messages from specified branches or all branches if none are
         specified. This method prepares the messages for sending, aggregation, or analysis by
         gathering them into a central location within the session.
 
         Args:
-            from_ (str | Branch | list[str] | list[Branch] | None): The branch(es) from which to
+            sender (str | Branch | list[str] | list[Branch] | None): The branch(es) from which to
             collect messages. If None or not specified, messages will be collected from all branches.
 
         This method is especially useful for preparing messages for bulk processing or analysis,
@@ -863,18 +868,18 @@ class Session:
 
         Example:
             >>> session.collect("CustomerService")
-            >>> session.collect(from_=["SalesInquiries", "TechnicalSupport"])
+            >>> session.collect(sender=["SalesInquiries", "TechnicalSupport"])
             These commands collect messages from the "CustomerService" branch and then from both
             "SalesInquiries" and "TechnicalSupport" branches, respectively.
         """
 
-        if from_ is None:
+        if sender is None:
             for branch in self.branches.keys():
                 self.mail_manager.collect(branch)
         else:
-            if not isinstance(from_, list):
-                from_ = [from_]
-            for branch in from_:
+            if not isinstance(sender, list):
+                sender = [sender]
+            for branch in sender:
                 if isinstance(branch, Branch):
                     branch = branch.name
                 if isinstance(branch, str):
@@ -972,13 +977,15 @@ class Session:
 
     def _setup_default_branch(
             self, system, sender, default_branch, default_branch_name, messages,
-            instruction_sets, tool_manager, service, llmconfig, tools, dir, logger
+            instruction_sets, action_manager, service, llmconfig, actions, persist_path,
+            logger
     ):
 
         branch = default_branch or Branch(
-            name=default_branch_name, service=service, llmconfig=llmconfig, tools=tools,
-            action_manager=tool_manager, instruction_sets=instruction_sets,
-            messages=messages, dir=dir, logger=logger
+            name=default_branch_name, service=service, llmconfig=llmconfig,
+            actions=actions,
+            action_manager=action_manager, instruction_sets=instruction_sets,
+            messages=messages, persist_path=persist_path, logger=logger
         )
 
         self.default_branch = branch
@@ -992,12 +999,12 @@ class Session:
                    context: Optional[Any] = None,
                    sender: Optional[str] = None,
                    system: Optional[Union[System, str, Dict[str, Any]]] = None,
-                   tools: Union[bool, BaseTool, List[BaseTool], str, List[str]] = False,
+                   actions: Union[bool, BaseActionNode, List[BaseActionNode], str, List[str]] = False,
                    out: bool = True, invoke: bool = True, branch: Branch | str = None,
                    **kwargs) -> Any:
         """
         Conducts an asynchronous chat exchange, processing instructions and optionally
-        invoking tools.
+        invoking actions.
 
         Args:
             branch:
@@ -1005,16 +1012,16 @@ class Session:
             context: Optional context for enriching the chat conversation.
             sender: Optional identifier for the sender of the chat message.
             system: Optional system message or configuration for the chat.
-            tools: Specifies tools to invoke as part of the chat session.
+            actions: Specifies actions to invoke as part of the chat session.
             out: If True, sends the instruction as a system message.
-            invoke: If True, invokes the specified tools.
+            invoke: If True, invokes the specified actions.
             **kwargs: Additional keyword arguments to pass to the model calling.
         """
         branch = self.get_branch(branch)
 
         return await branch.chat(
             instruction=instruction, context=context,
-            sender=sender, system=system, tools=tools,
+            sender=sender, system=system, actions=actions,
             out=out, invoke=invoke, **kwargs
         )
 
@@ -1022,11 +1029,11 @@ class Session:
                     context: Optional[Any] = None,
                     sender: Optional[str] = None,
                     system: Optional[Union[System, str, Dict[str, Any]]] = None,
-                    tools: Union[bool, BaseTool, List[BaseTool], str, List[str]] = False,
+                    actions: Union[bool, BaseActionNode, List[BaseActionNode], str, List[str]] = False,
                     num_rounds: int = 1, branch=None, **kwargs) -> Any:
         """
-        Performs a reason-action cycle with optional tool invocation over multiple rounds,
-        simulating decision-making processes based on initial instructions and available tools.
+        Performs a reason-action cycle with optional actions invocation over multiple rounds,
+        simulating decision-making processes based on initial instructions and available actions.
 
         Args:
             branch:
@@ -1034,15 +1041,15 @@ class Session:
             context: Context relevant to the instruction, enhancing the reasoning process.
             sender: Identifier for the message sender, enriching the conversational context.
             system: Initial system message or configuration for the chat session.
-            tools: Tools to be invoked during the reason-action cycle.
+            actions: Tools to be invoked during the reason-action cycle.
             num_rounds (int): Number of reason-action cycles to execute.
-            **kwargs: Additional keyword arguments for customization and tool invocation.
+            **kwargs: Additional keyword arguments for customization and actions invocation.
         """
         branch = self.get_branch(branch)
 
         return await branch.ReAct(
             instruction=instruction, context=context,
-            sender=sender, system=system, tools=tools,
+            sender=sender, system=system, actions=actions,
             num_rounds=num_rounds, **kwargs
         )
 
@@ -1052,8 +1059,8 @@ class Session:
             context=None,
             sender=None,
             system=None,
-            tools: Union[
-                bool, BaseTool, List[BaseTool], str, List[str], List[Dict]] = False,
+            persist_path: Union[
+                bool, BaseActionNode, List[BaseActionNode], str, List[str], List[Dict]] = False,
             max_followup: int = 3,
             out=True,
             branch=None,
@@ -1061,7 +1068,7 @@ class Session:
     ) -> Any:
         """
         Automatically generates follow-up actions based on previous chat interactions
-        and tool invocations.
+        and actions invocations.
 
         Args:
             branch:
@@ -1069,7 +1076,7 @@ class Session:
             context: Context relevant to the instruction, supporting the follow-up process.
             sender: Identifier for the message sender, adding context to the follow-up.
             system: Initial system message or configuration for the session.
-            tools: Specifies tools to consider for follow-up actions.
+            persist_path: Specifies actions to consider for follow-up actions.
             max_followup (int): Maximum number of follow-up chats allowed.
             out (bool): If True, outputs the result of the follow-up action.
             **kwargs: Additional keyword arguments for follow-up customization.
@@ -1078,7 +1085,7 @@ class Session:
 
         return await branch.auto_followup(
             instruction=instruction, context=context,
-            sender=sender, system=system, tools=tools,
+            sender=sender, system=system, persist_path=persist_path,
             max_followup=max_followup, out=out, **kwargs
         )
 

@@ -4,8 +4,8 @@ import pandas as pd
 
 from lionagi.util import strip_lower, to_dict, nget
 from lionagi.schema import BaseNode
-from lionagi.message.base.schema import (MessageField, MessageContentKey, MessageRoleType,
-                                         MessageSenderType)
+from lionagi.message.schema import (MessageField, MessageContentKey, MessageRoleType,
+                                    MessageSenderType)
 
 
 class BaseMessage(BaseNode):
@@ -27,10 +27,10 @@ class BaseMessage(BaseNode):
         to_pd_series (pd.Series): Convert the message's attributes to a pandas Series.
     """
 
-    _role = None
-    _sender = None
-    recipient = None
-    timestamp = None
+    _role: str = None
+    _sender: str = None
+    recipient: str = None
+    timestamp: str = None
 
     @property
     def role(self):
@@ -212,7 +212,7 @@ class Response(BaseMessage):
         content_key = ''
         try:
             response = response["message"]
-            if strip_lower(response[MessageField.CONTENT]) == "none":
+            if strip_lower(response[MessageField.CONTENT.value]) == "none":
                 content_ = self._handle_action_request(response)
                 sender = sender or MessageSenderType.ACTION_REQUEST
                 content_key = content_key or "action_list"
@@ -246,7 +246,8 @@ class Response(BaseMessage):
             content_key = content_key or "action_response"
 
         super().__init__(
-            role=MessageRoleType.ASSISTANT, sender=sender, content={content_key: content_}
+            role=MessageRoleType.ASSISTANT.value, sender=sender, content={content_key:
+                                                                         content_}
         )
 
     @staticmethod

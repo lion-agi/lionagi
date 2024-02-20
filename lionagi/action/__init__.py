@@ -1,7 +1,7 @@
-from .util import func_to_tool
-from .base import ActionManager
+from .util import func_to_action
+from .action_manager import ActionManager
 
 __all__ = [
-    "func_to_tool",
+    "func_to_action",
     "ActionManager"
 ]

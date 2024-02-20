@@ -1,8 +1,9 @@
-from .base import Relationship, Graph
+from .graph import Graph
+from .relationship import Relationship
 from .structure import Structure
 
-__all__=[
+__all__ = [
     "Relationship",
-    "Structure", 
+    "Structure",
     "Graph"
 ]

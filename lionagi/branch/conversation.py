@@ -1,10 +1,14 @@
 from datetime import datetime
-from typing import Dict, Any, Optional
+from pathlib import Path
+import json
+from typing import Dict, Any, Optional, Union, List
 
 from pandas import DataFrame, Series
 
+from lionagi.util import to_dict, to_df, lcall
 from lionagi.schema import BaseNode, DataLogger
-from lionagi.branch.util import MessageUtil, search_keywords, replace_keyword
+from lionagi.message import System, Instruction, Response, BaseMessage
+from lionagi.branch.util import MessageUtil
 
 
 class Conversation(BaseNode):
@@ -145,12 +149,10 @@ class Conversation(BaseNode):
     handling and analysis for conversation management applications.
     """
 
+    columns: List[str] = ['node_id', 'timestamp','role', 'sender',
+                          'content',  ]
 
-    messages: DataFrame
-
-    columns = ['node_id', 'sender', 'recipient', 'timestamp',
-               'content', 'role', 'metadata', 'relationships']
-
+    # 'metadata', 'relationships', 'recipient',
     def __init__(
             self,
             messages: Optional[DataFrame] = None,
@@ -180,8 +182,8 @@ class Conversation(BaseNode):
 
         """
         super().__init__(**kwargs)
-        self.messages = messages or DataFrame(columns=self.columns)
-        self.datalogger = datalogger or DataLogger(persist_path=persist_path)
+        self.messages: DataFrame = messages or DataFrame(columns=self.columns)
+        self.datalogger: DataLogger = datalogger or DataLogger(persist_path=persist_path)
 
     @property
     def chat_messages(self):
@@ -239,7 +241,6 @@ class Conversation(BaseNode):
             structured message formats, facilitating use in subsequent operations.
         """
         return to_dict(self.messages.content.iloc[-1])
-
 
     @property
     def first_system(self) -> Series:
@@ -610,7 +611,7 @@ class Conversation(BaseNode):
             >>> conversation.add_message(response={'text': 'Hello, world!'}, sender='assistant')
         """
 
-        msg = self._create_message(
+        msg = self._create_message(self,
             system=system, instruction=instruction,
             context=context, response=response, sender=sender)
 
@@ -746,7 +747,7 @@ class Conversation(BaseNode):
             >>> conversation.replace_keyword('hello', 'hi')
         """
 
-        replace_keyword(
+        MessageUtil.replace_keyword(
             self.messages, keyword, replacement, col=col,
             case_sensitive=case_sensitive
         )
@@ -776,7 +777,7 @@ class Conversation(BaseNode):
             ... case_sensitive=True)
         """
 
-        return search_keywords(
+        return MessageUtil.search_keywords(
             self.messages, keywords, case_sensitive, reset_index, dropna
         )
 

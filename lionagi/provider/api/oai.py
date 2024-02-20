@@ -1,12 +1,11 @@
 from os import getenv
 from lionagi.config.oai_configs import oai_schema
-import tiktoken
-from .base_service import BaseService, PayloadCreation
+from ..base_service import BaseService, PayloadPackage
 
 
 class OpenAIService(BaseService):
     """
-    A provider to interact with OpenAI's API endpoints.
+    A service to interact with OpenAI's API endpoints.
 
     Attributes:
         base_url (str): The base URL for the OpenAI API.
@@ -16,12 +15,12 @@ class OpenAIService(BaseService):
         token_encoding_name (str): The default token encoding scheme.
 
     Examples:
-        >>> provider = OpenAIService(api_key="your_api_key")
-        >>> asyncio.run(provider.serve("Hello, world!", "chat/completions"))
+        >>> service = OpenAIService(api_key="your_api_key")
+        >>> asyncio.run(service.serve("Hello, world!", "chat/completions"))
         (payload, completion)
 
-        >>> provider = OpenAIService()
-        >>> asyncio.run(provider.serve("Convert this text to speech.", "audio_speech"))
+        >>> service = OpenAIService()
+        >>> asyncio.run(service.serve("Convert this text to speech.", "audio_speech"))
     """
 
     base_url = "https://api.openai.com/v1/"
@@ -45,12 +44,12 @@ class OpenAIService(BaseService):
     async def serve(self, input_, endpoint="chat/completions", method="post",
                     tokenizer_kwargs={}, **kwargs):
         """
-        Serves the input_ using the specified endpoint and method.
+        Serves the input using the specified endpoint and method.
 
         Args:
-            input_: The input_ text to be processed.
+            input_: The input text to be processed.
             endpoint: The API endpoint to use for processing.
-            method: The HTTP method to use for the package.
+            method: The HTTP method to use for the request.
             **kwargs: Additional keyword arguments to pass to the payload creation.
 
         Returns:
@@ -60,12 +59,12 @@ class OpenAIService(BaseService):
             ValueError: If the specified endpoint is not supported.
 
         Examples:
-            >>> provider = OpenAIService(api_key="your_api_key")
-            >>> asyncio.run(provider.serve("Hello, world!", "chat/completions"))
+            >>> service = OpenAIService(api_key="your_api_key")
+            >>> asyncio.run(service.serve("Hello, world!", "chat/completions"))
             (payload, completion)
 
-            >>> provider = OpenAIService()
-            >>> asyncio.run(provider.serve("Convert this text to speech.", "audio_speech"))
+            >>> service = OpenAIService()
+            >>> asyncio.run(service.serve("Convert this text to speech.", "audio_speech"))
             ValueError: 'audio_speech' is currently not supported
         """
         if endpoint not in self.active_endpoint:
@@ -78,7 +77,7 @@ class OpenAIService(BaseService):
 
     async def serve_chat(self, messages, tokenizer_kwargs={}, **kwargs):
         """
-        Serves the chat completion package with the given messages.
+        Serves the chat completion request with the given messages.
 
         Args:
             messages: The messages to be included in the chat completion.
@@ -93,7 +92,7 @@ class OpenAIService(BaseService):
         if "chat/completions" not in self.active_endpoint:
             await self.init_endpoint("chat/completions")
             self.active_endpoint.append("chat/completions")
-        payload = PayloadCreation.chat_completion(
+        payload = PayloadPackage.chat_completion(
             messages, self.endpoints["chat/completions"].config,
             self.schema["chat/completions"], **kwargs)
 

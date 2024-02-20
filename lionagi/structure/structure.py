@@ -1,7 +1,8 @@
 from typing import TypeVar
 
 from ..schema import BaseNode
-from .base import Graph, Relationship
+from .graph import Graph
+from .relationship import Relationship
 
 
 
