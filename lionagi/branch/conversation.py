@@ -4,7 +4,7 @@ from typing import Dict, Any, Optional
 from pandas import DataFrame, Series
 
 from lionagi.schema import BaseNode, DataLogger
-from ..util import MessageUtil, search_keywords, replace_keyword
+from lionagi.branch.util import MessageUtil, search_keywords, replace_keyword
 
 
 class Conversation(BaseNode):
@@ -14,6 +14,10 @@ class Conversation(BaseNode):
     stored in a pandas DataFrame. Supports operations like message retrieval by various
     criteria, manipulation, and exporting data to external formats, making it a versatile
     component for conversation management.
+
+    Since Conversation inherits from the BaseNode class, it includes all methods and
+    attributes of its parent. For a comprehensive list of inherited functionalities,
+    please refer to the BaseNode class documentation.
 
     Attributes:
         messages (DataFrame):

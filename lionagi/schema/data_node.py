@@ -1,20 +1,19 @@
 from typing import Any
 from lionagi.schema.base_node import BaseNode
-from lionagi.bridge.llama_index import to_llama_index_textnode
-from lionagi.bridge.langchain import to_langchain_document
+from lionagi.bridge import LlamaIndexBridge, LangchainBridge
 
 
 class DataNode(BaseNode):
     """
-    Represents a data node with extended functionality for integration with llama index and langchain formats.
+    Represents a data node with extended functionality for integration with llama index and langchain_ formats.
 
     This class extends `BaseNode` to include methods for converting between DataNode instances and specific formats
-    used by llama index and langchain, facilitating interoperability with these systems.
+    used by llama index and langchain_, facilitating interoperability with these systems.
 
     Methods provided allow for serialization to and deserialization from these formats, supporting a variety of use cases.
     """
     
-    def to_llama_index(self, **kwargs) -> Any:
+    def to_llama_index(self, node_type=None, **kwargs) -> Any:
         """
         Converts the node to a format compatible with llama index.
 
@@ -22,6 +21,7 @@ class DataNode(BaseNode):
         integration and usage within that ecosystem.
 
         Args:
+            node_type:
             **kwargs: Additional keyword arguments for customization.
 
         Returns:
@@ -31,26 +31,26 @@ class DataNode(BaseNode):
             >>> node = DataNode(content="Example content")
             >>> llama_index = node.to_llama_index()
         """
-        return to_llama_index_textnode(self, **kwargs)
+        return LlamaIndexBridge.to_llama_index_node(self, node_type=node_type, **kwargs)
 
     def to_langchain(self, **kwargs) -> Any:
         """
-        Converts the node to a langchain document format.
+        Converts the node to a langchain_ document format.
 
-        This method serializes the DataNode into a document format used by langchain, enabling the node's
-        use within langchain applications and workflows.
+        This method serializes the DataNode into a document format used by langchain_, enabling the node's
+        use within langchain_ applications and workflows.
 
         Args:
             **kwargs: Additional keyword arguments for customization.
 
         Returns:
-            Any: The langchain document representation of the node.
+            Any: The langchain_ document representation of the node.
 
         Examples:
             >>> node = DataNode(content="Example content")
             >>> langchain_doc = node.to_langchain()
         """
-        return to_langchain_document(self, **kwargs)
+        return LangchainBridge.to_langchain_document(self, **kwargs)
 
     @classmethod
     def from_llama_index(cls, llama_node: Any, **kwargs) -> "DataNode":
@@ -74,10 +74,10 @@ class DataNode(BaseNode):
     @classmethod
     def from_langchain(cls, lc_doc: Any) -> "DataNode":
         """
-        Creates a DataNode instance from a langchain document.
+        Creates a DataNode instance from a langchain_ document.
 
         Args:
-            lc_doc: The langchain document object.
+            lc_doc: The langchain_ document object.
 
         Returns:
             An instance of DataNode.

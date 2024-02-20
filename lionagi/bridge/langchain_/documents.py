@@ -2,24 +2,17 @@ from typing import Union, Callable, List, Dict, Any, TypeVar
 from langchain.schema import Document as LangchainDocument
 import langchain.document_loaders as document_loaders
 
-from ..util.sys_util import change_dict_key, install_import
-from ..schema.base_node import DataNode
+from lionagi.util import SysUtil
+from lionagi.schema.base_node import DataNode
 
 T = TypeVar('T', bound='DataNode')
-
-
-def from_langchain(lc_doc: Any) -> T:
-    info_json = lc_doc.to_json()
-    info_node = {'lc_id': info_json['id']}
-    info_node = {**info_node, **info_json['kwargs']}
-    return DataNode(**info_node)
 
 
 def to_langchain_document(datanode: T, **kwargs: Any) -> Any:
 
     dnode = datanode.to_dict()
-    change_dict_key(dnode, old_key='content', new_key='page_content')
-    change_dict_key(dnode, old_key='lc_id', new_key='id_')
+    SysUtil.change_dict_key(dnode, old_key='content', new_key='page_content')
+    SysUtil.change_dict_key(dnode, old_key='lc_id', new_key='id_')
     dnode = {**dnode, **kwargs}
     return LangchainDocument(**dnode)
 
@@ -28,7 +21,7 @@ def langchain_loader(loader: Union[str, Callable],
                      loader_args: List[Any] = [],
                      loader_kwargs: Dict[str, Any] = {}) -> Any:
     """
-    Loads data using a specified langchain loader.
+    Loads data using a specified langchain_ loader.
 
     Args:
         loader (Union[str, Callable]): The name of the loader function or the loader function itself.
@@ -52,7 +45,7 @@ def langchain_loader(loader: Union[str, Callable],
                 loader = getattr(document_loaders, loader)
             except ImportError as e:
                 raise ValueError(
-                    f'Unable to import {loader} from langchain.document_loaders. '
+                    f'Unable to import {loader} from langchain_.document_loaders. '
                     f'Some dependency of LangChain are not installed. Error: {e}')
         else:
             loader = loader
@@ -112,7 +105,7 @@ def langchain_text_splitter(data: Union[str, List],
 #     Raises:
 #         ValueError: If the splitter fails to split the code document.
 #     """
-#     from langchain.text_splitter import RecursiveCharacterTextSplitter
+#     from langchain_.text_splitter import RecursiveCharacterTextSplitter
 #
 #     try:
 #         splitter = RecursiveCharacterTextSplitter.from_language(

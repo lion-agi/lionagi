@@ -6,12 +6,12 @@ import pandas as pd
 from lionagi.util import to_dict
 from lionagi.schema import BaseTool, BaseMail
 from lionagi.message import Instruction, System
-from to_do.action import ActionManager
+from lionagi.action import ActionManager
 from lionagi.provider import StatusTracker
 from lionagi.flow import ChatFlow
 
 from .util import MessageUtil
-from .base import Conversation
+from .conversation import Conversation
 
 # default service should change to be settable
 try:
@@ -26,10 +26,7 @@ T = TypeVar('T', bound='Branch')
 class Branch(Conversation):
     """
     Extends the Conversation class to manage specialized branches of conversation,
-    introducing advanced functionalities such as action management, service integration,
-    and complex conversational flows. Branches enable modular development and management
-    of conversation logic, catering to distinct conversational contexts or functionalities
-    within larger systems.
+    introducing action management, service integration,and complex conversational flows.
 
     Since Branch inherits from the Conversation class, it includes all methods and
     attributes of its parent. For a comprehensive list of inherited functionalities,
@@ -333,7 +330,7 @@ class Branch(Conversation):
                 if key not in self.action_manager.registry:
                     self.action_manager.registry[key] = value
 
-    # ----- tool manager methods ----- #
+    # ----- action manager methods ----- #
     def register_tools(self, tools: Union[BaseTool, List[BaseTool]]) -> None:
         """
         Registers one or more tools with the branch's action manager.
@@ -474,7 +471,7 @@ class Branch(Conversation):
         Processes all pending received packages from all registered senders.
 
         Iterates over each sender in the pending_ins dictionary and processes their
-        packages using the receive method. This ensures all waiting communications
+        packages using the `receive` method. This ensures all waiting communications
         are addressed.
 
         Example:
@@ -511,6 +508,20 @@ class Branch(Conversation):
                    system: Optional[Union[System, str, Dict[str, Any]]] = None,
                    tools: Union[bool, BaseTool, List[BaseTool], str, List[str]] = False,
                    out: bool = True, invoke: bool = True, **kwargs) -> Any:
+        """
+        Conducts an asynchronous chat exchange, processing instructions and optionally
+        invoking tools.
+
+        Args:
+            instruction: The chat instruction, either as a string or Instruction object.
+            context: Optional context for enriching the chat conversation.
+            sender: Optional identifier for the sender of the chat message.
+            system: Optional system message or configuration for the chat.
+            tools: Specifies tools to invoke as part of the chat session.
+            out: If True, sends the instruction as a system message.
+            invoke: If True, invokes the specified tools.
+            **kwargs: Additional keyword arguments to pass to the model calling.
+        """
 
         return await ChatFlow.chat(
             self, instruction=instruction, context=context,
@@ -523,7 +534,20 @@ class Branch(Conversation):
                     sender: Optional[str] = None,
                     system: Optional[Union[System, str, Dict[str, Any]]] = None,
                     tools: Union[bool, BaseTool, List[BaseTool], str, List[str]] = False,
-                    num_rounds: int = 1, **kwargs) -> None:
+                    num_rounds: int = 1, **kwargs) -> Any:
+        """
+        Performs a reason-action cycle with optional tool invocation over multiple rounds,
+        simulating decision-making processes based on initial instructions and available tools.
+
+        Args:
+            instruction: Initial instruction for the cycle, as a string or Instruction object.
+            context: Context relevant to the instruction, enhancing the reasoning process.
+            sender: Identifier for the message sender, enriching the conversational context.
+            system: Initial system message or configuration for the chat session.
+            tools: Tools to be invoked during the reason-action cycle.
+            num_rounds (int): Number of reason-action cycles to execute.
+            **kwargs: Additional keyword arguments for customization and tool invocation.
+        """
         return await ChatFlow.ReAct(
             self, instruction=instruction, context=context,
             sender=sender, system=system, tools=tools,
@@ -541,7 +565,22 @@ class Branch(Conversation):
             max_followup: int = 3,
             out=True,
             **kwargs
-    ) -> None:
+    ) -> Any:
+        """
+        Automatically generates follow-up actions based on previous chat interactions
+        and tool invocations.
+
+        Args:
+            instruction: The initial instruction for follow-up, as a string or Instruction.
+            context: Context relevant to the instruction, supporting the follow-up process.
+            sender: Identifier for the message sender, adding context to the follow-up.
+            system: Initial system message or configuration for the session.
+            tools: Specifies tools to consider for follow-up actions.
+            max_followup (int): Maximum number of follow-up chats allowed.
+            out (bool): If True, outputs the result of the follow-up action.
+            **kwargs: Additional keyword arguments for follow-up customization.
+        """
+
         return await ChatFlow.auto_followup(
             self, instruction=instruction, context=context,
             sender=sender, system=system, tools=tools,

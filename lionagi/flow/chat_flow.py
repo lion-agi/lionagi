@@ -11,10 +11,6 @@ class ChatFlow:
     management. The class provides static methods for handling chat completions, executing
     chat-based instructions, and managing reason-action cycles with optional tool invocation.
 
-    This utility class acts as an intermediary between the chat interface and backend
-    services, including LLMs and toolsets, to enhance conversational capabilities and
-    automate responses based on the current context, system states, or user inputs.
-
     Methods:
         call_chatcompletion:
             Asynchronously calls the chat completion provider with the current message
@@ -96,9 +92,8 @@ class ChatFlow:
                    out: bool = True,
                    invoke: bool = True, **kwargs) -> Any:
         """
-        Conducts an asynchronous chat session, processing instructions and optionally
-        invoking tools. This flexible method accommodates system messages, context,
-        and sender details to tailor the chat flow according to specific requirements.
+        Conducts an asynchronous chat exchange, processing instructions and optionally
+        invoking tools.
 
         Args:
             branch: The Branch instance for chat operations.
@@ -110,14 +105,6 @@ class ChatFlow:
             out (bool): If True, outputs the response of the chat session.
             invoke (bool): If True, allows for tool invocation during the chat.
             **kwargs: Arbitrary keyword arguments for chat completion customization.
-
-        Usage:
-            - Processing chat instructions with optional context and sender details.
-            - Invoking tools based on the chat content to enhance conversation flows.
-
-        Note:
-            This method leverages asynchronous processing to support real-time interactions
-            and dynamic response generation in chat applications.
         """
 
         if system:
@@ -128,11 +115,13 @@ class ChatFlow:
             kwargs.pop('tool_parsed')
             tool_kwarg = {'tools': tools}
             kwargs = {**tool_kwarg, **kwargs}
+
         else:
             if tools and branch.has_tools:
                 kwargs = branch.action_manager._tool_parser(tools=tools, **kwargs)
 
         config = {**branch.llmconfig, **kwargs}
+
         if sender is not None:
             config.update({"sender": sender})
 
@@ -188,14 +177,6 @@ class ChatFlow:
             tools: Tools to be invoked during the reason-action cycle.
             num_rounds (int): Number of reason-action cycles to execute.
             **kwargs: Additional keyword arguments for customization and tool invocation.
-
-        Usage:
-            - Executing complex reason-action cycles to facilitate decision-making.
-            - Invoking tools to perform actions based on reasoned outcomes.
-
-        Note:
-            ReAct cycles aim to enhance conversational decision-making by iteratively
-            processing instructions, invoking tools, and generating actions.
         """
 
         if tools is not None:
@@ -265,8 +246,7 @@ class ChatFlow:
                             max_followup: int = 3, out=True, **kwargs) -> None:
         """
         Automatically generates follow-up actions based on previous chat interactions
-        and tool invocations. This method iterates through reasoning and action steps
-        to maintain engagement and address user queries effectively.
+        and tool invocations.
 
         Args:
             branch: The Branch instance for follow-up operations.
@@ -278,15 +258,6 @@ class ChatFlow:
             max_followup (int): Maximum number of follow-up chats allowed.
             out (bool): If True, outputs the result of the follow-up action.
             **kwargs: Additional keyword arguments for follow-up customization.
-
-        Usage:
-            - Managing extended conversation flows with automated follow-up actions.
-            - Leveraging tool outputs to inform subsequent follow-up steps.
-
-        Note:
-            This method supports extended engagement in chat applications by automating
-            the generation of follow-up actions based on conversational context and tool
-            responses.
         """
 
         if branch.action_manager.registry != {} and tools:

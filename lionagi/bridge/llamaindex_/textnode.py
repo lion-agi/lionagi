@@ -1,23 +1,19 @@
 from typing import Any, TypeVar
 from llama_index.core.schema import TextNode
+
+from lionagi.util import SysUtil
 from lionagi.schema import DataNode
 
 T = TypeVar('T', bound='DataNode')
 
 
-def from_llama_index_node(llama_node: Any, **kwargs: Any) -> T:
-    _dict = llama_node.to_dict(**kwargs)
-    return DataNode.from_dict(_dict)
-
-
 def to_llama_index_node(lion_node: T, node_type: str | TextNode = None,
                         **kwargs: Any) -> TextNode | None:
-
     node_type = node_type or TextNode
 
     _dict = lion_node.to_dict()
-    change_dict_key(_dict, old_key='content', new_key='text')
-    change_dict_key(_dict, old_key='node_id', new_key='id_')
+    SysUtil.change_dict_key(_dict, old_key='content', new_key='text')
+    SysUtil.change_dict_key(_dict, old_key='node_id', new_key='id_')
     _dict['text'] = str(_dict['text'])
     _dict = {**_dict, **kwargs}
 
