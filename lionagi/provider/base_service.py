@@ -1,7 +1,7 @@
 from typing import Any, Dict, Optional, List, Union
 import aiohttp
 from lionagi.util import nget, to_list
-from lionagi.provider.base.status_tracker import StatusTracker
+from .status_tracker import StatusTracker
 
 from .base_endpoint import BaseEndpoint
 
@@ -23,13 +23,13 @@ class BaseService:
     available_endpoints: list = []
 
     def __init__(
-        self,
-        api_key: Optional[str] = None,
-        schema: Dict[str, Any] = None,
-        token_encoding_name: str = None,
-        max_tokens : int = None,
-        max_requests : int = None,
-        interval: int = None
+            self,
+            api_key: Optional[str] = None,
+            schema: Dict[str, Any] = None,
+            token_encoding_name: str = None,
+            max_tokens: int = None,
+            max_requests: int = None,
+            interval: int = None
     ) -> None:
         self.api_key = api_key
         self.schema = schema or {}
@@ -43,8 +43,8 @@ class BaseService:
             "token_encoding_name": token_encoding_name
         }
 
-
-    async def init_endpoint(self, endpoint_: Optional[Union[List[str], List[BaseEndpoint], str, BaseEndpoint]] = None) -> None:
+    async def init_endpoint(self, endpoint_: Optional[
+        Union[List[str], List[BaseEndpoint], str, BaseEndpoint]] = None) -> None:
         """
         Initializes the specified endpoint or all endpoints if none is specified.
 
@@ -54,10 +54,10 @@ class BaseService:
 
         if endpoint_:
             endpoint_ = to_list(endpoint_, flatten=True, dropna=True)
-            
+
             for ep in endpoint_:
                 self._check_endpoints(ep)
-            
+
                 if ep not in self.endpoints:
                     endpoint_config = self._get_endpoint(ep)
 
@@ -74,18 +74,19 @@ class BaseService:
                         else:
                             self.endpoints[ep] = BaseEndpoint(
                                 max_requests=(
-                                    endpoint_config.get('max_requests', None) 
-                                    if endpoint_config.get('max_requests', None) is not None 
+                                    endpoint_config.get('max_requests', None)
+                                    if endpoint_config.get('max_requests',
+                                                           None) is not None
                                     else None
                                 ),
                                 max_tokens=(
-                                    endpoint_config.get('max_tokens', None) 
-                                    if endpoint_config.get('max_tokens', None) is not None 
+                                    endpoint_config.get('max_tokens', None)
+                                    if endpoint_config.get('max_tokens', None) is not None
                                     else None
                                 ),
                                 interval=(
-                                    endpoint_config.get('interval', None) 
-                                    if endpoint_config.get('interval', None) is not None 
+                                    endpoint_config.get('interval', None)
+                                    if endpoint_config.get('interval', None) is not None
                                     else None
                                 ),
                                 endpoint_=ep,
@@ -132,15 +133,17 @@ class BaseService:
             raise ValueError(f'The endpoint {endpoint} has not initialized.')
         async with aiohttp.ClientSession() as http_session:
             completion = await self.endpoints[endpoint].rate_limiter._call_api(
-                http_session=http_session, endpoint=endpoint, base_url=self.base_url, api_key=self.api_key,
+                http_session=http_session, endpoint=endpoint, base_url=self.base_url,
+                api_key=self.api_key,
                 method=method, payload=payload, **kwargs)
             return completion
 
     def _check_endpoints(self, endpoint_):
-        f = lambda ep: ValueError (f"Endpoint {ep} not available for provider {self.__class__.__name__}")
+        f = lambda ep: ValueError(
+            f"Endpoint {ep} not available for provider {self.__class__.__name__}")
         if not endpoint_ in self.available_endpoints:
             raise f(endpoint_)
-        
+
     def _get_endpoint(self, endpoint_):
         if endpoint_ not in self.endpoints:
             endpoint_config = nget(self.schema, [endpoint_, 'config'])
@@ -150,4 +153,3 @@ class BaseService:
                 self.endpoints[endpoint_.endpoint] = endpoint_
             return None
         return endpoint_config
-    
