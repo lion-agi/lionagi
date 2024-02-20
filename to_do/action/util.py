@@ -1,6 +1,6 @@
 import inspect
 
-from ..schema.base_tool import BaseTool
+from lionagi.schema.base_tool import BaseTool
 
 
 def func_to_tool(func_, parser=None, docstring_style='google'):

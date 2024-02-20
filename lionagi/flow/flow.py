@@ -295,9 +295,10 @@ class ChatFlow:
         n_tries = 0
         while (max_followup - n_tries) > 0:
             prompt = f"""
-                In the current task you are allowed a maximum of another {max_followup - n_tries} followup chats. 
-                if further actions are needed, invoke tools usage. If you are done, present the final result 
-                to user without further tool usage
+                In the current task you are allowed a maximum of another 
+                {max_followup - n_tries} followup chats. if further actions are needed, 
+                invoke tools usage. If you are done, present the final result to user 
+                without further tool usage
             """
             if n_tries > 0:
                 _out = await ChatFlow.chat(

@@ -1,69 +1,31 @@
 from typing import Union, Callable, List, Dict, Any, TypeVar
+from langchain.schema import Document as LangchainDocument
+import langchain.document_loaders as document_loaders
+
 from ..util.sys_util import change_dict_key, install_import
 from ..schema.base_node import DataNode
 
-
 T = TypeVar('T', bound='DataNode')
 
+
 def from_langchain(lc_doc: Any) -> T:
-    """
-    Converts a langchain document into a DataNode object.
-
-    Args:
-        lc_doc (Any): The langchain document to be converted.
-
-    Returns:
-        T: A DataNode object created from the langchain document.
-
-    Examples:
-        >>> lc_doc = LangchainDocument(...)
-        >>> data_node = from_langchain(lc_doc)
-        >>> isinstance(data_node, DataNode)
-        True
-    """
     info_json = lc_doc.to_json()
     info_node = {'lc_id': info_json['id']}
     info_node = {**info_node, **info_json['kwargs']}
     return DataNode(**info_node)
 
+
 def to_langchain_document(datanode: T, **kwargs: Any) -> Any:
-    """
-    Converts a DataNode into a langchain Document.
-
-    Args:
-        datanode (T): The DataNode to be converted.
-        **kwargs: Additional keyword arguments to be included in the Document.
-
-    Returns:
-        Any: A langchain Document created from the DataNode.
-
-    Examples:
-        >>> data_node = DataNode(...)
-        >>> lc_document = to_langchain_document(data_node, author="John Doe")
-        >>> isinstance(lc_document, LangchainDocument)
-        True
-    """
-    try:
-        from langchain.schema import Document
-    except ImportError:
-        try:
-            install_import(
-                package_name='langchain', 
-                module_name='schema', 
-                import_name='Document',
-            )
-            from langchain.schema import Document
-        except Exception as e:
-            raise ImportError(f'Unable to import required module from langchain. Please make sure that langchain is installed. Error: {e}')
 
     dnode = datanode.to_dict()
     change_dict_key(dnode, old_key='content', new_key='page_content')
     change_dict_key(dnode, old_key='lc_id', new_key='id_')
     dnode = {**dnode, **kwargs}
-    return Document(**dnode)
+    return LangchainDocument(**dnode)
 
-def langchain_loader(loader: Union[str, Callable], 
-                     loader_args: List[Any] = [], 
+
+def langchain_loader(loader: Union[str, Callable],
+                     loader_args: List[Any] = [],
                      loader_kwargs: Dict[str, Any] = {}) -> Any:
     """
     Loads data using a specified langchain loader.
@@ -85,23 +47,13 @@ def langchain_loader(loader: Union[str, Callable],
         True
     """
     try:
-        import langchain.document_loaders as document_loaders
-    except ImportError:
-        try:
-            install_import(
-                package_name='langchain', 
-                module_name='document_loaders', 
-            )
-            import langchain.document_loaders as document_loaders
-        except Exception as e:
-            raise ImportError(f'Unable to import required module from langchain. Please make sure that langchain is installed. Error: {e}')
-        
-    try:
         if isinstance(loader, str):
             try:
                 loader = getattr(document_loaders, loader)
             except ImportError as e:
-                raise ValueError(f'Unable to import {loader} from langchain.document_loaders. Some dependency of LangChain are not installed. Error: {e}')
+                raise ValueError(
+                    f'Unable to import {loader} from langchain.document_loaders. '
+                    f'Some dependency of LangChain are not installed. Error: {e}')
         else:
             loader = loader
     except Exception as e:
@@ -114,38 +66,15 @@ def langchain_loader(loader: Union[str, Callable],
     except Exception as e:
         raise ValueError(f'Failed to load. Error: {e}')
 
+
 def langchain_text_splitter(data: Union[str, List],
-                            splitter: Union[str, Callable], 
-                            splitter_args: List[Any] = [], 
-                            splitter_kwargs: Dict[str, Any] = {}) -> List[str]:
-    """
-    Splits text or a list of documents using a specified langchain text splitter.
+                            splitter: Union[str, Callable],
+                            splitter_args: List[Any] = None,
+                            splitter_kwargs: Dict[str, Any] = None) -> List[str]:
+    splitter_args = splitter_args or []
+    splitter_kwargs = splitter_kwargs or {}
 
-    Args:
-        data (Union[str, List]): The input_ text or list of documents to be split.
-        splitter (Union[str, Callable]): The name of the text splitter function or the function itself.
-        splitter_args (List[Any]): Positional arguments to pass to the splitter function.
-        splitter_kwargs (Dict[str, Any]): Keyword arguments to pass to the splitter function.
-
-    Returns:
-        List[str]: A list of chunks obtained by splitting the input_.
-
-    Raises:
-        ValueError: If the specified text splitter is invalid or if the splitting fails.
-    """
-
-    try:
-        import langchain.text_splitter as text_splitter
-    except ImportError:
-        try:
-            install_import(
-                package_name='langchain', 
-                module_name='text_splitter'
-                )
-            import langchain.text_splitter as text_splitter
-        except Exception as e:
-            raise ImportError(f'Unable to import required module from langchain. Please make sure that langchain is installed. Error: {e}')
-
+    import langchain.text_splitter as text_splitter
     try:
         if isinstance(splitter, str):
             splitter = getattr(text_splitter, splitter)

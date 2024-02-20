@@ -252,6 +252,16 @@ class SysUtil:
         return package_spec is not None
 
     @staticmethod
+    def check_import(package_name, module_name=None, import_name=None, pip_name=None):
+        try:
+            if not SysUtil.is_package_installed(package_name=package_name):
+                SysUtil.install_import(
+                    package_name=package_name, module_name=module_name,
+                    import_name=import_name, pip_name=pip_name)
+        except Exception as e:
+            raise ValueError(f'Failed to import {package_name}. Error: {e}')
+
+    @staticmethod
     def is_same_dtype(input_: Any, dtype: type = None) -> bool:
         """
         validates if all elements in a container (list or dict) are of the same
