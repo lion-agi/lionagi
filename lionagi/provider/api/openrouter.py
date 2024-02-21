@@ -1,6 +1,6 @@
 from os import getenv
 from lionagi.config.openrouter_configs import openrouter_schema
-from ..base_service import BaseService, PayloadPackage
+from lionagi.provider.base.base_service import BaseService, PayloadPackage
 
 
 class OpenRouterService(BaseService):

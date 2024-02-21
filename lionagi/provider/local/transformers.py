@@ -2,7 +2,7 @@ from typing import Union, Dict, Any
 import subprocess
 
 from lionagi.utils.sys_util import SysUtil
-from ..base_service import BaseService
+from lionagi.provider.base.base_service import BaseService
 
 
 def get_pytorch_install_command():

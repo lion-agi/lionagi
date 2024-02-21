@@ -1,10 +1,9 @@
 from collections import deque
-import json
 from typing import Any, Dict, List, Optional, Union, TypeVar
 
 import pandas as pd
 
-from lionagi.util import to_dict, lcall, to_list
+from lionagi.util import to_dict, to_list
 from lionagi.schema import BaseActionNode, BaseMail
 from lionagi.message import Instruction, System
 from lionagi.action import ActionManager
@@ -13,7 +12,7 @@ from lionagi.provider.api.oai import OpenAIService
 from lionagi.flow import ChatFlow
 
 from .util import MessageUtil
-from .conversation import Conversation
+from lionagi.branch.base.conversation import Conversation
 
 OAIService = "OpenAI"
 # default service should change to be settable

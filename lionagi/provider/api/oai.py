@@ -1,6 +1,6 @@
 from os import getenv
 from lionagi.config.oai_configs import oai_schema
-from ..base_service import BaseService, PayloadPackage
+from lionagi.provider.base.base_service import BaseService, PayloadPackage
 
 
 class OpenAIService(BaseService):

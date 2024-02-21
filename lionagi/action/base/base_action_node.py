@@ -5,7 +5,6 @@ from lionagi.schema.base_node import BaseNode
 
 # To-Do: manual integration with actions
 
-
 class BaseActionNode(BaseNode):
     func: Any
     schema_: dict
@@ -16,5 +15,6 @@ class BaseActionNode(BaseNode):
     @field_serializer('func')
     def serialize_func(self, func):
         return func.__name__
+
 
 

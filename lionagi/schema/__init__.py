@@ -1,8 +1,8 @@
 from .base_node import BaseNode
-from .base_action import BaseActionNode
+from lionagi.action.base.base_action_node import BaseActionNode
 from .data_logger import DataLogger
 from .data_node import DataNode
-from .base_mail import BaseMail
+from lionagi.mail.base.base_mail import BaseMail
 
 __all__ = [
     'BaseNode',

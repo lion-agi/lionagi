@@ -6,7 +6,7 @@ from dataclasses import dataclass
 from typing import Any, Dict, NoReturn, Optional, Type, List, Union
 
 from lionagi.util import nget
-from .util import APIUtil
+from lionagi.provider.util import APIUtil
 
 
 @dataclass
