@@ -13,7 +13,7 @@ from lionagi.mail import MailManager
 from lionagi.message import Instruction, System
 
 
-
+# noinspection PyRedeclaration
 class Session:
     """
     Manages multiple conversation branches within a conversational system, providing
@@ -272,7 +272,7 @@ class Session:
 
         Returns:
             Dict[str, Any]: A dictionary mapping each branch name to its corresponding info
-            dictionary, which includes metrics and details specific to that branch.
+            dictionary, which includes metrics- and details-specific to that branch.
 
         Example:
             >>> session_info = session.info
@@ -723,10 +723,10 @@ class Session:
 
         Returns:
             Branch | tuple[Branch, str]: The requested Branch instance, or a tuple of the Branch
-            instance and its name if get_name is True.
+            instance and its name if the get_name is True.
 
         Raises:
-            ValueError: If the specified branch name does not exist or the branch reference is invalid.
+            ValueError: If the specified branch name does not exist, or the branch reference is invalid.
 
         Example:
             >>> my_branch = session.get_branch("CustomerService")
@@ -989,7 +989,7 @@ class Session:
         )
 
         self.default_branch = branch
-        self.default_branch_name = default_branch_name or 'main'
+        self.default_branch.branch_name = default_branch_name or 'main'
         if system:
             self.default_branch.add_message(system=system, sender=sender)
 
@@ -1029,7 +1029,8 @@ class Session:
                     context: Optional[Any] = None,
                     sender: Optional[str] = None,
                     system: Optional[Union[System, str, Dict[str, Any]]] = None,
-                    actions: Union[bool, BaseActionNode, List[BaseActionNode], str, List[str]] = False,
+                    actions: Union[bool, BaseActionNode, List[BaseActionNode], str,
+                    List[str]] = True,
                     num_rounds: int = 1, branch=None, **kwargs) -> Any:
         """
         Performs a reason-action cycle with optional actions invocation over multiple rounds,

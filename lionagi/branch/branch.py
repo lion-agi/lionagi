@@ -3,16 +3,16 @@ from typing import Any, Dict, List, Optional, Union, TypeVar
 
 import pandas as pd
 
-from lionagi.util import to_dict, to_list
+from lionagi.util import to_dict, to_list, SysUtil
 from lionagi.schema import BaseActionNode, BaseMail
 from lionagi.message import Instruction, System
 from lionagi.action import ActionManager
-from lionagi.provider import StatusTracker, Services
+from lionagi.provider import StatusTracker, Services, BaseService
 from lionagi.provider.api.oai import OpenAIService
 from lionagi.flow import ChatFlow
 
 from .util import MessageUtil
-from lionagi.branch.base.conversation import Conversation
+from lionagi.branch.conversation import Conversation
 
 OAIService = "OpenAI"
 # default service should change to be settable
@@ -27,129 +27,59 @@ T = TypeVar('T', bound='Branch')
 # noinspection PyUnresolvedReferences
 class Branch(Conversation):
     """
-    Extends the Conversation class to manage specialized branches of conversation,
-    introducing action management, service integration,and complex conversational flows.
+    Manages dynamic chat flows, integrating with Language Learning Models (LLMs) and executing custom actions.
 
-    Since Branch inherits from the Conversation class, it includes all methods and
-    attributes of its parent. For a comprehensive list of inherited functionalities,
-    please refer to the Conversation class documentation.
+    The `Branch` class extends `Conversation` to offer advanced features for real-time chat management. It enables asynchronous communication, integrates with LLMs for response generation, and handles custom actions for interactive chat experiences. Suitable for developing sophisticated chatbots, virtual assistants, and customer support systems.
 
     Attributes:
-        branch_name (Optional[str]):
-            Identifies the branch for management purposes.
-
-        sender (str):
-            Default sender name for messages from this branch, defaults to "system".
-
-        action_manager (ActionManager):
-            Manages actions within the branch, enhancing dynamic interaction capabilities.
-
-        service:
-            Integrates LLM services, defaulting to OpenAI for advanced natural language
-            processing and response generation.
-
-        llmconfig (Dict):
-            Configurations for LLM service, preset for OpenAI's chat configurations,
-            dictating behavior parameters of the LLM.
-
-        status_tracker (StatusTracker):
-            Monitors the status of operations and interactions within the branch.
-
-        instruction_sets (Optional[Dict]):
-            Defines instruction sets for structured interactions within the branch.
-
-        pending_ins (Dict):
-            Holds incoming messages or requests pending processing.
-
-        pending_outs (deque):
-            Queues outgoing messages or actions awaiting dispatch.
-
-    Properties:
-        messages_describe:
-            Summarizes the branch's messages, including breakdowns by role and sender.
-
-        has_tools:
-            Indicates the presence of registered actions in the action manager.
+        branch_name (Optional[str]): An identifier for the branch.
+        sender (str): Default sender identifier, defaults to 'system'.
+        action_manager (ActionManager): Manages custom actions within the chat flow.
+        service (BaseService): The chat service provider, defaults to OpenAI's GPT models.
+        llmconfig (Dict[str, Any]): Configuration for LLM integration.
+        instruction_sets (Optional[Dict[str, Any]]): Predefined sets of instructions for the chat flow.
+        messages (pandas.DataFrame): Stores the chat messages.
+        datalogger (DataLogger): Logs conversation data.
+        persist_path (Optional[str]): Path for persisting conversation data.
 
     Methods:
-        __init__(self, branch_name=None, system=None, ..., **kwargs):
-            Initializes a branch with specific configurations. Inherits initialization
-            parameters from Conversation.
+        from_csv(filepath, **kwargs): Initializes a `Branch` instance from a CSV file.
+        from_json(filepath, **kwargs): Initializes a `Branch` instance from a JSON file.
+        messages_describe() -> Dict[str, Any]: Summarizes the conversation's state.
+        has_actions() -> bool: Checks if there are registered actions.
+        merge_branch(branch, update=True): Merges conversation data from another branch.
+        register(actions): Registers custom actions.
+        delete_actions(actions, verbose=True) -> bool: Deletes specified actions.
+        send(recipient, category, package): Sends a package to a recipient.
+        receive(sender, **kwargs): Receives a package from a sender.
+        _add_service(service, llmconfig): Adds a chat service provider.
+        _is_invoked() -> bool: Checks if an action has been invoked.
+        call_chatcompletion(**kwargs): Asynchronously calls the chat completion service.
+        chat(**kwargs) -> Any: Processes a chat instruction asynchronously.
+        ReAct(**kwargs): Executes a reason-action cycle.
+        auto_followup(**kwargs): Performs automated follow-up actions.
 
-        merge_branch(self, branch: 'Branch', update: bool = True):
-            Combines another branch into this one, merging their data and configurations.
-
-        register_tools(self, actions: Union[BaseActionNode, List[BaseActionNode]]):
-            Adds actions to the branch's action manager for additional functionalities.
-
-        delete_tool(self, actions: Union[bool, BaseActionNode, List[BaseActionNode], str, List[str], List[Dict[str, Any]]], verbose: bool = True) -> bool:
-            Removes specified actions from the action manager.
-
-        send(self, recipient: str, category: str, package: Any):
-            Prepares and queues an outgoing package for a recipient.
-
-        receive(self, sender: str, messages: bool = True, ...):
-            Processes received packages, updating the branch's state accordingly.
-
-        receive_all(self):
-            Processes all pending received packages from all senders.
-
-    Class Methods:
-        from_csv(cls, filepath, branch_name=None, ...):
-            Creates a Branch instance from CSV data. See Conversation for base method details.
-
-        from_json(cls, filepath, branch_name=None, ...):
-            Creates a Branch instance from JSON data. Refer to Conversation for base method specifics.
-
-    Example Usage:
-        >>> branch = Branch(branch_name="CustomerSupport", sender="SupportBot")
-        >>> branch.register([FAQTool(), BookingTool()])
-        >>> branch.merge_branch(other_branch)
-
-    This class leverages the foundational capabilities of the Conversation class,
-    introducing additional features tailored for managing complex conversational systems.
     """
 
     def __init__(self, branch_name=None, system=None, messages=None, service=None,
                  sender=None, llmconfig=None, actions=None, datalogger=None,
                  persist_path=None, instruction_sets=None, action_manager=None, **kwargs):
         """
-        Initializes a Branch instance with advanced conversation management settings.
-
-        Extends Conversation to support functionalities like action management and service
-        integration, enabling modular development of conversation logic.
+        Initializes a Branch instance with configurable parameters for chat flow management.
 
         Args:
-            branch_name:
-                Identifier for the branch, for managing multiple branches.
-            system:
-                Initial system message or configuration for the branch environment.
-            messages:
-                Preloaded conversation messages as a pandas DataFrame. Uses Conversation's
-                message handling if provided.
-            service:
-                LLM service for natural language processing, defaults to OpenAI.
-            sender:
-                Default sender name for system messages, defaults to 'system'.
-            llmconfig:
-                Configuration for the LLM service, tailored for the integrated service.
-            actions:
-                List of BaseActionNode instances to register with the action manager.
-            datalogger:
-                DataLogger instance for logging activities. If None, initializes a new
-                DataLogger with `persist_path`.
-            persist_path:
-                Path for persisting branch data and logs, used by `datalogger`.
-            instruction_sets:
-                Instruction sets for structured interaction within the branch.
-            action_manager:
-                Manages actions within the branch, handling specific commands.
-            **kwargs:
-                Additional args for Conversation class initialization.
-
-        Example:
-            >>> branch = Branch(branch_name="CustomerService", sender="ServiceBot",
-                                system="Welcome to Customer Service")
+            branch_name (Optional[str]): Identifier for the branch instance.
+            system (Optional[Union[System, str, Dict[str, Any]]]): Initial system message or configuration.
+            messages (Optional[pandas.DataFrame]): Preloaded messages for the conversation.
+            service (Optional[BaseService]): Chat service provider. Defaults to OpenAI if not specified.
+            sender (Optional[str]): Default sender identifier. Defaults to 'system'.
+            llmconfig (Optional[Dict[str, Any]]): Configuration for LLM integration.
+            actions (Optional[Union[BaseActionNode, List[BaseActionNode]]]): List of actions to be registered.
+            datalogger (Optional[DataLogger]): Logs conversation data.
+            persist_path (Optional[str]): Path for persisting conversation data.
+            instruction_sets (Optional[Dict[str, Any]]): Sets of instructions for guiding the chat flow.
+            action_manager (Optional[ActionManager]): Manages custom actions within the chat flow.
+            **kwargs: Additional keyword arguments for configuration.
         """
 
         # init base conversation class
@@ -188,32 +118,16 @@ class Branch(Conversation):
                  actions=None, datalogger=None, persist_path=None, instruction_sets=None,
                  action_manager=None, read_kwargs=None, **kwargs):
         """
-        Creates a Branch instance from CSV file data, with branch-specific configurations.
-
-        Extends Conversation.from_csv by initializing a Branch with additional settings like
-        service and actions, using data loaded from a CSV file. Ideal for quickly setting up a
-        branch with predefined conversation data and custom functionalities.
+        Initializes a Branch instance from a CSV file containing conversation data.
 
         Args:
-            filepath: Path to the CSV file with conversation data.
-            branch_name: Unique identifier for the branch.
-            service: LLM service for natural language processing, defaults to OpenAI.
-            llmconfig: Configuration for the LLM service.
-            actions: List of BaseActionNode instances to register.
-            datalogger: DataLogger instance for logging activities.
-            persist_path: Path for persisting data and logs.
-            instruction_sets: Instruction sets for structured interactions.
-            action_manager: Manages actions within the branch.
-            read_kwargs: Additional kwargs for pd.read_csv().
-            **kwargs: Additional arguments for branch initialization.
-
+            filepath (str): Path to the CSV file.
+            branch_name, service, llmconfig, actions, datalogger, persist_path, instruction_sets, action_manager: See __init__ for details.
+            read_kwargs (Optional[Dict[str, Any]]): Additional keyword arguments for pandas.read_csv().
+            **kwargs: Additional initialization parameters.
         Returns:
-            Branch: An initialized Branch instance with data from the CSV file.
-
-        Example:
-            >>> branch = Branch.from_csv("data/conversations.csv", branch_name="Support")
+            Branch: An instance of the Branch class.
         """
-
         self = cls._from_csv(
             filepath=filepath, read_kwargs=read_kwargs, branch_name=branch_name,
             service=service, llmconfig=llmconfig, actions=actions, datalogger=datalogger,
@@ -227,32 +141,16 @@ class Branch(Conversation):
                   actions=None, datalogger=None, persist_path=None, instruction_sets=None,
                   action_manager=None, read_kwargs=None, **kwargs):
         """
-        Creates a Branch instance from JSON file data, including branch-specific settings.
-
-        Similar to from_csv, this method allows initializing a Branch with data from a JSON
-        file, complemented by additional configurations like LLM service and custom actions.
-        Useful for importing conversation data along with branch enhancements from JSON.
+        Initializes a Branch instance from a JSON file containing conversation data.
 
         Args:
-            filepath: Path to the JSON file with conversation data.
-            branch_name: Identifier for the branch.
-            service: Specifies the LLM service, e.g., OpenAI.
-            llmconfig: LLM service configuration.
-            actions: Tools to register with the action manager.
-            datalogger: Instance for logging branch activities.
-            persist_path: Storage path for data and logs.
-            instruction_sets: Sets of instructions for the branch.
-            action_manager: Action manager instance for the branch.
-            read_kwargs: Additional kwargs for pd.read_json().
-            **kwargs: Extra arguments for branch setup.
-
+            filepath (str): Path to the JSON file.
+            branch_name, service, llmconfig, actions, datalogger, persist_path, instruction_sets, action_manager: See __init__ for details.
+            read_kwargs (Optional[Dict[str, Any]]): Additional keyword arguments for pandas.read_json().
+            **kwargs: Additional initialization parameters.
         Returns:
-            Branch: A Branch instance initialized with JSON file data.
-
-        Example:
-            >>> branch = Branch.from_json("data/conversations.json", branch_name="FAQ")
+            Branch: An instance of the Branch class.
         """
-
         self = cls._from_json(
             filepath=filepath, read_kwargs=read_kwargs, branch_name=branch_name,
             service=service, llmconfig=llmconfig, actions=actions, datalogger=datalogger,
@@ -261,18 +159,12 @@ class Branch(Conversation):
 
         return self
 
-    @property
     def messages_describe(self) -> Dict[str, Any]:
         """
-        Provides a comprehensive summary of the branch's messages and configurations.
-
-        This property compiles various details about the branch's conversation messages,
-        including total message count, a summary by role, a summary by sender, the current
-        instruction sets, and the list of registered actions. It also includes the entire
-        message history formatted as dictionaries.
+        Provides a summary of the conversation state including message counts, registered actions, and instruction sets.
 
         Returns:
-            Dict[str, Any]: A dictionary containing detailed summaries and the message history.
+            Dict[str, Any]: A dictionary containing details about the conversation's state, such as total message count, a summary by role and sender, and lists of instruction sets and registered actions.
         """
         return {
             "total_messages": len(self.messages),
@@ -288,10 +180,7 @@ class Branch(Conversation):
     @property
     def has_actions(self) -> bool:
         """
-        Indicates whether the branch has any actions registered in the action manager.
-
-        Checks the action manager's registry to determine if any actions have been registered,
-        facilitating custom actions or responses within the branch.
+        Checks if there are any registered actions in the action manager.
 
         Returns:
             bool: True if there are registered actions, False otherwise.
@@ -301,18 +190,12 @@ class Branch(Conversation):
     # todo: also update other attributes
     def merge_branch(self, branch: 'Branch', update: bool = True) -> None:
         """
-        Merges another branch into this one, combining their messages, logs, and configurations.
-
-        This method allows for the integration of messages, datalogger logs, instruction sets,
-        and action manager registries from another branch. It can either update existing entries
-        or add new ones without replacing.
+        Merges conversation data from another branch into this one, including messages and actions.
 
         Args:
-            branch: The Branch instance to merge into this branch.
-            update: If True, updates existing configurations. If False, only adds new ones.
+            branch (Branch): The branch instance to merge from.
+            update (bool): If True, updates existing instruction sets and actions. If False, only adds non-existing ones.
 
-        Example:
-            >>> main_branch.merge_branch(secondary_branch, update=True)
         """
         message_copy = branch.messages.copy()
         self.messages = self.messages.merge(message_copy, how='outer')
@@ -335,51 +218,38 @@ class Branch(Conversation):
     # ----- action manager methods ----- #
     def register(self, actions: Union[BaseActionNode, List[BaseActionNode]]) -> None:
         """
-        Registers one or more actions with the branch's action manager.
-
-        Tools enhance the branch's capabilities by providing custom actions or responses.
-        This method supports registering a single actions or a list of actions.
+        Registers one or more actions with the action manager for use within the chat flow.
 
         Args:
-            actions: A single actions or a list of actions to register.
-
-        Example:
-            >>> branch.register([FAQTool(), BookingTool()])
+            actions (Union[BaseActionNode, List[BaseActionNode]]): The action or list of actions to register.
         """
-
         if not isinstance(actions, list):
             actions = to_list(actions, flatten=True, dropna=True)
         self.action_manager.register(actions=actions)
 
-    def delete_actions(self, actions: Union[
-        bool, BaseActionNode, List[BaseActionNode], str, List[str], List[Dict[str, Any]]],
-                       verbose: bool = True) -> bool:
+    def delete_actions(
+            self, actions: Union[bool, T, List[T], str, List[str], List[Dict[str, Any]]],
+            verbose: bool = True
+    ) -> bool:
         """
-        Deletes specified actions from the branch's action manager registry.
-
-        Allows for removal of actions by name or direct actions instances. Supports deletion of
-        single or multiple actions at once. Optionally, prints a success or failure message.
+        Deletes specified actions from the action manager's registry.
 
         Args:
-            actions: A single actions name, actions instance, or a list thereof to be deleted.
-            verbose: If True, prints a confirmation message upon successful deletion.
+            actions (Union[bool, BaseActionNode, List[BaseActionNode], str, List[str], List[Dict[str, Any]]]): The actions to delete.
+            verbose (bool): If True, prints a confirmation message.
 
         Returns:
-            bool: True if deletion was successful, False otherwise.
-
-        Example:
-            >>> branch.delete_actions("FAQTool", verbose=True)
+            bool: True if actions were successfully deleted, False otherwise.
         """
-
         if isinstance(actions, list):
-            if is_same_dtype(actions, str):
+            if SysUtil.is_same_dtype(actions, str):
                 for act_ in actions:
                     if act_ in self.action_manager.registry:
                         self.action_manager.registry.pop(act_)
                 if verbose:
                     print("actions successfully deleted")
                 return True
-            elif is_same_dtype(actions, _cols):
+            elif SysUtil.is_same_dtype(actions, _cols):
                 for act_ in actions:
                     if act_.name in self.action_manager.registry:
                         self.action_manager.registry.pop(act_.name)
@@ -392,19 +262,12 @@ class Branch(Conversation):
 
     def send(self, recipient: str, category: str, package: Any) -> None:
         """
-        Prepares and queues an outgoing package for a specified recipient.
-
-        Creates a BaseMail object to encapsulate the sender, recipient, category,
-        and package content, then adds it to the pending_outs queue for delivery.
+        Sends a package (message, action, etc.) to a specified recipient.
 
         Args:
-            recipient: The identifier for the recipient of the package.
-            category: The category of the message, defining its purpose or type.
-            package: The content or data of the package being sent.
-
-        Example:
-            >>> branch.send(recipient="User123", category="update",
-                            package={"message": "Your request has been processed."})
+            recipient (str): The recipient's identifier.
+            category (str): The category of the package being sent.
+            package (Any): The actual package to send.
         """
 
         mail_ = BaseMail(
@@ -415,26 +278,15 @@ class Branch(Conversation):
     def receive(self, sender: str, messages: bool = True, actions: bool = True,
                 service: bool = True, llmconfig: bool = True) -> None:
         """
-        Processes incoming packages based on their category, updating the branch state.
-
-        Iterates through pending incoming packages from a specified sender, handling
-        each according to its category (e.g., messages, actions, provider, llmconfig).
-        Unsupported or invalid package formats are skipped.
+        Receives and processes a package from a specified sender based on the category.
 
         Args:
-            sender: The identifier of the sender of the packages.
-            messages: If True, processes incoming message packages.
-            actions: If True, processes incoming actions packages.
-            service: If True, processes incoming service packages.
-            llmconfig: If True, processes incoming llmconfig packages.
-
-        Raises:
-            ValueError: If no package exists from the sender or if the package format is invalid.
-
-        Example:
-            >>> branch.receive(sender="System")
+            sender (str): The identifier of the sender.
+            messages (bool): If True, processes received messages.
+            actions (bool): If True, processes received actions.
+            service (bool): If True, updates the service provider.
+            llmconfig (bool): If True, updates the llmconfig.
         """
-
         skipped_requests = deque()
         if sender not in self.pending_ins:
             raise ValueError(f'No package from {sender}')
@@ -449,7 +301,7 @@ class Branch(Conversation):
                 continue
 
             elif mail_.category == 'actions' and actions:
-                if not isinstance(mail_.package, _cols):
+                if not isinstance(mail_.package, BaseActionNode):
                     raise ValueError('Invalid actions format')
                 self.action_manager.register([mail_.package])
 
@@ -470,14 +322,7 @@ class Branch(Conversation):
 
     def receive_all(self) -> None:
         """
-        Processes all pending received packages from all registered senders.
-
-        Iterates over each sender in the pending_ins dictionary and processes their
-        packages using the `receive` method. This ensures all waiting communications
-        are addressed.
-
-        Example:
-            >>> branch.receive_all()
+        Processes all pending packages from all senders.
         """
 
         for key in list(self.pending_ins.keys()):
@@ -504,24 +349,17 @@ class Branch(Conversation):
             return False
 
     # noinspection PyUnresolvedReferences
-    async def call_chatcompletion(self, sender=None, with_sender=False,
-                                  tokenizer_kwargs={}, **kwargs):
+    async def call_chatcompletion(self, sender=None, with_sender=False, **kwargs):
         """
-        Asynchronously calls the chat completion service with the current message queue.
-
-        This method prepares the messages for chat completion, sends the request to the configured service, and handles the response. The method supports additional keyword arguments that are passed directly to the service.
+        Asynchronously calls the chat completion service to generate a response.
 
         Args:
-            sender (Optional[str]): The name of the sender to be included in the chat completion request. Defaults to None.
-            with_sender (bool): If True, includes the sender's name in the messages. Defaults to False.
-            **kwargs: Arbitrary keyword arguments passed directly to the chat completion service.
-
-        Examples:
-            >>> await branch.call_chatcompletion()
+            sender (Optional[str]): The name of the sender to include in chat completions.
+            with_sender (bool): If True, includes sender information in messages.
+            **kwargs: Arbitrary keyword arguments for the chat completion service.
         """
         await ChatFlow.call_chatcompletion(
-            self, sender=sender, with_sender=with_sender,
-            tokenizer_kwargs=tokenizer_kwargs, **kwargs
+            self, sender=sender, with_sender=with_sender, **kwargs
         )
 
     async def chat(
@@ -535,21 +373,20 @@ class Branch(Conversation):
             invoke: bool = True,
             **kwargs) -> Any:
         """
-        Initiates a chat conversation, processing instructions and system messages, optionally invoking actions.
+        Processes a chat instruction asynchronously, optionally invoking actions.
 
         Args:
-            branch: The Branch instance to perform chat operations.
             instruction (Union[Instruction, str]): The instruction for the chat.
             context (Optional[Any]): Additional context for the chat.
             sender (Optional[str]): The sender of the chat message.
             system (Optional[Union[System, str, Dict[str, Any]]]): System message to be processed.
-            actions (Union[bool, Tool, List[Tool], str, List[str]]): Specifies actions to be invoked.
+            actions (Union[bool, T, List[T], str, List[str]]): Specifies actions to be invoked.
             out (bool): If True, outputs the chat response.
             invoke (bool): If True, invokes actions as part of the chat.
             **kwargs: Arbitrary keyword arguments for chat completion.
 
-        Examples:
-            >>> await ChatFlow.chat(branch, "Ask about user preferences")
+        Returns:
+            Any: The result of the chat operation, potentially including action outputs.
         """
         return await ChatFlow.chat(
             self, instruction=instruction, context=context,
@@ -567,10 +404,9 @@ class Branch(Conversation):
             num_rounds: int = 1,
             **kwargs):
         """
-        Performs a reason-action cycle with optional actions invocation over multiple rounds.
+        Executes a reason-action cycle with optional actions invocation over multiple rounds.
 
         Args:
-            branch: The Branch instance to perform ReAct operations.
             instruction (Union[Instruction, str]): Initial instruction for the cycle.
             context: Context relevant to the instruction.
             sender (Optional[str]): Identifier for the message sender.
@@ -579,8 +415,8 @@ class Branch(Conversation):
             num_rounds (int): Number of reason-action cycles to perform.
             **kwargs: Additional keyword arguments for customization.
 
-        Examples:
-            >>> await ChatFlow.ReAct(branch, "Analyze user feedback", num_rounds=2)
+        Returns:
+            Any: The final result after completing the reason-action cycles.
         """
         return await ChatFlow.ReAct(
             self, instruction=instruction, context=context,
@@ -603,7 +439,6 @@ class Branch(Conversation):
         Automatically performs follow-up actions based on chat interactions and actions invocations.
 
         Args:
-            branch: The Branch instance to perform follow-up operations.
             instruction (Union[Instruction, str]): The initial instruction for follow-up.
             context: Context relevant to the instruction.
             sender (Optional[str]): Identifier for the message sender.
@@ -612,9 +447,6 @@ class Branch(Conversation):
             max_followup (int): Maximum number of follow-up chats allowed.
             out (bool): If True, outputs the result of the follow-up action.
             **kwargs: Additional keyword arguments for follow-up customization.
-
-        Examples:
-            >>> await ChatFlow.auto_followup(branch, "Finalize report", max_followup=2)
         """
         return await ChatFlow.auto_followup(
             self, instruction=instruction, context=context,

@@ -48,8 +48,7 @@ class ChatFlow:
     """
 
     @staticmethod
-    async def call_chatcompletion(branch, sender=None, with_sender=False,
-                                  tokenizer_kwargs={}, **kwargs):
+    async def call_chatcompletion(branch, sender=None, with_sender=False, **kwargs):
         """
         Asynchronously calls the chat completion service with the current message queue.
 
@@ -57,7 +56,6 @@ class ChatFlow:
             branch: The Branch instance calling the service.
             sender (Optional[str]): The name of the sender to include in chat completions.
             with_sender (bool): If True, includes sender information in messages.
-            tokenizer_kwargs (dict): Keyword arguments for the tokenizer used in chat completion.
             **kwargs: Arbitrary keyword arguments for the chat completion service.
 
         Examples:
@@ -65,7 +63,7 @@ class ChatFlow:
         """
         messages = branch.chat_messages if not with_sender else branch.chat_messages_with_sender
         payload, completion = await branch.service.serve_chat(
-            messages=messages, tokenizer_kwargs=tokenizer_kwargs, **kwargs
+            messages=messages, **kwargs
         )
         if "choices" in completion:
             add_msg_config = {"response": completion['choices'][0]}
