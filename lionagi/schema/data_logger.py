@@ -1,126 +1,273 @@
+import atexit
 from collections import deque
-from typing import Dict, Any
-from ..utils.sys_util import get_timestamp, create_path, as_dict
-from ..utils.io_util import IOUtil
+from dataclasses import dataclass, asdict
+from pathlib import Path
+from typing import Any, Dict, Optional, Union, List
+
+from lionagi.util import SysUtil, to_df, to_list
+
+
+@dataclass
+class DLog:
+    """
+    Represents a log entry in a structured logging system, encapsulating both the
+    input to and output from a data processing operation, along with an automatically
+    generated timestamp indicating when the log entry was created.
+
+    The primary use of this class is to provide a standardized format for logging data
+    transformations or interactions within an application, facilitating analysis and
+    debugging by maintaining a clear record of data states before and after specific
+    operations.
+
+    Attributes:
+        input_data (Any): The data received by the operation. This attribute can be of
+                          any type, reflecting the flexible nature of input data to
+                          various processes.
+        output_data (Any): The data produced by the operation. Similar to `input_data`,
+                           this attribute supports any type, accommodating the diverse
+                           outputs that different operations may generate.
+
+    Methods: serialize: Converts the instance into a dictionary, suitable for
+    serialization, and appends a timestamp to this dictionary, reflecting the current
+    time.
+    """
+
+    input_data: Any
+    output_data: Any
+
+    def serialize(self) -> Dict[str, Any]:
+        """
+        Converts the DLog instance to a dictionary, suitable for serialization. This
+        method is particularly useful for exporting log entries to formats like JSON or
+        CSV. In addition to the data attributes, it appends a timestamp to the
+        dictionary, capturing the exact time the log entry was serialized.
+
+        Returns:
+            Dict[str, Any]: A dictionary representation of the DLog instance, including
+                            'input_data', 'output_data', and 'timestamp' keys.
+        """
+        log_dict = asdict(self)
+        log_dict['timestamp'] = SysUtil.get_timestamp()
+        return log_dict
 
 
 class DataLogger:
     """
-    A class for logging data entries and exporting them as CSV files.
+    Manages the accumulation, structuring, and persistence of log entries pertaining to
+    data processing activities within an application. The datalogger is designed to capture
+    input-output data pairs across operations, offering functionalities for exporting
+    these logs to disk in both CSV and JSON formats.
 
-    This class provides functionality to log data entries in a deque and 
-    supports exporting the logged data to a CSV file. The DataLogger can 
-    be configured to use a specific directory for saving files.
+    The class ensures that log entries are stored in an orderly fashion and can be
+    easily retrieved or persisted for analysis, debugging, or record-keeping purposes.
+    It supports customizable file naming, directory management, and automatic log saving
+    at program exit, among other features.
 
     Attributes:
-        dir (Optional[str]): 
-            The default directory where CSV files will be saved.
-        log (deque): 
-            A deque object that stores the logged data entries.
+        persist_path (Path): The filesystem path to the directory where log files will
+                             be saved. Defaults to a subdirectory 'data/logs/' within
+                             the current working directory.
+        log (Deque[Dict]): A deque object that acts as the container for log entries.
+                           Each log entry is stored as a dictionary, facilitating easy
+                           conversion to various data formats.
+        filename (str): The base name used for log files when saved. The actual filepath
+                        may include a timestamp or other modifiers based on the class's
+                        configuration.
 
     Methods:
-        __call__:
-            Adds an entry to the log.
-        to_csv:
-            Exports the logged data to a CSV file and clears the log.
-        set_dir:
-            Sets the default directory for saving CSV files.
-    """    
+        append: Adds a new log entry to the datalogger.
+        to_csv: Exports accumulated log entries to a CSV file.
+        to_json: Exports accumulated log entries to a JSON file.
+        save_at_exit: Ensures that unsaved log entries are persisted to a CSV file when
+                      the program terminates.
 
-    def __init__(self, dir= None, log: list = None) -> None:
+    Usage Example:
+        >>> datalogger = DataLogger(persist_path='my/logs/directory', filepath='process_logs')
+        >>> datalogger.append(input_data="Example input", output_data="Example output")
+        >>> datalogger.to_csv('finalized_logs.csv', clear=True)
+
+    This example demonstrates initializing a `DataLogger` with a custom directory and
+    filepath, appending a log entry, and then exporting the log to a CSV file.
+    """
+
+    def __init__(self, persist_path: str | Path | None = None,
+                 log: List[Dict] | None = None,
+                 filename: str | None = None) -> None:
         """
-        Initializes the DataLogger with an optional directory and initial log.
+        initializes a DataLogger instance, preparing it for structured logging of data
+        processing activities. allows for customization of storage directory, initial
+        logs, and base filepath for exports.
 
-        Parameters:
-            dir (Optional[str]): The directory where CSV files will be saved. Defaults to None.
+        Args:
+            persist_path (str | Path | None, optional):
+                The file system path to the directory where log files will be persisted.
+                if not provided, defaults to 'data/logs/' within the current working
+                directory. this path is used for all subsequent log export operations.
+            log (list[Dict[str, Any]] | None, optional):
+                An initial collection of log entries to populate the datalogger. each entry
+                should be a dictionary reflecting the structure used by the datalogger
+                (input, output, timestamp). if omitted, the datalogger starts empty.
+            filename (str | None, optional):
+                The base name for exported log files. this name may be augmented with
+                timestamps and format-specific extensions during export operations.
+                defaults to 'log'.
 
-            log (Optional[List]): An initial list of log entries. Defaults to an empty list.
-        """        
-        self.dir = dir
+        register an at-exit handler to ensure unsaved logs are automatically persisted to
+        a CSV file upon program termination.
+        """
+        self.persist_path = Path(persist_path) if persist_path else Path('data/logs/')
         self.log = deque(log) if log else deque()
+        self.filename = filename or 'log'
+        atexit.register(self.save_at_exit)
 
-    def add_entry(self, entry: Dict[str, Any], level: str = "INFO") -> None:
-        """
-        Adds a new entry to the log with a timestamp and a log level.
+    def extend(self, logs) -> None:
+        if len(logs) > 0:
+            log1 = to_list(self.logs)
+            log1.extend(to_list(logs))
+            self.log = deque(log1)
 
-        Args:
-            entry (Dict[str, Any]): The data entry to be added to the log.
-            level (str): The log level for the entry (e.g., "INFO", "ERROR"). Defaults to "INFO".
+    def append(self, input_data: Any, output_data: Any) -> None:
         """
-        self.log.append({
-            "timestamp": get_timestamp(), "level": level, **as_dict(entry)
-        })
-        
-    def set_dir(self, dir: str) -> None:
-        """
-        Sets the default directory for saving CSV files.
-
-        Parameters:
-            dir (str): The directory to be set as the default for saving files.
-        """
-        self.dir = dir
-
-    def to_csv(
-        self, filename: str, 
-        file_exist_ok: bool = False,  
-        timestamp = True,
-        time_prefix: bool = False,
-        verbose: bool = True,
-        clear = True
-    ) -> None:
-        """
-        Exports the logged data to a CSV file, using the provided utilities for path creation and timestamping.
+        appends a new log entry, encapsulating input and output data, to the datalogger's
+        record deque.
 
         Args:
-            filename (str): The name of the CSV file.
-            file_exist_ok (bool): If True, creates the directory for the file if it does not exist. Defaults to False.
-            verbose (bool): If True, prints a message upon completion. Defaults to True.
-            time_prefix (bool): If True, adds the timestamp as a prefix to the filename. Defaults to False.
+            input_data (Any):
+                Data provided as input to a tracked operation or process.
+            output_data (Any):
+                Data resulting from the operation, recorded as the output.
+
+        constructs a log entry from the provided data and automatically includes a
+        timestamp upon serialization.
         """
+        log_entry = DLog(input_data=input_data, output_data=output_data)
+        self.log.append(log_entry.serialize())
+
+    def to_csv(self, filename: str = 'log.csv', file_exist_ok: bool = False,
+               timestamp: bool = True, time_prefix: bool = False, verbose: bool = True,
+               clear: bool = True, **kwargs) -> None:
+        """
+        exports accumulated log entries to a CSV file, with customizable file naming
+        and timestamping options.
+
+        Args:
+            filename (str, optional):
+                Filename for the CSV output, appended with '.csv' if not included, saved
+                within the specified persisting directory.
+            file_exist_ok (bool, optional):
+                If False, raises an error if the directory already exists; otherwise,
+                writes without an error.
+            timestamp (bool, optional):
+                If True, appends a current timestamp to the filepath for uniqueness.
+            time_prefix (bool, optional):
+                If True, place the timestamp prefix before the filepath; otherwise,
+                it's suffixed.
+            verbose (bool, optional):
+                If True, print a message upon successful file save, detailing the file
+                path and number of logs saved.
+            clear (bool, optional):
+                If True, empties the internal log record after saving.
+            **kwargs:
+                Additional keyword arguments for pandas.DataFrame.to_csv(), allowing
+                customization of the CSV output, such as excluding the index.
+
+        raises a ValueError with an explanatory message if an error occurs during the file
+        writing or DataFrame conversion process.
+        """
+
         if not filename.endswith('.csv'):
             filename += '.csv'
-        
-        filepath = create_path(
-            self.dir, filename, timestamp=timestamp, 
+
+        filepath = SysUtil.create_path(
+            self.persist_path, filename, timestamp=timestamp,
             dir_exist_ok=file_exist_ok, time_prefix=time_prefix
         )
-        IOUtil.to_csv(list(self.log), filepath)
+        try:
+            df = to_df(list(self.log))
+            df.to_csv(filepath, **kwargs)
+            if verbose:
+                print(f"{len(self.log)} logs saved to {filepath}")
+            if clear:
+                self.log.clear()
+        except Exception as e:
+            raise ValueError(f"Error in saving to csv: {e}")
 
-        if verbose:
-            print(f"{len(self.log)} logs saved to {filepath}")
-
-        if clear:
-            self.log.clear()
-
-    def to_jsonl(
-        self, filename: str, 
-        timestamp = False, 
-        time_prefix=False,
-        file_exist_ok: bool = False, 
-        verbose: bool = True, 
-        clear = True
-    ) -> None:
+    def to_json(self, filename: str = 'log.json', timestamp: bool = False,
+                time_prefix: bool = False,
+                file_exist_ok: bool = False, verbose: bool = True, clear: bool = True,
+                **kwargs) -> None:
         """
-        Exports the logged data to a JSONL file and optionally clears the log.
+        exports the log entries to a JSON file within the specified persisting directory,
+        offering customization for file naming and timestamping.
 
-        Parameters:
-            filename (str): The name of the JSONL file.
-            file_exist_ok (bool): If True, creates the directory for the file if it does not exist. Defaults to False.
-            verbose (bool): If True, prints a message upon completion. Defaults to True.
+        Args:
+            filename (str, optional):
+                The filepath for the JSON output.'.json' is appended if not specified.
+                The file is saved within the designated persisting directory.
+            timestamp (bool, optional):
+                If True, adds a timestamp to the filepath to ensure uniqueness.
+            time_prefix (bool, optional):
+                Determines the placement of the timestamp in the filepath. A prefix if
+                True; otherwise, a suffix.
+            file_exist_ok (bool, optional):
+                Allows writing to an existing directory without raising an error.
+                If False, an error is raised when attempting to write to an existing
+                directory.
+            verbose (bool, optional):
+                 Print a message upon successful save, indicating the file path and
+                number of logs saved.
+            clear (bool, optional):
+                Clears the log deque after saving, aiding in memory management.
+            **kwargs:
+                Additional arguments passed to pandas.DataFrame.to_json(),
+                enabling customization of the JSON output.
+
+        Raises:
+            ValueError: When an error occurs during file writing or DataFrame conversion,
+            encapsulating
+            the exception with a descriptive message.
+
+        Examples:
+            Default usage saving logs to 'log.json' within the specified persisting
+            directory:
+            >>> datalogger.to_json()
+            # Save path: 'data/logs/log.json'
+
+            Custom filepath without a timestamp, using additional pandas options:
+            >>> datalogger.to_json(filepath='detailed_log.json', orient='records')
+            # Save a path: 'data/logs/detailed_log.json'
         """
-        if not filename.endswith('.jsonl'):
-            filename += '.jsonl'
+        if not filename.endswith('.json'):
+            filename += '.json'
 
-        filepath = create_path(
-            self.dir, filename, timestamp=timestamp, 
+        filepath = SysUtil.create_path(
+            self.persist_path, filename, timestamp=timestamp,
             dir_exist_ok=file_exist_ok, time_prefix=time_prefix
         )
-        
-        for entry in self.log:
-            IOUtil.append_to_jsonl(entry, filepath)
 
-        if verbose:
-            print(f"{len(self.log)} logs saved to {filepath}")
+        try:
+            df = to_df(list(self.log))
+            df.to_json(filepath, **kwargs)
+            if verbose:
+                print(f"{len(self.log)} logs saved to {filepath}")
+            if clear:
+                self.log.clear()
+        except Exception as e:
+            raise ValueError(f"Error in saving to csv: {e}")
 
-        if clear:
-            self.log.clear()
+    def save_at_exit(self):
+        """
+        Registers an at-exit handler to ensure that any unsaved logs are automatically
+        persisted to a file upon program termination. This safeguard helps prevent the
+        loss of log data due to unexpected shutdowns or program exits.
+
+        The method is configured to save the logs to a CSV file, named
+        'unsaved_logs.csv', which is stored in the designated persisting directory. This
+        automatic save operation is triggered only if there are unsaved logs present at
+        the time of program exit.
+
+        Note: This method does not clear the logs after saving, allowing for the
+        possibility of manual review or recovery after the program has terminated.
+        """
+        if self.log:
+            self.to_csv("unsaved_logs.csv", clear=False)

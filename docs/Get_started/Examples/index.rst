@@ -9,6 +9,5 @@ applications of LionAGI.
    calculator.rst
    comedian.rst
    function.rst
+   tool.rst
    auto_research.rst
-   coder.rst
-   coder_session.rst
