@@ -49,7 +49,7 @@ class APIUtil:
         Checks if the given response_json dictionary contains an "error" key.
 
         Args:
-            response_json: The JSON response as a dictionary.
+            response_json: The JSON assistant_response as a dictionary.
 
         Returns:
             True if there is an error, False otherwise.
@@ -73,7 +73,7 @@ class APIUtil:
         Checks if the error message in the response_json dictionary contains the phrase "Rate limit".
 
         Args:
-            response_json: The JSON response as a dictionary.
+            response_json: The JSON assistant_response as a dictionary.
 
         Returns:
             True if the phrase "Rate limit" is found, False otherwise.
@@ -124,7 +124,7 @@ class APIUtil:
             **kwargs: Additional keyword arguments to pass to the API call.
 
         Returns:
-            The JSON response as a dictionary.
+            The JSON assistant_response as a dictionary.
 
         Examples:
             >>> session = aiohttp.ClientSession()
@@ -179,7 +179,7 @@ class APIUtil:
             **kwargs: Additional arguments for the API call.
 
         Returns:
-            The response from the API call, if successful; otherwise, None.
+            The assistant_response from the API call, if successful; otherwise, None.
         """
         for attempt in range(retries):
             try:
@@ -213,12 +213,12 @@ class APIUtil:
             retries: The number of times to retry the upload in case of failure.
 
         Returns:
-            The HTTP response object.
+            The HTTP assistant_response object.
 
         Examples:
             >>> session = aiohttp.ClientSession()
-            >>> response = await APIUtil.upload_file_with_retry(session, 'http://example.com/upload', 'path/to/file.txt')
-            >>> response.status
+            >>> assistant_response = await APIUtil.upload_file_with_retry(session, 'http://example.com/upload', 'path/to/file.txt')
+            >>> assistant_response.status
             200
         """
         for attempt in range(retries):
@@ -283,7 +283,7 @@ class APIUtil:
             **kwargs: Additional arguments for the API call.
 
         Returns:
-            The response from the API call, if successful; otherwise, None.
+            The assistant_response from the API call, if successful; otherwise, None.
         """
         try:
             async with http_session.get(url, **kwargs) as response:

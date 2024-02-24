@@ -194,11 +194,25 @@ class BaseNode(BaseComponent):
         validation_alias=AliasChoices('text', 'page_content', 'chunk_content')
     )
 
+    @property
+    def content_str(self):
+        if isinstance(self.content, Dict):
+            return json.dumps(self.content)
+        elif isinstance(self.content, str):
+            return self.content
+        else:
+            try:
+                return str(self.content)
+            except ValueError:
+                print(f"Content is not serializable for Node: {self._id}")
+                return 'null'
+
     def __str__(self):
         timestamp = f" ({self.timestamp})" if self.timestamp else ""
         content_preview = self.content[:50] + "..." if len(self.content) > 50 else self.content
         meta_preview = str(self.metadata)[:50] + "..." if len(str(self.metadata)) > 50 else str(self.metadata)
-        return f"{self.class_name()}({self.id_}, {content_preview}, {meta_preview}){timestamp}"
+        return (f"{self.class_name()}({self.id_}, {content_preview}, {meta_preview},"
+                f"{timestamp})")
 
 
 

@@ -120,7 +120,7 @@ class BaseRateLimiter(ABC):
             payload: The payload to send with the API call.
 
         Returns:
-            The JSON response from the API call if successful, otherwise None.
+            The JSON assistant_response from the API call if successful, otherwise None.
         """
         endpoint = APIUtil.api_endpoint_from_url(base_url + endpoint)
         while True:
@@ -370,7 +370,7 @@ class BaseService:
             method: The HTTP method to use for the call.
 
         Returns:
-            The response from the API call.
+            The assistant_response from the API call.
 
         Raises:
             ValueError: If the endpoint has not been initialized.
