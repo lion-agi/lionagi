@@ -1,26 +1,13 @@
-from typing import Any, Optional
+from ..schema import MessageType, MessageField, MessageRoleType
 
-from lionagi.core.session.message import BaseMessage
-from lionagi.util import strip_lower, to_dict, nget
-from lionagi.core.session.message.schema import (MessageField, MessageContentKey, MessageRoleType,
-                                                 MessageSenderType)
+
+
+
+
+
 
 
 class Instruction(BaseMessage):
-    """
-    Represents an instruction message, typically used to convey actions or commands.
-
-    This class is intended for messages that carry instructions from users or automated
-    systems, possibly including a context for the instruction.
-
-    Args:
-        instruction (Any): The main instruction or command this message is carrying.
-        context (Optional[Any], optional): Additional context or parameters for the instruction.
-        sender (Optional[str], optional): The identifier for the entity sending the instruction.
-            Defaults to the role type converted to string if not specified.
-
-    Attributes are inherited from `BaseMessage`.
-    """
 
     def __init__(self, instruction: Any, context=None, sender: Optional[str] = None):
         super().__init__(
@@ -33,19 +20,6 @@ class Instruction(BaseMessage):
 
 
 class System(BaseMessage):
-    """
-    Represents a system message, typically used to convey system-level information or status.
-
-    This class is intended for messages that originate from or are about the system's internal
-    processes, configurations, or states.
-
-    Args:
-        system (Any): The main content or information this message is carrying about the system.
-        sender (Optional[str], optional): The identifier for the entity sending the system message.
-            Defaults to the role type converted to string if not specified.
-
-    Attributes are inherited from `BaseMessage`.
-    """
 
     def __init__(self, system: Any, sender: Optional[str] = None):
         super().__init__(

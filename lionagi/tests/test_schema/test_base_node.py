@@ -20,37 +20,37 @@ class TestBaseComponent(unittest.TestCase):
 
     def test_has_metadata_key(self):
         node = BaseNode(metadata={"key1": "value1"})
-        self.assertTrue(node.has_metadata_key("key1"))
-        self.assertFalse(node.has_metadata_key("key2"))
+        self.assertTrue(node.has_meta_key("key1"))
+        self.assertFalse(node.has_meta_key("key2"))
 
     def test_get_metadata(self):
         node = BaseNode(metadata={"key1": "value1"})
-        self.assertEqual(node.get_metadata("key1"), "value1")
-        self.assertIsNone(node.get_metadata("key2"))
-        self.assertEqual(node.get_metadata("key2", "default"), "default")
+        self.assertEqual(node.meta_get("key1"), "value1")
+        self.assertIsNone(node.meta_get("key2"))
+        self.assertEqual(node.meta_get("key2", "default"), "default")
 
     def test_change_metadata_key(self):
         node = BaseNode(metadata={"key1": "value1"})
-        node.change_metadata_key("key1", "key2")
+        node.meta_change_key("key1", "key2")
         self.assertNotIn("key1", node.metadata)
         self.assertIn("key2", node.metadata)
         self.assertEqual(node.metadata["key2"], "value1")
 
     def test_merge_metadata(self):
         node = BaseNode(metadata={"key1": "value1"})
-        node.merge_metadata({"key2": "value2"}, overwrite=False)
+        node.meta_merge({"key2": "value2"}, overwrite=False)
         self.assertEqual(node.metadata, {"key1": "value1", "key2": "value2"})
-        node.merge_metadata({"key1": "new_value1"}, overwrite=True)
+        node.meta_merge({"key1": "new_value1"}, overwrite=True)
         self.assertEqual(node.metadata["key1"], "new_value1")
 
     def test_add_related_node(self):
-        node = RelatableNode()
+        node = BaseRelatableNode()
         self.assertTrue(node.add_related_node("node_1"))
         self.assertIn("node_1", node.related_nodes)
         self.assertFalse(node.add_related_node("node_1"))  # Adding again returns False
 
     def test_remove_related_node(self):
-        node = RelatableNode(related_nodes=["node_1"])
+        node = BaseRelatableNode(related_nodes=["node_1"])
         self.assertTrue(node.remove_related_node("node_1"))
         self.assertNotIn("node_1", node.related_nodes)
         self.assertFalse(node.remove_related_node("node_1"))  # Removing non-existent node returns False

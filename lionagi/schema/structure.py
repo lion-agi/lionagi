@@ -3,10 +3,10 @@ from pydantic import Field
 
 from lionagi.util import lcall
 
-from .base_node import RelatableNode, BaseNode
+from .base_node import BaseRelatableNode, BaseNode
 
 
-class Relationship(BaseNode):
+class Relationship(BaseRelatableNode):
     """
     Represents a relationship between two nodes in a graph.
 
@@ -179,7 +179,7 @@ class Relationship(BaseNode):
 
 
 
-class Graph(RelatableNode):
+class Graph(BaseRelatableNode):
     """
     Represents a graph structure, consisting of nodes and their relationship.
     
@@ -391,7 +391,7 @@ class Graph(RelatableNode):
         return g
 
 
-class Structure(BaseNode):
+class Structure(BaseRelatableNode):
     """
     Represents the structure of a graph consisting of nodes and relationship.
     """

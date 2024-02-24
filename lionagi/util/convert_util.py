@@ -9,69 +9,24 @@ number_regex = re.compile(r'-?\d+\.?\d*')
 
 
 def to_dict(input_: Any) -> Dict[Any, Any]:
-
-    if isinstance(input_, str):
-        try:
-            return json.loads(input_)
-        except json.JSONDecodeError as e:
-            raise ValueError(f"Could not convert input_ to dict: {e}") from e
-
-    elif isinstance(input_, dict):
-        return input_
-    else:
-        raise TypeError(
-            f"Could not convert input_ to dict: {type(input_).__name__} given.")
+    return ConvertUtil.to_dict(input_)
 
 
-def str_to_num(input_: str, upper_bound: float | None = None, lower_bound: float | None = None,
-                num_type: Type[int | float] = int, precision: int | None = None) -> int | float:
-    number_str = ConvertUtil._extract_first_number(input_)
-    if number_str is None:
-        raise ValueError(f"No numeric values found in the string: {input_}")
+def str_to_num(input_: str, upper_bound: float | None = None,
+               lower_bound: float | None = None,
+               num_type: Type[int | float] = int,
+               precision: int | None = None) -> int | float:
+    return ConvertUtil.str_to_num(input_, upper_bound, lower_bound, num_type, precision)
 
-    number = ConvertUtil._convert_to_num(number_str, num_type, precision)
-
-    if upper_bound is not None and number > upper_bound:
-        raise ValueError(f"Number {number} is greater than the upper bound of {upper_bound}.")
-
-    if lower_bound is not None and number < lower_bound:
-        raise ValueError(f"Number {number} is less than the lower bound of {lower_bound}.")
-
-    return number
 
 def to_df(
-    item: List[Dict[Any, Any] | DataFrame | Series] | DataFrame | Series,
-    how: str = 'all',
-    drop_kwargs: Dict[str, Any] | None = None,
-    reset_index: bool = True,
-    **kwargs: Any
+        item: List[Dict[Any, Any] | DataFrame | Series] | DataFrame | Series,
+        how: str = 'all',
+        drop_kwargs: Dict[str, Any] | None = None,
+        reset_index: bool = True,
+        **kwargs: Any
 ) -> DataFrame:
-    if drop_kwargs is None:
-        drop_kwargs = {}
-    dfs = ''
-    try:
-        if isinstance(item, list):
-            if ConvertUtil.is_homogeneous(item, dict):
-                dfs = DataFrame(item)
-            elif ConvertUtil.is_homogeneous(item, (DataFrame, Series)):
-                dfs = concat(item, **kwargs)
-            else:
-                raise ValueError("Item list is not homogeneous or cannot be converted to DataFrame.")
-        elif isinstance(item, (DataFrame, Series)):
-            dfs = item if isinstance(item, DataFrame) else pd.DataFrame(item)
-        else:
-            raise TypeError("Unsupported type for conversion to DataFrame.")
-
-        dfs.dropna(**(drop_kwargs | {'how': how}), inplace=True)
-
-        if reset_index:
-            dfs.reset_index(drop=True, inplace=True)
-
-        return dfs
-
-    except Exception as e:
-        raise ValueError(f"Error converting item to DataFrame: {e}") from e
-
+    return ConvertUtil.to_df(item, how, drop_kwargs, reset_index, **kwargs)
 
 
 class ConvertUtil:
@@ -120,8 +75,10 @@ class ConvertUtil:
         return {k: v[0] if len(v) == 1 else v for k, v in result.items()}
 
     @staticmethod
-    def str_to_num(input_: str, upper_bound: float | None = None, lower_bound: float | None = None,
-                   num_type: Type[int | float] = int, precision: int | None = None) -> int | float:
+    def str_to_num(input_: str, upper_bound: float | None = None,
+                   lower_bound: float | None = None,
+                   num_type: Type[int | float] = int,
+                   precision: int | None = None) -> int | float:
         number_str = ConvertUtil._extract_first_number(input_)
         if number_str is None:
             raise ValueError(f"No numeric values found in the string: {input_}")
@@ -129,10 +86,12 @@ class ConvertUtil:
         number = ConvertUtil._convert_to_num(number_str, num_type, precision)
 
         if upper_bound is not None and number > upper_bound:
-            raise ValueError(f"Number {number} is greater than the upper bound of {upper_bound}.")
+            raise ValueError(
+                f"Number {number} is greater than the upper bound of {upper_bound}.")
 
         if lower_bound is not None and number < lower_bound:
-            raise ValueError(f"Number {number} is less than the lower bound of {lower_bound}.")
+            raise ValueError(
+                f"Number {number} is less than the lower bound of {lower_bound}.")
 
         return number
 
@@ -149,7 +108,8 @@ class ConvertUtil:
         return match.group(0) if match else None
 
     @staticmethod
-    def _convert_to_num(number_str: str, num_type: Type[int | float] = int, precision: int | None = None) -> int | float:
+    def _convert_to_num(number_str: str, num_type: Type[int | float] = int,
+                        precision: int | None = None) -> int | float:
         if num_type is int:
             return int(float(number_str))
         elif num_type is float:
@@ -170,11 +130,11 @@ class ConvertUtil:
 
     @staticmethod
     def to_df(
-        item: List[Dict[Any, Any] | DataFrame | Series] | DataFrame | Series,
-        how: str = 'all',
-        drop_kwargs: Dict[str, Any] | None = None,
-        reset_index: bool = True,
-        **kwargs: Any
+            item: List[Dict[Any, Any] | DataFrame | Series] | DataFrame | Series,
+            how: str = 'all',
+            drop_kwargs: Dict[str, Any] | None = None,
+            reset_index: bool = True,
+            **kwargs: Any
     ) -> DataFrame:
         if drop_kwargs is None:
             drop_kwargs = {}
@@ -186,7 +146,8 @@ class ConvertUtil:
                 elif ConvertUtil.is_homogeneous(item, (DataFrame, Series)):
                     dfs = concat(item, **kwargs)
                 else:
-                    raise ValueError("Item list is not homogeneous or cannot be converted to DataFrame.")
+                    raise ValueError(
+                        "Item list is not homogeneous or cannot be converted to DataFrame.")
             elif isinstance(item, (DataFrame, Series)):
                 dfs = item if isinstance(item, DataFrame) else pd.DataFrame(item)
             else:

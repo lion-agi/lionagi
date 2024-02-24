@@ -4,7 +4,7 @@ tiktoken>=0.5.1
 pydantic>=2.6.0
 aiocache>=0.12.2
 pandas>=2.1.0
-llama-index-core==0.10.5
+llama-index-core>=0.10.12
 networkx==3.2.1
 python-dateutil~=2.8.2
 setuptools~=68.2.0

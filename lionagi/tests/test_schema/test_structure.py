@@ -1,6 +1,7 @@
 from lionagi.schema.structure import *
 import unittest
 
+
 class TestRelationship(unittest.TestCase):
 
     def setUp(self):
@@ -42,13 +43,15 @@ class TestRelationship(unittest.TestCase):
         with self.assertRaises(ValueError):
             self.relationship.get_condition("non_existing_key")
 
+
 class TestGraph(unittest.TestCase):
 
     def setUp(self):
         self.graph = Graph()
         self.node1 = BaseNode(id_='node1')
         self.node2 = BaseNode(id_='node2')
-        self.relationship = Relationship(id_='rel1', source_node_id='node1', target_node_id='node2')
+        self.relationship = Relationship(id_='rel1', source_node_id='node1',
+                                         target_node_id='node2')
 
     def test_add_node(self):
         self.graph.add_node(self.node1)
@@ -67,7 +70,8 @@ class TestStructure(unittest.TestCase):
         self.structure = Structure()
         self.node1 = BaseNode(id_='node1')
         self.node2 = BaseNode(id_='node2')
-        self.relationship = Relationship(id_='rel1', source_node_id='node1', target_node_id='node2')
+        self.relationship = Relationship(id_='rel1', source_node_id='node1',
+                                         target_node_id='node2')
 
     def test_add_node(self):
         self.structure.add_node(self.node1)
@@ -78,7 +82,6 @@ class TestStructure(unittest.TestCase):
         self.structure.add_node(self.node2)
         self.structure.add_relationship(self.relationship)
         self.assertIn('rel1', self.structure.graph.relationships)
-
 
 
 if __name__ == '__main__':
