@@ -2,7 +2,6 @@ from typing import Any, TypeVar
 from llama_index.core.schema import TextNode
 
 from lionagi.util import SysUtil
-from lionagi.schema import DataNode
 
 T = TypeVar('T', bound='DataNode')
 

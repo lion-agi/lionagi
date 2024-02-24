@@ -1,7 +1,7 @@
 from typing import Any
 from pydantic import field_serializer
 
-from lionagi.schema.base_node import BaseNode
+from lionagi.core.schema.base_node import BaseNode
 
 # To-Do: manual integration with actions
 

@@ -5,7 +5,7 @@ from typing import Dict, Any, Optional, Union, List
 from pandas import DataFrame, Series
 
 from lionagi.util import to_dict, to_df, lcall
-from lionagi.schema import BaseNode, DataLogger
+from lionagi.core.schema import BaseNode, DataLogger
 from lionagi.core.session.message import System, Instruction, Response, BaseMessage
 from lionagi.core.session.branch.util import MessageUtil
 

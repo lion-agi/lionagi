@@ -3,7 +3,8 @@ from itertools import chain
 from typing import (Any, Callable, Dict, Generator,
                     List, Tuple, Union, Iterable, Optional)
 
-from .util import create_copy, is_homogeneous
+from .sys_util import SysUtil
+from .convert_util import ConvertUtil
 
 
 def nset(
@@ -158,11 +159,11 @@ def nmerge(
         >>> nmerge([[1, 2], [3, 4]], sort_list=True)
         [1, 2, 3, 4]
     """
-    if is_homogeneous(nested_structure, Dict):
+    if ConvertUtil.is_homogeneous(nested_structure, Dict):
         return _merge_dicts(
             nested_structure, dict_update, dict_sequence, sequence_separator
         )
-    elif is_homogeneous(nested_structure, List) and not any(
+    elif ConvertUtil.is_homogeneous(nested_structure, List) and not any(
             isinstance(it, (Dict, str)) for it in nested_structure):
         return _merge_sequences(
             nested_structure, sort_list, custom_sort
@@ -420,7 +421,7 @@ def get_flattened_keys(
         >>> assert keys == ['0_a', '1_b']
     """
     if inplace:
-        obj_copy = create_copy(nested_structure, num=1)
+        obj_copy = SysUtil.create_copy(nested_structure, num=1)
         flatten(
             obj_copy, sep=sep, max_depth=max_depth, inplace=True,
             dict_only=dict_only

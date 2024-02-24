@@ -1,5 +1,5 @@
 from lionagi.utils.sys_util import SysUtil
-from lionagi.provider.base.base_service import BaseService
+from lionagi.integrations.provider import BaseService
 
 
 class LiteLLMService(BaseService):

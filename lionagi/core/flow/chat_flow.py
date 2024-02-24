@@ -1,7 +1,7 @@
 from typing import Any, Dict, List, Optional, Union, TypeVar
 from lionagi.util import to_dict, lcall, to_list, alcall, get_flattened_keys
-from lionagi.schema import BaseActionNode
-from lionagi.message import Instruction, System
+from lionagi.core.schema import BaseActionNode
+from lionagi.core.session.message import Instruction, System
 
 T = TypeVar('T', bound=BaseActionNode)
 

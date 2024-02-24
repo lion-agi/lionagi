@@ -3,7 +3,6 @@ from langchain.schema import Document as LangchainDocument
 import langchain.document_loaders as document_loaders
 
 from lionagi.util import SysUtil
-from lionagi.schema.base_node import DataNode
 
 T = TypeVar('T', bound='DataNode')
 

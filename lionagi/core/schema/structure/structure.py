@@ -1,10 +1,7 @@
 from typing import TypeVar
 
-from ..schema import BaseNode
+from lionagi.core.schema import BaseNode
 from .graph import Graph
-from .relationship import Relationship
-
-
 
 T = TypeVar('T', bound='BaseNode')
 R = TypeVar('R', bound='Relationship')

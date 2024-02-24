@@ -1,3 +1,3 @@
-from .messages import BaseMessage, Instruction, Response, System
+from .messages import Instruction, Response, System
 
-__all__ = ["BaseMessage", "Instruction", "Response", "System"]
+__all__ = ["Instruction", "Response", "System"]

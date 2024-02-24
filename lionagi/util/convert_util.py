@@ -1,129 +1,11 @@
-from pathlib import Path
-import logging
+import json
 import re
-
-from pathlib import Path
-from typing import Any, Dict
-import logging
-
-from typing import Optional
-import platform
-import subprocess
-import sys
+from collections import defaultdict
 import xml.etree.ElementTree as ET
+from typing import Any, Dict, List, Type
+from pandas import DataFrame, Series, concat
 
 number_regex = re.compile(r'-?\d+\.?\d*')
-
-
-class ImportUtil:
-
-    @staticmethod
-    def get_cpu_architecture() -> str:
-        arch: str = platform.machine().lower()
-        if 'arm' in arch or 'aarch64' in arch:
-            return 'apple_silicon'
-        return 'other_cpu'
-
-    @staticmethod
-    def install_import(package_name: str, module_name: str | None = None,
-                       import_name: str | None = None,
-                       pip_name: str | None = None) -> None:
-        pip_name: str = pip_name or package_name
-        full_import_path: str = f"{package_name}.{module_name}" if module_name else package_name
-
-        try:
-            if import_name:
-                module = __import__(full_import_path, fromlist=[import_name])
-                getattr(module, import_name)
-            else:
-                __import__(full_import_path)
-            print(f"Successfully imported {import_name or full_import_path}.")
-        except ImportError:
-            print(
-                f"Module {full_import_path} or attribute {import_name} not found. Installing {pip_name}...")
-            subprocess.check_call([sys.executable, "-m", "pip", "install", pip_name])
-
-            # Retry the import after installation
-            if import_name:
-                module = __import__(full_import_path, fromlist=[import_name])
-                getattr(module, import_name)
-            else:
-                __import__(full_import_path)
-
-    @staticmethod
-    def is_package_installed(package_name: str) -> bool:
-        package_spec = importlib.util.find_spec(package_name)
-        return package_spec is not None
-
-    @staticmethod
-    def check_import(package_name: str, module_name: str | None = None,
-                     import_name: str | None = None, pip_name: str | None = None) -> None:
-        try:
-            if not SysUtil.is_package_installed(package_name):
-                logging.info(f"Package {package_name} not found. Attempting to install.")
-                SysUtil.install_import(package_name, module_name, import_name, pip_name)
-        except ImportError as e:  # More specific exception handling
-            logging.error(f'Failed to import {package_name}. Error: {e}')
-            raise ValueError(f'Failed to import {package_name}. Error: {e}') from e
-
-
-class PathUtil:
-    @staticmethod
-    def clear_dir(dir_path: Path | str, recursive: bool = False,
-                  exclude: list[str] = None) -> None:
-        dir_path = Path(dir_path)
-        if not dir_path.exists():
-            raise FileNotFoundError(f"The specified directory {dir_path} does not exist.")
-
-        exclude = exclude or []
-        exclude_pattern = re.compile("|".join(exclude)) if exclude else None
-
-        for file_path in dir_path.iterdir():
-            if exclude_pattern and exclude_pattern.search(file_path.name):
-                logging.info(f"Excluded from deletion: {file_path}")
-                continue
-
-            if recursive and file_path.is_dir():
-                PathUtil.clear_dir(file_path, recursive=True, exclude=exclude)
-            elif file_path.is_file() or file_path.is_symlink():
-                try:
-                    file_path.unlink()
-                    logging.info(f"Successfully deleted {file_path}")
-                except Exception as e:
-                    logging.error(f"Failed to delete {file_path}. Reason: {e}")
-                    raise
-
-    @staticmethod
-    def split_path(path: Path | str) -> tuple[Path, str]:
-        path = Path(path)
-        return path.parent, path.name
-
-    @staticmethod
-    def create_path(directory: Path | str, filename: str, timestamp: bool = True,
-                    dir_exist_ok: bool = True, time_prefix: bool = False,
-                    custom_timestamp_format: str | None = None) -> Path:
-        directory = Path(directory)
-        if not re.match(r'^[\w,\s-]+\.[A-Za-z]{1,5}$', filename):
-            raise ValueError(
-                "Invalid filename. Ensure it doesn't contain illegal characters and has a valid extension.")
-
-        name, ext = filename.rsplit('.', 1) if '.' in filename else (filename, '')
-        ext = f".{ext}" if ext else ''
-
-        timestamp_str = ""
-        if timestamp:
-            from datetime import datetime
-            timestamp_format = custom_timestamp_format or "%Y%m%d%H%M%S"
-            timestamp_str = datetime.now().strftime(timestamp_format)
-            filename = f"{timestamp_str}_{name}" if time_prefix else f"{name}_{timestamp_str}"
-        else:
-            filename = name
-
-        full_filename = f"{filename}{ext}"
-        full_path = directory / full_filename
-        full_path.parent.mkdir(parents=True, exist_ok=dir_exist_ok)
-
-        return full_path
 
 
 class ConvertUtil:
@@ -234,9 +116,9 @@ class ConvertUtil:
         try:
             if isinstance(item, list):
                 if ConvertUtil.is_homogeneous(item, dict):
-                    dfs = pd.DataFrame(item)
+                    dfs = DataFrame(item)
                 elif ConvertUtil.is_homogeneous(item, (DataFrame, Series)):
-                    dfs = pd.concat(item, **kwargs)
+                    dfs = concat(item, **kwargs)
                 else:
                     raise ValueError("Item list is not homogeneous or cannot be converted to DataFrame.")
             elif isinstance(item, (DataFrame, Series)):
@@ -253,5 +135,3 @@ class ConvertUtil:
 
         except Exception as e:
             raise ValueError(f"Error converting item to DataFrame: {e}") from e
-
-

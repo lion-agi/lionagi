@@ -4,15 +4,15 @@ from typing import Any, Dict, List, Optional, Union, TypeVar
 import pandas as pd
 
 from lionagi.util import to_dict, to_list, SysUtil
-from lionagi.schema import BaseActionNode, BaseMail
-from lionagi.message import Instruction, System
-from lionagi.action import ActionManager
-from lionagi.provider import StatusTracker, Services, BaseService
-from lionagi.provider.api.oai import OpenAIService
-from lionagi.flow import ChatFlow
+from lionagi.core.schema import BaseActionNode, BaseMail
+from lionagi.core.session.message import Instruction, System
+from lionagi.core.action import ActionManager
+from lionagi.integrations.provider import StatusTracker, Services, BaseService
+from lionagi.integrations.provider.api.oai import OpenAIService
+from lionagi.core.flow import ChatFlow
 
 from .util import MessageUtil
-from lionagi.branch.conversation import Conversation
+from lionagi.core.session.branch.conversation import Conversation
 
 OAIService = "OpenAI"
 # default service should change to be settable
@@ -333,7 +333,7 @@ class Branch(Conversation):
         service = service or OAIService
         if llmconfig is None:
             if isinstance(service, OpenAIService):
-                from lionagi.config.oai_configs import oai_schema
+                from lionagi.integrations.provider import oai_schema
                 llmconfig = oai_schema["chat/completions"]["config"]
             else:
                 llmconfig = {}

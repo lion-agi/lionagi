@@ -1,4 +1,4 @@
-from .base_directive_node import IfNode
+from lionagi.core.directive.schema.base_directive_node import IfNode
 
 class BaseDirectiveParser:
     def __init__(self, tokens):

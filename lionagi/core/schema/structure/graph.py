@@ -2,7 +2,7 @@ from typing import List, Any
 from pydantic import Field
 
 from lionagi.util import lcall
-from lionagi.schema import BaseNode
+from lionagi.core.schema import BaseNode
 from .relationship import Relationship
 
 
