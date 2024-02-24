@@ -17,7 +17,7 @@ class ChatFlow:
     Methods:
         call_chatcompletion:
             Asynchronously calls the chat completion provider with the current message
-            queue, integrating LLM services for response generation. Supports inclusion
+            queue, integrating LLM services for assistant_response generation. Supports inclusion
             of sender information and customization of tokenizer parameters.
 
         chat:
@@ -66,7 +66,7 @@ class ChatFlow:
             messages=messages, **kwargs
         )
         if "choices" in completion:
-            add_msg_config = {"response": completion['choices'][0]}
+            add_msg_config = {"assistant_response": completion['choices'][0]}
             if sender is not None:
                 add_msg_config["sender"] = sender
 
@@ -98,7 +98,7 @@ class ChatFlow:
             sender (Optional[str]): The sender of the chat message.
             system (Optional[Union[System, str, Dict[str, Any]]]): System message to be processed.
             actions (Union[bool, Tool, List[Tool], str, List[str]]): Specifies actions to be invoked.
-            out (bool): If True, outputs the chat response.
+            out (bool): If True, outputs the chat assistant_response.
             invoke (bool): If True, invokes actions as part of the chat.
             **kwargs: Arbitrary keyword arguments for chat completion.
 
@@ -186,7 +186,7 @@ class ChatFlow:
         """
         if actions is not None:
             if isinstance(actions, list) and isinstance(actions[0], BaseActionNode):
-                branch.register(actions)
+                branch.register_actions(actions)
 
         if branch.action_manager.registry == {}:
             raise ValueError(

@@ -64,7 +64,7 @@ class ActionManager:
                 args = response['parameters']
                 return func, args
             except:
-                raise ValueError('response is not a valid function call')
+                raise ValueError('assistant_response is not a valid function call')
     
     def register(self, actions: List[T]) -> None:
         lcall(actions, self._register)

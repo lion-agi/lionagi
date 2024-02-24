@@ -53,7 +53,7 @@ class OpenAIService(BaseService):
             **kwargs: Additional keyword arguments to pass to the payload creation.
 
         Returns:
-            A tuple containing the payload and the completion response from the API.
+            A tuple containing the payload and the completion assistant_response from the API.
 
         Raises:
             ValueError: If the specified endpoint is not supported.
@@ -84,7 +84,7 @@ class OpenAIService(BaseService):
             **kwargs: Additional keyword arguments for payload creation.
 
         Returns:
-            A tuple containing the payload and the completion response from the API.
+            A tuple containing the payload and the completion assistant_response from the API.
 
         Raises:
             Exception: If the API call fails.
