@@ -1,6 +1,6 @@
 from typing import Any
-from lionagi.schema.base_node import BaseNode
-from lionagi.bridge import LlamaIndexBridge, LangchainBridge
+from .base_node import BaseNode
+from lionagi.integrations.bridge import LlamaIndexBridge, LangchainBridge
 
 
 class DataNode(BaseNode):

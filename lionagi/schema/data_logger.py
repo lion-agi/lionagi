@@ -2,9 +2,9 @@ import atexit
 from collections import deque
 from dataclasses import dataclass, asdict
 from pathlib import Path
-from typing import Any, Dict, Optional, Union, List
+from typing import Any, Dict, List
 
-from lionagi.util import SysUtil, to_df, to_list
+from lionagi.util import SysUtil, to_df, to_list, PathUtil, to_df
 
 
 @dataclass
@@ -178,7 +178,7 @@ class DataLogger:
         if not filename.endswith('.csv'):
             filename += '.csv'
 
-        filepath = SysUtil.create_path(
+        filepath = PathUtil.create_path(
             self.persist_path, filename, timestamp=timestamp,
             dir_exist_ok=file_exist_ok, time_prefix=time_prefix
         )
@@ -240,7 +240,7 @@ class DataLogger:
         if not filename.endswith('.json'):
             filename += '.json'
 
-        filepath = SysUtil.create_path(
+        filepath = PathUtil.create_path(
             self.persist_path, filename, timestamp=timestamp,
             dir_exist_ok=file_exist_ok, time_prefix=time_prefix
         )
