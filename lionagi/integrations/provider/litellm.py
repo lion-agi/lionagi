@@ -1,23 +1,17 @@
-from lionagi.utils.sys_util import SysUtil
-from lionagi.integrations.provider import BaseService
+from lionagi.util.sys_util import SysUtil
+from lionagi.util.api_util import BaseService
 
 
 class LiteLLMService(BaseService):
     def __init__(self, model: str = None, **kwargs):
         super().__init__()
 
-        try:
-            if not SysUtil.is_package_installed('litellm'):
-                SysUtil.install_import(
-                    package_name='litellm',
-                    import_name='acompletion'
-                )
-            from litellm import acompletion
-            self.acompletion = acompletion
-        except:
-            raise ImportError(
-                f'Unable to import required module from ollama. Please make sure that ollama is installed.')
-
+        from lionagi.util.import_util import ImportUtil
+        ImportUtil.check_import('litellm')
+        
+        from litellm import acompletion
+        
+        self.acompletion = acompletion
         self.model = model
         self.kwargs = kwargs
 

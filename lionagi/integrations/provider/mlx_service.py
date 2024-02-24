@@ -1,14 +1,16 @@
-from lionagi.utils.sys_util import SysUtil, to_dict
-from lionagi.integrations.provider import BaseService
+from lionagi.util import to_dict
+from lionagi.util.api_util import BaseService
 
+from lionagi.integrations.config.mlx_configs import model
 
 class MlXService(BaseService):
-    def __init__(self, model="mlx-community/OLMo-7B-hf-4bit-mlx", **kwargs):
-
-        if not SysUtil.is_package_installed('mlx_lm'):
-            SysUtil.install_import(package_name='mlx_lm')
-
+    def __init__(self, model=model, **kwargs):
+        
+        from lionagi.util.import_util import ImportUtil
+        ImportUtil.check_import('mlx_lm')
+        
         from mlx_lm import load, generate
+        
         super().__init__()
 
         model_, tokenizer = load(model, **kwargs)

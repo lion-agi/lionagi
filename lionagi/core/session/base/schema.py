@@ -1,10 +1,12 @@
 import json
-from typing import Any, Optional, List
 from enum import Enum
+from typing import Any, Optional, List
+
 import pandas as pd
-from pydantic import BaseModel, Field, model_validator, ValidationError
-from lionagi.schema.base_node import BaseNode
-from lionagi.util import SysUtil, ConvertUtil, nget, to_dict
+from pydantic import Field, model_validator
+
+from lionagi.util import nget, to_dict
+from lionagi.core.schema import DataNode
 
 _message_fields = ['node_id', 'timestamp', 'role', 'sender', 'recipient', 'content',
                    'metadata', 'relation']
@@ -84,7 +86,7 @@ class MessageType(dict, Enum):
     }
 
 
-class BaseMessage(BaseNode):
+class BaseMessage(DataNode):
     role: MessageRoleType = Field(..., alias=MessageField.ROLE.value)
     sender: str = Field(..., alias=MessageField.SENDER.value)  # Customizable sender
     recipient: Optional[str] = Field(None,
@@ -121,15 +123,15 @@ class BaseMessage(BaseNode):
             )
         }
 
-    def to_pd_series(self):
-        msg_dict = self.to_dict()
-        if isinstance(to_dict(message_dict['content']), dict):
-            message_dict['content'] = json.dumps(message_dict['content'])
+    def to_pd_series(self, *args, **kwargs):
+        msg_dict = self.to_dict(*args, **kwargs)
+        if isinstance(to_dict(msg_dict['content']), dict):
+            msg_dict['content'] = json.dumps(msg_dict['content'])
         return pd.Series(msg_dict)
 
     @classmethod
-    def from_pd_series(cls, series: pd.Series):
-        self = cls.from_dict(series.to_dict())
+    def from_pd_series(cls, series: pd.Series, **kwargs):
+        self = cls.from_dict(series.to_dict(**kwargs))
         if isinstance(self.content, str):
             try:
                 self.content = to_dict(self.content)
@@ -139,8 +141,6 @@ class BaseMessage(BaseNode):
 
 
     def __str__(self):
-
-        timestamp = f" ({self.timestamp})" if self.timestamp else ""
         content_preview = self.content[:50] + "..." if len(
             self.content) > 50 else self.content
         meta_preview = str(self.metadata)[:50] + "..." if len(
@@ -149,10 +149,9 @@ class BaseMessage(BaseNode):
         return (
             f"Message({self._role.value or 'none'}, {self._sender or 'none'}, "
             f"{content_preview or 'none'}, {self.recipient or 'none'},"
-            f"{self.timestamp or 'none'})"
-        )
-
-
+            f"{self.timestamp or 'none'}, {meta_preview or 'none'}"
+        )  
+      
 class Instruction(BaseMessage):
 
     def __init__(self, instruction: Any, context: Any = None,
@@ -163,7 +162,7 @@ class Instruction(BaseMessage):
             role=MessageType.INSTRUCTION.value[MessageField.ROLE.value],
             sender=sender or MessageType.INSTRUCTION.value[MessageField.SENDER.value],
             content={MessageType.INSTRUCTION.value["content_key"]: instruction},
-            recipient=MessageType.SYSTEM.value[MessageField.RECIPIENT.value],
+            recipient=recipient or MessageType.SYSTEM.value[MessageField.RECIPIENT.value],
             metadata=metadata or {}, relation=relation or [], **kwargs
         )
         if context:

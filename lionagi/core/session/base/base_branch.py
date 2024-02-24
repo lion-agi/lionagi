@@ -1,13 +1,16 @@
+import json
 from abc import ABC
 from typing import Any, Dict, List
 import pandas as pd
 from pathlib import Path
-from lionagi.schema.base_node import BaseRelatableNode
-from lionagi.schema.data_logger import DataLogger
-from lionagi.util.path_util import PathUtil
+from datetime import datetime
 
-from .schema import (BranchColumns, System, Instruction, Response)
-from .util import MessageUtil
+from lionagi.util import PathUtil, to_dict, to_df
+
+from lionagi.core.schema import BaseRelatableNode, DataLogger
+
+from lionagi.core.session.base.schema import BranchColumns, System, Instruction, BaseMessage
+from lionagi.core.session.base.util import MessageUtil
 
 
 class BaseBranch(BaseRelatableNode, ABC):
@@ -33,7 +36,7 @@ class BaseBranch(BaseRelatableNode, ABC):
             self, system: Dict | List | System | None = None,
             instruction: Dict | List | Instruction | None = None,
             context: str | Dict[str, Any] | None = None,
-            response: Dict | List | Response | None = None,
+            response: Dict | List | BaseMessage | None = None,
             **kwargs) -> None:
         """
         Adds a message to the branch.
@@ -253,23 +256,23 @@ class BaseBranch(BaseRelatableNode, ABC):
         }
 
     @classmethod
-    def _from_csv(cls, filepath: str, read_kwargs=None, **kwargs) -> 'Conversation':
+    def _from_csv(cls, filepath: str, read_kwargs=None, **kwargs) -> 'BaseBranch':
         read_kwargs = {} if read_kwargs is None else read_kwargs
         messages = MessageUtil.read_csv(filepath, **read_kwargs)
         return cls(messages=messages, **kwargs)
 
     @classmethod
-    def from_csv(cls, **kwargs) -> 'Conversation':
+    def from_csv(cls, **kwargs) -> 'BaseBranch':
 
         return cls._from_csv(**kwargs)
 
     @classmethod
-    def from_json(cls, **kwargs) -> 'Conversation':
+    def from_json(cls, **kwargs) -> 'BaseBranch':
 
         return cls._from_json(**kwargs)
 
     @classmethod
-    def _from_json(cls, filepath: str, read_kwargs=None, **kwargs) -> 'Conversation':
+    def _from_json(cls, filepath: str, read_kwargs=None, **kwargs) -> 'BaseBranch':
         read_kwargs = {} if read_kwargs is None else read_kwargs
         messages = MessageUtil.read_json(filepath, **read_kwargs)
         return cls(messages=messages, **kwargs)
@@ -460,12 +463,12 @@ class BaseBranch(BaseRelatableNode, ABC):
     def search_keywords(self, keywords: str | list[str],
                         case_sensitive: bool = False,
                         reset_index: bool = False,
-                        dropna: bool = False) -> DataFrame:
+                        dropna: bool = False) -> pd.DataFrame:
         return MessageUtil.search_keywords(
             self.messages, keywords, case_sensitive, reset_index, dropna
         )
 
-    def extend(self, messages: DataFrame, **kwargs) -> None:
+    def extend(self, messages: pd.DataFrame, **kwargs) -> None:
 
         self.messages = MessageUtil.extend(self.messages, messages, **kwargs)
 
@@ -473,7 +476,7 @@ class BaseBranch(BaseRelatableNode, ABC):
                   start_time: datetime | None = None,
                   end_time: datetime | None = None,
                   content_keywords: str | list[str] | None = None,
-                  case_sensitive: bool = False) -> pandas.DataFrame:
+                  case_sensitive: bool = False) -> pd.DataFrame:
 
         return MessageUtil.filter_messages_by(
             self.messages, role=role, sender=sender,

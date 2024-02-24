@@ -1,5 +1,5 @@
 from typing import Any, Dict
-from lionagi.core.directive.evaluator.base_evaluator import BaseEvaluator
+from lionagi_experimental.directive.evaluator.base_evaluator import BaseEvaluator
 
 class BaseDirectiveTemplate:
     """Enhanced base template class for processing templates with conditionals and loops."""

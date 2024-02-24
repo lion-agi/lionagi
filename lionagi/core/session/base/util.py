@@ -1,13 +1,13 @@
-from typing import Any, Dict, List
-import pandas as pd
 import json
-from datetime import datetime
 
-from .schema import (
-    ActionRequest, AssistantResponse, ActionResponse, System,
-    Instruction, MessageField, MessageContentKey, BaseMessage
-)
-from lionagi.util import ConvertUtil, to_dict, to_df, nget
+from datetime import datetime
+from typing import Any, Dict, List
+
+import pandas as pd
+
+from lionagi.util import ConvertUtil, to_dict, to_df, nget, lcall
+from lionagi.core.session.base.schema import ActionRequest, AssistantResponse, \
+    ActionResponse, System, Instruction, MessageField, MessageContentKey, BaseMessage
 
 
 class MessageUtil:
@@ -202,7 +202,7 @@ class MessageUtil:
             outs = messages.copy()
 
             if content_keywords:
-                outs = search_keywords(content_keywords, case_sensitive)
+                outs = MessageUtil.search_keywords(content_keywords, case_sensitive)
 
             outs = outs[outs['role'] == role] if role else outs
             outs = outs[outs['sender'] == sender] if sender else outs

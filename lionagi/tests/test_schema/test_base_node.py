@@ -1,4 +1,4 @@
-from lionagi.schema.base_node import *
+from lionagi.core.schema.base_node import *
 import unittest
 
 class TestBaseComponent(unittest.TestCase):

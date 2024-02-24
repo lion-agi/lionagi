@@ -1,10 +1,10 @@
-# To-do
-
 import asyncio
+
 from typing import Dict, Union, List, Tuple, Any, TypeVar
-from lionagi.util.call_util import lcall, is_coroutine_func, _call_handler
-from lionagi.util.util import to_dict
+
 from lionagi.core.schema import BaseActionNode
+from lionagi.util import to_dict, lcall
+from lionagi.util.call_util import is_coroutine_func, _call_handler
 
 T = TypeVar('T', bound=BaseActionNode)
 
@@ -14,7 +14,7 @@ class ActionManager:
     def __init__(self, registry: Dict[str, T] = None, actions: List[T] = None):
         self.registry = registry or {}
         if actions:
-            self.register(actions)
+            self.register_actions(actions)
 
     @property
     def all_actions(self) -> List[T]:
@@ -66,7 +66,7 @@ class ActionManager:
             except:
                 raise ValueError('assistant_response is not a valid function call')
     
-    def register(self, actions: List[T]) -> None:
+    def register_actions(self, actions: List[T]) -> None:
         lcall(actions, self._register)
 
     def to_schema_list(self) -> List[Dict[str, Any]]:
@@ -99,54 +99,3 @@ class ActionManager:
             kwargs = {**action_kwarg, **kwargs}
             
         return kwargs
-
-    # def register_tool_with_grammar(self, actions: Tool, grammar: Callable[[str], Tuple[Dict, Dict]]) -> None:
-    #     """Registers a actions with associated grammar for advanced parsing."""
-    #     if not isinstance(actions, Tool):
-    #         raise TypeError("Please register a Tool object.")
-    #     name = actions.schema_['function']['name']
-    #     self.registry[name] = {"actions": actions, "grammar": grammar}
-    #
-    # async def invoke_with_grammar(self, action_call: str) -> Any:
-    #     """Invokes a registered actions using a grammar-based approach for parsing the function call."""
-    #     for name, data in self.registry.items():
-    #         actions = data["actions"]
-    #         grammar = data["grammar"]
-    #         match = grammar(action_call)
-    #         if match:
-    #             args, kwargs = match
-    #             func = actions.func
-    #             try:
-    #                 if is_coroutine_func(func):
-    #                     return await func(*args, **kwargs)
-    #                 else:
-    #                     return func(*args, **kwargs)
-    #             except Exception as e:
-    #                 raise ValueError(f"Error when invoking function {name}: {e}")
-    #     raise ValueError("No registered actions matches the function call.")
-    #
-    # def register_tool_with_grammar(self, actions: Tool, grammar: Callable[[str], Tuple[Dict, Dict]]) -> None:
-    #     if not isinstance(actions, Tool):
-    #         raise TypeError("Expected a Tool object for registration.")
-    #     name = actions.schema_['function']['name']
-    #     # Ensures each actions is associated with its unique grammar for parsing calls
-    #     self.registry[name] = {"actions": actions, "grammar": grammar}
-    #
-    # async def invoke_with_grammar(self, action_call: str) -> Any:
-    #     for name, data in self.registry.items():
-    #         if "grammar" in data:  # Ensure only actions with grammar are processed
-    #             actions, grammar = data["actions"], data["grammar"]
-    #             match = grammar(action_call)
-    #             if match:
-    #                 args, kwargs = match
-    #                 func = actions.func
-    #                 try:
-    #                     # Checks if the function is asynchronous and calls it appropriately
-    #                     if asyncio.iscoroutinefunction(func):
-    #                         return await func(*args, **kwargs)
-    #                     else:
-    #                         return func(*args, **kwargs)
-    #                 except Exception as e:
-    #                     raise ValueError(f"Error invoking {name} with {args}, {kwargs}: {e}")
-    #     raise ValueError(f"No registered actions matches the function call: {action_call}")
-    #

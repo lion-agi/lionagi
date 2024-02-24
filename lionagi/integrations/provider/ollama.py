@@ -1,21 +1,17 @@
-from lionagi.util.sys_util import install_import, is_package_installed
-from lionagi.integrations.provider import BaseService
+from lionagi.util.api_util import BaseService
+from lionagi.integrations.config.ollama_configs import model
 
 class OllamaService(BaseService):
-    def __init__(self, model: str = None, **kwargs):
+    
+    def __init__(self, model: str = model, **kwargs):
         super().__init__()
         
-        try: 
-            if not is_package_installed('ollama'):
-                install_import(
-                    package_name='ollama',
-                    import_name='Client'
-                )
-            import ollama    
-            self.ollama = ollama
-        except:
-            raise ImportError(f'Unable to import required module from ollama. Please make sure that ollama is installed.')
+        from lionagi.util.import_util import ImportUtil
+        ImportUtil.check_import('ollama')
         
+        import ollama    
+
+        self.ollama = ollama
         self.model = model
         self.client = self.ollama.AsyncClient(**kwargs)
 

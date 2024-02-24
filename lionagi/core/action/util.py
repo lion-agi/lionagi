@@ -1,6 +1,6 @@
 import inspect
 
-from lionagi.schema.action_node import BaseActionNode
+from lionagi.core.schema import BaseActionNode
 
 
 def func_to_action(func_, parser=None, docstring_style='google'):

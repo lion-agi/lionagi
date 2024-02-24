@@ -1,10 +1,20 @@
 from abc import ABC
-from lionagi.schema.data_logger import DataLogger
-from ..branch import Branch
+from typing import Any, Dict, List
+from collections import deque
+
+from pandas import DataFrame
+
+from lionagi.util import to_df, to_list
+
+from lionagi.core.schema import BaseActionNode, DataLogger
+from lionagi.core.action import ActionManager
+
+from lionagi.core.session.base.mail_manager import MailManager
+from lionagi.core.session.base.schema import System
+from lionagi.core.session.branch import Branch
 
 
-
-class BaseSession:
+class BaseSession(ABC):
 
     def __init__(
             self,

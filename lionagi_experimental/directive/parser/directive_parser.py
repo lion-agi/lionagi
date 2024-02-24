@@ -1,5 +1,5 @@
-from lionagi.core.directive.parser.base_directive_parser import BaseDirectiveParser
-from lionagi.core.directive.schema.base_directive_node import IfNode, TryNode
+from lionagi_experimental.directive.parser.base_directive_parser import BaseDirectiveParser
+from lionagi_experimental.directive.schema.base_directive_node import IfNode, TryNode
 
 
 class ActionParser(BaseDirectiveParser):

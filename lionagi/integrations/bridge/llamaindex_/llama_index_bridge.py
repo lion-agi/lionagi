@@ -3,7 +3,7 @@ class LlamaIndexBridge:
     @staticmethod
     def to_llama_index_node(*args, **kwargs):
         from .textnode import to_llama_index_node
-        return to_llama_index_node(**kwargs)
+        return to_llama_index_node(*args, **kwargs)
 
     @staticmethod
     def llama_index_read_data(*args, **kwargs):

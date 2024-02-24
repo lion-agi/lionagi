@@ -1,5 +1,35 @@
-from .base.base_branch import BaseBranch
+from collections import deque
+from typing import Any, Dict, List, Optional, Union, TypeVar
 
+import pandas as pd
+
+from lionagi.util import to_list, to_dict, ConvertUtil
+from lionagi.util.api_util import StatusTracker
+
+from lionagi.core.schema import BaseActionNode
+from lionagi.core.action import ActionManager
+from lionagi.core.flow import ChatFlow
+
+from lionagi.core.session.base.base_branch import BaseBranch
+from lionagi.core.session.base.schema import BaseMail, Instruction, System
+from lionagi.core.session.base.util import MessageUtil
+
+
+OAIService = ''
+
+from dotenv import load_dotenv
+
+load_dotenv()
+
+try:
+    from lionagi.integrations.provider import Services
+
+    OAIService = Services.OpenAI()
+
+except:
+    pass
+
+T = TypeVar('T', bound=BaseActionNode)
 
 
 class Branch(BaseBranch):
@@ -65,18 +95,14 @@ class Branch(BaseBranch):
 
         return self
 
-    def messages_describe(self) -> Dict[str, Any]:
+    def messages_describe(self, msg) -> Dict[str, Any]:
 
-        return {
-            "total_messages": len(self.messages),
-            "summary_by_role": self._info(),
-            "summary_by_sender": self._info(use_sender=True),
-            "instruction_sets": self.instruction_sets,
-            "registered_actions": self.action_manager.registry,
-            "messages": [
+        return dict(total_messages=len(self.messages), summary_by_role=self._info(),
+                    summary_by_sender=self._info(use_sender=True),
+                    instruction_sets=self.instruction_sets,
+                    registered_actions=self.action_manager.registry, messages=[
                 msg.to_dict() for _, msg in self.messages.iterrows()
-            ],
-        }
+            ])
 
     @property
     def has_actions(self) -> bool:
@@ -105,7 +131,8 @@ class Branch(BaseBranch):
                     self.action_manager.registry[key] = value
 
     # ----- action manager methods ----- #
-    def register_actions(self, actions: Union[BaseActionNode, List[BaseActionNode]]) -> None:
+    def register_actions(self,
+                         actions: Union[BaseActionNode, List[BaseActionNode]]) -> None:
 
         if not isinstance(actions, list):
             actions = to_list(actions, flatten=True, dropna=True)
@@ -117,14 +144,14 @@ class Branch(BaseBranch):
     ) -> bool:
 
         if isinstance(actions, list):
-            if SysUtil.is_same_dtype(actions, str):
+            if ConvertUtil.is_same_dtype(actions, str):
                 for act_ in actions:
                     if act_ in self.action_manager.registry:
                         self.action_manager.registry.pop(act_)
                 if verbose:
                     print("actions successfully deleted")
                 return True
-            elif SysUtil.is_same_dtype(actions, _cols):
+            elif ConvertUtil.is_same_dtype(actions, BaseActionNode):
                 for act_ in actions:
                     if act_.name in self.action_manager.registry:
                         self.action_manager.registry.pop(act_.name)
@@ -136,7 +163,6 @@ class Branch(BaseBranch):
         return False
 
     def send(self, recipient: str, category: str, package: Any) -> None:
-
 
         mail_ = BaseMail(
             sender=self.sender, recipient=recipient, category=category,
@@ -165,6 +191,8 @@ class Branch(BaseBranch):
                 self.action_manager.register_actions([mail_.package])
 
             elif mail_.category == 'provider' and service:
+                from lionagi.util.api_util import BaseService
+
                 if not isinstance(mail_.package, BaseService):
                     raise ValueError('Invalid provider format')
                 self.service = mail_.package
@@ -186,10 +214,12 @@ class Branch(BaseBranch):
 
     @staticmethod
     def _add_service(service, llmconfig):
+        from lionagi.integrations.provider.oai import OpenAIService
+
         service = service or OAIService
         if llmconfig is None:
             if isinstance(service, OpenAIService):
-                from lionagi.integrations.provider import oai_schema
+                from lionagi.integrations.config import oai_schema
                 llmconfig = oai_schema["chat/completions"]["config"]
             else:
                 llmconfig = {}

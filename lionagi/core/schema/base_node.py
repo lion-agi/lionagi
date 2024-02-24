@@ -2,6 +2,7 @@
 Module for base component model definition using Pydantic.
 """
 
+import json
 from abc import ABC
 from typing import Any, Dict, Type, TypeVar, Callable, List
 from pydantic import BaseModel, Field, ValidationError, AliasChoices, field_serializer
@@ -233,8 +234,9 @@ class BaseRelatableNode(BaseNode):
         return False
 
 
-class BaseActionNode(BaseNode):
+class BaseActionNode(BaseRelatableNode):
     func: Any
+    schema_: Any | None = None
     manual: Any | None = None
     parser: Any | None = None
 
