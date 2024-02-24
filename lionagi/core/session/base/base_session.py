@@ -4,7 +4,7 @@ from ..branch import Branch
 
 
 
-class Session(Branch, ABC):
+class BaseSession:
 
     def __init__(
             self,
@@ -20,19 +20,20 @@ class Session(Branch, ABC):
             messages: DataFrame | None = None,
             datalogger: DataLogger | None = None,
             persist_path: str | None = None,
+            session_logger: DataLogger | None = None,
             **kwargs: Any
     ):
 
-        super().__init__(
-            branch_name=default_branch_name,
+        self.default_branch = Branch(
+            branch_name=default_branch_name or 'main',
             system=system, sender=sender, llmconfig=llmconfig, service=service, actions=actions,
             instruction_sets=instruction_sets, action_manager=action_manager, messages=messages,
             persist_path=persist_path, datalogger=datalogger, **kwargs
         )
 
-        self.default_branch = self
-        self.session_logger = DataLogger(persist_path=persist_path)
+        self.session_logger = session_logger or DataLogger(persist_path=persist_path)
         self.branches = branches or {}
+        self.branches[self.default_branch.branch_name] = self.default_branch
         self.mail_manager = MailManager(self.branches)
 
 
