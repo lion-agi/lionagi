@@ -7,7 +7,7 @@ from lionagi.core.schema import Tool
 from lionagi.util import to_dict, lcall
 from lionagi.util.call_util import is_coroutine_func, _call_handler
 
-T = TypeVar('T', bound=Tool)
+T = TypeVar("T", bound=Tool)
 
 
 class ToolManager:
@@ -21,6 +21,7 @@ class ToolManager:
     Attributes:
         registry (Dict[str, Tool]): A dictionary to hold registered tools, keyed by their names.
     """
+
     registry: Dict = {}
 
     def name_existed(self, name: str) -> bool:
@@ -46,8 +47,8 @@ class ToolManager:
             TypeError: If the provided object is not an instance of Tool.
         """
         if not isinstance(tool, Tool):
-            raise TypeError('Please register a Tool object.')
-        name = tool.schema_['function']['name']
+            raise TypeError("Please register a Tool object.")
+        name = tool.schema_["function"]["name"]
         self.registry.update({name: tool})
 
     async def invoke(self, func_call: Tuple[str, Dict[str, Any]]) -> Any:
@@ -78,7 +79,8 @@ class ToolManager:
                     return parser(out) if parser else out
             except Exception as e:
                 raise ValueError(
-                    f"Error when invoking function {name} with arguments {kwargs} with error message {e}")
+                    f"Error when invoking function {name} with arguments {kwargs} with error message {e}"
+                )
         else:
             raise ValueError(f"Function {name} is not registered.")
 
@@ -97,16 +99,16 @@ class ToolManager:
             ValueError: If the response does not contain valid function call information.
         """
         try:
-            func = response['action'][7:]
-            args = json.loads(response['arguments'])
+            func = response["action"][7:]
+            args = json.loads(response["arguments"])
             return (func, args)
         except:
             try:
-                func = response['recipient_name'].split('.')[-1]
-                args = response['parameters']
+                func = response["recipient_name"].split(".")[-1]
+                args = response["parameters"]
                 return (func, args)
             except:
-                raise ValueError('response is not a valid function call')
+                raise ValueError("response is not a valid function call")
 
     def register_tools(self, tools: List[Tool]) -> None:
         """
@@ -130,9 +132,9 @@ class ToolManager:
             schema_list.append(tool.schema_)
         return schema_list
 
-    def _tool_parser(self,
-                     tools: Union[Dict, Tool, List[Tool], str, List[str], List[Dict]],
-                     **kwargs) -> Dict:
+    def _tool_parser(
+        self, tools: Union[Dict, Tool, List[Tool], str, List[str], List[Dict]], **kwargs
+    ) -> Dict:
         """
         Parses tool information and generates a dictionary for tool invocation.
 
@@ -157,7 +159,7 @@ class ToolManager:
                     tool = self.registry[tool]
                     return tool.schema_
                 else:
-                    raise ValueError(f'Function {tool} is not registered.')
+                    raise ValueError(f"Function {tool} is not registered.")
 
         if isinstance(tools, bool):
             tool_kwarg = {"tools": self.to_tool_schema_list()}

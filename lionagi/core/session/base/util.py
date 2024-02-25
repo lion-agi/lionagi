@@ -72,23 +72,32 @@ class MessageUtil:
             ValueError: If the DataFrame does not match expected schema or content requirements.
         """
 
-        if list(messages.columns) != ['node_id', 'role', 'sender', 'timestamp',
-                                      'content']:
-            raise ValueError('Invalid messages dataframe. Unmatched columns.')
+        if list(messages.columns) != [
+            "node_id",
+            "role",
+            "sender",
+            "timestamp",
+            "content",
+        ]:
+            raise ValueError("Invalid messages dataframe. Unmatched columns.")
         if messages.isnull().values.any():
-            raise ValueError('Invalid messages dataframe. Cannot have null.')
-        if not all(role in ['system', 'user', 'assistant'] for role in
-                   messages['role'].unique()):
+            raise ValueError("Invalid messages dataframe. Cannot have null.")
+        if not all(
+            role in ["system", "user", "assistant"]
+            for role in messages["role"].unique()
+        ):
             raise ValueError(
-                'Invalid messages dataframe. Cannot have role other than ["system", "user", "assistant"].')
-        for cont in messages['content']:
-            if cont.startswith('Sender'):
-                cont = cont.split(':', 1)[1]
+                'Invalid messages dataframe. Cannot have role other than ["system", "user", "assistant"].'
+            )
+        for cont in messages["content"]:
+            if cont.startswith("Sender"):
+                cont = cont.split(":", 1)[1]
             try:
                 json.loads(cont)
             except:
                 raise ValueError(
-                    'Invalid messages dataframe. Content expect json string.')
+                    "Invalid messages dataframe. Content expect json string."
+                )
         return True
 
     @staticmethod
@@ -107,16 +116,16 @@ class MessageUtil:
             ValueError: If the sender is None or the value is 'none'.
         """
 
-        if sender is None or ConvertUtil.strip_lower(sender) == 'none':
+        if sender is None or ConvertUtil.strip_lower(sender) == "none":
             raise ValueError("sender cannot be None")
         df = to_df(messages)
 
         for i in df.index:
-            if not df.loc[i, 'content'].startswith('Sender'):
-                df.loc[i, 'content'] = f"Sender {sender}: {df.loc[i, 'content']}"
+            if not df.loc[i, "content"].startswith("Sender"):
+                df.loc[i, "content"] = f"Sender {sender}: {df.loc[i, 'content']}"
             else:
-                content = df.loc[i, 'content'].split(':', 1)[1]
-                df.loc[i, 'content'] = f"Sender {sender}: {content}"
+                content = df.loc[i, "content"].split(":", 1)[1]
+                df.loc[i, "content"] = f"Sender {sender}: {content}"
 
         return to_df(df)
 
@@ -128,7 +137,7 @@ class MessageUtil:
         start_time: datetime | None = None,
         end_time: datetime | None = None,
         content_keywords: str | List[str] | None = None,
-        case_sensitive: bool = False
+        case_sensitive: bool = False,
     ) -> pd.DataFrame:
         """
         Filters messages in a DataFrame based on specified criteria.
@@ -152,10 +161,10 @@ class MessageUtil:
             if content_keywords:
                 outs = MessageUtil.search_keywords(content_keywords, case_sensitive)
 
-            outs = outs[outs['role'] == role] if role else outs
-            outs = outs[outs['sender'] == sender] if sender else outs
-            outs = outs[outs['timestamp'] > start_time] if start_time else outs
-            outs = outs[outs['timestamp'] < end_time] if end_time else outs
+            outs = outs[outs["role"] == role] if role else outs
+            outs = outs[outs["sender"] == sender] if sender else outs
+            outs = outs[outs["timestamp"] > start_time] if start_time else outs
+            outs = outs[outs["timestamp"] < end_time] if end_time else outs
 
             return to_df(outs)
 
@@ -191,7 +200,7 @@ class MessageUtil:
         role: str | None = None,
         n: int = 1,
         sign_: bool = False,
-        from_: str = "front"
+        from_: str = "front",
     ) -> pd.DataFrame:
         """
         Retrieves a specified number of message rows based on sender and role.
@@ -208,40 +217,37 @@ class MessageUtil:
             A DataFrame containing the filtered messages.
         """
 
-        outs = ''
+        outs = ""
 
         if from_ == "last":
             if sender is None and role is None:
                 outs = messages.iloc[-n:]
             elif sender and role:
                 outs = messages[
-                           (messages['sender'] == sender) & (messages['role'] == role)
-                           ].iloc[-n:]
+                    (messages["sender"] == sender) & (messages["role"] == role)
+                ].iloc[-n:]
 
             elif sender:
-                outs = messages[messages['sender'] == sender].iloc[-n:]
+                outs = messages[messages["sender"] == sender].iloc[-n:]
             else:
-                outs = messages[messages['role'] == role].iloc[-n:]
+                outs = messages[messages["role"] == role].iloc[-n:]
 
         elif from_ == "front":
             if sender is None and role is None:
                 outs = messages.iloc[:n]
             elif sender and role:
-                outs = messages[(messages['sender'] == sender) & (
-                        messages['role'] == role)].iloc[:n]
+                outs = messages[
+                    (messages["sender"] == sender) & (messages["role"] == role)
+                ].iloc[:n]
             elif sender:
-                outs = messages[messages['sender'] == sender].iloc[:n]
+                outs = messages[messages["sender"] == sender].iloc[:n]
             else:
-                outs = messages[messages['role'] == role].iloc[:n]
+                outs = messages[messages["role"] == role].iloc[:n]
 
         return MessageUtil.sign_message(outs, sender) if sign_ else outs
 
     @staticmethod
-    def extend(
-        df1: pd.DataFrame,
-        df2: pd.DataFrame,
-        **kwargs
-    ) -> pd.DataFrame:
+    def extend(df1: pd.DataFrame, df2: pd.DataFrame, **kwargs) -> pd.DataFrame:
         """
         Extends a DataFrame with another DataFrame's rows, ensuring no duplicate 'node_id'.
 
@@ -261,10 +267,10 @@ class MessageUtil:
 
         MessageUtil.validate_messages(df2)
         try:
-            if len(df2.dropna(how='all')) > 0 and len(df1.dropna(how='all')) > 0:
+            if len(df2.dropna(how="all")) > 0 and len(df1.dropna(how="all")) > 0:
                 df = to_df([df1, df2])
                 df.drop_duplicates(
-                    inplace=True, subset=['node_id'], keep='first', **kwargs
+                    inplace=True, subset=["node_id"], keep="first", **kwargs
                 )
                 return to_df(df)
         except Exception as e:
@@ -289,31 +295,30 @@ class MessageUtil:
 
             if i.role == "assistant":
                 try:
-                    a = nget(content, ['action_response', 'func'])
-                    b = nget(content, ['action_response', 'arguments'])
-                    c = nget(content, ['action_response', 'output'])
+                    a = nget(content, ["action_response", "func"])
+                    b = nget(content, ["action_response", "arguments"])
+                    c = nget(content, ["action_response", "output"])
                     if a is not None:
                         answers.append(f"Function: {a}")
                         answers.append(f"Arguments: {b}")
                         answers.append(f"Output: {c}")
                     else:
-                        answers.append(nget(content, ['assistant_response']))
+                        answers.append(nget(content, ["assistant_response"]))
                 except:
                     pass
             elif i.role == "user":
                 try:
-                    answers.append(nget(content, ['instruction']))
+                    answers.append(nget(content, ["instruction"]))
                 except:
                     pass
             else:
                 try:
-                    answers.append(nget(content, ['system_info']))
+                    answers.append(nget(content, ["system_info"]))
                 except:
                     pass
 
         out_ = "\n".join(answers)
         return out_
-
 
     @staticmethod
     def search_keywords(
@@ -322,7 +327,7 @@ class MessageUtil:
         col: str = "content",
         case_sensitive: bool = False,
         reset_index: bool = False,
-        dropna: bool = False
+        dropna: bool = False,
     ) -> pd.DataFrame:
         """
         Filters a DataFrame for rows where a specified column contains given keywords.
@@ -341,7 +346,7 @@ class MessageUtil:
         """
 
         if isinstance(keywords, list):
-            keywords = '|'.join(keywords)
+            keywords = "|".join(keywords)
 
         def handle_cases():
             if not case_sensitive:
@@ -360,8 +365,8 @@ class MessageUtil:
         df: pd.DataFrame,
         keyword: str,
         replacement: str,
-        col: str = 'content',
-        case_sensitive: bool = False
+        col: str = "content",
+        case_sensitive: bool = False,
     ) -> None:
         """
         Replaces occurrences of a specified keyword with a replacement string in a DataFrame column.
@@ -399,7 +404,6 @@ class MessageUtil:
         df = pd.read_json(filepath, **kwargs)
         return to_df(df)
 
-
     @staticmethod
     def remove_last_n_rows(df: pd.DataFrame, steps: int) -> pd.DataFrame:
         """
@@ -419,17 +423,12 @@ class MessageUtil:
         if steps < 0 or steps > len(df):
             raise ValueError(
                 "'steps' must be a non-negative integer less than or equal to "
-                "the length of DataFrame.")
+                "the length of DataFrame."
+            )
         return to_df(df[:-steps])
 
-
     @staticmethod
-    def update_row(
-            df: pd.DataFrame,
-            col: str,
-            old_value: Any,
-            new_value: Any
-    ) -> bool:
+    def update_row(df: pd.DataFrame, col: str, old_value: Any, new_value: Any) -> bool:
         """
         Updates a row's value for a specified column in a DataFrame.
 
@@ -449,7 +448,6 @@ class MessageUtil:
             return True
         return False
 
-
     # @staticmethod
     # def response_to_message(response: dict[str, Any], **kwargs) -> Any:
     #     """
@@ -466,7 +464,7 @@ class MessageUtil:
     #     try:
     #         response = response["message"]
     #         if ConvertUtil.strip_lower(response['content']) == "none":
-                
+
     #             content = ActionRequest._handle_action_request(response)
     #             return ActionRequest(action_request=content, **kwargs)
 

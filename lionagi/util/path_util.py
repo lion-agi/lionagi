@@ -8,13 +8,16 @@ from pathlib import Path
 
 
 class PathUtil:
-    
+
     @staticmethod
-    def clear_dir(dir_path: Path | str, recursive: bool = False,
-                  exclude: list[str] = None) -> None:
+    def clear_dir(
+        dir_path: Path | str, recursive: bool = False, exclude: list[str] = None
+    ) -> None:
         dir_path = Path(dir_path)
         if not dir_path.exists():
-            raise FileNotFoundError(f"The specified directory {dir_path} does not exist.")
+            raise FileNotFoundError(
+                f"The specified directory {dir_path} does not exist."
+            )
 
         exclude = exclude or []
         exclude_pattern = re.compile("|".join(exclude)) if exclude else None
@@ -40,23 +43,32 @@ class PathUtil:
         return path.parent, path.name
 
     @staticmethod
-    def create_path(directory: Path | str, filename: str, timestamp: bool = True,
-                    dir_exist_ok: bool = True, time_prefix: bool = False,
-                    custom_timestamp_format: str | None = None) -> Path:
+    def create_path(
+        directory: Path | str,
+        filename: str,
+        timestamp: bool = True,
+        dir_exist_ok: bool = True,
+        time_prefix: bool = False,
+        custom_timestamp_format: str | None = None,
+    ) -> Path:
         directory = Path(directory)
-        if not re.match(r'^[\w,\s-]+\.[A-Za-z]{1,5}$', filename):
+        if not re.match(r"^[\w,\s-]+\.[A-Za-z]{1,5}$", filename):
             raise ValueError(
-                "Invalid filename. Ensure it doesn't contain illegal characters and has a valid extension.")
+                "Invalid filename. Ensure it doesn't contain illegal characters and has a valid extension."
+            )
 
-        name, ext = filename.rsplit('.', 1) if '.' in filename else (filename, '')
-        ext = f".{ext}" if ext else ''
+        name, ext = filename.rsplit(".", 1) if "." in filename else (filename, "")
+        ext = f".{ext}" if ext else ""
 
         timestamp_str = ""
         if timestamp:
             from datetime import datetime
+
             timestamp_format = custom_timestamp_format or "%Y%m%d%H%M%S"
             timestamp_str = datetime.now().strftime(timestamp_format)
-            filename = f"{timestamp_str}_{name}" if time_prefix else f"{name}_{timestamp_str}"
+            filename = (
+                f"{timestamp_str}_{name}" if time_prefix else f"{name}_{timestamp_str}"
+            )
         else:
             filename = name
 
@@ -90,6 +102,6 @@ class PathUtil:
         if path.is_file():
             return path.stat().st_size
         elif path.is_dir():
-            return sum(f.stat().st_size for f in path.glob('**/*') if f.is_file())
+            return sum(f.stat().st_size for f in path.glob("**/*") if f.is_file())
         else:
             raise FileNotFoundError(f"{path} does not exist.")

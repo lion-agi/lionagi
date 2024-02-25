@@ -5,12 +5,12 @@ from .structure import Relationship, Graph, Structure
 
 
 __all__ = [
-    'BaseNode',
-    'BaseRelatableNode',
-    'Tool',
-    'DataLogger',
-    'DataNode',
-    'Relationship',
-    'Graph',
-    'Structure'
+    "BaseNode",
+    "BaseRelatableNode",
+    "Tool",
+    "DataLogger",
+    "DataNode",
+    "Relationship",
+    "Graph",
+    "Structure",
 ]

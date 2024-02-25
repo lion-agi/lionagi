@@ -13,6 +13,7 @@ from lionagi.util.sys_util import SysUtil
 
 T = TypeVar("T", bound="BaseComponent")
 
+
 class BaseComponent(BaseModel, ABC):
     """A base component model with common attributes and methods for inheritance.
 
@@ -22,12 +23,14 @@ class BaseComponent(BaseModel, ABC):
         metadata (Dict[str, Any]): Metadata associated with the component.
 
     """
+
     id_: str = Field(default_factory=SysUtil.create_id, alias="node_id")
     timestamp: str | None = Field(default_factory=SysUtil.get_timestamp)
     metadata: Dict[str, Any] = Field(default_factory=dict, alias="meta")
 
     class Config:
         """Model configuration settings."""
+
         extra = "allow"
         populate_by_name = True
         validate_assignment = True
@@ -61,8 +64,9 @@ class BaseComponent(BaseModel, ABC):
             raise ValueError(f"Invalid JSON for deserialization: {e}")
 
     @classmethod
-    def from_pd_series(cls: Type[T], pd_series: pd.Series,
-                       pd_kwargs=None, **kwargs) -> T:
+    def from_pd_series(
+        cls: Type[T], pd_series: pd.Series, pd_kwargs=None, **kwargs
+    ) -> T:
         """
         Creates an instance from a pandas Series.
         pd_kwargs for pd_series.to_dict method.
@@ -149,9 +153,7 @@ class BaseComponent(BaseModel, ABC):
         """Retrieves metadata value by key with default."""
         return self.metadata.get(key, default)
 
-    def meta_change_key(
-        self, old_key: str, new_key: str
-    ) -> bool:
+    def meta_change_key(self, old_key: str, new_key: str) -> bool:
         """Renames a key in metadata if it exists."""
         if old_key in self.metadata:
             self.metadata[new_key] = self.metadata.pop(old_key)
@@ -174,16 +176,16 @@ class BaseComponent(BaseModel, ABC):
         """Clears metadata dictionary."""
         self.metadata.clear()
 
-    def meta_filter(
-        self, filter_func: Callable[[Any], bool]
-    ) -> Dict[str, Any]:
+    def meta_filter(self, filter_func: Callable[[Any], bool]) -> Dict[str, Any]:
         """Filters metadata based on a predicate function."""
         return {k: v for k, v in self.metadata.items() if filter_func(v)}
 
     def meta_validate(self, schema: Dict[str, Type[Any]]) -> bool:
         """Validates metadata against a specified type schema."""
-        return all(isinstance(value, schema.get(key, type(None)))
-                   for key, value in self.metadata.items())
+        return all(
+            isinstance(value, schema.get(key, type(None)))
+            for key, value in self.metadata.items()
+        )
 
     def __repr__(self):
         return f"{self.__class__.__name__}({self.to_json()})"
@@ -192,7 +194,7 @@ class BaseComponent(BaseModel, ABC):
 class BaseNode(BaseComponent):
     content: str | Dict[str, Any] | None | Any = Field(
         default=None,
-        validation_alias=AliasChoices('text', 'page_content', 'chunk_content')
+        validation_alias=AliasChoices("text", "page_content", "chunk_content"),
     )
 
     @property
@@ -206,15 +208,22 @@ class BaseNode(BaseComponent):
                 return str(self.content)
             except ValueError:
                 print(f"Content is not serializable for Node: {self._id}")
-                return 'null'
+                return "null"
 
     def __str__(self):
         timestamp = f" ({self.timestamp})" if self.timestamp else ""
-        content_preview = self.content[:50] + "..." if len(self.content) > 50 else self.content
-        meta_preview = str(self.metadata)[:50] + "..." if len(str(self.metadata)) > 50 else str(self.metadata)
-        return (f"{self.class_name()}({self.id_}, {content_preview}, {meta_preview},"
-                f"{timestamp})")
-
+        content_preview = (
+            self.content[:50] + "..." if len(self.content) > 50 else self.content
+        )
+        meta_preview = (
+            str(self.metadata)[:50] + "..."
+            if len(str(self.metadata)) > 50
+            else str(self.metadata)
+        )
+        return (
+            f"{self.class_name()}({self.id_}, {content_preview}, {meta_preview},"
+            f"{timestamp})"
+        )
 
 
 class BaseRelatableNode(BaseNode):
@@ -240,6 +249,6 @@ class Tool(BaseRelatableNode):
     manual: Any | None = None
     parser: Any | None = None
 
-    @field_serializer('func')
+    @field_serializer("func")
     def serialize_func(self, func):
         return func.__name__

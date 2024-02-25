@@ -22,7 +22,9 @@ class APIUtil:
     """
 
     @staticmethod
-    def api_method(http_session: aiohttp.ClientSession, method: str = "post") -> Callable:
+    def api_method(
+        http_session: aiohttp.ClientSession, method: str = "post"
+    ) -> Callable:
         """
         Returns the corresponding HTTP method function from the http_session object.
 
@@ -44,7 +46,8 @@ class APIUtil:
         """
         if method not in ["post", "delete", "head", "options", "patch"]:
             raise ValueError(
-                "Invalid request, method must be in ['post', 'delete', 'head', 'options', 'patch']")
+                "Invalid request, method must be in ['post', 'delete', 'head', 'options', 'patch']"
+            )
         return getattr(http_session, method)
 
     @staticmethod
@@ -116,8 +119,9 @@ class APIUtil:
         return match.group(2) if match else ""
 
     @staticmethod
-    async def unified_api_call(http_session: aiohttp.ClientSession, method: str, url: str,
-                               **kwargs) -> Any:
+    async def unified_api_call(
+        http_session: aiohttp.ClientSession, method: str, url: str, **kwargs
+    ) -> Any:
         """
         Makes an API call and automatically retries on rate limit error.
 
@@ -150,10 +154,13 @@ class APIUtil:
                 if not APIUtil.api_error(response_json):
                     return response_json
 
-                if APIUtil.api_rate_limit_error(
-                        response_json) and attempt < retry_count - 1:
+                if (
+                    APIUtil.api_rate_limit_error(response_json)
+                    and attempt < retry_count - 1
+                ):
                     logging.warning(
-                        f"Rate limit error detected. Retrying in {retry_delay} seconds...")
+                        f"Rate limit error detected. Retrying in {retry_delay} seconds..."
+                    )
                     await asyncio.sleep(retry_delay)
                 else:
                     break
@@ -166,12 +173,16 @@ class APIUtil:
         Creates a unique cache key based on the URL and parameters.
         """
         param_str = json.dumps(params, sort_keys=True) if params else ""
-        return hashlib.md5((url + param_str).encode('utf-8')).hexdigest()
+        return hashlib.md5((url + param_str).encode("utf-8")).hexdigest()
 
     @staticmethod
-    async def retry_api_call(http_session: aiohttp.ClientSession, url: str,
-                             retries: int = 3, backoff_factor: float = 0.5,
-                             **kwargs) -> Any:
+    async def retry_api_call(
+        http_session: aiohttp.ClientSession,
+        url: str,
+        retries: int = 3,
+        backoff_factor: float = 0.5,
+        **kwargs,
+    ) -> Any:
         """
         Retries an API call on failure, with exponential backoff.
 
@@ -192,19 +203,24 @@ class APIUtil:
                     return await response.json()
             except aiohttp.ClientError:
                 if attempt < retries - 1:
-                    delay = backoff_factor * (2 ** attempt)
+                    delay = backoff_factor * (2**attempt)
                     logging.info(f"Retrying {url} in {delay} seconds...")
                     await asyncio.sleep(delay)
                 else:
                     logging.error(
-                        f"Failed to retrieve data from {url} after {retries} attempts.")
+                        f"Failed to retrieve data from {url} after {retries} attempts."
+                    )
                     return None
 
     @staticmethod
-    async def upload_file_with_retry(http_session: aiohttp.ClientSession, url: str,
-                                     file_path: str, param_name: str = 'file',
-                                     additional_data: Dict[str, Any] = None,
-                                     retries: int = 3) -> Any:
+    async def upload_file_with_retry(
+        http_session: aiohttp.ClientSession,
+        url: str,
+        file_path: str,
+        param_name: str = "file",
+        additional_data: Dict[str, Any] = None,
+        retries: int = 3,
+    ) -> Any:
         """
         Uploads a file to a specified URL with a retry mechanism for handling failures.
 
@@ -227,25 +243,30 @@ class APIUtil:
         """
         for attempt in range(retries):
             try:
-                with open(file_path, 'rb') as file:
+                with open(file_path, "rb") as file:
                     files = {param_name: file}
                     additional_data = additional_data if additional_data else {}
-                    async with http_session.post(url, data={**files,
-                                                            **additional_data}) as response:
+                    async with http_session.post(
+                        url, data={**files, **additional_data}
+                    ) as response:
                         response.raise_for_status()
                         return await response.json()
             except aiohttp.ClientError as e:
                 if attempt == retries - 1:
                     raise e
-                backoff = 2 ** attempt
+                backoff = 2**attempt
                 logging.info(f"Retrying {url} in {backoff} seconds...")
                 await asyncio.sleep(backoff)
 
     @staticmethod
     @cached(ttl=10 * 60)  # Cache the result for 10 minutes
-    async def get_oauth_token_with_cache(http_session: aiohttp.ClientSession,
-                                         auth_url: str, client_id: str,
-                                         client_secret: str, scope: str) -> str:
+    async def get_oauth_token_with_cache(
+        http_session: aiohttp.ClientSession,
+        auth_url: str,
+        client_id: str,
+        client_secret: str,
+        scope: str,
+    ) -> str:
         """
         Retrieves an OAuth token from the authentication server and caches it to avoid unnecessary requests.
 
@@ -265,19 +286,23 @@ class APIUtil:
             >>> token
             'mock_access_token'
         """
-        async with http_session.post(auth_url, data={
-            'grant_type': 'client_credentials',
-            'client_id': client_id,
-            'client_secret': client_secret,
-            'scope': scope
-        }) as auth_response:
+        async with http_session.post(
+            auth_url,
+            data={
+                "grant_type": "client_credentials",
+                "client_id": client_id,
+                "client_secret": client_secret,
+                "scope": scope,
+            },
+        ) as auth_response:
             auth_response.raise_for_status()
-            return (await auth_response.json()).get('access_token')
+            return (await auth_response.json()).get("access_token")
 
     @staticmethod
     @cached(ttl=10 * 60)
-    async def cached_api_call(http_session: aiohttp.ClientSession, url: str,
-                              **kwargs) -> Any:
+    async def cached_api_call(
+        http_session: aiohttp.ClientSession, url: str, **kwargs
+    ) -> Any:
         """
         Makes an API call.
 
@@ -300,9 +325,9 @@ class APIUtil:
     @staticmethod
     # @lru_cache(maxsize=1024)
     def calculate_num_token(
-            payload: Dict[str, Any] = None,
-            api_endpoint: str = None,
-            token_encoding_name: str = None,
+        payload: Dict[str, Any] = None,
+        api_endpoint: str = None,
+        token_encoding_name: str = None,
     ) -> int:
         """
         Calculates the number of tokens required for a request based on the payload and API endpoint.
@@ -388,7 +413,10 @@ class APIUtil:
             payload.update({key: config[key]})
 
         for key in optional_:
-            if bool(config[key]) is True and ConvertUtil.strip_lower(config[key]) != "none":
+            if (
+                bool(config[key]) is True
+                and ConvertUtil.strip_lower(config[key]) != "none"
+            ):
                 payload.update({key: config[key]})
 
         return payload
@@ -413,6 +441,7 @@ class StatusTracker:
         >>> tracker.num_tasks_started += 1
         >>> tracker.num_tasks_succeeded += 1
     """
+
     num_tasks_started: int = 0
     num_tasks_in_progress: int = 0
     num_tasks_succeeded: int = 0
@@ -438,8 +467,13 @@ class BaseRateLimiter(ABC):
         rate_limit_replenisher_task: The asyncio task for replenishing capacities.
     """
 
-    def __init__(self, max_requests: int, max_tokens: int, interval: int = 60,
-                 token_encoding_name=None) -> None:
+    def __init__(
+        self,
+        max_requests: int,
+        max_tokens: int,
+        interval: int = 60,
+        token_encoding_name=None,
+    ) -> None:
         self.interval: int = interval
         self.max_requests: int = max_requests
         self.max_tokens: int = max_tokens
@@ -476,21 +510,27 @@ class BaseRateLimiter(ABC):
         Returns True if the request can be made immediately, otherwise False.
         """
         async with self._lock:
-            if self.available_request_capacity > 0 and self.available_token_capacity > 0:
+            if (
+                self.available_request_capacity > 0
+                and self.available_token_capacity > 0
+            ):
                 self.available_request_capacity -= 1
-                self.available_token_capacity -= required_tokens  # Assuming 1 token per request for simplicity
+                self.available_token_capacity -= (
+                    required_tokens  # Assuming 1 token per request for simplicity
+                )
                 return True
             return False
 
     async def _call_api(
-            self,
-            http_session,
-            endpoint: str,
-            base_url: str,
-            api_key: str,
-            max_attempts: int = 3,
-            method: str = "post",
-            payload: Dict[str, any] = None, **kwargs
+        self,
+        http_session,
+        endpoint: str,
+        base_url: str,
+        api_key: str,
+        max_attempts: int = 3,
+        method: str = "post",
+        payload: Dict[str, any] = None,
+        **kwargs,
     ) -> Optional[Dict[str, any]]:
         """
         Makes an API call to the specified endpoint using the provided HTTP session.
@@ -509,12 +549,15 @@ class BaseRateLimiter(ABC):
         """
         endpoint = APIUtil.api_endpoint_from_url(base_url + endpoint)
         while True:
-            if self.available_request_capacity < 1 or self.available_token_capacity < 10:  # Minimum token count
+            if (
+                self.available_request_capacity < 1
+                or self.available_token_capacity < 10
+            ):  # Minimum token count
                 await asyncio.sleep(1)  # Wait for capacity
                 continue
-            required_tokens = APIUtil.calculate_num_token(payload, endpoint,
-                                                          self.token_encoding_name,
-                                                          **kwargs)
+            required_tokens = APIUtil.calculate_num_token(
+                payload, endpoint, self.token_encoding_name, **kwargs
+            )
 
             if await self.request_permission(required_tokens):
                 request_headers = {"Authorization": f"Bearer {api_key}"}
@@ -524,8 +567,9 @@ class BaseRateLimiter(ABC):
                     try:
                         method = APIUtil.api_method(http_session, method)
                         async with method(
-                                url=(base_url + endpoint), headers=request_headers,
-                                json=payload
+                            url=(base_url + endpoint),
+                            headers=request_headers,
+                            json=payload,
                         ) as response:
                             response_json = await response.json()
 
@@ -535,8 +579,9 @@ class BaseRateLimiter(ABC):
                                 )
                                 attempts_left -= 1
 
-                                if "Rate limit" in response_json["error"].get("message",
-                                                                              ""):
+                                if "Rate limit" in response_json["error"].get(
+                                    "message", ""
+                                ):
                                     await asyncio.sleep(15)
                             else:
                                 return response_json
@@ -550,8 +595,13 @@ class BaseRateLimiter(ABC):
                 await asyncio.sleep(1)
 
     @classmethod
-    async def create(cls, max_requests: int, max_tokens: int, interval: int = 60,
-                     token_encoding_name=None) -> 'BaseRateLimiter':
+    async def create(
+        cls,
+        max_requests: int,
+        max_tokens: int,
+        interval: int = 60,
+        token_encoding_name=None,
+    ) -> "BaseRateLimiter":
         """
         Creates an instance of BaseRateLimiter and starts the replenisher task.
 
@@ -578,8 +628,13 @@ class SimpleRateLimiter(BaseRateLimiter):
     Inherits from BaseRateLimiter and provides a basic rate limiting mechanism.
     """
 
-    def __init__(self, max_requests: int, max_tokens: int, interval: int = 60,
-                 token_encoding_name=None) -> None:
+    def __init__(
+        self,
+        max_requests: int,
+        max_tokens: int,
+        interval: int = 60,
+        token_encoding_name=None,
+    ) -> None:
         """Initializes the SimpleRateLimiter with the specified parameters."""
         super().__init__(max_requests, max_tokens, interval, token_encoding_name)
 
@@ -613,16 +668,16 @@ class EndPoint:
     """
 
     def __init__(
-            self,
-            max_requests: int = 1000,
-            max_tokens: int = 100000,
-            interval: int = 60,
-            endpoint_: Optional[str] = None,
-            rate_limiter_class: Type[BaseRateLimiter] = SimpleRateLimiter,
-            token_encoding_name=None,
-            config: Dict = None,
+        self,
+        max_requests: int = 1000,
+        max_tokens: int = 100000,
+        interval: int = 60,
+        endpoint_: Optional[str] = None,
+        rate_limiter_class: Type[BaseRateLimiter] = SimpleRateLimiter,
+        token_encoding_name=None,
+        config: Dict = None,
     ) -> None:
-        self.endpoint = endpoint_ or 'chat/completions'
+        self.endpoint = endpoint_ or "chat/completions"
         self.rate_limiter_class = rate_limiter_class
         self.max_requests = max_requests
         self.max_tokens = max_tokens
@@ -653,17 +708,17 @@ class BaseService:
         endpoints (Dict[str, EndPoint]): A dictionary of endpoint objects.
     """
 
-    base_url: str = ''
+    base_url: str = ""
     available_endpoints: list = []
 
     def __init__(
-            self,
-            api_key: Optional[str] = None,
-            schema: Dict[str, Any] = None,
-            token_encoding_name: str = None,
-            max_tokens: int = 100_000,
-            max_requests: int = 1_000,
-            interval: int = 60
+        self,
+        api_key: Optional[str] = None,
+        schema: Dict[str, Any] = None,
+        token_encoding_name: str = None,
+        max_tokens: int = 100_000,
+        max_requests: int = 1_000,
+        interval: int = 60,
     ) -> None:
         self.api_key = api_key
         self.schema = schema or {}
@@ -671,13 +726,15 @@ class BaseService:
         self.endpoints: Dict[str, EndPoint] = {}
         self.token_encoding_name = token_encoding_name
         self.chat_config_rate_limit = {
-            'max_requests': max_requests,
-            'max_tokens': max_tokens,
-            'interval': interval
+            "max_requests": max_requests,
+            "max_tokens": max_tokens,
+            "interval": interval,
         }
 
-    async def init_endpoint(self, endpoint_: Optional[
-        Union[List[str], List[EndPoint], str, EndPoint]] = None) -> None:
+    async def init_endpoint(
+        self,
+        endpoint_: Optional[Union[List[str], List[EndPoint], str, EndPoint]] = None,
+    ) -> None:
         """
         Initializes the specified endpoint or all endpoints if none is specified.
 
@@ -691,10 +748,11 @@ class BaseService:
             for ep in endpoint_:
                 if ep not in self.available_endpoints:
                     raise ValueError(
-                        f"Endpoint {ep} not available for service {self.__class__.__name__}")
+                        f"Endpoint {ep} not available for service {self.__class__.__name__}"
+                    )
 
                 if ep not in self.endpoints:
-                    endpoint_config = nget(self.schema, [ep, 'config'])
+                    endpoint_config = nget(self.schema, [ep, "config"])
                     self.schema.get(ep, {})
                     if isinstance(ep, EndPoint):
                         self.endpoints[ep.endpoint] = ep
@@ -702,25 +760,37 @@ class BaseService:
                         if ep == "chat/completions":
                             self.endpoints[ep] = EndPoint(
                                 max_requests=self.chat_config_rate_limit.get(
-                                    'max_requests', 1000),
-                                max_tokens=self.chat_config_rate_limit.get('max_tokens',
-                                                                           100000),
-                                interval=self.chat_config_rate_limit.get('interval', 60),
+                                    "max_requests", 1000
+                                ),
+                                max_tokens=self.chat_config_rate_limit.get(
+                                    "max_tokens", 100000
+                                ),
+                                interval=self.chat_config_rate_limit.get(
+                                    "interval", 60
+                                ),
                                 endpoint_=ep,
                                 token_encoding_name=self.token_encoding_name,
                                 config=endpoint_config,
                             )
                         else:
                             self.endpoints[ep] = EndPoint(
-                                max_requests=endpoint_config.get('max_requests',
-                                                                 1000) if endpoint_config.get(
-                                    'max_requests', 1000) is not None else 1000,
-                                max_tokens=endpoint_config.get('max_tokens',
-                                                               100000) if endpoint_config.get(
-                                    'max_tokens', 100000) is not None else 100000,
-                                interval=endpoint_config.get('interval',
-                                                             60) if endpoint_config.get(
-                                    'interval', 60) is not None else 60,
+                                max_requests=(
+                                    endpoint_config.get("max_requests", 1000)
+                                    if endpoint_config.get("max_requests", 1000)
+                                    is not None
+                                    else 1000
+                                ),
+                                max_tokens=(
+                                    endpoint_config.get("max_tokens", 100000)
+                                    if endpoint_config.get("max_tokens", 100000)
+                                    is not None
+                                    else 100000
+                                ),
+                                interval=(
+                                    endpoint_config.get("interval", 60)
+                                    if endpoint_config.get("interval", 60) is not None
+                                    else 60
+                                ),
                                 endpoint_=ep,
                                 token_encoding_name=self.token_encoding_name,
                                 config=endpoint_config,
@@ -731,13 +801,13 @@ class BaseService:
 
         else:
             for ep in self.available_endpoints:
-                endpoint_config = nget(self.schema, [ep, 'config'])
+                endpoint_config = nget(self.schema, [ep, "config"])
                 self.schema.get(ep, {})
                 if ep not in self.endpoints:
                     self.endpoints[ep] = EndPoint(
-                        max_requests=endpoint_config.get('max_requests', 1000),
-                        max_tokens=endpoint_config.get('max_tokens', 100000),
-                        interval=endpoint_config.get('interval', 60),
+                        max_requests=endpoint_config.get("max_requests", 1000),
+                        max_tokens=endpoint_config.get("max_tokens", 100000),
+                        interval=endpoint_config.get("interval", 60),
                         endpoint_=ep,
                         token_encoding_name=self.token_encoding_name,
                         config=endpoint_config,
@@ -761,12 +831,17 @@ class BaseService:
             ValueError: If the endpoint has not been initialized.
         """
         if endpoint not in self.endpoints.keys():
-            raise ValueError(f'The endpoint {endpoint} has not initialized.')
+            raise ValueError(f"The endpoint {endpoint} has not initialized.")
         async with aiohttp.ClientSession() as http_session:
             completion = await self.endpoints[endpoint].rate_limiter._call_api(
-                http_session=http_session, endpoint=endpoint, base_url=self.base_url,
+                http_session=http_session,
+                endpoint=endpoint,
+                base_url=self.base_url,
                 api_key=self.api_key,
-                method=method, payload=payload, **kwargs)
+                method=method,
+                payload=payload,
+                **kwargs,
+            )
             return completion
 
 
@@ -789,10 +864,11 @@ class PayloadPackage:
         return APIUtil.create_payload(
             input_=messages,
             config=llmconfig,
-            required_=schema['required'],
-            optional_=schema['optional'],
+            required_=schema["required"],
+            optional_=schema["optional"],
             input_key="messages",
-            **kwargs)
+            **kwargs,
+        )
 
     @classmethod
     def fine_tuning(cls, training_file, llmconfig, schema, **kwargs):
@@ -811,7 +887,8 @@ class PayloadPackage:
         return APIUtil._create_payload(
             input_=training_file,
             config=llmconfig,
-            required_=schema['required'],
-            optional_=schema['optional'],
+            required_=schema["required"],
+            optional_=schema["optional"],
             input_key="training_file",
-            **kwargs)
+            **kwargs,
+        )

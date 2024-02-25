@@ -1,6 +1,7 @@
 """
 lionagi is an intelligent automation framework.
 """
+
 import logging
 from .version import __version__
 from dotenv import load_dotenv
@@ -24,17 +25,11 @@ from .util import (
     unflatten,
     nfilter,
     get_flattened_keys,
-    CallDecorator, 
-    to_readable_dict
+    CallDecorator,
+    to_readable_dict,
 )
 
-from .core import (
-    ActionNode,
-    ChatFlow,
-    Session,
-    Branch,
-    func_to_tool
-)
+from .core import ActionNode, ChatFlow, Session, Branch, func_to_tool
 
 from .integrations.provider.services import Services
 
@@ -64,8 +59,8 @@ __all__ = [
     "Session",
     "Branch",
     "func_to_tool",
-    "Services", 
-    "to_readable_dict"
+    "Services",
+    "to_readable_dict",
 ]
 
 logger = logging.getLogger(__name__)

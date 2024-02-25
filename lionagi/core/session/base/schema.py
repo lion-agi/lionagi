@@ -8,7 +8,7 @@ from pydantic import Field, model_validator
 from lionagi.util import nget, to_dict, ConvertUtil
 from lionagi.core.schema import DataNode
 
-_message_fields = ['node_id', 'timestamp', 'role', 'sender', 'content']
+_message_fields = ["node_id", "timestamp", "role", "sender", "content"]
 
 
 class BranchColumns(List[str], Enum):
@@ -16,88 +16,94 @@ class BranchColumns(List[str], Enum):
 
 
 class MessageField(str, Enum):
-    NODE_ID = 'node_id'
-    TIMESTAMP = 'timestamp'
-    ROLE = 'role'
-    SENDER = 'sender'
-    RECIPIENT = 'recipient'
-    CONTENT = 'content'
-    METADATA = 'metadata'
-    RELATION = 'relation'
+    NODE_ID = "node_id"
+    TIMESTAMP = "timestamp"
+    ROLE = "role"
+    SENDER = "sender"
+    RECIPIENT = "recipient"
+    CONTENT = "content"
+    METADATA = "metadata"
+    RELATION = "relation"
 
 
 class MessageRoleType(str, Enum):
-    SYSTEM = 'system'
-    USER = 'user'
-    ASSISTANT = 'assistant'
+    SYSTEM = "system"
+    USER = "user"
+    ASSISTANT = "assistant"
 
 
 class MessageContentKey(str, Enum):
-    INSTRUCTION = 'instruction'
-    CONTEXT = 'context'
-    SYSTEM = 'system_info'
-    ACTION_REQUEST = 'action_request'
-    ACTION_RESPONSE = 'action_response'
-    RESPONSE = 'response'
+    INSTRUCTION = "instruction"
+    CONTEXT = "context"
+    SYSTEM = "system_info"
+    ACTION_REQUEST = "action_request"
+    ACTION_RESPONSE = "action_response"
+    RESPONSE = "response"
 
 
 class MessageType(dict, Enum):
-    SYSTEM = {
-        MessageField.ROLE.value: MessageRoleType.SYSTEM.value,
-        MessageField.SENDER.value: MessageRoleType.SYSTEM.value,
-        MessageField.RECIPIENT.value: "null",
-        "content_key": MessageContentKey.SYSTEM.value
-    },
+    SYSTEM = (
+        {
+            MessageField.ROLE.value: MessageRoleType.SYSTEM.value,
+            MessageField.SENDER.value: MessageRoleType.SYSTEM.value,
+            MessageField.RECIPIENT.value: "null",
+            "content_key": MessageContentKey.SYSTEM.value,
+        },
+    )
 
-    INSTRUCTION = {
-        MessageField.ROLE.value: MessageRoleType.USER.value,
-        MessageField.SENDER.value: MessageRoleType.USER.value,
-        MessageField.RECIPIENT.value: "null",
-        "content_key": MessageContentKey.INSTRUCTION.value
-    },
+    INSTRUCTION = (
+        {
+            MessageField.ROLE.value: MessageRoleType.USER.value,
+            MessageField.SENDER.value: MessageRoleType.USER.value,
+            MessageField.RECIPIENT.value: "null",
+            "content_key": MessageContentKey.INSTRUCTION.value,
+        },
+    )
 
-    CONTEXT = {
-        MessageField.ROLE.value: MessageRoleType.USER.value,
-        MessageField.SENDER.value: MessageRoleType.USER.value,
-        MessageField.RECIPIENT.value: "null",
-        "content_key": MessageContentKey.CONTEXT.value
-    },
+    CONTEXT = (
+        {
+            MessageField.ROLE.value: MessageRoleType.USER.value,
+            MessageField.SENDER.value: MessageRoleType.USER.value,
+            MessageField.RECIPIENT.value: "null",
+            "content_key": MessageContentKey.CONTEXT.value,
+        },
+    )
 
-    ACTION_REQUEST = {
-        MessageField.ROLE.value: MessageRoleType.ASSISTANT.value,
-        MessageField.SENDER.value: MessageRoleType.ASSISTANT.value,
-        MessageField.RECIPIENT.value: "null",
-        "content_key": MessageContentKey.ACTION_REQUEST.value
-    },
+    ACTION_REQUEST = (
+        {
+            MessageField.ROLE.value: MessageRoleType.ASSISTANT.value,
+            MessageField.SENDER.value: MessageRoleType.ASSISTANT.value,
+            MessageField.RECIPIENT.value: "null",
+            "content_key": MessageContentKey.ACTION_REQUEST.value,
+        },
+    )
 
-    ACTION_RESPONSE = {
-        MessageField.ROLE.value: MessageRoleType.ASSISTANT.value,
-        MessageField.SENDER.value: MessageRoleType.ASSISTANT.value,
-        MessageField.RECIPIENT.value: "null",
-        "content_key": MessageContentKey.ACTION_RESPONSE.value
-    },
+    ACTION_RESPONSE = (
+        {
+            MessageField.ROLE.value: MessageRoleType.ASSISTANT.value,
+            MessageField.SENDER.value: MessageRoleType.ASSISTANT.value,
+            MessageField.RECIPIENT.value: "null",
+            "content_key": MessageContentKey.ACTION_RESPONSE.value,
+        },
+    )
 
     RESPONSE = {
         MessageField.ROLE.value: MessageRoleType.ASSISTANT.value,
         MessageField.SENDER.value: MessageRoleType.ASSISTANT.value,
         MessageField.RECIPIENT.value: "null",
-        "content_key": MessageContentKey.RESPONSE.value
+        "content_key": MessageContentKey.RESPONSE.value,
     }
-
-
-
 
 
 class BaseMessage(DataNode):
     """
     Represents a message in a chatbot-like system, inheriting from BaseNode.
-    
+
     Attributes:
         role (Optional[str]): The role of the entity sending the message, e.g., 'user', 'system'.
         sender (Optional[str]): The identifier of the sender of the message.
         content (Any): The actual content of the message.
     """
-
 
     role: Optional[str] = None
     sender: Optional[str] = None
@@ -111,7 +117,7 @@ class BaseMessage(DataNode):
             A dictionary representation of the message with 'role' and 'content' keys.
         """
         return self._to_message()
-        
+
     @property
     def msg_content(self) -> Any:
         """
@@ -120,12 +126,12 @@ class BaseMessage(DataNode):
         Returns:
             The 'content' part of the message.
         """
-        return self.msg['content']
-    
+        return self.msg["content"]
+
     @property
     def sender(self) -> str:
         return self.sender
-    
+
     def _to_message(self):
         """
         Constructs and returns a dictionary representation of the message.
@@ -135,16 +141,22 @@ class BaseMessage(DataNode):
         """
         out = {
             "role": self.role,
-            "content": json.dumps(self.content) if isinstance(self.content, dict) else self.content
-            }
+            "content": (
+                json.dumps(self.content)
+                if isinstance(self.content, dict)
+                else self.content
+            ),
+        }
         return out
 
     def __str__(self):
         content_preview = (
-            (str(self.content)[:75] + '...') if self.content and len(self.content) > 75 
+            (str(self.content)[:75] + "...")
+            if self.content and len(self.content) > 75
             else str(self.content)
         )
         return f"Message(role={self.role}, sender={self.sender}, content='{content_preview}')"
+
 
 class Instruction(BaseMessage):
     """
@@ -156,22 +168,25 @@ class Instruction(BaseMessage):
 
     def __init__(self, instruction: Any, context=None, sender: Optional[str] = None):
         super().__init__(
-            role="user", sender=sender or 'user', content={"instruction": instruction}
+            role="user", sender=sender or "user", content={"instruction": instruction}
         )
         if context:
             self.content.update({"context": context})
-            
+
+
 class System(BaseMessage):
     """
     Represents a system-related message, a specialized subclass of Message.
 
     Designed for messages containing system information, this class sets the message role to 'system'.
     """
+
     def __init__(self, system: Any, sender: Optional[str] = None):
         super().__init__(
-            role="system", sender=sender or 'system', content={"system_info": system}
+            role="system", sender=sender or "system", content={"system_info": system}
         )
-            
+
+
 class Response(BaseMessage):
     """
     Represents a response message, a specialized subclass of Message.
@@ -182,34 +197,34 @@ class Response(BaseMessage):
     """
 
     def __init__(self, response: Any, sender: Optional[str] = None) -> None:
-        content_key = ''
+        content_key = ""
         try:
             response = response["message"]
-            if ConvertUtil.strip_lower(response['content']) == "none":
+            if ConvertUtil.strip_lower(response["content"]) == "none":
                 content_ = self._handle_action_request(response)
                 sender = sender or "action_request"
                 content_key = content_key or "action_request"
 
             else:
                 try:
-                    if 'tool_uses' in json.loads(response['content']):
-                        content_ = json.loads(response['content'])['tool_uses']
+                    if "tool_uses" in json.loads(response["content"]):
+                        content_ = json.loads(response["content"])["tool_uses"]
                         content_key = content_key or "action_request"
                         sender = sender or "action_request"
-                    elif 'response' in json.loads(response['content']):
+                    elif "response" in json.loads(response["content"]):
                         sender = sender or "assistant"
                         content_key = content_key or "response"
-                        content_ = json.loads(response['content'])['response']
-                    elif 'action_request' in json.loads(response['content']):
+                        content_ = json.loads(response["content"])["response"]
+                    elif "action_request" in json.loads(response["content"]):
                         sender = sender or "action_request"
                         content_key = content_key or "action_request"
-                        content_ = json.loads(response['content'])['action_request']
+                        content_ = json.loads(response["content"])["action_request"]
                     else:
-                        content_ = response['content']
+                        content_ = response["content"]
                         content_key = content_key or "response"
                         sender = sender or "assistant"
                 except:
-                    content_ = response['content']
+                    content_ = response["content"]
                     content_key = content_key or "response"
                     sender = sender or "assistant"
 
@@ -217,9 +232,11 @@ class Response(BaseMessage):
             sender = sender or "action_response"
             content_ = response
             content_key = content_key or "action_response"
-        
-        super().__init__(role="assistant", sender=sender, content={content_key: content_})
-        
+
+        super().__init__(
+            role="assistant", sender=sender, content={content_key: content_}
+        )
+
     @staticmethod
     def _handle_action_request(response):
         """
@@ -237,17 +254,17 @@ class Response(BaseMessage):
         try:
             tool_count = 0
             func_list = []
-            while tool_count < len(response['tool_calls']):
-                _path = ['tool_calls', tool_count, 'type']
-                
-                if nget(response, _path) == 'function':
-                    _path1 = ['tool_calls', tool_count, 'function', 'name']
-                    _path2 = ['tool_calls', tool_count, 'function', 'arguments']
-                    
+            while tool_count < len(response["tool_calls"]):
+                _path = ["tool_calls", tool_count, "type"]
+
+                if nget(response, _path) == "function":
+                    _path1 = ["tool_calls", tool_count, "function", "name"]
+                    _path2 = ["tool_calls", tool_count, "function", "arguments"]
+
                     func_content = {
                         "action": ("action_" + nget(response, _path1)),
-                        "arguments": nget(response, _path2)
-                        }
+                        "arguments": nget(response, _path2),
+                    }
                     func_list.append(func_content)
                 tool_count += 1
             return func_list
@@ -257,13 +274,12 @@ class Response(BaseMessage):
             )
 
 
-
 # class BaseMessage(DataNode):
-    
-    
+
+
 #     def __init__():
 #         ...
-    
+
 #     role: MessageRoleType = Field(..., alias=MessageField.ROLE.value)
 #     sender: str = Field(..., alias=MessageField.SENDER.value)  # Customizable sender
 #     recipient: Optional[str] = Field(None,
@@ -327,8 +343,8 @@ class Response(BaseMessage):
 #             f"Message({self.role.value or 'none'}, {self._sender or 'none'}, "
 #             f"{content_preview or 'none'}, {self.recipient or 'none'},"
 #             f"{self.timestamp or 'none'}, {meta_preview or 'none'}"
-#         )  
-      
+#         )
+
 # class Instruction(BaseMessage):
 
 #     def __init__(self, instruction: Any, context: Any = None,
@@ -464,10 +480,10 @@ class Response(BaseMessage):
 
 
 class MailCategory(str, Enum):
-    MESSAGES = 'messages'
-    TOOL = 'tools'
-    SERVICE = 'provider'
-    MODEL = 'model'
+    MESSAGES = "messages"
+    TOOL = "tools"
+    SERVICE = "provider"
+    MODEL = "model"
 
 
 class BaseMail:
@@ -481,9 +497,12 @@ class BaseMail:
             if isinstance(category, MailCategory):
                 self.category = category
             else:
-                raise ValueError(f'Invalid request title. Valid titles are'
-                                 f' {list(MailCategory)}')
+                raise ValueError(
+                    f"Invalid request title. Valid titles are" f" {list(MailCategory)}"
+                )
         except Exception as e:
-            raise ValueError(f'Invalid request title. Valid titles are '
-                             f'{list(MailCategory)}, Error: {e}')
+            raise ValueError(
+                f"Invalid request title. Valid titles are "
+                f"{list(MailCategory)}, Error: {e}"
+            )
         self.package = package

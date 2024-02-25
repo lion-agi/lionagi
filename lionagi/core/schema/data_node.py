@@ -1,6 +1,7 @@
 from typing import Any
 from .base_node import BaseNode
-from lionagi.integrations.bridge import LlamaIndexBridge, LangchainBridge
+
+# from lionagi.integrations.bridge import LlamaIndexBridge, LangchainBridge
 
 
 class DataNode(BaseNode):
@@ -12,82 +13,81 @@ class DataNode(BaseNode):
 
     Methods provided allow for serialization to and deserialization from these formats, supporting a variety of use cases.
     """
-    
-    def to_llama_index(self, node_type=None, **kwargs) -> Any:
-        """
-        Converts the node to a format compatible with llama index.
 
-        This method serializes the DataNode into a format recognized by the llama index system, allowing for
-        integration and usage within that ecosystem.
+    # def to_llama_index(self, node_type=None, **kwargs) -> Any:
+    #     """
+    #     Converts the node to a format compatible with llama index.
 
-        Args:
-            node_type:
-            **kwargs: Additional keyword arguments for customization.
+    #     This method serializes the DataNode into a format recognized by the llama index system, allowing for
+    #     integration and usage within that ecosystem.
 
-        Returns:
-            Any: The llama index format representation of the node.
+    #     Args:
+    #         node_type:
+    #         **kwargs: Additional keyword arguments for customization.
 
-        Examples:
-            >>> node = DataNode(content="Example content")
-            >>> llama_index = node.to_llama_index()
-        """
-        return LlamaIndexBridge.to_llama_index_node(self, node_type=node_type, **kwargs)
+    #     Returns:
+    #         Any: The llama index format representation of the node.
 
-    def to_langchain(self, **kwargs) -> Any:
-        """
-        Converts the node to a langchain_ document format.
+    #     Examples:
+    #         >>> node = DataNode(content="Example content")
+    #         >>> llama_index = node.to_llama_index()
+    #     """
+    #     return LlamaIndexBridge.to_llama_index_node(self, node_type=node_type, **kwargs)
 
-        This method serializes the DataNode into a document format used by langchain_, enabling the node's
-        use within langchain_ applications and workflows.
+    # def to_langchain(self, **kwargs) -> Any:
+    #     """
+    #     Converts the node to a langchain_ document format.
 
-        Args:
-            **kwargs: Additional keyword arguments for customization.
+    #     This method serializes the DataNode into a document format used by langchain_, enabling the node's
+    #     use within langchain_ applications and workflows.
 
-        Returns:
-            Any: The langchain_ document representation of the node.
+    #     Args:
+    #         **kwargs: Additional keyword arguments for customization.
 
-        Examples:
-            >>> node = DataNode(content="Example content")
-            >>> langchain_doc = node.to_langchain()
-        """
-        return LangchainBridge.to_langchain_document(self, **kwargs)
+    #     Returns:
+    #         Any: The langchain_ document representation of the node.
 
-    @classmethod
-    def from_llama_index(cls, llama_node: Any, **kwargs) -> "DataNode":
-        """
-        Creates a DataNode instance from a llama index node.
+    #     Examples:
+    #         >>> node = DataNode(content="Example content")
+    #         >>> langchain_doc = node.to_langchain()
+    #     """
+    #     return LangchainBridge.to_langchain_document(self, **kwargs)
 
-        Args:
-            llama_node: The llama index node object.
-            **kwargs: Variable length argument list.
+    # @classmethod
+    # def from_llama_index(cls, llama_node: Any, **kwargs) -> "DataNode":
+    #     """
+    #     Creates a DataNode instance from a llama index node.
 
-        Returns:
-            An instance of DataNode.
+    #     Args:
+    #         llama_node: The llama index node object.
+    #         **kwargs: Variable length argument list.
 
-        Examples:
-            llama_node = SomeLlamaIndexNode()
-            data_node = DataNode.from_llama_index(llama_node)
-        """
-        llama_dict = llama_node.to_dict(**kwargs)
-        return cls.from_dict(llama_dict)
+    #     Returns:
+    #         An instance of DataNode.
 
-    @classmethod
-    def from_langchain(cls, lc_doc: Any) -> "DataNode":
-        """
-        Creates a DataNode instance from a langchain_ document.
+    #     Examples:
+    #         llama_node = SomeLlamaIndexNode()
+    #         data_node = DataNode.from_llama_index(llama_node)
+    #     """
+    #     llama_dict = llama_node.to_dict(**kwargs)
+    #     return cls.from_dict(llama_dict)
 
-        Args:
-            lc_doc: The langchain_ document object.
+    # @classmethod
+    # def from_langchain(cls, lc_doc: Any) -> "DataNode":
+    #     """
+    #     Creates a DataNode instance from a langchain_ document.
 
-        Returns:
-            An instance of DataNode.
+    #     Args:
+    #         lc_doc: The langchain_ document object.
 
-        Examples:
-            lc_doc = SomeLangChainDocument()
-            data_node = DataNode.from_langchain(lc_doc)
-        """
-        info_json = lc_doc.to_json()
-        info_node = {'lc_id': info_json['id']}
-        info_node = {**info_node, **info_json['kwargs']}
-        return cls(**info_node)
-    
+    #     Returns:
+    #         An instance of DataNode.
+
+    #     Examples:
+    #         lc_doc = SomeLangChainDocument()
+    #         data_node = DataNode.from_langchain(lc_doc)
+    #     """
+    #     info_json = lc_doc.to_json()
+    #     info_node = {'lc_id': info_json['id']}
+    #     info_node = {**info_node, **info_json['kwargs']}
+    #     return cls(**info_node)

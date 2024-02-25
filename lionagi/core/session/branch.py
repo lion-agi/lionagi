@@ -13,11 +13,17 @@ from lionagi.core.action import ToolManager
 from lionagi.core.flow import ChatFlow
 
 from lionagi.core.session.base.base_branch import BaseBranch
-from lionagi.core.session.base.schema import BaseMail, Instruction, System, Response, BaseMessage
+from lionagi.core.session.base.schema import (
+    BaseMail,
+    Instruction,
+    System,
+    Response,
+    BaseMessage,
+)
 from lionagi.core.session.base.util import MessageUtil
 
 
-OAIService = ''
+OAIService = ""
 
 from dotenv import load_dotenv
 
@@ -31,22 +37,38 @@ try:
 except:
     pass
 
-T = TypeVar('T', bound=Tool)
+T = TypeVar("T", bound=Tool)
 
 
 class Branch(BaseBranch):
 
-    def __init__(self, branch_name=None, system=None, messages=None, service=None,
-                 sender=None, llmconfig=None, tools=None, datalogger=None,
-                 persist_path=None, instruction_sets=None, tool_manager=None, **kwargs):
+    def __init__(
+        self,
+        branch_name=None,
+        system=None,
+        messages=None,
+        service=None,
+        sender=None,
+        llmconfig=None,
+        tools=None,
+        datalogger=None,
+        persist_path=None,
+        instruction_sets=None,
+        tool_manager=None,
+        **kwargs,
+    ):
 
         # init base conversation class
-        super().__init__(messages=messages, datalogger=datalogger,
-                         persist_path=persist_path, **kwargs)
+        super().__init__(
+            messages=messages,
+            datalogger=datalogger,
+            persist_path=persist_path,
+            **kwargs,
+        )
 
         # add branch name
         self.branch_name = branch_name
-        self.sender = sender or 'system'
+        self.sender = sender or "system"
 
         # add tool manager and register tools
         self.tool_manager = tool_manager if tool_manager else ToolManager()
@@ -72,56 +94,94 @@ class Branch(BaseBranch):
             self.add_message(system=system)
 
     @classmethod
-    def from_csv(cls, filepath, branch_name=None, service=None, llmconfig=None,
-                 tools=None, datalogger=None, persist_path=None, instruction_sets=None,
-                 tool_manager=None, read_kwargs=None, **kwargs):
+    def from_csv(
+        cls,
+        filepath,
+        branch_name=None,
+        service=None,
+        llmconfig=None,
+        tools=None,
+        datalogger=None,
+        persist_path=None,
+        instruction_sets=None,
+        tool_manager=None,
+        read_kwargs=None,
+        **kwargs,
+    ):
 
         self = cls._from_csv(
-            filepath=filepath, read_kwargs=read_kwargs, branch_name=branch_name,
-            service=service, llmconfig=llmconfig, tools=tools, datalogger=datalogger,
-            persist_path=persist_path, instruction_sets=instruction_sets,
-            tool_manager=tool_manager, **kwargs)
+            filepath=filepath,
+            read_kwargs=read_kwargs,
+            branch_name=branch_name,
+            service=service,
+            llmconfig=llmconfig,
+            tools=tools,
+            datalogger=datalogger,
+            persist_path=persist_path,
+            instruction_sets=instruction_sets,
+            tool_manager=tool_manager,
+            **kwargs,
+        )
 
         return self
 
     @classmethod
-    def from_json(cls, filepath, branch_name=None, service=None, llmconfig=None,
-                  tools=None, datalogger=None, persist_path=None, instruction_sets=None,
-                  tool_manager=None, read_kwargs=None, **kwargs):
+    def from_json(
+        cls,
+        filepath,
+        branch_name=None,
+        service=None,
+        llmconfig=None,
+        tools=None,
+        datalogger=None,
+        persist_path=None,
+        instruction_sets=None,
+        tool_manager=None,
+        read_kwargs=None,
+        **kwargs,
+    ):
 
         self = cls._from_json(
-            filepath=filepath, read_kwargs=read_kwargs, branch_name=branch_name,
-            service=service, llmconfig=llmconfig, tools=tools, datalogger=datalogger,
-            persist_path=persist_path, instruction_sets=instruction_sets,
-            tool_manager=tool_manager, **kwargs)
+            filepath=filepath,
+            read_kwargs=read_kwargs,
+            branch_name=branch_name,
+            service=service,
+            llmconfig=llmconfig,
+            tools=tools,
+            datalogger=datalogger,
+            persist_path=persist_path,
+            instruction_sets=instruction_sets,
+            tool_manager=tool_manager,
+            **kwargs,
+        )
 
         return self
 
     def messages_describe(self) -> Dict[str, Any]:
 
-        return dict(total_messages=len(self.messages), summary_by_role=self._info(),
-                    summary_by_sender=self._info(use_sender=True),
-                    instruction_sets=self.instruction_sets,
-                    registered_tools=self.tool_manager.registry, messages=[
-                msg.to_dict() for _, msg in self.messages.iterrows()
-            ])
+        return dict(
+            total_messages=len(self.messages),
+            summary_by_role=self._info(),
+            summary_by_sender=self._info(use_sender=True),
+            instruction_sets=self.instruction_sets,
+            registered_tools=self.tool_manager.registry,
+            messages=[msg.to_dict() for _, msg in self.messages.iterrows()],
+        )
 
     @property
     def has_tools(self) -> bool:
         return self.tool_manager.registry != {}
 
     # todo: also update other attributes
-    def merge_branch(self, branch: 'Branch', update: bool = True) -> None:
+    def merge_branch(self, branch: "Branch", update: bool = True) -> None:
 
         message_copy = branch.messages.copy()
-        self.messages = self.messages.merge(message_copy, how='outer')
+        self.messages = self.messages.merge(message_copy, how="outer")
         self.datalogger.extend(branch.datalogger.logs)
 
         if update:
             self.instruction_sets.update(branch.instruction_sets)
-            self.tool_manager.registry.update(
-                branch.tool_manager.registry
-            )
+            self.tool_manager.registry.update(branch.tool_manager.registry)
         else:
             for key, value in branch.instruction_sets.items():
                 if key not in self.instruction_sets:
@@ -132,16 +192,16 @@ class Branch(BaseBranch):
                     self.tool_manager.registry[key] = value
 
     # ----- tool manager methods ----- #
-    def register_tools(self,
-                       tools: Union[Tool, List[Tool]]) -> None:
+    def register_tools(self, tools: Union[Tool, List[Tool]]) -> None:
 
         if not isinstance(tools, list):
             tools = to_list(tools, flatten=True, dropna=True)
         self.tool_manager.register_tools(tools=tools)
 
     def delete_tools(
-            self, tools: Union[bool, T, List[T], str, List[str], List[Dict[str, Any]]],
-            verbose: bool = True
+        self,
+        tools: Union[bool, T, List[T], str, List[str], List[Dict[str, Any]]],
+        verbose: bool = True,
     ) -> bool:
 
         if isinstance(tools, list):
@@ -166,41 +226,47 @@ class Branch(BaseBranch):
     def send(self, recipient: str, category: str, package: Any) -> None:
 
         mail_ = BaseMail(
-            sender=self.sender, recipient=recipient, category=category,
-            package=package)
+            sender=self.sender, recipient=recipient, category=category, package=package
+        )
         self.pending_outs.append(mail_)
 
-    def receive(self, sender: str, messages: bool = True, tools: bool = True,
-                service: bool = True, llmconfig: bool = True) -> None:
+    def receive(
+        self,
+        sender: str,
+        messages: bool = True,
+        tools: bool = True,
+        service: bool = True,
+        llmconfig: bool = True,
+    ) -> None:
 
         skipped_requests = deque()
         if sender not in self.pending_ins:
-            raise ValueError(f'No package from {sender}')
+            raise ValueError(f"No package from {sender}")
         while self.pending_ins[sender]:
             mail_ = self.pending_ins[sender].popleft()
 
-            if mail_.category == 'messages' and messages:
+            if mail_.category == "messages" and messages:
                 if not isinstance(mail_.package, pd.DataFrame):
-                    raise ValueError('Invalid messages format')
+                    raise ValueError("Invalid messages format")
                 MessageUtil.validate_messages(mail_.package)
-                self.messages = self.messages.merge(mail_.package, how='outer')
+                self.messages = self.messages.merge(mail_.package, how="outer")
                 continue
 
-            elif mail_.category == 'tools' and tools:
+            elif mail_.category == "tools" and tools:
                 if not isinstance(mail_.package, Tool):
-                    raise ValueError('Invalid tools format')
+                    raise ValueError("Invalid tools format")
                 self.tool_manager.register_tools([mail_.package])
 
-            elif mail_.category == 'provider' and service:
+            elif mail_.category == "provider" and service:
                 from lionagi.util.api_util import BaseService
 
                 if not isinstance(mail_.package, BaseService):
-                    raise ValueError('Invalid provider format')
+                    raise ValueError("Invalid provider format")
                 self.service = mail_.package
 
-            elif mail_.category == 'llmconfig' and llmconfig:
+            elif mail_.category == "llmconfig" and llmconfig:
                 if not isinstance(mail_.package, dict):
-                    raise ValueError('Invalid llmconfig format')
+                    raise ValueError("Invalid llmconfig format")
                 self.llmconfig.update(mail_.package)
 
             else:
@@ -221,6 +287,7 @@ class Branch(BaseBranch):
         if llmconfig is None:
             if isinstance(service, OpenAIService):
                 from lionagi.integrations.config import oai_schema
+
                 llmconfig = oai_schema["chat/completions"]["config"]
             else:
                 llmconfig = {}
@@ -234,15 +301,16 @@ class Branch(BaseBranch):
             bool: True if the conversation has been invoked, False otherwise.
 
         """
-        content = self.messages.iloc[-1]['content']
+        content = self.messages.iloc[-1]["content"]
         try:
-            if (
-                to_dict(content)['action_response'].keys() >= {'function', 'arguments', 'output'}
-            ):
+            if to_dict(content)["action_response"].keys() >= {
+                "function",
+                "arguments",
+                "output",
+            }:
                 return True
         except:
             return False
-
 
     # noinspection PyUnresolvedReferences
     async def call_chatcompletion(self, sender=None, with_sender=False, **kwargs):
@@ -252,61 +320,83 @@ class Branch(BaseBranch):
         )
 
     async def chat(
-            self,
-            instruction: Union[Instruction, str],
-            context: Optional[Any] = None,
-            sender: Optional[str] = None,
-            system: Optional[Union[System, str, Dict[str, Any]]] = None,
-            tools: Union[bool, T, List[T], str, List[str]] = False,
-            out: bool = True,
-            invoke: bool = True,
-            **kwargs) -> Any:
+        self,
+        instruction: Union[Instruction, str],
+        context: Optional[Any] = None,
+        sender: Optional[str] = None,
+        system: Optional[Union[System, str, Dict[str, Any]]] = None,
+        tools: Union[bool, T, List[T], str, List[str]] = False,
+        out: bool = True,
+        invoke: bool = True,
+        **kwargs,
+    ) -> Any:
 
         return await ChatFlow.chat(
-            self, instruction=instruction, context=context,
-            sender=sender, system=system, tools=tools,
-            out=out, invoke=invoke, **kwargs
+            self,
+            instruction=instruction,
+            context=context,
+            sender=sender,
+            system=system,
+            tools=tools,
+            out=out,
+            invoke=invoke,
+            **kwargs,
         )
 
     async def ReAct(
-            self,
-            instruction: Union[Instruction, str],
-            context=None,
-            sender=None,
-            system=None,
-            tools=None,
-            num_rounds: int = 1,
-            **kwargs):
+        self,
+        instruction: Union[Instruction, str],
+        context=None,
+        sender=None,
+        system=None,
+        tools=None,
+        num_rounds: int = 1,
+        **kwargs,
+    ):
 
         return await ChatFlow.ReAct(
-            self, instruction=instruction, context=context,
-            sender=sender, system=system, tools=tools,
-            num_rounds=num_rounds, **kwargs
+            self,
+            instruction=instruction,
+            context=context,
+            sender=sender,
+            system=system,
+            tools=tools,
+            num_rounds=num_rounds,
+            **kwargs,
         )
 
     async def auto_followup(
-            self,
-            instruction: Union[Instruction, str],
-            context=None,
-            sender=None,
-            system=None,
-            tools: Union[bool, T, List[T], str, List[str], List[Dict]] = False,
-            max_followup: int = 3,
-            out=True,
-            **kwargs
+        self,
+        instruction: Union[Instruction, str],
+        context=None,
+        sender=None,
+        system=None,
+        tools: Union[bool, T, List[T], str, List[str], List[Dict]] = False,
+        max_followup: int = 3,
+        out=True,
+        **kwargs,
     ) -> None:
 
         return await ChatFlow.auto_followup(
-            self, instruction=instruction, context=context,
-            sender=sender, system=system, tools=tools,
-            max_followup=max_followup, out=out, **kwargs
+            self,
+            instruction=instruction,
+            context=context,
+            sender=sender,
+            system=system,
+            tools=tools,
+            max_followup=max_followup,
+            out=out,
+            **kwargs,
         )
 
-    def add_message(self, system: Optional[Union[dict, list, System]] = None,
-                    instruction: Optional[Union[dict, list, Instruction]] = None,
-                    context: Optional[Union[str, Dict[str, Any]]] = None,
-                    response: Optional[Union[dict, list, Response]] = None,
-                    sender: Optional[str] = None) -> None:
+    def add_message(
+        self,
+        system: Optional[Union[dict, list, System]] = None,
+        instruction: Optional[Union[dict, list, Instruction]] = None,
+        context: Optional[Union[str, Dict[str, Any]]] = None,
+        response: Optional[Union[dict, list, Response]] = None,
+        sender: Optional[str] = None,
+    ) -> None:
         """
         Adds a message to the branch's conversation.
 
@@ -325,13 +415,16 @@ class Branch(BaseBranch):
             >>> branch.add_message(instruction={'content': 'Please respond'}, sender='user')
         """
         msg = self._create_message(
-            system=system, instruction=instruction, 
-            context=context, response=response, sender=sender
+            system=system,
+            instruction=instruction,
+            context=context,
+            response=response,
+            sender=sender,
         )
         message_dict = msg.to_dict()
-        if isinstance(to_dict(message_dict['content']), dict):
-            message_dict['content'] = json.dumps(message_dict['content'])
-        message_dict['timestamp'] = datetime.now().isoformat()
+        if isinstance(to_dict(message_dict["content"]), dict):
+            message_dict["content"] = json.dumps(message_dict["content"])
+        message_dict["timestamp"] = datetime.now().isoformat()
         self.messages.loc[len(self.messages)] = message_dict
 
     def _create_message(
@@ -340,7 +433,7 @@ class Branch(BaseBranch):
         instruction: Optional[Union[dict, list, Instruction]] = None,
         context: Optional[Union[str, Dict[str, Any]]] = None,
         response: Optional[Union[dict, list, Response]] = None,
-        sender: Optional[str] = None
+        sender: Optional[str] = None,
     ) -> BaseMessage:
         """
         Creates a message object based on the given parameters, ensuring only one message type is specified.
@@ -360,7 +453,7 @@ class Branch(BaseBranch):
         """
         if sum(lcall([system, instruction, response], bool)) != 1:
             raise ValueError("Error: Message must have one and only one role.")
-        
+
         else:
             if isinstance(any([system, instruction, response]), BaseMessage):
                 if system:
@@ -374,8 +467,9 @@ class Branch(BaseBranch):
             if response:
                 msg = Response(response=response, sender=sender)
             elif instruction:
-                msg = Instruction(instruction=instruction, 
-                                  context=context, sender=sender)
+                msg = Instruction(
+                    instruction=instruction, context=context, sender=sender
+                )
             elif system:
                 msg = System(system=system, sender=sender)
             return msg

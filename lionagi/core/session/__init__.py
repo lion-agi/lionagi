@@ -1,3 +1,1 @@
-__all__ = [
-    "Session"
-]
+__all__ = ["Session"]
