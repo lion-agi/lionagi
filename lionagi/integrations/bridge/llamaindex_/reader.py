@@ -6,6 +6,7 @@ from lionagi.util.import_util import ImportUtil
 def get_llama_index_reader(reader: Any | str = None) -> Any:
     
     ImportUtil.check_import('llama-index')
+    import llama_index
     from llama_index.core import SimpleDirectoryReader
     from llama_index.core.readers.base import BaseReader
     

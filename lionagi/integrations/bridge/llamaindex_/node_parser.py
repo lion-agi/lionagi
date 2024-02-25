@@ -5,6 +5,7 @@ from lionagi.util.import_util import ImportUtil
 def get_llama_index_node_parser(node_parser: Any ):
     
     ImportUtil.check_import('llama-index')
+    import llama_index
     from llama_index.core.node_parser.interface import NodeParser
     
     if not isinstance(node_parser, [str]):
@@ -33,6 +34,7 @@ def llama_index_parse_node(documents, node_parser: Any,
     parser = get_llama_index_node_parser(node_parser)
 
     ImportUtil.check_import('llama-index')
+    import llama_index
     from llama_index.core.schema import Document as LlamaDocument
 
     if isinstance(to_list(documents)[0], LlamaDocument):
