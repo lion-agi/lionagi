@@ -47,7 +47,7 @@ class DLog:
                             'input_data', 'output_data', and 'timestamp' keys.
         """
         log_dict = asdict(self)
-        log_dict['timestamp'] = SysUtil.get_timestamp()
+        log_dict["timestamp"] = SysUtil.get_timestamp()
         return log_dict
 
 
@@ -90,9 +90,12 @@ class DataLogger:
     filepath, appending a log entry, and then exporting the log to a CSV file.
     """
 
-    def __init__(self, persist_path: str | Path | None = None,
-                 log: List[Dict] | None = None,
-                 filename: str | None = None) -> None:
+    def __init__(
+        self,
+        persist_path: str | Path | None = None,
+        log: List[Dict] | None = None,
+        filename: str | None = None,
+    ) -> None:
         """
         initializes a DataLogger instance, preparing it for structured logging of data
         processing activities. allows for customization of storage directory, initial
@@ -115,9 +118,9 @@ class DataLogger:
         register an at-exit handler to ensure unsaved logs are automatically persisted to
         a CSV file upon program termination.
         """
-        self.persist_path = Path(persist_path) if persist_path else Path('data/logs/')
+        self.persist_path = Path(persist_path) if persist_path else Path("data/logs/")
         self.log = deque(log) if log else deque()
-        self.filename = filename or 'log'
+        self.filename = filename or "log"
         atexit.register(self.save_at_exit)
 
     def extend(self, logs) -> None:
@@ -143,9 +146,16 @@ class DataLogger:
         log_entry = DLog(input_data=input_data, output_data=output_data)
         self.log.append(log_entry.serialize())
 
-    def to_csv(self, filename: str = 'log.csv', file_exist_ok: bool = False,
-               timestamp: bool = True, time_prefix: bool = False, verbose: bool = True,
-               clear: bool = True, **kwargs) -> None:
+    def to_csv(
+        self,
+        filename: str = "log.csv",
+        file_exist_ok: bool = False,
+        timestamp: bool = True,
+        time_prefix: bool = False,
+        verbose: bool = True,
+        clear: bool = True,
+        **kwargs,
+    ) -> None:
         """
         exports accumulated log entries to a CSV file, with customizable file naming
         and timestamping options.
@@ -175,12 +185,15 @@ class DataLogger:
         writing or DataFrame conversion process.
         """
 
-        if not filename.endswith('.csv'):
-            filename += '.csv'
+        if not filename.endswith(".csv"):
+            filename += ".csv"
 
         filepath = PathUtil.create_path(
-            self.persist_path, filename, timestamp=timestamp,
-            dir_exist_ok=file_exist_ok, time_prefix=time_prefix
+            self.persist_path,
+            filename,
+            timestamp=timestamp,
+            dir_exist_ok=file_exist_ok,
+            time_prefix=time_prefix,
         )
         try:
             df = to_df(list(self.log))
@@ -192,10 +205,16 @@ class DataLogger:
         except Exception as e:
             raise ValueError(f"Error in saving to csv: {e}")
 
-    def to_json(self, filename: str = 'log.json', timestamp: bool = False,
-                time_prefix: bool = False,
-                file_exist_ok: bool = False, verbose: bool = True, clear: bool = True,
-                **kwargs) -> None:
+    def to_json(
+        self,
+        filename: str = "log.json",
+        timestamp: bool = False,
+        time_prefix: bool = False,
+        file_exist_ok: bool = False,
+        verbose: bool = True,
+        clear: bool = True,
+        **kwargs,
+    ) -> None:
         """
         exports the log entries to a JSON file within the specified persisting directory,
         offering customization for file naming and timestamping.
@@ -237,12 +256,15 @@ class DataLogger:
             >>> datalogger.to_json(filepath='detailed_log.json', orient='records')
             # Save a path: 'data/logs/detailed_log.json'
         """
-        if not filename.endswith('.json'):
-            filename += '.json'
+        if not filename.endswith(".json"):
+            filename += ".json"
 
         filepath = PathUtil.create_path(
-            self.persist_path, filename, timestamp=timestamp,
-            dir_exist_ok=file_exist_ok, time_prefix=time_prefix
+            self.persist_path,
+            filename,
+            timestamp=timestamp,
+            dir_exist_ok=file_exist_ok,
+            time_prefix=time_prefix,
         )
 
         try:

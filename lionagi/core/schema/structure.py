@@ -58,7 +58,7 @@ class Relationship(BaseRelatableNode):
             'value'
         """
         if condition_key not in self.condition.keys():
-            raise KeyError(f'condition {condition_key} is not found')
+            raise KeyError(f"condition {condition_key} is not found")
         return self.condition.pop(condition_key)
 
     def condition_exists(self, condition_key: str) -> bool:
@@ -162,8 +162,10 @@ class Relationship(BaseRelatableNode):
             >>> str(relationship)
             'Relationship (id_=None, from=node1, to=node2, label=None)'
         """
-        return f"Relationship (id_={self.id_}, from={self.source_node_id}, to={self.target_node_id}, " \
-               f"label={self.label})"
+        return (
+            f"Relationship (id_={self.id_}, from={self.source_node_id}, to={self.target_node_id}, "
+            f"label={self.label})"
+        )
 
     def __repr__(self) -> str:
         """
@@ -174,20 +176,21 @@ class Relationship(BaseRelatableNode):
             >>> repr(relationship)
             'Relationship(id_=None, from=node1, to=node2, content=None, metadata=None, label=None)'
         """
-        return f"Relationship(id_={self.id_}, from={self.source_node_id}, to={self.target_node_id}, " \
-               f"content={self.content}, metadata={self.metadata}, label={self.label})"
-
+        return (
+            f"Relationship(id_={self.id_}, from={self.source_node_id}, to={self.target_node_id}, "
+            f"content={self.content}, metadata={self.metadata}, label={self.label})"
+        )
 
 
 class Graph(BaseRelatableNode):
     """
     Represents a graph structure, consisting of nodes and their relationship.
-    
+
     Attributes:
         nodes (Dict[str, BaseNode]): A dictionary of nodes in the graph.
         relationships (Dict[str, Relationship]): A dictionary of relationship between nodes in the graph.
         node_relationships (Dict[str, Dict[str, Dict[str, str]]]): A dictionary tracking the relationship of each node.
-    
+
     Examples:
         >>> graph = Graph()
         >>> node = BaseNode(id_='node1')
@@ -199,6 +202,7 @@ class Graph(BaseRelatableNode):
         >>> graph.relationship_exists(relationship)
         True
     """
+
     nodes: dict = Field(default={})
     relationships: dict = Field(default={})
     node_relationships: dict = Field(default={})
@@ -212,7 +216,7 @@ class Graph(BaseRelatableNode):
         """
 
         self.nodes[node.id_] = node
-        self.node_relationships[node.id_] = {'in': {}, 'out': {}}
+        self.node_relationships[node.id_] = {"in": {}, "out": {}}
 
     def add_relationship(self, relationship: Relationship) -> None:
         """
@@ -225,15 +229,21 @@ class Graph(BaseRelatableNode):
             KeyError: If either the source or target node of the relationship is not found in the graph.
         """
         if relationship.source_node_id not in self.node_relationships.keys():
-            raise KeyError(f'node {relationship.source_node_id} is not found.')
+            raise KeyError(f"node {relationship.source_node_id} is not found.")
         if relationship.target_node_id not in self.node_relationships.keys():
-            raise KeyError(f'node {relationship.target_node_id} is not found.')
+            raise KeyError(f"node {relationship.target_node_id} is not found.")
 
         self.relationships[relationship.id_] = relationship
-        self.node_relationships[relationship.source_node_id]['out'][relationship.id_] = relationship.target_node_id
-        self.node_relationships[relationship.target_node_id]['in'][relationship.id_] = relationship.source_node_id
+        self.node_relationships[relationship.source_node_id]["out"][
+            relationship.id_
+        ] = relationship.target_node_id
+        self.node_relationships[relationship.target_node_id]["in"][
+            relationship.id_
+        ] = relationship.source_node_id
 
-    def get_node_relationships(self, node: BaseNode = None, out_edge=True) -> List[Relationship]:
+    def get_node_relationships(
+        self, node: BaseNode = None, out_edge=True
+    ) -> List[Relationship]:
         """
         Retrieves relationship of a specific node or all relationship in the graph.
 
@@ -251,14 +261,14 @@ class Graph(BaseRelatableNode):
             return list(self.relationships.values())
 
         if node.id_ not in self.nodes.keys():
-            raise KeyError(f'node {node.id_} is not found')
+            raise KeyError(f"node {node.id_} is not found")
 
         if out_edge:
-            relationship_ids = list(self.node_relationships[node.id_]['out'].keys())
+            relationship_ids = list(self.node_relationships[node.id_]["out"].keys())
             relationships = lcall(relationship_ids, lambda i: self.relationships[i])
             return relationships
         else:
-            relationship_ids = list(self.node_relationships[node.id_]['in'].keys())
+            relationship_ids = list(self.node_relationships[node.id_]["in"].keys())
             relationships = lcall(relationship_ids, lambda i: self.relationships[i])
             return relationships
 
@@ -276,16 +286,16 @@ class Graph(BaseRelatableNode):
             KeyError: If the node is not found in the graph.
         """
         if node.id_ not in self.nodes.keys():
-            raise KeyError(f'node {node.id_} is not found')
+            raise KeyError(f"node {node.id_} is not found")
 
-        out_relationship = self.node_relationships[node.id_]['out']
+        out_relationship = self.node_relationships[node.id_]["out"]
         for relationship_id, node_id in out_relationship.items():
-            self.node_relationships[node_id]['in'].pop(relationship_id)
+            self.node_relationships[node_id]["in"].pop(relationship_id)
             self.relationships.pop(relationship_id)
 
-        in_relationship = self.node_relationships[node.id_]['in']
+        in_relationship = self.node_relationships[node.id_]["in"]
         for relationship_id, node_id in in_relationship.items():
-            self.node_relationships[node_id]['out'].pop(relationship_id)
+            self.node_relationships[node_id]["out"].pop(relationship_id)
             self.relationships.pop(relationship_id)
 
         self.node_relationships.pop(node.id_)
@@ -305,10 +315,12 @@ class Graph(BaseRelatableNode):
             KeyError: If the relationship is not found in the graph.
         """
         if relationship.id_ not in self.relationships.keys():
-            raise KeyError(f'relationship {relationship.id_} is not found')
+            raise KeyError(f"relationship {relationship.id_} is not found")
 
-        self.node_relationships[relationship.source_node_id]['out'].pop(relationship.id_)
-        self.node_relationships[relationship.target_node_id]['in'].pop(relationship.id_)
+        self.node_relationships[relationship.source_node_id]["out"].pop(
+            relationship.id_
+        )
+        self.node_relationships[relationship.target_node_id]["in"].pop(relationship.id_)
 
         return self.relationships.pop(relationship.id_)
 
@@ -375,20 +387,22 @@ class Graph(BaseRelatableNode):
             >>> nx_graph = graph.to_networkx()
         """
         from lionagi.util.import_util import ImportUtil
-        ImportUtil.check_import('networkx')
-        
+
+        ImportUtil.check_import("networkx")
+
         from networkx import DiGraph
+
         g = DiGraph(**kwargs)
         for node_id, node in self.nodes.items():
             node_info = node.to_dict()
-            node_info.pop('node_id')
+            node_info.pop("node_id")
             g.add_node(node_id, **node_info)
 
         for _, relationship in self.relationships.items():
             relationship_info = relationship.to_dict()
-            relationship_info.pop('node_id')
-            source_node_id = relationship_info.pop('source_node_id')
-            target_node_id = relationship_info.pop('target_node_id')
+            relationship_info.pop("node_id")
+            source_node_id = relationship_info.pop("source_node_id")
+            target_node_id = relationship_info.pop("target_node_id")
             g.add_edge(source_node_id, target_node_id, **relationship_info)
 
         return g
@@ -398,12 +412,13 @@ class Structure(BaseRelatableNode):
     """
     Represents the structure of a graph consisting of nodes and relationship.
     """
+
     graph: Graph = Graph()
 
     def add_node(self, node: BaseNode) -> None:
         """
         Adds a node to the structure.
-        
+
         Args:
             node (T): The node instance to be added.
         """
@@ -412,7 +427,7 @@ class Structure(BaseRelatableNode):
     def add_relationship(self, relationship: Relationship) -> None:
         """
         Adds a relationship to the structure.
-        
+
         Args:
             relationship (R): The relationship instance to be added.
         """
@@ -421,7 +436,9 @@ class Structure(BaseRelatableNode):
     def get_relationships(self) -> list[Relationship]:
         return self.graph.get_node_relationships()
 
-    def get_node_relationships(self, node: BaseNode, out_edge=True, labels=None) -> Relationship:
+    def get_node_relationships(
+        self, node: BaseNode, out_edge=True, labels=None
+    ) -> Relationship:
         relationships = self.graph.get_node_relationships(node, out_edge)
         if labels:
             if not isinstance(labels, list):
@@ -436,23 +453,23 @@ class Structure(BaseRelatableNode):
     def node_exist(self, node: BaseNode) -> bool:
         """
         Checks if a node exists in the structure.
-        
+
         Args:
             node (T): The node instance or node ID to check for existence.
-            
+
         Returns:
             bool: True if the node exists, False otherwise.
         """
 
         return self.graph.node_exist(node)
-    
+
     def relationship_exist(self, relationship: Relationship) -> bool:
         """
         Checks if a relationship exists in the structure.
-        
+
         Args:
             relationship (R): The relationship instance to check for existence.
-            
+
         Returns:
             bool: True if the relationship exists, False otherwise.
         """
@@ -461,7 +478,7 @@ class Structure(BaseRelatableNode):
     def remove_node(self, node: BaseNode) -> BaseNode:
         """
         Removes a node and its associated relationship from the structure.
-        
+
         Args:
             node (T): The node instance or node ID to be removed.
         """
@@ -470,7 +487,7 @@ class Structure(BaseRelatableNode):
     def remove_relationship(self, relationship: Relationship) -> Relationship:
         """
         Removes a relationship from the structure.
-        
+
         Args:
             relationship (R): The relationship instance to be removed.
         """

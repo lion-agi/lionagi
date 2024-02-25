@@ -3,7 +3,7 @@ import inspect
 from lionagi.core.schema import Tool
 
 
-def func_to_tool(func_, parser=None, docstring_style='google'):
+def func_to_tool(func_, parser=None, docstring_style="google"):
     """
     Transforms a given function into a Tool object, equipped with a schema derived
     from its docstring. This process involves parsing the function's docstring based
@@ -27,7 +27,7 @@ def func_to_tool(func_, parser=None, docstring_style='google'):
                                 transformation process but is included for future
                                 compatibility and extension purposes.
         docstring_style (str): The format of the docstring to be parsed, indicating
-                               the convention used in the function's docstring. 
+                               the convention used in the function's docstring.
                                Supports 'google' for Google-style docstrings and
                                'reST' for reStructuredText-style docstrings. The
                                chosen style affects how the docstring is parsed and
@@ -83,6 +83,7 @@ def func_to_tool(func_, parser=None, docstring_style='google'):
     schema = _func_to_schema(func_, docstring_style)
     return Tool(func=func_, parser=parser, schema_=schema)
 
+
 def _extract_docstring_details_google(func):
     """
     Extracts the function description and parameter descriptions from the
@@ -113,7 +114,7 @@ def _extract_docstring_details_google(func):
     docstring = inspect.getdoc(func)
     if not docstring:
         return "No description available.", {}
-    lines = docstring.split('\n')
+    lines = docstring.split("\n")
     func_description = lines[0].strip()
 
     param_start_pos = 0
@@ -121,26 +122,31 @@ def _extract_docstring_details_google(func):
 
     params_description = {}
     for i in range(1, lines_len):
-        if lines[i].startswith('Args') or lines[i].startswith('Arguments') or lines[i].startswith('Parameters'):
+        if (
+            lines[i].startswith("Args")
+            or lines[i].startswith("Arguments")
+            or lines[i].startswith("Parameters")
+        ):
             param_start_pos = i + 1
             break
 
     current_param = None
     for i in range(param_start_pos, lines_len):
-        if lines[i] == '':
+        if lines[i] == "":
             continue
-        elif lines[i].startswith(' '):
-            param_desc = lines[i].split(':', 1)
+        elif lines[i].startswith(" "):
+            param_desc = lines[i].split(":", 1)
             if len(param_desc) == 1:
-                params_description[current_param] += ' ' + param_desc[0].strip()
+                params_description[current_param] += " " + param_desc[0].strip()
                 continue
             param, desc = param_desc
-            param = param.split('(')[0].strip()
+            param = param.split("(")[0].strip()
             params_description[param] = desc.strip()
             current_param = param
         else:
             break
     return func_description, params_description
+
 
 def _extract_docstring_details_rest(func):
     """
@@ -173,25 +179,26 @@ def _extract_docstring_details_rest(func):
     docstring = inspect.getdoc(func)
     if not docstring:
         return "No description available.", {}
-    lines = docstring.split('\n')
+    lines = docstring.split("\n")
     func_description = lines[0].strip()
 
     params_description = {}
     current_param = None
     for line in lines[1:]:
         line = line.strip()
-        if line.startswith(':param'):
-            param_desc = line.split(':', 2)
+        if line.startswith(":param"):
+            param_desc = line.split(":", 2)
             _, param, desc = param_desc
             param = param.split()[-1].strip()
             params_description[param] = desc.strip()
             current_param = param
-        elif line.startswith(' '):
-            params_description[current_param] += ' ' + line
+        elif line.startswith(" "):
+            params_description[current_param] += " " + line
 
     return func_description, params_description
 
-def _extract_docstring_details(func, style='google'):
+
+def _extract_docstring_details(func, style="google"):
     """
     Extracts the function description and parameter descriptions from the
     docstring of the given function using either Google style or reStructuredText
@@ -223,13 +230,16 @@ def _extract_docstring_details(func, style='google'):
         >>> params == {'param1': 'The first parameter.', 'param2': 'The second parameter.'}
         True
     """
-    if style == 'google':
+    if style == "google":
         func_description, params_description = _extract_docstring_details_google(func)
-    elif style == 'reST':
+    elif style == "reST":
         func_description, params_description = _extract_docstring_details_rest(func)
     else:
-        raise ValueError(f'{style} is not supported. Please choose either "google" or "reST".')
+        raise ValueError(
+            f'{style} is not supported. Please choose either "google" or "reST".'
+        )
     return func_description, params_description
+
 
 def _python_to_json_type(py_type):
     """
@@ -248,17 +258,18 @@ def _python_to_json_type(py_type):
         'number'
     """
     type_mapping = {
-        'str': 'string',
-        'int': 'number',
-        'float': 'number',
-        'list': 'array',
-        'tuple': 'array',
-        'bool': 'boolean',
-        'dict': 'object'
+        "str": "string",
+        "int": "number",
+        "float": "number",
+        "list": "array",
+        "tuple": "array",
+        "bool": "boolean",
+        "dict": "object",
     }
-    return type_mapping.get(py_type, 'object')
+    return type_mapping.get(py_type, "object")
 
-def _func_to_schema(func, style='google'):
+
+def _func_to_schema(func, style="google"):
     """
     Generates a schema description for a given function, using typing hints and
     docstrings. The schema includes the function's name, description, and parameters.
@@ -318,7 +329,7 @@ def _func_to_schema(func, style='google'):
             "name": func_name,
             "description": func_description,
             "parameters": parameters,
-        }
+        },
     }
 
     return schema

@@ -18,17 +18,17 @@ class MailManager:
     def add_source(self, sources: Dict[str, Any]):
         for key in sources.keys():
             if key in self.sources:
-                raise ValueError(f'{key} exists, please input a different name.')
+                raise ValueError(f"{key} exists, please input a different name.")
             self.sources[key] = {}
 
     def delete_source(self, source_name):
         if source_name not in self.sources:
-            raise ValueError(f'{source_name} does not exist.')
+            raise ValueError(f"{source_name} does not exist.")
         self.sources.pop(source_name)
 
     def collect(self, sender):
         if sender not in self.sources:
-            raise ValueError(f'{sender} does not exist.')
+            raise ValueError(f"{sender} does not exist.")
         while self.sources[sender].pending_outs:
             mail_ = self.sources[sender].pending_outs.popleft()
             if mail_.sender not in self.mails[mail_.recipient]:
@@ -37,7 +37,7 @@ class MailManager:
 
     def send(self, to_name):
         if to_name not in self.sources:
-            raise ValueError(f'{to_name} does not exist.')
+            raise ValueError(f"{to_name} does not exist.")
         if not self.mails[to_name]:
             return
         else:

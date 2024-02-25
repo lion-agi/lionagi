@@ -1,8 +1,7 @@
-
 from typing import Any, Dict, List
 from collections import deque
 
-from lionagi.util import to_df,to_list, to_df
+from lionagi.util import to_df, to_list, to_df
 from lionagi.core.session.base.mail_manager import MailManager
 from lionagi.core.session.base.schema import System, Instruction
 from lionagi.core.session.branch import Branch
@@ -16,7 +15,6 @@ import pandas as pd
 from lionagi.util.path_util import PathUtil
 from lionagi.core.schema import Tool
 from lionagi.util.api_util import BaseService
-
 
 
 class Session:
@@ -33,6 +31,7 @@ class Session:
         branch_manager (BranchManager): The manager for handling branches within the session.
         logger (Optional[Any]): The logger instance for session data logging.
     """
+
     def __init__(
         self,
         system: Optional[Union[str, System]] = None,
@@ -43,11 +42,11 @@ class Session:
         default_branch: Optional[Branch] = None,
         default_branch_name: Optional[str] = None,
         tools: Optional[List[Tool]] = None,
-        instruction_sets: Optional[List[Instruction]] = None, 
+        instruction_sets: Optional[List[Instruction]] = None,
         tool_manager: Optional[Any] = None,
-        messages: Optional[List[Dict[str, Any]]] = None, 
-        logger: Optional[Any] = None, 
-        dir: Optional[str] = None
+        messages: Optional[List[Dict[str, Any]]] = None,
+        logger: Optional[Any] = None,
+        dir: Optional[str] = None,
     ):
         """Initialize a new session with optional configuration for managing conversations.
 
@@ -70,18 +69,25 @@ class Session:
             >>> session = Session(system="you are a helpful assistant", sender="researcher")
         """
         self.branches = branches if isinstance(branches, dict) else {}
-        self.service = service 
+        self.service = service
         self.setup_default_branch(
-            system=system, sender=sender, default_branch=default_branch,
-            default_branch_name=default_branch_name, messages=messages,
-            instruction_sets=instruction_sets, tool_manager=tool_manager, 
-            service=service, llmconfig=llmconfig, tools=tools, 
-            dir=dir, logger=logger)
+            system=system,
+            sender=sender,
+            default_branch=default_branch,
+            default_branch_name=default_branch_name,
+            messages=messages,
+            instruction_sets=instruction_sets,
+            tool_manager=tool_manager,
+            service=service,
+            llmconfig=llmconfig,
+            tools=tools,
+            dir=dir,
+            logger=logger,
+        )
         self.branch_manager = MailManager(self.branches)
         self.datalogger = self.default_branch.datalogger
-  
 
-# --- default branch methods ---- #
+    # --- default branch methods ---- #
 
     @property
     def messages(self):
@@ -125,7 +131,7 @@ class Session:
             pd.Series: The last message as a pandas Series.
         """
         return self.default_branch.last_message
-    
+
     @property
     def first_system(self) -> pd.Series:
         """
@@ -135,7 +141,7 @@ class Session:
             pd.Series: The first system message as a pandas Series.
         """
         return self.default_branch.first_system
-        
+
     @property
     def last_response(self) -> pd.Series:
         """
@@ -165,7 +171,7 @@ class Session:
             pd.DataFrame: A DataFrame containing all tool request messages.
         """
         return self.default_branch.tool_request
-    
+
     @property
     def tool_response(self) -> pd.DataFrame:
         """
@@ -204,9 +210,9 @@ class Session:
         Returns:
             Dict[str, int]: A dictionary with keys as message roles and values as counts.
         """
-        
+
         return self.default_branch.info
-    
+
     @property
     def sender_info(self) -> Dict[str, int]:
         """
@@ -227,10 +233,12 @@ class Session:
         service: BaseService = None,
         branches: Optional[Dict[str, Branch]] = None,
         default_branch: Optional[Branch] = None,
-        default_branch_name: str = 'main',
-        tools = None, 
-        instruction_sets=None, tool_manager=None,
-        **kwargs) -> 'Session':
+        default_branch_name: str = "main",
+        tools=None,
+        instruction_sets=None,
+        tool_manager=None,
+        **kwargs,
+    ) -> "Session":
         """
         Creates a Session instance from a CSV file containing messages.
 
@@ -251,7 +259,7 @@ class Session:
             >>> branch = Branch.from_csv("path/to/messages.csv", name="ImportedBranch")
         """
         df = pd.read_csv(filepath, **kwargs)
-        
+
         self = cls(
             system=system,
             sender=sender,
@@ -260,12 +268,13 @@ class Session:
             branches=branches,
             default_branch=default_branch,
             default_branch_name=default_branch_name,
-            tools = tools, 
-            instruction_sets=instruction_sets, 
+            tools=tools,
+            instruction_sets=instruction_sets,
             tool_manager=tool_manager,
-            messages=df, **kwargs
+            messages=df,
+            **kwargs,
         )
-        
+
         return self
 
     @classmethod
@@ -278,10 +287,12 @@ class Session:
         service: BaseService = None,
         branches: Optional[Dict[str, Branch]] = None,
         default_branch: Optional[Branch] = None,
-        default_branch_name: str = 'main',
-        tools = None, 
-        instruction_sets=None, tool_manager=None,
-        **kwargs) -> 'Session':
+        default_branch_name: str = "main",
+        tools=None,
+        instruction_sets=None,
+        tool_manager=None,
+        **kwargs,
+    ) -> "Session":
         """
         Creates a Branch instance from a JSON file containing messages.
 
@@ -309,17 +320,25 @@ class Session:
             branches=branches,
             default_branch=default_branch,
             default_branch_name=default_branch_name,
-            tools = tools, 
-            instruction_sets=instruction_sets, 
+            tools=tools,
+            instruction_sets=instruction_sets,
             tool_manager=tool_manager,
-            messages=df, **kwargs
+            messages=df,
+            **kwargs,
         )
-        
+
         return self
 
-    def to_csv(self, filename: str = 'messages.csv', file_exist_ok: bool = False,
-            timestamp: bool = True, time_prefix: bool = False,
-            verbose: bool = True, clear: bool = True, **kwargs):
+    def to_csv(
+        self,
+        filename: str = "messages.csv",
+        file_exist_ok: bool = False,
+        timestamp: bool = True,
+        time_prefix: bool = False,
+        verbose: bool = True,
+        clear: bool = True,
+        **kwargs,
+    ):
         """
         Saves the branch's messages to a CSV file.
 
@@ -336,15 +355,18 @@ class Session:
             >>> branch.to_csv("exported_messages.csv")
             >>> branch.to_csv("timed_export.csv", timestamp=True, time_prefix=True)
         """
-        
-        if not filename.endswith('.csv'):
-            filename += '.csv'
-        
+
+        if not filename.endswith(".csv"):
+            filename += ".csv"
+
         filepath = PathUtil.create_path(
-            self.datalogger.dir, filename, timestamp=timestamp, 
-            dir_exist_ok=file_exist_ok, time_prefix=time_prefix
+            self.datalogger.dir,
+            filename,
+            timestamp=timestamp,
+            dir_exist_ok=file_exist_ok,
+            time_prefix=time_prefix,
         )
-        
+
         try:
             self.messages.to_csv(filepath, **kwargs)
             if verbose:
@@ -354,9 +376,16 @@ class Session:
         except Exception as e:
             raise ValueError(f"Error in saving to csv: {e}")
 
-    def to_json(self, filename: str = 'messages.json', file_exist_ok: bool = False,
-                timestamp: bool = True, time_prefix: bool = False,
-                verbose: bool = True, clear: bool = True, **kwargs):
+    def to_json(
+        self,
+        filename: str = "messages.json",
+        file_exist_ok: bool = False,
+        timestamp: bool = True,
+        time_prefix: bool = False,
+        verbose: bool = True,
+        clear: bool = True,
+        **kwargs,
+    ):
         """
         Saves the branch's messages to a JSON file.
 
@@ -373,19 +402,21 @@ class Session:
             >>> branch.to_json("exported_messages.json")
             >>> branch.to_json("timed_export.json", timestamp=True, time_prefix=True)
         """
-        
-        if not filename.endswith('.json'):
-            filename += '.json'
-        
+
+        if not filename.endswith(".json"):
+            filename += ".json"
+
         filepath = PathUtil.create_path(
-            self.dir, filename, timestamp=timestamp, 
-            dir_exist_ok=file_exist_ok, time_prefix=time_prefix
+            self.dir,
+            filename,
+            timestamp=timestamp,
+            dir_exist_ok=file_exist_ok,
+            time_prefix=time_prefix,
         )
-        
+
         try:
             self.messages.to_json(
-                filepath, orient="records", lines=True, 
-                date_format="iso", **kwargs
+                filepath, orient="records", lines=True, date_format="iso", **kwargs
             )
             if clear:
                 self.clear_messages()
@@ -394,8 +425,16 @@ class Session:
         except Exception as e:
             raise ValueError(f"Error in saving to json: {e}")
 
-    def log_to_csv(self, filename: str = 'log.csv', file_exist_ok: bool = False, timestamp: bool = True,
-                time_prefix: bool = False, verbose: bool = True, clear: bool = True, **kwargs):
+    def log_to_csv(
+        self,
+        filename: str = "log.csv",
+        file_exist_ok: bool = False,
+        timestamp: bool = True,
+        time_prefix: bool = False,
+        verbose: bool = True,
+        clear: bool = True,
+        **kwargs,
+    ):
         """
         Saves the branch's log data to a CSV file.
 
@@ -416,12 +455,25 @@ class Session:
             >>> branch.log_to_csv("detailed_branch_log.csv", timestamp=True, verbose=True)
         """
         self.datalogger.to_csv(
-            filename=filename, file_exist_ok=file_exist_ok, timestamp=timestamp, 
-            time_prefix=time_prefix, verbose=verbose, clear=clear, **kwargs
+            filename=filename,
+            file_exist_ok=file_exist_ok,
+            timestamp=timestamp,
+            time_prefix=time_prefix,
+            verbose=verbose,
+            clear=clear,
+            **kwargs,
         )
 
-    def log_to_json(self, filename: str = 'log.json', file_exist_ok: bool = False, timestamp: bool = True,
-                    time_prefix: bool = False, verbose: bool = True, clear: bool = True, **kwargs):
+    def log_to_json(
+        self,
+        filename: str = "log.json",
+        file_exist_ok: bool = False,
+        timestamp: bool = True,
+        time_prefix: bool = False,
+        verbose: bool = True,
+        clear: bool = True,
+        **kwargs,
+    ):
         """
         Saves the branch's log data to a JSON file.
 
@@ -442,8 +494,13 @@ class Session:
             >>> branch.log_to_json("detailed_branch_log.json", verbose=True, timestamp=True)
         """
         self.datalogger.to_json(
-            filename=filename, file_exist_ok=file_exist_ok, timestamp=timestamp, 
-            time_prefix=time_prefix, verbose=verbose, clear=clear, **kwargs
+            filename=filename,
+            file_exist_ok=file_exist_ok,
+            timestamp=timestamp,
+            time_prefix=time_prefix,
+            verbose=verbose,
+            clear=clear,
+            **kwargs,
         )
 
     @property
@@ -459,8 +516,10 @@ class Session:
     def register_tools(self, tools):
         self.default_branch.register_tools(tools)
 
-# ----- chatflow ----#
-    async def call_chatcompletion(self, branch=None, sender=None, with_sender=False, tokenizer_kwargs={}, **kwargs):
+    # ----- chatflow ----#
+    async def call_chatcompletion(
+        self, branch=None, sender=None, with_sender=False, tokenizer_kwargs={}, **kwargs
+    ):
         """
         Asynchronously calls the chat completion service with the current message queue.
 
@@ -476,10 +535,12 @@ class Session:
         """
         branch = self.get_branch(branch)
         await branch.call_chatcompletion(
-            sender=sender, with_sender=with_sender, 
-            tokenizer_kwargs=tokenizer_kwargs, **kwargs
+            sender=sender,
+            with_sender=with_sender,
+            tokenizer_kwargs=tokenizer_kwargs,
+            **kwargs,
         )
-    
+
     async def chat(
         self,
         instruction: Union[Instruction, str],
@@ -490,7 +551,8 @@ class Session:
         tools: Union[bool, Tool, List[Tool], str, List[str]] = False,
         out: bool = True,
         invoke: bool = True,
-        **kwargs) -> Any:
+        **kwargs,
+    ) -> Any:
         """
         a chat conversation with LLM, processing instructions and system messages, optionally invoking tools.
 
@@ -510,21 +572,27 @@ class Session:
         """
         branch = self.get_branch(branch)
         return await branch.chat(
-            instruction=instruction, context=context, 
-            sender=sender, system=system, tools=tools, 
-            out=out, invoke=invoke, **kwargs
+            instruction=instruction,
+            context=context,
+            sender=sender,
+            system=system,
+            tools=tools,
+            out=out,
+            invoke=invoke,
+            **kwargs,
         )
 
     async def ReAct(
         self,
         instruction: Union[Instruction, str],
         branch=None,
-        context = None,
-        sender = None,
-        system = None,
-        tools = None, 
+        context=None,
+        sender=None,
+        system=None,
+        tools=None,
         num_rounds: int = 1,
-        **kwargs ):
+        **kwargs,
+    ):
         """
         Performs a reason-tool cycle with optional tool invocation over multiple rounds.
 
@@ -544,22 +612,27 @@ class Session:
         branch = self.get_branch(branch)
 
         return await branch.ReAct(
-            instruction=instruction, context=context, 
-            sender=sender, system=system, tools=tools, 
-            num_rounds=num_rounds, **kwargs
+            instruction=instruction,
+            context=context,
+            sender=sender,
+            system=system,
+            tools=tools,
+            num_rounds=num_rounds,
+            **kwargs,
         )
 
     async def auto_followup(
         self,
         instruction: Union[Instruction, str],
         branch=None,
-        context = None,
-        sender = None,
-        system = None,
+        context=None,
+        sender=None,
+        system=None,
         tools: Union[bool, Tool, List[Tool], str, List[str], List[Dict]] = False,
         max_followup: int = 3,
-        out=True, 
-        **kwargs):
+        out=True,
+        **kwargs,
+    ):
         """
         Automatically performs follow-up tools based on chat intertools and tool invocations.
 
@@ -579,24 +652,29 @@ class Session:
         """
         branch = self.get_branch(branch)
         return await branch.auto_followup(
-            instruction=instruction, context=context, 
-            sender=sender, system=system, tools=tools, 
-            max_followup=max_followup, out=out, **kwargs
+            instruction=instruction,
+            context=context,
+            sender=sender,
+            system=system,
+            tools=tools,
+            max_followup=max_followup,
+            out=out,
+            **kwargs,
         )
 
-# ---- branch manipulation ---- #        
+    # ---- branch manipulation ---- #
     def new_branch(
-        self, 
+        self,
         branch_name: Optional[str] = None,
         system=None,
         sender=None,
         messages: Optional[pd.DataFrame] = None,
-        instruction_sets = None,
-        tool_manager = None,
-        service = None,
-        llmconfig = None,
+        instruction_sets=None,
+        tool_manager=None,
+        service=None,
+        llmconfig=None,
         tools=None,
-    ) -> None:     
+    ) -> None:
         """Create a new branch with the specified configurations.
 
         Args:
@@ -617,15 +695,17 @@ class Session:
             >>> session.new_branch("new_branch_name")
         """
         if branch_name in self.branches.keys():
-            raise ValueError(f'Invalid new branch name {branch_name}. Branch already existed.')
+            raise ValueError(
+                f"Invalid new branch name {branch_name}. Branch already existed."
+            )
         new_branch = Branch(
             name=branch_name,
             messages=messages,
-            instruction_sets=instruction_sets, 
-            tool_manager=tool_manager, 
-            service=service, 
-            llmconfig=llmconfig, 
-            tools=tools
+            instruction_sets=instruction_sets,
+            tool_manager=tool_manager,
+            service=service,
+            llmconfig=llmconfig,
+            tools=tools,
         )
         if system:
             new_branch.add_message(system=system, sender=sender)
@@ -635,9 +715,7 @@ class Session:
         self.branch_manager.requests[branch_name] = {}
 
     def get_branch(
-        self, 
-        branch: Optional[Union[Branch, str]] = None, 
-        get_name: bool = False
+        self, branch: Optional[Union[Branch, str]] = None, get_name: bool = False
     ) -> Union[Branch, Tuple[Branch, str]]:
         """
         Retrieve a branch by name or instance.
@@ -658,24 +736,27 @@ class Session:
         """
         if isinstance(branch, str):
             if branch not in self.branches.keys():
-                raise ValueError(f'Invalid branch name {branch}. Not exist.')
+                raise ValueError(f"Invalid branch name {branch}. Not exist.")
             else:
-                if get_name: 
+                if get_name:
                     return self.branches[branch], branch
                 return self.branches[branch]
-        
+
         elif isinstance(branch, Branch) and branch in self.branches.values():
             if get_name:
-                return branch, [key for key, value in self.branches.items() if value == branch][0]
+                return (
+                    branch,
+                    [key for key, value in self.branches.items() if value == branch][0],
+                )
             return branch
 
         elif branch is None:
             if get_name:
                 return self.default_branch, self.default_branch_name
             return self.default_branch
-        
+
         else:
-            raise ValueError(f'Invalid branch input {branch}.')
+            raise ValueError(f"Invalid branch input {branch}.")
 
     def change_default_branch(self, branch: Union[str, Branch]) -> None:
         """Change the default branch of the session.
@@ -710,22 +791,22 @@ class Session:
 
         if branch_name == self.default_branch_name:
             raise ValueError(
-                f'{branch_name} is the current default branch, please switch to another branch before delete it.'
+                f"{branch_name} is the current default branch, please switch to another branch before delete it."
             )
         else:
             self.branches.pop(branch_name)
             # self.branch_manager.sources.pop(branch_name)
             self.branch_manager.requests.pop(branch_name)
             if verbose:
-                print(f'Branch {branch_name} is deleted.')
+                print(f"Branch {branch_name} is deleted.")
             return True
 
     def merge_branch(
-        self, 
-        from_: Union[str, Branch], 
-        to_branch: Union[str, Branch], 
-        update: bool = True, 
-        del_: bool = False
+        self,
+        from_: Union[str, Branch],
+        to_branch: Union[str, Branch],
+        update: bool = True,
+        del_: bool = False,
     ) -> None:
         """Merge messages and settings from one branch to another.
 
@@ -741,7 +822,7 @@ class Session:
         from_ = self.get_branch(branch=from_)
         to_branch, to_name = self.get_branch(branch=to_branch, get_name=True)
         to_branch.merge_branch(from_, update=update)
-        
+
         if del_:
             if from_ == self.default_branch:
                 self.default_branch_name = to_name
@@ -808,11 +889,11 @@ class Session:
         """
         Collects and sends requests across all branches, optionally invoking a receive operation on each branch.
 
-        This method is a convenience function for performing a full cycle of collect and send operations across all branches, 
+        This method is a convenience function for performing a full cycle of collect and send operations across all branches,
         useful in scenarios where data or requests need to be aggregated and then distributed uniformly.
 
         Args:
-            receive_all (bool): If True, triggers a `receive_all` method on each branch after sending requests, 
+            receive_all (bool): If True, triggers a `receive_all` method on each branch after sending requests,
                 which can be used to process or acknowledge the received data.
 
         Examples:
@@ -832,25 +913,45 @@ class Session:
     def _verify_default_branch(self):
         if self.branches:
             if self.default_branch_name not in self.branches.keys():
-                raise ValueError('default branch name is not in imported branches')
+                raise ValueError("default branch name is not in imported branches")
             if self.default_branch is not self.branches[self.default_branch_name]:
-                raise ValueError(f'default branch does not match Branch object under {self.default_branch_name}')
-            
+                raise ValueError(
+                    f"default branch does not match Branch object under {self.default_branch_name}"
+                )
+
         if not self.branches:
             self.branches[self.default_branch_name] = self.default_branch
 
     def _setup_default_branch(
-        self, system, sender, default_branch, default_branch_name, messages, 
-        instruction_sets, tool_manager, service, llmconfig, tools, dir, logger
+        self,
+        system,
+        sender,
+        default_branch,
+        default_branch_name,
+        messages,
+        instruction_sets,
+        tool_manager,
+        service,
+        llmconfig,
+        tools,
+        dir,
+        logger,
     ):
-        
+
         branch = default_branch or Branch(
-            name=default_branch_name, service=service, llmconfig=llmconfig, tools=tools,
-            tool_manager=tool_manager, instruction_sets=instruction_sets, messages=messages, dir=dir, logger=logger
+            name=default_branch_name,
+            service=service,
+            llmconfig=llmconfig,
+            tools=tools,
+            tool_manager=tool_manager,
+            instruction_sets=instruction_sets,
+            messages=messages,
+            dir=dir,
+            logger=logger,
         )
-        
+
         self.default_branch = branch
-        self.default_branch_name = default_branch_name or 'main'
+        self.default_branch_name = default_branch_name or "main"
         if system:
             self.default_branch.add_message(system=system, sender=sender)
 
