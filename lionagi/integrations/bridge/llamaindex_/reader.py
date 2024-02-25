@@ -1,9 +1,15 @@
-from llama_index.core import SimpleDirectoryReader
-from llama_index.core.readers.base import BaseReader
-from lionagi.util import SysUtil, strip_lower
+from typing import Any
+from lionagi.util import SysUtil, ConvertUtil
+from lionagi.util.import_util import ImportUtil
 
 
-def get_llama_index_reader(reader: BaseReader | str = None) -> BaseReader:
+def get_llama_index_reader(reader: Any | str = None) -> Any:
+    
+    ImportUtil.check_import('llama-index')
+    from llama_index.core import SimpleDirectoryReader
+    from llama_index.core.readers.base import BaseReader
+    
+    
     if not isinstance(reader, [str, BaseReader]):
         raise TypeError(f'reader must be a string or BaseReader, not {type(reader)}')
 
@@ -31,10 +37,10 @@ def get_llama_index_reader(reader: BaseReader | str = None) -> BaseReader:
 
 def parse_reader_name(reader_str):
     reader_ = ''
-    if 'index' in reader:
-        reader_ = reader.split('index')[-1]
+    if 'index' in reader_str:
+        reader_ = reader_str.split('index')[-1]
 
-    reader_ = strip_lower(reader_.replace("_", "-"))
+    reader_ = ConvertUtil.strip_lower(reader_.replace("_", "-"))
 
     if reader_.startswith('-'):
         reader_ = reader_[1:]

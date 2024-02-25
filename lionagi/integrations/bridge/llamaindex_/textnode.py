@@ -1,13 +1,16 @@
 from typing import Any, TypeVar
-from llama_index.core.schema import TextNode
-
 from lionagi.util import SysUtil
+from lionagi.util.import_util import ImportUtil
 
-T = TypeVar('T', bound='DataNode')
 
 
-def to_llama_index_node(lion_node: T, node_type: str | TextNode = None,
-                        **kwargs: Any) -> TextNode | None:
+
+
+def to_llama_index_node(lion_node, node_type: Any = None,
+                        **kwargs: Any) -> Any:
+    
+    ImportUtil.check_import('llama-index')
+    from llama_index.core.schema import TextNode
     node_type = node_type or TextNode
 
     _dict = lion_node.to_dict()
