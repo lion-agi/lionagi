@@ -10,6 +10,7 @@ def to_llama_index_node(lion_node, node_type: Any = None,
                         **kwargs: Any) -> Any:
     
     ImportUtil.check_import('llama-index')
+    import llama_index
     from llama_index.core.schema import TextNode
     node_type = node_type or TextNode
 
