@@ -1,6 +1,6 @@
 from typing import Union, Callable, List, Dict, Any, TypeVar
-from langchain.schema import Document as LangchainDocument
-import langchain.document_loaders as document_loaders
+from lionagi.core.schema import DataNode
+
 
 from lionagi.util import SysUtil
 
@@ -8,7 +8,8 @@ T = TypeVar('T', bound='DataNode')
 
 
 def to_langchain_document(datanode: T, **kwargs: Any) -> Any:
-
+    from langchain.schema import Document as LangchainDocument
+    
     dnode = datanode.to_dict()
     SysUtil.change_dict_key(dnode, old_key='content', new_key='page_content')
     SysUtil.change_dict_key(dnode, old_key='lc_id', new_key='id_')
@@ -41,6 +42,7 @@ def langchain_loader(loader: Union[str, Callable],
     try:
         if isinstance(loader, str):
             try:
+                import langchain.document_loaders as document_loaders
                 loader = getattr(document_loaders, loader)
             except ImportError as e:
                 raise ValueError(

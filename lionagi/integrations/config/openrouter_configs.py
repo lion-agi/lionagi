@@ -10,14 +10,14 @@ openrouter_chat_llmconfig = {
     "stream": False,
     "temperature": 0.7, 
     "top_p": 1, 
-    "actions": None,
+    "tools": None,
     "tool_choice": "none", 
     "user": None
     }
 
 openrouter_chat_schema = {
     "required" : ["model", "frequency_penalty", "num", "presence_penalty", "response_format", "temperature", "top_p"],
-    "optional": ["seed", "stop", "stream", "actions", "tool_choice", "user", "max_tokens"],
+    "optional": ["seed", "stop", "stream", "tools", "tool_choice", "user", "max_tokens"],
     "input_": "messages",
     "config": openrouter_chat_llmconfig
     }

@@ -5,6 +5,7 @@ import sys
 import importlib
 import importlib.metadata  # For listing installed packages
 
+
 class ImportUtil:
 
     @staticmethod
@@ -51,7 +52,8 @@ class ImportUtil:
         try:
             if not ImportUtil.is_package_installed(package_name):
                 logging.info(f"Package {package_name} not found. Attempting to install.")
-                ImportUtil.install_import(package_name, module_name, import_name, pip_name)
+                ImportUtil.install_import(package_name, module_name, import_name,
+                                          pip_name)
         except ImportError as e:  # More specific exception handling
             logging.error(f'Failed to import {package_name}. Error: {e}')
             raise ValueError(f'Failed to import {package_name}. Error: {e}') from e
@@ -65,7 +67,8 @@ class ImportUtil:
     def uninstall_package(package_name: str) -> None:
         """Uninstall a specified package."""
         try:
-            subprocess.check_call([sys.executable, "-m", "pip", "uninstall", package_name, "-y"])
+            subprocess.check_call(
+                [sys.executable, "-m", "pip", "uninstall", package_name, "-y"])
             print(f"Successfully uninstalled {package_name}.")
         except subprocess.CalledProcessError as e:
             print(f"Failed to uninstall {package_name}. Error: {e}")
@@ -74,7 +77,8 @@ class ImportUtil:
     def update_package(package_name: str) -> None:
         """Update a specified package."""
         try:
-            subprocess.check_call([sys.executable, "-m", "pip", "install", "--upgrade", package_name])
+            subprocess.check_call(
+                [sys.executable, "-m", "pip", "install", "--upgrade", package_name])
             print(f"Successfully updated {package_name}.")
         except subprocess.CalledProcessError as e:
             print(f"Failed to update {package_name}. Error: {e}")

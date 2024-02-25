@@ -17,7 +17,7 @@ class Services:
             token_encoding_name (str): The default token encoding scheme.
         """
 
-        from .api.oai import OpenAIService
+        from lionagi.integrations.provider.oai import OpenAIService
         return OpenAIService(**kwargs)
     
     @staticmethod 
@@ -37,7 +37,7 @@ class Services:
             token_encoding_name (str): The default token encoding scheme.
         """
 
-        from .api.openrouter import OpenRouterService
+        from lionagi.integrations.provider.openrouter import OpenRouterService
         return OpenRouterService(**kwargs)
 
     @staticmethod
@@ -66,7 +66,7 @@ class Services:
             asynchronous operations.
         """
 
-        from .local.transformers import TransformersService
+        from lionagi.integrations.provider.transformers import TransformersService
         return TransformersService(**kwargs)
 
     #
@@ -100,7 +100,7 @@ class Services:
             kwargs (Optional[Any]): additional kwargs for calling the model
         """
     
-        from .local.ollama import OllamaService
+        from lionagi.integrations.provider.ollama import OllamaService
         return OllamaService(**kwargs)
 
     # @staticmethod
@@ -126,6 +126,6 @@ class Services:
             kwargs (Optional[Any]): additional kwargs for calling the model
         """
         
-        from .local.mlx_service import MlXService
+        from lionagi.integrations.provider.mlx_service import MlXService
         return MlXService(**kwargs)
     
