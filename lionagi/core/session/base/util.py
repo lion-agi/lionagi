@@ -6,108 +6,56 @@ from typing import Any, Dict, List
 import pandas as pd
 
 from lionagi.util import ConvertUtil, to_dict, to_df, nget, lcall
-from lionagi.core.session.base.schema import ActionRequest, AssistantResponse, \
-    ActionResponse, System, Instruction, MessageField, MessageContentKey, BaseMessage
+from lionagi.core.session.base.schema import System, Instruction, BaseMessage
 
 
 class MessageUtil:
 
-    @staticmethod
-    def response_to_message(response: dict[str, Any], **kwargs) -> Any:
-        """
-        Processes a message response dictionary to generate an appropriate message object.
+    # @staticmethod
+    # def create_message(
+    #     system: dict[str, Any] | List[Any] | System | None = None,
+    #     instruction: dict[str, Any] | List[Any] | Instruction | None = None,
+    #     context: str | Dict[str, Any] | None = None,
+    #     response: dict[str, Any] | List[Any] | BaseMessage | None = None,
+    #     **kwargs
+    # ) -> BaseMessage:
+    #     """
+    #     Creates a message object based on the input parameters, ensuring only one message role is present.
 
-        Args:
-            response: A dictionary potentially containing message information.
-            **kwargs: Additional keyword arguments to pass to the message constructors.
+    #     Args:
+    #         system: Information for creating a System message.
+    #         instruction: Information for creating an Instruction message.
+    #         context: Context information for the message.
+    #         response: Response data for creating a message.
+    #         **kwargs: Additional keyword arguments for message creation.
 
-        Returns:
-            An instance of a message class, such as ActionRequest or AssistantResponse,
-            depending on the content of the response.
-        """
-        try:
-            if isinstance(response, dict) and 'message' in response:
-                if ConvertUtil.strip_lower(
-                        nget(response, indices=['message', MessageField.CONTENT.value],
-                             default='null')
-                ) == "none":
-                    content = ActionRequest._handle_action_request(
-                        nget(response, ['message']))
-                    return ActionRequest(action_request=content, **kwargs)
+    #     Returns:
+    #         A message object of the appropriate type based on provided inputs.
 
-            else:
+    #     Raises:
+    #         ValueError: If more than one of the role-specific parameters are provided.
+    #     """
+    #     if sum(lcall([system, instruction, response], bool)) != 1:
+    #         raise ValueError("Error: Message must have one and only one role.")
 
-                try:
-                    if 'tool_uses' in to_dict(response[MessageField.CONTENT.value]):
-                        content_ = to_dict(response[MessageField.CONTENT.value])[
-                            'tool_uses']
-                        return ActionRequest(action_request=content_, **kwargs)
+    #     else:
+    #         if isinstance(any([system, instruction, response]), BaseMessage):
+    #             if system:
+    #                 return system
+    #             elif instruction:
+    #                 return instruction
+    #             elif response:
+    #                 return response
 
-                    elif MessageContentKey.RESPONSE.value in to_dict(
-                            response[MessageField.CONTENT.value]):
-                        content_ = to_dict(response[MessageField.CONTENT.value])[
-                            MessageContentKey.RESPONSE.value]
-                        return AssistantResponse(assistant_response=content_, **kwargs)
-
-                    elif MessageContentKey.ACTION_REQUEST.value in to_dict(
-                            response[MessageField.CONTENT.value]):
-                        content_ = to_dict(response[MessageField.CONTENT.value])[
-                            MessageContentKey.ACTION_REQUEST.value]
-                        return ActionRequest(action_request=content_, **kwargs)
-
-                    else:
-                        return AssistantResponse(assistant_response=response, **kwargs)
-
-                except:
-                    return AssistantResponse(assistant_response=response, **kwargs)
-        except:
-            return ActionResponse(action_response=response, **kwargs)
-
-    @staticmethod
-    def create_message(
-        system: dict[str, Any] | List[Any] | System | None = None,
-        instruction: dict[str, Any] | List[Any] | Instruction | None = None,
-        context: str | Dict[str, Any] | None = None,
-        response: dict[str, Any] | List[Any] | BaseMessage | None = None,
-        **kwargs
-    ) -> BaseMessage:
-        """
-        Creates a message object based on the input parameters, ensuring only one message role is present.
-
-        Args:
-            system: Information for creating a System message.
-            instruction: Information for creating an Instruction message.
-            context: Context information for the message.
-            response: Response data for creating a message.
-            **kwargs: Additional keyword arguments for message creation.
-
-        Returns:
-            A message object of the appropriate type based on provided inputs.
-
-        Raises:
-            ValueError: If more than one of the role-specific parameters are provided.
-        """
-        if sum(lcall([system, instruction, response], bool)) != 1:
-            raise ValueError("Error: Message must have one and only one role.")
-
-        else:
-            if isinstance(any([system, instruction, response]), BaseMessage):
-                if system:
-                    return system
-                elif instruction:
-                    return instruction
-                elif response:
-                    return response
-
-            msg = 0
-            if response:
-                msg = MessageUtil.response_to_message(response=response, **kwargs)
-            elif instruction:
-                msg = Instruction(instruction=instruction,
-                                  context=context, **kwargs)
-            elif system:
-                msg = System(system=system, **kwargs)
-            return msg
+    #         msg = 0
+    #         if response:
+    #             msg = MessageUtil.response_to_message(response=response, **kwargs)
+    #         elif instruction:
+    #             msg = Instruction(instruction=instruction,
+    #                               context=context, **kwargs)
+    #         elif system:
+    #             msg = System(system=system, **kwargs)
+    #         return msg
 
     @staticmethod
     def validate_messages(messages: pd.DataFrame) -> bool:
@@ -500,3 +448,52 @@ class MessageUtil:
             df.at[index[0], col] = new_value
             return True
         return False
+
+
+    # @staticmethod
+    # def response_to_message(response: dict[str, Any], **kwargs) -> Any:
+    #     """
+    #     Processes a message response dictionary to generate an appropriate message object.
+
+    #     Args:
+    #         response: A dictionary potentially containing message information.
+    #         **kwargs: Additional keyword arguments to pass to the message constructors.
+
+    #     Returns:
+    #         An instance of a message class, such as ActionRequest or AssistantResponse,
+    #         depending on the content of the response.
+    #     """
+    #     try:
+    #         response = response["message"]
+    #         if ConvertUtil.strip_lower(response['content']) == "none":
+                
+    #             content = ActionRequest._handle_action_request(response)
+    #             return ActionRequest(action_request=content, **kwargs)
+
+    #         else:
+
+    #             try:
+    #                 if 'tool_uses' in to_dict(response[MessageField.CONTENT.value]):
+    #                     content_ = to_dict(response[MessageField.CONTENT.value])[
+    #                         'tool_uses']
+    #                     return ActionRequest(action_request=content_, **kwargs)
+
+    #                 elif MessageContentKey.RESPONSE.value in to_dict(
+    #                         response[MessageField.CONTENT.value]):
+    #                     content_ = to_dict(response[MessageField.CONTENT.value])[
+    #                         MessageContentKey.RESPONSE.value]
+    #                     return AssistantResponse(assistant_response=content_, **kwargs)
+
+    #                 elif MessageContentKey.ACTION_REQUEST.value in to_dict(
+    #                         response[MessageField.CONTENT.value]):
+    #                     content_ = to_dict(response[MessageField.CONTENT.value])[
+    #                         MessageContentKey.ACTION_REQUEST.value]
+    #                     return ActionRequest(action_request=content_, **kwargs)
+
+    #                 else:
+    #                     return AssistantResponse(assistant_response=response, **kwargs)
+
+    #             except:
+    #                 return AssistantResponse(assistant_response=response, **kwargs)
+    #     except:
+    #         return ActionResponse(action_response=response, **kwargs)

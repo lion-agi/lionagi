@@ -1,9 +1,9 @@
 import inspect
 
-from lionagi.core.schema import BaseActionNode
+from lionagi.core.schema import Tool
 
 
-def func_to_action(func_, parser=None, docstring_style='google'):
+def func_to_tool(func_, parser=None, docstring_style='google'):
     """
     Transforms a given function into a Tool object, equipped with a schema derived
     from its docstring. This process involves parsing the function's docstring based
@@ -38,7 +38,7 @@ def func_to_action(func_, parser=None, docstring_style='google'):
               with its generated schema. This Tool object can be used in systems that
               require detailed metadata about functions, facilitating tasks such as
               automatic documentation generation, user interface creation, or
-              integration with other software actions.
+              integration with other software tools.
 
     Examples:
         >>> def example_function_google(param1: int, param2: str) -> bool:
@@ -54,7 +54,7 @@ def func_to_action(func_, parser=None, docstring_style='google'):
         ...     '''
         ...     return True
         ...
-        >>> tool_google = func_to_action(example_function_google, docstring_style='google')
+        >>> tool_google = func_to_tool(example_function_google, docstring_style='google')
         >>> print(isinstance(tool_google, Tool))
         True
 
@@ -71,7 +71,7 @@ def func_to_action(func_, parser=None, docstring_style='google'):
         ...     '''
         ...     return True
         ...
-        >>> tool_reST = func_to_action(example_function_reST, docstring_style='reST')
+        >>> tool_reST = func_to_tool(example_function_reST, docstring_style='reST')
         >>> print(isinstance(tool_reST, Tool))
         True
 
@@ -81,7 +81,7 @@ def func_to_action(func_, parser=None, docstring_style='google'):
         docstrings may result in incomplete or inaccurate Tool schemas.
     """
     schema = _func_to_schema(func_, docstring_style)
-    return BaseActionNode(func=func_, parser=parser, schema_=schema)
+    return Tool(func=func_, parser=parser, schema_=schema)
 
 def _extract_docstring_details_google(func):
     """

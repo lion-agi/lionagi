@@ -1,25 +1,25 @@
- #     actions = None,
+ #     tools = None,
     #     max_rounds: int = 1,
 
     #     fallback: Optional[Callable] = None,
     #     fallback_kwargs: Optional[Dict] = None,
     #     **kwargs
     # ):
-    #     if actions is not None:
-    #         if isinstance(actions, list) and isinstance(actions[0], Tool):
-    #             self.register_tools(actions)
+    #     if tools is not None:
+    #         if isinstance(tools, list) and isinstance(tools[0], Tool):
+    #             self.register_tools(tools)
 
     #     if self.action_manager.registry == {}:
-    #         raise ValueError("No actions found, You need to register actions for ReAct (reason-action)")
+    #         raise ValueError("No tools found, You need to register tools for ReAct (reason-action)")
 
     #     else:
-    #         kwargs = self.action_manager._tool_parser(actions=True, **kwargs)
+    #         kwargs = self.action_manager._tool_parser(tools=True, **kwargs)
 
     #     i = 0
     #     while i < max_rounds:
     #         prompt = f"""
     #             you have {(max_rounds-i)*2} step left in current task. reflect, perform
-    #             reason for action plan according to available actions only, apply divide and conquer technique, retain from invoking functions
+    #             reason for action plan according to available tools only, apply divide and conquer technique, retain from invoking functions
     #         """
     #         instruct = {"Notice": prompt}
 
@@ -36,7 +36,7 @@
     #             )
 
     #         prompt = f"""
-    #             you have {(max_rounds-i)*2-1} step left in current task, invoke actions usage to perform the action
+    #             you have {(max_rounds-i)*2-1} step left in current task, invoke tools usage to perform the action
     #         """
     #         await self.chat(prompt, tool_choice="auto", tool_parsed=True, out=False,sender=sender, **kwargs)
 
@@ -93,7 +93,7 @@
 
     # async def run_session(
     #     prompts, dir, llmconfig, key_scheme, num_prompts,
-    #     temperature, max_tokens, type_=None, actions=None
+    #     temperature, max_tokens, type_=None, tools=None
     # ):
     #     prompts_ = prompts.copy()
     #     session = Session(
@@ -101,8 +101,8 @@
     #         dir = dir,
     #         llmconfig = llmconfig
     #     )
-    #     if actions:
-    #         session.register_tools(actions)
+    #     if tools:
+    #         session.register_tools(tools)
     #     if type_ is None:
     #         session = await run_workflow(
     #             session, prompts_, temperature, max_tokens,
@@ -122,25 +122,25 @@
     #     context = None,
     #     sender = None,
     #     system = None,
-    #     actions: Union[bool, BaseActionNode, List[BaseActionNode], str, List[str], List[Dict]] = False,
+    #     tools: Union[bool, Tool, List[Tool], str, List[str], List[Dict]] = False,
     #     max_followup: int = 3,
     #     out=True,
     #     **kwargs
     # ) -> None:
 
     #     """
-    #     auto BaseActionNode usages until LLM decides done. Then presents final results.
+    #     auto Tool usages until LLM decides done. Then presents final results.
     #     """
 
-    #     if self.action_manager.registry != {} and actions:
-    #         kwargs = self.action_manager._BaseActionNode_parser(actions=actions, **kwargs)
+    #     if self.action_manager.registry != {} and tools:
+    #         kwargs = self.action_manager._BaseActionNode_parser(tools=tools, **kwargs)
 
     #     n_tries = 0
     #     while (max_followup - n_tries) > 0:
     #         prompt = f"""
     #             In the current task you are allowed a maximum of another {max_followup-n_tries} followup chats.
-    #             if further actions are needed, invoke actions usage. If you are done, present the final result
-    #             to user without further BaseActionNode usage.
+    #             if further tools are needed, invoke tools usage. If you are done, present the final result
+    #             to user without further Tool usage.
     #         """
     #         if n_tries > 0:
     #             _out = await self.chat(prompt, sender=sender, BaseActionNode_choice="auto", BaseActionNode_parsed=True, **kwargs)
@@ -166,28 +166,28 @@
     #     context = None,
     #     sender = None,
     #     system = None,
-    #     actions = None,
+    #     tools = None,
     #     max_rounds: int = 1,
 
     #     fallback: Optional[Callable] = None,
     #     fallback_kwargs: Optional[Dict] = None,
     #     **kwargs
     # ):
-    #     if actions is not None:
-    #         if isinstance(actions, list) and isinstance(actions[0], BaseActionNode):
-    #             self.register_BaseActionNodes(actions)
+    #     if tools is not None:
+    #         if isinstance(tools, list) and isinstance(tools[0], Tool):
+    #             self.register_BaseActionNodes(tools)
 
     #     if self.action_manager.registry == {}:
-    #         raise ValueError("No actions found, You need to register actions for ReAct (reason-action)")
+    #         raise ValueError("No tools found, You need to register tools for ReAct (reason-action)")
 
     #     else:
-    #         kwargs = self.action_manager._BaseActionNode_parser(actions=True, **kwargs)
+    #         kwargs = self.action_manager._BaseActionNode_parser(tools=True, **kwargs)
 
     #     i = 0
     #     while i < max_rounds:
     #         prompt = f"""
     #             you have {(max_rounds-i)*2} step left in current task. reflect, perform
-    #             reason for action plan according to available actions only, apply divide and conquer technique, retain from invoking functions
+    #             reason for action plan according to available tools only, apply divide and conquer technique, retain from invoking functions
     #         """
     #         instruct = {"Notice": prompt}
 
@@ -204,7 +204,7 @@
     #             )
 
     #         prompt = f"""
-    #             you have {(max_rounds-i)*2-1} step left in current task, invoke BaseActionNode usage to perform the action
+    #             you have {(max_rounds-i)*2-1} step left in current task, invoke Tool usage to perform the action
     #         """
     #         await self.chat(prompt, BaseActionNode_choice="auto", BaseActionNode_parsed=True, out=False,sender=sender, **kwargs)
 
@@ -261,7 +261,7 @@
 
 # async def run_session(
 #     prompts, directory, llmconfig, key_scheme, num_prompts,
-#     temperature, max_tokens, type_=None, actions=None
+#     temperature, max_tokens, type_=None, tools=None
 # ):
 #     prompts_ = prompts.copy()
 #     session = Session(
@@ -269,8 +269,8 @@
 #         directory = directory,
 #         llmconfig = llmconfig
 #     )
-#     if actions:
-#         session.register_BaseActionNodes(actions)
+#     if tools:
+#         session.register_BaseActionNodes(tools)
 #     if type_ is None:
 #         session = await run_workflow(
 #             session, prompts_, temperature, max_tokens,

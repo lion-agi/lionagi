@@ -9,7 +9,7 @@ def basic_func_grammar(func_call: str) -> Callable[[str], Optional[Tuple[List[An
     Parses the string to extract function arguments and keyword arguments.
 
     Parameters:
-    - action_call: The name of the function to match in the call string.
+    - tools: The name of the function to match in the call string.
 
     Returns:
     - A callable that takes a string representation of a function call and returns a tuple of positional arguments

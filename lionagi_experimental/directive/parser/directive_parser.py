@@ -59,14 +59,14 @@ class ActionParser(BaseDirectiveParser):
             raise SyntaxError("Expected TRY block")
         self.next_token()  # Move past TRY
 
-        try_block = self.parse_block()  # Parse the block of actions within the TRY
+        try_block = self.parse_block()  # Parse the block of tools within the TRY
 
         # Expecting 'EXCEPT' keyword
         if self.current_token.type != 'KEYWORD' or self.current_token.value != 'EXCEPT':
             raise SyntaxError("Expected 'EXCEPT' keyword in TRY block")
         self.next_token()  # Move past EXCEPT
 
-        except_block = self.parse_block()  # Parse the block of actions within the EXCEPT
+        except_block = self.parse_block()  # Parse the block of tools within the EXCEPT
 
         return TryNode(try_block, except_block)
 
@@ -226,7 +226,7 @@ print(f"False block: {if_node.false_block}")
 #
 #     # Placeholder for parse_action method
 #     def parse_action(self):
-#         # Assuming actions are simple and directly followed by a semicolon
+#         # Assuming tools are simple and directly followed by a semicolon
 #         action = self.current_token.value
 #         self.next_token()  # Move past the action
 #         return action  # In a real scenario, this would return an ActionNode or similar

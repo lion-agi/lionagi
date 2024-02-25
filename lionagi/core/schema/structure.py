@@ -374,6 +374,9 @@ class Graph(BaseRelatableNode):
             >>> graph = Graph()
             >>> nx_graph = graph.to_networkx()
         """
+        from lionagi.util.import_util import ImportUtil
+        ImportUtil.check_import('networkx')
+        
         from networkx import DiGraph
         g = DiGraph(**kwargs)
         for node_id, node in self.nodes.items():

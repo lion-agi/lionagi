@@ -6,15 +6,15 @@ from pandas import DataFrame
 
 from lionagi.util import to_df, to_list
 
-from lionagi.core.schema import BaseActionNode, DataLogger
-from lionagi.core.action import ActionManager
+from lionagi.core.schema import Tool, DataLogger
+from lionagi.core.action import ToolManager
 
 from lionagi.core.session.base.mail_manager import MailManager
 from lionagi.core.session.base.schema import System
 from lionagi.core.session.branch import Branch
 
 
-class BaseSession(ABC):
+class BaseSession:
 
     def __init__(
             self,
@@ -24,9 +24,9 @@ class BaseSession(ABC):
             llmconfig: Dict | None = None,
             service: Any = None,
             branches: Dict[str, Branch] | None = None,
-            actions: BaseActionNode | List[BaseActionNode] | None = None,
+            tools: Tool | List[Tool] | None = None,
             instruction_sets: Dict | None = None,
-            action_manager: ActionManager | None = None,
+            tool_manager: ToolManager | None = None,
             messages: DataFrame | None = None,
             datalogger: DataLogger | None = None,
             persist_path: str | None = None,
@@ -36,8 +36,8 @@ class BaseSession(ABC):
 
         self.default_branch = Branch(
             branch_name=default_branch_name or 'main',
-            system=system, sender=sender, llmconfig=llmconfig, service=service, actions=actions,
-            instruction_sets=instruction_sets, action_manager=action_manager, messages=messages,
+            system=system, sender=sender, llmconfig=llmconfig, service=service, tools=tools,
+            instruction_sets=instruction_sets, tool_manager=tool_manager, messages=messages,
             persist_path=persist_path, datalogger=datalogger, **kwargs
         )
 
@@ -70,23 +70,23 @@ class BaseSession(ABC):
 
         dfs = deque()
         for _, v in self.branches:
-            dfs.append(to_df(v.assistant_responses))
+            dfs.append(to_df(v.responses))
         return to_df(to_list(dfs, flatten=True, dropna=True))
 
     @property
-    def all_action_responses(self) -> DataFrame:
+    def all_tool_responses(self) -> DataFrame:
 
         dfs = deque()
         for _, v in self.branches:
-            dfs.append(to_df(v.action_response))
+            dfs.append(to_df(v.tool_response))
         return to_df(to_list(dfs, flatten=True, dropna=True))
 
     @property
-    def all_action_requests(self) -> DataFrame:
+    def all_tool_requests(self) -> DataFrame:
 
         dfs = deque()
         for _, v in self.branches:
-            dfs.append(to_df(v.action_request))
+            dfs.append(to_df(v.tool_request))
         return to_df(to_list(dfs, flatten=True, dropna=True))
 
     @property
@@ -196,10 +196,10 @@ class BaseSession(ABC):
             sender: str | None = None,
             messages: DataFrame | None = None,
             instruction_sets: Dict | None = None,
-            action_manager: ActionManager | None = None,
+            tool_manager: ToolManager | None = None,
             service: Any = None,
             llmconfig: Dict | None = None,
-            actions: BaseActionNode | List[BaseActionNode] | None = None,
+            tools: Tool | List[Tool] | None = None,
             datalogger: DataLogger | None = None,
             persist_path: str | None = None,
             **kwargs: Any
@@ -217,8 +217,8 @@ class BaseSession(ABC):
             sender=sender,
             service=service or self.service,
             llmconfig=llmconfig or self.llmconfig,
-            actions=actions,
-            action_manager=action_manager,
+            tools=tools,
+            tool_manager=tool_manager,
             instruction_sets=instruction_sets,
             datalogger=datalogger,
             persist_path=persist_path,

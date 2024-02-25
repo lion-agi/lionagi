@@ -106,9 +106,9 @@ class BaseDirectiveParser:
         self.current_token = self.tokenizer.current_token
 
 class ActionParser(BaseDirectiveParser):
-    """Parses actions and parameters from tokens.
+    """Parses tools and parameters from tokens.
 
-    This parser can handle nested actions and validate parameter types.
+    This parser can handle nested tools and validate parameter types.
 
     Example:
         tokens = [

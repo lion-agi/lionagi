@@ -234,7 +234,7 @@ class BaseRelatableNode(BaseNode):
         return False
 
 
-class BaseActionNode(BaseRelatableNode):
+class Tool(BaseRelatableNode):
     func: Any
     schema_: Any | None = None
     manual: Any | None = None

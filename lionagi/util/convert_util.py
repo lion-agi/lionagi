@@ -28,6 +28,8 @@ def to_df(
 ) -> DataFrame:
     return ConvertUtil.to_df(item, how, drop_kwargs, reset_index, **kwargs)
 
+def to_readable_dict(input_: Dict[Any, Any] | List[Any]) -> str | List[Any]:
+    return ConvertUtil.to_readable_dict(input_)
 
 class ConvertUtil:
 
