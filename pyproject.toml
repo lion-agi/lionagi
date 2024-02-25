@@ -1,12 +1,11 @@
 [build-system]
 requires = [
     "setuptools>=61.0", 
-    "aiohttp>=3.9.0",
+    "aiohttp>=3.9.3",
     "python-dotenv==1.0.0",
     "tiktoken>=0.5.1",
     "pydantic>=2.6.0",
-    "cryptography>=42.0.0",
-    "aiocache==0.12.2",
+    "aiocache>=0.12.2",
     "pandas>=2.1.0"
 ]
 build-backend = "setuptools.build_meta"
@@ -17,14 +16,13 @@ authors=[{name = "Haiyang Li", email="ocean@lionagi.ai"}]
 description="Towards automated general intelligence."
 dynamic = ["version"]
 readme = "README.md"
-requires-python = ">= 3.9"
+requires-python = ">= 3.10"
 dependencies = [
-    "aiohttp>=3.9.0",
+    "aiohttp>=3.9.3",
     "python-dotenv==1.0.0",
     "tiktoken>=0.5.1",
     "pydantic>=2.6.0",
-    "cryptography>=42.0.0",
-    "aiocache==0.12.2",
+    "aiocache>=0.12.2",
     "pandas>=2.1.0"
 ]
 license = {file = "LICENSE"}
