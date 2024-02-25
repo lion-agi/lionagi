@@ -57,8 +57,9 @@ def to_list(input_: Any, flatten: bool = True, dropna: bool = False) -> List[Any
     return input_
 
 
-def lcall(input_: Any, func: Callable, flatten: bool = False,
-          dropna: bool = False, **kwargs) -> List[Any]:
+def lcall(
+    input_: Any, func: Callable, flatten: bool = False, dropna: bool = False, **kwargs
+) -> List[Any]:
     """
     applies a function to each element of the input list, with options to flatten
     results and drop None values.
@@ -136,8 +137,9 @@ def is_coroutine_func(func: Callable) -> bool:
     return asyncio.iscoroutinefunction(func)
 
 
-async def alcall(input_: Any = None, func: Callable = None, flatten: bool = False,
-                 **kwargs) -> List[Any]:
+async def alcall(
+    input_: Any = None, func: Callable = None, flatten: bool = False, **kwargs
+) -> List[Any]:
     # noinspection GrazieInspection
     """
     asynchronously applies a function to each element in the input.
@@ -170,7 +172,7 @@ async def alcall(input_: Any = None, func: Callable = None, flatten: bool = Fals
         >>> async def square(x): return x * x
         >>> await alcall([1, 2, 3], square)
         [1, 4, 9]
-        """
+    """
     if input_:
         lst = to_list(input_=input_)
         tasks = [func(i, **kwargs) for i in lst]
@@ -181,9 +183,7 @@ async def alcall(input_: Any = None, func: Callable = None, flatten: bool = Fals
     return to_list(outs, flatten=flatten)
 
 
-async def mcall(
-        input_: Any, func: Any, explode: bool = False, **kwargs
-) -> tuple[Any]:
+async def mcall(input_: Any, func: Any, explode: bool = False, **kwargs) -> tuple[Any]:
     """
     asynchronously map a function or functions over an input_ or inputs.
 
@@ -205,25 +205,20 @@ async def mcall(
         >>>     return x + 1
         >>> asyncio.run(mcall([1, 2, 3], add_one))
         [2, 3, 4]
-        
+
     """
     input_ = to_list(input_, dropna=True)
     funcs_ = to_list(func, dropna=True)
 
     if explode:
-        tasks = [
-            _alcall(input_, f, flatten=True, **kwargs)
-            for f in funcs_
-        ]
+        tasks = [_alcall(input_, f, flatten=True, **kwargs) for f in funcs_]
         return await asyncio.gather(*tasks)
     else:
         if len(input_) != len(funcs_):
             raise ValueError(
-                "Inputs and functions must be the same length for map calling.")
-        tasks = [
-            _call_handler(func, inp, **kwargs)
-            for inp, func in zip(input_, func)
-        ]
+                "Inputs and functions must be the same length for map calling."
+            )
+        tasks = [_call_handler(func, inp, **kwargs) for inp, func in zip(input_, func)]
         return await asyncio.gather(*tasks)
 
 
@@ -248,7 +243,7 @@ async def bcall(input_: Any, func: Callable, batch_size: int, **kwargs) -> List[
     results = []
     input_ = to_list(input_)
     for i in range(0, len(input_), batch_size):
-        batch = input_[i:i + batch_size]
+        batch = input_[i : i + batch_size]
         batch_results = await alcall(batch, func, **kwargs)
         results.extend(batch_results)
 
@@ -256,9 +251,14 @@ async def bcall(input_: Any, func: Callable, batch_size: int, **kwargs) -> List[
 
 
 async def tcall(
-        func: Callable, *args, delay: float = 0, err_msg: Optional[str] = None,
-        ignore_err: bool = False, timing: bool = False,
-        timeout: Optional[float] = None, **kwargs
+    func: Callable,
+    *args,
+    delay: float = 0,
+    err_msg: Optional[str] = None,
+    ignore_err: bool = False,
+    timing: bool = False,
+    timeout: Optional[float] = None,
+    **kwargs,
 ) -> Any:
     """
     asynchronously executes a function with an optional delay, error handling, and timing.
@@ -339,9 +339,14 @@ async def tcall(
 
 
 async def rcall(
-        func: Callable, *args, retries: int = 0, delay: float = 1.0,
-        backoff_factor: float = 2.0, default: Any = None,
-        timeout: Optional[float] = None, **kwargs
+    func: Callable,
+    *args,
+    retries: int = 0,
+    delay: float = 1.0,
+    backoff_factor: float = 2.0,
+    default: Any = None,
+    timeout: Optional[float] = None,
+    **kwargs,
 ) -> Any:
     """
     asynchronously retries a function call with exponential backoff.
@@ -445,7 +450,7 @@ def _flatten_list(lst_: List[Any], dropna: bool = True) -> List[Any]:
 
 
 def _flatten_list_generator(
-        l: List[Any], dropna: bool = True
+    l: List[Any], dropna: bool = True
 ) -> Generator[Any, None, None]:
     """
     Generator for flattening a nested list.
@@ -471,19 +476,19 @@ def _flatten_list_generator(
 def _custom_error_handler(error: Exception, error_map: Dict[type, Callable]) -> None:
     # noinspection PyUnresolvedReferences
     """
-        handle errors based on a given error mapping.
+    handle errors based on a given error mapping.
 
-        Args:
-            error (Exception):
-                The error to handle.
-            error_map (Dict[type, Callable]):
-                A dictionary mapping error types to handler functions.
+    Args:
+        error (Exception):
+            The error to handle.
+        error_map (Dict[type, Callable]):
+            A dictionary mapping error types to handler functions.
 
-        examples:
-            >>> def handle_value_error(e): print("ValueError occurred")
-            >>> custom_error_handler(ValueError(), {ValueError: handle_value_error})
-            ValueError occurred
-        """
+    examples:
+        >>> def handle_value_error(e): print("ValueError occurred")
+        >>> custom_error_handler(ValueError(), {ValueError: handle_value_error})
+        ValueError occurred
+    """
     handler = error_map.get(type(error))
     if handler:
         handler(error)
@@ -492,8 +497,7 @@ def _custom_error_handler(error: Exception, error_map: Dict[type, Callable]) -> 
 
 
 async def _call_handler(
-        func: Callable, *args, error_map: Dict[type, Callable] = None,
-        **kwargs
+    func: Callable, *args, error_map: Dict[type, Callable] = None, **kwargs
 ) -> Any:
     """
     call a function with error handling, supporting both synchronous and asynchronous
@@ -547,7 +551,7 @@ async def _call_handler(
 
 
 async def _alcall(
-        input_: Any, func: Callable, flatten: bool = False, **kwargs
+    input_: Any, func: Callable, flatten: bool = False, **kwargs
 ) -> List[Any]:
     """
     asynchronously apply a function to each element in the input_.
@@ -573,9 +577,15 @@ async def _alcall(
 
 
 async def _tcall(
-        func: Callable, *args, delay: float = 0, err_msg: Optional[str] = None,
-        ignore_err: bool = False, timing: bool = False,
-        default: Any = None, timeout: Optional[float] = None, **kwargs
+    func: Callable,
+    *args,
+    delay: float = 0,
+    err_msg: Optional[str] = None,
+    ignore_err: bool = False,
+    timing: bool = False,
+    default: Any = None,
+    timeout: Optional[float] = None,
+    **kwargs,
 ) -> Any:
     """
     asynchronously call a function with optional delay, timeout, and error handling.

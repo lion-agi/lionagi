@@ -1,14 +1,18 @@
-from lionagi.utils.sys_util import SysUtil, to_dict
-from lionagi.integrations.provider import BaseService
+from lionagi.util import to_dict
+from lionagi.util.api_util import BaseService
+
+from lionagi.integrations.config.mlx_configs import model
 
 
 class MlXService(BaseService):
-    def __init__(self, model="mlx-community/OLMo-7B-hf-4bit-mlx", **kwargs):
+    def __init__(self, model=model, **kwargs):
 
-        if not SysUtil.is_package_installed('mlx_lm'):
-            SysUtil.install_import(package_name='mlx_lm')
+        from lionagi.util.import_util import ImportUtil
+
+        ImportUtil.check_import("mlx_lm")
 
         from mlx_lm import load, generate
+
         super().__init__()
 
         model_, tokenizer = load(model, **kwargs)
@@ -19,19 +23,19 @@ class MlXService(BaseService):
         self.generate = generate
 
     async def serve_chat(self, messages, **kwargs):
-        prompts = [to_dict(msg['content'])['instruction'] for msg in messages if
-                   msg['role'] == 'user']
+        prompts = [
+            to_dict(msg["content"])["instruction"]
+            for msg in messages
+            if msg["role"] == "user"
+        ]
 
-        payload = {'messages': messages}
+        payload = {"messages": messages}
 
         try:
             response = self.generate(
                 self.model, self.tokenizer, prompt=f"{prompts[-1]} \nOutput: ", **kwargs
             )
-            completion = {
-                'model': self.model_name,
-                'choices': [{'message': response}]
-            }
+            completion = {"model": self.model_name, "choices": [{"message": response}]}
 
             return payload, completion
         except Exception as e:

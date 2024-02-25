@@ -108,7 +108,7 @@ Let’s check the message records in this session:
     what is the number of unique kinds of ball?", "question2": "There are three fruits in
     total, each with 2 different colors, how many unique kinds of fruits are there?"}}
 
-   {"action_list": [{"recipient_name": "functions.multiply", "parameters": {"number1": 3,
+   {"action_request": [{"recipient_name": "functions.multiply", "parameters": {"number1": 3,
    "number2": 4}}, {"recipient_name": "functions.multiply", "parameters": {"number1": 3,
    "number2": 2}}]}
 

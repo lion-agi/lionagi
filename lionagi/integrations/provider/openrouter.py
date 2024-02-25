@@ -1,22 +1,29 @@
 from os import getenv
-from lionagi.integrations.provider import openrouter_schema
-from lionagi.integrations.provider import BaseService, PayloadPackage
+from lionagi.integrations.config.openrouter_configs import openrouter_schema
+from lionagi.util.api_util import BaseService, PayloadPackage
 
 
 class OpenRouterService(BaseService):
     base_url = "https://openrouter.ai/api/v1/"
-    available_endpoints = ['chat/completions']
+    available_endpoints = ["chat/completions"]
     schema = openrouter_schema
     key_scheme = "OPENROUTER_API_KEY"
     token_encoding_name = "cl100k_base"
 
-    def __init__(self, api_key=None, key_scheme=None, schema=None,
-                 token_encoding_name: str = "cl100k_base", **kwargs):
+    def __init__(
+        self,
+        api_key=None,
+        key_scheme=None,
+        schema=None,
+        token_encoding_name: str = "cl100k_base",
+        **kwargs,
+    ):
         key_scheme = key_scheme or self.key_scheme
         super().__init__(
             api_key=api_key or getenv(key_scheme),
             schema=schema or self.schema,
-            token_encoding_name=token_encoding_name, **kwargs
+            token_encoding_name=token_encoding_name,
+            **kwargs,
         )
         self.active_endpoint = []
 
@@ -26,7 +33,7 @@ class OpenRouterService(BaseService):
         if endpoint == "chat/completions":
             return await self.serve_chat(input_, **kwargs)
         else:
-            return ValueError(f'{endpoint} is currently not supported')
+            return ValueError(f"{endpoint} is currently not supported")
 
     async def serve_chat(self, messages, **kwargs):
         endpoint = "chat/completions"
@@ -35,7 +42,8 @@ class OpenRouterService(BaseService):
             await self.init_endpoint(endpoint)
             self.active_endpoint.append(endpoint)
         payload = PayloadPackage.chat_completion(
-            messages, self.endpoints[endpoint].config, self.schema[endpoint], **kwargs)
+            messages, self.endpoints[endpoint].config, self.schema[endpoint], **kwargs
+        )
 
         try:
             completion = await self.call_api(payload, endpoint, "post")

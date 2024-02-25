@@ -66,7 +66,7 @@ class CallDecorator:
 
     @staticmethod
     def retry(
-            retries: int = 3, delay: float = 2.0, backoff_factor: float = 2.0
+        retries: int = 3, delay: float = 2.0, backoff_factor: float = 2.0
     ) -> Callable:
         """
         Decorates an asynchronous function to automatically retry on failure,
@@ -105,8 +105,12 @@ class CallDecorator:
             @functools.wraps(func)
             async def wrapper(*args, **kwargs) -> Any:
                 return await rcall(
-                    func, *args, retries=retries, delay=delay,
-                    backoff_factor=backoff_factor, **kwargs
+                    func,
+                    *args,
+                    retries=retries,
+                    delay=delay,
+                    backoff_factor=backoff_factor,
+                    **kwargs,
                 )
 
             return wrapper
@@ -142,6 +146,7 @@ class CallDecorator:
             ... # Executing `get_resource` will return "Fetch failed" instead of raising
             ... # an error
         """
+
         def decorator(func: Callable[..., Any]) -> Callable:
             @functools.wraps(func)
             async def wrapper(*args, **kwargs) -> Any:
@@ -215,6 +220,7 @@ class CallDecorator:
 
         def decorator(func: Callable[..., List[Any]]) -> Callable:
             if is_coroutine_func(func):
+
                 @functools.wraps(func)
                 async def async_wrapper(*args, **kwargs) -> List[Any]:
                     values = await func(*args, **kwargs)
@@ -222,6 +228,7 @@ class CallDecorator:
 
                 return async_wrapper
             else:
+
                 @functools.wraps(func)
                 def sync_wrapper(*args, **kwargs) -> List[Any]:
                     values = func(*args, **kwargs)
@@ -271,6 +278,7 @@ class CallDecorator:
 
         def decorator(func: Callable) -> Callable:
             if not any(is_coroutine_func(f) for f in functions):
+
                 @functools.wraps(func)
                 def sync_wrapper(*args, **kwargs):
                     value = func(*args, **kwargs)
@@ -279,11 +287,13 @@ class CallDecorator:
                             value = function(value)
                         except Exception as e:
                             raise ValueError(
-                                f"Error in function {function.__name__}: {e}")
+                                f"Error in function {function.__name__}: {e}"
+                            )
                     return value
 
                 return sync_wrapper
             elif all(is_coroutine_func(f) for f in functions):
+
                 @functools.wraps(func)
                 async def async_wrapper(*args, **kwargs):
                     value = func(*args, **kwargs)
@@ -292,19 +302,21 @@ class CallDecorator:
                             value = await function(value)
                         except Exception as e:
                             raise ValueError(
-                                f"Error in function {function.__name__}: {e}")
+                                f"Error in function {function.__name__}: {e}"
+                            )
                     return value
 
                 return async_wrapper
             else:
                 raise ValueError(
-                    "Cannot compose both synchronous and asynchronous functions.")
+                    "Cannot compose both synchronous and asynchronous functions."
+                )
 
         return decorator
 
     @staticmethod
     def pre_post_process(
-            preprocess: Callable[..., Any], postprocess: Callable[..., Any]
+        preprocess: Callable[..., Any], postprocess: Callable[..., Any]
     ) -> Callable:
         """
         Decorates a function with preprocessing and postprocessing steps, allowing for
@@ -340,6 +352,7 @@ class CallDecorator:
 
         def decorator(func: Callable[..., Any]) -> Callable[..., Any]:
             if is_coroutine_func(func):
+
                 @functools.wraps(func)
                 async def async_wrapper(*args, **kwargs) -> Any:
                     preprocessed_args = [preprocess(arg) for arg in args]
@@ -349,6 +362,7 @@ class CallDecorator:
 
                 return async_wrapper
             else:
+
                 @functools.wraps(func)
                 def sync_wrapper(*args, **kwargs) -> Any:
                     preprocessed_args = [preprocess(arg) for arg in args]
@@ -439,6 +453,7 @@ class CallDecorator:
 
         def decorator(func: Callable[..., List[Any]]) -> Callable:
             if is_coroutine_func(func):
+
                 @functools.wraps(func)
                 async def wrapper(*args, **kwargs) -> List[Any]:
                     values = await func(*args, **kwargs)
@@ -446,6 +461,7 @@ class CallDecorator:
 
                 return wrapper
             else:
+
                 @functools.wraps(func)
                 def wrapper(*args, **kwargs) -> List[Any]:
                     values = func(*args, **kwargs)
@@ -490,6 +506,7 @@ class CallDecorator:
 
         def decorator(func: Callable[..., List[Any]]) -> Callable:
             if is_coroutine_func(func):
+
                 @functools.wraps(func)
                 async def async_wrapper(*args, **kwargs) -> Any:
                     values = await func(*args, **kwargs)
@@ -497,6 +514,7 @@ class CallDecorator:
 
                 return async_wrapper
             else:
+
                 @functools.wraps(func)
                 def sync_wrapper(*args, **kwargs) -> Any:
                     values = func(*args, **kwargs)
@@ -531,10 +549,12 @@ class CallDecorator:
             ...     pass
             ... # No more than 3 instances of `process_data` will run concurrently.
         """
+
         def decorator(func: Callable) -> Callable:
             if not asyncio.iscoroutinefunction(func):
                 raise TypeError(
-                    "max_concurrency decorator can only be used with async functions.")
+                    "max_concurrency decorator can only be used with async functions."
+                )
             semaphore = asyncio.Semaphore(limit)
 
             @functools.wraps(func)

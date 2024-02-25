@@ -1,4 +1,4 @@
-from lionagi.schema.structure import *
+from lionagi.core.schema.structure import *
 import unittest
 
 

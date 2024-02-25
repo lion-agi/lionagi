@@ -1,13 +1,21 @@
+import json
 from abc import ABC
 from typing import Any, Dict, List
 import pandas as pd
 from pathlib import Path
-from lionagi.schema.base_node import BaseRelatableNode
-from lionagi.schema.data_logger import DataLogger
-from lionagi.util.path_util import PathUtil
+from datetime import datetime
 
-from .schema import (BranchColumns, System, Instruction, Response)
-from .util import MessageUtil
+from lionagi.util import PathUtil, to_dict, to_df
+
+from lionagi.core.schema import BaseRelatableNode, DataLogger
+
+from lionagi.core.session.base.schema import (
+    BranchColumns,
+    System,
+    Instruction,
+    BaseMessage,
+)
+from lionagi.core.session.base.util import MessageUtil
 
 
 class BaseBranch(BaseRelatableNode, ABC):
@@ -20,21 +28,28 @@ class BaseBranch(BaseRelatableNode, ABC):
         datalogger (DataLogger): Logs data related to the branch's operation.
         persist_path (Path | str): Filesystem path for data persistence.
     """
+
     _columns: List[str] = BranchColumns.COLUMNS.value
 
-    def __init__(self, messages: pd.DataFrame | None = None,
-                 datalogger: DataLogger | None = None,
-                 persist_path: Path | str | None = None, **kwargs) -> None:
+    def __init__(
+        self,
+        messages: pd.DataFrame | None = None,
+        datalogger: DataLogger | None = None,
+        persist_path: Path | str | None = None,
+        **kwargs,
+    ) -> None:
         super().__init__(**kwargs)
         self.messages = messages or pd.DataFrame(columns=self._columns)
         self.datalogger = datalogger or DataLogger(persist_path=persist_path)
 
     def add_message(
-            self, system: Dict | List | System | None = None,
-            instruction: Dict | List | Instruction | None = None,
-            context: str | Dict[str, Any] | None = None,
-            response: Dict | List | Response | None = None,
-            **kwargs) -> None:
+        self,
+        system: Dict | List | System | None = None,
+        instruction: Dict | List | Instruction | None = None,
+        context: str | Dict[str, Any] | None = None,
+        response: Dict | List | BaseMessage | None = None,
+        **kwargs,
+    ) -> None:
         """
         Adds a message to the branch.
 
@@ -46,14 +61,18 @@ class BaseBranch(BaseRelatableNode, ABC):
             **kwargs: Additional keyword arguments for message creation.
         """
         msg = MessageUtil.create_message(
-            system=system, instruction=instruction,
-            context=context, response=response, **kwargs
+            system=system,
+            instruction=instruction,
+            context=context,
+            response=response,
+            **kwargs,
         )
 
         self.messages.loc[len(self.messages)] = msg.to_pd_series()
 
-    def _to_chatcompletion_message(self, with_sender: bool = False) -> List[
-        Dict[str, Any]]:
+    def _to_chatcompletion_message(
+        self, with_sender: bool = False
+    ) -> List[Dict[str, Any]]:
         """
         Converts messages to a list of dictionaries formatted for chat completion,
         optionally including sender information.
@@ -69,20 +88,21 @@ class BaseBranch(BaseRelatableNode, ABC):
         message = []
 
         for _, row in self.messages.iterrows():
-            content_ = row['content']
-            if content_.startswith('Sender'):
-                content_ = content_.split(':', 1)[1]
+            content_ = row["content"]
+            if content_.startswith("Sender"):
+                content_ = content_.split(":", 1)[1]
 
             if isinstance(content_, str):
                 try:
                     content_ = json.dumps(to_dict(content_))
                 except Exception as e:
                     raise ValueError(
-                        f"Error in serializing, {row['node_id']} {content_}: {e}")
+                        f"Error in serializing, {row['node_id']} {content_}: {e}"
+                    )
 
-            out = {"role": row['role'], "content": content_}
+            out = {"role": row["role"], "content": content_}
             if with_sender:
-                out['content'] = f"Sender {row['sender']}: {content_}"
+                out["content"] = f"Sender {row['sender']}: {content_}"
 
             message.append(out)
         return message
@@ -118,7 +138,7 @@ class BaseBranch(BaseRelatableNode, ABC):
             A pandas Series representing the last message in the branch.
         """
 
-        return MessageUtil.get_message_rows(self.messages, n=1, from_='last')
+        return MessageUtil.get_message_rows(self.messages, n=1, from_="last")
 
     @property
     def last_message_content(self) -> Dict[str, Any]:
@@ -140,8 +160,9 @@ class BaseBranch(BaseRelatableNode, ABC):
             A pandas Series representing the first 'system' message in the branch.
         """
 
-        return MessageUtil.get_message_rows(self.messages, role='system', n=1,
-                                            from_='front')
+        return MessageUtil.get_message_rows(
+            self.messages, role="system", n=1, from_="front"
+        )
 
     @property
     def last_response(self) -> pd.Series:
@@ -152,8 +173,9 @@ class BaseBranch(BaseRelatableNode, ABC):
             A pandas Series representing the last 'assistant' (response) message in the branch.
         """
 
-        return MessageUtil.get_message_rows(self.messages, role='assistant', n=1,
-                                            from_='last')
+        return MessageUtil.get_message_rows(
+            self.messages, role="assistant", n=1, from_="last"
+        )
 
     @property
     def last_response_content(self) -> Dict[str, Any]:
@@ -175,7 +197,7 @@ class BaseBranch(BaseRelatableNode, ABC):
             A pandas DataFrame containing all 'action_request' messages.
         """
 
-        return to_df(self.messages[self.messages.sender == 'action_request'])
+        return to_df(self.messages[self.messages.sender == "action_request"])
 
     @property
     def action_response(self) -> pd.DataFrame:
@@ -186,7 +208,7 @@ class BaseBranch(BaseRelatableNode, ABC):
             A pandas DataFrame containing all 'action_response' messages.
         """
 
-        return to_df(self.messages[self.messages.sender == 'action_response'])
+        return to_df(self.messages[self.messages.sender == "action_response"])
 
     @property
     def responses(self) -> pd.DataFrame:
@@ -197,7 +219,7 @@ class BaseBranch(BaseRelatableNode, ABC):
             A pandas DataFrame containing all messages with an 'assistant' role.
         """
 
-        return to_df(self.messages[self.messages.role == 'assistant'])
+        return to_df(self.messages[self.messages.role == "assistant"])
 
     @property
     def assistant_responses(self) -> pd.DataFrame:
@@ -208,8 +230,8 @@ class BaseBranch(BaseRelatableNode, ABC):
             A pandas DataFrame of 'assistant' messages excluding action requests/responses.
         """
 
-        a_responses = self.responses[self.responses.sender != 'action_response']
-        a_responses = a_responses[a_responses.sender != 'action_request']
+        a_responses = self.responses[self.responses.sender != "action_response"]
+        a_responses = a_responses[a_responses.sender != "action_request"]
         return to_df(a_responses)
 
     @property
@@ -247,36 +269,43 @@ class BaseBranch(BaseRelatableNode, ABC):
         return {
             "total_messages": len(self.messages),
             "summary_by_role": self._info(),
-            "messages": [
-                            msg.to_dict() for _, msg in self.messages.iterrows()
-                        ][: self.len_messages - 1 if self.len_messages < 5 else 5],
+            "messages": [msg.to_dict() for _, msg in self.messages.iterrows()][
+                : self.len_messages - 1 if self.len_messages < 5 else 5
+            ],
         }
 
     @classmethod
-    def _from_csv(cls, filepath: str, read_kwargs=None, **kwargs) -> 'Conversation':
+    def _from_csv(cls, filepath: str, read_kwargs=None, **kwargs) -> "BaseBranch":
         read_kwargs = {} if read_kwargs is None else read_kwargs
         messages = MessageUtil.read_csv(filepath, **read_kwargs)
         return cls(messages=messages, **kwargs)
 
     @classmethod
-    def from_csv(cls, **kwargs) -> 'Conversation':
+    def from_csv(cls, **kwargs) -> "BaseBranch":
 
         return cls._from_csv(**kwargs)
 
     @classmethod
-    def from_json(cls, **kwargs) -> 'Conversation':
+    def from_json(cls, **kwargs) -> "BaseBranch":
 
         return cls._from_json(**kwargs)
 
     @classmethod
-    def _from_json(cls, filepath: str, read_kwargs=None, **kwargs) -> 'Conversation':
+    def _from_json(cls, filepath: str, read_kwargs=None, **kwargs) -> "BaseBranch":
         read_kwargs = {} if read_kwargs is None else read_kwargs
         messages = MessageUtil.read_json(filepath, **read_kwargs)
         return cls(messages=messages, **kwargs)
 
-    def to_csv(self, filepath: str | Path = 'messages.csv', file_exist_ok: bool = False,
-               timestamp: bool = True, time_prefix: bool = False,
-               verbose: bool = True, clear: bool = True, **kwargs) -> None:
+    def to_csv(
+        self,
+        filepath: str | Path = "messages.csv",
+        file_exist_ok: bool = False,
+        timestamp: bool = True,
+        time_prefix: bool = False,
+        verbose: bool = True,
+        clear: bool = True,
+        **kwargs,
+    ) -> None:
         """
         Exports the branch messages to a CSV file.
 
@@ -290,12 +319,15 @@ class BaseBranch(BaseRelatableNode, ABC):
             **kwargs: Additional keyword arguments for pandas.DataFrame.to_csv().
         """
 
-        if not filepath.endswith('.csv'):
-            filepath += '.csv'
+        if not filepath.endswith(".csv"):
+            filepath += ".csv"
 
         filepath = PathUtil.create_path(
-            self.logger.dir, filepath, timestamp=timestamp,
-            dir_exist_ok=file_exist_ok, time_prefix=time_prefix
+            self.logger.dir,
+            filepath,
+            timestamp=timestamp,
+            dir_exist_ok=file_exist_ok,
+            time_prefix=time_prefix,
         )
 
         try:
@@ -307,9 +339,16 @@ class BaseBranch(BaseRelatableNode, ABC):
         except Exception as e:
             raise ValueError(f"Error in saving to csv: {e}")
 
-    def to_json(self, filename: str | Path = 'messages.json', file_exist_ok: bool = False,
-                timestamp: bool = True, time_prefix: bool = False,
-                verbose: bool = True, clear: bool = True, **kwargs) -> None:
+    def to_json(
+        self,
+        filename: str | Path = "messages.json",
+        file_exist_ok: bool = False,
+        timestamp: bool = True,
+        time_prefix: bool = False,
+        verbose: bool = True,
+        clear: bool = True,
+        **kwargs,
+    ) -> None:
         """
         Exports the branch messages to a JSON file.
 
@@ -323,18 +362,20 @@ class BaseBranch(BaseRelatableNode, ABC):
             **kwargs: Additional keyword arguments for pandas.DataFrame.to_json().
         """
 
-        if not filename.endswith('.json'):
-            filename += '.json'
+        if not filename.endswith(".json"):
+            filename += ".json"
 
         filepath = PathUtil.create_path(
-            self.dir, filename, timestamp=timestamp,
-            dir_exist_ok=file_exist_ok, time_prefix=time_prefix
+            self.dir,
+            filename,
+            timestamp=timestamp,
+            dir_exist_ok=file_exist_ok,
+            time_prefix=time_prefix,
         )
 
         try:
             self.messages.to_json(
-                filepath, orient="records", lines=True,
-                date_format="iso", **kwargs
+                filepath, orient="records", lines=True, date_format="iso", **kwargs
             )
             if clear:
                 self.clear_messages()
@@ -343,9 +384,16 @@ class BaseBranch(BaseRelatableNode, ABC):
         except Exception as e:
             raise ValueError(f"Error in saving to json: {e}")
 
-    def log_to_csv(self, filename: str | Path = 'log.csv', file_exist_ok: bool = False,
-                   timestamp: bool = True, time_prefix: bool = False,
-                   verbose: bool = True, clear: bool = True, **kwargs) -> None:
+    def log_to_csv(
+        self,
+        filename: str | Path = "log.csv",
+        file_exist_ok: bool = False,
+        timestamp: bool = True,
+        time_prefix: bool = False,
+        verbose: bool = True,
+        clear: bool = True,
+        **kwargs,
+    ) -> None:
         """
         Exports the data logger contents to a CSV file.
 
@@ -359,13 +407,25 @@ class BaseBranch(BaseRelatableNode, ABC):
             **kwargs: Additional keyword arguments for pandas.DataFrame.to_csv().
         """
         self.logger.to_csv(
-            filepath=filename, file_exist_ok=file_exist_ok, timestamp=timestamp,
-            time_prefix=time_prefix, verbose=verbose, clear=clear, **kwargs
+            filepath=filename,
+            file_exist_ok=file_exist_ok,
+            timestamp=timestamp,
+            time_prefix=time_prefix,
+            verbose=verbose,
+            clear=clear,
+            **kwargs,
         )
 
-    def log_to_json(self, filename: str | Path = 'log.json', file_exist_ok: bool = False,
-                    timestamp: bool = True, time_prefix: bool = False,
-                    verbose: bool = True, clear: bool = True, **kwargs) -> None:
+    def log_to_json(
+        self,
+        filename: str | Path = "log.json",
+        file_exist_ok: bool = False,
+        timestamp: bool = True,
+        time_prefix: bool = False,
+        verbose: bool = True,
+        clear: bool = True,
+        **kwargs,
+    ) -> None:
         """
         Exports the data logger contents to a JSON file.
 
@@ -380,8 +440,13 @@ class BaseBranch(BaseRelatableNode, ABC):
         """
 
         self.logger.to_json(
-            filename=filename, file_exist_ok=file_exist_ok, timestamp=timestamp,
-            time_prefix=time_prefix, verbose=verbose, clear=clear, **kwargs
+            filename=filename,
+            file_exist_ok=file_exist_ok,
+            timestamp=timestamp,
+            time_prefix=time_prefix,
+            verbose=verbose,
+            clear=clear,
+            **kwargs,
         )
 
     def remove_message(self, node_id: str) -> None:
@@ -393,7 +458,7 @@ class BaseBranch(BaseRelatableNode, ABC):
         """
         MessageUtil.remove_message(self.messages, node_id)
 
-    def update_message(self, value: Any, node_id: str, col: str = 'node_id') -> None:
+    def update_message(self, value: Any, node_id: str, col: str = "node_id") -> None:
         """
         Updates a specific column of a message identified by node_id with a new value.
 
@@ -403,11 +468,13 @@ class BaseBranch(BaseRelatableNode, ABC):
             col: The column of the message to update.
         """
 
-        return MessageUtil.update_row(self.messages, node_id=node_id, col=col,
-                                      value=value)
+        return MessageUtil.update_row(
+            self.messages, node_id=node_id, col=col, value=value
+        )
 
-    def change_first_system_message(self, system: Dict[str, Any] | System,
-                                    sender: str | None = None, **kwargs) -> None:
+    def change_first_system_message(
+        self, system: Dict[str, Any] | System, sender: str | None = None, **kwargs
+    ) -> None:
         """
         Updates the first system message with new content and/or sender.
 
@@ -428,9 +495,9 @@ class BaseBranch(BaseRelatableNode, ABC):
         elif isinstance(system, System):
             message_dict = system.to_dict()
             if sender:
-                message_dict['sender'] = sender
-            message_dict['timestamp'] = datetime.now().isoformat()
-            sys_index = self.messages[self.messages.role == 'system'].index
+                message_dict["sender"] = sender
+            message_dict["timestamp"] = datetime.now().isoformat()
+            sys_index = self.messages[self.messages.role == "system"].index
             self.messages.loc[sys_index[0]] = message_dict
 
     def rollback(self, steps: int) -> None:
@@ -449,36 +516,51 @@ class BaseBranch(BaseRelatableNode, ABC):
         """
         self.messages = pd.DataFrame(columns=self._columns)
 
-    def replace_keyword(self, keyword: str, replacement: str, col: str = 'content',
-                        case_sensitive: bool = False) -> None:
+    def replace_keyword(
+        self,
+        keyword: str,
+        replacement: str,
+        col: str = "content",
+        case_sensitive: bool = False,
+    ) -> None:
 
         MessageUtil.replace_keyword(
-            self.messages, keyword, replacement, col=col,
-            case_sensitive=case_sensitive
+            self.messages, keyword, replacement, col=col, case_sensitive=case_sensitive
         )
 
-    def search_keywords(self, keywords: str | list[str],
-                        case_sensitive: bool = False,
-                        reset_index: bool = False,
-                        dropna: bool = False) -> DataFrame:
+    def search_keywords(
+        self,
+        keywords: str | list[str],
+        case_sensitive: bool = False,
+        reset_index: bool = False,
+        dropna: bool = False,
+    ) -> pd.DataFrame:
         return MessageUtil.search_keywords(
             self.messages, keywords, case_sensitive, reset_index, dropna
         )
 
-    def extend(self, messages: DataFrame, **kwargs) -> None:
+    def extend(self, messages: pd.DataFrame, **kwargs) -> None:
 
         self.messages = MessageUtil.extend(self.messages, messages, **kwargs)
 
-    def filter_by(self, role: str | None = None, sender: str | None = None,
-                  start_time: datetime | None = None,
-                  end_time: datetime | None = None,
-                  content_keywords: str | list[str] | None = None,
-                  case_sensitive: bool = False) -> pandas.DataFrame:
+    def filter_by(
+        self,
+        role: str | None = None,
+        sender: str | None = None,
+        start_time: datetime | None = None,
+        end_time: datetime | None = None,
+        content_keywords: str | list[str] | None = None,
+        case_sensitive: bool = False,
+    ) -> pd.DataFrame:
 
         return MessageUtil.filter_messages_by(
-            self.messages, role=role, sender=sender,
-            start_time=start_time, end_time=end_time,
-            content_keywords=content_keywords, case_sensitive=case_sensitive
+            self.messages,
+            role=role,
+            sender=sender,
+            start_time=start_time,
+            end_time=end_time,
+            content_keywords=content_keywords,
+            case_sensitive=case_sensitive,
         )
 
     # noinspection PyTestUnpassedFixture
@@ -493,8 +575,8 @@ class BaseBranch(BaseRelatableNode, ABC):
             A dictionary summarizing the count of messages either by role or sender.
         """
 
-        messages = self.messages['sender'] if use_sender else self.messages['role']
+        messages = self.messages["sender"] if use_sender else self.messages["role"]
         result = messages.value_counts().to_dict()
-        result['total'] = len(self.len_messages)
+        result["total"] = len(self.len_messages)
 
         return result
