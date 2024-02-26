@@ -188,7 +188,7 @@ class MessageUtil:
         """
 
         initial_length = len(messages)
-        messages = messages[messages["node_id"] != node_id]
+        messages.drop(messages[messages['node_id'] == node_id].index, inplace=True)
 
         return len(messages) < initial_length
 
@@ -379,9 +379,9 @@ class MessageUtil:
         """
 
         if not case_sensitive:
-            df[col] = df[col].str.replace(keyword, replacement, case=False, regex=False)
+            df.loc[:, col] = df[col].str.replace(keyword, replacement, case=False, regex=False)
         else:
-            df[col] = df[col].str.replace(keyword, replacement, regex=False)
+            df.loc[:, col] = df[col].str.replace(keyword, replacement, regex=False)
 
     @staticmethod
     def read_csv(filepath: str, **kwargs) -> pd.DataFrame:
@@ -451,6 +451,14 @@ class MessageUtil:
             return True
         except:
             return False
+
+    @staticmethod
+    def to_json_content(value):
+        if isinstance(value, dict):
+            for key, val in value.items():
+                value[key] = MessageUtil.to_json_content(val)
+            value = json.dumps(value)
+        return value
 
     # @staticmethod
     # def response_to_message(response: dict[str, Any], **kwargs) -> Any:
