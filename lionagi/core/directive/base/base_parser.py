@@ -1,6 +1,6 @@
 from typing import List, Optional
 from lionagi.core.directive.base.schema import IfNode, TryNode, ForNode
-from lionagi.core.directive.base.base_tokenizer import BaseTokenizer, BaseToken
+from lionagi.core.directive.base.base_tokenizer import BaseToken
 
 
 
@@ -33,7 +33,7 @@ class BaseParser:
         else:
             self.current_token = None
 
-    def peek_next_token(self, offset: int = 1) -> Optional[BaseToken]:
+    def peek_next_token(self, offset: int = 1) -> BaseToken | None:
         """Peeks at the next token without consuming it.
 
         Args:

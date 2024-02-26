@@ -11,7 +11,7 @@ class BaseToken:
 
 class BaseTokenizer:
     TOKEN_TYPES = {
-        'KEYWORD': r'\b(BEGIN|END|IF|ELSE|FOR|IN|TRY|EXCEPT|ENDIF|ENDFOR|ENDTRY|DO|THEN)\b',
+        'KEYWORD': r'\b(BEGIN|END|IF|ELSE|FOR|IN|TRY|EXCEPT|ENDIF|ENDFOR|ENDTRY|DO)\b',
         'OPERATOR': r'(==|!=|>=|<=|>|<|&&|\|\||!)',
         'FUNCTION_CALL': r'\b[a-zA-Z_][a-zA-Z0-9_]*\b\((.*?)\)',
         'LITERAL': r'(\d+|\'.*?\'|".*?")',
