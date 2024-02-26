@@ -1,20 +1,17 @@
-from typing import Any, Dict, List
-from collections import deque
-
-from lionagi.util import to_df, to_list, to_df
-from lionagi.core.session.base.mail_manager import MailManager
-from lionagi.core.session.base.schema import System, Instruction
-from lionagi.core.session.branch import Branch
-
-
 from collections import deque
 from typing import Any, Dict, List, Optional, Tuple, Union
 
 import pandas as pd
 
 from lionagi.util.path_util import PathUtil
-from lionagi.core.schema import Tool
 from lionagi.util.api_util import BaseService
+from lionagi.util import to_df, to_list, to_df
+
+from lionagi.core.schema import Tool
+
+from lionagi.core.session.base.mail_manager import MailManager
+from lionagi.core.session.base.schema import System, Instruction
+from lionagi.core.session.branch import Branch
 
 
 class Session:
