@@ -23,14 +23,12 @@ class BaseComponent(BaseModel, ABC):
         metadata (Dict[str, Any]): Metadata associated with the component.
 
     """
-
     id_: str = Field(default_factory=SysUtil.create_id, alias="node_id")
     timestamp: str | None = Field(default_factory=SysUtil.get_timestamp)
     metadata: Dict[str, Any] = Field(default_factory=dict, alias="meta")
 
     class Config:
         """Model configuration settings."""
-
         extra = "allow"
         populate_by_name = True
         validate_assignment = True
@@ -76,17 +74,17 @@ class BaseComponent(BaseModel, ABC):
         dict_ = pd_series.to_dict(**pd_kwargs)
         return cls.from_dict(dict_, **kwargs)
 
-    @classmethod
-    def from_xml(cls: Type[T], xml_str: str, **kwargs) -> T:
-        """
-        Creates an instance from an XML string.
-        kwargs for pydantic model_validate method.
-        """
-        import xml.etree.ElementTree as ET
-
-        root = ET.fromstring(xml_str)
-        data = cls._xml_to_dict(root)
-        return cls.from_dict(data, **kwargs)
+    # @classmethod
+    # def from_xml(cls: Type[T], xml_str: str, **kwargs) -> T:
+    #     """
+    #     Creates an instance from an XML string.
+    #     kwargs for pydantic model_validate method.
+    #     """
+    #     import xml.etree.ElementTree as ET
+    #
+    #     root = ET.fromstring(xml_str)
+    #     data = cls._xml_to_dict(root)
+    #     return cls.from_dict(data, **kwargs)
 
     @staticmethod
     def _xml_to_dict(root) -> Dict[str, Any]:
@@ -112,15 +110,17 @@ class BaseComponent(BaseModel, ABC):
         import xml.etree.ElementTree as ET
 
         root = ET.Element(self.__class__.__name__)
-        for field, value in self.dict().items():
-            if isinstance(value, dict):  # Special handling for `metadata`
-                meta_element = ET.SubElement(root, field)
-                for key, val in value.items():
-                    child = ET.SubElement(meta_element, key)
-                    child.text = str(val)
-            else:
-                child = ET.SubElement(root, field)
-                child.text = str(value)
+
+        def convert(dict_obj, parent):
+            for key, val in dict_obj.items():
+                if isinstance(val, dict):
+                    element = ET.SubElement(parent, key)
+                    convert(val, element)
+                else:
+                    element = ET.SubElement(parent, key)
+                    element.text = str(val)
+
+        convert(self.to_dict(), root)
         return ET.tostring(root, encoding="unicode")
 
     def to_pd_series(self, *args, pd_kwargs=None, **kwargs) -> pd.Series:
@@ -245,7 +245,6 @@ class BaseRelatableNode(BaseNode):
 
 class Tool(BaseRelatableNode):
     func: Any
-    schema_: Any | None = None
     manual: Any | None = None
     parser: Any | None = None
 

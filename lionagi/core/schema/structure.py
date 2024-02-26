@@ -202,7 +202,6 @@ class Graph(BaseRelatableNode):
         >>> graph.relationship_exists(relationship)
         True
     """
-
     nodes: dict = Field(default={})
     relationships: dict = Field(default={})
     node_relationships: dict = Field(default={})
@@ -324,7 +323,7 @@ class Graph(BaseRelatableNode):
 
         return self.relationships.pop(relationship.id_)
 
-    def node_exists(self, node: BaseNode) -> bool:
+    def node_exist(self, node: BaseNode) -> bool:
         """
         Checks if a node exists in the graph.
 
@@ -339,7 +338,7 @@ class Graph(BaseRelatableNode):
         else:
             return False
 
-    def relationship_exists(self, relationship: Relationship) -> bool:
+    def relationship_exist(self, relationship: Relationship) -> bool:
         """
         Checks if a relationship exists in the graph.
 
@@ -436,9 +435,7 @@ class Structure(BaseRelatableNode):
     def get_relationships(self) -> list[Relationship]:
         return self.graph.get_node_relationships()
 
-    def get_node_relationships(
-        self, node: BaseNode, out_edge=True, labels=None
-    ) -> Relationship:
+    def get_node_relationships(self, node: BaseNode, out_edge=True, labels=None) -> List[Relationship]:
         relationships = self.graph.get_node_relationships(node, out_edge)
         if labels:
             if not isinstance(labels, list):
@@ -473,7 +470,7 @@ class Structure(BaseRelatableNode):
         Returns:
             bool: True if the relationship exists, False otherwise.
         """
-        return self.graph.relationship_exists(relationship)
+        return self.graph.relationship_exist(relationship)
 
     def remove_node(self, node: BaseNode) -> BaseNode:
         """

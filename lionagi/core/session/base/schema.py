@@ -128,10 +128,6 @@ class BaseMessage(DataNode):
         """
         return self.msg["content"]
 
-    @property
-    def sender(self) -> str:
-        return self.sender
-
     def _to_message(self):
         """
         Constructs and returns a dictionary representation of the message.
