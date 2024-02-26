@@ -166,7 +166,7 @@ class ConvertUtil:
                         "Item list is not homogeneous or cannot be converted to DataFrame."
                     )
             elif isinstance(item, (DataFrame, Series)):
-                dfs = item if isinstance(item, DataFrame) else DataFrame(item)
+                dfs = item.copy() if isinstance(item, DataFrame) else DataFrame(item)
             else:
                 raise TypeError("Unsupported type for conversion to DataFrame.")
 
