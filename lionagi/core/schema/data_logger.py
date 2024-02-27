@@ -125,7 +125,7 @@ class DataLogger:
 
     def extend(self, logs) -> None:
         if len(logs) > 0:
-            log1 = to_list(self.logs)
+            log1 = to_list(self.log)
             log1.extend(to_list(logs))
             self.log = deque(log1)
 

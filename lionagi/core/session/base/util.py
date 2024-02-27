@@ -6,56 +6,55 @@ from typing import Any, Dict, List
 import pandas as pd
 
 from lionagi.util import ConvertUtil, to_dict, to_df, nget, lcall
-from lionagi.core.session.base.schema import System, Instruction, BaseMessage
+from lionagi.core.session.base.schema import System, Instruction, Response, BaseMessage
 
 
 class MessageUtil:
 
-    # @staticmethod
-    # def create_message(
-    #     system: dict[str, Any] | List[Any] | System | None = None,
-    #     instruction: dict[str, Any] | List[Any] | Instruction | None = None,
-    #     context: str | Dict[str, Any] | None = None,
-    #     response: dict[str, Any] | List[Any] | BaseMessage | None = None,
-    #     **kwargs
-    # ) -> BaseMessage:
-    #     """
-    #     Creates a message object based on the input parameters, ensuring only one message role is present.
+    @staticmethod
+    def create_message(
+        system: dict[str, Any] | str | List[Any] | System | None = None,
+        instruction: dict[str, Any] | str | List[Any] | Instruction | None = None,
+        context: str | Dict[str, Any] | None = None,
+        response: dict[str, Any] | List[Any] | str | Response | None = None,
+        **kwargs
+    ) -> BaseMessage:
+        """
+        Creates a message object based on the input parameters, ensuring only one message role is present.
 
-    #     Args:
-    #         system: Information for creating a System message.
-    #         instruction: Information for creating an Instruction message.
-    #         context: Context information for the message.
-    #         response: Response data for creating a message.
-    #         **kwargs: Additional keyword arguments for message creation.
+        Args:
+            system: Information for creating a System message.
+            instruction: Information for creating an Instruction message.
+            context: Context information for the message.
+            response: Response data for creating a message.
+            **kwargs: Additional keyword arguments for message creation.
 
-    #     Returns:
-    #         A message object of the appropriate type based on provided inputs.
+        Returns:
+            A message object of the appropriate type based on provided inputs.
 
-    #     Raises:
-    #         ValueError: If more than one of the role-specific parameters are provided.
-    #     """
-    #     if sum(lcall([system, instruction, response], bool)) != 1:
-    #         raise ValueError("Error: Message must have one and only one role.")
+        Raises:
+            ValueError: If more than one of the role-specific parameters are provided.
+        """
+        if sum(lcall([system, instruction, response], bool)) != 1:
+            raise ValueError("Error: Message must have one and only one role.")
 
-    #     else:
-    #         if isinstance(any([system, instruction, response]), BaseMessage):
-    #             if system:
-    #                 return system
-    #             elif instruction:
-    #                 return instruction
-    #             elif response:
-    #                 return response
+        else:
+            if isinstance(system, System):
+                return system
+            elif isinstance(instruction, Instruction):
+                return instruction
+            elif isinstance(response, Response):
+                return response
 
-    #         msg = 0
-    #         if response:
-    #             msg = MessageUtil.response_to_message(response=response, **kwargs)
-    #         elif instruction:
-    #             msg = Instruction(instruction=instruction,
-    #                               context=context, **kwargs)
-    #         elif system:
-    #             msg = System(system=system, **kwargs)
-    #         return msg
+            msg = 0
+            if response:
+                msg = Response(response=response, **kwargs)
+            elif instruction:
+                msg = Instruction(instruction=instruction,
+                                  context=context, **kwargs)
+            elif system:
+                msg = System(system=system, **kwargs)
+            return msg
 
     @staticmethod
     def validate_messages(messages: pd.DataFrame) -> bool:
@@ -74,9 +73,9 @@ class MessageUtil:
 
         if list(messages.columns) != [
             "node_id",
+            "timestamp",
             "role",
             "sender",
-            "timestamp",
             "content",
         ]:
             raise ValueError("Invalid messages dataframe. Unmatched columns.")
@@ -159,7 +158,7 @@ class MessageUtil:
             outs = messages.copy()
 
             if content_keywords:
-                outs = MessageUtil.search_keywords(content_keywords, case_sensitive)
+                outs = MessageUtil.search_keywords(outs, keywords=content_keywords, case_sensitive=case_sensitive)
 
             outs = outs[outs["role"] == role] if role else outs
             outs = outs[outs["sender"] == sender] if sender else outs
@@ -172,7 +171,7 @@ class MessageUtil:
             raise ValueError(f"Error in filtering messages: {e}")
 
     @staticmethod
-    def remove_message(messages: pd.DataFrame, node_id: str) -> pd.DataFrame:
+    def remove_message(messages: pd.DataFrame, node_id: str) -> bool:
         """
         Removes a message from the DataFrame based on its node ID.
 
@@ -181,7 +180,7 @@ class MessageUtil:
             node_id: The unique identifier of the message to be removed.
 
         Returns:
-            A DataFrame with the specified message removed.
+            If any messages are removed.
 
         Examples:
             >>> messages = pd.DataFrame([...])
@@ -189,7 +188,7 @@ class MessageUtil:
         """
 
         initial_length = len(messages)
-        messages = messages[messages["node_id"] != node_id]
+        messages.drop(messages[messages['node_id'] == node_id].index, inplace=True)
 
         return len(messages) < initial_length
 
@@ -380,9 +379,9 @@ class MessageUtil:
         """
 
         if not case_sensitive:
-            df[col] = df[col].str.replace(keyword, replacement, case=False, regex=False)
+            df.loc[:, col] = df[col].str.replace(keyword, replacement, case=False, regex=False)
         else:
-            df[col] = df[col].str.replace(keyword, replacement, regex=False)
+            df.loc[:, col] = df[col].str.replace(keyword, replacement, regex=False)
 
     @staticmethod
     def read_csv(filepath: str, **kwargs) -> pd.DataFrame:
@@ -428,7 +427,7 @@ class MessageUtil:
         return to_df(df[:-steps])
 
     @staticmethod
-    def update_row(df: pd.DataFrame, col: str, old_value: Any, new_value: Any) -> bool:
+    def update_row(df: pd.DataFrame, row: str | int, col: str | int, value: Any) -> bool:
         """
         Updates a row's value for a specified column in a DataFrame.
 
@@ -442,11 +441,24 @@ class MessageUtil:
             True if the update was successful, False otherwise.
         """
 
-        index = df.index[df[col] == old_value].tolist()
-        if index:
-            df.at[index[0], col] = new_value
+        # index = df.index[df[col] == old_value].tolist()
+        # if index:
+        #     df.at[index[0], col] = new_value
+        #     return True
+        # return False
+        try:
+            df.loc[row, col] = value
             return True
-        return False
+        except:
+            return False
+
+    @staticmethod
+    def to_json_content(value):
+        if isinstance(value, dict):
+            for key, val in value.items():
+                value[key] = MessageUtil.to_json_content(val)
+            value = json.dumps(value)
+        return value
 
     # @staticmethod
     # def response_to_message(response: dict[str, Any], **kwargs) -> Any:

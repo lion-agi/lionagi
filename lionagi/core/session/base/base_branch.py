@@ -39,8 +39,17 @@ class BaseBranch(BaseRelatableNode, ABC):
         **kwargs,
     ) -> None:
         super().__init__(**kwargs)
-        self.messages = messages or pd.DataFrame(columns=self._columns)
-        self.datalogger = datalogger or DataLogger(persist_path=persist_path)
+        if isinstance(messages, pd.DataFrame):
+            if MessageUtil.validate_messages(messages):
+                self.messages = messages
+            else:
+                raise ValueError("Invalid messages format")
+        else:
+            self.messages = pd.DataFrame(columns=self._columns)
+        if isinstance(datalogger, DataLogger.__class__):
+            self.datalogger = datalogger
+        else:
+            self.datalogger = DataLogger(persist_path=persist_path)
 
     def add_message(
         self,
@@ -67,6 +76,8 @@ class BaseBranch(BaseRelatableNode, ABC):
             response=response,
             **kwargs,
         )
+
+        msg.content = MessageUtil.to_json_content(msg.content)
 
         self.messages.loc[len(self.messages)] = msg.to_pd_series()
 
@@ -130,7 +141,7 @@ class BaseBranch(BaseRelatableNode, ABC):
         return self._to_chatcompletion_message(with_sender=True)
 
     @property
-    def last_message(self) -> pd.Series:
+    def last_message(self) -> pd.DataFrame:
         """
         Retrieves the last message from the branch as a pandas Series.
 
@@ -152,7 +163,7 @@ class BaseBranch(BaseRelatableNode, ABC):
         return to_dict(self.messages.content.iloc[-1])
 
     @property
-    def first_system(self) -> pd.Series:
+    def first_system(self) -> pd.DataFrame:
         """
         Retrieves the first message marked with the 'system' role.
 
@@ -165,7 +176,7 @@ class BaseBranch(BaseRelatableNode, ABC):
         )
 
     @property
-    def last_response(self) -> pd.Series:
+    def last_response(self) -> pd.DataFrame:
         """
         Retrieves the last message marked with the 'assistant' role.
 
@@ -270,7 +281,7 @@ class BaseBranch(BaseRelatableNode, ABC):
             "total_messages": len(self.messages),
             "summary_by_role": self._info(),
             "messages": [msg.to_dict() for _, msg in self.messages.iterrows()][
-                : self.len_messages - 1 if self.len_messages < 5 else 5
+                : len(self.messages) - 1 if len(self.messages) < 5 else 5
             ],
         }
 
@@ -323,7 +334,7 @@ class BaseBranch(BaseRelatableNode, ABC):
             filepath += ".csv"
 
         filepath = PathUtil.create_path(
-            self.logger.dir,
+            self.datalogger.persist_path,
             filepath,
             timestamp=timestamp,
             dir_exist_ok=file_exist_ok,
@@ -366,7 +377,7 @@ class BaseBranch(BaseRelatableNode, ABC):
             filename += ".json"
 
         filepath = PathUtil.create_path(
-            self.dir,
+            self.datalogger.persist_path,
             filename,
             timestamp=timestamp,
             dir_exist_ok=file_exist_ok,
@@ -406,7 +417,7 @@ class BaseBranch(BaseRelatableNode, ABC):
             clear: If True, clears the logger after exporting. Defaults to True.
             **kwargs: Additional keyword arguments for pandas.DataFrame.to_csv().
         """
-        self.logger.to_csv(
+        self.datalogger.to_csv(
             filepath=filename,
             file_exist_ok=file_exist_ok,
             timestamp=timestamp,
@@ -439,7 +450,7 @@ class BaseBranch(BaseRelatableNode, ABC):
             **kwargs: Additional keyword arguments for pandas.DataFrame.to_json().
         """
 
-        self.logger.to_json(
+        self.datalogger.to_json(
             filename=filename,
             file_exist_ok=file_exist_ok,
             timestamp=timestamp,
@@ -458,7 +469,7 @@ class BaseBranch(BaseRelatableNode, ABC):
         """
         MessageUtil.remove_message(self.messages, node_id)
 
-    def update_message(self, value: Any, node_id: str, col: str = "node_id") -> None:
+    def update_message(self, node_id: str, col: str, value: Any) -> bool:
         """
         Updates a specific column of a message identified by node_id with a new value.
 
@@ -468,12 +479,14 @@ class BaseBranch(BaseRelatableNode, ABC):
             col: The column of the message to update.
         """
 
+        index = self.messages[self.messages['node_id'] == node_id].index[0]
+
         return MessageUtil.update_row(
-            self.messages, node_id=node_id, col=col, value=value
+            self.messages, row=index, col=col, value=value
         )
 
     def change_first_system_message(
-        self, system: Dict[str, Any] | System, sender: str | None = None, **kwargs
+        self, system: str | Dict[str, Any] | System, sender: str | None = None
     ) -> None:
         """
         Updates the first system message with new content and/or sender.
@@ -483,20 +496,21 @@ class BaseBranch(BaseRelatableNode, ABC):
             sender: The identifier of the sender for the system message.
         """
 
-        if self.len_systems == 0:
+        if len(self.messages[self.messages["role"] == "system"]) == 0:
             raise ValueError("There is no system message in the messages.")
 
         if not isinstance(system, (str, Dict, System)):
             raise ValueError("Input cannot be converted into a system message.")
 
-        elif isinstance(system, (str, Dict)):
-            system = System(system, sender=sender, **kwargs)
+        if isinstance(system, (str, Dict)):
+            system = System(system, sender=sender)
 
-        elif isinstance(system, System):
+        if isinstance(system, System):
             message_dict = system.to_dict()
             if sender:
                 message_dict["sender"] = sender
             message_dict["timestamp"] = datetime.now().isoformat()
+            message_dict["content"] = MessageUtil.to_json_content(message_dict['content'])
             sys_index = self.messages[self.messages.role == "system"].index
             self.messages.loc[sys_index[0]] = message_dict
 
@@ -508,7 +522,7 @@ class BaseBranch(BaseRelatableNode, ABC):
             steps: The number of messages to remove from the end.
         """
 
-        return MessageUtil.remove_last_n_rows(self.messages, steps)
+        self.messages = MessageUtil.remove_last_n_rows(self.messages, steps)
 
     def clear_messages(self) -> None:
         """
@@ -536,7 +550,7 @@ class BaseBranch(BaseRelatableNode, ABC):
         dropna: bool = False,
     ) -> pd.DataFrame:
         return MessageUtil.search_keywords(
-            self.messages, keywords, case_sensitive, reset_index, dropna
+            self.messages, keywords, case_sensitive=case_sensitive, reset_index=reset_index, dropna=dropna
         )
 
     def extend(self, messages: pd.DataFrame, **kwargs) -> None:
@@ -577,6 +591,5 @@ class BaseBranch(BaseRelatableNode, ABC):
 
         messages = self.messages["sender"] if use_sender else self.messages["role"]
         result = messages.value_counts().to_dict()
-        result["total"] = len(self.len_messages)
-
+        result["total"] = len(self.messages)
         return result
