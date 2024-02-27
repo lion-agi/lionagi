@@ -4,6 +4,12 @@ import subprocess
 from lionagi.util.import_util import ImportUtil
 from lionagi.util.api_util import BaseService
 
+allowed_kwargs = [
+    'model', 'tokenizer', 'modelcard', 'framework', 'task',
+    'num_workers', 'batch_size', 'args_parser', 'device', 
+    'torch_dtype', 'min_length_for_response', 'minimum_tokens'
+]
+
 
 def get_pytorch_install_command():
     cpu_arch = ImportUtil.get_cpu_architecture()
@@ -75,7 +81,12 @@ class TransformersService(BaseService):
                 raise ValueError(f"Invalid transformers pipeline task: {self.task}.")
 
         payload = {"messages": messages}
-        conversation = self.pipe(str(messages), **kwargs)
+        config = {}
+        for k, v in kwargs.items():
+            if k in allowed_kwargs:
+                config[k] = v
+        
+        conversation = self.pipe(str(messages), **config)
 
         texts = conversation[-1]["generated_text"]
         msgs = (

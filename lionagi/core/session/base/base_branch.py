@@ -67,7 +67,7 @@ class BaseBranch(BaseRelatableNode, ABC):
             response: Response data for creating a message.
             **kwargs: Additional keyword arguments for message creation.
         """
-        msg = MessageUtil.create_message(
+        _msg = MessageUtil.create_message(
             system=system,
             instruction=instruction,
             context=context,
@@ -75,9 +75,8 @@ class BaseBranch(BaseRelatableNode, ABC):
             **kwargs,
         )
 
-        msg.content = MessageUtil.to_json_content(msg.content)
-
-        self.messages.loc[len(self.messages)] = msg.to_pd_series()
+        _msg.content = _msg.msg_content
+        self.messages.loc[len(self.messages)] = _msg.to_pd_series()
 
     def _to_chatcompletion_message(
         self, with_sender: bool = False
@@ -505,13 +504,9 @@ class BaseBranch(BaseRelatableNode, ABC):
             system = System(system, sender=sender)
 
         if isinstance(system, System):
-            message_dict = system.to_dict()
-            if sender:
-                message_dict["sender"] = sender
-            message_dict["timestamp"] = datetime.now().isoformat()
-            message_dict["content"] = MessageUtil.to_json_content(message_dict['content'])
+            system.timestamp = datetime.now().isoformat()
             sys_index = self.messages[self.messages.role == "system"].index
-            self.messages.loc[sys_index[0]] = message_dict
+            self.messages.loc[sys_index[0]] = system.to_pd_series()
 
     def rollback(self, steps: int) -> None:
         """
