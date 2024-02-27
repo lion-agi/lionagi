@@ -2,7 +2,7 @@ from typing import Any, Dict, List, Optional, Union
 from lionagi.util import to_dict, lcall, to_list, alcall, get_flattened_keys
 from lionagi.core.schema import Tool
 from lionagi.core.session.base.schema import Instruction, System
-
+from lionagi.core.session.base.util import MessageUtil
 
 class ChatFlow:
 
@@ -90,7 +90,7 @@ class ChatFlow:
         await branch.call_chatcompletion(**config)
 
         async def _output():
-            content_ = to_dict(branch.messages.content.iloc[-1])
+            content_ = MessageUtil.to_dict_content(branch.messages.content.iloc[-1])
             if invoke:
                 try:
                     tool_uses = content_

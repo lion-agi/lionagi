@@ -76,15 +76,15 @@ class DataLogger:
 
     Methods:
         append: Adds a new log entry to the datalogger.
-        to_csv: Exports accumulated log entries to a CSV file.
-        to_json: Exports accumulated log entries to a JSON file.
+        to_csv_file: Exports accumulated log entries to a CSV file.
+        to_json_file: Exports accumulated log entries to a JSON file.
         save_at_exit: Ensures that unsaved log entries are persisted to a CSV file when
                       the program terminates.
 
     Usage Example:
         >>> datalogger = DataLogger(persist_path='my/logs/directory', filepath='process_logs')
         >>> datalogger.append(input_data="Example input", output_data="Example output")
-        >>> datalogger.to_csv('finalized_logs.csv', clear=True)
+        >>> datalogger.to_csv_file('finalized_logs.csv', clear=True)
 
     This example demonstrates initializing a `DataLogger` with a custom directory and
     filepath, appending a log entry, and then exporting the log to a CSV file.
@@ -146,10 +146,10 @@ class DataLogger:
         log_entry = DLog(input_data=input_data, output_data=output_data)
         self.log.append(log_entry.serialize())
 
-    def to_csv(
+    def to_csv_file(
         self,
         filename: str = "log.csv",
-        file_exist_ok: bool = False,
+        dir_exist_ok: bool = True,
         timestamp: bool = True,
         time_prefix: bool = False,
         verbose: bool = True,
@@ -164,7 +164,7 @@ class DataLogger:
             filename (str, optional):
                 Filename for the CSV output, appended with '.csv' if not included, saved
                 within the specified persisting directory.
-            file_exist_ok (bool, optional):
+            dir_exist_ok (bool, optional):
                 If False, raises an error if the directory already exists; otherwise,
                 writes without an error.
             timestamp (bool, optional):
@@ -192,7 +192,7 @@ class DataLogger:
             self.persist_path,
             filename,
             timestamp=timestamp,
-            dir_exist_ok=file_exist_ok,
+            dir_exist_ok=dir_exist_ok,
             time_prefix=time_prefix,
         )
         try:
@@ -205,12 +205,12 @@ class DataLogger:
         except Exception as e:
             raise ValueError(f"Error in saving to csv: {e}")
 
-    def to_json(
+    def to_json_file(
         self,
         filename: str = "log.json",
         timestamp: bool = False,
         time_prefix: bool = False,
-        file_exist_ok: bool = False,
+        dir_exist_ok: bool = True,
         verbose: bool = True,
         clear: bool = True,
         **kwargs,
@@ -228,7 +228,7 @@ class DataLogger:
             time_prefix (bool, optional):
                 Determines the placement of the timestamp in the filepath. A prefix if
                 True; otherwise, a suffix.
-            file_exist_ok (bool, optional):
+            dir_exist_ok (bool, optional):
                 Allows writing to an existing directory without raising an error.
                 If False, an error is raised when attempting to write to an existing
                 directory.
@@ -249,11 +249,11 @@ class DataLogger:
         Examples:
             Default usage saving logs to 'log.json' within the specified persisting
             directory:
-            >>> datalogger.to_json()
+            >>> datalogger.to_json_file()
             # Save path: 'data/logs/log.json'
 
             Custom filepath without a timestamp, using additional pandas options:
-            >>> datalogger.to_json(filepath='detailed_log.json', orient='records')
+            >>> datalogger.to_json_file(filepath='detailed_log.json', orient='records')
             # Save a path: 'data/logs/detailed_log.json'
         """
         if not filename.endswith(".json"):
@@ -263,7 +263,7 @@ class DataLogger:
             self.persist_path,
             filename,
             timestamp=timestamp,
-            dir_exist_ok=file_exist_ok,
+            dir_exist_ok=dir_exist_ok,
             time_prefix=time_prefix,
         )
 
@@ -292,4 +292,4 @@ class DataLogger:
         possibility of manual review or recovery after the program has terminated.
         """
         if self.log:
-            self.to_csv("unsaved_logs.csv", clear=False)
+            self.to_csv_file("unsaved_logs.csv", clear=False)

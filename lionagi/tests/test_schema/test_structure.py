@@ -2,6 +2,7 @@ from lionagi.core.schema.structure import *
 import unittest
 from unittest.mock import patch
 
+
 class TestRelationship(unittest.TestCase):
 
     def setUp(self):
@@ -70,6 +71,7 @@ class TestRelationship(unittest.TestCase):
         self.assertIsInstance(repr_str, str)
         self.assertIn("node1", repr_str)
         self.assertIn("node2", repr_str)
+
 
 class TestGraph(unittest.TestCase):
 
@@ -185,7 +187,6 @@ class TestStructure(unittest.TestCase):
         self.assertTrue(self.structure.is_empty())
         self.structure.add_node(self.node1)
         self.assertFalse(self.structure.is_empty())
-
 
     def test_filter_relationships_by_label(self):
         """Test filtering relationships by label."""
