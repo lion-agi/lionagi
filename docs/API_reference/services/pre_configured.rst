@@ -1,5 +1,5 @@
 PreConfigured Services
 =========
 
-.. automodule:: lionagi._services.services
+.. automodule:: lionagi.services.services
    :members:
