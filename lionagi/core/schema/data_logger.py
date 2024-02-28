@@ -1,10 +1,11 @@
+import json
 import atexit
 from collections import deque
 from dataclasses import dataclass, asdict
 from pathlib import Path
 from typing import Any, Dict, List
 
-from lionagi.util import SysUtil, to_df, to_list, PathUtil, to_df
+from lionagi.util import SysUtil, to_df, to_list, PathUtil, to_df, flatten, unflatten
 
 
 @dataclass
@@ -35,8 +36,11 @@ class DLog:
     input_data: Any
     output_data: Any
 
-    def serialize(self) -> Dict[str, Any]:
+    def serialize(self, flatten_=True, sep="[*]", parent_key='[^]') -> Dict[str, Any]:
         """
+        [_], and [^] are reserved, do not add this in dictionary keys, otherwise the structrue 
+        won't be reserved
+        
         Converts the DLog instance to a dictionary, suitable for serialization. This
         method is particularly useful for exporting log entries to formats like JSON or
         CSV. In addition to the data attributes, it appends a timestamp to the
@@ -46,9 +50,55 @@ class DLog:
             Dict[str, Any]: A dictionary representation of the DLog instance, including
                             'input_data', 'output_data', and 'timestamp' keys.
         """
-        log_dict = asdict(self)
+        log_dict = {}
+        
+        
+        if flatten_:
+            if isinstance(self.input_data, dict):
+                log_dict['input_data'] = json.dumps(flatten(
+                    self.input_data, sep=sep, parent_key=parent_key
+                )) 
+            if isinstance(self.output_data, dict):
+                log_dict['output_data'] = json.dumps(flatten(
+                    self.output_data, sep=sep, parent_key=parent_key
+                ))
+        
+        else:
+            log_dict["input_data"] = self.input_data
+            log_dict["output_data"] = self.output_data
+        
         log_dict["timestamp"] = SysUtil.get_timestamp()
+        
         return log_dict
+
+
+    @classmethod
+    def deserialize(cls, input_str, output_str, unflatten_ = True,sep="[*]", parent_key='[^]') -> Dict[str, Any]:
+        """
+        [_], and [^] are reserved, do not add this in dictionary keys, otherwise the structrue 
+        won't be reserved
+        
+        Converts the DLog instance to a dictionary, suitable for serialization. This
+        method is particularly useful for exporting log entries to formats like JSON or
+        CSV. In addition to the data attributes, it appends a timestamp to the
+        dictionary, capturing the exact time the log entry was serialized.
+
+        Returns:
+            Dict[str, Any]: A dictionary representation of the DLog instance, including
+                            'input_data', 'output_data', and 'timestamp' keys.
+        """
+        input_data = ''
+        output_data = ''
+        
+        if unflatten_:
+            input_data = unflatten(json.loads(input_str), sep=sep, parent_key=parent_key)
+            output_data = unflatten(json.loads(output_str), sep=sep, parent_key=parent_key)
+        
+        else:
+            input_data = input_str
+            output_data = output_str
+        
+        return cls(input_data=input_data, output_data=output_data)
 
 
 class DataLogger:
