@@ -189,6 +189,7 @@ class MessageUtil:
 
         initial_length = len(messages)
         messages.drop(messages[messages['node_id'] == node_id].index, inplace=True)
+        messages.reset_index(drop=True, inplace=True)
 
         return len(messages) < initial_length
 

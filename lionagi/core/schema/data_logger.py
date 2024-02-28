@@ -259,11 +259,14 @@ class DataLogger:
     def to_json_file(
         self,
         filename: str = "log.json",
-        timestamp: bool = False,
-        time_prefix: bool = False,
         dir_exist_ok: bool = True,
+        timestamp: bool = True,
+        time_prefix: bool = False,
         verbose: bool = True,
         clear: bool = True,
+        flatten_=True, 
+        sep='[*]',
+        index=False, 
         **kwargs,
     ) -> None:
         """
@@ -319,7 +322,8 @@ class DataLogger:
         )
 
         try:
-            df = to_df(list(self.log))
+            logs = [log.serialize(flatten_=flatten_, sep=sep) for log in self.log]
+            df = to_df(to_list(logs, flatten=True))
             df.to_json(filepath, **kwargs)
             if verbose:
                 print(f"{len(self.log)} logs saved to {filepath}")
