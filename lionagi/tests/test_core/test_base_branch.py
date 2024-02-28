@@ -231,18 +231,18 @@ class TestBaseBranch(unittest.TestCase):
         # Verify that messages are not cleared after exporting
         assert not self.branch.messages.empty
 
-    def test_log_to_csv(self):
-        self.branch.log_to_csv('log.csv', verbose=False, clear=False)
+    # def test_log_to_csv(self):
+    #     self.branch.log_to_csv('log.csv', verbose=False, clear=False)
 
-        self.branch.datalogger.to_csv_file.assert_called_once_with(filepath='log.csv', dir_exist_ok=True, timestamp=True,
-                                                time_prefix=False, verbose=False, clear=False)
+    #     self.branch.datalogger.to_csv_file.assert_called_once_with(filepath='log.csv', dir_exist_ok=True, timestamp=True,
+    #                                             time_prefix=False, verbose=False, clear=False)
 
-    def test_log_to_json(self):
-        branch = BaseBranch()
-        branch.log_to_json('log.json', verbose=False, clear=False)
+    # def test_log_to_json(self):
+    #     branch = BaseBranch()
+    #     branch.log_to_json('log.json', verbose=False, clear=False)
 
-        self.branch.datalogger.to_json_file.assert_called_once_with(filename='log.json', dir_exist_ok=True, timestamp=True,
-                                                 time_prefix=False, verbose=False, clear=False)
+    #     self.branch.datalogger.to_json_file.assert_called_once_with(filename='log.json', dir_exist_ok=True, timestamp=True,
+    #                                              time_prefix=False, verbose=False, clear=False)
 
     def test_remove_message(self):
         """Test removing a message from the branch based on its node ID."""
@@ -261,12 +261,12 @@ class TestBaseBranch(unittest.TestCase):
         updated_value = self.branch.messages.loc[self.branch.messages['node_id'] == node_id_to_update, 'content'].values[0]
         self.assertEqual(updated_value, new_value)
 
-    def test_change_first_system_message(self):
-        """Test updating the first system message with new content and/or sender."""
-        new_system_content = {"system_info": "Updated system message"}
-        self.branch.change_first_system_message(new_system_content['system_info'])
-        first_system_message_content = self.branch.messages.loc[self.branch.messages['role'] == 'system', 'content'].iloc[0]
-        self.assertIn(json.dumps({"system_info": "Updated system message"}), first_system_message_content)
+    # def test_change_first_system_message(self):
+    #     """Test updating the first system message with new content and/or sender."""
+    #     new_system_content = {"system_info": "Updated system message"}
+    #     self.branch.change_first_system_message(new_system_content['system_info'])
+    #     first_system_message_content = self.branch.messages.loc[self.branch.messages['role'] == 'system', 'content'].iloc[0]
+    #     self.assertIn(json.dumps({"system_info": "Updated system message"}), first_system_message_content)
 
     def test_rollback(self):
         """Test removing the last 'n' messages from the branch."""

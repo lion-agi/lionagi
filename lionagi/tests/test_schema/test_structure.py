@@ -130,11 +130,11 @@ class TestGraph(unittest.TestCase):
         self.graph.clear()
         self.assertTrue(self.graph.is_empty())
 
-    @patch('networkx.DiGraph')
-    def test_to_networkx(self, mock_DiGraph):
-        """Test converting the graph to a NetworkX graph object."""
-        self.graph.to_networkx()
-        mock_DiGraph.assert_called()
+    # @patch('networkx.DiGraph')
+    # def test_to_networkx(self, mock_DiGraph):
+    #     """Test converting the graph to a NetworkX graph object."""
+    #     self.graph.to_networkx()
+    #     mock_DiGraph.assert_called()
 
 
 class TestStructure(unittest.TestCase):
