@@ -189,6 +189,7 @@ class MessageUtil:
 
         initial_length = len(messages)
         messages.drop(messages[messages['node_id'] == node_id].index, inplace=True)
+        messages.reset_index(drop=True, inplace=True)
 
         return len(messages) < initial_length
 
@@ -452,13 +453,30 @@ class MessageUtil:
         except:
             return False
 
-    @staticmethod
-    def to_json_content(value):
-        if isinstance(value, dict):
-            for key, val in value.items():
-                value[key] = MessageUtil.to_json_content(val)
-            value = json.dumps(value)
-        return value
+    # @staticmethod
+    # def to_json_content(value):
+    #     if isinstance(value, dict):
+    #         for key, val in value.items():
+    #             value[key] = MessageUtil.to_json_content(val)
+    #         value = json.dumps(value)
+    #     if isinstance(value, list):
+    #         for i in range(len(value)):
+    #             value[i] = MessageUtil.to_json_content(value[i])
+    #     return value
+
+    # @staticmethod
+    # def to_dict_content(value):
+    #     try:
+    #         value = json.loads(value)
+    #         if isinstance(value, dict):
+    #             for key, val in value.items():
+    #                 value[key] = MessageUtil.to_dict_content(val)
+    #         if isinstance(value, list):
+    #             for i in range(len(value)):
+    #                 value[i] = MessageUtil.to_dict_content(value[i])
+    #         return value
+    #     except:
+    #         return value
 
     # @staticmethod
     # def response_to_message(response: dict[str, Any], **kwargs) -> Any:

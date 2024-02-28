@@ -90,7 +90,7 @@ class ChatFlow:
         await branch.call_chatcompletion(**config)
 
         async def _output():
-            content_ = to_dict(branch.messages.content.iloc[-1])
+            content_ = branch.last_message_content
             if invoke:
                 try:
                     tool_uses = content_
@@ -162,7 +162,6 @@ class ChatFlow:
         else:
             kwargs = branch.tool_manager._tool_parser(tools=True, **kwargs)
 
-        out = ""
         i = 0
         while i < num_rounds:
             prompt = f"""you have {(num_rounds-i)*2} step left in current task. if available, integrate previous tool responses. perform reasoning and prepare action plan according to available tools only, apply divide and conquer technique.
@@ -171,7 +170,7 @@ class ChatFlow:
 
             if i == 0:
                 instruct["Task"] = instruction
-                out = await branch.chat(
+                await branch.chat(
                     instruction=instruct,
                     context=context,
                     system=system,
@@ -180,26 +179,23 @@ class ChatFlow:
                 )
 
             elif i > 0:
-                out = await branch.chat(instruction=instruct, sender=sender, **kwargs)
+                await branch.chat(instruction=instruct, sender=sender, **kwargs)
 
             prompt = f"""
                 you have {(num_rounds-i)*2-1} step left in current task, invoke tool usage to perform actions
             """
-            out = await branch.chat(
+            await branch.chat(
                 prompt, tool_choice="auto", tool_parsed=True, sender=sender, **kwargs
             )
 
             i += 1
-            if not branch._is_invoked():
-                return out
 
-        if branch._is_invoked():
-            prompt = """
-                present the final result to user
-            """
-            return await branch.chat(prompt, sender=sender, tool_parsed=True, **kwargs)
-        else:
-            return out
+
+        prompt = """
+            present the final result to user
+        """
+        return await branch.chat(prompt, sender=sender, tool_parsed=True, **kwargs)
+
 
     @staticmethod
     async def auto_followup(
@@ -266,8 +262,6 @@ class ChatFlow:
                 )
                 n_tries += 1
 
-                if not branch._is_invoked():
-                    return _out if out else None
 
         if branch._is_invoked():
             """
