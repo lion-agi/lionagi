@@ -7,7 +7,8 @@ from datetime import datetime
 
 from lionagi.util import PathUtil, to_dict, to_df
 
-from lionagi.core.schema import BaseRelatableNode, DataLogger
+from lionagi.core.schema import BaseRelatableNode, DataLogger, DLog
+
 
 from lionagi.core.session.base.schema import (
     BranchColumns,
@@ -401,6 +402,8 @@ class BaseBranch(BaseRelatableNode, ABC):
         time_prefix: bool = False,
         verbose: bool = True,
         clear: bool = True,
+        flatten_=True, 
+        sep='[^_^]',
         **kwargs,
     ) -> None:
         """
@@ -416,12 +419,14 @@ class BaseBranch(BaseRelatableNode, ABC):
             **kwargs: Additional keyword arguments for pandas.DataFrame.to_csv().
         """
         self.datalogger.to_csv_file(
-            filepath=filename,
+            filename=filename,
             dir_exist_ok=dir_exist_ok,
             timestamp=timestamp,
             time_prefix=time_prefix,
             verbose=verbose,
             clear=clear,
+            flatten_=flatten_,
+            sep=sep,
             **kwargs,
         )
 
@@ -433,6 +438,8 @@ class BaseBranch(BaseRelatableNode, ABC):
         time_prefix: bool = False,
         verbose: bool = True,
         clear: bool = True,
+        flatten_=True, 
+        sep='[^_^]',
         **kwargs,
     ) -> None:
         """
@@ -455,8 +462,39 @@ class BaseBranch(BaseRelatableNode, ABC):
             time_prefix=time_prefix,
             verbose=verbose,
             clear=clear,
+            flatten_=flatten_,
+            sep=sep,
             **kwargs,
         )
+    
+    def load_log(
+        self, 
+        filename,
+        flattened=True, 
+        sep='[^_^]',
+        verbose=True,
+        **kwargs
+    ):
+        df = ''
+        try:        
+            if filename.endswith('.csv'):
+                df = MessageUtil.read_csv(filename, **kwargs)
+                
+            elif filename.endswith('.json'):
+                df = MessageUtil.read_json(filename, **kwargs)
+
+            for _, row in df.iterrows():
+                self.datalogger.log.append(DLog.deserialize(
+                    input_str=row.input_data, 
+                    output_str = row.output_data,
+                    unflatten_=flattened, 
+                    sep=sep,
+                ))
+        
+            if verbose:
+                print(f"Loaded {len(df)} logs from {filename}")
+        except Exception as e:
+            raise ValueError(f"Error in loading log: {e}")
 
     def remove_message(self, node_id: str) -> None:
         """

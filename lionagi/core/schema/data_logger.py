@@ -1,7 +1,7 @@
 import json
 import atexit
 from collections import deque
-from dataclasses import dataclass, asdict
+from dataclasses import dataclass
 from pathlib import Path
 from typing import Any, Dict, List
 
@@ -36,11 +36,8 @@ class DLog:
     input_data: Any
     output_data: Any
 
-    def serialize(self, flatten_=True, sep="[*]", parent_key='[^]') -> Dict[str, Any]:
-        """
-        [_], and [^] are reserved, do not add this in dictionary keys, otherwise the structrue 
-        won't be reserved
-        
+    def serialize(self, flatten_=True, sep="[^_^]") -> Dict[str, Any]:
+        """        
         Converts the DLog instance to a dictionary, suitable for serialization. This
         method is particularly useful for exporting log entries to formats like JSON or
         CSV. In addition to the data attributes, it appends a timestamp to the
@@ -56,11 +53,11 @@ class DLog:
         if flatten_:
             if isinstance(self.input_data, dict):
                 log_dict['input_data'] = json.dumps(flatten(
-                    self.input_data, sep=sep, parent_key=parent_key
+                    self.input_data, sep=sep
                 )) 
             if isinstance(self.output_data, dict):
                 log_dict['output_data'] = json.dumps(flatten(
-                    self.output_data, sep=sep, parent_key=parent_key
+                    self.output_data, sep=sep
                 ))
         
         else:
@@ -73,7 +70,7 @@ class DLog:
 
 
     @classmethod
-    def deserialize(cls, input_str, output_str, unflatten_ = True,sep="[*]", parent_key='[^]') -> Dict[str, Any]:
+    def deserialize(cls, input_str, output_str, unflatten_ = True,sep="[*]") -> Dict[str, Any]:
         """
         [_], and [^] are reserved, do not add this in dictionary keys, otherwise the structrue 
         won't be reserved
@@ -91,8 +88,8 @@ class DLog:
         output_data = ''
         
         if unflatten_:
-            input_data = unflatten(json.loads(input_str), sep=sep, parent_key=parent_key)
-            output_data = unflatten(json.loads(output_str), sep=sep, parent_key=parent_key)
+            input_data = unflatten(json.loads(input_str), sep=sep)
+            output_data = unflatten(json.loads(output_str), sep=sep)
         
         else:
             input_data = input_str
@@ -194,7 +191,7 @@ class DataLogger:
         timestamp upon serialization.
         """
         log_entry = DLog(input_data=input_data, output_data=output_data)
-        self.log.append(log_entry.serialize())
+        self.log.append(log_entry)
 
     def to_csv_file(
         self,
@@ -204,6 +201,9 @@ class DataLogger:
         time_prefix: bool = False,
         verbose: bool = True,
         clear: bool = True,
+        flatten_=True, 
+        sep='[*]',
+        index=False, 
         **kwargs,
     ) -> None:
         """
@@ -246,8 +246,9 @@ class DataLogger:
             time_prefix=time_prefix,
         )
         try:
-            df = to_df(list(self.log))
-            df.to_csv(filepath, **kwargs)
+            logs = [log.serialize(flatten_=flatten_, sep=sep) for log in self.log]
+            df = to_df(to_list(logs, flatten=True))
+            df.to_csv(filepath, index=index, **kwargs)
             if verbose:
                 print(f"{len(self.log)} logs saved to {filepath}")
             if clear:
