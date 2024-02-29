@@ -9,6 +9,7 @@ from lionagi.util.convert_util import (
     to_df, 
     to_dict, 
     to_list, 
+    to_str,
     to_readable_dict
 )
 
@@ -47,6 +48,7 @@ __all__ = [
     "to_df",
     "to_dict",
     "to_list",
+    "to_str",
     "to_readable_dict",
     "flatten",
     "get_flattened_keys",

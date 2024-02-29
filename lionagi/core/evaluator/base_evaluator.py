@@ -1,8 +1,8 @@
 import operator
 import ast
-import json
 from typing import Any, Dict, Tuple
 
+from lionagi.util import to_dict
 class BaseEvaluator:
     """
     A class to evaluate mathematical and boolean expressions from strings using Python's AST.
@@ -116,7 +116,7 @@ class BaseEvaluator:
                 return last_result
         elif format == "json":
             with open(file_path, 'r') as file:
-                data = json.load(file)
+                data = to_dict(file)
                 last_result = None
                 for expression in data:
                     last_result = self.evaluate(expression, context)

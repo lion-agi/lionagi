@@ -1,7 +1,8 @@
 # filename: enhanced_script_engine.py
 import ast
-import functools
+from functools import lru_cache
 
+from lionagi.util import AsyncUtil
 
 class SandboxTransformer(ast.NodeTransformer):
     """AST transformer to enforce restrictions in sandbox mode."""
@@ -26,7 +27,7 @@ class ScriptEngine:
     def process_data(self, data):
         return data * 2
 
-    @functools.lru_cache(maxsize=128)  # Cache to optimize performance
+    @lru_cache(maxsize=128)  # Cache to optimize performance
     def _evaluate_expression(self, expression):
         return self.safe_evaluator.evaluate(expression, self.variables)
 
@@ -136,7 +137,7 @@ class ScriptEngine:
     async def _execute_function_async(self, func_name, arg):
         if func_name in self.functions:
             func = self.functions[func_name]
-            if asyncio.iscoroutinefunction(func):
+            if AsyncUtil.is_coroutine_func(func):
                 return await func(arg)
             else:
                 return func(arg)

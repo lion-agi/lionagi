@@ -1,5 +1,3 @@
-import json
-
 from datetime import datetime
 from typing import Any, Dict, List
 
@@ -92,7 +90,7 @@ class MessageUtil:
             if cont.startswith("Sender"):
                 cont = cont.split(":", 1)[1]
             try:
-                json.loads(cont)
+               to_dict(cont)
             except:
                 raise ValueError(
                     "Invalid messages dataframe. Content expect json string."

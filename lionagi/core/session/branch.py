@@ -1,11 +1,9 @@
-import json
-from datetime import datetime
 from collections import deque
 from typing import Any, Dict, List, Optional, Union, TypeVar
 
 import pandas as pd
 
-from lionagi.util import to_list, to_dict, ConvertUtil, lcall
+from lionagi.util import ConvertUtil
 from lionagi.util.api_util import StatusTracker
 
 from lionagi.core.schema import Tool
@@ -323,9 +321,8 @@ class Branch(BaseBranch):
     # noinspection PyUnresolvedReferences
     async def call_chatcompletion(self, sender=None, with_sender=False, **kwargs):
 
-        await ChatFlow.call_chatcompletion(
-            self, sender=sender, with_sender=with_sender, **kwargs
-        )
+        await ChatFlow.call_chatcompletion(self, sender=sender, with_sender=with_sender,
+                                           **kwargs)
 
     async def chat(
         self,

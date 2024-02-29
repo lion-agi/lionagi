@@ -7,9 +7,7 @@ from lionagi.core.session.base.schema import Instruction, System
 class ChatFlow:
 
     @staticmethod
-    async def call_chatcompletion(
-        branch, sender=None, with_sender=False, tokenizer_kwargs={}, **kwargs
-    ):
+    async def call_chatcompletion(branch, sender=None, with_sender=False, **kwargs):
         """
         Asynchronously calls the chat completion service with the current message queue.
 
@@ -17,20 +15,17 @@ class ChatFlow:
             branch: The Branch instance calling the service.
             sender (Optional[str]): The name of the sender to include in chat completions.
             with_sender (bool): If True, includes sender information in messages.
-            tokenizer_kwargs (dict): Keyword arguments for the tokenizer used in chat completion.
             **kwargs: Arbitrary keyword arguments for the chat completion service.
 
         Examples:
-            >>> await ChatFlow.call_chatcompletion(branch, sender="user")
+            >>> await ChatFlow.call_chatcompletion(branch,sender="user")
         """
         messages = (
             branch.chat_messages
             if not with_sender
             else branch.chat_messages_with_sender
         )
-        payload, completion = await branch.service.serve_chat(
-            messages=messages, tokenizer_kwargs=tokenizer_kwargs, **kwargs
-        )
+        payload, completion = await branch.service.serve_chat(messages=messages, **kwargs)
         if "choices" in completion:
             add_msg_config = {"response": completion["choices"][0]}
             if sender is not None:
@@ -270,3 +265,4 @@ class ChatFlow:
             return await branch.chat(
                 instruction, sender=sender, tool_parsed=True, **kwargs
             )
+

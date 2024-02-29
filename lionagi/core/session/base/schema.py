@@ -1,11 +1,10 @@
-import json
 from enum import Enum
 from typing import Any, Optional, List, Dict
 
-import pandas as pd
-from pydantic import Field, model_validator
+# import pandas as pd
+# from pydantic import Field, model_validator
 
-from lionagi.util import nget, to_dict, ConvertUtil
+from lionagi.util import nget, to_dict, ConvertUtil, to_str
 from lionagi.core.schema import DataNode
 
 _message_fields = ["node_id", "timestamp", "role", "sender", "content"]
@@ -135,14 +134,7 @@ class BaseMessage(DataNode):
         Returns:
             dict: A dictionary representation of the message with 'role' and 'content' keys.
         """
-        out = {
-            "role": self.role,
-            "content": (
-                json.dumps(self.content)
-                if isinstance(self.content, dict)
-                else self.content
-            ),
-        }
+        out = {"role": self.role, "content": to_str(self.content)}
         return out
 
     def __str__(self):
@@ -203,18 +195,18 @@ class Response(BaseMessage):
 
             else:
                 try:
-                    if "tool_uses" in json.loads(response["content"]):
-                        content_ = json.loads(response["content"])["tool_uses"]
+                    if "tool_uses" in to_dict(response["content"]):
+                        content_ = to_dict(response["content"])["tool_uses"]
                         content_key = content_key or "action_request"
                         sender = sender or "action_request"
-                    elif "response" in json.loads(response["content"]):
+                    elif "response" in to_dict(response["content"]):
                         sender = sender or "assistant"
                         content_key = content_key or "response"
-                        content_ = json.loads(response["content"])["response"]
-                    elif "action_request" in json.loads(response["content"]):
+                        content_ = to_dict(response["content"])["response"]
+                    elif "action_request" in to_dict(response["content"]):
                         sender = sender or "action_request"
                         content_key = content_key or "action_request"
-                        content_ = json.loads(response["content"])["action_request"]
+                        content_ = to_dict(response["content"])["action_request"]
                     else:
                         content_ = response["content"]
                         content_key = content_key or "response"

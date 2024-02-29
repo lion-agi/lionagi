@@ -1,7 +1,6 @@
 import ast
 import textwrap
 from typing import Any, Dict, Callable
-import unittest
 
 
 class BaseEvaluationEngine:

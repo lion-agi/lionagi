@@ -62,6 +62,10 @@ def to_dict(input_: Any) -> Dict[Any, Any]:
     return ConvertUtil.to_dict(input_)
 
 
+def to_str(input_):
+    return json.dumps(input_) if isinstance(input_, dict) else input_
+    
+
 def str_to_num(
     input_: str,
     upper_bound: float | None = None,

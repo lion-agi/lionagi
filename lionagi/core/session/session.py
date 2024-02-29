@@ -3,7 +3,6 @@ from typing import Any, Dict, List, Optional, Tuple, Union
 
 import pandas as pd
 
-from lionagi.util.path_util import PathUtil
 from lionagi.util.api_util import BaseService
 from lionagi.util import to_df, to_list, to_df
 

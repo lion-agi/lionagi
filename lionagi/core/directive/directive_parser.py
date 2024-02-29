@@ -1,51 +1,51 @@
 
 
 
-class IfParser(BaseParser):
-    def parse_if_statement(self):
-        self.next_token()  # Move past IF
-        self.skip_semicolon()
+# class IfParser(BaseParser):
+#     def parse_if_statement(self):
+#         self.next_token()  # Move past IF
+#         self.skip_semicolon()
 
-        condition = self.parse_condition()
-        # Ensure we skip any semicolons after the condition
-        while self.current_token and self.current_token.value == ';':
-            self.next_token()
+#         condition = self.parse_condition()
+#         # Ensure we skip any semicolons after the condition
+#         while self.current_token and self.current_token.value == ';':
+#             self.next_token()
 
-        if self.current_token.value != 'DO':
-            raise SyntaxError("Expected DO after condition")
-        self.next_token()  # Move past DO
-        self.skip_semicolon()
+#         if self.current_token.value != 'DO':
+#             raise SyntaxError("Expected DO after condition")
+#         self.next_token()  # Move past DO
+#         self.skip_semicolon()
 
-        action1 = self.parse_action()
-        self.skip_semicolon()
+#         action1 = self.parse_action()
+#         self.skip_semicolon()
 
-        action2 = None
-        if self.current_token and self.current_token.value == 'ELSE':
-            self.next_token()  # Move past ELSE
-            self.skip_semicolon()
-            action2 = self.parse_action()
-            self.skip_semicolon()
+#         action2 = None
+#         if self.current_token and self.current_token.value == 'ELSE':
+#             self.next_token()  # Move past ELSE
+#             self.skip_semicolon()
+#             action2 = self.parse_action()
+#             self.skip_semicolon()
 
-        if self.current_token and self.current_token.value == 'ENDIF':
-            self.next_token()  # Move past ENDIF
-            self.skip_semicolon()
-        else:
-            raise SyntaxError("Expected ENDIF")
+#         if self.current_token and self.current_token.value == 'ENDIF':
+#             self.next_token()  # Move past ENDIF
+#             self.skip_semicolon()
+#         else:
+#             raise SyntaxError("Expected ENDIF")
 
-        return IfNode(condition, action1, action2)
+#         return IfNode(condition, action1, action2)
 
-    def parse_condition(self):
-        condition_parts = re.split(r'(\|\||&&|!)', self.current_token.value)
-        self.next_token()  # Move past condition
-        return " ".join(condition_parts).strip()
+#     def parse_condition(self):
+#         condition_parts = re.split(r'(\|\||&&|!)', self.current_token.value)
+#         self.next_token()  # Move past condition
+#         return " ".join(condition_parts).strip()
 
-    def parse_action(self):
-        if self.current_token.value == 'IF':
-            return self.parse_if_statement()  # Recursive call for nested IF
-        else:
-            action = self.current_token.value
-            self.next_token()  # Move past action
-            return action
+#     def parse_action(self):
+#         if self.current_token.value == 'IF':
+#             return self.parse_if_statement()  # Recursive call for nested IF
+#         else:
+#             action = self.current_token.value
+#             self.next_token()  # Move past action
+#             return action
 
 
 
