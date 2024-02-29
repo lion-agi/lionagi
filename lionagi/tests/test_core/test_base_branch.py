@@ -172,7 +172,7 @@ class TestBaseBranch(unittest.TestCase):
         mock_read_csv.return_value = mock_messages_df
 
         # Call the from_csv class method
-        branch = BaseBranch.from_csv(filepath='dummy.csv')
+        branch = BaseBranch.from_csv(filename='dummy.csv')
 
         # Verify that read_csv was called correctly
         mock_read_csv.assert_called_once_with('dummy.csv')
@@ -193,7 +193,7 @@ class TestBaseBranch(unittest.TestCase):
         mock_read_csv.return_value = mock_messages_df
 
         # Call the from_csv class method
-        branch = BaseBranch.from_json(filepath='dummy.json')
+        branch = BaseBranch.from_json(filename='dummy.json')
 
         # Verify that read_csv was called correctly
         mock_read_csv.assert_called_once_with('dummy.json')
@@ -234,7 +234,7 @@ class TestBaseBranch(unittest.TestCase):
     # def test_log_to_csv(self):
     #     self.branch.log_to_csv('log.csv', verbose=False, clear=False)
 
-    #     self.branch.datalogger.to_csv_file.assert_called_once_with(filepath='log.csv', dir_exist_ok=True, timestamp=True,
+    #     self.branch.datalogger.to_csv_file.assert_called_once_with(filename='log.csv', dir_exist_ok=True, timestamp=True,
     #                                             time_prefix=False, verbose=False, clear=False)
 
     # def test_log_to_json(self):

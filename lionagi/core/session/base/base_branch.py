@@ -375,7 +375,7 @@ class BaseBranch(BaseRelatableNode, ABC):
         if not filename.endswith(".json"):
             filename += ".json"
 
-        filepath = PathUtil.create_path(
+        filename = PathUtil.create_path(
             self.datalogger.persist_path,
             filename,
             timestamp=timestamp,
@@ -385,10 +385,10 @@ class BaseBranch(BaseRelatableNode, ABC):
 
         try:
             self.messages.to_json(
-                filepath, orient="records", lines=True, date_format="iso", **kwargs
+                filename, orient="records", lines=True, date_format="iso", **kwargs
             )
             if verbose:
-                print(f"{len(self.messages)} messages saved to {filepath}")
+                print(f"{len(self.messages)} messages saved to {filename}")
             if clear:
                 self.clear_messages()
         except Exception as e:
