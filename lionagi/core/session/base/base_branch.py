@@ -419,7 +419,7 @@ class BaseBranch(BaseRelatableNode, ABC):
             **kwargs: Additional keyword arguments for pandas.DataFrame.to_csv().
         """
         self.datalogger.to_csv_file(
-            filename=filename,
+            filepath=filename,
             dir_exist_ok=dir_exist_ok,
             timestamp=timestamp,
             time_prefix=time_prefix,
@@ -456,7 +456,7 @@ class BaseBranch(BaseRelatableNode, ABC):
         """
 
         self.datalogger.to_json_file(
-            filename=filename,
+            filepath=filename,
             dir_exist_ok=dir_exist_ok,
             timestamp=timestamp,
             time_prefix=time_prefix,
