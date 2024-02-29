@@ -1,5 +1,6 @@
 from lionagi.core.action.util import _extract_docstring_details_google, \
-    _extract_docstring_details_rest, _func_to_schema, func_to_tool
+    _extract_docstring_details_rest, _func_to_schema
+from lionagi.core.action import func_to_tool
 from lionagi.core.schema import Tool
 
 import unittest

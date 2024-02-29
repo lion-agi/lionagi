@@ -3,7 +3,7 @@ from pydantic import Field
 
 from lionagi.util import lcall
 
-from .base_node import BaseRelatableNode, BaseNode
+from lionagi.core.schema.base_node import BaseRelatableNode, BaseNode
 
 
 class Relationship(BaseRelatableNode):

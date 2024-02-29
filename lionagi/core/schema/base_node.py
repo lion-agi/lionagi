@@ -9,7 +9,7 @@ from pydantic import BaseModel, Field, ValidationError, AliasChoices, field_seri
 
 import pandas as pd
 
-from lionagi.util.sys_util import SysUtil
+from lionagi.util import SysUtil
 
 T = TypeVar("T", bound="BaseComponent")
 
