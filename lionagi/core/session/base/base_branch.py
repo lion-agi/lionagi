@@ -284,9 +284,9 @@ class BaseBranch(BaseRelatableNode, ABC):
         }
 
     @classmethod
-    def _from_csv(cls, filepath: str, read_kwargs=None, **kwargs) -> "BaseBranch":
+    def _from_csv(cls, filename: str, read_kwargs=None, **kwargs) -> "BaseBranch":
         read_kwargs = {} if read_kwargs is None else read_kwargs
-        messages = MessageUtil.read_csv(filepath, **read_kwargs)
+        messages = MessageUtil.read_csv(filename, **read_kwargs)
         return cls(messages=messages, **kwargs)
 
     @classmethod
@@ -300,14 +300,14 @@ class BaseBranch(BaseRelatableNode, ABC):
         return cls._from_json(**kwargs)
 
     @classmethod
-    def _from_json(cls, filepath: str, read_kwargs=None, **kwargs) -> "BaseBranch":
+    def _from_json(cls, filename: str, read_kwargs=None, **kwargs) -> "BaseBranch":
         read_kwargs = {} if read_kwargs is None else read_kwargs
-        messages = MessageUtil.read_json(filepath, **read_kwargs)
+        messages = MessageUtil.read_json(filename, **read_kwargs)
         return cls(messages=messages, **kwargs)
 
     def to_csv_file(
         self,
-        filepath: str | Path = "messages.csv",
+        filename: str | Path = "messages.csv",
         dir_exist_ok: bool = True,
         timestamp: bool = True,
         time_prefix: bool = False,
@@ -328,21 +328,21 @@ class BaseBranch(BaseRelatableNode, ABC):
             **kwargs: Additional keyword arguments for pandas.DataFrame.to_csv().
         """
 
-        if not filepath.endswith(".csv"):
-            filepath += ".csv"
+        if not filename.endswith(".csv"):
+            filename += ".csv"
 
-        filepath = PathUtil.create_path(
+        filename = PathUtil.create_path(
             self.datalogger.persist_path,
-            filepath,
+            filename,
             timestamp=timestamp,
             dir_exist_ok=dir_exist_ok,
             time_prefix=time_prefix,
         )
 
         try:
-            self.messages.to_csv(filepath, **kwargs)
+            self.messages.to_csv(filename, **kwargs)
             if verbose:
-                print(f"{len(self.messages)} messages saved to {filepath}")
+                print(f"{len(self.messages)} messages saved to {filename}")
             if clear:
                 self.clear_messages()
         except Exception as e:
@@ -419,7 +419,7 @@ class BaseBranch(BaseRelatableNode, ABC):
             **kwargs: Additional keyword arguments for pandas.DataFrame.to_csv().
         """
         self.datalogger.to_csv_file(
-            filepath=filename,
+            filename=filename,
             dir_exist_ok=dir_exist_ok,
             timestamp=timestamp,
             time_prefix=time_prefix,
@@ -456,7 +456,7 @@ class BaseBranch(BaseRelatableNode, ABC):
         """
 
         self.datalogger.to_json_file(
-            filepath=filename,
+            filename=filename,
             dir_exist_ok=dir_exist_ok,
             timestamp=timestamp,
             time_prefix=time_prefix,
