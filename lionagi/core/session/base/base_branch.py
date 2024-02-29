@@ -7,7 +7,8 @@ from datetime import datetime
 
 from lionagi.util import PathUtil, to_dict, to_df
 
-from lionagi.core.schema import BaseRelatableNode, DataLogger
+from lionagi.core.schema import BaseRelatableNode, DataLogger, DLog
+
 
 from lionagi.core.session.base.schema import (
     BranchColumns,
@@ -46,10 +47,8 @@ class BaseBranch(BaseRelatableNode, ABC):
                 raise ValueError("Invalid messages format")
         else:
             self.messages = pd.DataFrame(columns=self._columns)
-        if isinstance(datalogger, DataLogger.__class__):
-            self.datalogger = datalogger
-        else:
-            self.datalogger = DataLogger(persist_path=persist_path)
+
+        self.datalogger = datalogger if datalogger else DataLogger(persist_path=persist_path)
 
     def add_message(
         self,
@@ -69,7 +68,7 @@ class BaseBranch(BaseRelatableNode, ABC):
             response: Response data for creating a message.
             **kwargs: Additional keyword arguments for message creation.
         """
-        msg = MessageUtil.create_message(
+        _msg = MessageUtil.create_message(
             system=system,
             instruction=instruction,
             context=context,
@@ -77,9 +76,8 @@ class BaseBranch(BaseRelatableNode, ABC):
             **kwargs,
         )
 
-        msg.content = MessageUtil.to_json_content(msg.content)
-
-        self.messages.loc[len(self.messages)] = msg.to_pd_series()
+        _msg.content = _msg.msg_content
+        self.messages.loc[len(self.messages)] = _msg.to_pd_series()
 
     def _to_chatcompletion_message(
         self, with_sender: bool = False
@@ -103,13 +101,13 @@ class BaseBranch(BaseRelatableNode, ABC):
             if content_.startswith("Sender"):
                 content_ = content_.split(":", 1)[1]
 
-            if isinstance(content_, str):
-                try:
-                    content_ = json.dumps(to_dict(content_))
-                except Exception as e:
-                    raise ValueError(
-                        f"Error in serializing, {row['node_id']} {content_}: {e}"
-                    )
+            # if isinstance(content_, str):
+            #     try:
+            #         content_ = json.dumps(to_dict(content_))
+            #     except Exception as e:
+            #         raise ValueError(
+            #             f"Error in serializing, {row['node_id']} {content_}: {e}"
+            #         )
 
             out = {"role": row["role"], "content": content_}
             if with_sender:
@@ -286,9 +284,9 @@ class BaseBranch(BaseRelatableNode, ABC):
         }
 
     @classmethod
-    def _from_csv(cls, filepath: str, read_kwargs=None, **kwargs) -> "BaseBranch":
+    def _from_csv(cls, filename: str, read_kwargs=None, **kwargs) -> "BaseBranch":
         read_kwargs = {} if read_kwargs is None else read_kwargs
-        messages = MessageUtil.read_csv(filepath, **read_kwargs)
+        messages = MessageUtil.read_csv(filename, **read_kwargs)
         return cls(messages=messages, **kwargs)
 
     @classmethod
@@ -302,15 +300,15 @@ class BaseBranch(BaseRelatableNode, ABC):
         return cls._from_json(**kwargs)
 
     @classmethod
-    def _from_json(cls, filepath: str, read_kwargs=None, **kwargs) -> "BaseBranch":
+    def _from_json(cls, filename: str, read_kwargs=None, **kwargs) -> "BaseBranch":
         read_kwargs = {} if read_kwargs is None else read_kwargs
-        messages = MessageUtil.read_json(filepath, **read_kwargs)
+        messages = MessageUtil.read_json(filename, **read_kwargs)
         return cls(messages=messages, **kwargs)
 
-    def to_csv(
+    def to_csv_file(
         self,
-        filepath: str | Path = "messages.csv",
-        file_exist_ok: bool = False,
+        filename: str | Path = "messages.csv",
+        dir_exist_ok: bool = True,
         timestamp: bool = True,
         time_prefix: bool = False,
         verbose: bool = True,
@@ -322,7 +320,7 @@ class BaseBranch(BaseRelatableNode, ABC):
 
         Args:
             filepath: Destination path for the CSV file. Defaults to 'messages.csv'.
-            file_exist_ok: If False, an error is raised if the file exists. Defaults to False.
+            dir_exist_ok: If False, an error is raised if the directory exists. Defaults to True.
             timestamp: If True, appends a timestamp to the filename. Defaults to True.
             time_prefix: If True, prefixes the filename with a timestamp. Defaults to False.
             verbose: If True, prints a message upon successful export. Defaults to True.
@@ -330,42 +328,43 @@ class BaseBranch(BaseRelatableNode, ABC):
             **kwargs: Additional keyword arguments for pandas.DataFrame.to_csv().
         """
 
-        if not filepath.endswith(".csv"):
-            filepath += ".csv"
+        if not filename.endswith(".csv"):
+            filename += ".csv"
 
-        filepath = PathUtil.create_path(
+        filename = PathUtil.create_path(
             self.datalogger.persist_path,
-            filepath,
+            filename,
             timestamp=timestamp,
-            dir_exist_ok=file_exist_ok,
+            dir_exist_ok=dir_exist_ok,
             time_prefix=time_prefix,
         )
 
         try:
-            self.messages.to_csv(filepath, **kwargs)
+            self.messages.to_csv(filename, **kwargs)
             if verbose:
-                print(f"{len(self.messages)} messages saved to {filepath}")
+                print(f"{len(self.messages)} messages saved to {filename}")
             if clear:
                 self.clear_messages()
         except Exception as e:
             raise ValueError(f"Error in saving to csv: {e}")
 
-    def to_json(
+    def to_json_file(
         self,
         filename: str | Path = "messages.json",
-        file_exist_ok: bool = False,
+        dir_exist_ok: bool = True,
         timestamp: bool = True,
         time_prefix: bool = False,
         verbose: bool = True,
         clear: bool = True,
         **kwargs,
+
     ) -> None:
         """
         Exports the branch messages to a JSON file.
 
         Args:
             filename: Destination path for the JSON file. Defaults to 'messages.json'.
-            file_exist_ok: If False, an error is raised if the file exists. Defaults to False.
+            dir_exist_ok: If False, an error is raised if the dirctory exists. Defaults to True.
             timestamp: If True, appends a timestamp to the filename. Defaults to True.
             time_prefix: If True, prefixes the filename with a timestamp. Defaults to False.
             verbose: If True, prints a message upon successful export. Defaults to True.
@@ -376,33 +375,35 @@ class BaseBranch(BaseRelatableNode, ABC):
         if not filename.endswith(".json"):
             filename += ".json"
 
-        filepath = PathUtil.create_path(
+        filename = PathUtil.create_path(
             self.datalogger.persist_path,
             filename,
             timestamp=timestamp,
-            dir_exist_ok=file_exist_ok,
+            dir_exist_ok=dir_exist_ok,
             time_prefix=time_prefix,
         )
 
         try:
             self.messages.to_json(
-                filepath, orient="records", lines=True, date_format="iso", **kwargs
+                filename, orient="records", lines=True, date_format="iso", **kwargs
             )
+            if verbose:
+                print(f"{len(self.messages)} messages saved to {filename}")
             if clear:
                 self.clear_messages()
-            if verbose:
-                print(f"{len(self.messages)} messages saved to {filepath}")
         except Exception as e:
             raise ValueError(f"Error in saving to json: {e}")
 
     def log_to_csv(
         self,
         filename: str | Path = "log.csv",
-        file_exist_ok: bool = False,
+        dir_exist_ok: bool = True,
         timestamp: bool = True,
         time_prefix: bool = False,
         verbose: bool = True,
         clear: bool = True,
+        flatten_=True, 
+        sep='[^_^]',
         **kwargs,
     ) -> None:
         """
@@ -410,31 +411,35 @@ class BaseBranch(BaseRelatableNode, ABC):
 
         Args:
             filename: Destination path for the CSV file. Defaults to 'log.csv'.
-            file_exist_ok: If False, an error is raised if the file exists. Defaults to False.
+            dir_exist_ok: If False, an error is raised if the directory exists. Defaults to True.
             timestamp: If True, appends a timestamp to the filename. Defaults to True.
             time_prefix: If True, prefixes the filename with a timestamp. Defaults to False.
             verbose: If True, prints a message upon successful export. Defaults to True.
             clear: If True, clears the logger after exporting. Defaults to True.
             **kwargs: Additional keyword arguments for pandas.DataFrame.to_csv().
         """
-        self.datalogger.to_csv(
-            filepath=filename,
-            file_exist_ok=file_exist_ok,
+        self.datalogger.to_csv_file(
+            filename=filename,
+            dir_exist_ok=dir_exist_ok,
             timestamp=timestamp,
             time_prefix=time_prefix,
             verbose=verbose,
             clear=clear,
+            flatten_=flatten_,
+            sep=sep,
             **kwargs,
         )
 
     def log_to_json(
         self,
         filename: str | Path = "log.json",
-        file_exist_ok: bool = False,
+        dir_exist_ok: bool = True,
         timestamp: bool = True,
         time_prefix: bool = False,
         verbose: bool = True,
         clear: bool = True,
+        flatten_=True, 
+        sep='[^_^]',
         **kwargs,
     ) -> None:
         """
@@ -442,7 +447,7 @@ class BaseBranch(BaseRelatableNode, ABC):
 
         Args:
             filename: Destination path for the JSON file. Defaults to 'log.json'.
-            file_exist_ok: If False, an error is raised if the file exists. Defaults to False.
+            dir_exist_ok: If False, an error is raised if the directory exists. Defaults to True.
             timestamp: If True, appends a timestamp to the filename. Defaults to True.
             time_prefix: If True, prefixes the filename with a timestamp. Defaults to False.
             verbose: If True, prints a message upon successful export. Defaults to True.
@@ -450,15 +455,46 @@ class BaseBranch(BaseRelatableNode, ABC):
             **kwargs: Additional keyword arguments for pandas.DataFrame.to_json().
         """
 
-        self.datalogger.to_json(
+        self.datalogger.to_json_file(
             filename=filename,
-            file_exist_ok=file_exist_ok,
+            dir_exist_ok=dir_exist_ok,
             timestamp=timestamp,
             time_prefix=time_prefix,
             verbose=verbose,
             clear=clear,
+            flatten_=flatten_,
+            sep=sep,
             **kwargs,
         )
+    
+    def load_log(
+        self, 
+        filename,
+        flattened=True, 
+        sep='[^_^]',
+        verbose=True,
+        **kwargs
+    ):
+        df = ''
+        try:        
+            if filename.endswith('.csv'):
+                df = MessageUtil.read_csv(filename, **kwargs)
+                
+            elif filename.endswith('.json'):
+                df = MessageUtil.read_json(filename, **kwargs)
+
+            for _, row in df.iterrows():
+                self.datalogger.log.append(DLog.deserialize(
+                    input_str=row.input_data, 
+                    output_str = row.output_data,
+                    unflatten_=flattened, 
+                    sep=sep,
+                ))
+        
+            if verbose:
+                print(f"Loaded {len(df)} logs from {filename}")
+        except Exception as e:
+            raise ValueError(f"Error in loading log: {e}")
 
     def remove_message(self, node_id: str) -> None:
         """
@@ -506,13 +542,9 @@ class BaseBranch(BaseRelatableNode, ABC):
             system = System(system, sender=sender)
 
         if isinstance(system, System):
-            message_dict = system.to_dict()
-            if sender:
-                message_dict["sender"] = sender
-            message_dict["timestamp"] = datetime.now().isoformat()
-            message_dict["content"] = MessageUtil.to_json_content(message_dict['content'])
+            system.timestamp = datetime.now().isoformat()
             sys_index = self.messages[self.messages.role == "system"].index
-            self.messages.loc[sys_index[0]] = message_dict
+            self.messages.loc[sys_index[0]] = system.to_pd_series()
 
     def rollback(self, steps: int) -> None:
         """

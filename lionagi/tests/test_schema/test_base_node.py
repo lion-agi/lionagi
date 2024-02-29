@@ -26,7 +26,7 @@ class TestBaseComponent(unittest.TestCase):
     def test_json_serialization(self):
         """Test that an object is correctly serialized to JSON."""
         component = BaseComponent(metadata={"key": "value"})
-        component_json = component.to_json()
+        component_json = component.to_json_string()
 
         # Convert JSON string back to a dictionary to check values
         component_dict = json.loads(component_json)
@@ -289,7 +289,7 @@ class TestBaseActionNode(unittest.TestCase):
         def sample_function():
             return "Function Called"
 
-        action_node = Tool(func=sample_function)
+        action_node = Tool(func=sample_function, schema_={'schema': 'schema example'})
         action_node.manual = "Manual Text"
         action_node.parser = "Parser Object"
 
@@ -303,10 +303,11 @@ class TestBaseActionNode(unittest.TestCase):
         def test_func():
             pass
 
-        action_node = Tool(func=test_func)
+        action_node = Tool(func=test_func, schema_={'schema': 'schema example'})
         serialized_func_name = action_node.serialize_func(action_node.func)
 
         self.assertEqual(serialized_func_name, "test_func")
+
 
 if __name__ == '__main__':
     unittest.main()

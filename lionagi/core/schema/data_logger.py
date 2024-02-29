@@ -1,10 +1,11 @@
+import json
 import atexit
 from collections import deque
-from dataclasses import dataclass, asdict
+from dataclasses import dataclass
 from pathlib import Path
 from typing import Any, Dict, List
 
-from lionagi.util import SysUtil, to_df, to_list, PathUtil, to_df
+from lionagi.util import SysUtil, to_df, to_list, PathUtil, to_df, flatten, unflatten
 
 
 @dataclass
@@ -35,8 +36,8 @@ class DLog:
     input_data: Any
     output_data: Any
 
-    def serialize(self) -> Dict[str, Any]:
-        """
+    def serialize(self, flatten_=True, sep="[^_^]") -> Dict[str, Any]:
+        """        
         Converts the DLog instance to a dictionary, suitable for serialization. This
         method is particularly useful for exporting log entries to formats like JSON or
         CSV. In addition to the data attributes, it appends a timestamp to the
@@ -46,9 +47,55 @@ class DLog:
             Dict[str, Any]: A dictionary representation of the DLog instance, including
                             'input_data', 'output_data', and 'timestamp' keys.
         """
-        log_dict = asdict(self)
+        log_dict = {}
+        
+        
+        if flatten_:
+            if isinstance(self.input_data, dict):
+                log_dict['input_data'] = json.dumps(flatten(
+                    self.input_data, sep=sep
+                )) 
+            if isinstance(self.output_data, dict):
+                log_dict['output_data'] = json.dumps(flatten(
+                    self.output_data, sep=sep
+                ))
+        
+        else:
+            log_dict["input_data"] = self.input_data
+            log_dict["output_data"] = self.output_data
+        
         log_dict["timestamp"] = SysUtil.get_timestamp()
+        
         return log_dict
+
+
+    @classmethod
+    def deserialize(cls, input_str, output_str, unflatten_ = True,sep="[*]") -> Dict[str, Any]:
+        """
+        [_], and [^] are reserved, do not add this in dictionary keys, otherwise the structrue 
+        won't be reserved
+        
+        Converts the DLog instance to a dictionary, suitable for serialization. This
+        method is particularly useful for exporting log entries to formats like JSON or
+        CSV. In addition to the data attributes, it appends a timestamp to the
+        dictionary, capturing the exact time the log entry was serialized.
+
+        Returns:
+            Dict[str, Any]: A dictionary representation of the DLog instance, including
+                            'input_data', 'output_data', and 'timestamp' keys.
+        """
+        input_data = ''
+        output_data = ''
+        
+        if unflatten_:
+            input_data = unflatten(json.loads(input_str), sep=sep)
+            output_data = unflatten(json.loads(output_str), sep=sep)
+        
+        else:
+            input_data = input_str
+            output_data = output_str
+        
+        return cls(input_data=input_data, output_data=output_data)
 
 
 class DataLogger:
@@ -76,15 +123,15 @@ class DataLogger:
 
     Methods:
         append: Adds a new log entry to the datalogger.
-        to_csv: Exports accumulated log entries to a CSV file.
-        to_json: Exports accumulated log entries to a JSON file.
+        to_csv_file: Exports accumulated log entries to a CSV file.
+        to_json_file: Exports accumulated log entries to a JSON file.
         save_at_exit: Ensures that unsaved log entries are persisted to a CSV file when
                       the program terminates.
 
     Usage Example:
         >>> datalogger = DataLogger(persist_path='my/logs/directory', filepath='process_logs')
         >>> datalogger.append(input_data="Example input", output_data="Example output")
-        >>> datalogger.to_csv('finalized_logs.csv', clear=True)
+        >>> datalogger.to_csv_file('finalized_logs.csv', clear=True)
 
     This example demonstrates initializing a `DataLogger` with a custom directory and
     filepath, appending a log entry, and then exporting the log to a CSV file.
@@ -144,16 +191,19 @@ class DataLogger:
         timestamp upon serialization.
         """
         log_entry = DLog(input_data=input_data, output_data=output_data)
-        self.log.append(log_entry.serialize())
+        self.log.append(log_entry)
 
-    def to_csv(
+    def to_csv_file(
         self,
         filename: str = "log.csv",
-        file_exist_ok: bool = False,
+        dir_exist_ok: bool = True,
         timestamp: bool = True,
         time_prefix: bool = False,
         verbose: bool = True,
         clear: bool = True,
+        flatten_=True, 
+        sep='[*]',
+        index=False, 
         **kwargs,
     ) -> None:
         """
@@ -164,7 +214,7 @@ class DataLogger:
             filename (str, optional):
                 Filename for the CSV output, appended with '.csv' if not included, saved
                 within the specified persisting directory.
-            file_exist_ok (bool, optional):
+            dir_exist_ok (bool, optional):
                 If False, raises an error if the directory already exists; otherwise,
                 writes without an error.
             timestamp (bool, optional):
@@ -192,12 +242,13 @@ class DataLogger:
             self.persist_path,
             filename,
             timestamp=timestamp,
-            dir_exist_ok=file_exist_ok,
+            dir_exist_ok=dir_exist_ok,
             time_prefix=time_prefix,
         )
         try:
-            df = to_df(list(self.log))
-            df.to_csv(filepath, **kwargs)
+            logs = [log.serialize(flatten_=flatten_, sep=sep) for log in self.log]
+            df = to_df(to_list(logs, flatten=True))
+            df.to_csv(filepath, index=index, **kwargs)
             if verbose:
                 print(f"{len(self.log)} logs saved to {filepath}")
             if clear:
@@ -205,14 +256,17 @@ class DataLogger:
         except Exception as e:
             raise ValueError(f"Error in saving to csv: {e}")
 
-    def to_json(
+    def to_json_file(
         self,
         filename: str = "log.json",
-        timestamp: bool = False,
+        dir_exist_ok: bool = True,
+        timestamp: bool = True,
         time_prefix: bool = False,
-        file_exist_ok: bool = False,
         verbose: bool = True,
         clear: bool = True,
+        flatten_=True, 
+        sep='[*]',
+        index=False, 
         **kwargs,
     ) -> None:
         """
@@ -228,7 +282,7 @@ class DataLogger:
             time_prefix (bool, optional):
                 Determines the placement of the timestamp in the filepath. A prefix if
                 True; otherwise, a suffix.
-            file_exist_ok (bool, optional):
+            dir_exist_ok (bool, optional):
                 Allows writing to an existing directory without raising an error.
                 If False, an error is raised when attempting to write to an existing
                 directory.
@@ -249,11 +303,11 @@ class DataLogger:
         Examples:
             Default usage saving logs to 'log.json' within the specified persisting
             directory:
-            >>> datalogger.to_json()
+            >>> datalogger.to_json_file()
             # Save path: 'data/logs/log.json'
 
             Custom filepath without a timestamp, using additional pandas options:
-            >>> datalogger.to_json(filepath='detailed_log.json', orient='records')
+            >>> datalogger.to_json_file(filepath='detailed_log.json', orient='records')
             # Save a path: 'data/logs/detailed_log.json'
         """
         if not filename.endswith(".json"):
@@ -263,12 +317,13 @@ class DataLogger:
             self.persist_path,
             filename,
             timestamp=timestamp,
-            dir_exist_ok=file_exist_ok,
+            dir_exist_ok=dir_exist_ok,
             time_prefix=time_prefix,
         )
 
         try:
-            df = to_df(list(self.log))
+            logs = [log.serialize(flatten_=flatten_, sep=sep) for log in self.log]
+            df = to_df(to_list(logs, flatten=True))
             df.to_json(filepath, **kwargs)
             if verbose:
                 print(f"{len(self.log)} logs saved to {filepath}")
@@ -292,4 +347,4 @@ class DataLogger:
         possibility of manual review or recovery after the program has terminated.
         """
         if self.log:
-            self.to_csv("unsaved_logs.csv", clear=False)
+            self.to_csv_file("unsaved_logs.csv", clear=False)

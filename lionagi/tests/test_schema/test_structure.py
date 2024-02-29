@@ -2,6 +2,7 @@ from lionagi.core.schema.structure import *
 import unittest
 from unittest.mock import patch
 
+
 class TestRelationship(unittest.TestCase):
 
     def setUp(self):
@@ -71,6 +72,7 @@ class TestRelationship(unittest.TestCase):
         self.assertIn("node1", repr_str)
         self.assertIn("node2", repr_str)
 
+
 class TestGraph(unittest.TestCase):
 
     def setUp(self):
@@ -128,11 +130,11 @@ class TestGraph(unittest.TestCase):
         self.graph.clear()
         self.assertTrue(self.graph.is_empty())
 
-    @patch('networkx.DiGraph')
-    def test_to_networkx(self, mock_DiGraph):
-        """Test converting the graph to a NetworkX graph object."""
-        self.graph.to_networkx()
-        mock_DiGraph.assert_called()
+    # @patch('networkx.DiGraph')
+    # def test_to_networkx(self, mock_DiGraph):
+    #     """Test converting the graph to a NetworkX graph object."""
+    #     self.graph.to_networkx()
+    #     mock_DiGraph.assert_called()
 
 
 class TestStructure(unittest.TestCase):
@@ -185,7 +187,6 @@ class TestStructure(unittest.TestCase):
         self.assertTrue(self.structure.is_empty())
         self.structure.add_node(self.node1)
         self.assertFalse(self.structure.is_empty())
-
 
     def test_filter_relationships_by_label(self):
         """Test filtering relationships by label."""

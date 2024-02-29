@@ -78,6 +78,51 @@ response = await session.chat(
 )
 ```
 
-### Conclusion
 
-LionAGI's `func_to_tool` function significantly eases the process of creating and utilizing custom tools within sessions, enhancing the AI's ability to perform specialized tasks based on conversational context. By automatically generating tool schemas from well-documented functions, LionAGI empowers developers to seamlessly integrate complex logic into their conversational applications, opening up a wide range of possibilities for interactive and dynamic AI-driven solutions.
+
+
+### Ways of Specifying Tools
+
+In the following steps, you can specify which tool or set of tools you
+want to use in that step.
+
+If you want to specify a single tool to be used in this step, you can
+pass in:
+
+-   the name of the tool (str)
+-   the `Tool` object
+-   a tool schema
+
+If you want to specify a subset of tools, you can pass in a list
+containing any of these three types.
+
+By default, no tools will be used. If you want to include all registered
+tools in the step, you can add `tools=True`.
+
+``` python
+# all compatible inputs
+
+# default: no tools will be used
+await session.chat(instruction=instruct)
+
+# use all registered tools
+await session.chat(instruction=instruct, tools=True)
+
+# name
+await session.chat(instruction=instruct, tools='multiply')
+
+# list of name
+await session.chat(instruction=instruct, tools=['multiply'])
+
+# tool
+await session.chat(instruction=instruct, tools=tool_mul)
+
+# list of tool
+await session.chat(instruction=instruct, tools=[tool_mul])
+
+# schema
+await session.chat(instruction=instruct, tools=tool_schema)
+
+# list of schema
+await session.chat(instruction=instruct, tools=[tool_schema])
+```

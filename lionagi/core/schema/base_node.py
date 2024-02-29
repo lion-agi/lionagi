@@ -91,7 +91,7 @@ class BaseComponent(BaseModel, ABC):
         """Converts a flat XML structure to a dictionary."""
         return {child.tag: child.text for child in root}
 
-    def to_json(self, *args, **kwargs) -> str:
+    def to_json_string(self, *args, **kwargs) -> str:
         """
         Serializes the instance to a JSON string.
         kwargs for pydantic model_dump_json method.
@@ -188,7 +188,7 @@ class BaseComponent(BaseModel, ABC):
         )
 
     def __repr__(self):
-        return f"{self.__class__.__name__}({self.to_json()})"
+        return f"{self.__class__.__name__}({self.to_dict()})"
 
 
 class BaseNode(BaseComponent):
@@ -212,9 +212,12 @@ class BaseNode(BaseComponent):
 
     def __str__(self):
         timestamp = f" ({self.timestamp})" if self.timestamp else ""
-        content_preview = (
-            self.content[:50] + "..." if len(self.content) > 50 else self.content
-        )
+        if self.content:
+            content_preview = (
+                self.content[:50] + "..." if len(self.content) > 50 else self.content
+            )
+        else:
+            content_preview = ''
         meta_preview = (
             str(self.metadata)[:50] + "..."
             if len(str(self.metadata)) > 50
@@ -245,6 +248,7 @@ class BaseRelatableNode(BaseNode):
 
 class Tool(BaseRelatableNode):
     func: Any
+    schema_: Dict = None
     manual: Any | None = None
     parser: Any | None = None
 

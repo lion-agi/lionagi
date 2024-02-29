@@ -26,7 +26,7 @@ class Session:
         branches (Dict[str, Branch]): A dictionary of branch instances associated with the session.
         service (Optional[BaseService]): The external service instance associated with the session.
         branch_manager (BranchManager): The manager for handling branches within the session.
-        logger (Optional[Any]): The logger instance for session data logging.
+        datalogger (Optional[Any]): The datalogger instance for session data logging.
     """
 
     def __init__(
@@ -39,10 +39,10 @@ class Session:
         default_branch: Optional[Branch] = None,
         default_branch_name: Optional[str] = None,
         tools: Optional[List[Tool]] = None,
-        instruction_sets: Optional[List[Instruction]] = None,
+        # instruction_sets: Optional[List[Instruction]] = None,
         tool_manager: Optional[Any] = None,
-        messages: Optional[List[Dict[str, Any]]] = None,
-        logger: Optional[Any] = None,
+        messages: Optional[pd.DataFrame] = None,
+        datalogger: Optional[Any] = None,
         dir: Optional[str] = None,
     ):
         """Initialize a new session with optional configuration for managing conversations.
@@ -59,7 +59,7 @@ class Session:
             instruction_sets (Optional[List[Instruction]]): List of instruction sets.
             tool_manager (Optional[Any]): Manager for handling tools.
             messages (Optional[List[Dict[str, Any]]]): Initial list of messages.
-            logger (Optional[Any]): Logger instance for the session.
+            datalogger (Optional[Any]): Logger instance for the session.
             dir (Optional[str]): Directory path for saving session data.
 
         Examples:
@@ -73,16 +73,28 @@ class Session:
             default_branch=default_branch,
             default_branch_name=default_branch_name,
             messages=messages,
-            instruction_sets=instruction_sets,
+            # instruction_sets=instruction_sets,
             tool_manager=tool_manager,
             service=service,
             llmconfig=llmconfig,
             tools=tools,
             dir=dir,
-            logger=logger,
+            datalogger=datalogger,
         )
         self.branch_manager = MailManager(self.branches)
         self.datalogger = self.default_branch.datalogger
+        for key, branch in self.branches.items():
+            branch.name = key
+
+
+
+
+
+
+
+
+
+
 
     # --- default branch methods ---- #
 
@@ -91,7 +103,7 @@ class Session:
         return self.default_branch.messages
 
     @property
-    def messages_describe(self) -> Dict[str, Any]:
+    def messages_describe(self):
         """
         Provides a descriptive summary of all messages in the branch.
 
@@ -120,7 +132,7 @@ class Session:
         return self.default_branch.has_tools
 
     @property
-    def last_message(self) -> pd.Series:
+    def last_message(self) -> pd.DataFrame:
         """
         Retrieves the last message from the conversation.
 
@@ -130,7 +142,7 @@ class Session:
         return self.default_branch.last_message
 
     @property
-    def first_system(self) -> pd.Series:
+    def first_system(self) -> pd.DataFrame:
         """
         Retrieves the first system message from the conversation.
 
@@ -140,7 +152,7 @@ class Session:
         return self.default_branch.first_system
 
     @property
-    def last_response(self) -> pd.Series:
+    def last_response(self) -> pd.DataFrame:
         """
         Retrieves the last response message from the conversation.
 
@@ -220,6 +232,20 @@ class Session:
         """
         return self.default_branch.sender_info
 
+    def register_tools(self, tools):
+        self.default_branch.register_tools(tools)
+
+
+
+
+
+
+
+
+
+
+
+
     @classmethod
     def from_csv(
         cls,
@@ -228,11 +254,9 @@ class Session:
         sender: Optional[str] = None,
         llmconfig: Optional[Dict[str, Any]] = None,
         service: BaseService = None,
-        branches: Optional[Dict[str, Branch]] = None,
-        default_branch: Optional[Branch] = None,
         default_branch_name: str = "main",
         tools=None,
-        instruction_sets=None,
+        # instruction_sets=None,
         tool_manager=None,
         **kwargs,
     ) -> "Session":
@@ -262,11 +286,8 @@ class Session:
             sender=sender,
             llmconfig=llmconfig,
             service=service,
-            branches=branches,
-            default_branch=default_branch,
             default_branch_name=default_branch_name,
             tools=tools,
-            instruction_sets=instruction_sets,
             tool_manager=tool_manager,
             messages=df,
             **kwargs,
@@ -282,11 +303,9 @@ class Session:
         sender: Optional[str] = None,
         llmconfig: Optional[Dict[str, Any]] = None,
         service: BaseService = None,
-        branches: Optional[Dict[str, Branch]] = None,
-        default_branch: Optional[Branch] = None,
         default_branch_name: str = "main",
         tools=None,
-        instruction_sets=None,
+        # instruction_sets=None,
         tool_manager=None,
         **kwargs,
     ) -> "Session":
@@ -314,11 +333,9 @@ class Session:
             sender=sender,
             llmconfig=llmconfig,
             service=service,
-            branches=branches,
-            default_branch=default_branch,
             default_branch_name=default_branch_name,
             tools=tools,
-            instruction_sets=instruction_sets,
+            # instruction_sets=instruction_sets,
             tool_manager=tool_manager,
             messages=df,
             **kwargs,
@@ -326,10 +343,10 @@ class Session:
 
         return self
 
-    def to_csv(
+    def to_csv_file(
         self,
         filename: str = "messages.csv",
-        file_exist_ok: bool = False,
+        dir_exist_ok: bool = True,
         timestamp: bool = True,
         time_prefix: bool = False,
         verbose: bool = True,
@@ -341,7 +358,7 @@ class Session:
 
         Args:
             filename (str): The name of the output CSV file, default is 'messages.csv'.
-            file_exist_ok (bool): If True, does not raise an error if the directory already exists, default is False.
+            dir_exist_ok (bool): If True, does not raise an error if the directory already exists, default is True.
             timestamp (bool): If True, appends a timestamp to the filename, default is True.
             time_prefix (bool): If True, adds a timestamp prefix to the filename, default is False.
             verbose (bool): If True, prints a message upon successful save, default is True.
@@ -349,34 +366,18 @@ class Session:
             **kwargs: Additional keyword arguments for DataFrame.to_csv().
 
         Examples:
-            >>> branch.to_csv("exported_messages.csv")
-            >>> branch.to_csv("timed_export.csv", timestamp=True, time_prefix=True)
+            >>> branch.to_csv_file("exported_messages.csv")
+            >>> branch.to_csv_file("timed_export.csv", timestamp=True, time_prefix=True)
         """
+        for name, branch in self.branches.items():
+            f_name = f'{name}_{filename}'
+            branch.to_csv_file(filename=f_name, dir_exist_ok=dir_exist_ok, timestamp=timestamp,
+                               time_prefix=time_prefix, verbose=verbose, clear=clear, **kwargs)
 
-        if not filename.endswith(".csv"):
-            filename += ".csv"
-
-        filepath = PathUtil.create_path(
-            self.datalogger.dir,
-            filename,
-            timestamp=timestamp,
-            dir_exist_ok=file_exist_ok,
-            time_prefix=time_prefix,
-        )
-
-        try:
-            self.messages.to_csv(filepath, **kwargs)
-            if verbose:
-                print(f"{len(self.messages)} messages saved to {filepath}")
-            if clear:
-                self.clear_messages()
-        except Exception as e:
-            raise ValueError(f"Error in saving to csv: {e}")
-
-    def to_json(
+    def to_json_file(
         self,
         filename: str = "messages.json",
-        file_exist_ok: bool = False,
+        dir_exist_ok: bool = False,
         timestamp: bool = True,
         time_prefix: bool = False,
         verbose: bool = True,
@@ -388,7 +389,7 @@ class Session:
 
         Args:
             filename (str): The name of the output JSON file, default is 'messages.json'.
-            file_exist_ok (bool): If True, does not raise an error if the directory already exists, default is False.
+            dir_exist_ok (bool): If True, does not raise an error if the directory already exists, default is True.
             timestamp (bool): If True, appends a timestamp to the filename, default is True.
             time_prefix (bool): If True, adds a timestamp prefix to the filename, default is False.
             verbose (bool): If True, prints a message upon successful save, default is True.
@@ -396,36 +397,19 @@ class Session:
             **kwargs: Additional keyword arguments for DataFrame.to_json().
 
         Examples:
-            >>> branch.to_json("exported_messages.json")
-            >>> branch.to_json("timed_export.json", timestamp=True, time_prefix=True)
+            >>> branch.to_json_file("exported_messages.json")
+            >>> branch.to_json_file("timed_export.json", timestamp=True, time_prefix=True)
         """
 
-        if not filename.endswith(".json"):
-            filename += ".json"
-
-        filepath = PathUtil.create_path(
-            self.dir,
-            filename,
-            timestamp=timestamp,
-            dir_exist_ok=file_exist_ok,
-            time_prefix=time_prefix,
-        )
-
-        try:
-            self.messages.to_json(
-                filepath, orient="records", lines=True, date_format="iso", **kwargs
-            )
-            if clear:
-                self.clear_messages()
-            if verbose:
-                print(f"{len(self.messages)} messages saved to {filepath}")
-        except Exception as e:
-            raise ValueError(f"Error in saving to json: {e}")
+        for name, branch in self.branches.items():
+            f_name = f'{name}_{filename}'
+            branch.to_json_file(filename=f_name, dir_exist_ok=dir_exist_ok, timestamp=timestamp,
+                                time_prefix=time_prefix, verbose=verbose, clear=clear, **kwargs)
 
     def log_to_csv(
         self,
         filename: str = "log.csv",
-        file_exist_ok: bool = False,
+        dir_exist_ok: bool = True,
         timestamp: bool = True,
         time_prefix: bool = False,
         verbose: bool = True,
@@ -440,7 +424,7 @@ class Session:
 
         Args:
             filename (str): The name of the output CSV file. Defaults to 'log.csv'.
-            file_exist_ok (bool): If True, will not raise an error if the directory already exists. Defaults to False.
+            dir_exist_ok (bool): If True, will not raise an error if the directory already exists. Defaults to True.
             timestamp (bool): If True, appends a timestamp to the filename for uniqueness. Defaults to True.
             time_prefix (bool): If True, adds a timestamp prefix to the filename. Defaults to False.
             verbose (bool): If True, prints a success message upon completion. Defaults to True.
@@ -451,20 +435,15 @@ class Session:
             >>> branch.log_to_csv("branch_log.csv")
             >>> branch.log_to_csv("detailed_branch_log.csv", timestamp=True, verbose=True)
         """
-        self.datalogger.to_csv(
-            filename=filename,
-            file_exist_ok=file_exist_ok,
-            timestamp=timestamp,
-            time_prefix=time_prefix,
-            verbose=verbose,
-            clear=clear,
-            **kwargs,
-        )
+        for name, branch in self.branches.items():
+            f_name = f'{name}_{filename}'
+            branch.log_to_csv(filename=f_name, dir_exist_ok=dir_exist_ok, timestamp=timestamp,
+                              time_prefix=time_prefix, verbose=verbose, clear=clear, **kwargs)
 
     def log_to_json(
         self,
         filename: str = "log.json",
-        file_exist_ok: bool = False,
+        dir_exist_ok: bool = True,
         timestamp: bool = True,
         time_prefix: bool = False,
         verbose: bool = True,
@@ -479,7 +458,7 @@ class Session:
 
         Args:
             filename (str): The name of the output JSON file. Defaults to 'log.json'.
-            file_exist_ok (bool): If directory existence should not raise an error. Defaults to False.
+            dir_exist_ok (bool): If directory existence should not raise an error. Defaults to True.
             timestamp (bool): If True, appends a timestamp to the filename. Defaults to True.
             time_prefix (bool): If True, adds a timestamp prefix to the filename. Defaults to False.
             verbose (bool): If True, prints a success message upon completion. Defaults to True.
@@ -490,15 +469,10 @@ class Session:
             >>> branch.log_to_json("branch_log.json")
             >>> branch.log_to_json("detailed_branch_log.json", verbose=True, timestamp=True)
         """
-        self.datalogger.to_json(
-            filename=filename,
-            file_exist_ok=file_exist_ok,
-            timestamp=timestamp,
-            time_prefix=time_prefix,
-            verbose=verbose,
-            clear=clear,
-            **kwargs,
-        )
+        for name, branch in self.branches.items():
+            f_name = f'{name}_{filename}'
+            branch.log_to_json(filename=f_name, dir_exist_ok=dir_exist_ok, timestamp=timestamp,
+                               time_prefix=time_prefix, verbose=verbose, clear=clear, **kwargs)
 
     @property
     def all_messages(self) -> pd.DataFrame:
@@ -506,12 +480,20 @@ class Session:
         return all messages across branches
         """
         dfs = deque()
-        for _, v in self.branches:
+        for _, v in self.branches.items():
             dfs.append(to_df(v.messages))
         return to_df(to_list(dfs, flatten=True, dropna=True))
 
-    def register_tools(self, tools):
-        self.default_branch.register_tools(tools)
+
+
+
+
+
+
+
+
+
+
 
     # ----- chatflow ----#
     async def call_chatcompletion(
@@ -659,14 +641,27 @@ class Session:
             **kwargs,
         )
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
     # ---- branch manipulation ---- #
     def new_branch(
         self,
-        branch_name: Optional[str] = None,
-        system=None,
+        branch_name: str,
+        system: Optional[Union[System, str]]=None,
         sender=None,
         messages: Optional[pd.DataFrame] = None,
-        instruction_sets=None,
         tool_manager=None,
         service=None,
         llmconfig=None,
@@ -698,7 +693,6 @@ class Session:
         new_branch = Branch(
             name=branch_name,
             messages=messages,
-            instruction_sets=instruction_sets,
             tool_manager=tool_manager,
             service=service,
             llmconfig=llmconfig,
@@ -709,7 +703,7 @@ class Session:
 
         self.branches[branch_name] = new_branch
         self.branch_manager.sources[branch_name] = new_branch
-        self.branch_manager.requests[branch_name] = {}
+        self.branch_manager.mails[branch_name] = {}
 
     def get_branch(
         self, branch: Optional[Union[Branch, str]] = None, get_name: bool = False
@@ -743,7 +737,8 @@ class Session:
             if get_name:
                 return (
                     branch,
-                    [key for key, value in self.branches.items() if value == branch][0],
+                    # [key for key, value in self.branches.items() if value == branch][0],
+                    branch.name
                 )
             return branch
 
@@ -793,7 +788,7 @@ class Session:
         else:
             self.branches.pop(branch_name)
             # self.branch_manager.sources.pop(branch_name)
-            self.branch_manager.requests.pop(branch_name)
+            self.branch_manager.mails.pop(branch_name)
             if verbose:
                 print(f"Branch {branch_name} is deleted.")
             return True
@@ -809,7 +804,7 @@ class Session:
 
         Args:
             from_ (Union[str, Branch]): The source branch name or instance.
-            to_ (Union[str, Branch]): The target branch name or instance where the merge will happen.
+            to_branch (Union[str, Branch]): The target branch name or instance where the merge will happen.
             update (bool): If True, updates the target branch with the source branch's settings.
             del_ (bool): If True, deletes the source branch after merging.
 
@@ -926,13 +921,13 @@ class Session:
         default_branch,
         default_branch_name,
         messages,
-        instruction_sets,
+        # instruction_sets,
         tool_manager,
         service,
         llmconfig,
         tools,
         dir,
-        logger,
+        datalogger,
     ):
 
         branch = default_branch or Branch(
@@ -941,10 +936,10 @@ class Session:
             llmconfig=llmconfig,
             tools=tools,
             tool_manager=tool_manager,
-            instruction_sets=instruction_sets,
+            # instruction_sets=instruction_sets,
             messages=messages,
             dir=dir,
-            logger=logger,
+            datalogger=datalogger,
         )
 
         self.default_branch = branch

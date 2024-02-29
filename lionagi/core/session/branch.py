@@ -29,13 +29,13 @@ from dotenv import load_dotenv
 
 load_dotenv()
 
-try:
-    from lionagi.integrations.provider import Services
-
-    OAIService = Services.OpenAI()
-
-except:
-    pass
+# try:
+#     from lionagi.integrations.provider import Services
+#
+#     OAIService = Services.OpenAI()
+#
+# except:
+#     pass
 
 T = TypeVar("T", bound=Tool)
 
@@ -53,12 +53,12 @@ class Branch(BaseBranch):
         tools=None,
         datalogger=None,
         persist_path=None,
-        instruction_sets=None,
+        # instruction_sets=None,
         tool_manager=None,
         **kwargs,
     ):
 
-        # init base conversation class
+        # init base class
         super().__init__(
             messages=messages,
             datalogger=datalogger,
@@ -83,7 +83,7 @@ class Branch(BaseBranch):
         self.status_tracker = StatusTracker()
 
         # add instruction sets
-        self.instruction_sets = instruction_sets
+        # self.instruction_sets = instruction_sets
 
         # add pending ins and outs for mails
         self.pending_ins = {}
@@ -118,7 +118,7 @@ class Branch(BaseBranch):
             tools=tools,
             datalogger=datalogger,
             persist_path=persist_path,
-            instruction_sets=instruction_sets,
+            # instruction_sets=instruction_sets,
             tool_manager=tool_manager,
             **kwargs,
         )
@@ -150,7 +150,7 @@ class Branch(BaseBranch):
             tools=tools,
             datalogger=datalogger,
             persist_path=persist_path,
-            instruction_sets=instruction_sets,
+            # instruction_sets=instruction_sets,
             tool_manager=tool_manager,
             **kwargs,
         )
@@ -163,7 +163,7 @@ class Branch(BaseBranch):
             total_messages=len(self.messages),
             summary_by_role=self._info(),
             summary_by_sender=self._info(use_sender=True),
-            instruction_sets=self.instruction_sets,
+            # instruction_sets=self.instruction_sets,
             registered_tools=self.tool_manager.registry,
             messages=[msg.to_dict() for _, msg in self.messages.iterrows()],
         )
@@ -177,10 +177,10 @@ class Branch(BaseBranch):
 
         message_copy = branch.messages.copy()
         self.messages = self.messages.merge(message_copy, how="outer")
-        self.datalogger.extend(branch.datalogger.logs)
+        self.datalogger.extend(branch.datalogger.log)
 
         if update:
-            self.instruction_sets.update(branch.instruction_sets)
+            # self.instruction_sets.update(branch.instruction_sets)
             self.tool_manager.registry.update(branch.tool_manager.registry)
         else:
             for key, value in branch.instruction_sets.items():
@@ -195,30 +195,31 @@ class Branch(BaseBranch):
     def register_tools(self, tools: Union[Tool, List[Tool]]) -> None:
 
         if not isinstance(tools, list):
-            tools = to_list(tools, flatten=True, dropna=True)
+            tools = [tools]
         self.tool_manager.register_tools(tools=tools)
 
     def delete_tools(
         self,
-        tools: Union[bool, T, List[T], str, List[str], List[Dict[str, Any]]],
+        tools: Union[T, List[T], str, List[str]],
         verbose: bool = True,
     ) -> bool:
 
-        if isinstance(tools, list):
-            if ConvertUtil.is_same_dtype(tools, str):
-                for act_ in tools:
-                    if act_ in self.tool_manager.registry:
-                        self.tool_manager.registry.pop(act_)
-                if verbose:
-                    print("tools successfully deleted")
-                return True
-            elif ConvertUtil.is_same_dtype(tools, Tool):
-                for act_ in tools:
-                    if act_.name in self.tool_manager.registry:
-                        self.tool_manager.registry.pop(act_.name)
-                if verbose:
-                    print("tools successfully deleted")
-                return True
+        if not isinstance(tools, list):
+            tools = [tools]
+        if ConvertUtil.is_same_dtype(tools, str):
+            for act_ in tools:
+                if act_ in self.tool_manager.registry:
+                    self.tool_manager.registry.pop(act_)
+            if verbose:
+                print("tools successfully deleted")
+            return True
+        elif ConvertUtil.is_same_dtype(tools, Tool):
+            for act_ in tools:
+                if act_.schema_["function"]["name"] in self.tool_manager.registry:
+                    self.tool_manager.registry.pop(act_.schema_["function"]["name"])
+            if verbose:
+                print("tools successfully deleted")
+            return True
         if verbose:
             print("tools deletion failed")
         return False
@@ -250,7 +251,6 @@ class Branch(BaseBranch):
                     raise ValueError("Invalid messages format")
                 MessageUtil.validate_messages(mail_.package)
                 self.messages = self.messages.merge(mail_.package, how="outer")
-                continue
 
             elif mail_.category == "tools" and tools:
                 if not isinstance(mail_.package, Tool):
@@ -273,6 +273,8 @@ class Branch(BaseBranch):
                 skipped_requests.append(mail_)
 
         self.pending_ins[sender] = skipped_requests
+        if self.pending_ins[sender] == deque():
+            self.pending_ins.pop(sender)
 
     def receive_all(self) -> None:
 
@@ -282,8 +284,14 @@ class Branch(BaseBranch):
     @staticmethod
     def _add_service(service, llmconfig):
         from lionagi.integrations.provider.oai import OpenAIService
+        if service is None:
+            try:
+                from lionagi.integrations.provider import Services
 
-        service = service or OAIService
+                service = Services.OpenAI()
+
+            except:
+                raise ValueError("No available service")
         if llmconfig is None:
             if isinstance(service, OpenAIService):
                 from lionagi.integrations.config import oai_schema
@@ -303,7 +311,7 @@ class Branch(BaseBranch):
         """
         content = self.messages.iloc[-1]["content"]
         try:
-            if to_dict(content)["action_response"].keys() >= {
+            if MessageUtil.to_dict_content(content)["action_response"].keys() >= {
                 "function",
                 "arguments",
                 "output",
@@ -388,88 +396,3 @@ class Branch(BaseBranch):
             out=out,
             **kwargs,
         )
-
-    def add_message(
-        self,
-        system: Optional[Union[dict, list, System]] = None,
-        instruction: Optional[Union[dict, list, Instruction]] = None,
-        context: Optional[Union[str, Dict[str, Any]]] = None,
-        response: Optional[Union[dict, list, Response]] = None,
-        sender: Optional[str] = None,
-    ) -> None:
-        """
-        Adds a message to the branch's conversation.
-
-        Supports adding different types of messages: system, instruction, and response. Each message
-        type is added with a timestamp and sender information.
-
-        Args:
-            system (Optional[Union[dict, list, System]]): System message to add.
-            instruction (Optional[Union[dict, list, Instruction]]): Instruction message to add.
-            context (Optional[Union[str, Dict[str, Any]]]): Context associated with the instruction.
-            response (Optional[Union[dict, list, Response]]): Response message to add.
-            sender (Optional[str]): Identifier for the sender of the message.
-
-        Examples:
-            >>> branch.add_message(system={'content': 'System initialized'}, sender='system')
-            >>> branch.add_message(instruction={'content': 'Please respond'}, sender='user')
-        """
-        msg = self._create_message(
-            system=system,
-            instruction=instruction,
-            context=context,
-            response=response,
-            sender=sender,
-        )
-        message_dict = msg.to_dict()
-        if isinstance(to_dict(message_dict["content"]), dict):
-            message_dict["content"] = json.dumps(message_dict["content"])
-        message_dict["timestamp"] = datetime.now().isoformat()
-        self.messages.loc[len(self.messages)] = message_dict
-
-    def _create_message(
-        self,
-        system: Optional[Union[dict, list, System]] = None,
-        instruction: Optional[Union[dict, list, Instruction]] = None,
-        context: Optional[Union[str, Dict[str, Any]]] = None,
-        response: Optional[Union[dict, list, Response]] = None,
-        sender: Optional[str] = None,
-    ) -> BaseMessage:
-        """
-        Creates a message object based on the given parameters, ensuring only one message type is specified.
-
-        Args:
-            system (Optional[Union[dict, list, System]]): System message to be added.
-            instruction (Optional[Union[dict, list, Instruction]]): Instruction message to be added.
-            context (Optional[Union[str, Dict[str, Any]]]): Context for the instruction message.
-            response (Optional[Union[dict, list, Response]]): Response message to be added.
-            sender (Optional[str]): The sender of the message.
-
-        Returns:
-            Message: A Message object created from the provided parameters.
-
-        Raises:
-            ValueError: If more than one message type is specified or if the parameters do not form a valid message.
-        """
-        if sum(lcall([system, instruction, response], bool)) != 1:
-            raise ValueError("Error: Message must have one and only one role.")
-
-        else:
-            if isinstance(any([system, instruction, response]), BaseMessage):
-                if system:
-                    return system
-                elif instruction:
-                    return instruction
-                elif response:
-                    return response
-
-            msg = 0
-            if response:
-                msg = Response(response=response, sender=sender)
-            elif instruction:
-                msg = Instruction(
-                    instruction=instruction, context=context, sender=sender
-                )
-            elif system:
-                msg = System(system=system, sender=sender)
-            return msg
