@@ -67,8 +67,8 @@ class ParseUtil:
         
         def replacement(match):
             char = match.group(0)
-            char_map = char_map or md_json_char_map
-            return char_map.get(char, char)  # Default to the char itself if not in map
+            _char_map = char_map or md_json_char_map
+            return _char_map.get(char, char)  # Default to the char itself if not in map
 
         # Match any of the special characters to be escaped.
         return re.sub(r'[\n\r\t"]', replacement, value)

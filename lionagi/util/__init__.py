@@ -1,7 +1,8 @@
 from .sys_util import SysUtil
 from .path_util import PathUtil
 from .api_util import APIUtil
-from .convert_util import ConvertUtil, to_df, to_dict, str_to_num, to_readable_dict
+from .convert_util import ConvertUtil, to_df, to_dict, str_to_num, to_readable_dict, \
+    to_list
 from .call_util import lcall, alcall, mcall, bcall, rcall, tcall, to_list
 from .nested_util import (
     nget,
@@ -23,6 +24,7 @@ __all__ = [
     "ConvertUtil",
     "to_df",
     "to_dict",
+    "to_list",
     "str_to_num",
     "lcall",
     "alcall",
@@ -30,7 +32,6 @@ __all__ = [
     "bcall",
     "rcall",
     "tcall",
-    "to_list",
     "nget",
     "nset",
     "ninsert",

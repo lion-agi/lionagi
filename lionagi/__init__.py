@@ -16,7 +16,6 @@ from .util import (
     bcall,
     rcall,
     tcall,
-    to_list,
     nget,
     nset,
     ninsert,
@@ -28,6 +27,7 @@ from .util import (
     CallDecorator,
     to_readable_dict,
 )
+from . import to_list
 
 from .core import ActionNode, ChatFlow, Session, Branch, func_to_tool
 
@@ -44,7 +44,6 @@ __all__ = [
     "bcall",
     "rcall",
     "tcall",
-    "to_list",
     "nget",
     "nset",
     "ninsert",

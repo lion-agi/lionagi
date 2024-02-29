@@ -12,8 +12,8 @@ from typing import (
     Optional,
 )
 
-from .sys_util import SysUtil
-from .convert_util import ConvertUtil
+from lionagi.util.sys_util import SysUtil
+from lionagi.util.convert_util import ConvertUtil
 
 
 def nset(nested_structure: Dict | List, indices: List[int | str], value: Any) -> None:
