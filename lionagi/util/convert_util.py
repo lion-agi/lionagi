@@ -2,11 +2,61 @@ import json
 import re
 from collections import defaultdict
 import xml.etree.ElementTree as ET
-from typing import Any, Dict, List, Type
+from typing import Any, Dict, List, Type, Iterable, Generator
 from pandas import DataFrame, Series, concat
 
 number_regex = re.compile(r"-?\d+\.?\d*")
 
+
+def to_list(input_: Any, flatten: bool = True, dropna: bool = False) -> List[Any]:
+    """
+    converts a given input to a list, with options to flatten nested lists and exclude
+    None values.
+
+    this utility function is designed to standardize the conversion of various types of
+    input into a flat list format. it supports flattening nested lists, thereby
+    simplifying the handling of complex data structures. additionally, it can remove
+    None values from the list, which is particularly useful in data processing
+    pipelines where missing values need to be excluded.
+
+    Args:
+        input_ (Any):
+            The input to be converted to a list. it can be of any type that is
+            iterable or a single object. nested lists are handled based on the `flatten`
+            argument.
+        flatten (bool, optional):
+            Indicates whether to flatten nested lists. if True, nested lists will be
+            converted into a flat list. defaults to True.
+        dropna (bool, optional):
+            Determines whether None values should be removed from the list. if True,
+            all None values are excluded.
+            defaults to False.
+
+    Returns:
+        List[Any]: The converted list, potentially flattened and without None values,
+        based on the provided arguments.
+
+    Examples:
+        Convert and flatten a nested list, excluding None values:
+        >>> to_list([1, [2, None], 3], flatten=True, dropna=True)
+        [1, 2, 3]
+
+        convert a non-list input without flattening:
+        >>> to_list("hello", flatten=False)
+        ["hello"]
+    """
+    if isinstance(input_, list) and flatten:
+        input_ = _flatten_list(input_)
+    elif isinstance(input_, Iterable) and not isinstance(input_, (str, dict)):
+        try:
+            input_ = list(input_)
+        except Exception as e:
+            raise ValueError("Input cannot be converted to a list.") from e
+    else:
+        input_ = [input_]
+    if dropna:
+        input_ = _dropna(input_)
+    return input_
 
 def to_dict(input_: Any) -> Dict[Any, Any]:
     return ConvertUtil.to_dict(input_)
@@ -179,3 +229,65 @@ class ConvertUtil:
 
         except Exception as e:
             raise ValueError(f"Error converting item to DataFrame: {e}") from e
+
+
+def _dropna(lst_: List[Any]) -> List[Any]:
+    """
+    Remove None values from a list.
+
+    Args:
+        lst_ (List[Any]): A list potentially containing None values.
+
+    Returns:
+        List[Any]: A list with None values removed.
+
+    Examples:
+        >>> _dropna([1, None, 3, None])
+        [1, 3]
+    """
+    return [item for item in lst_ if item is not None]
+
+
+def _flatten_list(lst_: List[Any], dropna: bool = True) -> List[Any]:
+    """
+    flatten a nested list, optionally removing None values.
+
+    Args:
+        lst_ (List[Any]): A nested list to flatten.
+        dropna (bool): If True, None values are removed. default is True.
+
+    Returns:
+        List[Any]: A flattened list.
+
+    examples:
+        >>> _flatten_list([[1, 2], [3, None]], dropna=True)
+        [1, 2, 3]
+        >>> _flatten_list([[1, [2, None]], 3], dropna=False)
+        [1, 2, None, 3]
+    """
+    flattened_list = list(_flatten_list_generator(lst_, dropna))
+    return _dropna(flattened_list) if dropna else flattened_list
+
+
+def _flatten_list_generator(
+    l: List[Any], dropna: bool = True
+) -> Generator[Any, None, None]:
+    """
+    Generator for flattening a nested list.
+
+    Args:
+        l (List[Any]): A nested list to flatten.
+        dropna (bool): If True, None values are omitted. Default is True.
+
+    Yields:
+        Generator[Any, None, None]: A generator yielding flattened elements.
+
+    Examples:
+        >>> list(_flatten_list_generator([[1, [2, None]], 3], dropna=False))
+        [1, 2, None, 3]
+    """
+    for i in l:
+        if isinstance(i, list):
+            yield from _flatten_list_generator(i, dropna)
+        else:
+            yield i

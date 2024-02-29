@@ -1,12 +1,13 @@
-import asyncio
-import functools
 import time
+import functools
 from concurrent.futures import ThreadPoolExecutor
+
 from typing import Callable, Any, List
 
 from aiocache import cached
 
-from .call_util import is_coroutine_func, rcall
+from lionagi.util.call_util import rcall
+from lionagi.util.async_util import AsyncUtil
 
 
 class CallDecorator:
@@ -219,7 +220,7 @@ class CallDecorator:
         """
 
         def decorator(func: Callable[..., List[Any]]) -> Callable:
-            if is_coroutine_func(func):
+            if AsyncUtil.is_coroutine_func(func):
 
                 @functools.wraps(func)
                 async def async_wrapper(*args, **kwargs) -> List[Any]:
@@ -277,7 +278,7 @@ class CallDecorator:
         """
 
         def decorator(func: Callable) -> Callable:
-            if not any(is_coroutine_func(f) for f in functions):
+            if not any(AsyncUtil.is_coroutine_func(f) for f in functions):
 
                 @functools.wraps(func)
                 def sync_wrapper(*args, **kwargs):
@@ -292,7 +293,7 @@ class CallDecorator:
                     return value
 
                 return sync_wrapper
-            elif all(is_coroutine_func(f) for f in functions):
+            elif all(AsyncUtil.is_coroutine_func(f) for f in functions):
 
                 @functools.wraps(func)
                 async def async_wrapper(*args, **kwargs):
@@ -351,7 +352,7 @@ class CallDecorator:
         """
 
         def decorator(func: Callable[..., Any]) -> Callable[..., Any]:
-            if is_coroutine_func(func):
+            if AsyncUtil.is_coroutine_func(func):
 
                 @functools.wraps(func)
                 async def async_wrapper(*args, **kwargs) -> Any:
@@ -401,7 +402,7 @@ class CallDecorator:
             ... # will return the cached result without re-executing the function body.
         """
 
-        if is_coroutine_func(func):
+        if AsyncUtil.is_coroutine_func(func):
             # Asynchronous function handling
             @cached(ttl=ttl)
             async def cached_async(*args, **kwargs) -> Any:
@@ -452,7 +453,7 @@ class CallDecorator:
         """
 
         def decorator(func: Callable[..., List[Any]]) -> Callable:
-            if is_coroutine_func(func):
+            if AsyncUtil.is_coroutine_func(func):
 
                 @functools.wraps(func)
                 async def wrapper(*args, **kwargs) -> List[Any]:
@@ -505,7 +506,7 @@ class CallDecorator:
         """
 
         def decorator(func: Callable[..., List[Any]]) -> Callable:
-            if is_coroutine_func(func):
+            if AsyncUtil.is_coroutine_func(func):
 
                 @functools.wraps(func)
                 async def async_wrapper(*args, **kwargs) -> Any:
@@ -551,11 +552,11 @@ class CallDecorator:
         """
 
         def decorator(func: Callable) -> Callable:
-            if not asyncio.iscoroutinefunction(func):
+            if not AsyncUtil.AsyncUtil.is_coroutine_func(func):
                 raise TypeError(
                     "max_concurrency decorator can only be used with async functions."
                 )
-            semaphore = asyncio.Semaphore(limit)
+            semaphore = AsyncUtil.semaphore(limit)
 
             @functools.wraps(func)
             async def wrapper(*args, **kwargs):
@@ -601,7 +602,7 @@ class CallDecorator:
         @functools.wraps(fn)
         def wrapper(*args, **kwargs):
             future = pool.submit(fn, *args, **kwargs)
-            return asyncio.wrap_future(future)  # make it awaitable
+            return AsyncUtil.wrap_future(future)  # make it awaitable
 
         return wrapper
 
@@ -668,7 +669,7 @@ class _Throttle:
         async def wrapper(*args, **kwargs) -> Any:
             elapsed = time.time() - self.last_called
             if elapsed < self.period:
-                await asyncio.sleep(self.period - elapsed)
+                await AsyncUtil.sleep(self.period - elapsed)
             self.last_called = time.time()
             return await func(*args, **kwargs)
 

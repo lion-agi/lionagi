@@ -12,8 +12,8 @@ from functools import lru_cache
 from aiocache import cached
 from typing import Any, Callable, Dict, Optional, NoReturn, Type, Union, List
 
-from .convert_util import ConvertUtil
-from .nested_util import nget
+from lionagi.util.convert_util import ConvertUtil
+from lionagi.util.nested_util import nget
 
 
 class APIUtil:
