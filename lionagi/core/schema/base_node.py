@@ -58,8 +58,8 @@ class BaseComponent(BaseModel, ABC):
     # from_obj method, overloaded
     # implemented for Dict, str, pd.Series, pd.DataFrame, List, pydantic.BaseModel
 
-    @classmethod
     @singledispatchmethod
+    @classmethod
     def from_obj(cls: Type[T], obj: Any, *args, **kwargs) -> T:
         """
         Generic method to create an instance of the class from an object. This method should be
@@ -78,9 +78,9 @@ class BaseComponent(BaseModel, ABC):
         """
         raise NotImplementedError(f"Unsupported type: {type(obj)}")
 
-    @from_obj.register(Dict)
+    @from_obj.register
     @classmethod
-    def _(cls: Type[T], dict_data: Dict, *args, **kwargs) -> T:
+    def _(cls, dict_data: dict, *args, **kwargs) -> T:
         """
         Handles creation of an instance from a dictionary object.
 
@@ -118,7 +118,7 @@ class BaseComponent(BaseModel, ABC):
 
     @from_obj.register(pd.Series)
     @classmethod
-    def _(cls: Type[T], pd_series: pd.Series, *args, pd_kwargs: Dict | None = None,
+    def _(cls, pd_series: pd.Series, *args, pd_kwargs: Dict | None = None,
           **kwargs) -> T:
         """
         Handles creation of an instance from a pandas Series object.
@@ -137,7 +137,7 @@ class BaseComponent(BaseModel, ABC):
     @from_obj.register(pd.DataFrame)
     @classmethod
     def _(
-            cls: Type[T],
+            cls,
             pd_df: pd.DataFrame,
             *args,
             pd_kwargs: Dict | None = None,

@@ -70,7 +70,7 @@ def _(input_, flatten=True, dropna=True):
 
 
 @to_list.register(set)
-def _(input_, flatten=True, dropna=True):
+def _(input_, dropna=True):
     """Specialized implementation of `to_list` for handling set inputs."""
     return list(dropna_iterator(list(input_))) if dropna else list(input_)
 
@@ -171,7 +171,7 @@ def _(input_: pd.DataFrame, *args, orient: str = "list", as_list: bool = False,
         of the DataFrame or a list of dictionaries, one for each row.
     """
     if as_list:
-        return [row.to_dict(*args, orient=orient, **kwargs) for _, row in
+        return [row.to_dict(*args, **kwargs) for _, row in
                 input_.iterrows()]
     return input_.to_dict(*args, orient=orient, **kwargs)
 
@@ -194,7 +194,7 @@ def _(input_: BaseModel, *args, **kwargs) -> Dict[Any, Any]:
 
 # to_str functions with datatype overloads
 @singledispatch
-def to_str(input_: Any, *args, **kwargs) -> str:
+def to_str(input_: Any) -> str:
     """
     Converts the input object to a string. This function utilizes single dispatch to handle
     specific input types such as dict, str, list, pandas.Series, and pandas.DataFrame,
@@ -233,7 +233,7 @@ def _(input_: dict, *args, **kwargs) -> str:
 
 
 @to_str.register(str)
-def _(input_: str, *args, **kwargs) -> str:
+def _(input_: str) -> str:
     """
     Returns the input string unchanged.
 
@@ -266,7 +266,7 @@ def _(input_: list, *args, as_list: bool = False, **kwargs) -> str | List[str]:
              of the elements joined by a comma.
     """
     lst_ = [to_str(item, *args, **kwargs) for item in input_]
-    return str(lst_) if as_list else ", ".join(lst_)
+    return lst_ if as_list else ", ".join(lst_)
 
 
 @to_str.register(pd.Series)
@@ -352,64 +352,24 @@ def to_df(
         raise ValueError(f"Error converting input_ to DataFrame: {e}") from e
 
 
-@to_df.register(list[dict])
+@to_df.register
 def _(
-        input_,
-        how: bool = "all",
-        drop_kwargs: Dict | None = None,
-        reset_index: bool = True,
-        **kwargs
-) -> pd.DataFrame:
-    """
-    Overloaded `to_df` implementation for converting a list of dictionaries into a pandas DataFrame.
-
-    This method is specifically optimized for handling lists of dictionaries, allowing for efficient conversion
-    to DataFrame, with additional control over handling missing data and indexing.
-
-    Args:
-        input_ (list[dict]): A list of dictionaries, each representing a row in the DataFrame.
-        how, drop_kwargs, reset_index, **kwargs: See the base `to_df` function for descriptions.
-
-    Returns:
-        pd.DataFrame: A DataFrame constructed from the list of dictionaries.
-
-    Note:
-        - Inherits behavior from the base `to_df` function for dropping missing values and resetting the index.
-    """
-
-    if drop_kwargs is None:
-        drop_kwargs = {}
-    try:
-        dfs = pd.DataFrame(input_, **kwargs)
-        dfs.dropna(**(drop_kwargs | {"how": how}), inplace=True)
-        return dfs.reset_index(drop=True) if reset_index else dfs
-    except Exception as e:
-        raise ValueError(f"Error converting input_ to DataFrame: {e}") from e
-
-
-@to_df.register(list[pd.DataFrame | pd.Series] | pd.core.generic.NDFrame)
-def _(
-        input_: list[pd.DataFrame | pd.Series] | pd.core.generic.NDFrame,
+        input_: list,
         how: str = "all",
         drop_kwargs: Dict | None = None,
         reset_index: bool = True,
         **kwargs
 ) -> pd.DataFrame:
-    """
-    Overloaded `to_df` implementation for converting lists of pandas DataFrames or Series, or a single NDFrame, into a single pandas DataFrame.
 
-    For lists, this method concatenates the elements into a single DataFrame. For a single NDFrame, it applies the provided processing directly.
-
-    Args:
-        input_ (list[pd.DataFrame | pd.Series] | pd.core.generic.NDFrame): Input data to be converted.
-        how, drop_kwargs, reset_index, **kwargs: See the base `to_df` function for descriptions.
-
-    Returns:
-        pd.DataFrame: A single DataFrame obtained by concatenating the input DataFrames or Series, or the processed NDFrame.
-
-    Note:
-        - This method leverages `pd.concat` for lists of DataFrames or Series and applies `dropna` and `reset_index` as per the base `to_df` logic.
-    """
+    if not isinstance(input_[0], (pd.DataFrame, pd.Series, pd.core.generic.NDFrame)):
+        if drop_kwargs is None:
+            drop_kwargs = {}
+        try:
+            dfs = pd.DataFrame(input_, **kwargs)
+            dfs.dropna(**(drop_kwargs | {"how": how}), inplace=True)
+            return dfs.reset_index(drop=True) if reset_index else dfs
+        except Exception as e:
+            raise ValueError(f"Error converting input_ to DataFrame: {e}") from e
 
     dfs = ''
     if drop_kwargs is None:
@@ -642,3 +602,4 @@ def _flatten_list_generator(
             yield from _flatten_list_generator(i, dropna)
         else:
             yield i
+
