@@ -4,7 +4,16 @@ from dataclasses import dataclass
 from pathlib import Path
 from typing import Any, Dict, List
 
-from lionagi.util import SysUtil, to_df, to_list, PathUtil, to_dict, flattened, unflatten, to_str
+from lionagi.util import (
+    to_df,
+    to_list,
+    to_str,
+    to_dict,
+    flatten,
+    unflatten, 
+    SysUtil,
+    PathUtil,
+)
 
 
 @dataclass
@@ -51,11 +60,11 @@ class DLog:
         
         if flatten_:
             if isinstance(self.input_data, dict):
-                log_dict['input_data'] = to_str(flattened(
+                log_dict['input_data'] = to_str(flatten(
                     self.input_data, sep=sep
                 )) 
             if isinstance(self.output_data, dict):
-                log_dict['output_data'] = to_str(flattened(
+                log_dict['output_data'] = to_str(flatten(
                     self.output_data, sep=sep
                 ))
         
@@ -69,9 +78,9 @@ class DLog:
 
 
     @classmethod
-    def deserialize(cls, input_str, output_str, unflatten_ = True,sep="[*]") -> Dict[str, Any]:
+    def deserialize(cls, input_str, output_str, unflatten_ = True, sep="[^_^]") -> Dict[str, Any]:
         """
-        [_], and [^] are reserved, do not add this in dictionary keys, otherwise the structrue 
+        [^_^] is reserved, do not add this in dictionary keys, otherwise the structrue 
         won't be reserved
         
         Converts the DLog instance to a dictionary, suitable for serialization. This
@@ -201,7 +210,7 @@ class DataLogger:
         verbose: bool = True,
         clear: bool = True,
         flatten_=True, 
-        sep='[*]',
+        sep='[^_^]',
         index=False, 
         **kwargs,
     ) -> None:
@@ -264,7 +273,7 @@ class DataLogger:
         verbose: bool = True,
         clear: bool = True,
         flatten_=True, 
-        sep='[*]',
+        sep='[^_^]',
         index=False, 
         **kwargs,
     ) -> None:
@@ -323,7 +332,7 @@ class DataLogger:
         try:
             logs = [log.serialize(flatten_=flatten_, sep=sep) for log in self.log]
             df = to_df(to_list(logs, flatten=True))
-            df.to_json(filepath, **kwargs)
+            df.to_json(filepath, index=index, **kwargs)
             if verbose:
                 print(f"{len(self.log)} logs saved to {filepath}")
             if clear:

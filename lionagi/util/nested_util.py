@@ -178,7 +178,7 @@ def nmerge(
 
 
 # flatten dictionary
-def flattened(
+def flatten(
     nested_structure: Any,
     parent_key: str = "",
     sep: str = "_",
@@ -208,11 +208,11 @@ def flattened(
 
     examples:
         >>> nested_dict = {'a': {'b': {'c': 1}}}
-        >>> flattened(nested_dict)
+        >>> flatten(nested_dict)
         {'a_b_c': 1}
 
         >>> nested_list = [{'a': 1}, {'b': 2}]
-        >>> flattened(nested_list, dict_only=True)
+        >>> flatten(nested_list, dict_only=True)
         {'0_a': 1, '1_b': 2}
     """
     if inplace:
@@ -430,13 +430,13 @@ def get_flattened_keys(
     """
     if inplace:
         obj_copy = SysUtil.create_copy(nested_structure, num=1)
-        flattened(
+        flatten(
             obj_copy, sep=sep, max_depth=max_depth, inplace=True, dict_only=dict_only
         )
         return list(obj_copy.keys())
     else:
         return list(
-            flattened(
+            flatten(
                 nested_structure, sep=sep, max_depth=max_depth, dict_only=dict_only
             ).keys()
         )

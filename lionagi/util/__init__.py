@@ -14,7 +14,7 @@ from lionagi.util.convert_util import (
 )
 
 from lionagi.util.nested_util import (
-    flattened,
+    flatten,
     get_flattened_keys,
     nfilter,
     nget,
@@ -50,7 +50,7 @@ __all__ = [
     "to_list",
     "to_str",
     "to_readable_dict",
-    "flattened",
+    "flatten",
     "get_flattened_keys",
     "nfilter",
     "nget",
