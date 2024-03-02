@@ -14,7 +14,7 @@ def lcall(
     results and drop None values.
 
     this function facilitates the batch application of a transformation or operation
-    to each item in an input list. it is versatile, supporting both flattening of the
+    to each input_ in an input list. it is versatile, supporting both flattening of the
     result list and removal of None values from the output, making it suitable for a
     wide range of data manipulation tasks. additional arguments to the applied
     function can be passed dynamically, allowing for flexible function application.

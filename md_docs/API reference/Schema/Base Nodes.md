@@ -55,7 +55,7 @@ Deserializes a component from a JSON string. This method is particularly useful 
 
 ```python
 json_str = '''{"id_": "123", "metadata": {"author": "John Doe"}}'''
-component = BaseComponent.from_json(json_str)
+component = BaseComponent.from_json_string(json_str)
 print(component.metadata)  # Output: {'author': 'John Doe'}
 ```
 

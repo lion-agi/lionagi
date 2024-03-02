@@ -13,7 +13,7 @@ from typing import (
 )
 
 from lionagi.util.sys_util import SysUtil
-from lionagi.util.convert_util import ConvertUtil
+from lionagi.util.convert_util import ConvertUtil, to_list
 
 
 def nset(nested_structure: Dict | List, indices: List[int | str], value: Any) -> None:
@@ -121,7 +121,7 @@ def nget(
 # nested merge
 def nmerge(
     nested_structure: List[Dict | List | Iterable],
-    dict_update: bool = False,
+    overwrite: bool = False,
     dict_sequence: bool = False,
     sequence_separator: str = "_",
     sort_list: bool = False,
@@ -141,7 +141,7 @@ def nmerge(
     to False, preserving original keys. dict_sequence: Enables unique key
     generation for duplicate keys by appending a sequence number,
     using `sequence_separator` as the delimiter. applicable only if `dict_update`
-    is False. sequence_separator: The separator used when generating unique keys
+    is False. sequence_separator: The sep used when generating unique keys
     for duplicate dictionary keys. sort_list: When true, sort the resulting list
     after merging. it Does not affect dictionaries. custom_sort: An optional callable
     that defines custom sorting logic for the merged list.
@@ -156,7 +156,7 @@ def nmerge(
         contains objects of incompatible types that cannot be merged.
 
     examples:
-        >>> nmerge([{'a': 1}, {'b': 2}], dict_update=True)
+        >>> nmerge([{'a': 1}, {'b': 2}], overwrite=True)
         {'a': 1, 'b': 2}
 
         >>> nmerge([[1, 2], [3, 4]], sort_list=True)
@@ -164,7 +164,7 @@ def nmerge(
     """
     if ConvertUtil.is_homogeneous(nested_structure, Dict):
         return _merge_dicts(
-            nested_structure, dict_update, dict_sequence, sequence_separator
+            nested_structure, overwrite, dict_sequence, sequence_separator
         )
     elif ConvertUtil.is_homogeneous(nested_structure, List) and not any(
         isinstance(it, (Dict, str)) for it in nested_structure
@@ -178,7 +178,7 @@ def nmerge(
 
 
 # flatten dictionary
-def flatten(
+def flattened(
     nested_structure: Any,
     parent_key: str = "",
     sep: str = "_",
@@ -195,7 +195,7 @@ def flatten(
 
     Args: nested_structure: The nested dictionary or list to flatten. parent_key: A
     prefix for all keys in the flattened dictionary, useful for nested calls. sep:
-    The separator used between levels in composite keys. max_depth: The maximum
+    The sep used between levels in composite keys. max_depth: The maximum
     depth to flatten; if None, flattens completely. inplace: If True, modifies
     `nested_structure` in place; otherwise, returns a new dictionary. dict_only: If
     True, only flattens nested dictionaries, leaving lists intact.
@@ -208,11 +208,11 @@ def flatten(
 
     examples:
         >>> nested_dict = {'a': {'b': {'c': 1}}}
-        >>> flatten(nested_dict)
+        >>> flattened(nested_dict)
         {'a_b_c': 1}
 
         >>> nested_list = [{'a': 1}, {'b': 2}]
-        >>> flatten(nested_list, dict_only=True)
+        >>> flattened(nested_list, dict_only=True)
         {'0_a': 1, '1_b': 2}
     """
     if inplace:
@@ -246,7 +246,7 @@ def unflatten(
 
     Args:
         flat_dict: A flat dictionary with composite keys to unflatten.
-        sep: The separator used in composite keys, indicating nested levels.
+        sep: The sep used in composite keys, indicating nested levels.
         custom_logic: An optional function to process each part of the composite keys.
         max_depth: The maximum depth for nesting during reconstruction.
 
@@ -298,8 +298,8 @@ def nfilter(
 
     Args: nested_structure (Dict | List): The collection to filter, either a
     dictionary or a list. condition (Callable[[Any], bool]): A function that
-    evaluates each item (or key-value pair in the case of dictionaries) against a
-    condition. returns True to include the item in the result, False otherwise.
+    evaluates each input_ (or key-value pair in the case of dictionaries) against a
+    condition. returns True to include the input_ in the result, False otherwise.
 
     Returns: Dict | List: A new collection of the same types as `collection`,
     containing only items that meet the condition.
@@ -323,7 +323,7 @@ def nfilter(
 
 def ninsert(
     nested_structure: Dict | List,
-    parts: List[str | int],
+    indices: List[str | int],
     value: Any,
     sep: str = "_",
     max_depth: int | None = None,
@@ -333,14 +333,14 @@ def ninsert(
     inserts a value into a nested structure at a specified path.
 
     navigates a nested dictionary or list based on a sequence of indices or keys (
-    `parts`) and inserts `value` at the final location. this method can create
+    `indices`) and inserts `value` at the final location. this method can create
     intermediate dictionaries or lists as needed.
 
-    Args: nested_structure (Dict | List): The nested structure to modify. parts (
+    Args: nested_structure (Dict | List): The nested structure to modify. indices (
     List[str | int]): The sequence of keys (str for dicts) or indices (int for
     lists) defining the path to the insertion point. value (Any): The value to
-    insert at the specified location within `subject`. sep (str): A separator used
-    when concatenating parts to form composite keys in case of ambiguity. defaults
+    insert at the specified location within `subject`. sep (str): A sep used
+    when concatenating indices to form composite keys in case of ambiguity. defaults
     to '_'. max_depth (int | None): Limits the depth of insertion. if `None`,
     no limit is applied. current_depth (int): Internal use only; tracks the current
     depth during recursive calls.
@@ -354,9 +354,10 @@ def ninsert(
         >>> ninsert(subject_, [0, 'a'], 1)
         >>> assert subject_ == [{'a': 1}]
     """
-    parts_len = len(parts)
+    indices = to_list(indices)
+    parts_len = len(indices)
     parts_depth = 0
-    for i, part in enumerate(parts[:-1]):
+    for i, part in enumerate(indices[:-1]):
         if max_depth is not None and current_depth >= max_depth:
             break
 
@@ -366,21 +367,21 @@ def ninsert(
             if nested_structure[part] is None or not isinstance(
                 nested_structure[part], (dict, list)
             ):
-                next_part = parts[i + 1]
+                next_part = indices[i + 1]
                 nested_structure[part] = [] if isinstance(next_part, int) else {}
             nested_structure = nested_structure[part]
         else:
             if part not in nested_structure:
-                next_part = parts[i + 1]
+                next_part = indices[i + 1]
                 nested_structure[part] = [] if isinstance(next_part, int) else {}
             nested_structure = nested_structure[part]
         current_depth += 1
         parts_depth += 1
 
     if parts_depth < parts_len - 1:
-        last_part = sep.join([str(part) for part in parts[parts_depth:]])
+        last_part = sep.join([str(part) for part in indices[parts_depth:]])
     else:
-        last_part = parts[-1]
+        last_part = indices[-1]
     if isinstance(last_part, int):
         _handle_list_insert(nested_structure, last_part, value)
     else:
@@ -406,7 +407,7 @@ def get_flattened_keys(
     in-place modifications, and can be limited to processing dictionaries only.
 
     Args: nested_structure: The nested dictionary or list to process. sep: The
-    separator used between nested keys in the flattened keys. defaults to '_'.
+    sep used between nested keys in the flattened keys. defaults to '_'.
     max_depth: The maximum depth to flatten. if None, flattens the structure
     completely. dict_only: If True, only processes nested dictionaries, leaving
     lists as values. inplace: If True, flattens `nested_structure` in place,
@@ -429,13 +430,13 @@ def get_flattened_keys(
     """
     if inplace:
         obj_copy = SysUtil.create_copy(nested_structure, num=1)
-        flatten(
+        flattened(
             obj_copy, sep=sep, max_depth=max_depth, inplace=True, dict_only=dict_only
         )
         return list(obj_copy.keys())
     else:
         return list(
-            flatten(
+            flattened(
                 nested_structure, sep=sep, max_depth=max_depth, dict_only=dict_only
             ).keys()
         )
@@ -585,7 +586,7 @@ def _dynamic_flatten_generator(
 
     Args: nested_structure: The nested object to flatten, which can be either a
     dictionary or a list. parent_key: A tuple of keys representing the path to the
-    current position within the nested structure. sep: The separator to use between
+    current position within the nested structure. sep: The sep to use between
     keys in the flattened keys. Defaults to '_'. max_depth: The maximum depth to
     traverse. If None, no limit is applied. Defaults to None. current_depth:
     Current depth in the nested structure, used internally for recursive depth
@@ -656,10 +657,10 @@ def _merge_dicts(
     """
     Merges a list of dictionaries into a single dictionary.
 
-    Args: iterables: A list of dictionaries to be merged.dict_update: If True,
+    Args: iterables: A list of dictionaries to be merged.overwrite: If True,
     the value of a key in a later dictionary overwrites the previous one.
     dict_sequence: If True, instead of overwriting, keys are made unique by
-    appending a sequence number. sequence_separator: The separator to use when
+    appending a sequence number. sequence_separator: The sep to use when
     creating unique keys in case of dict_sequence.
 
     Returns: A merged dictionary containing the combined key-value pairs from all

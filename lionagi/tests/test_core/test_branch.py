@@ -64,7 +64,7 @@ class TestBranch(unittest.TestCase):
     def test_from_json(self, mock_from_json):
         """Test creating a Branch instance from a JSON file."""
         filepath = "path/to/your/jsonfile.json"
-        Branch.from_json(filepath=filepath, branch_name="TestBranchFromJSON")
+        Branch.from_json_string(filepath=filepath, branch_name="TestBranchFromJSON")
         mock_from_json.assert_called_once_with(filepath=filepath, read_kwargs=None,branch_name='TestBranchFromJSON',
                                                service=None, llmconfig=None, tools=None, datalogger=None,
                                                persist_path=None, tool_manager=None)

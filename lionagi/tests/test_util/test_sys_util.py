@@ -26,7 +26,7 @@ class TestGetTimestamp(unittest.TestCase):
         self.assertNotIn('.', timestamp)
 
     def test_custom_separator(self):
-        timestamp = SysUtil.get_timestamp(separator='-')
+        timestamp = SysUtil.get_timestamp(sep='-')
         self.assertNotIn(':', timestamp)
         self.assertNotIn('.', timestamp)
         self.assertIn('-', timestamp)

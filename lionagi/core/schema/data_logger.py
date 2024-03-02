@@ -4,7 +4,7 @@ from dataclasses import dataclass
 from pathlib import Path
 from typing import Any, Dict, List
 
-from lionagi.util import SysUtil, to_df, to_list, PathUtil, to_dict, flatten, unflatten, to_str
+from lionagi.util import SysUtil, to_df, to_list, PathUtil, to_dict, flattened, unflatten, to_str
 
 
 @dataclass
@@ -51,11 +51,11 @@ class DLog:
         
         if flatten_:
             if isinstance(self.input_data, dict):
-                log_dict['input_data'] = to_str(flatten(
+                log_dict['input_data'] = to_str(flattened(
                     self.input_data, sep=sep
                 )) 
             if isinstance(self.output_data, dict):
-                log_dict['output_data'] = to_str(flatten(
+                log_dict['output_data'] = to_str(flattened(
                     self.output_data, sep=sep
                 ))
         

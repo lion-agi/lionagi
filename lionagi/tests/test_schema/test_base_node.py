@@ -26,7 +26,7 @@ class TestBaseComponent(unittest.TestCase):
     def test_json_serialization(self):
         """Test that an object is correctly serialized to JSON."""
         component = BaseComponent(metadata={"key": "value"})
-        component_json = component.to_json_string()
+        component_json = component.to_json_data()
 
         # Convert JSON string back to a dictionary to check values
         component_dict = json.loads(component_json)
@@ -39,7 +39,7 @@ class TestBaseComponent(unittest.TestCase):
     def test_from_json_valid_data(self):
         """Test object creation from valid JSON string."""
         json_str = '{"node_id": "test_id123", "timestamp": "2021-01-01T00:00:00", "meta": {"key": "value"}}'
-        component = BaseComponent.from_json(json_str)
+        component = BaseComponent.from_json_string(json_str)
 
         self.assertEqual(component.id_, "test_id123")
         self.assertEqual(component.timestamp, "2021-01-01T00:00:00")
@@ -133,8 +133,8 @@ class TestBaseComponent(unittest.TestCase):
 
     def test_has_metadata_key(self):
         """Test checking the existence of a metadata key."""
-        self.assertTrue(self.component.has_meta_key("initial_key"))
-        self.assertFalse(self.component.has_meta_key("nonexistent_key"))
+        self.assertTrue(self.component.meta_has_key("initial_key"))
+        self.assertFalse(self.component.meta_has_key("nonexistent_key"))
 
     def test_metadata_addition_and_retrieval(self):
         """Test adding and retrieving metadata."""
@@ -245,7 +245,7 @@ class TestBaseNode(unittest.TestCase):
     def test_inheritance_integrity_metadata(self):
         """Ensure inherited metadata functionality works correctly."""
         node = BaseNode(metadata={"inherited": "true"})
-        self.assertTrue(node.has_meta_key("inherited"))
+        self.assertTrue(node.meta_has_key("inherited"))
 
 class TestBaseRelatableNode(unittest.TestCase):
 

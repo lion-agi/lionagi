@@ -78,7 +78,7 @@ class TestToolParser(unittest.TestCase):
 
     def test_tool_parser_single_tool(self):
         """Test parsing a single tool name."""
-        parsed = self.manager._tool_parser('test_func')
+        parsed = self.manager.parse_tool('test_func')
         self.assertIn('tools', parsed)
         self.assertEqual(len(parsed['tools']), 1)
         self.assertEqual(parsed['tools'][0]['function']['name'], 'test_func')
@@ -86,7 +86,7 @@ class TestToolParser(unittest.TestCase):
     def test_tool_parser_unregistered_tool(self):
         """Test parsing an unregistered tool name."""
         with self.assertRaises(ValueError):
-            self.manager._tool_parser('unregistered_func')
+            self.manager.parse_tool('unregistered_func')
 
 
 if __name__ == '__main__':

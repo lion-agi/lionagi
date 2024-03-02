@@ -4,17 +4,17 @@ from lionagi.util.import_util import ImportUtil
 from lionagi.util.async_util import AsyncUtil
 
 from lionagi.util.convert_util import (
-    ConvertUtil, 
-    str_to_num, 
-    to_df, 
-    to_dict, 
-    to_list, 
+    ConvertUtil,
+    to_num,
+    to_df,
+    to_dict,
+    to_list,
     to_str,
     to_readable_dict
 )
 
 from lionagi.util.nested_util import (
-    flatten,
+    flattened,
     get_flattened_keys,
     nfilter,
     nget,
@@ -44,13 +44,13 @@ __all__ = [
     "ImportUtil",
     "AsyncUtil",
     "ConvertUtil",
-    "str_to_num",
+    "to_num",
     "to_df",
     "to_dict",
     "to_list",
     "to_str",
     "to_readable_dict",
-    "flatten",
+    "flattened",
     "get_flattened_keys",
     "nfilter",
     "nget",

@@ -6,7 +6,7 @@ class TestBaseTokenizer(unittest.TestCase):
     def test_complex_script(self):
         script = """
         BEGIN; IF condition1 && condition2 || !condition3; DO action1(param1, param2); ENDIF;
-        FOR item IN collections DO action2(item.param1, item.param2); ENDFOR; END;
+        FOR input_ IN collections DO action2(input_.param1, input_.param2); ENDFOR; END;
         """
         tokenizer = BaseTokenizer(script)
         tokens = tokenizer.get_tokens()

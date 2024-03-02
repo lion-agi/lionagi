@@ -1,9 +1,11 @@
 import copy
 import os
-from datetime import datetime
+from datetime import datetime, timezone
 from hashlib import sha256
 from typing import Any, Dict, List
 
+
+_timestamp_syms = ['-', ':', '.']
 
 class SysUtil:
 
@@ -14,11 +16,15 @@ class SysUtil:
             dict_[new_key] = dict_.pop(old_key)
 
     @staticmethod
-    def get_timestamp(separator: str = "_") -> str:
-        """Returns a timestamp string with optional custom separators for ':' and '.'."""
-        return (
-            datetime.now().isoformat().replace(":", separator).replace(".", separator)
-        )
+    def get_timestamp(tz=timezone.utc, sep: str = "_") -> str:
+        """
+        Returns a timestamp string with optional custom separators and timezone.
+        """
+        str_ = datetime.now(tz=tz).isoformat()
+        if sep is not None:
+            for sym in _timestamp_syms:
+                str_ = str_.replace(sym, sep)
+        return str_
 
     @staticmethod
     def is_schema(dict_: Dict[Any, Any], schema: Dict[Any, type]) -> bool:

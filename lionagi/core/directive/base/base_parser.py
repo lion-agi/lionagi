@@ -209,5 +209,5 @@ class BaseParser:
 
 
 # "IF condition1 && condition2; DO action2; ELSE; DO action3; ENDIF;"
-# "FOR item IN collections; DO action(item); ENDFOR;"
-# "TRY; DO action(); EXCEPT; DO action(item); ENDTRY;"
+# "FOR input_ IN collections; DO action(input_); ENDFOR;"
+# "TRY; DO action(); EXCEPT; DO action(input_); ENDTRY;"

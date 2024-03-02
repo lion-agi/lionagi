@@ -268,7 +268,7 @@
 #                 parameters.append(self.current_token.value)  # Add parameter to list
 #                 self.next_token()
 #                 if self.current_token.value == ',':
-#                     self.next_token()  # Skip comma separator
+#                     self.next_token()  # Skip comma sep
 #             self.next_token()  # Move past ')'
 #
 #         return {"action": action_name, "parameters": parameters}
@@ -338,7 +338,7 @@
 #                     parameters.append(self.current_token.value)
 #                     self.next_token()
 #                 if self.current_token.value == ',':
-#                     self.next_token()  # Skip comma separator
+#                     self.next_token()  # Skip comma sep
 #             self.next_token()  # Move past ')'
 #
 #         return {"action": action_name, "parameters": parameters}
@@ -548,7 +548,7 @@
 #                     parameters.append(self.current_token.value)
 #                     self.next_token()
 #                 if self.current_token.value == ',':
-#                     self.next_token()  # Skip comma separator
+#                     self.next_token()  # Skip comma sep
 #             self.next_token()  # Move past ')'
 #
 #         return {"action": action_name, "parameters": parameters}

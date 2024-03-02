@@ -124,7 +124,7 @@ class Branch(BaseBranch):
         return self
 
     @classmethod
-    def from_json(
+    def from_json_string(
         cls,
         filepath,
         branch_name=None,

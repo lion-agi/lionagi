@@ -18,7 +18,7 @@
 @staticmethod
 async def call_chatcompletion(
 	branch: 'Branch', sender: str | None = None,
-    with_sender: bool = False, tokenizer_kwargs: dict = {},
+    with_sender: bool = False,
     **kwargs) -> None:
     """Asynchronously calls the chat completion service with the current message queue."""
 ```
@@ -27,7 +27,6 @@ async def call_chatcompletion(
   - `branch`: The [[Branch]] instance calling the service.
   - `sender`: The name of the sender to include in chat completions (optional).
   - `with_sender`: If True, includes sender information in messages.
-  - `tokenizer_kwargs`: Keyword arguments for the tokenizer used in chat completion.
   - `**kwargs`: Arbitrary keyword arguments for the chat completion service.
 
 #### chat

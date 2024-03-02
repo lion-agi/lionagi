@@ -294,7 +294,7 @@ class BaseBranch(BaseRelatableNode, ABC):
         return cls._from_csv(**kwargs)
 
     @classmethod
-    def from_json(cls, **kwargs) -> "BaseBranch":
+    def from_json_string(cls, **kwargs) -> "BaseBranch":
 
         return cls._from_json(**kwargs)
 

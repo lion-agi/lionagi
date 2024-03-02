@@ -193,7 +193,7 @@ class TestBaseBranch(unittest.TestCase):
         mock_read_csv.return_value = mock_messages_df
 
         # Call the from_csv class method
-        branch = BaseBranch.from_json(filename='dummy.json')
+        branch = BaseBranch.from_json_string(filename='dummy.json')
 
         # Verify that read_csv was called correctly
         mock_read_csv.assert_called_once_with('dummy.json')

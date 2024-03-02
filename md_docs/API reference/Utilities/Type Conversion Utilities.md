@@ -53,7 +53,8 @@ Converts a string to a numeric type (int or float), with options for upper and l
 ### Usage
 
 ```python
-number = ConvertUtil.str_to_num(input_, upper_bound=None, lower_bound=None, num_type=int, precision=None)
+number = ConvertUtil.to_num(input_, upper_bound=None, lower_bound=None, num_type=int,
+                            precision=None)
 ```
 
 ### Parameters

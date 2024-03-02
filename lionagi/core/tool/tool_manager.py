@@ -33,6 +33,10 @@ class ToolManager:
         """
         return True if name in self.registry.keys() else False
 
+    @property
+    def has_tools(self):
+        return self.registry != {}
+
     def _register_tool(self, tool: Tool) -> None:
         """
         Registers a tool in the registry. Raises a TypeError if the object is not an instance of Tool.
@@ -98,12 +102,12 @@ class ToolManager:
         try:
             func = response["action"][7:]
             args = to_dict(response["arguments"])
-            return (func, args)
+            return func, args
         except:
             try:
                 func = response["recipient_name"].split(".")[-1]
                 args = response["parameters"]
-                return (func, args)
+                return func, args
             except:
                 raise ValueError("response is not a valid function call")
 
@@ -129,7 +133,7 @@ class ToolManager:
             schema_list.append(tool.schema_)
         return schema_list
 
-    def _tool_parser(
+    def parse_tool(
         self, tools: Union[Dict, Tool, List[Tool], str, List[str], List[Dict]], **kwargs
     ) -> Dict:
         """

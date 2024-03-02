@@ -8,18 +8,6 @@ class ChatFlow:
 
     @staticmethod
     async def call_chatcompletion(branch, sender=None, with_sender=False, **kwargs):
-        """
-        Asynchronously calls the chat completion service with the current message queue.
-
-        Args:
-            branch: The Branch instance calling the service.
-            sender (Optional[str]): The name of the sender to include in chat completions.
-            with_sender (bool): If True, includes sender information in messages.
-            **kwargs: Arbitrary keyword arguments for the chat completion service.
-
-        Examples:
-            >>> await ChatFlow.call_chatcompletion(branch,sender="user")
-        """
         messages = (
             branch.chat_messages
             if not with_sender
@@ -49,23 +37,6 @@ class ChatFlow:
         invoke: bool = True,
         **kwargs,
     ) -> Any:
-        """
-        a chat conversation with LLM, processing instructions and system messages, optionally invoking tools.
-
-        Args:
-            branch: The Branch instance to perform chat operations.
-            instruction (Union[Instruction, str]): The instruction for the chat.
-            context (Optional[Any]): Additional context for the chat.
-            sender (Optional[str]): The sender of the chat message.
-            system (Optional[Union[System, str, Dict[str, Any]]]): System message to be processed.
-            tools (Union[bool, Tool, List[Tool], str, List[str]]): Specifies tools to be invoked.
-            out (bool): If True, outputs the chat response.
-            invoke (bool): If True, invokes tools as part of the chat.
-            **kwargs: Arbitrary keyword arguments for chat completion.
-
-        Examples:
-            >>> await ChatFlow.chat(branch, "Ask about user preferences")
-        """
         if system:
             branch.change_first_system_message(system)
         branch.add_message(instruction=instruction, context=context, sender=sender)
@@ -76,7 +47,7 @@ class ChatFlow:
             kwargs = {**tool_kwarg, **kwargs}
         else:
             if tools and branch.has_tools:
-                kwargs = branch.tool_manager._tool_parser(tools=tools, **kwargs)
+                kwargs = branch.tool_manager.parse_tool(tools=tools, **kwargs)
 
         config = {**branch.llmconfig, **kwargs}
         if sender is not None:
@@ -129,22 +100,6 @@ class ChatFlow:
         num_rounds: int = 1,
         **kwargs,
     ):
-        """
-        Performs a reason-action cycle with optional tool invocation over multiple rounds.
-
-        Args:
-            branch: The Branch instance to perform ReAct operations.
-            instruction (Union[Instruction, str]): Initial instruction for the cycle.
-            context: Context relevant to the instruction.
-            sender (Optional[str]): Identifier for the message sender.
-            system: Initial system message or configuration.
-            tools: Tools to be registered or used during the cycle.
-            num_rounds (int): Number of reason-action cycles to perform.
-            **kwargs: Additional keyword arguments for customization.
-
-        Examples:
-            >>> await ChatFlow.ReAct(branch, "Analyze user feedback", num_rounds=2)
-        """
         if tools is not None:
             if isinstance(tools, list) and isinstance(tools[0], Tool):
                 branch.register_tools(tools)
@@ -155,7 +110,7 @@ class ChatFlow:
             )
 
         else:
-            kwargs = branch.tool_manager._tool_parser(tools=True, **kwargs)
+            kwargs = branch.tool_manager.parse_tool(tools=True, **kwargs)
 
         i = 0
         while i < num_rounds:
@@ -204,25 +159,8 @@ class ChatFlow:
         out=True,
         **kwargs,
     ) -> None:
-        """
-        Automatically performs follow-up actions based on chat interactions and tool invocations.
-
-        Args:
-            branch: The Branch instance to perform follow-up operations.
-            instruction (Union[Instruction, str]): The initial instruction for follow-up.
-            context: Context relevant to the instruction.
-            sender (Optional[str]): Identifier for the message sender.
-            system: Initial system message or configuration.
-            tools: Specifies tools to be considered for follow-up actions.
-            max_followup (int): Maximum number of follow-up chats allowed.
-            out (bool): If True, outputs the result of the follow-up action.
-            **kwargs: Additional keyword arguments for follow-up customization.
-
-        Examples:
-            >>> await ChatFlow.auto_followup(branch, "Finalize report", max_followup=2)
-        """
         if branch.tool_manager.registry != {} and tools:
-            kwargs = branch.tool_manager._tool_parser(tools=tools, **kwargs)
+            kwargs = branch.tool_manager.parse_tool(tools=tools, **kwargs)
 
         n_tries = 0
         while (max_followup - n_tries) > 0:
@@ -265,4 +203,6 @@ class ChatFlow:
             return await branch.chat(
                 instruction, sender=sender, tool_parsed=True, **kwargs
             )
+
+
 

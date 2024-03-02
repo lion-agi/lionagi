@@ -197,7 +197,7 @@ class CallDecorator:
         such as transforming data fetched from an API or processing items in a
         collection concurrently.
 
-        The mapping function is applied to each item in the output list of the
+        The mapping function is applied to each input_ in the output list of the
         decorated function, enabling patterned modifications or transformations to be
         succinctly applied to a collection of asynchronous results.
 
@@ -436,7 +436,7 @@ class CallDecorator:
 
         Args:
             predicate (Callable[[Any], bool]):
-                A function that evaluates each item in the list. Items for which the
+                A function that evaluates each input_ in the list. Items for which the
                 predicate returns True are included in the final result.
 
         Returns:
@@ -545,7 +545,7 @@ class CallDecorator:
 
         Examples:
             >>> @CallDecorator.max_concurrency(3)
-            ... async def process_data(item):
+            ... async def process_data(input_):
             ...     # Asynchronous processing logic here
             ...     pass
             ... # No more than 3 instances of `process_data` will run concurrently.

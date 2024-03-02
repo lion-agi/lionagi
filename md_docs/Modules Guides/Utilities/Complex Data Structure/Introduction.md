@@ -42,7 +42,7 @@ Flattening is particularly useful for converting nested dictionaries into a sing
 **Example Usage:**
 
 ```python
-from lionagi import flatten
+from lionagi import flattened
 from lionagi.util import to_list
 
 # Flattening a nested list
@@ -52,7 +52,7 @@ print('Flattened list:', flat_list)
 
 # Flattening a nested dictionary
 nested_dict = {'a': [1, 2, {'b': 3}], 'c': {'d': 4, 'e': {'f': [5, 6, 7]}}}
-flattened_dict = flatten(nested_dict)
+flattened_dict = flattened(nested_dict)
 print('Flattened dictionary:', flattened_dict)
 ```
 

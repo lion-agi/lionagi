@@ -324,7 +324,7 @@ class Session:
             Branch: A new Branch instance created from the JSON data.
 
         Examples:
-            >>> branch = Branch.from_json("path/to/messages.json", name="JSONBranch")
+            >>> branch = Branch.from_json_string("path/to/messages.json", name="JSONBranch")
         """
         df = pd.read_json(filepath, **kwargs)
         self = cls(
@@ -496,7 +496,7 @@ class Session:
 
     # ----- chatflow ----#
     async def call_chatcompletion(
-        self, branch=None, sender=None, with_sender=False, tokenizer_kwargs={}, **kwargs
+        self, branch=None, sender=None, with_sender=False, **kwargs
     ):
         """
         Asynchronously calls the chat completion service with the current message queue.
@@ -515,7 +515,6 @@ class Session:
         await branch.call_chatcompletion(
             sender=sender,
             with_sender=with_sender,
-            tokenizer_kwargs=tokenizer_kwargs,
             **kwargs,
         )
 
@@ -841,7 +840,7 @@ class Session:
                 self.branch_manager.collect(branch)
         else:
             if not isinstance(from_, list):
-                from_ = [from_]
+                from_ = to_list(from_)
             for branch in from_:
                 if isinstance(branch, Branch):
                     branch = branch.name
