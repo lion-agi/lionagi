@@ -48,7 +48,7 @@ def lcall(
         >>> lcall([1, 2, None], lambda x: [x, x] if x else x, flatten=True, dropna=True)
         [1, 1, 2, 2]
     """
-    lst = to_list(input_=input_, dropna=dropna)
+    lst = to_list(input_, dropna=dropna)
     if len(to_list(func)) != 1:
         raise ValueError("There must be one and only one function for list calling.")
 
@@ -92,7 +92,7 @@ async def alcall(
         [1, 4, 9]
     """
     if input_:
-        lst = to_list(input_=input_)
+        lst = to_list(input_)
         tasks = [func(i, **kwargs) for i in lst]
     else:
         tasks = [func(**kwargs)]
@@ -365,7 +365,7 @@ async def _alcall(
         >>> asyncio.run(alcall([1, 2, 3], square))
         [1, 4, 9]
     """
-    lst = to_list(input_=input_)
+    lst = to_list(input_)
     tasks = [AsyncUtil.handle_async_sync(func, i, **kwargs) for i in lst]
     outs = await AsyncUtil.execute_tasks(*tasks)
     return to_list(outs, flatten=flatten)
