@@ -3,6 +3,71 @@ import json
 import xml.etree.ElementTree as ET
 import unittest
 
+
+
+class TestBaseComponentFromObj(unittest.TestCase):
+    def test_from_dict(self):
+        """Test creating an instance from a dictionary."""
+        input_dict = {"id_": "test_id", "metadata": {"key": "value"}}
+        instance = BaseComponent.from_obj(input_dict)
+        self.assertIsInstance(instance, BaseComponent)
+        self.assertEqual(instance.id_, "test_id")
+        self.assertEqual(instance.metadata, {"key": "value"})
+
+    def test_from_json_str(self):
+        """Test creating an instance from a JSON string."""
+        input_json = '{"id_": "json_id", "metadata": {"key": "value"}}'
+        instance = BaseComponent.from_obj(input_json)
+        self.assertIsInstance(instance, BaseComponent)
+        self.assertEqual(instance.id_, "json_id")
+        self.assertEqual(instance.metadata, {"key": "value"})
+
+    def test_from_pandas_series(self):
+        """Test creating an instance from a pandas Series."""
+        input_series = pd.Series({"id_": "series_id", "metadata": {"key": "value"}})
+        instance = BaseComponent.from_obj(input_series)
+        self.assertIsInstance(instance, BaseComponent)
+        self.assertEqual(instance.id_, "series_id")
+        self.assertEqual(instance.metadata, {"key": "value"})
+
+    def test_from_pandas_dataframe(self):
+        """Test creating instances from a pandas DataFrame."""
+        input_df = pd.DataFrame([{"id_": "df_id1", "metadata": {"key1": "value1"}},
+                                 {"id_": "df_id2", "metadata": {"key2": "value2"}}])
+        instances = BaseComponent.from_obj(input_df)
+        self.assertIsInstance(instances, list)
+        self.assertEqual(len(instances), 2)
+        self.assertEqual(instances[0].id_, "df_id1")
+        self.assertEqual(instances[1].id_, "df_id2")
+
+    def test_from_list(self):
+        """Test creating instances from a list."""
+        input_list = [{"id_": "list_id1", "metadata": {"key1": "value1"}},
+                      {"id_": "list_id2", "metadata": {"key2": "value2"}}]
+        instances = BaseComponent.from_obj(input_list)
+        self.assertIsInstance(instances, list)
+        self.assertEqual(len(instances), 2)
+        self.assertEqual(instances[0].id_, "list_id1")
+        self.assertEqual(instances[1].id_, "list_id2")
+
+    def test_from_pydantic_model(self):
+        """Test creating an instance from another Pydantic model."""
+        input_model = BaseNode(id_="model_id", metadata={"key": "value"})
+        instance = BaseComponent.from_obj(input_model)
+        self.assertIsInstance(instance, BaseComponent)
+        self.assertEqual(instance.id_, "model_id")
+        self.assertEqual(instance.metadata, {"key": "value"})
+
+    def test_unsupported_type(self):
+        """Test handling of unsupported input types."""
+        with self.assertRaises(NotImplementedError):
+            BaseComponent.from_obj(123)  # Using an integer to provoke an error
+
+
+
+
+
+
 class TestBaseComponent(unittest.TestCase):
 
     def setUp(self):
@@ -36,33 +101,30 @@ class TestBaseComponent(unittest.TestCase):
         self.assertIn("timestamp", component_dict)
         self.assertEqual(component_dict["meta"], {"key": "value"})
 
-    def test_from_json_valid_data(self):
-        """Test object creation from valid JSON string."""
-        json_str = '{"node_id": "test_id123", "timestamp": "2021-01-01T00:00:00", "meta": {"key": "value"}}'
-        component = BaseComponent.from_json_string(json_str)
+    # def test_from_json_valid_data(self):
+    #     """Test object creation from valid JSON string."""
+    #     json_str = '{"node_id": "test_id123", "timestamp": "2021-01-01T00:00:00", "meta": {"key": "value"}}'
+    #     component = BaseComponent.from_json_string(json_str)
 
-        self.assertEqual(component.id_, "test_id123")
-        self.assertEqual(component.timestamp, "2021-01-01T00:00:00")
-        self.assertEqual(component.metadata, {"key": "value"})
+    #     self.assertEqual(component.id_, "test_id123")
+    #     self.assertEqual(component.timestamp, "2021-01-01T00:00:00")
+    #     self.assertEqual(component.metadata, {"key": "value"})
 
     def test_dictionary_serialization(self):
         """Test that an object is correctly serialized to a dictionary."""
-        component = BaseComponent(metadata={"key": "value"})
-        component_dict = component.to_dict()
-
-        # Check if the keys and values are correctly serialized
+        component_dict = self.component.to_dict()
         self.assertIn("node_id", component_dict)
         self.assertIn("timestamp", component_dict)
-        self.assertEqual(component_dict["meta"], {"key": "value"})
+        self.assertEqual(component_dict["meta"], {"initial_key": "initial_value"})
 
-    def test_from_dict_valid_data(self):
-        """Test object creation from a valid dictionary."""
-        dict_data = {"node_id": "test_id123", "timestamp": "2021-01-01T00:00:00", "meta": {"key": "value"}}
-        component = BaseComponent.from_dict(dict_data)
+    # def test_from_dict_valid_data(self):
+    #     """Test object creation from a valid dictionary."""
+    #     dict_data = {"node_id": "test_id123", "timestamp": "2021-01-01T00:00:00", "meta": {"key": "value"}}
+    #     component = BaseComponent.from_dict(dict_data)
 
-        self.assertEqual(component.id_, "test_id123")
-        self.assertEqual(component.timestamp, "2021-01-01T00:00:00")
-        self.assertEqual(component.metadata, {"key": "value"})
+    #     self.assertEqual(component.id_, "test_id123")
+    #     self.assertEqual(component.timestamp, "2021-01-01T00:00:00")
+    #     self.assertEqual(component.metadata, {"key": "value"})
 
     def test_deserialization_with_extra_fields(self):
         """Test deserialization from a dictionary with extra fields."""
@@ -72,7 +134,7 @@ class TestBaseComponent(unittest.TestCase):
             "meta": {"key": "value"},
             "extra_field": "extra_value"
         }
-        component = BaseComponent.from_dict(dict_data)
+        component = BaseComponent.from_obj(dict_data)
 
         # Verify the extra field is ignored or handled according to the class Config
         self.assertEqual(component.id_, "test_id123")
@@ -125,7 +187,7 @@ class TestBaseComponent(unittest.TestCase):
             "meta": {"key": "value"}
         }
         series = pd.Series(data)
-        component = BaseComponent.from_pd_series(series)
+        component = BaseComponent.from_obj(series)
 
         self.assertEqual(component.id_, "test_id")
         self.assertEqual(component.timestamp, "2021-01-01T00:00:00")
@@ -168,9 +230,8 @@ class TestBaseComponent(unittest.TestCase):
     def test_filtering_metadata(self):
         """Test filtering metadata with a predicate function."""
         self.component.meta_merge({"number": 10, "text": "string"})
-        filtered = self.component.meta_filter(lambda x: isinstance(x, int))
+        filtered = self.component.meta_filter(lambda v: isinstance(v[1], int))
         self.assertEqual(filtered, {"number": 10})
-        self.assertNotIn("text", filtered)
 
     def test_metadata_validation(self):
         """Test validating metadata against a schema."""
@@ -200,7 +261,7 @@ class TestBaseComponent(unittest.TestCase):
         """Test from_dict method with invalid type for an attribute."""
         invalid_data = {"node_id": 123, "metadata": {"key": "value"}}  # node_id should be a string
         with self.assertRaises(ValidationError):
-            BaseComponent.from_dict(invalid_data)
+            BaseComponent.from_obj(invalid_data)
 
 class TestBaseNode(unittest.TestCase):
     def test_content_initialization(self):

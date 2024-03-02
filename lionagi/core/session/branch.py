@@ -7,7 +7,7 @@ from lionagi.util import ConvertUtil
 from lionagi.util.api_util import StatusTracker
 
 from lionagi.core.schema import Tool
-from lionagi.core.action import ToolManager
+from lionagi.core.tool.tool_manager import ToolManager
 from lionagi.core.flow import ChatFlow
 
 from lionagi.core.session.base.base_branch import BaseBranch

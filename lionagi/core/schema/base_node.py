@@ -131,6 +131,7 @@ class BaseComponent(BaseModel, ABC):
         Returns:
             T: An instance of the class created from the pandas Series.
         """
+        pd_kwargs = pd_kwargs or {}
         pd_dict = to_dict(pd_series, **pd_kwargs)
         return cls.from_obj(pd_dict, *args, **kwargs)
 
@@ -153,6 +154,7 @@ class BaseComponent(BaseModel, ABC):
         Returns:
             List[T]: A list of instances of the class created from each row of the pandas DataFrame.
         """
+        pd_kwargs = pd_kwargs or {}
         pd_dict = to_dict(pd_df, as_list=True, **pd_kwargs)
         return cls.from_obj(pd_dict, *args, **kwargs)
 
@@ -175,6 +177,7 @@ class BaseComponent(BaseModel, ABC):
     @from_obj.register(BaseModel)
     @classmethod
     def _(cls, model: BaseModel, *args, model_kwargs=None, **kwargs) -> T:
+        model_kwargs = model_kwargs or {}
         model_dict = model.model_dump(by_alias=True, **model_kwargs)
         return cls.model_validate(model_dict, *args, **kwargs)
 
@@ -514,3 +517,15 @@ class Tool(BaseRelatableNode):
     @field_serializer("func")
     def serialize_func(self, func):
         return func.__name__
+
+
+import unittest
+from datetime import datetime, timezone
+
+import unittest
+from pydantic import ValidationError
+import pandas as pd
+
+
+if __name__ == '__main__':
+    unittest.main()
