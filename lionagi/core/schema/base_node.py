@@ -517,15 +517,3 @@ class Tool(BaseRelatableNode):
     @field_serializer("func")
     def serialize_func(self, func):
         return func.__name__
-
-
-import unittest
-from datetime import datetime, timezone
-
-import unittest
-from pydantic import ValidationError
-import pandas as pd
-
-
-if __name__ == '__main__':
-    unittest.main()

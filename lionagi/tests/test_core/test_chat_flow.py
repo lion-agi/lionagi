@@ -1,4 +1,4 @@
-from lionagi.core.flow.chat_flow import ChatFlow
+from lion_experiment_dev.flows.chat_flow import ChatFlow
 from lionagi.core.session.branch import Branch
 from lionagi.core.action.util import func_to_tool
 

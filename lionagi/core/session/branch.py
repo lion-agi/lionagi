@@ -8,7 +8,7 @@ from lionagi.util.api_util import StatusTracker
 
 from lionagi.core.schema import Tool
 from lionagi.core.tool.tool_manager import ToolManager
-from lionagi.core.flow import ChatFlow
+from lionagi.core.flow.monoflow import MonoChat
 
 from lionagi.core.session.base.base_branch import BaseBranch
 from lionagi.core.session.base.schema import (
@@ -21,19 +21,10 @@ from lionagi.core.session.base.schema import (
 from lionagi.core.session.base.util import MessageUtil
 
 
-OAIService = ""
-
 from dotenv import load_dotenv
 
 load_dotenv()
 
-# try:
-#     from lionagi.integrations.provider import Services
-#
-#     OAIService = Services.OpenAI()
-#
-# except:
-#     pass
 
 T = TypeVar("T", bound=Tool)
 
@@ -101,7 +92,7 @@ class Branch(BaseBranch):
         tools=None,
         datalogger=None,
         persist_path=None,
-        instruction_sets=None,
+        # instruction_sets=None,
         tool_manager=None,
         read_kwargs=None,
         **kwargs,
@@ -133,7 +124,7 @@ class Branch(BaseBranch):
         tools=None,
         datalogger=None,
         persist_path=None,
-        instruction_sets=None,
+        # instruction_sets=None,
         tool_manager=None,
         read_kwargs=None,
         **kwargs,
@@ -318,12 +309,6 @@ class Branch(BaseBranch):
         except:
             return False
 
-    # noinspection PyUnresolvedReferences
-    async def call_chatcompletion(self, sender=None, with_sender=False, **kwargs):
-
-        await ChatFlow.call_chatcompletion(self, sender=sender, with_sender=with_sender,
-                                           **kwargs)
-
     async def chat(
         self,
         instruction: Union[Instruction, str],
@@ -335,9 +320,9 @@ class Branch(BaseBranch):
         invoke: bool = True,
         **kwargs,
     ) -> Any:
-
-        return await ChatFlow.chat(
-            self,
+        
+        flow = MonoChat(self)
+        return await flow.chat(
             instruction=instruction,
             context=context,
             sender=sender,
@@ -358,9 +343,8 @@ class Branch(BaseBranch):
         num_rounds: int = 1,
         **kwargs,
     ):
-
-        return await ChatFlow.ReAct(
-            self,
+        flow = MonoChat(self)
+        return await flow.ReAct(
             instruction=instruction,
             context=context,
             sender=sender,
@@ -382,8 +366,8 @@ class Branch(BaseBranch):
         **kwargs,
     ) -> None:
 
-        return await ChatFlow.auto_followup(
-            self,
+        flow = MonoChat(self)
+        return await flow.auto_followup(
             instruction=instruction,
             context=context,
             sender=sender,
@@ -393,3 +377,28 @@ class Branch(BaseBranch):
             out=out,
             **kwargs,
         )
+        
+    async def followup(
+        self,
+        instruction: Union[Instruction, str],
+        context=None,
+        sender=None,
+        system=None,
+        tools: bool | Tool | List[Tool | str | Dict] | str = False,
+        max_followup: int = 1,
+        out=True,
+        **kwargs,
+    ) -> None:
+        
+        flow = MonoChat(self)
+        return await flow.followup(
+            instruction=instruction,
+            context=context,
+            sender=sender,
+            system=system,
+            tools=tools,
+            max_followup=max_followup,
+            out=out,
+            **kwargs,
+        )
+        

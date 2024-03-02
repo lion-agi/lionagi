@@ -5,11 +5,25 @@ from lionagi.core.schema import Tool
 from lionagi.core.session.base.schema import Instruction, System
 
 
-class BaseChatFlow:
+class BaseMonoFlow:
     
-    def __init__(self, branch):
-        self.branch = branch
+    def __init__(self, branch) -> None:
+        self.branch=branch
         
+
+    @classmethod
+    def class_name(cls) -> str:
+        """
+        Returns the class name of the flow.
+        """
+        return cls.__name__
+
+
+class MonoChat(BaseMonoFlow):
+    
+    def __init__(self, branch) -> None:
+        super().__init__(branch)
+
     def process_chatcompletion(self, payload, completion, sender):
         if "choices" in completion:
             add_msg_config = {"response": completion["choices"][0]}
@@ -31,7 +45,7 @@ class BaseChatFlow:
         payload, completion = await self.branch.service.serve_chat(messages=messages, **kwargs)
         self.process_chatcompletion(payload, completion, sender)
     
-    def create_chat_config(
+    def _create_chat_config(
         self, 
         instruction: Instruction | str,
         context: Optional[Any] = None,
@@ -116,21 +130,14 @@ class BaseChatFlow:
         **kwargs,
     ) -> Any:
 
-        config = self.create_chat_config(
+        config = self._create_chat_config(
             instruction, context, sender, system, tools, **kwargs
         )
 
         await self.call_chatcompletion(**config)
         return self.output(invoke, out)
 
-
-
-class ReActFlow(BaseChatFlow):
-    
-    def __init__(self, branch):
-        super().__init__(branch)
-    
-    def create_config(self, tools, **kwargs):
+    def _create_followup_config(self, tools, **kwargs):
         
         if tools is not None:
             if isinstance(tools, list) and isinstance(tools[0], Tool):
@@ -138,10 +145,13 @@ class ReActFlow(BaseChatFlow):
 
         if not self.branch.tool_manager.has_tools:
             raise ValueError(
-                "No tools found, You need to register tools for ReAct (reason-action)"
+                "No tools found, You need to register tools"
             )
 
-        return self.branch.tool_manager.parse_tool(tools=True, **kwargs)
+        config = self.branch.tool_manager.parse_tool(tools=True, **kwargs)
+        config['tool_parsed'] = True
+        return config
+
 
     async def ReAct(
         self,
@@ -154,7 +164,7 @@ class ReActFlow(BaseChatFlow):
         **kwargs,
     ):
 
-        config = self.create_config(tools, **kwargs)
+        config = self._create_followup_config(tools, **kwargs)
 
         i = 0
         while i < num_rounds:
@@ -181,18 +191,112 @@ class ReActFlow(BaseChatFlow):
                 you have {(num_rounds-i)*2-1} step left in current task, invoke tool usage to perform actions
             """
             await self.chat(
-                prompt, tool_choice="auto", tool_parsed=True, sender=sender, **config
+                prompt, tool_choice="auto", sender=sender, **config
             )
 
             i += 1
 
         prompt = "present the final result to user"
-        return await self.chat(prompt, sender=sender, tool_parsed=True, **config)
+        return await self.chat(prompt, sender=sender, **config)
 
 
-class FollowUpFlow(BaseChatFlow):
+    async def auto_followup(
+        self,
+        instruction: Union[Instruction, str],
+        context=None,
+        sender=None,
+        system=None,
+        tools=None,
+        max_followup: int = 1,
+        out=True,
+        **kwargs,
+    ) -> None:
+        config = self._create_followup_config(tools, **kwargs)
+
+        n_tries = 0
+        while (max_followup - n_tries) > 0:
+            prompt = f"""
+                In the current task you are allowed a maximum of another {max_followup-n_tries} followup chats. 
+                if further actions are needed, invoke tools usage. If you are done, present the final result 
+                to user without further tool usage
+            """
+            if n_tries > 0:
+                _out = await self.chat(
+                    prompt,
+                    sender=sender,
+                    tool_choice="auto",
+                    **config,
+                )
+                n_tries += 1
+
+                if not self.branch._is_invoked():
+                    return _out if out else None
+
+            elif n_tries == 0:
+                instruct = {"notice": prompt, "task": instruction}
+                out = await self.chat(
+                    instruct,
+                    context=context,
+                    system=system,
+                    sender=sender,
+                    tool_choice="auto",
+                    **config,
+                )
+                n_tries += 1
+
+        if self.branch._is_invoked():
+            """
+            In the current task, you are at your last step, present the final result to user
+            """
+            return await self.chat(
+                instruction, sender=sender, tool_parsed=True, out=out, **kwargs
+            )
+
     
-    def __init__(self, branch):
-        super().__init__(branch)
-        
-    
+    async def followup(
+        self,
+        instruction: Union[Instruction, str],
+        context=None,
+        sender=None,
+        system=None,
+        tools: Union[bool, Tool, List[Tool], str, List[str], List[Dict]] = False,
+        max_followup: int = 1,
+        out=True,
+        **kwargs,
+    ) -> None:
+        config = self.create_followup_config(tools, **kwargs)
+
+        n_tries = 0
+        while (max_followup - n_tries) > 0:
+            prompt = f"""
+                In the current task you have another {max_followup-n_tries} followup chats. 
+                You must invoke tools usage
+            """            
+            if n_tries == 0:
+            
+                await self.chat(
+                    prompt,
+                    system=system,
+                    context=context,
+                    sender=sender,
+                    tool_choice="auto",
+                    **config,
+                )
+                                
+            elif n_tries > 0:
+                await self.chat(
+                    prompt,
+                    sender=sender,
+                    tool_choice="auto",
+                    **config,
+                )
+
+            n_tries += 1
+
+        instruct_ = {
+            "notice": "present final output to user",
+            "original user instruction": instruction
+        }
+        return await self.chat(
+            instruct_, sender=sender, tool_parsed=True, out=out, **config
+        )
