@@ -1,6 +1,9 @@
 from typing import Any, Dict, List, Optional, Union
 
-from lionagi.util import to_dict, lcall, to_list, alcall, get_flattened_keys
+from lionagi.libs import ln_convert as convert
+from lionagi.libs import ln_func_call as func_call
+from lionagi.libs import ln_nested as nested
+
 from lionagi.core.schema import Tool
 from lionagi.core.session.base.schema import Instruction, System
 
@@ -75,8 +78,8 @@ class MonoChat(BaseMonoFlow):
 
     def get_tool_calls(self, content_):
         tool_uses = content_
-        func_calls = lcall(
-            [to_dict(i) for i in tool_uses["action_request"]],
+        func_calls = func_call.lcall(
+            [convert.to_dict(i) for i in tool_uses["action_request"]],
             self.branch.tool_manager.get_function_call,
         )
         
@@ -84,8 +87,8 @@ class MonoChat(BaseMonoFlow):
 
     @staticmethod
     async def invoke_tools(self, func_calls):
-        outs = await alcall(func_calls, self.branch.tool_manager.invoke)
-        outs = to_list(outs, flatten=True)
+        outs = await func_call.alcall(func_calls, self.branch.tool_manager.invoke)
+        outs = convert.to_list(outs, flatten=True)
 
         for out_, f in zip(outs, func_calls):
             self.branch.add_message(
@@ -112,9 +115,9 @@ class MonoChat(BaseMonoFlow):
     def return_response(content_):            
         if (
             len(content_.items()) == 1
-            and len(get_flattened_keys(content_)) == 1
+            and len(nested.get_flattened_keys(content_)) == 1
         ):
-            key = get_flattened_keys(content_)[0]
+            key = nested.get_flattened_keys(content_)[0]
             return content_[key]
         return content_
 

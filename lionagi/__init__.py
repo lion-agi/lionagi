@@ -6,7 +6,7 @@ import logging
 from .version import __version__
 from dotenv import load_dotenv
 
-from .util import (
+from .libs import (
     to_df,
     to_dict,
     to_num,
@@ -24,9 +24,9 @@ from .util import (
     unflatten,
     nfilter,
     get_flattened_keys,
-    CallDecorator,
     to_readable_dict,
 )
+from . import CallDecorator
 
 from .core import Session, Branch
 
@@ -51,7 +51,6 @@ __all__ = [
     "unflatten",
     "nfilter",
     "get_flattened_keys",
-    "CallDecorator",
     "Session",
     "Branch",
     "Services",

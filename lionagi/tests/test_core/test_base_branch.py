@@ -201,7 +201,7 @@ class TestBaseBranch(unittest.TestCase):
         # Verify that the branch instance contains the correct messages
         pd.testing.assert_frame_equal(branch.messages, mock_messages_df)
 
-    @patch('lionagi.core.session.base.base_branch.PathUtil.create_path', return_value='path/to/messages.csv')
+    @patch('lionagi.core.session.base.base_branch.SysUtil.create_path', return_value='path/to/messages.csv')
     @patch.object(pd.DataFrame, 'to_csv')
     def test_to_csv(self, mock_to_csv, mock_create_path):
         self.branch.datalogger = MagicMock()
@@ -216,7 +216,7 @@ class TestBaseBranch(unittest.TestCase):
         # Verify that messages are not cleared after exporting
         assert not self.branch.messages.empty
 
-    @patch('lionagi.core.session.base.base_branch.PathUtil.create_path', return_value='path/to/messages.json')
+    @patch('lionagi.core.session.base.base_branch.SysUtil.create_path', return_value='path/to/messages.json')
     @patch.object(pd.DataFrame, 'to_json')
     def test_to_json(self, mock_to_json, mock_create_path):
         self.branch.datalogger = MagicMock()

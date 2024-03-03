@@ -1,7 +1,10 @@
 from typing import Dict, Union, List, Tuple, Any, TypeVar
 
 from lionagi.core.schema import Tool
-from lionagi.util import AsyncUtil, ParseUtil, to_dict, lcall
+from lionagi.libs.ln_async import AsyncUtil
+from lionagi.libs.ln_parse import ParseUtil
+from lionagi.libs import ln_convert as convert
+from lionagi.libs import ln_func_call as func_call
 
 
 T = TypeVar("T", bound=Tool)
@@ -101,7 +104,7 @@ class ToolManager:
         """
         try:
             func = response["action"][7:]
-            args = to_dict(response["arguments"])
+            args = convert.to_dict(response["arguments"])
             return func, args
         except:
             try:
@@ -118,7 +121,7 @@ class ToolManager:
         Args:
             tools (List[Tool]): A list of tool instances to register.
         """
-        lcall(tools, self._register_tool)
+        func_call.lcall(tools, self._register_tool)
 
     def to_tool_schema_list(self) -> List[Dict[str, Any]]:
         """
@@ -169,13 +172,13 @@ class ToolManager:
         else:
             if not isinstance(tools, list):
                 tools = [tools]
-            tool_kwarg = {"tools": lcall(tools, tool_check)}
+            tool_kwarg = {"tools": func_call.lcall(tools, tool_check)}
             kwargs = {**tool_kwarg, **kwargs}
 
         return kwargs
 
 
-def func_to_tool(func_, parser=None, docstring_style="google"):
+def func_to_tool(func_: callable | list[callable], parser=None, docstring_style="google"):
     """
     Transforms a given function into a Tool object, equipped with a schema derived
     from its docstring. This process involves parsing the function's docstring based
@@ -252,5 +255,31 @@ def func_to_tool(func_, parser=None, docstring_style="google"):
         the function's docstring. Functions with incomplete or incorrectly formatted
         docstrings may result in incomplete or inaccurate Tool schemas.
     """
-    schema = ParseUtil._func_to_schema(func_, docstring_style)
-    return Tool(func=func_, parser=parser, schema_=schema)
+
+    fs = []
+    funcs = convert.to_list(func_, flatten=True, dropna=True)
+    parsers = convert.to_list(parser, flatten=True, dropna=True)
+
+    if parser:
+        if len(funcs) != len(parsers) and len(parsers) != 1:
+            raise ValueError("Length of parser must match length of func. Except if you only pass one")
+        
+        for idx in range(len(funcs)):
+            f_ = lambda _f: Tool(
+                func=_f, 
+                schema_=ParseUtil._func_to_schema(_f, style=docstring_style), 
+                parser=parsers[idx] if len(parsers)>1 else parsers[0]
+            )
+            
+            fs.append(f_)
+    
+    else:
+        fs = func_call.lcall(
+            funcs, 
+            lambda _f: Tool(
+                func=_f, 
+                schema_=ParseUtil._func_to_schema(_f, style=docstring_style)
+                )
+            )
+    
+    return [f(func) for f, func in zip(fs, funcs)]

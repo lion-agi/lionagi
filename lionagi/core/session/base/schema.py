@@ -4,7 +4,7 @@ from typing import Any, Optional, List, Dict
 # import pandas as pd
 # from pydantic import Field, model_validator
 
-from lionagi.util import nget, to_dict, ConvertUtil, to_str
+from lionagi.libs import nget, to_dict, ConvertUtil, to_str
 from lionagi.core.schema import DataNode
 
 _message_fields = ["node_id", "timestamp", "role", "sender", "content"]

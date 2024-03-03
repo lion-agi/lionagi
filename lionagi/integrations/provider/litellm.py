@@ -1,4 +1,4 @@
-from lionagi.util.api_util import BaseService
+from lionagi.libs.ln_api import BaseService
 
 allowed_kwargs = [
     "model", "frequency_penalty", "max_tokens", "n",
@@ -11,9 +11,9 @@ class LiteLLMService(BaseService):
     def __init__(self, model: str = None, **kwargs):
         super().__init__()
 
-        from lionagi.util.import_util import ImportUtil
+        from lionagi.libs import SysUtil
 
-        ImportUtil.check_import("litellm")
+        SysUtil.check_import("litellm")
 
         from litellm import acompletion
 

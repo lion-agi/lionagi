@@ -4,16 +4,10 @@ from dataclasses import dataclass
 from pathlib import Path
 from typing import Any, Dict, List
 
-from lionagi.util import (
-    to_df,
-    to_list,
-    to_str,
-    to_dict,
-    flatten,
-    unflatten, 
-    SysUtil,
-    PathUtil,
-)
+from lionagi.libs.sys_util import SysUtil
+
+from lionagi.libs import ln_convert as convert
+from lionagi.libs import ln_nested as nested
 
 
 @dataclass
@@ -60,11 +54,11 @@ class DLog:
         
         if flatten_:
             if isinstance(self.input_data, dict):
-                log_dict['input_data'] = to_str(flatten(
+                log_dict['input_data'] = convert.to_str(nested.flatten(
                     self.input_data, sep=sep
                 )) 
             if isinstance(self.output_data, dict):
-                log_dict['output_data'] = to_str(flatten(
+                log_dict['output_data'] = convert.to_str(nested.flatten(
                     self.output_data, sep=sep
                 ))
         
@@ -96,8 +90,8 @@ class DLog:
         output_data = ''
         
         if unflatten_:
-            input_data = unflatten(to_dict(input_str), sep=sep)
-            output_data = unflatten(to_dict(output_str), sep=sep)
+            input_data = nested.unflatten(convert.to_dict(input_str), sep=sep)
+            output_data = nested.unflatten(convert.to_dict(output_str), sep=sep)
         
         else:
             input_data = input_str
@@ -180,8 +174,8 @@ class DataLogger:
 
     def extend(self, logs) -> None:
         if len(logs) > 0:
-            log1 = to_list(self.log)
-            log1.extend(to_list(logs))
+            log1 = convert.to_list(self.log)
+            log1.extend(convert.to_list(logs))
             self.log = deque(log1)
 
     def append(self, input_data: Any, output_data: Any) -> None:
@@ -246,7 +240,7 @@ class DataLogger:
         if not filename.endswith(".csv"):
             filename += ".csv"
 
-        filepath = PathUtil.create_path(
+        filepath = SysUtil.create_path(
             self.persist_path,
             filename,
             timestamp=timestamp,
@@ -255,7 +249,7 @@ class DataLogger:
         )
         try:
             logs = [log.serialize(flatten_=flatten_, sep=sep) for log in self.log]
-            df = to_df(to_list(logs, flatten=True))
+            df = convert.to_df(convert.to_list(logs, flatten=True))
             df.to_csv(filepath, index=index, **kwargs)
             if verbose:
                 print(f"{len(self.log)} logs saved to {filepath}")
@@ -321,7 +315,7 @@ class DataLogger:
         if not filename.endswith(".json"):
             filename += ".json"
 
-        filepath = PathUtil.create_path(
+        filepath = SysUtil.create_path(
             self.persist_path,
             filename,
             timestamp=timestamp,
@@ -331,7 +325,7 @@ class DataLogger:
 
         try:
             logs = [log.serialize(flatten_=flatten_, sep=sep) for log in self.log]
-            df = to_df(to_list(logs, flatten=True))
+            df = convert.to_df(convert.to_list(logs, flatten=True))
             df.to_json(filepath, index=index, **kwargs)
             if verbose:
                 print(f"{len(self.log)} logs saved to {filepath}")

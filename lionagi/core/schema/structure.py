@@ -1,7 +1,8 @@
 from typing import List, Any, Dict
 from pydantic import Field
 
-from lionagi.util import lcall
+from lionagi.libs.sys_util import SysUtil
+from lionagi.libs import ln_func_call as func_call
 
 from lionagi.core.schema.base_node import BaseRelatableNode, BaseNode
 
@@ -264,11 +265,11 @@ class Graph(BaseRelatableNode):
 
         if out_edge:
             relationship_ids = list(self.node_relationships[node.id_]["out"].keys())
-            relationships = lcall(relationship_ids, lambda i: self.relationships[i])
+            relationships = func_call.lcall(relationship_ids, lambda i: self.relationships[i])
             return relationships
         else:
             relationship_ids = list(self.node_relationships[node.id_]["in"].keys())
-            relationships = lcall(relationship_ids, lambda i: self.relationships[i])
+            relationships = func_call.lcall(relationship_ids, lambda i: self.relationships[i])
             return relationships
 
     def remove_node(self, node: BaseNode) -> BaseNode:
@@ -385,9 +386,8 @@ class Graph(BaseRelatableNode):
             >>> graph = Graph()
             >>> nx_graph = graph.to_networkx()
         """
-        from lionagi.util.import_util import ImportUtil
 
-        ImportUtil.check_import("networkx")
+        SysUtil.check_import("networkx")
 
         from networkx import DiGraph
 

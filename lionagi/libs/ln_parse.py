@@ -1,7 +1,7 @@
 import re
 import inspect
 from typing import Any, Callable, List
-from lionagi.util.convert_util import to_dict
+from lionagi.libs.ln_convert import to_dict
 
 
 md_json_char_map = {

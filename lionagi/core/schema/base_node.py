@@ -10,16 +10,10 @@ from pydantic import BaseModel, Field, ValidationError, AliasChoices, field_seri
 
 import pandas as pd
 
-from lionagi.util import (
-    SysUtil,
-    to_dict,
-    to_str,
-    nget,
-    nmerge,
-    nfilter,
-    ninsert,
-    get_flattened_keys
-)
+from lionagi.libs.sys_util import SysUtil
+
+from lionagi.libs import ln_convert as convert
+from lionagi.libs import ln_nested as nested
 
 T = TypeVar("T", bound="BaseComponent")
 
@@ -112,7 +106,7 @@ class BaseComponent(BaseModel, ABC):
             ValueError: If the JSON string is invalid.
         """
         try:
-            return cls.from_obj(to_dict(json_data), *args, **kwargs)
+            return cls.from_obj(convert.to_dict(json_data), *args, **kwargs)
         except ValidationError as e:
             raise ValueError(f"Invalid JSON for deserialization: {e}")
 
@@ -132,7 +126,7 @@ class BaseComponent(BaseModel, ABC):
             T: An instance of the class created from the pandas Series.
         """
         pd_kwargs = pd_kwargs or {}
-        pd_dict = to_dict(pd_series, **pd_kwargs)
+        pd_dict = convert.to_dict(pd_series, **pd_kwargs)
         return cls.from_obj(pd_dict, *args, **kwargs)
 
     @from_obj.register(pd.DataFrame)
@@ -155,7 +149,7 @@ class BaseComponent(BaseModel, ABC):
             List[T]: A list of instances of the class created from each row of the pandas DataFrame.
         """
         pd_kwargs = pd_kwargs or {}
-        pd_dict = to_dict(pd_df, as_list=True, **pd_kwargs)
+        pd_dict = convert.to_dict(pd_df, as_list=True, **pd_kwargs)
         return cls.from_obj(pd_dict, *args, **kwargs)
 
     @from_obj.register(list)
@@ -276,7 +270,7 @@ class BaseComponent(BaseModel, ABC):
             List[str]: A list of keys from the metadata dictionary.
         """
         if flattened:
-            return get_flattened_keys(self.metadata, **kwargs)
+            return nested.get_flattened_keys(self.metadata, **kwargs)
         return list(self.metadata.keys())
 
     def meta_has_key(self, key: str, flattened: bool = False, **kwargs) -> bool:
@@ -292,13 +286,13 @@ class BaseComponent(BaseModel, ABC):
             bool: True if the key exists, False otherwise.
         """
         if flattened:
-            return key in get_flattened_keys(self.metadata, **kwargs)
+            return key in nested.get_flattened_keys(self.metadata, **kwargs)
         return key in self.metadata
 
     def meta_get(self, key: str, indices=None, default: Any = None) -> Any:
         """Retrieves metadata value by key with default."""
         if indices:
-            return nget(self.metadata, key, indices, default)
+            return nested.nget(self.metadata, key, indices, default)
         return self.metadata.get(key, default)
 
     def meta_change_key(self, old_key: str, new_key: str) -> bool:
@@ -310,7 +304,7 @@ class BaseComponent(BaseModel, ABC):
 
     def meta_insert(self, indices: str | List, value: Any, **kwargs) -> bool:
         """Inserts a value into metadata at the specified key."""
-        return ninsert(self.metadata, indices, value, **kwargs)
+        return nested.ninsert(self.metadata, indices, value, **kwargs)
 
     # ToDo: do a nested pop
     def meta_pop(self, key: str, default: Any = None) -> Any:
@@ -325,7 +319,7 @@ class BaseComponent(BaseModel, ABC):
         Merges another dictionary into metadata with optional overwrite.
         kwargs for nmerge
         """
-        nmerge([self.metadata, additional_metadata], overwrite=overwrite, **kwargs)
+        nested.nmerge([self.metadata, additional_metadata], overwrite=overwrite, **kwargs)
 
         for key, value in additional_metadata.items():
             if overwrite or key not in self.metadata:
@@ -348,7 +342,7 @@ class BaseComponent(BaseModel, ABC):
         Returns:
             Dict[str, Any]: A new dictionary containing only the key-value pairs that match the condition.
         """
-        return nfilter(self.metadata, condition)
+        return nested.nfilter(self.metadata, condition)
 
     def meta_validate(self,schema: Dict[str, Type | Callable]) -> bool:
         """
@@ -421,7 +415,7 @@ class BaseNode(BaseComponent):
                 logs an error message indicating the content is not serializable.
         """
         try:
-            return to_str(self.content)
+            return convert.to_str(self.content)
         except ValueError:
             print(
                 f"Content is not serializable for Node: {self._id}, defaulting to 'null'")

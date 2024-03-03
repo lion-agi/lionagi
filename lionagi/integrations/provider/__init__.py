@@ -1,4 +1,4 @@
-from ...util.api_util import APIUtil
+from ...libs.ln_api import APIUtil
 
 from .services import Services
 

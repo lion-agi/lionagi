@@ -1,12 +1,12 @@
 # from typing import Any, TypeVar
-# from lionagi.util import SysUtil
-# from lionagi.util.import_util import ImportUtil
+# from lionagi.libs import SysUtil
+# from lionagi.libs.import_util import SysUtil
 
 
 # def to_llama_index_node(lion_node, node_type: Any = None,
 #                         **kwargs: Any) -> Any:
 
-#     ImportUtil.check_import('llama-index')
+#     SysUtil.check_import('llama-index')
 #     import llama_index
 #     from llama_index.core.schema import TextNode
 #     node_type = node_type or TextNode

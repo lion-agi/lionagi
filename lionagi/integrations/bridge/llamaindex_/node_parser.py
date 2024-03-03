@@ -1,10 +1,10 @@
 # from typing import Any
-# from lionagi.util import SysUtil, to_list
-# from lionagi.util.import_util import ImportUtil
+# from lionagi.libs import SysUtil, to_list
+# from lionagi.libs.import_util import SysUtil
 
 # def get_llama_index_node_parser(node_parser: Any ):
 
-#     ImportUtil.check_import('llama-index')
+#     SysUtil.check_import('llama-index')
 #     import llama_index
 #     from llama_index.core.node_parser.interface import NodeParser
 
@@ -33,7 +33,7 @@
 #     parser_kwargs = parser_kwargs or {}
 #     parser = get_llama_index_node_parser(node_parser)
 
-#     ImportUtil.check_import('llama-index')
+#     SysUtil.check_import('llama-index')
 #     import llama_index
 #     from llama_index.core.schema import Document as LlamaDocument
 

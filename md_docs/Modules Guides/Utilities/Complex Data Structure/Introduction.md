@@ -43,7 +43,7 @@ Flattening is particularly useful for converting nested dictionaries into a sing
 
 ```python
 from lionagi import flatten
-from lionagi.util import to_list
+from lionagi.libs import to_list
 
 # Flattening a nested list
 nested_list = [1, [2, [3, None, 4]], [5, 6], None]

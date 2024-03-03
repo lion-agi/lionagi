@@ -13,7 +13,7 @@ The `to_list` handler is a versatile tool for converting various data structures
 
 ```python
 
-from lionagi.util import to_list
+from lionagi.libs import to_list
 
 nested_list = [
     1, None, 2, 3,

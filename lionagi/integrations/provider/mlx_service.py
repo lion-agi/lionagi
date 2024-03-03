@@ -1,5 +1,5 @@
-from lionagi.util import to_dict
-from lionagi.util.api_util import BaseService
+from lionagi.libs import to_dict, SysUtil
+from lionagi.libs.ln_api import BaseService
 
 from lionagi.integrations.config.mlx_configs import model
 
@@ -7,9 +7,7 @@ from lionagi.integrations.config.mlx_configs import model
 class MlXService(BaseService):
     def __init__(self, model=model, **kwargs):
 
-        from lionagi.util.import_util import ImportUtil
-
-        ImportUtil.check_import("mlx_lm")
+        SysUtil.check_import("mlx_lm")
 
         from mlx_lm import load, generate
 

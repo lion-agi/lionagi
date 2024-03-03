@@ -163,7 +163,7 @@ class TestBranchReceive(unittest.TestCase):
 
     def test_receive_service(self):
         # Prepare a mock mail package with a service
-        from lionagi.util.api_util import BaseService
+        from lionagi.libs.ln_api import BaseService
         service = BaseService()
         mail_package_service = MagicMock(category="provider", package=service)
         self.branch.pending_ins[self.sender].append(mail_package_service)

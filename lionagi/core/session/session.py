@@ -3,11 +3,10 @@ from typing import Any, Dict, List, Optional, Tuple, Union
 
 import pandas as pd
 
-from lionagi.util.api_util import BaseService
-from lionagi.util import to_df, to_list, to_df
+from lionagi.libs.ln_api import BaseService
+from lionagi.libs import ln_convert as convert
 
 from lionagi.core.schema import Tool
-
 from lionagi.core.session.base.mail_manager import MailManager
 from lionagi.core.session.base.schema import System, Instruction
 from lionagi.core.session.branch import Branch
@@ -480,8 +479,8 @@ class Session:
         """
         dfs = deque()
         for _, v in self.branches.items():
-            dfs.append(to_df(v.messages))
-        return to_df(to_list(dfs, flatten=True, dropna=True))
+            dfs.append(convert.to_df(v.messages))
+        return convert.to_df(convert.to_list(dfs, flatten=True, dropna=True))
 
 
 
@@ -840,7 +839,7 @@ class Session:
                 self.branch_manager.collect(branch)
         else:
             if not isinstance(from_, list):
-                from_ = to_list(from_)
+                from_ = convert.to_list(from_)
             for branch in from_:
                 if isinstance(branch, Branch):
                     branch = branch.name

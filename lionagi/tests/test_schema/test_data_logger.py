@@ -22,7 +22,7 @@ class TestDLog(unittest.TestCase):
     #     output_sample = "output data"
     #     fake_timestamp = "2023-01-01T00:00:00"
 
-    #     with patch('lionagi.util.SysUtil.get_timestamp', return_value=fake_timestamp):
+    #     with patch('lionagi.libs.SysUtil.get_timestamp', return_value=fake_timestamp):
     #         log_entry = DLog(input_data=input_sample, output_data=output_sample)
     #         serialized_log = log_entry.serialize()
 

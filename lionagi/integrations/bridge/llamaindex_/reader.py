@@ -1,11 +1,11 @@
 # from typing import Any
-# from lionagi.util import SysUtil, ConvertUtil
-# from lionagi.util.import_util import ImportUtil
+# from lionagi.libs import SysUtil, ConvertUtil
+# from lionagi.libs.import_util import SysUtil
 
 
 # def get_llama_index_reader(reader: Any | str = None) -> Any:
 
-#     ImportUtil.check_import('llama-index')
+#     SysUtil.check_import('llama-index')
 #     import llama_index
 #     from llama_index.core import SimpleDirectoryReader
 #     from llama_index.core.readers.base import BaseReader

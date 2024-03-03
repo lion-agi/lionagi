@@ -1,4 +1,4 @@
-from lionagi.util.parse_util import ParseUtil
+from lionagi.libs.ln_parse import ParseUtil
 from lionagi.core.tool.tool_manager import func_to_tool
 from lionagi.core.schema import Tool
 
@@ -45,7 +45,7 @@ class TestExtractDocstringDetailsRest(unittest.TestCase):
 
 class TestFuncToSchema(unittest.TestCase):
 
-    @patch('lionagi.core.action.util._extract_docstring_details')
+    @patch('lionagi.core.action.libs._extract_docstring_details')
     def test_func_to_schema(self, mock_extract):
         mock_extract.return_value = ("Function description", {"param1": "Description of param1."})
 
