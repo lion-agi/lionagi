@@ -92,7 +92,7 @@ mail_manager = MailManager(sources)
 # Add a new source
 mail_manager.add_source({"source3": {}})
 
-# Create a mail item
+# Create a mail input_
 mail_item = MailManager.create_mail("source1", "source2", "category1", "package1")
 
 # Collect and send mail items

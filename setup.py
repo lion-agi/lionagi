@@ -12,10 +12,10 @@ __version__ = version["__version__"]
 install_requires = [
     "aiohttp",
     "python-dotenv",
-    "tiktoken", 
+    "tiktoken",
     "pydantic",
     "aiocache",
-    "pandas"
+    "pandas",
 ]
 
 setuptools.setup(
@@ -24,8 +24,8 @@ setuptools.setup(
     author="HaiyangLi",
     author_email="ocean@lionagi.ai",
     description="Towards automated general intelligence.",
-    long_description=open('README.md').read(),
-    long_description_content_type='text/markdown',
+    long_description=open("README.md").read(),
+    long_description_content_type="text/markdown",
     packages=setuptools.find_packages(include=["lionagi*"]),
     install_requires=install_requires,
     classifiers=[

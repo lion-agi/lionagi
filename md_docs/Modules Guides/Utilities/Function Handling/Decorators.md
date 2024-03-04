@@ -10,12 +10,15 @@ The `@cd.cache` decorator allows you to cache the results of your function calls
 **Example Usage:**
 
 ```python
-from lionagi import CallDecorator as cd
+
+from lionagi.libs import CallDecorator as cd
+
 
 @cd.cache
 def square_data(x):
     # Simulates a time-consuming operation
-    return x**2
+    return x ** 2
+
 
 # First call caches the result
 result = square_data(10)

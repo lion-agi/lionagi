@@ -12,7 +12,7 @@ Returns the corresponding HTTP method function from the `http_session` object.
 - **Parameters:**
   - `http_session`: The session object from the `aiohttp` library.
   - `method`: The HTTP method as a string, defaulting to `"post"`.
-- **Returns:** The callable for the specified HTTP method.
+- **Returns:** The Callable for the specified HTTP method.
 - **Raises:** `ValueError` if the method is not one of the allowed ones.
 - **Example:**
   ```python

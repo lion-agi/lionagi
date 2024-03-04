@@ -2,7 +2,7 @@ from typing import Union, Callable, List, Dict, Any, TypeVar
 from lionagi.core.schema import DataNode
 
 
-from lionagi.util import SysUtil
+from lionagi.libs import SysUtil
 
 T = TypeVar("T", bound="DataNode")
 

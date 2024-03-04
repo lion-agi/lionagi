@@ -14,7 +14,9 @@ The `func_to_tool` utility in LionAGI automatically generates a schema for your 
 #### Example: Creating a Tool with `func_to_tool`
 
 ```python
+import lionagi.core.tool.tool_manager
 import lionagi as li
+
 
 # Define a function with type hints and a docstring
 def add_numbers(number1: float, number2: float) -> float:
@@ -30,8 +32,9 @@ def add_numbers(number1: float, number2: float) -> float:
     """
     return number1 + number2
 
+
 # Automatically generate a Tool object
-tool_add = li.func_to_tool(add_numbers)
+tool_add = lionagi.core.tool.tool_manager.func_to_tool(add_numbers)
 
 # Inspect the generated schema
 print(li.to_readable_dict(tool_add.schema_))

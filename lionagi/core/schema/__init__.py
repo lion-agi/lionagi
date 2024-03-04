@@ -5,7 +5,7 @@ from .structure import Relationship, Graph, Structure
 
 
 __all__ = [
-    'DLog',
+    "DLog",
     "BaseNode",
     "BaseRelatableNode",
     "Tool",

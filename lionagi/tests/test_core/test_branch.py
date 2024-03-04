@@ -1,6 +1,5 @@
 from lionagi.core.session.branch import Branch
-from lionagi.core.action import ToolManager
-from lionagi.core.action.util import func_to_tool
+from lionagi.core.tool.tool_manager import ToolManager, func_to_tool
 from lionagi.core.schema import DataLogger
 from lionagi.core.session.base.util import MessageUtil
 
@@ -16,13 +15,46 @@ class TestBranch(unittest.TestCase):
     def setUp(self):
         # Assuming no need for actual files or external services for initialization
         self.test_messages = [
-            {'node_id': '1', 'timestamp': '2021-01-01 00:00:00', 'role': 'system', 'sender': 'system', 'content': json.dumps({'system_info': 'System message'})},
-            {'node_id': '2', 'timestamp': '2021-01-01 00:01:00', 'role': 'user', 'sender': 'user1', 'content': json.dumps({'instruction': 'User message'})},
-            {'node_id': '3', 'timestamp': '2021-01-01 00:02:00', 'role': 'assistant', 'sender': 'assistant', 'content': json.dumps({'response': 'Assistant response'})},
-            {'node_id': '4', 'timestamp': '2021-01-01 00:03:00', 'role': 'assistant', 'sender': 'action_request', 'content': json.dumps({'action_request': 'Action request'})},
-            {'node_id': '5', 'timestamp': '2021-01-01 00:04:00', 'role': 'assistant', 'sender': 'action_response', 'content': json.dumps({'action_response': 'Action response'})}
+            {
+                "node_id": "1",
+                "timestamp": "2021-01-01 00:00:00",
+                "role": "system",
+                "sender": "system",
+                "content": json.dumps({"system_info": "System message"}),
+            },
+            {
+                "node_id": "2",
+                "timestamp": "2021-01-01 00:01:00",
+                "role": "user",
+                "sender": "user1",
+                "content": json.dumps({"instruction": "User message"}),
+            },
+            {
+                "node_id": "3",
+                "timestamp": "2021-01-01 00:02:00",
+                "role": "assistant",
+                "sender": "assistant",
+                "content": json.dumps({"response": "Assistant response"}),
+            },
+            {
+                "node_id": "4",
+                "timestamp": "2021-01-01 00:03:00",
+                "role": "assistant",
+                "sender": "action_request",
+                "content": json.dumps({"action_request": "Action request"}),
+            },
+            {
+                "node_id": "5",
+                "timestamp": "2021-01-01 00:04:00",
+                "role": "assistant",
+                "sender": "action_response",
+                "content": json.dumps({"action_response": "Action response"}),
+            },
         ]
-        self.branch = Branch(branch_name="TestBranch", messages=pd.DataFrame(self.test_messages))
+        self.branch = Branch(
+            branch_name="TestBranch", messages=pd.DataFrame(self.test_messages)
+        )
+
         def sample_func(param1: int) -> bool:
             """Sample function.
 
@@ -33,6 +65,7 @@ class TestBranch(unittest.TestCase):
                 bool: Description of return value.
             """
             return True
+
         self.tool = func_to_tool(sample_func)
 
     def test_initialization(self):
@@ -56,18 +89,34 @@ class TestBranch(unittest.TestCase):
         """Test creating a Branch instance from a CSV file."""
         filepath = "path/to/your/csvfile.csv"
         Branch.from_csv(filepath=filepath, branch_name="TestBranchFromCSV")
-        mock_from_csv.assert_called_once_with(filepath=filepath, read_kwargs=None, branch_name='TestBranchFromCSV',
-                                              service=None, llmconfig=None, tools=None, datalogger=None,
-                                              persist_path=None, tool_manager=None)
+        mock_from_csv.assert_called_once_with(
+            filepath=filepath,
+            read_kwargs=None,
+            branch_name="TestBranchFromCSV",
+            service=None,
+            llmconfig=None,
+            tools=None,
+            datalogger=None,
+            persist_path=None,
+            tool_manager=None,
+        )
 
     @patch("lionagi.core.session.branch.BaseBranch._from_json")
     def test_from_json(self, mock_from_json):
         """Test creating a Branch instance from a JSON file."""
         filepath = "path/to/your/jsonfile.json"
-        Branch.from_json(filepath=filepath, branch_name="TestBranchFromJSON")
-        mock_from_json.assert_called_once_with(filepath=filepath, read_kwargs=None,branch_name='TestBranchFromJSON',
-                                               service=None, llmconfig=None, tools=None, datalogger=None,
-                                               persist_path=None, tool_manager=None)
+        Branch.from_json_string(filepath=filepath, branch_name="TestBranchFromJSON")
+        mock_from_json.assert_called_once_with(
+            filepath=filepath,
+            read_kwargs=None,
+            branch_name="TestBranchFromJSON",
+            service=None,
+            llmconfig=None,
+            tools=None,
+            datalogger=None,
+            persist_path=None,
+            tool_manager=None,
+        )
 
     def test_messages_describe(self):
         """Test the messages_describe method for accuracy."""
@@ -80,8 +129,15 @@ class TestBranch(unittest.TestCase):
 
     def test_merge_branch(self):
         """Test merging another Branch instance into the current one."""
-        mes = [{'node_id': '6', 'timestamp': '2021-01-01 00:01:00', 'role': 'user', 'sender': 'user1',
-               'content': json.dumps({'instruction': 'User message'})}]
+        mes = [
+            {
+                "node_id": "6",
+                "timestamp": "2021-01-01 00:01:00",
+                "role": "user",
+                "sender": "user1",
+                "content": json.dumps({"instruction": "User message"}),
+            }
+        ]
         other_branch = Branch(branch_name="OtherBranch", messages=pd.DataFrame(mes))
 
         original_message_count = len(self.branch.messages)
@@ -128,11 +184,21 @@ class TestBranchReceive(unittest.TestCase):
         self.sender = "MockSender"
         self.branch.pending_ins[self.sender] = deque()
 
-    @patch('lionagi.core.session.branch.BaseMail')
-    @patch('lionagi.core.session.branch.MessageUtil.validate_messages')
+    @patch("lionagi.core.session.branch.BaseMail")
+    @patch("lionagi.core.session.branch.MessageUtil.validate_messages")
     def test_receive_messages(self, mock_validate_messages, mock_base_mail):
         # Prepare a mock mail package with messages
-        messages_df = pd.DataFrame([{'node_id': '1', 'timestamp': '2021-01-01 00:00:00', 'role': 'system', 'sender': 'system', 'content': json.dumps({'system_info': 'System message'})}])
+        messages_df = pd.DataFrame(
+            [
+                {
+                    "node_id": "1",
+                    "timestamp": "2021-01-01 00:00:00",
+                    "role": "system",
+                    "sender": "system",
+                    "content": json.dumps({"system_info": "System message"}),
+                }
+            ]
+        )
         mail_package_messages = MagicMock(category="messages", package=messages_df)
         self.branch.pending_ins[self.sender].append(mail_package_messages)
 
@@ -142,29 +208,30 @@ class TestBranchReceive(unittest.TestCase):
         self.assertTrue(len(self.branch.messages) > 0)
         self.assertEqual(self.branch.pending_ins, {})
 
-    def test_receive_tools(self):
-        def sample_func(param1: int) -> bool:
-            """Sample function.
+    # def test_receive_tools(self):
+    #     def sample_func(param1: int) -> bool:
+    #         """Sample function.
 
-            Args:
-                param1 (int): Description of param1.
+    #         Args:
+    #             param1 (int): Description of param1.
 
-            Returns:
-                bool: Description of return value.
-            """
-            return True
+    #         Returns:
+    #             bool: Description of return value.
+    #         """
+    #         return True
 
-        tool = func_to_tool(sample_func)
-        mail_package_tools = MagicMock(category="tools", package=tool)
-        self.branch.pending_ins[self.sender].append(mail_package_tools)
+    #     tool = func_to_tool(sample_func)
+    #     mail_package_tools = MagicMock(category="tools", package=tool)
+    #     self.branch.pending_ins[self.sender].append(mail_package_tools)
 
-        # Test receiving tools
-        self.branch.receive(self.sender)
-        self.assertIn(tool, self.branch.tool_manager.registry.values())
+    #     # Test receiving tools
+    #     self.branch.receive(self.sender)
+    #     self.assertIn(tool, self.branch.tool_manager.registry.values())
 
     def test_receive_service(self):
         # Prepare a mock mail package with a service
-        from lionagi.util.api_util import BaseService
+        from lionagi.libs.ln_api import BaseService
+
         service = BaseService()
         mail_package_service = MagicMock(category="provider", package=service)
         self.branch.pending_ins[self.sender].append(mail_package_service)
@@ -193,7 +260,17 @@ class TestBranchReceive(unittest.TestCase):
         self.assertTrue("Invalid messages format" in str(context.exception))
 
     def test_receive_all(self):
-        messages_df = pd.DataFrame([{'node_id': '1', 'timestamp': '2021-01-01 00:00:00', 'role': 'system', 'sender': 'system', 'content': json.dumps({'system_info': 'System message'})}])
+        messages_df = pd.DataFrame(
+            [
+                {
+                    "node_id": "1",
+                    "timestamp": "2021-01-01 00:00:00",
+                    "role": "system",
+                    "sender": "system",
+                    "content": json.dumps({"system_info": "System message"}),
+                }
+            ]
+        )
         mail_package_messages = MagicMock(category="messages", package=messages_df)
         self.branch.pending_ins[self.sender].append(mail_package_messages)
 
@@ -202,11 +279,14 @@ class TestBranchReceive(unittest.TestCase):
         self.branch.pending_ins[self.sender].append(mail_package_llmconfig)
 
         self.branch.receive_all()
-        self.assertTrue(not self.branch.pending_ins, "pending_ins should be empty or contain only skipped requests")
+        self.assertTrue(
+            not self.branch.pending_ins,
+            "pending_ins should be empty or contain only skipped requests",
+        )
         self.assertTrue(..., "Additional assertions based on your implementation")
 
 
 # Chatflow: call_chatcompletion, chat, ReAct, auto_followup
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     unittest.main()

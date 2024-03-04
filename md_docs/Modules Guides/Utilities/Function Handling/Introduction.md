@@ -12,11 +12,12 @@ The `to_list` handler is a versatile tool for converting various data structures
 **Example Usage:**
 
 ```python
-from lionagi import to_list
+
+from lionagi.libs import to_list
 
 nested_list = [
-    1, None, 2, 3, 
-    [4, None], 
+    1, None, 2, 3,
+    [4, None],
     [5, [6, None]]
 ]
 

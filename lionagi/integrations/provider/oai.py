@@ -1,6 +1,6 @@
 from os import getenv
 from lionagi.integrations.config.oai_configs import oai_schema
-from lionagi.util.api_util import BaseService, PayloadPackage
+from lionagi.libs.ln_api import BaseService, PayloadPackage
 
 
 class OpenAIService(BaseService):
@@ -16,11 +16,11 @@ class OpenAIService(BaseService):
 
     Examples:
         >>> service = OpenAIService(api_key="your_api_key")
-        >>> asyncio.run(service.serve("Hello, world!", "chat/completions"))
+        >>> asyncio.run(service.serve("Hello, world!","chat/completions"))
         (payload, completion)
 
         >>> service = OpenAIService()
-        >>> asyncio.run(service.serve("Convert this text to speech.", "audio_speech"))
+        >>> asyncio.run(service.serve("Convert this text to speech.","audio_speech"))
     """
 
     base_url = "https://api.openai.com/v1/"
@@ -52,14 +52,7 @@ class OpenAIService(BaseService):
         )
         self.active_endpoint = []
 
-    async def serve(
-        self,
-        input_,
-        endpoint="chat/completions",
-        method="post",
-        tokenizer_kwargs={},
-        **kwargs,
-    ):
+    async def serve(self, input_, endpoint="chat/completions", method="post", **kwargs):
         """
         Serves the input using the specified endpoint and method.
 
@@ -77,23 +70,21 @@ class OpenAIService(BaseService):
 
         Examples:
             >>> service = OpenAIService(api_key="your_api_key")
-            >>> asyncio.run(service.serve("Hello, world!", "chat/completions"))
+            >>> asyncio.run(service.serve("Hello, world!","chat/completions"))
             (payload, completion)
 
             >>> service = OpenAIService()
-            >>> asyncio.run(service.serve("Convert this text to speech.", "audio_speech"))
+            >>> asyncio.run(service.serve("Convert this text to speech.","audio_speech"))
             ValueError: 'audio_speech' is currently not supported
         """
         if endpoint not in self.active_endpoint:
             await self.init_endpoint(endpoint)
         if endpoint == "chat/completions":
-            return await self.serve_chat(
-                input_, tokenizer_kwargs=tokenizer_kwargs, **kwargs
-            )
+            return await self.serve_chat(input_, **kwargs)
         else:
             return ValueError(f"{endpoint} is currently not supported")
 
-    async def serve_chat(self, messages, tokenizer_kwargs={}, **kwargs):
+    async def serve_chat(self, messages, **kwargs):
         """
         Serves the chat completion request with the given messages.
 
@@ -118,9 +109,7 @@ class OpenAIService(BaseService):
         )
 
         try:
-            completion = await self.call_api(
-                payload, "chat/completions", "post", **tokenizer_kwargs
-            )
+            completion = await self.call_api(payload, "chat/completions", "post")
             return payload, completion
         except Exception as e:
             self.status_tracker.num_tasks_failed += 1

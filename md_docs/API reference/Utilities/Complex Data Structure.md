@@ -94,7 +94,7 @@ result = nmerge(nested_structure, dict_update=False, dict_sequence=False, sequen
 - `dict_sequence`: Enables unique key generation for duplicate keys by appending a sequence number, using `sequence_separator` as the delimiter. Applicable only if `dict_update` is False.
 - `sequence_separator`: The separator used when generating unique keys for duplicate dictionary keys.
 - `sort_list`: When true, sort the resulting list after merging. Does not affect dictionaries.
-- `custom_sort`: An optional callable that defines custom sorting logic for the merged list.
+- `custom_sort`: An optional Callable that defines custom sorting logic for the merged list.
 
 ### Returns
 
