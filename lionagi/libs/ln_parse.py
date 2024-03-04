@@ -5,12 +5,8 @@ from typing import Any
 import lionagi.libs.ln_convert as convert
 
 
-md_json_char_map = {
-    '\n': '\\n',
-    '\r': '\\r',
-    '\t': '\\t',
-    '"': '\\"'
-}
+md_json_char_map = {"\n": "\\n", "\r": "\\r", "\t": "\\t", '"': '\\"'}
+
 
 class ParseUtil:
 
@@ -43,15 +39,16 @@ class ParseUtil:
             try:
                 return convert.to_dict(fixed_s, strict=strict)
             except Exception as e:
-                raise ValueError(f"Failed to parse JSON even after fixing attempts: {e}")
-
+                raise ValueError(
+                    f"Failed to parse JSON even after fixing attempts: {e}"
+                )
 
     @staticmethod
     def fix_json_string(str_to_parse: str) -> str:
-        
-        brackets = {'{': '}', '[': ']'}
+
+        brackets = {"{": "}", "[": "]"}
         open_brackets = []
-        
+
         for char in str_to_parse:
             if char in brackets:
                 open_brackets.append(brackets[char])
@@ -60,8 +57,7 @@ class ParseUtil:
                     raise ValueError("Mismatched or extra closing bracket found.")
                 open_brackets.pop()
 
-        return str_to_parse + ''.join(reversed(open_brackets))
-
+        return str_to_parse + "".join(reversed(open_brackets))
 
     @staticmethod
     def escape_chars_in_json(value: str, char_map=None) -> str:
@@ -85,6 +81,7 @@ class ParseUtil:
             >>> escape_chars_in_json('Line 1\nLine 2')
             'Line 1\\nLine 2'
         """
+
         def replacement(match):
             char = match.group(0)
             _char_map = char_map or md_json_char_map
@@ -93,18 +90,16 @@ class ParseUtil:
         # Match any of the special characters to be escaped.
         return re.sub(r'[\n\r\t"]', replacement, value)
 
-
     # inspired by langchain_core.output_parsers.json (MIT License)
     # https://github.com/langchain-ai/langchain/blob/master/libs/core/langchain_core/output_parsers/json.py
     @staticmethod
     def extract_code_block(
-        str_to_parse: str, 
+        str_to_parse: str,
         language: str | None = None,
         regex_pattern: str | None = None,
-        *, 
-        parser: Callable[[str], Any]
+        *,
+        parser: Callable[[str], Any],
     ) -> Any:
-
         """
         Extracts and parses a code block from Markdown content.
 
@@ -134,21 +129,23 @@ class ParseUtil:
             regex_pattern = rf"```{language}\n?(.*?)\n?```"
         else:
             regex_pattern = r"```\n?(.*?)\n?```"
-        
+
         match = re.search(regex_pattern, str_to_parse, re.DOTALL)
-        code_str = ''
+        code_str = ""
         if match:
             code_str = match.group(1).strip()
         else:
-            raise ValueError(f"No {language or 'specified'} code block found in the Markdown content.")
-        
+            raise ValueError(
+                f"No {language or 'specified'} code block found in the Markdown content."
+            )
+
         return parser(code_str)
 
     @staticmethod
     def md_to_json(
-        str_to_parse: str, 
-        *, 
-        expected_keys: list[str] | None = None, 
+        str_to_parse: str,
+        *,
+        expected_keys: list[str] | None = None,
         parser: Callable[[str], Any] | None = None,
     ) -> Any:
         """
@@ -175,13 +172,15 @@ class ParseUtil:
             {'key': 'value'}
         """
         json_obj = ParseUtil.extract_code_block(
-            str_to_parse, language='json', parser=parser or ParseUtil.fuzzy_parse_json
+            str_to_parse, language="json", parser=parser or ParseUtil.fuzzy_parse_json
         )
 
         if expected_keys:
             missing_keys = [key for key in expected_keys if key not in json_obj]
             if missing_keys:
-                raise ValueError(f"Missing expected keys in JSON object: {', '.join(missing_keys)}")
+                raise ValueError(
+                    f"Missing expected keys in JSON object: {', '.join(missing_keys)}"
+                )
 
         return json_obj
 
@@ -249,7 +248,6 @@ class ParseUtil:
                 break
         return func_description, params_description
 
-
     @staticmethod
     def _extract_docstring_details_rest(func):
         """
@@ -300,7 +298,6 @@ class ParseUtil:
 
         return func_description, params_description
 
-
     @staticmethod
     def _extract_docstring_details(func, style="google"):
         """
@@ -335,15 +332,18 @@ class ParseUtil:
             True
         """
         if style == "google":
-            func_description, params_description = ParseUtil._extract_docstring_details_google(func)
+            func_description, params_description = (
+                ParseUtil._extract_docstring_details_google(func)
+            )
         elif style == "reST":
-            func_description, params_description = ParseUtil._extract_docstring_details_rest(func)
+            func_description, params_description = (
+                ParseUtil._extract_docstring_details_rest(func)
+            )
         else:
             raise ValueError(
                 f'{style} is not supported. Please choose either "google" or "reST".'
             )
         return func_description, params_description
-
 
     @staticmethod
     def _python_to_json_type(py_type):
@@ -373,7 +373,6 @@ class ParseUtil:
         }
         return type_mapping.get(py_type, "object")
 
-
     @staticmethod
     def _func_to_schema(func, style="google"):
         """
@@ -402,7 +401,9 @@ class ParseUtil:
         """
         # Extracting function name and docstring details
         func_name = func.__name__
-        func_description, params_description = ParseUtil._extract_docstring_details(func, style)
+        func_description, params_description = ParseUtil._extract_docstring_details(
+            func, style
+        )
 
         # Extracting parameters with typing hints
         sig = inspect.signature(func)
@@ -419,7 +420,9 @@ class ParseUtil:
                 param_type = ParseUtil._python_to_json_type(param.annotation.__name__)
 
             # Extract parameter description from docstring, if available
-            param_description = params_description.get(name, "No description available.")
+            param_description = params_description.get(
+                name, "No description available."
+            )
 
             # Assuming all parameters are required for simplicity
             parameters["required"].append(name)
@@ -439,7 +442,6 @@ class ParseUtil:
         }
 
         return schema
-
 
 
 class StringMatch:
@@ -504,7 +506,9 @@ class StringMatch:
             k += 1
 
         transpositions //= 2
-        return (matches / s_len + matches / t_len + (matches - transpositions) / matches) / 3.0
+        return (
+            matches / s_len + matches / t_len + (matches - transpositions) / matches
+        ) / 3.0
 
     @staticmethod
     def jaro_winkler_similarity(s, t, scaling=0.1):
@@ -577,7 +581,9 @@ class StringMatch:
                     cost = 0
                 else:
                     cost = 1
-                d[i][j] = min(d[i - 1][j] + 1,  # deletion
-                              d[i][j - 1] + 1,  # insertion
-                              d[i - 1][j - 1] + cost)  # substitution
+                d[i][j] = min(
+                    d[i - 1][j] + 1,  # deletion
+                    d[i][j - 1] + 1,  # insertion
+                    d[i - 1][j - 1] + cost,
+                )  # substitution
         return d[m][n]

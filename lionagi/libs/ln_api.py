@@ -171,7 +171,7 @@ class APIUtil:
         Creates a unique cache key based on the URL and parameters.
         """
         import hashlib
-        
+
         param_str = convert.to_str(params, sort_keys=True) if params else ""
         return hashlib.md5((url + param_str).encode("utf-8")).hexdigest()
 
@@ -414,10 +414,7 @@ class APIUtil:
             payload.update({key: config[key]})
 
         for key in optional_:
-            if (
-                bool(config[key]) is True
-                and convert.strip_lower(config[key]) != "none"
-            ):
+            if bool(config[key]) is True and convert.strip_lower(config[key]) != "none":
                 payload.update({key: config[key]})
 
         return payload
@@ -480,7 +477,7 @@ class BaseRateLimiter(ABC):
         self.max_tokens: int = max_tokens
         self.available_request_capacity: int = max_requests
         self.available_token_capacity: int = max_tokens
-        self.rate_limit_replenisher_task: AsyncUtil.Task| None = None
+        self.rate_limit_replenisher_task: AsyncUtil.Task | None = None
         self._stop_replenishing: AsyncUtil.Event = AsyncUtil.create_event()
         self._lock: AsyncUtil.Lock = AsyncUtil.create_lock()
         self.token_encoding_name = token_encoding_name

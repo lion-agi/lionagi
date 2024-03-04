@@ -84,16 +84,6 @@ class Session:
         for key, branch in self.branches.items():
             branch.name = key
 
-
-
-
-
-
-
-
-
-
-
     # --- default branch methods ---- #
 
     @property
@@ -233,17 +223,6 @@ class Session:
     def register_tools(self, tools):
         self.default_branch.register_tools(tools)
 
-
-
-
-
-
-
-
-
-
-
-
     @classmethod
     def from_csv(
         cls,
@@ -368,9 +347,16 @@ class Session:
             >>> branch.to_csv_file("timed_export.csv", timestamp=True, time_prefix=True)
         """
         for name, branch in self.branches.items():
-            f_name = f'{name}_{filename}'
-            branch.to_csv_file(filename=f_name, dir_exist_ok=dir_exist_ok, timestamp=timestamp,
-                               time_prefix=time_prefix, verbose=verbose, clear=clear, **kwargs)
+            f_name = f"{name}_{filename}"
+            branch.to_csv_file(
+                filename=f_name,
+                dir_exist_ok=dir_exist_ok,
+                timestamp=timestamp,
+                time_prefix=time_prefix,
+                verbose=verbose,
+                clear=clear,
+                **kwargs,
+            )
 
     def to_json_file(
         self,
@@ -400,9 +386,16 @@ class Session:
         """
 
         for name, branch in self.branches.items():
-            f_name = f'{name}_{filename}'
-            branch.to_json_file(filename=f_name, dir_exist_ok=dir_exist_ok, timestamp=timestamp,
-                                time_prefix=time_prefix, verbose=verbose, clear=clear, **kwargs)
+            f_name = f"{name}_{filename}"
+            branch.to_json_file(
+                filename=f_name,
+                dir_exist_ok=dir_exist_ok,
+                timestamp=timestamp,
+                time_prefix=time_prefix,
+                verbose=verbose,
+                clear=clear,
+                **kwargs,
+            )
 
     def log_to_csv(
         self,
@@ -434,9 +427,16 @@ class Session:
             >>> branch.log_to_csv("detailed_branch_log.csv", timestamp=True, verbose=True)
         """
         for name, branch in self.branches.items():
-            f_name = f'{name}_{filename}'
-            branch.log_to_csv(filename=f_name, dir_exist_ok=dir_exist_ok, timestamp=timestamp,
-                              time_prefix=time_prefix, verbose=verbose, clear=clear, **kwargs)
+            f_name = f"{name}_{filename}"
+            branch.log_to_csv(
+                filename=f_name,
+                dir_exist_ok=dir_exist_ok,
+                timestamp=timestamp,
+                time_prefix=time_prefix,
+                verbose=verbose,
+                clear=clear,
+                **kwargs,
+            )
 
     def log_to_json(
         self,
@@ -468,9 +468,16 @@ class Session:
             >>> branch.log_to_json("detailed_branch_log.json", verbose=True, timestamp=True)
         """
         for name, branch in self.branches.items():
-            f_name = f'{name}_{filename}'
-            branch.log_to_json(filename=f_name, dir_exist_ok=dir_exist_ok, timestamp=timestamp,
-                               time_prefix=time_prefix, verbose=verbose, clear=clear, **kwargs)
+            f_name = f"{name}_{filename}"
+            branch.log_to_json(
+                filename=f_name,
+                dir_exist_ok=dir_exist_ok,
+                timestamp=timestamp,
+                time_prefix=time_prefix,
+                verbose=verbose,
+                clear=clear,
+                **kwargs,
+            )
 
     @property
     def all_messages(self) -> pd.DataFrame:
@@ -481,17 +488,6 @@ class Session:
         for _, v in self.branches.items():
             dfs.append(convert.to_df(v.messages))
         return convert.to_df(convert.to_list(dfs, flatten=True, dropna=True))
-
-
-
-
-
-
-
-
-
-
-
 
     # ----- chatflow ----#
     async def call_chatcompletion(
@@ -638,25 +634,11 @@ class Session:
             **kwargs,
         )
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
     # ---- branch manipulation ---- #
     def new_branch(
         self,
         branch_name: str,
-        system: Optional[Union[System, str]]=None,
+        system: Optional[Union[System, str]] = None,
         sender=None,
         messages: Optional[pd.DataFrame] = None,
         tool_manager=None,
@@ -735,7 +717,7 @@ class Session:
                 return (
                     branch,
                     # [key for key, value in self.branches.items() if value == branch][0],
-                    branch.name
+                    branch.name,
                 )
             return branch
 

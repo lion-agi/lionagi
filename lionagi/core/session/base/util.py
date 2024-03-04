@@ -18,7 +18,7 @@ class MessageUtil:
         instruction: dict[str, Any] | str | List[Any] | Instruction | None = None,
         context: str | Dict[str, Any] | None = None,
         response: dict[str, Any] | List[Any] | str | Response | None = None,
-        **kwargs
+        **kwargs,
     ) -> BaseMessage:
         """
         Creates a message object based on the input parameters, ensuring only one message role is present.
@@ -51,8 +51,7 @@ class MessageUtil:
             if response:
                 msg = Response(response=response, **kwargs)
             elif instruction:
-                msg = Instruction(instruction=instruction,
-                                  context=context, **kwargs)
+                msg = Instruction(instruction=instruction, context=context, **kwargs)
             elif system:
                 msg = System(system=system, **kwargs)
             return msg
@@ -93,7 +92,7 @@ class MessageUtil:
             if cont.startswith("Sender"):
                 cont = cont.split(":", 1)[1]
             try:
-               convert.to_dict(cont)
+                convert.to_dict(cont)
             except:
                 raise ValueError(
                     "Invalid messages dataframe. Content expect json string."
@@ -159,7 +158,9 @@ class MessageUtil:
             outs = messages.copy()
 
             if content_keywords:
-                outs = MessageUtil.search_keywords(outs, keywords=content_keywords, case_sensitive=case_sensitive)
+                outs = MessageUtil.search_keywords(
+                    outs, keywords=content_keywords, case_sensitive=case_sensitive
+                )
 
             outs = outs[outs["role"] == role] if role else outs
             outs = outs[outs["sender"] == sender] if sender else outs
@@ -189,7 +190,7 @@ class MessageUtil:
         """
 
         initial_length = len(messages)
-        messages.drop(messages[messages['node_id'] == node_id].index, inplace=True)
+        messages.drop(messages[messages["node_id"] == node_id].index, inplace=True)
         messages.reset_index(drop=True, inplace=True)
 
         return len(messages) < initial_length
@@ -381,7 +382,9 @@ class MessageUtil:
         """
 
         if not case_sensitive:
-            df.loc[:, col] = df[col].str.replace(keyword, replacement, case=False, regex=False)
+            df.loc[:, col] = df[col].str.replace(
+                keyword, replacement, case=False, regex=False
+            )
         else:
             df.loc[:, col] = df[col].str.replace(keyword, replacement, regex=False)
 
@@ -429,7 +432,9 @@ class MessageUtil:
         return convert.to_df(df[:-steps])
 
     @staticmethod
-    def update_row(df: pd.DataFrame, row: str | int, col: str | int, value: Any) -> bool:
+    def update_row(
+        df: pd.DataFrame, row: str | int, col: str | int, value: Any
+    ) -> bool:
         """
         Updates a row's value for a specified column in a DataFrame.
 

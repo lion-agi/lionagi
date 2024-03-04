@@ -111,15 +111,16 @@ class Services:
     def LiteLLM(**kwargs):
         """
         A provider to interact with Litellm
-    
+
         Attributes:
             model (str): name of the model to use
             kwargs (Optional[Any]): additional kwargs for calling the model
         """
-    
+
         from .litellm import LiteLLMService
+
         return LiteLLMService(**kwargs)
-    
+
     @staticmethod
     def MLX(**kwargs):
         """

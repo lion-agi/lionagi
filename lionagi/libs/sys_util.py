@@ -13,7 +13,8 @@ from pathlib import Path
 from typing import Any
 
 
-_timestamp_syms = ['-', ':', '.']
+_timestamp_syms = ["-", ":", "."]
+
 
 class SysUtil:
 
@@ -41,7 +42,6 @@ class SysUtil:
             return time.time()
         else:
             return datetime.now()
-
 
     @staticmethod
     def change_dict_key(dict_: dict[Any, Any], old_key: str, new_key: str) -> None:
@@ -158,7 +158,12 @@ class SysUtil:
         return "other_cpu"
 
     @staticmethod
-    def install_import(package_name: str, module_name: str = None, import_name: str = None, pip_name: str = None) -> None:
+    def install_import(
+        package_name: str,
+        module_name: str = None,
+        import_name: str = None,
+        pip_name: str = None,
+    ) -> None:
         """Attempts to import a package, installing it with pip if not found.
 
         This method tries to import a specified module or attribute. If the import fails, it attempts
@@ -212,10 +217,10 @@ class SysUtil:
 
     @staticmethod
     def check_import(
-        package_name: str, 
-        module_name: str | None = None, 
-        import_name: str | None = None, 
-        pip_name: str | None = None
+        package_name: str,
+        module_name: str | None = None,
+        import_name: str | None = None,
+        pip_name: str | None = None,
     ) -> None:
         """Checks if a package is installed; if not, attempts to install and import it.
 
@@ -233,9 +238,7 @@ class SysUtil:
                 logging.info(
                     f"Package {package_name} not found. Attempting to install."
                 )
-                SysUtil.install_import(
-                    package_name, module_name, import_name, pip_name
-                )
+                SysUtil.install_import(package_name, module_name, import_name, pip_name)
         except ImportError as e:  # More specific exception handling
             logging.error(f"Failed to import {package_name}. Error: {e}")
             raise ValueError(f"Failed to import {package_name}. Error: {e}") from e
@@ -272,7 +275,7 @@ class SysUtil:
         dir_path: Path | str, recursive: bool = False, exclude: list[str] = None
     ) -> None:
         """
-        Clears all files (and, if recursive, directories) in the specified directory, 
+        Clears all files (and, if recursive, directories) in the specified directory,
         excluding files that match any pattern in the exclude list.
 
         Args:
@@ -385,7 +388,7 @@ class SysUtil:
     @staticmethod
     def copy_file(src: Path | str, dest: Path | str) -> None:
         from shutil import copy2
-        
+
         src, dest = Path(src), Path(dest)
         if not src.is_file():
             raise FileNotFoundError(f"{src} does not exist or is not a file.")

@@ -5,9 +5,18 @@ from lionagi.libs import SysUtil
 from lionagi.libs.ln_api import BaseService
 
 allowed_kwargs = [
-    'model', 'tokenizer', 'modelcard', 'framework', 'task',
-    'num_workers', 'batch_size', 'args_parser', 'device', 
-    'torch_dtype', 'min_length_for_response', 'minimum_tokens'
+    "model",
+    "tokenizer",
+    "modelcard",
+    "framework",
+    "task",
+    "num_workers",
+    "batch_size",
+    "args_parser",
+    "device",
+    "torch_dtype",
+    "min_length_for_response",
+    "minimum_tokens",
 ]
 
 
@@ -85,7 +94,7 @@ class TransformersService(BaseService):
         for k, v in kwargs.items():
             if k in allowed_kwargs:
                 config[k] = v
-        
+
         conversation = self.pipe(str(messages), **config)
 
         texts = conversation[-1]["generated_text"]

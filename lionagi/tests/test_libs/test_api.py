@@ -4,6 +4,7 @@ from unittest.mock import AsyncMock
 
 from lionagi.libs.ln_api import *
 
+
 class TestAPIUtil(unittest.TestCase):
     def test_api_method_post(self):
         session = AsyncMock(spec=aiohttp.ClientSession)
@@ -14,8 +15,8 @@ class TestAPIUtil(unittest.TestCase):
         session = AsyncMock(spec=aiohttp.ClientSession)
         with self.assertRaises(ValueError):
             APIUtil.api_method(session, "invalid_method")
-            
-            
+
+
 class TestAPIUtilExtended(unittest.TestCase):
     def test_api_error_with_error(self):
         response_json = {"error": "Something went wrong"}
@@ -41,6 +42,6 @@ class TestAPIUtilExtended(unittest.TestCase):
         invalid_url = "https://api.example.com/users"
         self.assertEqual(APIUtil.api_endpoint_from_url(invalid_url), "")
 
+
 if __name__ == "__main__":
     unittest.main()
-    

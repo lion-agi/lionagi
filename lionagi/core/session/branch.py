@@ -11,11 +11,7 @@ from lionagi.core.tool.tool_manager import ToolManager
 from lionagi.core.flow.monoflow import MonoChat
 
 from lionagi.core.session.base.base_branch import BaseBranch
-from lionagi.core.session.base.schema import (
-    BaseMail,
-    Instruction,
-    System
-)
+from lionagi.core.session.base.schema import BaseMail, Instruction, System
 
 from lionagi.core.session.base.util import MessageUtil
 
@@ -272,6 +268,7 @@ class Branch(BaseBranch):
     @staticmethod
     def _add_service(service, llmconfig):
         from lionagi.integrations.provider.oai import OpenAIService
+
         if service is None:
             try:
                 from lionagi.integrations.provider import Services
@@ -319,7 +316,7 @@ class Branch(BaseBranch):
         invoke: bool = True,
         **kwargs,
     ) -> Any:
-        
+
         flow = MonoChat(self)
         return await flow.chat(
             instruction=instruction,
@@ -376,7 +373,7 @@ class Branch(BaseBranch):
             out=out,
             **kwargs,
         )
-        
+
     async def followup(
         self,
         instruction: Union[Instruction, str],
@@ -388,7 +385,7 @@ class Branch(BaseBranch):
         out=True,
         **kwargs,
     ) -> None:
-        
+
         flow = MonoChat(self)
         return await flow.followup(
             instruction=instruction,
@@ -400,4 +397,3 @@ class Branch(BaseBranch):
             out=out,
             **kwargs,
         )
-        

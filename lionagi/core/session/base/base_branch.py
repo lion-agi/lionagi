@@ -47,7 +47,9 @@ class BaseBranch(BaseRelatableNode, ABC):
         else:
             self.messages = pd.DataFrame(columns=self._columns)
 
-        self.datalogger = datalogger if datalogger else DataLogger(persist_path=persist_path)
+        self.datalogger = (
+            datalogger if datalogger else DataLogger(persist_path=persist_path)
+        )
 
     def add_message(
         self,
@@ -356,7 +358,6 @@ class BaseBranch(BaseRelatableNode, ABC):
         verbose: bool = True,
         clear: bool = True,
         **kwargs,
-
     ) -> None:
         """
         Exports the branch messages to a JSON file.
@@ -401,8 +402,8 @@ class BaseBranch(BaseRelatableNode, ABC):
         time_prefix: bool = False,
         verbose: bool = True,
         clear: bool = True,
-        flatten_=True, 
-        sep='[^_^]',
+        flatten_=True,
+        sep="[^_^]",
         **kwargs,
     ) -> None:
         """
@@ -437,8 +438,8 @@ class BaseBranch(BaseRelatableNode, ABC):
         time_prefix: bool = False,
         verbose: bool = True,
         clear: bool = True,
-        flatten_=True, 
-        sep='[^_^]',
+        flatten_=True,
+        sep="[^_^]",
         **kwargs,
     ) -> None:
         """
@@ -465,31 +466,26 @@ class BaseBranch(BaseRelatableNode, ABC):
             sep=sep,
             **kwargs,
         )
-    
-    def load_log(
-        self, 
-        filename,
-        flattened=True, 
-        sep='[^_^]',
-        verbose=True,
-        **kwargs
-    ):
-        df = ''
-        try:        
-            if filename.endswith('.csv'):
+
+    def load_log(self, filename, flattened=True, sep="[^_^]", verbose=True, **kwargs):
+        df = ""
+        try:
+            if filename.endswith(".csv"):
                 df = MessageUtil.read_csv(filename, **kwargs)
-                
-            elif filename.endswith('.json'):
+
+            elif filename.endswith(".json"):
                 df = MessageUtil.read_json(filename, **kwargs)
 
             for _, row in df.iterrows():
-                self.datalogger.log.append(DLog.deserialize(
-                    input_str=row.input_data, 
-                    output_str = row.output_data,
-                    unflatten_=flattened, 
-                    sep=sep,
-                ))
-        
+                self.datalogger.log.append(
+                    DLog.deserialize(
+                        input_str=row.input_data,
+                        output_str=row.output_data,
+                        unflatten_=flattened,
+                        sep=sep,
+                    )
+                )
+
             if verbose:
                 print(f"Loaded {len(df)} logs from {filename}")
         except Exception as e:
@@ -514,11 +510,9 @@ class BaseBranch(BaseRelatableNode, ABC):
             col: The column of the message to update.
         """
 
-        index = self.messages[self.messages['node_id'] == node_id].index[0]
+        index = self.messages[self.messages["node_id"] == node_id].index[0]
 
-        return MessageUtil.update_row(
-            self.messages, row=index, col=col, value=value
-        )
+        return MessageUtil.update_row(self.messages, row=index, col=col, value=value)
 
     def change_first_system_message(
         self, system: str | dict[str, Any] | System, sender: str | None = None
@@ -581,7 +575,11 @@ class BaseBranch(BaseRelatableNode, ABC):
         dropna: bool = False,
     ) -> pd.DataFrame:
         return MessageUtil.search_keywords(
-            self.messages, keywords, case_sensitive=case_sensitive, reset_index=reset_index, dropna=dropna
+            self.messages,
+            keywords,
+            case_sensitive=case_sensitive,
+            reset_index=reset_index,
+            dropna=dropna,
         )
 
     def extend(self, messages: pd.DataFrame, **kwargs) -> None:

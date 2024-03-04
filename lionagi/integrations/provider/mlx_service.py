@@ -21,9 +21,9 @@ class MlXService(BaseService):
         self.generate = generate
 
     async def serve_chat(self, messages, **kwargs):
-        if 'verbose' not in kwargs.keys():
-            verbose=True
-            
+        if "verbose" not in kwargs.keys():
+            verbose = True
+
         prompts = [
             to_dict(msg["content"])["instruction"]
             for msg in messages
@@ -34,7 +34,10 @@ class MlXService(BaseService):
 
         try:
             response = self.generate(
-                self.model, self.tokenizer, prompt=f"{prompts[-1]} \nOutput: ", verbose=verbose
+                self.model,
+                self.tokenizer,
+                prompt=f"{prompts[-1]} \nOutput: ",
+                verbose=verbose,
             )
             completion = {"model": self.model_name, "choices": [{"message": response}]}
 

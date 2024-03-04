@@ -203,6 +203,7 @@ class Graph(BaseRelatableNode):
         >>> graph.relationship_exists(relationship)
         True
     """
+
     nodes: dict = Field(default={})
     relationships: dict = Field(default={})
     node_relationships: dict = Field(default={})
@@ -265,11 +266,15 @@ class Graph(BaseRelatableNode):
 
         if out_edge:
             relationship_ids = list(self.node_relationships[node.id_]["out"].keys())
-            relationships = func_call.lcall(relationship_ids, lambda i: self.relationships[i])
+            relationships = func_call.lcall(
+                relationship_ids, lambda i: self.relationships[i]
+            )
             return relationships
         else:
             relationship_ids = list(self.node_relationships[node.id_]["in"].keys())
-            relationships = func_call.lcall(relationship_ids, lambda i: self.relationships[i])
+            relationships = func_call.lcall(
+                relationship_ids, lambda i: self.relationships[i]
+            )
             return relationships
 
     def remove_node(self, node: BaseNode) -> BaseNode:
@@ -435,7 +440,9 @@ class Structure(BaseRelatableNode):
     def get_relationships(self) -> list[Relationship]:
         return self.graph.get_node_relationships()
 
-    def get_node_relationships(self, node: BaseNode, out_edge=True, labels=None) -> List[Relationship]:
+    def get_node_relationships(
+        self, node: BaseNode, out_edge=True, labels=None
+    ) -> List[Relationship]:
         relationships = self.graph.get_node_relationships(node, out_edge)
         if labels:
             if not isinstance(labels, list):

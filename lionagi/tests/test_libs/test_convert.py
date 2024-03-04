@@ -39,7 +39,6 @@ class TestToList(unittest.TestCase):
             to_list(TestToList.FaultyIterable())
 
 
-
 class TestIsStructureHomogeneous(unittest.TestCase):
 
     def test_homogeneous_structure_list(self):
@@ -47,11 +46,11 @@ class TestIsStructureHomogeneous(unittest.TestCase):
         self.assertTrue(is_structure_homogeneous(test_list))
 
     def test_homogeneous_structure_dict(self):
-        test_dict = {'a': {'b': 1}, 'c': {'d': 2}}
+        test_dict = {"a": {"b": 1}, "c": {"d": 2}}
         self.assertTrue(is_structure_homogeneous(test_dict))
 
     def test_heterogeneous_structure(self):
-        test_structure = {'a': [1, 2], 'b': {'c': 3}}
+        test_structure = {"a": [1, 2], "b": {"c": 3}}
         self.assertFalse(is_structure_homogeneous(test_structure))
 
     def test_empty_structure(self):
@@ -60,20 +59,26 @@ class TestIsStructureHomogeneous(unittest.TestCase):
 
     def test_return_structure_type_flag(self):
         test_list = [1, 2, 3]
-        is_homogeneous, structure_type = is_structure_homogeneous(test_list, return_structure_type=True)
+        is_homogeneous, structure_type = is_structure_homogeneous(
+            test_list, return_structure_type=True
+        )
         self.assertTrue(is_homogeneous)
         self.assertIs(structure_type, list)
 
-        test_dict = {'a': 1, 'b': 2}
-        is_homogeneous, structure_type = is_structure_homogeneous(test_dict, return_structure_type=True)
+        test_dict = {"a": 1, "b": 2}
+        is_homogeneous, structure_type = is_structure_homogeneous(
+            test_dict, return_structure_type=True
+        )
         self.assertTrue(is_homogeneous)
         self.assertIs(structure_type, dict)
 
-        test_mixed = [1, {'a': 2}]
-        is_homogeneous, structure_type = is_structure_homogeneous(test_mixed, return_structure_type=True)
+        test_mixed = [1, {"a": 2}]
+        is_homogeneous, structure_type = is_structure_homogeneous(
+            test_mixed, return_structure_type=True
+        )
         self.assertFalse(is_homogeneous)
         self.assertIsNone(structure_type)
 
     def test_deeply_nested_structures(self):
-        test_structure = {'a': [{'b': 1}, {'c': [2, 3]}]}
+        test_structure = {"a": [{"b": 1}, {"c": [2, 3]}]}
         self.assertFalse(is_structure_homogeneous(test_structure))
