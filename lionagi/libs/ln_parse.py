@@ -1,5 +1,6 @@
 import re
 import inspect
+from collections.abc import Callable
 from typing import Any
 import lionagi.libs.ln_convert as convert
 
@@ -64,7 +65,26 @@ class ParseUtil:
 
     @staticmethod
     def escape_chars_in_json(value: str, char_map=None) -> str:
-        
+        """
+        Escapes special characters in a JSON string using a specified character map.
+
+        This method replaces newline, carriage return, tab, and double quote characters
+        in a given string with their escaped versions defined in the character map. If no map is provided,
+        a default mapping is used.
+
+        Args:
+            value: The string to be escaped.
+            char_map: An optional dictionary mapping characters to their escaped versions.
+                If not provided, a default mapping that escapes newlines, carriage returns,
+                tabs, and double quotes is used.
+
+        Returns:
+            The escaped JSON string.
+
+        Examples:
+            >>> escape_chars_in_json('Line 1\nLine 2')
+            'Line 1\\nLine 2'
+        """
         def replacement(match):
             char = match.group(0)
             _char_map = char_map or md_json_char_map
@@ -82,9 +102,34 @@ class ParseUtil:
         language: str | None = None,
         regex_pattern: str | None = None,
         *, 
-        parser: callable[[str], Any]
+        parser: Callable[[str], Any]
     ) -> Any:
-        
+
+        """
+        Extracts and parses a code block from Markdown content.
+
+        This method searches for a code block in the given Markdown string, optionally
+        filtered by language. If a code block is found, it is parsed using the provided parser function.
+
+        Args:
+            str_to_parse: The Markdown content to search.
+            language: An optional language specifier for the code block. If provided,
+                only code blocks of this language are considered.
+            regex_pattern: An optional regular expression pattern to use for finding the code block.
+                If provided, it overrides the language parameter.
+            parser: A function to parse the extracted code block string.
+
+        Returns:
+            The result of parsing the code block with the provided parser function.
+
+        Raises:
+            ValueError: If no code block is found in the Markdown content.
+
+        Examples:
+            >>> extract_code_block('```python\\nprint("Hello, world!")\\n```', language='python', parser=lambda x: x)
+            'print("Hello, world!")'
+        """
+
         if language:
             regex_pattern = rf"```{language}\n?(.*?)\n?```"
         else:
@@ -101,11 +146,34 @@ class ParseUtil:
 
     @staticmethod
     def md_to_json(
-        str_to_parse: str, *, 
+        str_to_parse: str, 
+        *, 
         expected_keys: list[str] | None = None, 
-        parser: callable[[str], Any] | None = None,
+        parser: Callable[[str], Any] | None = None,
     ) -> Any:
-        
+        """
+        Extracts a JSON code block from Markdown content, parses it, and verifies required keys.
+
+        This method uses `extract_code_block` to find and parse a JSON code block within the given
+        Markdown string. It then optionally verifies that the parsed JSON object contains all expected keys.
+
+        Args:
+            str_to_parse: The Markdown content to parse.
+            expected_keys: An optional list of keys expected to be present in the parsed JSON object.
+            parser: An optional function to parse the extracted code block. If not provided,
+                `fuzzy_parse_json` is used with default settings.
+
+        Returns:
+            The parsed JSON object from the Markdown content.
+
+        Raises:
+            ValueError: If the JSON code block is missing, or if any of the expected keys are missing
+                from the parsed JSON object.
+
+        Examples:
+            >>> md_to_json('```json\\n{"key": "value"}\\n```', expected_keys=['key'])
+            {'key': 'value'}
+        """
         json_obj = ParseUtil.extract_code_block(
             str_to_parse, language='json', parser=parser or ParseUtil.fuzzy_parse_json
         )
@@ -117,8 +185,6 @@ class ParseUtil:
 
         return json_obj
 
-
-
     @staticmethod
     def _extract_docstring_details_google(func):
         """
@@ -126,7 +192,7 @@ class ParseUtil:
         docstring following the Google style format.
 
         Args:
-            func (callable): The function from which to extract docstring details.
+            func (Callable): The function from which to extract docstring details.
 
         Returns:
             Tuple[str, Dict[str, str]]: A tuple containing the function description
@@ -191,7 +257,7 @@ class ParseUtil:
         docstring following the reStructuredText (reST) style format.
 
         Args:
-            func (callable): The function from which to extract docstring details.
+            func (Callable): The function from which to extract docstring details.
 
         Returns:
             Tuple[str, Dict[str, str]]: A tuple containing the function description
@@ -243,7 +309,7 @@ class ParseUtil:
         (reST) style format.
 
         Args:
-            func (callable): The function from which to extract docstring details.
+            func (Callable): The function from which to extract docstring details.
             style (str): The style of docstring to parse ('google' or 'reST').
 
         Returns:
@@ -315,7 +381,7 @@ class ParseUtil:
         docstrings. The schema includes the function's name, description, and parameters.
 
         Args:
-            func (callable): The function to generate a schema for.
+            func (Callable): The function to generate a schema for.
             style (str): The docstring format ('google' or 'reST').
 
         Returns:

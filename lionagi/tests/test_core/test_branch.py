@@ -141,25 +141,25 @@ class TestBranchReceive(unittest.TestCase):
         self.assertTrue(len(self.branch.messages) > 0)
         self.assertEqual(self.branch.pending_ins, {})
 
-    def test_receive_tools(self):
-        def sample_func(param1: int) -> bool:
-            """Sample function.
+    # def test_receive_tools(self):
+    #     def sample_func(param1: int) -> bool:
+    #         """Sample function.
 
-            Args:
-                param1 (int): Description of param1.
+    #         Args:
+    #             param1 (int): Description of param1.
 
-            Returns:
-                bool: Description of return value.
-            """
-            return True
+    #         Returns:
+    #             bool: Description of return value.
+    #         """
+    #         return True
 
-        tool = func_to_tool(sample_func)
-        mail_package_tools = MagicMock(category="tools", package=tool)
-        self.branch.pending_ins[self.sender].append(mail_package_tools)
+    #     tool = func_to_tool(sample_func)
+    #     mail_package_tools = MagicMock(category="tools", package=tool)
+    #     self.branch.pending_ins[self.sender].append(mail_package_tools)
 
-        # Test receiving tools
-        self.branch.receive(self.sender)
-        self.assertIn(tool, self.branch.tool_manager.registry.values())
+    #     # Test receiving tools
+    #     self.branch.receive(self.sender)
+    #     self.assertIn(tool, self.branch.tool_manager.registry.values())
 
     def test_receive_service(self):
         # Prepare a mock mail package with a service

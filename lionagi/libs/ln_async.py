@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 import asyncio
-from collections.abc import Mapping
+from collections.abc import Mapping, Callable
 from functools import lru_cache
 from typing import Any
 import logging
@@ -13,7 +13,7 @@ class AsyncUtil:
     
     @staticmethod
     @lru_cache(maxsize=None)
-    def is_coroutine_func(func: callable[..., Any]) -> bool:
+    def is_coroutine_func(func: Callable[..., Any]) -> bool:
         """
         Checks whether a function is an asyncio coroutine function.
 
@@ -27,7 +27,7 @@ class AsyncUtil:
 
 
     @staticmethod
-    def _custom_error_handler(error: Exception, error_map: Mapping[type, callable]) -> None:
+    def _custom_error_handler(error: Exception, error_map: Mapping[type, Callable]) -> None:
         # noinspection PyUnresolvedReferences
         """
         handle errors based on a given error mapping.
@@ -35,7 +35,7 @@ class AsyncUtil:
         Args:
             error (Exception):
                 The error to handle.
-            error_map (Mapping[type, callable]):
+            error_map (Mapping[type, Callable]):
                 A dictionary mapping error types to handler functions.
 
         examples:
@@ -51,7 +51,7 @@ class AsyncUtil:
 
 
     @staticmethod
-    async def handle_async_sync(func: callable[..., Any], *args, error_map=None, **kwargs) -> Any:
+    async def handle_async_sync(func: Callable[..., Any], *args, error_map=None, **kwargs) -> Any:
         """
         Executes a function, automatically handling synchronous and asynchronous functions.
 
@@ -98,7 +98,7 @@ class AsyncUtil:
 
     @staticmethod
     async def execute_timeout(coro, timeout):
-        return await asyncio.wait_for(coro, timeout)
+        return 
 
     @classmethod
     def TimeoutError(cls):

@@ -215,7 +215,7 @@ Represents a specialized node that includes a functional aspect, such as a task 
 ### Attributes
 
 - Inherits all attributes from `BaseRelatableNode`.
-- `func`: `Any` - A reference to the function associated with the tool. This could be any callable object.
+- `func`: `Any` - A reference to the function associated with the tool. This could be any Callable object.
 - `manual`: `Any | None` - Optional attribute for storing a manual or documentation related to the tool's function.
 - `parser`: `Any | None` - Optional attribute for storing a parser that can be used with the tool's function.
 
