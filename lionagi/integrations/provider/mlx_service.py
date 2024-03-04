@@ -1,5 +1,5 @@
-from lionagi.util import to_dict
-from lionagi.util.api_util import BaseService
+from lionagi.libs import to_dict, SysUtil
+from lionagi.libs.ln_api import BaseService
 
 from lionagi.integrations.config.mlx_configs import model
 
@@ -7,9 +7,7 @@ from lionagi.integrations.config.mlx_configs import model
 class MlXService(BaseService):
     def __init__(self, model=model, **kwargs):
 
-        from lionagi.util.import_util import ImportUtil
-
-        ImportUtil.check_import("mlx_lm")
+        SysUtil.check_import("mlx_lm")
 
         from mlx_lm import load, generate
 
@@ -23,6 +21,9 @@ class MlXService(BaseService):
         self.generate = generate
 
     async def serve_chat(self, messages, **kwargs):
+        if 'verbose' not in kwargs.keys():
+            verbose=True
+            
         prompts = [
             to_dict(msg["content"])["instruction"]
             for msg in messages
@@ -33,7 +34,7 @@ class MlXService(BaseService):
 
         try:
             response = self.generate(
-                self.model, self.tokenizer, prompt=f"{prompts[-1]} \nOutput: ", **kwargs
+                self.model, self.tokenizer, prompt=f"{prompts[-1]} \nOutput: ", verbose=verbose
             )
             completion = {"model": self.model_name, "choices": [{"message": response}]}
 

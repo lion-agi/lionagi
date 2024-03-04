@@ -3,31 +3,31 @@ import tempfile
 import unittest
 from pathlib import Path
 
-from lionagi.util.path_util import PathUtil
+from lionagi.libs import SysUtil
 
 
-class TestPathUtil(unittest.TestCase):
+class TestSysUtil(unittest.TestCase):
 
     def test_split_path_file(self):
         """Test splitting a file path."""
-        parent, name = PathUtil.split_path("/tmp/example.txt")
+        parent, name = SysUtil.split_path("/tmp/example.txt")
         self.assertEqual(parent, Path("/tmp"))
         self.assertEqual(name, "example.txt")
 
     def test_split_path_directory(self):
         """Test splitting a directory path."""
-        parent, name = PathUtil.split_path("/tmp/example/")
+        parent, name = SysUtil.split_path("/tmp/example/")
         self.assertEqual(parent, Path("/tmp"))
         self.assertEqual(name, "example")
 
     def test_split_path_root(self):
         """Test splitting the root path."""
-        parent, name = PathUtil.split_path("/")
+        parent, name = SysUtil.split_path("/")
         self.assertEqual(parent, Path("/"))
         self.assertEqual(name, "")
         
         
-class TestPathUtil2(unittest.TestCase):
+class TestSysUtil2(unittest.TestCase):
     def setUp(self):
         # Create a temporary directory
         self.test_dir = tempfile.mkdtemp()
@@ -41,11 +41,11 @@ class TestPathUtil2(unittest.TestCase):
         shutil.rmtree(self.test_dir)
 
     def test_list_files_no_extension(self):
-        files = PathUtil.list_files(self.test_dir)
+        files = SysUtil.list_files(self.test_dir)
         self.assertEqual(len(files), 2)  # Expecting 2 files
 
     def test_list_files_with_extension(self):
-        files = PathUtil.list_files(self.test_dir, extension='txt')
+        files = SysUtil.list_files(self.test_dir, extension='txt')
         self.assertEqual(len(files), 1)  # Expecting 1 .txt file
         self.assertTrue(files[0].name.endswith('.txt'))
         

@@ -1,14 +1,14 @@
-import json
 from abc import ABC
-from typing import Any, Dict, List
-import pandas as pd
+from typing import Any
 from pathlib import Path
 from datetime import datetime
 
-from lionagi.util import PathUtil, to_dict, to_df
+import pandas as pd
 
-from lionagi.core.schema import BaseRelatableNode, DataLogger
+from lionagi.libs.sys_util import SysUtil
+from lionagi.libs import ln_convert as convert
 
+from lionagi.core.schema import BaseRelatableNode, DataLogger, DLog
 from lionagi.core.session.base.schema import (
     BranchColumns,
     System,
@@ -29,7 +29,7 @@ class BaseBranch(BaseRelatableNode, ABC):
         persist_path (Path | str): Filesystem path for data persistence.
     """
 
-    _columns: List[str] = BranchColumns.COLUMNS.value
+    _columns: list[str] = BranchColumns.COLUMNS.value
 
     def __init__(
         self,
@@ -51,10 +51,10 @@ class BaseBranch(BaseRelatableNode, ABC):
 
     def add_message(
         self,
-        system: Dict | List | System | None = None,
-        instruction: Dict | List | Instruction | None = None,
-        context: str | Dict[str, Any] | None = None,
-        response: Dict | List | BaseMessage | None = None,
+        system: dict | list | System | None = None,
+        instruction: dict | list | Instruction | None = None,
+        context: str | dict[str, Any] | None = None,
+        response: dict | list | BaseMessage | None = None,
         **kwargs,
     ) -> None:
         """
@@ -67,7 +67,7 @@ class BaseBranch(BaseRelatableNode, ABC):
             response: Response data for creating a message.
             **kwargs: Additional keyword arguments for message creation.
         """
-        msg = MessageUtil.create_message(
+        _msg = MessageUtil.create_message(
             system=system,
             instruction=instruction,
             context=context,
@@ -75,13 +75,12 @@ class BaseBranch(BaseRelatableNode, ABC):
             **kwargs,
         )
 
-        msg.content = MessageUtil.to_json_content(msg.content)
-
-        self.messages.loc[len(self.messages)] = msg.to_pd_series()
+        _msg.content = _msg.msg_content
+        self.messages.loc[len(self.messages)] = _msg.to_pd_series()
 
     def _to_chatcompletion_message(
         self, with_sender: bool = False
-    ) -> List[Dict[str, Any]]:
+    ) -> list[dict[str, Any]]:
         """
         Converts messages to a list of dictionaries formatted for chat completion,
         optionally including sender information.
@@ -117,7 +116,7 @@ class BaseBranch(BaseRelatableNode, ABC):
         return message
 
     @property
-    def chat_messages(self) -> List[Dict[str, Any]]:
+    def chat_messages(self) -> list[dict[str, Any]]:
         """
         Retrieves all chat messages without sender information.
 
@@ -128,7 +127,7 @@ class BaseBranch(BaseRelatableNode, ABC):
         return self._to_chatcompletion_message()
 
     @property
-    def chat_messages_with_sender(self) -> List[Dict[str, Any]]:
+    def chat_messages_with_sender(self) -> list[dict[str, Any]]:
         """
         Retrieves all chat messages, including sender information.
 
@@ -150,7 +149,7 @@ class BaseBranch(BaseRelatableNode, ABC):
         return MessageUtil.get_message_rows(self.messages, n=1, from_="last")
 
     @property
-    def last_message_content(self) -> Dict[str, Any]:
+    def last_message_content(self) -> dict[str, Any]:
         """
         Extracts the content of the last message in the branch.
 
@@ -158,7 +157,7 @@ class BaseBranch(BaseRelatableNode, ABC):
             A dictionary representing the content of the last message.
         """
 
-        return to_dict(self.messages.content.iloc[-1])
+        return convert.to_dict(self.messages.content.iloc[-1])
 
     @property
     def first_system(self) -> pd.DataFrame:
@@ -187,7 +186,7 @@ class BaseBranch(BaseRelatableNode, ABC):
         )
 
     @property
-    def last_response_content(self) -> Dict[str, Any]:
+    def last_response_content(self) -> dict[str, Any]:
         """
         Extracts the content of the last 'assistant' (response) message.
 
@@ -195,7 +194,7 @@ class BaseBranch(BaseRelatableNode, ABC):
             A dictionary representing the content of the last 'assistant' message.
         """
 
-        return to_dict(self.last_response.content.iloc[-1])
+        return convert.to_dict(self.last_response.content.iloc[-1])
 
     @property
     def action_request(self) -> pd.DataFrame:
@@ -206,7 +205,7 @@ class BaseBranch(BaseRelatableNode, ABC):
             A pandas DataFrame containing all 'action_request' messages.
         """
 
-        return to_df(self.messages[self.messages.sender == "action_request"])
+        return convert.to_df(self.messages[self.messages.sender == "action_request"])
 
     @property
     def action_response(self) -> pd.DataFrame:
@@ -217,7 +216,7 @@ class BaseBranch(BaseRelatableNode, ABC):
             A pandas DataFrame containing all 'action_response' messages.
         """
 
-        return to_df(self.messages[self.messages.sender == "action_response"])
+        return convert.to_df(self.messages[self.messages.sender == "action_response"])
 
     @property
     def responses(self) -> pd.DataFrame:
@@ -228,7 +227,7 @@ class BaseBranch(BaseRelatableNode, ABC):
             A pandas DataFrame containing all messages with an 'assistant' role.
         """
 
-        return to_df(self.messages[self.messages.role == "assistant"])
+        return convert.to_df(self.messages[self.messages.role == "assistant"])
 
     @property
     def assistant_responses(self) -> pd.DataFrame:
@@ -241,10 +240,10 @@ class BaseBranch(BaseRelatableNode, ABC):
 
         a_responses = self.responses[self.responses.sender != "action_response"]
         a_responses = a_responses[a_responses.sender != "action_request"]
-        return to_df(a_responses)
+        return convert.to_df(a_responses)
 
     @property
-    def info(self) -> Dict[str, Any]:
+    def info(self) -> dict[str, Any]:
         """
         Summarizes branch information, including message counts by role.
 
@@ -255,7 +254,7 @@ class BaseBranch(BaseRelatableNode, ABC):
         return self._info()
 
     @property
-    def sender_info(self) -> Dict[str, int]:
+    def sender_info(self) -> dict[str, int]:
         """
         Provides a summary of message counts categorized by sender.
 
@@ -266,7 +265,7 @@ class BaseBranch(BaseRelatableNode, ABC):
         return self._info(use_sender=True)
 
     @property
-    def describe(self) -> Dict[str, Any]:
+    def describe(self) -> dict[str, Any]:
         """
         Provides a detailed description of the branch, including a summary of messages.
 
@@ -284,9 +283,9 @@ class BaseBranch(BaseRelatableNode, ABC):
         }
 
     @classmethod
-    def _from_csv(cls, filepath: str, read_kwargs=None, **kwargs) -> "BaseBranch":
+    def _from_csv(cls, filename: str, read_kwargs=None, **kwargs) -> "BaseBranch":
         read_kwargs = {} if read_kwargs is None else read_kwargs
-        messages = MessageUtil.read_csv(filepath, **read_kwargs)
+        messages = MessageUtil.read_csv(filename, **read_kwargs)
         return cls(messages=messages, **kwargs)
 
     @classmethod
@@ -295,19 +294,19 @@ class BaseBranch(BaseRelatableNode, ABC):
         return cls._from_csv(**kwargs)
 
     @classmethod
-    def from_json(cls, **kwargs) -> "BaseBranch":
+    def from_json_string(cls, **kwargs) -> "BaseBranch":
 
         return cls._from_json(**kwargs)
 
     @classmethod
-    def _from_json(cls, filepath: str, read_kwargs=None, **kwargs) -> "BaseBranch":
+    def _from_json(cls, filename: str, read_kwargs=None, **kwargs) -> "BaseBranch":
         read_kwargs = {} if read_kwargs is None else read_kwargs
-        messages = MessageUtil.read_json(filepath, **read_kwargs)
+        messages = MessageUtil.read_json(filename, **read_kwargs)
         return cls(messages=messages, **kwargs)
 
     def to_csv_file(
         self,
-        filepath: str | Path = "messages.csv",
+        filename: str | Path = "messages.csv",
         dir_exist_ok: bool = True,
         timestamp: bool = True,
         time_prefix: bool = False,
@@ -328,21 +327,21 @@ class BaseBranch(BaseRelatableNode, ABC):
             **kwargs: Additional keyword arguments for pandas.DataFrame.to_csv().
         """
 
-        if not filepath.endswith(".csv"):
-            filepath += ".csv"
+        if not filename.endswith(".csv"):
+            filename += ".csv"
 
-        filepath = PathUtil.create_path(
+        filename = SysUtil.create_path(
             self.datalogger.persist_path,
-            filepath,
+            filename,
             timestamp=timestamp,
             dir_exist_ok=dir_exist_ok,
             time_prefix=time_prefix,
         )
 
         try:
-            self.messages.to_csv(filepath, **kwargs)
+            self.messages.to_csv(filename, **kwargs)
             if verbose:
-                print(f"{len(self.messages)} messages saved to {filepath}")
+                print(f"{len(self.messages)} messages saved to {filename}")
             if clear:
                 self.clear_messages()
         except Exception as e:
@@ -375,7 +374,7 @@ class BaseBranch(BaseRelatableNode, ABC):
         if not filename.endswith(".json"):
             filename += ".json"
 
-        filepath = PathUtil.create_path(
+        filename = SysUtil.create_path(
             self.datalogger.persist_path,
             filename,
             timestamp=timestamp,
@@ -385,10 +384,10 @@ class BaseBranch(BaseRelatableNode, ABC):
 
         try:
             self.messages.to_json(
-                filepath, orient="records", lines=True, date_format="iso", **kwargs
+                filename, orient="records", lines=True, date_format="iso", **kwargs
             )
             if verbose:
-                print(f"{len(self.messages)} messages saved to {filepath}")
+                print(f"{len(self.messages)} messages saved to {filename}")
             if clear:
                 self.clear_messages()
         except Exception as e:
@@ -402,6 +401,8 @@ class BaseBranch(BaseRelatableNode, ABC):
         time_prefix: bool = False,
         verbose: bool = True,
         clear: bool = True,
+        flatten_=True, 
+        sep='[^_^]',
         **kwargs,
     ) -> None:
         """
@@ -417,12 +418,14 @@ class BaseBranch(BaseRelatableNode, ABC):
             **kwargs: Additional keyword arguments for pandas.DataFrame.to_csv().
         """
         self.datalogger.to_csv_file(
-            filepath=filename,
+            filename=filename,
             dir_exist_ok=dir_exist_ok,
             timestamp=timestamp,
             time_prefix=time_prefix,
             verbose=verbose,
             clear=clear,
+            flatten_=flatten_,
+            sep=sep,
             **kwargs,
         )
 
@@ -434,6 +437,8 @@ class BaseBranch(BaseRelatableNode, ABC):
         time_prefix: bool = False,
         verbose: bool = True,
         clear: bool = True,
+        flatten_=True, 
+        sep='[^_^]',
         **kwargs,
     ) -> None:
         """
@@ -456,8 +461,39 @@ class BaseBranch(BaseRelatableNode, ABC):
             time_prefix=time_prefix,
             verbose=verbose,
             clear=clear,
+            flatten_=flatten_,
+            sep=sep,
             **kwargs,
         )
+    
+    def load_log(
+        self, 
+        filename,
+        flattened=True, 
+        sep='[^_^]',
+        verbose=True,
+        **kwargs
+    ):
+        df = ''
+        try:        
+            if filename.endswith('.csv'):
+                df = MessageUtil.read_csv(filename, **kwargs)
+                
+            elif filename.endswith('.json'):
+                df = MessageUtil.read_json(filename, **kwargs)
+
+            for _, row in df.iterrows():
+                self.datalogger.log.append(DLog.deserialize(
+                    input_str=row.input_data, 
+                    output_str = row.output_data,
+                    unflatten_=flattened, 
+                    sep=sep,
+                ))
+        
+            if verbose:
+                print(f"Loaded {len(df)} logs from {filename}")
+        except Exception as e:
+            raise ValueError(f"Error in loading log: {e}")
 
     def remove_message(self, node_id: str) -> None:
         """
@@ -485,7 +521,7 @@ class BaseBranch(BaseRelatableNode, ABC):
         )
 
     def change_first_system_message(
-        self, system: str | Dict[str, Any] | System, sender: str | None = None
+        self, system: str | dict[str, Any] | System, sender: str | None = None
     ) -> None:
         """
         Updates the first system message with new content and/or sender.
@@ -498,20 +534,16 @@ class BaseBranch(BaseRelatableNode, ABC):
         if len(self.messages[self.messages["role"] == "system"]) == 0:
             raise ValueError("There is no system message in the messages.")
 
-        if not isinstance(system, (str, Dict, System)):
+        if not isinstance(system, (str, dict, System)):
             raise ValueError("Input cannot be converted into a system message.")
 
-        if isinstance(system, (str, Dict)):
+        if isinstance(system, (str, dict)):
             system = System(system, sender=sender)
 
         if isinstance(system, System):
-            message_dict = system.to_dict()
-            if sender:
-                message_dict["sender"] = sender
-            message_dict["timestamp"] = datetime.now().isoformat()
-            message_dict["content"] = MessageUtil.to_json_content(message_dict['content'])
+            system.timestamp = datetime.now().isoformat()
             sys_index = self.messages[self.messages.role == "system"].index
-            self.messages.loc[sys_index[0]] = message_dict
+            self.messages.loc[sys_index[0]] = system.to_pd_series()
 
     def rollback(self, steps: int) -> None:
         """
@@ -577,7 +609,7 @@ class BaseBranch(BaseRelatableNode, ABC):
         )
 
     # noinspection PyTestUnpassedFixture
-    def _info(self, use_sender: bool = False) -> Dict[str, int]:
+    def _info(self, use_sender: bool = False) -> dict[str, int]:
         """
         Helper method to generate summaries of messages either by role or sender.
 

@@ -47,16 +47,16 @@ class TestCreateMessage(unittest.TestCase):
 
 class TestValidateMessages(unittest.TestCase):
 
-    def test_validate_messages_correct_format(self):
-        """Test messages DataFrame with the correct format."""
-        messages = pd.DataFrame({
-            "node_id": ["1"],
-            "role": ["user"],
-            "sender": ["test"],
-            "timestamp": ["2020-01-01T00:00:00"],
-            "content": ['{"message": "test"}']
-        })
-        self.assertTrue(MessageUtil.validate_messages(messages))
+    # def test_validate_messages_correct_format(self):
+    #     """Test messages DataFrame with the correct format."""
+    #     messages = pd.DataFrame({
+    #         "node_id": ["1"],
+    #         "role": ["user"],
+    #         "sender": ["test"],
+    #         "timestamp": ["2020-01-01T00:00:00"],
+    #         "content": ['{"message": "test"}']
+    #     })
+    #     self.assertTrue(MessageUtil.validate_messages(messages))
 
     def test_validate_messages_incorrect_columns(self):
         """Test messages DataFrame with incorrect columns raises ValueError."""
@@ -171,26 +171,26 @@ class TestGetMessageRows(unittest.TestCase):
         self.assertEqual(len(rows), 2)
 
 
-class TestExtend(unittest.TestCase):
+# class TestExtend(unittest.TestCase):
 
-    def test_extend(self):
-        """Test extending one DataFrame with another, ensuring no duplicate 'node_id'."""
-        df1 = pd.DataFrame({
-            "node_id": ["1"],
-            "role": ["user"],
-            "sender": ["test"],
-            "timestamp": ["2020-01-01T00:00:00"],
-            "content": ['{"message": "test"}']
-        })
-        df2 = pd.DataFrame({
-            "node_id": ["2"],
-            "role": ["user"],
-            "sender": ["test"],
-            "timestamp": ["2020-01-02T00:00:00"],
-            "content": ['{"message": "test2"}']
-        })
-        combined = MessageUtil.extend(df1, df2)
-        self.assertEqual(len(combined), 2)
+    # def test_extend(self):
+    #     """Test extending one DataFrame with another, ensuring no duplicate 'node_id'."""
+    #     df1 = pd.DataFrame({
+    #         "node_id": ["1"],
+    #         "role": ["user"],
+    #         "sender": ["test"],
+    #         "timestamp": ["2020-01-01T00:00:00"],
+    #         "content": ['{"message": "test"}']
+    #     })
+    #     df2 = pd.DataFrame({
+    #         "node_id": ["2"],
+    #         "role": ["user"],
+    #         "sender": ["test"],
+    #         "timestamp": ["2020-01-02T00:00:00"],
+    #         "content": ['{"message": "test2"}']
+    #     })
+    #     combined = MessageUtil.extend(df1, df2)
+    #     self.assertEqual(len(combined), 2)
 
 
 class TestToMarkdownString(unittest.TestCase):

@@ -1,5 +1,5 @@
 import unittest
-from lionagi.util.sys_util import SysUtil
+from lionagi.libs.sys_util import SysUtil
 
 class TestChangeDictKey(unittest.TestCase):
     def test_change_existing_key(self):
@@ -26,7 +26,7 @@ class TestGetTimestamp(unittest.TestCase):
         self.assertNotIn('.', timestamp)
 
     def test_custom_separator(self):
-        timestamp = SysUtil.get_timestamp(separator='-')
+        timestamp = SysUtil.get_timestamp(sep='-')
         self.assertNotIn(':', timestamp)
         self.assertNotIn('.', timestamp)
         self.assertIn('-', timestamp)

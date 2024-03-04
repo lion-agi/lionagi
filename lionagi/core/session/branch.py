@@ -1,41 +1,29 @@
-import json
-from datetime import datetime
 from collections import deque
 from typing import Any, Dict, List, Optional, Union, TypeVar
 
 import pandas as pd
 
-from lionagi.util import to_list, to_dict, ConvertUtil, lcall
-from lionagi.util.api_util import StatusTracker
+from lionagi.libs import ln_convert as convert
+from lionagi.libs.ln_api import StatusTracker
 
 from lionagi.core.schema import Tool
-from lionagi.core.action import ToolManager
-from lionagi.core.flow import ChatFlow
+from lionagi.core.tool.tool_manager import ToolManager
+from lionagi.core.flow.monoflow import MonoChat
 
 from lionagi.core.session.base.base_branch import BaseBranch
 from lionagi.core.session.base.schema import (
     BaseMail,
     Instruction,
-    System,
-    Response,
-    BaseMessage,
+    System
 )
+
 from lionagi.core.session.base.util import MessageUtil
 
-
-OAIService = ""
 
 from dotenv import load_dotenv
 
 load_dotenv()
 
-# try:
-#     from lionagi.integrations.provider import Services
-#
-#     OAIService = Services.OpenAI()
-#
-# except:
-#     pass
 
 T = TypeVar("T", bound=Tool)
 
@@ -103,7 +91,7 @@ class Branch(BaseBranch):
         tools=None,
         datalogger=None,
         persist_path=None,
-        instruction_sets=None,
+        # instruction_sets=None,
         tool_manager=None,
         read_kwargs=None,
         **kwargs,
@@ -126,7 +114,7 @@ class Branch(BaseBranch):
         return self
 
     @classmethod
-    def from_json(
+    def from_json_string(
         cls,
         filepath,
         branch_name=None,
@@ -135,7 +123,7 @@ class Branch(BaseBranch):
         tools=None,
         datalogger=None,
         persist_path=None,
-        instruction_sets=None,
+        # instruction_sets=None,
         tool_manager=None,
         read_kwargs=None,
         **kwargs,
@@ -206,14 +194,14 @@ class Branch(BaseBranch):
 
         if not isinstance(tools, list):
             tools = [tools]
-        if ConvertUtil.is_same_dtype(tools, str):
+        if convert.is_same_dtype(tools, str):
             for act_ in tools:
                 if act_ in self.tool_manager.registry:
                     self.tool_manager.registry.pop(act_)
             if verbose:
                 print("tools successfully deleted")
             return True
-        elif ConvertUtil.is_same_dtype(tools, Tool):
+        elif convert.is_same_dtype(tools, Tool):
             for act_ in tools:
                 if act_.schema_["function"]["name"] in self.tool_manager.registry:
                     self.tool_manager.registry.pop(act_.schema_["function"]["name"])
@@ -258,7 +246,7 @@ class Branch(BaseBranch):
                 self.tool_manager.register_tools([mail_.package])
 
             elif mail_.category == "provider" and service:
-                from lionagi.util.api_util import BaseService
+                from lionagi.libs.ln_api import BaseService
 
                 if not isinstance(mail_.package, BaseService):
                     raise ValueError("Invalid provider format")
@@ -320,13 +308,6 @@ class Branch(BaseBranch):
         except:
             return False
 
-    # noinspection PyUnresolvedReferences
-    async def call_chatcompletion(self, sender=None, with_sender=False, **kwargs):
-
-        await ChatFlow.call_chatcompletion(
-            self, sender=sender, with_sender=with_sender, **kwargs
-        )
-
     async def chat(
         self,
         instruction: Union[Instruction, str],
@@ -338,9 +319,9 @@ class Branch(BaseBranch):
         invoke: bool = True,
         **kwargs,
     ) -> Any:
-
-        return await ChatFlow.chat(
-            self,
+        
+        flow = MonoChat(self)
+        return await flow.chat(
             instruction=instruction,
             context=context,
             sender=sender,
@@ -361,9 +342,8 @@ class Branch(BaseBranch):
         num_rounds: int = 1,
         **kwargs,
     ):
-
-        return await ChatFlow.ReAct(
-            self,
+        flow = MonoChat(self)
+        return await flow.ReAct(
             instruction=instruction,
             context=context,
             sender=sender,
@@ -385,8 +365,8 @@ class Branch(BaseBranch):
         **kwargs,
     ) -> None:
 
-        return await ChatFlow.auto_followup(
-            self,
+        flow = MonoChat(self)
+        return await flow.auto_followup(
             instruction=instruction,
             context=context,
             sender=sender,
@@ -396,3 +376,28 @@ class Branch(BaseBranch):
             out=out,
             **kwargs,
         )
+        
+    async def followup(
+        self,
+        instruction: Union[Instruction, str],
+        context=None,
+        sender=None,
+        system=None,
+        tools: bool | Tool | List[Tool | str | Dict] | str = False,
+        max_followup: int = 1,
+        out=True,
+        **kwargs,
+    ) -> None:
+        
+        flow = MonoChat(self)
+        return await flow.followup(
+            instruction=instruction,
+            context=context,
+            sender=sender,
+            system=system,
+            tools=tools,
+            max_followup=max_followup,
+            out=out,
+            **kwargs,
+        )
+        
