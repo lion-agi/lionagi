@@ -1,16 +1,19 @@
 from __future__ import annotations
 
 import asyncio
+from collections.abc import Mapping
 from functools import lru_cache
-from typing import Any, Callable, Dict
+from typing import Any
 import logging
+import aiocache
+import aiohttp
 
 
 class AsyncUtil:
     
     @staticmethod
     @lru_cache(maxsize=None)
-    def is_coroutine_func(func: Callable[..., Any]) -> bool:
+    def is_coroutine_func(func: callable[..., Any]) -> bool:
         """
         Checks whether a function is an asyncio coroutine function.
 
@@ -24,7 +27,7 @@ class AsyncUtil:
 
 
     @staticmethod
-    def _custom_error_handler(error: Exception, error_map: Dict[type, Callable]) -> None:
+    def _custom_error_handler(error: Exception, error_map: Mapping[type, callable]) -> None:
         # noinspection PyUnresolvedReferences
         """
         handle errors based on a given error mapping.
@@ -32,7 +35,7 @@ class AsyncUtil:
         Args:
             error (Exception):
                 The error to handle.
-            error_map (Dict[type, Callable]):
+            error_map (Mapping[type, callable]):
                 A dictionary mapping error types to handler functions.
 
         examples:
@@ -48,7 +51,7 @@ class AsyncUtil:
 
 
     @staticmethod
-    async def handle_async_sync(func: Callable[..., Any], *args, error_map=None, **kwargs) -> Any:
+    async def handle_async_sync(func: callable[..., Any], *args, error_map=None, **kwargs) -> Any:
         """
         Executes a function, automatically handling synchronous and asynchronous functions.
 
@@ -97,10 +100,26 @@ class AsyncUtil:
     async def execute_timeout(coro, timeout):
         return await asyncio.wait_for(coro, timeout)
 
-    @property
-    def TimeoutError(self):
+    @classmethod
+    def TimeoutError(cls):
         return asyncio.TimeoutError
+
+    @classmethod
+    def CancelledError(cls):
+        return asyncio.CancelledError
+
+    @classmethod
+    def Task(cls):
+        return asyncio.Task
     
+    @classmethod
+    def Event(cls):
+        return asyncio.Event
+    
+    @classmethod
+    def Lock(cls):
+        return asyncio.Lock
+
     @staticmethod
     def wrap_future(future_):
         return asyncio.wrap_future(future_)
@@ -109,3 +128,30 @@ class AsyncUtil:
     def semaphore(limit):
         return asyncio.Semaphore(limit)
     
+    @staticmethod
+    def cached(*args, **kwargs):
+        return aiocache.cached(*args, **kwargs)
+    
+    @staticmethod
+    def create_event(*args, **kwargs):
+        return asyncio.Event(*args, **kwargs)  
+    
+    @staticmethod
+    def create_task(*args, obj=True, **kwargs):
+        if obj:
+            return asyncio.Task(*args, **kwargs)
+        else:
+            return asyncio.create_task(*args, **kwargs)
+    
+    @staticmethod
+    def create_lock(*args, **kwargs):
+        return asyncio.Lock(*args, **kwargs)
+
+
+    @classmethod
+    def HttpClientSession(cls):
+        return aiohttp.ClientSession
+    
+    @classmethod
+    def HttpClientError(cls):
+        return aiohttp.ClientError

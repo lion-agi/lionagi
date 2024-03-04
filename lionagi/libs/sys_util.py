@@ -6,11 +6,11 @@ import platform
 import re
 import subprocess
 import sys
+import time
 from datetime import datetime, timezone
 from hashlib import sha256
 from pathlib import Path
-from shutil import copy2
-from typing import Any, Dict, List
+from typing import Any
 
 
 _timestamp_syms = ['-', ':', '.']
@@ -18,7 +18,19 @@ _timestamp_syms = ['-', ':', '.']
 class SysUtil:
 
     @staticmethod
-    def change_dict_key(dict_: Dict[Any, Any], old_key: str, new_key: str) -> None:
+    def sleep(delay):
+        time.sleep(delay)
+
+    @staticmethod
+    def get_now(datetime_=False):
+        if not datetime_:
+            return time.time()
+        else:
+            return datetime.now()
+
+
+    @staticmethod
+    def change_dict_key(dict_: dict[Any, Any], old_key: str, new_key: str) -> None:
         """Safely changes a key in a dictionary if the old key exists."""
         if old_key in dict_:
             dict_[new_key] = dict_.pop(old_key)
@@ -35,7 +47,7 @@ class SysUtil:
         return str_
 
     @staticmethod
-    def is_schema(dict_: Dict[Any, Any], schema: Dict[Any, type]) -> bool:
+    def is_schema(dict_: dict[Any, Any], schema: dict[Any, type]) -> bool:
         """Validates if the given dictionary matches the expected schema types."""
         return all(
             isinstance(dict_.get(key), expected_type)
@@ -43,7 +55,7 @@ class SysUtil:
         )
 
     @staticmethod
-    def create_copy(input_: Any, num: int = 1) -> Any | List[Any]:
+    def create_copy(input_: Any, num: int = 1) -> Any | list[Any]:
         """Creates deep copies of the input, either as a single copy or a list of copies."""
         if num < 1:
             raise ValueError(f"'num' must be a positive integer: {num}")
@@ -61,7 +73,7 @@ class SysUtil:
         return sha256(current_time + random_bytes).hexdigest()[:n]
 
     @staticmethod
-    def get_bins(input_: List[str], upper: Any = 2000) -> List[List[int]]:
+    def get_bins(input_: list[str], upper: Any = 2000) -> list[list[int]]:
         """Organizes indices of strings into bins based on a cumulative upper limit."""
         current = 0
         bins = []
@@ -144,7 +156,7 @@ class SysUtil:
 
     @staticmethod
     def list_installed_packages() -> list:
-        """List all installed packages using importlib.metadata."""
+        """list all installed packages using importlib.metadata."""
         return [dist.metadata["Name"] for dist in importlib.metadata.distributions()]
 
     @staticmethod
@@ -250,6 +262,8 @@ class SysUtil:
 
     @staticmethod
     def copy_file(src: Path | str, dest: Path | str) -> None:
+        from shutil import copy2
+        
         src, dest = Path(src), Path(dest)
         if not src.is_file():
             raise FileNotFoundError(f"{src} does not exist or is not a file.")

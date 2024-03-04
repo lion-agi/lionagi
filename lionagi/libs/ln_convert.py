@@ -1,15 +1,9 @@
 import json
 import re
+from collections.abc import Mapping, Sequence, Iterable, Generator
 from functools import singledispatch
 
-from typing import (
-    Any,
-    Dict,
-    List,
-    Type,
-    Iterable,
-    Generator,
-)
+from typing import Any, Type
 
 import pandas as pd
 from pydantic import BaseModel
@@ -19,7 +13,7 @@ number_regex = re.compile(r"-?\d+\.?\d*")
 
 # to_list functions with datatype overloads
 @singledispatch
-def to_list(input_: Any, flatten: bool = True, dropna: bool = True) -> List[Any]:
+def to_list(input_: Any, flatten: bool = True, dropna: bool = True) -> Sequence[Any]:
     """
     Converts the input object to a list. This function is capable of handling various input types,
     utilizing single dispatch to specialize for different types such as list, tuple, and set.
@@ -35,7 +29,7 @@ def to_list(input_: Any, flatten: bool = True, dropna: bool = True) -> List[Any]
         dropna (bool): If True, None values will be removed from the resulting list.
 
     Returns:
-        List[Any]: A list representation of the input, with modifications based on `flatten` and `dropna`.
+        Sequence[Any]: A list representation of the input, with modifications based on `flatten` and `dropna`.
 
     Raises:
         ValueError: If the input type is unsupported or cannot be converted to a list.
@@ -51,7 +45,7 @@ def to_list(input_: Any, flatten: bool = True, dropna: bool = True) -> List[Any]
                 not isinstance(input_, (str, bytes, bytearray, dict))
         ):
             iterable_list = list(input_)
-            return flatten_list(iterable_list, dropna) if flatten else iterable_list
+            return _flatten_list(iterable_list, dropna) if flatten else iterable_list
         else:
             return [input_]
     except Exception as e:
@@ -59,25 +53,25 @@ def to_list(input_: Any, flatten: bool = True, dropna: bool = True) -> List[Any]
 
 
 @to_list.register(list)
-def _(input_: List[Any], flatten: bool = True, dropna: bool = True) -> List[Any]:
-    return flatten_list(input_, dropna) if flatten else input_
+def _(input_: Sequence[Any], flatten: bool = True, dropna: bool = True) -> Sequence[Any]:
+    return _flatten_list(input_, dropna) if flatten else input_
 
 
 @to_list.register(tuple)
 def _(input_, flatten=True, dropna=True):
     """Specialized implementation of `to_list` for handling tuple inputs."""
-    return flatten_list(list(input_), dropna) if flatten else list(input_)
+    return _flatten_list(list(input_), dropna) if flatten else list(input_)
 
 
 @to_list.register(set)
 def _(input_, dropna=True):
     """Specialized implementation of `to_list` for handling set inputs."""
-    return list(dropna_iterator(list(input_))) if dropna else list(input_)
+    return list(_dropna_iterator(list(input_))) if dropna else list(input_)
 
 
 # to_dict functions with datatype overloads
 @singledispatch
-def to_dict(input_: Any, *args, **kwargs) -> Dict[Any, Any]:
+def to_dict(input_: Any, *args, **kwargs) -> Mapping[Any, Any]:
     """
     Converts the input object to a dictionary. This base function raises a ValueError for unsupported types.
     The function is overloaded to handle specific input types such as dict, str, pandas.Series, pandas.DataFrame,
@@ -89,7 +83,7 @@ def to_dict(input_: Any, *args, **kwargs) -> Dict[Any, Any]:
         **kwargs: Arbitrary keyword arguments for additional options in type-specific handlers.
 
     Returns:
-        Dict[Any, Any]: A dictionary representation of the input object.
+        Mapping[Any, Any]: A dictionary representation of the input object.
 
     Raises:
         ValueError: If the input type is not supported or cannot be converted to a dictionary.
@@ -101,22 +95,22 @@ def to_dict(input_: Any, *args, **kwargs) -> Dict[Any, Any]:
     raise ValueError(f"Input type not supported: {type(input_).__name__}")
 
 
-@to_dict.register(dict)
-def _(input_: Dict[Any, Any]) -> Dict[Any, Any]:
+@to_dict.register
+def _(input_: dict[Any, Any]) -> Mapping[Any, Any]:
     """
     Handles dictionary inputs directly, returning the input without modification.
 
     Args:
-        input_ (Dict[Any, Any]): The dictionary to be returned.
+        input_ (Mapping[Any, Any]): The dictionary to be returned.
 
     Returns:
-        Dict[Any, Any]: The input dictionary, unchanged.
+        Mapping[Any, Any]: The input dictionary, unchanged.
     """
     return input_
 
 
-@to_dict.register(str)
-def _(input_: str, *args, **kwargs) -> Dict[Any, Any]:
+@to_dict.register
+def _(input_: str, *args, **kwargs) -> Mapping[Any, Any]:
     """
     Converts a JSON-formatted string to a dictionary.
 
@@ -126,7 +120,7 @@ def _(input_: str, *args, **kwargs) -> Dict[Any, Any]:
         **kwargs: Arbitrary keyword arguments for json.loads().
 
     Returns:
-        Dict[Any, Any]: The dictionary representation of the JSON string.
+        Mapping[Any, Any]: The dictionary representation of the JSON string.
 
     Raises:
         ValueError: If the string cannot be decoded into a dictionary.
@@ -137,8 +131,8 @@ def _(input_: str, *args, **kwargs) -> Dict[Any, Any]:
         raise ValueError(f"Could not convert input_ to dict: {e}") from e
 
 
-@to_dict.register(pd.Series)
-def _(input_: pd.Series, *args, **kwargs) -> Dict[Any, Any]:
+@to_dict.register
+def _(input_: pd.Series, *args, **kwargs) -> Mapping[Any, Any]:
     """
     Converts a pandas Series to a dictionary.
 
@@ -148,14 +142,14 @@ def _(input_: pd.Series, *args, **kwargs) -> Dict[Any, Any]:
         **kwargs: Arbitrary keyword arguments for Series.to_dict().
 
     Returns:
-        Dict[Any, Any]: The dictionary representation of the pandas Series.
+        Mapping[Any, Any]: The dictionary representation of the pandas Series.
     """
     return input_.to_dict(*args, **kwargs)
 
 
-@to_dict.register(pd.DataFrame)
+@to_dict.register
 def _(input_: pd.DataFrame, *args, orient: str = "list", as_list: bool = False,
-      **kwargs) -> Dict[Any, Any] | List[Dict[Any, Any]]:
+      **kwargs) -> Mapping[Any, Any] | Sequence[Mapping[Any, Any]]:
     """
     Converts a pandas DataFrame to a dictionary or a list of dictionaries, based on the `orient` and `as_list` parameters.
 
@@ -167,7 +161,7 @@ def _(input_: pd.DataFrame, *args, orient: str = "list", as_list: bool = False,
         **kwargs: Arbitrary keyword arguments for DataFrame.to_dict().
 
     Returns:
-        Dict[Any, Any] | List[Dict[Any, Any]]: Depending on `as_list`, either a dictionary representation
+        Mapping[Any, Any] | Sequence[Mapping[Any, Any]]: Depending on `as_list`, either a dictionary representation
         of the DataFrame or a list of dictionaries, one for each row.
     """
     if as_list:
@@ -176,8 +170,8 @@ def _(input_: pd.DataFrame, *args, orient: str = "list", as_list: bool = False,
     return input_.to_dict(*args, orient=orient, **kwargs)
 
 
-@to_dict.register(BaseModel)
-def _(input_: BaseModel, *args, **kwargs) -> Dict[Any, Any]:
+@to_dict.register
+def _(input_: BaseModel, *args, **kwargs) -> Mapping[Any, Any]:
     """
     Converts a Pydantic BaseModel instance to a dictionary.
 
@@ -187,7 +181,7 @@ def _(input_: BaseModel, *args, **kwargs) -> Dict[Any, Any]:
         **kwargs: Arbitrary keyword arguments for the model's dict() method.
 
     Returns:
-        Dict[Any, Any]: The dictionary representation of the BaseModel instance.
+        Mapping[Any, Any]: The dictionary representation of the BaseModel instance.
     """
     return input_.model_dump(*args, **kwargs)
 
@@ -249,7 +243,7 @@ def _(input_: str) -> str:
 
 
 @to_str.register(list)
-def _(input_: list, *args, as_list: bool = False, **kwargs) -> str | List[str]:
+def _(input_: list, *args, as_list: bool = False, **kwargs) -> str | Sequence[str]:
     """
     Converts a list to a string. Optionally, the function can return a string representation
     of the list itself or join the string representations of its elements.
@@ -286,7 +280,7 @@ def _(input_: pd.Series, *args, **kwargs) -> str:
 
 
 @to_str.register(pd.DataFrame)
-def _(input_: pd.DataFrame, *args, as_list: bool = False, **kwargs) -> str | List[str]:
+def _(input_: pd.DataFrame, *args, as_list: bool = False, **kwargs) -> str | Sequence[str]:
     """
     Converts a pandas DataFrame to a JSON-formatted string. Optionally, can convert to a list of dictionaries
     first if `as_list` is True, then to a string representation of that list.
@@ -313,7 +307,7 @@ def _(input_: pd.DataFrame, *args, as_list: bool = False, **kwargs) -> str | Lis
 def to_df(
         input_: Any,
         how: str = "all",
-        drop_kwargs: Dict[str, Any] | None = None,
+        drop_kwargs: Mapping[str, Any] | None = None,
         reset_index: bool = True,
         **kwargs: Any,
 ) -> pd.DataFrame:
@@ -326,7 +320,7 @@ def to_df(
     Args:
         input_ (Any): The input data to convert into a DataFrame. Accepts a wide range of types thanks to overloads.
         how (str): Specifies how missing values are dropped. Passed directly to DataFrame.dropna().
-        drop_kwargs (Dict[str, Any] | None): Additional keyword arguments for DataFrame.dropna().
+        drop_kwargs (Mapping[str, Any] | None): Additional keyword arguments for DataFrame.dropna().
         reset_index (bool): If True, the DataFrame index will be reset, removing the index labels.
         **kwargs: Additional keyword arguments passed to the pandas DataFrame constructor.
 
@@ -356,7 +350,7 @@ def to_df(
 def _(
         input_: list,
         how: str = "all",
-        drop_kwargs: Dict | None = None,
+        drop_kwargs: Mapping | None = None,
         reset_index: bool = True,
         **kwargs
 ) -> pd.DataFrame:
@@ -416,159 +410,206 @@ def to_num(
         ValueError: If the input cannot be converted to a number, or if it violates the specified bounds.
     """
     str_ = to_str(input_)
-    return ConvertUtil.str_to_num(str_, upper_bound, lower_bound, num_type, precision)
+    return _str_to_num(str_, upper_bound, lower_bound, num_type, precision)
 
 
-def to_readable_dict(input_: Any | List[Any]) -> str | List[str]:
+def to_readable_dict(input_: Any | Sequence[Any]) -> str | Sequence[Any]:
     """
     Converts a given input to a readable dictionary format, either as a string or a list of dictionaries.
 
     Args:
-        input_ (Any | List[Any]): The input to convert to a readable dictionary format.
+        input_ (Any | Sequence[Any]): The input to convert to a readable dictionary format.
 
     Returns:
-        str | List[str]: The readable dictionary format of the input.
+        str | Sequence[str]: The readable dictionary format of the input.
+    """
+    
+    try:
+        dict_ = to_dict(input_)
+        return json.dumps(dict_, indent=4) if isinstance(input_, dict) else input_
+    except Exception as e:
+        raise ValueError(f"Could not convert given input to readable dict: {e}") from e
+
+def is_same_dtype(input_: Sequence | Mapping, dtype: Type | None = None) -> bool:
+    """
+    Checks if all elements in a list or dictionary values are of the same data type.
+
+    Args:
+        input_ (Sequence | Mapping): The input list or dictionary to check.
+        dtype (Type | None): The data type to check against. If None, uses the type of the first element.
+
+    Returns:
+        bool: True if all elements are of the same type (or if the input is empty), False otherwise.
+    """
+    if not input_:
+        return True
+
+    iterable = input_.values() if isinstance(input_, Mapping) else input_
+    first_element_type = type(next(iter(iterable), None))
+
+    dtype = dtype or first_element_type
+
+    return all(isinstance(element, dtype) for element in iterable)
+
+def xml_to_dict(root) -> Mapping[str, Any]:
+    import xml.etree.ElementTree as ET
+    from collections import defaultdict
+    
+    def parse_xml(element: ET.Element, parent: Mapping[str, Any]):
+        children = list(element)
+        if children:
+            d = defaultdict(list)
+            for child in children:
+                parse_xml(child, d)
+            parent[element.tag].append(d if len(d) > 1 else d[next(iter(d))])
+        else:
+            parent[element.tag].append(element.text)
+
+    result = defaultdict(list)
+    parse_xml(root, result)
+    return {k: v[0] if len(v) == 1 else v for k, v in result.items()}
+
+
+def strip_lower(input_: Any) -> str:
+    """
+    Converts the input to a lowercase string with leading and trailing whitespace removed.
+
+    Args:
+        input_ (Any): The input value to convert and process.
+
+    Returns:
+        str: The processed string.
+
+    Raises:
+        ValueError: If the input cannot be converted to a string.
+    """
+    try:
+        return str(input_).strip().lower()
+    except Exception as e:
+        raise ValueError(
+            f"Could not convert input_ to string: {input_}, Error: {e}"
+        )
+
+
+def is_structure_homogeneous(
+    structure: Any, return_structure_type: bool = False
+) -> bool | tuple[bool, type | None]:
+    """
+    checks if a nested structure is homogeneous, meaning it doesn't contain a mix
+    of lists and dictionaries.
+
+    Args: structure: The nested structure to check. return_structure_type: Flag to
+    indicate whether to return the type of homogeneous structure.
+
+    Returns: If return_structure_type is False, returns a boolean indicating
+    whether the structure is homogeneous. if return_structure_type is True,
+    returns a tuple containing a boolean indicating whether the structure is
+    homogeneous, and the type of the homogeneous structure if it is homogeneous (
+    either Sequence | Mapping, or None).
+
+    examples:
+        >>> _is_structure_homogeneous({'a': {'b': 1}, 'c': {'d': 2}})
+        True
+
+        >>> _is_structure_homogeneous({'a': {'b': 1}, 'c': [1, 2]})
+        False
     """
 
-    return ConvertUtil.to_readable_dict(input_)
+    # noinspection PyShadowingNames
+    def _check_structure(substructure):
+        structure_type = None
+        if isinstance(substructure, Sequence):
+            structure_type = Sequence
+            for item in substructure:
+                if not isinstance(item, structure_type) and isinstance(
+                    item, (Sequence | Mapping)
+                ):
+                    return False, None
+                result, _ = _check_structure(item)
+                if not result:
+                    return False, None
+        elif isinstance(substructure, Mapping):
+            structure_type = Mapping
+            for item in substructure.values():
+                if not isinstance(item, structure_type) and isinstance(
+                    item, (Sequence | Mapping)
+                ):
+                    return False, None
+                result, _ = _check_structure(item)
+                if not result:
+                    return False, None
+        return True, structure_type
+
+    is_, structure_type = _check_structure(structure)
+    if return_structure_type:
+        return is_, structure_type
+    else:
+        return is_
 
 
-class ConvertUtil:
 
-    @staticmethod
-    def is_same_dtype(input_: list | dict, dtype: Type | None = None) -> bool:
-        """
-        Checks if all elements in a list or dictionary values are of the same data type.
+def is_homogeneous(iterables: Sequence[Any] | Mapping[Any, Any], type_check: type) -> bool:
+    if isinstance(iterables, Sequence):
+        return all(isinstance(it, type_check) for it in iterables)
+    return isinstance(iterables, type_check)
 
-        Args:
-            input_ (list | dict): The input list or dictionary to check.
-            dtype (Type | None): The data type to check against. If None, uses the type of the first element.
 
-        Returns:
-            bool: True if all elements are of the same type (or if the input is empty), False otherwise.
-        """
-        if not input_:
-            return True
 
-        iterable = input_.values() if isinstance(input_, dict) else input_
-        first_element_type = type(next(iter(iterable), None))
+def _str_to_num(
+        input_: str,
+        upper_bound: float | None = None,
+        lower_bound: float | None = None,
+        num_type: Type[int | float] = int,
+        precision: int | None = None,
+) -> int | float:
+    number_str = _extract_first_number(input_)
+    if number_str is None:
+        raise ValueError(f"No numeric values found in the string: {input_}")
 
-        dtype = dtype or first_element_type
+    number = _convert_to_num(number_str, num_type, precision)
 
-        return all(isinstance(element, dtype) for element in iterable)
+    if upper_bound is not None and number > upper_bound:
+        raise ValueError(
+            f"Number {number} is greater than the upper bound of {upper_bound}."
+        )
 
-    @staticmethod
-    def xml_to_dict(root) -> Dict[str, Any]:
-        import xml.etree.ElementTree as ET
-        from collections import defaultdict
-        
-        def parse_xml(element: ET.Element, parent: Dict[str, Any]):
-            children = list(element)
-            if children:
-                d = defaultdict(list)
-                for child in children:
-                    parse_xml(child, d)
-                parent[element.tag].append(d if len(d) > 1 else d[next(iter(d))])
-            else:
-                parent[element.tag].append(element.text)
+    if lower_bound is not None and number < lower_bound:
+        raise ValueError(
+            f"Number {number} is less than the lower bound of {lower_bound}."
+        )
 
-        result = defaultdict(list)
-        parse_xml(root, result)
-        return {k: v[0] if len(v) == 1 else v for k, v in result.items()}
+    return number
 
-    @staticmethod
-    def str_to_num(
-            input_: str,
-            upper_bound: float | None = None,
-            lower_bound: float | None = None,
-            num_type: Type[int | float] = int,
-            precision: int | None = None,
-    ) -> int | float:
-        number_str = ConvertUtil._extract_first_number(input_)
-        if number_str is None:
-            raise ValueError(f"No numeric values found in the string: {input_}")
+def _extract_first_number(input_: str) -> str | None:
+    match = number_regex.search(input_)
+    return match.group(0) if match else None
 
-        number = ConvertUtil._convert_to_num(number_str, num_type, precision)
+def _convert_to_num(
+        number_str: str, num_type: Type[int | float] = int,
+        precision: int | None = None
+) -> int | float:
+    if num_type is int:
+        return int(float(number_str))
+    elif num_type is float:
+        number = float(number_str)
+        return round(number, precision) if precision is not None else number
+    else:
+        raise ValueError(f"Invalid number type: {num_type}")
 
-        if upper_bound is not None and number > upper_bound:
-            raise ValueError(
-                f"Number {number} is greater than the upper bound of {upper_bound}."
-            )
-
-        if lower_bound is not None and number < lower_bound:
-            raise ValueError(
-                f"Number {number} is less than the lower bound of {lower_bound}."
-            )
-
-        return number
-
-    @staticmethod
-    def strip_lower(input_: Any) -> str:
-        """
-        Converts the input to a lowercase string with leading and trailing whitespace removed.
-
-        Args:
-            input_ (Any): The input value to convert and process.
-
-        Returns:
-            str: The processed string.
-
-        Raises:
-            ValueError: If the input cannot be converted to a string.
-        """
-        try:
-            return str(input_).strip().lower()
-        except Exception as e:
-            raise ValueError(
-                f"Could not convert input_ to string: {input_}, Error: {e}"
-            )
-
-    @staticmethod
-    def _extract_first_number(input_: str) -> str | None:
-        match = number_regex.search(input_)
-        return match.group(0) if match else None
-
-    @staticmethod
-    def _convert_to_num(
-            number_str: str, num_type: Type[int | float] = int,
-            precision: int | None = None
-    ) -> int | float:
-        if num_type is int:
-            return int(float(number_str))
-        elif num_type is float:
-            number = float(number_str)
-            return round(number, precision) if precision is not None else number
-        else:
-            raise ValueError(f"Invalid number type: {num_type}")
-
-    @staticmethod
-    def is_homogeneous(iterables: List[Any] | Dict[Any, Any], type_check: type) -> bool:
-        if isinstance(iterables, list):
-            return all(isinstance(it, type_check) for it in iterables)
-        return isinstance(iterables, type_check)
-
-    @staticmethod
-    def to_readable_dict(input_: Dict[Any, Any] | List[Any]) -> str | List[Any]:
-        try:
-            dict_ = to_dict(input_)
-            return json.dumps(dict_, indent=4) if isinstance(input_, dict) else input_
-        except Exception as e:
-            raise ValueError(f"Could not convert given input to readable dict: {e}") from e
-
-def dropna_iterator(lst_: List[Any]) -> iter:
+def _dropna_iterator(lst_: Sequence[Any]) -> iter:
     return (item for item in lst_ if item is not None)
 
 
-def flatten_list(lst_: List[Any], dropna: bool = True) -> List[Any]:
+def _flatten_list(lst_: Sequence[Any], dropna: bool = True) -> Sequence[Any]:
     """
     flatten a nested list, optionally removing None values.
 
     Args:
-        lst_ (List[Any]): A nested list to flatten.
+        lst_ (Sequence[Any]): A nested list to flatten.
         dropna (bool): If True, None values are removed. default is True.
 
     Returns:
-        List[Any]: A flattened list.
+        Sequence[Any]: A flattened list.
 
     examples:
         >>> flatten_list([[1, 2], [3, None]], dropna=True)
@@ -577,17 +618,17 @@ def flatten_list(lst_: List[Any], dropna: bool = True) -> List[Any]:
         [1, 2, None, 3]
     """
     flattened_list = list(_flatten_list_generator(lst_, dropna))
-    return list(dropna_iterator(flattened_list)) if dropna else flattened_list
+    return list(_dropna_iterator(flattened_list)) if dropna else flattened_list
 
 
 def _flatten_list_generator(
-        lst_: List[Any], dropna: bool = True
+        lst_: Sequence[Any], dropna: bool = True
 ) -> Generator[Any, None, None]:
     """
     Generator for flattening a nested list.
 
     Args:
-        lst_ (List[Any]): A nested list to flatten.
+        lst_ (Sequence[Any]): A nested list to flatten.
         dropna (bool): If True, None values are omitted. Default is True.
 
     Yields:
@@ -598,8 +639,7 @@ def _flatten_list_generator(
         [1, 2, None, 3]
     """
     for i in lst_:
-        if isinstance(i, list):
+        if isinstance(i, Sequence):
             yield from _flatten_list_generator(i, dropna)
         else:
             yield i
-

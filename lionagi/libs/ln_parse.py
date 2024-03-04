@@ -1,7 +1,7 @@
 import re
 import inspect
-from typing import Any, Callable, List
-from lionagi.libs.ln_convert import to_dict
+from typing import Any
+import lionagi.libs.ln_convert as convert
 
 
 md_json_char_map = {
@@ -36,11 +36,11 @@ class ParseUtil:
             {'name': 'John', 'age': 30, 'city': 'New York'}
         """
         try:
-            return to_dict(str_to_parse, strict=strict)
+            return convert.to_dict(str_to_parse, strict=strict)
         except:
             fixed_s = ParseUtil.fix_json_string(str_to_parse)
             try:
-                return to_dict(fixed_s, strict=strict)
+                return convert.to_dict(fixed_s, strict=strict)
             except Exception as e:
                 raise ValueError(f"Failed to parse JSON even after fixing attempts: {e}")
 
@@ -82,7 +82,7 @@ class ParseUtil:
         language: str | None = None,
         regex_pattern: str | None = None,
         *, 
-        parser: Callable[[str], Any]
+        parser: callable[[str], Any]
     ) -> Any:
         
         if language:
@@ -102,8 +102,8 @@ class ParseUtil:
     @staticmethod
     def md_to_json(
         str_to_parse: str, *, 
-        expected_keys: List[str] | None = None, 
-        parser: Callable[[str], Any] | None = None,
+        expected_keys: list[str] | None = None, 
+        parser: callable[[str], Any] | None = None,
     ) -> Any:
         
         json_obj = ParseUtil.extract_code_block(
@@ -126,7 +126,7 @@ class ParseUtil:
         docstring following the Google style format.
 
         Args:
-            func (Callable): The function from which to extract docstring details.
+            func (callable): The function from which to extract docstring details.
 
         Returns:
             Tuple[str, Dict[str, str]]: A tuple containing the function description
@@ -191,7 +191,7 @@ class ParseUtil:
         docstring following the reStructuredText (reST) style format.
 
         Args:
-            func (Callable): The function from which to extract docstring details.
+            func (callable): The function from which to extract docstring details.
 
         Returns:
             Tuple[str, Dict[str, str]]: A tuple containing the function description
@@ -243,7 +243,7 @@ class ParseUtil:
         (reST) style format.
 
         Args:
-            func (Callable): The function from which to extract docstring details.
+            func (callable): The function from which to extract docstring details.
             style (str): The style of docstring to parse ('google' or 'reST').
 
         Returns:
@@ -315,7 +315,7 @@ class ParseUtil:
         docstrings. The schema includes the function's name, description, and parameters.
 
         Args:
-            func (Callable): The function to generate a schema for.
+            func (callable): The function to generate a schema for.
             style (str): The docstring format ('google' or 'reST').
 
         Returns:

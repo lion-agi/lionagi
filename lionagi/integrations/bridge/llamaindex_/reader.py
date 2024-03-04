@@ -1,5 +1,5 @@
 # from typing import Any
-# from lionagi.libs import SysUtil, ConvertUtil
+# from lionagi.libs import SysUtil, 
 # from lionagi.libs.import_util import SysUtil
 
 
@@ -41,7 +41,7 @@
 #     if 'index' in reader_str:
 #         reader_ = reader_str.split('index')[-1]
 
-#     reader_ = ConvertUtil.strip_lower(reader_.replace("_", "-"))
+#     reader_ = .strip_lower(reader_.replace("_", "-"))
 
 #     if reader_.startswith('-'):
 #         reader_ = reader_[1:]

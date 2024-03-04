@@ -1,20 +1,22 @@
 from __future__ import annotations
 
 import functools
-import time
 from concurrent.futures import ThreadPoolExecutor
 
-from typing import Any, Callable, List, Tuple
+from typing import Any
 
-from aiocache import cached
-
+from lionagi.libs.sys_util import SysUtil
 from lionagi.libs.ln_convert import to_list
 from lionagi.libs.ln_async import AsyncUtil
 
 
+
+def lru_cache(*args, **kwargs):
+    return functools.lru_cache(*args, **kwargs)
+
 def lcall(
-        input_: Any, func: Callable, flatten: bool = False, dropna: bool = False, **kwargs
-) -> List[Any]:
+        input_: Any, func: callable, *, flatten: bool = False, dropna: bool = False, **kwargs
+) -> list[Any]:
     """
     applies a function to each element of the input list, with options to flatten
     results and drop None values.
@@ -29,7 +31,7 @@ def lcall(
         input_ (Any):
             The input list or iterable to process. each element will be passed to the
             provided `func` callable.
-        func (Callable):
+        func (callable):
             The function to apply to each element of `input_`. this function can be any
             callable that accepts the elements of `input_` as arguments.
         flatten (bool, optional):
@@ -41,7 +43,7 @@ def lcall(
             Additional keyword arguments to be passed to `func`.
 
     Returns:
-        List[Any]:
+        list[Any]:
             The list of results after applying `func` to each input element, modified
             according to `flatten` and `dropna` options.
 
@@ -62,8 +64,8 @@ def lcall(
 
 
 async def alcall(
-        input_: Any = None, func: Callable = None, flatten: bool = False, **kwargs
-) -> List[Any]:
+        input_: Any = None, func: callable = None, *, flatten: bool = False, **kwargs
+) -> list[Any]:
     # noinspection GrazieInspection
     """
     asynchronously applies a function to each element in the input.
@@ -79,7 +81,7 @@ async def alcall(
         input_ (Any, optional):
             The input to process. defaults to None, which requires `func` to be capable of
             handling the absence of explicit input.
-        func (Callable, optional):
+        func (callable, optional):
             The asynchronous function to apply. defaults to None.
         flatten (bool, optional):
             Whether to flatten the result. useful when `func` returns a list or iterable
@@ -88,7 +90,7 @@ async def alcall(
             Keyword arguments to pass to the function.
 
     Returns:
-        List[Any]:
+        list[Any]:
             A list of results after asynchronously applying the function to each element
             of the input, potentially flattened.
 
@@ -107,7 +109,7 @@ async def alcall(
     return to_list(outs, flatten=flatten)
 
 
-async def mcall(input_: Any, func: Any, explode: bool = False, **kwargs) -> tuple[Any]:
+async def mcall(input_: Any, func: Any, *, explode: bool = False, **kwargs) -> tuple[Any]:
     """
     asynchronously map a function or functions over an input_ or inputs.
 
@@ -122,7 +124,7 @@ async def mcall(input_: Any, func: Any, explode: bool = False, **kwargs) -> tupl
             Keyword arguments to pass to the function.
 
     Returns:
-        List[Any]: A list of results after applying the function(s).
+        list[Any]: A list of results after applying the function(s).
 
     examples:
         >>> async def add_one(x):
@@ -147,18 +149,18 @@ async def mcall(input_: Any, func: Any, explode: bool = False, **kwargs) -> tupl
         return await AsyncUtil.execute_tasks(*tasks)
 
 
-async def bcall(input_: Any, func: Callable, batch_size: int, **kwargs) -> List[Any]:
+async def bcall(input_: Any, func: callable, *, batch_size: int, **kwargs) -> list[Any]:
     """
     asynchronously call a function on batches of inputs.
 
     Args:
         input_ (Any): The input_ to process.
-        func (Callable): The function to apply.
+        func (callable): The function to apply.
         batch_size (int): The size of each batch.
         **kwargs: Keyword arguments to pass to the function.
 
     Returns:
-        List[Any]: A list of results after applying the function in batches.
+        list[Any]: A list of results after applying the function in batches.
 
     examples:
         >>> async def sum_batch(batch_): return sum(batch_)
@@ -176,7 +178,7 @@ async def bcall(input_: Any, func: Callable, batch_size: int, **kwargs) -> List[
 
 
 async def tcall(
-        func: Callable,
+        func: callable,
         *args,
         delay: float = 0,
         err_msg: str | None = None,
@@ -195,7 +197,7 @@ async def tcall(
     frame, or when monitoring execution duration.
 
     Args:
-        func (Callable):
+        func (callable):
             The asynchronous function to be called.
         *args:
             Positional arguments to pass to the function.
@@ -227,26 +229,26 @@ async def tcall(
         (9, execution_duration)
     """
 
-    async def async_call() -> Tuple[Any, float]:
-        start_time = time.time()
+    async def async_call() -> tuple[Any, float]:
+        start_time = SysUtil.get_now(datetime_=False)
         if timeout is not None:
             result = await AsyncUtil.execute_timeout(func(*args, **kwargs), timeout)
-            duration = time.time() - start_time
+            duration = SysUtil.get_now(datetime_=False) - start_time
             return (result, duration) if timing else result
         try:
             await AsyncUtil.sleep(delay)
             result = await func(*args, **kwargs)
-            duration = time.time() - start_time
+            duration = SysUtil.get_now(datetime_=False) - start_time
             return (result, duration) if timing else result
         except Exception as e:
             handle_error(e)
 
-    def sync_call() -> Tuple[Any, float]:
-        start_time = time.time()
+    def sync_call() -> tuple[Any, float]:
+        start_time = SysUtil.get_now(datetime_=False)
         try:
-            time.sleep(delay)
+            SysUtil.sleep(delay)
             result = func(*args, **kwargs)
-            duration = time.time() - start_time
+            duration = SysUtil.get_now(datetime_=False) - start_time
             return (result, duration) if timing else result
         except Exception as e:
             handle_error(e)
@@ -264,7 +266,7 @@ async def tcall(
 
 
 async def rcall(
-        func: Callable,
+        func: callable,
         *args,
         retries: int = 0,
         delay: float = 1.0,
@@ -283,7 +285,7 @@ async def rcall(
     persistent failures, and a backoff factor to control the delay increase.
 
     Args:
-        func (Callable):
+        func (callable):
             The asynchronous function to retry.
         *args:
             Positional arguments for the function.
@@ -336,15 +338,15 @@ async def rcall(
         raise RuntimeError("rcall failed without catching an exception")
 
 
-def _dropna(lst_: List[Any]) -> List[Any]:
+def _dropna(lst_: list[Any]) -> list[Any]:
     """
     Remove None values from a list.
 
     Args:
-        lst_ (List[Any]): A list potentially containing None values.
+        lst_ (list[Any]): A list potentially containing None values.
 
     Returns:
-        List[Any]: A list with None values removed.
+        list[Any]: A list with None values removed.
 
     Examples:
         >>> _dropna([1, None, 3, None])
@@ -354,19 +356,19 @@ def _dropna(lst_: List[Any]) -> List[Any]:
 
 
 async def _alcall(
-        input_: Any, func: Callable, flatten: bool = False, **kwargs
-) -> List[Any]:
+        input_: Any, func: callable, flatten: bool = False, **kwargs
+) -> list[Any]:
     """
     asynchronously apply a function to each element in the input_.
 
     Args:
         input (Any): The input_ to process.
-        func (Callable): The function to apply.
+        func (callable): The function to apply.
         flatten (bool, optional): Whether to flatten the result. default is False.
         **kwargs: Keyword arguments to pass to the function.
 
     Returns:
-        List[Any]: A list of results after asynchronously applying the function.
+        list[Any]: A list of results after asynchronously applying the function.
 
     examples:
         >>> async def square(x): return x * x
@@ -380,7 +382,7 @@ async def _alcall(
 
 
 async def _tcall(
-        func: Callable,
+        func: callable,
         *args,
         delay: float = 0,
         err_msg: str | None = None,
@@ -394,7 +396,7 @@ async def _tcall(
     asynchronously call a function with optional delay, timeout, and error handling.
 
     Args:
-        func (Callable): The function to call.
+        func (callable): The function to call.
         *args: Positional arguments to pass to the function.
         delay (float): Delay before calling the function, in seconds.
         err_msg (str | None): Custom error message.
@@ -412,7 +414,7 @@ async def _tcall(
         >>> asyncio.run(tcall(example_func, 5, timing=True))
         (5, duration)
     """
-    start_time = time.time()
+    start_time = SysUtil.get_now(datetime_=False)
     try:
         await AsyncUtil.sleep(delay)
         # Apply timeout to the function call
@@ -422,20 +424,20 @@ async def _tcall(
             if AsyncUtil.is_coroutine_func(func):
                 return await func(*args, **kwargs)
             return func(*args, **kwargs)
-        duration = time.time() - start_time
+        duration = SysUtil.get_now(datetime_=False) - start_time
         return (result, duration) if timing else result
     except AsyncUtil.TimeoutError as e:
         err_msg = f"{err_msg} Error: {e}" if err_msg else f"An error occurred: {e}"
         print(err_msg)
         if ignore_err:
-            return (default, time.time() - start_time) if timing else default
+            return (default, SysUtil.get_now(datetime_=False) - start_time) if timing else default
         else:
             raise e  # Re-raise the timeout exception
     except Exception as e:
         err_msg = f"{err_msg} Error: {e}" if err_msg else f"An error occurred: {e}"
         print(err_msg)
         if ignore_err:
-            return (default, time.time() - start_time) if timing else default
+            return (default, SysUtil.get_now(datetime_=False) - start_time) if timing else default
         else:
             raise e
 
@@ -459,7 +461,7 @@ class CallDecorator:
     """
 
     @staticmethod
-    def timeout(timeout: int) -> Callable:
+    def timeout(timeout: int) -> callable:
         """
         Applies a timeout to an asynchronous function call, ensuring that the function
         execution completes within the specified duration.
@@ -473,7 +475,7 @@ class CallDecorator:
                 The maximum duration, in seconds, that the function is allowed to execute.
 
         Returns:
-            Callable:
+            callable:
                 A decorated function that enforces the specified execution timeout.
 
         Examples:
@@ -486,7 +488,7 @@ class CallDecorator:
             ... # seconds
         """
 
-        def decorator(func: Callable[..., Any]) -> Callable:
+        def decorator(func: callable[..., Any]) -> callable:
             @functools.wraps(func)
             async def wrapper(*args, **kwargs) -> Any:
                 return await rcall(func, *args, timeout=timeout, **kwargs)
@@ -498,7 +500,7 @@ class CallDecorator:
     @staticmethod
     def retry(
             retries: int = 3, delay: float = 2.0, backoff_factor: float = 2.0
-    ) -> Callable:
+    ) -> callable:
         """
         Decorates an asynchronous function to automatically retry on failure,
         with configurable retries, delay, and exponential backoff.
@@ -519,7 +521,7 @@ class CallDecorator:
                 exponential backoff. Default to 2.0.
 
         Returns:
-            Callable:
+            callable:
                 A decorated asynchronous function with retry logic based on the specified
                 parameters.
 
@@ -532,7 +534,7 @@ class CallDecorator:
             ... # with delays of 1s and 2s.
         """
 
-        def decorator(func: Callable[..., Any]) -> Callable:
+        def decorator(func: callable[..., Any]) -> callable:
             @functools.wraps(func)
             async def wrapper(*args, **kwargs) -> Any:
                 return await rcall(
@@ -549,7 +551,7 @@ class CallDecorator:
         return decorator
 
     @staticmethod
-    def default(default_value: Any) -> Callable:
+    def default(default_value: Any) -> callable:
         """
         Decorates an asynchronous function to return a default value in case of an
         exception, allowing the function to gracefully handle errors without
@@ -565,7 +567,7 @@ class CallDecorator:
                 The value to return if the decorated function raises an exception.
 
         Returns:
-            Callable:
+            callable:
                 A decorated asynchronous function that returns `default_value` in case of
                 error.
 
@@ -578,7 +580,7 @@ class CallDecorator:
             ... # an error
         """
 
-        def decorator(func: Callable[..., Any]) -> Callable:
+        def decorator(func: callable[..., Any]) -> callable:
             @functools.wraps(func)
             async def wrapper(*args, **kwargs) -> Any:
                 return await rcall(func, *args, default=default_value, **kwargs)
@@ -588,7 +590,7 @@ class CallDecorator:
         return decorator
 
     @staticmethod
-    def throttle(period: int) -> Callable:
+    def throttle(period: int) -> callable:
         """
         Decorates an asynchronous function to limit its execution frequency to not
         exceed one call per specified period. This is useful for rate-limiting calls to
@@ -605,7 +607,7 @@ class CallDecorator:
                 decorated function.
 
         Returns:
-            Callable:
+            callable:
                 A decorated asynchronous function that adheres to the specified call
                 frequency limit.
 
@@ -619,7 +621,7 @@ class CallDecorator:
         return _Throttle(period)
 
     @staticmethod
-    def map(function: Callable[[Any], Any]) -> Callable:
+    def map(function: callable[[Any], Any]) -> callable:
         """
         Decorates an asynchronous function to apply a specified mapping function to
         each element in the list returned by the decorated function. This is
@@ -632,12 +634,12 @@ class CallDecorator:
         succinctly applied to a collection of asynchronous results.
 
         Args:
-            function (Callable[[Any], Any]):
+            function (callable[[Any], Any]):
                 A mapping function to apply to each element of the list returned by the
                 decorated function.
 
         Returns:
-            Callable:
+            callable:
                 A decorated asynchronous function whose results are transformed by the
                 specified mapping function.
 
@@ -649,11 +651,11 @@ class CallDecorator:
             ... # `get_names` now returns ["ALICE", "BOB", "CHARLIE"]
         """
 
-        def decorator(func: Callable[..., List[Any]]) -> Callable:
+        def decorator(func: callable[..., list[Any]]) -> callable:
             if AsyncUtil.is_coroutine_func(func):
 
                 @functools.wraps(func)
-                async def async_wrapper(*args, **kwargs) -> List[Any]:
+                async def async_wrapper(*args, **kwargs) -> list[Any]:
                     values = await func(*args, **kwargs)
                     return [function(value) for value in values]
 
@@ -661,7 +663,7 @@ class CallDecorator:
             else:
 
                 @functools.wraps(func)
-                def sync_wrapper(*args, **kwargs) -> List[Any]:
+                def sync_wrapper(*args, **kwargs) -> list[Any]:
                     values = func(*args, **kwargs)
                     return [function(value) for value in values]
 
@@ -670,7 +672,7 @@ class CallDecorator:
         return decorator
 
     @staticmethod
-    def compose(*functions: Callable[[Any], Any]) -> Callable:
+    def compose(*functions: callable[[Any], Any]) -> callable:
         """
         Creates a decorator to sequentially apply multiple functions, where the output
         of one function becomes the input to the next. This enables function
@@ -683,12 +685,12 @@ class CallDecorator:
         all asynchronous).
 
         Args:
-            *functions (Callable[[Any], Any]):
+            *functions (callable[[Any], Any]):
                 A variable number of functions that are to be composed together. Each
                 function must accept a single argument and return a value.
 
         Returns:
-            Callable:
+            callable:
                 A decorator that, when applied to a function, composes it with the
                 specified functions, creating a pipeline of function calls.
 
@@ -707,7 +709,7 @@ class CallDecorator:
             7  # The value is doubled to 6, then incremented to 7
         """
 
-        def decorator(func: Callable) -> Callable:
+        def decorator(func: callable) -> callable:
             if not any(AsyncUtil.is_coroutine_func(f) for f in functions):
 
                 @functools.wraps(func)
@@ -747,8 +749,8 @@ class CallDecorator:
 
     @staticmethod
     def pre_post_process(
-            preprocess: Callable[..., Any], postprocess: Callable[..., Any]
-    ) -> Callable:
+            preprocess: callable[..., Any], postprocess: callable[..., Any]
+    ) -> callable:
         """
         Decorates a function with preprocessing and postprocessing steps, allowing for
         modifications to the arguments before the function call and to the result after
@@ -761,15 +763,15 @@ class CallDecorator:
         function's output, such as formatting results or applying additional computations.
 
         Args:
-            preprocess (Callable[..., Any]):
+            preprocess (callable[..., Any]):
                 A function to preprocess the arguments passed to the decorated function.
                 It must accept the same arguments as the decorated function.
-            postprocess (Callable[..., Any]):
+            postprocess (callable[..., Any]):
                 A function to postprocess the result of the decorated function. It must
                 accept a single argument, which is the output of the decorated function.
 
         Returns:
-            Callable:
+            callable:
                 A decorated function that applies the specified preprocessing and
                 postprocessing steps to its execution.
 
@@ -781,7 +783,7 @@ class CallDecorator:
             12  # Input 5 is preprocessed to 4, processed to 6, and postprocessed to 12
         """
 
-        def decorator(func: Callable[..., Any]) -> Callable[..., Any]:
+        def decorator(func: callable[..., Any]) -> callable[..., Any]:
             if AsyncUtil.is_coroutine_func(func):
 
                 @functools.wraps(func)
@@ -806,21 +808,21 @@ class CallDecorator:
         return decorator
 
     @staticmethod
-    def cache(func: Callable, ttl=600, maxsize=None) -> Callable:
+    def cache(func: callable, ttl=600, maxsize=None) -> callable:
         """
         Decorates a function (synchronous or asynchronous) to cache its results for a
         specified time-to-live (TTL). This caching mechanism prevents re-execution of
         the function with the same arguments, improving efficiency, especially for I/O
         bound or computationally intensive operations.
 
-        Args: func (Callable): The target function to cache. Can be either synchronous
+        Args: func (callable): The target function to cache. Can be either synchronous
         or asynchronous. ttl (int, optional): The time-to-live of the cache entries in
         seconds. Defaults to 600 seconds. maxsize (Optional[int], optional): The
         maximum size of the cache. If None, the cache is unbounded. Applies only to
         synchronous functions.
 
         Returns:
-            Callable: A decorated version of the function with caching applied. Subsequent
+            callable: A decorated version of the function with caching applied. Subsequent
             calls with the same arguments within the TTL will return the cached result.
 
         Examples:
@@ -834,7 +836,7 @@ class CallDecorator:
 
         if AsyncUtil.is_coroutine_func(func):
             # Asynchronous function handling
-            @cached(ttl=ttl)
+            @AsyncUtil.cached(ttl=ttl)
             async def cached_async(*args, **kwargs) -> Any:
                 return await func(*args, **kwargs)
 
@@ -857,7 +859,7 @@ class CallDecorator:
             return sync_wrapper
 
     @staticmethod
-    def filter(predicate: Callable[[Any], bool]) -> Callable:
+    def filter(predicate: callable[[Any], bool]) -> callable:
         """
         Decorates a function to filter its list result based on a given predicate. The
         predicate determines which items in the list should be included in the final
@@ -865,12 +867,12 @@ class CallDecorator:
         functions returning lists.
 
         Args:
-            predicate (Callable[[Any], bool]):
+            predicate (callable[[Any], bool]):
                 A function that evaluates each input_ in the list. Items for which the
                 predicate returns True are included in the final result.
 
         Returns:
-            Callable:
+            callable:
             A decorated function that filters its list result according to the predicate.
 
         Examples:
@@ -882,11 +884,11 @@ class CallDecorator:
             ... # The result list is filtered to include only even numbers.
         """
 
-        def decorator(func: Callable[..., List[Any]]) -> Callable:
+        def decorator(func: callable[..., list[Any]]) -> callable:
             if AsyncUtil.is_coroutine_func(func):
 
                 @functools.wraps(func)
-                async def wrapper(*args, **kwargs) -> List[Any]:
+                async def wrapper(*args, **kwargs) -> list[Any]:
                     values = await func(*args, **kwargs)
                     return [value for value in values if predicate(value)]
 
@@ -894,7 +896,7 @@ class CallDecorator:
             else:
 
                 @functools.wraps(func)
-                def wrapper(*args, **kwargs) -> List[Any]:
+                def wrapper(*args, **kwargs) -> list[Any]:
                     values = func(*args, **kwargs)
                     return [value for value in values if predicate(value)]
 
@@ -903,7 +905,7 @@ class CallDecorator:
         return decorator
 
     @staticmethod
-    def reduce(function: Callable[[Any, Any], Any], initial: Any) -> Callable:
+    def reduce(function: callable[[Any, Any], Any], initial: Any) -> callable:
         """
         Decorates a function to apply a reduction to its list result, combining all
         items in the list into a single value using the specified reduction function.
@@ -912,7 +914,7 @@ class CallDecorator:
         synchronous and asynchronous functions.
 
         Args:
-            function (Callable[[Any, Any], Any]):
+            function (callable[[Any, Any], Any]):
                 The reduction function to apply to the list. It should take two arguments
                 and return a single value that is the result of combining them.
             initial (Any):
@@ -921,7 +923,7 @@ class CallDecorator:
                 reduction operation.
 
         Returns:
-            Callable:
+            callable:
                 A decorated function that applies the specified reduction to its list
                 result,
             producing a single aggregated value.
@@ -935,7 +937,7 @@ class CallDecorator:
             ... # The numbers in the list are summed, resulting in a single value.
         """
 
-        def decorator(func: Callable[..., List[Any]]) -> Callable:
+        def decorator(func: callable[..., list[Any]]) -> callable:
             if AsyncUtil.is_coroutine_func(func):
 
                 @functools.wraps(func)
@@ -956,7 +958,7 @@ class CallDecorator:
         return decorator
 
     @staticmethod
-    def max_concurrency(limit: int = 5) -> Callable:
+    def max_concurrency(limit: int = 5) -> callable:
         """
         Limits the number of concurrent executions for an asynchronous function to
         ensure that no more than a specified number of instances of the function run
@@ -970,7 +972,7 @@ class CallDecorator:
                 function.
 
         Returns:
-            Callable:
+            callable:
                 An asynchronous function wrapper that enforces the concurrency limit.
 
         Examples:
@@ -981,7 +983,7 @@ class CallDecorator:
             ... # No more than 3 instances of `process_data` will run concurrently.
         """
 
-        def decorator(func: Callable) -> Callable:
+        def decorator(func: callable) -> callable:
             if not AsyncUtil.AsyncUtil.is_coroutine_func(func):
                 raise TypeError(
                     "max_concurrency decorator can only be used with async functions."
@@ -999,7 +1001,7 @@ class CallDecorator:
 
     # noinspection PyRedeclaration
     @staticmethod
-    def throttle(period: int) -> Callable:
+    def throttle(period: int) -> callable:
         """
         A static method to create a throttling decorator. This method utilizes the
         _Throttle class to enforce a minimum time period between successive calls of the
@@ -1011,7 +1013,7 @@ class CallDecorator:
                 calls to the decorated function.
 
         Returns:
-            Callable:
+            callable:
                 A decorator that applies a throttling mechanism to the decorated function,
                 ensuring that the function is not called more frequently than the
                 specified period.
@@ -1063,44 +1065,44 @@ class _Throttle:
         self.period = period
         self.last_called = 0
 
-    def __call__(self, func: Callable[..., Any]) -> Callable[..., Any]:
+    def __call__(self, func: callable[..., Any]) -> callable[..., Any]:
         """
         Decorates a synchronous function with the throttling mechanism.
 
         Args:
-            func (Callable[..., Any]): The synchronous function to be throttled.
+            func (callable[..., Any]): The synchronous function to be throttled.
 
         Returns:
-            Callable[..., Any]: The throttled synchronous function.
+            callable[..., Any]: The throttled synchronous function.
         """
 
         @functools.wraps(func)
         def wrapper(*args, **kwargs) -> Any:
-            elapsed = time.time() - self.last_called
+            elapsed = SysUtil.get_now(datetime_=False) - self.last_called
             if elapsed < self.period:
-                time.sleep(self.period - elapsed)
-            self.last_called = time.time()
+                SysUtil.sleep(self.period - elapsed)
+            self.last_called = SysUtil.get_now(datetime_=False)
             return func(*args, **kwargs)
 
         return wrapper
 
-    async def __call_async__(self, func: Callable[..., Any]) -> Callable[..., Any]:
+    async def __call_async__(self, func: callable[..., Any]) -> callable[..., Any]:
         """
         Decorates an asynchronous function with the throttling mechanism.
 
         Args:
-            func (Callable[..., Any]): The asynchronous function to be throttled.
+            func (callable[..., Any]): The asynchronous function to be throttled.
 
         Returns:
-            Callable[..., Any]: The throttled asynchronous function.
+            callable[..., Any]: The throttled asynchronous function.
         """
 
         @functools.wraps(func)
         async def wrapper(*args, **kwargs) -> Any:
-            elapsed = time.time() - self.last_called
+            elapsed = SysUtil.get_now(datetime_=False) - self.last_called
             if elapsed < self.period:
                 await AsyncUtil.sleep(self.period - elapsed)
-            self.last_called = time.time()
+            self.last_called = SysUtil.get_now(datetime_=False)
             return await func(*args, **kwargs)
 
         return wrapper

@@ -3,7 +3,7 @@ from typing import Any, Dict, List, Optional, Union, TypeVar
 
 import pandas as pd
 
-from lionagi.libs.ln_convert import ConvertUtil
+from lionagi.libs import ln_convert as convert
 from lionagi.libs.ln_api import StatusTracker
 
 from lionagi.core.schema import Tool
@@ -14,10 +14,9 @@ from lionagi.core.session.base.base_branch import BaseBranch
 from lionagi.core.session.base.schema import (
     BaseMail,
     Instruction,
-    System,
-    Response,
-    BaseMessage,
+    System
 )
+
 from lionagi.core.session.base.util import MessageUtil
 
 
@@ -195,14 +194,14 @@ class Branch(BaseBranch):
 
         if not isinstance(tools, list):
             tools = [tools]
-        if ConvertUtil.is_same_dtype(tools, str):
+        if convert.is_same_dtype(tools, str):
             for act_ in tools:
                 if act_ in self.tool_manager.registry:
                     self.tool_manager.registry.pop(act_)
             if verbose:
                 print("tools successfully deleted")
             return True
-        elif ConvertUtil.is_same_dtype(tools, Tool):
+        elif convert.is_same_dtype(tools, Tool):
             for act_ in tools:
                 if act_.schema_["function"]["name"] in self.tool_manager.registry:
                     self.tool_manager.registry.pop(act_.schema_["function"]["name"])

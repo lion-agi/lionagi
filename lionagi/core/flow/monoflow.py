@@ -51,6 +51,7 @@ class MonoChat(BaseMonoFlow):
     def _create_chat_config(
         self, 
         instruction: Instruction | str,
+        *,
         context: Optional[Any] = None,
         sender: Optional[str] = None,
         system: Optional[Union[System, str, Dict[str, Any]]] = None,
@@ -124,6 +125,7 @@ class MonoChat(BaseMonoFlow):
     async def chat(
         self,
         instruction: Union[Instruction, str],
+        *,
         context: Optional[Any] = None,
         sender: Optional[str] = None,
         system: Optional[Union[System, str, Dict[str, Any]]] = None,
@@ -159,6 +161,7 @@ class MonoChat(BaseMonoFlow):
     async def ReAct(
         self,
         instruction: Union[Instruction, str],
+        *,
         context=None,
         sender=None,
         system=None,
@@ -206,6 +209,7 @@ class MonoChat(BaseMonoFlow):
     async def auto_followup(
         self,
         instruction: Union[Instruction, str],
+        *,
         context=None,
         sender=None,
         system=None,
@@ -259,6 +263,7 @@ class MonoChat(BaseMonoFlow):
     async def followup(
         self,
         instruction: Union[Instruction, str],
+        *,
         context=None,
         sender=None,
         system=None,

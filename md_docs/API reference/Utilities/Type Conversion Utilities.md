@@ -1,7 +1,7 @@
 
-# ConvertUtil Class API Reference
+#  Class API Reference
 
-The `ConvertUtil` class offers a suite of static methods designed for data type conversion and manipulation, simplifying the handling of various data formats and structures.
+The `` class offers a suite of static methods designed for data type conversion and manipulation, simplifying the handling of various data formats and structures.
 
 ## to_dict
 
@@ -10,7 +10,7 @@ Converts a given input to a dictionary. It supports converting JSON strings to d
 ### Usage
 
 ```python
-dict_obj = ConvertUtil.to_dict(input_)
+dict_obj = .to_dict(input_)
 ```
 
 ### Parameters
@@ -24,7 +24,7 @@ Checks if all elements in an input list or dictionary values are of the same dat
 ### Usage
 
 ```python
-is_homogeneous = ConvertUtil.is_same_dtype(input_, dtype=None)
+is_homogeneous = .is_same_dtype(input_, dtype=None)
 ```
 
 ### Parameters
@@ -39,7 +39,7 @@ Converts an XML `ElementTree.Element` to a dictionary, preserving hierarchy and 
 ### Usage
 
 ```python
-xml_dict = ConvertUtil.xml_to_dict(root)
+xml_dict = .xml_to_dict(root)
 ```
 
 ### Parameters
@@ -53,7 +53,7 @@ Converts a string to a numeric type (int or float), with options for upper and l
 ### Usage
 
 ```python
-number = ConvertUtil.to_num(input_, upper_bound=None, lower_bound=None, num_type=int,
+number = .to_num(input_, upper_bound=None, lower_bound=None, num_type=int,
                             precision=None)
 ```
 
@@ -72,7 +72,7 @@ Converts any input to a lowercase string, stripping leading and trailing whitesp
 ### Usage
 
 ```python
-stripped_lower_str = ConvertUtil.strip_lower(input_)
+stripped_lower_str = .strip_lower(input_)
 ```
 
 ### Parameters
@@ -87,7 +87,7 @@ Converts various types of inputs into a pandas DataFrame. This method supports c
 ### Usage
 
 ```python
-df = ConvertUtil.to_df(item, how="all", drop_kwargs=None, reset_index=True, **kwargs)
+df = .to_df(item, how="all", drop_kwargs=None, reset_index=True, **kwargs)
 ```
 
 ### Parameters
@@ -105,7 +105,7 @@ Converts a dictionary or a list into a JSON-formatted string for easier readabil
 ### Usage
 
 ```python
-readable_json = ConvertUtil.to_readable_dict(input_)
+readable_json = .to_readable_dict(input_)
 ```
 
 ### Parameters

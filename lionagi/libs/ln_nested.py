@@ -1,22 +1,13 @@
+from collections.abc import Mapping, Sequence
 from collections import defaultdict
 from itertools import chain
-from typing import (
-    Any,
-    Callable,
-    Dict,
-    Generator,
-    List,
-    Tuple,
-    Union,
-    Iterable,
-    Optional,
-)
+from typing import Any, Generator
 
 from lionagi.libs.sys_util import SysUtil
-from lionagi.libs.ln_convert import ConvertUtil, to_list
+import lionagi.libs.ln_convert as convert
 
 
-def nset(nested_structure: Dict | List, indices: List[int | str], value: Any) -> None:
+def nset(nested_structure: Mapping | Sequence, indices: Sequence[int | str], value: Any) -> None:
     """
     sets a value within a nested structure at the specified path defined by indices.
 
@@ -25,8 +16,8 @@ def nset(nested_structure: Dict | List, indices: List[int | str], value: Any) ->
     the list represents a level in the nested structure, with integers used for
     list indices and strings for dictionary keys.
 
-    Args: nested_structure (Dict | List): The nested structure where the value will
-    be set. indices (List[int | str]): The path of indices leading to where the
+    Args: nested_structure (Mapping | Sequence): The nested structure where the value will
+    be set. indices (list[int | str]): The path of indices leading to where the
     value should be set. value (Any): The value to set at the specified location in
     the nested structure.
 
@@ -46,8 +37,9 @@ def nset(nested_structure: Dict | List, indices: List[int | str], value: Any) ->
     if not indices:
         raise ValueError("Indices list is empty, cannot determine target container")
 
-    target_container = _get_target_container(nested_structure, indices[:-1])
-    last_index = indices[-1]
+    _indices = convert.to_list(indices)
+    target_container = _get_target_container(nested_structure, _indices[:-1])
+    last_index = _indices[-1]
 
     if isinstance(target_container, list):
         _ensure_list_index(target_container, last_index)
@@ -59,9 +51,9 @@ def nset(nested_structure: Dict | List, indices: List[int | str], value: Any) ->
 
 
 def nget(
-    nested_structure: Dict | List,
-    indices: List[int | str],
-    default: Optional[Any] = None,
+    nested_structure: Mapping | Sequence,
+    indices: list[int | str],
+    default: Any | None = None,
 ) -> Any:
     """
     retrieves a value from a nested list or dictionary structure, with an option to
@@ -73,9 +65,9 @@ def nget(
     exist, it returns the specified default value or raises an error if no default
     is provided.
 
-    Args: nested_structure (Dict | List): The nested list or dictionary structure.
-    indices (List[int | str]): A list of indices to navigate through the structure.
-    default (Optional[Any]): The default value to return if the target cannot be
+    Args: nested_structure (Mapping | Sequence): The nested list or dictionary structure.
+    indices (list[int | str]): A list of indices to navigate through the structure.
+    default (Any | None): The default value to return if the target cannot be
     reached. if `default` is not provided and the target cannot be reached,
     a LookupError is raised.
 
@@ -120,13 +112,13 @@ def nget(
 
 # nested merge
 def nmerge(
-    nested_structure: List[Dict | List | Iterable],
+    nested_structure: Sequence[Mapping | Sequence],
     overwrite: bool = False,
     dict_sequence: bool = False,
     sequence_separator: str = "_",
     sort_list: bool = False,
-    custom_sort: Optional[Callable[[Any], Any]] = None,
-) -> Dict | List:
+    custom_sort: callable[[Any], Any] | None = None,
+) -> Mapping | Sequence:
     """
     merges multiple dictionaries, lists, or sequences into a unified structure.
 
@@ -162,18 +154,18 @@ def nmerge(
         >>> nmerge([[1, 2], [3, 4]], sort_list=True)
         [1, 2, 3, 4]
     """
-    if ConvertUtil.is_homogeneous(nested_structure, Dict):
+    if convert.is_homogeneous(nested_structure, Mapping):
         return _merge_dicts(
             nested_structure, overwrite, dict_sequence, sequence_separator
         )
-    elif ConvertUtil.is_homogeneous(nested_structure, List) and not any(
-        isinstance(it, (Dict, str)) for it in nested_structure
+    elif convert.is_homogeneous(nested_structure, Sequence) and not any(
+        isinstance(it, (Mapping, str)) for it in nested_structure
     ):
         return _merge_sequences(nested_structure, sort_list, custom_sort)
     else:
         raise TypeError(
             "All items in the input_ list must be of the same type, "
-            "either Dict, List, or Iterable."
+            "either dict, list, or Iterable."
         )
 
 
@@ -185,7 +177,7 @@ def flatten(
     max_depth: int | None = None,
     inplace: bool = False,
     dict_only: bool = False,
-) -> Dict | None:
+) -> dict | None:
     """
     flattens a nested structure into a dictionary with composite keys.
 
@@ -216,14 +208,14 @@ def flatten(
         {'0_a': 1, '1_b': 2}
     """
     if inplace:
-        if not isinstance(nested_structure, dict):
+        if not isinstance(nested_structure, Mapping):
             raise ValueError("Object must be a dictionary when 'inplace' is True.")
         _dynamic_flatten_in_place(
             nested_structure, parent_key, sep, max_depth, dict_only=dict_only
         )
     else:
         parent_key_tuple = tuple(parent_key.split(sep)) if parent_key else ()
-        return dict(
+        return convert.to_dict(
             _dynamic_flatten_generator(
                 nested_structure, parent_key_tuple, sep, max_depth, dict_only=dict_only
             )
@@ -232,11 +224,11 @@ def flatten(
 
 # unflatten dictionary
 def unflatten(
-    flat_dict: Dict[str, Any],
+    flat_dict: dict[str, Any],
     sep: str = "_",
-    custom_logic: Callable[[str], Any] | None = None,
+    custom_logic: callable[[str], Any] | None = None,
     max_depth: int | None = None,
-) -> Dict | List:
+) -> Mapping | Sequence:
     """
     reconstructs a nested structure from a flat dictionary with composite keys.
 
@@ -275,7 +267,7 @@ def unflatten(
 
         ninsert(unflattened, parts, value, sep, max_depth)
 
-    if isinstance(unflattened, dict) and all(
+    if isinstance(unflattened, Mapping) and all(
         isinstance(k, int) for k in unflattened.keys()
     ):
         max_index = max(unflattened.keys(), default=-1)
@@ -286,8 +278,8 @@ def unflatten(
 
 
 def nfilter(
-    nested_structure: Dict | List, condition: Callable[[Any], bool]
-) -> Dict | List:
+    nested_structure: Mapping | Sequence, condition: callable[[Any], bool]
+) -> Mapping | Sequence:
     """
     filters items in a dictionary or list based on a specified condition.
 
@@ -296,12 +288,12 @@ def nfilter(
     it directly receives the elements. only items for which the condition returns
     True are included in the resulting collection.
 
-    Args: nested_structure (Dict | List): The collection to filter, either a
-    dictionary or a list. condition (Callable[[Any], bool]): A function that
+    Args: nested_structure (Mapping | Sequence): The collection to filter, either a
+    dictionary or a list. condition (callable[[Any], bool]): A function that
     evaluates each input_ (or key-value pair in the case of dictionaries) against a
     condition. returns True to include the input_ in the result, False otherwise.
 
-    Returns: Dict | List: A new collection of the same types as `collection`,
+    Returns: Mapping | Sequence: A new collection of the same types as `collection`,
     containing only items that meet the condition.
 
     Raises:
@@ -313,17 +305,17 @@ def nfilter(
         >>> nfilter([1, 2, 3, 4], lambda x: x % 2 == 0)
         [2, 4]
     """
-    if isinstance(nested_structure, Dict):
+    if isinstance(nested_structure, Mapping):
         return _filter_dict(nested_structure, condition)
-    elif isinstance(nested_structure, List):
+    elif isinstance(nested_structure, Sequence):
         return _filter_list(nested_structure, condition)
     else:
-        raise TypeError("The nested_structure must be either a Dict or a List.")
+        raise TypeError("The nested_structure must be either a dict or a list.")
 
 
 def ninsert(
-    nested_structure: Dict | List,
-    indices: List[str | int],
+    nested_structure: Mapping | Sequence,
+    indices: Sequence[str | int],
     value: Any,
     sep: str = "_",
     max_depth: int | None = None,
@@ -336,8 +328,8 @@ def ninsert(
     `indices`) and inserts `value` at the final location. this method can create
     intermediate dictionaries or lists as needed.
 
-    Args: nested_structure (Dict | List): The nested structure to modify. indices (
-    List[str | int]): The sequence of keys (str for dicts) or indices (int for
+    Args: nested_structure (Mapping | Sequence): The nested structure to modify. indices (
+    list[str | int]): The sequence of keys (str for dicts) or indices (int for
     lists) defining the path to the insertion point. value (Any): The value to
     insert at the specified location within `subject`. sep (str): A sep used
     when concatenating indices to form composite keys in case of ambiguity. defaults
@@ -354,7 +346,7 @@ def ninsert(
         >>> ninsert(subject_, [0, 'a'], 1)
         >>> assert subject_ == [{'a': 1}]
     """
-    indices = to_list(indices)
+    indices = convert.to_list(indices)
     parts_len = len(indices)
     parts_depth = 0
     for i, part in enumerate(indices[:-1]):
@@ -365,7 +357,7 @@ def ninsert(
             while len(nested_structure) <= part:
                 nested_structure.append(None)
             if nested_structure[part] is None or not isinstance(
-                nested_structure[part], (dict, list)
+                nested_structure[part], (Mapping, Sequence)
             ):
                 next_part = indices[i + 1]
                 nested_structure[part] = [] if isinstance(next_part, int) else {}
@@ -385,7 +377,7 @@ def ninsert(
     if isinstance(last_part, int):
         _handle_list_insert(nested_structure, last_part, value)
     else:
-        if isinstance(nested_structure, list):
+        if isinstance(nested_structure, Sequence):
             nested_structure.append({last_part: value})
         else:
             nested_structure[last_part] = value
@@ -398,7 +390,7 @@ def get_flattened_keys(
     max_depth: int | None = None,
     dict_only: bool = False,
     inplace: bool = False,
-) -> List[str]:
+) -> list[str]:
     """
     retrieves keys from a nested structure after flattening.
 
@@ -433,9 +425,9 @@ def get_flattened_keys(
         flatten(
             obj_copy, sep=sep, max_depth=max_depth, inplace=True, dict_only=dict_only
         )
-        return list(obj_copy.keys())
+        return convert.to_list(obj_copy.keys())
     else:
-        return list(
+        return convert.to_list(
             flatten(
                 nested_structure, sep=sep, max_depth=max_depth, dict_only=dict_only
             ).keys()
@@ -472,22 +464,22 @@ def _dynamic_flatten_in_place(
         Given a nested dictionary `nested_dict` with the appropriate structure,
         `_dynamic_flatten_in_place(nested_dict)` will modify it to a flattened form.
     """
-    if isinstance(nested_structure, dict):
+    if isinstance(nested_structure, Mapping):
         keys_to_delete = []
-        items = list(nested_structure.items())  # Create a copy of the dictionary
+        items = convert.to_list(nested_structure.items())  # Create a copy of the dictionary
         # items
 
         for k, v in items:
             new_key = f"{parent_key}{sep}{k}" if parent_key else k
 
-            if isinstance(v, dict) and (max_depth is None or current_depth < max_depth):
+            if isinstance(v, Mapping) and (max_depth is None or current_depth < max_depth):
                 _dynamic_flatten_in_place(
                     v, new_key, sep, max_depth, current_depth + 1, dict_only
                 )
                 keys_to_delete.append(k)
                 nested_structure.update(v)
             elif not dict_only and (
-                isinstance(v, list) or not isinstance(v, (dict, list))
+                isinstance(v, Sequence) or not isinstance(v, (Mapping, Sequence))
             ):
                 nested_structure[new_key] = v
                 if parent_key:
@@ -497,7 +489,7 @@ def _dynamic_flatten_in_place(
             del nested_structure[k]
 
 
-def _handle_list_insert(nested_structure: List, part: int, value: Any) -> None:
+def _handle_list_insert(nested_structure: Sequence, part: int, value: Any) -> None:
     """
     Ensures a specified index in a list is occupied by a given value, extending the
     list if necessary.
@@ -519,7 +511,7 @@ def _handle_list_insert(nested_structure: List, part: int, value: Any) -> None:
     nested_structure[part] = value
 
 
-def _ensure_list_index(lst_: List, index: int, default: Any = None) -> None:
+def _ensure_list_index(lst_: Sequence, index: int, default: Any = None) -> None:
     """
     Extends a list to ensure it has a minimum length, appending a default value as
     needed.
@@ -540,7 +532,7 @@ def _ensure_list_index(lst_: List, index: int, default: Any = None) -> None:
         lst_.append(default)
 
 
-def _deep_update(original: Dict, update: Dict) -> Dict:
+def _deep_update(original: Mapping, update: Mapping) -> dict:
     """
     Recursively merges two dictionaries, updating nested dictionaries instead of
     overwriting them.
@@ -570,12 +562,12 @@ def _deep_update(original: Dict, update: Dict) -> Dict:
 
 def _dynamic_flatten_generator(
     nested_structure: Any,
-    parent_key: Tuple[str, ...],
+    parent_key: tuple[str, ...],
     sep: str = "_",
     max_depth: int | None = None,
     current_depth: int = 0,
     dict_only: bool = False,
-) -> Generator[Tuple[str, Any], None, None]:
+) -> Generator[tuple[str, Any], None, None]:
     """
     Generates flattened key-value pairs from a nested structure.
 
@@ -601,7 +593,7 @@ def _dynamic_flatten_generator(
         yield sep.join(parent_key), nested_structure
         return
 
-    if isinstance(nested_structure, dict):
+    if isinstance(nested_structure, Mapping):
         for k, v in nested_structure.items():
             new_key = parent_key + (k,)
             yield from _dynamic_flatten_generator(
@@ -617,7 +609,7 @@ def _dynamic_flatten_generator(
         yield sep.join(parent_key), nested_structure
 
 
-def _deep_merge_dicts(dict1: Dict, dict2: Dict) -> Dict:
+def _deep_merge_dicts(dict1: Mapping, dict2: Mapping) -> Mapping:
     """
     Deeply merges two dictionaries, combining nested dictionaries instead of
     overwriting them.
@@ -639,7 +631,7 @@ def _deep_merge_dicts(dict1: Dict, dict2: Dict) -> Dict:
     """
     for key in dict2:
         if key in dict1:
-            if isinstance(dict1[key], dict) and isinstance(dict2[key], dict):
+            if isinstance(dict1[key], Mapping) and isinstance(dict2[key], Mapping):
                 _deep_merge_dicts(dict1[key], dict2[key])
             else:
                 dict1[key] = dict2[key]
@@ -649,11 +641,11 @@ def _deep_merge_dicts(dict1: Dict, dict2: Dict) -> Dict:
 
 
 def _merge_dicts(
-    iterables: List[Dict[Any, Any]],
+    iterables: Sequence[Mapping[Any, Any]],
     dict_update: bool,
     dict_sequence: bool,
     sequence_separator: str,
-) -> Dict[Any, Any]:
+) -> dict[Any, Any]:
     """
     Merges a list of dictionaries into a single dictionary.
 
@@ -682,10 +674,10 @@ def _merge_dicts(
 
 
 def _merge_sequences(
-    iterables: List[Iterable[Any]],
+    iterables: Sequence,
     sort_list: bool,
-    custom_sort: Callable[[Any], Any] | None = None,
-) -> List[Any]:
+    custom_sort: callable[[Any], Any] | None = None,
+) -> list[Any]:
     """
     Concatenates multiple sequences into a single list, with optional sorting.
 
@@ -698,14 +690,14 @@ def _merge_sequences(
         sort_list: Determines whether to sort the merged list.
         custom_sort: Optional. A function defining custom sort criteria.
 
-    Returns: List[Any]: The merged (and potentially sorted) list of elements from
+    Returns: list[Any]: The merged (and potentially sorted) list of elements from
     all provided iterables.
 
     Note: The sorting behavior is defined by `sort_list` and `custom_sort`. If
     `sort_list` is False, `custom_sort` is ignored. If True, the list is sorted
     using Python's default sort unless `custom_sort` is provided.
     """
-    merged_list = list(chain(*iterables))
+    merged_list = convert.to_list(chain(*iterables))
     if sort_list:
         if custom_sort:
             return sorted(merged_list, key=custom_sort)
@@ -716,8 +708,8 @@ def _merge_sequences(
 
 
 def _filter_dict(
-    dictionary: Dict[Any, Any], condition: Callable[[Tuple[Any, Any]], bool]
-) -> Dict[Any, Any]:
+    dictionary: Mapping[Any, Any], condition: callable[[tuple[Any, Any]], bool]
+) -> Mapping[Any, Any]:
     """
     Filters the entries in a dictionary based on a specified condition.
 
@@ -729,13 +721,13 @@ def _filter_dict(
     accepts a key-value pair (as a tuple) and returns a boolean. Key-value pairs
     for which the function returns True are included in the output dictionary.
 
-    Returns: Dict[Any, Any]: A new dictionary containing only the entries that
+    Returns: dict[Any, Any]: A new dictionary containing only the entries that
     satisfy the condition.
     """
     return {k: v for k, v in dictionary.items() if condition((k, v))}
 
 
-def _filter_list(lst: List[Any], condition: Callable[[Any], bool]) -> List[Any]:
+def _filter_list(lst: list[Any], condition: callable[[Any], bool]) -> list[Any]:
     """
     Filters elements in a list based on a specified condition.
 
@@ -747,22 +739,22 @@ def _filter_list(lst: List[Any], condition: Callable[[Any], bool]) -> List[Any]:
     the filtered list.
 
     Returns:
-        List[Any]: A new list comprising elements that meet the condition.
+        list[Any]: A new list comprising elements that meet the condition.
     """
     return [item for item in lst if condition(item)]
 
 
 def _get_target_container(
-    nested_list: Union[List, Dict], indices: List[Union[int, str]]
-) -> Union[List, Dict]:
+    nested_list: Sequence | Mapping, indices: Sequence[int | str]
+) -> Sequence | Mapping:
     current_element = nested_list
     for index in indices:
-        if isinstance(current_element, list):
+        if isinstance(current_element, Sequence):
             if isinstance(index, int) and 0 <= index < len(current_element):
                 current_element = current_element[index]
             else:
-                raise IndexError("List index out of range")
-        elif isinstance(current_element, dict):
+                raise IndexError("list index out of range")
+        elif isinstance(current_element, Mapping):
             if index in current_element:
                 current_element = current_element[index]
             else:
@@ -770,59 +762,3 @@ def _get_target_container(
         else:
             raise TypeError("Current element is neither a list nor a dictionary")
     return current_element
-
-
-def _is_structure_homogeneous(
-    structure: Any, return_structure_type: bool = False
-) -> Union[bool, Tuple[bool, Optional[type]]]:
-    """
-    checks if a nested structure is homogeneous, meaning it doesn't contain a mix
-    of lists and dictionaries.
-
-    Args: structure: The nested structure to check. return_structure_type: Flag to
-    indicate whether to return the type of homogeneous structure.
-
-    Returns: If return_structure_type is False, returns a boolean indicating
-    whether the structure is homogeneous. if return_structure_type is True,
-    returns a tuple containing a boolean indicating whether the structure is
-    homogeneous, and the type of the homogeneous structure if it is homogeneous (
-    either list, dict, or None).
-
-    examples:
-        >>> _is_structure_homogeneous({'a': {'b': 1}, 'c': {'d': 2}})
-        True
-
-        >>> _is_structure_homogeneous({'a': {'b': 1}, 'c': [1, 2]})
-        False
-    """
-
-    # noinspection PyShadowingNames
-    def _check_structure(substructure):
-        structure_type = None
-        if isinstance(substructure, list):
-            structure_type = list
-            for item in substructure:
-                if not isinstance(item, structure_type) and isinstance(
-                    item, (list, Dict)
-                ):
-                    return False, None
-                result, _ = _check_structure(item)
-                if not result:
-                    return False, None
-        elif isinstance(substructure, dict):
-            structure_type = dict
-            for item in substructure.values():
-                if not isinstance(item, structure_type) and isinstance(
-                    item, (list, dict)
-                ):
-                    return False, None
-                result, _ = _check_structure(item)
-                if not result:
-                    return False, None
-        return True, structure_type
-
-    is_, structure_type = _check_structure(structure)
-    if return_structure_type:
-        return is_, structure_type
-    else:
-        return is_

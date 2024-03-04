@@ -1,16 +1,18 @@
 from enum import Enum
-from typing import Any, Optional, List, Dict
+from typing import Any, Optional
 
 # import pandas as pd
 # from pydantic import Field, model_validator
 
-from lionagi.libs import nget, to_dict, ConvertUtil, to_str
+from lionagi.libs import ln_nested as nested
+from lionagi.libs import ln_convert as convert
+
 from lionagi.core.schema import DataNode
 
 _message_fields = ["node_id", "timestamp", "role", "sender", "content"]
 
 
-class BranchColumns(List[str], Enum):
+class BranchColumns(list[str], Enum):
     COLUMNS = _message_fields
 
 
@@ -108,7 +110,7 @@ class BaseMessage(DataNode):
     sender: Optional[str] = None
 
     @property
-    def msg(self) -> Dict[str, Any]:
+    def msg(self) -> dict[str, Any]:
         """
         Constructs and returns a dictionary representation of the message.
 
@@ -134,7 +136,7 @@ class BaseMessage(DataNode):
         Returns:
             dict: A dictionary representation of the message with 'role' and 'content' keys.
         """
-        out = {"role": self.role, "content": to_str(self.content)}
+        out = {"role": self.role, "content": convert.to_str(self.content)}
         return out
 
     def __str__(self):
@@ -188,25 +190,25 @@ class Response(BaseMessage):
         content_key = ""
         try:
             response = response["message"]
-            if ConvertUtil.strip_lower(response["content"]) == "none":
+            if convert.strip_lower(response["content"]) == "none":
                 content_ = self._handle_action_request(response)
                 sender = sender or "action_request"
                 content_key = content_key or "action_request"
 
             else:
                 try:
-                    if "tool_uses" in to_dict(response["content"]):
-                        content_ = to_dict(response["content"])["tool_uses"]
+                    if "tool_uses" in convert.to_dict(response["content"]):
+                        content_ = convert.to_dict(response["content"])["tool_uses"]
                         content_key = content_key or "action_request"
                         sender = sender or "action_request"
-                    elif "response" in to_dict(response["content"]):
+                    elif "response" in convert.to_dict(response["content"]):
                         sender = sender or "assistant"
                         content_key = content_key or "response"
-                        content_ = to_dict(response["content"])["response"]
-                    elif "action_request" in to_dict(response["content"]):
+                        content_ = convert.to_dict(response["content"])["response"]
+                    elif "action_request" in convert.to_dict(response["content"]):
                         sender = sender or "action_request"
                         content_key = content_key or "action_request"
-                        content_ = to_dict(response["content"])["action_request"]
+                        content_ = convert.to_dict(response["content"])["action_request"]
                     else:
                         content_ = response["content"]
                         content_key = content_key or "response"
@@ -245,13 +247,13 @@ class Response(BaseMessage):
             while tool_count < len(response["tool_calls"]):
                 _path = ["tool_calls", tool_count, "type"]
 
-                if nget(response, _path) == "function":
+                if nested.nget(response, _path) == "function":
                     _path1 = ["tool_calls", tool_count, "function", "name"]
                     _path2 = ["tool_calls", tool_count, "function", "arguments"]
 
                     func_content = {
-                        "action": ("action_" + nget(response, _path1)),
-                        "arguments": nget(response, _path2),
+                        "action": ("action_" + nested.nget(response, _path1)),
+                        "arguments": nested.nget(response, _path2),
                     }
                     func_list.append(func_content)
                 tool_count += 1

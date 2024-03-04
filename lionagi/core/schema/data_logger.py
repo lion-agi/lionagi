@@ -38,7 +38,7 @@ class DLog:
     input_data: Any
     output_data: Any
 
-    def serialize(self, flatten_=True, sep="[^_^]") -> Dict[str, Any]:
+    def serialize(self, *, flatten_=True, sep="[^_^]") -> Dict[str, Any]:
         """        
         Converts the DLog instance to a dictionary, suitable for serialization. This
         method is particularly useful for exporting log entries to formats like JSON or
@@ -72,7 +72,7 @@ class DLog:
 
 
     @classmethod
-    def deserialize(cls, input_str, output_str, unflatten_ = True, sep="[^_^]") -> Dict[str, Any]:
+    def deserialize(cls, *, input_str, output_str, unflatten_ = True, sep="[^_^]") -> Dict[str, Any]:
         """
         [^_^] is reserved, do not add this in dictionary keys, otherwise the structrue 
         won't be reserved
@@ -178,7 +178,7 @@ class DataLogger:
             log1.extend(convert.to_list(logs))
             self.log = deque(log1)
 
-    def append(self, input_data: Any, output_data: Any) -> None:
+    def append(self, *, input_data: Any, output_data: Any) -> None:
         """
         appends a new log entry, encapsulating input and output data, to the datalogger's
         record deque.
@@ -198,6 +198,7 @@ class DataLogger:
     def to_csv_file(
         self,
         filename: str = "log.csv",
+        *, 
         dir_exist_ok: bool = True,
         timestamp: bool = True,
         time_prefix: bool = False,
@@ -261,6 +262,7 @@ class DataLogger:
     def to_json_file(
         self,
         filename: str = "log.json",
+        *,
         dir_exist_ok: bool = True,
         timestamp: bool = True,
         time_prefix: bool = False,

@@ -116,7 +116,7 @@ class MessageUtil:
             ValueError: If the sender is None or the value is 'none'.
         """
 
-        if sender is None or convert.ConvertUtil.strip_lower(sender) == "none":
+        if sender is None or convert.strip_lower(sender) == "none":
             raise ValueError("sender cannot be None")
         df = convert.to_df(messages)
 
@@ -494,7 +494,7 @@ class MessageUtil:
     #     """
     #     try:
     #         response = response["message"]
-    #         if ConvertUtil.strip_lower(response['content']) == "none":
+    #         if .strip_lower(response['content']) == "none":
 
     #             content = ActionRequest._handle_action_request(response)
     #             return ActionRequest(action_request=content, **kwargs)

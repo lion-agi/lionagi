@@ -208,51 +208,51 @@ class TestToNum(unittest.TestCase):
 
 
 
-class TestConvertUtil(unittest.TestCase):
+class Test(unittest.TestCase):
 
 
     def test_is_same_dtype_with_int_list(self):
         input_ = [1, 2, 3]
-        self.assertTrue(ConvertUtil.is_same_dtype(input_))
+        self.assertTrue(.is_same_dtype(input_))
 
     def test_is_same_dtype_with_str_dict(self):
         input_ = {"a": "apple", "b": "banana"}
-        self.assertTrue(ConvertUtil.is_same_dtype(input_))
+        self.assertTrue(.is_same_dtype(input_))
 
     def test_is_same_dtype_with_mixed_list(self):
         input_ = [1, "2", 3.0]
-        self.assertFalse(ConvertUtil.is_same_dtype(input_))
+        self.assertFalse(.is_same_dtype(input_))
 
     def test_is_same_dtype_with_int_list_specifying_float_dtype(self):
         input_ = [1, 2, 3]
-        self.assertFalse(ConvertUtil.is_same_dtype(input_, float))
+        self.assertFalse(.is_same_dtype(input_, float))
 
 
-class TestConvertUtilXmlToDict(unittest.TestCase):
+class TestXmlToDict(unittest.TestCase):
 
     def test_xml_to_dict_with_simple_element(self):
         xml_str = "<root>value</root>"
         root = ET.fromstring(xml_str)
         expected = {"root": "value"}
-        self.assertEqual(ConvertUtil.xml_to_dict(root), expected)
+        self.assertEqual(.xml_to_dict(root), expected)
 
     # def test_xml_to_dict_with_children(self):
     #     xml_str = "<root><child1>value1</child1><child2>value2</child2></root>"
     #     root = ET.fromstring(xml_str)
     #     expected = {'root': [{'child1': 'value1'}, {'child2': 'value2'}]}
-    #     self.assertEqual(ConvertUtil.xml_to_dict(root), expected)
+    #     self.assertEqual(.xml_to_dict(root), expected)
 
     def test_xml_to_dict_with_nested_children(self):
         xml_str = "<root><child><subchild>value</subchild></child></root>"
         root = ET.fromstring(xml_str)
         expected = {'root': [['value']]}
-        self.assertEqual(ConvertUtil.xml_to_dict(root), expected)
+        self.assertEqual(.xml_to_dict(root), expected)
 
     def test_xml_to_dict_with_multiple_same_tag_children(self):
         xml_str = "<root><child>value1</child><child>value2</child></root>"
         root = ET.fromstring(xml_str)
         expected = {'root': ['value1', 'value2']}
-        self.assertEqual(ConvertUtil.xml_to_dict(root), expected)
+        self.assertEqual(.xml_to_dict(root), expected)
 
 
 if __name__ == '__main__':
