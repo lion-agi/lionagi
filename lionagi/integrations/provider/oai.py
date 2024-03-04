@@ -109,9 +109,7 @@ class OpenAIService(BaseService):
         )
 
         try:
-            completion = await self.call_api(
-                payload, "chat/completions", "post"
-            )
+            completion = await self.call_api(payload, "chat/completions", "post")
             return payload, completion
         except Exception as e:
             self.status_tracker.num_tasks_failed += 1

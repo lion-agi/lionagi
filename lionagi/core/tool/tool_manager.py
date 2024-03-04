@@ -178,7 +178,9 @@ class ToolManager:
         return kwargs
 
 
-def func_to_tool(func_: Callable | list[Callable], parser=None, docstring_style="google"):
+def func_to_tool(
+    func_: Callable | list[Callable], parser=None, docstring_style="google"
+):
     """
     Transforms a given function into a Tool object, equipped with a schema derived
     from its docstring. This process involves parsing the function's docstring based
@@ -262,24 +264,25 @@ def func_to_tool(func_: Callable | list[Callable], parser=None, docstring_style=
 
     if parser:
         if len(funcs) != len(parsers) and len(parsers) != 1:
-            raise ValueError("Length of parser must match length of func. Except if you only pass one")
-        
+            raise ValueError(
+                "Length of parser must match length of func. Except if you only pass one"
+            )
+
         for idx in range(len(funcs)):
             f_ = lambda _f: Tool(
-                func=_f, 
-                schema_=ParseUtil._func_to_schema(_f, style=docstring_style), 
-                parser=parsers[idx] if len(parsers)>1 else parsers[0]
+                func=_f,
+                schema_=ParseUtil._func_to_schema(_f, style=docstring_style),
+                parser=parsers[idx] if len(parsers) > 1 else parsers[0],
             )
-            
+
             fs.append(f_)
-    
+
     else:
         fs = func_call.lcall(
-            funcs, 
+            funcs,
             lambda _f: Tool(
-                func=_f, 
-                schema_=ParseUtil._func_to_schema(_f, style=docstring_style)
-                )
-            )
-    
-    return [f for f in fs]
+                func=_f, schema_=ParseUtil._func_to_schema(_f, style=docstring_style)
+            ),
+        )
+
+    return fs

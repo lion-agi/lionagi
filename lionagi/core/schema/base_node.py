@@ -36,6 +36,7 @@ class BaseComponent(BaseModel, ABC):
 
     class Config:
         """Model configuration settings."""
+
         extra = "allow"
         populate_by_name = True
         validate_assignment = True
@@ -112,8 +113,9 @@ class BaseComponent(BaseModel, ABC):
 
     @from_obj.register(pd.Series)
     @classmethod
-    def _(cls, pd_series: pd.Series, *args, pd_kwargs: Dict | None = None,
-          **kwargs) -> T:
+    def _(
+        cls, pd_series: pd.Series, *args, pd_kwargs: Dict | None = None, **kwargs
+    ) -> T:
         """
         Handles creation of an instance from a pandas Series object.
 
@@ -132,11 +134,8 @@ class BaseComponent(BaseModel, ABC):
     @from_obj.register(pd.DataFrame)
     @classmethod
     def _(
-            cls,
-            pd_df: pd.DataFrame,
-            *args,
-            pd_kwargs: Dict | None = None,
-            **kwargs) -> List[T]:
+        cls, pd_df: pd.DataFrame, *args, pd_kwargs: Dict | None = None, **kwargs
+    ) -> List[T]:
         """
         Handles creation of instances from a pandas DataFrame object, returning a list of instances.
 
@@ -312,14 +311,15 @@ class BaseComponent(BaseModel, ABC):
         return self.metadata.pop(key, default)
 
     def meta_merge(
-            self, additional_metadata: Dict[str, Any],
-            overwrite: bool = False, **kwargs
+        self, additional_metadata: Dict[str, Any], overwrite: bool = False, **kwargs
     ) -> None:
         """
         Merges another dictionary into metadata with optional overwrite.
         kwargs for nmerge
         """
-        nested.nmerge([self.metadata, additional_metadata], overwrite=overwrite, **kwargs)
+        nested.nmerge(
+            [self.metadata, additional_metadata], overwrite=overwrite, **kwargs
+        )
 
         for key, value in additional_metadata.items():
             if overwrite or key not in self.metadata:
@@ -344,7 +344,7 @@ class BaseComponent(BaseModel, ABC):
         """
         return nested.nfilter(self.metadata, condition)
 
-    def meta_validate(self,schema: Dict[str, Type | Callable]) -> bool:
+    def meta_validate(self, schema: Dict[str, Type | Callable]) -> bool:
         """
         Validates the metadata dictionary against a specified schema.
 
@@ -365,7 +365,6 @@ class BaseComponent(BaseModel, ABC):
                 if not validator(value):
                     return False
         return True
-
 
     def __repr__(self):
         return f"{self.__class__.__name__}({self.to_dict()})"
@@ -418,7 +417,8 @@ class BaseNode(BaseComponent):
             return convert.to_str(self.content)
         except ValueError:
             print(
-                f"Content is not serializable for Node: {self._id}, defaulting to 'null'")
+                f"Content is not serializable for Node: {self._id}, defaulting to 'null'"
+            )
             return "null"
 
     def __str__(self):
@@ -435,7 +435,7 @@ class BaseNode(BaseComponent):
                 self.content[:50] + "..." if len(self.content) > 50 else self.content
             )
         else:
-            content_preview = ''
+            content_preview = ""
         meta_preview = (
             str(self.metadata)[:50] + "..."
             if len(str(self.metadata)) > 50
@@ -473,7 +473,6 @@ class BaseRelatableNode(BaseNode):
             self.related_nodes.append(node_id)
             return True
         return False
-
 
     def remove_related_node(self, node_id: str) -> bool:
         """

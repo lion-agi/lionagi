@@ -10,7 +10,7 @@ import aiohttp
 
 
 class AsyncUtil:
-    
+
     @staticmethod
     @lru_cache(maxsize=None)
     def is_coroutine_func(func: Callable[..., Any]) -> bool:
@@ -25,9 +25,10 @@ class AsyncUtil:
         """
         return asyncio.iscoroutinefunction(func)
 
-
     @staticmethod
-    def _custom_error_handler(error: Exception, error_map: Mapping[type, Callable]) -> None:
+    def _custom_error_handler(
+        error: Exception, error_map: Mapping[type, Callable]
+    ) -> None:
         # noinspection PyUnresolvedReferences
         """
         handle errors based on a given error mapping.
@@ -49,9 +50,10 @@ class AsyncUtil:
         else:
             logging.error(f"Unhandled error: {error}")
 
-
     @staticmethod
-    async def handle_async_sync(func: Callable[..., Any], *args, error_map=None, **kwargs) -> Any:
+    async def handle_async_sync(
+        func: Callable[..., Any], *args, error_map=None, **kwargs
+    ) -> Any:
         """
         Executes a function, automatically handling synchronous and asynchronous functions.
 
@@ -63,13 +65,13 @@ class AsyncUtil:
         Returns:
             The result of the function execution.
         """
-        
+
         try:
             if AsyncUtil.is_coroutine_func(func):
-                
+
                 try:
                     loop = asyncio.get_event_loop()
-                    
+
                     if loop.is_running():
                         return await func(*args, **kwargs)
                     else:
@@ -80,25 +82,25 @@ class AsyncUtil:
 
             else:
                 return func(*args, **kwargs)
-        
+
         except Exception as e:
             if error_map:
                 AsyncUtil._custom_error_handler(e, error_map)
             else:
                 logging.error(f"Error in call_handler: {e}")
             raise
-            
+
     @staticmethod
     async def execute_tasks(*tasks):
         return await asyncio.gather(*tasks)
-    
+
     @staticmethod
     async def sleep(seconds):
         await asyncio.sleep(seconds)
 
     @staticmethod
     async def execute_timeout(coro, timeout):
-        return 
+        return
 
     @classmethod
     def TimeoutError(cls):
@@ -111,11 +113,11 @@ class AsyncUtil:
     @classmethod
     def Task(cls):
         return asyncio.Task
-    
+
     @classmethod
     def Event(cls):
         return asyncio.Event
-    
+
     @classmethod
     def Lock(cls):
         return asyncio.Lock
@@ -123,35 +125,34 @@ class AsyncUtil:
     @staticmethod
     def wrap_future(future_):
         return asyncio.wrap_future(future_)
-    
+
     @staticmethod
     def semaphore(limit):
         return asyncio.Semaphore(limit)
-    
+
     @staticmethod
     def cached(*args, **kwargs):
         return aiocache.cached(*args, **kwargs)
-    
+
     @staticmethod
     def create_event(*args, **kwargs):
-        return asyncio.Event(*args, **kwargs)  
-    
+        return asyncio.Event(*args, **kwargs)
+
     @staticmethod
     def create_task(*args, obj=True, **kwargs):
         if obj:
             return asyncio.Task(*args, **kwargs)
         else:
             return asyncio.create_task(*args, **kwargs)
-    
+
     @staticmethod
     def create_lock(*args, **kwargs):
         return asyncio.Lock(*args, **kwargs)
 
-
     @classmethod
     def HttpClientSession(cls):
         return aiohttp.ClientSession
-    
+
     @classmethod
     def HttpClientError(cls):
         return aiohttp.ClientError

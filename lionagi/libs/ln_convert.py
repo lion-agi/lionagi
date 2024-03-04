@@ -39,9 +39,8 @@ def to_list(input_, /, *, flatten: bool = True, dropna: bool = True) -> list[Any
         - For specific behaviors with lists, tuples, sets, and other types, see the registered implementations.
     """
     try:
-        if (
-                isinstance(input_, Iterable) and
-                not isinstance(input_, (str, bytes, bytearray, dict))
+        if isinstance(input_, Iterable) and not isinstance(
+            input_, (str, bytes, bytearray, dict)
         ):
             iterable_list = list(input_)
             return _flatten_list(iterable_list, dropna) if flatten else iterable_list
@@ -94,7 +93,9 @@ def to_dict(input_, /, *args, **kwargs) -> dict[Any, Any]:
     try:
         return dict(input_, *args, **kwargs)
     except Exception as e:
-        raise TypeError(f"Input type not supported: {type(input_).__name__}. {e}") from e
+        raise TypeError(
+            f"Input type not supported: {type(input_).__name__}. {e}"
+        ) from e
 
 
 @to_dict.register(dict)
@@ -150,8 +151,9 @@ def _(input_, /, *args, **kwargs) -> dict[Any, Any]:
 
 
 @to_dict.register(pd.DataFrame)
-def _(input_, /, *args, orient: str = "list", as_list: bool = False,
-      **kwargs) -> dict[Any, Any] | list[dict[Any, Any]]:
+def _(
+    input_, /, *args, orient: str = "list", as_list: bool = False, **kwargs
+) -> dict[Any, Any] | list[dict[Any, Any]]:
     """
     Converts a pandas DataFrame to a dictionary or a list of dictionaries, based on the `orient` and `as_list` parameters.
 
@@ -167,8 +169,7 @@ def _(input_, /, *args, orient: str = "list", as_list: bool = False,
         of the DataFrame or a list of dictionaries, one for each row.
     """
     if as_list:
-        return [row.to_dict(*args, **kwargs) for _, row in
-                input_.iterrows()]
+        return [row.to_dict(*args, **kwargs) for _, row in input_.iterrows()]
     return input_.to_dict(*args, orient=orient, **kwargs)
 
 
@@ -305,14 +306,16 @@ def _(input_, /, *args, as_list: bool = False, **kwargs) -> str | list[str]:
 
 # to_df functions with datatype overloads
 
+
 @singledispatch
 def to_df(
-        input_: Any,
-        /, *,
-        how: str = "all",
-        drop_kwargs: dict[str, Any] | None = None,
-        reset_index: bool = True,
-        **kwargs: Any,
+    input_: Any,
+    /,
+    *,
+    how: str = "all",
+    drop_kwargs: dict[str, Any] | None = None,
+    reset_index: bool = True,
+    **kwargs: Any,
 ) -> pd.DataFrame:
     """
     Converts various input types to a pandas DataFrame, with options for handling missing data and resetting the index.
@@ -351,12 +354,13 @@ def to_df(
 
 @to_df.register(list)
 def _(
-        input_,
-        /, *,
-        how: str = "all",
-        drop_kwargs: dict | None = None,
-        reset_index: bool = True,
-        **kwargs
+    input_,
+    /,
+    *,
+    how: str = "all",
+    drop_kwargs: dict | None = None,
+    reset_index: bool = True,
+    **kwargs,
 ) -> pd.DataFrame:
     if not isinstance(input_[0], (pd.DataFrame, pd.Series, pd.core.generic.NDFrame)):
         if drop_kwargs is None:
@@ -368,7 +372,7 @@ def _(
         except Exception as e:
             raise ValueError(f"Error converting input_ to DataFrame: {e}") from e
 
-    dfs = ''
+    dfs = ""
     if drop_kwargs is None:
         drop_kwargs = {}
     try:
@@ -390,12 +394,13 @@ def _(
 
 
 def to_num(
-        input_: Any,
-        /, *,
-        upper_bound: int | float | None = None,
-        lower_bound: int | float | None = None,
-        num_type: Type[int | float] = int,
-        precision: int | None = None,
+    input_: Any,
+    /,
+    *,
+    upper_bound: int | float | None = None,
+    lower_bound: int | float | None = None,
+    num_type: Type[int | float] = int,
+    precision: int | None = None,
 ) -> int | float:
     """
     Converts the input to a numeric value of specified type, with optional bounds and precision.
@@ -492,13 +497,11 @@ def strip_lower(input_: Any) -> str:
     try:
         return str(input_).strip().lower()
     except Exception as e:
-        raise ValueError(
-            f"Could not convert input_ to string: {input_}, Error: {e}"
-        )
+        raise ValueError(f"Could not convert input_ to string: {input_}, Error: {e}")
 
 
 def is_structure_homogeneous(
-        structure: Any, return_structure_type: bool = False
+    structure: Any, return_structure_type: bool = False
 ) -> bool | tuple[bool, type | None]:
     """
     checks if a nested structure is homogeneous, meaning it doesn't contain a mix
@@ -528,7 +531,7 @@ def is_structure_homogeneous(
             structure_type = list
             for item in substructure:
                 if not isinstance(item, structure_type) and isinstance(
-                        item, (list | dict)
+                    item, (list | dict)
                 ):
                     return False, None
                 result, _ = _check_structure(item)
@@ -538,7 +541,7 @@ def is_structure_homogeneous(
             structure_type = dict
             for item in substructure.values():
                 if not isinstance(item, structure_type) and isinstance(
-                        item, (list | dict)
+                    item, (list | dict)
                 ):
                     return False, None
                 result, _ = _check_structure(item)
@@ -560,11 +563,11 @@ def is_homogeneous(iterables: list[Any] | dict[Any, Any], type_check: type) -> b
 
 
 def _str_to_num(
-        input_: str,
-        upper_bound: float | None = None,
-        lower_bound: float | None = None,
-        num_type: Type[int | float] = int,
-        precision: int | None = None,
+    input_: str,
+    upper_bound: float | None = None,
+    lower_bound: float | None = None,
+    num_type: Type[int | float] = int,
+    precision: int | None = None,
 ) -> int | float:
     number_str = _extract_first_number(input_)
     if number_str is None:
@@ -591,8 +594,7 @@ def _extract_first_number(input_: str) -> str | None:
 
 
 def _convert_to_num(
-        number_str: str, num_type: Type[int | float] = int,
-        precision: int | None = None
+    number_str: str, num_type: Type[int | float] = int, precision: int | None = None
 ) -> int | float:
     if num_type is int:
         return int(float(number_str))
@@ -629,7 +631,7 @@ def _flatten_list(lst_: list[Any], dropna: bool = True) -> list[Any]:
 
 
 def _flatten_list_generator(
-        lst_: list[Any], dropna: bool = True
+    lst_: list[Any], dropna: bool = True
 ) -> Generator[Any, None, None]:
     """
     Generator for flattening a nested list.

@@ -9,10 +9,9 @@ from lionagi.core.session.base.schema import Instruction, System
 
 
 class BaseMonoFlow:
-    
+
     def __init__(self, branch) -> None:
-        self.branch=branch
-        
+        self.branch = branch
 
     @classmethod
     def class_name(cls) -> str:
@@ -23,7 +22,7 @@ class BaseMonoFlow:
 
 
 class MonoChat(BaseMonoFlow):
-    
+
     def __init__(self, branch) -> None:
         super().__init__(branch)
 
@@ -38,18 +37,20 @@ class MonoChat(BaseMonoFlow):
             self.branch.status_tracker.num_tasks_succeeded += 1
         else:
             self.branch.status_tracker.num_tasks_failed += 1
-        
+
     async def call_chatcompletion(self, sender=None, with_sender=False, **kwargs):
         messages = (
             self.branch.chat_messages
             if not with_sender
             else self.branch.chat_messages_with_sender
         )
-        payload, completion = await self.branch.service.serve_chat(messages=messages, **kwargs)
+        payload, completion = await self.branch.service.serve_chat(
+            messages=messages, **kwargs
+        )
         self.process_chatcompletion(payload, completion, sender)
-    
+
     def _create_chat_config(
-        self, 
+        self,
         instruction: Instruction | str,
         *,
         context: Optional[Any] = None,
@@ -83,7 +84,7 @@ class MonoChat(BaseMonoFlow):
             [convert.to_dict(i) for i in tool_uses["action_request"]],
             self.branch.tool_manager.get_function_call,
         )
-        
+
         return func_calls
 
     @staticmethod
@@ -111,13 +112,9 @@ class MonoChat(BaseMonoFlow):
         if out:
             return self.return_response(content_)
 
-    
     @staticmethod
-    def return_response(content_):            
-        if (
-            len(content_.items()) == 1
-            and len(nested.get_flattened_keys(content_)) == 1
-        ):
+    def return_response(content_):
+        if len(content_.items()) == 1 and len(nested.get_flattened_keys(content_)) == 1:
             key = nested.get_flattened_keys(content_)[0]
             return content_[key]
         return content_
@@ -143,20 +140,17 @@ class MonoChat(BaseMonoFlow):
         return self.output(invoke, out)
 
     def _create_followup_config(self, tools, **kwargs):
-        
+
         if tools is not None:
             if isinstance(tools, list) and isinstance(tools[0], Tool):
                 self.branch.tool_manager.register_tools(tools)
 
         if not self.branch.tool_manager.has_tools:
-            raise ValueError(
-                "No tools found, You need to register tools"
-            )
+            raise ValueError("No tools found, You need to register tools")
 
         config = self.branch.tool_manager.parse_tool(tools=True, **kwargs)
-        config['tool_parsed'] = True
+        config["tool_parsed"] = True
         return config
-
 
     async def ReAct(
         self,
@@ -196,15 +190,12 @@ class MonoChat(BaseMonoFlow):
             prompt = f"""
                 you have {(num_rounds-i)*2-1} step left in current task, invoke tool usage to perform actions
             """
-            await self.chat(
-                prompt, tool_choice="auto", sender=sender, **config
-            )
+            await self.chat(prompt, tool_choice="auto", sender=sender, **config)
 
             i += 1
 
         prompt = "present the final result to user"
         return await self.chat(prompt, sender=sender, **config)
-
 
     async def auto_followup(
         self,
@@ -259,7 +250,6 @@ class MonoChat(BaseMonoFlow):
                 instruction, sender=sender, tool_parsed=True, out=out, **kwargs
             )
 
-    
     async def followup(
         self,
         instruction: Union[Instruction, str],
@@ -279,9 +269,9 @@ class MonoChat(BaseMonoFlow):
             prompt = f"""
                 In the current task you have another {max_followup-n_tries} followup chats. 
                 You must invoke tools usage
-            """            
+            """
             if n_tries == 0:
-            
+
                 await self.chat(
                     prompt,
                     system=system,
@@ -290,7 +280,7 @@ class MonoChat(BaseMonoFlow):
                     tool_choice="auto",
                     **config,
                 )
-                                
+
             elif n_tries > 0:
                 await self.chat(
                     prompt,
@@ -303,7 +293,7 @@ class MonoChat(BaseMonoFlow):
 
         instruct_ = {
             "notice": "present final output to user",
-            "original user instruction": instruction
+            "original user instruction": instruction,
         }
         return await self.chat(
             instruct_, sender=sender, tool_parsed=True, out=out, **config

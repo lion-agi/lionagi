@@ -28,21 +28,20 @@ class TestSysUtil(unittest.TestCase):
         self.assertIsInstance(now, datetime)
 
     def test_change_dict_key(self):
-        dict_ = {'old_key': 'value'}
-        SysUtil.change_dict_key(dict_, 'old_key', 'new_key')
-        self.assertIn('new_key', dict_)
-        self.assertNotIn('old_key', dict_)
+        dict_ = {"old_key": "value"}
+        SysUtil.change_dict_key(dict_, "old_key", "new_key")
+        self.assertIn("new_key", dict_)
+        self.assertNotIn("old_key", dict_)
 
     def test_get_timestamp(self):
         timestamp = SysUtil.get_timestamp()
         self.assertIsInstance(timestamp, str)
         # Test custom separator
-        custom_sep_timestamp = SysUtil.get_timestamp(sep='-')
-        self.assertIn('-', custom_sep_timestamp)
-        
-    
+        custom_sep_timestamp = SysUtil.get_timestamp(sep="-")
+        self.assertIn("-", custom_sep_timestamp)
+
     def test_create_copy(self):
-        input_ = {'key': 'value'}
+        input_ = {"key": "value"}
         # Single copy
         single_copy = SysUtil.create_copy(input_)
         self.assertEqual(input_, single_copy)
@@ -61,35 +60,42 @@ class TestSysUtil(unittest.TestCase):
         self.assertNotEqual(id1, id2)
 
     def test_get_bins(self):
-        input_ = ['a'*500, 'b'*1000, 'c'*500, 'd'*1000]
+        input_ = ["a" * 500, "b" * 1000, "c" * 500, "d" * 1000]
         bins = SysUtil.get_bins(input_)
-        self.assertEqual(len(bins), 2) 
-        self.assertEqual(bins, [[0,1], [2, 3]])
+        self.assertEqual(len(bins), 2)
+        self.assertEqual(bins, [[0, 1], [2, 3]])
 
     def test_get_cpu_architecture(self):
         architecture = SysUtil.get_cpu_architecture()
-        self.assertIn(architecture, ['apple_silicon', 'other_cpu'])
+        self.assertIn(architecture, ["apple_silicon", "other_cpu"])
 
     def test_is_package_installed(self):
-        with patch('importlib.util.find_spec', return_value=None):
-            self.assertFalse(SysUtil.is_package_installed('nonexistent_package'))
-        with patch('importlib.util.find_spec', return_value=True):
-            self.assertTrue(SysUtil.is_package_installed('existent_package'))
+        with patch("importlib.util.find_spec", return_value=None):
+            self.assertFalse(SysUtil.is_package_installed("nonexistent_package"))
+        with patch("importlib.util.find_spec", return_value=True):
+            self.assertTrue(SysUtil.is_package_installed("existent_package"))
 
-    @patch('importlib.metadata.distributions', return_value=[type('', (), {'metadata': {'Name': 'fake-package'}})()])
+    @patch(
+        "importlib.metadata.distributions",
+        return_value=[type("", (), {"metadata": {"Name": "fake-package"}})()],
+    )
     def test_list_installed_packages(self, mock_distributions):
         installed_packages = SysUtil.list_installed_packages()
-        self.assertIn('fake-package', installed_packages)
+        self.assertIn("fake-package", installed_packages)
 
-    @patch('subprocess.check_call')
+    @patch("subprocess.check_call")
     def test_uninstall_package(self, mock_subprocess):
         SysUtil.uninstall_package("fake-package")
-        mock_subprocess.assert_called_with([sys.executable, "-m", "pip", "uninstall", "fake-package", "-y"])
+        mock_subprocess.assert_called_with(
+            [sys.executable, "-m", "pip", "uninstall", "fake-package", "-y"]
+        )
 
-    @patch('subprocess.check_call')
+    @patch("subprocess.check_call")
     def test_update_package(self, mock_subprocess):
         SysUtil.update_package("fake-package")
-        mock_subprocess.assert_called_with([sys.executable, "-m", "pip", "install", "--upgrade", "fake-package"])
+        mock_subprocess.assert_called_with(
+            [sys.executable, "-m", "pip", "install", "--upgrade", "fake-package"]
+        )
 
     def test_split_path_file(self):
         """Test splitting a file path."""
@@ -108,15 +114,14 @@ class TestSysUtil(unittest.TestCase):
         parent, name = SysUtil.split_path("/")
         self.assertEqual(parent, Path("/"))
         self.assertEqual(name, "")
-        
-        
+
     def setUp(self):
         # Create a temporary directory
         self.test_dir = tempfile.mkdtemp()
 
         # Create some test files
-        Path(self.test_dir, 'test_file.txt').touch()
-        Path(self.test_dir, 'another_test_file.md').touch()
+        Path(self.test_dir, "test_file.txt").touch()
+        Path(self.test_dir, "another_test_file.md").touch()
 
     def tearDown(self):
         # Remove the temporary directory after the test
@@ -127,61 +132,61 @@ class TestSysUtil(unittest.TestCase):
         self.assertEqual(len(files), 2)  # Expecting 2 files
 
     def test_list_files_with_extension(self):
-        files = SysUtil.list_files(self.test_dir, extension='txt')
+        files = SysUtil.list_files(self.test_dir, extension="txt")
         self.assertEqual(len(files), 1)  # Expecting 1 .txt file
-        self.assertTrue(files[0].name.endswith('.txt'))
+        self.assertTrue(files[0].name.endswith(".txt"))
 
     def test_change_existing_key(self):
-        test_dict = {'old_key': 'value'}
-        SysUtil.change_dict_key(test_dict, 'old_key', 'new_key')
-        self.assertIn('new_key', test_dict)
-        self.assertNotIn('old_key', test_dict)
+        test_dict = {"old_key": "value"}
+        SysUtil.change_dict_key(test_dict, "old_key", "new_key")
+        self.assertIn("new_key", test_dict)
+        self.assertNotIn("old_key", test_dict)
 
     def test_change_non_existing_key(self):
-        test_dict = {'key': 'value'}
-        SysUtil.change_dict_key(test_dict, 'non_existing_key', 'new_key')
-        self.assertNotIn('new_key', test_dict)
-        self.assertIn('key', test_dict)
+        test_dict = {"key": "value"}
+        SysUtil.change_dict_key(test_dict, "non_existing_key", "new_key")
+        self.assertNotIn("new_key", test_dict)
+        self.assertIn("key", test_dict)
 
     def test_change_key_to_existing_key(self):
-        test_dict = {'old_key': 'value1', 'new_key': 'value2'}
-        SysUtil.change_dict_key(test_dict, 'old_key', 'new_key')
-        self.assertEqual(test_dict['new_key'], 'value1')
+        test_dict = {"old_key": "value1", "new_key": "value2"}
+        SysUtil.change_dict_key(test_dict, "old_key", "new_key")
+        self.assertEqual(test_dict["new_key"], "value1")
 
     def test_default_separator(self):
         timestamp = SysUtil.get_timestamp()
-        self.assertNotIn(':', timestamp)
-        self.assertNotIn('.', timestamp)
+        self.assertNotIn(":", timestamp)
+        self.assertNotIn(".", timestamp)
 
     def test_custom_separator(self):
-        timestamp = SysUtil.get_timestamp(sep='-')
-        self.assertNotIn(':', timestamp)
-        self.assertNotIn('.', timestamp)
-        self.assertIn('-', timestamp)
+        timestamp = SysUtil.get_timestamp(sep="-")
+        self.assertNotIn(":", timestamp)
+        self.assertNotIn(".", timestamp)
+        self.assertIn("-", timestamp)
 
     def test_valid_schema(self):
-        test_dict = {'key1': 1, 'key2': 'value'}
-        schema = {'key1': int, 'key2': str}
+        test_dict = {"key1": 1, "key2": "value"}
+        schema = {"key1": int, "key2": str}
         self.assertTrue(SysUtil.is_schema(test_dict, schema))
 
     def test_invalid_schema(self):
-        test_dict = {'key1': 'value', 'key2': 'value'}
-        schema = {'key1': int, 'key2': str}
+        test_dict = {"key1": "value", "key2": "value"}
+        schema = {"key1": int, "key2": str}
         self.assertFalse(SysUtil.is_schema(test_dict, schema))
 
     def test_partial_schema(self):
-        test_dict = {'key1': 1}
-        schema = {'key1': int, 'key2': str}
+        test_dict = {"key1": 1}
+        schema = {"key1": int, "key2": str}
         self.assertFalse(SysUtil.is_schema(test_dict, schema))
 
     def test_single_copy(self):
-        original = {'key': 'value'}
+        original = {"key": "value"}
         copy = SysUtil.create_copy(original)
         self.assertEqual(original, copy)
         self.assertNotEqual(id(original), id(copy))
 
     def test_multiple_copies(self):
-        original = {'key': 'value'}
+        original = {"key": "value"}
         copies = SysUtil.create_copy(original, num=2)
         self.assertEqual(len(copies), 2)
         self.assertNotEqual(id(copies[0]), id(copies[1]))
@@ -189,7 +194,6 @@ class TestSysUtil(unittest.TestCase):
     def test_invalid_num(self):
         with self.assertRaises(ValueError):
             SysUtil.create_copy({}, num=0)
-
 
     def test_id_length(self):
         id_ = SysUtil.create_id()
@@ -200,19 +204,19 @@ class TestSysUtil(unittest.TestCase):
         self.assertEqual(len(id_), 16)
 
     def test_bins_with_small_strings(self):
-        input_ = ['a', 'b', 'c', 'd']
+        input_ = ["a", "b", "c", "d"]
         bins = SysUtil.get_bins(input_, upper=2)
         self.assertEqual(len(bins), 4)
 
     def test_bins_with_large_strings(self):
-        input_ = ['a'*1000, 'b'*1000, 'c'*1000]
+        input_ = ["a" * 1000, "b" * 1000, "c" * 1000]
         bins = SysUtil.get_bins(input_)
         self.assertEqual(len(bins), 3)
 
     def test_bins_with_empty_input(self):
         bins = SysUtil.get_bins([])
         self.assertEqual(len(bins), 0)
-        
 
-if __name__ == '__main__':
+
+if __name__ == "__main__":
     unittest.main()

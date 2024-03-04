@@ -39,7 +39,7 @@ class DLog:
     output_data: Any
 
     def serialize(self, *, flatten_=True, sep="[^_^]") -> Dict[str, Any]:
-        """        
+        """
         Converts the DLog instance to a dictionary, suitable for serialization. This
         method is particularly useful for exporting log entries to formats like JSON or
         CSV. In addition to the data attributes, it appends a timestamp to the
@@ -50,33 +50,33 @@ class DLog:
                             'input_data', 'output_data', and 'timestamp' keys.
         """
         log_dict = {}
-        
-        
+
         if flatten_:
             if isinstance(self.input_data, dict):
-                log_dict['input_data'] = convert.to_str(nested.flatten(
-                    self.input_data, sep=sep
-                )) 
+                log_dict["input_data"] = convert.to_str(
+                    nested.flatten(self.input_data, sep=sep)
+                )
             if isinstance(self.output_data, dict):
-                log_dict['output_data'] = convert.to_str(nested.flatten(
-                    self.output_data, sep=sep
-                ))
-        
+                log_dict["output_data"] = convert.to_str(
+                    nested.flatten(self.output_data, sep=sep)
+                )
+
         else:
             log_dict["input_data"] = self.input_data
             log_dict["output_data"] = self.output_data
-        
+
         log_dict["timestamp"] = SysUtil.get_timestamp()
-        
+
         return log_dict
 
-
     @classmethod
-    def deserialize(cls, *, input_str, output_str, unflatten_ = True, sep="[^_^]") -> Dict[str, Any]:
+    def deserialize(
+        cls, *, input_str, output_str, unflatten_=True, sep="[^_^]"
+    ) -> Dict[str, Any]:
         """
-        [^_^] is reserved, do not add this in dictionary keys, otherwise the structrue 
+        [^_^] is reserved, do not add this in dictionary keys, otherwise the structrue
         won't be reserved
-        
+
         Converts the DLog instance to a dictionary, suitable for serialization. This
         method is particularly useful for exporting log entries to formats like JSON or
         CSV. In addition to the data attributes, it appends a timestamp to the
@@ -86,17 +86,17 @@ class DLog:
             Dict[str, Any]: A dictionary representation of the DLog instance, including
                             'input_data', 'output_data', and 'timestamp' keys.
         """
-        input_data = ''
-        output_data = ''
-        
+        input_data = ""
+        output_data = ""
+
         if unflatten_:
             input_data = nested.unflatten(convert.to_dict(input_str), sep=sep)
             output_data = nested.unflatten(convert.to_dict(output_str), sep=sep)
-        
+
         else:
             input_data = input_str
             output_data = output_str
-        
+
         return cls(input_data=input_data, output_data=output_data)
 
 
@@ -198,15 +198,15 @@ class DataLogger:
     def to_csv_file(
         self,
         filename: str = "log.csv",
-        *, 
+        *,
         dir_exist_ok: bool = True,
         timestamp: bool = True,
         time_prefix: bool = False,
         verbose: bool = True,
         clear: bool = True,
-        flatten_=True, 
-        sep='[^_^]',
-        index=False, 
+        flatten_=True,
+        sep="[^_^]",
+        index=False,
         **kwargs,
     ) -> None:
         """
@@ -268,9 +268,9 @@ class DataLogger:
         time_prefix: bool = False,
         verbose: bool = True,
         clear: bool = True,
-        flatten_=True, 
-        sep='[^_^]',
-        index=False, 
+        flatten_=True,
+        sep="[^_^]",
+        index=False,
         **kwargs,
     ) -> None:
         """

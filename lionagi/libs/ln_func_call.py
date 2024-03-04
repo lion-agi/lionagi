@@ -17,8 +17,13 @@ def lru_cache(*args, **kwargs):
 
 
 def lcall(
-        input_: Any, /, func: Callable, *, flatten: bool = False, dropna: bool = False,
-        **kwargs
+    input_: Any,
+    /,
+    func: Callable,
+    *,
+    flatten: bool = False,
+    dropna: bool = False,
+    **kwargs,
 ) -> list[Any]:
     """
     applies a function to each element of the input list, with options to flatten
@@ -67,7 +72,13 @@ def lcall(
 
 
 async def alcall(
-        input_: Any, /, func: Callable = None, *, flatten: bool = False, dropna=False, **kwargs
+    input_: Any,
+    /,
+    func: Callable = None,
+    *,
+    flatten: bool = False,
+    dropna=False,
+    **kwargs,
 ) -> list[Any]:
     # noinspection GrazieInspection
     """
@@ -106,7 +117,7 @@ async def alcall(
         lst = to_list(input_)
         tasks = [AsyncUtil.handle_async_sync(func, i, **kwargs) for i in lst]
         outs = await AsyncUtil.execute_tasks(*tasks)
-        
+
     else:
         outs = [func(input_, **kwargs)]
 
@@ -114,7 +125,8 @@ async def alcall(
 
 
 async def mcall(
-        input_: Any, /, func: Any, *, explode: bool = False, **kwargs) -> tuple[Any]:
+    input_: Any, /, func: Any, *, explode: bool = False, **kwargs
+) -> tuple[Any]:
     """
     asynchronously map a function or functions over an input_ or inputs.
 
@@ -149,13 +161,16 @@ async def mcall(
             raise ValueError(
                 "Inputs and functions must be the same length for map calling."
             )
-        tasks = [AsyncUtil.handle_async_sync(func, inp, **kwargs) for inp, func in
-                 zip(inputs_, funcs_)]
+        tasks = [
+            AsyncUtil.handle_async_sync(func, inp, **kwargs)
+            for inp, func in zip(inputs_, funcs_)
+        ]
         return await AsyncUtil.execute_tasks(*tasks)
 
 
 async def bcall(
-        input_: Any, /, func: Callable, *, batch_size: int, **kwargs) -> list[Any]:
+    input_: Any, /, func: Callable, *, batch_size: int, **kwargs
+) -> list[Any]:
     """
     asynchronously call a function on batches of inputs.
 
@@ -176,7 +191,7 @@ async def bcall(
     results = []
     input_ = to_list(input_)
     for i in range(0, len(input_), batch_size):
-        batch = input_[i: i + batch_size]
+        batch = input_[i : i + batch_size]
         batch_results = await alcall(batch, func, **kwargs)
         results.extend(batch_results)
 
@@ -184,14 +199,14 @@ async def bcall(
 
 
 async def tcall(
-        func: Callable,
-        *args,
-        delay: float = 0,
-        err_msg: str | None = None,
-        ignore_err: bool = False,
-        timing: bool = False,
-        timeout: float | None = None,
-        **kwargs,
+    func: Callable,
+    *args,
+    delay: float = 0,
+    err_msg: str | None = None,
+    ignore_err: bool = False,
+    timing: bool = False,
+    timeout: float | None = None,
+    **kwargs,
 ) -> Any:
     """
     asynchronously executes a function with an optional delay, error handling, and timing.
@@ -272,14 +287,14 @@ async def tcall(
 
 
 async def rcall(
-        func: Callable,
-        *args,
-        retries: int = 0,
-        delay: float = 1.0,
-        backoff_factor: float = 2.0,
-        default: Any = None,
-        timeout: float | None = None,
-        **kwargs,
+    func: Callable,
+    *args,
+    retries: int = 0,
+    delay: float = 1.0,
+    backoff_factor: float = 2.0,
+    default: Any = None,
+    timeout: float | None = None,
+    **kwargs,
 ) -> Any:
     """
     asynchronously retries a function call with exponential backoff.
@@ -362,7 +377,7 @@ def _dropna(lst_: list[Any]) -> list[Any]:
 
 
 async def _alcall(
-        input_: Any, func: Callable, flatten: bool = False, **kwargs
+    input_: Any, func: Callable, flatten: bool = False, **kwargs
 ) -> list[Any]:
     """
     asynchronously apply a function to each element in the input_.
@@ -388,15 +403,15 @@ async def _alcall(
 
 
 async def _tcall(
-        func: Callable,
-        *args,
-        delay: float = 0,
-        err_msg: str | None = None,
-        ignore_err: bool = False,
-        timing: bool = False,
-        default: Any = None,
-        timeout: float | None = None,
-        **kwargs,
+    func: Callable,
+    *args,
+    delay: float = 0,
+    err_msg: str | None = None,
+    ignore_err: bool = False,
+    timing: bool = False,
+    default: Any = None,
+    timeout: float | None = None,
+    **kwargs,
 ) -> Any:
     """
     asynchronously call a function with optional delay, timeout, and error handling.
@@ -425,16 +440,18 @@ async def _tcall(
         await AsyncUtil.sleep(delay)
         # Apply timeout to the function call
         if timeout is not None:
-            coro = ''
+            coro = ""
             if AsyncUtil.is_coroutine_func(func):
                 coro = func(*args, **kwargs)
             else:
+
                 async def coro_():
                     return func(*args, **kwargs)
+
                 coro = coro_()
-                
+
             result = await asyncio.wait_for(coro, timeout)
-                    
+
         else:
             if AsyncUtil.is_coroutine_func(func):
                 return await func(*args, **kwargs)
@@ -446,8 +463,10 @@ async def _tcall(
         print(err_msg)
         if ignore_err:
             return (
-                default,
-                SysUtil.get_now(datetime_=False) - start_time) if timing else default
+                (default, SysUtil.get_now(datetime_=False) - start_time)
+                if timing
+                else default
+            )
         else:
             raise e  # Re-raise the timeout exception
     except Exception as e:
@@ -455,8 +474,10 @@ async def _tcall(
         print(err_msg)
         if ignore_err:
             return (
-                default,
-                SysUtil.get_now(datetime_=False) - start_time) if timing else default
+                (default, SysUtil.get_now(datetime_=False) - start_time)
+                if timing
+                else default
+            )
         else:
             raise e
 
@@ -518,7 +539,7 @@ class CallDecorator:
 
     @staticmethod
     def retry(
-            retries: int = 3, delay: float = 2.0, backoff_factor: float = 2.0
+        retries: int = 3, delay: float = 2.0, backoff_factor: float = 2.0
     ) -> Callable:
         """
         Decorates an asynchronous function to automatically retry on failure,
@@ -768,7 +789,7 @@ class CallDecorator:
 
     @staticmethod
     def pre_post_process(
-            preprocess: Callable[..., Any], postprocess: Callable[..., Any]
+        preprocess: Callable[..., Any], postprocess: Callable[..., Any]
     ) -> Callable:
         """
         Decorates a function with preprocessing and postprocessing steps, allowing for
