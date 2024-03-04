@@ -1,8 +1,8 @@
 from typing import Union, Dict, Any
 import subprocess
 
-from lionagi.util.import_util import ImportUtil
-from lionagi.util.api_util import BaseService
+from lionagi.libs import SysUtil
+from lionagi.libs.ln_api import BaseService
 
 allowed_kwargs = [
     'model', 'tokenizer', 'modelcard', 'framework', 'task',
@@ -12,7 +12,7 @@ allowed_kwargs = [
 
 
 def get_pytorch_install_command():
-    cpu_arch = ImportUtil.get_cpu_architecture()
+    cpu_arch = SysUtil.get_cpu_architecture()
 
     if cpu_arch == "apple_silicon":
         return "pip install --pre torch torchvision torchaudio --extra-index-url https://download.pytorch.org/whl/nightly/cpu"
@@ -49,18 +49,18 @@ class TransformersService(BaseService):
             self.pipeline = pipeline
         except ImportError:
             try:
-                if not ImportUtil.is_package_installed("torch"):
+                if not SysUtil.is_package_installed("torch"):
                     in_ = input(
                         "PyTorch is required for transformers. Would you like to install it now? (y/n): "
                     )
                     if in_ == "y":
                         install_pytorch()
-                if not ImportUtil.is_package_installed("transformers"):
+                if not SysUtil.is_package_installed("transformers"):
                     in_ = input(
                         "transformers is required. Would you like to install it now? (y/n): "
                     )
                     if in_ == "y":
-                        ImportUtil.install_import(
+                        SysUtil.install_import(
                             package_name="transformers", import_name="pipeline"
                         )
                     from transformers import pipeline

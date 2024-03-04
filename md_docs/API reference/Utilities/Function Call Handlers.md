@@ -52,8 +52,8 @@ def lcall(input_: Any, func: Callable, flatten: bool = False, dropna: bool = Fal
 
 ### Parameters
 
-- `input_`: The input list or iterable to process. Each element will be passed to the provided `func` callable.
-- `func`: The function to apply to each element of `input_`. This function can be any callable that accepts the elements of `input_` as arguments.
+- `input_`: The input list or iterable to process. Each element will be passed to the provided `func` Callable.
+- `func`: The function to apply to each element of `input_`. This function can be any Callable that accepts the elements of `input_` as arguments.
 - `flatten`: If `True`, the resulting list is flattened. Useful when `func` returns a list. Defaults to `False`.
 - `dropna`: If `True`, `None` values are removed from the final list. Defaults to `False`.
 - `**kwargs`: Additional keyword arguments to be passed to `func`.

@@ -3,12 +3,10 @@ from typing import Any, Dict, List, Optional, Tuple, Union
 
 import pandas as pd
 
-from lionagi.util.path_util import PathUtil
-from lionagi.util.api_util import BaseService
-from lionagi.util import to_df, to_list, to_df
+from lionagi.libs.ln_api import BaseService
+from lionagi.libs import ln_convert as convert
 
 from lionagi.core.schema import Tool
-
 from lionagi.core.session.base.mail_manager import MailManager
 from lionagi.core.session.base.schema import System, Instruction
 from lionagi.core.session.branch import Branch
@@ -325,7 +323,7 @@ class Session:
             Branch: A new Branch instance created from the JSON data.
 
         Examples:
-            >>> branch = Branch.from_json("path/to/messages.json", name="JSONBranch")
+            >>> branch = Branch.from_json_string("path/to/messages.json", name="JSONBranch")
         """
         df = pd.read_json(filepath, **kwargs)
         self = cls(
@@ -481,8 +479,8 @@ class Session:
         """
         dfs = deque()
         for _, v in self.branches.items():
-            dfs.append(to_df(v.messages))
-        return to_df(to_list(dfs, flatten=True, dropna=True))
+            dfs.append(convert.to_df(v.messages))
+        return convert.to_df(convert.to_list(dfs, flatten=True, dropna=True))
 
 
 
@@ -497,7 +495,7 @@ class Session:
 
     # ----- chatflow ----#
     async def call_chatcompletion(
-        self, branch=None, sender=None, with_sender=False, tokenizer_kwargs={}, **kwargs
+        self, branch=None, sender=None, with_sender=False, **kwargs
     ):
         """
         Asynchronously calls the chat completion service with the current message queue.
@@ -516,7 +514,6 @@ class Session:
         await branch.call_chatcompletion(
             sender=sender,
             with_sender=with_sender,
-            tokenizer_kwargs=tokenizer_kwargs,
             **kwargs,
         )
 
@@ -842,7 +839,7 @@ class Session:
                 self.branch_manager.collect(branch)
         else:
             if not isinstance(from_, list):
-                from_ = [from_]
+                from_ = convert.to_list(from_)
             for branch in from_:
                 if isinstance(branch, Branch):
                     branch = branch.name

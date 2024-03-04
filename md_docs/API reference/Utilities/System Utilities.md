@@ -27,7 +27,7 @@ Returns a timestamp string with optional custom separators for ':' and '.'.
 ### Usage
 
 ```python
-timestamp = SysUtil.get_timestamp(separator="_")
+timestamp = SysUtil.get_timestamp(sep="_")
 ```
 
 ### Parameters

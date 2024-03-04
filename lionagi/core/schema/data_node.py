@@ -1,5 +1,5 @@
 from typing import Any
-from .base_node import BaseNode
+from lionagi.core.schema.base_node import BaseNode
 
 # from lionagi.integrations.bridge import LlamaIndexBridge, LangchainBridge
 

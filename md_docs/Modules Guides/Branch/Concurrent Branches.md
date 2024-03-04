@@ -44,8 +44,10 @@ With the functions defined, use `func_to_tool` to generate `Tool` objects, which
 
 ```python
 # Automatically generate Tool objects
-tool_mul = li.func_to_tool(multiply)
-tool_add = li.func_to_tool(add)
+import lionagi.core.tool.tool_manager
+
+tool_mul = lionagi.core.tool.tool_manager.func_to_tool(multiply)
+tool_add = lionagi.core.tool.tool_manager.func_to_tool(add)
 ```
 
 ### Setting Up Concurrent Branches

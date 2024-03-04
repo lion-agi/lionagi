@@ -1,11 +1,12 @@
-import json
-
 from datetime import datetime
 from typing import Any, Dict, List
 
 import pandas as pd
 
-from lionagi.util import ConvertUtil, to_dict, to_df, nget, lcall
+from lionagi.libs import ln_convert as convert
+from lionagi.libs import ln_nested as nested
+from lionagi.libs import ln_func_call as func_call
+
 from lionagi.core.session.base.schema import System, Instruction, Response, BaseMessage
 
 
@@ -35,7 +36,7 @@ class MessageUtil:
         Raises:
             ValueError: If more than one of the role-specific parameters are provided.
         """
-        if sum(lcall([system, instruction, response], bool)) != 1:
+        if sum(func_call.lcall([system, instruction, response], bool)) != 1:
             raise ValueError("Error: Message must have one and only one role.")
 
         else:
@@ -92,7 +93,7 @@ class MessageUtil:
             if cont.startswith("Sender"):
                 cont = cont.split(":", 1)[1]
             try:
-                json.loads(cont)
+               convert.to_dict(cont)
             except:
                 raise ValueError(
                     "Invalid messages dataframe. Content expect json string."
@@ -115,9 +116,9 @@ class MessageUtil:
             ValueError: If the sender is None or the value is 'none'.
         """
 
-        if sender is None or ConvertUtil.strip_lower(sender) == "none":
+        if sender is None or convert.strip_lower(sender) == "none":
             raise ValueError("sender cannot be None")
-        df = to_df(messages)
+        df = convert.to_df(messages)
 
         for i in df.index:
             if not df.loc[i, "content"].startswith("Sender"):
@@ -126,7 +127,7 @@ class MessageUtil:
                 content = df.loc[i, "content"].split(":", 1)[1]
                 df.loc[i, "content"] = f"Sender {sender}: {content}"
 
-        return to_df(df)
+        return convert.to_df(df)
 
     @staticmethod
     def filter_messages_by(
@@ -165,7 +166,7 @@ class MessageUtil:
             outs = outs[outs["timestamp"] > start_time] if start_time else outs
             outs = outs[outs["timestamp"] < end_time] if end_time else outs
 
-            return to_df(outs)
+            return convert.to_df(outs)
 
         except Exception as e:
             raise ValueError(f"Error in filtering messages: {e}")
@@ -268,11 +269,11 @@ class MessageUtil:
         MessageUtil.validate_messages(df2)
         try:
             if len(df2.dropna(how="all")) > 0 and len(df1.dropna(how="all")) > 0:
-                df = to_df([df1, df2])
+                df = convert.to_df([df1, df2])
                 df.drop_duplicates(
                     inplace=True, subset=["node_id"], keep="first", **kwargs
                 )
-                return to_df(df)
+                return convert.to_df(df)
         except Exception as e:
             raise ValueError(f"Error in extending messages: {e}")
 
@@ -291,29 +292,29 @@ class MessageUtil:
 
         answers = []
         for _, i in messages.iterrows():
-            content = to_dict(i.content)
+            content = convert.to_dict(i.content)
 
             if i.role == "assistant":
                 try:
-                    a = nget(content, ["action_response", "func"])
-                    b = nget(content, ["action_response", "arguments"])
-                    c = nget(content, ["action_response", "output"])
+                    a = nested.nget(content, ["action_response", "func"])
+                    b = nested.nget(content, ["action_response", "arguments"])
+                    c = nested.nget(content, ["action_response", "output"])
                     if a is not None:
                         answers.append(f"Function: {a}")
                         answers.append(f"Arguments: {b}")
                         answers.append(f"Output: {c}")
                     else:
-                        answers.append(nget(content, ["assistant_response"]))
+                        answers.append(nested.nget(content, ["assistant_response"]))
                 except:
                     pass
             elif i.role == "user":
                 try:
-                    answers.append(nget(content, ["instruction"]))
+                    answers.append(nested.nget(content, ["instruction"]))
                 except:
                     pass
             else:
                 try:
-                    answers.append(nget(content, ["system_info"]))
+                    answers.append(nested.nget(content, ["system_info"]))
                 except:
                     pass
 
@@ -356,7 +357,7 @@ class MessageUtil:
 
         out = handle_cases()
         if reset_index or dropna:
-            out = to_df(out, reset_index=reset_index)
+            out = convert.to_df(out, reset_index=reset_index)
 
         return out
 
@@ -397,12 +398,12 @@ class MessageUtil:
             A DataFrame containing the data read from the CSV file.
         """
         df = pd.read_csv(filepath, **kwargs)
-        return to_df(df)
+        return convert.to_df(df)
 
     @staticmethod
     def read_json(filepath, **kwargs):
         df = pd.read_json(filepath, **kwargs)
-        return to_df(df)
+        return convert.to_df(df)
 
     @staticmethod
     def remove_last_n_rows(df: pd.DataFrame, steps: int) -> pd.DataFrame:
@@ -425,7 +426,7 @@ class MessageUtil:
                 "'steps' must be a non-negative integer less than or equal to "
                 "the length of DataFrame."
             )
-        return to_df(df[:-steps])
+        return convert.to_df(df[:-steps])
 
     @staticmethod
     def update_row(df: pd.DataFrame, row: str | int, col: str | int, value: Any) -> bool:
@@ -493,7 +494,7 @@ class MessageUtil:
     #     """
     #     try:
     #         response = response["message"]
-    #         if ConvertUtil.strip_lower(response['content']) == "none":
+    #         if .strip_lower(response['content']) == "none":
 
     #             content = ActionRequest._handle_action_request(response)
     #             return ActionRequest(action_request=content, **kwargs)

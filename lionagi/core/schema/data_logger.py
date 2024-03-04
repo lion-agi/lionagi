@@ -1,11 +1,13 @@
-import json
 import atexit
 from collections import deque
 from dataclasses import dataclass
 from pathlib import Path
 from typing import Any, Dict, List
 
-from lionagi.util import SysUtil, to_df, to_list, PathUtil, to_df, flatten, unflatten
+from lionagi.libs.sys_util import SysUtil
+
+from lionagi.libs import ln_convert as convert
+from lionagi.libs import ln_nested as nested
 
 
 @dataclass
@@ -36,7 +38,7 @@ class DLog:
     input_data: Any
     output_data: Any
 
-    def serialize(self, flatten_=True, sep="[^_^]") -> Dict[str, Any]:
+    def serialize(self, *, flatten_=True, sep="[^_^]") -> Dict[str, Any]:
         """        
         Converts the DLog instance to a dictionary, suitable for serialization. This
         method is particularly useful for exporting log entries to formats like JSON or
@@ -52,11 +54,11 @@ class DLog:
         
         if flatten_:
             if isinstance(self.input_data, dict):
-                log_dict['input_data'] = json.dumps(flatten(
+                log_dict['input_data'] = convert.to_str(nested.flatten(
                     self.input_data, sep=sep
                 )) 
             if isinstance(self.output_data, dict):
-                log_dict['output_data'] = json.dumps(flatten(
+                log_dict['output_data'] = convert.to_str(nested.flatten(
                     self.output_data, sep=sep
                 ))
         
@@ -70,9 +72,9 @@ class DLog:
 
 
     @classmethod
-    def deserialize(cls, input_str, output_str, unflatten_ = True,sep="[*]") -> Dict[str, Any]:
+    def deserialize(cls, *, input_str, output_str, unflatten_ = True, sep="[^_^]") -> Dict[str, Any]:
         """
-        [_], and [^] are reserved, do not add this in dictionary keys, otherwise the structrue 
+        [^_^] is reserved, do not add this in dictionary keys, otherwise the structrue 
         won't be reserved
         
         Converts the DLog instance to a dictionary, suitable for serialization. This
@@ -88,8 +90,8 @@ class DLog:
         output_data = ''
         
         if unflatten_:
-            input_data = unflatten(json.loads(input_str), sep=sep)
-            output_data = unflatten(json.loads(output_str), sep=sep)
+            input_data = nested.unflatten(convert.to_dict(input_str), sep=sep)
+            output_data = nested.unflatten(convert.to_dict(output_str), sep=sep)
         
         else:
             input_data = input_str
@@ -172,11 +174,11 @@ class DataLogger:
 
     def extend(self, logs) -> None:
         if len(logs) > 0:
-            log1 = to_list(self.log)
-            log1.extend(to_list(logs))
+            log1 = convert.to_list(self.log)
+            log1.extend(convert.to_list(logs))
             self.log = deque(log1)
 
-    def append(self, input_data: Any, output_data: Any) -> None:
+    def append(self, *, input_data: Any, output_data: Any) -> None:
         """
         appends a new log entry, encapsulating input and output data, to the datalogger's
         record deque.
@@ -196,13 +198,14 @@ class DataLogger:
     def to_csv_file(
         self,
         filename: str = "log.csv",
+        *, 
         dir_exist_ok: bool = True,
         timestamp: bool = True,
         time_prefix: bool = False,
         verbose: bool = True,
         clear: bool = True,
         flatten_=True, 
-        sep='[*]',
+        sep='[^_^]',
         index=False, 
         **kwargs,
     ) -> None:
@@ -238,7 +241,7 @@ class DataLogger:
         if not filename.endswith(".csv"):
             filename += ".csv"
 
-        filepath = PathUtil.create_path(
+        filepath = SysUtil.create_path(
             self.persist_path,
             filename,
             timestamp=timestamp,
@@ -247,7 +250,7 @@ class DataLogger:
         )
         try:
             logs = [log.serialize(flatten_=flatten_, sep=sep) for log in self.log]
-            df = to_df(to_list(logs, flatten=True))
+            df = convert.to_df(convert.to_list(logs, flatten=True))
             df.to_csv(filepath, index=index, **kwargs)
             if verbose:
                 print(f"{len(self.log)} logs saved to {filepath}")
@@ -259,13 +262,14 @@ class DataLogger:
     def to_json_file(
         self,
         filename: str = "log.json",
+        *,
         dir_exist_ok: bool = True,
         timestamp: bool = True,
         time_prefix: bool = False,
         verbose: bool = True,
         clear: bool = True,
         flatten_=True, 
-        sep='[*]',
+        sep='[^_^]',
         index=False, 
         **kwargs,
     ) -> None:
@@ -313,7 +317,7 @@ class DataLogger:
         if not filename.endswith(".json"):
             filename += ".json"
 
-        filepath = PathUtil.create_path(
+        filepath = SysUtil.create_path(
             self.persist_path,
             filename,
             timestamp=timestamp,
@@ -323,8 +327,8 @@ class DataLogger:
 
         try:
             logs = [log.serialize(flatten_=flatten_, sep=sep) for log in self.log]
-            df = to_df(to_list(logs, flatten=True))
-            df.to_json(filepath, **kwargs)
+            df = convert.to_df(convert.to_list(logs, flatten=True))
+            df.to_json(filepath, index=index, **kwargs)
             if verbose:
                 print(f"{len(self.log)} logs saved to {filepath}")
             if clear:
@@ -344,7 +348,7 @@ class DataLogger:
         the time of program exit.
 
         Note: This method does not clear the logs after saving, allowing for the
-        possibility of manual review or recovery after the program has terminated.
+        possibility of manual.py review or recovery after the program has terminated.
         """
         if self.log:
             self.to_csv_file("unsaved_logs.csv", clear=False)

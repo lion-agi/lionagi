@@ -55,10 +55,11 @@ from lionagi import nmerge
 
 # Merging dictionaries with and without overwriting
 dicts_to_merge = [{'a': 1, 'b': 2}, {'b': 3, 'c': 4}]
-merged_dict_overwrite = nmerge(dicts_to_merge, dict_update=True)
+merged_dict_overwrite = nmerge(dicts_to_merge, overwrite=True)
 print('Merged with overwriting:', merged_dict_overwrite)
 
-merged_dict_no_overwrite = nmerge(dicts_to_merge, dict_update=False, dict_sequence=True, sequence_separator='_')
+merged_dict_no_overwrite = nmerge(dicts_to_merge, overwrite=False, dict_sequence=True,
+                                  sequence_separator='_')
 print('Merged without overwriting:', merged_dict_no_overwrite)
 
 # Merging lists with sorting

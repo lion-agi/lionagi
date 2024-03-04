@@ -1,8 +1,8 @@
 
 
-# ImportUtil Class API Reference
+# SysUtil Class API Reference
 
-The `ImportUtil` class offers utility functions for managing package imports and installations programmatically, enhancing the flexibility and robustness of Python applications in handling dependencies.
+The `SysUtil` class offers utility functions for managing package imports and installations programmatically, enhancing the flexibility and robustness of Python applications in handling dependencies.
 
 ## get_cpu_architecture
 
@@ -11,7 +11,7 @@ Returns the CPU architecture of the system, useful for determining compatibility
 ### Usage
 
 ```python
-cpu_architecture = ImportUtil.get_cpu_architecture()
+cpu_architecture = SysUtil.get_cpu_architecture()
 ```
 
 ### Returns
@@ -25,7 +25,7 @@ Attempts to import a module, installing the package via pip if the import fails.
 ### Usage
 
 ```python
-ImportUtil.install_import(package_name, module_name=None, import_name=None, pip_name=None)
+SysUtil.install_import(package_name, module_name=None, import_name=None, pip_name=None)
 ```
 
 ### Parameters
@@ -42,7 +42,7 @@ Checks if a package is installed.
 ### Usage
 
 ```python
-is_installed = ImportUtil.is_package_installed(package_name)
+is_installed = SysUtil.is_package_installed(package_name)
 ```
 
 ### Parameters
@@ -60,7 +60,7 @@ Checks if a package is installed and attempts to install it if not found.
 ### Usage
 
 ```python
-ImportUtil.check_import(package_name, module_name=None, import_name=None, pip_name=None)
+SysUtil.check_import(package_name, module_name=None, import_name=None, pip_name=None)
 ```
 
 ### Parameters
@@ -74,7 +74,7 @@ Lists all installed packages in the environment.
 ### Usage
 
 ```python
-installed_packages = ImportUtil.list_installed_packages()
+installed_packages = SysUtil.list_installed_packages()
 ```
 
 ### Returns
@@ -88,7 +88,7 @@ Uninstalls a specified package.
 ### Usage
 
 ```python
-ImportUtil.uninstall_package(package_name)
+SysUtil.uninstall_package(package_name)
 ```
 
 ### Parameters
@@ -102,7 +102,7 @@ Updates a specified package to the latest version.
 ### Usage
 
 ```python
-ImportUtil.update_package(package_name)
+SysUtil.update_package(package_name)
 ```
 
 ### Parameters
@@ -111,4 +111,4 @@ ImportUtil.update_package(package_name)
 
 ## Conclusion
 
-The `ImportUtil` class simplifies the dynamic management of Python packages, facilitating automatic installation, update, and verification of dependencies. This utility is particularly useful in developing applications that require flexibility in handling external libraries or in environments where dependencies need to be managed programmatically.
+The `SysUtil` class simplifies the dynamic management of Python packages, facilitating automatic installation, update, and verification of dependencies. This utility is particularly useful in developing applications that require flexibility in handling external libraries or in environments where dependencies need to be managed programmatically.

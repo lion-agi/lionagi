@@ -1,8 +1,8 @@
 
-# PathUtil Class API Reference
+# SysUtil Class API Reference
 
 ## Overview
-`PathUtil` provides utility methods for common file and directory operations, simplifying tasks such as directory clearing, path splitting, file listing, and file copying. It's designed to enhance file system manipulation with convenience methods for Python projects.
+`SysUtil` provides utility methods for common file and directory operations, simplifying tasks such as directory clearing, path splitting, file listing, and file copying. It's designed to enhance file system manipulation with convenience methods for Python projects.
 
 ### Methods
 
