@@ -361,7 +361,7 @@ class BaseComponent(BaseModel, ABC):
             if isinstance(validator, type):
                 if not isinstance(value, validator):
                     return False
-            elif callable(validator):
+            elif Callable(validator):
                 if not validator(value):
                     return False
         return True

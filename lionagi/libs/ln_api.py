@@ -6,7 +6,7 @@ from dataclasses import dataclass
 import logging
 import re
 
-from typing import Any, NoReturn, Type
+from typing import Any, NoReturn, Type, Callable
 
 from lionagi.libs.ln_async import AsyncUtil
 import lionagi.libs.ln_convert as convert
@@ -22,7 +22,7 @@ class APIUtil:
     @staticmethod
     def api_method(
         http_session: AsyncUtil.HttpClientSession, method: str = "post"
-    ) -> callable:
+    ) -> Callable:
         """
         Returns the corresponding HTTP method function from the http_session object.
 
@@ -31,7 +31,7 @@ class APIUtil:
             method: The HTTP method as a string.
 
         Returns:
-            The callable for the specified HTTP method.
+            The Callable for the specified HTTP method.
 
         Raises:
             ValueError: If the method is not one of the allowed ones.

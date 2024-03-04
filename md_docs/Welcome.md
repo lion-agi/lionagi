@@ -33,7 +33,7 @@ it includes the following
 ![[Picture1.png]]
 ### Why Another Language?
 
- [[Function Calling]] in LLM is a powerful feature. In essence, the LLM acts as a configuration provider that can interact with any callable objects, in other words, ability to make decision that can have real impact in our lives. 
+ [[Function Calling]] in LLM is a powerful feature. In essence, the LLM acts as a configuration provider that can interact with any Callable objects, in other words, ability to make decision that can have real impact in our lives. 
 
 Currently, the [[Base Nodes#^0c90e6|tool]] usages are still relatively simple, it requires plenty prompt engineering and with relatively pretty “static” usages. LLM can decide what to call, whether to call, and what to call on, but that’s about it. 
 

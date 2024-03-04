@@ -1,4 +1,4 @@
-from typing import Dict, Union, List, Tuple, Any, TypeVar
+from typing import Dict, Union, List, Tuple, Any, TypeVar, Callable
 
 from lionagi.core.schema import Tool
 from lionagi.libs.ln_async import AsyncUtil
@@ -178,7 +178,7 @@ class ToolManager:
         return kwargs
 
 
-def func_to_tool(func_: callable | list[callable], parser=None, docstring_style="google"):
+def func_to_tool(func_: Callable | list[Callable], parser=None, docstring_style="google"):
     """
     Transforms a given function into a Tool object, equipped with a schema derived
     from its docstring. This process involves parsing the function's docstring based
@@ -188,7 +188,7 @@ def func_to_tool(func_: callable | list[callable], parser=None, docstring_style=
     frameworks that rely on structured metadata for automation, documentation, or
     interface generation purposes.
 
-    The function to be transformed can be any callable that adheres to the
+    The function to be transformed can be any Callable that adheres to the
     specified docstring conventions. The resulting Tool object encapsulates the
     original function, allowing it to be utilized within environments that require
     objects with structured metadata.
@@ -282,4 +282,4 @@ def func_to_tool(func_: callable | list[callable], parser=None, docstring_style=
                 )
             )
     
-    return [f(func) for f, func in zip(fs, funcs)]
+    return [f for f in fs]

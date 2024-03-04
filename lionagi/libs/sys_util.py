@@ -18,11 +18,25 @@ _timestamp_syms = ['-', ':', '.']
 class SysUtil:
 
     @staticmethod
-    def sleep(delay):
+    def sleep(delay: float) -> None:
+        """
+        Pauses execution for a specified duration.
+
+        Args:
+            delay (float): The amount of time, in seconds, to pause execution.
+        """
         time.sleep(delay)
 
     @staticmethod
-    def get_now(datetime_=False):
+    def get_now(datetime_: bool = False) -> float | datetime:
+        """Returns the current time either as a Unix timestamp or a datetime object.
+
+        Args:
+            datetime_ (bool): If True, returns a datetime object; otherwise, returns a Unix timestamp.
+
+        Returns:
+            Union[float, datetime.datetime]: The current time as a Unix timestamp or a datetime object.
+        """
         if not datetime_:
             return time.time()
         else:
@@ -31,14 +45,29 @@ class SysUtil:
 
     @staticmethod
     def change_dict_key(dict_: dict[Any, Any], old_key: str, new_key: str) -> None:
-        """Safely changes a key in a dictionary if the old key exists."""
+        """Safely changes a key in a dictionary if the old key exists.
+
+        Args:
+            dict_ (Dict[Any, Any]): The dictionary in which to change the key.
+            old_key (str): The old key to be changed.
+            new_key (str): The new key to replace the old key.
+
+        Returns:
+            None
+        """
         if old_key in dict_:
             dict_[new_key] = dict_.pop(old_key)
 
     @staticmethod
-    def get_timestamp(tz=timezone.utc, sep: str = "_") -> str:
-        """
-        Returns a timestamp string with optional custom separators and timezone.
+    def get_timestamp(tz: timezone = timezone.utc, sep: str = "_") -> str:
+        """Returns a timestamp string with optional custom separators and timezone.
+
+        Args:
+            tz (timezone): The timezone for the timestamp.
+            sep (str): The separator to use in the timestamp string, replacing '-', ':', and '.'.
+
+        Returns:
+            str: A string representation of the current timestamp.
         """
         str_ = datetime.now(tz=tz).isoformat()
         if sep is not None:
@@ -56,7 +85,15 @@ class SysUtil:
 
     @staticmethod
     def create_copy(input_: Any, num: int = 1) -> Any | list[Any]:
-        """Creates deep copies of the input, either as a single copy or a list of copies."""
+        """Creates deep copies of the input, either as a single copy or a list of copies.
+
+        Args:
+            input_ (Any): The input to be copied.
+            num (int): The number of copies to create.
+
+        Returns:
+            Union[Any, List[Any]]: A single copy of the input or a list of deep copies.
+        """
         if num < 1:
             raise ValueError(f"'num' must be a positive integer: {num}")
         return (
@@ -67,14 +104,30 @@ class SysUtil:
 
     @staticmethod
     def create_id(n: int = 32) -> str:
-        """Generates a unique identifier based on the current time and random bytes."""
+        """
+        Generates a unique identifier based on the current time and random bytes.
+
+        Args:
+            n (int): The length of the generated identifier.
+
+        Returns:
+            str: A unique identifier string.
+        """
         current_time = datetime.now().isoformat().encode("utf-8")
         random_bytes = os.urandom(42)
         return sha256(current_time + random_bytes).hexdigest()[:n]
 
     @staticmethod
-    def get_bins(input_: list[str], upper: Any = 2000) -> list[list[int]]:
-        """Organizes indices of strings into bins based on a cumulative upper limit."""
+    def get_bins(input_: list[str], upper: int | None = 2000) -> list[list[int]]:
+        """Organizes indices of strings into bins based on a cumulative upper limit.
+
+        Args:
+            input_ (List[str]): The list of strings to be binned.
+            upper (int): The cumulative length upper limit for each bin.
+
+        Returns:
+            List[List[int]]: A list of bins, each bin is a list of indices from the input list.
+        """
         current = 0
         bins = []
         current_bin = []
@@ -90,21 +143,35 @@ class SysUtil:
             bins.append(current_bin)
         return bins
 
-
     @staticmethod
     def get_cpu_architecture() -> str:
+        """Returns a string identifying the CPU architecture.
+
+        This method categorizes some architectures as 'apple_silicon'.
+
+        Returns:
+            str: A string identifying the CPU architecture ('apple_silicon' or 'other_cpu').
+        """
         arch: str = platform.machine().lower()
         if "arm" in arch or "aarch64" in arch:
             return "apple_silicon"
         return "other_cpu"
 
     @staticmethod
-    def install_import(
-        package_name: str,
-        module_name: str | None = None,
-        import_name: str | None = None,
-        pip_name: str | None = None,
-    ) -> None:
+    def install_import(package_name: str, module_name: str = None, import_name: str = None, pip_name: str = None) -> None:
+        """Attempts to import a package, installing it with pip if not found.
+
+        This method tries to import a specified module or attribute. If the import fails, it attempts
+        to install the package using pip and then retries the import.
+
+        Args:
+            package_name: The base name of the package to import.
+            module_name: The submodule name to import from the package, if applicable. Defaults to None.
+            import_name: The specific name to import from the module or package. Defaults to None.
+            pip_name: The pip package name if different from `package_name`. Defaults to None.
+
+        Prints a message indicating success or attempts installation if the import fails.
+        """
         pip_name: str = pip_name or package_name
         full_import_path: str = (
             f"{package_name}.{module_name}" if module_name else package_name
@@ -132,16 +199,35 @@ class SysUtil:
 
     @staticmethod
     def is_package_installed(package_name: str) -> bool:
+        """Checks if a package is currently installed.
+
+        Args:
+            package_name: The name of the package to check.
+
+        Returns:
+            A boolean indicating whether the package is installed.
+        """
         package_spec = importlib.util.find_spec(package_name)
         return package_spec is not None
 
     @staticmethod
     def check_import(
-        package_name: str,
-        module_name: str | None = None,
-        import_name: str | None = None,
-        pip_name: str | None = None,
+        package_name: str, 
+        module_name: str | None = None, 
+        import_name: str | None = None, 
+        pip_name: str | None = None
     ) -> None:
+        """Checks if a package is installed; if not, attempts to install and import it.
+
+        This method first checks if a package is installed using `is_package_installed`. If not found,
+        it attempts to install the package using `install_import` and then retries the import.
+
+        Args:
+            package_name: The name of the package to check and potentially install.
+            module_name: The submodule name to import from the package, if applicable. Defaults to None.
+            import_name: The specific name to import from the module or package. Defaults to None.
+            pip_name: The pip package name if different from `package_name`. Defaults to None.
+        """
         try:
             if not SysUtil.is_package_installed(package_name):
                 logging.info(
@@ -185,6 +271,18 @@ class SysUtil:
     def clear_dir(
         dir_path: Path | str, recursive: bool = False, exclude: list[str] = None
     ) -> None:
+        """
+        Clears all files (and, if recursive, directories) in the specified directory, 
+        excluding files that match any pattern in the exclude list.
+
+        Args:
+            dir_path (Union[Path, str]): The path to the directory to clear.
+            recursive (bool): If True, clears directories recursively. Defaults to False.
+            exclude (List[str]): A list of string patterns to exclude from deletion. Defaults to None.
+
+        Raises:
+            FileNotFoundError: If the specified directory does not exist.
+        """
         dir_path = Path(dir_path)
         if not dir_path.exists():
             raise FileNotFoundError(
@@ -211,6 +309,15 @@ class SysUtil:
 
     @staticmethod
     def split_path(path: Path | str) -> tuple[Path, str]:
+        """
+        Splits a path into its directory and filename components.
+
+        Args:
+            path (Union[Path, str]): The path to split.
+
+        Returns:
+            Tuple[Path, str]: A tuple containing the directory and filename.
+        """
         path = Path(path)
         return path.parent, path.name
 
@@ -223,6 +330,23 @@ class SysUtil:
         time_prefix: bool = False,
         custom_timestamp_format: str | None = None,
     ) -> Path:
+        """
+        Creates a path with an optional timestamp in the specified directory.
+
+        Args:
+            directory (Union[Path, str]): The directory where the file will be located.
+            filename (str): The filename. Must include a valid extension.
+            timestamp (bool): If True, adds a timestamp to the filename. Defaults to True.
+            dir_exist_ok (bool): If True, does not raise an error if the directory exists. Defaults to True.
+            time_prefix (bool): If True, adds the timestamp as a prefix; otherwise, as a suffix. Defaults to False.
+            custom_timestamp_format (str): A custom format for the timestamp. Defaults to "%Y%m%d%H%M%S".
+
+        Returns:
+            Path: The full path to the file.
+
+        Raises:
+            ValueError: If the filename is invalid.
+        """
         directory = Path(directory)
         if not re.match(r"^[\w,\s-]+\.[A-Za-z]{1,5}$", filename):
             raise ValueError(
@@ -234,8 +358,6 @@ class SysUtil:
 
         timestamp_str = ""
         if timestamp:
-            from datetime import datetime
-
             timestamp_format = custom_timestamp_format or "%Y%m%d%H%M%S"
             timestamp_str = datetime.now().strftime(timestamp_format)
             filename = (
