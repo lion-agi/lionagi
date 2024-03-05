@@ -41,7 +41,8 @@ def get_llama_index_reader(reader: Any | str = None) -> Any:
     if isinstance(reader, str):
         package_name, pip_name = parse_reader_name(reader)
         if package_name == "" and pip_name == "":
-            raise ValueError(f"Invalid reader {reader}, please check llama-index documentation for supported readers.")
+            raise ValueError(f"{reader} is not found. Please directly input llama-index reader class "
+                             f"or check llama-index documentation for supported readers.")
 
         try:
             SysUtil.check_import(package_name, pip_name=pip_name)
@@ -137,6 +138,12 @@ def parse_reader_name(reader_str):
     elif reader_str == "WeaviateReader":
         package_name = "llama_index.readers.weaviate"
         pip_name = "llama-index-readers-weaviate"
+    elif reader_str == "PandasAIReader":
+        package_name = "llama_index.readers.pandas_ai"
+        pip_name = "llama-index-readers-pandas-ai"
+    elif reader_str == "IntercomReader":
+        package_name = "llama_index.readers.intercom"
+        pip_name = "llama-index-readers-intercom"
 
     return package_name, pip_name
 
