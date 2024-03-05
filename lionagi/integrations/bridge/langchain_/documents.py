@@ -2,12 +2,13 @@ from typing import Union, Callable, List, Dict, Any, TypeVar
 from lionagi.core.schema import DataNode
 
 
-from lionagi.libs import SysUtil
+from lionagi.libs.sys_util import SysUtil
 
 T = TypeVar("T", bound="DataNode")
 
 
 def to_langchain_document(datanode: T, **kwargs: Any) -> Any:
+    SysUtil.check_import('langchain')
     from langchain.schema import Document as LangchainDocument
 
     dnode = datanode.to_dict()
@@ -41,17 +42,13 @@ def langchain_loader(
         >>> isinstance(data, dict)
         True
     """
+
+    SysUtil.check_import('langchain')
+    import langchain_community.document_loaders as document_loaders
+
     try:
         if isinstance(loader, str):
-            try:
-                import langchain.document_loaders as document_loaders
-
-                loader = getattr(document_loaders, loader)
-            except ImportError as e:
-                raise ValueError(
-                    f"Unable to import {loader} from langchain_.document_loaders. "
-                    f"Some dependency of LangChain are not installed. Error: {e}"
-                )
+            loader = getattr(document_loaders, loader)
         else:
             loader = loader
     except Exception as e:
@@ -74,7 +71,8 @@ def langchain_text_splitter(
     splitter_args = splitter_args or []
     splitter_kwargs = splitter_kwargs or {}
 
-    import langchain.text_splitter as text_splitter
+    SysUtil.check_import('langchain')
+    import langchain_text_splitters as text_splitter
 
     try:
         if isinstance(splitter, str):
@@ -93,34 +91,3 @@ def langchain_text_splitter(
         return chunk
     except Exception as e:
         raise ValueError(f"Failed to split. Error: {e}")
-
-
-# def langchain_code_splitter(doc: str,
-#                             language: str,
-#                             splitter_args: List[Any] = [],
-#                             splitter_kwargs: Dict[str, Any] = {}) -> List[Any]:
-#     """
-#     Splits code into smaller chunks using a RecursiveCharacterTextSplitter specific to a language.
-#
-#     Parameters:
-#         doc (str): The code document to be split.
-#         language (str): The programming language of the code.
-#         splitter_args (List[Any]): Positional arguments to pass to the splitter.
-#         splitter_kwargs (Dict[str, Any]): Keyword arguments to pass to the splitter.
-#
-#     Returns:
-#         List[Any]: A list of Documents, each representing a chunk of the original code.
-#
-#     Raises:
-#         ValueError: If the splitter fails to split the code document.
-#     """
-#     from langchain_.text_splitter import RecursiveCharacterTextSplitter
-#
-#     try:
-#         splitter = RecursiveCharacterTextSplitter.from_language(
-#             language=language, *splitter_args, **splitter_kwargs
-#             )
-#         docs = splitter.create_documents([doc])
-#         return docs
-#     except Exception as e:
-#         raise ValueError(f'Failed to split. Error: {e}')
