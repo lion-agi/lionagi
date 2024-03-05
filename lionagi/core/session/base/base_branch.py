@@ -499,19 +499,19 @@ class BaseBranch(BaseRelatableNode, ABC):
         """
         MessageUtil.remove_message(self.messages, node_id)
 
-    def update_message(self, node_id: str, col: str, value: Any) -> bool:
+    def update_message(self, node_id: str, column: str, value: Any) -> bool:
         """
         Updates a specific column of a message identified by node_id with a new value.
 
         Args:
             value: The new value to update the message with.
             node_id: The unique identifier of the message to update.
-            col: The column of the message to update.
+            column: The column of the message to update.
         """
 
         index = self.messages[self.messages["node_id"] == node_id].index[0]
 
-        return dataframe.update_row(self.messages, row=index, col=col, value=value)
+        return dataframe.update_row(self.messages, row=index, column=column, value=value)
 
     def change_first_system_message(
         self, system: str | dict[str, Any] | System, sender: str | None = None
@@ -558,12 +558,12 @@ class BaseBranch(BaseRelatableNode, ABC):
         self,
         keyword: str,
         replacement: str,
-        col: str = "content",
+        column: str = "content",
         case_sensitive: bool = False,
     ) -> None:
 
         dataframe.replace_keyword(
-            self.messages, keyword, replacement, col=col, case_sensitive=case_sensitive
+            self.messages, keyword, replacement, column=column, case_sensitive=case_sensitive
         )
 
     def search_keywords(

@@ -5,6 +5,7 @@ from dataclasses import dataclass
 
 import logging
 import re
+import asyncio
 
 from typing import Any, NoReturn, Type, Callable
 
@@ -490,7 +491,7 @@ class BaseRateLimiter(ABC):
                 async with self._lock:
                     self.available_request_capacity = self.max_requests
                     self.available_token_capacity = self.max_tokens
-        except AsyncUtil.CancelledError:
+        except asyncio.CancelledError:
             logging.info("Rate limit replenisher task cancelled.")
         except Exception as e:
             logging.error(f"An error occurred in the rate limit replenisher: {e}")
