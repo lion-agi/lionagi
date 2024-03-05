@@ -1,5 +1,6 @@
 from collections import deque
 from typing import Tuple
+import asyncio
 
 from lionagi.libs.ln_api import BaseService
 from lionagi.libs.sys_util import PATH_TYPE
@@ -7,7 +8,7 @@ from lionagi.libs.sys_util import PATH_TYPE
 from lionagi.libs import ln_convert as convert
 from lionagi.libs import ln_dataframe as dataframe
 
-from lionagi.core.schema.base_node import TOOL_TYPE
+from lionagi.core.schema.base_node import TOOL_TYPE, Tool
 from lionagi.core.schema.data_logger import DataLogger
 from lionagi.core.tool.tool_manager import ToolManager
 from lionagi.core.session.base.mail_manager import MailManager
@@ -516,6 +517,7 @@ class Session:
             **kwargs,
         )
 
+
     async def chat(
         self,
         instruction: dict | list | Instruction | str,
@@ -545,6 +547,7 @@ class Session:
         Examples:
             >>> await ChatFlow.chat(branch, "Ask about user preferences")
         """
+
         branch = self.get_branch(branch)
         return await branch.chat(
             instruction=instruction,
@@ -556,6 +559,7 @@ class Session:
             invoke=invoke,
             **kwargs,
         )
+
 
     async def ReAct(
         self,
@@ -672,6 +676,8 @@ class Session:
             raise ValueError(
                 f"Invalid new branch name {branch_name}. Branch already existed."
             )
+        if isinstance(tools, Tool):
+            tools = [tools]
         new_branch = Branch(
             name=branch_name,
             messages=messages,
