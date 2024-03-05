@@ -2,10 +2,10 @@ from __future__ import annotations
 
 import functools
 import asyncio
+import logging
 from concurrent.futures import ThreadPoolExecutor
-import time
 
-from typing import Any, Callable
+from typing import Any, Callable, Coroutine
 
 from lionagi.libs.sys_util import SysUtil
 from lionagi.libs.ln_convert import to_list
@@ -72,8 +72,7 @@ def lcall(
 
 
 async def alcall(
-    input_: Any,
-    /,
+    input_: Any| None = None,
     func: Callable = None,
     *,
     flatten: bool = False,
@@ -113,15 +112,21 @@ async def alcall(
         >>> await alcall([1, 2, 3], square)
         [1, 4, 9]
     """
-    if input_:
+    tasks=[]
+    if input_ is not None:
         lst = to_list(input_)
         tasks = [AsyncUtil.handle_async_sync(func, i, **kwargs) for i in lst]
-        outs = await AsyncUtil.execute_tasks(*tasks)
-
+    
     else:
-        outs = [func(input_, **kwargs)]
+        tasks = [AsyncUtil.handle_async_sync(func, **kwargs)]
+        
+    outs = await AsyncUtil.execute_tasks(*tasks)
+    outs_ = []
+    for i in outs:
+        outs_.append(i if not isinstance(i, (Coroutine, asyncio.Future)) else await i)
 
-    return to_list(outs, flatten=flatten, dropna=dropna)
+    return to_list(outs_, flatten=flatten, dropna=dropna)
+    
 
 
 async def mcall(
@@ -1039,33 +1044,33 @@ class CallDecorator:
 
         return decorator
 
-    # noinspection PyRedeclaration
-    @staticmethod
-    def throttle(period: int) -> Callable:
-        """
-        A static method to create a throttling decorator. This method utilizes the
-        _Throttle class to enforce a minimum time period between successive calls of the
-        decorated function.
+    # # noinspection PyRedeclaration
+    # @staticmethod
+    # def throttle(period: int) -> Callable:
+    #     """
+    #     A static method to create a throttling decorator. This method utilizes the
+    #     _Throttle class to enforce a minimum time period between successive calls of the
+    #     decorated function.
 
-        Args:
-            period (int):
-                The minimum time period, in seconds, that must elapse between successive
-                calls to the decorated function.
+    #     Args:
+    #         period (int):
+    #             The minimum time period, in seconds, that must elapse between successive
+    #             calls to the decorated function.
 
-        Returns:
-            Callable:
-                A decorator that applies a throttling mechanism to the decorated function,
-                ensuring that the function is not called more frequently than the
-                specified period.
+    #     Returns:
+    #         Callable:
+    #             A decorator that applies a throttling mechanism to the decorated function,
+    #             ensuring that the function is not called more frequently than the
+    #             specified period.
 
-        Examples:
-            >>> @CallDecorator.throttle(2)  # Ensures at least 2 seconds between calls
-            ... async def fetch_data(): pass
+    #     Examples:
+    #         >>> @CallDecorator.throttle(2)  # Ensures at least 2 seconds between calls
+    #         ... async def fetch_data(): pass
 
-            This decorator is particularly useful in scenarios like rate-limiting API
-            calls or reducing the frequency of resource-intensive operations.
-        """
-        return Throttle(period)
+    #         This decorator is particularly useful in scenarios like rate-limiting API
+    #         calls or reducing the frequency of resource-intensive operations.
+    #     """
+    #     return Throttle(period)
 
     @staticmethod
     def force_async(fn):
@@ -1146,3 +1151,111 @@ class Throttle:
             return await func(*args, **kwargs)
 
         return wrapper
+
+
+def _custom_error_handler(error: Exception, error_map: dict[type, Callable]) -> None:
+    # noinspection PyUnresolvedReferences
+    """
+    handle errors based on a given error mapping.
+
+    Args:
+        error (Exception):
+            The error to handle.
+        error_map (Dict[type, Callable]):
+            A dictionary mapping error types to handler functions.
+
+    examples:
+        >>> def handle_value_error(e): print("ValueError occurred")
+        >>> custom_error_handler(ValueError(), {ValueError: handle_value_error})
+        ValueError occurred
+    """
+    handler = error_map.get(type(error))
+    if handler:
+        handler(error)
+    else:
+        logging.error(f"Unhandled error: {error}")
+
+
+async def call_handler(
+    func: Callable, *args, error_map: dict[type, Callable] = None, **kwargs
+) -> Any:
+    """
+    call a function with error handling, supporting both synchronous and asynchronous
+    functions.
+
+    Args:
+        func (Callable):
+            The function to call.
+        *args:
+            Positional arguments to pass to the function.
+        error_map (Dict[type, Callable], optional):
+            A dictionary mapping error types to handler functions.
+        **kwargs:
+            Keyword arguments to pass to the function.
+
+    Returns:
+        Any: The result of the function call.
+
+    Raises:
+        Exception: Propagates any exceptions not handled by the error_map.
+
+    examples:
+        >>> async def async_add(x, y): return x + y
+        >>> asyncio.run(_call_handler(async_add, 1, 2))
+        3
+    """
+    try:
+        if is_coroutine_func(func):
+            # Checking for a running event loop
+            try:
+                loop = asyncio.get_running_loop()
+            except RuntimeError:  # No running event loop
+                loop = asyncio.new_event_loop()
+                result = loop.run_until_complete(func(*args, **kwargs))
+
+                loop.close()
+                return result
+
+            if loop.is_running():
+                return await func(*args, **kwargs)
+
+        else:
+            return func(*args, **kwargs)
+
+    except Exception as e:
+        if error_map:
+            _custom_error_handler(e, error_map)
+        else:
+            logging.error(f"Error in call_handler: {e}")
+        raise
+
+
+@functools.lru_cache(maxsize=None)
+def is_coroutine_func(func: Callable) -> bool:
+    """
+    checks if the specified function is an asyncio coroutine function.
+
+    this utility function is critical for asynchronous programming in Python, allowing
+    developers to distinguish between synchronous and asynchronous functions.
+    understanding whether a function is coroutine-enabled is essential for making
+    correct asynchronous calls and for integrating synchronous functions into
+    asynchronous codebases correctly.
+
+    Args:
+        func (Callable):
+            The function to check for coroutine compatibility.
+
+    Returns:
+        bool:
+            True if `func` is an asyncio coroutine function, False otherwise. this
+            determination is based on whether the function is defined with `async def`.
+
+    examples:
+        >>> async def async_func(): pass
+        >>> def sync_func(): pass
+        >>> is_coroutine_func(async_func)
+        True
+        >>> is_coroutine_func(sync_func)
+        False
+    """
+    return asyncio.iscoroutinefunction(func)

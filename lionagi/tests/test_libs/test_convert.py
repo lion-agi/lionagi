@@ -82,3 +82,7 @@ class TestIsStructureHomogeneous(unittest.TestCase):
     def test_deeply_nested_structures(self):
         test_structure = {"a": [{"b": 1}, {"c": [2, 3]}]}
         self.assertFalse(is_structure_homogeneous(test_structure))
+
+if __name__ == "__main__":
+    unittest.main()
+    

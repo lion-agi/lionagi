@@ -5,6 +5,8 @@ from dataclasses import dataclass
 
 import logging
 import re
+import asyncio
+import aiohttp
 
 from typing import Any, NoReturn, Type, Callable
 
@@ -21,7 +23,7 @@ class APIUtil:
 
     @staticmethod
     def api_method(
-        http_session: AsyncUtil.HttpClientSession, method: str = "post"
+        http_session: aiohttp.ClientSession, method: str = "post"
     ) -> Callable:
         """
         Returns the corresponding HTTP method function from the http_session object.
@@ -37,7 +39,7 @@ class APIUtil:
             ValueError: If the method is not one of the allowed ones.
 
         Examples:
-            >>> session = AsyncUtil.HttpClientSession()
+            >>> session = aiohttp.ClientSession()
             >>> post_method = APIUtil.api_method(session, "post")
             >>> print(post_method)
             <bound method ClientSession._request of <aiohttp.client.ClientSession object at 0x...>>
@@ -118,7 +120,7 @@ class APIUtil:
 
     @staticmethod
     async def unified_api_call(
-        http_session: AsyncUtil.HttpClientSession, method: str, url: str, **kwargs
+        http_session: aiohttp.ClientSession, method: str, url: str, **kwargs
     ) -> Any:
         """
         Makes an API call and automatically retries on rate limit error.
@@ -133,7 +135,7 @@ class APIUtil:
             The JSON assistant_response as a dictionary.
 
         Examples:
-            >>> session = AsyncUtil.HttpClientSession()
+            >>> session = aiohttp.ClientSession()
             >>> success_url = "https://api.example.com/v1/success"
             >>> print(await unified_api_call(session, 'get', success_url))
             {'result': 'Success'}
@@ -177,7 +179,7 @@ class APIUtil:
 
     @staticmethod
     async def retry_api_call(
-        http_session: AsyncUtil.HttpClientSession,
+        http_session: aiohttp.ClientSession,
         url: str,
         retries: int = 3,
         backoff_factor: float = 0.5,
@@ -201,7 +203,7 @@ class APIUtil:
                 async with http_session.get(url, **kwargs) as response:
                     response.raise_for_status()
                     return await response.json()
-            except AsyncUtil.HttpClientError:
+            except aiohttp.ClientError:
                 if attempt < retries - 1:
                     delay = backoff_factor * (2**attempt)
                     logging.info(f"Retrying {url} in {delay} seconds...")
@@ -214,7 +216,7 @@ class APIUtil:
 
     @staticmethod
     async def upload_file_with_retry(
-        http_session: AsyncUtil.HttpClientSession,
+        http_session: aiohttp.ClientSession,
         url: str,
         file_path: str,
         param_name: str = "file",
@@ -236,7 +238,7 @@ class APIUtil:
             The HTTP assistant_response object.
 
         Examples:
-            >>> session = AsyncUtil.HttpClientSession()
+            >>> session = aiohttp.ClientSession()
             >>> assistant_response = await APIUtil.upload_file_with_retry(session, 'http://example.com/upload', 'path/to/file.txt')
             >>> assistant_response.status
             200
@@ -251,7 +253,7 @@ class APIUtil:
                     ) as response:
                         response.raise_for_status()
                         return await response.json()
-            except AsyncUtil.HttpClientError as e:
+            except aiohttp.ClientError as e:
                 if attempt == retries - 1:
                     raise e
                 backoff = 2**attempt
@@ -261,7 +263,7 @@ class APIUtil:
     @staticmethod
     @AsyncUtil.cached(ttl=10 * 60)  # Cache the result for 10 minutes
     async def get_oauth_token_with_cache(
-        http_session: AsyncUtil.HttpClientSession,
+        http_session: aiohttp.ClientSession,
         auth_url: str,
         client_id: str,
         client_secret: str,
@@ -281,7 +283,7 @@ class APIUtil:
             The OAuth token as a string.
 
         Examples:
-            >>> session = AsyncUtil.HttpClientSession()
+            >>> session = aiohttp.ClientSession()
             >>> token = await APIUtil.get_oauth_token_with_cache(session, 'http://auth.example.com', 'client_id', 'client_secret', 'read')
             >>> token
             'mock_access_token'
@@ -301,7 +303,7 @@ class APIUtil:
     @staticmethod
     @AsyncUtil.cached(ttl=10 * 60)
     async def cached_api_call(
-        http_session: AsyncUtil.HttpClientSession, url: str, **kwargs
+        http_session: aiohttp.ClientSession, url: str, **kwargs
     ) -> Any:
         """
         Makes an API call.
@@ -318,7 +320,7 @@ class APIUtil:
             async with http_session.get(url, **kwargs) as response:
                 response.raise_for_status()
                 return await response.json()
-        except AsyncUtil.HttpClientError as e:
+        except aiohttp.ClientError as e:
             logging.error(f"API call to {url} failed: {e}")
             return None
 
@@ -490,7 +492,7 @@ class BaseRateLimiter(ABC):
                 async with self._lock:
                     self.available_request_capacity = self.max_requests
                     self.available_token_capacity = self.max_tokens
-        except AsyncUtil.CancelledError:
+        except asyncio.CancelledError:
             logging.info("Rate limit replenisher task cancelled.")
         except Exception as e:
             logging.error(f"An error occurred in the rate limit replenisher: {e}")
@@ -830,7 +832,7 @@ class BaseService:
         """
         if endpoint not in self.endpoints.keys():
             raise ValueError(f"The endpoint {endpoint} has not initialized.")
-        async with AsyncUtil.HttpClientSession() as http_session:
+        async with aiohttp.ClientSession() as http_session:
             completion = await self.endpoints[endpoint].rate_limiter._call_api(
                 http_session=http_session,
                 endpoint=endpoint,

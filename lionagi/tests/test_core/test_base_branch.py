@@ -224,7 +224,7 @@ class TestBaseBranch(unittest.TestCase):
         self.assertEqual(description["total_messages"], len(self.test_messages))
         self.assertEqual(len(description["messages"]), min(5, len(self.test_messages)))
 
-    @patch("lionagi.core.session.base.base_branch.MessageUtil.read_csv")
+    @patch("lionagi.libs.ln_dataframe.read_csv")
     def test_from_csv(cls, mock_read_csv):
         # Define a mock return value for read_csv
         mock_messages_df = pd.DataFrame(
@@ -250,7 +250,7 @@ class TestBaseBranch(unittest.TestCase):
         # Verify that the branch instance contains the correct messages
         pd.testing.assert_frame_equal(branch.messages, mock_messages_df)
 
-    @patch("lionagi.core.session.base.base_branch.MessageUtil.read_json")
+    @patch("lionagi.libs.ln_dataframe.read_json")
     def test_from_json(cls, mock_read_csv):
         # Define a mock return value for read_csv
         mock_messages_df = pd.DataFrame(

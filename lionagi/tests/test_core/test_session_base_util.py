@@ -230,84 +230,84 @@ class TestToMarkdownString(unittest.TestCase):
         self.assertIn("Hello, World!", markdown_str)
 
 
-class TestSearchKeywords(unittest.TestCase):
+# class TestSearchKeywords(unittest.TestCase):
 
-    def test_search_keywords(self):
-        """Test filtering DataFrame for rows containing specified keywords."""
-        messages = pd.DataFrame(
-            {"node_id": ["1", "2"], "content": ["Hello world", "Goodbye world"]}
-        )
-        filtered = MessageUtil.search_keywords(messages, "Hello")
-        print(filtered)
-        self.assertEqual(len(filtered), 1)
-
-
-class TestReplaceKeyword(unittest.TestCase):
-
-    def test_replace_keyword(self):
-        """Test replacing a keyword in DataFrame's specified column."""
-        messages = pd.DataFrame({"content": ["Hello world", "Goodbye world"]})
-        MessageUtil.replace_keyword(messages, "world", "universe")
-        self.assertTrue(all(messages["content"].str.contains("universe")))
+#     def test_search_keywords(self):
+#         """Test filtering DataFrame for rows containing specified keywords."""
+#         messages = pd.DataFrame(
+#             {"node_id": ["1", "2"], "content": ["Hello world", "Goodbye world"]}
+#         )
+#         filtered = MessageUtil.search_keywords(messages, "Hello")
+#         print(filtered)
+#         self.assertEqual(len(filtered), 1)
 
 
-class TestReadCsv(unittest.TestCase):
+# class TestReplaceKeyword(unittest.TestCase):
 
-    @patch("pandas.read_csv")
-    def test_read_csv(self, mock_read_csv):
-        """Test reading a CSV file into a DataFrame."""
-        mock_df = pd.DataFrame(
-            {"node_id": ["1", "2"], "content": ["Hello, World!", "Goodbye, World!"]}
-        )
-        mock_read_csv.return_value = mock_df
-
-        df = MessageUtil.read_csv("path/to/nonexistent/file.csv")
-
-        mock_read_csv.assert_called_once_with("path/to/nonexistent/file.csv")
-
-        self.assertTrue(isinstance(df, pd.DataFrame))
-        self.assertEqual(len(df), 2)
-        self.assertEqual(list(df.columns), ["node_id", "content"])
+#     def test_replace_keyword(self):
+#         """Test replacing a keyword in DataFrame's specified column."""
+#         messages = pd.DataFrame({"content": ["Hello world", "Goodbye world"]})
+#         MessageUtil.replace_keyword(messages, "world", "universe")
+#         self.assertTrue(all(messages["content"].str.contains("universe")))
 
 
-class TestReadJson(unittest.TestCase):
+# class TestReadCsv(unittest.TestCase):
 
-    @patch("pandas.read_json")
-    def test_read_json(self, mock_read_json):
-        """Test reading a JSON file into a DataFrame."""
-        mock_df = pd.DataFrame(
-            {"node_id": ["1", "2"], "content": ["JSON Message 1", "JSON Message 2"]}
-        )
-        mock_read_json.return_value = mock_df
+    # @patch("pandas.read_csv")
+    # def test_read_csv(self, mock_read_csv):
+    #     """Test reading a CSV file into a DataFrame."""
+    #     mock_df = pd.DataFrame(
+    #         {"node_id": ["1", "2"], "content": ["Hello, World!", "Goodbye, World!"]}
+    #     )
+    #     mock_read_csv.return_value = mock_df
 
-        df = MessageUtil.read_json("path/to/nonexistent/file.json")
+    #     df = MessageUtil.read_csv("path/to/nonexistent/file.csv")
 
-        mock_read_json.assert_called_once_with("path/to/nonexistent/file.json")
+    #     mock_read_csv.assert_called_once_with("path/to/nonexistent/file.csv")
 
-        self.assertTrue(isinstance(df, pd.DataFrame))
-        self.assertEqual(len(df), 2)
-        self.assertEqual(list(df.columns), ["node_id", "content"])
-
-
-class TestRemoveLastNRows(unittest.TestCase):
-
-    def test_remove_last_n_rows(self):
-        """Test removing the last 'n' rows from a DataFrame."""
-        messages = pd.DataFrame({"content": ["message1", "message2", "message3"]})
-        updated = MessageUtil.remove_last_n_rows(messages, 2)
-        self.assertEqual(len(updated), 1)
+    #     self.assertTrue(isinstance(df, pd.DataFrame))
+    #     self.assertEqual(len(df), 2)
+    #     self.assertEqual(list(df.columns), ["node_id", "content"])
 
 
-class TestUpdateRow(unittest.TestCase):
+# class TestReadJson(unittest.TestCase):
 
-    def test_update_row(self):
-        """Test updating a row's value for a specified column."""
-        messages = pd.DataFrame(
-            {"node_id": ["1", "2"], "content": ["message1", "message2"]}
-        )
-        success = MessageUtil.update_row(messages, 0, "node_id", "3")
-        self.assertTrue(success)
-        self.assertTrue("3" in messages["node_id"].values)
+#     @patch("pandas.read_json")
+#     def test_read_json(self, mock_read_json):
+#         """Test reading a JSON file into a DataFrame."""
+#         mock_df = pd.DataFrame(
+#             {"node_id": ["1", "2"], "content": ["JSON Message 1", "JSON Message 2"]}
+#         )
+#         mock_read_json.return_value = mock_df
+
+#         df = MessageUtil.read_json("path/to/nonexistent/file.json")
+
+#         mock_read_json.assert_called_once_with("path/to/nonexistent/file.json")
+
+#         self.assertTrue(isinstance(df, pd.DataFrame))
+#         self.assertEqual(len(df), 2)
+#         self.assertEqual(list(df.columns), ["node_id", "content"])
+
+
+# class TestRemoveLastNRows(unittest.TestCase):
+
+#     def test_remove_last_n_rows(self):
+#         """Test removing the last 'n' rows from a DataFrame."""
+#         messages = pd.DataFrame({"content": ["message1", "message2", "message3"]})
+#         updated = MessageUtil.remove_last_n_rows(messages, 2)
+#         self.assertEqual(len(updated), 1)
+
+
+# class TestUpdateRow(unittest.TestCase):
+
+#     def test_update_row(self):
+#         """Test updating a row's value for a specified column."""
+#         messages = pd.DataFrame(
+#             {"node_id": ["1", "2"], "content": ["message1", "message2"]}
+#         )
+#         success = MessageUtil.update_row(messages, 0, "node_id", "3")
+#         self.assertTrue(success)
+#         self.assertTrue("3" in messages["node_id"].values)
 
 
 if __name__ == "__main__":

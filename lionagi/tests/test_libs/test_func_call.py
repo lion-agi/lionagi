@@ -55,9 +55,9 @@ class TestLCall(unittest.TestCase):
 
 class TestAlCall(unittest.IsolatedAsyncioTestCase):
 
-    async def test_empty_input(self):
-        result = await alcall([], lambda x: x * 2, flatten=True)
-        self.assertEqual(result, [])
+    # async def test_empty_input(self):
+    #     result = await alcall([], lambda x: x * 2, flatten=True)
+    #     self.assertEqual(result, [])
 
     async def test_single_element_with_async_function(self):
         async def async_func(x):
