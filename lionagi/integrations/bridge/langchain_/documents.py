@@ -8,6 +8,21 @@ T = TypeVar("T", bound="DataNode")
 
 
 def to_langchain_document(datanode: T, **kwargs: Any) -> Any:
+    """
+    Converts a generic data node into a Langchain Document.
+
+    This function transforms a node, typically from another data schema, into a Langchain Document format.
+    It requires the source node to have a `to_dict` method to convert it into a dictionary, then it renames specific keys
+    to match the Langchain Document schema before creating a Langchain Document object.
+
+    Args:
+        datanode (T): The data node to convert. Must have a `to_dict` method.
+        **kwargs: Additional keyword arguments to be passed to the Langchain Document constructor.
+
+    Returns:
+        Any: An instance of `LangchainDocument` populated with data from the input node.
+    """
+
     SysUtil.check_import('langchain')
     from langchain.schema import Document as LangchainDocument
 
@@ -24,18 +39,21 @@ def langchain_loader(
     loader_kwargs: Dict[str, Any] = {},
 ) -> Any:
     """
-    Loads data using a specified langchain_ loader.
+    Initializes and uses a specified loader to load data within the Langchain ecosystem.
+
+    This function supports dynamically selecting a loader by name or directly using a loader function.
+    It passes specified arguments and keyword arguments to the loader for data retrieval or processing.
 
     Args:
-        loader (Union[str, Callable]): The name of the loader function or the loader function itself.
-        loader_args (List[Any]): Positional arguments to pass to the loader function.
-        loader_kwargs (Dict[str, Any]): Keyword arguments to pass to the loader function.
+        loader (Union[str, Callable]): A string representing the loader's name or a callable loader function.
+        loader_args (List[Any], optional): A list of positional arguments for the loader.
+        loader_kwargs (Dict[str, Any], optional): A dictionary of keyword arguments for the loader.
 
     Returns:
-        Any: The data loaded by the loader function.
+        Any: The result returned by the loader function, typically data loaded into a specified format.
 
     Raises:
-        ValueError: If the specified loader is invalid or if the loader fails to load data.
+        ValueError: If the loader cannot be initialized or fails to load data.
 
     Examples:
         >>> data = langchain_loader("json_loader", loader_args=["data.json"])
@@ -68,6 +86,24 @@ def langchain_text_splitter(
     splitter_args: List[Any] = None,
     splitter_kwargs: Dict[str, Any] = None,
 ) -> List[str]:
+    """
+    Splits text or a list of texts using a specified Langchain text splitter.
+
+    This function allows for dynamic selection of a text splitter, either by name or as a function, to split text
+    or documents into chunks. The splitter can be configured with additional arguments and keyword arguments.
+
+    Args:
+        data (Union[str, List]): The text or list of texts to be split.
+        splitter (Union[str, Callable]): The name of the splitter function or the splitter function itself.
+        splitter_args (List[Any], optional): Positional arguments to pass to the splitter function.
+        splitter_kwargs (Dict[str, Any], optional): Keyword arguments to pass to the splitter function.
+
+    Returns:
+        List[str]: A list of text chunks produced by the text splitter.
+
+    Raises:
+        ValueError: If the splitter is invalid or fails during the split operation.
+    """
     splitter_args = splitter_args or []
     splitter_kwargs = splitter_kwargs or {}
 

@@ -5,6 +5,26 @@ from lionagi.libs.sys_util import SysUtil
 
 
 def get_llama_index_reader(reader: Any | str = None) -> Any:
+    """
+    Retrieves a llama index reader object based on the specified reader name or class.
+
+    This function checks if the specified reader is a recognized type or name and returns the appropriate
+    llama index reader class. If a string is provided, it attempts to match it with known reader names and import
+    the corresponding reader class dynamically. If a reader class is provided, it validates that the class is a
+    subclass of BasePydanticReader.
+
+    Args:
+      reader (Union[Any, str], optional): The reader identifier, which can be a reader class, a string alias
+          for a reader class, or None. If None, returns the SimpleDirectoryReader class.
+
+    Returns:
+      Any: The llama index reader class corresponding to the specified reader.
+
+    Raises:
+      TypeError: If the reader is neither a string nor a subclass of BasePydanticReader.
+      ValueError: If the specified reader string does not correspond to a known reader.
+      AttributeError: If there is an issue importing the specified reader.
+    """
 
     SysUtil.check_import('llama_index', pip_name='llama-index')
     from llama_index.core import SimpleDirectoryReader
@@ -38,6 +58,19 @@ def get_llama_index_reader(reader: Any | str = None) -> Any:
 
 
 def parse_reader_name(reader_str):
+    """
+    Parses a reader name string into a package and pip name.
+
+    Given a reader name string, this function maps it to the corresponding package name and pip name
+    to facilitate dynamic import and installation if necessary.
+
+    Args:
+        reader_str (str): The name of the reader as a string.
+
+    Returns:
+        Tuple[str, str]: A tuple containing the package name and the pip name corresponding to the reader.
+    """
+
     package_name = ""
     pip_name = ""
 
@@ -111,6 +144,26 @@ def parse_reader_name(reader_str):
 def llama_index_read_data(
         reader=None, reader_args=None, reader_kwargs=None,
         loader_args=None, loader_kwargs=None):
+    """
+    Reads data using a specified llama index reader and its arguments.
+
+    This function initializes a llama index reader with the given arguments and keyword arguments,
+    then loads data using the reader's `load_data` method with the provided loader arguments and keyword arguments.
+
+    Args:
+        reader (Union[None, str, Any], optional): The reader to use. This can be a class, a string identifier,
+            or None. If None, a default reader is used.
+        reader_args (List[Any], optional): Positional arguments to initialize the reader.
+        reader_kwargs (Dict[str, Any], optional): Keyword arguments to initialize the reader.
+        loader_args (List[Any], optional): Positional arguments for the reader's `load_data` method.
+        loader_kwargs (Dict[str, Any], optional): Keyword arguments for the reader's `load_data` method.
+
+    Returns:
+        Any: The documents or data loaded by the reader.
+
+    Raises:
+        ValueError: If there is an error initializing the reader or loading the data.
+    """
     try:
         reader_args = reader_args or []
         reader_kwargs = reader_kwargs or {}
