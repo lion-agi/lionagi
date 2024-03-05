@@ -15,6 +15,7 @@ from typing import Any
 
 _timestamp_syms = ["-", ":", "."]
 
+PATH_TYPE = str | Path
 
 class SysUtil:
 

@@ -5,7 +5,7 @@ import asyncio
 from concurrent.futures import ThreadPoolExecutor
 import time
 
-from typing import Any, Callable
+from typing import Any, Callable, Coroutine
 
 from lionagi.libs.sys_util import SysUtil
 from lionagi.libs.ln_convert import to_list
@@ -113,13 +113,14 @@ async def alcall(
         >>> await alcall([1, 2, 3], square)
         [1, 4, 9]
     """
-    if input_:
-        lst = to_list(input_)
-        tasks = [AsyncUtil.handle_async_sync(func, i, **kwargs) for i in lst]
-        outs = await AsyncUtil.execute_tasks(*tasks)
+    
+    lst = to_list(input_)
+    tasks = [AsyncUtil.handle_async_sync(func, i, **kwargs) for i in lst]
+    outs = await AsyncUtil.execute_tasks(*tasks)
 
-    else:
-        outs = [func(input_, **kwargs)]
+    # outs_ = []
+    # for i in outs:
+    #     outs_.append(i if not isinstance(i, Coroutine) else await i)
 
     return to_list(outs, flatten=flatten, dropna=dropna)
 
@@ -1039,33 +1040,33 @@ class CallDecorator:
 
         return decorator
 
-    # noinspection PyRedeclaration
-    @staticmethod
-    def throttle(period: int) -> Callable:
-        """
-        A static method to create a throttling decorator. This method utilizes the
-        _Throttle class to enforce a minimum time period between successive calls of the
-        decorated function.
+    # # noinspection PyRedeclaration
+    # @staticmethod
+    # def throttle(period: int) -> Callable:
+    #     """
+    #     A static method to create a throttling decorator. This method utilizes the
+    #     _Throttle class to enforce a minimum time period between successive calls of the
+    #     decorated function.
 
-        Args:
-            period (int):
-                The minimum time period, in seconds, that must elapse between successive
-                calls to the decorated function.
+    #     Args:
+    #         period (int):
+    #             The minimum time period, in seconds, that must elapse between successive
+    #             calls to the decorated function.
 
-        Returns:
-            Callable:
-                A decorator that applies a throttling mechanism to the decorated function,
-                ensuring that the function is not called more frequently than the
-                specified period.
+    #     Returns:
+    #         Callable:
+    #             A decorator that applies a throttling mechanism to the decorated function,
+    #             ensuring that the function is not called more frequently than the
+    #             specified period.
 
-        Examples:
-            >>> @CallDecorator.throttle(2)  # Ensures at least 2 seconds between calls
-            ... async def fetch_data(): pass
+    #     Examples:
+    #         >>> @CallDecorator.throttle(2)  # Ensures at least 2 seconds between calls
+    #         ... async def fetch_data(): pass
 
-            This decorator is particularly useful in scenarios like rate-limiting API
-            calls or reducing the frequency of resource-intensive operations.
-        """
-        return Throttle(period)
+    #         This decorator is particularly useful in scenarios like rate-limiting API
+    #         calls or reducing the frequency of resource-intensive operations.
+    #     """
+    #     return Throttle(period)
 
     @staticmethod
     def force_async(fn):

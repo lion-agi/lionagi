@@ -1,16 +1,13 @@
 from enum import Enum
-from typing import Any, Optional
-
-# import pandas as pd
-# from pydantic import Field, model_validator
 
 from lionagi.libs import ln_nested as nested
 from lionagi.libs import ln_convert as convert
 
-from lionagi.core.schema import DataNode
+from lionagi.core.schema.data_node import DataNode
 
 _message_fields = ["node_id", "timestamp", "role", "sender", "content"]
 
+# ToDo: actually implement the new message classes 
 
 class BranchColumns(list[str], Enum):
     COLUMNS = _message_fields
@@ -101,16 +98,16 @@ class BaseMessage(DataNode):
     Represents a message in a chatbot-like system, inheriting from BaseNode.
 
     Attributes:
-        role (Optional[str]): The role of the entity sending the message, e.g., 'user', 'system'.
-        sender (Optional[str]): The identifier of the sender of the message.
+        role (str | None): The role of the entity sending the message, e.g., 'user', 'system'.
+        sender (str | None): The identifier of the sender of the message.
         content (Any): The actual content of the message.
     """
 
-    role: Optional[str] = None
-    sender: Optional[str] = None
+    role: str | None = None
+    sender: str | None = None
 
     @property
-    def msg(self) -> dict[str, Any]:
+    def msg(self) -> dict:
         """
         Constructs and returns a dictionary representation of the message.
 
@@ -120,7 +117,7 @@ class BaseMessage(DataNode):
         return self._to_message()
 
     @property
-    def msg_content(self) -> Any:
+    def msg_content(self) -> str | dict:
         """
         Gets the 'content' field of the message.
 
@@ -156,7 +153,7 @@ class Instruction(BaseMessage):
     including any associated context. It sets the message role to 'user'.
     """
 
-    def __init__(self, instruction: Any, context=None, sender: Optional[str] = None):
+    def __init__(self, instruction: dict | list | str, context=None, sender: str | None = None):
         super().__init__(
             role="user", sender=sender or "user", content={"instruction": instruction}
         )
@@ -171,7 +168,7 @@ class System(BaseMessage):
     Designed for messages containing system information, this class sets the message role to 'system'.
     """
 
-    def __init__(self, system: Any, sender: Optional[str] = None):
+    def __init__(self, system: dict | list | str, sender: str | None = None):
         super().__init__(
             role="system", sender=sender or "system", content={"system_info": system}
         )
@@ -186,7 +183,7 @@ class Response(BaseMessage):
 
     """
 
-    def __init__(self, response: Any, sender: Optional[str] = None) -> None:
+    def __init__(self, response: dict | list | str, sender: str | None = None) -> None:
         content_key = ""
         try:
             response = response["message"]
@@ -274,7 +271,7 @@ class Response(BaseMessage):
 
 #     role: MessageRoleType = Field(..., alias=MessageField.ROLE.value)
 #     sender: str = Field(..., alias=MessageField.SENDER.value)  # Customizable sender
-#     recipient: Optional[str] = Field(None,
+#     recipient: str | None = Field(None,
 #                                      alias=MessageField.RECIPIENT.value)  # Optional recipient
 
 #     class Config:
@@ -356,7 +353,7 @@ class Response(BaseMessage):
 
 # class System(BaseMessage):
 
-#     def __init__(self, system: Any, sender: Optional[str] = None, recipient: Optional[
+#     def __init__(self, system: Any, sender: str | None = None, recipient: Optional[
 #         str] = None, metadata: Optional[dict] = None, relation: Optional[list] = None,
 #                  **kwargs):
 #         super().__init__(
@@ -370,7 +367,7 @@ class Response(BaseMessage):
 
 # class ActionRequest(BaseMessage):
 
-#     def __init__(self, action_request: Any, sender: Optional[str] = None,
+#     def __init__(self, action_request: Any, sender: str | None = None,
 #                  recipient: Optional[
 #                      str] = None, metadata: Optional[dict] = None,
 #                  relation: Optional[list] = None,
@@ -421,7 +418,7 @@ class Response(BaseMessage):
 
 # class ActionResponse(BaseMessage):
 
-#     def __init__(self, action_response: Any, sender: Optional[str] = None,
+#     def __init__(self, action_response: Any, sender: str | None = None,
 #                  recipient: Optional[
 #                      str] = None, metadata: Optional[dict] = None,
 #                  relation: Optional[list] = None,
@@ -447,7 +444,7 @@ class Response(BaseMessage):
 
 # class AssistantResponse(BaseMessage):
 
-#     def __init__(self, response: Any, sender: Optional[str] = None,
+#     def __init__(self, response: Any, sender: str | None = None,
 #                  recipient: Optional[
 #                      str] = None, metadata: Optional[dict] = None,
 #                  relation: Optional[list] = None,

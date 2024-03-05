@@ -1,10 +1,10 @@
-from typing import Any, Dict, List, Optional, Union
+from typing import Any
 
 from lionagi.libs import ln_convert as convert
 from lionagi.libs import ln_func_call as func_call
 from lionagi.libs import ln_nested as nested
 
-from lionagi.core.schema import Tool
+from lionagi.core.schema.base_node import Tool, TOOL_TYPE
 from lionagi.core.session.base.schema import Instruction, System
 
 
@@ -51,12 +51,12 @@ class MonoChat(BaseMonoFlow):
 
     def _create_chat_config(
         self,
-        instruction: Instruction | str,
+        instruction: Instruction | str | dict[str, Any],
         *,
-        context: Optional[Any] = None,
-        sender: Optional[str] = None,
-        system: Optional[Union[System, str, Dict[str, Any]]] = None,
-        tools: Union[bool, Tool, List[Tool], str, List[str]] = False,
+        context: Any | None = None,
+        sender: str | None = None,
+        system: System | str | dict[str, Any] | None = None,
+        tools: TOOL_TYPE = False,
         **kwargs,
     ) -> Any:
 
@@ -121,12 +121,12 @@ class MonoChat(BaseMonoFlow):
 
     async def chat(
         self,
-        instruction: Union[Instruction, str],
+        instruction: Instruction | str | dict[str, Any],
         *,
-        context: Optional[Any] = None,
-        sender: Optional[str] = None,
-        system: Optional[Union[System, str, Dict[str, Any]]] = None,
-        tools: Union[bool, Tool, List[Tool], str, List[str]] = False,
+        context: Any | None = None,
+        sender: str | None = None,
+        system: System | str | dict[str, Any] | None = None,
+        tools: TOOL_TYPE = False,
         out: bool = True,
         invoke: bool = True,
         **kwargs,
@@ -154,7 +154,7 @@ class MonoChat(BaseMonoFlow):
 
     async def ReAct(
         self,
-        instruction: Union[Instruction, str],
+        instruction: Instruction | str | dict[str, Any],
         *,
         context=None,
         sender=None,
@@ -199,7 +199,7 @@ class MonoChat(BaseMonoFlow):
 
     async def auto_followup(
         self,
-        instruction: Union[Instruction, str],
+        instruction: Instruction | str | dict[str, Any],
         *,
         context=None,
         sender=None,
@@ -252,12 +252,12 @@ class MonoChat(BaseMonoFlow):
 
     async def followup(
         self,
-        instruction: Union[Instruction, str],
+        instruction: Instruction | str | dict[str, Any],
         *,
         context=None,
         sender=None,
         system=None,
-        tools: Union[bool, Tool, List[Tool], str, List[str], List[Dict]] = False,
+        tools: TOOL_TYPE = False,
         max_followup: int = 1,
         out=True,
         **kwargs,

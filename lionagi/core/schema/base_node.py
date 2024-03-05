@@ -5,20 +5,20 @@ Module for base component model definition using Pydantic.
 from abc import ABC
 from functools import singledispatchmethod
 
-from typing import Any, Dict, Type, TypeVar, Callable, List
-from pydantic import BaseModel, Field, ValidationError, AliasChoices, field_serializer
+from typing import Any, Type, TypeVar, Callable
 
-import pandas as pd
+import lionagi.integrations.bridge.pydantic_ as pyd
 
 from lionagi.libs.sys_util import SysUtil
-
+from lionagi.libs import ln_dataframe as dataframe
 from lionagi.libs import ln_convert as convert
 from lionagi.libs import ln_nested as nested
+
 
 T = TypeVar("T", bound="BaseComponent")
 
 
-class BaseComponent(BaseModel, ABC):
+class BaseComponent(pyd.ln_BaseModel, ABC):
     """
     A base component model that provides common attributes and utility methods for metadata management.
     It includes functionality to interact with metadata in various ways, such as retrieving, modifying,
@@ -27,12 +27,12 @@ class BaseComponent(BaseModel, ABC):
     Attributes:
         id_ (str): Unique identifier, defaulted using SysUtil.create_id.
         timestamp (str | None): Timestamp of creation or modification.
-        metadata (Dict[str, Any]): Metadata associated with the component.
+        metadata (dict[str, Any]): Metadata associated with the component.
     """
 
-    id_: str = Field(default_factory=SysUtil.create_id, alias="node_id")
-    timestamp: str | None = Field(default_factory=SysUtil.get_timestamp)
-    metadata: Dict[str, Any] = Field(default_factory=dict, alias="meta")
+    id_: str = pyd.ln_Field(default_factory=SysUtil.create_id, alias="node_id")
+    timestamp: str | None = pyd.ln_Field(default_factory=SysUtil.get_timestamp)
+    metadata: dict[str, Any] = pyd.ln_Field(default_factory=dict, alias="meta")
 
     class Config:
         """Model configuration settings."""
@@ -51,7 +51,7 @@ class BaseComponent(BaseModel, ABC):
         return cls.__name__
 
     # from_obj method, overloaded
-    # implemented for Dict, str, pd.Series, pd.DataFrame, List, pydantic.BaseModel
+    # implemented for dict, str, pd.Series, pd.DataFrame, list, pydantic.BaseModel
 
     @singledispatchmethod
     @classmethod
@@ -80,7 +80,7 @@ class BaseComponent(BaseModel, ABC):
         Handles creation of an instance from a dictionary object.
 
         Args:
-            dict_data (Dict): The dictionary from which to create an instance of the class.
+            dict_data (dict): The dictionary from which to create an instance of the class.
             *args: Additional positional arguments.
             **kwargs: Additional keyword arguments.
 
@@ -108,13 +108,13 @@ class BaseComponent(BaseModel, ABC):
         """
         try:
             return cls.from_obj(convert.to_dict(json_data), *args, **kwargs)
-        except ValidationError as e:
+        except pyd.ln_ValidationError as e:
             raise ValueError(f"Invalid JSON for deserialization: {e}")
 
-    @from_obj.register(pd.Series)
+    @from_obj.register(dataframe.ln_Series)
     @classmethod
     def _(
-        cls, pd_series: pd.Series, *args, pd_kwargs: Dict | None = None, **kwargs
+        cls, pd_series, *args, pd_kwargs: dict | None = None, **kwargs
     ) -> T:
         """
         Handles creation of an instance from a pandas Series object.
@@ -131,11 +131,11 @@ class BaseComponent(BaseModel, ABC):
         pd_dict = convert.to_dict(pd_series, **pd_kwargs)
         return cls.from_obj(pd_dict, *args, **kwargs)
 
-    @from_obj.register(pd.DataFrame)
+    @from_obj.register(dataframe.ln_DataFrame)
     @classmethod
     def _(
-        cls, pd_df: pd.DataFrame, *args, pd_kwargs: Dict | None = None, **kwargs
-    ) -> List[T]:
+        cls, pd_df, *args, pd_kwargs: dict | None = None, **kwargs
+    ) -> list[T]:
         """
         Handles creation of instances from a pandas DataFrame object, returning a list of instances.
 
@@ -145,7 +145,7 @@ class BaseComponent(BaseModel, ABC):
             **kwargs: Additional keyword arguments.
 
         Returns:
-            List[T]: A list of instances of the class created from each row of the pandas DataFrame.
+            list[T]: A list of instances of the class created from each row of the pandas DataFrame.
         """
         pd_kwargs = pd_kwargs or {}
         pd_dict = convert.to_dict(pd_df, as_list=True, **pd_kwargs)
@@ -153,25 +153,29 @@ class BaseComponent(BaseModel, ABC):
 
     @from_obj.register(list)
     @classmethod
-    def _(cls, list_data: List[Any], *args, **kwargs) -> List[T]:
+    def _(cls, list_data: list[Any], *args, **kwargs) -> list[T]:
         """
         Overloaded method to handle list inputs, converting each element in the list to an instance of the class.
 
         Args:
-            list_data (List[Any]): The list to convert to instances of the class.
+            list_data (list[Any]): The list to convert to instances of the class.
             *args: Variable length argument list.
             **kwargs: Arbitrary keyword arguments for list element conversion.
 
         Returns:
-            List[T]: A list of instances of the class created from each element of the input list.
+            list[T]: A list of instances of the class created from each element of the input list.
         """
         return [cls.from_obj(item, *args, **kwargs) for item in list_data]
 
-    @from_obj.register(BaseModel)
+    @from_obj.register(pyd.ln_BaseModel)
     @classmethod
-    def _(cls, model: BaseModel, *args, model_kwargs=None, **kwargs) -> T:
+    def _(cls, model, *args, model_kwargs=None, **kwargs) -> T:
         model_kwargs = model_kwargs or {}
-        model_dict = model.model_dump(by_alias=True, **model_kwargs)
+        model_dict = {}
+        try:
+            model_dict = model.model_dump(by_alias=True, **model_kwargs)
+        except:
+            model_dict = model.to_dict(**model_kwargs)
         return cls.model_validate(model_dict, *args, **kwargs)
 
     # to obj methods, not overloaded
@@ -189,7 +193,7 @@ class BaseComponent(BaseModel, ABC):
         """
         return self.model_dump_json(*args, by_alias=True, **kwargs)
 
-    def to_dict(self, *args, **kwargs) -> Dict[str, Any]:
+    def to_dict(self, *args, **kwargs) -> dict[str, Any]:
         """
         Serializes the instance to a dictionary.
 
@@ -198,7 +202,7 @@ class BaseComponent(BaseModel, ABC):
             **kwargs: Arbitrary keyword arguments for Pydantic's dict() method.
 
         Returns:
-            Dict[str, Any]: The dictionary representation of the instance.
+            dict[str, Any]: The dictionary representation of the instance.
         """
         return self.model_dump(*args, by_alias=True, **kwargs)
 
@@ -226,7 +230,7 @@ class BaseComponent(BaseModel, ABC):
         convert(self.to_dict(), root)
         return ET.tostring(root, encoding="unicode")
 
-    def to_pd_series(self, *args, pd_kwargs: Dict | None = None, **kwargs) -> pd.Series:
+    def to_pd_series(self, *args, pd_kwargs: dict | None = None, **kwargs) -> dataframe.ln_Series:
         """
         Converts the instance to a pandas Series.
 
@@ -240,7 +244,7 @@ class BaseComponent(BaseModel, ABC):
         """
         pd_kwargs = {} if pd_kwargs is None else pd_kwargs
         dict_ = self.to_dict(*args, **kwargs)
-        return pd.Series(dict_, **pd_kwargs)
+        return dataframe.ln_Series(dict_, **pd_kwargs)
 
     def copy(self, *args, **kwargs) -> T:
         """
@@ -257,16 +261,16 @@ class BaseComponent(BaseModel, ABC):
 
     # meta methods
 
-    def meta_keys(self, flattened: bool = False, **kwargs) -> List[str]:
+    def meta_keys(self, flattened: bool = False, **kwargs) -> list[str]:
         """
-        Lists the keys in the metadata dictionary. Optionally returns flattened keys for nested structures.
+        lists the keys in the metadata dictionary. Optionally returns flattened keys for nested structures.
 
         Args:
             flattened (bool): If True, returns the keys in a flattened format for nested dictionaries.
             **kwargs: Additional keyword arguments passed to get_flattened_keys function when flattened is True.
 
         Returns:
-            List[str]: A list of keys from the metadata dictionary.
+            list[str]: A list of keys from the metadata dictionary.
         """
         if flattened:
             return nested.get_flattened_keys(self.metadata, **kwargs)
@@ -301,7 +305,7 @@ class BaseComponent(BaseModel, ABC):
             return True
         return False
 
-    def meta_insert(self, indices: str | List, value: Any, **kwargs) -> bool:
+    def meta_insert(self, indices: str | list, value: Any, **kwargs) -> bool:
         """Inserts a value into metadata at the specified key."""
         return nested.ninsert(self.metadata, indices, value, **kwargs)
 
@@ -311,7 +315,7 @@ class BaseComponent(BaseModel, ABC):
         return self.metadata.pop(key, default)
 
     def meta_merge(
-        self, additional_metadata: Dict[str, Any], overwrite: bool = False, **kwargs
+        self, additional_metadata: dict[str, Any], overwrite: bool = False, **kwargs
     ) -> None:
         """
         Merges another dictionary into metadata with optional overwrite.
@@ -331,7 +335,7 @@ class BaseComponent(BaseModel, ABC):
         """
         self.metadata.clear()
 
-    def meta_filter(self, condition: Callable[[Any, Any], bool]) -> Dict[str, Any]:
+    def meta_filter(self, condition: Callable[[Any, Any], bool]) -> dict[str, Any]:
         """
         Filters the metadata dictionary based on a predicate function.
 
@@ -340,16 +344,16 @@ class BaseComponent(BaseModel, ABC):
             returns True if the pair should be included in the output.
 
         Returns:
-            Dict[str, Any]: A new dictionary containing only the key-value pairs that match the condition.
+            dict[str, Any]: A new dictionary containing only the key-value pairs that match the condition.
         """
         return nested.nfilter(self.metadata, condition)
 
-    def meta_validate(self, schema: Dict[str, Type | Callable]) -> bool:
+    def meta_validate(self, schema: dict[str, Type | Callable]) -> bool:
         """
         Validates the metadata dictionary against a specified schema.
 
         Args:
-            schema (Dict[str, Union[Type[Any], Callable[[Any], bool]]]): A dictionary where each key is
+            schema (dict[str, Union[Type[Any], Callable[[Any], bool]]]): A dictionary where each key is
             a metadata key to validate, and the value is the type expected or a function that takes
             the value and returns True if it's valid.
 
@@ -382,7 +386,7 @@ class BaseComponent(BaseModel, ABC):
     #     return cls.from_dict(data, **kwargs)
 
     # @staticmethod
-    # def _xml_to_dict(root) -> Dict[str, Any]:
+    # def _xml_to_dict(root) -> dict[str, Any]:
     #     """Converts a flat XML structure to a dictionary."""
     #     return {child.tag: child.text for child in root}
 
@@ -399,9 +403,9 @@ class BaseNode(BaseComponent):
             different naming conventions like "text", "page_content", or "chunk_content".
     """
 
-    content: str | Dict[str, Any] | None | Any = Field(
+    content: str | dict[str, Any] | None | Any = pyd.ln_Field(
         default=None,
-        validation_alias=AliasChoices("text", "page_content", "chunk_content"),
+        validation_alias=pyd.ln_AliasChoices("text", "page_content", "chunk_content"),
     )
 
     @property
@@ -456,7 +460,7 @@ class BaseRelatableNode(BaseNode):
         label: An optional label for the node, providing additional context or classification.
     """
 
-    related_nodes: List[str] = Field(default_factory=list)
+    related_nodes: list[str] = pyd.ln_Field(default_factory=list)
     label: str | None = None
 
     def add_related_node(self, node_id: str) -> bool:
@@ -503,10 +507,12 @@ class Tool(BaseRelatableNode):
     """
 
     func: Any
-    schema_: Dict | None = None
+    schema_: dict | None = None
     manual: Any | None = None
     parser: Any | None = None
 
-    @field_serializer("func")
+    @pyd.ln_field_serializer("func")
     def serialize_func(self, func):
         return func.__name__
+
+TOOL_TYPE = bool | Tool | str | list[Tool | str | dict] | dict

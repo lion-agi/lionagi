@@ -1,12 +1,14 @@
 from collections import deque
-from typing import Any, Dict, List, Optional, Union, TypeVar
+from typing import Any, Optional, Union, TypeVar
 
-import pandas as pd
 
+from lionagi.libs.sys_util import PATH_TYPE
+from lionagi.libs.ln_api import StatusTracker, BaseService
 from lionagi.libs import ln_convert as convert
-from lionagi.libs.ln_api import StatusTracker
+from lionagi.libs import ln_dataframe as dataframe
 
-from lionagi.core.schema import Tool
+from lionagi.core.schema.base_node import TOOL_TYPE, Tool
+from lionagi.core.schema.data_logger import DataLogger
 from lionagi.core.tool.tool_manager import ToolManager
 from lionagi.core.flow.monoflow import MonoChat
 
@@ -28,17 +30,17 @@ class Branch(BaseBranch):
 
     def __init__(
         self,
-        branch_name=None,
-        system=None,
-        messages=None,
-        service=None,
-        sender=None,
-        llmconfig=None,
-        tools=None,
-        datalogger=None,
-        persist_path=None,
+        branch_name: str | None = None,
+        system: dict | list | System | None = None,
+        messages: dataframe.ln_DataFrame | None = None,
+        service: BaseService | None = None,
+        sender: str | None = None,
+        llmconfig: dict[str, str | int | dict] | None = None,
+        tools: TOOL_TYPE | None = None,
+        datalogger: None | DataLogger = None,
+        persist_path: PATH_TYPE | None = None,
         # instruction_sets=None,
-        tool_manager=None,
+        tool_manager: ToolManager | None = None,
         **kwargs,
     ):
 
@@ -81,14 +83,14 @@ class Branch(BaseBranch):
     def from_csv(
         cls,
         filepath,
-        branch_name=None,
-        service=None,
-        llmconfig=None,
-        tools=None,
-        datalogger=None,
-        persist_path=None,
+        branch_name: str | None = None,
+        service: BaseService | None = None,
+        llmconfig: dict[str, str | int | dict] | None = None,
+        tools: TOOL_TYPE | None = None,
+        datalogger: None | DataLogger = None,
+        persist_path: PATH_TYPE | None = None,
         # instruction_sets=None,
-        tool_manager=None,
+        tool_manager: ToolManager | None = None,
         read_kwargs=None,
         **kwargs,
     ):
@@ -113,14 +115,14 @@ class Branch(BaseBranch):
     def from_json_string(
         cls,
         filepath,
-        branch_name=None,
-        service=None,
-        llmconfig=None,
-        tools=None,
-        datalogger=None,
-        persist_path=None,
+        branch_name: str | None = None,
+        service: BaseService | None = None,
+        llmconfig: dict[str, str | int | dict] | None = None,
+        tools: TOOL_TYPE | None = None,
+        datalogger: None | DataLogger = None,
+        persist_path: PATH_TYPE | None = None,
         # instruction_sets=None,
-        tool_manager=None,
+        tool_manager: ToolManager | None = None,
         read_kwargs=None,
         **kwargs,
     ):
@@ -141,7 +143,7 @@ class Branch(BaseBranch):
 
         return self
 
-    def messages_describe(self) -> Dict[str, Any]:
+    def messages_describe(self) -> dict[str, Any]:
 
         return dict(
             total_messages=len(self.messages),
@@ -176,7 +178,7 @@ class Branch(BaseBranch):
                     self.tool_manager.registry[key] = value
 
     # ----- tool manager methods ----- #
-    def register_tools(self, tools: Union[Tool, List[Tool]]) -> None:
+    def register_tools(self, tools: Union[Tool, list[Tool]]) -> None:
 
         if not isinstance(tools, list):
             tools = [tools]
@@ -184,7 +186,7 @@ class Branch(BaseBranch):
 
     def delete_tools(
         self,
-        tools: Union[T, List[T], str, List[str]],
+        tools: Union[T, list[T], str, list[str]],
         verbose: bool = True,
     ) -> bool:
 
@@ -231,7 +233,7 @@ class Branch(BaseBranch):
             mail_ = self.pending_ins[sender].popleft()
 
             if mail_.category == "messages" and messages:
-                if not isinstance(mail_.package, pd.DataFrame):
+                if not isinstance(mail_.package, dataframe.ln_DataFrame):
                     raise ValueError("Invalid messages format")
                 MessageUtil.validate_messages(mail_.package)
                 self.messages = self.messages.merge(mail_.package, how="outer")
@@ -310,8 +312,8 @@ class Branch(BaseBranch):
         instruction: Union[Instruction, str],
         context: Optional[Any] = None,
         sender: Optional[str] = None,
-        system: Optional[Union[System, str, Dict[str, Any]]] = None,
-        tools: Union[bool, T, List[T], str, List[str]] = False,
+        system: Optional[Union[System, str, dict[str, Any]]] = None,
+        tools: Union[bool, T, list[T], str, list[str]] = False,
         out: bool = True,
         invoke: bool = True,
         **kwargs,
@@ -333,9 +335,9 @@ class Branch(BaseBranch):
         self,
         instruction: Union[Instruction, str],
         context=None,
-        sender=None,
-        system=None,
-        tools=None,
+        sender: str | None = None,
+        system: dict | list | System | None = None,
+        tools: TOOL_TYPE | None = None,
         num_rounds: int = 1,
         **kwargs,
     ):
@@ -354,9 +356,9 @@ class Branch(BaseBranch):
         self,
         instruction: Union[Instruction, str],
         context=None,
-        sender=None,
-        system=None,
-        tools: Union[bool, T, List[T], str, List[str], List[Dict]] = False,
+        sender: str | None = None,
+        system: dict | list | System | None = None,
+        tools: Union[bool, T, list[T], str, list[str], list[dict]] = False,
         max_followup: int = 3,
         out=True,
         **kwargs,
@@ -378,9 +380,9 @@ class Branch(BaseBranch):
         self,
         instruction: Union[Instruction, str],
         context=None,
-        sender=None,
-        system=None,
-        tools: bool | Tool | List[Tool | str | Dict] | str = False,
+        sender: str | None = None,
+        system: dict | list | System | None = None,
+        tools: bool | Tool | list[Tool | str | dict] | str = False,
         max_followup: int = 1,
         out=True,
         **kwargs,

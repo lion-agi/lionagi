@@ -1,12 +1,15 @@
 from collections import deque
-from typing import Any, Dict, List, Optional, Tuple, Union
-
-import pandas as pd
+from typing import Tuple
 
 from lionagi.libs.ln_api import BaseService
-from lionagi.libs import ln_convert as convert
+from lionagi.libs.sys_util import PATH_TYPE
 
-from lionagi.core.schema import Tool
+from lionagi.libs import ln_convert as convert
+from lionagi.libs import ln_dataframe as dataframe
+
+from lionagi.core.schema.base_node import TOOL_TYPE
+from lionagi.core.schema.data_logger import DataLogger
+from lionagi.core.tool.tool_manager import ToolManager
 from lionagi.core.session.base.mail_manager import MailManager
 from lionagi.core.session.base.schema import System, Instruction
 from lionagi.core.session.branch import Branch
@@ -21,44 +24,44 @@ class Session:
     branches, configuring language learning models, managing tools, and handling session data logging.
 
     Attributes:
-        branches (Dict[str, Branch]): A dictionary of branch instances associated with the session.
-        service (Optional[BaseService]): The external service instance associated with the session.
+        branches (dict[str, Branch]): A dictionary of branch instances associated with the session.
+        service (BaseService]): The external service instance associated with the | Nonesession.
         branch_manager (BranchManager): The manager for handling branches within the session.
         datalogger (Optional[Any]): The datalogger instance for session data logging.
     """
 
     def __init__(
         self,
-        system: Optional[Union[str, System]] = None,
-        sender: Optional[str] = None,
-        llmconfig: Optional[Dict[str, Any]] = None,
-        service: Optional[BaseService] = None,
-        branches: Optional[Dict[str, Branch]] = None,
-        default_branch: Optional[Branch] = None,
-        default_branch_name: Optional[str] = None,
-        tools: Optional[List[Tool]] = None,
+        system: dict | list | System | None = None,
+        sender: str | None = None,
+        llmconfig: dict[str, str | int | dict] | None = None,
+        service: BaseService | None = None,
+        branches: dict[str, Branch] | None = None,
+        default_branch: Branch | None = None,
+        default_branch_name: str | None = None,
+        tools: TOOL_TYPE | None = None,
         # instruction_sets: Optional[List[Instruction]] = None,
-        tool_manager: Optional[Any] = None,
-        messages: Optional[pd.DataFrame] = None,
-        datalogger: Optional[Any] = None,
-        dir: Optional[str] = None,
+        tool_manager: ToolManager | None = None,
+        messages: dataframe.ln_DataFrame | None = None,
+        datalogger: None | DataLogger = None,
+        persist_path: PATH_TYPE | None = None,
     ):
         """Initialize a new session with optional configuration for managing conversations.
 
         Args:
             system (Optional[Union[str, System]]): The system message.
-            sender (Optional[str]): the default sender name for default branch
-            llmconfig (Optional[Dict[str, Any]]): Configuration for language learning models.
-            service (Optional[BaseService]): External service instance.
-            branches (Optional[Dict[str, Branch]]): Dictionary of branch instances.
-            default_branch (Optional[Branch]): The default branch for the session.
-            default_branch_name (Optional[str]): The name of the default branch.
-            tools (Optional[List[Tool]]): List of tools available for the session.
+            sender (str | None): the default sender name for default branch
+            llmconfig (dict[str, Any] | None): Configuration for language learning models.
+            service (BaseService]): External service  | Nonenstance.
+            branches (dict[str, Branch] | None): dictionary of branch instances.
+            default_branch (Branch | None): The default branch for the session.
+            default_branch_name (str | None): The name of the default branch.
+            tools (TOOL_TYPE | None): List of tools available for the session.
             instruction_sets (Optional[List[Instruction]]): List of instruction sets.
             tool_manager (Optional[Any]): Manager for handling tools.
-            messages (Optional[List[Dict[str, Any]]]): Initial list of messages.
+            messages (Optional[List[dict[str, Any]]]): Initial list of messages.
             datalogger (Optional[Any]): Logger instance for the session.
-            dir (Optional[str]): Directory path for saving session data.
+            persist_path (str | None): Directory path for saving session data.
 
         Examples:
             >>> session = Session(system="you are a helpful assistant", sender="researcher")
@@ -76,7 +79,7 @@ class Session:
             service=service,
             llmconfig=llmconfig,
             tools=tools,
-            dir=dir,
+            persist_path=persist_path,
             datalogger=datalogger,
         )
         self.branch_manager = MailManager(self.branches)
@@ -96,7 +99,7 @@ class Session:
         Provides a descriptive summary of all messages in the branch.
 
         Returns:
-            Dict[str, Any]: A dictionary containing summaries of messages by role and sender, total message count,
+            dict[str, Any]: A dictionary containing summaries of messages by role and sender, total message count,
             instruction sets, registered tools, and message details.
 
         Examples:
@@ -120,7 +123,7 @@ class Session:
         return self.default_branch.has_tools
 
     @property
-    def last_message(self) -> pd.DataFrame:
+    def last_message(self) -> dataframe.ln_DataFrame:
         """
         Retrieves the last message from the conversation.
 
@@ -130,7 +133,7 @@ class Session:
         return self.default_branch.last_message
 
     @property
-    def first_system(self) -> pd.DataFrame:
+    def first_system(self) -> dataframe.ln_DataFrame:
         """
         Retrieves the first system message from the conversation.
 
@@ -140,7 +143,7 @@ class Session:
         return self.default_branch.first_system
 
     @property
-    def last_response(self) -> pd.DataFrame:
+    def last_response(self) -> dataframe.ln_DataFrame:
         """
         Retrieves the last response message from the conversation.
 
@@ -150,73 +153,73 @@ class Session:
         return self.default_branch.last_response
 
     @property
-    def last_response_content(self) -> Dict:
+    def last_response_content(self) -> dict:
         """
         Retrieves the content of the last response message from the conversation.
 
         Returns:
-            Dict: The content of the last response message as a dictionary
+            dict: The content of the last response message as a dictionary
         """
         return self.default_branch.last_response_content
 
     @property
-    def tool_request(self) -> pd.DataFrame:
+    def tool_request(self) -> dataframe.ln_DataFrame:
         """
         Retrieves all tool request messages from the conversation.
 
         Returns:
-            pd.DataFrame: A DataFrame containing all tool request messages.
+            dataframe.ln_DataFrame: A DataFrame containing all tool request messages.
         """
         return self.default_branch.tool_request
 
     @property
-    def tool_response(self) -> pd.DataFrame:
+    def tool_response(self) -> dataframe.ln_DataFrame:
         """
         Retrieves all tool response messages from the conversation.
 
         Returns:
-            pd.DataFrame: A DataFrame containing all tool response messages.
+            dataframe.ln_DataFrame: A DataFrame containing all tool response messages.
         """
         return self.default_branch.tool_response
 
     @property
-    def responses(self) -> pd.DataFrame:
+    def responses(self) -> dataframe.ln_DataFrame:
         """
         Retrieves all response messages from the conversation.
 
         Returns:
-            pd.DataFrame: A DataFrame containing all response messages.
+            dataframe.ln_DataFrame: A DataFrame containing all response messages.
         """
         return self.default_branch.responses
 
     @property
-    def assistant_responses(self) -> pd.DataFrame:
+    def assistant_responses(self) -> dataframe.ln_DataFrame:
         """
         Retrieves all assistant responses from the conversation, excluding tool requests and responses.
 
         Returns:
-            pd.DataFrame: A DataFrame containing assistant responses excluding tool requests and responses.
+            dataframe.ln_DataFrame: A DataFrame containing assistant responses excluding tool requests and responses.
         """
         return self.default_branch.assistant_responses
 
     @property
-    def info(self) -> Dict[str, int]:
+    def info(self) -> dict[str, int]:
         """
         Get a summary of the conversation messages categorized by role.
 
         Returns:
-            Dict[str, int]: A dictionary with keys as message roles and values as counts.
+            dict[str, int]: A dictionary with keys as message roles and values as counts.
         """
 
         return self.default_branch.info
 
     @property
-    def sender_info(self) -> Dict[str, int]:
+    def sender_info(self) -> dict[str, int]:
         """
         Provides a descriptive summary of the conversation, including total message count and summary by sender.
 
         Returns:
-            Dict[str, Any]: A dictionary containing the total number of messages and a summary categorized by sender.
+            dict[str, Any]: A dictionary containing the total number of messages and a summary categorized by sender.
         """
         return self.default_branch.sender_info
 
@@ -226,13 +229,13 @@ class Session:
     @classmethod
     def from_csv(
         cls,
-        filepath,
-        system: Optional[Union[str, System]] = None,
-        sender: Optional[str] = None,
-        llmconfig: Optional[Dict[str, Any]] = None,
+        filepath: PATH_TYPE,
+        system: dict | list | System | None = None,
+        sender: str | None = None,
+        llmconfig: dict[str, str | int | dict] | None = None,
         service: BaseService = None,
         default_branch_name: str = "main",
-        tools=None,
+        tools: TOOL_TYPE = False,
         # instruction_sets=None,
         tool_manager=None,
         **kwargs,
@@ -242,12 +245,12 @@ class Session:
 
         Args:
             filepath (str): Path to the CSV file.
-            name (Optional[str]): Name of the branch, default is None.
-            instruction_sets (Optional[Dict[str, InstructionSet]]): Instruction sets, default is None.
+            name (str | None): Name of the branch, default is None.
+            instruction_sets (Optional[dict[str, InstructionSet]]): Instruction sets, default is None.
             tool_manager (Optional[ToolManager]): Tool manager for the branch, default is None.
-            service (Optional[BaseService]): External service for the branch, default is None.
-            llmconfig (Optional[Dict]): Configuration for language learning models, default is None.
-            tools (Optional[List[Tool]]): Initial list of tools to register, default is None.
+            service (BaseService]): External service for the branch, default | Noneis None.
+            llmconfig (Optional[dict]): Configuration for language learning models, default is None.
+            tools (TOOL_TYPE | None): Initial list of tools to register, default is None.
             **kwargs: Additional keyword arguments for pd.read_csv().
 
         Returns:
@@ -256,7 +259,7 @@ class Session:
         Examples:
             >>> branch = Branch.from_csv("path/to/messages.csv", name="ImportedBranch")
         """
-        df = pd.read_csv(filepath, **kwargs)
+        df = dataframe.read_csv(filepath, **kwargs)
 
         self = cls(
             system=system,
@@ -275,13 +278,13 @@ class Session:
     @classmethod
     def from_json(
         cls,
-        filepath,
-        system: Optional[Union[str, System]] = None,
-        sender: Optional[str] = None,
-        llmconfig: Optional[Dict[str, Any]] = None,
+        filepath: PATH_TYPE,
+        system: dict | list | System | None = None,
+        sender: str | None = None,
+        llmconfig: dict[str, str | int | dict] | None = None,
         service: BaseService = None,
         default_branch_name: str = "main",
-        tools=None,
+        tools: TOOL_TYPE = False,
         # instruction_sets=None,
         tool_manager=None,
         **kwargs,
@@ -291,11 +294,11 @@ class Session:
 
         Args:
             filepath (str): Path to the JSON file.
-            name (Optional[str]): Name of the branch, default is None.
-            instruction_sets (Optional[Dict[str, InstructionSet]]): Instruction sets, default is None.
+            name (str | None): Name of the branch, default is None.
+            instruction_sets (Optional[dict[str, InstructionSet]]): Instruction sets, default is None.
             tool_manager (Optional[ToolManager]): Tool manager for the branch, default is None.
-            service (Optional[BaseService]): External service for the branch, default is None.
-            llmconfig (Optional[Dict]): Configuration for language learning models, default is None.
+            service (BaseService]): External service for the branch, default | Noneis None.
+            llmconfig (Optional[dict]): Configuration for language learning models, default is None.
             **kwargs: Additional keyword arguments for pd.read_json().
 
         Returns:
@@ -304,7 +307,7 @@ class Session:
         Examples:
             >>> branch = Branch.from_json_string("path/to/messages.json", name="JSONBranch")
         """
-        df = pd.read_json(filepath, **kwargs)
+        df = dataframe.read_json(filepath, **kwargs)
         self = cls(
             system=system,
             sender=sender,
@@ -480,7 +483,7 @@ class Session:
             )
 
     @property
-    def all_messages(self) -> pd.DataFrame:
+    def all_messages(self) -> dataframe.ln_DataFrame:
         """
         return all messages across branches
         """
@@ -491,7 +494,7 @@ class Session:
 
     # ----- chatflow ----#
     async def call_chatcompletion(
-        self, branch=None, sender=None, with_sender=False, **kwargs
+        self, branch: Branch| str | None = None, sender: str | None = None, with_sender=False, **kwargs
     ):
         """
         Asynchronously calls the chat completion service with the current message queue.
@@ -499,7 +502,7 @@ class Session:
         This method prepares the messages for chat completion, sends the request to the configured service, and handles the response. The method supports additional keyword arguments that are passed directly to the service.
 
         Args:
-            sender (Optional[str]): The name of the sender to be included in the chat completion request. Defaults to None.
+            sender (str | None): The name of the sender to be included in the chat completion request. Defaults to None.
             with_sender (bool): If True, includes the sender's name in the messages. Defaults to False.
             **kwargs: Arbitrary keyword arguments passed directly to the chat completion service.
 
@@ -515,25 +518,25 @@ class Session:
 
     async def chat(
         self,
-        instruction: Union[Instruction, str],
-        branch=None,
-        context: Optional[Any] = None,
-        sender: Optional[str] = None,
-        system: Optional[Union[System, str, Dict[str, Any]]] = None,
-        tools: Union[bool, Tool, List[Tool], str, List[str]] = False,
+        instruction: dict | list | Instruction | str,
+        branch: Branch| str | None = None,
+        context: dict | list | str = None,
+        sender: str | None = None,
+        system: dict | list | System | None = None,
+        tools: TOOL_TYPE = False,
         out: bool = True,
         invoke: bool = True,
         **kwargs,
-    ) -> Any:
+    ) -> str | None:
         """
         a chat conversation with LLM, processing instructions and system messages, optionally invoking tools.
 
         Args:
             branch: The Branch instance to perform chat operations.
-            instruction (Union[Instruction, str]): The instruction for the chat.
+            instruction (dict | list | Instruction | str): The instruction for the chat.
             context (Optional[Any]): Additional context for the chat.
-            sender (Optional[str]): The sender of the chat message.
-            system (Optional[Union[System, str, Dict[str, Any]]]): System message to be processed.
+            sender (str | None): The sender of the chat message.
+            system (Optional[Union[System, str, dict[str, Any]]]): System message to be processed.
             tools (Union[bool, Tool, List[Tool], str, List[str]]): Specifies tools to be invoked.
             out (bool): If True, outputs the chat response.
             invoke (bool): If True, invokes tools as part of the chat.
@@ -556,12 +559,12 @@ class Session:
 
     async def ReAct(
         self,
-        instruction: Union[Instruction, str],
-        branch=None,
-        context=None,
-        sender=None,
-        system=None,
-        tools=None,
+        instruction: dict | list | Instruction | str,
+        branch: Branch| str | None = None,
+        context: dict | list | str = None,
+        sender: str | None = None,
+        system: dict | list | System | None = None,
+        tools: TOOL_TYPE = False,
         num_rounds: int = 1,
         **kwargs,
     ):
@@ -570,9 +573,9 @@ class Session:
 
         Args:
             branch: The Branch instance to perform ReAct operations.
-            instruction (Union[Instruction, str]): Initial instruction for the cycle.
+            instruction (dict | list | Instruction | str): Initial instruction for the cycle.
             context: Context relevant to the instruction.
-            sender (Optional[str]): Identifier for the message sender.
+            sender (str | None): Identifier for the message sender.
             system: Initial system message or configuration.
             tools: Tools to be registered or used during the cycle.
             num_rounds (int): Number of reason-tool cycles to perform.
@@ -595,12 +598,12 @@ class Session:
 
     async def auto_followup(
         self,
-        instruction: Union[Instruction, str],
-        branch=None,
-        context=None,
-        sender=None,
-        system=None,
-        tools: Union[bool, Tool, List[Tool], str, List[str], List[Dict]] = False,
+        instruction: dict | list | Instruction | str,
+        branch: Branch| str | None = None,
+        context: dict | list | str = None,
+        sender: str | None = None,
+        system: dict | list | System | None = None,
+        tools: TOOL_TYPE = False,
         max_followup: int = 3,
         out=True,
         **kwargs,
@@ -610,9 +613,9 @@ class Session:
 
         Args:
             branch: The Branch instance to perform follow-up operations.
-            instruction (Union[Instruction, str]): The initial instruction for follow-up.
+            instruction (dict | list | Instruction | str): The initial instruction for follow-up.
             context: Context relevant to the instruction.
-            sender (Optional[str]): Identifier for the message sender.
+            sender (str | None): Identifier for the message sender.
             system: Initial system message or configuration.
             tools: Specifies tools to be considered for follow-up tools.
             max_followup (int): Maximum number of follow-up chats allowed.
@@ -638,26 +641,26 @@ class Session:
     def new_branch(
         self,
         branch_name: str,
-        system: Optional[Union[System, str]] = None,
-        sender=None,
-        messages: Optional[pd.DataFrame] = None,
+        system: dict | list | System | None = None,
+        sender: str | None = None,
+        messages: dataframe.ln_DataFrame | None = None,
         tool_manager=None,
         service=None,
         llmconfig=None,
-        tools=None,
+        tools: TOOL_TYPE = False,
     ) -> None:
         """Create a new branch with the specified configurations.
 
         Args:
-            branch_name (Optional[str]): Name of the new branch.
+            branch_name (str | None): Name of the new branch.
             system (Optional[Union[System, str]]): System or context identifier for the new branch.
-            sender (Optional[str]): Default sender identifier for the new branch.
-            messages (Optional[pd.DataFrame]): Initial set of messages for the new branch.
+            sender (str | None): Default sender identifier for the new branch.
+            messages (Optional[dataframe.ln_DataFrame]): Initial set of messages for the new branch.
             instruction_sets (Optional[Any]): Instruction sets for the new branch.
             tool_manager (Optional[Any]): Tool manager for handling tools in the new branch.
-            service (Optional[BaseService]): External service instance for the new branch.
-            llmconfig (Optional[Dict[str, Any]]): Configuration for language learning models in the new branch.
-            tools (Optional[List[Tool]]): List of tools available for the new branch.
+            service (BaseService]): External service instance for the ne | None branch.
+            llmconfig (dict[str, Any] | None): Configuration for language learning models in the new branch.
+            tools (TOOL_TYPE | None): List of tools available for the new branch.
 
         Raises:
             ValueError: If the branch name already exists.
@@ -685,13 +688,13 @@ class Session:
         self.branch_manager.mails[branch_name] = {}
 
     def get_branch(
-        self, branch: Optional[Union[Branch, str]] = None, get_name: bool = False
-    ) -> Union[Branch, Tuple[Branch, str]]:
+        self, branch: Branch| str | None = None, get_name: bool = False
+    ) -> Branch | Tuple[Branch, str]:
         """
         Retrieve a branch by name or instance.
 
         Args:
-            branch (Optional[Union[Branch, str]]): The branch name or instance to retrieve.
+            branch (Optional[Branch | str]): The branch name or instance to retrieve.
             get_name (bool): If True, returns a tuple of the branch instance and its name.
 
         Returns:
@@ -729,11 +732,11 @@ class Session:
         else:
             raise ValueError(f"Invalid branch input {branch}.")
 
-    def change_default_branch(self, branch: Union[str, Branch]) -> None:
+    def change_default_branch(self, branch: str | Branch) -> None:
         """Change the default branch of the session.
 
         Args:
-            branch (Union[str, Branch]): The branch name or instance to set as the new default.
+            branch (str | Branch): The branch name or instance to set as the new default.
 
         Examples:
             >>> session.change_default_branch("new_default_branch")
@@ -742,11 +745,11 @@ class Session:
         self.default_branch = branch_
         self.default_branch_name = name_
 
-    def delete_branch(self, branch: Union[Branch, str], verbose: bool = True) -> bool:
+    def delete_branch(self, branch: Branch | str, verbose: bool = True) -> bool:
         """Delete a branch from the session.
 
         Args:
-            branch (Union[Branch, str]): The branch name or instance to delete.
+            branch (Branch | str): The branch name or instance to delete.
             verbose (bool): If True, prints a message upon deletion.
 
         Returns:
@@ -774,16 +777,16 @@ class Session:
 
     def merge_branch(
         self,
-        from_: Union[str, Branch],
-        to_branch: Union[str, Branch],
+        from_: str | Branch,
+        to_branch: str | Branch,
         update: bool = True,
         del_: bool = False,
     ) -> None:
         """Merge messages and settings from one branch to another.
 
         Args:
-            from_ (Union[str, Branch]): The source branch name or instance.
-            to_branch (Union[str, Branch]): The target branch name or instance where the merge will happen.
+            from_ (str | Branch): The source branch name or instance.
+            to_branch (str | Branch): The target branch name or instance where the merge will happen.
             update (bool): If True, updates the target branch with the source branch's settings.
             del_ (bool): If True, deletes the source branch after merging.
 
@@ -800,14 +803,14 @@ class Session:
                 self.default_branch = to_branch
             self.delete_branch(from_, verbose=False)
 
-    def collect(self, from_: Union[str, Branch, List[str], List[Branch]] = None):
+    def collect(self, from_: str | Branch | list[str | Branch] | None = None):
         """
         Collects requests from specified branches or from all branches if none are specified.
 
         This method is intended to aggregate data or requests from one or more branches for processing or analysis.
 
         Args:
-            from_ (Optional[Union[str, Branch, List[Union[str, Branch]]]]): The branch(es) from which to collect requests.
+            from_ (Optional[Union[str, Branch, List[str | Branch]]]): The branch(es) from which to collect requests.
                 Can be a single branch name, a single branch instance, a list of branch names, a list of branch instances, or None.
                 If None, requests are collected from all branches.
 
@@ -828,14 +831,14 @@ class Session:
                 if isinstance(branch, str):
                     self.branch_manager.collect(branch)
 
-    def send(self, to_: Union[str, Branch, List[str], List[Branch]] = None):
+    def send(self, to_: str | Branch | list[str | Branch] | None = None):
         """
         Sends requests or data to specified branches or to all branches if none are specified.
 
         This method facilitates the distribution of data or requests to one or more branches, potentially for further tool or processing.
 
         Args:
-            to_ (Optional[Union[str, Branch, List[Union[str, Branch]]]]): The target branch(es) to which to send requests.
+            to_ (Optional[Union[str, Branch, List[str | Branch]]]): The target branch(es) to which to send requests.
                 Can be a single branch name, a single branch instance, a list of branch names, a list of branch instances, or None.
                 If None, requests are sent to all branches.
 
@@ -905,7 +908,7 @@ class Session:
         service,
         llmconfig,
         tools,
-        dir,
+        persist_path,
         datalogger,
     ):
 
@@ -917,7 +920,7 @@ class Session:
             tool_manager=tool_manager,
             # instruction_sets=instruction_sets,
             messages=messages,
-            dir=dir,
+            persist_path=persist_path,
             datalogger=datalogger,
         )
 

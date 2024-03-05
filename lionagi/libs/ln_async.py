@@ -1,13 +1,12 @@
 from __future__ import annotations
 
 import asyncio
-from collections.abc import Mapping, Callable
+from collections.abc import Mapping, Callable, Coroutine
 from functools import lru_cache
 from typing import Any
 import logging
 import aiocache
 import aiohttp
-
 
 class AsyncUtil:
 
@@ -92,7 +91,10 @@ class AsyncUtil:
 
     @staticmethod
     async def execute_tasks(*tasks):
-        return await asyncio.gather(*tasks)
+        if isinstance(tasks[0], (asyncio.Future, Coroutine)):
+            return await asyncio.gather(*tasks)
+        else:
+            return tasks
 
     @staticmethod
     async def sleep(seconds):

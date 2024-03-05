@@ -1,23 +1,24 @@
 from datetime import datetime
-from typing import Any, Dict, List
-
-import pandas as pd
+from typing import Any
 
 from lionagi.libs import ln_convert as convert
 from lionagi.libs import ln_nested as nested
 from lionagi.libs import ln_func_call as func_call
+from lionagi.libs import ln_dataframe as dataframe
 
-from lionagi.core.session.base.schema import System, Instruction, Response, BaseMessage
+from lionagi.core.session.base.schema import System, Instruction, Response, BaseMessage, BranchColumns
 
+
+CUSTOM_TYPE =  dict[str, Any] | str | list[Any] | None
 
 class MessageUtil:
 
     @staticmethod
     def create_message(
-        system: dict[str, Any] | str | List[Any] | System | None = None,
-        instruction: dict[str, Any] | str | List[Any] | Instruction | None = None,
-        context: str | Dict[str, Any] | None = None,
-        response: dict[str, Any] | List[Any] | str | Response | None = None,
+        system: System | CUSTOM_TYPE = None,
+        instruction: Instruction | CUSTOM_TYPE = None,
+        context: str | dict[str, Any] | None = None,
+        response: Response | CUSTOM_TYPE = None,
         **kwargs,
     ) -> BaseMessage:
         """
@@ -57,7 +58,7 @@ class MessageUtil:
             return msg
 
     @staticmethod
-    def validate_messages(messages: pd.DataFrame) -> bool:
+    def validate_messages(messages: dataframe.ln_DataFrame) -> bool:
         """
         Validates the format and content of a DataFrame containing messages.
 
@@ -71,13 +72,7 @@ class MessageUtil:
             ValueError: If the DataFrame does not match expected schema or content requirements.
         """
 
-        if list(messages.columns) != [
-            "node_id",
-            "timestamp",
-            "role",
-            "sender",
-            "content",
-        ]:
+        if list(messages.columns) != BranchColumns.COLUMNS.value:
             raise ValueError("Invalid messages dataframe. Unmatched columns.")
         if messages.isnull().values.any():
             raise ValueError("Invalid messages dataframe. Cannot have null.")
@@ -100,7 +95,7 @@ class MessageUtil:
         return True
 
     @staticmethod
-    def sign_message(messages: pd.DataFrame, sender: str) -> pd.DataFrame:
+    def sign_message(messages: dataframe.ln_DataFrame, sender: str) -> dataframe.ln_DataFrame:
         """
         Appends a sender prefix to the 'content' field of each message in a DataFrame.
 
@@ -130,14 +125,14 @@ class MessageUtil:
 
     @staticmethod
     def filter_messages_by(
-        messages: pd.DataFrame,
+        messages: dataframe.ln_DataFrame,
         role: str | None = None,
         sender: str | None = None,
         start_time: datetime | None = None,
         end_time: datetime | None = None,
-        content_keywords: str | List[str] | None = None,
+        content_keywords: str | list[str] | None = None,
         case_sensitive: bool = False,
-    ) -> pd.DataFrame:
+    ) -> dataframe.ln_DataFrame:
         """
         Filters messages in a DataFrame based on specified criteria.
 
@@ -173,7 +168,7 @@ class MessageUtil:
             raise ValueError(f"Error in filtering messages: {e}")
 
     @staticmethod
-    def remove_message(messages: pd.DataFrame, node_id: str) -> bool:
+    def remove_message(messages: dataframe.ln_DataFrame, node_id: str) -> bool:
         """
         Removes a message from the DataFrame based on its node ID.
 
@@ -185,7 +180,7 @@ class MessageUtil:
             If any messages are removed.
 
         Examples:
-            >>> messages = pd.DataFrame([...])
+            >>> messages = dataframe.ln_DataFrame([...])
             >>> updated_messages = MessageUtil.remove_message(messages, "node_id_123")
         """
 
@@ -197,13 +192,13 @@ class MessageUtil:
 
     @staticmethod
     def get_message_rows(
-        messages: pd.DataFrame,
+        messages: dataframe.ln_DataFrame,
         sender: str | None = None,
         role: str | None = None,
         n: int = 1,
         sign_: bool = False,
         from_: str = "front",
-    ) -> pd.DataFrame:
+    ) -> dataframe.ln_DataFrame:
         """
         Retrieves a specified number of message rows based on sender and role.
 
@@ -249,7 +244,7 @@ class MessageUtil:
         return MessageUtil.sign_message(outs, sender) if sign_ else outs
 
     @staticmethod
-    def extend(df1: pd.DataFrame, df2: pd.DataFrame, **kwargs) -> pd.DataFrame:
+    def extend(df1: dataframe.ln_DataFrame, df2: dataframe.ln_DataFrame, **kwargs) -> dataframe.ln_DataFrame:
         """
         Extends a DataFrame with another DataFrame's rows, ensuring no duplicate 'node_id'.
 
@@ -262,8 +257,8 @@ class MessageUtil:
             A DataFrame combined from df1 and df2 with duplicates removed based on 'node_id'.
 
         Examples:
-            >>> df_main = pd.DataFrame([...])
-            >>> df_additional = pd.DataFrame([...])
+            >>> df_main = dataframe.ln_DataFrame([...])
+            >>> df_additional = dataframe.ln_DataFrame([...])
             >>> combined_df = MessageUtil.extend(df_main, df_additional, keep='first')
         """
 
@@ -279,7 +274,7 @@ class MessageUtil:
             raise ValueError(f"Error in extending messages: {e}")
 
     @staticmethod
-    def to_markdown_string(messages: pd.DataFrame) -> str:
+    def to_markdown_string(messages: dataframe.ln_DataFrame) -> str:
         """
         Converts messages in a DataFrame to a Markdown-formatted string for easy reading.
 
@@ -321,143 +316,6 @@ class MessageUtil:
 
         out_ = "\n".join(answers)
         return out_
-
-    @staticmethod
-    def search_keywords(
-        df: pd.DataFrame,
-        keywords: str | List[str],
-        col: str = "content",
-        case_sensitive: bool = False,
-        reset_index: bool = False,
-        dropna: bool = False,
-    ) -> pd.DataFrame:
-        """
-        Filters a DataFrame for rows where a specified column contains given keywords.
-
-        Args:
-            df: The DataFrame to search through.
-            keywords: A keyword or list of keywords to search for.
-            col: The column to perform the search in. Defaults to "content".
-            case_sensitive: Whether the search should be case-sensitive. Defaults to False.
-            reset_index: Whether to reset the DataFrame's index after filtering. Defaults to False.
-            dropna: Whether to drop rows with NA values before searching. Defaults to False.
-
-        Returns:
-            A filtered DataFrame containing only rows where the specified column contains
-            any of the provided keywords.
-        """
-
-        if isinstance(keywords, list):
-            keywords = "|".join(keywords)
-
-        def handle_cases():
-            if not case_sensitive:
-                return df[df[col].str.contains(keywords, case=False)]
-            else:
-                return df[df[col].str.contains(keywords)]
-
-        out = handle_cases()
-        if reset_index or dropna:
-            out = convert.to_df(out, reset_index=reset_index)
-
-        return out
-
-    @staticmethod
-    def replace_keyword(
-        df: pd.DataFrame,
-        keyword: str,
-        replacement: str,
-        col: str = "content",
-        case_sensitive: bool = False,
-    ) -> None:
-        """
-        Replaces occurrences of a specified keyword with a replacement string in a DataFrame column.
-
-        Args:
-            df: The DataFrame to modify.
-            keyword: The keyword to be replaced.
-            replacement: The string to replace the keyword with.
-            col: The column in which to perform the replacement.
-            case_sensitive: If True, performs a case-sensitive replacement. Defaults to False.
-        """
-
-        if not case_sensitive:
-            df.loc[:, col] = df[col].str.replace(
-                keyword, replacement, case=False, regex=False
-            )
-        else:
-            df.loc[:, col] = df[col].str.replace(keyword, replacement, regex=False)
-
-    @staticmethod
-    def read_csv(filepath: str, **kwargs) -> pd.DataFrame:
-        """
-        Reads a CSV file into a DataFrame with optional additional pandas read_csv parameters.
-
-        Args:
-            filepath: The path to the CSV file to read.
-            **kwargs: Additional keyword arguments to pass to pandas.read_csv function.
-
-        Returns:
-            A DataFrame containing the data read from the CSV file.
-        """
-        df = pd.read_csv(filepath, **kwargs)
-        return convert.to_df(df)
-
-    @staticmethod
-    def read_json(filepath, **kwargs):
-        df = pd.read_json(filepath, **kwargs)
-        return convert.to_df(df)
-
-    @staticmethod
-    def remove_last_n_rows(df: pd.DataFrame, steps: int) -> pd.DataFrame:
-        """
-        Removes the last 'n' rows from a DataFrame.
-
-        Args:
-            df: The DataFrame from which to remove rows.
-            steps: The number of rows to remove from the end of the DataFrame.
-
-        Returns:
-            A DataFrame with the last 'n' rows removed.
-
-        Raises:
-            ValueError: If 'steps' is negative or greater than the number of rows in the DataFrame.
-        """
-
-        if steps < 0 or steps > len(df):
-            raise ValueError(
-                "'steps' must be a non-negative integer less than or equal to "
-                "the length of DataFrame."
-            )
-        return convert.to_df(df[:-steps])
-
-    @staticmethod
-    def update_row(
-        df: pd.DataFrame, row: str | int, col: str | int, value: Any
-    ) -> bool:
-        """
-        Updates a row's value for a specified column in a DataFrame.
-
-        Args:
-            df: The DataFrame to update.
-            col: The column whose value is to be updated.
-            old_value: The current value to search for in the specified column.
-            new_value: The new value to replace the old value with.
-
-        Returns:
-            True if the update was successful, False otherwise.
-        """
-
-        # index = df.index[df[col] == old_value].tolist()
-        # if index:
-        #     df.at[index[0], col] = new_value
-        #     return True
-        # return False
-        try:
-            df.loc[row, col] = value
-            return True
-        except:
-            return False
 
     # @staticmethod
     # def to_json_content(value):

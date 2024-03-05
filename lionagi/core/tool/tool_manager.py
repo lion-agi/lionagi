@@ -1,6 +1,6 @@
-from typing import Dict, Union, List, Tuple, Any, TypeVar, Callable
+from typing import Tuple, Any, TypeVar, Callable
 
-from lionagi.core.schema import Tool
+from lionagi.core.schema.base_node import Tool, TOOL_TYPE
 from lionagi.libs.ln_async import AsyncUtil
 from lionagi.libs.ln_parse import ParseUtil
 from lionagi.libs import ln_convert as convert
@@ -19,10 +19,10 @@ class ToolManager:
     calls.
 
     Attributes:
-        registry (Dict[str, Tool]): A dictionary to hold registered tools, keyed by their names.
+        registry (dict[str, Tool]): A dictionary to hold registered tools, keyed by their names.
     """
 
-    registry: Dict = {}
+    registry: dict = {}
 
     def name_existed(self, name: str) -> bool:
         """
@@ -55,12 +55,12 @@ class ToolManager:
         name = tool.schema_["function"]["name"]
         self.registry.update({name: tool})
 
-    async def invoke(self, func_call: Tuple[str, Dict[str, Any]]) -> Any:
+    async def invoke(self, func_call: Tuple[str, dict[str, Any]]) -> Any:
         """
         Invokes a registered tool's function with the given arguments. Supports both coroutine and regular functions.
 
         Args:
-            func_call (Tuple[str, Dict[str, Any]]): A tuple containing the function name and a dictionary of keyword arguments.
+            func_call (Tuple[str, dict[str, Any]]): A tuple containing the function name and a dictionary of keyword arguments.
 
         Returns:
             Any: The result of the function call.
@@ -89,15 +89,15 @@ class ToolManager:
             raise ValueError(f"Function {name} is not registered.")
 
     @staticmethod
-    def get_function_call(response: Dict) -> Tuple[str, Dict]:
+    def get_function_call(response: dict) -> Tuple[str, dict]:
         """
         Extracts a function call and arguments from a response dictionary.
 
         Args:
-            response (Dict): The response dictionary containing the function call information.
+            response (dict): The response dictionary containing the function call information.
 
         Returns:
-            Tuple[str, Dict]: A tuple containing the function name and a dictionary of arguments.
+            Tuple[str, dict]: A tuple containing the function name and a dictionary of arguments.
 
         Raises:
             ValueError: If the response does not contain valid function call information.
@@ -114,21 +114,21 @@ class ToolManager:
             except:
                 raise ValueError("response is not a valid function call")
 
-    def register_tools(self, tools: List[Tool]) -> None:
+    def register_tools(self, tools: list[Tool]) -> None:
         """
         Registers multiple tools in the registry.
 
         Args:
-            tools (List[Tool]): A list of tool instances to register.
+            tools (list[Tool]): A list of tool instances to register.
         """
         func_call.lcall(tools, self._register_tool)
 
-    def to_tool_schema_list(self) -> List[Dict[str, Any]]:
+    def to_tool_schema_list(self) -> list[dict[str, Any]]:
         """
         Generates a list of schemas for all registered tools.
 
         Returns:
-            List[Dict[str, Any]]: A list of tool schemas.
+            list[dict[str, Any]]: A list of tool schemas.
 
         """
         schema_list = []
@@ -137,8 +137,8 @@ class ToolManager:
         return schema_list
 
     def parse_tool(
-        self, tools: Union[Dict, Tool, List[Tool], str, List[str], List[Dict]], **kwargs
-    ) -> Dict:
+        self, tools: TOOL_TYPE, **kwargs
+    ) -> dict:
         """
         Parses tool information and generates a dictionary for tool invocation.
 
@@ -147,7 +147,7 @@ class ToolManager:
             **kwargs: Additional keyword arguments.
 
         Returns:
-            Dict: A dictionary containing tool schema information and any additional keyword arguments.
+            dict: A dictionary containing tool schema information and any additional keyword arguments.
 
         Raises:
             ValueError: If a tool name is provided that is not registered.
