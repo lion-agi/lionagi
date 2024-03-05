@@ -15,6 +15,7 @@ from typing import Any
 
 _timestamp_syms = ["-", ":", "."]
 
+PATH_TYPE = str | Path
 
 class SysUtil:
 
@@ -203,6 +204,10 @@ class SysUtil:
                 __import__(full_import_path)
 
     @staticmethod
+    def import_module(module_path: str):
+        return importlib.import_module(module_path)
+
+    @staticmethod
     def is_package_installed(package_name: str) -> bool:
         """Checks if a package is currently installed.
 
@@ -217,10 +222,12 @@ class SysUtil:
 
     @staticmethod
     def check_import(
-        package_name: str,
-        module_name: str | None = None,
-        import_name: str | None = None,
+        package_name: str, 
+        module_name: str | None = None, 
+        import_name: str | None = None, 
         pip_name: str | None = None,
+        attempt_install: bool = True,
+        error_message: str = "",
     ) -> None:
         """Checks if a package is installed; if not, attempts to install and import it.
 
@@ -232,13 +239,24 @@ class SysUtil:
             module_name: The submodule name to import from the package, if applicable. Defaults to None.
             import_name: The specific name to import from the module or package. Defaults to None.
             pip_name: The pip package name if different from `package_name`. Defaults to None.
+            attempt_install: If attempt to install the package if uninstalled. Defaults to True.
+            error_message: Error message when the package is not installed and not attempt to install.
         """
         try:
             if not SysUtil.is_package_installed(package_name):
-                logging.info(
-                    f"Package {package_name} not found. Attempting to install."
-                )
-                SysUtil.install_import(package_name, module_name, import_name, pip_name)
+                print('check')
+                if attempt_install:
+                    logging.info(
+                        f"Package {package_name} not found. Attempting to install."
+                    )
+                    SysUtil.install_import(
+                        package_name, module_name, import_name, pip_name
+                    )
+                else:
+                    logging.info(
+                        f"Package {package_name} not found. {error_message}"
+                    )
+                    raise ImportError(f'Package {package_name} not found. {error_message}')
         except ImportError as e:  # More specific exception handling
             logging.error(f"Failed to import {package_name}. Error: {e}")
             raise ValueError(f"Failed to import {package_name}. Error: {e}") from e

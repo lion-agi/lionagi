@@ -22,7 +22,7 @@ class LiteLLMService(BaseService):
     def __init__(self, model: str = None, **kwargs):
         super().__init__()
 
-        from lionagi.libs import SysUtil
+        from lionagi.libs.sys_util import SysUtil
 
         SysUtil.check_import("litellm")
 

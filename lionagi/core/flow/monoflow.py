@@ -1,10 +1,10 @@
-from typing import Any, Dict, List, Optional, Union
+from typing import Any
 
 from lionagi.libs import ln_convert as convert
 from lionagi.libs import ln_func_call as func_call
 from lionagi.libs import ln_nested as nested
 
-from lionagi.core.schema import Tool
+from lionagi.core.schema.base_node import Tool, TOOL_TYPE
 from lionagi.core.session.base.schema import Instruction, System
 
 
@@ -49,17 +49,34 @@ class MonoChat(BaseMonoFlow):
         )
         self.process_chatcompletion(payload, completion, sender)
 
-    def _create_chat_config(
+    async def chat(
         self,
         instruction: Instruction | str,
-        *,
-        context: Optional[Any] = None,
-        sender: Optional[str] = None,
-        system: Optional[Union[System, str, Dict[str, Any]]] = None,
-        tools: Union[bool, Tool, List[Tool], str, List[str]] = False,
+        context= None,
+        sender= None,
+        system= None,
+        tools= False,
+        out: bool = True,
+        invoke: bool = True,
         **kwargs,
     ) -> Any:
+        """
+        a chat conversation with LLM, processing instructions and system messages, optionally invoking tools.
 
+        Args:
+            branch: The Branch instance to perform chat operations.
+            instruction (Union[Instruction, str]): The instruction for the chat.
+            context (Optional[Any]): Additional context for the chat.
+            sender (Optional[str]): The sender of the chat message.
+            system (Optional[Union[System, str, Dict[str, Any]]]): System message to be processed.
+            tools (Union[bool, Tool, List[Tool], str, List[str]]): Specifies tools to be invoked.
+            out (bool): If True, outputs the chat response.
+            invoke (bool): If True, invokes tools as part of the chat.
+            **kwargs: Arbitrary keyword arguments for chat completion.
+
+        Examples:
+            >>> await ChatFlow.chat(branch, "Ask about user preferences")
+        """
         if system:
             self.branch.change_first_system_message(system)
         self.branch.add_message(instruction=instruction, context=context, sender=sender)
@@ -76,68 +93,132 @@ class MonoChat(BaseMonoFlow):
         if sender is not None:
             config.update({"sender": sender})
 
-        return config
-
-    def get_tool_calls(self, content_):
-        tool_uses = content_
-        func_calls = func_call.lcall(
-            [convert.to_dict(i) for i in tool_uses["action_request"]],
-            self.branch.tool_manager.get_function_call,
-        )
-
-        return func_calls
-
-    @staticmethod
-    async def invoke_tools(self, func_calls):
-        outs = await func_call.alcall(func_calls, self.branch.tool_manager.invoke)
-        outs = convert.to_list(outs, flatten=True)
-
-        for out_, f in zip(outs, func_calls):
-            self.branch.add_message(
-                response={
-                    "function": f[0],
-                    "arguments": f[1],
-                    "output": out_,
-                }
-            )
-
-    async def output(self, invoke=True, out=True):
-        content_ = self.branch.last_message_content
-        if invoke:
-            try:
-                tool_calls = self.get_tool_calls(content_)
-                await self.invoke_tools(tool_calls)
-            except:
-                pass
-        if out:
-            return self.return_response(content_)
-
-    @staticmethod
-    def return_response(content_):
-        if len(content_.items()) == 1 and len(nested.get_flattened_keys(content_)) == 1:
-            key = nested.get_flattened_keys(content_)[0]
-            return content_[key]
-        return content_
-
-    async def chat(
-        self,
-        instruction: Union[Instruction, str],
-        *,
-        context: Optional[Any] = None,
-        sender: Optional[str] = None,
-        system: Optional[Union[System, str, Dict[str, Any]]] = None,
-        tools: Union[bool, Tool, List[Tool], str, List[str]] = False,
-        out: bool = True,
-        invoke: bool = True,
-        **kwargs,
-    ) -> Any:
-
-        config = self._create_chat_config(
-            instruction, context, sender, system, tools, **kwargs
-        )
-
         await self.call_chatcompletion(**config)
-        return self.output(invoke, out)
+
+        async def _output():
+            content_ = self.branch.last_message_content
+            if invoke:
+                try:
+                    tool_uses = content_
+                    func_calls = func_call.lcall(
+                        [convert.to_dict(i) for i in tool_uses["action_request"]],
+                        self.branch.tool_manager.get_function_call,
+                    )
+
+                    outs = await func_call.alcall(func_calls, self.branch.tool_manager.invoke)
+                    outs = convert.to_list(outs, flatten=True)
+
+                    for out_, f in zip(outs, func_calls):
+                        self.branch.add_message(
+                            response={
+                                "function": f[0],
+                                "arguments": f[1],
+                                "output": out_,
+                            }
+                        )
+                except:
+                    pass
+            if out:
+                if (
+                    len(content_.items()) == 1
+                    and len(nested.get_flattened_keys(content_)) == 1
+                ):
+                    key = nested.get_flattened_keys(content_)[0]
+                    return content_[key]
+                return content_
+
+        return await _output()
+
+
+    # def _create_chat_config(
+    #     self,
+    #     instruction: Instruction | str | dict[str, Any],
+    #     *,
+    #     context: Any | None = None,
+    #     sender: str | None = None,
+    #     system: System | str | dict[str, Any] | None = None,
+    #     tools: TOOL_TYPE = False,
+    #     **kwargs,
+    # ) -> Any:
+
+    #     if system:
+    #         self.branch.change_first_system_message(system)
+    #     self.branch.add_message(instruction=instruction, context=context, sender=sender)
+
+    #     if "tool_parsed" in kwargs:
+    #         kwargs.pop("tool_parsed")
+    #         tool_kwarg = {"tools": tools}
+    #         kwargs = {**tool_kwarg, **kwargs}
+    #     else:
+    #         if tools and self.branch.has_tools:
+    #             kwargs = self.branch.tool_manager.parse_tool(tools=tools, **kwargs)
+
+    #     config = {**self.branch.llmconfig, **kwargs}
+    #     if sender is not None:
+    #         config.update({"sender": sender})
+
+    #     return config
+
+    # def get_tool_calls(self, content_):
+    #     tool_calls = func_call.lcall(
+    #         [convert.to_dict(i) for i in content_["action_request"]],
+    #         self.branch.tool_manager.get_function_call,
+    #     )
+
+    #     return tool_calls
+
+    # @staticmethod
+    # async def invoke_tools(self, tool_calls):
+    #     outs = await func_call.alcall(tool_calls, self.branch.tool_manager.invoke)
+    #     outs = convert.to_list(outs, flatten=True)
+
+    #     for out_, f in zip(outs, tool_calls):
+    #         self.branch.add_message(
+    #             response={
+    #                 "function": f[0],
+    #                 "arguments": f[1],
+    #                 "output": out_,
+    #             }
+    #         )
+
+    # async def output(self, invoke=True, out=True):
+    #     content_ = self.branch.last_message_content
+    #     if invoke:
+    #         try:
+    #             tool_calls = self.get_tool_calls(content_)
+    #             print(tool_calls)
+    #             # await self.invoke_tools(tool_calls)
+    #         except:
+    #             pass
+    #     if out:
+    #         return self.return_response(content_)
+
+    # @staticmethod
+    # def return_response(content_):
+    #     if len(content_.items()) == 1 and len(nested.get_flattened_keys(content_)) == 1:
+    #         key = nested.get_flattened_keys(content_)[0]
+    #         return content_[key]
+    #     return content_
+
+    # async def chat(
+    #     self,
+    #     instruction: Instruction | str | dict[str, Any],
+    #     *,
+    #     context: Any | None = None,
+    #     sender: str | None = None,
+    #     system: System | str | dict[str, Any] | None = None,
+    #     tools: TOOL_TYPE = False,
+    #     out: bool = True,
+    #     invoke: bool = True,
+    #     **kwargs,
+    # ) -> Any:
+
+    #     config = self._create_chat_config(
+    #         instruction, context=context, sender=sender, system=system, tools=tools, **kwargs
+    #     )
+
+    #     await self.call_chatcompletion(**config)
+    #     return await self.output(invoke, out)
 
     def _create_followup_config(self, tools, **kwargs):
 
@@ -154,7 +235,7 @@ class MonoChat(BaseMonoFlow):
 
     async def ReAct(
         self,
-        instruction: Union[Instruction, str],
+        instruction: Instruction | str | dict[str, Any],
         *,
         context=None,
         sender=None,
@@ -199,7 +280,7 @@ class MonoChat(BaseMonoFlow):
 
     async def auto_followup(
         self,
-        instruction: Union[Instruction, str],
+        instruction: Instruction | str | dict[str, Any],
         *,
         context=None,
         sender=None,
@@ -252,12 +333,12 @@ class MonoChat(BaseMonoFlow):
 
     async def followup(
         self,
-        instruction: Union[Instruction, str],
+        instruction: Instruction | str | dict[str, Any],
         *,
         context=None,
         sender=None,
         system=None,
-        tools: Union[bool, Tool, List[Tool], str, List[str], List[Dict]] = False,
+        tools: TOOL_TYPE = False,
         max_followup: int = 1,
         out=True,
         **kwargs,
