@@ -1,12 +1,12 @@
-from lionagi.libs import to_dict, SysUtil
+from lionagi.libs.sys_util import SysUtil
+import lionagi.libs.ln_convert as convert
 from lionagi.libs.ln_api import BaseService
-
 from lionagi.integrations.config.mlx_configs import model
 
 
 class MlXService(BaseService):
     def __init__(self, model=model, **kwargs):
-
+        
         SysUtil.check_import("mlx_lm")
 
         from mlx_lm import load, generate
@@ -25,7 +25,7 @@ class MlXService(BaseService):
             verbose = True
 
         prompts = [
-            to_dict(msg["content"])["instruction"]
+            convert.to_dict(msg["content"])["instruction"]
             for msg in messages
             if msg["role"] == "user"
         ]

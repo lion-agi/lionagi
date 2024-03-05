@@ -1,7 +1,8 @@
 from typing import Tuple, Any, TypeVar, Callable
 
+import asyncio
 from lionagi.core.schema.base_node import Tool, TOOL_TYPE
-from lionagi.libs.ln_async import AsyncUtil
+# from lionagi.libs.ln_async import AsyncUtil
 from lionagi.libs.ln_parse import ParseUtil
 from lionagi.libs import ln_convert as convert
 from lionagi.libs import ln_func_call as func_call
@@ -55,12 +56,12 @@ class ToolManager:
         name = tool.schema_["function"]["name"]
         self.registry.update({name: tool})
 
-    async def invoke(self, func_call: Tuple[str, dict[str, Any]]) -> Any:
+    async def invoke(self, func_calls: Tuple[str, dict[str, Any]]) -> Any:
         """
         Invokes a registered tool's function with the given arguments. Supports both coroutine and regular functions.
 
         Args:
-            func_call (Tuple[str, dict[str, Any]]): A tuple containing the function name and a dictionary of keyword arguments.
+            func_call (Tuple[str, Dict[str, Any]]): A tuple containing the function name and a dictionary of keyword arguments.
 
         Returns:
             Any: The result of the function call.
@@ -68,15 +69,15 @@ class ToolManager:
         Raises:
             ValueError: If the function name is not registered or if there's an error during function invocation.
         """
-        name, kwargs = func_call
+        name, kwargs = func_calls
         if self.name_existed(name):
             tool = self.registry[name]
             func = tool.func
             parser = tool.parser
             try:
-                if AsyncUtil.is_coroutine_func(func):
-                    tasks = [AsyncUtil.handle_async_sync(func, **kwargs)]
-                    out = await AsyncUtil.execute_tasks(*tasks)
+                if func_call.is_coroutine_func(func):
+                    tasks = [func_call.call_handler(func, **kwargs)]
+                    out = await asyncio.gather(*tasks)
                     return parser(out[0]) if parser else out[0]
                 else:
                     out = func(**kwargs)

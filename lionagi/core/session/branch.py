@@ -1,5 +1,5 @@
 from collections import deque
-from typing import Any, Optional, Union, TypeVar
+from typing import Any, Optional, Union, TypeVar, Callable
 
 
 from lionagi.libs.sys_util import PATH_TYPE
@@ -9,7 +9,7 @@ from lionagi.libs import ln_dataframe as dataframe
 
 from lionagi.core.schema.base_node import TOOL_TYPE, Tool
 from lionagi.core.schema.data_logger import DataLogger
-from lionagi.core.tool.tool_manager import ToolManager
+from lionagi.core.tool.tool_manager import ToolManager, func_to_tool
 from lionagi.core.flow.monoflow import MonoChat
 
 from lionagi.core.session.base.base_branch import BaseBranch
@@ -36,7 +36,7 @@ class Branch(BaseBranch):
         service: BaseService | None = None,
         sender: str | None = None,
         llmconfig: dict[str, str | int | dict] | None = None,
-        tools: TOOL_TYPE | None = None,
+        tools: list[Callable | Tool] | None = None,
         datalogger: None | DataLogger = None,
         persist_path: PATH_TYPE | None = None,
         # instruction_sets=None,
@@ -60,7 +60,15 @@ class Branch(BaseBranch):
         self.tool_manager = tool_manager if tool_manager else ToolManager()
         if tools:
             try:
-                self.register_tools(tools)
+                tools_ = []
+                _tools = convert.to_list(tools)
+                for i in _tools:
+                    if isinstance(i, Tool):
+                        tools_.append(i)
+                    else:
+                        tools_.append(func_to_tool(i))
+                
+                self.register_tools(tools_)
             except Exception as e:
                 raise TypeError(f"Error in registering tools: {e}")
 
