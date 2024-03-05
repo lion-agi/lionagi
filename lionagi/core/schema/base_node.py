@@ -7,7 +7,7 @@ from functools import singledispatchmethod
 
 from typing import Any, Type, TypeVar, Callable
 
-import lionagi.integrations.bridge.pydantic_ as pyd
+import lionagi.integrations.bridge.pydantic_.base_model as pyd
 
 from lionagi.libs.sys_util import SysUtil
 from lionagi.libs import ln_dataframe as dataframe
