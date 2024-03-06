@@ -127,9 +127,7 @@ async def read_propose(context, num=5):
 Use asynchronous programming to execute your workflow and review the results for insights:
 
 ```python
-import lionagi.libs.ln_convert
-
-researcher = lionagi.util.convert_util.to_list(
+researcher = li.to_list(
     await li.alcall(abstracts, read_propose), flatten=True
 )[0]
 

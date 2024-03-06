@@ -305,8 +305,7 @@ Initializes a Session instance from conversation data stored in a JSON file, cre
 #### Example
 
 ```python
-session = Session.from_json_string('data/conversations.json',
-                                   default_branch_name='CustomerService')
+session = Session.from_json('data/conversations.json', default_branch_name='CustomerService')
 ```
 
 ### `to_csv` Method
@@ -357,8 +356,7 @@ Initializes a Session instance from conversation data stored in a JSON file, cre
 #### Example
 
 ```python
-session = Session.from_json_string('data/conversations.json',
-                                   default_branch_name='CustomerService')
+session = Session.from_json('data/conversations.json', default_branch_name='CustomerService')
 ```
 
 ### `to_csv` Method

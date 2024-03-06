@@ -2,7 +2,7 @@
 
 # ToolManager API Reference
 
-The `ToolManager` class is responsible for handling the registration and invocation of tools that are subclasses of [[Base Nodes#^0c90e6|Tool]]. It maintains a registry of tool instances, allowing for dynamic invocation based on tool name and provided arguments. This class supports both synchronous and asynchronous tool function calls.
+The `ToolManager` class is responsible for handling the registration and invocation of tools that are subclasses of [[Base Component#^0c90e6|Tool]]. It maintains a registry of tool instances, allowing for dynamic invocation based on tool name and provided arguments. This class supports both synchronous and asynchronous tool function calls.
 
 ## Attributes
 

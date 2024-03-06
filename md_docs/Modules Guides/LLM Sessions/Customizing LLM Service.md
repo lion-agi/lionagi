@@ -1,8 +1,8 @@
-Diving into the customization and concurrency aspects of LionAGI sessions, this guide highlights the flexibility of the `Session` object in accommodating various use cases through custom configurations and managing concurrent operations efficiently.
+Diving into the customization and concurrency aspects of LionAGI sessions, this guide highlights the flexibility of the [[Sessions|session]] object in accommodating various use cases through custom configurations and managing concurrent operations efficiently.
 
 ### Customizing Session Behavior
 
-LionAGI's `Session` object offers extensive customization options to tailor the behavior of language model (LLM) API calls and manage rate limits effectively.
+LionAGI's `Session` offers extensive customization options to tailor the behavior of language model (LLM) API calls and manage rate limits effectively.
 
 #### Customizing Services
 
