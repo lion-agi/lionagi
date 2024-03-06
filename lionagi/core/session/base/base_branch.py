@@ -511,7 +511,9 @@ class BaseBranch(BaseRelatableNode, ABC):
 
         index = self.messages[self.messages["node_id"] == node_id].index[0]
 
-        return dataframe.update_row(self.messages, row=index, column=column, value=value)
+        return dataframe.update_row(
+            self.messages, row=index, column=column, value=value
+        )
 
     def change_first_system_message(
         self, system: str | dict[str, Any] | System, sender: str | None = None
@@ -563,7 +565,11 @@ class BaseBranch(BaseRelatableNode, ABC):
     ) -> None:
 
         dataframe.replace_keyword(
-            self.messages, keyword, replacement, column=column, case_sensitive=case_sensitive
+            self.messages,
+            keyword,
+            replacement,
+            column=column,
+            case_sensitive=case_sensitive,
         )
 
     def search_keywords(
@@ -589,8 +595,8 @@ class BaseBranch(BaseRelatableNode, ABC):
         self,
         role: str | None = None,
         sender: str | None = None,
-        start_time = None,
-        end_time = None,
+        start_time=None,
+        end_time=None,
         content_keywords: str | list[str] | None = None,
         case_sensitive: bool = False,
     ) -> dataframe.ln_DataFrame:

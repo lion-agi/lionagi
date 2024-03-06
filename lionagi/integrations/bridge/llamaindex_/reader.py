@@ -26,23 +26,31 @@ def get_llama_index_reader(reader: Any | str = None) -> Any:
       AttributeError: If there is an issue importing the specified reader.
     """
 
-    SysUtil.check_import('llama_index', pip_name='llama-index')
+    SysUtil.check_import("llama_index", pip_name="llama-index")
     from llama_index.core import SimpleDirectoryReader
     from llama_index.core.readers.base import BasePydanticReader
 
-    if reader in ['SimpleDirectoryReader', SimpleDirectoryReader,
-                  'simple-directory-reader', 'simple_directory_reader', 'simple',
-                  'simple_reader', 'simple-reader']:
+    if reader in [
+        "SimpleDirectoryReader",
+        SimpleDirectoryReader,
+        "simple-directory-reader",
+        "simple_directory_reader",
+        "simple",
+        "simple_reader",
+        "simple-reader",
+    ]:
         return SimpleDirectoryReader
 
     if not isinstance(reader, str) and not issubclass(reader, BasePydanticReader):
-        raise TypeError(f'reader must be a string or BasePydanticReader.')
+        raise TypeError(f"reader must be a string or BasePydanticReader.")
 
     if isinstance(reader, str):
         package_name, pip_name = parse_reader_name(reader)
         if package_name == "" and pip_name == "":
-            raise ValueError(f"{reader} is not found. Please directly input llama-index reader class "
-                             f"or check llama-index documentation for supported readers.")
+            raise ValueError(
+                f"{reader} is not found. Please directly input llama-index reader class "
+                f"or check llama-index documentation for supported readers."
+            )
 
         try:
             SysUtil.check_import(package_name, pip_name=pip_name)
@@ -50,9 +58,11 @@ def get_llama_index_reader(reader: Any | str = None) -> Any:
             return reader
 
         except Exception as e:
-            raise AttributeError(f"Failed to import/download {reader}, "
-                                 f"please check llama-index documentation to download it "
-                                 f"manually and input the reader object: {e}")
+            raise AttributeError(
+                f"Failed to import/download {reader}, "
+                f"please check llama-index documentation to download it "
+                f"manually and input the reader object: {e}"
+            )
 
     elif issubclass(reader, BasePydanticReader):
         return reader
@@ -149,8 +159,12 @@ def parse_reader_name(reader_str):
 
 
 def llama_index_read_data(
-        reader=None, reader_args=None, reader_kwargs=None,
-        loader_args=None, loader_kwargs=None):
+    reader=None,
+    reader_args=None,
+    reader_kwargs=None,
+    loader_args=None,
+    loader_kwargs=None,
+):
     """
     Reads data using a specified llama index reader and its arguments.
 
@@ -183,4 +197,4 @@ def llama_index_read_data(
         documents = loader.load_data(*loader_args, **loader_kwargs)
         return documents
     except Exception as e:
-        raise ValueError(f'Failed to read and load data. Error: {e}')
+        raise ValueError(f"Failed to read and load data. Error: {e}")

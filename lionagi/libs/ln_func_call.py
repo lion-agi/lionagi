@@ -72,7 +72,7 @@ def lcall(
 
 
 async def alcall(
-    input_: Any| None = None,
+    input_: Any | None = None,
     func: Callable = None,
     *,
     flatten: bool = False,
@@ -112,21 +112,20 @@ async def alcall(
         >>> await alcall([1, 2, 3], square)
         [1, 4, 9]
     """
-    tasks=[]
+    tasks = []
     if input_ is not None:
         lst = to_list(input_)
         tasks = [AsyncUtil.handle_async_sync(func, i, **kwargs) for i in lst]
-    
+
     else:
         tasks = [AsyncUtil.handle_async_sync(func, **kwargs)]
-        
+
     outs = await AsyncUtil.execute_tasks(*tasks)
     outs_ = []
     for i in outs:
         outs_.append(i if not isinstance(i, (Coroutine, asyncio.Future)) else await i)
 
     return to_list(outs_, flatten=flatten, dropna=dropna)
-    
 
 
 async def mcall(

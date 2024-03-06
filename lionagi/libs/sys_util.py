@@ -17,6 +17,7 @@ _timestamp_syms = ["-", ":", "."]
 
 PATH_TYPE = str | Path
 
+
 class SysUtil:
 
     @staticmethod
@@ -222,9 +223,9 @@ class SysUtil:
 
     @staticmethod
     def check_import(
-        package_name: str, 
-        module_name: str | None = None, 
-        import_name: str | None = None, 
+        package_name: str,
+        module_name: str | None = None,
+        import_name: str | None = None,
         pip_name: str | None = None,
         attempt_install: bool = True,
         error_message: str = "",
@@ -244,7 +245,7 @@ class SysUtil:
         """
         try:
             if not SysUtil.is_package_installed(package_name):
-                print('check')
+                print("check")
                 if attempt_install:
                     logging.info(
                         f"Package {package_name} not found. Attempting to install."
@@ -253,10 +254,10 @@ class SysUtil:
                         package_name, module_name, import_name, pip_name
                     )
                 else:
-                    logging.info(
+                    logging.info(f"Package {package_name} not found. {error_message}")
+                    raise ImportError(
                         f"Package {package_name} not found. {error_message}"
                     )
-                    raise ImportError(f'Package {package_name} not found. {error_message}')
         except ImportError as e:  # More specific exception handling
             logging.error(f"Failed to import {package_name}. Error: {e}")
             raise ValueError(f"Failed to import {package_name}. Error: {e}") from e

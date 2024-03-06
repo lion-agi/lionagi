@@ -83,6 +83,6 @@ class TestIsStructureHomogeneous(unittest.TestCase):
         test_structure = {"a": [{"b": 1}, {"c": [2, 3]}]}
         self.assertFalse(is_structure_homogeneous(test_structure))
 
+
 if __name__ == "__main__":
     unittest.main()
-    

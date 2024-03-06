@@ -6,10 +6,17 @@ from lionagi.libs import ln_nested as nested
 from lionagi.libs import ln_func_call as func_call
 from lionagi.libs import ln_dataframe as dataframe
 
-from lionagi.core.session.base.schema import System, Instruction, Response, BaseMessage, BranchColumns
+from lionagi.core.session.base.schema import (
+    System,
+    Instruction,
+    Response,
+    BaseMessage,
+    BranchColumns,
+)
 
 
-CUSTOM_TYPE =  dict[str, Any] | str | list[Any] | None
+CUSTOM_TYPE = dict[str, Any] | str | list[Any] | None
+
 
 class MessageUtil:
 
@@ -95,7 +102,9 @@ class MessageUtil:
         return True
 
     @staticmethod
-    def sign_message(messages: dataframe.ln_DataFrame, sender: str) -> dataframe.ln_DataFrame:
+    def sign_message(
+        messages: dataframe.ln_DataFrame, sender: str
+    ) -> dataframe.ln_DataFrame:
         """
         Appends a sender prefix to the 'content' field of each message in a DataFrame.
 
@@ -244,7 +253,9 @@ class MessageUtil:
         return MessageUtil.sign_message(outs, sender) if sign_ else outs
 
     @staticmethod
-    def extend(df1: dataframe.ln_DataFrame, df2: dataframe.ln_DataFrame, **kwargs) -> dataframe.ln_DataFrame:
+    def extend(
+        df1: dataframe.ln_DataFrame, df2: dataframe.ln_DataFrame, **kwargs
+    ) -> dataframe.ln_DataFrame:
         """
         Extends a DataFrame with another DataFrame's rows, ensuring no duplicate 'node_id'.
 

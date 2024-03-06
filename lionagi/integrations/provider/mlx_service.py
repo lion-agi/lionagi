@@ -6,7 +6,7 @@ from lionagi.integrations.config.mlx_configs import model
 
 class MlXService(BaseService):
     def __init__(self, model=model, **kwargs):
-        
+
         SysUtil.check_import("mlx_lm")
 
         from mlx_lm import load, generate

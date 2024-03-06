@@ -88,6 +88,6 @@ class DataNode(BaseNode):
             data_node = DataNode.from_langchain(lc_doc)
         """
         info_json = lc_doc.to_json()
-        info_node = {'lc_id': info_json['id']}
-        info_node = {**info_node, **info_json['kwargs']}
+        info_node = {"lc_id": info_json["id"]}
+        info_node = {**info_node, **info_json["kwargs"]}
         return cls(**info_node)
