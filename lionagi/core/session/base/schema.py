@@ -479,8 +479,34 @@ class MailCategory(str, Enum):
 
 
 class BaseMail:
+    """
+    Represents a basic mail item within a mailing system, encapsulating sender, recipient, category, and content.
+
+    This class serves as a foundational element for creating mail objects that can be sent, received, and processed
+    within a system. It includes validation for the mail category to ensure it aligns with predefined categories.
+
+    Attributes:
+        sender (str): The identifier of the sender.
+        recipient (str): The identifier of the recipient.
+        category (MailCategory): The category of the mail, validated against predefined categories.
+        package (Any): The content or payload of the mail.
+    """
 
     def __init__(self, sender, recipient, category, package):
+        """
+        Initializes a BaseMail object with sender, recipient, category, and package information.
+
+        Args:
+            sender (str): The identifier of the entity sending the mail.
+            recipient (str): The identifier of the mail's intended recipient.
+            category (Union[str, MailCategory]): The category of the mail, which must be one of the predefined
+                categories in the MailCategory enumeration. If a string is provided, it will be converted to a
+                MailCategory instance.
+            package (Any): The content of the mail, which can be of any type.
+
+        Raises:
+            ValueError: If the provided category is not a valid MailCategory or cannot be converted to one.
+        """
         self.sender = sender
         self.recipient = recipient
         try:

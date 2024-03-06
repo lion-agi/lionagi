@@ -19,13 +19,19 @@ from lionagi.core.session.base.util import MessageUtil
 
 class BaseBranch(BaseRelatableNode, ABC):
     """
-    Base class for managing branches of conversation, incorporating messages
-    and logging functionality.
+    A base class for managing branches of conversation, which encapsulates messaging and logging functionalities.
+
+    This class provides a structured way to manage conversation messages, including storing, adding, updating,
+    and querying messages. It supports functionalities like changing system messages, rolling back messages,
+    and exporting or importing message logs.
 
     Attributes:
-        messages (dataframe.ln_DataFrame): Holds the messages in the branch.
-        datalogger (DataLogger): Logs data related to the branch's operation.
-        persist_path (PATH_TYPE): Filesystem path for data persistence.
+        messages (dataframe.ln_DataFrame): Dataframe holding the messages within the branch, with a flexible
+                                           schema to accommodate different message types.
+        datalogger (DataLogger): Responsible for logging data related to branch operation, useful for tracking
+                                 and debugging purposes.
+        persist_path (PATH_TYPE): The filesystem path where the branch's data can be persisted, facilitating
+                                  data saving and loading operations.
     """
 
     _columns: list[str] = BranchColumns.COLUMNS.value
@@ -37,6 +43,15 @@ class BaseBranch(BaseRelatableNode, ABC):
         persist_path: PATH_TYPE | None = None,
         **kwargs,
     ) -> None:
+        """
+        Initializes a BaseBranch instance with optional messages, datalogger, and a persistence path.
+
+        Args:
+            messages (dataframe.ln_DataFrame | None): An optional dataframe of messages to initialize the branch.
+            datalogger (DataLogger | None): An optional datalogger for tracking branch operations.
+            persist_path (PATH_TYPE | None): An optional filesystem path for persisting branch data.
+            **kwargs: Additional keyword arguments to pass to the BaseRelatableNode initializer.
+        """
         super().__init__(**kwargs)
         if isinstance(messages, dataframe.ln_DataFrame):
             if MessageUtil.validate_messages(messages):
@@ -59,14 +74,20 @@ class BaseBranch(BaseRelatableNode, ABC):
         **kwargs,
     ) -> None:
         """
-        Adds a message to the branch.
+        Adds a message to the branch with optional system information, instruction, context, and response.
+
+        This method constructs a message from the provided parameters and appends it to the branch's message dataframe.
+        It validates and transforms message contents to ensure compatibility with the branch's schema.
 
         Args:
-            system: Information for creating a System message.
-            instruction: Information for creating an Instruction message.
-            context: Context information for the message.
-            response: Response data for creating a message.
-            **kwargs: Additional keyword arguments for message creation.
+            system: System message or data to be included in the message.
+            instruction: Instruction message or data.
+            context: Additional context for the message.
+            response: Response message or data.
+            **kwargs: Arbitrary keyword arguments for additional message parameters.
+
+        Raises:
+            ValueError: If provided messages are in an invalid format.
         """
         _msg = MessageUtil.create_message(
             system=system,
@@ -83,15 +104,16 @@ class BaseBranch(BaseRelatableNode, ABC):
         self, with_sender: bool = False
     ) -> list[dict[str, Any]]:
         """
-        Converts messages to a list of dictionaries formatted for chat completion,
-        optionally including sender information.
+        Formats messages in the branch for chat completion, optionally including sender information.
+
+        Converts each message in the branch's dataframe to a dictionary format suitable for chat completion tasks,
+        optionally prefixing messages with sender information.
 
         Args:
-            with_sender: Flag to include sender information in the output.
+            with_sender: If True, includes the sender's information in the message content.
 
         Returns:
-            A list of message dictionaries, each with 'role' and 'content' keys,
-            and optionally prefixed by 'Sender' if with_sender is True.
+            A list of dictionaries, each representing a message formatted for chat completion.
         """
 
         message = []
@@ -291,12 +313,32 @@ class BaseBranch(BaseRelatableNode, ABC):
 
     @classmethod
     def from_csv(cls, **kwargs) -> "BaseBranch":
+        """
+        Creates a new branch instance by loading messages from a CSV file.
 
+        This class method initializes a branch with messages imported from a specified CSV file, applying any provided read options.
+
+        Args:
+            **kwargs: Keyword arguments to be passed to the underlying pandas `read_csv` function, including the 'filename' and any additional pandas options.
+
+        Returns:
+            BaseBranch: A new instance of the class populated with messages loaded from the CSV file.
+        """
         return cls._from_csv(**kwargs)
 
     @classmethod
     def from_json_string(cls, **kwargs) -> "BaseBranch":
+        """
+        Creates a new branch instance by loading messages from a JSON-formatted string.
 
+        This method allows for the initialization of a branch with messages defined in a JSON string, providing a way to dynamically construct branches from serialized data.
+
+        Args:
+            **kwargs: Keyword arguments containing the JSON string and any additional options for JSON deserialization.
+
+        Returns:
+            BaseBranch: An instance of the class populated with messages defined in the provided JSON string.
+        """
         return cls._from_json(**kwargs)
 
     @classmethod
@@ -316,16 +358,16 @@ class BaseBranch(BaseRelatableNode, ABC):
         **kwargs,
     ) -> None:
         """
-        Exports the branch messages to a CSV file.
+        Exports the branch's messages to a CSV file.
 
         Args:
-            filepath: Destination path for the CSV file. Defaults to 'messages.csv'.
-            dir_exist_ok: If False, an error is raised if the directory exists. Defaults to True.
-            timestamp: If True, appends a timestamp to the filename. Defaults to True.
-            time_prefix: If True, prefixes the filename with a timestamp. Defaults to False.
-            verbose: If True, prints a message upon successful export. Defaults to True.
-            clear: If True, clears the messages after exporting. Defaults to True.
-            **kwargs: Additional keyword arguments for pandas.DataFrame.to_csv().
+            filename (PATH_TYPE): The name or path of the file where messages will be saved.
+            dir_exist_ok (bool): If True, allows directory creation if it doesn't exist.
+            timestamp (bool): If True, appends a timestamp to the filename.
+            time_prefix (bool): If True, adds a timestamp prefix to the filename.
+            verbose (bool): If True, prints a message upon successful saving.
+            clear (bool): If True, clears messages from the branch after saving.
+            **kwargs: Additional keyword arguments for pandas to_csv method.
         """
 
         if not filename.endswith(".csv"):
@@ -467,6 +509,19 @@ class BaseBranch(BaseRelatableNode, ABC):
         )
 
     def load_log(self, filename, flattened=True, sep="[^_^]", verbose=True, **kwargs):
+        """
+        Loads logged data into the branch's datalogger from a specified file.
+
+        Args:
+            filename (str): The path to the log file (CSV or JSON) to be loaded.
+            flattened (bool, optional): Indicates if the log entries are flattened. Default is True.
+            sep (str, optional): The separator used if the log entries are flattened. Default is "[^_^]".
+            verbose (bool, optional): If True, prints a message upon successful loading of log data. Default is True.
+            **kwargs: Additional keyword arguments to pass to the file reading function.
+
+        Raises:
+            ValueError: If there's an error loading the log file.
+        """
         df = ""
         try:
             if filename.endswith(".csv"):
@@ -563,7 +618,20 @@ class BaseBranch(BaseRelatableNode, ABC):
         column: str = "content",
         case_sensitive: bool = False,
     ) -> None:
+        """
+        Replaces occurrences of a specified keyword within a designated column of the branch's messages with a replacement string.
 
+        This method iterates over the branch's messages and replaces all instances of the specified keyword found in the selected column. It can perform either case-sensitive or case-insensitive replacement.
+
+        Args:
+            keyword (str): The keyword to search for within the messages' specified column.
+            replacement (str): The string to replace the keyword with whenever it is found.
+            column (str, optional): The column in the messages dataframe where the search and replace operation should be performed. Defaults to "content".
+            case_sensitive (bool, optional): Determines if the search for the keyword should be case-sensitive. Defaults to False, performing a case-insensitive search and replace.
+
+        Raises:
+            ValueError: If the specified column does not exist in the branch's messages dataframe.
+        """
         dataframe.replace_keyword(
             self.messages,
             keyword,
@@ -579,6 +647,18 @@ class BaseBranch(BaseRelatableNode, ABC):
         reset_index: bool = False,
         dropna: bool = False,
     ) -> dataframe.ln_DataFrame:
+        """
+        Searches for messages containing specified keywords.
+
+        Args:
+            keywords (str | List[str]): A single keyword or a list of keywords to search for in the messages.
+            case_sensitive (bool, optional): If True, the search is case-sensitive. Defaults to False.
+            reset_index (bool, optional): If True, the returned dataframe will have a reset index. Defaults to False.
+            dropna (bool, optional): If True, drops rows with NA values. Defaults to False.
+
+        Returns:
+            dataframe.ln_DataFrame: A dataframe containing messages that match the search criteria.
+        """
         return dataframe.search_keywords(
             self.messages,
             keywords,
@@ -588,7 +668,16 @@ class BaseBranch(BaseRelatableNode, ABC):
         )
 
     def extend(self, messages: dataframe.ln_DataFrame, **kwargs) -> None:
+        """
+        Extends the branch's messages with additional messages provided in a dataframe.
 
+        Args:
+            messages (dataframe.ln_DataFrame): A dataframe containing messages to be added to the branch.
+            **kwargs: Additional keyword arguments for handling message extension, such as specifying merge strategies.
+
+        Raises:
+            ValueError: If the provided messages cannot be integrated due to format or schema discrepancies.
+        """
         self.messages = MessageUtil.extend(self.messages, messages, **kwargs)
 
     def filter_by(
@@ -600,7 +689,20 @@ class BaseBranch(BaseRelatableNode, ABC):
         content_keywords: str | list[str] | None = None,
         case_sensitive: bool = False,
     ) -> dataframe.ln_DataFrame:
+        """
+        Filters the branch's messages based on various criteria such as role, sender, time, and content keywords.
 
+        Args:
+            role (str | None, optional): Filter messages by role (e.g., 'system', 'user').
+            sender (str | None, optional): Filter messages by sender identifier.
+            start_time: Filter messages sent after this time. The format should be compatible with pandas datetime handling.
+            end_time: Filter messages sent before this time. The format should be compatible with pandas datetime handling.
+            content_keywords (str | List[str] | None, optional): Filter messages containing specified keyword(s) in their content.
+            case_sensitive (bool, optional): If True, keyword search is case-sensitive. Defaults to False.
+
+        Returns:
+            dataframe.ln_DataFrame: A filtered dataframe containing messages that match the specified criteria.
+        """
         return MessageUtil.filter_messages_by(
             self.messages,
             role=role,
