@@ -10,7 +10,7 @@ completed: true
 
 # BaseBranch Class  API Reference
 
-> Child class of [[Base Nodes#^614ddc|BaseRelatableNode]], `abc.ABC`
+> Child class of [[Base Component#^614ddc|BaseRelatableNode]], `abc.ABC`
 
 
 ## Overview

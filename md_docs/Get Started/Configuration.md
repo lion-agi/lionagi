@@ -9,7 +9,7 @@ Customizing your `lionagi` experience to fit your specific needs is crucial, esp
 
 ## Customizations
 
-You can customize the following aspects of your `lionagi` sessions:
+You can customize the following aspects of your `lionagi` [[Modules Guides/LLM Sessions/Introduction|sessions]]:
 
 ### `llmconfig`
 
@@ -51,7 +51,7 @@ To change the default behavior for a session, you can either:
 
 ### `service`
 
-The `service` configuration is essential for integrating and utilizing LLM services efficiently. By default, the service is set to the OpenAI API service with **tier 1** rate limits for the `gpt-4-1104-preview` model.
+The `service` configuration is essential for integrating and utilizing LLM services efficiently. By default, the [[Customizing LLM Service|service]] is set to the OpenAI API service with **tier 1** rate limits for the `gpt-4-1104-preview` model.
 
 To adjust rate limits:
 

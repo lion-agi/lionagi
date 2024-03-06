@@ -14,7 +14,7 @@ This document provides the API reference for the `DataNode` class, which extends
 
 ## DataNode Class
 
-> Child class of [[Base Nodes#^9e015a|BaseNode]]
+> Child class of [[Base Component#^9e015a|BaseNode]]
 
 The `DataNode` class represents a data node with additional methods for converting between DataNode instances and formats used by `llama index` and `langchain`, enabling seamless integration with these platforms.
 

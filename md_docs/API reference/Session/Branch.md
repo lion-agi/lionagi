@@ -41,9 +41,9 @@ Initializes a new instance of the `Branch` class with enhanced features for conv
 - `system`: System message or configuration.
 - `messages`: Initial set of messages as a `pandas.DataFrame`.
 - [[API Utilities#^4350a9|service]]: External service integration, e.g., OpenAI.
-- `sender`: Default sender identifier for messages.
+- `sender`: Default sender identifier for messages. ^fc105b
 - `llmconfig`: Configuration for language models or external APIs.
-- [[Base Nodes#^0c90e6|tools]]: Collection of tools to be registered with the branch.
+- [[Base Component#^0c90e6|tools]]: Collection of tools to be registered with the branch.
 - `datalogger`: A `DataLogger` instance for logging branch operations.
 - `persist_path`: Filesystem path for data persistence.
 - `instruction_sets`: Sets of instructions for managing conversation flows.
@@ -148,9 +148,11 @@ Adds a message to the branch, extending `BaseBranch`'s method with additional fu
 
 ## ChatFlow Methods
 
-> Uses [[ChatFlow]], to conduct interactions with [LLM](https://en.wikipedia.org/wiki/Large_language_model)
+> Uses [[MonoFlow]], to conduct interactions with [LLM](https://en.wikipedia.org/wiki/Large_language_model)
 
 #### call_chatcompletion
+
+^c7d696
 
 ```python
 async def call_chatcompletion(self, sender=None, with_sender=False, **kwargs):

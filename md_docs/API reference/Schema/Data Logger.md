@@ -12,6 +12,7 @@ completed: true
 This document provides the API reference for the `DLog` and `DataLogger` classes, which are designed for structured logging of data processing operations.
 
 ## DLog Class
+
 > Child class of [`dataclass`](https://docs.python.org/3/library/dataclasses.html)
 
 Represents a log entry, capturing both input to and output from a data processing operation, along with an automatically generated timestamp.
@@ -86,6 +87,3 @@ datalogger.to_json('logs.json', clear=True)
 Ensures any unsaved logs are automatically persisted to a file upon program termination.
 
 **Usage:** Automatically registered upon `DataLogger` instantiation.
-
-These classes provide a structured approach to logging data transformations or interactions within applications, facilitating analysis and debugging.
-
