@@ -113,9 +113,7 @@ class BaseComponent(pyd.ln_BaseModel, ABC):
 
     @from_obj.register(dataframe.ln_Series)
     @classmethod
-    def _(
-        cls, pd_series, *args, pd_kwargs: dict | None = None, **kwargs
-    ) -> T:
+    def _(cls, pd_series, *args, pd_kwargs: dict | None = None, **kwargs) -> T:
         """
         Handles creation of an instance from a pandas Series object.
 
@@ -133,9 +131,7 @@ class BaseComponent(pyd.ln_BaseModel, ABC):
 
     @from_obj.register(dataframe.ln_DataFrame)
     @classmethod
-    def _(
-        cls, pd_df, *args, pd_kwargs: dict | None = None, **kwargs
-    ) -> list[T]:
+    def _(cls, pd_df, *args, pd_kwargs: dict | None = None, **kwargs) -> list[T]:
         """
         Handles creation of instances from a pandas DataFrame object, returning a list of instances.
 
@@ -230,7 +226,9 @@ class BaseComponent(pyd.ln_BaseModel, ABC):
         convert(self.to_dict(), root)
         return ET.tostring(root, encoding="unicode")
 
-    def to_pd_series(self, *args, pd_kwargs: dict | None = None, **kwargs) -> dataframe.ln_Series:
+    def to_pd_series(
+        self, *args, pd_kwargs: dict | None = None, **kwargs
+    ) -> dataframe.ln_Series:
         """
         Converts the instance to a pandas Series.
 
@@ -514,5 +512,6 @@ class Tool(BaseRelatableNode):
     @pyd.ln_field_serializer("func")
     def serialize_func(self, func):
         return func.__name__
+
 
 TOOL_TYPE = bool | Tool | str | list[Tool | str | dict] | dict

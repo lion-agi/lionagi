@@ -8,8 +8,8 @@ import logging
 import aiocache
 import aiohttp
 
-class AsyncUtil:
 
+class AsyncUtil:
 
     async def _call_handler(
         func: Callable, *args, error_map: dict[type, Callable] = None, **kwargs

@@ -2,6 +2,7 @@ from typing import Tuple, Any, TypeVar, Callable
 
 import asyncio
 from lionagi.core.schema.base_node import Tool, TOOL_TYPE
+
 # from lionagi.libs.ln_async import AsyncUtil
 from lionagi.libs.ln_parse import ParseUtil
 from lionagi.libs import ln_convert as convert
@@ -137,9 +138,7 @@ class ToolManager:
             schema_list.append(tool.schema_)
         return schema_list
 
-    def parse_tool(
-        self, tools: TOOL_TYPE, **kwargs
-    ) -> dict:
+    def parse_tool(self, tools: TOOL_TYPE, **kwargs) -> dict:
         """
         Parses tool information and generates a dictionary for tool invocation.
 

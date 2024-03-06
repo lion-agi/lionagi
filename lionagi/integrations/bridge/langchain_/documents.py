@@ -23,7 +23,7 @@ def to_langchain_document(datanode: T, **kwargs: Any) -> Any:
         Any: An instance of `LangchainDocument` populated with data from the input node.
     """
 
-    SysUtil.check_import('langchain')
+    SysUtil.check_import("langchain")
     from langchain.schema import Document as LangchainDocument
 
     dnode = datanode.to_dict()
@@ -61,7 +61,7 @@ def langchain_loader(
         True
     """
 
-    SysUtil.check_import('langchain')
+    SysUtil.check_import("langchain")
     import langchain_community.document_loaders as document_loaders
 
     try:
@@ -107,7 +107,7 @@ def langchain_text_splitter(
     splitter_args = splitter_args or []
     splitter_kwargs = splitter_kwargs or {}
 
-    SysUtil.check_import('langchain')
+    SysUtil.check_import("langchain")
     import langchain_text_splitters as text_splitter
 
     try:

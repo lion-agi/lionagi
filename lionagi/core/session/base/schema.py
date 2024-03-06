@@ -7,7 +7,8 @@ from lionagi.core.schema.data_node import DataNode
 
 _message_fields = ["node_id", "timestamp", "role", "sender", "content"]
 
-# ToDo: actually implement the new message classes 
+# ToDo: actually implement the new message classes
+
 
 class BranchColumns(list[str], Enum):
     COLUMNS = _message_fields
@@ -153,7 +154,9 @@ class Instruction(BaseMessage):
     including any associated context. It sets the message role to 'user'.
     """
 
-    def __init__(self, instruction: dict | list | str, context=None, sender: str | None = None):
+    def __init__(
+        self, instruction: dict | list | str, context=None, sender: str | None = None
+    ):
         super().__init__(
             role="user", sender=sender or "user", content={"instruction": instruction}
         )

@@ -1,5 +1,3 @@
 from .provider.services import Services
 
-__all__ = [
-    "Services"
-]
+__all__ = ["Services"]

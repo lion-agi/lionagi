@@ -1,5 +1,3 @@
 from .monoflow import MonoChat
 
-__all__ = [
-    "MonoChat"
-]
+__all__ = ["MonoChat"]

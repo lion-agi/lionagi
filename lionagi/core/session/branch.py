@@ -67,7 +67,7 @@ class Branch(BaseBranch):
                         tools_.append(i)
                     else:
                         tools_.append(func_to_tool(i))
-                
+
                 self.register_tools(tools_)
             except Exception as e:
                 raise TypeError(f"Error in registering tools: {e}")

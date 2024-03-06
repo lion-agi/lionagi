@@ -495,7 +495,11 @@ class Session:
 
     # ----- chatflow ----#
     async def call_chatcompletion(
-        self, branch: Branch| str | None = None, sender: str | None = None, with_sender=False, **kwargs
+        self,
+        branch: Branch | str | None = None,
+        sender: str | None = None,
+        with_sender=False,
+        **kwargs,
     ):
         """
         Asynchronously calls the chat completion service with the current message queue.
@@ -517,11 +521,10 @@ class Session:
             **kwargs,
         )
 
-
     async def chat(
         self,
         instruction: dict | list | Instruction | str,
-        branch: Branch| str | None = None,
+        branch: Branch | str | None = None,
         context: dict | list | str = None,
         sender: str | None = None,
         system: dict | list | System | None = None,
@@ -560,11 +563,10 @@ class Session:
             **kwargs,
         )
 
-
     async def ReAct(
         self,
         instruction: dict | list | Instruction | str,
-        branch: Branch| str | None = None,
+        branch: Branch | str | None = None,
         context: dict | list | str = None,
         sender: str | None = None,
         system: dict | list | System | None = None,
@@ -603,7 +605,7 @@ class Session:
     async def auto_followup(
         self,
         instruction: dict | list | Instruction | str,
-        branch: Branch| str | None = None,
+        branch: Branch | str | None = None,
         context: dict | list | str = None,
         sender: str | None = None,
         system: dict | list | System | None = None,
@@ -694,7 +696,7 @@ class Session:
         self.branch_manager.mails[branch_name] = {}
 
     def get_branch(
-        self, branch: Branch| str | None = None, get_name: bool = False
+        self, branch: Branch | str | None = None, get_name: bool = False
     ) -> Branch | Tuple[Branch, str]:
         """
         Retrieve a branch by name or instance.

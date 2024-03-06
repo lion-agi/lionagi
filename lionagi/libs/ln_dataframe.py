@@ -9,8 +9,14 @@ ln_DataFrame = pd.DataFrame
 ln_Series = pd.Series
 
 
-
-def extend_dataframe(df1: pd.DataFrame, df2: pd.DataFrame, /, unique_col: str = 'node_id', keep='first', **kwargs) -> pd.DataFrame:
+def extend_dataframe(
+    df1: pd.DataFrame,
+    df2: pd.DataFrame,
+    /,
+    unique_col: str = "node_id",
+    keep="first",
+    **kwargs,
+) -> pd.DataFrame:
     """
     Merges two DataFrames while ensuring no duplicate entries based on a specified unique column.
 
@@ -26,18 +32,17 @@ def extend_dataframe(df1: pd.DataFrame, df2: pd.DataFrame, /, unique_col: str = 
     try:
         if len(df2.dropna(how="all")) > 0 and len(df1.dropna(how="all")) > 0:
             df = convert.to_df([df1, df2])
-            df.drop_duplicates(
-                inplace=True, subset=[unique_col], keep=keep, **kwargs
-            )
+            df.drop_duplicates(inplace=True, subset=[unique_col], keep=keep, **kwargs)
             df_ = convert.to_df(df)
             if len(df_) > 1:
                 return df_
             else:
                 raise ValueError("No data to extend")
-        
+
     except Exception as e:
         raise ValueError(f"Error in extending messages: {e}")
-    
+
+
 def search_keywords(
     df: pd.DataFrame,
     /,
@@ -127,9 +132,11 @@ def read_csv(filepath: str, **kwargs) -> pd.DataFrame:
     df = pd.read_csv(filepath, **kwargs)
     return convert.to_df(df)
 
+
 def read_json(filepath, **kwargs):
     df = pd.read_json(filepath, **kwargs)
     return convert.to_df(df)
+
 
 def remove_last_n_rows(df: pd.DataFrame, steps: int) -> pd.DataFrame:
     """
@@ -153,9 +160,8 @@ def remove_last_n_rows(df: pd.DataFrame, steps: int) -> pd.DataFrame:
         )
     return convert.to_df(df[:-steps])
 
-def update_row(
-    df: pd.DataFrame, row: str | int, column: str | int, value: Any
-) -> bool:
+
+def update_row(df: pd.DataFrame, row: str | int, column: str | int, value: Any) -> bool:
     """
     Updates a row's value for a specified column in a DataFrame.
 

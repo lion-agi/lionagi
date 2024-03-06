@@ -52,10 +52,10 @@ class MonoChat(BaseMonoFlow):
     async def chat(
         self,
         instruction: Instruction | str,
-        context= None,
-        sender= None,
-        system= None,
-        tools= False,
+        context=None,
+        sender=None,
+        system=None,
+        tools=False,
         out: bool = True,
         invoke: bool = True,
         **kwargs,
@@ -105,7 +105,9 @@ class MonoChat(BaseMonoFlow):
                         self.branch.tool_manager.get_function_call,
                     )
 
-                    outs = await func_call.alcall(func_calls, self.branch.tool_manager.invoke)
+                    outs = await func_call.alcall(
+                        func_calls, self.branch.tool_manager.invoke
+                    )
                     outs = convert.to_list(outs, flatten=True)
 
                     for out_, f in zip(outs, func_calls):
@@ -128,7 +130,6 @@ class MonoChat(BaseMonoFlow):
                 return content_
 
         return await _output()
-
 
     # def _create_chat_config(
     #     self,

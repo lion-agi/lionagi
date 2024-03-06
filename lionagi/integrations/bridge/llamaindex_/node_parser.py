@@ -24,31 +24,32 @@ def get_llama_index_node_parser(node_parser: Any):
         found within the llama_index.core.node_parser module.
     """
 
-    SysUtil.check_import('llama_index', pip_name='llama-index')
+    SysUtil.check_import("llama_index", pip_name="llama-index")
     from llama_index.core.node_parser.interface import NodeParser
     import llama_index.core.node_parser
 
     if not isinstance(node_parser, str) and not issubclass(node_parser, NodeParser):
-        raise TypeError(
-            f'node_parser must be a string or NodeParser.')
+        raise TypeError(f"node_parser must be a string or NodeParser.")
 
     if isinstance(node_parser, str):
-        if node_parser == 'CodeSplitter':
-            SysUtil.check_import('tree_sitter_languages')
+        if node_parser == "CodeSplitter":
+            SysUtil.check_import("tree_sitter_languages")
 
         try:
             parser = getattr(llama_index.core.node_parser, node_parser)
             return parser
         except Exception as e:
-            raise AttributeError(f"llama_index_core has no such attribute:"
-                                 f" {node_parser}, Error: {e}")
+            raise AttributeError(
+                f"llama_index_core has no such attribute:" f" {node_parser}, Error: {e}"
+            )
 
     elif isinstance(node_parser, NodeParser):
         return node_parser
 
 
-def llama_index_parse_node(documents, node_parser: Any,
-                           parser_args=None, parser_kwargs=None):
+def llama_index_parse_node(
+    documents, node_parser: Any, parser_args=None, parser_kwargs=None
+):
     """
     Parses documents using a specified llama index node parser and its arguments.
 
@@ -80,4 +81,4 @@ def llama_index_parse_node(documents, node_parser: Any,
         return nodes
 
     except Exception as e:
-        raise ValueError(f'Failed to parse. Error: {e}')
+        raise ValueError(f"Failed to parse. Error: {e}")
