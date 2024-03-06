@@ -4,6 +4,9 @@
 
 [PyPI](https://pypi.org/project/lionagi/) | [Documentation](https://ocean-lion.com/Welcome) | [Discord](https://discord.gg/mzDD5JtYRp)
 
+```
+Documentation for v0.0.302 in in progress
+```
   
 # LionAGI
 
