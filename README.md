@@ -50,16 +50,16 @@ The following example shows how to use LionAGI's `Session` object to interact wi
 system = "You are a helpful assistant designed to perform calculations."
 instruction = {"Addition":"Add the two numbers together i.e. x+y"}
 context = {"x": 10, "y": 5}
+
+model="gpt-4-turbo-preview"
 ```
 
 ```python
 # in interactive environment (.ipynb for example)
-import lionagi as li
+from lionagi import Session
 
-calculator = li.Session(system=system)
-result = await calculator.chat(
-  instruction=instruction, context=context, model="gpt-4-turbo-preview"
-)
+calculator = Session(system)
+result = await calculator.chat(instruction, context=context, model=model)
 
 print(f"Calculation Result: {result}")
 ```
@@ -71,13 +71,12 @@ from dotenv import load_dotenv
 
 load_dotenv()
 
-import lionagi as li
+from lionagi import Session
 
 async def main():
-    calculator = li.Session(system=system)
-    result = await calculator.chat(
-      instruction=instruction, context=context, model="gpt-4-turbo-preview"
-    )
+    calculator = Session(system)
+    result = await calculator.chat(instruction, context=context, model=model)
+
     print(f"Calculation Result: {result}")
 
 if __name__ == "__main__":
