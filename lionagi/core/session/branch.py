@@ -7,13 +7,14 @@ from lionagi.libs.ln_api import StatusTracker, BaseService
 from lionagi.libs import ln_convert as convert
 from lionagi.libs import ln_dataframe as dataframe
 
-from lionagi.core.schema.base_node import TOOL_TYPE, Tool
+from lionagi.core.schema.base_node import TOOL_TYPE
 from lionagi.core.schema.data_logger import DataLogger
 from lionagi.core.tool.tool_manager import ToolManager, func_to_tool
 from lionagi.core.flow.monoflow import MonoChat
 
 from lionagi.core.session.base.base_branch import BaseBranch
-from lionagi.core.session.base.schema import BaseMail, Instruction, System
+from lionagi.core.message.schema import Instruction, System, Tool
+from lionagi.core.mail.schema import BaseMail
 
 from lionagi.core.session.base.util import MessageUtil
 

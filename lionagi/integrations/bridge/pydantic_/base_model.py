@@ -1,7 +1,8 @@
-from pydantic import BaseModel, Field, ValidationError, AliasChoices, field_serializer
+import pydantic
 
-ln_BaseModel = BaseModel
-ln_Field = Field
-ln_field_serializer = field_serializer
-ln_AliasChoices = AliasChoices
-ln_ValidationError = ValidationError
+BaseModel = pydantic.BaseModel
+Field = pydantic.Field
+field_serializer = pydantic.field_serializer
+AliasChoices = pydantic.AliasChoices
+ValidationError = pydantic.ValidationError
+model_validator = pydantic.model_validator

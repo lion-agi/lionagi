@@ -1,6 +1,5 @@
 from collections import deque
 from typing import Tuple
-import asyncio
 
 from lionagi.libs.ln_api import BaseService
 from lionagi.libs.sys_util import PATH_TYPE
@@ -8,11 +7,11 @@ from lionagi.libs.sys_util import PATH_TYPE
 from lionagi.libs import ln_convert as convert
 from lionagi.libs import ln_dataframe as dataframe
 
-from lionagi.core.schema.base_node import TOOL_TYPE, Tool
+from lionagi.core.schema.base_node import TOOL_TYPE
 from lionagi.core.schema.data_logger import DataLogger
 from lionagi.core.tool.tool_manager import ToolManager
-from lionagi.core.session.base.mail_manager import MailManager
-from lionagi.core.session.base.schema import System, Instruction
+from lionagi.core.mail.mail_manager import MailManager
+from lionagi.core.message.schema import System, Instruction, Tool
 from lionagi.core.session.branch import Branch
 
 

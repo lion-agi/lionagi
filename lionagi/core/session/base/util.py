@@ -6,7 +6,7 @@ from lionagi.libs import ln_nested as nested
 from lionagi.libs import ln_func_call as func_call
 from lionagi.libs import ln_dataframe as dataframe
 
-from lionagi.core.session.base.schema import (
+from lionagi.core.message.schema import (
     System,
     Instruction,
     Response,

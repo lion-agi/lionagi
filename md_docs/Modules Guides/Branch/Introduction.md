@@ -44,8 +44,12 @@ Tools, such as custom functions for multiplication and addition, need to be regi
 
 ```python
 # Define and create tool objects
-tool_mul = li.Tool(func=multiply, schema_=tool_1[0])  # Assuming multiply function and schema are defined
-tool_add = li.Tool(func=add, schema_=tool_2[0])  # Assuming add function and schema are defined
+import lionagi.core.message.schema
+
+tool_mul = lionagi.core.message.schema.Tool(func=multiply, schema_=tool_1[
+    0])  # Assuming multiply function and schema are defined
+tool_add = lionagi.core.message.schema.Tool(func=add, schema_=tool_2[
+    0])  # Assuming add function and schema are defined
 
 # Register tool_mul to 'main' branch
 session.branches['main'].register_tools(tool_mul)

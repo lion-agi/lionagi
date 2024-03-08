@@ -4,8 +4,8 @@ from lionagi.libs import ln_convert as convert
 from lionagi.libs import ln_func_call as func_call
 from lionagi.libs import ln_nested as nested
 
-from lionagi.core.schema.base_node import Tool, TOOL_TYPE
-from lionagi.core.session.base.schema import Instruction, System
+from lionagi.core.schema.base_node import TOOL_TYPE
+from lionagi.core.message.schema import Instruction, Tool
 
 
 class BaseMonoFlow:

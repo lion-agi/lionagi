@@ -1,9 +1,7 @@
 from lionagi.core.tool.tool_manager import ToolManager
-from lionagi.core.schema import Tool
+from lionagi.core.message.schema import Tool
 
 import unittest
-from unittest.mock import patch, AsyncMock
-import asyncio
 import json
 
 

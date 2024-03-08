@@ -8,7 +8,7 @@ import lionagi.libs.ln_dataframe as dataframe
 
 from lionagi.core.schema.base_node import BaseRelatableNode
 from lionagi.core.schema.data_logger import DataLogger, DLog
-from lionagi.core.session.base.schema import (
+from lionagi.core.message.schema import (
     BranchColumns,
     System,
     Instruction,

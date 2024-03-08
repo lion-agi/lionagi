@@ -11,6 +11,8 @@ To utilize function calling effectively, you must first define a tool schema tha
 **Example Schema and Function:**
 
 ```python
+import lionagi.core.message.schema
+
 tool_schema = {
     "type": "function",
     "function": {
@@ -27,11 +29,13 @@ tool_schema = {
     }
 }
 
+
 def multiply(number1, number2):
     return number1 * number2
 
+
 # Creating a Tool object with the defined schema
-tools = li.Tool(func=multiply, schema_=tool_schema)
+tools = lionagi.core.message.schema.Tool(func=multiply, schema_=tool_schema)
 ```
 
 #### Preparing the Session

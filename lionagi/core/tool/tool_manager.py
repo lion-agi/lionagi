@@ -1,7 +1,8 @@
 from typing import Tuple, Any, TypeVar, Callable
 
 import asyncio
-from lionagi.core.schema.base_node import Tool, TOOL_TYPE
+from lionagi.core.schema.base_node import TOOL_TYPE
+from lionagi.core.message.schema import Tool
 
 # from lionagi.libs.ln_async import AsyncUtil
 from lionagi.libs.ln_parse import ParseUtil
