@@ -2,7 +2,7 @@
 
 
 
-[PyPI](https://pypi.org/project/lionagi/) | [Documentation](https://ocean-lion.com/Welcome) | [Discord](https://discord.gg/mzDD5JtYRp)
+[PyPI](https://pypi.org/project/lionagi/) | [Documentation](https://ocean-lion.com/Welcome) | [Discord](https://discord.gg/xCkA5ErGmV)
 
 ```
 Documentation for v0.0.302 is in progress
