@@ -1,3 +1,4 @@
+from typing import Any
 from lionagi.integrations.bridge.pydantic_ import base_model as pyd
 from lionagi.libs import ln_nested as nested
 from lionagi.libs import ln_convert as convert
@@ -10,13 +11,15 @@ from lionagi.core.message.schema import (
 )
 
 from lionagi.core.schema.structure import Relationship
+from lionagi.core.schema.data_node import DataNode
+
 
 
 class BaseMessage(DataNode):
     role: MessageRoleType = pyd.Field(..., alias=MessageField.ROLE.value)
     sender: str = pyd.Field(..., alias=MessageField.SENDER.value)
     recipient: str = pyd.Field(..., alias=MessageField.RECIPIENT.value)
-    relationship: List[Relationship] = pyd.Field([],
+    relationship: list[Relationship] = pyd.Field([],
                                                  alias=MessageField.RELATIONSHIP.value)
 
     class Config:
@@ -89,7 +92,7 @@ class BaseMessage(DataNode):
 class Instruction(BaseMessage):
 
     def __init__(self, instruction: Any, context: Any = None, sender: str = None,
-                 recipient: str = None, relation: List[Relationship] = None, **kwargs):
+                 recipient: str = None, relation: list[Relationship] = None, **kwargs):
 
         super().__init__(**kwargs)
         self.role = MessageType.INSTRUCTION.value[MessageField.ROLE.value]
@@ -105,7 +108,7 @@ class Instruction(BaseMessage):
 class System(BaseMessage):
 
     def __init__(self, system: Any, sender: str = None, recipient: str = None,
-                 relation: List[Relationship] = None, **kwargs):
+                 relation: list[Relationship] = None, **kwargs):
 
         super().__init__(**kwargs)
         self.role = MessageType.SYSTEM.value[MessageField.ROLE.value]
@@ -119,7 +122,7 @@ class System(BaseMessage):
 
 class ActionRequest(BaseMessage):
     def __init__(self, action_request: Any, sender: str = None,
-                 recipient: str = None, relation: List[Relationship] = None, **kwargs):
+                 recipient: str = None, relation: list[Relationship] = None, **kwargs):
 
         super().__init__(**kwargs)
         self.role = MessageType.ACTION_REQUEST.value[MessageField.ROLE.value]
@@ -160,7 +163,7 @@ class ActionRequest(BaseMessage):
 class ActionResponse(BaseMessage):
 
     def __init__(self, action_response: Any, sender: str = None,
-                 recipient: str = None, relation: List[Relationship] = None, **kwargs):
+                 recipient: str = None, relation: list[Relationship] = None, **kwargs):
         super().__init__(**kwargs)
         self.role = MessageType.ACTION_RESPONSE.value[MessageField.ROLE.value]
         self.sender = sender or MessageType.ACTION_RESPONSE.value[
@@ -179,7 +182,7 @@ class ActionResponse(BaseMessage):
 class AssistantResponse(BaseMessage):
 
     def __init__(self, response: Any, sender: str = None,
-                 recipient: str = None, relation: List[Relationship] = None, **kwargs):
+                 recipient: str = None, relation: list[Relationship] = None, **kwargs):
         super().__init__(**kwargs)
         self.role = MessageType.RESPONSE.value[MessageField.ROLE.value]
         self.sender = sender or MessageType.RESPONSE.value[MessageField.SENDER.value]
@@ -196,7 +199,6 @@ class Response:
 
     @staticmethod
     def process(response: dict | list | str, **kwargs) -> BaseMessage:
-        content_key = ""
         try:
             response = response["message"]
 

@@ -1,4 +1,4 @@
-from lionagi.core.session.base.util import MessageUtil
+from lionagi.core.session.util import MessageUtil
 from lionagi.core.message.schema import System, Instruction, Response
 
 import unittest

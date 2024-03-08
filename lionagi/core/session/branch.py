@@ -12,11 +12,11 @@ from lionagi.core.schema.data_logger import DataLogger
 from lionagi.core.tool.tool_manager import ToolManager, func_to_tool
 from lionagi.core.flow.monoflow import MonoChat
 
-from lionagi.core.session.base.base_branch import BaseBranch
+from lionagi.core.session.base_branch import BaseBranch
 from lionagi.core.message.schema import Instruction, System, Tool
 from lionagi.core.mail.schema import BaseMail
 
-from lionagi.core.session.base.util import MessageUtil
+from lionagi.core.session.util import MessageUtil
 
 
 from dotenv import load_dotenv

@@ -1,14 +1,12 @@
 from lionagi.core.session.branch import Branch
 from lionagi.core.tool.tool_manager import ToolManager, func_to_tool
 from lionagi.core.schema import DataLogger
-from lionagi.core.session.base.util import MessageUtil
 
 import unittest
 from unittest.mock import patch, MagicMock
 import pandas as pd
 import json
 from collections import deque
-import asyncio
 
 
 class TestBranch(unittest.TestCase):

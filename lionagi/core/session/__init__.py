@@ -1,5 +1,5 @@
 from .base import *
-from .session import Session
+from .sessions import Session
 from .branch import Branch
 
 
