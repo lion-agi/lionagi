@@ -1,6 +1,5 @@
 from .base import *
-from .sessions import Session
 from .branch import Branch
+from .sessions import Session
 
-
-__all__ = ["Instruction", "System", "Response", "MailManager", "Session", "Branch"]
+__all__ = ["BaseInstruction", "System", "Response", "MailManager", "Session", "Branch"]

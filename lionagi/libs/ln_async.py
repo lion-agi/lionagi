@@ -1,12 +1,12 @@
 from __future__ import annotations
 
 import asyncio
+import logging
 from collections.abc import Mapping, Callable, Coroutine
 from functools import lru_cache
 from typing import Any
-import logging
+
 import aiocache
-import aiohttp
 
 
 class AsyncUtil:

@@ -1,5 +1,4 @@
 import ast
-import textwrap
 from typing import Any, Dict, Callable
 
 
@@ -7,7 +6,7 @@ class BaseEvaluationEngine:
     def __init__(self) -> None:
         self.variables: Dict[str, Any] = {}
         self.functions: Dict[str, Callable] = {
-            'print': print,
+            "print": print,
         }
 
     def _evaluate_expression(self, expression: str) -> Any:
@@ -32,14 +31,17 @@ class BaseEvaluationEngine:
             self._assign_variable(var_name, value)
         elif isinstance(stmt, ast.Expr) and isinstance(stmt.value, ast.Call):
             func_name = stmt.value.func.id
-            args = [self._evaluate_expression(ast.unparse(arg)) for arg in
-                    stmt.value.args]
+            args = [
+                self._evaluate_expression(ast.unparse(arg)) for arg in stmt.value.args
+            ]
             self._execute_function(func_name, *args)
         elif isinstance(stmt, ast.For):
             iter_var = stmt.target.id
-            if isinstance(stmt.iter, ast.Call) and stmt.iter.func.id == 'range':
-                start, end = [self._evaluate_expression(ast.unparse(arg)) for arg in
-                              stmt.iter.args]
+            if isinstance(stmt.iter, ast.Call) and stmt.iter.func.id == "range":
+                start, end = [
+                    self._evaluate_expression(ast.unparse(arg))
+                    for arg in stmt.iter.args
+                ]
                 for i in range(start, end):
                     self.variables[iter_var] = i
                     for body_stmt in stmt.body:

@@ -1,6 +1,6 @@
-
 class Node:
     """Base class for all nodes in the abstract syntax tree (AST)."""
+
     pass
 
 

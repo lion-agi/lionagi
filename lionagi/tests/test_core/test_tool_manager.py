@@ -1,8 +1,8 @@
-from lionagi.core.tool.tool_manager import ToolManager
-from lionagi.core.message.schema import Tool
-
-import unittest
 import json
+import unittest
+
+from lionagi.core.message.schema import Tool
+from lionagi.core.tool.tool_manager import ToolManager
 
 
 class TestToolManager(unittest.TestCase):

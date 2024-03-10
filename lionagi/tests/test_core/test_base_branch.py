@@ -1,11 +1,12 @@
+import json
+import unittest
+from datetime import datetime
+from unittest.mock import patch, MagicMock
+
+import pandas as pd
+
 from lionagi.core.session.base_branch import BaseBranch
 from lionagi.core.session.util import MessageUtil, System
-
-import unittest
-from unittest.mock import patch, MagicMock
-import pandas as pd
-from datetime import datetime
-import json
 
 
 class TestBaseBranch(unittest.TestCase):

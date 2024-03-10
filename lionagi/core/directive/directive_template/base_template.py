@@ -1,5 +1,7 @@
 from typing import Any, Dict
+
 from lionagi.core.evaluator.base_evaluator import BaseEvaluator
+
 
 class BaseDirectiveTemplate:
     """Enhanced base template class for processing templates with conditionals and loops."""
@@ -10,7 +12,7 @@ class BaseDirectiveTemplate:
 
     def _render_conditionals(self, context: Dict[str, Any]) -> str:
         """Processes conditional statements with improved logic and support for 'else'."""
-        pattern = re.compile(r'\{if (.*?)\}(.*?)\{else\}(.*?)\{endif\}', re.DOTALL)
+        pattern = re.compile(r"\{if (.*?)\}(.*?)\{else\}(.*?)\{endif\}", re.DOTALL)
 
         def evaluate_condition(match):
             condition, if_text, else_text = match.groups()
@@ -23,14 +25,15 @@ class BaseDirectiveTemplate:
 
     def _render_loops(self, template: str, context: Dict[str, Any]) -> str:
         """Processes loop statements within the template."""
-        loop_pattern = re.compile(r'\{for (\w+) in (\w+)\}(.*?)\{endfor\}', re.DOTALL)
+        loop_pattern = re.compile(r"\{for (\w+) in (\w+)\}(.*?)\{endfor\}", re.DOTALL)
 
         def render_loop(match):
             iterator_var, collection_name, loop_body = match.groups()
             collection = context.get(collection_name, [])
             if not isinstance(collection, (list, range)):
                 raise ValueError(
-                    f"Expected list or range for '{collection_name}', got {type(collection).__name__}.")
+                    f"Expected list or range for '{collection_name}', got {type(collection).__name__}."
+                )
 
             loop_result = ""
             for item in collection:
@@ -58,8 +61,10 @@ class BaseDirectiveTemplate:
             print(f"Missing key in context: {e}")
             return template_with_loops
 
+
 class BaseDirectiveTemplate:
     """Processes templates with conditionals and loops."""
+
     def __init__(self, template_str: str):
         self.template_str = template_str
         self.evaluator = BaseEvaluator()
@@ -70,13 +75,15 @@ class BaseDirectiveTemplate:
 
     def _render_loops(self, template: str, context: Dict[str, Any]) -> str:
         """Renders loops in the template."""
-        loop_pattern = re.compile(r'\{for (\w+) in (\w+)\}(.*?)\{endfor\}', re.DOTALL)
+        loop_pattern = re.compile(r"\{for (\w+) in (\w+)\}(.*?)\{endfor\}", re.DOTALL)
 
         def render_loop(match):
             iterator_var, collection_name, loop_body = match.groups()
             collection = context.get(collection_name, [])
             if not isinstance(collection, (list, range)):
-                raise ValueError(f"Expected list or range for '{collection_name}', got {type(collection).__name__}.")
+                raise ValueError(
+                    f"Expected list or range for '{collection_name}', got {type(collection).__name__}."
+                )
 
             loop_result = ""
             for item in collection:

@@ -1,6 +1,7 @@
 from typing import Any, Dict, List, Optional, Union
-from lionagi.libs import to_dict, lcall, to_list, alcall, get_flattened_keys
+
 from lionagi.core.message.schema import Instruction, System, Tool
+from lionagi.libs import to_dict, lcall, to_list, alcall, get_flattened_keys
 
 
 class ChatFlow:
@@ -12,7 +13,9 @@ class ChatFlow:
             if not with_sender
             else branch.chat_messages_with_sender
         )
-        payload, completion = await branch.service.serve_chat(messages=messages, **kwargs)
+        payload, completion = await branch.service.serve_chat(
+            messages=messages, **kwargs
+        )
         if "choices" in completion:
             add_msg_config = {"response": completion["choices"][0]}
             if sender is not None:
@@ -52,7 +55,7 @@ class ChatFlow:
         if sender is not None:
             config.update({"sender": sender})
 
-        await branch.call_chatcompletion(**config)
+        await branch._call_chatcompletion(**config)
 
         async def _output():
             content_ = branch.last_message_content
@@ -113,7 +116,7 @@ class ChatFlow:
 
         i = 0
         while i < num_rounds:
-            prompt = f"""you have {(num_rounds-i)*2} step left in current task. if available, integrate previous tool responses. perform reasoning and prepare action plan according to available tools only, apply divide and conquer technique.
+            prompt = f"""you have {(num_rounds - i) * 2} step left in current task. if available, integrate previous tool responses. perform reasoning and prepare action plan according to available tools only, apply divide and conquer technique.
             """
             instruct = {"Notice": prompt}
 
@@ -131,7 +134,7 @@ class ChatFlow:
                 await branch.chat(instruction=instruct, sender=sender, **kwargs)
 
             prompt = f"""
-                you have {(num_rounds-i)*2-1} step left in current task, invoke tool usage to perform actions
+                you have {(num_rounds - i) * 2 - 1} step left in current task, invoke tool usage to perform actions
             """
             await branch.chat(
                 prompt, tool_choice="auto", tool_parsed=True, sender=sender, **kwargs
@@ -139,12 +142,10 @@ class ChatFlow:
 
             i += 1
 
-
         prompt = """
             present the final result to user
         """
         return await branch.chat(prompt, sender=sender, tool_parsed=True, **kwargs)
-
 
     @staticmethod
     async def auto_followup(
@@ -164,7 +165,7 @@ class ChatFlow:
         n_tries = 0
         while (max_followup - n_tries) > 0:
             prompt = f"""
-                In the current task you are allowed a maximum of another {max_followup-n_tries} followup chats. 
+                In the current task you are allowed a maximum of another {max_followup - n_tries} followup chats. 
                 if further actions are needed, invoke tools usage. If you are done, present the final result 
                 to user without further tool usage
             """
@@ -193,7 +194,6 @@ class ChatFlow:
                     **kwargs,
                 )
                 n_tries += 1
-
 
         if branch._is_invoked():
             """

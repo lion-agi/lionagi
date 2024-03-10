@@ -56,7 +56,6 @@ openrouter_finetune_schema = {
     "config": openrouter_finetune_llmconfig,
 }
 
-
 openrouter_schema = {
     "chat/completions": openrouter_chat_schema,
     "finetune": openrouter_finetune_schema,

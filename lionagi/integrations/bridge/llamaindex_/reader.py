@@ -1,6 +1,5 @@
-from typing import Any, Union
+from typing import Any
 
-from lionagi.libs.ln_convert import strip_lower
 from lionagi.libs.sys_util import SysUtil
 
 

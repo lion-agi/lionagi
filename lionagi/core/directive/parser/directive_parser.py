@@ -1,6 +1,3 @@
-
-
-
 # class IfParser(BaseParser):
 #     def parse_if_statement(self):
 #         self.next_token()  # Move past IF
@@ -46,15 +43,6 @@
 #             action = self.current_token.value
 #             self.next_token()  # Move past action
 #             return action
-
-
-
-
-
-
-
-
-
 
 
 #

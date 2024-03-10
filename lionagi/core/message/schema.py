@@ -1,18 +1,7 @@
 from enum import Enum
-from typing import Any
 
-from lionagi.core.schema import BaseNode, BaseRelatableNode
-from lionagi.integrations.bridge.pydantic_ import base_model as pyd
+from lionagi.core.schema import BaseNode
 
-
-# _message_fields = ["node_id", "timestamp", "role", "sender", "content"]
-#
-# # ToDo: actually implement the new message classes
-#
-#
-# class BranchColumns(list[str], Enum):
-#     COLUMNS = _message_fields
-#
 
 class MessageField(str, Enum):
     NODE_ID = "node_id"
@@ -94,9 +83,4 @@ class MessageType(dict, Enum):
     }
 
 
-class MessageTemplate(BaseNode):
-
-    ...
-
-
-
+class MessageTemplate(BaseNode): ...

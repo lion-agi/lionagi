@@ -4,6 +4,7 @@ from functools import lru_cache
 
 from lionagi.libs import AsyncUtil
 
+
 class SandboxTransformer(ast.NodeTransformer):
     """AST transformer to enforce restrictions in sandbox mode."""
 
@@ -12,6 +13,7 @@ class SandboxTransformer(ast.NodeTransformer):
 
     def visit_Exec(self, node):
         raise RuntimeError("Exec statements are not allowed in sandbox mode.")
+
     # Add other visit methods for disallowed operations or nodes
 
 
@@ -20,7 +22,7 @@ class ScriptEngine:
         self.variables = {}
         self.safe_evaluator = SafeEvaluator()
         self.functions = {
-            'processData': self.process_data,
+            "processData": self.process_data,
         }
         self.cache = {}
 
@@ -84,7 +86,7 @@ class ScriptEngine:
         self.variables = {}
         self.safe_evaluator = SafeEvaluator()
         self.functions = {
-            'processData': self.process_data,
+            "processData": self.process_data,
         }
 
     def process_data(self, data):
@@ -146,12 +148,12 @@ class ScriptEngine:
 
     def execute_sandboxed(self, script):
         # Parse and sanitize the script
-        tree = ast.parse(script, mode='exec')
+        tree = ast.parse(script, mode="exec")
         sanitized_tree = SandboxTransformer().visit(tree)
         ast.fix_missing_locations(sanitized_tree)
 
         # Compile the sanitized AST
-        code = compile(sanitized_tree, '<sandbox>', 'exec')
+        code = compile(sanitized_tree, "<sandbox>", "exec")
 
         # Execute the code in a restricted namespace
-        exec(code, {'__builtins__': None}, self.variables)
+        exec(code, {"__builtins__": None}, self.variables)

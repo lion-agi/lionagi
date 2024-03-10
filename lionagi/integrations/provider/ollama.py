@@ -1,5 +1,5 @@
-from lionagi.libs.ln_api import BaseService
 from lionagi.integrations.config.ollama_configs import model
+from lionagi.libs.ln_api import BaseService
 
 allowed_kwargs = [
     "model",

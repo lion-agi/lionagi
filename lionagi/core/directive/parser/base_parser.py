@@ -1,7 +1,7 @@
 from typing import List, Optional
+
 from lionagi.core.directive.schema import IfNode, TryNode, ForNode
 from lionagi.core.directive.tokenizer.base_tokenizer import BaseToken
-
 
 
 class BaseParser:
@@ -19,6 +19,7 @@ class BaseParser:
         >>> print(parser.current_token)
         BaseToken(KEYWORD, IF)
     """
+
     def __init__(self, tokens: List[BaseToken]):
         self.tokens = tokens
         self.current_token_index = -1
@@ -75,49 +76,48 @@ class BaseParser:
         self.next_token()
 
     def skip_semicolon(self):
-        if self.current_token and self.current_token.value == ';':
+        if self.current_token and self.current_token.value == ";":
             self.next_token()
 
     def parse_expression(self):
         expr = ""
-        while self.current_token and self.current_token.value != ';':
+        while self.current_token and self.current_token.value != ";":
             expr += self.current_token.value + " "
             self.next_token()
         # Expecting a semicolon at the end of the condition
-        if self.current_token.value != ';':
+        if self.current_token.value != ";":
             raise SyntaxError("Expected ';' at the end of the condition")
         self.next_token()  # Move past the semicolon to the next part of the statement
         return expr.strip()
 
-
     def parse_if_block(self):
         block = []
         # Parse the block until 'ELSE', 'ENDIF', ensuring not to include semicolons as part of the block
-        while self.current_token and self.current_token.value not in ('ENDIF', 'ELSE'):
-            if self.current_token.value == 'DO':
+        while self.current_token and self.current_token.value not in ("ENDIF", "ELSE"):
+            if self.current_token.value == "DO":
                 self.next_token()  # Move past 'DO' to get to the action
             block.append(self.current_token.value)  # Add the action to the block
             self.next_token()  # Move to the next token, which could be a semicolon or the next action
-            if self.current_token.value == ';':
+            if self.current_token.value == ";":
                 self.next_token()  # Move past the semicolon
         return block
 
     def parse_if_statement(self):
-        if self.current_token.type != 'KEYWORD' or self.current_token.value != 'IF':
+        if self.current_token.type != "KEYWORD" or self.current_token.value != "IF":
             raise SyntaxError("Expected IF statement")
         self.next_token()  # Skip 'IF'
 
         condition = self.parse_expression()  # Now properly ends after the semicolon
 
         true_block = []
-        if self.current_token.value == 'DO':
+        if self.current_token.value == "DO":
             true_block = self.parse_if_block()  # Parse true block after 'DO'
 
         false_block = None
-        if self.current_token and self.current_token.value == 'ELSE':
+        if self.current_token and self.current_token.value == "ELSE":
             self.next_token()  # Skip 'ELSE', expect 'DO' next for the false block
             self.skip_semicolon()
-            if self.current_token.value != 'DO':
+            if self.current_token.value != "DO":
                 raise SyntaxError("Expected 'DO' after 'ELSE'")
             self.next_token()  # Skip 'DO'
             false_block = self.parse_if_block()  # Parse false block
@@ -125,23 +125,23 @@ class BaseParser:
         return IfNode(condition, true_block, false_block)
 
     def parse_for_statement(self):
-        if self.current_token.type != 'KEYWORD' or self.current_token.value != 'FOR':
+        if self.current_token.type != "KEYWORD" or self.current_token.value != "FOR":
             raise SyntaxError("Expected FOR statement")
         self.next_token()  # Skip 'FOR'
 
         # Parse the iterator variable
-        if self.current_token.type != 'IDENTIFIER':
+        if self.current_token.type != "IDENTIFIER":
             raise SyntaxError("Expected iterator variable after FOR")
         iterator = self.current_token.value
         self.next_token()  # Move past the iterator variable
 
         # Expect and skip 'IN' keyword
-        if self.current_token.type != 'KEYWORD' or self.current_token.value != 'IN':
+        if self.current_token.type != "KEYWORD" or self.current_token.value != "IN":
             raise SyntaxError("Expected 'IN' after iterator variable")
         self.next_token()  # Move past 'IN'
 
         # Parse the collection
-        if self.current_token.type not in ['IDENTIFIER', 'LITERAL']:
+        if self.current_token.type not in ["IDENTIFIER", "LITERAL"]:
             raise SyntaxError("Expected collection after 'IN'")
         collection = self.current_token.value
         self.next_token()  # Move past the collection
@@ -155,16 +155,16 @@ class BaseParser:
     def parse_for_block(self):
         block = []
         # Skip initial 'DO' if present
-        if self.current_token and self.current_token.value == 'DO':
+        if self.current_token and self.current_token.value == "DO":
             self.next_token()
 
-        while self.current_token and self.current_token.value not in ('ENDFOR',):
-            if self.current_token.value == ';':
+        while self.current_token and self.current_token.value not in ("ENDFOR",):
+            if self.current_token.value == ";":
                 # If a semicolon is encountered, skip it and move to the next token
                 self.next_token()
                 continue
             # Add the current token to the block unless it's a 'DO' or ';'
-            if self.current_token.value != 'DO':
+            if self.current_token.value != "DO":
                 block.append(self.current_token.value)
             self.next_token()
 
@@ -173,21 +173,23 @@ class BaseParser:
         return block
 
     def parse_try_statement(self):
-        if self.current_token.type != 'KEYWORD' or self.current_token.value != 'TRY':
+        if self.current_token.type != "KEYWORD" or self.current_token.value != "TRY":
             raise SyntaxError("Expected TRY statement")
         self.next_token()  # Skip 'TRY'
 
-        try_block = self.parse_try_block('EXCEPT')  # Parse the try block until 'EXCEPT'
+        try_block = self.parse_try_block("EXCEPT")  # Parse the try block until 'EXCEPT'
 
         # Now expecting 'EXCEPT' keyword
-        if not (self.current_token and self.current_token.value == 'EXCEPT'):
+        if not (self.current_token and self.current_token.value == "EXCEPT"):
             raise SyntaxError("Expected 'EXCEPT' after try block")
         self.next_token()  # Move past 'EXCEPT'
 
-        except_block = self.parse_try_block('ENDTRY')  # Parse the except block until 'ENDTRY'
+        except_block = self.parse_try_block(
+            "ENDTRY"
+        )  # Parse the except block until 'ENDTRY'
 
         # Ensure we are correctly positioned after 'ENDTRY'
-        if self.current_token and self.current_token.value != 'ENDTRY':
+        if self.current_token and self.current_token.value != "ENDTRY":
             raise SyntaxError("Expected 'ENDTRY' at the end of except block")
         self.next_token()  # Move past 'ENDTRY' for subsequent parsing
 
@@ -196,9 +198,9 @@ class BaseParser:
     def parse_try_block(self, stop_keyword):
         block = []
         while self.current_token and self.current_token.value != stop_keyword:
-            if self.current_token.value == 'DO':
+            if self.current_token.value == "DO":
                 self.next_token()  # Move past 'DO' to get to the action
-            elif self.current_token.value == ';':
+            elif self.current_token.value == ";":
                 self.next_token()  # Move past the semicolon
                 continue  # Skip adding ';' to the block
             else:

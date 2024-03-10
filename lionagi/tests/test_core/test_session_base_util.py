@@ -1,10 +1,11 @@
-from lionagi.core.session.util import MessageUtil
-from lionagi.core.message.schema import System, Instruction, Response
-
-import unittest
-import pandas as pd
 import json
+import unittest
 from datetime import datetime
+
+import pandas as pd
+
+from lionagi.core.message.schema import System, Instruction, Response
+from lionagi.core.session.util import MessageUtil
 
 
 class TestCreateMessage(unittest.TestCase):
@@ -17,7 +18,7 @@ class TestCreateMessage(unittest.TestCase):
         self.assertEqual(message.content, system_info)
 
     def test_create_instruction_message(self):
-        """Test creating an Instruction message with context."""
+        """Test creating an BaseInstruction message with context."""
         instruction_info = {"task": "Do something"}
         context = {"additional": "context"}
         message = MessageUtil.create_message(

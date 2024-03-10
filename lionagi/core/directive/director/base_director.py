@@ -1,5 +1,6 @@
 from typing import Any, Dict, List
 
+
 class BaseDirector:
     def __init__(self):
         self.components = []  # Stores the workflow components
@@ -24,7 +25,9 @@ class BaseDirector:
             if self._should_execute_component(component, context):
                 self._execute_component(component, context)
 
-    def _should_execute_component(self, component: Any, context: Dict[str, Any]) -> bool:
+    def _should_execute_component(
+        self, component: Any, context: Dict[str, Any]
+    ) -> bool:
         """
         Determines whether a component should be executed based on the current context.
 

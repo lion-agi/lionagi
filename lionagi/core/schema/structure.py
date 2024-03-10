@@ -1,10 +1,10 @@
 from typing import List, Any, Dict
+
 from pydantic import Field
 
-from lionagi.libs.sys_util import SysUtil
-from lionagi.libs import ln_func_call as func_call
-
 from lionagi.core.schema.base_node import BaseRelatableNode, BaseNode
+from lionagi.libs import ln_func_call as func_call
+from lionagi.libs.sys_util import SysUtil
 
 
 class Relationship(BaseRelatableNode):

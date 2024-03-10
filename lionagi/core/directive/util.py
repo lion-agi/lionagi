@@ -1,9 +1,11 @@
-import re
 import json
+import re
 from typing import Callable, Tuple, Dict, List, Any, Optional
 
 
-def basic_func_grammar(func_call: str) -> Callable[[str], Optional[Tuple[List[Any], Dict[str, Any]]]]:
+def basic_func_grammar(
+    func_call: str,
+) -> Callable[[str], Optional[Tuple[List[Any], Dict[str, Any]]]]:
     """
     Defines a basic function grammar for parsing string function calls into callable format.
     Parses the string to extract function arguments and keyword arguments.
@@ -32,13 +34,16 @@ def basic_func_grammar(func_call: str) -> Callable[[str], Optional[Tuple[List[An
         for part in arg_parts:
             kwarg_match = kwarg_pattern.match(part)
             if kwarg_match:
-                kwargs[kwarg_match.group("key")] = json.loads(kwarg_match.group("value"))
+                kwargs[kwarg_match.group("key")] = json.loads(
+                    kwarg_match.group("value")
+                )
             else:
                 args.append(json.loads(part))
 
         return args, kwargs
 
     return parse_call
+
 
 # def register_tool_with_grammar(self, tools: Tool, grammar: Callable[[str], Tuple[Dict, Dict]]) -> None:
 #     """Registers a tools with associated grammar for advanced parsing."""

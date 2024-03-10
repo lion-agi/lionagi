@@ -1,4 +1,3 @@
-import aiohttp
 import unittest
 from unittest.mock import AsyncMock
 

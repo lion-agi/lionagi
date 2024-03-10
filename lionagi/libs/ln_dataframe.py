@@ -4,7 +4,6 @@ import pandas as pd
 
 from lionagi.libs import ln_convert as convert
 
-
 ln_DataFrame = pd.DataFrame
 ln_Series = pd.Series
 

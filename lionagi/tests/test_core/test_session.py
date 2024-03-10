@@ -1,10 +1,11 @@
-from lionagi.core.session.sessions import Session, Branch
-
-import unittest
-from unittest.mock import patch, call, MagicMock
-import pandas as pd
 import json
+import unittest
 from datetime import datetime
+from unittest.mock import patch, MagicMock
+
+import pandas as pd
+
+from lionagi.core.session.sessions import Session, Branch
 
 
 class TestSession(unittest.TestCase):

@@ -1,9 +1,9 @@
+import unittest
+from collections import deque
+from unittest.mock import patch
+
 from lionagi.core.mail.mail_manager import MailManager
 from lionagi.core.mail.schema import BaseMail
-
-import unittest
-from unittest.mock import patch
-from collections import deque
 
 
 class MockSource:

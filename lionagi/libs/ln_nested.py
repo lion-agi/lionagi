@@ -2,8 +2,8 @@ from collections import defaultdict
 from itertools import chain
 from typing import Any, Generator, Callable
 
-from lionagi.libs.sys_util import SysUtil
 import lionagi.libs.ln_convert as convert
+from lionagi.libs.sys_util import SysUtil
 
 
 def nset(nested_structure: dict | list, indices: list[int | str], value: Any) -> None:

@@ -1,11 +1,6 @@
 from datetime import datetime
 from typing import Any
 
-from lionagi.libs import ln_convert as convert
-from lionagi.libs import ln_nested as nested
-from lionagi.libs import ln_func_call as func_call
-from lionagi.libs import ln_dataframe as dataframe
-
 from lionagi.core.message.schema import (
     System,
     Instruction,
@@ -13,7 +8,10 @@ from lionagi.core.message.schema import (
     BaseMessage,
     BranchColumns,
 )
-
+from lionagi.libs import ln_convert as convert
+from lionagi.libs import ln_dataframe as dataframe
+from lionagi.libs import ln_func_call as func_call
+from lionagi.libs import ln_nested as nested
 
 CUSTOM_TYPE = dict[str, Any] | str | list[Any] | None
 
@@ -33,7 +31,7 @@ class MessageUtil:
 
         Args:
             system: Information for creating a System message.
-            instruction: Information for creating an Instruction message.
+            instruction: Information for creating an BaseInstruction message.
             context: Context information for the message.
             response: Response data for creating a message.
             **kwargs: Additional keyword arguments for message creation.

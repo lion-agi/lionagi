@@ -20,7 +20,7 @@ branch = session.default_branch
 # Access branch information
 print(branch.messages_describe)
 print(branch.info())
-print("Last Instruction:", branch.last_instruction)
+print("Last BaseInstruction:", branch.last_instruction)
 print("Last Response:", branch.last_response)
 ```
 

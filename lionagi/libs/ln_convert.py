@@ -1,7 +1,6 @@
 import json
 import re
 from functools import singledispatch
-
 from typing import Any, Type, Iterable, Generator
 
 import pandas as pd
@@ -128,6 +127,7 @@ def _(input_, /, *args, **kwargs) -> dict[Any, Any]:
     Raises:
         ValueError: If the string cannot be decoded into a dictionary.
     """
+
     try:
         return json.loads(input_, *args, **kwargs)
     except json.JSONDecodeError as e:

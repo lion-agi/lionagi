@@ -12,7 +12,6 @@ from hashlib import sha256
 from pathlib import Path
 from typing import Any
 
-
 _timestamp_syms = ["-", ":", "."]
 
 PATH_TYPE = str | Path

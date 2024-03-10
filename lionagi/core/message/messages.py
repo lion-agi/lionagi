@@ -1,33 +1,31 @@
 from typing import Any
-from lionagi.integrations.bridge.pydantic_ import base_model as pyd
-from lionagi.libs import ln_nested as nested
-from lionagi.libs import ln_convert as convert
-from lionagi.libs import ln_dataframe as dataframe
 
 from lionagi.core.message.schema import (
     MessageField,
-    MessageRoleType,
     MessageType,
 )
-
-from lionagi.core.schema.structure import Relationship
 from lionagi.core.schema.data_node import DataNode
-
+from lionagi.core.schema.structure import Relationship
+from lionagi.integrations.bridge.pydantic_ import base_model as pyd
+from lionagi.libs import ln_convert as convert
+from lionagi.libs import ln_dataframe as dataframe
+from lionagi.libs import ln_nested as nested
 
 
 class BaseMessage(DataNode):
-    role: MessageRoleType = pyd.Field(..., alias=MessageField.ROLE.value)
+    role: str = pyd.Field(..., alias=MessageField.ROLE.value)
     sender: str = pyd.Field(..., alias=MessageField.SENDER.value)
     recipient: str = pyd.Field(..., alias=MessageField.RECIPIENT.value)
-    relationship: list[Relationship] = pyd.Field([],
-                                                 alias=MessageField.RELATIONSHIP.value)
+    relationship: list[Relationship] = pyd.Field(
+        [], alias=MessageField.RELATIONSHIP.value
+    )
 
     class Config:
-        extra = 'allow'
+        extra = "allow"
         use_enum_values = True
         populate_by_name = True
 
-    @pyd.model_validator(mode='before')
+    @pyd.model_validator(mode="before")
     def handle_extra_fields(cls, values):
         """Move undefined fields to metadata."""
         fields = set(values.keys())
@@ -35,13 +33,13 @@ class BaseMessage(DataNode):
         extra_fields = fields - defined_fields
 
         if extra_fields:
-            metadata = values.get('metadata', {})
+            metadata = values.get("metadata", {})
             for field in extra_fields:
                 if field in metadata:
                     metadata[f"{field}_1"] = values.pop(field)
                 else:
                     metadata[field] = values.pop(field)
-            values['metadata'] = metadata
+            values["metadata"] = metadata
         return values
 
     @property
@@ -55,7 +53,7 @@ class BaseMessage(DataNode):
     def _to_roled_message(self):
         out = {
             MessageField.ROLE.value: self.role,
-            MessageField.CONTENT.value: convert.to_str(self.content)
+            MessageField.CONTENT.value: convert.to_str(self.content),
         }
         return out
 
@@ -89,15 +87,23 @@ class BaseMessage(DataNode):
         return dataframe.ln_Series(out)
 
 
-class Instruction(BaseMessage):
+class BaseInstruction(BaseMessage):
 
-    def __init__(self, instruction: Any, context: Any = None, sender: str = None,
-                 recipient: str = None, relation: list[Relationship] = None, **kwargs):
-
+    def __init__(
+        self,
+        instruction: Any,
+        context: Any = None,
+        sender: str = None,
+        recipient: str = None,
+        relation: list[Relationship] = None,
+        **kwargs,
+    ):
         super().__init__(**kwargs)
         self.role = MessageType.INSTRUCTION.value[MessageField.ROLE.value]
         self.sender = sender or MessageType.INSTRUCTION.value[MessageField.SENDER.value]
-        self.recipient = recipient or MessageType.INSTRUCTION.value[MessageField.RECIPIENT.value]
+        self.recipient = (
+            recipient or MessageType.INSTRUCTION.value[MessageField.RECIPIENT.value]
+        )
         self.relationship = relation or []
 
         self.content = {MessageType.INSTRUCTION.value["content_key"]: instruction}
@@ -107,13 +113,20 @@ class Instruction(BaseMessage):
 
 class System(BaseMessage):
 
-    def __init__(self, system: Any, sender: str = None, recipient: str = None,
-                 relation: list[Relationship] = None, **kwargs):
-
+    def __init__(
+        self,
+        system: Any,
+        sender: str = None,
+        recipient: str = None,
+        relation: list[Relationship] = None,
+        **kwargs,
+    ):
         super().__init__(**kwargs)
         self.role = MessageType.SYSTEM.value[MessageField.ROLE.value]
         self.sender = sender or MessageType.SYSTEM.value[MessageField.SENDER.value]
-        self.recipient = recipient or MessageType.SYSTEM.value[MessageField.RECIPIENT.value]
+        self.recipient = (
+            recipient or MessageType.SYSTEM.value[MessageField.RECIPIENT.value]
+        )
         self.relationship = relation or []
 
         system = system or "you are a helpful assistant"
@@ -121,13 +134,23 @@ class System(BaseMessage):
 
 
 class ActionRequest(BaseMessage):
-    def __init__(self, action_request: Any, sender: str = None,
-                 recipient: str = None, relation: list[Relationship] = None, **kwargs):
+    def __init__(
+        self,
+        action_request: Any,
+        sender: str = None,
+        recipient: str = None,
+        relation: list[Relationship] = None,
+        **kwargs,
+    ):
 
         super().__init__(**kwargs)
         self.role = MessageType.ACTION_REQUEST.value[MessageField.ROLE.value]
-        self.sender = sender or MessageType.ACTION_REQUEST.value[MessageField.SENDER.value]
-        self.recipient = recipient or MessageType.ACTION_REQUEST.value[MessageField.RECIPIENT.value]
+        self.sender = (
+            sender or MessageType.ACTION_REQUEST.value[MessageField.SENDER.value]
+        )
+        self.recipient = (
+            recipient or MessageType.ACTION_REQUEST.value[MessageField.RECIPIENT.value]
+        )
         self.relationship = relation or []
         self.content = {MessageType.ACTION_REQUEST.value["content_key"]: action_request}
 
@@ -162,31 +185,48 @@ class ActionRequest(BaseMessage):
 
 class ActionResponse(BaseMessage):
 
-    def __init__(self, action_response: Any, sender: str = None,
-                 recipient: str = None, relation: list[Relationship] = None, **kwargs):
+    def __init__(
+        self,
+        action_response: Any,
+        sender: str = None,
+        recipient: str = None,
+        relation: list[Relationship] = None,
+        **kwargs,
+    ):
         super().__init__(**kwargs)
         self.role = MessageType.ACTION_RESPONSE.value[MessageField.ROLE.value]
-        self.sender = sender or MessageType.ACTION_RESPONSE.value[
-            MessageField.SENDER.value]
-        self.recipient = recipient or MessageType.ACTION_RESPONSE.value[
-            MessageField.RECIPIENT.value]
+        self.sender = (
+            sender or MessageType.ACTION_RESPONSE.value[MessageField.SENDER.value]
+        )
+        self.recipient = (
+            recipient or MessageType.ACTION_RESPONSE.value[MessageField.RECIPIENT.value]
+        )
         self.relationship = relation or []
-        self.content = {MessageType.ACTION_RESPONSE.value["content_key"]: action_response}
+        self.content = {
+            MessageType.ACTION_RESPONSE.value["content_key"]: action_response
+        }
 
     @classmethod
     def from_response(cls, response, **kwargs):
         return cls(action_response=response, **kwargs)
 
 
-
 class AssistantResponse(BaseMessage):
 
-    def __init__(self, response: Any, sender: str = None,
-                 recipient: str = None, relation: list[Relationship] = None, **kwargs):
+    def __init__(
+        self,
+        response: Any,
+        sender: str = None,
+        recipient: str = None,
+        relation: list[Relationship] = None,
+        **kwargs,
+    ):
         super().__init__(**kwargs)
         self.role = MessageType.RESPONSE.value[MessageField.ROLE.value]
         self.sender = sender or MessageType.RESPONSE.value[MessageField.SENDER.value]
-        self.recipient = recipient or MessageType.RESPONSE.value[MessageField.RECIPIENT.value]
+        self.recipient = (
+            recipient or MessageType.RESPONSE.value[MessageField.RECIPIENT.value]
+        )
         self.relationship = relation or []
         self.content = {MessageType.RESPONSE.value["content_key"]: response}
 
@@ -218,7 +258,9 @@ class Response:
                         return AssistantResponse.from_response(content_, **kwargs)
 
                     elif "action_request" in convert.to_dict(response["content"]):
-                        content_ = convert.to_dict(response["content"])["action_request"]
+                        content_ = convert.to_dict(response["content"])[
+                            "action_request"
+                        ]
                         return ActionRequest.from_response(content_, **kwargs)
 
                     else:

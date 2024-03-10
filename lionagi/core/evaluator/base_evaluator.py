@@ -1,8 +1,10 @@
-import operator
 import ast
+import operator
 from typing import Any, Dict, Tuple
 
 from lionagi.libs import to_dict
+
+
 class BaseEvaluator:
     """
     A class to evaluate mathematical and boolean expressions from strings using Python's AST.
@@ -30,7 +32,7 @@ class BaseEvaluator:
             ast.And: lambda x, y: x and y,
             ast.Or: lambda x, y: x or y,
             ast.Not: operator.not_,
-            ast.USub: operator.neg
+            ast.USub: operator.neg,
         }
         self.cache: Dict[Tuple[str, Tuple], Any] = {}
 
@@ -53,7 +55,7 @@ class BaseEvaluator:
             return self.cache[cache_key]
 
         try:
-            tree = ast.parse(expression, mode='eval')
+            tree = ast.parse(expression, mode="eval")
             result = self._evaluate_node(tree.body, context)
             self.cache[cache_key] = result
             return result
@@ -107,7 +109,7 @@ class BaseEvaluator:
     def evaluate_file(self, file_path, context, format="line"):
         """Evaluates expressions from a file."""
         if format == "line":
-            with open(file_path, 'r') as file:
+            with open(file_path, "r") as file:
                 last_result = None
                 for line in file:
                     line = line.strip()
@@ -115,7 +117,7 @@ class BaseEvaluator:
                         last_result = self.evaluate(line, context)
                 return last_result
         elif format == "json":
-            with open(file_path, 'r') as file:
+            with open(file_path, "r") as file:
                 data = to_dict(file)
                 last_result = None
                 for expression in data:
@@ -127,7 +129,7 @@ class BaseEvaluator:
     def validate_expression(self, expression):
         """Validates the given expression."""
         try:
-            tree = ast.parse(expression, mode='eval')
+            tree = ast.parse(expression, mode="eval")
             self._validate_node(tree.body)
             return True, "Expression is valid."
         except Exception as e:
@@ -135,8 +137,15 @@ class BaseEvaluator:
 
     def _validate_node(self, node):
         """Validates an AST node."""
-        if isinstance(node, (ast.BinOp, ast.Compare, ast.BoolOp, ast.Name, ast.Constant)):
-            if isinstance(node, ast.BinOp) and type(node.op) not in self.allowed_operators:
-                raise ValueError(f"Operation {type(node.op).__name__} is not supported.")
+        if isinstance(
+            node, (ast.BinOp, ast.Compare, ast.BoolOp, ast.Name, ast.Constant)
+        ):
+            if (
+                isinstance(node, ast.BinOp)
+                and type(node.op) not in self.allowed_operators
+            ):
+                raise ValueError(
+                    f"Operation {type(node.op).__name__} is not supported."
+                )
         else:
             raise ValueError("Unsupported node type in expression.")

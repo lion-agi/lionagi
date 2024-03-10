@@ -1,20 +1,18 @@
 from abc import ABC
 from typing import Any
 
-from lionagi.libs.sys_util import SysUtil, PATH_TYPE
-
 import lionagi.libs.ln_convert as convert
 import lionagi.libs.ln_dataframe as dataframe
-
-from lionagi.core.schema.base_node import BaseRelatableNode
-from lionagi.core.schema.data_logger import DataLogger, DLog
 from lionagi.core.message.schema import (
     BranchColumns,
     System,
     Instruction,
     BaseMessage,
 )
+from lionagi.core.schema.base_node import BaseRelatableNode
+from lionagi.core.schema.data_logger import DataLogger, DLog
 from lionagi.core.session.util import MessageUtil
+from lionagi.libs.sys_util import SysUtil, PATH_TYPE
 
 
 class BaseBranch(BaseRelatableNode, ABC):
@@ -63,7 +61,7 @@ class BaseBranch(BaseRelatableNode, ABC):
 
         Args:
             system: Information for creating a System message.
-            instruction: Information for creating an Instruction message.
+            instruction: Information for creating an BaseInstruction message.
             context: Context information for the message.
             response: Response data for creating a message.
             **kwargs: Additional keyword arguments for message creation.

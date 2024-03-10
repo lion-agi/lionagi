@@ -1,6 +1,8 @@
-from typing import Callable, Dict, Any, Optional, Union
 import asyncio
+from typing import Callable, Dict, Any, Optional, Union
+
 from working.branch import Branch
+
 
 class Agent:
     def __init__(self, name: Optional[str] = None):
@@ -45,10 +47,13 @@ class Agent:
         raise NotImplementedError("Subclasses must implement this method.")
 
     async def receive_instruction(self, instruction: Any):
-        instruction = await self.apply_middleware(instruction, self.pre_middleware_stack)
+        instruction = await self.apply_middleware(
+            instruction, self.pre_middleware_stack
+        )
         response = await self.process_instruction(instruction)
         response = await self.apply_middleware(response, self.post_middleware_stack)
         return response
+
 
 class ConversationalAgent(Agent):
     def __init__(self, name: Optional[str] = None):
@@ -89,15 +94,23 @@ class ConversationalAgent(Agent):
         processed_instruction = await self.process_instruction(instruction)
         response = await self.generate_response(processed_instruction)
         response = await self.apply_middleware(response, "assistant_response")
-        
+
         # Abstracted conversation history management.
         self.conversation_history.append({"type": "instruction", "data": instruction})
-        self.conversation_history.append({"type": "assistant_response", "data": response})
-        
+        self.conversation_history.append(
+            {"type": "assistant_response", "data": response}
+        )
+
         return response
 
+
 class TaskAgent(ConversationalAgent):
-    def __init__(self, name: Optional[str] = None, task_handlers: Optional[Dict[str, Callable]] = None, fallback_handler: Optional[Callable] = None):
+    def __init__(
+        self,
+        name: Optional[str] = None,
+        task_handlers: Optional[Dict[str, Callable]] = None,
+        fallback_handler: Optional[Callable] = None,
+    ):
         super().__init__(name)
         self.task_handlers = task_handlers or {}
         self.fallback_handler = fallback_handler
@@ -137,7 +150,9 @@ class TaskAgent(ConversationalAgent):
 
 
 class LearningAgent(TaskAgent):
-    def __init__(self, name: Optional[str] = None, learning_model: Optional[Any] = None):
+    def __init__(
+        self, name: Optional[str] = None, learning_model: Optional[Any] = None
+    ):
         super().__init__(name)
         self.learning_model = learning_model
 
@@ -170,12 +185,16 @@ class LearningAgent(TaskAgent):
         adapted_response = await self.adapt_response_strategy(instruction)
         return adapted_response
 
+
 from abc import ABC, abstractmethod
 from typing import Any, Dict
 
+
 class AgentInterface(ABC):
     @abstractmethod
-    async def receive_instruction(self, instruction: Dict[str, Any], context: Dict[str, Any]) -> None:
+    async def receive_instruction(
+        self, instruction: Dict[str, Any], context: Dict[str, Any]
+    ) -> None:
         """
         Process a received instruction along with its context.
         """
@@ -188,8 +207,9 @@ class AgentInterface(ABC):
         """
         pass
 
+
 class ServiceAccessLayer:
-    def __init__(self, branch_reference: 'Branch'):
+    def __init__(self, branch_reference: "Branch"):
         self.branch_reference = branch_reference
 
     async def use_tool(self, tool_name: str, *args, **kwargs) -> Any:
@@ -205,9 +225,10 @@ class ServiceAccessLayer:
         """
         service = self.branch_reference.get_service(service_name)
         return await service(*args, **kwargs)
-    
+
+
 class ConversationContextManager:
-    def __init__(self, conversation_storage: 'ConversationStorage'):
+    def __init__(self, conversation_storage: "ConversationStorage"):
         self.conversation_storage = conversation_storage
 
     def get_conversation_history(self, conversation_id: str) -> Dict[str, Any]:
@@ -216,11 +237,14 @@ class ConversationContextManager:
         """
         return self.conversation_storage.get_history(conversation_id)
 
-    def update_conversation_context(self, conversation_id: str, update: Dict[str, Any]) -> None:
+    def update_conversation_context(
+        self, conversation_id: str, update: Dict[str, Any]
+    ) -> None:
         """
         Update the conversation context for a specific conversation ID.
         """
         self.conversation_storage.update_context(conversation_id, update)
+
 
 class LearningFramework:
     def __init__(self, learning_model: Any, learning_service: Any):
@@ -244,4 +268,3 @@ class LearningFramework:
         # Use the learning model to determine the adaptation strategy
         adaptation_strategy = self.learning_model.determine_strategy(context)
         return adaptation_strategy
-
