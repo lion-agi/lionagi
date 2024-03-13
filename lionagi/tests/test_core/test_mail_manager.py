@@ -1,5 +1,5 @@
-from lionagi.core.session.base.mail_manager import MailManager
-from lionagi.core.session.base.schema import BaseMail
+from lionagi.core.mail.mail_manager import MailManager
+from lionagi.core.mail.schema import BaseMail
 
 import unittest
 from unittest.mock import patch
