@@ -60,7 +60,12 @@ class MessageUtil:
             if response:
                 msg = Response(response=response, **kwargs)
             elif instruction:
-                msg = Instruction(instruction=instruction, context=context, output_fields=output_fields, **kwargs)
+                msg = Instruction(
+                    instruction=instruction,
+                    context=context,
+                    output_fields=output_fields,
+                    **kwargs,
+                )
             elif system:
                 msg = System(system=system, **kwargs)
             return msg

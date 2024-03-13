@@ -82,7 +82,13 @@ class MonoChat(BaseMonoFlow):
         """
         if system:
             self.branch.change_first_system_message(system)
-        self.branch.add_message(instruction=instruction, context=context, sender=sender, output_fields=output_fields)
+        self.branch.add_message(
+            instruction=instruction,
+            context=context,
+            sender=sender,
+            output_fields=output_fields,
+        )
+
 
         if "tool_parsed" in kwargs:
             kwargs.pop("tool_parsed")
@@ -100,7 +106,7 @@ class MonoChat(BaseMonoFlow):
 
         async def _output():
             content_ = self.branch.last_message_content
-            
+
             if invoke:
                 try:
                     tool_uses = content_
@@ -125,7 +131,8 @@ class MonoChat(BaseMonoFlow):
                 except:
                     pass
             if out:
-                out_ = ''
+                out_ = ""
+
                 if (
                     len(content_.items()) == 1
                     and len(nested.get_flattened_keys(content_)) == 1
@@ -136,10 +143,14 @@ class MonoChat(BaseMonoFlow):
                 
                 if output_fields:
                     try:
-                        return ParseUtil.md_to_json(out_['response']) if 'response' in out_ else ParseUtil.md_to_json(out_)
+                        return (
+                            ParseUtil.md_to_json(out_["response"])
+                            if "response" in out_
+                            else ParseUtil.md_to_json(out_)
+                        )
                     except:
                         pass
-                
+
                 return out_
 
         return await _output()

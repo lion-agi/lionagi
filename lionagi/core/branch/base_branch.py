@@ -59,6 +59,7 @@ class BaseBranch(BaseRelatableNode, ABC):
         response: dict | list | BaseMessage | None = None,
         output_fields = None,
         **kwargs,
+      
     ) -> None:
         """
         Adds a message to the branch.

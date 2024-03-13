@@ -155,7 +155,11 @@ class Instruction(BaseMessage):
     """
 
     def __init__(
-        self, instruction: dict | list | str, context=None, sender: str | None = None, output_fields=None
+        self,
+        instruction: dict | list | str,
+        context=None,
+        sender: str | None = None,
+        output_fields=None,
     ):
         super().__init__(
             role="user", sender=sender or "user", content={"instruction": instruction}
@@ -174,11 +178,7 @@ class Instruction(BaseMessage):
             }
             ```
             """
-            self.content.update(
-                {
-                    "response_format": format
-                }
-            )
+            self.content.update({"response_format": format})
 
 
 class System(BaseMessage):
@@ -486,5 +486,3 @@ class Response(BaseMessage):
 #         return cls(response=response, sender=sender, recipient=recipient,
 #                    metadata=metadata,
 #                    relation=relation, **kwargs)
-
-

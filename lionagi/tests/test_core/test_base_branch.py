@@ -1,5 +1,8 @@
 from lionagi.core.branch.base_branch import BaseBranch
-from lionagi.core.branch.util import MessageUtil, System
+from lionagi.core.branch.util import MessageUtil
+from lionagi.core.messages.schema import System
+from lionagi.core.schema import DataLogger
+
 
 import unittest
 from unittest.mock import patch, MagicMock
@@ -13,7 +16,7 @@ class TestBaseBranch(unittest.TestCase):
     def setUp(self):
         # Patching DataLogger to avoid filesystem interactions during tests
         self.patcher = patch(
-            "lionagi.core.session.base.base_branch.DataLogger", autospec=True
+            "lionagi.core.branch.base_branch.DataLogger", autospec=True
         )
         self.MockDataLogger = self.patcher.start()
         self.addCleanup(self.patcher.stop)
@@ -276,7 +279,7 @@ class TestBaseBranch(unittest.TestCase):
         pd.testing.assert_frame_equal(branch.messages, mock_messages_df)
 
     @patch(
-        "lionagi.core.session.base.base_branch.SysUtil.create_path",
+        "lionagi.libs.sys_util.SysUtil.create_path",
         return_value="path/to/messages.csv",
     )
     @patch.object(pd.DataFrame, "to_csv")
@@ -299,7 +302,7 @@ class TestBaseBranch(unittest.TestCase):
         assert not self.branch.messages.empty
 
     @patch(
-        "lionagi.core.session.base.base_branch.SysUtil.create_path",
+        "lionagi.libs.sys_util.SysUtil.create_path",
         return_value="path/to/messages.json",
     )
     @patch.object(pd.DataFrame, "to_json")
