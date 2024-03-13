@@ -13,6 +13,7 @@ from lionagi.core.tool.tool_manager import ToolManager
 from lionagi.core.mail.mail_manager import MailManager
 from lionagi.core.messages.schema import System, Instruction
 from lionagi.core.branch.branch import Branch
+from lionagi.core.flow.polyflow import PolyChat
 
 
 class Session:
@@ -644,6 +645,45 @@ class Session:
             **kwargs,
         )
 
+    async def parallel_chat(
+        self,
+        instruction: Instruction | str,
+        num_instances=1,
+        context=None,
+        sender=None,
+        branch_system=None,
+        messages=None,
+        tools=False,
+        out=True,
+        invoke: bool = True,
+        output_fields=None,
+        persist_path=None,
+        branch_config={},
+        explode=False, **kwargs):
+        """
+        parallel chat
+        """
+        
+        flow = PolyChat(self)
+        
+        return await flow.parallel_chat(
+            instruction,
+            num_instances=num_instances,
+            context=context,
+            sender=sender,
+            branch_system=branch_system,
+            messages=messages,
+            tools=tools,
+            out=out,
+            invoke=invoke,
+            output_fields=output_fields,
+            persist_path=persist_path,
+            branch_config=branch_config,
+            explode=explode,
+            **kwargs,
+        )
+
+
     # ---- branch manipulation ---- #
     def new_branch(
         self,
@@ -811,6 +851,11 @@ class Session:
                 self.default_branch_name = to_name
                 self.default_branch = to_branch
             self.delete_branch(from_, verbose=False)
+
+    def take_branch(self, branch):
+        self.branches[branch.branch_name] = branch
+        self.branch_manager.sources[branch.branch_name] = branch
+        self.branch_manager.mails[branch.branch_name] = {}
 
     def collect(self, from_: str | Branch | list[str | Branch] | None = None):
         """

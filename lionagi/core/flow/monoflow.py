@@ -8,19 +8,7 @@ from lionagi.libs.ln_parse import ParseUtil
 from lionagi.core.schema.base_node import Tool, TOOL_TYPE
 from lionagi.core.messages.schema import Instruction
 
-
-class BaseMonoFlow:
-
-    def __init__(self, branch) -> None:
-        self.branch = branch
-
-    @classmethod
-    def class_name(cls) -> str:
-        """
-        Returns the class name of the flow.
-        """
-        return cls.__name__
-
+from .baseflow import BaseMonoFlow
 
 class MonoChat(BaseMonoFlow):
 
