@@ -363,7 +363,7 @@ class BaseComponent(pyd.ln_BaseModel, ABC):
             if isinstance(validator, type):
                 if not isinstance(value, validator):
                     return False
-            elif isinstance(validator, Callable):
+            elif Callable(validator):
                 if not validator(value):
                     return False
         return True

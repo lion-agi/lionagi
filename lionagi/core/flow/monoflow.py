@@ -3,71 +3,31 @@ from typing import Any
 from lionagi.libs import ln_convert as convert
 from lionagi.libs import ln_func_call as func_call
 from lionagi.libs import ln_nested as nested
+from lionagi.libs.ln_parse import ParseUtil
 
 from lionagi.core.schema.base_node import Tool, TOOL_TYPE
-from lionagi.core.session.base.schema import Instruction, System
+from lionagi.core.messages.schema import Instruction
 
 
 class BaseMonoFlow:
-    """
-    Base class for monolithic flow structures in the application.
-
-    This class serves as a base for implementing various types of monolithic flows,
-    providing shared functionality across different implementations.
-
-    Attributes:
-        branch: The branch associated with the flow.
-    """
 
     def __init__(self, branch) -> None:
-        """
-        Initializes a new instance of BaseMonoFlow.
-
-        Args:
-            branch: The branch to associate with this flow.
-        """
         self.branch = branch
 
     @classmethod
     def class_name(cls) -> str:
         """
-        Returns the class name of the current flow.
-
-        Returns:
-            str: The name of the class.
+        Returns the class name of the flow.
         """
         return cls.__name__
 
 
 class MonoChat(BaseMonoFlow):
-    """
-    Represents a monolithic chat flow, handling chat completions and interactions.
-
-    Extends `BaseMonoFlow` to process chat completions, manage chat sessions, and interact
-    with external services or tools as part of the chat process.
-
-    Attributes:
-        branch: The branch associated with the chat flow.
-    """
 
     def __init__(self, branch) -> None:
-        """
-         Initializes a new instance of MonoChat.
-
-         Args:
-             branch: The branch to associate with this chat flow.
-         """
         super().__init__(branch)
 
     def process_chatcompletion(self, payload, completion, sender):
-        """
-         Processes the completion result of a chat request.
-
-         Args:
-             payload: The input payload for the chat request.
-             completion: The completion result received from the chat service.
-             sender: The identifier of the sender for message attribution.
-         """
         if "choices" in completion:
             add_msg_config = {"response": completion["choices"][0]}
             if sender is not None:
@@ -80,14 +40,6 @@ class MonoChat(BaseMonoFlow):
             self.branch.status_tracker.num_tasks_failed += 1
 
     async def call_chatcompletion(self, sender=None, with_sender=False, **kwargs):
-        """
-        Calls the chat completion service and processes the result.
-
-        Args:
-            sender: Optional sender information for message attribution.
-            with_sender: Specifies whether to include sender information in chat messages.
-            **kwargs: Additional keyword arguments for the chat completion request.
-        """
         messages = (
             self.branch.chat_messages
             if not with_sender
@@ -107,27 +59,34 @@ class MonoChat(BaseMonoFlow):
         tools=False,
         out: bool = True,
         invoke: bool = True,
+        output_fields=None,
         **kwargs,
     ) -> Any:
         """
-         Initiates a chat session with an instruction and optional parameters.
+        a chat conversation with LLM, processing instructions and system messages, optionally invoking tools.
 
-         Args:
-             instruction: The instruction or prompt for the chat session.
-             context: Optional context to provide additional information.
-             sender: Identifier of the message sender.
-             system: Optional system message to start the session with.
-             tools: Specifies whether to use tools in the chat session.
-             out: If True, outputs the response from the chat session.
-             invoke: If True, invokes any actionable responses.
-             **kwargs: Additional keyword arguments for the chat session.
+        Args:
+            branch: The Branch instance to perform chat operations.
+            instruction (Union[Instruction, str]): The instruction for the chat.
+            context (Optional[Any]): Additional context for the chat.
+            sender (Optional[str]): The sender of the chat message.
+            system (Optional[Union[System, str, Dict[str, Any]]]): System message to be processed.
+            tools (Union[bool, Tool, List[Tool], str, List[str]]): Specifies tools to be invoked.
+            out (bool): If True, outputs the chat response.
+            invoke (bool): If True, invokes tools as part of the chat.
+            **kwargs: Arbitrary keyword arguments for chat completion.
 
-         Returns:
-             Any: The result of the chat session.
-         """
+        Examples:
+            >>> await ChatFlow.chat(branch, "Ask about user preferences")
+        """
         if system:
             self.branch.change_first_system_message(system)
-        self.branch.add_message(instruction=instruction, context=context, sender=sender)
+        self.branch.add_message(
+            instruction=instruction,
+            context=context,
+            sender=sender,
+            output_fields=output_fields,
+        )
 
         if "tool_parsed" in kwargs:
             kwargs.pop("tool_parsed")
@@ -145,6 +104,7 @@ class MonoChat(BaseMonoFlow):
 
         async def _output():
             content_ = self.branch.last_message_content
+
             if invoke:
                 try:
                     tool_uses = content_
@@ -169,13 +129,26 @@ class MonoChat(BaseMonoFlow):
                 except:
                     pass
             if out:
+                out_ = ""
                 if (
                     len(content_.items()) == 1
                     and len(nested.get_flattened_keys(content_)) == 1
                 ):
                     key = nested.get_flattened_keys(content_)[0]
-                    return content_[key]
-                return content_
+                    out_ = content_[key]
+                out_ = content_
+
+                if output_fields:
+                    try:
+                        return (
+                            ParseUtil.md_to_json(out_["response"])
+                            if "response" in out_
+                            else ParseUtil.md_to_json(out_)
+                        )
+                    except:
+                        pass
+
+                return out_
 
         return await _output()
 
@@ -293,18 +266,6 @@ class MonoChat(BaseMonoFlow):
         num_rounds: int = 1,
         **kwargs,
     ):
-        """
-        Processes a reaction or response to an instruction with multiple rounds of interaction.
-
-        Args:
-            instruction: The instruction or task for the reaction.
-            context: Optional context for the task.
-            sender: Sender of the instruction.
-            system: Optional system message to include.
-            tools: Tools to utilize during the reaction.
-            num_rounds: Number of interaction rounds to execute.
-            **kwargs: Additional keyword arguments for the reaction process.
-        """
 
         config = self._create_followup_config(tools, **kwargs)
 
@@ -351,19 +312,6 @@ class MonoChat(BaseMonoFlow):
         out=True,
         **kwargs,
     ) -> None:
-        """
-        Automatically manages follow-up interactions based on an instruction.
-
-        Args:
-            instruction: The initial instruction for follow-up.
-            context: Optional context for the instruction.
-            sender: The sender of the instruction.
-            system: Optional system message for initial setup.
-            tools: Tools to be considered for follow-up actions.
-            max_followup: Maximum number of follow-up interactions allowed.
-            out: Specifies whether to output the final result.
-            **kwargs: Additional keyword arguments for follow-up configuration.
-        """
         config = self._create_followup_config(tools, **kwargs)
 
         n_tries = 0
@@ -417,20 +365,7 @@ class MonoChat(BaseMonoFlow):
         out=True,
         **kwargs,
     ) -> None:
-        """
-        Manages a specified number of follow-up interactions for a given instruction.
-
-        Args:
-            instruction: The instruction for which follow-ups are being managed.
-            context: Optional context relevant to the instruction.
-            sender: The identifier of the sender.
-            system: Optional initial system message for setup.
-            tools: Specifies the use of tools in the follow-up process.
-            max_followup: The maximum number of follow-ups to conduct.
-            out: Indicates whether to output the final result.
-            **kwargs: Additional keyword arguments for configuring the follow-up.
-        """
-        config = self._create_followup_config(tools, **kwargs)
+        config = self.create_followup_config(tools, **kwargs)
 
         n_tries = 0
         while (max_followup - n_tries) > 0:
