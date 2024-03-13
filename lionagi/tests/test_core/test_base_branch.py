@@ -3,8 +3,9 @@ from lionagi.core.branch.util import MessageUtil
 from lionagi.core.messages.schema import System
 from lionagi.core.schema import DataLogger
 
+
 import unittest
-from unittest.mock import patch, MagicMock, create_autospec
+from unittest.mock import patch, MagicMock
 import pandas as pd
 from datetime import datetime
 import json
