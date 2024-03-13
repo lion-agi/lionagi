@@ -12,10 +12,11 @@ from lionagi.core.schema.data_logger import DataLogger
 from lionagi.core.tool.tool_manager import ToolManager, func_to_tool
 from lionagi.core.flow.monoflow import MonoChat
 
-from lionagi.core.session.base.base_branch import BaseBranch
-from lionagi.core.session.base.schema import BaseMail, Instruction, System
+from lionagi.core.branch.base_branch import BaseBranch
+from lionagi.core.messages.schema import Instruction, System
+from lionagi.core.mail.schema import BaseMail
 
-from lionagi.core.session.base.util import MessageUtil
+from lionagi.core.branch.util import MessageUtil
 
 
 from dotenv import load_dotenv
@@ -324,6 +325,7 @@ class Branch(BaseBranch):
         tools: Union[bool, T, list[T], str, list[str]] = False,
         out: bool = True,
         invoke: bool = True,
+        output_fields=None,
         **kwargs,
     ) -> Any:
 
@@ -336,6 +338,7 @@ class Branch(BaseBranch):
             tools=tools,
             out=out,
             invoke=invoke,
+            output_fields=output_fields,
             **kwargs,
         )
 

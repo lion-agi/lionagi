@@ -1,6 +1,6 @@
 from typing import Dict, Any
 from collections import deque
-from lionagi.core.session.base.schema import BaseMail
+from lionagi.core.mail.schema import BaseMail
 
 
 class MailManager:

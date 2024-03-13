@@ -8,13 +8,14 @@ import lionagi.libs.ln_dataframe as dataframe
 
 from lionagi.core.schema.base_node import BaseRelatableNode
 from lionagi.core.schema.data_logger import DataLogger, DLog
-from lionagi.core.session.base.schema import (
+from lionagi.core.messages.schema import (
     BranchColumns,
     System,
     Instruction,
     BaseMessage,
 )
-from lionagi.core.session.base.util import MessageUtil
+from lionagi.core.branch.util import MessageUtil
+from lionagi.libs.ln_parse import ParseUtil
 
 
 class BaseBranch(BaseRelatableNode, ABC):
@@ -56,6 +57,7 @@ class BaseBranch(BaseRelatableNode, ABC):
         instruction: dict | list | Instruction | None = None,
         context: str | dict[str, Any] | None = None,
         response: dict | list | BaseMessage | None = None,
+        output_fields = None,
         **kwargs,
     ) -> None:
         """
@@ -73,6 +75,7 @@ class BaseBranch(BaseRelatableNode, ABC):
             instruction=instruction,
             context=context,
             response=response,
+            output_fields=output_fields,
             **kwargs,
         )
 

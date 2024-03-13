@@ -1,6 +1,5 @@
 from collections import deque
 from typing import Tuple
-import asyncio
 
 from lionagi.libs.ln_api import BaseService
 from lionagi.libs.sys_util import PATH_TYPE
@@ -11,9 +10,9 @@ from lionagi.libs import ln_dataframe as dataframe
 from lionagi.core.schema.base_node import TOOL_TYPE, Tool
 from lionagi.core.schema.data_logger import DataLogger
 from lionagi.core.tool.tool_manager import ToolManager
-from lionagi.core.session.base.mail_manager import MailManager
-from lionagi.core.session.base.schema import System, Instruction
-from lionagi.core.session.branch import Branch
+from lionagi.core.mail.mail_manager import MailManager
+from lionagi.core.messages.schema import System, Instruction
+from lionagi.core.branch.branch import Branch
 
 
 class Session:
@@ -531,6 +530,7 @@ class Session:
         tools: TOOL_TYPE = False,
         out: bool = True,
         invoke: bool = True,
+        output_fields=None,
         **kwargs,
     ) -> str | None:
         """
@@ -560,6 +560,7 @@ class Session:
             tools=tools,
             out=out,
             invoke=invoke,
+            output_fields=output_fields,
             **kwargs,
         )
 
