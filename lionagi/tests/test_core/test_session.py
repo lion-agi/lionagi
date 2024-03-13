@@ -1,4 +1,5 @@
-from lionagi.core.session.session import Session, Branch
+from lionagi.core.branch.branch import Branch
+from lionagi.core.session.session import Session
 
 import unittest
 from unittest.mock import patch, call, MagicMock

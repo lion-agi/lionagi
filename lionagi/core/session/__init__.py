@@ -1,6 +1,5 @@
-from .base import *
 from .session import Session
-from .branch import Branch
+from lionagi.core.branch.branch import Branch
 
 
-__all__ = ["Instruction", "System", "Response", "MailManager", "Session", "Branch"]
+__all__ = ["Session", "Branch"]

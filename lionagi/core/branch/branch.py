@@ -12,10 +12,11 @@ from lionagi.core.schema.data_logger import DataLogger
 from lionagi.core.tool.tool_manager import ToolManager, func_to_tool
 from lionagi.core.flow.monoflow import MonoChat
 
-from lionagi.core.session.base.base_branch import BaseBranch
-from lionagi.core.session.base.schema import BaseMail, Instruction, System
+from lionagi.core.branch.base_branch import BaseBranch
+from lionagi.core.messages.schema import Instruction, System
+from lionagi.core.mail.schema import BaseMail
 
-from lionagi.core.session.base.util import MessageUtil
+from lionagi.core.branch.util import MessageUtil
 
 
 from dotenv import load_dotenv
@@ -27,21 +28,6 @@ T = TypeVar("T", bound=Tool)
 
 
 class Branch(BaseBranch):
-    """
-    Represents a specific branch of conversation with enhanced functionality for chat, mail management,
-    and tool integration.
-
-    Extends `BaseBranch` to include handling for service interactions, tool management, and specialized chat flows.
-
-    Attributes:
-        branch_name (str | None): The name of the branch, optional.
-        sender (str | None): Default sender identifier for outgoing messages and mails.
-        service (BaseService | None): Service used for external communications and operations.
-        llmconfig (dict[str, str | int | dict] | None): Configuration for language model services.
-        tool_manager (ToolManager | None): Manages tools and functionalities available within the branch.
-        pending_ins (Dict[str, deque]): Queues of incoming mail items, organized by sender.
-        pending_outs (deque): Queue of outgoing mail items.
-    """
 
     def __init__(
         self,
@@ -58,22 +44,6 @@ class Branch(BaseBranch):
         tool_manager: ToolManager | None = None,
         **kwargs,
     ):
-        """
-        Initializes a new Branch instance with optional parameters for customizing the branch's capabilities and behaviors.
-
-        Args:
-            branch_name (str | None): Name of the branch.
-            system (Union[dict, list, System, None]): Initial system message or data.
-            messages (Union[dataframe.ln_DataFrame, None]): Predefined set of messages to load into the branch.
-            service (Union[BaseService, None]): External service for operations like chat completions.
-            sender (str | None): Default identifier for the sender of outgoing messages.
-            llmconfig (Union[dict[str, str | int | dict], None]): Configuration settings for language models.
-            tools (Union[list[Callable | Tool], None]): List of tools or functionalities to register with the branch.
-            datalogger (Union[None, DataLogger]): Logger for tracking branch activity.
-            persist_path (Union[PATH_TYPE, None]): Filesystem path for persisting branch data.
-            tool_manager (Union[ToolManager, None]): Tool manager for the branch.
-            **kwargs: Additional keyword arguments for base initialization.
-        """
 
         # init base class
         super().__init__(
@@ -133,16 +103,6 @@ class Branch(BaseBranch):
         read_kwargs=None,
         **kwargs,
     ):
-        """
-        Creates a branch from messages loaded from a CSV file, along with optional configurations.
-
-        Args:
-            filepath: Path to the CSV file containing messages to initialize the branch with.
-            Other parameters are similar to the `__init__` method.
-
-        Returns:
-            Branch: An instance of `Branch` initialized with messages from the specified CSV file.
-        """
 
         self = cls._from_csv(
             filepath=filepath,
@@ -175,16 +135,6 @@ class Branch(BaseBranch):
         read_kwargs=None,
         **kwargs,
     ):
-        """
-        Creates a branch from messages loaded from a JSON file, incorporating additional configurations as needed.
-
-        Args:
-            filepath: Path to the JSON file containing messages to initialize the branch with.
-            Other parameters are analogous to those in the `__init__` method.
-
-        Returns:
-            Branch: An instance of `Branch` initialized with messages from the specified JSON file.
-        """
 
         self = cls._from_json(
             filepath=filepath,
@@ -203,12 +153,7 @@ class Branch(BaseBranch):
         return self
 
     def messages_describe(self) -> dict[str, Any]:
-        """
-        Provides a descriptive summary of the messages within the branch.
 
-        Returns:
-            dict[str, Any]: A dictionary containing a summary of the messages, categorized by role and sender, along with the total message count and a list of messages.
-        """
         return dict(
             total_messages=len(self.messages),
             summary_by_role=self._info(),
@@ -220,23 +165,11 @@ class Branch(BaseBranch):
 
     @property
     def has_tools(self) -> bool:
-        """
-        Indicates whether the branch has any registered tools available.
-
-        Returns:
-            bool: True if there are registered tools within the tool manager, False otherwise.
-        """
         return self.tool_manager.registry != {}
 
     # todo: also update other attributes
     def merge_branch(self, branch: "Branch", update: bool = True) -> None:
-        """
-        Merges messages, logs, and tools from another branch into this branch.
 
-        Args:
-            branch: The `Branch` instance to merge into this branch.
-            update (bool): If True, updates existing tools and logs with those from the merging branch. If False, only adds new items that do not exist in this branch.
-        """
         message_copy = branch.messages.copy()
         self.messages = self.messages.merge(message_copy, how="outer")
         self.datalogger.extend(branch.datalogger.log)
@@ -255,15 +188,6 @@ class Branch(BaseBranch):
 
     # ----- tool manager methods ----- #
     def register_tools(self, tools: Union[Tool, list[Tool]]) -> None:
-        """
-        Registers a list of tools or a single tool with the branch's tool manager.
-
-        Args:
-            tools: A single `Tool` object or a list of `Tool` objects to be registered.
-
-        This method integrates provided tools into the branch's operational context, making them available for
-        use in processing and responding within the branch's workflows.
-        """
 
         if not isinstance(tools, list):
             tools = [tools]
@@ -274,19 +198,6 @@ class Branch(BaseBranch):
         tools: Union[T, list[T], str, list[str]],
         verbose: bool = True,
     ) -> bool:
-        """
-        Removes specified tools from the branch's tool manager.
-
-        Args:
-            tools: A tool (or its identifier string) or a list of tools (or their identifier strings) to be deleted.
-            verbose (bool): If True, prints a confirmation message upon successful deletion.
-
-        Returns:
-            bool: True if the tool(s) were successfully deleted, False otherwise.
-
-        This method allows for the dynamic management of tools within a branch, enabling the removal of tools
-        that are no longer needed or relevant to the branch's operations.
-        """
 
         if not isinstance(tools, list):
             tools = [tools]
@@ -309,17 +220,7 @@ class Branch(BaseBranch):
         return False
 
     def send(self, recipient: str, category: str, package: Any) -> None:
-        """
-        Creates and enqueues a mail item for sending to a specified recipient.
 
-        Args:
-            recipient (str): The identifier of the recipient.
-            category (str): The category of the mail, used for routing and processing.
-            package (Any): The content of the mail.
-
-        This method facilitates the internal communication between different parts of the system, using categorized
-        mails to carry data, instructions, or responses.
-        """
         mail_ = BaseMail(
             sender=self.sender, recipient=recipient, category=category, package=package
         )
@@ -333,22 +234,6 @@ class Branch(BaseBranch):
         service: bool = True,
         llmconfig: bool = True,
     ) -> None:
-        """
-        Processes incoming mail items from a specified sender, based on category flags.
-
-        Args:
-            sender (str): The identifier of the sender whose mail is being processed.
-            messages (bool): If True, processes incoming mails categorized as messages.
-            tools (bool): If True, processes incoming mails categorized as tools.
-            service (bool): If True, processes incoming mails categorized as service updates.
-            llmconfig (bool): If True, processes incoming mails containing llmconfig updates.
-
-        Raises:
-            ValueError: If no mails are found from the specified sender.
-
-        This method handles the unpacking and integration of content from received mails into the branch's operational
-        context, based on the category of each mail item.
-        """
 
         skipped_requests = deque()
         if sender not in self.pending_ins:
@@ -387,30 +272,12 @@ class Branch(BaseBranch):
             self.pending_ins.pop(sender)
 
     def receive_all(self) -> None:
-        """
-        Processes all pending incoming mail from all senders.
 
-        This method iterates through all senders with pending mails, processing each according to its
-        category and the branch's current operational context.
-        """
         for key in list(self.pending_ins.keys()):
             self.receive(key)
 
     @staticmethod
     def _add_service(service, llmconfig):
-        """
-        Adds an external service and its configuration to the branch.
-
-        Args:
-            service: The service to be added to the branch.
-            llmconfig: Configuration details for the language model service.
-
-        Returns:
-            A tuple containing the added service and its configuration.
-
-        This internal method ensures the branch is equipped with an external service for processing
-        requests and responses, along with the necessary configuration.
-        """
         from lionagi.integrations.provider.oai import OpenAIService
 
         if service is None:
@@ -432,28 +299,19 @@ class Branch(BaseBranch):
 
     def _is_invoked(self) -> bool:
         """
-        Determines if the branch has been invoked with an actionable response.
+        Check if the conversation has been invoked with an action response.
 
         Returns:
-            bool: True if the last message in the branch contains an action response indicating that
-                  an action has been taken or needs to be taken, False otherwise.
+            bool: True if the conversation has been invoked, False otherwise.
 
-        This method aids in identifying branches where an automated process has been triggered,
-        requiring attention or further action.
         """
         content = self.messages.iloc[-1]["content"]
         try:
-            action_response = convert.to_dict(content)["action_response"]
-            if convert.to_dict(action_response).keys() >= {
+            if MessageUtil.to_dict_content(content)["action_response"].keys() >= {
                 "function",
                 "arguments",
                 "output",
             }:
-            # if MessageUtil.to_dict_content(content)["action_response"].keys() >= {
-            #     "function",
-            #     "arguments",
-            #     "output",
-            # }:
                 return True
         except:
             return False
@@ -467,26 +325,10 @@ class Branch(BaseBranch):
         tools: Union[bool, T, list[T], str, list[str]] = False,
         out: bool = True,
         invoke: bool = True,
+        output_fields=None,
         **kwargs,
     ) -> Any:
-        """
-        Initiates a chat within the branch using the specified instruction and parameters.
 
-        This asynchronous method processes the instruction and optionally interacts with external tools or services based on the provided configurations.
-
-        Args:
-            instruction: The instruction to be processed in the chat.
-            context: Additional context for the chat, if any.
-            sender: The identifier of the sender of the instruction.
-            system: Optional system message or data to be included at the beginning of the chat.
-            tools: Specifies whether to use any tools during the chat process.
-            out (bool, optional): If True, outputs the response from the chat. Default is True.
-            invoke (bool, optional): If True, allows invocation of actions based on the chat outcome. Default is True.
-            **kwargs: Additional keyword arguments for configuring the chat process.
-
-        Returns:
-            The outcome of the chat process, which may include a response message, action invocations, or tool outputs.
-        """
         flow = MonoChat(self)
         return await flow.chat(
             instruction=instruction,
@@ -496,6 +338,7 @@ class Branch(BaseBranch):
             tools=tools,
             out=out,
             invoke=invoke,
+            output_fields=output_fields,
             **kwargs,
         )
 
@@ -509,18 +352,6 @@ class Branch(BaseBranch):
         num_rounds: int = 1,
         **kwargs,
     ):
-        """
-        Processes a reaction or response to an instruction with multiple rounds of interaction.
-
-        Args:
-            instruction: The instruction or task for the reaction.
-            context: Optional context for the task.
-            sender: Sender of the instruction.
-            system: Optional system message to include.
-            tools: Tools to utilize during the reaction.
-            num_rounds: Number of interaction rounds to execute.
-            **kwargs: Additional keyword arguments for the reaction process.
-        """
         flow = MonoChat(self)
         return await flow.ReAct(
             instruction=instruction,
@@ -543,19 +374,7 @@ class Branch(BaseBranch):
         out=True,
         **kwargs,
     ) -> None:
-        """
-        Automatically manages follow-up interactions based on an instruction.
 
-        Args:
-            instruction: The initial instruction for follow-up.
-            context: Optional context for the instruction.
-            sender: The sender of the instruction.
-            system: Optional system message for initial setup.
-            tools: Tools to be considered for follow-up actions.
-            max_followup: Maximum number of follow-up interactions allowed.
-            out: Specifies whether to output the final result.
-            **kwargs: Additional keyword arguments for follow-up configuration.
-        """
         flow = MonoChat(self)
         return await flow.auto_followup(
             instruction=instruction,
@@ -579,19 +398,7 @@ class Branch(BaseBranch):
         out=True,
         **kwargs,
     ) -> None:
-        """
-        Manages a specified number of follow-up interactions for a given instruction.
 
-        Args:
-            instruction: The instruction for which follow-ups are being managed.
-            context: Optional context relevant to the instruction.
-            sender: The identifier of the sender.
-            system: Optional initial system message for setup.
-            tools: Specifies the use of tools in the follow-up process.
-            max_followup: The maximum number of follow-ups to conduct.
-            out: Indicates whether to output the final result.
-            **kwargs: Additional keyword arguments for configuring the follow-up.
-        """
         flow = MonoChat(self)
         return await flow.followup(
             instruction=instruction,

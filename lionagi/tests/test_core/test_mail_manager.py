@@ -1,5 +1,5 @@
-from lionagi.core.session.base.mail_manager import MailManager
-from lionagi.core.session.base.schema import BaseMail
+from lionagi.core.mail.mail_manager import MailManager
+from lionagi.core.mail.schema import BaseMail
 
 import unittest
 from unittest.mock import patch
@@ -48,7 +48,7 @@ class TestMailManager(unittest.TestCase):
         with self.assertRaises(ValueError):
             self.manager.send("nonexistent_recipient")
 
-    @patch("lionagi.core.session.base.mail_manager.BaseMail")
+    @patch("lionagi.core.mail.mail_manager.BaseMail")
     def test_create_mail(self, mock_base_mail):
         """Test creating mail using the static method."""
         mail = MailManager.create_mail("sender", "recipient", "messages", "package")

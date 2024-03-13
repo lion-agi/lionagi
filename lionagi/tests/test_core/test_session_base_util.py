@@ -1,5 +1,5 @@
-from lionagi.core.session.base.util import MessageUtil
-from lionagi.core.session.base.schema import System, Instruction, Response
+from lionagi.core.branch.util import MessageUtil
+from lionagi.core.messages.schema import System, Instruction, Response
 
 import unittest
 from unittest.mock import patch

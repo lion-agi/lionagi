@@ -6,7 +6,7 @@ from lionagi.libs import ln_nested as nested
 from lionagi.libs import ln_func_call as func_call
 from lionagi.libs import ln_dataframe as dataframe
 
-from lionagi.core.session.base.schema import (
+from lionagi.core.messages.schema import (
     System,
     Instruction,
     Response,
@@ -26,6 +26,7 @@ class MessageUtil:
         instruction: Instruction | CUSTOM_TYPE = None,
         context: str | dict[str, Any] | None = None,
         response: Response | CUSTOM_TYPE = None,
+        output_fields=None,
         **kwargs,
     ) -> BaseMessage:
         """
@@ -59,7 +60,12 @@ class MessageUtil:
             if response:
                 msg = Response(response=response, **kwargs)
             elif instruction:
-                msg = Instruction(instruction=instruction, context=context, **kwargs)
+                msg = Instruction(
+                    instruction=instruction,
+                    context=context,
+                    output_fields=output_fields,
+                    **kwargs,
+                )
             elif system:
                 msg = System(system=system, **kwargs)
             return msg
