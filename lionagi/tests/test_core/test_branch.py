@@ -84,7 +84,7 @@ class TestBranch(unittest.TestCase):
         self.branch.register_tools(self.tool)
         self.assertTrue(self.branch.has_tools)
 
-    @patch("lionagi.core.session.branch.BaseBranch._from_csv")
+    @patch("lionagi.core.branch.BaseBranch._from_csv")
     def test_from_csv(self, mock_from_csv):
         """Test creating a Branch instance from a CSV file."""
         filepath = "path/to/your/csvfile.csv"
@@ -101,7 +101,7 @@ class TestBranch(unittest.TestCase):
             tool_manager=None,
         )
 
-    @patch("lionagi.core.session.branch.BaseBranch._from_json")
+    @patch("lionagi.core.branch.BaseBranch._from_json")
     def test_from_json(self, mock_from_json):
         """Test creating a Branch instance from a JSON file."""
         filepath = "path/to/your/jsonfile.json"
@@ -184,8 +184,8 @@ class TestBranchReceive(unittest.TestCase):
         self.sender = "MockSender"
         self.branch.pending_ins[self.sender] = deque()
 
-    @patch("lionagi.core.session.branch.BaseMail")
-    @patch("lionagi.core.session.branch.MessageUtil.validate_messages")
+    @patch("lionagi.core.mail.BaseMail")
+    @patch("lionagi.core.branch.MessageUtil.validate_messages")
     def test_receive_messages(self, mock_validate_messages, mock_base_mail):
         # Prepare a mock mail package with messages
         messages_df = pd.DataFrame(
