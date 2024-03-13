@@ -8,24 +8,13 @@ from lionagi.libs.ln_parse import ParseUtil
 from lionagi.core.schema.base_node import Tool, TOOL_TYPE
 from lionagi.core.messages.schema import Instruction
 
-
-class BaseMonoFlow:
-
-    def __init__(self, branch) -> None:
-        self.branch = branch
-
-    @classmethod
-    def class_name(cls) -> str:
-        """
-        Returns the class name of the flow.
-        """
-        return cls.__name__
-
+from .baseflow import BaseMonoFlow
 
 class MonoChat(BaseMonoFlow):
 
     def __init__(self, branch) -> None:
         super().__init__(branch)
+
 
     def process_chatcompletion(self, payload, completion, sender):
         if "choices" in completion:
@@ -88,6 +77,7 @@ class MonoChat(BaseMonoFlow):
             output_fields=output_fields,
         )
 
+
         if "tool_parsed" in kwargs:
             kwargs.pop("tool_parsed")
             tool_kwarg = {"tools": tools}
@@ -130,6 +120,7 @@ class MonoChat(BaseMonoFlow):
                     pass
             if out:
                 out_ = ""
+
                 if (
                     len(content_.items()) == 1
                     and len(nested.get_flattened_keys(content_)) == 1
@@ -137,7 +128,7 @@ class MonoChat(BaseMonoFlow):
                     key = nested.get_flattened_keys(content_)[0]
                     out_ = content_[key]
                 out_ = content_
-
+                
                 if output_fields:
                     try:
                         return (

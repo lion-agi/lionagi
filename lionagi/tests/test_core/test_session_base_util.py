@@ -2,7 +2,6 @@ from lionagi.core.branch.util import MessageUtil
 from lionagi.core.messages.schema import System, Instruction, Response
 
 import unittest
-from unittest.mock import patch
 import pandas as pd
 import json
 from datetime import datetime
