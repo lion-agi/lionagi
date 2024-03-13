@@ -127,15 +127,10 @@ class MonoChat(BaseMonoFlow):
                 ):
                     key = nested.get_flattened_keys(content_)[0]
                     out_ = content_[key]
-                out_ = content_
                 
                 if output_fields:
                     try:
-                        return (
-                            ParseUtil.md_to_json(out_["response"])
-                            if "response" in out_
-                            else ParseUtil.md_to_json(out_)
-                        )
+                        return ParseUtil.md_to_json(out_)
                     except:
                         pass
 

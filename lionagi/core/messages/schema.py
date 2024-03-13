@@ -168,15 +168,11 @@ class Instruction(BaseMessage):
             self.content.update({"context": context})
 
         if output_fields:
-            format = """
+            format = f"""
             Follow the following response format.
             ```json
-            {                    
-            """
-            format += f"{output_fields}"
-            format += """
-            }
-            ```
+            {output_fields}
+            ```         
             """
             self.content.update({"response_format": format})
 

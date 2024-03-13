@@ -31,6 +31,7 @@ class PolyChat(BasePolyFlow):
         output_fields=None,
         persist_path=None,
         branch_config={},
+        explode=False,
         **kwargs,
     ) -> Any:
         """
@@ -87,11 +88,20 @@ class PolyChat(BasePolyFlow):
 
         async def _inner_4(i):
             """different instructions and different context"""
-            tasks = [
-                _inner_2(i, ins_=ins_, cxt_=cxt_)
-                for ins_ in convert.to_list(instruction)
-                for cxt_ in convert.to_list(context)
-            ]
+            
+            tasks = []
+            if explode:
+                tasks = [
+                    _inner_2(i, ins_=ins_, cxt_=cxt_)
+                    for ins_ in convert.to_list(instruction)
+                    for cxt_ in convert.to_list(context)
+                ]
+            else:
+                tasks = [
+                    _inner_2(i, ins_=ins_, cxt_=cxt_)
+                    for ins_, cxt_ in zip(convert.to_list(instruction), convert.to_list(context))
+                ]
+            
             ress = await AsyncUtil.execute_tasks(*tasks)
             return convert.to_list(ress)
 
