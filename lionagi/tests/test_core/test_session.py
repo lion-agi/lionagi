@@ -55,7 +55,7 @@ class TestSession(unittest.TestCase):
             default_branch_name="branch1",
             default_branch=branches["branch1"],
         )
-        self.session.branch_manager = MagicMock()
+        self.session.mail_manager = MagicMock()
 
     def test_from_csv_initialization(self):
         """Test Session initialization from a CSV file."""
@@ -230,28 +230,28 @@ class TestSession(unittest.TestCase):
     def test_collect_from_specified_branches(self):
         """Test collecting requests from specified branches."""
         self.session.collect(from_=["branch1"])
-        self.assertEqual(self.session.branch_manager.collect.call_count, 1)
+        self.assertEqual(self.session.mail_manager.collect.call_count, 1)
 
     def test_collect_from_all_branches(self):
         """Test collecting requests from all branches."""
         self.session.collect()
-        self.assertEqual(self.session.branch_manager.collect.call_count, 2)
+        self.assertEqual(self.session.mail_manager.collect.call_count, 2)
 
     def test_send_to_specified_branches(self):
         """Test sending requests to specified branches."""
         self.session.send(to_=["branch_1"])
-        self.assertEqual(self.session.branch_manager.send.call_count, 1)
+        self.assertEqual(self.session.mail_manager.send.call_count, 1)
 
     def test_send_to_all_branches(self):
         """Test sending requests to all branches."""
         self.session.send()
-        self.assertEqual(self.session.branch_manager.send.call_count, 2)
+        self.assertEqual(self.session.mail_manager.send.call_count, 2)
 
     def test_collect_send_all_without_receive_all(self):
         """Test collecting and sending requests across all branches without receiving."""
         self.session.collect_send_all()
-        self.assertEqual(self.session.branch_manager.collect.call_count, 2)
-        self.assertEqual(self.session.branch_manager.send.call_count, 2)
+        self.assertEqual(self.session.mail_manager.collect.call_count, 2)
+        self.assertEqual(self.session.mail_manager.send.call_count, 2)
         self.branch1.receive_all.assert_not_called()
         self.branch2.receive_all.assert_not_called()
 

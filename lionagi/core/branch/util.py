@@ -26,7 +26,7 @@ class MessageUtil:
         instruction: Instruction | CUSTOM_TYPE = None,
         context: str | dict[str, Any] | None = None,
         response: Response | CUSTOM_TYPE = None,
-        output_fields = None,
+        output_fields=None,
         **kwargs,
     ) -> BaseMessage:
         """

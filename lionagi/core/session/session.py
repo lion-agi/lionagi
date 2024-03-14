@@ -13,7 +13,7 @@ from lionagi.core.tool.tool_manager import ToolManager
 from lionagi.core.mail.mail_manager import MailManager
 from lionagi.core.messages.schema import System, Instruction
 from lionagi.core.branch.branch import Branch
-from lionagi.core.flow.polyflow import PolyChat
+from lionagi.core.flow.polyflow.polychat import PolyChat
 
 
 class Session:
@@ -27,7 +27,7 @@ class Session:
     Attributes:
         branches (dict[str, Branch]): A dictionary of branch instances associated with the session.
         service (BaseService]): The external service instance associated with the | Nonesession.
-        branch_manager (BranchManager): The manager for handling branches within the session.
+        mail_manager (BranchManager): The manager for handling branches within the session.
         datalogger (Optional[Any]): The datalogger instance for session data logging.
     """
 
@@ -83,7 +83,7 @@ class Session:
             persist_path=persist_path,
             datalogger=datalogger,
         )
-        self.branch_manager = MailManager(self.branches)
+        self.mail_manager = MailManager(self.branches)
         self.datalogger = self.default_branch.datalogger
         for key, branch in self.branches.items():
             branch.name = key
@@ -569,11 +569,15 @@ class Session:
         self,
         instruction: dict | list | Instruction | str,
         branch: Branch | str | None = None,
-        context: dict | list | str = None,
-        sender: str | None = None,
-        system: dict | list | System | None = None,
-        tools: TOOL_TYPE = False,
+        context=None,
+        sender=None,
+        system=None,
+        tools=None,
+        auto=False,
         num_rounds: int = 1,
+        reason_prompt=None,
+        action_prompt=None,
+        output_prompt=None,
         **kwargs,
     ):
         """
@@ -600,19 +604,26 @@ class Session:
             sender=sender,
             system=system,
             tools=tools,
+            auto=auto,
             num_rounds=num_rounds,
+            reason_prompt=reason_prompt,
+            action_prompt=action_prompt,
+            output_prompt=output_prompt,
             **kwargs,
         )
 
-    async def auto_followup(
+    async def followup(
         self,
         instruction: dict | list | Instruction | str,
-        branch: Branch | str | None = None,
-        context: dict | list | str = None,
-        sender: str | None = None,
-        system: dict | list | System | None = None,
-        tools: TOOL_TYPE = False,
-        max_followup: int = 3,
+        branch=None,
+        context=None,
+        sender=None,
+        system=None,
+        tools=None,
+        max_followup: int = 1,
+        auto=False,
+        followup_prompt=None,
+        output_prompt=None,
         out=True,
         **kwargs,
     ):
@@ -634,13 +645,16 @@ class Session:
             >>> await ChatFlow.auto_followup(branch, "Finalize report", max_followup=2)
         """
         branch = self.get_branch(branch)
-        return await branch.auto_followup(
+        return await branch.followup(
             instruction=instruction,
             context=context,
             sender=sender,
             system=system,
             tools=tools,
             max_followup=max_followup,
+            auto=auto,
+            followup_prompt=followup_prompt,
+            output_prompt=output_prompt,
             out=out,
             **kwargs,
         )
@@ -659,13 +673,15 @@ class Session:
         output_fields=None,
         persist_path=None,
         branch_config={},
-        explode=False, **kwargs):
+        explode=False,
+        **kwargs,
+    ):
         """
         parallel chat
         """
-        
+
         flow = PolyChat(self)
-        
+
         return await flow.parallel_chat(
             instruction,
             num_instances=num_instances,
@@ -682,7 +698,6 @@ class Session:
             explode=explode,
             **kwargs,
         )
-
 
     # ---- branch manipulation ---- #
     def new_branch(
@@ -733,8 +748,8 @@ class Session:
             new_branch.add_message(system=system, sender=sender)
 
         self.branches[branch_name] = new_branch
-        self.branch_manager.sources[branch_name] = new_branch
-        self.branch_manager.mails[branch_name] = {}
+        self.mail_manager.sources[branch_name] = new_branch
+        self.mail_manager.mails[branch_name] = {}
 
     def get_branch(
         self, branch: Branch | str | None = None, get_name: bool = False
@@ -818,8 +833,8 @@ class Session:
             )
         else:
             self.branches.pop(branch_name)
-            # self.branch_manager.sources.pop(branch_name)
-            self.branch_manager.mails.pop(branch_name)
+            # self.mail_manager.sources.pop(branch_name)
+            self.mail_manager.mails.pop(branch_name)
             if verbose:
                 print(f"Branch {branch_name} is deleted.")
             return True
@@ -854,8 +869,8 @@ class Session:
 
     def take_branch(self, branch):
         self.branches[branch.branch_name] = branch
-        self.branch_manager.sources[branch.branch_name] = branch
-        self.branch_manager.mails[branch.branch_name] = {}
+        self.mail_manager.sources[branch.branch_name] = branch
+        self.mail_manager.mails[branch.branch_name] = {}
 
     def collect(self, from_: str | Branch | list[str | Branch] | None = None):
         """
@@ -875,7 +890,7 @@ class Session:
         """
         if from_ is None:
             for branch in self.branches.keys():
-                self.branch_manager.collect(branch)
+                self.mail_manager.collect(branch)
         else:
             if not isinstance(from_, list):
                 from_ = convert.to_list(from_)
@@ -883,7 +898,7 @@ class Session:
                 if isinstance(branch, Branch):
                     branch = branch.name
                 if isinstance(branch, str):
-                    self.branch_manager.collect(branch)
+                    self.mail_manager.collect(branch)
 
     def send(self, to_: str | Branch | list[str | Branch] | None = None):
         """
@@ -903,7 +918,7 @@ class Session:
         """
         if to_ is None:
             for branch in self.branches.keys():
-                self.branch_manager.send(branch)
+                self.mail_manager.send(branch)
         else:
             if not isinstance(to_, list):
                 to_ = [to_]
@@ -911,7 +926,7 @@ class Session:
                 if isinstance(branch, Branch):
                     branch = branch.name
                 if isinstance(branch, str):
-                    self.branch_manager.send(branch)
+                    self.mail_manager.send(branch)
 
     def collect_send_all(self, receive_all=False):
         """
