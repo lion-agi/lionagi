@@ -10,8 +10,6 @@ import lionagi.libs.ln_convert as convert
 from lionagi.libs.ln_parse import ParseUtil
 from lionagi.libs.sys_util import SysUtil
 
-from lionagi.integrations.bridge.langchain_.documents import LangChainDocument
-
 T = TypeVar("T")  # Generic type for return type of from_obj method
 
 
