@@ -30,7 +30,8 @@ class MonoFollowup(MonoChat):
             followup_prompt=followup_prompt,
             output_prompt=output_prompt,
             out=out,
-            **kwargs,)
+            **kwargs,
+        )
 
     @staticmethod
     def _get_prompt(prompt=None, default=None, num_followup=None, instruction=None):
@@ -59,70 +60,93 @@ class MonoFollowup(MonoChat):
         config["tool_choice"] = "auto"
         return config
 
-    async def _handle_auto(self, _out=None, out=None, instruction=None,
-                           output_prompt=None, sender=None, output=False, **kwargs):
+    async def _handle_auto(
+        self,
+        _out=None,
+        out=None,
+        instruction=None,
+        output_prompt=None,
+        sender=None,
+        output=False,
+        **kwargs,
+    ):
         if self.branch._is_invoked():
             return False
-        
+
         if output:
-            return await self._handle_auto_output(instruction, output_prompt, sender, out,
-                                                **kwargs)
+            return await self._handle_auto_output(
+                instruction, output_prompt, sender, out, **kwargs
+            )
         return self._handle_auto_followup(_out, out)
 
     def _handle_auto_followup(self, _out, out):
         return _out if out else None
 
-    async def _handle_auto_output(self, instruction, output_prompt, sender, out,
-                                  **kwargs):
-        prompt = self._get_prompt(prompt=output_prompt, default=_output_prompt,
-                                    instruction=instruction)
-        return await self.chat(prompt, sender=sender, tool_parsed=True, out=out,
-                                **kwargs)
+    async def _handle_auto_output(
+        self, instruction, output_prompt, sender, out, **kwargs
+    ):
+        prompt = self._get_prompt(
+            prompt=output_prompt, default=_output_prompt, instruction=instruction
+        )
+        return await self.chat(
+            prompt, sender=sender, tool_parsed=True, out=out, **kwargs
+        )
 
     async def _followup(
-            self,
-            instruction: Instruction | str | dict[str, dict | str],
-            context=None,
-            sender=None,
-            system=None,
-            tools=None,
-            max_followup: int = 1,
-            auto=False,
-            followup_prompt=None,
-            output_prompt=None,
-            out=True,
-            **kwargs,
+        self,
+        instruction: Instruction | str | dict[str, dict | str],
+        context=None,
+        sender=None,
+        system=None,
+        tools=None,
+        max_followup: int = 1,
+        auto=False,
+        followup_prompt=None,
+        output_prompt=None,
+        out=True,
+        **kwargs,
     ) -> None:
-        _out = ''
+        _out = ""
         config = self._create_followup_config(tools, **kwargs)
 
         i = 0
         while i < max_followup:
-                
-            prompt_ = self._get_prompt(prompt=followup_prompt, default=_followup_prompt,
-                                    num_followup=max_followup - i)
-            
+
+            prompt_ = self._get_prompt(
+                prompt=followup_prompt,
+                default=_followup_prompt,
+                num_followup=max_followup - i,
+            )
+
             if i == 0:
 
                 prompt_ = {"notice": prompt_, "task": instruction}
-                _out = await self.chat(prompt_, context=context, system=system,
-                                    sender=sender, **config)
-                
-            
+                _out = await self.chat(
+                    prompt_, context=context, system=system, sender=sender, **config
+                )
+
             elif i > 0:
                 _out = await self.chat(prompt_, sender=sender, **config)
-                
+
                 if auto:
                     a = self._handle_auto(_out=_out, out=out)
-                    if a is not False: return a
+                    if a is not False:
+                        return a
 
             i += 1
 
         if auto:
-            a = await self._handle_auto(instruction, output_prompt=output_prompt,
-                                           sender=sender, out=out, output=True, **kwargs)
-            if a: return a
-            
+            a = await self._handle_auto(
+                instruction,
+                output_prompt=output_prompt,
+                sender=sender,
+                out=out,
+                output=True,
+                **kwargs,
+            )
+            if a:
+                return a
+
         return _out
 
 
@@ -130,7 +154,6 @@ _followup_prompt = """In the current task you are allowed a maximum of another {
 to user without further tool usage
 """
 
-_output_prompt = "notice: present final output to user, original user instruction: {instruction}"
-
-
-
+_output_prompt = (
+    "notice: present final output to user, original user instruction: {instruction}"
+)

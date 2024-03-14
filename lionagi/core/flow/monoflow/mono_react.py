@@ -6,17 +6,17 @@ from lionagi.core.messages.schema import Instruction
 class MonoReAct(MonoChat):
 
     async def ReAct(
-            self,
-            instruction: Instruction | str | dict[str, dict | str],
-            context=None,
-            sender=None,
-            system=None,
-            tools=None,
-            num_rounds: int = 1,
-            reason_prompt=None,
-            action_prompt=None,
-            output_prompt=None,
-            **kwargs
+        self,
+        instruction: Instruction | str | dict[str, dict | str],
+        context=None,
+        sender=None,
+        system=None,
+        tools=None,
+        num_rounds: int = 1,
+        reason_prompt=None,
+        action_prompt=None,
+        output_prompt=None,
+        **kwargs,
     ):
         return await self._ReAct(
             instruction,
@@ -28,7 +28,7 @@ class MonoReAct(MonoChat):
             reason_prompt=reason_prompt,
             action_prompt=action_prompt,
             output_prompt=output_prompt,
-            **kwargs
+            **kwargs,
         )
 
     @staticmethod
@@ -58,81 +58,100 @@ class MonoReAct(MonoChat):
         config["tool_choice"] = "auto"
         return config
 
-    async def _handle_auto(self, _out=None, out=None, instruction=None,
-                           output_prompt=None, sender=None, output=False, config=None):
+    async def _handle_auto(
+        self,
+        _out=None,
+        out=None,
+        instruction=None,
+        output_prompt=None,
+        sender=None,
+        output=False,
+        config=None,
+    ):
         if not self.branch._is_invoked():
             if output:
-                return await self._handle_auto_output(instruction, output_prompt, sender, out,
-                                                    config)
+                return await self._handle_auto_output(
+                    instruction, output_prompt, sender, out, config
+                )
             return self._handle_auto_followup(_out, out)
         return False
 
     def _handle_auto_followup(self, _out, out):
         return _out if out else None
 
-    async def _handle_auto_output(self, instruction, output_prompt, sender, out,
-                                  config):
-        prompt_ = self._get_prompt(output_prompt, _output_prompt,
-                                    instruction=instruction)
+    async def _handle_auto_output(
+        self, instruction, output_prompt, sender, out, config
+    ):
+        prompt_ = self._get_prompt(
+            output_prompt, _output_prompt, instruction=instruction
+        )
         return await self.chat(prompt_, sender=sender, **config)
 
     async def _ReAct(
-            self,
-            instruction: Instruction | str | dict[str, dict | str],
-            context=None,
-            sender=None,
-            system=None,
-            tools=None,
-            num_rounds: int = 1,
-            auto=False,
-            reason_prompt=None,
-            action_prompt=None,
-            output_prompt=None,
-            out=True,
-            **kwargs,
+        self,
+        instruction: Instruction | str | dict[str, dict | str],
+        context=None,
+        sender=None,
+        system=None,
+        tools=None,
+        num_rounds: int = 1,
+        auto=False,
+        reason_prompt=None,
+        action_prompt=None,
+        output_prompt=None,
+        out=True,
+        **kwargs,
     ):
 
         config = self._create_followup_config(tools, **kwargs)
 
         i = 0
         while i < num_rounds:
-            prompt_ = self._get_prompt(reason_prompt, _reason_prompt,
-                                       (num_rounds - i) * 2)
+            prompt_ = self._get_prompt(
+                reason_prompt, _reason_prompt, (num_rounds - i) * 2
+            )
             instruct = {"Notice": prompt_}
 
             # reason
             if i == 0:
                 instruct["Task"] = instruction
-                
+
                 await self.chat(
                     instruct,
                     context=context,
                     system=system,
                     sender=sender,
-                    **kwargs, 
-                    )
+                    **kwargs,
+                )
 
             elif i > 0:
                 await self.chat(instruct, sender=sender, **kwargs)
 
             # action
-            prompt_ = self._get_prompt(action_prompt, _action_prompt,
-                                       (num_rounds - i) * 2 - 1)
+            prompt_ = self._get_prompt(
+                action_prompt, _action_prompt, (num_rounds - i) * 2 - 1
+            )
             _out = await self.chat(prompt_, sender=sender, **config)
 
             if auto:
                 a = await self._handle_auto(_out=_out, out=out)
-                if a: return a
+                if a:
+                    return a
 
             i += 1
 
         if auto:
-            a = await self._handle_auto(instruction,
-                                           output_prompt=output_prompt,
-                                           sender=sender, out=out, output=True,
-                                           config=config)
-            if a: return a
-            
+            a = await self._handle_auto(
+                instruction,
+                output_prompt=output_prompt,
+                sender=sender,
+                out=out,
+                output=True,
+                config=config,
+            )
+            if a:
+                return a
+
     # TODO: auto_ReAct
 
 
@@ -143,4 +162,6 @@ you have {num_steps} step left in current task. if available, integrate previous
 _action_prompt = """
 you have {num_steps} step left in current task, if further actions are needed, invoke tools usage. If you are done, present the final result to user without further tool usage
 """
-_output_prompt = "notice: present final output to user, original user instruction: {instruction}"
+_output_prompt = (
+    "notice: present final output to user, original user instruction: {instruction}"
+)

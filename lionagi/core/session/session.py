@@ -609,7 +609,7 @@ class Session:
             reason_prompt=reason_prompt,
             action_prompt=action_prompt,
             output_prompt=output_prompt,
-            **kwargs
+            **kwargs,
         )
 
     async def followup(
@@ -673,13 +673,15 @@ class Session:
         output_fields=None,
         persist_path=None,
         branch_config={},
-        explode=False, **kwargs):
+        explode=False,
+        **kwargs,
+    ):
         """
         parallel chat
         """
-        
+
         flow = PolyChat(self)
-        
+
         return await flow.parallel_chat(
             instruction,
             num_instances=num_instances,
@@ -696,7 +698,6 @@ class Session:
             explode=explode,
             **kwargs,
         )
-
 
     # ---- branch manipulation ---- #
     def new_branch(

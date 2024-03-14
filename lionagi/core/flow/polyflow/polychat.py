@@ -35,7 +35,7 @@ class PolyChat(BasePolyFlow):
         """
         parallel chat
         """
-        
+
         return await self._parallel_chat(
             instruction,
             num_instances=num_instances,
@@ -54,20 +54,20 @@ class PolyChat(BasePolyFlow):
         )
 
     async def _parallel_chat(
-            self,
-            instruction: Instruction | str,
-            num_instances=1,
-            context=None,
-            sender=None,
-            messages=None,
-            tools=False,
-            out=True,
-            invoke: bool = True,
-            output_fields=None,
-            persist_path=None,
-            branch_config={},
-            explode=False,
-            **kwargs,
+        self,
+        instruction: Instruction | str,
+        num_instances=1,
+        context=None,
+        sender=None,
+        messages=None,
+        tools=False,
+        out=True,
+        invoke: bool = True,
+        output_fields=None,
+        persist_path=None,
+        branch_config={},
+        explode=False,
+        **kwargs,
     ) -> Any:
         """
         parallel chat
@@ -135,8 +135,9 @@ class PolyChat(BasePolyFlow):
             else:
                 tasks = [
                     _inner_2(i, ins_=ins_, cxt_=cxt_)
-                    for ins_, cxt_ in
-                    zip(convert.to_list(instruction), convert.to_list(context))
+                    for ins_, cxt_ in zip(
+                        convert.to_list(instruction), convert.to_list(context)
+                    )
                 ]
 
             ress = await AsyncUtil.execute_tasks(*tasks)

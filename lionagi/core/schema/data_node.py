@@ -7,6 +7,7 @@ from lionagi.core.schema.base_mixin import DataNodeFromObjectMixin
 
 T = TypeVar("T")
 
+
 class DataNode(BaseNode, DataNodeFromObjectMixin):
 
     def to_llama_index(self, node_type=None, **kwargs) -> Any:

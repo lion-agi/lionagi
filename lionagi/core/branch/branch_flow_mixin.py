@@ -10,8 +10,9 @@ from lionagi.core.messages.schema import Instruction, System
 
 T = TypeVar("T", bound=Tool)
 
+
 class BranchFlowMixin(ABC):
-    
+
     async def chat(
         self,
         instruction: Union[Instruction, str],
@@ -39,18 +40,18 @@ class BranchFlowMixin(ABC):
         )
 
     async def ReAct(
-            self,
-            instruction: Instruction | str | dict[str, dict | str],
-            context=None,
-            sender=None,
-            system=None,
-            tools=None,
-            auto=False,
-            num_rounds: int = 1,
-            reason_prompt=None,
-            action_prompt=None,
-            output_prompt=None,
-            **kwargs
+        self,
+        instruction: Instruction | str | dict[str, dict | str],
+        context=None,
+        sender=None,
+        system=None,
+        tools=None,
+        auto=False,
+        num_rounds: int = 1,
+        reason_prompt=None,
+        action_prompt=None,
+        output_prompt=None,
+        **kwargs,
     ):
         flow = MonoReAct(self)
         return await flow.ReAct(
@@ -64,7 +65,7 @@ class BranchFlowMixin(ABC):
             reason_prompt=reason_prompt,
             action_prompt=action_prompt,
             output_prompt=output_prompt,
-            **kwargs
+            **kwargs,
         )
 
     async def followup(
@@ -93,4 +94,5 @@ class BranchFlowMixin(ABC):
             followup_prompt=followup_prompt,
             output_prompt=output_prompt,
             out=out,
-            **kwargs,)
+            **kwargs,
+        )

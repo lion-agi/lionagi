@@ -40,10 +40,15 @@ class MonoChat(BaseMonoFlow, MonoChatMixin):
         """
 
         config = self._create_chat_config(
-            instruction, context=context, sender=sender, system=system,
-            tools=tools, output_fields=output_fields, **kwargs
+            instruction,
+            context=context,
+            sender=sender,
+            system=system,
+            tools=tools,
+            output_fields=output_fields,
+            **kwargs,
         )
 
         await self._call_chatcompletion(**config)
-        
+
         return await self._output(invoke, out, output_fields)

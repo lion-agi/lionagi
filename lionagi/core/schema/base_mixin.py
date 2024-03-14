@@ -158,7 +158,6 @@ class BaseFromObjectMixin(ABC, BaseModel):
         return cls.from_obj(**config_)
 
 
-
 class BaseMetaManageMixin(ABC, BaseModel):
 
     def meta_keys(self, flattened: bool = False, **kwargs) -> list[str]:
@@ -296,6 +295,7 @@ class BaseMetaManageMixin(ABC, BaseModel):
             dict[str, Any]: The filtered metadata.
         """
         return nested.nfilter(self.metadata, condition)
+
 
 class BaseComponentMixin(BaseFromObjectMixin, BaseToObjectMixin, BaseMetaManageMixin):
     pass

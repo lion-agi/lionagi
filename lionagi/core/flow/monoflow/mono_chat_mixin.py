@@ -4,9 +4,9 @@ from typing import Any
 from lionagi.core.messages.schema import Instruction
 from lionagi.core.schema.base_node import TOOL_TYPE
 from lionagi.libs import (
-    ln_nested as nested, 
+    ln_nested as nested,
     ln_func_call as func_call,
-    ln_convert as convert
+    ln_convert as convert,
 )
 from lionagi.libs.ln_parse import ParseUtil, StringMatch
 
@@ -14,14 +14,14 @@ from lionagi.libs.ln_parse import ParseUtil, StringMatch
 class MonoChatConfigMixin(ABC):
 
     def _create_chat_config(
-            self,
-            instruction: Instruction | str | dict[str, Any],
-            context: Any | None = None,
-            sender: str | None = None,
-            system: str | dict[str, Any] | None = None,
-            tools: TOOL_TYPE = False,
-            output_fields=None,
-            **kwargs,
+        self,
+        instruction: Instruction | str | dict[str, Any],
+        context: Any | None = None,
+        sender: str | None = None,
+        system: str | dict[str, Any] | None = None,
+        tools: TOOL_TYPE = False,
+        output_fields=None,
+        **kwargs,
     ) -> Any:
 
         if system:
@@ -64,10 +64,7 @@ class MonoChatInvokeMixin(ABC):
     def _return_response(content_, output_fields):
         out_ = ""
 
-        if (
-                len(content_.items()) == 1
-                and len(nested.get_flattened_keys(content_)) == 1
-        ):
+        if len(content_.items()) == 1 and len(nested.get_flattened_keys(content_)) == 1:
             key = nested.get_flattened_keys(content_)[0]
             out_ = content_[key]
 
@@ -90,9 +87,7 @@ class MonoChatInvokeMixin(ABC):
             self.branch.tool_manager.get_function_call,
         )
 
-        outs = await func_call.alcall(
-            func_calls, self.branch.tool_manager.invoke
-        )
+        outs = await func_call.alcall(func_calls, self.branch.tool_manager.invoke)
         outs = convert.to_list(outs, flatten=True)
 
         for out_, f in zip(outs, func_calls):
