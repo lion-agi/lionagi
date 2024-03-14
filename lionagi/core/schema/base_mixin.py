@@ -299,14 +299,3 @@ class BaseMetaManageMixin(ABC, BaseModel):
 
 class BaseComponentMixin(BaseFromObjectMixin, BaseToObjectMixin, BaseMetaManageMixin):
     pass
-
-
-class DataNodeFromObjectMixin(BaseFromObjectMixin):
-
-    @BaseFromObjectMixin.from_obj.register(LangChainDocument)
-    @classmethod
-    def _from_langchain(cls, lc_doc) -> "T":
-        info_json = lc_doc.to_json()
-        info_node = {"lc_id": info_json["id"]}
-        info_node = {**info_node, **info_json["kwargs"]}
-        return cls(**info_node)

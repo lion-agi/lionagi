@@ -1,9 +1,10 @@
 from typing import Union, Callable, List, Dict, Any, TypeVar
-from langchain.schema import Document as LangchainDocument
+from lionagi.core.schema import DataNode
+
 
 from lionagi.libs.sys_util import SysUtil
 
-T = TypeVar("T")
+T = TypeVar("T", bound="DataNode")
 
 
 def to_langchain_document(datanode: T, **kwargs: Any) -> Any:
@@ -23,7 +24,8 @@ def to_langchain_document(datanode: T, **kwargs: Any) -> Any:
     """
 
     SysUtil.check_import("langchain")
-    
+    from langchain.schema import Document as LangchainDocument
+
     dnode = datanode.to_dict()
     SysUtil.change_dict_key(dnode, old_key="content", new_key="page_content")
     SysUtil.change_dict_key(dnode, old_key="lc_id", new_key="id_")
