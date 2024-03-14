@@ -306,7 +306,7 @@ class Branch(BaseBranch, BranchFlowMixin):
         """
         content = self.messages.iloc[-1]["content"]
         try:
-            if MessageUtil.to_dict_content(content)["action_response"].keys() >= {
+            if convert.to_dict(content)["action_response"].keys() >= {
                 "function",
                 "arguments",
                 "output",
