@@ -13,7 +13,7 @@ from lionagi.core.tool.tool_manager import ToolManager
 from lionagi.core.mail.mail_manager import MailManager
 from lionagi.core.messages.schema import System, Instruction
 from lionagi.core.branch.branch import Branch
-from lionagi.core.flow.polyflow import PolyChat
+from lionagi.core.flow.polyflow.polychat import PolyChat
 
 
 class Session:
@@ -569,11 +569,15 @@ class Session:
         self,
         instruction: dict | list | Instruction | str,
         branch: Branch | str | None = None,
-        context: dict | list | str = None,
-        sender: str | None = None,
-        system: dict | list | System | None = None,
-        tools: TOOL_TYPE = False,
+        context=None,
+        sender=None,
+        system=None,
+        tools=None,
+        auto=False,
         num_rounds: int = 1,
+        reason_prompt=None,
+        action_prompt=None,
+        output_prompt=None,
         **kwargs,
     ):
         """
@@ -600,19 +604,25 @@ class Session:
             sender=sender,
             system=system,
             tools=tools,
+            auto=auto,
             num_rounds=num_rounds,
-            **kwargs,
+            reason_prompt=reason_prompt,
+            action_prompt=action_prompt,
+            output_prompt=output_prompt,
+            **kwargs
         )
 
-    async def auto_followup(
+    async def followup(
         self,
         instruction: dict | list | Instruction | str,
-        branch: Branch | str | None = None,
-        context: dict | list | str = None,
-        sender: str | None = None,
-        system: dict | list | System | None = None,
-        tools: TOOL_TYPE = False,
-        max_followup: int = 3,
+        context=None,
+        sender=None,
+        system=None,
+        tools=None,
+        max_followup: int = 1,
+        auto=False,
+        followup_prompt=None,
+        output_prompt=None,
         out=True,
         **kwargs,
     ):
@@ -634,13 +644,16 @@ class Session:
             >>> await ChatFlow.auto_followup(branch, "Finalize report", max_followup=2)
         """
         branch = self.get_branch(branch)
-        return await branch.auto_followup(
+        return await branch.followup(
             instruction=instruction,
             context=context,
             sender=sender,
             system=system,
             tools=tools,
             max_followup=max_followup,
+            auto=auto,
+            followup_prompt=followup_prompt,
+            output_prompt=output_prompt,
             out=out,
             **kwargs,
         )

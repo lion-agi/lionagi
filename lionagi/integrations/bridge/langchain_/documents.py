@@ -1,10 +1,10 @@
 from typing import Union, Callable, List, Dict, Any, TypeVar
-from lionagi.core.schema import DataNode
+from langchain_core.documents import Document as LangChainDocument
 
 
 from lionagi.libs.sys_util import SysUtil
 
-T = TypeVar("T", bound="DataNode")
+T = TypeVar("T")
 
 
 def to_langchain_document(datanode: T, **kwargs: Any) -> Any:

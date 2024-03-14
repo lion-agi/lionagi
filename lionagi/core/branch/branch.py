@@ -1,6 +1,5 @@
 from collections import deque
-from typing import Any, Optional, Union, TypeVar, Callable
-
+from typing import Any, Union, TypeVar, Callable
 
 from lionagi.libs.sys_util import PATH_TYPE
 from lionagi.libs.ln_api import StatusTracker, BaseService
@@ -10,14 +9,14 @@ from lionagi.libs import ln_dataframe as dataframe
 from lionagi.core.schema.base_node import TOOL_TYPE, Tool
 from lionagi.core.schema.data_logger import DataLogger
 from lionagi.core.tool.tool_manager import ToolManager, func_to_tool
-from lionagi.core.flow.monoflow import MonoChat
 
 from lionagi.core.branch.base_branch import BaseBranch
-from lionagi.core.messages.schema import Instruction, System
+from lionagi.core.messages.schema import System
 from lionagi.core.mail.schema import BaseMail
 
 from lionagi.core.branch.util import MessageUtil
 
+from .branch_flow_mixin import BranchFlowMixin
 
 from dotenv import load_dotenv
 
@@ -27,7 +26,7 @@ load_dotenv()
 T = TypeVar("T", bound=Tool)
 
 
-class Branch(BaseBranch):
+class Branch(BaseBranch, BranchFlowMixin):
 
     def __init__(
         self,
@@ -315,98 +314,3 @@ class Branch(BaseBranch):
                 return True
         except:
             return False
-
-    async def chat(
-        self,
-        instruction: Union[Instruction, str],
-        context: Optional[Any] = None,
-        sender: Optional[str] = None,
-        system: Optional[Union[System, str, dict[str, Any]]] = None,
-        tools: Union[bool, T, list[T], str, list[str]] = False,
-        out: bool = True,
-        invoke: bool = True,
-        output_fields=None,
-        **kwargs,
-    ) -> Any:
-
-        flow = MonoChat(self)
-        return await flow.chat(
-            instruction=instruction,
-            context=context,
-            sender=sender,
-            system=system,
-            tools=tools,
-            out=out,
-            invoke=invoke,
-            output_fields=output_fields,
-            **kwargs,
-        )
-
-    async def ReAct(
-        self,
-        instruction: Union[Instruction, str],
-        context=None,
-        sender: str | None = None,
-        system: dict | list | System | None = None,
-        tools: TOOL_TYPE | None = None,
-        num_rounds: int = 1,
-        **kwargs,
-    ):
-        flow = MonoChat(self)
-        return await flow.ReAct(
-            instruction=instruction,
-            context=context,
-            sender=sender,
-            system=system,
-            tools=tools,
-            num_rounds=num_rounds,
-            **kwargs,
-        )
-
-    async def auto_followup(
-        self,
-        instruction: Union[Instruction, str],
-        context=None,
-        sender: str | None = None,
-        system: dict | list | System | None = None,
-        tools: Union[bool, T, list[T], str, list[str], list[dict]] = False,
-        max_followup: int = 3,
-        out=True,
-        **kwargs,
-    ) -> None:
-
-        flow = MonoChat(self)
-        return await flow.auto_followup(
-            instruction=instruction,
-            context=context,
-            sender=sender,
-            system=system,
-            tools=tools,
-            max_followup=max_followup,
-            out=out,
-            **kwargs,
-        )
-
-    async def followup(
-        self,
-        instruction: Union[Instruction, str],
-        context=None,
-        sender: str | None = None,
-        system: dict | list | System | None = None,
-        tools: bool | Tool | list[Tool | str | dict] | str = False,
-        max_followup: int = 1,
-        out=True,
-        **kwargs,
-    ) -> None:
-
-        flow = MonoChat(self)
-        return await flow.followup(
-            instruction=instruction,
-            context=context,
-            sender=sender,
-            system=system,
-            tools=tools,
-            max_followup=max_followup,
-            out=out,
-            **kwargs,
-        )
