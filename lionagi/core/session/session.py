@@ -615,6 +615,7 @@ class Session:
     async def followup(
         self,
         instruction: dict | list | Instruction | str,
+        branch=None,
         context=None,
         sender=None,
         system=None,
