@@ -13,7 +13,7 @@ from lionagi.core.tool.tool_manager import ToolManager
 from lionagi.core.mail.mail_manager import MailManager
 from lionagi.core.messages.schema import System, Instruction
 from lionagi.core.branch.branch import Branch
-from lionagi.core.flow.polyflow.polychat import PolyChat
+from lionagi.core.flow.poly_chat import PolyChat
 
 
 class Session:
