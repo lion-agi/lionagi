@@ -2,7 +2,6 @@ from abc import ABC
 from typing import Any
 
 from lionagi.core.schema.base.base_mixin import BaseComponentMixin
-from lionagi.core.schema.base_node import T
 from lionagi.integrations.bridge.pydantic_ import base_model as pyd
 from lionagi.libs.sys_util import SysUtil
 
@@ -32,7 +31,7 @@ class BaseComponent(BaseComponentMixin, ABC):
         validate_return = True
         str_strip_whitespace = True
 
-    def copy(self, *args, **kwargs) -> T:
+    def copy(self, *args, **kwargs):
         """
         Creates a deep copy of the instance, with an option to update specific fields.
 

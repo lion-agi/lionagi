@@ -429,7 +429,9 @@ class Structure(BaseRelatableNode):
     # def add_relationship(self, relationship: Relationship):
     #     self.graph.add_relationship(relationship)
     def add_relationship(self, from_node: BaseNode, to_node: BaseNode, **kwargs):
-        relationship = Relationship(source_node_id=from_node.id_, target_node_id=to_node.id_, **kwargs)
+        relationship = Relationship(
+            source_node_id=from_node.id_, target_node_id=to_node.id_, **kwargs
+        )
         self.graph.add_relationship(relationship)
 
     def get_relationships(self) -> list[Relationship]:
@@ -483,7 +485,9 @@ class Structure(BaseRelatableNode):
 
     def acyclic(self):
         check_deque = deque(self.graph.nodes.keys())
-        check_dict = {key: 0 for key in self.graph.nodes.keys()} # 0: not visited, 1: temp, 2: perm
+        check_dict = {
+            key: 0 for key in self.graph.nodes.keys()
+        }  # 0: not visited, 1: temp, 2: perm
 
         def visit(key):
             if check_dict[key] == 2:
@@ -510,7 +514,12 @@ class Structure(BaseRelatableNode):
         return True
 
     def send(self, recipient_id: str, category: str, package: Any) -> None:
-        mail = BaseMail(sender_id=self.id_, recipient_id=recipient_id, category=category, package=package)
+        mail = BaseMail(
+            sender_id=self.id_,
+            recipient_id=recipient_id,
+            category=category,
+            package=package,
+        )
         self.pending_outs.append(mail)
 
     def process(self) -> None:
@@ -524,20 +533,28 @@ class Structure(BaseRelatableNode):
                     return
                 elif mail.category == "node_id":
                     if mail.package not in self.graph.nodes:
-                        raise ValueError(f"Node {mail.package} does not exist in the structure {self.id_}")
+                        raise ValueError(
+                            f"Node {mail.package} does not exist in the structure {self.id_}"
+                        )
                     next_nodes = self.get_next_step(self.graph.nodes[mail.package])
                 elif mail.category == "node" and isinstance(mail.package, BaseNode):
                     if not self.node_exist(mail.package):
-                        raise ValueError(f"Node {mail.package} does not exist in the structure {self.id_}")
+                        raise ValueError(
+                            f"Node {mail.package} does not exist in the structure {self.id_}"
+                        )
                     next_nodes = self.get_next_step(mail.package)
                 else:
                     raise ValueError(f"Invalid mail type for structure")
 
-                if not next_nodes: # tail
-                    self.send(recipient_id=mail.sender_id, category="end", package="end")
+                if not next_nodes:  # tail
+                    self.send(
+                        recipient_id=mail.sender_id, category="end", package="end"
+                    )
                 while next_nodes:
                     package = next_nodes.popleft()
-                    self.send(recipient_id=mail.sender_id, category="node", package=package)
+                    self.send(
+                        recipient_id=mail.sender_id, category="node", package=package
+                    )
 
     async def execute(self, refresh_time=1):
         if not self.acyclic():
@@ -546,4 +563,3 @@ class Structure(BaseRelatableNode):
         while not self.execute_stop:
             self.process()
             await AsyncUtil.sleep(refresh_time)
-

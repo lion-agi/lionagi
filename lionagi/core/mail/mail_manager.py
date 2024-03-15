@@ -21,10 +21,20 @@ class MailManager:
     def __init__(self, sources: List[BaseNode]):
         self.sources = {}
         self.mails = {}
-        for source in sources:
-            self.sources[source.id_] = source
-            self.mails[source.id_] = {}
+        self.add_sources(sources)
         self.execute_stop = False
+
+    def add_sources(self, sources):
+        if isinstance(sources, dict):
+            for _, v in sources.items():
+                if not v.id_ in self.sources:
+                    self.sources[v.id_] = v
+                    self.mails[v.id_] = {}
+        elif isinstance(sources, list):
+            for v in sources:
+                if not v.id_ in self.sources:
+                    self.sources[v.id_] = v
+                    self.mails[v.id_] = {}
 
     @staticmethod
     def create_mail(sender_id, recipient_id, category, package):
@@ -52,7 +62,9 @@ class MailManager:
         while self.sources[sender_id].pending_outs:
             mail_ = self.sources[sender_id].pending_outs.popleft()
             if mail_.recipient_id not in self.sources:
-                raise ValueError(f"Recipient source {mail_.recipient_id} does not exist")
+                raise ValueError(
+                    f"Recipient source {mail_.recipient_id} does not exist"
+                )
             if mail_.sender_id not in self.mails[mail_.recipient_id]:
                 self.mails[mail_.recipient_id] = {mail_.sender_id: deque()}
             self.mails[mail_.recipient_id][mail_.sender_id].append(mail_)
