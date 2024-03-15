@@ -1,11 +1,9 @@
 from lionagi.core.branch.branch import Branch
 from lionagi.core.tool.tool_manager import ToolManager, func_to_tool
 from lionagi.core.schema import DataLogger
-from lionagi.core.branch.util import MessageUtil
-
 
 import unittest
-from unittest.mock import patch, MagicMock
+from unittest.mock import MagicMock
 import pandas as pd
 import json
 from collections import deque
