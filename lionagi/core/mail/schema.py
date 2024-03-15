@@ -3,16 +3,21 @@ from enum import Enum
 
 class MailCategory(str, Enum):
     MESSAGES = "messages"
-    TOOL = "tools"
-    SERVICE = "provider"
+    TOOL = "tool"
+    SERVICE = "service"
     MODEL = "model"
+    NODE = "node"
+    CONTEXT = "context"
+    NODE_ID = "node_id"
+    START = "start"
+    END = "end"
 
 
 class BaseMail:
 
-    def __init__(self, sender, recipient, category, package):
-        self.sender = sender
-        self.recipient = recipient
+    def __init__(self, sender_id, recipient_id, category, package):
+        self.sender_id = sender_id
+        self.recipient_id = recipient_id
         try:
             if isinstance(category, str):
                 category = MailCategory(category)
