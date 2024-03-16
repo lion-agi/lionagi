@@ -1,4 +1,4 @@
-from lionagi.core.messages.schema import Instruction
+from ..messages.instruction import Instruction
 from lionagi.core.schema.base_node import Tool
 from .mono_chat import MonoChat
 

@@ -1,7 +1,7 @@
 from abc import ABC
 from typing import Any
 
-from lionagi.core.messages.schema import Instruction
+from lionagi.core.messages.instruction import Instruction
 from lionagi.core.schema.base_node import TOOL_TYPE
 from lionagi.libs import (
     ln_nested as nested,

@@ -350,7 +350,7 @@ class APIUtil:
 
         Example:
             >>> rate_limiter = OpenAIRateLimiter(100, 200)
-            >>> payload = {'prompt': 'Translate the following text:', 'max_tokens': 50}
+            >>> payload = {'format_prompt': 'Translate the following text:', 'max_tokens': 50}
             >>> rate_limiter.calculate_num_token(payload, 'completions')
             # Expected token calculation for the given payload and endpoint.
         """
@@ -377,8 +377,8 @@ class APIUtil:
                 return num_tokens + completion_tokens
             # normal completions
             else:
-                prompt = payload["prompt"]
-                if isinstance(prompt, str):  # single prompt
+                prompt = payload["format_prompt"]
+                if isinstance(prompt, str):  # single format_prompt
                     prompt_tokens = len(encoding.encode(prompt))
                     num_tokens = prompt_tokens + completion_tokens
                     return num_tokens
@@ -388,7 +388,7 @@ class APIUtil:
                     return num_tokens
                 else:
                     raise TypeError(
-                        'Expecting either string or list of strings for "prompt" field in completion request'
+                        'Expecting either string or list of strings for "format_prompt" field in completion request'
                     )
         elif api_endpoint == "embeddings":
             input = payload["input"]

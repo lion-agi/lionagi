@@ -56,7 +56,7 @@ Raises a `ValueError` if the specified endpoint has not been initialized.
 
 Examples:
 ```python
-payload = {'prompt': 'Hello, how are you?'}
+payload = {'format_prompt': 'Hello, how are you?'}
 response = await service.call_api(payload, 'chat/completions', 'post')
 
 payload = {'input': 'This is a sample text.'}

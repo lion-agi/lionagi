@@ -1,11 +1,9 @@
 from lionagi.core.branch.branch import Branch
 from lionagi.core.tool.tool_manager import ToolManager, func_to_tool
 from lionagi.core.schema import DataLogger
-from lionagi.core.branch.util import MessageUtil
-
 
 import unittest
-from unittest.mock import patch, MagicMock
+from unittest.mock import MagicMock
 import pandas as pd
 import json
 from collections import deque
@@ -88,11 +86,11 @@ class TestBranch(unittest.TestCase):
     # def test_from_csv(self, mock_from_csv):
     #     """Test creating a Branch instance from a CSV file."""
     #     filepath = "path/to/your/csvfile.csv"
-    #     Branch.from_csv(filepath=filepath, branch_name="TestBranchFromCSV")
+    #     Branch.from_csv(filepath=filepath, name="TestBranchFromCSV")
     #     mock_from_csv.assert_called_once_with(
     #         filepath=filepath,
     #         read_kwargs=None,
-    #         branch_name="TestBranchFromCSV",
+    #         name="TestBranchFromCSV",
     #         service=None,
     #         llmconfig=None,
     #         tools=None,
@@ -105,11 +103,11 @@ class TestBranch(unittest.TestCase):
     # def test_from_json(self, mock_from_json):
     #     """Test creating a Branch instance from a JSON file."""
     #     filepath = "path/to/your/jsonfile.json"
-    #     Branch.from_json_string(filepath=filepath, branch_name="TestBranchFromJSON")
+    #     Branch.from_json_string(filepath=filepath, name="TestBranchFromJSON")
     #     mock_from_json.assert_called_once_with(
     #         filepath=filepath,
     #         read_kwargs=None,
-    #         branch_name="TestBranchFromJSON",
+    #         name="TestBranchFromJSON",
     #         service=None,
     #         llmconfig=None,
     #         tools=None,

@@ -1,49 +1,98 @@
-from typing import Dict, Any
 from collections import deque
+from lionagi.core.schema.base_node import BaseNode
 from lionagi.core.mail.schema import BaseMail
+from lionagi.libs.ln_async import AsyncUtil
 
 
 class MailManager:
+    """
+    Manages the sending, receiving, and storage of mail items between various sources.
 
-    def __init__(self, sources: Dict[str, Any]):
-        self.sources = sources
+    This class acts as a central hub for managing mail transactions within a system. It allows for the addition
+    and deletion of sources, and it handles the collection and dispatch of mails to and from these sources.
+
+    Attributes:
+        sources (Dict[str, Any]): A dictionary mapping source identifiers to their attributes.
+        mails (Dict[str, Dict[str, deque]]): A nested dictionary storing queued mail items, organized by recipient
+            and sender.
+    """
+
+    def __init__(self, sources: list[BaseNode]):
+        self.sources = {}
         self.mails = {}
-        for key in self.sources.keys():
-            self.mails[key] = {}
+        self.add_sources(sources)
+        self.execute_stop = False
+
+    def add_sources(self, sources):
+        if isinstance(sources, dict):
+            for _, v in sources.items():
+                if not v.id_ in self.sources:
+                    self.sources[v.id_] = v
+                    self.mails[v.id_] = {}
+        elif isinstance(sources, list):
+            for v in sources:
+                if not v.id_ in self.sources:
+                    self.sources[v.id_] = v
+                    self.mails[v.id_] = {}
 
     @staticmethod
-    def create_mail(sender, recipient, category, package):
-        return BaseMail(sender, recipient, category, package)
+    def create_mail(sender_id, recipient_id, category, package):
+        return BaseMail(sender_id, recipient_id, category, package)
 
-    def add_source(self, sources: Dict[str, Any]):
-        for key in sources.keys():
-            if key in self.sources:
-                raise ValueError(f"{key} exists, please input a different name.")
-            self.sources[key] = {}
+    def add_source(self, sources: list[BaseNode]):
+        for source in sources:
+            if source.id_ in self.sources:
+                # raise ValueError(f"Source {source.id_} exists, please input a different name.")
+                continue
+            self.sources[source.id_] = source
+            self.mails[source.id_] = {}
 
-    def delete_source(self, source_name):
-        if source_name not in self.sources:
-            raise ValueError(f"{source_name} does not exist.")
-        self.sources.pop(source_name)
+    def delete_source(self, source_id):
+        if source_id not in self.sources:
+            raise ValueError(f"Source {source_id} does not exist.")
+        # if self.mails[source_id]:
+        #     raise ValueError(f"None empty pending mails in source {source_id}")
+        self.sources.pop(source_id)
+        self.mails.pop(source_id)
 
-    def collect(self, sender):
-        if sender not in self.sources:
-            raise ValueError(f"{sender} does not exist.")
-        while self.sources[sender].pending_outs:
-            mail_ = self.sources[sender].pending_outs.popleft()
-            if mail_.sender not in self.mails[mail_.recipient]:
-                self.mails[mail_.recipient] = {mail_.sender: deque()}
-            self.mails[mail_.recipient][mail_.sender].append(mail_)
+    def collect(self, sender_id):
+        if sender_id not in self.sources:
+            raise ValueError(f"Sender source {sender_id} does not exist.")
+        while self.sources[sender_id].pending_outs:
+            mail_ = self.sources[sender_id].pending_outs.popleft()
+            if mail_.recipient_id not in self.sources:
+                raise ValueError(
+                    f"Recipient source {mail_.recipient_id} does not exist"
+                )
+            if mail_.sender_id not in self.mails[mail_.recipient_id]:
+                self.mails[mail_.recipient_id] = {mail_.sender_id: deque()}
+            self.mails[mail_.recipient_id][mail_.sender_id].append(mail_)
 
-    def send(self, to_name):
-        if to_name not in self.sources:
-            raise ValueError(f"{to_name} does not exist.")
-        if not self.mails[to_name]:
+    def send(self, recipient_id):
+        if recipient_id not in self.sources:
+            raise ValueError(f"Recipient source {recipient_id} does not exist.")
+        if not self.mails[recipient_id]:
             return
         else:
-            for key in list(self.mails[to_name].keys()):
-                request = self.mails[to_name].pop(key)
-                if key not in self.sources[to_name].pending_ins:
-                    self.sources[to_name].pending_ins[key] = request
+            for key in list(self.mails[recipient_id].keys()):
+                mails_deque = self.mails[recipient_id].pop(key)
+                if key not in self.sources[recipient_id].pending_ins:
+                    self.sources[recipient_id].pending_ins[key] = mails_deque
                 else:
-                    self.sources[to_name].pending_ins[key].append(request)
+                    while mails_deque:
+                        mail_ = mails_deque.popleft()
+                        self.sources[recipient_id].pending_ins[key].append(mail_)
+
+    def collect_all(self):
+        for ids in self.sources:
+            self.collect(ids)
+
+    def send_all(self):
+        for ids in self.sources:
+            self.send(ids)
+
+    async def execute(self, refresh_time=1):
+        while not self.execute_stop:
+            self.collect_all()
+            self.send_all()
+            await AsyncUtil.sleep(refresh_time)
