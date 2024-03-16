@@ -3,6 +3,7 @@ from enum import Enum
 
 from lionagi.core.schema.base_node import BaseRelatableNode
 
+
 class MailCategory(str, Enum):
     MESSAGES = "messages"
     TOOL = "tool"
@@ -36,6 +37,7 @@ class BaseMail:
             )
         self.package = package
 
+
 class StartMail(BaseRelatableNode):
 
     def __init__(self, *args, **kwargs):
@@ -43,8 +45,11 @@ class StartMail(BaseRelatableNode):
         self.pending_outs = deque()
 
     def trigger(self, context, structure_id, executable_id):
-        start_mail_content = {'context': context, 'structure_id': structure_id}
-        start_mail = BaseMail(sender_id=self.id_, recipient_id=executable_id,
-                              category="start", package=start_mail_content)
+        start_mail_content = {"context": context, "structure_id": structure_id}
+        start_mail = BaseMail(
+            sender_id=self.id_,
+            recipient_id=executable_id,
+            category="start",
+            package=start_mail_content,
+        )
         self.pending_outs.append(start_mail)
-        

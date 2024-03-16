@@ -81,7 +81,6 @@ class BaseBranch(BaseRelatableNode, BranchIOMixin, ABC):
 
         self.name = name
 
-
     def add_message(
         self,
         system: dict | list | System | None = None,
@@ -122,7 +121,6 @@ class BaseBranch(BaseRelatableNode, BranchIOMixin, ABC):
 
         if isinstance(_msg, Response):
             _msg.sender = self.name
-
 
         _msg.content = _msg.msg_content
         self.messages.loc[len(self.messages)] = _msg.to_pd_series()
@@ -263,8 +261,6 @@ class BaseBranch(BaseRelatableNode, BranchIOMixin, ABC):
             A pandas DataFrame of 'assistant' messages excluding action requests/responses.
         """
         return self.assistant_responses.iloc[-1]
-
-
 
     @property
     def info(self) -> dict[str, Any]:

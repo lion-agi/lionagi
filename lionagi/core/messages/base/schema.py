@@ -88,6 +88,7 @@ class MessageType(dict, Enum):
         "content_key": MessageContentKey.RESPONSE.value,
     }
 
+
 # class BaseMessage(DataNode):
 
 

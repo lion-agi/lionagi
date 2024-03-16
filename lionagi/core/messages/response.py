@@ -33,7 +33,9 @@ class Response(BaseMessage):
                     elif "action_request" in convert.to_dict(response["content"]):
                         sender = sender or "action_request"
                         content_key = content_key or "action_request"
-                        content_ = convert.to_dict(response["content"])["action_request"]
+                        content_ = convert.to_dict(response["content"])[
+                            "action_request"
+                        ]
                     else:
                         content_ = response["content"]
                         content_key = content_key or "response"
@@ -50,8 +52,8 @@ class Response(BaseMessage):
 
         try:
             content_ = convert.to_dict(content_)
-            if 'response' in content_.keys():
-                content_ = content_['response']
+            if "response" in content_.keys():
+                content_ = content_["response"]
         except:
             pass
 

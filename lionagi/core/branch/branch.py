@@ -131,7 +131,6 @@ class Branch(BaseBranch, BranchFlowMixin):
         self.pending_ins = {}
         self.pending_outs = deque()
 
-
     @property
     def has_tools(self) -> bool:
         """

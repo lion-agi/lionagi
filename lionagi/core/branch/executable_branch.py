@@ -8,12 +8,16 @@ from lionagi.libs.ln_async import AsyncUtil
 from lionagi.libs.ln_parse import ParseUtil
 
 from lionagi.core.schema.base_node import BaseRelatableNode
+from lionagi.core.schema.action_node import ActionNode
+
 from lionagi.core.mail.schema import BaseMail
 
 from lionagi.core.messages.system import System
 from lionagi.core.messages.instruction import Instruction
 
 from lionagi import Branch
+from lionagi.core.agent.base_agent import BaseAgent
+
 
 class ExecutableBranch(BaseRelatableNode):
 
@@ -55,29 +59,42 @@ class ExecutableBranch(BaseRelatableNode):
 
         if isinstance(mail.package, System):
             self._system_process(mail.package)
-
+            self.send(mail.sender_id, "node_id", mail.package.id_)
+            return
+            
         elif isinstance(mail.package, Instruction):
             await self._instruction_process(mail.package)
+            self.send(mail.sender_id, "node_id", mail.package.id_)
+            return
+        
+        elif isinstance(mail.package, ActionNode):    
+            await self._action_process(mail.package)
+            self.send(mail.sender_id, "node_id", mail.package.instruction.id_)
+            return 
 
-        else:
+        elif isinstance(mail.package, BaseAgent):
             await self._agent_process(mail.package)
-
-        self.send(mail.sender_id, "node_id", mail.package.id_)
+            self.send(mail.sender_id, "node_id", mail.package.id_)
+            return
 
     def _system_process(self, system: System, verbose=True, context_verbose=False):
         if verbose:
-            print(f'---------------Welcome: {system.name}------------------')
+            print(f"---------------Welcome: {system.name}------------------")
             display(Markdown(f"system: {convert.to_str(system.system)}"))
             if self.context and context_verbose:
                 display(Markdown(f"context: {convert.to_str(self.context)}"))
 
         self.branch.add_message(system=system)
 
-    async def _instruction_process(self, instruction: Instruction, verbose=True,
-                                   **kwargs):
+    async def _instruction_process(
+        self, instruction: Instruction, verbose=True, **kwargs
+    ):
         if verbose:
             display(
-                Markdown(f"{instruction.sender}: {convert.to_str(instruction.instruct)}"))
+                Markdown(
+                    f"{instruction.sender}: {convert.to_str(instruction.instruct)}"
+                )
+            )
 
         if self.context:
             instruction.content.update({"context": self.context})
@@ -86,25 +103,26 @@ class ExecutableBranch(BaseRelatableNode):
         result = await self.branch.chat(instruction, **kwargs)
         try:
             result = ParseUtil.fuzzy_parse_json(result)
-            if 'response' in result.keys():
-                result = result['response']
+            if "response" in result.keys():
+                result = result["response"]
         except:
             pass
 
         if verbose:
-            display(Markdown(
-                f"{self.branch.last_assistant_response.sender}: {convert.to_str(result)}"))
-            print('-----------------------------------------------------')
+            display(
+                Markdown(
+                    f"{self.branch.last_assistant_response.sender}: {convert.to_str(result)}"
+                )
+            )
+            print("-----------------------------------------------------")
 
         self.responses.append(result)
 
     async def _agent_process(self, agent):
         context = self.responses
         result = await agent.execute(context)
-
-        # if verbose:
-        #     display(Markdown(f"Agent Response: {result}"))
-
+        
+        self.context=result
         self.responses.append(result)
 
     def _process_start(self, mail):
@@ -115,3 +133,25 @@ class ExecutableBranch(BaseRelatableNode):
     def _process_end(self, mail):
         self.execute_stop = True
         self.send(mail.sender_id, "end", "end")
+
+    async def _action_process(self, action: ActionNode):
+        # instruction = action.instruction
+        # if self.context:
+        #     instruction.content.update({"context": self.context})
+        #     self.context=None
+        try:
+            func = getattr(self.branch, action.action)
+        except:
+            raise ValueError(f"{action.action} is not a valid action")
+
+        if action.tools:
+            self.branch.register_tools(action.tools)
+        # result = await func(instruction, tools=action.tools, **action.action_kwargs)
+        if self.context:
+            result = await func(action.instruction.content, context=self.context,
+                                tools=action.tools, **action.action_kwargs)
+            self.context = None
+        else: 
+            result = await func(action.instruction.content, tools=action.tools, **action.action_kwargs)
+        print('action calls:', result)
+        self.responses.append(result)
