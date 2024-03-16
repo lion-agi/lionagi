@@ -1,4 +1,3 @@
-from typing import Dict, List
 from collections import deque
 from lionagi.core.schema.base_node import BaseNode
 from lionagi.core.mail.schema import BaseMail
@@ -18,25 +17,43 @@ class MailManager:
             and sender.
     """
 
-    def __init__(self, sources: List[BaseNode]):
+    # def __init__(self, sources: List[BaseNode]):
+    #     self.sources = {}
+    #     self.mails = {}
+    #     for source in sources:
+    #         self.sources[source.id_] = source
+    #         self.mails[source.id_] = {}
+    #     self.execute_stop = False
+
+    def __init__(self, sources: list[BaseNode]):
         self.sources = {}
         self.mails = {}
-        for source in sources:
-            self.sources[source.id_] = source
-            self.mails[source.id_] = {}
+        self.add_sources(sources)
         self.execute_stop = False
+
+    def add_sources(self, sources):
+        if isinstance(sources, dict):
+            for _, v in sources.items():
+                if v.id_ not in self.sources:
+                    self.sources[v.id_] = v
+                    self.mails[v.id_] = {}
+        elif isinstance(sources, list):
+            for v in sources:
+                if v.id_ not in self.sources:
+                    self.sources[v.id_] = v
+                    self.mails[v.id_] = {}
 
     @staticmethod
     def create_mail(sender_id, recipient_id, category, package):
         return BaseMail(sender_id, recipient_id, category, package)
 
-    def add_source(self, sources: List[BaseNode]):
-        for source in sources:
-            if source.id_ in self.sources:
-                # raise ValueError(f"Source {source.id_} exists, please input a different name.")
-                continue
-            self.sources[source.id_] = source
-            self.mails[source.id_] = {}
+    # def add_source(self, sources: List[BaseNode]):
+    #     for source in sources:
+    #         if source.id_ in self.sources:
+    #             # raise ValueError(f"Source {source.id_} exists, please input a different name.")
+    #             continue
+    #         self.sources[source.id_] = source
+    #         self.mails[source.id_] = {}
 
     def delete_source(self, source_id):
         if source_id not in self.sources:

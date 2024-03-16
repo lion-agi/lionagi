@@ -10,6 +10,10 @@ from lionagi.core.schema.base_node import BaseRelatableNode, BaseNode
 from lionagi.core.mail.schema import BaseMail
 
 
+from lionagi.core.schema.action_node import ActionNode, ActionSelection
+from lionagi.core.schema.base_node import Tool
+
+
 class Relationship(BaseRelatableNode):
     """
     Represents a relationship between two nodes in a graph.
@@ -28,7 +32,7 @@ class Relationship(BaseRelatableNode):
 
     source_node_id: str
     target_node_id: str
-    if_bundle: bool = False
+    bundle: bool = False
     condition: dict = Field(default={})
 
     def add_condition(self, condition: Dict[str, Any]) -> None:
@@ -469,16 +473,47 @@ class Structure(BaseRelatableNode):
                 heads.append(self.graph.nodes[key])
         return heads
 
+    # def get_next_step(self, current_node: BaseNode):
+    #     next_nodes = deque()
+    #     next_relationships = self.get_node_relationships(current_node)
+    #     for relationship in next_relationships:
+    #         node = self.graph.nodes[relationship.target_node_id]
+    #         next_nodes.append(node)
+    #         further_relationships = self.get_node_relationships(node)
+    #         for f_relationship in further_relationships:
+    #             if f_relationship.bundle:
+    #                 next_nodes.append(self.graph.nodes[f_relationship.target_node_id])
+    #     return next_nodes
+
+    @staticmethod
+    def parse_to_action(instruction: BaseNode, bundled_nodes: deque):
+        action_node = ActionNode(instruction)
+        while bundled_nodes:
+            node = bundled_nodes.popleft()
+            if isinstance(node, ActionSelection):
+                action_node.action = node.action
+                action_node.action_kwargs = node.action_kwargs
+            elif isinstance(node, Tool):
+                action_node.tools.append(node)
+            else:
+                raise ValueError('Invalid bundles nodes')
+        return action_node
+
     def get_next_step(self, current_node: BaseNode):
         next_nodes = deque()
         next_relationships = self.get_node_relationships(current_node)
         for relationship in next_relationships:
+            if relationship.bundle:
+                continue
             node = self.graph.nodes[relationship.target_node_id]
-            next_nodes.append(node)
             further_relationships = self.get_node_relationships(node)
+            bundled_nodes = deque()
             for f_relationship in further_relationships:
-                if f_relationship.if_bundle:
-                    next_nodes.append(self.graph.nodes[f_relationship.target_node_id])
+                if f_relationship.bundle:
+                    bundled_nodes.append(self.graph.nodes[f_relationship.target_node_id])
+            if bundled_nodes:
+                node = self.parse_to_action(node, bundled_nodes)
+            next_nodes.append(node)
         return next_nodes
 
     def acyclic(self):
