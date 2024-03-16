@@ -1,18 +1,19 @@
-import lionagi.libs.ln_convert as convert
-from lionagi.libs.ln_async import AsyncUtil
-from lionagi.core.messages.system import System
-from lionagi.core.messages.instruction import Instruction
-
-from lionagi.libs.ln_parse import ParseUtil
-
-from lionagi import Branch
-from lionagi.core.mail.schema import BaseMail
-from lionagi.core.schema.base_node import BaseRelatableNode
 from collections import deque
 from typing import Any
 
 from IPython.display import Markdown, display
 
+import lionagi.libs.ln_convert as convert
+from lionagi.libs.ln_async import AsyncUtil
+from lionagi.libs.ln_parse import ParseUtil
+
+from lionagi.core.schema.base_node import BaseRelatableNode
+from lionagi.core.mail.schema import BaseMail
+
+from lionagi.core.messages.system import System
+from lionagi.core.messages.instruction import Instruction
+
+from lionagi import Branch
 
 class ExecutableBranch(BaseRelatableNode):
 
