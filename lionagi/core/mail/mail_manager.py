@@ -69,7 +69,9 @@ class MailManager:
         while self.sources[sender_id].pending_outs:
             mail_ = self.sources[sender_id].pending_outs.popleft()
             if mail_.recipient_id not in self.sources:
-                raise ValueError(f"Recipient source {mail_.recipient_id} does not exist")
+                raise ValueError(
+                    f"Recipient source {mail_.recipient_id} does not exist"
+                )
             if mail_.sender_id not in self.mails[mail_.recipient_id]:
                 self.mails[mail_.recipient_id] = {mail_.sender_id: deque()}
             self.mails[mail_.recipient_id][mail_.sender_id].append(mail_)

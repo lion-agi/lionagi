@@ -61,16 +61,16 @@ class ExecutableBranch(BaseRelatableNode):
             self._system_process(mail.package)
             self.send(mail.sender_id, "node_id", mail.package.id_)
             return
-            
+
         elif isinstance(mail.package, Instruction):
             await self._instruction_process(mail.package)
             self.send(mail.sender_id, "node_id", mail.package.id_)
             return
-        
-        elif isinstance(mail.package, ActionNode):    
+
+        elif isinstance(mail.package, ActionNode):
             await self._action_process(mail.package)
             self.send(mail.sender_id, "node_id", mail.package.instruction.id_)
-            return 
+            return
 
         elif isinstance(mail.package, BaseAgent):
             await self._agent_process(mail.package)
@@ -121,8 +121,8 @@ class ExecutableBranch(BaseRelatableNode):
     async def _agent_process(self, agent):
         context = self.responses
         result = await agent.execute(context)
-        
-        self.context=result
+
+        self.context = result
         self.responses.append(result)
 
     def _process_start(self, mail):
@@ -148,10 +148,16 @@ class ExecutableBranch(BaseRelatableNode):
             self.branch.register_tools(action.tools)
         # result = await func(instruction, tools=action.tools, **action.action_kwargs)
         if self.context:
-            result = await func(action.instruction.content, context=self.context,
-                                tools=action.tools, **action.action_kwargs)
+            result = await func(
+                action.instruction.content,
+                context=self.context,
+                tools=action.tools,
+                **action.action_kwargs,
+            )
             self.context = None
-        else: 
-            result = await func(action.instruction.content, tools=action.tools, **action.action_kwargs)
-        print('action calls:', result)
+        else:
+            result = await func(
+                action.instruction.content, tools=action.tools, **action.action_kwargs
+            )
+        print("action calls:", result)
         self.responses.append(result)

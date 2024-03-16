@@ -498,7 +498,7 @@ class Structure(BaseRelatableNode):
             elif isinstance(node, Tool):
                 action_node.tools.append(node)
             else:
-                raise ValueError('Invalid bundles nodes')
+                raise ValueError("Invalid bundles nodes")
         return action_node
 
     def get_next_step(self, current_node: BaseNode):
@@ -512,7 +512,9 @@ class Structure(BaseRelatableNode):
             bundled_nodes = deque()
             for f_relationship in further_relationships:
                 if f_relationship.bundle:
-                    bundled_nodes.append(self.graph.nodes[f_relationship.target_node_id])
+                    bundled_nodes.append(
+                        self.graph.nodes[f_relationship.target_node_id]
+                    )
             if bundled_nodes:
                 node = self.parse_to_action(node, bundled_nodes)
             next_nodes.append(node)
