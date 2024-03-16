@@ -1,7 +1,8 @@
 from abc import ABC
 
 from lionagi.core.schema.base_node import TOOL_TYPE
-from lionagi.core.messages.schema import System, Instruction
+from lionagi.core.messages.system import System
+from lionagi.core.messages.instruction import Instruction
 from lionagi.core.branch.branch import Branch
 from lionagi.core.flow.poly_chat import PolyChat
 

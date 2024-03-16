@@ -6,14 +6,19 @@ from lionagi.libs.sys_util import SysUtil, PATH_TYPE
 import lionagi.libs.ln_convert as convert
 import lionagi.libs.ln_dataframe as dataframe
 
+from lionagi.core.messages.system import System
+from lionagi.core.messages.instruction import Instruction
+from lionagi.core.messages.response import Response
+
+
 from lionagi.core.schema.base_node import BaseRelatableNode
 from lionagi.core.schema.data_logger import DataLogger
-from lionagi.core.messages.schema import (
+from lionagi.core.messages.base.schema import (
     BranchColumns,
-    System,
-    Instruction,
-    BaseMessage,
 )
+from lionagi.core.messages.system import System
+from lionagi.core.messages.instruction import Instruction
+from lionagi.core.messages.base.base_message import BaseMessage
 from lionagi.core.branch.base.util import MessageUtil
 from lionagi.core.branch.base.branch_io_mixin import BranchIOMixin
 
@@ -35,9 +40,11 @@ class BaseBranch(BaseRelatableNode, BranchIOMixin, ABC):
 
     def __init__(
         self,
+        name: str | None = None,
         messages: dataframe.ln_DataFrame | None = None,
         datalogger: DataLogger | None = None,
         persist_path: PATH_TYPE | None = None,
+        system=None,
         **kwargs,
     ) -> None:
         """Initializes a new instance of the BaseBranch class.
@@ -56,6 +63,7 @@ class BaseBranch(BaseRelatableNode, BranchIOMixin, ABC):
             ValueError: If the provided messages dataframe is not in the expected format.
         """
         super().__init__(**kwargs)
+        self.system_node = None
         if isinstance(messages, dataframe.ln_DataFrame):
             if MessageUtil.validate_messages(messages):
                 self.messages = messages
@@ -67,6 +75,12 @@ class BaseBranch(BaseRelatableNode, BranchIOMixin, ABC):
         self.datalogger = (
             datalogger if datalogger else DataLogger(persist_path=persist_path)
         )
+
+        if system is not None:
+            self.add_message(system=system)
+
+        self.name = name
+
 
     def add_message(
         self,
@@ -102,6 +116,13 @@ class BaseBranch(BaseRelatableNode, BranchIOMixin, ABC):
             output_fields=output_fields,
             **kwargs,
         )
+
+        if isinstance(_msg, System):
+            self.system_node = _msg
+
+        if isinstance(_msg, Response):
+            _msg.sender = self.name
+
 
         _msg.content = _msg.msg_content
         self.messages.loc[len(self.messages)] = _msg.to_pd_series()
@@ -232,6 +253,18 @@ class BaseBranch(BaseRelatableNode, BranchIOMixin, ABC):
         a_responses = self.responses[self.responses.sender != "action_response"]
         a_responses = a_responses[a_responses.sender != "action_request"]
         return convert.to_df(a_responses)
+
+    @property
+    def last_assistant_response(self) -> dataframe.ln_Series:
+        """
+        Filters 'assistant' role messages excluding 'action_request' and 'action_response'.
+
+        Returns:
+            A pandas DataFrame of 'assistant' messages excluding action requests/responses.
+        """
+        return self.assistant_responses.iloc[-1]
+
+
 
     @property
     def info(self) -> dict[str, Any]:

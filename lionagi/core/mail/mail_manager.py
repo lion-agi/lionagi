@@ -1,4 +1,3 @@
-from typing import Dict, List
 from collections import deque
 from lionagi.core.schema.base_node import BaseNode
 from lionagi.core.mail.schema import BaseMail
@@ -18,7 +17,7 @@ class MailManager:
             and sender.
     """
 
-    def __init__(self, sources: List[BaseNode]):
+    def __init__(self, sources: list[BaseNode]):
         self.sources = {}
         self.mails = {}
         self.add_sources(sources)
@@ -40,7 +39,7 @@ class MailManager:
     def create_mail(sender_id, recipient_id, category, package):
         return BaseMail(sender_id, recipient_id, category, package)
 
-    def add_source(self, sources: List[BaseNode]):
+    def add_source(self, sources: list[BaseNode]):
         for source in sources:
             if source.id_ in self.sources:
                 # raise ValueError(f"Source {source.id_} exists, please input a different name.")

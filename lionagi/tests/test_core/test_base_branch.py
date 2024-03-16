@@ -1,6 +1,6 @@
 from lionagi.core.branch.base.base_branch import BaseBranch
 from lionagi.core.branch.base.util import MessageUtil
-from lionagi.core.messages.schema import System
+from lionagi.core.messages.system import System
 
 import unittest
 from unittest.mock import patch, MagicMock

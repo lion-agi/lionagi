@@ -11,7 +11,7 @@ from lionagi.core.schema.base_node import TOOL_TYPE, Tool
 from lionagi.core.schema.data_logger import DataLogger
 from lionagi.core.tool.tool_manager import ToolManager
 from lionagi.core.mail.mail_manager import MailManager
-from lionagi.core.messages.schema import System
+from ..messages.system import System
 from lionagi.core.branch.branch import Branch
 
 from .session_flow_mixin import SessionFlowMIxin
@@ -566,7 +566,7 @@ class Session(SessionFlowMIxin):
 
         Examples:
             >>> branch_instance = session.get_branch("existing_branch_name")
-            >>> branch_instance, branch_name = session.get_branch("existing_branch_name", get_name=True)
+            >>> branch_instance, name = session.get_branch("existing_branch_name", get_name=True)
         """
         if isinstance(branch, str):
             if branch not in self.branches.keys():
@@ -630,7 +630,7 @@ class Session(SessionFlowMIxin):
             )
         else:
             self.branches.pop(branch_name)
-            # self.mail_manager.sources.pop(branch_name)
+            # self.mail_manager.sources.pop(name)
             self.mail_manager.mails.pop(branch_name)
             if verbose:
                 print(f"Branch {branch_name} is deleted.")
@@ -681,7 +681,7 @@ class Session(SessionFlowMIxin):
                 If None, requests are collected from all branches.
 
         Examples:
-            >>> session.collect("branch_name")
+            >>> session.collect("name")
             >>> session.collect([branch_instance_1, "branch_name_2"])
             >>> session.collect()  # Collects from all branches
         """

@@ -320,12 +320,12 @@ Returns the estimated number of tokens required for the request.
 
 Examples:
 ```python
-payload = {'prompt': 'Translate the following text:', 'max_tokens': 50}
+payload = {'format_prompt': 'Translate the following text:', 'max_tokens': 50}
 num_tokens = APIUtil.calculate_num_token(payload, 'completions', 'cl100k_base')
 print(num_tokens)
 # Output: 100
 
-payload_with_multiple_prompts = {'prompt': ['Prompt 1', 'Prompt 2'], 'max_tokens': 100}
+payload_with_multiple_prompts = {'format_prompt': ['Prompt 1', 'Prompt 2'], 'max_tokens': 100}
 num_tokens = APIUtil.calculate_num_token(payload_with_multiple_prompts, 'completions', 'cl100k_base')
 print(num_tokens)
 # Output: 250

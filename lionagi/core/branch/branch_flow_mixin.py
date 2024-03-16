@@ -6,7 +6,8 @@ from lionagi.core.flow.mono_chat import MonoChat
 from lionagi.core.flow.mono_followup import MonoFollowup
 from lionagi.core.flow.mono_react import MonoReAct
 
-from lionagi.core.messages.schema import Instruction, System
+from lionagi.core.messages.system import System
+from lionagi.core.messages.instruction import Instruction
 
 T = TypeVar("T", bound=Tool)
 
@@ -32,7 +33,7 @@ class BranchFlowMixin(ABC):
         trigger a tool call and specify output fields for structured response.
 
         Args:
-            instruction (Instruction | str): The instruction or prompt for the LLM.
+            instruction (Instruction | str): The instruction or format_prompt for the LLM.
             context (Any, optional): Additional context for the LLM.
             sender (str, optional): Identifier for the sender of the message.
             system (System | str | dict[str, Any], optional): System message to include.
@@ -142,8 +143,8 @@ class BranchFlowMixin(ABC):
             max_followup (int, optional): The maximum number of follow-up rounds. Defaults to 1.
             auto (bool, optional): If True, allows automatic stopping of the follow-up before reaching
                                    max_followup rounds if the LLM deems the task as successfully achieved.
-            followup_prompt (Any, optional): The prompt used for follow-up interactions.
-            output_prompt (Any, optional): The prompt for structuring the output.
+            followup_prompt (Any, optional): The format_prompt used for follow-up interactions.
+            output_prompt (Any, optional): The format_prompt for structuring the output.
             out (bool, optional): If True, outputs the response as specified by `output_fields`.
             **kwargs: Additional keyword arguments for customization.
 

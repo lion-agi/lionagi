@@ -1,6 +1,6 @@
 from .mono_chat import MonoChat
 from lionagi.core.schema.base_node import Tool
-from lionagi.core.messages.schema import Instruction
+from ..messages.instruction import Instruction
 
 
 class MonoReAct(MonoChat):

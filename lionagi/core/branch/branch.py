@@ -11,7 +11,7 @@ from lionagi.core.schema.data_logger import DataLogger
 from lionagi.core.tool.tool_manager import ToolManager, func_to_tool
 
 from lionagi.core.branch.base.base_branch import BaseBranch
-from lionagi.core.messages.schema import System
+from ..messages.system import System
 from lionagi.core.mail.schema import BaseMail
 
 from lionagi.core.branch.base.util import MessageUtil
@@ -55,14 +55,14 @@ class Branch(BaseBranch, BranchFlowMixin):
     conversational AI applications.
 
     Example:
-        >>> branch = Branch(branch_name="CustomerSupport", service=my_service, llmconfig=my_llm_config)
+        >>> branch = Branch(name="CustomerSupport", service=my_service, llmconfig=my_llm_config)
         >>> branch.register_tools([my_tool])
         >>> branch.send(recipient="other_branch", category="tools", package=my_tool)
     """
 
     def __init__(
         self,
-        branch_name: str | None = None,
+        name: str | None = None,
         system: dict | list | System | None = None,
         messages: dataframe.ln_DataFrame | None = None,
         service: BaseService | None = None,
@@ -79,7 +79,7 @@ class Branch(BaseBranch, BranchFlowMixin):
         Initializes a new Branch instance with various configurations.
 
         Args:
-            branch_name (str | None): Optional name for the branch.
+            name (str | None): Optional name for the branch.
             system (dict | list | System | None): System configuration or messages.
             messages (dataframe.ln_DataFrame | None): Initial messages for the branch.
             service (BaseService | None): The service associated with this branch.
@@ -101,7 +101,7 @@ class Branch(BaseBranch, BranchFlowMixin):
         )
 
         # add branch name
-        self.branch_name = branch_name
+        self.name = name
         self.sender = sender or "system"
 
         # add tool manager and register tools
@@ -131,9 +131,6 @@ class Branch(BaseBranch, BranchFlowMixin):
         self.pending_ins = {}
         self.pending_outs = deque()
 
-        # add system
-        if system is not None:
-            self.add_message(system=system)
 
     @property
     def has_tools(self) -> bool:

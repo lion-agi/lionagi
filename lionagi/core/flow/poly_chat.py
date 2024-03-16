@@ -3,7 +3,7 @@ from typing import Any
 from lionagi.libs import ln_convert as convert
 from lionagi.libs.ln_async import AsyncUtil
 
-from lionagi.core.messages.schema import Instruction
+from lionagi.core.messages.instruction import Instruction
 from lionagi.core.branch.branch import Branch
 
 
