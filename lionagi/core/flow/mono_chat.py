@@ -1,7 +1,7 @@
 from typing import Any
 
 from lionagi.core.flow.base.baseflow import BaseMonoFlow
-from lionagi.core.flow.monoflow.mono_chat_mixin import MonoChatMixin
+from lionagi.core.flow.base.mono_chat_mixin import MonoChatMixin
 
 
 class MonoChat(BaseMonoFlow, MonoChatMixin):

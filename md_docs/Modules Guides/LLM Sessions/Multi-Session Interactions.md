@@ -32,8 +32,8 @@ critic = li.Session(sys_critic)
 
 # Providing context for the critic to evaluate the joke
 context = {
-    "joke1": {"prompt": instruct1, "response": joke1},
-    "joke2": {"prompt": instruct2, "response": joke2}
+    "joke1": {"format_prompt": instruct1, "response": joke1},
+    "joke2": {"format_prompt": instruct2, "response": joke2}
 }
 
 # Generating critiques for the jokes

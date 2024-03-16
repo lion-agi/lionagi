@@ -79,7 +79,7 @@ oai_audio_speech_schema = {
 oai_audio_transcriptions_llmconfig = {
     "model": "whisper-1",
     "language": None,
-    "prompt": None,
+    "format_prompt": None,
     "response_format": "json",
     "temperature": 0,
 }
@@ -88,7 +88,7 @@ oai_audio_transcriptions_schema = {
     "optional": [
         "response_format",
         "language",
-        "prompt",
+        "format_prompt",
         "response_format",
         "temperature",
     ],
@@ -99,14 +99,14 @@ oai_audio_transcriptions_schema = {
 # Audio ------------    translations
 oai_audio_translations_llmconfig = {
     "model": "whisper-1",
-    "prompt": None,
+    "format_prompt": None,
     "response_format": "json",
     "temperature": 0,
 }
 
 oai_audio_translations_schema = {
     "required": ["model"],
-    "optional": ["response_format", "speed", "prompt", "temperature"],
+    "optional": ["response_format", "speed", "format_prompt", "temperature"],
     "input_": "file",
     "config": oai_audio_translations_llmconfig,
 }

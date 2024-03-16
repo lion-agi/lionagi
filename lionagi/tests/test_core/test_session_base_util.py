@@ -1,5 +1,7 @@
-from lionagi.core.branch.util import MessageUtil
-from lionagi.core.messages.schema import System, Instruction, Response
+from lionagi.core.branch.base.util import MessageUtil
+from lionagi.core.messages.response import Response
+from lionagi.core.messages.system import System
+from lionagi.core.messages.instruction import Instruction
 
 import unittest
 import pandas as pd
