@@ -20,16 +20,16 @@ async def score(
     **kwargs,
 ):
     return await _force_score(
-        context = context, 
-        instruction = instruction,
-        score_range = score_range,
-        inclusive = inclusive,
-        num_digit = num_digit,
-        default_key = default_key,
-        method = method,
-        reason = reason,
-        confidence_score = confidence_score,
-        retry_kwargs = retry_kwargs,
+        context=context,
+        instruction=instruction,
+        score_range=score_range,
+        inclusive=inclusive,
+        num_digit=num_digit,
+        default_key=default_key,
+        method=method,
+        reason=reason,
+        confidence_score=confidence_score,
+        retry_kwargs=retry_kwargs,
         **kwargs,
     )
 
@@ -65,7 +65,7 @@ async def _force_score(
             raise ValueError("No output from the model")
 
         return out_
-    
+
     if "retries" not in retry_kwargs:
         retry_kwargs["retries"] = 2
 
@@ -92,12 +92,12 @@ def _create_score_config(
         "include_endpoints": "yes" if inclusive else "no",
     }
 
-    return_precision = ''
+    return_precision = ""
     if num_digit == 0:
         return_precision = "integer"
     else:
         return_precision = f"num:{convert.to_str(num_digit)}f"
-        
+
     extra_fields = kwargs.pop("output_fields", {})
     output_fields = {default_key: f"""a numeric score as {return_precision}"""}
     output_fields = {**output_fields, **extra_fields}
@@ -143,7 +143,12 @@ async def _score(
     out_ = ""
 
     if method == "llm":
-        out_ = await branch.chat(_instruct, tools=None, context=context, output_fields=_output_fields, **_kwargs,
+        out_ = await branch.chat(
+            _instruct,
+            tools=None,
+            context=context,
+            output_fields=_output_fields,
+            **_kwargs,
         )
 
     to_num_kwargs = {

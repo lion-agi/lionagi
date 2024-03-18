@@ -94,7 +94,7 @@ class BaseBranch(BaseRelatableNode, ABC):
         if isinstance(_msg, Response):
             if "action_response" in _msg.content.keys():
                 _msg.recipient = recipient or self.name
-            if 'response' in _msg.content.keys():
+            if "response" in _msg.content.keys():
                 _msg.sender = self.name
 
         _msg.content = _msg.msg_content

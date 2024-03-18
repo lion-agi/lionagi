@@ -90,8 +90,11 @@ async def _predict(
     **kwargs,
 ):
     _instruct, _output_fields, _kwargs = _create_predict_config(
-        num_sentences=num_sentences, default_key=default_key, 
-        confidence_score=confidence_score, reason=reason, **kwargs,  
+        num_sentences=num_sentences,
+        default_key=default_key,
+        confidence_score=confidence_score,
+        reason=reason,
+        **kwargs,
     )
 
     branch = Branch()

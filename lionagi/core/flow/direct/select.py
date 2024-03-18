@@ -4,16 +4,17 @@ from lionagi.libs.ln_parse import StringMatch
 
 from .utils import _handle_single_out
 
+
 async def select(
-    context, 
-    choices, 
+    context,
+    choices,
     *,
     num_choices=1,
-    method='llm', 
+    method="llm",
     objective=None,
-    default_key='answer',
-    reason=False, 
-    confidence_score=False, 
+    default_key="answer",
+    reason=False,
+    confidence_score=False,
     retry_kwargs={},
     **kwargs,
 ):
@@ -32,19 +33,18 @@ async def select(
 
 
 async def _force_select(
-    context, 
-    choices, 
+    context,
+    choices,
     num_choices=1,
-    method='llm', 
+    method="llm",
     objective=None,
-    default_key='answer',
-    reason=False, 
-    confidence_score=False, 
+    default_key="answer",
+    reason=False,
+    confidence_score=False,
     retry_kwargs={},
     **kwargs,
 ):
-    
-    
+
     async def _inner():
         out_ = await _select(
             context=context,
@@ -78,15 +78,15 @@ async def _force_select(
 
 
 def _create_select_config(
-        choices, 
-        num_choices=1,
-        objective=None,
-        default_key='answer',
-        reason=False, 
-        confidence_score=False, 
-        **kwargs,
+    choices,
+    num_choices=1,
+    objective=None,
+    default_key="answer",
+    reason=False,
+    confidence_score=False,
+    **kwargs,
 ):
-    
+
     instruct = {"task": f"select {num_choices} from provided", "choices": choices}
     if objective is not None:
         instruct["objective"] = objective
@@ -105,22 +105,22 @@ def _create_select_config(
 
     if "temperature" not in kwargs:
         kwargs["temperature"] = 0.1
-    
+
     return instruct, output_fields, kwargs
 
 
 async def _select(
-    context, 
-    choices, 
+    context,
+    choices,
     num_choices=1,
-    method='llm', 
+    method="llm",
     objective=None,
-    default_key='answer',
-    reason=False, 
-    confidence_score=False, 
+    default_key="answer",
+    reason=False,
+    confidence_score=False,
     **kwargs,
 ):
-    
+
     _instruct, _output_fields, _kwargs = _create_select_config(
         choices=choices,
         num_choices=num_choices,
@@ -130,12 +130,16 @@ async def _select(
         confidence_score=confidence_score,
         **kwargs,
     )
-    
+
     branch = Branch()
     out_ = ""
     if method == "llm":
         out_ = await branch.chat(
-            _instruct, tools=None, context=context, output_fields=_output_fields, **_kwargs
+            _instruct,
+            tools=None,
+            context=context,
+            output_fields=_output_fields,
+            **_kwargs,
         )
-    
+
     return _handle_single_out(out_, default_key)
