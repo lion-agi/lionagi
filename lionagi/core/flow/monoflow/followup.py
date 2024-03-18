@@ -1,6 +1,6 @@
 from lionagi.core.messages.schema import Instruction
 from lionagi.core.schema.base_node import Tool
-from .mono_chat import MonoChat
+from .chat import MonoChat
 
 
 class MonoFollowup(MonoChat):

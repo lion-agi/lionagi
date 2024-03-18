@@ -30,7 +30,7 @@ class Branch(BaseBranch, BranchFlowMixin):
 
     def __init__(
         self,
-        branch_name: str | None = None,
+        name: str | None = None,
         system: dict | list | System | None = None,
         messages: dataframe.ln_DataFrame | None = None,
         service: BaseService | None = None,
@@ -49,11 +49,11 @@ class Branch(BaseBranch, BranchFlowMixin):
             messages=messages,
             datalogger=datalogger,
             persist_path=persist_path,
+            name=name,
             **kwargs,
         )
 
         # add branch name
-        self.branch_name = branch_name
         self.sender = sender or "system"
 
         # add tool manager and register tools
@@ -91,7 +91,7 @@ class Branch(BaseBranch, BranchFlowMixin):
     def from_csv(
         cls,
         filepath,
-        branch_name: str | None = None,
+        name: str | None = None,
         service: BaseService | None = None,
         llmconfig: dict[str, str | int | dict] | None = None,
         tools: TOOL_TYPE | None = None,
@@ -106,7 +106,7 @@ class Branch(BaseBranch, BranchFlowMixin):
         self = cls._from_csv(
             filepath=filepath,
             read_kwargs=read_kwargs,
-            branch_name=branch_name,
+            name=name,
             service=service,
             llmconfig=llmconfig,
             tools=tools,
@@ -123,7 +123,7 @@ class Branch(BaseBranch, BranchFlowMixin):
     def from_json_string(
         cls,
         filepath,
-        branch_name: str | None = None,
+        name: str | None = None,
         service: BaseService | None = None,
         llmconfig: dict[str, str | int | dict] | None = None,
         tools: TOOL_TYPE | None = None,
@@ -138,7 +138,7 @@ class Branch(BaseBranch, BranchFlowMixin):
         self = cls._from_json(
             filepath=filepath,
             read_kwargs=read_kwargs,
-            branch_name=branch_name,
+            name=name,
             service=service,
             llmconfig=llmconfig,
             tools=tools,

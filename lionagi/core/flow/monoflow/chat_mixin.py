@@ -49,12 +49,12 @@ class MonoChatConfigMixin(ABC):
 
 
 class MonoChatInvokeMixin(ABC):
-    async def _output(self, invoke, out, output_fields):
+    async def _output(self, invoke, out, output_fields, func_calls_=None):
         content_ = self.branch.last_message_content
 
         if invoke:
             try:
-                await self._invoke_tools(content_)
+                await self._invoke_tools(content_, func_calls_=func_calls_)
             except:
                 pass
         if out:
@@ -80,24 +80,29 @@ class MonoChatInvokeMixin(ABC):
 
         return out_
 
-    async def _invoke_tools(self, content_):
-        tool_uses = content_
-        func_calls = func_call.lcall(
-            [convert.to_dict(i) for i in tool_uses["action_request"]],
-            self.branch.tool_manager.get_function_call,
-        )
+    async def _invoke_tools(self, content_=None, func_calls_=None):
 
-        outs = await func_call.alcall(func_calls, self.branch.tool_manager.invoke)
+        if func_calls_ is None and content_ is not None:
+            tool_uses = content_
+            func_calls_ = func_call.lcall(
+                [convert.to_dict(i) for i in tool_uses["action_request"]],
+                self.branch.tool_manager.get_function_call,
+            )
+
+        outs = await func_call.alcall(func_calls_, self.branch.tool_manager.invoke)
         outs = convert.to_list(outs, flatten=True)
 
-        for out_, f in zip(outs, func_calls):
-            self.branch.add_message(
-                response={
-                    "function": f[0],
-                    "arguments": f[1],
-                    "output": out_,
-                }
-            )
+        a = []
+        for out_, f in zip(outs, func_calls_):
+            res = {
+                "function": f[0],
+                "arguments": f[1],
+                "output": out_,
+            }
+            self.branch.add_message(response=res)
+            a.append(res)
+
+        return a
 
     def _process_chatcompletion(self, payload, completion, sender):
         if "choices" in completion:

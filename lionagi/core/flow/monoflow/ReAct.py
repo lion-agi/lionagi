@@ -1,4 +1,7 @@
-from .mono_chat import MonoChat
+from lionagi.core.tool.tool_manager import func_to_tool
+from typing import Callable
+import lionagi.libs.ln_convert as convert
+from .chat import MonoChat
 from lionagi.core.schema.base_node import Tool
 from lionagi.core.messages.schema import Instruction
 
@@ -44,7 +47,7 @@ class MonoReAct(MonoChat):
         except:
             return default
 
-    def _create_followup_config(self, tools, **kwargs):
+    def _create_followup_config(self, tools, auto=True, **kwargs):
 
         if tools is not None:
             if isinstance(tools, list) and isinstance(tools[0], Tool):
@@ -55,7 +58,8 @@ class MonoReAct(MonoChat):
 
         config = self.branch.tool_manager.parse_tool(tools=True, **kwargs)
         config["tool_parsed"] = True
-        config["tool_choice"] = "auto"
+        if auto:
+            config["tool_choice"] = "auto"
         return config
 
     async def _handle_auto(
@@ -85,7 +89,7 @@ class MonoReAct(MonoChat):
         prompt_ = self._get_prompt(
             output_prompt, _output_prompt, instruction=instruction
         )
-        return await self.chat(prompt_, sender=sender, **config)
+        return await self.chat(prompt_, sender=sender, out=out, **config)
 
     async def _ReAct(
         self,
@@ -151,6 +155,44 @@ class MonoReAct(MonoChat):
             )
             if a:
                 return a
+
+    async def _react(
+        self,
+        instruction=None,
+        context=None,
+        output_fields=None,
+        tools=None,
+        reason_prompt=None,
+        action_prompt=None,
+        **kwargs,
+    ):
+
+        config = self._create_followup_config(tools=tools, auto=False, **kwargs)
+
+        instruct = {
+            "requirement": "think step by step, perform reasoning and prepare action plan according to available tools only",
+            "task": convert.to_str(instruction),
+        }
+
+        extra_fields = output_fields or {}
+        output_fields = {
+            "reason": reason_prompt or "reasoning",
+            "action": action_prompt
+            or "the action(s) to take, in function call format. If no actions are needed return none",
+        }
+        output_fields = {**output_fields, **extra_fields}
+
+        out_ = await self.chat(
+            instruct, context=context, output_fields=output_fields, **config
+        )
+        print(out_)
+
+        if convert.strip_lower(out_["action"]) not in ["none", "no", "na", "nan"]:
+            res = await self._invoke_tools(content_={"action_request": out_["action"]})
+            for idx, item in enumerate(res):
+                out_[f"action_response_{idx}"] = item
+
+        return out_
 
     # TODO: auto_ReAct
 

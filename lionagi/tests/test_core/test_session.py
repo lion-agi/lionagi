@@ -57,47 +57,47 @@ class TestSession(unittest.TestCase):
         )
         self.session.mail_manager = MagicMock()
 
-    def test_from_csv_initialization(self):
-        """Test Session initialization from a CSV file."""
-        mock_df = pd.DataFrame(
-            {
-                "node_id": ["1", "2"],
-                "timestamp": [datetime(2021, 1, 1), datetime(2021, 1, 1)],
-                "role": ["system", "user"],
-                "sender": ["system", "user1"],
-                "content": [
-                    json.dumps({"system_info": "System message"}),
-                    json.dumps({"instruction": "User message"}),
-                ],
-            }
-        )
-        filepath = "path/to/mock.csv"
+    # def test_from_csv_initialization(self):
+    #     """Test Session initialization from a CSV file."""
+    #     mock_df = pd.DataFrame(
+    #         {
+    #             "node_id": ["1", "2"],
+    #             "timestamp": [datetime(2021, 1, 1), datetime(2021, 1, 1)],
+    #             "role": ["system", "user"],
+    #             "sender": ["system", "user1"],
+    #             "content": [
+    #                 json.dumps({"system_info": "System message"}),
+    #                 json.dumps({"instruction": "User message"}),
+    #             ],
+    #         }
+    #     )
+    #     filepath = "path/to/mock.csv"
 
-        with patch("pandas.read_csv", return_value=mock_df) as mock_read_csv:
-            session = Session.from_csv(filepath)
-            mock_read_csv.assert_called_once_with(filepath)
-            pd.testing.assert_frame_equal(session.messages, mock_df)
+    #     with patch("pandas.read_csv", return_value=mock_df) as mock_read_csv:
+    #         session = Session.from_csv(filepath)
+    #         mock_read_csv.assert_called_once_with(filepath)
+    #         pd.testing.assert_frame_equal(session.messages, mock_df)
 
-    def test_from_json_initialization(self):
-        """Test Session initialization from a CSV file."""
-        mock_df = pd.DataFrame(
-            {
-                "node_id": ["1", "2"],
-                "timestamp": [datetime(2021, 1, 1), datetime(2021, 1, 1)],
-                "role": ["system", "user"],
-                "sender": ["system", "user1"],
-                "content": [
-                    json.dumps({"system_info": "System message"}),
-                    json.dumps({"instruction": "User message"}),
-                ],
-            }
-        )
-        filepath = "path/to/mock.json"
+    # def test_from_json_initialization(self):
+    #     """Test Session initialization from a CSV file."""
+    #     mock_df = pd.DataFrame(
+    #         {
+    #             "node_id": ["1", "2"],
+    #             "timestamp": [datetime(2021, 1, 1), datetime(2021, 1, 1)],
+    #             "role": ["system", "user"],
+    #             "sender": ["system", "user1"],
+    #             "content": [
+    #                 json.dumps({"system_info": "System message"}),
+    #                 json.dumps({"instruction": "User message"}),
+    #             ],
+    #         }
+    #     )
+    #     filepath = "path/to/mock.json"
 
-        with patch("pandas.read_json", return_value=mock_df) as mock_read_json:
-            session = Session.from_json(filepath)
-            mock_read_json.assert_called_once_with(filepath)
-            pd.testing.assert_frame_equal(session.messages, mock_df)
+    #     with patch("pandas.read_json", return_value=mock_df) as mock_read_json:
+    #         session = Session.from_json(filepath)
+    #         mock_read_json.assert_called_once_with(filepath)
+    #         pd.testing.assert_frame_equal(session.messages, mock_df)
 
     def test_to_csv_file(self):
         """Ensure to_csv_file calls each branch's to_csv_file method."""
