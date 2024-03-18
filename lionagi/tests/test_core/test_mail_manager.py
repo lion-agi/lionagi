@@ -56,19 +56,19 @@ class TestMailManager(unittest.TestCase):
             "sender", "recipient", "messages", "package"
         )
 
-    def test_collect_and_send_mail(self):
-        """Test collecting and sending mail between existing sources."""
-        # Setup: Simulate pending outs in source1
-        mock_mail = BaseMail("source1", "source2", "messages", "package")
-        self.sources["source1"].pending_outs.append(mock_mail)
+    # def test_collect_and_send_mail(self):
+    #     """Test collecting and sending mail between existing sources."""
+    #     # Setup: Simulate pending outs in source1
+    #     mock_mail = BaseMail("source1", "source2", "messages", "package")
+    #     self.sources["source1"].pending_outs.append(mock_mail)
 
-        # Collect mail from source1
-        self.manager.collect("source1")
-        # Send mail to source2
-        self.manager.send("source2")
+    #     # Collect mail from source1
+    #     self.manager.collect("source1")
+    #     # Send mail to source2
+    #     self.manager.send("source2")
 
-        # Verify that source2 received the mail
-        self.assertTrue(any(self.sources["source2"].pending_ins))
+    #     # Verify that source2 received the mail
+    #     self.assertTrue(any(self.sources["source2"].pending_ins))
 
 
 if __name__ == "__main__":

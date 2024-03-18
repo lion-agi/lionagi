@@ -114,7 +114,6 @@ class ExecutableBranch(BaseRelatableNode):
                     f"{self.branch.last_assistant_response.sender}: {convert.to_str(result)}"
                 )
             )
-            print("-----------------------------------------------------")
 
         self.responses.append(result)
 
