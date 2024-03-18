@@ -2,9 +2,9 @@ from abc import ABC
 from typing import Any, Optional, Union, TypeVar
 
 from lionagi.core.schema.base_node import TOOL_TYPE, Tool
-from lionagi.core.flow.monoflow.mono_chat import MonoChat
-from lionagi.core.flow.monoflow.mono_followup import MonoFollowup
-from lionagi.core.flow.monoflow.mono_react import MonoReAct
+from lionagi.core.flow.monoflow.chat import MonoChat
+from lionagi.core.flow.monoflow.followup import MonoFollowup
+from lionagi.core.flow.monoflow.ReAct import MonoReAct
 
 from lionagi.core.messages.schema import Instruction, System
 

@@ -5,7 +5,7 @@ from lionagi.libs import ln_convert as convert
 
 from lionagi.core.schema.data_node import DataNode
 
-_message_fields = ["node_id", "timestamp", "role", "sender", "content"]
+_message_fields = ["node_id", "timestamp", "role", "sender", "recipient", "content"]
 
 # ToDo: actually implement the new message classes
 
@@ -106,6 +106,7 @@ class BaseMessage(DataNode):
 
     role: str | None = None
     sender: str | None = None
+    recipient: str | None = None
 
     @property
     def msg(self) -> dict:
@@ -160,9 +161,13 @@ class Instruction(BaseMessage):
         context=None,
         sender: str | None = None,
         output_fields=None,
+        recipient=None,
     ):
         super().__init__(
-            role="user", sender=sender or "user", content={"instruction": instruction}
+            role="user",
+            sender=sender or "user",
+            content={"instruction": instruction},
+            recipient=recipient or "assistant",
         )
         if context:
             self.content.update({"context": context})
@@ -176,6 +181,10 @@ class Instruction(BaseMessage):
             """
             self.content.update({"response_format": format})
 
+    @property
+    def instruct(self):
+        return self.content["instruction"]
+
 
 class System(BaseMessage):
     """
@@ -184,10 +193,19 @@ class System(BaseMessage):
     Designed for messages containing system information, this class sets the message role to 'system'.
     """
 
-    def __init__(self, system: dict | list | str, sender: str | None = None):
+    def __init__(
+        self, system: dict | list | str, sender: str | None = None, recipient=None
+    ):
         super().__init__(
-            role="system", sender=sender or "system", content={"system_info": system}
+            role="system",
+            sender=sender or "system",
+            content={"system_info": system},
+            recipient=recipient or "assistant",
         )
+
+    @property
+    def system_info(self):
+        return self.content["system_info"]
 
 
 class Response(BaseMessage):
@@ -199,7 +217,9 @@ class Response(BaseMessage):
 
     """
 
-    def __init__(self, response: dict | list | str, sender: str | None = None) -> None:
+    def __init__(
+        self, response: dict | list | str, sender: str | None = None, recipient=None
+    ) -> None:
         content_key = ""
         try:
             response = response["message"]
@@ -207,6 +227,7 @@ class Response(BaseMessage):
                 content_ = self._handle_action_request(response)
                 sender = sender or "action_request"
                 content_key = content_key or "action_request"
+                recipient = recipient or "action"
 
             else:
                 try:
@@ -214,32 +235,44 @@ class Response(BaseMessage):
                         content_ = convert.to_dict(response["content"])["tool_uses"]
                         content_key = content_key or "action_request"
                         sender = sender or "action_request"
+                        recipient = recipient or "action"
+
                     elif "response" in convert.to_dict(response["content"]):
                         sender = sender or "assistant"
                         content_key = content_key or "response"
                         content_ = convert.to_dict(response["content"])["response"]
+                        recipient = recipient or "user"
+
                     elif "action_request" in convert.to_dict(response["content"]):
                         sender = sender or "action_request"
                         content_key = content_key or "action_request"
                         content_ = convert.to_dict(response["content"])[
                             "action_request"
                         ]
+                        recipient = recipient or "action"
+
                     else:
                         content_ = response["content"]
                         content_key = content_key or "response"
                         sender = sender or "assistant"
+                        recipient = recipient or "user"
                 except:
                     content_ = response["content"]
                     content_key = content_key or "response"
                     sender = sender or "assistant"
+                    recipient = recipient or "user"
 
         except:
             sender = sender or "action_response"
             content_ = response
             content_key = content_key or "action_response"
+            recipient = recipient or "assistant"
 
         super().__init__(
-            role="assistant", sender=sender, content={content_key: content_}
+            role="assistant",
+            sender=sender,
+            content={content_key: content_},
+            recipient=recipient,
         )
 
     @staticmethod

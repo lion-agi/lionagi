@@ -11,6 +11,7 @@ from lionagi.core.schema.data_logger import DataLogger, DLog
 from lionagi.core.messages.schema import (
     BranchColumns,
     System,
+    Response,
     Instruction,
     BaseMessage,
 )
@@ -36,6 +37,7 @@ class BaseBranch(BaseRelatableNode, ABC):
         messages: dataframe.ln_DataFrame | None = None,
         datalogger: DataLogger | None = None,
         persist_path: PATH_TYPE | None = None,
+        name=None,
         **kwargs,
     ) -> None:
         super().__init__(**kwargs)
@@ -50,6 +52,7 @@ class BaseBranch(BaseRelatableNode, ABC):
         self.datalogger = (
             datalogger if datalogger else DataLogger(persist_path=persist_path)
         )
+        self.name = name
 
     def add_message(
         self,
@@ -58,6 +61,7 @@ class BaseBranch(BaseRelatableNode, ABC):
         context: str | dict[str, Any] | None = None,
         response: dict | list | BaseMessage | None = None,
         output_fields=None,
+        recipient=None,
         **kwargs,
     ) -> None:
         """
@@ -76,8 +80,20 @@ class BaseBranch(BaseRelatableNode, ABC):
             context=context,
             response=response,
             output_fields=output_fields,
+            recipient=recipient,
             **kwargs,
         )
+
+        if isinstance(_msg, System):
+            self.system_node = _msg
+
+        if isinstance(_msg, Instruction):
+            if recipient is None and self.name is not None:
+                _msg.recipient = self.name
+
+        if isinstance(_msg, Response):
+            if "action_response" in _msg.content.keys():
+                _msg.recipient = recipient or self.name
 
         _msg.content = _msg.msg_content
         self.messages.loc[len(self.messages)] = _msg.to_pd_series()
@@ -245,6 +261,10 @@ class BaseBranch(BaseRelatableNode, ABC):
         a_responses = self.responses[self.responses.sender != "action_response"]
         a_responses = a_responses[a_responses.sender != "action_request"]
         return convert.to_df(a_responses)
+
+    @property
+    def last_assistant_response(self):
+        return self.assistant_responses.iloc[-1]
 
     @property
     def info(self) -> dict[str, Any]:

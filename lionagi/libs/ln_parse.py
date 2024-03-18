@@ -39,10 +39,16 @@ class ParseUtil:
             fixed_s = ParseUtil.fix_json_string(str_to_parse)
             try:
                 return convert.to_dict(fixed_s, strict=strict)
-            except Exception as e:
-                raise ValueError(
-                    f"Failed to parse JSON even after fixing attempts: {e}"
-                )
+            
+            except:
+                try:
+                    fixed_s = fixed_s.replace('\'', '\"')
+                    return convert.to_dict(fixed_s, strict=strict)
+                    
+                except Exception as e:
+                    raise ValueError(
+                        f"Failed to parse JSON even after fixing attempts: {e}"
+                    )
 
     @staticmethod
     def fix_json_string(str_to_parse: str) -> str:
@@ -620,3 +626,18 @@ class StringMatch:
                     corrected_out[k] = v
 
         return corrected_out
+
+    @staticmethod
+    def choose_most_similar(word, correct_words_list, score_func=None):
+
+        if score_func is None:
+            score_func = StringMatch.jaro_winkler_similarity
+            
+        # Calculate Jaro-Winkler similarity scores for each potential match
+        scores = np.array([score_func(convert.to_str(word), correct_word) for correct_word in correct_words_list])
+        # Find the index of the highest score
+        max_score_index = np.argmax(scores)
+        # Select the best match based on the highest score
+        best_match = correct_words_list[max_score_index]
+
+        return best_match

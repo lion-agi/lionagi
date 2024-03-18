@@ -10,6 +10,9 @@ from lionagi.libs import ln_convert as convert
 from lionagi.libs import ln_nested as nested
 
 
+# TODO: there should be a global data logger, under setting
+
+
 @dataclass
 class DLog:
     """
