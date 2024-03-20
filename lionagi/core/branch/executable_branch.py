@@ -12,6 +12,7 @@ from lionagi.core.mail.schema import BaseMail
 
 from lionagi.core.messages.system import System
 from lionagi.core.messages.instruction import Instruction
+from lionagi.core.schema.action_node import ActionNode
 
 from lionagi import Branch
 
@@ -25,6 +26,7 @@ class ExecutableBranch(BaseRelatableNode):
         self.responses = []
         self.execute_stop = False  # needed
         self.context = None  # needed
+        self.context_log = []
 
     def send(self, recipient_id: str, category: str, package: Any) -> None:
         mail = BaseMail(
@@ -41,8 +43,12 @@ class ExecutableBranch(BaseRelatableNode):
                 mail = self.pending_ins[key].popleft()
                 if mail.category == "start":  # needed
                     self._process_start(mail)
-                if mail.category == "node":
+                elif mail.category == "node":
                     await self._process_node(mail)
+                elif mail.category == "node_list":
+                    self._process_node_list(mail)
+                elif mail.category == "condition":
+                    self._process_condition(mail)
                 elif mail.category == "end":  # needed
                     self._process_end(mail)
 
@@ -55,14 +61,32 @@ class ExecutableBranch(BaseRelatableNode):
 
         if isinstance(mail.package, System):
             self._system_process(mail.package)
+            self.send(mail.sender_id, "node_id", mail.package.id_)
 
         elif isinstance(mail.package, Instruction):
             await self._instruction_process(mail.package)
+            self.send(mail.sender_id, "node_id", mail.package.id_)
 
+        elif isinstance(mail.package, ActionNode):
+            await self._action_process(mail.package)
+            self.send(mail.sender_id, "node_id", mail.package.instruction.id_)
         else:
-            await self._agent_process(mail.package)
+            try:
+                await self._agent_process(mail.package)
+                self.send(mail.sender_id, "node_id", mail.package.id_)
+            except:
+                raise ValueError(f"Invalid mail to process. Mail:{mail}")
 
-        self.send(mail.sender_id, "node_id", mail.package.id_)
+    def _process_node_list(self, mail: BaseMail):
+        self.send(mail.sender_id, "end", "end")
+        self.execute_stop = True
+        raise ValueError("Multiple path selection is currently not supported")
+
+    def _process_condition(self, mail: BaseMail):
+        relationship = mail.package
+        check_result = relationship.condition(self)
+        back_mail = {"relationship_id": mail.package.id_, "check_result": check_result}
+        self.send(mail.sender_id, "condition", back_mail)
 
     def _system_process(self, system: System, verbose=True, context_verbose=False):
         if verbose:
@@ -96,6 +120,22 @@ class ExecutableBranch(BaseRelatableNode):
                 f"{self.branch.last_assistant_response.sender}: {convert.to_str(result)}"))
             print('-----------------------------------------------------')
 
+        self.responses.append(result)
+
+    async def _action_process(self, action: ActionNode):
+        try:
+            func = getattr(self.branch, action.action)
+        except:
+            raise ValueError(f"{action.action} is not a valid action")
+
+        if action.tools:
+            self.branch.register_tools(action.tools)
+        if self.context:
+            result = await func(action.instruction.content, context=self.context,
+                                tools=action.tools, **action.action_kwargs)
+            self.context = None
+        else:
+            result = await func(action.instruction.content, tools=action.tools, **action.action_kwargs)
         self.responses.append(result)
 
     async def _agent_process(self, agent):

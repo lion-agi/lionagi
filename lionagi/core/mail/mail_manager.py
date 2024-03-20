@@ -25,7 +25,7 @@ class MailManager:
     #         self.mails[source.id_] = {}
     #     self.execute_stop = False
 
-    def __init__(self, sources: list[BaseNode]):
+    def __init__(self, sources):
         self.sources = {}
         self.mails = {}
         self.add_sources(sources)
