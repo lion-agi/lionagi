@@ -1,7 +1,7 @@
 from collections import deque
+from lionagi.libs import AsyncUtil
 from lionagi.core.schema.base_node import BaseNode
 from lionagi.core.mail.schema import BaseMail
-from lionagi.libs.ln_async import AsyncUtil
 
 
 class MailManager:

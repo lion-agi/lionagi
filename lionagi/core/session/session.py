@@ -1,19 +1,15 @@
 from collections import deque
 from typing import Tuple
 
-from lionagi.libs.ln_api import BaseService
 from lionagi.libs.sys_util import PATH_TYPE
+from lionagi.libs import BaseService, convert, dataframe
 
-from lionagi.libs import ln_convert as convert
-from lionagi.libs import ln_dataframe as dataframe
-
-from lionagi.core.schema.base_node import TOOL_TYPE, Tool
-from lionagi.core.schema.data_logger import DataLogger
-from lionagi.core.tool.tool_manager import ToolManager
-from lionagi.core.mail.mail_manager import MailManager
-from lionagi.core.messages.schema import System, Instruction
-from lionagi.core.branch.branch import Branch
-from lionagi.core.flow.polyflow.chat import PolyChat
+from lionagi.core.schema import TOOL_TYPE, Tool, DataLogger
+from lionagi.core.tool import ToolManager
+from lionagi.core.mail import MailManager
+from lionagi.core.messages import System, Instruction
+from lionagi.core.branch import Branch
+from lionagi.core.flow.polyflow import PolyChat
 
 
 class Session:
@@ -674,6 +670,7 @@ class Session:
         persist_path=None,
         branch_config={},
         explode=False,
+        include_mapping=False,
         **kwargs,
     ):
         """
@@ -696,6 +693,7 @@ class Session:
             persist_path=persist_path,
             branch_config=branch_config,
             explode=explode,
+            include_mapping=include_mapping,
             **kwargs,
         )
 

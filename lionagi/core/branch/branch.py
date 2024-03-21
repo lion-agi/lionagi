@@ -2,20 +2,16 @@ from collections import deque
 from typing import Any, Union, TypeVar, Callable
 
 from lionagi.libs.sys_util import PATH_TYPE
-from lionagi.libs.ln_api import StatusTracker, BaseService
-from lionagi.libs import ln_convert as convert
-from lionagi.libs import ln_dataframe as dataframe
+from lionagi.libs import StatusTracker, BaseService, convert, dataframe
 
-from lionagi.core.schema.base_node import TOOL_TYPE, Tool
-from lionagi.core.schema.data_logger import DataLogger
-from lionagi.core.tool.tool_manager import ToolManager, func_to_tool
+from ..schema import TOOL_TYPE, Tool, DataLogger
+from ..tool import ToolManager, func_to_tool
 
-from lionagi.core.branch.base_branch import BaseBranch
-from lionagi.core.messages.schema import System
-from lionagi.core.mail.schema import BaseMail
+from ..messages import System
+from ..mail import BaseMail
 
-from lionagi.core.branch.util import MessageUtil
-
+from .util import MessageUtil
+from .base_branch import BaseBranch
 from .branch_flow_mixin import BranchFlowMixin
 
 from dotenv import load_dotenv

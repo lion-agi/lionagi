@@ -1,9 +1,7 @@
 from enum import Enum
 
-from lionagi.libs import ln_nested as nested
-from lionagi.libs import ln_convert as convert
-
-from lionagi.core.schema.data_node import DataNode
+from lionagi.libs import nested, convert
+from lionagi.core.schema import DataNode
 
 _message_fields = ["node_id", "timestamp", "role", "sender", "recipient", "content"]
 

@@ -3,17 +3,16 @@ from typing import Any
 
 from IPython.display import Markdown, display
 
-import lionagi.libs.ln_convert as convert
-from lionagi.libs.ln_async import AsyncUtil
-from lionagi.libs.ln_parse import ParseUtil
+from lionagi.libs import convert, AsyncUtil, ParseUtil
 
-from lionagi.core.schema.base_node import BaseRelatableNode
-from lionagi.core.mail.schema import BaseMail
 
-from lionagi.core.messages import System, Instruction
-from lionagi.core.schema.action_node import ActionNode
+from ..schema import BaseRelatableNode, ActionNode
+from ..mail import BaseMail
+from ..messages import System, Instruction
+from ..agent import BaseAgent
 
-from lionagi import Branch
+from .branch import Branch
+
 
 class ExecutableBranch(BaseRelatableNode):
 

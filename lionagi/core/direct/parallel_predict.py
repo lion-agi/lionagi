@@ -1,9 +1,10 @@
-from lionagi.libs import ln_func_call as func_call
-from lionagi.core.branch.branch import Branch
-from .utils import _handle_single_out
+from lionagi.libs import func_call
+from ..branch import Branch
+from ..session import Session
+from .utils import _handle_single_out, _handle_multi_out
 
 
-async def predict(
+async def parallel_predict(
     sentence,
     *,
     num_sentences=1,
@@ -13,7 +14,7 @@ async def predict(
     retry_kwargs={},
     **kwargs,
 ):
-    return await _force_predict(
+    return await _force_parallel_predict(
         sentence,
         num_sentences,
         default_key,
@@ -24,19 +25,26 @@ async def predict(
     )
 
 
-async def _force_predict(
+async def _force_parallel_predict(
     sentence,
     num_sentences,
     default_key="answer",
     confidence_score=False,
     reason=False,
     retry_kwargs={},
+    include_mapping=False,
     **kwargs,
 ):
 
     async def _inner():
-        out_ = await _predict(
-            sentence, num_sentences, default_key, confidence_score, reason, **kwargs
+        out_ = await _parallel_predict(
+            sentence=sentence,
+            num_sentences=num_sentences,
+            default_key=default_key,
+            confidence_score=confidence_score,
+            reason=reason,
+            include_mapping=include_mapping,
+            **kwargs,
         )
         if out_ is None:
             raise ValueError("No output from the model")
@@ -81,25 +89,37 @@ def _create_predict_config(
     return instruct, output_fields, kwargs
 
 
-async def _predict(
+async def _parallel_predict(
     sentence,
     num_sentences,
     default_key="answer",
     confidence_score=False,
     reason=False,
+    include_mapping=False,
     **kwargs,
 ):
     _instruct, _output_fields, _kwargs = _create_predict_config(
-        num_sentences=num_sentences, default_key=default_key, 
-        confidence_score=confidence_score, reason=reason, **kwargs,  
+        num_sentences=num_sentences,
+        default_key=default_key,
+        confidence_score=confidence_score,
+        reason=reason,
+        **kwargs,
     )
 
-    branch = Branch()
+    session = Session()
 
-    out_ = await branch.chat(
-        _instruct, context=sentence, output_fields=_output_fields, **_kwargs
+    out_ = await session.parallel_chat(
+        _instruct,
+        context=sentence,
+        output_fields=_output_fields,
+        include_mapping=include_mapping,
+        **_kwargs,
     )
 
-    return _handle_single_out(
-        out_, default_key=default_key, to_type="str", to_default=True
+    return _handle_multi_out(
+        out_,
+        default_key=default_key,
+        to_type="str",
+        to_default=True,
+        include_mapping=include_mapping,
     )

@@ -5,10 +5,8 @@ Module for base component model definition using Pydantic.
 from abc import ABC
 from typing import Any, TypeVar
 
-import lionagi.integrations.bridge.pydantic_.base_model as pyd
-from lionagi.libs.sys_util import SysUtil
-
-from lionagi.libs import ln_convert as convert
+from pydantic import Field, field_serializer, AliasChoices
+from lionagi.libs import SysUtil, convert
 
 from .base_mixin import BaseComponentMixin
 
@@ -28,9 +26,9 @@ class BaseComponent(BaseComponentMixin, ABC):
         metadata (dict[str, Any]): Metadata associated with the component.
     """
 
-    id_: str = pyd.ln_Field(default_factory=SysUtil.create_id, alias="node_id")
-    timestamp: str | None = pyd.ln_Field(default_factory=SysUtil.get_timestamp)
-    metadata: dict[str, Any] = pyd.ln_Field(default_factory=dict, alias="meta")
+    id_: str = Field(default_factory=SysUtil.create_id, alias="node_id")
+    timestamp: str | None = Field(default_factory=SysUtil.get_timestamp)
+    metadata: dict[str, Any] = Field(default_factory=dict, alias="meta")
 
     class Config:
         """Model configuration settings."""
@@ -70,9 +68,9 @@ class BaseNode(BaseComponent):
             different naming conventions like "text", "page_content", or "chunk_content".
     """
 
-    content: str | dict[str, Any] | None | Any = pyd.ln_Field(
+    content: str | dict[str, Any] | None | Any = Field(
         default=None,
-        validation_alias=pyd.ln_AliasChoices("text", "page_content", "chunk_content"),
+        validation_alias=AliasChoices("text", "page_content", "chunk_content"),
     )
 
     @property
@@ -127,7 +125,7 @@ class BaseRelatableNode(BaseNode):
         label: An optional label for the node, providing additional context or classification.
     """
 
-    related_nodes: list[str] = pyd.ln_Field(default_factory=list)
+    related_nodes: list[str] = Field(default_factory=list)
     label: str | None = None
 
     def add_related_node(self, node_id: str) -> bool:
@@ -178,7 +176,7 @@ class Tool(BaseRelatableNode):
     manual: Any | None = None
     parser: Any | None = None
 
-    @pyd.ln_field_serializer("func")
+    @field_serializer("func")
     def serialize_func(self, func):
         return func.__name__
 
