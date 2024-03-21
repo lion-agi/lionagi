@@ -31,7 +31,7 @@ class SysUtil:
         time.sleep(delay)
 
     @staticmethod
-    def get_now(datetime_: bool = False) -> float | datetime:
+    def get_now(datetime_: bool = False, tz=None) -> float | datetime:
         """Returns the current time either as a Unix timestamp or a datetime object.
 
         Args:
@@ -40,10 +40,17 @@ class SysUtil:
         Returns:
             Union[float, datetime.datetime]: The current time as a Unix timestamp or a datetime object.
         """
+        
         if not datetime_:
             return time.time()
         else:
-            return datetime.now()
+            config_ = {}
+            if tz:
+                if isinstance(tz, timezone):
+                    config_['tz'] = tz
+                else:
+                    config_['tz'] = timezone.utc
+            return datetime.now(**config_)
 
     @staticmethod
     def change_dict_key(dict_: dict[Any, Any], old_key: str, new_key: str) -> None:

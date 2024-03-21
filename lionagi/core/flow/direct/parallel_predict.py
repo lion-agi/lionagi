@@ -4,7 +4,8 @@ from lionagi.core.session.session import Session
 from .utils import _handle_single_out, _handle_multi_out
 
 
-async def predict(
+
+async def parallel_predict(
     sentence,
     *,
     num_sentences=1,
@@ -12,22 +13,20 @@ async def predict(
     confidence_score=False,
     reason=False,
     retry_kwargs={},
-    include_mapping=False,
     **kwargs,
 ):
-    return await _force_predict(
-        sentence=sentence,
-        num_sentences=num_sentences,
-        default_key=default_key,
-        confidence_score=confidence_score,
-        reason=reason,
-        retry_kwargs=retry_kwargs,
-        include_mapping=include_mapping,
+    return await _force_parallel_predict(
+        sentence,
+        num_sentences,
+        default_key,
+        confidence_score,
+        reason,
+        retry_kwargs,
         **kwargs,
     )
 
 
-async def _force_predict(
+async def _force_parallel_predict(
     sentence,
     num_sentences,
     default_key="answer",
@@ -38,32 +37,16 @@ async def _force_predict(
     **kwargs,
 ):
 
-    async def _inner1():
-        out_ = await _predict(
+    async def _inner():
+        out_ = await _parallel_predict(
             sentence=sentence, 
             num_sentences=num_sentences, 
-            default_key=default_key,
-            confidence_score=confidence_score,
-            reason=reason,
-            **kwargs,
-            
-        )
-        if out_ is None:
-            raise ValueError("No output from the model")
-
-        return out_
-
-    async def _inner2():
-        out_ = await _parallel_predict(
-            sentence=sentence,
-            num_sentences=num_sentences,
-            default_key=default_key,
-            confidence_score=confidence_score,
-            reason=reason,
+            default_key=default_key, 
+            confidence_score=confidence_score, 
+            reason=reason, 
             include_mapping=include_mapping,
-            **kwargs,
+            **kwargs
         )
-
         if out_ is None:
             raise ValueError("No output from the model")
 
@@ -75,10 +58,8 @@ async def _force_predict(
     if "delay" not in retry_kwargs:
         retry_kwargs["delay"] = 0.5
 
-    if (isinstance(sentence, (list, tuple)) and len(sentence) > 1) or include_mapping:
-        return await func_call.rcall(_inner2, **retry_kwargs)
+    return await func_call.rcall(_inner, **retry_kwargs)
 
-    return await func_call.rcall(_inner1, **retry_kwargs)
 
 
 def _create_predict_config(
@@ -110,31 +91,6 @@ def _create_predict_config(
     return instruct, output_fields, kwargs
 
 
-async def _predict(
-    sentence,
-    num_sentences,
-    default_key="answer",
-    confidence_score=False,
-    reason=False,
-    **kwargs,
-):
-    _instruct, _output_fields, _kwargs = _create_predict_config(
-        num_sentences=num_sentences,
-        default_key=default_key,
-        confidence_score=confidence_score,
-        reason=reason,
-        **kwargs,
-    )
-
-    branch = Branch()
-
-    out_ = await branch.chat(
-        _instruct, context=sentence, output_fields=_output_fields, **_kwargs
-    )
-
-    return _handle_single_out(
-        out_, default_key=default_key, to_type="str", to_default=True
-    )
 
 async def _parallel_predict(
     sentence,

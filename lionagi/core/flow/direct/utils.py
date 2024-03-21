@@ -1,6 +1,7 @@
 from lionagi.core.branch.branch import Branch
 from lionagi.libs.ln_parse import ParseUtil, StringMatch
 import lionagi.libs.ln_convert as convert
+import lionagi.libs.ln_func_call as func_call
 
 
 def _parse_out(out_):
@@ -41,3 +42,20 @@ def _handle_single_out(
         return out_[default_key]
 
     return out_
+
+def _handle_multi_out(out_, default_key, choices=None, to_type="dict", to_type_kwargs={}, to_default=True, include_mapping=False):
+    if include_mapping:
+        for i in out_:
+            i[default_key] = _handle_single_out(
+                i[default_key], choices=choices, default_key=default_key, to_type=to_type, to_type_kwargs=to_type_kwargs, to_default=to_default
+            )
+        return out_ if len(out_) > 1 else out_[0]
+
+    else:
+        _out = []
+        for i in out_:
+            i = _handle_single_out(
+                i, choices=choices, default_key=default_key, to_type=to_type, to_type_kwargs=to_type_kwargs, to_default=to_default
+            )
+            _out.append(i)
+        return out_ if len(out_) > 1 else out_[0]

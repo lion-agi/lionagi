@@ -674,6 +674,7 @@ class Session:
         persist_path=None,
         branch_config={},
         explode=False,
+        include_mapping=False,
         **kwargs,
     ):
         """
@@ -696,6 +697,7 @@ class Session:
             persist_path=persist_path,
             branch_config=branch_config,
             explode=explode,
+            include_mapping=include_mapping,
             **kwargs,
         )
 

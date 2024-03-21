@@ -67,6 +67,8 @@ class PolyChat(BasePolyFlow):
         persist_path=None,
         branch_config={},
         explode=False,
+        include_mapping=True,
+        default_key="response",
         **kwargs,
     ) -> Any:
         """
@@ -102,8 +104,16 @@ class PolyChat(BasePolyFlow):
             )
 
             branches[branch_.id_] = branch_
-            return res_
+            if include_mapping:
+                a = {
+                    "instruction": ins_ or instruction,
+                    "context": cxt_ or context,
+                    "branch_id": branch_.id_,
+                    default_key: res_,
+                }
 
+            else:
+                return res_
         async def _inner_2(i, ins_=None, cxt_=None):
             """returns num_instances of branches performing for same task/context"""
             tasks = [_inner(i, ins_, cxt_) for _ in range(num_instances)]
