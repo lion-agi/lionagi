@@ -5,7 +5,9 @@
 [PyPI](https://pypi.org/project/lionagi/) | [Documentation](https://ocean-lion.com/Welcome) | [Discord](https://discord.gg/xCkA5ErGmV)
 
 ```
-Documentation for v0.0.302 is in progress
+Documentation for v0.0.300+ is in progress
+
+To contribute, you need to make a fork first, and then make pull request from your fork. 
 ```
   
 # LionAGI
