@@ -17,7 +17,7 @@ class MailManager:
             and sender.
     """
 
-    def __init__(self, sources: list[BaseNode]):
+    def __init__(self, sources):
         self.sources = {}
         self.mails = {}
         self.add_sources(sources)
@@ -26,7 +26,7 @@ class MailManager:
     def add_sources(self, sources):
         if isinstance(sources, dict):
             for _, v in sources.items():
-                if not v.id_ in self.sources:
+                if v.id_ not in self.sources:
                     self.sources[v.id_] = v
                     self.mails[v.id_] = {}
         elif isinstance(sources, list):
