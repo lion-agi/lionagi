@@ -1,22 +1,19 @@
 from abc import ABC
 from typing import Any
 
-from lionagi.libs.sys_util import SysUtil, PATH_TYPE
+from lionagi.libs.sys_util import PATH_TYPE
+from lionagi.libs import convert, dataframe, SysUtil
 
-import lionagi.libs.ln_convert as convert
-import lionagi.libs.ln_dataframe as dataframe
-
-from lionagi.core.schema.base_node import BaseRelatableNode
-from lionagi.core.schema.data_logger import DataLogger, DLog
-from lionagi.core.messages.schema import (
+from ..schema.base_node import BaseRelatableNode
+from ..schema.data_logger import DataLogger, DLog
+from ..messages.schema import (
     BranchColumns,
     System,
     Response,
     Instruction,
     BaseMessage,
 )
-from lionagi.core.branch.util import MessageUtil
-from lionagi.libs.ln_parse import ParseUtil
+from .util import MessageUtil
 
 
 class BaseBranch(BaseRelatableNode, ABC):
@@ -49,9 +46,7 @@ class BaseBranch(BaseRelatableNode, ABC):
         else:
             self.messages = dataframe.ln_DataFrame(columns=self._columns)
 
-        self.datalogger = (
-            datalogger if datalogger else DataLogger(persist_path=persist_path)
-        )
+        self.datalogger = datalogger or DataLogger(persist_path=persist_path)
         self.name = name
 
     def add_message(

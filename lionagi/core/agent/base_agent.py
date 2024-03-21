@@ -1,11 +1,9 @@
 from collections import deque
 
-from lionagi.core.mail.schema import StartMail
-from lionagi.core.schema.base_node import BaseRelatableNode
-from lionagi.core.mail.mail_manager import MailManager
+from lionagi.core.schema import BaseRelatableNode
+from lionagi.core.mail import StartMail, MailManager
 
-import lionagi.libs.ln_func_call as func_call
-from lionagi.libs.ln_async import AsyncUtil
+from lionagi.libs import func_call, AsyncUtil
 
 
 class BaseAgent(BaseRelatableNode):

@@ -40,16 +40,16 @@ class SysUtil:
         Returns:
             Union[float, datetime.datetime]: The current time as a Unix timestamp or a datetime object.
         """
-        
+
         if not datetime_:
             return time.time()
         else:
             config_ = {}
             if tz:
                 if isinstance(tz, timezone):
-                    config_['tz'] = tz
+                    config_["tz"] = tz
                 else:
-                    config_['tz'] = timezone.utc
+                    config_["tz"] = timezone.utc
             return datetime.now(**config_)
 
     @staticmethod

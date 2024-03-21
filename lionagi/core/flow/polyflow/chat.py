@@ -114,6 +114,7 @@ class PolyChat(BasePolyFlow):
 
             else:
                 return res_
+
         async def _inner_2(i, ins_=None, cxt_=None):
             """returns num_instances of branches performing for same task/context"""
             tasks = [_inner(i, ins_, cxt_) for _ in range(num_instances)]

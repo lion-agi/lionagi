@@ -1,8 +1,7 @@
-from lionagi.libs import ln_func_call as func_call
-from lionagi.core.branch.branch import Branch
-from lionagi.core.session.session import Session
+from lionagi.libs import func_call
+from ..branch import Branch
+from ..session import Session
 from .utils import _handle_single_out, _handle_multi_out
-
 
 
 async def parallel_predict(
@@ -39,13 +38,13 @@ async def _force_parallel_predict(
 
     async def _inner():
         out_ = await _parallel_predict(
-            sentence=sentence, 
-            num_sentences=num_sentences, 
-            default_key=default_key, 
-            confidence_score=confidence_score, 
-            reason=reason, 
+            sentence=sentence,
+            num_sentences=num_sentences,
+            default_key=default_key,
+            confidence_score=confidence_score,
+            reason=reason,
             include_mapping=include_mapping,
-            **kwargs
+            **kwargs,
         )
         if out_ is None:
             raise ValueError("No output from the model")
@@ -59,7 +58,6 @@ async def _force_parallel_predict(
         retry_kwargs["delay"] = 0.5
 
     return await func_call.rcall(_inner, **retry_kwargs)
-
 
 
 def _create_predict_config(
@@ -91,7 +89,6 @@ def _create_predict_config(
     return instruct, output_fields, kwargs
 
 
-
 async def _parallel_predict(
     sentence,
     num_sentences,
@@ -112,8 +109,17 @@ async def _parallel_predict(
     session = Session()
 
     out_ = await session.parallel_chat(
-        _instruct, context=sentence, output_fields=_output_fields,
-        include_mapping=include_mapping, **_kwargs
+        _instruct,
+        context=sentence,
+        output_fields=_output_fields,
+        include_mapping=include_mapping,
+        **_kwargs,
     )
-    
-    return _handle_multi_out(out_, default_key=default_key, to_type='str', to_default=True, include_mapping=include_mapping)
+
+    return _handle_multi_out(
+        out_,
+        default_key=default_key,
+        to_type="str",
+        to_default=True,
+        include_mapping=include_mapping,
+    )
