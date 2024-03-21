@@ -7,13 +7,9 @@ from lionagi.libs import func_call, AsyncUtil
 
 
 class BaseAgent(BaseRelatableNode):
-    def __init__(
-        self,
-        structure,
-        executable_class,
-        output_parser=None,
-        executable_class_kwargs={},
-    ) -> None:
+    def __init__(self, structure, executable_class, output_parser=None, executable_class_kwargs=None) -> None:
+        if executable_class_kwargs is None:
+            executable_class_kwargs = {}
         super().__init__()
         self.structure = structure
         self.executable = executable_class(**executable_class_kwargs)
