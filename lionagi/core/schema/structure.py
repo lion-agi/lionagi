@@ -1,4 +1,5 @@
-from typing import List, Any, Dict
+import time
+from typing import List, Any, Dict, Callable
 from collections import deque
 from pydantic import Field
 
@@ -8,6 +9,7 @@ from lionagi.libs.ln_async import AsyncUtil
 
 from lionagi.core.schema.base_node import BaseRelatableNode, BaseNode
 from lionagi.core.mail.schema import BaseMail
+from lionagi.core.schema.condition import Condition
 
 
 from lionagi.core.schema.action_node import ActionNode, ActionSelection
@@ -33,89 +35,18 @@ class Relationship(BaseRelatableNode):
     source_node_id: str
     target_node_id: str
     bundle: bool = False
-    condition: dict = Field(default={})
+    condition: Callable = None
 
-    def add_condition(self, condition: Dict[str, Any]) -> None:
-        """
-        Adds a condition to the relationship.
+    def add_condition(self, condition: Condition):
+        if not isinstance(condition, Condition):
+            raise ValueError("Invalid condition type, please use Condition class to build a valid condition")
+        self.condition = condition
 
-        Args:
-            condition: The condition to be added.
-
-        Examples:
-            >>> relationship = Relationship(source_node_id="node1", target_node_id="node2")
-            >>> relationship.add_condition({"key": "value"})
-        """
-        self.condition.update(condition)
-
-    def remove_condition(self, condition_key: str) -> Any:
-        """
-        Removes a condition from the relationship.
-
-        Args:
-            condition_key: The key of the condition to be removed.
-
-        Returns:
-            The value of the removed condition.
-
-        Raises:
-            KeyError: If the condition key is not found.
-
-        Examples:
-            >>> relationship = Relationship(source_node_id="node1", target_node_id="node2", condition={"key": "value"})
-            >>> relationship.remove_condition("key")
-            'value'
-        """
-        if condition_key not in self.condition.keys():
-            raise KeyError(f"condition {condition_key} is not found")
-        return self.condition.pop(condition_key)
-
-    def condition_exists(self, condition_key: str) -> bool:
-        """
-        Checks if a condition exists in the relationship.
-
-        Args:
-            condition_key: The key of the condition to check.
-
-        Returns:
-            True if the condition exists, False otherwise.
-
-        Examples:
-            >>> relationship = Relationship(source_node_id="node1", target_node_id="node2", condition={"key": "value"})
-            >>> relationship.condition_exists("key")
-            True
-        """
-        if condition_key in self.condition.keys():
-            return True
-        else:
-            return False
-
-    def get_condition(self, condition_key: str | None = None) -> Any:
-        """
-        Retrieves a specific condition or all conditions of the relationship.
-
-        Args:
-            condition_key: The key of the specific condition. If None, all conditions are returned.
-
-        Returns:
-            The requested condition or all conditions if no key is provided.
-
-        Raises:
-            ValueError: If the specified condition key does not exist.
-
-        Examples:
-            >>> relationship = Relationship(source_node_id="node1", target_node_id="node2", condition={"key": "value"})
-            >>> relationship.get_condition("key")
-            'value'
-            >>> relationship.get_condition()
-            {'key': 'value'}
-        """
-        if condition_key is None:
-            return self.condition
-        if self.condition_exists(condition_key=condition_key):
-            return self.condition[condition_key]
-        else:
-            raise ValueError(f"Condition {condition_key} does not exist")
+    def check_condition(self, source_obj):
+        try:
+            return bool(self.condition(source_obj))
+        except:
+            raise ValueError('Invalid relationship condition function')
 
     def _source_existed(self, obj: Dict[str, Any]) -> bool:
         """
@@ -285,6 +216,20 @@ class Graph(BaseRelatableNode):
             )
             return relationships
 
+    def get_predecessors(self, node: BaseNode):
+        node_ids = list(self.node_relationships[node.id_]["in"].values())
+        nodes = func_call.lcall(
+            node_ids, lambda i: self.nodes[i]
+        )
+        return nodes
+
+    def get_successors(self, node: BaseNode):
+        node_ids = list(self.node_relationships[node.id_]["out"].values())
+        nodes = func_call.lcall(
+            node_ids, lambda i: self.nodes[i]
+        )
+        return nodes
+
     def remove_node(self, node: BaseNode) -> BaseNode:
         """
         Removes a node and its associated relationship from the graph.
@@ -408,11 +353,13 @@ class Graph(BaseRelatableNode):
         for node_id, node in self.nodes.items():
             node_info = node.to_dict()
             node_info.pop("node_id")
+            node_info.update({"class_name": node.__class__.__name__})
             g.add_node(node_id, **node_info)
 
         for _, relationship in self.relationships.items():
             relationship_info = relationship.to_dict()
             relationship_info.pop("node_id")
+            relationship_info.update({"class_name": relationship.__class__.__name__})
             source_node_id = relationship_info.pop("source_node_id")
             target_node_id = relationship_info.pop("target_node_id")
             g.add_edge(source_node_id, target_node_id, **relationship_info)
@@ -422,20 +369,22 @@ class Graph(BaseRelatableNode):
 
 class Structure(BaseRelatableNode):
     graph: Graph = Graph()
-    processing_mails: deque = deque()
     pending_ins: dict = {}
     pending_outs: deque = deque()
     execute_stop: bool = False
+    condition_check_result: bool | None = None
 
     def add_node(self, node: BaseNode):
         self.graph.add_node(node)
 
     # def add_relationship(self, relationship: Relationship):
     #     self.graph.add_relationship(relationship)
-    def add_relationship(self, from_node: BaseNode, to_node: BaseNode, **kwargs):
+    def add_relationship(self, from_node: BaseNode, to_node: BaseNode, bundle=False, condition=None, **kwargs):
         relationship = Relationship(
-            source_node_id=from_node.id_, target_node_id=to_node.id_, **kwargs
+            source_node_id=from_node.id_, target_node_id=to_node.id_, bundle=bundle, **kwargs
         )
+        if condition:
+            relationship.add_condition(condition)
         self.graph.add_relationship(relationship)
 
     def get_relationships(self) -> list[Relationship]:
@@ -453,6 +402,12 @@ class Structure(BaseRelatableNode):
             relationships = result
         return relationships
 
+    def get_predecessors(self, node: BaseNode):
+        return self.graph.get_predecessors(node)
+
+    def get_successors(self, node: BaseNode):
+        return self.graph.get_successors(node)
+
     def node_exist(self, node: BaseNode) -> bool:
         return self.graph.node_exist(node)
 
@@ -469,23 +424,11 @@ class Structure(BaseRelatableNode):
         return self.graph.is_empty()
 
     def get_heads(self):
-        heads = deque()
+        heads = []
         for key in self.graph.node_relationships:
             if not self.graph.node_relationships[key]["in"]:
                 heads.append(self.graph.nodes[key])
         return heads
-
-    # def get_next_step(self, current_node: BaseNode):
-    #     next_nodes = deque()
-    #     next_relationships = self.get_node_relationships(current_node)
-    #     for relationship in next_relationships:
-    #         node = self.graph.nodes[relationship.target_node_id]
-    #         next_nodes.append(node)
-    #         further_relationships = self.get_node_relationships(node)
-    #         for f_relationship in further_relationships:
-    #             if f_relationship.bundle:
-    #                 next_nodes.append(self.graph.nodes[f_relationship.target_node_id])
-    #     return next_nodes
 
     @staticmethod
     def parse_to_action(instruction: BaseNode, bundled_nodes: deque):
@@ -498,23 +441,43 @@ class Structure(BaseRelatableNode):
             elif isinstance(node, Tool):
                 action_node.tools.append(node)
             else:
-                raise ValueError("Invalid bundles nodes")
+                raise ValueError('Invalid bundles nodes')
         return action_node
 
-    def get_next_step(self, current_node: BaseNode):
-        next_nodes = deque()
+    async def check_condition(self, relationship, executable_id):
+        if relationship.condition.source_type == "structure":
+            return self.check_condition_structure(relationship)
+        elif relationship.condition.source_type == "executable":
+            self.send(recipient_id=executable_id, category="condition", package=relationship)
+            while self.condition_check_result is None:
+                await AsyncUtil.sleep(0.1)
+                self.process_relationship_condition(relationship.id_)
+                continue
+            check_result = self.condition_check_result
+            self.condition_check_result = None
+            return check_result
+        else:
+            raise ValueError(f"Invalid source_type.")
+
+    def check_condition_structure(self, relationship):
+        return relationship.condition(self)
+
+    async def get_next_step(self, current_node: BaseNode, executable_id):
+        next_nodes = []
         next_relationships = self.get_node_relationships(current_node)
         for relationship in next_relationships:
             if relationship.bundle:
                 continue
+            if relationship.condition:
+                check = await self.check_condition(relationship, executable_id)
+                if not check:
+                    continue
             node = self.graph.nodes[relationship.target_node_id]
             further_relationships = self.get_node_relationships(node)
             bundled_nodes = deque()
             for f_relationship in further_relationships:
                 if f_relationship.bundle:
-                    bundled_nodes.append(
-                        self.graph.nodes[f_relationship.target_node_id]
-                    )
+                    bundled_nodes.append(self.graph.nodes[f_relationship.target_node_id])
             if bundled_nodes:
                 node = self.parse_to_action(node, bundled_nodes)
             next_nodes.append(node)
@@ -559,7 +522,18 @@ class Structure(BaseRelatableNode):
         )
         self.pending_outs.append(mail)
 
-    def process(self) -> None:
+    def process_relationship_condition(self, relationship_id):
+        for key in list(self.pending_ins.keys()):
+            skipped_requests = deque()
+            while self.pending_ins[key]:
+                mail = self.pending_ins[key].popleft()
+                if mail.category == "condition" and mail.package['relationship_id'] == relationship_id:
+                    self.condition_check_result = mail.package['check_result']
+                else:
+                    skipped_requests.append(mail)
+            self.pending_ins[key] = skipped_requests
+
+    async def process(self) -> None:
         for key in list(self.pending_ins.keys()):
             while self.pending_ins[key]:
                 mail = self.pending_ins[key].popleft()
@@ -573,13 +547,13 @@ class Structure(BaseRelatableNode):
                         raise ValueError(
                             f"Node {mail.package} does not exist in the structure {self.id_}"
                         )
-                    next_nodes = self.get_next_step(self.graph.nodes[mail.package])
+                    next_nodes = await self.get_next_step(self.graph.nodes[mail.package], mail.sender_id)
                 elif mail.category == "node" and isinstance(mail.package, BaseNode):
                     if not self.node_exist(mail.package):
                         raise ValueError(
                             f"Node {mail.package} does not exist in the structure {self.id_}"
                         )
-                    next_nodes = self.get_next_step(mail.package)
+                    next_nodes = await self.get_next_step(mail.package, mail.sender_id)
                 else:
                     raise ValueError(f"Invalid mail type for structure")
 
@@ -587,16 +561,20 @@ class Structure(BaseRelatableNode):
                     self.send(
                         recipient_id=mail.sender_id, category="end", package="end"
                     )
-                while next_nodes:
-                    package = next_nodes.popleft()
-                    self.send(
-                        recipient_id=mail.sender_id, category="node", package=package
-                    )
+                else:
+                    if len(next_nodes) == 1:
+                        self.send(
+                            recipient_id=mail.sender_id, category="node", package=next_nodes[0]
+                        )
+                    else:
+                        self.send(
+                            recipient_id=mail.sender_id, category="node_list", package=next_nodes
+                        )
 
     async def execute(self, refresh_time=1):
         if not self.acyclic():
             raise ValueError("Structure is not acyclic")
 
         while not self.execute_stop:
-            self.process()
+            await self.process()
             await AsyncUtil.sleep(refresh_time)
