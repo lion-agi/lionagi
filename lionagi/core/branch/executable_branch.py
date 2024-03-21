@@ -89,18 +89,22 @@ class ExecutableBranch(BaseRelatableNode):
 
     def _system_process(self, system: System, verbose=True, context_verbose=False):
         if verbose:
-            print(f'------------------Welcome: {system.sender}--------------------')
+            print(f"------------------Welcome: {system.sender}--------------------")
             display(Markdown(f"system: {convert.to_str(system.system_info)}"))
             if self.context and context_verbose:
                 display(Markdown(f"context: {convert.to_str(self.context)}"))
 
         self.branch.add_message(system=system)
 
-    async def _instruction_process(self, instruction: Instruction, verbose=True,
-                                   **kwargs):
+    async def _instruction_process(
+        self, instruction: Instruction, verbose=True, **kwargs
+    ):
         if verbose:
             display(
-                Markdown(f"{instruction.sender}: {convert.to_str(instruction.instruct)}"))
+                Markdown(
+                    f"{instruction.sender}: {convert.to_str(instruction.instruct)}"
+                )
+            )
 
         if self.context:
             instruction.content.update({"context": self.context})
@@ -109,16 +113,19 @@ class ExecutableBranch(BaseRelatableNode):
         result = await self.branch.chat(instruction, **kwargs)
         try:
             result = ParseUtil.fuzzy_parse_json(result)
-            if 'response' in result.keys():
-                result = result['response']
+            if "response" in result.keys():
+                result = result["response"]
         except:
             pass
 
         if verbose:
             if len(self.branch.assistant_responses) != 0:
-                display(Markdown(
-                    f"{self.branch.last_assistant_response.sender}: {convert.to_str(result)}"))
-                print('-----------------------------------------------------')
+                display(
+                    Markdown(
+                        f"{self.branch.last_assistant_response.sender}: {convert.to_str(result)}"
+                    )
+                )
+                print("-----------------------------------------------------")
 
         self.responses.append(result)
 
@@ -130,33 +137,45 @@ class ExecutableBranch(BaseRelatableNode):
 
         if verbose:
             display(
-                Markdown(f"{action.instruction.sender}: {convert.to_str(action.instruction.instruct)}"))
+                Markdown(
+                    f"{action.instruction.sender}: {convert.to_str(action.instruction.instruct)}"
+                )
+            )
 
         if action.tools:
             self.branch.register_tools(action.tools)
         if self.context:
-            result = await func(action.instruction.content['instruction'], context=self.context,
-                                tools=action.tools, **action.action_kwargs)
+            result = await func(
+                action.instruction.content["instruction"],
+                context=self.context,
+                tools=action.tools,
+                **action.action_kwargs,
+            )
             self.context = None
         else:
-            result = await func(action.instruction.content, tools=action.tools, **action.action_kwargs)
+            result = await func(
+                action.instruction.content, tools=action.tools, **action.action_kwargs
+            )
 
         if verbose:
             if len(self.branch.assistant_responses) != 0:
-                display(Markdown(
-                    f"{self.branch.last_assistant_response.sender}: {convert.to_str(result)}"))
-                print('-----------------------------------------------------')
+                display(
+                    Markdown(
+                        f"{self.branch.last_assistant_response.sender}: {convert.to_str(result)}"
+                    )
+                )
+                print("-----------------------------------------------------")
 
         self.responses.append(result)
 
     async def _agent_process(self, agent, verbose=True):
         context = self.responses
         if verbose:
-            print('*****************************************************')
+            print("*****************************************************")
         result = await agent.execute(context)
 
         if verbose:
-            print('*****************************************************')
+            print("*****************************************************")
 
         self.context = result
         self.responses.append(result)

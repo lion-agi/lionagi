@@ -4,6 +4,7 @@ from lionagi.libs.ln_async import AsyncUtil
 import lionagi.libs.ln_convert as convert
 import lionagi.libs.ln_dataframe as dataframe
 import lionagi.libs.ln_func_call as func_call
+from lionagi.libs.ln_func_call import CallDecorator
 import lionagi.libs.ln_nested as nested
 from lionagi.libs.ln_parse import ParseUtil, StringMatch
 
@@ -30,4 +31,5 @@ __all__ = [
     "PayloadPackage",
     "StatusTracker",
     "SimpleRateLimiter",
+    "CallDecorator"
 ]

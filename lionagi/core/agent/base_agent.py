@@ -1,4 +1,3 @@
-
 from lionagi.core.mail.schema import StartMail
 from lionagi.core.schema.base_node import BaseRelatableNode
 from lionagi.core.mail.mail_manager import MailManager
@@ -25,10 +24,20 @@ class BaseAgent(BaseRelatableNode):
 
     async def execute(self, context=None):
         self.start_context = context
-        self.start.trigger(context=context, structure_id=self.structure.id_, executable_id=self.executable.id_)
-        await func_call.mcall([0.1, 0.1, 0.1, 0.1],
-                              [self.structure.execute, self.executable.execute, self.mailManager.execute,
-                               self.mail_manager_control])
+        self.start.trigger(
+            context=context,
+            structure_id=self.structure.id_,
+            executable_id=self.executable.id_,
+        )
+        await func_call.mcall(
+            [0.1, 0.1, 0.1, 0.1],
+            [
+                self.structure.execute,
+                self.executable.execute,
+                self.mailManager.execute,
+                self.mail_manager_control,
+            ],
+        )
 
         self.structure.execute_stop = False
         self.executable.execute_stop = False

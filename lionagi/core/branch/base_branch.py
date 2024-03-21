@@ -92,10 +92,9 @@ class BaseBranch(BaseRelatableNode, ABC):
                     _msg.recipient = self.name
                 if recipient is not None and self.name is None:
                     _msg.recipient = recipient
-            if 'response' in _msg.content.keys():
+            if "response" in _msg.content.keys():
                 if self.name is not None:
                     _msg.sender = self.name
-
 
         _msg.content = _msg.msg_content
         self.messages.loc[len(self.messages)] = _msg.to_pd_series()

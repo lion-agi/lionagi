@@ -46,7 +46,11 @@ class StartMail(BaseRelatableNode):
         self.pending_outs = deque()
 
     def trigger(self, context, structure_id, executable_id):
-        start_mail_content = {'context': context, 'structure_id': structure_id}
-        start_mail = BaseMail(sender_id=self.id_, recipient_id=executable_id,
-                              category="start", package=start_mail_content)
+        start_mail_content = {"context": context, "structure_id": structure_id}
+        start_mail = BaseMail(
+            sender_id=self.id_,
+            recipient_id=executable_id,
+            category="start",
+            package=start_mail_content,
+        )
         self.pending_outs.append(start_mail)

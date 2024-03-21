@@ -15,7 +15,9 @@ class Condition(ABC):
             if isinstance(source_type, SourceType):
                 self.source_type = source_type
         except:
-            raise ValueError(f"Invalid source_type. Valid source types are {list(SourceType)}")
+            raise ValueError(
+                f"Invalid source_type. Valid source types are {list(SourceType)}"
+            )
 
     @abstractmethod
     def __call__(self, source_obj):

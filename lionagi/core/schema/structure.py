@@ -15,7 +15,6 @@ from lionagi.core.schema.action_node import ActionNode, ActionSelection
 from lionagi.core.schema.base_node import Tool
 
 
-
 class Relationship(BaseRelatableNode):
     """
     Represents a relationship between two nodes in a graph.
@@ -39,14 +38,16 @@ class Relationship(BaseRelatableNode):
 
     def add_condition(self, condition: Condition):
         if not isinstance(condition, Condition):
-            raise ValueError("Invalid condition type, please use Condition class to build a valid condition")
+            raise ValueError(
+                "Invalid condition type, please use Condition class to build a valid condition"
+            )
         self.condition = condition
 
     def check_condition(self, source_obj):
         try:
             return bool(self.condition(source_obj))
         except:
-            raise ValueError('Invalid relationship condition function')
+            raise ValueError("Invalid relationship condition function")
 
     def _source_existed(self, obj: Dict[str, Any]) -> bool:
         """
@@ -218,16 +219,12 @@ class Graph(BaseRelatableNode):
 
     def get_predecessors(self, node: BaseNode):
         node_ids = list(self.node_relationships[node.id_]["in"].values())
-        nodes = func_call.lcall(
-            node_ids, lambda i: self.nodes[i]
-        )
+        nodes = func_call.lcall(node_ids, lambda i: self.nodes[i])
         return nodes
 
     def get_successors(self, node: BaseNode):
         node_ids = list(self.node_relationships[node.id_]["out"].values())
-        nodes = func_call.lcall(
-            node_ids, lambda i: self.nodes[i]
-        )
+        nodes = func_call.lcall(node_ids, lambda i: self.nodes[i])
         return nodes
 
     def remove_node(self, node: BaseNode) -> BaseNode:
@@ -377,14 +374,26 @@ class Structure(BaseRelatableNode):
     def add_node(self, node: BaseNode):
         self.graph.add_node(node)
 
-    def add_relationship(self, from_node: BaseNode, to_node: BaseNode, bundle=False, condition=None, **kwargs):
+    def add_relationship(
+        self,
+        from_node: BaseNode,
+        to_node: BaseNode,
+        bundle=False,
+        condition=None,
+        **kwargs,
+    ):
         if isinstance(from_node, Tool) or isinstance(from_node, ActionSelection):
-            raise ValueError(f"type {type(from_node)} should not be the head of the relationship, "
-                             f"please switch position and attach it to the tail of the relationship")
+            raise ValueError(
+                f"type {type(from_node)} should not be the head of the relationship, "
+                f"please switch position and attach it to the tail of the relationship"
+            )
         if isinstance(to_node, Tool) or isinstance(to_node, ActionSelection):
             bundle = True
         relationship = Relationship(
-            source_node_id=from_node.id_, target_node_id=to_node.id_, bundle=bundle, **kwargs
+            source_node_id=from_node.id_,
+            target_node_id=to_node.id_,
+            bundle=bundle,
+            **kwargs,
         )
         if condition:
             relationship.add_condition(condition)
@@ -444,14 +453,16 @@ class Structure(BaseRelatableNode):
             elif isinstance(node, Tool):
                 action_node.tools.append(node)
             else:
-                raise ValueError('Invalid bundles nodes')
+                raise ValueError("Invalid bundles nodes")
         return action_node
 
     async def check_condition(self, relationship, executable_id):
         if relationship.condition.source_type == "structure":
             return self.check_condition_structure(relationship)
         elif relationship.condition.source_type == "executable":
-            self.send(recipient_id=executable_id, category="condition", package=relationship)
+            self.send(
+                recipient_id=executable_id, category="condition", package=relationship
+            )
             while self.condition_check_result is None:
                 await AsyncUtil.sleep(0.1)
                 self.process_relationship_condition(relationship.id_)
@@ -480,7 +491,9 @@ class Structure(BaseRelatableNode):
             bundled_nodes = deque()
             for f_relationship in further_relationships:
                 if f_relationship.bundle:
-                    bundled_nodes.append(self.graph.nodes[f_relationship.target_node_id])
+                    bundled_nodes.append(
+                        self.graph.nodes[f_relationship.target_node_id]
+                    )
             if bundled_nodes:
                 node = self.parse_to_action(node, bundled_nodes)
             next_nodes.append(node)
@@ -530,8 +543,11 @@ class Structure(BaseRelatableNode):
             skipped_requests = deque()
             while self.pending_ins[key]:
                 mail = self.pending_ins[key].popleft()
-                if mail.category == "condition" and mail.package['relationship_id'] == relationship_id:
-                    self.condition_check_result = mail.package['check_result']
+                if (
+                    mail.category == "condition"
+                    and mail.package["relationship_id"] == relationship_id
+                ):
+                    self.condition_check_result = mail.package["check_result"]
                 else:
                     skipped_requests.append(mail)
             self.pending_ins[key] = skipped_requests
@@ -550,7 +566,9 @@ class Structure(BaseRelatableNode):
                         raise ValueError(
                             f"Node {mail.package} does not exist in the structure {self.id_}"
                         )
-                    next_nodes = await self.get_next_step(self.graph.nodes[mail.package], mail.sender_id)
+                    next_nodes = await self.get_next_step(
+                        self.graph.nodes[mail.package], mail.sender_id
+                    )
                 elif mail.category == "node" and isinstance(mail.package, BaseNode):
                     if not self.node_exist(mail.package):
                         raise ValueError(
@@ -567,11 +585,15 @@ class Structure(BaseRelatableNode):
                 else:
                     if len(next_nodes) == 1:
                         self.send(
-                            recipient_id=mail.sender_id, category="node", package=next_nodes[0]
+                            recipient_id=mail.sender_id,
+                            category="node",
+                            package=next_nodes[0],
                         )
                     else:
                         self.send(
-                            recipient_id=mail.sender_id, category="node_list", package=next_nodes
+                            recipient_id=mail.sender_id,
+                            category="node_list",
+                            package=next_nodes,
                         )
 
     async def execute(self, refresh_time=1):
