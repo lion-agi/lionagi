@@ -1,7 +1,7 @@
 from enum import Enum
 
 from lionagi.libs import nested, convert
-from lionagi.core.schema import DataNode
+from ..schema import DataNode
 
 _message_fields = ["node_id", "timestamp", "role", "sender", "recipient", "content"]
 
@@ -133,12 +133,11 @@ class BaseMessage(DataNode):
         Returns:
             dict: A dictionary representation of the message with 'role' and 'content' keys.
         """
-        out = {"role": self.role, "content": convert.to_str(self.content)}
-        return out
+        return {"role": self.role, "content": convert.to_str(self.content)}
 
     def __str__(self):
         content_preview = (
-            (str(self.content)[:75] + "...")
+            f"{str(self.content)[:75]}..."
             if self.content and len(self.content) > 75
             else str(self.content)
         )
@@ -160,7 +159,7 @@ class Instruction(BaseMessage):
         sender: str | None = None,
         output_fields=None,
         recipient=None,
-    ):
+    ):  # sourcery skip: avoid-builtin-shadow
         super().__init__(
             role="user",
             sender=sender or "user",
@@ -254,13 +253,13 @@ class Response(BaseMessage):
                         content_key = content_key or "response"
                         sender = sender or "assistant"
                         recipient = recipient or "user"
-                except:
+                except Exception:
                     content_ = response["content"]
                     content_key = content_key or "response"
                     sender = sender or "assistant"
                     recipient = recipient or "user"
 
-        except:
+        except Exception:
             sender = sender or "action_response"
             content_ = response
             content_key = content_key or "action_response"
@@ -298,7 +297,7 @@ class Response(BaseMessage):
                     _path2 = ["tool_calls", tool_count, "function", "arguments"]
 
                     func_content = {
-                        "action": ("action_" + nested.nget(response, _path1)),
+                        "action": f"action_{nested.nget(response, _path1)}",
                         "arguments": nested.nget(response, _path2),
                     }
                     func_list.append(func_content)

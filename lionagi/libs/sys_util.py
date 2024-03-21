@@ -43,14 +43,10 @@ class SysUtil:
 
         if not datetime_:
             return time.time()
-        else:
-            config_ = {}
-            if tz:
-                if isinstance(tz, timezone):
-                    config_["tz"] = tz
-                else:
-                    config_["tz"] = timezone.utc
-            return datetime.now(**config_)
+        config_ = {}
+        if tz:
+            config_["tz"] = tz if isinstance(tz, timezone) else timezone.utc
+        return datetime.now(**config_)
 
     @staticmethod
     def change_dict_key(dict_: dict[Any, Any], old_key: str, new_key: str) -> None:
@@ -162,9 +158,7 @@ class SysUtil:
             str: A string identifying the CPU architecture ('apple_silicon' or 'other_cpu').
         """
         arch: str = platform.machine().lower()
-        if "arm" in arch or "aarch64" in arch:
-            return "apple_silicon"
-        return "other_cpu"
+        return "apple_silicon" if "arm" in arch or "aarch64" in arch else "other_cpu"
 
     @staticmethod
     def install_import(

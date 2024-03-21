@@ -40,7 +40,7 @@ def extend_dataframe(
                 raise ValueError("No data to extend")
 
     except Exception as e:
-        raise ValueError(f"Error in extending messages: {e}")
+        raise ValueError(f"Error in extending messages: {e}") from e
 
 
 def search_keywords(
@@ -178,5 +178,5 @@ def update_row(df: pd.DataFrame, row: str | int, column: str | int, value: Any) 
     try:
         df.loc[row, column] = value
         return True
-    except:
+    except Exception:
         return False

@@ -1,7 +1,7 @@
 from collections import deque
 from lionagi.libs import AsyncUtil
-from lionagi.core.schema.base_node import BaseNode
-from lionagi.core.mail.schema import BaseMail
+from ..schema import BaseNode
+from .schema import BaseMail
 
 
 class MailManager:
@@ -31,7 +31,7 @@ class MailManager:
                     self.mails[v.id_] = {}
         elif isinstance(sources, list):
             for v in sources:
-                if not v.id_ in self.sources:
+                if v.id_ not in self.sources:
                     self.sources[v.id_] = v
                     self.mails[v.id_] = {}
 
@@ -73,15 +73,14 @@ class MailManager:
             raise ValueError(f"Recipient source {recipient_id} does not exist.")
         if not self.mails[recipient_id]:
             return
-        else:
-            for key in list(self.mails[recipient_id].keys()):
-                mails_deque = self.mails[recipient_id].pop(key)
-                if key not in self.sources[recipient_id].pending_ins:
-                    self.sources[recipient_id].pending_ins[key] = mails_deque
-                else:
-                    while mails_deque:
-                        mail_ = mails_deque.popleft()
-                        self.sources[recipient_id].pending_ins[key].append(mail_)
+        for key in list(self.mails[recipient_id].keys()):
+            mails_deque = self.mails[recipient_id].pop(key)
+            if key not in self.sources[recipient_id].pending_ins:
+                self.sources[recipient_id].pending_ins[key] = mails_deque
+            else:
+                while mails_deque:
+                    mail_ = mails_deque.popleft()
+                    self.sources[recipient_id].pending_ins[key].append(mail_)
 
     def collect_all(self):
         for ids in self.sources:

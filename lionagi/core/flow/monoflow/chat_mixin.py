@@ -36,32 +36,33 @@ class MonoChatConfigMixin(ABC):
         if "tool_parsed" in kwargs:
             kwargs.pop("tool_parsed")
             tool_kwarg = {"tools": tools}
-            kwargs = {**tool_kwarg, **kwargs}
-        else:
-            if tools and self.branch.has_tools:
-                kwargs = self.branch.tool_manager.parse_tool(tools=tools, **kwargs)
+            kwargs = tool_kwarg | kwargs
+        elif tools and self.branch.has_tools:
+            kwargs = self.branch.tool_manager.parse_tool(tools=tools, **kwargs)
 
         config = {**self.branch.llmconfig, **kwargs}
         if sender is not None:
-            config.update({"sender": sender})
+            config["sender"] = sender
 
         return config
 
 
 class MonoChatInvokeMixin(ABC):
     async def _output(self, invoke, out, output_fields, func_calls_=None):
+        # sourcery skip: use-contextlib-suppress
         content_ = self.branch.last_message_content
 
         if invoke:
             try:
                 await self._invoke_tools(content_, func_calls_=func_calls_)
-            except:
+            except Exception:
                 pass
         if out:
             return self._return_response(content_, output_fields)
 
     @staticmethod
     def _return_response(content_, output_fields):
+        # sourcery skip: assign-if-exp, use-contextlib-suppress
         out_ = ""
 
         if len(content_.items()) == 1 and len(nested.get_flattened_keys(content_)) == 1:
@@ -75,7 +76,7 @@ class MonoChatInvokeMixin(ABC):
                 else:
                     out_ = ParseUtil.md_to_json(out_)
                 out_ = StringMatch.correct_keys(output_fields=output_fields, out_=out_)
-            except:
+            except Exception:
                 pass
 
         return out_
@@ -118,9 +119,9 @@ class MonoChatInvokeMixin(ABC):
 
     async def _call_chatcompletion(self, sender=None, with_sender=False, **kwargs):
         messages = (
-            self.branch.chat_messages
-            if not with_sender
-            else self.branch.chat_messages_with_sender
+            self.branch.chat_messages_with_sender
+            if with_sender
+            else self.branch.chat_messages
         )
         payload, completion = await self.branch.service.serve_chat(
             messages=messages, **kwargs

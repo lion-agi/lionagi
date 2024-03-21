@@ -257,7 +257,7 @@ class DataLogger:
             if clear:
                 self.log.clear()
         except Exception as e:
-            raise ValueError(f"Error in saving to csv: {e}")
+            raise ValueError(f"Error in saving to csv: {e}") from e
 
     def to_json_file(
         self,
@@ -334,7 +334,7 @@ class DataLogger:
             if clear:
                 self.log.clear()
         except Exception as e:
-            raise ValueError(f"Error in saving to csv: {e}")
+            raise ValueError(f"Error in saving to csv: {e}") from e
 
     def save_at_exit(self):
         """

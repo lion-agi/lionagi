@@ -1,5 +1,6 @@
 import re
 import inspect
+import itertools
 from collections.abc import Callable
 from typing import Any
 import numpy as np
@@ -35,12 +36,12 @@ class ParseUtil:
         """
         try:
             return convert.to_dict(str_to_parse, strict=strict)
-        except:
+        except Exception:
             fixed_s = ParseUtil.fix_json_string(str_to_parse)
             try:
                 return convert.to_dict(fixed_s, strict=strict)
 
-            except:
+            except Exception:
                 try:
                     fixed_s = fixed_s.replace("'", '"')
                     return convert.to_dict(fixed_s, strict=strict)
@@ -48,7 +49,7 @@ class ParseUtil:
                 except Exception as e:
                     raise ValueError(
                         f"Failed to parse JSON even after fixing attempts: {e}"
-                    )
+                    ) from e
 
     @staticmethod
     def fix_json_string(str_to_parse: str) -> str:
@@ -140,7 +141,7 @@ class ParseUtil:
         match = re.search(regex_pattern, str_to_parse, re.DOTALL)
         code_str = ""
         if match:
-            code_str = match.group(1).strip()
+            code_str = match[1].strip()
         else:
             raise ValueError(
                 f"No {language or 'specified'} code block found in the Markdown content."
@@ -183,8 +184,7 @@ class ParseUtil:
         )
 
         if expected_keys:
-            missing_keys = [key for key in expected_keys if key not in json_obj]
-            if missing_keys:
+            if missing_keys := [key for key in expected_keys if key not in json_obj]:
                 raise ValueError(
                     f"Missing expected keys in JSON object: {', '.join(missing_keys)}"
                 )
@@ -225,19 +225,21 @@ class ParseUtil:
         lines = docstring.split("\n")
         func_description = lines[0].strip()
 
-        param_start_pos = 0
         lines_len = len(lines)
 
         params_description = {}
-        for i in range(1, lines_len):
-            if (
-                lines[i].startswith("Args")
-                or lines[i].startswith("Arguments")
-                or lines[i].startswith("Parameters")
-            ):
-                param_start_pos = i + 1
-                break
-
+        param_start_pos = next(
+            (
+                i + 1
+                for i in range(1, lines_len)
+                if (
+                    lines[i].startswith("Args")
+                    or lines[i].startswith("Arguments")
+                    or lines[i].startswith("Parameters")
+                )
+            ),
+            0,
+        )
         current_param = None
         for i in range(param_start_pos, lines_len):
             if lines[i] == "":
@@ -245,7 +247,7 @@ class ParseUtil:
             elif lines[i].startswith(" "):
                 param_desc = lines[i].split(":", 1)
                 if len(param_desc) == 1:
-                    params_description[current_param] += " " + param_desc[0].strip()
+                    params_description[current_param] += f" {param_desc[0].strip()}"
                     continue
                 param, desc = param_desc
                 param = param.split("(")[0].strip()
@@ -301,7 +303,7 @@ class ParseUtil:
                 params_description[param] = desc.strip()
                 current_param = param
             elif line.startswith(" "):
-                params_description[current_param] += " " + line
+                params_description[current_param] += f" {line}"
 
         return func_description, params_description
 
@@ -438,8 +440,7 @@ class ParseUtil:
                 "description": param_description,
             }
 
-        # Constructing the schema
-        schema = {
+        return {
             "type": "function",
             "function": {
                 "name": func_name,
@@ -447,8 +448,6 @@ class ParseUtil:
                 "parameters": parameters,
             },
         }
-
-        return schema
 
 
 class StringMatch:
@@ -582,17 +581,13 @@ class StringMatch:
             d[0][j] = j
 
         # Compute the distance
-        for i in range(1, m + 1):
-            for j in range(1, n + 1):
-                if a[i - 1] == b[j - 1]:
-                    cost = 0
-                else:
-                    cost = 1
-                d[i][j] = min(
-                    d[i - 1][j] + 1,  # deletion
-                    d[i][j - 1] + 1,  # insertion
-                    d[i - 1][j - 1] + cost,
-                )  # substitution
+        for i, j in itertools.product(range(1, m + 1), range(1, n + 1)):
+            cost = 0 if a[i - 1] == b[j - 1] else 1
+            d[i][j] = min(
+                d[i - 1][j] + 1,  # deletion
+                d[i][j - 1] + 1,  # insertion
+                d[i - 1][j - 1] + cost,
+            )  # substitution
         return d[m][n]
 
     @staticmethod
@@ -642,7 +637,4 @@ class StringMatch:
         )
         # Find the index of the highest score
         max_score_index = np.argmax(scores)
-        # Select the best match based on the highest score
-        best_match = correct_words_list[max_score_index]
-
-        return best_match
+        return correct_words_list[max_score_index]

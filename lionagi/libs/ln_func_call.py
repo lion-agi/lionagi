@@ -123,7 +123,7 @@ async def alcall(
     outs = await AsyncUtil.execute_tasks(*tasks)
     outs_ = []
     for i in outs:
-        outs_.append(i if not isinstance(i, (Coroutine, asyncio.Future)) else await i)
+        outs_.append(await i if isinstance(i, (Coroutine, asyncio.Future)) else i)
 
     return to_list(outs_, flatten=flatten, dropna=dropna)
 
@@ -159,17 +159,16 @@ async def mcall(
 
     if explode:
         tasks = [_alcall(inputs_, f, flatten=True, **kwargs) for f in funcs_]
-        return await AsyncUtil.execute_tasks(*tasks)
-    else:
-        if len(inputs_) != len(funcs_):
-            raise ValueError(
-                "Inputs and functions must be the same length for map calling."
-            )
+    elif len(inputs_) == len(funcs_):
         tasks = [
             AsyncUtil.handle_async_sync(func, inp, **kwargs)
             for inp, func in zip(inputs_, funcs_)
         ]
-        return await AsyncUtil.execute_tasks(*tasks)
+    else:
+        raise ValueError(
+            "Inputs and functions must be the same length for map calling."
+        )
+    return await AsyncUtil.execute_tasks(*tasks)
 
 
 async def bcall(
@@ -284,10 +283,7 @@ async def tcall(
         if not ignore_err:
             raise
 
-    if AsyncUtil.is_coroutine_func(func):
-        return await async_call()
-    else:
-        return sync_call()
+    return await async_call() if AsyncUtil.is_coroutine_func(func) else sync_call()
 
 
 async def rcall(
@@ -345,9 +341,7 @@ async def rcall(
 
     for attempt in range(retries + 1) if retries == 0 else range(retries):
         try:
-            # Using tcall for each retry attempt with timeout and delay
-            result = await _tcall(func, *args, timeout=timeout, **kwargs)
-            return result
+            return await _tcall(func, *args, timeout=timeout, **kwargs)
         except Exception as e:
             last_exception = e
             if attempt < retries:
@@ -1168,8 +1162,7 @@ def _custom_error_handler(error: Exception, error_map: dict[type, Callable]) -> 
         >>> custom_error_handler(ValueError(), {ValueError: handle_value_error})
         ValueError occurred
     """
-    handler = error_map.get(type(error))
-    if handler:
+    if handler := error_map.get(type(error)):
         handler(error)
     else:
         logging.error(f"Unhandled error: {error}")
@@ -1204,22 +1197,21 @@ async def call_handler(
         3
     """
     try:
-        if is_coroutine_func(func):
-            # Checking for a running event loop
-            try:
-                loop = asyncio.get_running_loop()
-            except RuntimeError:  # No running event loop
-                loop = asyncio.new_event_loop()
-                result = loop.run_until_complete(func(*args, **kwargs))
-
-                loop.close()
-                return result
-
-            if loop.is_running():
-                return await func(*args, **kwargs)
-
-        else:
+        if not is_coroutine_func(func):
             return func(*args, **kwargs)
+
+        # Checking for a running event loop
+        try:
+            loop = asyncio.get_running_loop()
+        except RuntimeError:  # No running event loop
+            loop = asyncio.new_event_loop()
+            result = loop.run_until_complete(func(*args, **kwargs))
+
+            loop.close()
+            return result
+
+        if loop.is_running():
+            return await func(*args, **kwargs)
 
     except Exception as e:
         if error_map:

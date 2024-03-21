@@ -101,12 +101,12 @@ class BaseNode(BaseComponent):
         timestamp = f" ({self.timestamp})" if self.timestamp else ""
         if self.content:
             content_preview = (
-                self.content[:50] + "..." if len(self.content) > 50 else self.content
+                f"{self.content[:50]}..." if len(self.content) > 50 else self.content
             )
         else:
             content_preview = ""
         meta_preview = (
-            str(self.metadata)[:50] + "..."
+            f"{str(self.metadata)[:50]}..."
             if len(str(self.metadata)) > 50
             else str(self.metadata)
         )

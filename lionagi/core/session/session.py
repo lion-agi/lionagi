@@ -258,7 +258,7 @@ class Session:
         """
         df = dataframe.read_csv(filepath, **kwargs)
 
-        self = cls(
+        return cls(
             system=system,
             sender=sender,
             llmconfig=llmconfig,
@@ -269,8 +269,6 @@ class Session:
             messages=df,
             **kwargs,
         )
-
-        return self
 
     @classmethod
     def from_json(
@@ -305,7 +303,7 @@ class Session:
             >>> branch = Branch.from_json_string("path/to/messages.json", name="JSONBranch")
         """
         df = dataframe.read_json(filepath, **kwargs)
-        self = cls(
+        return cls(
             system=system,
             sender=sender,
             llmconfig=llmconfig,
@@ -317,8 +315,6 @@ class Session:
             messages=df,
             **kwargs,
         )
-
-        return self
 
     def to_csv_file(
         self,
@@ -668,7 +664,7 @@ class Session:
         invoke: bool = True,
         output_fields=None,
         persist_path=None,
-        branch_config={},
+        branch_config=None,
         explode=False,
         include_mapping=False,
         **kwargs,
@@ -677,6 +673,8 @@ class Session:
         parallel chat
         """
 
+        if branch_config is None:
+            branch_config = {}
         flow = PolyChat(self)
 
         return await flow.parallel_chat(
@@ -772,20 +770,11 @@ class Session:
         if isinstance(branch, str):
             if branch not in self.branches.keys():
                 raise ValueError(f"Invalid branch name {branch}. Not exist.")
-            else:
-                if get_name:
-                    return self.branches[branch], branch
-                return self.branches[branch]
-
+            return (
+                (self.branches[branch], branch) if get_name else self.branches[branch]
+            )
         elif isinstance(branch, Branch) and branch in self.branches.values():
-            if get_name:
-                return (
-                    branch,
-                    # [key for key, value in self.branches.items() if value == branch][0],
-                    branch.name,
-                )
-            return branch
-
+            return (branch, branch.name) if get_name else branch
         elif branch is None:
             if get_name:
                 return self.default_branch, self.default_branch_name
@@ -829,13 +818,12 @@ class Session:
             raise ValueError(
                 f"{branch_name} is the current default branch, please switch to another branch before delete it."
             )
-        else:
-            self.branches.pop(branch_name)
-            # self.mail_manager.sources.pop(branch_name)
-            self.mail_manager.mails.pop(branch_name)
-            if verbose:
-                print(f"Branch {branch_name} is deleted.")
-            return True
+        self.branches.pop(branch_name)
+        # self.mail_manager.sources.pop(branch_name)
+        self.mail_manager.mails.pop(branch_name)
+        if verbose:
+            print(f"Branch {branch_name} is deleted.")
+        return True
 
     def merge_branch(
         self,

@@ -11,6 +11,7 @@ import aiohttp
 
 class AsyncUtil:
 
+    @staticmethod
     async def _call_handler(
         func: Callable, *args, error_map: dict[type, Callable] = None, **kwargs
     ) -> Any:
@@ -40,22 +41,21 @@ class AsyncUtil:
             3
         """
         try:
-            if AsyncUtil.is_coroutine_func(func):
-                # Checking for a running event loop
-                try:
-                    loop = asyncio.get_running_loop()
-                except RuntimeError:  # No running event loop
-                    loop = asyncio.new_event_loop()
-                    result = loop.run_until_complete(func(*args, **kwargs))
-
-                    loop.close()
-                    return result
-
-                if loop.is_running():
-                    return await func(*args, **kwargs)
-
-            else:
+            if not AsyncUtil.is_coroutine_func(func):
                 return func(*args, **kwargs)
+
+            # Checking for a running event loop
+            try:
+                loop = asyncio.get_running_loop()
+            except RuntimeError:  # No running event loop
+                loop = asyncio.new_event_loop()
+                result = loop.run_until_complete(func(*args, **kwargs))
+
+                loop.close()
+                return result
+
+            if loop.is_running():
+                return await func(*args, **kwargs)
 
         except Exception as e:
             if error_map:
@@ -97,8 +97,7 @@ class AsyncUtil:
             >>> custom_error_handler(ValueError(), {ValueError: handle_value_error})
             ValueError occurred
         """
-        handler = error_map.get(type(error))
-        if handler:
+        if handler := error_map.get(type(error)):
             handler(error)
         else:
             logging.error(f"Unhandled error: {error}")
@@ -120,21 +119,19 @@ class AsyncUtil:
         """
 
         try:
-            if AsyncUtil.is_coroutine_func(func):
-
-                try:
-                    loop = asyncio.get_event_loop()
-
-                    if loop.is_running():
-                        return await func(*args, **kwargs)
-                    else:
-                        return await asyncio.run(func(*args, **kwargs))
-
-                except RuntimeError:
-                    return asyncio.run(func(*args, **kwargs))
-
-            else:
+            if not AsyncUtil.is_coroutine_func(func):
                 return func(*args, **kwargs)
+
+            try:
+                loop = asyncio.get_event_loop()
+
+                return (
+                    await func(*args, **kwargs)
+                    if loop.is_running()
+                    else await asyncio.run(func(*args, **kwargs))
+                )
+            except RuntimeError:
+                return asyncio.run(func(*args, **kwargs))
 
         except Exception as e:
             if error_map:

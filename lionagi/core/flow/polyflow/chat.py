@@ -28,7 +28,7 @@ class PolyChat(BasePolyFlow):
         invoke: bool = True,
         output_fields=None,
         persist_path=None,
-        branch_config={},
+        branch_config=None,
         explode=False,
         **kwargs,
     ) -> Any:
@@ -36,6 +36,8 @@ class PolyChat(BasePolyFlow):
         parallel chat
         """
 
+        if branch_config is None:
+            branch_config = {}
         return await self._parallel_chat(
             instruction,
             num_instances=num_instances,

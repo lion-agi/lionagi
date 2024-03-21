@@ -115,15 +115,11 @@ class BaseFromObjectMixin(ABC, BaseModel):
     @from_obj.register(str)
     @classmethod
     def _from_str(cls, obj: str, *args, fuzzy_parse=False, **kwargs) -> T:
-        if fuzzy_parse:
-            obj = ParseUtil.fuzzy_parse_json(obj)
-        else:
-            obj = convert.to_dict(obj)
-
+        obj = ParseUtil.fuzzy_parse_json(obj) if fuzzy_parse else convert.to_dict(obj)
         try:
             return cls.from_obj(obj, *args, **kwargs)
         except ValidationError as e:
-            raise ValueError(f"Invalid JSON for deserialization: {e}")
+            raise ValueError(f"Invalid JSON for deserialization: {e}") from e
 
     @from_obj.register(list)
     @classmethod
@@ -132,23 +128,27 @@ class BaseFromObjectMixin(ABC, BaseModel):
 
     @from_obj.register(pd.Series)
     @classmethod
-    def _from_pd_series(cls, obj: pd.Series, *args, pd_kwargs={}, **kwargs) -> T:
+    def _from_pd_series(cls, obj: pd.Series, *args, pd_kwargs=None, **kwargs) -> T:
+        if pd_kwargs is None:
+            pd_kwargs = {}
         return cls.from_obj(obj.to_dict(**pd_kwargs), *args, **kwargs)
 
     @from_obj.register(pd.DataFrame)
     @classmethod
     def _from_pd_dataframe(
-        cls, obj: pd.DataFrame, *args, pd_kwargs={}, **kwargs
+        cls, obj: pd.DataFrame, *args, pd_kwargs=None, **kwargs
     ) -> list[T]:
+        if pd_kwargs is None:
+            pd_kwargs = {}
         return [
             cls.from_obj(row, *args, **pd_kwargs, **kwargs) for _, row in obj.iterrows()
         ]
 
     @from_obj.register(BaseModel)
     @classmethod
-    def _from_base_model(
-        cls, obj: BaseModel, pydantic_kwargs={"by_alias": True}, **kwargs
-    ) -> T:
+    def _from_base_model(cls, obj: BaseModel, pydantic_kwargs=None, **kwargs) -> T:
+        if pydantic_kwargs is None:
+            pydantic_kwargs = {"by_alias": True}
         config_ = {**obj.model_dump(**pydantic_kwargs), **kwargs}
         return cls.from_obj(**config_)
 

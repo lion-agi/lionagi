@@ -35,7 +35,7 @@ class BaseMail:
             raise ValueError(
                 f"Invalid request title. Valid titles are "
                 f"{list(MailCategory)}, Error: {e}"
-            )
+            ) from e
         self.package = package
 
 

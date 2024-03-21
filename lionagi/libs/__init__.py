@@ -31,5 +31,5 @@ __all__ = [
     "PayloadPackage",
     "StatusTracker",
     "SimpleRateLimiter",
-    "CallDecorator"
+    "CallDecorator",
 ]

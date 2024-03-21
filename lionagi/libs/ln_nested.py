@@ -285,9 +285,7 @@ def unflatten(
     ):
         max_index = max(unflattened.keys(), default=-1)
         return [unflattened.get(i) for i in range(max_index + 1)]
-    if not unflattened:
-        return {}
-    return unflattened
+    return unflattened or {}
 
 
 def nfilter(
@@ -376,12 +374,10 @@ def ninsert(
             ):
                 next_part = indices[i + 1]
                 nested_structure[part] = [] if isinstance(next_part, int) else {}
-            nested_structure = nested_structure[part]
-        else:
-            if part not in nested_structure:
-                next_part = indices[i + 1]
-                nested_structure[part] = [] if isinstance(next_part, int) else {}
-            nested_structure = nested_structure[part]
+        elif part not in nested_structure:
+            next_part = indices[i + 1]
+            nested_structure[part] = [] if isinstance(next_part, int) else {}
+        nested_structure = nested_structure[part]
         current_depth += 1
         parts_depth += 1
 
@@ -391,11 +387,10 @@ def ninsert(
         last_part = indices[-1]
     if isinstance(last_part, int):
         _handle_list_insert(nested_structure, last_part, value)
+    elif isinstance(nested_structure, list):
+        nested_structure.append({last_part: value})
     else:
-        if isinstance(nested_structure, list):
-            nested_structure.append({last_part: value})
-        else:
-            nested_structure[last_part] = value
+        nested_structure[last_part] = value
 
 
 # noinspection PyDecorator
@@ -437,18 +432,15 @@ def get_flattened_keys(
         >>> keys = get_flattened_keys(nested_list)
         >>> assert keys == ['0_a', '1_b']
     """
-    if inplace:
-        obj_copy = SysUtil.create_copy(nested_structure, num=1)
-        flatten(
-            obj_copy, sep=sep, max_depth=max_depth, inplace=True, dict_only=dict_only
-        )
-        return convert.to_list(obj_copy.keys())
-    else:
+    if not inplace:
         return convert.to_list(
             flatten(
                 nested_structure, sep=sep, max_depth=max_depth, dict_only=dict_only
             ).keys()
         )
+    obj_copy = SysUtil.create_copy(nested_structure, num=1)
+    flatten(obj_copy, sep=sep, max_depth=max_depth, inplace=True, dict_only=dict_only)
+    return convert.to_list(obj_copy.keys())
 
 
 def _dynamic_flatten_in_place(

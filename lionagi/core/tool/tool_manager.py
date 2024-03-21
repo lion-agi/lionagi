@@ -32,7 +32,7 @@ class ToolManager:
         Returns:
             bool: True if the name exists, False otherwise.
         """
-        return True if name in self.registry.keys() else False
+        return name in self.registry
 
     @property
     def has_tools(self):
@@ -67,24 +67,23 @@ class ToolManager:
             ValueError: If the function name is not registered or if there's an error during function invocation.
         """
         name, kwargs = func_calls
-        if self.name_existed(name):
-            tool = self.registry[name]
-            func = tool.func
-            parser = tool.parser
-            try:
-                if func_call.is_coroutine_func(func):
-                    tasks = [func_call.call_handler(func, **kwargs)]
-                    out = await asyncio.gather(*tasks)
-                    return parser(out[0]) if parser else out[0]
-                else:
-                    out = func(**kwargs)
-                    return parser(out) if parser else out
-            except Exception as e:
-                raise ValueError(
-                    f"Error when invoking function {name} with arguments {kwargs} with error message {e}"
-                )
-        else:
+        if not self.name_existed(name):
             raise ValueError(f"Function {name} is not registered.")
+        tool = self.registry[name]
+        func = tool.func
+        parser = tool.parser
+        try:
+            if func_call.is_coroutine_func(func):
+                tasks = [func_call.call_handler(func, **kwargs)]
+                out = await asyncio.gather(*tasks)
+                return parser(out[0]) if parser else out[0]
+            else:
+                out = func(**kwargs)
+                return parser(out) if parser else out
+        except Exception as e:
+            raise ValueError(
+                f"Error when invoking function {name} with arguments {kwargs} with error message {e}"
+            ) from e
 
     @staticmethod
     def get_function_call(response: dict) -> Tuple[str, dict]:
@@ -104,7 +103,7 @@ class ToolManager:
             func = response["action"][7:]
             args = convert.to_dict(response["arguments"])
             return func, args
-        except:
+        except Exception:
             try:
                 func = response["recipient_name"].split(".")[-1]
                 args = response["parameters"]
@@ -129,10 +128,7 @@ class ToolManager:
             list[dict[str, Any]]: A list of tool schemas.
 
         """
-        schema_list = []
-        for tool in self.registry.values():
-            schema_list.append(tool.schema_)
-        return schema_list
+        return [tool.schema_ for tool in self.registry.values()]
 
     def parse_tool(self, tools: TOOL_TYPE, **kwargs) -> dict:
         """
@@ -163,13 +159,13 @@ class ToolManager:
 
         if isinstance(tools, bool):
             tool_kwarg = {"tools": self.to_tool_schema_list()}
-            kwargs = {**tool_kwarg, **kwargs}
+            kwargs = tool_kwarg | kwargs
 
         else:
             if not isinstance(tools, list):
                 tools = [tools]
             tool_kwarg = {"tools": func_call.lcall(tools, tool_check)}
-            kwargs = {**tool_kwarg, **kwargs}
+            kwargs = tool_kwarg | kwargs
 
         return kwargs
 
@@ -259,7 +255,7 @@ def func_to_tool(
     parsers = convert.to_list(parser, flatten=True, dropna=True)
 
     if parser:
-        if len(funcs) != len(parsers) and len(parsers) != 1:
+        if len(funcs) != len(parsers) != 1:
             raise ValueError(
                 "Length of parser must match length of func. Except if you only pass one"
             )

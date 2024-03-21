@@ -39,13 +39,12 @@ def to_list(input_, /, *, flatten: bool = True, dropna: bool = True) -> list[Any
         - For specific behaviors with lists, tuples, sets, and other types, see the registered implementations.
     """
     try:
-        if isinstance(input_, Iterable) and not isinstance(
+        if not isinstance(input_, Iterable) or isinstance(
             input_, (str, bytes, bytearray, dict)
         ):
-            iterable_list = list(input_)
-            return _flatten_list(iterable_list, dropna) if flatten else iterable_list
-        else:
             return [input_]
+        iterable_list = list(input_)
+        return _flatten_list(iterable_list, dropna) if flatten else iterable_list
     except Exception as e:
         raise ValueError(f"Could not convert {type(input_)} object to list: {e}") from e
 
@@ -345,7 +344,7 @@ def to_df(
 
     try:
         dfs = pd.DataFrame(input_, **kwargs)
-        dfs.dropna(**(drop_kwargs | {"how": how}), inplace=True)
+        dfs = dfs.dropna(**(drop_kwargs | {"how": how}))
         return dfs.reset_index(drop=True) if reset_index else dfs
 
     except Exception as e:
@@ -367,7 +366,7 @@ def _(
             drop_kwargs = {}
         try:
             dfs = pd.DataFrame(input_, **kwargs)
-            dfs.dropna(**(drop_kwargs | {"how": how}), inplace=True)
+            dfs = dfs.dropna(**(drop_kwargs | {"how": how}))
             return dfs.reset_index(drop=True) if reset_index else dfs
         except Exception as e:
             raise ValueError(f"Error converting input_ to DataFrame: {e}") from e
@@ -387,7 +386,9 @@ def _(
                     dfs = pd.concat([dfs, i], **kwargs)
 
         except Exception as e2:
-            raise ValueError(f"Error converting input_ to DataFrame: {e1}, {e2}")
+            raise ValueError(
+                f"Error converting input_ to DataFrame: {e1}, {e2}"
+            ) from e2
 
     dfs.dropna(**(drop_kwargs | {"how": how}), inplace=True)
     return dfs.reset_index(drop=True) if reset_index else dfs
@@ -550,10 +551,7 @@ def is_structure_homogeneous(
         return True, structure_type
 
     is_, structure_type = _check_structure(structure)
-    if return_structure_type:
-        return is_, structure_type
-    else:
-        return is_
+    return (is_, structure_type) if return_structure_type else is_
 
 
 def is_homogeneous(iterables: list[Any] | dict[Any, Any], type_check: type) -> bool:

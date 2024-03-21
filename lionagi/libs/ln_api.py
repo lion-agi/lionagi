@@ -44,11 +44,12 @@ class APIUtil:
             >>> print(post_method)
             <bound method ClientSession._request of <aiohttp.client.ClientSession object at 0x...>>
         """
-        if method not in ["post", "delete", "head", "options", "patch"]:
+        if method in {"post", "delete", "head", "options", "patch"}:
+            return getattr(http_session, method)
+        else:
             raise ValueError(
                 "Invalid request, method must be in ['post', 'delete', 'head', 'options', 'patch']"
             )
-        return getattr(http_session, method)
 
     @staticmethod
     def api_error(response_json: Mapping[str, Any]) -> bool:
@@ -116,7 +117,7 @@ class APIUtil:
             ''
         """
         match = re.search(r"^https://[^/]+(/.+)?/v\d+/(.+)$", request_url)
-        return match.group(2) if match else ""
+        return match[2] if match else ""
 
     @staticmethod
     async def unified_api_call(
@@ -247,7 +248,7 @@ class APIUtil:
             try:
                 with open(file_path, "rb") as file:
                     files = {param_name: file}
-                    additional_data = additional_data if additional_data else {}
+                    additional_data = additional_data or {}
                     async with http_session.post(
                         url, data={**files, **additional_data}
                     ) as response:
@@ -325,12 +326,11 @@ class APIUtil:
             return None
 
     @staticmethod
-    # @lru_cache(maxsize=1024)
     def calculate_num_token(
         payload: Mapping[str, Any] = None,
         api_endpoint: str = None,
         token_encoding_name: str = None,
-    ) -> int:
+    ) -> int:  # sourcery skip: avoid-builtin-shadow
         """
         Calculates the number of tokens required for a request based on the payload and API endpoint.
 
@@ -375,17 +375,14 @@ class APIUtil:
                             )
                 num_tokens += 2  # every reply is primed with <im_start>assistant
                 return num_tokens + completion_tokens
-            # normal completions
             else:
                 prompt = payload["prompt"]
                 if isinstance(prompt, str):  # single prompt
                     prompt_tokens = len(encoding.encode(prompt))
-                    num_tokens = prompt_tokens + completion_tokens
-                    return num_tokens
+                    return prompt_tokens + completion_tokens
                 elif isinstance(prompt, list):  # multiple prompts
-                    prompt_tokens = sum([len(encoding.encode(p)) for p in prompt])
-                    num_tokens = prompt_tokens + completion_tokens * len(prompt)
-                    return num_tokens
+                    prompt_tokens = sum(len(encoding.encode(p)) for p in prompt)
+                    return prompt_tokens + completion_tokens * len(prompt)
                 else:
                     raise TypeError(
                         'Expecting either string or list of strings for "prompt" field in completion request'
@@ -393,11 +390,9 @@ class APIUtil:
         elif api_endpoint == "embeddings":
             input = payload["input"]
             if isinstance(input, str):  # single input
-                num_tokens = len(encoding.encode(input))
-                return num_tokens
+                return len(encoding.encode(input))
             elif isinstance(input, list):  # multiple inputs
-                num_tokens = sum([len(encoding.encode(i)) for i in input])
-                return num_tokens
+                return sum(len(encoding.encode(i)) for i in input)
             else:
                 raise TypeError(
                     'Expecting either string or list of strings for "inputs" field in embedding request'
@@ -413,11 +408,11 @@ class APIUtil:
         payload = {input_key: input_}
 
         for key in required_:
-            payload.update({key: config[key]})
+            payload[key] = config[key]
 
         for key in optional_:
-            if bool(config[key]) is True and convert.strip_lower(config[key]) != "none":
-                payload.update({key: config[key]})
+            if bool(config[key]) and convert.strip_lower(config[key]) != "none":
+                payload[key] = config[key]
 
         return payload
 
@@ -573,18 +568,17 @@ class BaseRateLimiter(ABC):
                         ) as response:
                             response_json = await response.json()
 
-                            if "error" in response_json:
-                                logging.warning(
-                                    f"API call failed with error: {response_json['error']}"
-                                )
-                                attempts_left -= 1
-
-                                if "Rate limit" in response_json["error"].get(
-                                    "message", ""
-                                ):
-                                    await AsyncUtil.sleep(15)
-                            else:
+                            if "error" not in response_json:
                                 return response_json
+                            logging.warning(
+                                f"API call failed with error: {response_json['error']}"
+                            )
+                            attempts_left -= 1
+
+                            if "Rate limit" in response_json["error"].get(
+                                "message", ""
+                            ):
+                                await AsyncUtil.sleep(15)
                     except Exception as e:
                         logging.warning(f"API call failed with exception: {e}")
                         attempts_left -= 1
@@ -756,45 +750,40 @@ class BaseService:
                     self.schema.get(ep, {})
                     if isinstance(ep, EndPoint):
                         self.endpoints[ep.endpoint] = ep
+                    elif ep == "chat/completions":
+                        self.endpoints[ep] = EndPoint(
+                            max_requests=self.chat_config_rate_limit.get(
+                                "max_requests", 1000
+                            ),
+                            max_tokens=self.chat_config_rate_limit.get(
+                                "max_tokens", 100000
+                            ),
+                            interval=self.chat_config_rate_limit.get("interval", 60),
+                            endpoint_=ep,
+                            token_encoding_name=self.token_encoding_name,
+                            config=endpoint_config,
+                        )
                     else:
-                        if ep == "chat/completions":
-                            self.endpoints[ep] = EndPoint(
-                                max_requests=self.chat_config_rate_limit.get(
-                                    "max_requests", 1000
-                                ),
-                                max_tokens=self.chat_config_rate_limit.get(
-                                    "max_tokens", 100000
-                                ),
-                                interval=self.chat_config_rate_limit.get(
-                                    "interval", 60
-                                ),
-                                endpoint_=ep,
-                                token_encoding_name=self.token_encoding_name,
-                                config=endpoint_config,
-                            )
-                        else:
-                            self.endpoints[ep] = EndPoint(
-                                max_requests=(
-                                    endpoint_config.get("max_requests", 1000)
-                                    if endpoint_config.get("max_requests", 1000)
-                                    is not None
-                                    else 1000
-                                ),
-                                max_tokens=(
-                                    endpoint_config.get("max_tokens", 100000)
-                                    if endpoint_config.get("max_tokens", 100000)
-                                    is not None
-                                    else 100000
-                                ),
-                                interval=(
-                                    endpoint_config.get("interval", 60)
-                                    if endpoint_config.get("interval", 60) is not None
-                                    else 60
-                                ),
-                                endpoint_=ep,
-                                token_encoding_name=self.token_encoding_name,
-                                config=endpoint_config,
-                            )
+                        self.endpoints[ep] = EndPoint(
+                            max_requests=(
+                                endpoint_config.get("max_requests", 1000)
+                                if endpoint_config.get("max_requests", 1000) is not None
+                                else 1000
+                            ),
+                            max_tokens=(
+                                endpoint_config.get("max_tokens", 100000)
+                                if endpoint_config.get("max_tokens", 100000) is not None
+                                else 100000
+                            ),
+                            interval=(
+                                endpoint_config.get("interval", 60)
+                                if endpoint_config.get("interval", 60) is not None
+                                else 60
+                            ),
+                            endpoint_=ep,
+                            token_encoding_name=self.token_encoding_name,
+                            config=endpoint_config,
+                        )
 
                 if not self.endpoints[ep]._has_initialized:
                     await self.endpoints[ep].init_rate_limiter()
@@ -833,7 +822,7 @@ class BaseService:
         if endpoint not in self.endpoints.keys():
             raise ValueError(f"The endpoint {endpoint} has not initialized.")
         async with aiohttp.ClientSession() as http_session:
-            completion = await self.endpoints[endpoint].rate_limiter._call_api(
+            return await self.endpoints[endpoint].rate_limiter._call_api(
                 http_session=http_session,
                 endpoint=endpoint,
                 base_url=self.base_url,
@@ -842,7 +831,6 @@ class BaseService:
                 payload=payload,
                 **kwargs,
             )
-            return completion
 
 
 class PayloadPackage:
