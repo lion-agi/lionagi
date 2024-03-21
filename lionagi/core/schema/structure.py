@@ -377,9 +377,12 @@ class Structure(BaseRelatableNode):
     def add_node(self, node: BaseNode):
         self.graph.add_node(node)
 
-    # def add_relationship(self, relationship: Relationship):
-    #     self.graph.add_relationship(relationship)
     def add_relationship(self, from_node: BaseNode, to_node: BaseNode, bundle=False, condition=None, **kwargs):
+        if isinstance(from_node, Tool) or isinstance(from_node, ActionSelection):
+            raise ValueError(f"type {type(from_node)} should not be the head of the relationship, "
+                             f"please switch position and attach it to the tail of the relationship")
+        if isinstance(to_node, Tool) or isinstance(to_node, ActionSelection):
+            bundle = True
         relationship = Relationship(
             source_node_id=from_node.id_, target_node_id=to_node.id_, bundle=bundle, **kwargs
         )

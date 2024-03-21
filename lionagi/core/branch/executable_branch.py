@@ -116,9 +116,10 @@ class ExecutableBranch(BaseRelatableNode):
             pass
 
         if verbose:
-            display(Markdown(
-                f"{self.branch.last_assistant_response.sender}: {convert.to_str(result)}"))
-            print('-----------------------------------------------------')
+            if len(self.branch.assistant_responses) != 0:
+                display(Markdown(
+                    f"{self.branch.last_assistant_response.sender}: {convert.to_str(result)}"))
+                print('-----------------------------------------------------')
 
         self.responses.append(result)
 
@@ -142,9 +143,10 @@ class ExecutableBranch(BaseRelatableNode):
             result = await func(action.instruction.content, tools=action.tools, **action.action_kwargs)
 
         if verbose:
-            display(Markdown(
-                f"{self.branch.last_assistant_response.sender}: {convert.to_str(result)}"))
-            print('-----------------------------------------------------')
+            if len(self.branch.assistant_responses) != 0:
+                display(Markdown(
+                    f"{self.branch.last_assistant_response.sender}: {convert.to_str(result)}"))
+                print('-----------------------------------------------------')
 
         self.responses.append(result)
 
