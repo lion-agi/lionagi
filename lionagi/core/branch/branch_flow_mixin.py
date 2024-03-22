@@ -1,12 +1,9 @@
 from abc import ABC
 from typing import Any, Optional, Union, TypeVar
 
-from lionagi.core.schema.base_node import TOOL_TYPE, Tool
-from lionagi.core.flow.monoflow.chat import MonoChat
-from lionagi.core.flow.monoflow.followup import MonoFollowup
-from lionagi.core.flow.monoflow.ReAct import MonoReAct
-
-from lionagi.core.messages.schema import Instruction, System
+from ..schema import TOOL_TYPE, Tool
+from ..messages import Instruction, System
+from ..flow.monoflow import MonoChat, MonoFollowup, MonoReAct
 
 T = TypeVar("T", bound=Tool)
 
@@ -25,7 +22,6 @@ class BranchFlowMixin(ABC):
         output_fields=None,
         **kwargs,
     ) -> Any:
-
         flow = MonoChat(self)
         return await flow.chat(
             instruction=instruction,

@@ -8,19 +8,19 @@ class OpenAIService(BaseService):
     A service to interact with OpenAI's API endpoints.
 
     Attributes:
-        base_url (str): The base URL for the OpenAI API.
-        available_endpoints (list): A list of available API endpoints.
-        schema (dict): The schema configuration for the API.
-        key_scheme (str): The environment variable name for OpenAI API key.
-        token_encoding_name (str): The default token encoding scheme.
+            base_url (str): The base URL for the OpenAI API.
+            available_endpoints (list): A list of available API endpoints.
+            schema (dict): The schema configuration for the API.
+            key_scheme (str): The environment variable name for OpenAI API key.
+            token_encoding_name (str): The default token encoding scheme.
 
     Examples:
-        >>> service = OpenAIService(api_key="your_api_key")
-        >>> asyncio.run(service.serve("Hello, world!","chat/completions"))
-        (payload, completion)
+            >>> service = OpenAIService(api_key="your_api_key")
+            >>> asyncio.run(service.serve("Hello, world!","chat/completions"))
+            (payload, completion)
 
-        >>> service = OpenAIService()
-        >>> asyncio.run(service.serve("Convert this text to speech.","audio_speech"))
+            >>> service = OpenAIService()
+            >>> asyncio.run(service.serve("Convert this text to speech.","audio_speech"))
     """
 
     base_url = "https://api.openai.com/v1/"
@@ -57,25 +57,25 @@ class OpenAIService(BaseService):
         Serves the input using the specified endpoint and method.
 
         Args:
-            input_: The input text to be processed.
-            endpoint: The API endpoint to use for processing.
-            method: The HTTP method to use for the request.
-            **kwargs: Additional keyword arguments to pass to the payload creation.
+                input_: The input text to be processed.
+                endpoint: The API endpoint to use for processing.
+                method: The HTTP method to use for the request.
+                **kwargs: Additional keyword arguments to pass to the payload creation.
 
         Returns:
-            A tuple containing the payload and the completion assistant_response from the API.
+                A tuple containing the payload and the completion assistant_response from the API.
 
         Raises:
-            ValueError: If the specified endpoint is not supported.
+                ValueError: If the specified endpoint is not supported.
 
         Examples:
-            >>> service = OpenAIService(api_key="your_api_key")
-            >>> asyncio.run(service.serve("Hello, world!","chat/completions"))
-            (payload, completion)
+                >>> service = OpenAIService(api_key="your_api_key")
+                >>> asyncio.run(service.serve("Hello, world!","chat/completions"))
+                (payload, completion)
 
-            >>> service = OpenAIService()
-            >>> asyncio.run(service.serve("Convert this text to speech.","audio_speech"))
-            ValueError: 'audio_speech' is currently not supported
+                >>> service = OpenAIService()
+                >>> asyncio.run(service.serve("Convert this text to speech.","audio_speech"))
+                ValueError: 'audio_speech' is currently not supported
         """
         if endpoint not in self.active_endpoint:
             await self.init_endpoint(endpoint)
@@ -89,14 +89,14 @@ class OpenAIService(BaseService):
         Serves the chat completion request with the given messages.
 
         Args:
-            messages: The messages to be included in the chat completion.
-            **kwargs: Additional keyword arguments for payload creation.
+                messages: The messages to be included in the chat completion.
+                **kwargs: Additional keyword arguments for payload creation.
 
         Returns:
-            A tuple containing the payload and the completion assistant_response from the API.
+                A tuple containing the payload and the completion assistant_response from the API.
 
         Raises:
-            Exception: If the API call fails.
+                Exception: If the API call fails.
         """
         if "chat/completions" not in self.active_endpoint:
             await self.init_endpoint("chat/completions")

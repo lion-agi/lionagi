@@ -1,22 +1,19 @@
 from abc import ABC
 from typing import Any
 
-from lionagi.libs.sys_util import SysUtil, PATH_TYPE
+from lionagi.libs.sys_util import PATH_TYPE
+from lionagi.libs import convert, dataframe, SysUtil
 
-import lionagi.libs.ln_convert as convert
-import lionagi.libs.ln_dataframe as dataframe
-
-from lionagi.core.schema.base_node import BaseRelatableNode
-from lionagi.core.schema.data_logger import DataLogger, DLog
-from lionagi.core.messages.schema import (
+from ..schema.base_node import BaseRelatableNode
+from ..schema.data_logger import DataLogger, DLog
+from ..messages.schema import (
     BranchColumns,
     System,
     Response,
     Instruction,
     BaseMessage,
 )
-from lionagi.core.branch.util import MessageUtil
-from lionagi.libs.ln_parse import ParseUtil
+from .util import MessageUtil
 
 
 class BaseBranch(BaseRelatableNode, ABC):
@@ -25,9 +22,9 @@ class BaseBranch(BaseRelatableNode, ABC):
     and logging functionality.
 
     Attributes:
-        messages (dataframe.ln_DataFrame): Holds the messages in the branch.
-        datalogger (DataLogger): Logs data related to the branch's operation.
-        persist_path (PATH_TYPE): Filesystem path for data persistence.
+            messages (dataframe.ln_DataFrame): Holds the messages in the branch.
+            datalogger (DataLogger): Logs data related to the branch's operation.
+            persist_path (PATH_TYPE): Filesystem path for data persistence.
     """
 
     _columns: list[str] = BranchColumns.COLUMNS.value
@@ -49,9 +46,7 @@ class BaseBranch(BaseRelatableNode, ABC):
         else:
             self.messages = dataframe.ln_DataFrame(columns=self._columns)
 
-        self.datalogger = (
-            datalogger if datalogger else DataLogger(persist_path=persist_path)
-        )
+        self.datalogger = datalogger or DataLogger(persist_path=persist_path)
         self.name = name
 
     def add_message(
@@ -68,11 +63,11 @@ class BaseBranch(BaseRelatableNode, ABC):
         Adds a message to the branch.
 
         Args:
-            system: Information for creating a System message.
-            instruction: Information for creating an Instruction message.
-            context: Context information for the message.
-            response: Response data for creating a message.
-            **kwargs: Additional keyword arguments for message creation.
+                system: Information for creating a System message.
+                instruction: Information for creating an Instruction message.
+                context: Context information for the message.
+                response: Response data for creating a message.
+                **kwargs: Additional keyword arguments for message creation.
         """
         _msg = MessageUtil.create_message(
             system=system,
@@ -87,15 +82,20 @@ class BaseBranch(BaseRelatableNode, ABC):
         if isinstance(_msg, System):
             self.system_node = _msg
 
+        # sourcery skip: merge-nested-ifs
         if isinstance(_msg, Instruction):
             if recipient is None and self.name is not None:
                 _msg.recipient = self.name
 
         if isinstance(_msg, Response):
             if "action_response" in _msg.content.keys():
-                _msg.recipient = recipient or self.name
-            if 'response' in _msg.content.keys():
-                _msg.sender = self.name
+                if recipient is None and self.name is not None:
+                    _msg.recipient = self.name
+                if recipient is not None and self.name is None:
+                    _msg.recipient = recipient
+            if "response" in _msg.content.keys():
+                if self.name is not None:
+                    _msg.sender = self.name
 
         _msg.content = _msg.msg_content
         self.messages.loc[len(self.messages)] = _msg.to_pd_series()
@@ -108,11 +108,11 @@ class BaseBranch(BaseRelatableNode, ABC):
         optionally including sender information.
 
         Args:
-            with_sender: Flag to include sender information in the output.
+                with_sender: Flag to include sender information in the output.
 
         Returns:
-            A list of message dictionaries, each with 'role' and 'content' keys,
-            and optionally prefixed by 'Sender' if with_sender is True.
+                A list of message dictionaries, each with 'role' and 'content' keys,
+                and optionally prefixed by 'Sender' if with_sender is True.
         """
 
         message = []
@@ -143,7 +143,7 @@ class BaseBranch(BaseRelatableNode, ABC):
         Retrieves all chat messages without sender information.
 
         Returns:
-            A list of dictionaries representing chat messages.
+                A list of dictionaries representing chat messages.
         """
 
         return self._to_chatcompletion_message()
@@ -154,7 +154,7 @@ class BaseBranch(BaseRelatableNode, ABC):
         Retrieves all chat messages, including sender information.
 
         Returns:
-            A list of dictionaries representing chat messages, each prefixed with its sender.
+                A list of dictionaries representing chat messages, each prefixed with its sender.
         """
 
         return self._to_chatcompletion_message(with_sender=True)
@@ -165,7 +165,7 @@ class BaseBranch(BaseRelatableNode, ABC):
         Retrieves the last message from the branch as a pandas Series.
 
         Returns:
-            A pandas Series representing the last message in the branch.
+                A pandas Series representing the last message in the branch.
         """
 
         return MessageUtil.get_message_rows(self.messages, n=1, from_="last")
@@ -176,7 +176,7 @@ class BaseBranch(BaseRelatableNode, ABC):
         Extracts the content of the last message in the branch.
 
         Returns:
-            A dictionary representing the content of the last message.
+                A dictionary representing the content of the last message.
         """
 
         return convert.to_dict(self.messages.content.iloc[-1])
@@ -187,7 +187,7 @@ class BaseBranch(BaseRelatableNode, ABC):
         Retrieves the first message marked with the 'system' role.
 
         Returns:
-            A pandas Series representing the first 'system' message in the branch.
+                A pandas Series representing the first 'system' message in the branch.
         """
 
         return MessageUtil.get_message_rows(
@@ -200,7 +200,7 @@ class BaseBranch(BaseRelatableNode, ABC):
         Retrieves the last message marked with the 'assistant' role.
 
         Returns:
-            A pandas Series representing the last 'assistant' (response) message in the branch.
+                A pandas Series representing the last 'assistant' (response) message in the branch.
         """
 
         return MessageUtil.get_message_rows(
@@ -213,7 +213,7 @@ class BaseBranch(BaseRelatableNode, ABC):
         Extracts the content of the last 'assistant' (response) message.
 
         Returns:
-            A dictionary representing the content of the last 'assistant' message.
+                A dictionary representing the content of the last 'assistant' message.
         """
 
         return convert.to_dict(self.last_response.content.iloc[-1])
@@ -224,7 +224,7 @@ class BaseBranch(BaseRelatableNode, ABC):
         Filters and retrieves all messages sent by 'action_request'.
 
         Returns:
-            A pandas DataFrame containing all 'action_request' messages.
+                A pandas DataFrame containing all 'action_request' messages.
         """
 
         return convert.to_df(self.messages[self.messages.sender == "action_request"])
@@ -235,7 +235,7 @@ class BaseBranch(BaseRelatableNode, ABC):
         Filters and retrieves all messages sent by 'action_response'.
 
         Returns:
-            A pandas DataFrame containing all 'action_response' messages.
+                A pandas DataFrame containing all 'action_response' messages.
         """
 
         return convert.to_df(self.messages[self.messages.sender == "action_response"])
@@ -246,7 +246,7 @@ class BaseBranch(BaseRelatableNode, ABC):
         Retrieves all messages marked with the 'assistant' role.
 
         Returns:
-            A pandas DataFrame containing all messages with an 'assistant' role.
+                A pandas DataFrame containing all messages with an 'assistant' role.
         """
 
         return convert.to_df(self.messages[self.messages.role == "assistant"])
@@ -257,7 +257,7 @@ class BaseBranch(BaseRelatableNode, ABC):
         Filters 'assistant' role messages excluding 'action_request' and 'action_response'.
 
         Returns:
-            A pandas DataFrame of 'assistant' messages excluding action requests/responses.
+                A pandas DataFrame of 'assistant' messages excluding action requests/responses.
         """
 
         a_responses = self.responses[self.responses.sender != "action_response"]
@@ -274,7 +274,7 @@ class BaseBranch(BaseRelatableNode, ABC):
         Summarizes branch information, including message counts by role.
 
         Returns:
-            A dictionary containing counts of messages categorized by their role.
+                A dictionary containing counts of messages categorized by their role.
         """
 
         return self._info()
@@ -285,7 +285,7 @@ class BaseBranch(BaseRelatableNode, ABC):
         Provides a summary of message counts categorized by sender.
 
         Returns:
-            A dictionary with senders as keys and counts of their messages as values.
+                A dictionary with senders as keys and counts of their messages as values.
         """
 
         return self._info(use_sender=True)
@@ -296,8 +296,8 @@ class BaseBranch(BaseRelatableNode, ABC):
         Provides a detailed description of the branch, including a summary of messages.
 
         Returns:
-            A dictionary with a summary of total messages, a breakdown by role, and
-            a preview of the first five messages.
+                A dictionary with a summary of total messages, a breakdown by role, and
+                a preview of the first five messages.
         """
 
         return {
@@ -344,13 +344,13 @@ class BaseBranch(BaseRelatableNode, ABC):
         Exports the branch messages to a CSV file.
 
         Args:
-            filepath: Destination path for the CSV file. Defaults to 'messages.csv'.
-            dir_exist_ok: If False, an error is raised if the directory exists. Defaults to True.
-            timestamp: If True, appends a timestamp to the filename. Defaults to True.
-            time_prefix: If True, prefixes the filename with a timestamp. Defaults to False.
-            verbose: If True, prints a message upon successful export. Defaults to True.
-            clear: If True, clears the messages after exporting. Defaults to True.
-            **kwargs: Additional keyword arguments for pandas.DataFrame.to_csv().
+                filepath: Destination path for the CSV file. Defaults to 'messages.csv'.
+                dir_exist_ok: If False, an error is raised if the directory exists. Defaults to True.
+                timestamp: If True, appends a timestamp to the filename. Defaults to True.
+                time_prefix: If True, prefixes the filename with a timestamp. Defaults to False.
+                verbose: If True, prints a message upon successful export. Defaults to True.
+                clear: If True, clears the messages after exporting. Defaults to True.
+                **kwargs: Additional keyword arguments for pandas.DataFrame.to_csv().
         """
 
         if not filename.endswith(".csv"):
@@ -371,7 +371,7 @@ class BaseBranch(BaseRelatableNode, ABC):
             if clear:
                 self.clear_messages()
         except Exception as e:
-            raise ValueError(f"Error in saving to csv: {e}")
+            raise ValueError(f"Error in saving to csv: {e}") from e
 
     def to_json_file(
         self,
@@ -387,13 +387,13 @@ class BaseBranch(BaseRelatableNode, ABC):
         Exports the branch messages to a JSON file.
 
         Args:
-            filename: Destination path for the JSON file. Defaults to 'messages.json'.
-            dir_exist_ok: If False, an error is raised if the dirctory exists. Defaults to True.
-            timestamp: If True, appends a timestamp to the filename. Defaults to True.
-            time_prefix: If True, prefixes the filename with a timestamp. Defaults to False.
-            verbose: If True, prints a message upon successful export. Defaults to True.
-            clear: If True, clears the messages after exporting. Defaults to True.
-            **kwargs: Additional keyword arguments for pandas.DataFrame.to_json().
+                filename: Destination path for the JSON file. Defaults to 'messages.json'.
+                dir_exist_ok: If False, an error is raised if the dirctory exists. Defaults to True.
+                timestamp: If True, appends a timestamp to the filename. Defaults to True.
+                time_prefix: If True, prefixes the filename with a timestamp. Defaults to False.
+                verbose: If True, prints a message upon successful export. Defaults to True.
+                clear: If True, clears the messages after exporting. Defaults to True.
+                **kwargs: Additional keyword arguments for pandas.DataFrame.to_json().
         """
 
         if not filename.endswith(".json"):
@@ -416,7 +416,7 @@ class BaseBranch(BaseRelatableNode, ABC):
             if clear:
                 self.clear_messages()
         except Exception as e:
-            raise ValueError(f"Error in saving to json: {e}")
+            raise ValueError(f"Error in saving to json: {e}") from e
 
     def log_to_csv(
         self,
@@ -434,13 +434,13 @@ class BaseBranch(BaseRelatableNode, ABC):
         Exports the data logger contents to a CSV file.
 
         Args:
-            filename: Destination path for the CSV file. Defaults to 'log.csv'.
-            dir_exist_ok: If False, an error is raised if the directory exists. Defaults to True.
-            timestamp: If True, appends a timestamp to the filename. Defaults to True.
-            time_prefix: If True, prefixes the filename with a timestamp. Defaults to False.
-            verbose: If True, prints a message upon successful export. Defaults to True.
-            clear: If True, clears the logger after exporting. Defaults to True.
-            **kwargs: Additional keyword arguments for pandas.DataFrame.to_csv().
+                filename: Destination path for the CSV file. Defaults to 'log.csv'.
+                dir_exist_ok: If False, an error is raised if the directory exists. Defaults to True.
+                timestamp: If True, appends a timestamp to the filename. Defaults to True.
+                time_prefix: If True, prefixes the filename with a timestamp. Defaults to False.
+                verbose: If True, prints a message upon successful export. Defaults to True.
+                clear: If True, clears the logger after exporting. Defaults to True.
+                **kwargs: Additional keyword arguments for pandas.DataFrame.to_csv().
         """
         self.datalogger.to_csv_file(
             filename=filename,
@@ -470,13 +470,13 @@ class BaseBranch(BaseRelatableNode, ABC):
         Exports the data logger contents to a JSON file.
 
         Args:
-            filename: Destination path for the JSON file. Defaults to 'log.json'.
-            dir_exist_ok: If False, an error is raised if the directory exists. Defaults to True.
-            timestamp: If True, appends a timestamp to the filename. Defaults to True.
-            time_prefix: If True, prefixes the filename with a timestamp. Defaults to False.
-            verbose: If True, prints a message upon successful export. Defaults to True.
-            clear: If True, clears the logger after exporting. Defaults to True.
-            **kwargs: Additional keyword arguments for pandas.DataFrame.to_json().
+                filename: Destination path for the JSON file. Defaults to 'log.json'.
+                dir_exist_ok: If False, an error is raised if the directory exists. Defaults to True.
+                timestamp: If True, appends a timestamp to the filename. Defaults to True.
+                time_prefix: If True, prefixes the filename with a timestamp. Defaults to False.
+                verbose: If True, prints a message upon successful export. Defaults to True.
+                clear: If True, clears the logger after exporting. Defaults to True.
+                **kwargs: Additional keyword arguments for pandas.DataFrame.to_json().
         """
 
         self.datalogger.to_json_file(
@@ -513,14 +513,14 @@ class BaseBranch(BaseRelatableNode, ABC):
             if verbose:
                 print(f"Loaded {len(df)} logs from {filename}")
         except Exception as e:
-            raise ValueError(f"Error in loading log: {e}")
+            raise ValueError(f"Error in loading log: {e}") from e
 
     def remove_message(self, node_id: str) -> None:
         """
         Removes a message from the branch based on its node ID.
 
         Args:
-            node_id: The unique identifier of the message to be removed.
+                node_id: The unique identifier of the message to be removed.
         """
         MessageUtil.remove_message(self.messages, node_id)
 
@@ -529,9 +529,9 @@ class BaseBranch(BaseRelatableNode, ABC):
         Updates a specific column of a message identified by node_id with a new value.
 
         Args:
-            value: The new value to update the message with.
-            node_id: The unique identifier of the message to update.
-            column: The column of the message to update.
+                value: The new value to update the message with.
+                node_id: The unique identifier of the message to update.
+                column: The column of the message to update.
         """
 
         index = self.messages[self.messages["node_id"] == node_id].index[0]
@@ -547,8 +547,8 @@ class BaseBranch(BaseRelatableNode, ABC):
         Updates the first system message with new content and/or sender.
 
         Args:
-            system: The new system message content or a System object.
-            sender: The identifier of the sender for the system message.
+                system: The new system message content or a System object.
+                sender: The identifier of the sender for the system message.
         """
 
         if len(self.messages[self.messages["role"] == "system"]) == 0:
@@ -570,7 +570,7 @@ class BaseBranch(BaseRelatableNode, ABC):
         Removes the last 'n' messages from the branch.
 
         Args:
-            steps: The number of messages to remove from the end.
+                steps: The number of messages to remove from the end.
         """
 
         self.messages = dataframe.remove_last_n_rows(self.messages, steps)
@@ -642,10 +642,10 @@ class BaseBranch(BaseRelatableNode, ABC):
         Helper method to generate summaries of messages either by role or sender.
 
         Args:
-            use_sender: If True, summary is categorized by sender. Otherwise, by role.
+                use_sender: If True, summary is categorized by sender. Otherwise, by role.
 
         Returns:
-            A dictionary summarizing the count of messages either by role or sender.
+                A dictionary summarizing the count of messages either by role or sender.
         """
 
         messages = self.messages["sender"] if use_sender else self.messages["role"]

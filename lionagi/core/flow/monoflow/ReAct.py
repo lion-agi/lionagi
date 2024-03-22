@@ -42,16 +42,17 @@ class MonoReAct(MonoChat):
         try:
             try:
                 return default.format(num_steps=num_steps)
-            except:
+            except Exception:
                 return default.format(instruction=instruction)
-        except:
+        except Exception:
             return default
 
     def _create_followup_config(self, tools, auto=True, **kwargs):
 
-        if tools is not None:
-            if isinstance(tools, list) and isinstance(tools[0], Tool):
-                self.branch.tool_manager.register_tools(tools)
+        if tools is not None and (
+            isinstance(tools, list) and isinstance(tools[0], Tool)
+        ):
+            self.branch.tool_manager.register_tools(tools)
 
         if not self.branch.tool_manager.has_tools:
             raise ValueError("No tools found, You need to register tools")

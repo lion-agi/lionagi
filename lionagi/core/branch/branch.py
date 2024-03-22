@@ -2,26 +2,21 @@ from collections import deque
 from typing import Any, Union, TypeVar, Callable
 
 from lionagi.libs.sys_util import PATH_TYPE
-from lionagi.libs.ln_api import StatusTracker, BaseService
-from lionagi.libs import ln_convert as convert
-from lionagi.libs import ln_dataframe as dataframe
+from lionagi.libs import StatusTracker, BaseService, convert, dataframe
 
-from lionagi.core.schema.base_node import TOOL_TYPE, Tool
-from lionagi.core.schema.data_logger import DataLogger
-from lionagi.core.tool.tool_manager import ToolManager, func_to_tool
+from ..schema import TOOL_TYPE, Tool, DataLogger
+from ..tool import ToolManager, func_to_tool
 
-from lionagi.core.branch.base_branch import BaseBranch
-from lionagi.core.messages.schema import System
-from lionagi.core.mail.schema import BaseMail
+from ..messages import System
+from ..mail import BaseMail
 
-from lionagi.core.branch.util import MessageUtil
-
+from .util import MessageUtil
+from .base_branch import BaseBranch
 from .branch_flow_mixin import BranchFlowMixin
 
 from dotenv import load_dotenv
 
 load_dotenv()
-
 
 T = TypeVar("T", bound=Tool)
 
@@ -38,8 +33,7 @@ class Branch(BaseBranch, BranchFlowMixin):
         llmconfig: dict[str, str | int | dict] | None = None,
         tools: list[Callable | Tool] | None = None,
         datalogger: None | DataLogger = None,
-        persist_path: PATH_TYPE | None = None,
-        # instruction_sets=None,
+        persist_path: PATH_TYPE | None = None,  # instruction_sets=None,
         tool_manager: ToolManager | None = None,
         **kwargs,
     ):
@@ -57,7 +51,7 @@ class Branch(BaseBranch, BranchFlowMixin):
         self.sender = sender or "system"
 
         # add tool manager and register tools
-        self.tool_manager = tool_manager if tool_manager else ToolManager()
+        self.tool_manager = tool_manager or ToolManager()
         if tools:
             try:
                 tools_ = []
@@ -70,7 +64,7 @@ class Branch(BaseBranch, BranchFlowMixin):
 
                 self.register_tools(tools_)
             except Exception as e:
-                raise TypeError(f"Error in registering tools: {e}")
+                raise TypeError(f"Error in registering tools: {e}") from e
 
         # add service and llmconfig
         self.service, self.llmconfig = self._add_service(service, llmconfig)
@@ -96,14 +90,13 @@ class Branch(BaseBranch, BranchFlowMixin):
         llmconfig: dict[str, str | int | dict] | None = None,
         tools: TOOL_TYPE | None = None,
         datalogger: None | DataLogger = None,
-        persist_path: PATH_TYPE | None = None,
-        # instruction_sets=None,
+        persist_path: PATH_TYPE | None = None,  # instruction_sets=None,
         tool_manager: ToolManager | None = None,
         read_kwargs=None,
         **kwargs,
     ):
 
-        self = cls._from_csv(
+        return cls._from_csv(
             filepath=filepath,
             read_kwargs=read_kwargs,
             name=name,
@@ -116,8 +109,6 @@ class Branch(BaseBranch, BranchFlowMixin):
             tool_manager=tool_manager,
             **kwargs,
         )
-
-        return self
 
     @classmethod
     def from_json_string(
@@ -128,14 +119,13 @@ class Branch(BaseBranch, BranchFlowMixin):
         llmconfig: dict[str, str | int | dict] | None = None,
         tools: TOOL_TYPE | None = None,
         datalogger: None | DataLogger = None,
-        persist_path: PATH_TYPE | None = None,
-        # instruction_sets=None,
+        persist_path: PATH_TYPE | None = None,  # instruction_sets=None,
         tool_manager: ToolManager | None = None,
         read_kwargs=None,
         **kwargs,
     ):
 
-        self = cls._from_json(
+        return cls._from_json(
             filepath=filepath,
             read_kwargs=read_kwargs,
             name=name,
@@ -148,8 +138,6 @@ class Branch(BaseBranch, BranchFlowMixin):
             tool_manager=tool_manager,
             **kwargs,
         )
-
-        return self
 
     def messages_describe(self) -> dict[str, Any]:
 
@@ -301,7 +289,7 @@ class Branch(BaseBranch, BranchFlowMixin):
         Check if the conversation has been invoked with an action response.
 
         Returns:
-            bool: True if the conversation has been invoked, False otherwise.
+                bool: True if the conversation has been invoked, False otherwise.
 
         """
         content = self.messages.iloc[-1]["content"]
@@ -312,5 +300,5 @@ class Branch(BaseBranch, BranchFlowMixin):
                 "output",
             }:
                 return True
-        except:
+        except Exception:
             return False

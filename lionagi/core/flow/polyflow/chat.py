@@ -6,7 +6,6 @@ from lionagi.libs.ln_async import AsyncUtil
 from lionagi.core.messages.schema import Instruction
 from lionagi.core.branch.branch import Branch
 
-
 from lionagi.core.flow.base.baseflow import BasePolyFlow
 
 
@@ -28,7 +27,7 @@ class PolyChat(BasePolyFlow):
         invoke: bool = True,
         output_fields=None,
         persist_path=None,
-        branch_config={},
+        branch_config=None,
         explode=False,
         **kwargs,
     ) -> Any:
@@ -36,6 +35,8 @@ class PolyChat(BasePolyFlow):
         parallel chat
         """
 
+        if branch_config is None:
+            branch_config = {}
         return await self._parallel_chat(
             instruction,
             num_instances=num_instances,
@@ -67,6 +68,8 @@ class PolyChat(BasePolyFlow):
         persist_path=None,
         branch_config={},
         explode=False,
+        include_mapping=True,
+        default_key="response",
         **kwargs,
     ) -> Any:
         """
@@ -102,7 +105,16 @@ class PolyChat(BasePolyFlow):
             )
 
             branches[branch_.id_] = branch_
-            return res_
+            if include_mapping:
+                return {
+                    "instruction": ins_ or instruction,
+                    "context": cxt_ or context,
+                    "branch_id": branch_.id_,
+                    default_key: res_,
+                }
+
+            else:
+                return res_
 
         async def _inner_2(i, ins_=None, cxt_=None):
             """returns num_instances of branches performing for same task/context"""

@@ -1,10 +1,10 @@
 import re
 import inspect
+import itertools
 from collections.abc import Callable
 from typing import Any
 import numpy as np
 import lionagi.libs.ln_convert as convert
-
 
 md_json_char_map = {"\n": "\\n", "\r": "\\r", "\t": "\\t", '"': '\\"'}
 
@@ -20,35 +20,35 @@ class ParseUtil:
         the string by appending necessary closing characters before retrying.
 
         Args:
-            s (str): The JSON string to parse.
-            strict (bool, optional): If True, enforces strict JSON syntax. Defaults to False.
+                s (str): The JSON string to parse.
+                strict (bool, optional): If True, enforces strict JSON syntax. Defaults to False.
 
         Returns:
-            The parsed JSON object, typically a dictionary or list.
+                The parsed JSON object, typically a dictionary or list.
 
         Raises:
-            ValueError: If parsing fails even after attempting to correct the string.
+                ValueError: If parsing fails even after attempting to correct the string.
 
         Example:
-            >>> fuzzy_parse_json('{"name": "John", "age": 30, "city": "New York"')
-            {'name': 'John', 'age': 30, 'city': 'New York'}
+                >>> fuzzy_parse_json('{"name": "John", "age": 30, "city": "New York"')
+                {'name': 'John', 'age': 30, 'city': 'New York'}
         """
         try:
             return convert.to_dict(str_to_parse, strict=strict)
-        except:
+        except Exception:
             fixed_s = ParseUtil.fix_json_string(str_to_parse)
             try:
                 return convert.to_dict(fixed_s, strict=strict)
-            
-            except:
+
+            except Exception:
                 try:
-                    fixed_s = fixed_s.replace('\'', '\"')
+                    fixed_s = fixed_s.replace("'", '"')
                     return convert.to_dict(fixed_s, strict=strict)
-                    
+
                 except Exception as e:
                     raise ValueError(
                         f"Failed to parse JSON even after fixing attempts: {e}"
-                    )
+                    ) from e
 
     @staticmethod
     def fix_json_string(str_to_parse: str) -> str:
@@ -76,17 +76,17 @@ class ParseUtil:
         a default mapping is used.
 
         Args:
-            value: The string to be escaped.
-            char_map: An optional dictionary mapping characters to their escaped versions.
-                If not provided, a default mapping that escapes newlines, carriage returns,
-                tabs, and double quotes is used.
+                value: The string to be escaped.
+                char_map: An optional dictionary mapping characters to their escaped versions.
+                        If not provided, a default mapping that escapes newlines, carriage returns,
+                        tabs, and double quotes is used.
 
         Returns:
-            The escaped JSON string.
+                The escaped JSON string.
 
         Examples:
-            >>> escape_chars_in_json('Line 1\nLine 2')
-            'Line 1\\nLine 2'
+                >>> escape_chars_in_json('Line 1\nLine 2')
+                'Line 1\\nLine 2'
         """
 
         def replacement(match):
@@ -114,22 +114,22 @@ class ParseUtil:
         filtered by language. If a code block is found, it is parsed using the provided parser function.
 
         Args:
-            str_to_parse: The Markdown content to search.
-            language: An optional language specifier for the code block. If provided,
-                only code blocks of this language are considered.
-            regex_pattern: An optional regular expression pattern to use for finding the code block.
-                If provided, it overrides the language parameter.
-            parser: A function to parse the extracted code block string.
+                str_to_parse: The Markdown content to search.
+                language: An optional language specifier for the code block. If provided,
+                        only code blocks of this language are considered.
+                regex_pattern: An optional regular expression pattern to use for finding the code block.
+                        If provided, it overrides the language parameter.
+                parser: A function to parse the extracted code block string.
 
         Returns:
-            The result of parsing the code block with the provided parser function.
+                The result of parsing the code block with the provided parser function.
 
         Raises:
-            ValueError: If no code block is found in the Markdown content.
+                ValueError: If no code block is found in the Markdown content.
 
         Examples:
-            >>> extract_code_block('```python\\nprint("Hello, world!")\\n```', language='python', parser=lambda x: x)
-            'print("Hello, world!")'
+                >>> extract_code_block('```python\\nprint("Hello, world!")\\n```', language='python', parser=lambda x: x)
+                'print("Hello, world!")'
         """
 
         if language:
@@ -140,7 +140,7 @@ class ParseUtil:
         match = re.search(regex_pattern, str_to_parse, re.DOTALL)
         code_str = ""
         if match:
-            code_str = match.group(1).strip()
+            code_str = match[1].strip()
         else:
             raise ValueError(
                 f"No {language or 'specified'} code block found in the Markdown content."
@@ -162,29 +162,28 @@ class ParseUtil:
         Markdown string. It then optionally verifies that the parsed JSON object contains all expected keys.
 
         Args:
-            str_to_parse: The Markdown content to parse.
-            expected_keys: An optional list of keys expected to be present in the parsed JSON object.
-            parser: An optional function to parse the extracted code block. If not provided,
-                `fuzzy_parse_json` is used with default settings.
+                str_to_parse: The Markdown content to parse.
+                expected_keys: An optional list of keys expected to be present in the parsed JSON object.
+                parser: An optional function to parse the extracted code block. If not provided,
+                        `fuzzy_parse_json` is used with default settings.
 
         Returns:
-            The parsed JSON object from the Markdown content.
+                The parsed JSON object from the Markdown content.
 
         Raises:
-            ValueError: If the JSON code block is missing, or if any of the expected keys are missing
-                from the parsed JSON object.
+                ValueError: If the JSON code block is missing, or if any of the expected keys are missing
+                        from the parsed JSON object.
 
         Examples:
-            >>> md_to_json('```json\\n{"key": "value"}\\n```', expected_keys=['key'])
-            {'key': 'value'}
+                >>> md_to_json('```json\\n{"key": "value"}\\n```', expected_keys=['key'])
+                {'key': 'value'}
         """
         json_obj = ParseUtil.extract_code_block(
             str_to_parse, language="json", parser=parser or ParseUtil.fuzzy_parse_json
         )
 
         if expected_keys:
-            missing_keys = [key for key in expected_keys if key not in json_obj]
-            if missing_keys:
+            if missing_keys := [key for key in expected_keys if key not in json_obj]:
                 raise ValueError(
                     f"Missing expected keys in JSON object: {', '.join(missing_keys)}"
                 )
@@ -198,26 +197,26 @@ class ParseUtil:
         docstring following the Google style format.
 
         Args:
-            func (Callable): The function from which to extract docstring details.
+                func (Callable): The function from which to extract docstring details.
 
         Returns:
-            Tuple[str, Dict[str, str]]: A tuple containing the function description
-            and a dictionary with parameter names as keys and their descriptions as values.
+                Tuple[str, Dict[str, str]]: A tuple containing the function description
+                and a dictionary with parameter names as keys and their descriptions as values.
 
         Examples:
-            >>> def example_function(param1: int, param2: str):
-            ...     '''Example function.
-            ...
-            ...     Args:
-            ...         param1 (int): The first parameter.
-            ...         param2 (str): The second parameter.
-            ...     '''
-            ...     pass
-            >>> description, params = _extract_docstring_details_google(example_function)
-            >>> description
-            'Example function.'
-            >>> params == {'param1': 'The first parameter.', 'param2': 'The second parameter.'}
-            True
+                >>> def example_function(param1: int, param2: str):
+                ...     '''Example function.
+                ...
+                ...     Args:
+                ...         param1 (int): The first parameter.
+                ...         param2 (str): The second parameter.
+                ...     '''
+                ...     pass
+                >>> description, params = _extract_docstring_details_google(example_function)
+                >>> description
+                'Example function.'
+                >>> params == {'param1': 'The first parameter.', 'param2': 'The second parameter.'}
+                True
         """
         docstring = inspect.getdoc(func)
         if not docstring:
@@ -225,19 +224,21 @@ class ParseUtil:
         lines = docstring.split("\n")
         func_description = lines[0].strip()
 
-        param_start_pos = 0
         lines_len = len(lines)
 
         params_description = {}
-        for i in range(1, lines_len):
-            if (
-                lines[i].startswith("Args")
-                or lines[i].startswith("Arguments")
-                or lines[i].startswith("Parameters")
-            ):
-                param_start_pos = i + 1
-                break
-
+        param_start_pos = next(
+            (
+                i + 1
+                for i in range(1, lines_len)
+                if (
+                    lines[i].startswith("Args")
+                    or lines[i].startswith("Arguments")
+                    or lines[i].startswith("Parameters")
+                )
+            ),
+            0,
+        )
         current_param = None
         for i in range(param_start_pos, lines_len):
             if lines[i] == "":
@@ -245,7 +246,7 @@ class ParseUtil:
             elif lines[i].startswith(" "):
                 param_desc = lines[i].split(":", 1)
                 if len(param_desc) == 1:
-                    params_description[current_param] += " " + param_desc[0].strip()
+                    params_description[current_param] += f" {param_desc[0].strip()}"
                     continue
                 param, desc = param_desc
                 param = param.split("(")[0].strip()
@@ -262,27 +263,27 @@ class ParseUtil:
         docstring following the reStructuredText (reST) style format.
 
         Args:
-            func (Callable): The function from which to extract docstring details.
+                func (Callable): The function from which to extract docstring details.
 
         Returns:
-            Tuple[str, Dict[str, str]]: A tuple containing the function description
-            and a dictionary with parameter names as keys and their descriptions as values.
+                Tuple[str, Dict[str, str]]: A tuple containing the function description
+                and a dictionary with parameter names as keys and their descriptions as values.
 
         Examples:
-            >>> def example_function(param1: int, param2: str):
-            ...     '''Example function.
-            ...
-            ...     :param param1: The first parameter.
-            ...     :type param1: int
-            ...     :param param2: The second parameter.
-            ...     :type param2: str
-            ...     '''
-            ...     pass
-            >>> description, params = _extract_docstring_details_rest(example_function)
-            >>> description
-            'Example function.'
-            >>> params == {'param1': 'The first parameter.', 'param2': 'The second parameter.'}
-            True
+                >>> def example_function(param1: int, param2: str):
+                ...     '''Example function.
+                ...
+                ...     :param param1: The first parameter.
+                ...     :type param1: int
+                ...     :param param2: The second parameter.
+                ...     :type param2: str
+                ...     '''
+                ...     pass
+                >>> description, params = _extract_docstring_details_rest(example_function)
+                >>> description
+                'Example function.'
+                >>> params == {'param1': 'The first parameter.', 'param2': 'The second parameter.'}
+                True
         """
         docstring = inspect.getdoc(func)
         if not docstring:
@@ -301,7 +302,7 @@ class ParseUtil:
                 params_description[param] = desc.strip()
                 current_param = param
             elif line.startswith(" "):
-                params_description[current_param] += " " + line
+                params_description[current_param] += f" {line}"
 
         return func_description, params_description
 
@@ -313,30 +314,30 @@ class ParseUtil:
         (reST) style format.
 
         Args:
-            func (Callable): The function from which to extract docstring details.
-            style (str): The style of docstring to parse ('google' or 'reST').
+                func (Callable): The function from which to extract docstring details.
+                style (str): The style of docstring to parse ('google' or 'reST').
 
         Returns:
-            Tuple[str, Dict[str, str]]: A tuple containing the function description
-            and a dictionary with parameter names as keys and their descriptions as values.
+                Tuple[str, Dict[str, str]]: A tuple containing the function description
+                and a dictionary with parameter names as keys and their descriptions as values.
 
         Raises:
-            ValueError: If an unsupported style is provided.
+                ValueError: If an unsupported style is provided.
 
         Examples:
-            >>> def example_function(param1: int, param2: str):
-            ...     '''Example function.
-            ...
-            ...     Args:
-            ...         param1 (int): The first parameter.
-            ...         param2 (str): The second parameter.
-            ...     '''
-            ...     pass
-            >>> description, params = _extract_docstring_details(example_function, style='google')
-            >>> description
-            'Example function.'
-            >>> params == {'param1': 'The first parameter.', 'param2': 'The second parameter.'}
-            True
+                >>> def example_function(param1: int, param2: str):
+                ...     '''Example function.
+                ...
+                ...     Args:
+                ...         param1 (int): The first parameter.
+                ...         param2 (str): The second parameter.
+                ...     '''
+                ...     pass
+                >>> description, params = _extract_docstring_details(example_function, style='google')
+                >>> description
+                'Example function.'
+                >>> params == {'param1': 'The first parameter.', 'param2': 'The second parameter.'}
+                True
         """
         if style == "google":
             func_description, params_description = (
@@ -358,16 +359,16 @@ class ParseUtil:
         Converts a Python type to its JSON type equivalent.
 
         Args:
-            py_type (str): The name of the Python type.
+                py_type (str): The name of the Python type.
 
         Returns:
-            str: The corresponding JSON type.
+                str: The corresponding JSON type.
 
         Examples:
-            >>> _python_to_json_type('str')
-            'string'
-            >>> _python_to_json_type('int')
-            'number'
+                >>> _python_to_json_type('str')
+                'string'
+                >>> _python_to_json_type('int')
+                'number'
         """
         type_mapping = {
             "str": "string",
@@ -387,24 +388,24 @@ class ParseUtil:
         docstrings. The schema includes the function's name, description, and parameters.
 
         Args:
-            func (Callable): The function to generate a schema for.
-            style (str): The docstring format ('google' or 'reST').
+                func (Callable): The function to generate a schema for.
+                style (str): The docstring format ('google' or 'reST').
 
         Returns:
-            Dict[str, Any]: A schema describing the function.
+                Dict[str, Any]: A schema describing the function.
 
         Examples:
-            >>> def example_function(param1: int, param2: str) -> bool:
-            ...     '''Example function.
-            ...
-            ...     Args:
-            ...         param1 (int): The first parameter.
-            ...         param2 (str): The second parameter.
-            ...     '''
-            ...     return True
-            >>> schema = _func_to_schema(example_function)
-            >>> schema['function']['name']
-            'example_function'
+                >>> def example_function(param1: int, param2: str) -> bool:
+                ...     '''Example function.
+                ...
+                ...     Args:
+                ...         param1 (int): The first parameter.
+                ...         param2 (str): The second parameter.
+                ...     '''
+                ...     return True
+                >>> schema = _func_to_schema(example_function)
+                >>> schema['function']['name']
+                'example_function'
         """
         # Extracting function name and docstring details
         func_name = func.__name__
@@ -438,8 +439,7 @@ class ParseUtil:
                 "description": param_description,
             }
 
-        # Constructing the schema
-        schema = {
+        return {
             "type": "function",
             "function": {
                 "name": func_name,
@@ -447,8 +447,6 @@ class ParseUtil:
                 "parameters": parameters,
             },
         }
-
-        return schema
 
 
 class StringMatch:
@@ -463,16 +461,16 @@ class StringMatch:
         and 1 is an exact match.
 
         Args:
-            s: The first string to compare.
-            t: The second string to compare.
+                s: The first string to compare.
+                t: The second string to compare.
 
         Returns:
-            A float representing the Jaro distance between the two strings, ranging from 0 to 1,
-            where 1 means the strings are identical.
+                A float representing the Jaro distance between the two strings, ranging from 0 to 1,
+                where 1 means the strings are identical.
 
         Examples:
-            >>> jaro_distance("martha", "marhta")
-            0.9444444444444445
+                >>> jaro_distance("martha", "marhta")
+                0.9444444444444445
         """
         s_len = len(s)
         t_len = len(t)
@@ -527,18 +525,18 @@ class StringMatch:
         person names, and is designed to improve the scoring of strings that have a common prefix.
 
         Args:
-            s: The first string to compare.
-            t: The second string to compare.
-            scaling: The scaling factor for how much the score is adjusted upwards for having common prefixes.
-                     The scaling factor should be less than 1, and a typical value is 0.1.
+                s: The first string to compare.
+                t: The second string to compare.
+                scaling: The scaling factor for how much the score is adjusted upwards for having common prefixes.
+                                 The scaling factor should be less than 1, and a typical value is 0.1.
 
         Returns:
-            A float representing the Jaro-Winkler similarity between the two strings, ranging from 0 to 1,
-            where 1 means the strings are identical.
+                A float representing the Jaro-Winkler similarity between the two strings, ranging from 0 to 1,
+                where 1 means the strings are identical.
 
         Examples:
-            >>> jaro_winkler_similarity("dixon", "dicksonx")
-            0.8133333333333332
+                >>> jaro_winkler_similarity("dixon", "dicksonx")
+                0.8133333333333332
         """
         jaro_sim = StringMatch.jaro_distance(s, t)
         prefix_len = 0
@@ -561,15 +559,15 @@ class StringMatch:
         required to change one word into the other. Each operation has an equal cost.
 
         Args:
-            a: The first string to compare.
-            b: The second string to compare.
+                a: The first string to compare.
+                b: The second string to compare.
 
         Returns:
-            An integer representing the Levenshtein distance between the two strings.
+                An integer representing the Levenshtein distance between the two strings.
 
         Examples:
-            >>> levenshtein_distance("kitten", "sitting")
-            3
+                >>> levenshtein_distance("kitten", "sitting")
+                3
         """
         m, n = len(a), len(b)
         # Initialize 2D array (m+1) x (n+1)
@@ -582,17 +580,13 @@ class StringMatch:
             d[0][j] = j
 
         # Compute the distance
-        for i in range(1, m + 1):
-            for j in range(1, n + 1):
-                if a[i - 1] == b[j - 1]:
-                    cost = 0
-                else:
-                    cost = 1
-                d[i][j] = min(
-                    d[i - 1][j] + 1,  # deletion
-                    d[i][j - 1] + 1,  # insertion
-                    d[i - 1][j - 1] + cost,
-                )  # substitution
+        for i, j in itertools.product(range(1, m + 1), range(1, n + 1)):
+            cost = 0 if a[i - 1] == b[j - 1] else 1
+            d[i][j] = min(
+                d[i - 1][j] + 1,  # deletion
+                d[i][j - 1] + 1,  # insertion
+                d[i - 1][j - 1] + cost,
+            )  # substitution
         return d[m][n]
 
     @staticmethod
@@ -632,12 +626,14 @@ class StringMatch:
 
         if score_func is None:
             score_func = StringMatch.jaro_winkler_similarity
-            
+
         # Calculate Jaro-Winkler similarity scores for each potential match
-        scores = np.array([score_func(convert.to_str(word), correct_word) for correct_word in correct_words_list])
+        scores = np.array(
+            [
+                score_func(convert.to_str(word), correct_word)
+                for correct_word in correct_words_list
+            ]
+        )
         # Find the index of the highest score
         max_score_index = np.argmax(scores)
-        # Select the best match based on the highest score
-        best_match = correct_words_list[max_score_index]
-
-        return best_match
+        return correct_words_list[max_score_index]

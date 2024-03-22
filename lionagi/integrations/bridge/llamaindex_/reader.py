@@ -15,7 +15,7 @@ def get_llama_index_reader(reader: Any | str = None) -> Any:
 
     Args:
       reader (Union[Any, str], optional): The reader identifier, which can be a reader class, a string alias
-          for a reader class, or None. If None, returns the SimpleDirectoryReader class.
+              for a reader class, or None. If None, returns the SimpleDirectoryReader class.
 
     Returns:
       Any: The llama index reader class corresponding to the specified reader.
@@ -76,10 +76,10 @@ def parse_reader_name(reader_str):
     to facilitate dynamic import and installation if necessary.
 
     Args:
-        reader_str (str): The name of the reader as a string.
+            reader_str (str): The name of the reader as a string.
 
     Returns:
-        Tuple[str, str]: A tuple containing the package name and the pip name corresponding to the reader.
+            Tuple[str, str]: A tuple containing the package name and the pip name corresponding to the reader.
     """
 
     package_name = ""
@@ -172,18 +172,18 @@ def llama_index_read_data(
     then loads data using the reader's `load_data` method with the provided loader arguments and keyword arguments.
 
     Args:
-        reader (Union[None, str, Any], optional): The reader to use. This can be a class, a string identifier,
-            or None. If None, a default reader is used.
-        reader_args (List[Any], optional): Positional arguments to initialize the reader.
-        reader_kwargs (Dict[str, Any], optional): Keyword arguments to initialize the reader.
-        loader_args (List[Any], optional): Positional arguments for the reader's `load_data` method.
-        loader_kwargs (Dict[str, Any], optional): Keyword arguments for the reader's `load_data` method.
+            reader (Union[None, str, Any], optional): The reader to use. This can be a class, a string identifier,
+                    or None. If None, a default reader is used.
+            reader_args (List[Any], optional): Positional arguments to initialize the reader.
+            reader_kwargs (Dict[str, Any], optional): Keyword arguments to initialize the reader.
+            loader_args (List[Any], optional): Positional arguments for the reader's `load_data` method.
+            loader_kwargs (Dict[str, Any], optional): Keyword arguments for the reader's `load_data` method.
 
     Returns:
-        Any: The documents or data loaded by the reader.
+            Any: The documents or data loaded by the reader.
 
     Raises:
-        ValueError: If there is an error initializing the reader or loading the data.
+            ValueError: If there is an error initializing the reader or loading the data.
     """
     try:
         reader_args = reader_args or []

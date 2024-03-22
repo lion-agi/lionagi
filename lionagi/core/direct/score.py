@@ -1,7 +1,5 @@
-from lionagi.core.branch.branch import Branch
-from lionagi.libs import ln_func_call as func_call
-import lionagi.libs.ln_convert as convert
-
+from lionagi.libs import func_call, convert
+from ..branch import Branch
 from .utils import _handle_single_out
 
 
@@ -16,20 +14,22 @@ async def score(
     method="llm",
     reason=False,
     confidence_score=False,
-    retry_kwargs={},
+    retry_kwargs=None,
     **kwargs,
 ):
+    if retry_kwargs is None:
+        retry_kwargs = {}
     return await _force_score(
-        context = context, 
-        instruction = instruction,
-        score_range = score_range,
-        inclusive = inclusive,
-        num_digit = num_digit,
-        default_key = default_key,
-        method = method,
-        reason = reason,
-        confidence_score = confidence_score,
-        retry_kwargs = retry_kwargs,
+        context=context,
+        instruction=instruction,
+        score_range=score_range,
+        inclusive=inclusive,
+        num_digit=num_digit,
+        default_key=default_key,
+        method=method,
+        reason=reason,
+        confidence_score=confidence_score,
+        retry_kwargs=retry_kwargs,
         **kwargs,
     )
 
@@ -65,7 +65,7 @@ async def _force_score(
             raise ValueError("No output from the model")
 
         return out_
-    
+
     if "retries" not in retry_kwargs:
         retry_kwargs["retries"] = 2
 
@@ -86,28 +86,28 @@ def _create_score_config(
     **kwargs,
 ):
     instruct = {
-        "task": f"score context according to the following constraints",
+        "task": "score context according to the following constraints",
         "instruction": convert.to_str(instruction),
         "score_range": convert.to_str(score_range),
         "include_endpoints": "yes" if inclusive else "no",
     }
 
-    return_precision = ''
+    return_precision = ""
     if num_digit == 0:
         return_precision = "integer"
     else:
         return_precision = f"num:{convert.to_str(num_digit)}f"
-        
+
     extra_fields = kwargs.pop("output_fields", {})
     output_fields = {default_key: f"""a numeric score as {return_precision}"""}
     output_fields = {**output_fields, **extra_fields}
 
     if reason:
-        output_fields.update({"reason": "brief reason for the score"})
+        output_fields["reason"] = "brief reason for the score"
 
     if confidence_score:
-        output_fields.update(
-            {"confidence_score": "a numeric score between 0 to 1 formatted in num:0.2f"}
+        output_fields["confidence_score"] = (
+            "a numeric score between 0 to 1 formatted in num:0.2f"
         )
 
     if "temperature" not in kwargs:
@@ -143,7 +143,12 @@ async def _score(
     out_ = ""
 
     if method == "llm":
-        out_ = await branch.chat(_instruct, tools=None, context=context, output_fields=_output_fields, **_kwargs,
+        out_ = await branch.chat(
+            _instruct,
+            tools=None,
+            context=context,
+            output_fields=_output_fields,
+            **_kwargs,
         )
 
     to_num_kwargs = {

@@ -1,22 +1,23 @@
-from lionagi.libs import ln_func_call as func_call
-from lionagi.core.branch.branch import Branch
-from lionagi.libs.ln_parse import StringMatch
-
+from lionagi.libs import StringMatch, func_call
+from ..branch.branch import Branch
 from .utils import _handle_single_out
 
+
 async def select(
-    context, 
-    choices, 
+    context,
+    choices,
     *,
     num_choices=1,
-    method='llm', 
+    method="llm",
     objective=None,
-    default_key='answer',
-    reason=False, 
-    confidence_score=False, 
-    retry_kwargs={},
+    default_key="answer",
+    reason=False,
+    confidence_score=False,
+    retry_kwargs=None,
     **kwargs,
 ):
+    if retry_kwargs is None:
+        retry_kwargs = {}
     return await _force_select(
         context=context,
         choices=choices,
@@ -32,19 +33,18 @@ async def select(
 
 
 async def _force_select(
-    context, 
-    choices, 
+    context,
+    choices,
     num_choices=1,
-    method='llm', 
+    method="llm",
     objective=None,
-    default_key='answer',
-    reason=False, 
-    confidence_score=False, 
+    default_key="answer",
+    reason=False,
+    confidence_score=False,
     retry_kwargs={},
     **kwargs,
 ):
-    
-    
+
     async def _inner():
         out_ = await _select(
             context=context,
@@ -61,10 +61,9 @@ async def _force_select(
         if out_ is None:
             raise ValueError("No output from the model")
 
-        if isinstance(out_, dict):
-            if out_[default_key] not in choices:
-                v = StringMatch.choose_most_similar(out_.pop(default_key, ""), choices)
-                out_[default_key] = v
+        if isinstance(out_, dict) and out_[default_key] not in choices:
+            v = StringMatch.choose_most_similar(out_.pop(default_key, ""), choices)
+            out_[default_key] = v
 
         return out_
 
@@ -78,15 +77,15 @@ async def _force_select(
 
 
 def _create_select_config(
-        choices, 
-        num_choices=1,
-        objective=None,
-        default_key='answer',
-        reason=False, 
-        confidence_score=False, 
-        **kwargs,
+    choices,
+    num_choices=1,
+    objective=None,
+    default_key="answer",
+    reason=False,
+    confidence_score=False,
+    **kwargs,
 ):
-    
+
     instruct = {"task": f"select {num_choices} from provided", "choices": choices}
     if objective is not None:
         instruct["objective"] = objective
@@ -96,31 +95,31 @@ def _create_select_config(
     output_fields = {**output_fields, **extra_fields}
 
     if reason:
-        output_fields.update({"reason": "brief reason for the selection"})
+        output_fields["reason"] = "brief reason for the selection"
 
     if confidence_score:
-        output_fields.update(
-            {"confidence_score": "a numeric score between 0 to 1 formatted in num:0.2f"}
+        output_fields["confidence_score"] = (
+            "a numeric score between 0 to 1 formatted in num:0.2f"
         )
 
     if "temperature" not in kwargs:
         kwargs["temperature"] = 0.1
-    
+
     return instruct, output_fields, kwargs
 
 
 async def _select(
-    context, 
-    choices, 
+    context,
+    choices,
     num_choices=1,
-    method='llm', 
+    method="llm",
     objective=None,
-    default_key='answer',
-    reason=False, 
-    confidence_score=False, 
+    default_key="answer",
+    reason=False,
+    confidence_score=False,
     **kwargs,
 ):
-    
+
     _instruct, _output_fields, _kwargs = _create_select_config(
         choices=choices,
         num_choices=num_choices,
@@ -130,12 +129,16 @@ async def _select(
         confidence_score=confidence_score,
         **kwargs,
     )
-    
+
     branch = Branch()
     out_ = ""
     if method == "llm":
         out_ = await branch.chat(
-            _instruct, tools=None, context=context, output_fields=_output_fields, **_kwargs
+            _instruct,
+            tools=None,
+            context=context,
+            output_fields=_output_fields,
+            **_kwargs,
         )
-    
+
     return _handle_single_out(out_, default_key)

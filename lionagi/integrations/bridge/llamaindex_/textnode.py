@@ -10,17 +10,17 @@ def to_llama_index_node(lion_node, node_type: Any = None, **kwargs: Any) -> Any:
     the expected Llama Index node schema, and then creates a Llama Index node object of the specified type.
 
     Args:
-        lion_node: The Lion node to convert. Must have a `to_dict` method.
-        node_type (Any, optional): The type of Llama Index node to create. Can be a string name of a node class
-            within the Llama Index schema or a class that inherits from `BaseNode`. Defaults to 'TextNode'.
-        **kwargs: Additional keyword arguments to be included in the Llama Index node's initialization.
+            lion_node: The Lion node to convert. Must have a `to_dict` method.
+            node_type (Any, optional): The type of Llama Index node to create. Can be a string name of a node class
+                    within the Llama Index schema or a class that inherits from `BaseNode`. Defaults to 'TextNode'.
+            **kwargs: Additional keyword arguments to be included in the Llama Index node's initialization.
 
     Returns:
-        Any: A new instance of the specified Llama Index node type populated with data from the Lion node.
+            Any: A new instance of the specified Llama Index node type populated with data from the Lion node.
 
     Raises:
-        TypeError: If `node_type` is neither a string nor a subclass of `BaseNode`.
-        AttributeError: If an error occurs due to an invalid node type or during the creation of the node object.
+            TypeError: If `node_type` is neither a string nor a subclass of `BaseNode`.
+            AttributeError: If an error occurs due to an invalid node type or during the creation of the node object.
     """
 
     SysUtil.check_import("llama_index", pip_name="llama-index")

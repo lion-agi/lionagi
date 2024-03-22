@@ -1,13 +1,9 @@
 from typing import Tuple, Any, TypeVar, Callable
 
 import asyncio
+
+from lionagi.libs import func_call, convert, ParseUtil
 from lionagi.core.schema.base_node import Tool, TOOL_TYPE
-
-# from lionagi.libs.ln_async import AsyncUtil
-from lionagi.libs.ln_parse import ParseUtil
-from lionagi.libs import ln_convert as convert
-from lionagi.libs import ln_func_call as func_call
-
 
 T = TypeVar("T", bound=Tool)
 
@@ -21,7 +17,7 @@ class ToolManager:
     calls.
 
     Attributes:
-        registry (dict[str, Tool]): A dictionary to hold registered tools, keyed by their names.
+            registry (dict[str, Tool]): A dictionary to hold registered tools, keyed by their names.
     """
 
     registry: dict = {}
@@ -31,12 +27,12 @@ class ToolManager:
         Checks if a tool name already exists in the registry.
 
         Args:
-            name (str): The name of the tool to check.
+                name (str): The name of the tool to check.
 
         Returns:
-            bool: True if the name exists, False otherwise.
+                bool: True if the name exists, False otherwise.
         """
-        return True if name in self.registry.keys() else False
+        return name in self.registry
 
     @property
     def has_tools(self):
@@ -47,10 +43,10 @@ class ToolManager:
         Registers a tool in the registry. Raises a TypeError if the object is not an instance of Tool.
 
         Args:
-            tool (Tool): The tool instance to register.
+                tool (Tool): The tool instance to register.
 
         Raises:
-            TypeError: If the provided object is not an instance of Tool.
+                TypeError: If the provided object is not an instance of Tool.
         """
         if not isinstance(tool, Tool):
             raise TypeError("Please register a Tool object.")
@@ -62,33 +58,32 @@ class ToolManager:
         Invokes a registered tool's function with the given arguments. Supports both coroutine and regular functions.
 
         Args:
-            func_call (Tuple[str, Dict[str, Any]]): A tuple containing the function name and a dictionary of keyword arguments.
+                func_call (Tuple[str, Dict[str, Any]]): A tuple containing the function name and a dictionary of keyword arguments.
 
         Returns:
-            Any: The result of the function call.
+                Any: The result of the function call.
 
         Raises:
-            ValueError: If the function name is not registered or if there's an error during function invocation.
+                ValueError: If the function name is not registered or if there's an error during function invocation.
         """
         name, kwargs = func_calls
-        if self.name_existed(name):
-            tool = self.registry[name]
-            func = tool.func
-            parser = tool.parser
-            try:
-                if func_call.is_coroutine_func(func):
-                    tasks = [func_call.call_handler(func, **kwargs)]
-                    out = await asyncio.gather(*tasks)
-                    return parser(out[0]) if parser else out[0]
-                else:
-                    out = func(**kwargs)
-                    return parser(out) if parser else out
-            except Exception as e:
-                raise ValueError(
-                    f"Error when invoking function {name} with arguments {kwargs} with error message {e}"
-                )
-        else:
+        if not self.name_existed(name):
             raise ValueError(f"Function {name} is not registered.")
+        tool = self.registry[name]
+        func = tool.func
+        parser = tool.parser
+        try:
+            if func_call.is_coroutine_func(func):
+                tasks = [func_call.call_handler(func, **kwargs)]
+                out = await asyncio.gather(*tasks)
+                return parser(out[0]) if parser else out[0]
+            else:
+                out = func(**kwargs)
+                return parser(out) if parser else out
+        except Exception as e:
+            raise ValueError(
+                f"Error when invoking function {name} with arguments {kwargs} with error message {e}"
+            ) from e
 
     @staticmethod
     def get_function_call(response: dict) -> Tuple[str, dict]:
@@ -96,19 +91,19 @@ class ToolManager:
         Extracts a function call and arguments from a response dictionary.
 
         Args:
-            response (dict): The response dictionary containing the function call information.
+                response (dict): The response dictionary containing the function call information.
 
         Returns:
-            Tuple[str, dict]: A tuple containing the function name and a dictionary of arguments.
+                Tuple[str, dict]: A tuple containing the function name and a dictionary of arguments.
 
         Raises:
-            ValueError: If the response does not contain valid function call information.
+                ValueError: If the response does not contain valid function call information.
         """
         try:
             func = response["action"][7:]
             args = convert.to_dict(response["arguments"])
             return func, args
-        except:
+        except Exception:
             try:
                 func = response["recipient_name"].split(".")[-1]
                 args = response["parameters"]
@@ -121,7 +116,7 @@ class ToolManager:
         Registers multiple tools in the registry.
 
         Args:
-            tools (list[Tool]): A list of tool instances to register.
+                tools (list[Tool]): A list of tool instances to register.
         """
         func_call.lcall(tools, self._register_tool)
 
@@ -130,27 +125,24 @@ class ToolManager:
         Generates a list of schemas for all registered tools.
 
         Returns:
-            list[dict[str, Any]]: A list of tool schemas.
+                list[dict[str, Any]]: A list of tool schemas.
 
         """
-        schema_list = []
-        for tool in self.registry.values():
-            schema_list.append(tool.schema_)
-        return schema_list
+        return [tool.schema_ for tool in self.registry.values()]
 
     def parse_tool(self, tools: TOOL_TYPE, **kwargs) -> dict:
         """
         Parses tool information and generates a dictionary for tool invocation.
 
         Args:
-            tools: Tool information which can be a single Tool instance, a list of Tool instances, a tool name, or a list of tool names.
-            **kwargs: Additional keyword arguments.
+                tools: Tool information which can be a single Tool instance, a list of Tool instances, a tool name, or a list of tool names.
+                **kwargs: Additional keyword arguments.
 
         Returns:
-            dict: A dictionary containing tool schema information and any additional keyword arguments.
+                dict: A dictionary containing tool schema information and any additional keyword arguments.
 
         Raises:
-            ValueError: If a tool name is provided that is not registered.
+                ValueError: If a tool name is provided that is not registered.
         """
 
         def tool_check(tool):
@@ -167,13 +159,13 @@ class ToolManager:
 
         if isinstance(tools, bool):
             tool_kwarg = {"tools": self.to_tool_schema_list()}
-            kwargs = {**tool_kwarg, **kwargs}
+            kwargs = tool_kwarg | kwargs
 
         else:
             if not isinstance(tools, list):
                 tools = [tools]
             tool_kwarg = {"tools": func_call.lcall(tools, tool_check)}
-            kwargs = {**tool_kwarg, **kwargs}
+            kwargs = tool_kwarg | kwargs
 
         return kwargs
 
@@ -196,66 +188,66 @@ def func_to_tool(
     objects with structured metadata.
 
     Args:
-        func_ (Callable): The function to be transformed into a Tool object. This
-                          function should have a docstring that follows the
-                          specified docstring style for accurate schema generation.
-        parser (Optional[Any]): An optional parser object associated with the Tool.
-                                This parameter is currently not utilized in the
-                                transformation process but is included for future
-                                compatibility and extension purposes.
-        docstring_style (str): The format of the docstring to be parsed, indicating
-                               the convention used in the function's docstring.
-                               Supports 'google' for Google-style docstrings and
-                               'reST' for reStructuredText-style docstrings. The
-                               chosen style affects how the docstring is parsed and
-                               how the schema is generated.
+            func_ (Callable): The function to be transformed into a Tool object. This
+                                              function should have a docstring that follows the
+                                              specified docstring style for accurate schema generation.
+            parser (Optional[Any]): An optional parser object associated with the Tool.
+                                                            This parameter is currently not utilized in the
+                                                            transformation process but is included for future
+                                                            compatibility and extension purposes.
+            docstring_style (str): The format of the docstring to be parsed, indicating
+                                                       the convention used in the function's docstring.
+                                                       Supports 'google' for Google-style docstrings and
+                                                       'reST' for reStructuredText-style docstrings. The
+                                                       chosen style affects how the docstring is parsed and
+                                                       how the schema is generated.
 
     Returns:
-        Tool: An object representing the original function wrapped as a Tool, along
-              with its generated schema. This Tool object can be used in systems that
-              require detailed metadata about functions, facilitating tasks such as
-              automatic documentation generation, user interface creation, or
-              integration with other software tools.
+            Tool: An object representing the original function wrapped as a Tool, along
+                      with its generated schema. This Tool object can be used in systems that
+                      require detailed metadata about functions, facilitating tasks such as
+                      automatic documentation generation, user interface creation, or
+                      integration with other software tools.
 
     Examples:
-        >>> def example_function_google(param1: int, param2: str) -> bool:
-        ...     '''
-        ...     An example function using Google style docstrings.
-        ...
-        ...     Args:
-        ...         param1 (int): The first parameter, demonstrating an integer input_.
-        ...         param2 (str): The second parameter, demonstrating a string input_.
-        ...
-        ...     Returns:
-        ...         bool: A boolean value, illustrating the return type.
-        ...     '''
-        ...     return True
-        ...
-        >>> tool_google = func_to_tool(example_function_google, docstring_style='google')
-        >>> print(isinstance(tool_google, Tool))
-        True
+            >>> def example_function_google(param1: int, param2: str) -> bool:
+            ...     '''
+            ...     An example function using Google style docstrings.
+            ...
+            ...     Args:
+            ...         param1 (int): The first parameter, demonstrating an integer input_.
+            ...         param2 (str): The second parameter, demonstrating a string input_.
+            ...
+            ...     Returns:
+            ...         bool: A boolean value, illustrating the return type.
+            ...     '''
+            ...     return True
+            ...
+            >>> tool_google = func_to_tool(example_function_google, docstring_style='google')
+            >>> print(isinstance(tool_google, Tool))
+            True
 
-        >>> def example_function_reST(param1: int, param2: str) -> bool:
-        ...     '''
-        ...     An example function using reStructuredText (reST) style docstrings.
-        ...
-        ...     :param param1: The first parameter, demonstrating an integer input_.
-        ...     :type param1: int
-        ...     :param param2: The second parameter, demonstrating a string input_.
-        ...     :type param2: str
-        ...     :returns: A boolean value, illustrating the return type.
-        ...     :rtype: bool
-        ...     '''
-        ...     return True
-        ...
-        >>> tool_reST = func_to_tool(example_function_reST, docstring_style='reST')
-        >>> print(isinstance(tool_reST, Tool))
-        True
+            >>> def example_function_reST(param1: int, param2: str) -> bool:
+            ...     '''
+            ...     An example function using reStructuredText (reST) style docstrings.
+            ...
+            ...     :param param1: The first parameter, demonstrating an integer input_.
+            ...     :type param1: int
+            ...     :param param2: The second parameter, demonstrating a string input_.
+            ...     :type param2: str
+            ...     :returns: A boolean value, illustrating the return type.
+            ...     :rtype: bool
+            ...     '''
+            ...     return True
+            ...
+            >>> tool_reST = func_to_tool(example_function_reST, docstring_style='reST')
+            >>> print(isinstance(tool_reST, Tool))
+            True
 
     Note:
-        The transformation process relies heavily on the accuracy and completeness of
-        the function's docstring. Functions with incomplete or incorrectly formatted
-        docstrings may result in incomplete or inaccurate Tool schemas.
+            The transformation process relies heavily on the accuracy and completeness of
+            the function's docstring. Functions with incomplete or incorrectly formatted
+            docstrings may result in incomplete or inaccurate Tool schemas.
     """
 
     fs = []
@@ -263,7 +255,7 @@ def func_to_tool(
     parsers = convert.to_list(parser, flatten=True, dropna=True)
 
     if parser:
-        if len(funcs) != len(parsers) and len(parsers) != 1:
+        if len(funcs) != len(parsers) != 1:
             raise ValueError(
                 "Length of parser must match length of func. Except if you only pass one"
             )

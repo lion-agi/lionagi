@@ -1,7 +1,7 @@
 from collections import deque
-from lionagi.core.schema.base_node import BaseNode
-from lionagi.core.mail.schema import BaseMail
-from lionagi.libs.ln_async import AsyncUtil
+from lionagi.libs import AsyncUtil
+from ..schema import BaseNode
+from .schema import BaseMail
 
 
 class MailManager:
@@ -12,12 +12,12 @@ class MailManager:
     and deletion of sources, and it handles the collection and dispatch of mails to and from these sources.
 
     Attributes:
-        sources (Dict[str, Any]): A dictionary mapping source identifiers to their attributes.
-        mails (Dict[str, Dict[str, deque]]): A nested dictionary storing queued mail items, organized by recipient
-            and sender.
+            sources (Dict[str, Any]): A dictionary mapping source identifiers to their attributes.
+            mails (Dict[str, Dict[str, deque]]): A nested dictionary storing queued mail items, organized by recipient
+                    and sender.
     """
 
-    def __init__(self, sources: list[BaseNode]):
+    def __init__(self, sources):
         self.sources = {}
         self.mails = {}
         self.add_sources(sources)
@@ -26,12 +26,12 @@ class MailManager:
     def add_sources(self, sources):
         if isinstance(sources, dict):
             for _, v in sources.items():
-                if not v.id_ in self.sources:
+                if v.id_ not in self.sources:
                     self.sources[v.id_] = v
                     self.mails[v.id_] = {}
         elif isinstance(sources, list):
             for v in sources:
-                if not v.id_ in self.sources:
+                if v.id_ not in self.sources:
                     self.sources[v.id_] = v
                     self.mails[v.id_] = {}
 
@@ -73,15 +73,14 @@ class MailManager:
             raise ValueError(f"Recipient source {recipient_id} does not exist.")
         if not self.mails[recipient_id]:
             return
-        else:
-            for key in list(self.mails[recipient_id].keys()):
-                mails_deque = self.mails[recipient_id].pop(key)
-                if key not in self.sources[recipient_id].pending_ins:
-                    self.sources[recipient_id].pending_ins[key] = mails_deque
-                else:
-                    while mails_deque:
-                        mail_ = mails_deque.popleft()
-                        self.sources[recipient_id].pending_ins[key].append(mail_)
+        for key in list(self.mails[recipient_id].keys()):
+            mails_deque = self.mails[recipient_id].pop(key)
+            if key not in self.sources[recipient_id].pending_ins:
+                self.sources[recipient_id].pending_ins[key] = mails_deque
+            else:
+                while mails_deque:
+                    mail_ = mails_deque.popleft()
+                    self.sources[recipient_id].pending_ins[key].append(mail_)
 
     def collect_all(self):
         for ids in self.sources:
