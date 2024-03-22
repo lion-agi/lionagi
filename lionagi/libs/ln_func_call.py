@@ -787,7 +787,8 @@ class CallDecorator:
 
     @staticmethod
     def pre_post_process(
-        preprocess: Callable[..., Any], postprocess: Callable[..., Any]
+        preprocess: Callable[..., Any]=None, postprocess: Callable[..., Any]=None, 
+        preprocess_args=[], preprocess_kwargs={}, postprocess_args=[], postprocess_kwargs={}
     ) -> Callable:
         """
         Decorates a function with preprocessing and postprocessing steps, allowing for
@@ -826,20 +827,20 @@ class CallDecorator:
 
                 @functools.wraps(func)
                 async def async_wrapper(*args, **kwargs) -> Any:
-                    preprocessed_args = [preprocess(arg) for arg in args]
-                    preprocessed_kwargs = {k: preprocess(v) for k, v in kwargs.items()}
+                    preprocessed_args = [preprocess(arg, *preprocess_args, **preprocess_kwargs) for arg in args]
+                    preprocessed_kwargs = {k: preprocess(v, *preprocess_args, **preprocess_kwargs) for k, v in kwargs.items()}
                     result = await func(*preprocessed_args, **preprocessed_kwargs)
-                    return postprocess(result)
+                    return postprocess(result, *postprocess_args, **postprocess_kwargs)
 
                 return async_wrapper
             else:
 
                 @functools.wraps(func)
                 def sync_wrapper(*args, **kwargs) -> Any:
-                    preprocessed_args = [preprocess(arg) for arg in args]
-                    preprocessed_kwargs = {k: preprocess(v) for k, v in kwargs.items()}
+                    preprocessed_args = [preprocess(arg, *preprocess_args, **preprocess_kwargs) for arg in args]
+                    preprocessed_kwargs = {k: preprocess(v, *preprocess_args, **preprocess_kwargs) for k, v in kwargs.items()}
                     result = func(*preprocessed_args, **preprocessed_kwargs)
-                    return postprocess(result)
+                    return postprocess(result, *postprocess_args, **postprocess_kwargs)
 
                 return sync_wrapper
 

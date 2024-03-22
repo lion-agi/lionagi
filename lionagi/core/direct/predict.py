@@ -17,6 +17,7 @@ async def predict(
 ):
     if retry_kwargs is None:
         retry_kwargs = {}
+
     return await _force_predict(
         sentence=sentence,
         num_sentences=num_sentences,

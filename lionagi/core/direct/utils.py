@@ -14,7 +14,7 @@ def _parse_out(out_):
 
 def _handle_single_out(
     out_,
-    default_key,
+    default_key="answer",
     choices=None,
     to_type="dict",
     to_type_kwargs=None,
@@ -38,17 +38,19 @@ def _handle_single_out(
         raise ValueError(f"Answer {answer} not in choices {choices}")
 
     if to_type == "str":
-        out_[default_key] = convert.to_str(answer, **to_type_kwargs)
+        answer = convert.to_str(answer, **to_type_kwargs)
 
     elif to_type == "num":
-        out_[default_key] = convert.to_num(answer, **to_type_kwargs)
+        answer = convert.to_num(answer, **to_type_kwargs)
 
-    return out_[default_key] if to_default and len(out_.keys()) == 1 else out_
+    out_[default_key] = answer
+
+    return out_
 
 
 def _handle_multi_out(
     out_,
-    default_key,
+    default_key="answer",
     choices=None,
     to_type="dict",
     to_type_kwargs=None,
@@ -57,6 +59,7 @@ def _handle_multi_out(
 ):
     if to_type_kwargs is None:
         to_type_kwargs = {}
+
     if include_mapping:
         for i in out_:
             i[default_key] = _handle_single_out(
