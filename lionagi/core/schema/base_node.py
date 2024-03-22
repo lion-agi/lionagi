@@ -29,7 +29,7 @@ class BaseComponent(BaseComponentMixin, ABC):
     timestamp: str | None = Field(default_factory=SysUtil.get_timestamp)
     metadata: dict[str, Any] = Field(default_factory=dict, alias="meta")
 
-    class ConfigDict:
+    class Config:
         """Model configuration settings."""
 
         extra = "allow"
