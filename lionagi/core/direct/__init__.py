@@ -4,4 +4,10 @@ from .score import score
 from .sentiment import sentiment
 from .react import react
 
-__all__ = ["predict", "select", "score", "sentiment", "react", ]
+__all__ = [
+    "predict",
+    "select",
+    "score",
+    "sentiment",
+    "react",
+]
