@@ -2,8 +2,6 @@ import contextlib
 from collections import deque
 from typing import Any
 
-from IPython.display import Markdown, display
-
 from lionagi.libs import convert, AsyncUtil, ParseUtil
 
 from ..schema import BaseRelatableNode, ActionNode
@@ -88,6 +86,9 @@ class ExecutableBranch(BaseRelatableNode):
         self.send(mail.sender_id, "condition", back_mail)
 
     def _system_process(self, system: System, verbose=True, context_verbose=False):
+        from lionagi.libs import SysUtil
+        SysUtil.check_import('IPython')
+        from IPython.display import Markdown, display
         if verbose:
             print(f"------------------Welcome: {system.sender}--------------------")
             display(Markdown(f"system: {convert.to_str(system.system_info)}"))
@@ -99,6 +100,9 @@ class ExecutableBranch(BaseRelatableNode):
     async def _instruction_process(
         self, instruction: Instruction, verbose=True, **kwargs
     ):
+        from lionagi.libs import SysUtil
+        SysUtil.check_import('IPython')
+        from IPython.display import Markdown, display
         if verbose:
             display(
                 Markdown(
@@ -126,6 +130,9 @@ class ExecutableBranch(BaseRelatableNode):
         self.responses.append(result)
 
     async def _action_process(self, action: ActionNode, verbose=True):
+        from lionagi.libs import SysUtil
+        SysUtil.check_import('IPython')
+        from IPython.display import Markdown, display
         try:
             func = getattr(self.branch, action.action)
         except:
