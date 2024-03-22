@@ -9,187 +9,187 @@ from datetime import datetime
 
 class TestCreateMessage(unittest.TestCase):
 
-    def test_create_system_message(self):
-        """Test creating a System message."""
-        system_info = {"system_info": "System information"}
-        message = MessageUtil.create_message(system=system_info["system_info"])
-        self.assertIsInstance(message, System)
-        self.assertEqual(message.content, system_info)
+	def test_create_system_message(self):
+		"""Test creating a System message."""
+		system_info = {"system_info": "System information"}
+		message = MessageUtil.create_message(
+			system=system_info["system_info"]
+			)
+		self.assertIsInstance(message, System)
+		self.assertEqual(message.content, system_info)
 
-    def test_create_instruction_message(self):
-        """Test creating an Instruction message with context."""
-        instruction_info = {"task": "Do something"}
-        context = {"additional": "context"}
-        message = MessageUtil.create_message(
-            instruction=instruction_info, context=context
-        )
-        self.assertIsInstance(message, Instruction)
-        self.assertEqual(message.content["instruction"], instruction_info)
-        self.assertEqual(message.content["context"], context)
+	def test_create_instruction_message(self):
+		"""Test creating an Instruction message with context."""
+		instruction_info = {"task": "Do something"}
+		context = {"additional": "context"}
+		message = MessageUtil.create_message(
+			instruction=instruction_info, context=context
+		)
+		self.assertIsInstance(message, Instruction)
+		self.assertEqual(message.content["instruction"], instruction_info)
+		self.assertEqual(message.content["context"], context)
 
-    def test_create_response_message(self):
-        """Test creating a Response message."""
-        response_info = {"message": {"content": "This is a response"}}
-        message = MessageUtil.create_message(response=response_info)
-        self.assertIsInstance(message, Response)
-        self.assertEqual(
-            message.content["response"], response_info["message"]["content"]
-        )
+	def test_create_response_message(self):
+		"""Test creating a Response message."""
+		response_info = {"message": {"content": "This is a response"}}
+		message = MessageUtil.create_message(response=response_info)
+		self.assertIsInstance(message, Response)
+		self.assertEqual(
+			message.content["response"], response_info["message"]["content"]
+		)
 
-    def test_error_on_multiple_roles(self):
-        """Test error is raised when multiple roles are provided."""
-        with self.assertRaises(ValueError):
-            MessageUtil.create_message(
-                system={"info": "info"}, instruction={"task": "task"}
-            )
+	def test_error_on_multiple_roles(self):
+		"""Test error is raised when multiple roles are provided."""
+		with self.assertRaises(ValueError):
+			MessageUtil.create_message(
+				system={"info": "info"}, instruction={"task": "task"}
+			)
 
-    def test_return_existing_base_message_instance(self):
-        """Test returning an existing BaseMessage instance if provided."""
-        existing_message = System(system={"info": "Already created"})
-        message = MessageUtil.create_message(system=existing_message)
-        self.assertEqual(message.content, existing_message.content)
+	def test_return_existing_base_message_instance(self):
+		"""Test returning an existing BaseMessage instance if provided."""
+		existing_message = System(system={"info": "Already created"})
+		message = MessageUtil.create_message(system=existing_message)
+		self.assertEqual(message.content, existing_message.content)
 
 
 class TestValidateMessages(unittest.TestCase):
 
-    # def test_validate_messages_correct_format(self):
-    #     """Test messages DataFrame with the correct format."""
-    #     messages = pd.DataFrame({
-    #         "node_id": ["1"],
-    #         "role": ["user"],
-    #         "sender": ["test"],
-    #         "timestamp": ["2020-01-01T00:00:00"],
-    #         "content": ['{"message": "test"}']
-    #     })
-    #     self.assertTrue(MessageUtil.validate_messages(messages))
+	# def test_validate_messages_correct_format(self):
+	#     """Test messages DataFrame with the correct format."""
+	#     messages = pd.DataFrame({
+	#         "node_id": ["1"],
+	#         "role": ["user"],
+	#         "sender": ["test"],
+	#         "timestamp": ["2020-01-01T00:00:00"],
+	#         "content": ['{"message": "test"}']
+	#     })
+	#     self.assertTrue(MessageUtil.validate_messages(messages))
 
-    def test_validate_messages_incorrect_columns(self):
-        """Test messages DataFrame with incorrect columns raises ValueError."""
-        messages = pd.DataFrame(
-            {
-                "id": ["1"],
-                "type": ["user"],
-                "source": ["test"],
-                "time": ["2020-01-01T00:00:00"],
-                "data": ['{"message": "test"}'],
-            }
-        )
-        with self.assertRaises(ValueError):
-            MessageUtil.validate_messages(messages)
+	def test_validate_messages_incorrect_columns(self):
+		"""Test messages DataFrame with incorrect columns raises ValueError."""
+		messages = pd.DataFrame(
+			{
+				"id": ["1"], "type": ["user"], "source": ["test"],
+				"time": ["2020-01-01T00:00:00"],
+				"data": ['{"message": "test"}'],
+			}
+		)
+		with self.assertRaises(ValueError):
+			MessageUtil.validate_messages(messages)
 
-    def test_validate_messages_null_values(self):
-        """Test messages DataFrame with null values raises ValueError."""
-        messages = pd.DataFrame(
-            {
-                "node_id": [None],
-                "role": ["user"],
-                "sender": ["test"],
-                "timestamp": ["2020-01-01T00:00:00"],
-                "content": ['{"message": "test"}'],
-            }
-        )
-        with self.assertRaises(ValueError):
-            MessageUtil.validate_messages(messages)
+	def test_validate_messages_null_values(self):
+		"""Test messages DataFrame with null values raises ValueError."""
+		messages = pd.DataFrame(
+			{
+				"node_id": [None], "role": ["user"], "sender": ["test"],
+				"timestamp": ["2020-01-01T00:00:00"],
+				"content": ['{"message": "test"}'],
+			}
+		)
+		with self.assertRaises(ValueError):
+			MessageUtil.validate_messages(messages)
 
 
 class TestSignMessage(unittest.TestCase):
 
-    def test_sign_message(self):
-        """Test signing message content with sender."""
-        messages = pd.DataFrame(
-            {
-                "node_id": ["1"],
-                "role": ["user"],
-                "sender": ["test"],
-                "timestamp": ["2020-01-01T00:00:00"],
-                "content": ["Original message"],
-            }
-        )
-        sender = "system"
-        signed_messages = MessageUtil.sign_message(messages, sender)
-        expected_content = "Sender system: Original message"
-        self.assertEqual(signed_messages["content"][0], expected_content)
+	def test_sign_message(self):
+		"""Test signing message content with sender."""
+		messages = pd.DataFrame(
+			{
+				"node_id": ["1"], "role": ["user"], "sender": ["test"],
+				"timestamp": ["2020-01-01T00:00:00"],
+				"content": ["Original message"],
+			}
+		)
+		sender = "system"
+		signed_messages = MessageUtil.sign_message(messages, sender)
+		expected_content = "Sender system: Original message"
+		self.assertEqual(signed_messages["content"][0], expected_content)
 
-    def test_sign_message_invalid_sender(self):
-        """Test signing message with an invalid sender raises ValueError."""
-        messages = pd.DataFrame(
-            {
-                "node_id": ["1"],
-                "role": ["user"],
-                "sender": ["test"],
-                "timestamp": ["2020-01-01T00:00:00"],
-                "content": ["Original message"],
-            }
-        )
-        with self.assertRaises(ValueError):
-            MessageUtil.sign_message(messages, None)
+	def test_sign_message_invalid_sender(self):
+		"""Test signing message with an invalid sender raises ValueError."""
+		messages = pd.DataFrame(
+			{
+				"node_id": ["1"], "role": ["user"], "sender": ["test"],
+				"timestamp": ["2020-01-01T00:00:00"],
+				"content": ["Original message"],
+			}
+		)
+		with self.assertRaises(ValueError):
+			MessageUtil.sign_message(messages, None)
 
 
 class TestFilterMessagesBy(unittest.TestCase):
 
-    def setUp(self):
-        self.messages = pd.DataFrame(
-            {
-                "node_id": ["1", "2"],
-                "role": ["user", "assistant"],
-                "sender": ["test", "assistant"],
-                "timestamp": [datetime(2020, 1, 1), datetime(2020, 1, 2)],
-                "content": ['{"message": "test"}', '{"response": "ok"}'],
-            }
-        )
+	def setUp(self):
+		self.messages = pd.DataFrame(
+			{
+				"node_id": ["1", "2"], "role": ["user", "assistant"],
+				"sender": ["test", "assistant"],
+				"timestamp": [datetime(2020, 1, 1), datetime(2020, 1, 2)],
+				"content": ['{"message": "test"}', '{"response": "ok"}'],
+			}
+		)
 
-    def test_filter_by_role(self):
-        """Test filtering messages by role."""
-        filtered = MessageUtil.filter_messages_by(self.messages, role="assistant")
-        self.assertEqual(len(filtered), 1)
-        self.assertEqual(filtered.iloc[0]["sender"], "assistant")
+	def test_filter_by_role(self):
+		"""Test filtering messages by role."""
+		filtered = MessageUtil.filter_messages_by(
+			self.messages, role="assistant"
+			)
+		self.assertEqual(len(filtered), 1)
+		self.assertEqual(filtered.iloc[0]["sender"], "assistant")
 
-    def test_filter_by_sender(self):
-        """Test filtering messages by sender."""
-        filtered = MessageUtil.filter_messages_by(self.messages, sender="test")
-        self.assertEqual(len(filtered), 1)
-        self.assertEqual(filtered.iloc[0]["sender"], "test")
+	def test_filter_by_sender(self):
+		"""Test filtering messages by sender."""
+		filtered = MessageUtil.filter_messages_by(
+			self.messages, sender="test"
+			)
+		self.assertEqual(len(filtered), 1)
+		self.assertEqual(filtered.iloc[0]["sender"], "test")
 
-    def test_filter_by_time_range(self):
-        """Test filtering messages by time range."""
-        start_time = datetime(2020, 1, 1, 12)
-        end_time = datetime(2020, 1, 2, 12)
-        filtered = MessageUtil.filter_messages_by(
-            self.messages, start_time=start_time, end_time=end_time
-        )
-        self.assertEqual(len(filtered), 1)
-        self.assertTrue(start_time <= filtered.iloc[0]["timestamp"] <= end_time)
+	def test_filter_by_time_range(self):
+		"""Test filtering messages by time range."""
+		start_time = datetime(2020, 1, 1, 12)
+		end_time = datetime(2020, 1, 2, 12)
+		filtered = MessageUtil.filter_messages_by(
+			self.messages, start_time=start_time, end_time=end_time
+		)
+		self.assertEqual(len(filtered), 1)
+		self.assertTrue(
+			start_time <= filtered.iloc[0]["timestamp"] <= end_time
+			)
 
 
 class TestRemoveMessage(unittest.TestCase):
 
-    def test_remove_message(self):
-        """Test removing a message by node_id."""
-        messages = pd.DataFrame(
-            {
-                "node_id": ["1", "2"],
-                "role": ["user", "assistant"],
-                "content": ["message1", "message2"],
-            }
-        )
-        updated_messages = MessageUtil.remove_message(messages, "1")
-        self.assertTrue(updated_messages)
+	def test_remove_message(self):
+		"""Test removing a message by node_id."""
+		messages = pd.DataFrame(
+			{
+				"node_id": ["1", "2"], "role": ["user", "assistant"],
+				"content": ["message1", "message2"],
+			}
+		)
+		updated_messages = MessageUtil.remove_message(messages, "1")
+		self.assertTrue(updated_messages)
 
 
 class TestGetMessageRows(unittest.TestCase):
 
-    def test_get_message_rows(self):
-        """Test retrieving the last 'n' message rows based on criteria."""
-        messages = pd.DataFrame(
-            {
-                "node_id": ["1", "2", "3"],
-                "role": ["user", "assistant", "user"],
-                "sender": ["A", "B", "A"],
-                "content": ["message1", "message2", "message3"],
-            }
-        )
-        rows = MessageUtil.get_message_rows(messages, sender="A", role="user", n=2)
-        self.assertEqual(len(rows), 2)
+	def test_get_message_rows(self):
+		"""Test retrieving the last 'n' message rows based on criteria."""
+		messages = pd.DataFrame(
+			{
+				"node_id": ["1", "2", "3"],
+				"role": ["user", "assistant", "user"],
+				"sender": ["A", "B", "A"],
+				"content": ["message1", "message2", "message3"],
+			}
+		)
+		rows = MessageUtil.get_message_rows(
+			messages, sender="A", role="user", n=2
+			)
+		self.assertEqual(len(rows), 2)
 
 
 # class TestExtend(unittest.TestCase):
@@ -216,17 +216,16 @@ class TestGetMessageRows(unittest.TestCase):
 
 class TestToMarkdownString(unittest.TestCase):
 
-    def test_to_markdown_string(self):
-        """Test converting messages to a Markdown-formatted string."""
-        messages = pd.DataFrame(
-            {
-                "node_id": ["1"],
-                "role": ["user"],
-                "content": [json.dumps({"instruction": "Hello, World!"})],
-            }
-        )
-        markdown_str = MessageUtil.to_markdown_string(messages)
-        self.assertIn("Hello, World!", markdown_str)
+	def test_to_markdown_string(self):
+		"""Test converting messages to a Markdown-formatted string."""
+		messages = pd.DataFrame(
+			{
+				"node_id": ["1"], "role": ["user"],
+				"content": [json.dumps({"instruction": "Hello, World!"})],
+			}
+		)
+		markdown_str = MessageUtil.to_markdown_string(messages)
+		self.assertIn("Hello, World!", markdown_str)
 
 
 # class TestSearchKeywords(unittest.TestCase):
@@ -310,4 +309,4 @@ class TestToMarkdownString(unittest.TestCase):
 
 
 if __name__ == "__main__":
-    unittest.main()
+	unittest.main()
