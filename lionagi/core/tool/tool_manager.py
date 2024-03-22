@@ -3,7 +3,7 @@ from typing import Tuple, Any, TypeVar, Callable
 import asyncio
 
 from lionagi.libs import func_call, convert, ParseUtil
-from lionagi.core.schema.base_node import Tool, TOOL_TYPE
+from lionagi.core.schema import Tool, TOOL_TYPE
 
 T = TypeVar("T", bound=Tool)
 
