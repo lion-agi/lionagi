@@ -441,7 +441,9 @@ def to_readable_dict(input_: Any | list[Any]) -> str | list[Any]:
         raise ValueError(f"Could not convert given input to readable dict: {e}") from e
 
 
-def is_same_dtype(input_: list | dict, dtype: Type | None = None) -> bool:
+def is_same_dtype(
+    input_: list | dict, dtype: Type | None = None, return_dtype=False
+) -> bool:
     """
     Checks if all elements in a list or dictionary values are of the same data type.
 
@@ -460,7 +462,8 @@ def is_same_dtype(input_: list | dict, dtype: Type | None = None) -> bool:
 
     dtype = dtype or first_element_type
 
-    return all(isinstance(element, dtype) for element in iterable)
+    a = all(isinstance(element, dtype) for element in iterable)
+    return a, dtype if return_dtype else a
 
 
 def xml_to_dict(root) -> dict[str, Any]:

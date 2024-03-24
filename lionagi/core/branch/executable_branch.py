@@ -35,6 +35,7 @@ class ExecutableBranch(BaseRelatableNode):
         self.pending_outs.append(mail)
 
     async def forward(self):
+
         for key in list(self.pending_ins.keys()):
             while self.pending_ins[key]:
                 mail = self.pending_ins[key].popleft()
@@ -87,8 +88,10 @@ class ExecutableBranch(BaseRelatableNode):
 
     def _system_process(self, system: System, verbose=True, context_verbose=False):
         from lionagi.libs import SysUtil
-        SysUtil.check_import('IPython')
+
+        SysUtil.check_import("IPython")
         from IPython.display import Markdown, display
+
         if verbose:
             print(f"------------------Welcome: {system.sender}--------------------")
             display(Markdown(f"system: {convert.to_str(system.system_info)}"))
@@ -101,8 +104,10 @@ class ExecutableBranch(BaseRelatableNode):
         self, instruction: Instruction, verbose=True, **kwargs
     ):
         from lionagi.libs import SysUtil
-        SysUtil.check_import('IPython')
+
+        SysUtil.check_import("IPython")
         from IPython.display import Markdown, display
+
         if verbose:
             display(
                 Markdown(
@@ -131,8 +136,10 @@ class ExecutableBranch(BaseRelatableNode):
 
     async def _action_process(self, action: ActionNode, verbose=True):
         from lionagi.libs import SysUtil
-        SysUtil.check_import('IPython')
+
+        SysUtil.check_import("IPython")
         from IPython.display import Markdown, display
+
         try:
             func = getattr(self.branch, action.action)
         except:

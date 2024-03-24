@@ -33,10 +33,26 @@ class BaseComponent(BaseComponentMixin, ABC):
         """Model configuration settings."""
 
         extra = "allow"
+        arbitrary_types_allowed = True
         populate_by_name = True
         validate_assignment = True
         validate_return = True
         str_strip_whitespace = True
+
+    @classmethod
+    def class_name(cls) -> str:
+        """
+        Retrieves the name of the class.
+        """
+        return cls.__name__
+
+    @property
+    def property_schema(self):
+        return self.model_json_schema()["properties"]
+
+    @property
+    def property_keys(self):
+        return list(self.model_json_schema()["properties"].keys())
 
     def copy(self, *args, **kwargs) -> T:
         """

@@ -12,7 +12,7 @@ class BranchFlowMixin(ABC):
 
     async def chat(
         self,
-        instruction: Union[Instruction, str],
+        instruction: Union[Instruction, str] = None,
         context: Optional[Any] = None,
         sender: Optional[str] = None,
         system: Optional[Union[System, str, dict[str, Any]]] = None,
@@ -20,6 +20,7 @@ class BranchFlowMixin(ABC):
         out: bool = True,
         invoke: bool = True,
         output_fields=None,
+        prompt_template=None,
         **kwargs,
     ) -> Any:
         flow = MonoChat(self)
@@ -32,6 +33,7 @@ class BranchFlowMixin(ABC):
             out=out,
             invoke=invoke,
             output_fields=output_fields,
+            prompt_template=prompt_template,
             **kwargs,
         )
 
