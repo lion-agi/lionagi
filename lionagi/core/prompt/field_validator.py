@@ -11,7 +11,7 @@ def check_number_field(x, fix_=True, **kwargs):
 
         raise ValueError(
             f"Default value for NUMERIC must be an int or float, got {type(x).__name__}"
-        ) from e
+        )
     return x
 
 
