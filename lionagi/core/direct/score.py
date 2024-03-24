@@ -1,163 +1,118 @@
-from lionagi.libs import func_call, convert
-from ..branch import Branch
-from .utils import _handle_single_out
+from pydantic import Field
 
+from lionagi.libs import func_call, convert
+from ..prompt.prompt_template import ScoredTemplate
+from ..branch import Branch
+
+
+class ScoreTemplate(ScoredTemplate):
+    template_name: str = "default_score"
+    sentence: str | list | dict = Field(
+        default_factory=str, description="the given context to score"
+    )
+    answer: float = Field(default_factory=float, description=f"a numeric score")
+    signature: str = "sentence -> answer"
+
+    def __init__(
+        self,
+        sentence=None,
+        instruction=None,
+        score_range=(1, 10),
+        inclusive=True,
+        num_digit=0,
+        confidence_score=False,
+        reason=False,
+        **kwargs,
+    ):
+        super().__init__(**kwargs)
+
+        self.sentence = sentence
+
+        return_precision = ""
+        if num_digit == 0:
+            return_precision = "integer"
+        else:
+            return_precision = f"num:{convert.to_str(num_digit)}f"
+
+        self.task = f"""
+score context according to the following constraints
+1. objective, {convert.to_str(instruction)}
+2. score range, {convert.to_str(score_range)}
+3. include_endpoints, {"yes" if inclusive else "no"}
+4. format the score in {return_precision}
+"""
+
+        if reason:
+            self.output_fields.append("reason")
+
+        if confidence_score:
+            self.output_fields.append("confidence_score")
+
+        self.out_validation_kwargs['answer'] = {
+            "upper_bound": score_range[1],
+            "lower_bound": score_range[0],
+            "num_type": int if num_digit == 0 else float,
+            "precision": num_digit if num_digit != 0 else None,
+        }
 
 async def score(
-    context,
+    sentence,
     instruction=None,
-    *,
     score_range=(1, 10),
     inclusive=True,
     num_digit=0,
-    default_key="score",
-    method="llm",
-    reason=False,
     confidence_score=False,
-    retry_kwargs=None,
+    reason=False,
+    retries=2,
+    delay=0.5,
+    backoff_factor=2,
+    default_value=None,
+    timeout=None,
+    branch_name=None,
+    system=None,
+    messages=None,
+    service=None,
+    sender=None,
+    llmconfig=None,
+    tools=None,
+    datalogger=None,
+    persist_path=None,
+    tool_manager=None,
     **kwargs,
 ):
-    if retry_kwargs is None:
-        retry_kwargs = {}
-    return await _force_score(
-        context=context,
+
+    branch = Branch(
+        name=branch_name,
+        system=system,
+        messages=messages,
+        service=service,
+        sender=sender,
+        llmconfig=llmconfig,
+        tools=tools,
+        datalogger=datalogger,
+        persist_path=persist_path,
+        tool_manager=tool_manager,
+    )
+
+    _template = ScoreTemplate(
+        sentence=sentence,
         instruction=instruction,
         score_range=score_range,
         inclusive=inclusive,
         num_digit=num_digit,
-        default_key=default_key,
-        method=method,
-        reason=reason,
         confidence_score=confidence_score,
-        retry_kwargs=retry_kwargs,
+        reason=reason,
+    )
+
+    await func_call.rcall(
+        branch.chat,
+        prompt_template=_template,
+        retries=retries,
+        delay=delay,
+        backoff_factor=backoff_factor,
+        default=default_value,
+        timeout=timeout,
         **kwargs,
     )
 
-
-async def _force_score(
-    context,
-    instruction=None,
-    score_range=(1, 10),
-    inclusive=True,
-    num_digit=1,
-    default_key="score",
-    method="llm",
-    reason=False,
-    confidence_score=False,
-    retry_kwargs={},
-    **kwargs,
-):
-
-    async def _inner():
-        out_ = await _score(
-            instruction=instruction,
-            context=context,
-            score_range=score_range,
-            inclusive=inclusive,
-            num_digit=num_digit,
-            reason=reason,
-            default_key=default_key,
-            confidence_score=confidence_score,
-            method=method,
-            **kwargs,
-        )
-        if out_ is None:
-            raise ValueError("No output from the model")
-
-        return out_
-
-    if "retries" not in retry_kwargs:
-        retry_kwargs["retries"] = 2
-
-    if "delay" not in retry_kwargs:
-        retry_kwargs["delay"] = 0.5
-
-    return await func_call.rcall(_inner, **retry_kwargs)
-
-
-def _create_score_config(
-    instruction,
-    score_range=(1, 10),
-    inclusive=True,
-    num_digit=0,
-    reason=False,
-    default_key="score",
-    confidence_score=False,
-    **kwargs,
-):
-    instruct = {
-        "task": "score context according to the following constraints",
-        "instruction": convert.to_str(instruction),
-        "score_range": convert.to_str(score_range),
-        "include_endpoints": "yes" if inclusive else "no",
-    }
-
-    return_precision = ""
-    if num_digit == 0:
-        return_precision = "integer"
-    else:
-        return_precision = f"num:{convert.to_str(num_digit)}f"
-
-    extra_fields = kwargs.pop("output_fields", {})
-    output_fields = {default_key: f"""a numeric score as {return_precision}"""}
-    output_fields = {**output_fields, **extra_fields}
-
-    if reason:
-        output_fields["reason"] = "brief reason for the score"
-
-    if confidence_score:
-        output_fields["confidence_score"] = (
-            "a numeric score between 0 to 1 formatted in num:0.2f"
-        )
-
-    if "temperature" not in kwargs:
-        kwargs["temperature"] = 0.1
-
-    return instruct, output_fields, kwargs
-
-
-async def _score(
-    context,
-    instruction=None,
-    score_range=(1, 10),
-    inclusive=True,
-    num_digit=0,
-    default_key="score",
-    method="llm",
-    reason=False,
-    confidence_score=False,
-    **kwargs,
-):
-    _instruct, _output_fields, _kwargs = _create_score_config(
-        instruction=instruction,
-        score_range=score_range,
-        inclusive=inclusive,
-        num_digit=num_digit,
-        reason=reason,
-        default_key=default_key,
-        confidence_score=confidence_score,
-        **kwargs,
-    )
-
-    branch = Branch()
-    out_ = ""
-
-    if method == "llm":
-        out_ = await branch.chat(
-            _instruct,
-            tools=None,
-            context=context,
-            output_fields=_output_fields,
-            **_kwargs,
-        )
-
-    to_num_kwargs = {
-        "upper_bound": score_range[1],
-        "lower_bound": score_range[0],
-        "num_type": int if num_digit == 0 else float,
-        "precision": num_digit if num_digit != 0 else None,
-    }
-
-    return _handle_single_out(
-        out_, default_key, to_type="num", to_type_kwargs=to_num_kwargs
-    )
+    return _template

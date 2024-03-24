@@ -2,6 +2,7 @@ from enum import Enum
 
 from lionagi.libs import nested, convert
 from ..schema import DataNode
+from ..prompt.prompt_template import PromptTemplate
 
 _message_fields = ["node_id", "timestamp", "role", "sender", "recipient", "content"]
 
@@ -160,7 +161,7 @@ class Instruction(BaseMessage):
         sender: str | None = None,
         output_fields=None,
         recipient=None,
-    ):  # sourcery skip: avoid-builtin-shadow
+    ):
         super().__init__(
             role="user",
             sender=sender or "user",
@@ -171,17 +172,34 @@ class Instruction(BaseMessage):
             self.content.update({"context": context})
 
         if output_fields:
-            format = f"""
+            format_ = f"""
             Follow the following response format.
             ```json
             {output_fields}
-            ```         
+            ```
             """
-            self.content.update({"response_format": format})
+            self.content.update(
+                {"response_format": format_.replace("            ", "")}
+            )
 
     @property
     def instruct(self):
         return self.content["instruction"]
+
+    @classmethod
+    def from_prompt_template(
+        cls,
+        prompt_template: PromptTemplate,
+        sender: str | None = None,
+        recipient=None,
+    ):
+        return cls(
+            instruction=prompt_template.instruction,
+            context=prompt_template.instruction_context,
+            output_fields=prompt_template.instruction_output_fields,
+            sender=sender,
+            recipient=recipient,
+        )
 
 
 class System(BaseMessage):

@@ -46,6 +46,14 @@ class BaseComponent(BaseComponentMixin, ABC):
         """
         return cls.__name__
 
+    @property
+    def property_schema(self):
+        return self.model_json_schema()["properties"]
+
+    @property
+    def property_keys(self):
+        return list(self.model_json_schema()["properties"].keys())
+
     def copy(self, *args, **kwargs) -> T:
         """
         Creates a deep copy of the instance, with an option to update specific fields.

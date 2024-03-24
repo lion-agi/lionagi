@@ -15,23 +15,29 @@ class MonoChatConfigMixin(ABC):
 
     def _create_chat_config(
         self,
-        instruction: Instruction | str | dict[str, Any],
+        instruction: Instruction | str | dict[str, Any] = None,
         context: Any | None = None,
         sender: str | None = None,
         system: str | dict[str, Any] | None = None,
-        tools: TOOL_TYPE = False,
         output_fields=None,
+        prompt_template=None,
+        tools: TOOL_TYPE = False,
         **kwargs,
     ) -> Any:
 
         if system:
             self.branch.change_first_system_message(system)
-        self.branch.add_message(
-            instruction=instruction,
-            context=context,
-            sender=sender,
-            output_fields=output_fields,
-        )
+
+        if not prompt_template:
+            self.branch.add_message(
+                instruction=instruction,
+                context=context,
+                sender=sender,
+                output_fields=output_fields,
+            )
+        else:
+            instruct_ = Instruction.from_prompt_template(prompt_template)
+            self.branch.add_message(instruction=instruct_)
 
         if "tool_parsed" in kwargs:
             kwargs.pop("tool_parsed")
@@ -48,7 +54,10 @@ class MonoChatConfigMixin(ABC):
 
 
 class MonoChatInvokeMixin(ABC):
-    async def _output(self, invoke, out, output_fields, func_calls_=None):
+
+    async def _output(
+        self, invoke, out, output_fields, func_calls_=None, prompt_template=None
+    ):
         # sourcery skip: use-contextlib-suppress
         content_ = self.branch.last_message_content
 
@@ -57,8 +66,14 @@ class MonoChatInvokeMixin(ABC):
                 await self._invoke_tools(content_, func_calls_=func_calls_)
             except Exception:
                 pass
+
+        response_ = self._return_response(content_, output_fields)
+        if prompt_template:
+            prompt_template._process_response(response_)
+            return prompt_template.out
+
         if out:
-            return self._return_response(content_, output_fields)
+            return response_
 
     @staticmethod
     def _return_response(content_, output_fields):
@@ -72,10 +87,23 @@ class MonoChatInvokeMixin(ABC):
         if output_fields:
             try:
                 if isinstance(out_, dict):
-                    out_ = ParseUtil.md_to_json(out_.values())
-                else:
-                    out_ = ParseUtil.md_to_json(out_)
+                    out_ = convert.to_str(out_.values())
+
+                if isinstance(out_, str):
+                    try:
+                        out_ = ParseUtil.md_to_json(out_)
+                    except Exception:
+                        out_ = ParseUtil.md_to_json(out_.replace("'", '"'))
+
                 out_ = StringMatch.correct_keys(output_fields=output_fields, out_=out_)
+            except Exception:
+                pass
+
+        if isinstance(out_, str):
+            try:
+                out_ = ParseUtil.md_to_json(out_)
+                out_ = StringMatch.correct_keys(output_fields=output_fields, out_=out_)
+                return out_
             except Exception:
                 pass
 

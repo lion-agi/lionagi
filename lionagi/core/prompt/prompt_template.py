@@ -1,79 +1,180 @@
-from pydantic import BaseModel, ValidationError
-from typing import Dict, Any, Optional, List
-import json
+from lionagi.libs import convert, func_call, StringMatch
+from lionagi.core.schema.base_node import BaseComponent
+from datetime import time, datetime, date
 
-from .base_prompt_field import BasePromptField
+from pydantic import BaseModel, Field
+from .field_validator import validation_funcs
 
 
-class PromptTemplate(BaseModel):
-    fields: Dict[str, BasePromptField] = {}
-    field_order: Optional[List[str]] = None
+_non_prompt_words = [
+    "id_",
+    "node_id",
+    "meta",
+    "timestamp",
+    "metadata",
+    "signature",
+    "task",
+    "template_name",
+]
 
-    class Config:
-        arbitrary_types_allowed = True
 
-    def add_field(self, field: BasePromptField) -> None:
-        """Adds a new field to the template."""
-        if field.name in self.fields:
-            raise ValueError(f"Field with name '{field.name}' already exists.")
-        self.fields[field.name] = field
+class PromptTemplate(BaseComponent):
+    signature: str = Field("null", description="signature indicating inputs, outputs")
 
-    def remove_field(self, field_name: str) -> None:
-        """Removes a field from the template."""
-        if field_name not in self.fields:
-            raise KeyError(f"Field with name '{field_name}' does not exist.")
-        del self.fields[field_name]
+    def __init__(
+        self,
+        template_name: str = "default_prompt_template",
+        version_: str | float | int = None,
+        description_: dict | str | None = None,
+        task_: str | None = None,
+        choices_: list[str] | None = None,
+        **kwargs,
+    ):
+        super().__init__(**kwargs)
+        self.template_name = template_name
+        self.meta_insert(["version"], version_)
+        self.meta_insert(["description"], description_ or "")
+        self.task = task_
+        self.choices = choices_
+        self.output_fields = None
+        self.input_fields, self.output_fields = self._get_input_output_fields(
+            self.signature
+        )
+        self.out_validation_kwargs = {}
 
-    def update_field(self, field_name: str, **kwargs) -> None:
-        """Updates properties of a field."""
-        if field_name not in self.fields:
-            raise KeyError(f"Field with name '{field_name}' does not exist.")
-        for key, value in kwargs.items():
-            setattr(self.fields[field_name], key, value)
+    @property
+    def version(self):
+        return self.metadata["version"]
 
-    def process_data(self, data: Dict[str, Any]) -> Dict[str, Any]:
-        """Processes data through the template's fields."""
-        processed_data = {}
-        for field_name, field in self.fields.items():
-            if field_name in data:
-                try:
-                    processed_data[field_name] = field.process(data[field_name])
-                except Exception as e:
-                    raise ValidationError(f"Error processing field '{field_name}': {e}")
-        return processed_data
+    @version.setter
+    def version(self, value):
+        self.metadata["version"] = value
 
-    def validate_data(self, data: Dict[str, Any]) -> bool:
-        """Validates data against the template's fields."""
-        for field_name, field in self.fields.items():
-            if field_name in data:
-                # Reuse Pydantic's validation
-                try:
-                    field.validate_field(data[field_name])
-                except ValidationError as e:
-                    raise ValidationError(f"Validation error for field '{field_name}': {e}")
-        return True
+    @property
+    def description(self):
+        return self.metadata["description"]
 
-    def render(self, data: Dict[str, Any]) -> str:
-        """Renders data using the template."""
-        self.validate_data(data)
-        processed_data = self.process_data(data)
-        rendered_data = ""
-        for field_name in self.field_order if self.field_order else self.fields.keys():
-            if field_name in processed_data:
-                rendered_data += f"{field_name}: {processed_data[field_name]}\n"
-        return rendered_data.strip()
+    @description.setter
+    def description(self, value):
+        self.metadata["description"] = value
 
-    def export_to_json(self) -> str:
-        """Exports the template configuration to a JSON string."""
-        return json.dumps(self.dict(), default=str)
+    @property
+    def prompt_fields(self):
+        return [
+            _field for _field in self.property_keys if _field not in _non_prompt_words
+        ]
 
-    @classmethod
-    def import_from_json(cls, json_str: str) -> 'PromptTemplate':
-        """Creates a template instance from a JSON string."""
-        data = json.loads(json_str)
-        template = cls()
-        for field_data in data.get("fields", {}).values():
-            field = BasePromptField(**field_data)
-            template.add_field(field)
-        template.field_order = data.get("field_order", [])
-        return template
+    @staticmethod
+    def _get_input_output_fields(str_):
+        _inputs, _outputs = str_.split("->")
+
+        _inputs = [convert.strip_lower(i) for i in _inputs.split(",")]
+        _outputs = [convert.strip_lower(o) for o in _outputs.split(",")]
+
+        return _inputs, _outputs
+
+    @property
+    def instruction_context(self):
+        a = "".join(
+            f"""
+        ## input: {i}:
+        - description: {self.model_fields[i].description}
+        - value: {str(self.__getattribute__(self.input_fields[idx]))}
+        """
+            for idx, i in enumerate(self.input_fields)
+        )
+        return a.replace("        ", "")
+
+    @property
+    def instruction(self):
+        ccc = f"""
+        0. Your task is {self.task},
+        1. provided: {self.input_fields}, 
+        2. requested: {self.output_fields}
+        ----------
+        """
+        return ccc.replace("        ", "")
+
+    @property
+    def instruction_output_fields(self):
+        return {i: self.model_fields[i].description for i in self.output_fields}
+
+    @property
+    def prompt_fields_annotation(self):
+        dict_ = {i: self.model_fields[i].annotation for i in self.prompt_fields}
+        for k, v in dict_.items():
+            if "|" in str(v):
+                v = str(v)
+                v = v.split("|")
+                dict_[k] = func_call.lcall(v, convert.strip_lower)
+            else:
+                dict_[k] = [v.__name__]
+
+        return dict_
+
+    def _validate_field(self, k, v, fix_=True, **kwargs):
+        str_ = self.prompt_fields_annotation[k]
+
+        if "enum" in str_:
+            self.__setattr__(
+                k,
+                validation_funcs["enum"](v, choices=self.choices, fix_=fix_, **kwargs),
+            )
+            return True
+
+        elif "bool" in str_:
+            self.__setattr__(k, validation_funcs["bool"](v))
+            return True
+
+        elif "int" in str_ or "float" in str_:
+            self.__setattr__(k, validation_funcs["number"](v, fix_=fix_, **kwargs))
+            return True
+
+        elif "str" in str_:
+            self.__setattr__(k, validation_funcs["str"](v, fix_=fix_, **kwargs))
+            return True
+
+        return False
+
+
+    def _process_response(self, out_, fix_=True):
+        kwargs = self.out_validation_kwargs.copy()
+        for k, v in out_.items():
+            if k not in kwargs:
+                kwargs = {k: {}}
+            if self._validate_field(k, v, fix_=fix_, **kwargs[k]):
+                continue
+            else:
+                raise ValueError(f"field {k} with value {v} is not valid")
+
+    @property
+    def out(self):
+        return {i: self.__getattribute__(i) for i in self.output_fields}
+
+
+
+class ScoredTemplate(PromptTemplate):
+    confidence_score: float | None = Field(
+        default_factory=float,
+        description="a numeric score between 0 to 1 formatted in num:0.2f",
+    )
+    reason: str | None = Field(
+        default_factory=str, description="brief reason for the given output"
+    )
+
+# class Weather(PromptTemplate):
+#     sunny: bool = Field(True, description="true if the weather is sunny outside else false")
+#     rainy: bool = Field(False, description="true if it is raining outside else false")
+#     play1: bool = Field(True, description="conduct play1")
+#     play2: bool = Field(False, description="conduct play2")
+#     signature: str = Field("sunny, rainy -> play1, play2")
+
+# predictor = Weather(
+#     template_name="predictor",
+#     task_ = "decides to conduct one of play1 and play2",
+#     version_=0.1,
+#     description_="predicts the weather and decides play",
+#     signature = "sunny, play1 -> play2"
+#     )
+
+# predictor.to_instruction()

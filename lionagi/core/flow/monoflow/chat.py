@@ -11,7 +11,7 @@ class MonoChat(BaseMonoFlow, MonoChatMixin):
 
     async def chat(
         self,
-        instruction,
+        instruction=None,
         context=None,
         sender=None,
         system=None,
@@ -19,6 +19,7 @@ class MonoChat(BaseMonoFlow, MonoChatMixin):
         out: bool = True,
         invoke: bool = True,
         output_fields=None,
+        prompt_template=None,
         **kwargs,
     ) -> Any:
         """
@@ -40,10 +41,11 @@ class MonoChat(BaseMonoFlow, MonoChatMixin):
         """
 
         config = self._create_chat_config(
-            instruction,
+            instruction=instruction,
             context=context,
             sender=sender,
             system=system,
+            prompt_template=prompt_template,
             tools=tools,
             output_fields=output_fields,
             **kwargs,
@@ -51,4 +53,9 @@ class MonoChat(BaseMonoFlow, MonoChatMixin):
 
         await self._call_chatcompletion(**config)
 
-        return await self._output(invoke, out, output_fields)
+        return await self._output(
+            invoke=invoke,
+            out=out,
+            output_fields=output_fields,
+            prompt_template=prompt_template,
+        )

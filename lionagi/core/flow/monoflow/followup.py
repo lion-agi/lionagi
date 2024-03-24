@@ -138,7 +138,7 @@ class MonoFollowup(MonoChat):
 
         if auto:
             a = await self._handle_auto(
-                instruction,
+                instruction=instruction,
                 output_prompt=output_prompt,
                 sender=sender,
                 out=out,
