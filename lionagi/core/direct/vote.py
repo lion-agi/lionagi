@@ -1,10 +1,11 @@
 from lionagi.libs import func_call
 import numpy as np
+from .predict import predict
 from .score import score
 
 # for example, directive=predict
 
-async def vote(sentence, directive, num_generations=5, num_output=1, num_scorer=5, score_range=(0,100), num_digit=2, scorer_instruction=None, **kwargs):
+async def vote(sentence, directive=predict, num_generations=5, num_output=1, num_scorer=5, score_range=(0,100), num_digit=2, scorer_instruction=None, **kwargs):
     
     async def _inner(i):
         out_ = await directive(sentence, **kwargs)

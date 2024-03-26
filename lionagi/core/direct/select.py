@@ -17,7 +17,6 @@ class SelectTemplate(ScoredTemplate):
         self,
         sentence=None,
         choices=None,
-        num_choices=1,
         instruction=None,
         reason=False, 
         confidence_score=False,
@@ -27,7 +26,7 @@ class SelectTemplate(ScoredTemplate):
 
         self.sentence = sentence
         self.choices = choices
-        self.task = f"select {num_choices} item(s), from provided choices {choices}."
+        self.task = f"select 1 item, from provided choices {choices}."
         if instruction:
             self.task += f"objetive {instruction}."
         
@@ -41,7 +40,6 @@ class SelectTemplate(ScoredTemplate):
 async def select(
     sentence,
     choices=None,
-    num_choices=1,
     instruction=None,
     confidence_score=False,
     reason=False,
@@ -79,7 +77,6 @@ async def select(
     _template = SelectTemplate(
         sentence=sentence,
         choices=choices,
-        num_choices=num_choices,
         instruction=instruction,
         confidence_score=confidence_score,
         reason=reason,
@@ -97,6 +94,7 @@ async def select(
     )
 
     ans = _template.answer
+
     if ans not in _template.choices:
         _template.answer = StringMatch.choose_most_similar(ans, _template.choices)
 
