@@ -12,6 +12,33 @@ To contribute, you need to make a fork first, and then make pull request from yo
   
 # LionAGI
 
+
+**LionAGI is undergoing major transformation.**
+
+It is an intelligent agentic workflow automation framework. It introduces advanced ML models into any existing workflows and data infrastructure.
+
+#### Currently, it can
+
+- generate inferences from almost all models including local
+- run most model inferencing in parallel
+- produce structured pydantic outputs with flexible usage
+- automate workflow via graph based agents
+- use advanced prompting techniques, i.e. ReAct (reason-action)
+- …
+  
+#### It aims to:
+
+- provide a centralized agent-managed framework for ML-powered tools coordination.
+- such that, people can utilize intelligence to solve their problems in real life.
+- achieve the goal by dramatically lowering the barrier of entries for creating use-case/domain specific tools.
+
+#### Why?
+
+- To better the human experience for more.
+
+---
+
+
 **Powerful Intelligent Workflow Automation**
 
 LionAGI is an **intelligent agent framework**. Tailored for **big data analysis** in conjunction with advanced **machine learning** tools, designed for data-centric, production-level projects. Lionagi provides a set of robust tools, enabling flexible and rapid design of agentic workflow, for your own data.  
