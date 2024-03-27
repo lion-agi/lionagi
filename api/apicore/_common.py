@@ -4,11 +4,11 @@ from logging import Logger as Log
 
 
 def info_logger(
-        message: str | None = "",
-        func_str: str | None = "",
-        logger: Log | None = None,
-        addition_msg: str | None = ""
-    ):
+    message: str | None = "",
+    func_str: str | None = "",
+    logger: Log | None = None,
+    addition_msg: str | None = "",
+):
     """Logs a formatted message or prints it if no logger is provided.
 
     This function formats a message by optionally prefixing it with a function string,
@@ -30,21 +30,26 @@ def info_logger(
     """
 
     try:
-        if func_str: message = f"{func_str}: {message}"
-        logger.info(f"{message} {addition_msg}") if logger else print(f"{message} {addition_msg}")
+        if func_str:
+            message = f"{func_str}: {message}"
+        (
+            logger.info(f"{message} {addition_msg}")
+            if logger
+            else print(f"{message} {addition_msg}")
+        )
     except Exception as err:
         raise err
 
 
 def error_logger(
-        func_str: str | None,
-        error:  str | None,
-        logger: Log | None = None,
-        addition_msg: str | None = "",
-        mode: str | None = "critical",
-        ignore_flag: bool = True,
-        set_trace: bool = False
-    ) -> None:
+    func_str: str | None,
+    error: str | None,
+    logger: Log | None = None,
+    addition_msg: str | None = "",
+    mode: str | None = "critical",
+    ignore_flag: bool = True,
+    set_trace: bool = False,
+) -> None:
     """
     Logs or prints an error message constructed from the provided arguments. This function
     supports logging with different levels (critical, debug, error, info) and can optionally
@@ -78,20 +83,24 @@ def error_logger(
             "critical": logger.critical,
             "debug": logger.debug,
             "error": logger.error,
-            "info": logger.info
+            "info": logger.info,
         }
     try:
-        logger_mode.get(mode, logger_mode)(f"Error in {func_str} {addition_msg} {error}") if logger \
+        (
+            logger_mode.get(mode, logger_mode)(
+                f"Error in {func_str} {addition_msg} {error}"
+            )
+            if logger
             else print(f"Error in {func_str} {addition_msg} {error}")
-        if logger and set_trace: logger.exception("trace")
+        )
+        if logger and set_trace:
+            logger.exception("trace")
         return exit(99) if not ignore_flag else None
     except Exception as err:
         raise err
 
 
-def exception_handlers(
-        logger: Log | None = None
-    ):
+def exception_handlers(logger: Log | None = None):
     """
     A decorator that wraps a function with exception handling logic.
 
@@ -107,6 +116,7 @@ def exception_handlers(
     Returns:
         Callable: A decorator that wraps functions with exception handling logic.
     """
+
     def decorator(func):
         @wraps(func)
         def wrapper(*args, **kwargs):
@@ -114,13 +124,9 @@ def exception_handlers(
                 return func(*args, **kwargs)
             except Exception as err:
                 error_logger(
-                             func.__name__,
-                             err,
-                             logger=logger,
-                             mode="error",
-                             ignore_flag=False
+                    func.__name__, err, logger=logger, mode="error", ignore_flag=False
                 )
+
         return wrapper
+
     return decorator
-
-

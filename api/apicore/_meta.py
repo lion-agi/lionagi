@@ -2,7 +2,7 @@ class APIObjectSingleton:
     object_registration = {}
 
     def __new__(cls):
-        if not hasattr(cls, 'instance'):
+        if not hasattr(cls, "instance"):
             cls.instance = super(APIObjectSingleton, cls).__new__(cls)
         return cls.instance
 
@@ -33,10 +33,13 @@ class APIObjectMeta(type):
         for attr_name, attr_value in attrs.items():
             new_attrs[attr_name] = attr_value
             if attr_name == "__qualname__" and attr_value.startswith("APIObject"):
-                object_name = attr_value[len("APIObject"):]
+                object_name = attr_value[len("APIObject") :]
                 orig_object_name = attr_value
 
         obj = type(class_name, bases, new_attrs)
         if object_name:
-            object_register.object_registration[object_name] = {"object_name": orig_object_name, "object_ptr": obj}
+            object_register.object_registration[object_name] = {
+                "object_name": orig_object_name,
+                "object_ptr": obj,
+            }
         return object

@@ -10,17 +10,14 @@ from api.apicore import _config as _config_
 iaws_config = Config(
     region_name="us-west-2",
     signature_version="v4",
-    retries={
-        "max_attempts": 10,
-        "mode": "standard"
-
-    }
+    retries={"max_attempts": 10, "mode": "standard"},
 )
+
+
 @_common_.exception_handlers()
 def setup_session_by_profile(
-        profile_name: str | None,
-        region_name: str | None = "us-west-2"
-    ) -> session.Session:
+    profile_name: str | None, region_name: str | None = "us-west-2"
+) -> session.Session:
     """
     Initializes and returns an AWS session, optionally configured with a specified profile and region.
     This function creates an AWS session that can be used to interact with AWS services. The session can
@@ -55,9 +52,8 @@ def setup_session_by_profile(
 
 @_common_.exception_handlers()
 def setup_session(
-        config: _config_.ConfigSingleton | None,
-        logger: Log | None = None
-    ) -> session.Session:
+    config: _config_.ConfigSingleton | None, logger: Log | None = None
+) -> session.Session:
     """
     Creates an AWS session using credentials and region information from a configuration singleton or environment variables.
     This function attempts to create an AWS session by first trying to decode and use AWS credentials (access key and
@@ -94,23 +90,31 @@ def setup_session(
 
     """
 
-    access_key = b64decode(config.config.get("aws_access_key_id", getenv("AWS_ACCESS_KEY_ID", ""))).decode("UTF-8")
+    access_key = b64decode(
+        config.config.get("aws_access_key_id", getenv("AWS_ACCESS_KEY_ID", ""))
+    ).decode("UTF-8")
     secret_access_key = b64decode(
-        config.config.get("aws_secret_access_key", getenv("AWS_SECRET_ACCESS_KEY", ""))).decode("UTF-8")
+        config.config.get("aws_secret_access_key", getenv("AWS_SECRET_ACCESS_KEY", ""))
+    ).decode("UTF-8")
     region = config.config.get("aws_region_name", getenv("AWS_REGION", "us-west-2"))
     if access_key and secret_access_key:
-        sess = session.Session(aws_access_key_id=access_key,
-                               aws_secret_access_key=secret_access_key,
-                               region_name=region)
-        _common_.info_logger(f"connecting to AWS region {region}, AWS session is created successfully", logger=logger)
+        sess = session.Session(
+            aws_access_key_id=access_key,
+            aws_secret_access_key=secret_access_key,
+            region_name=region,
+        )
+        _common_.info_logger(
+            f"connecting to AWS region {region}, AWS session is created successfully",
+            logger=logger,
+        )
         return sess
     else:
-        _common_.error_logger(currentframe().f_code.co_name,
-                              f"Error in working with AWS credentials.  "
-                              f"Please check whether the environment variable encoded AWS_ACCESS_KEY_ID and "
-                              f"AWS_SECRET_ACCESS_KEY is set correctly or they are in the configuration file. ",
-                              logger=logger,
-                              mode="error",
-                              ignore_flag=False)
-
-
+        _common_.error_logger(
+            currentframe().f_code.co_name,
+            f"Error in working with AWS credentials.  "
+            f"Please check whether the environment variable encoded AWS_ACCESS_KEY_ID and "
+            f"AWS_SECRET_ACCESS_KEY is set correctly or they are in the configuration file. ",
+            logger=logger,
+            mode="error",
+            ignore_flag=False,
+        )

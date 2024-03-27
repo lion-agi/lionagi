@@ -11,15 +11,17 @@ from api.aws import _awsclient_config as _aws_config_
 class APIObjectAWSS3(metaclass=_meta_.APIObjectMeta):
     def __init__(self, config: _config_.ConfigSingleton = None, logger: Log = None):
         self.config = config if config else _config_.ConfigSingleton()
-        self.session = _aws_config_.setup_session_by_profile(self.config.config.get("aws_profile_name")) if \
-            self.config.config.get("aws_profile_name") else _aws_config_.setup_session(self.config)
+        self.session = (
+            _aws_config_.setup_session_by_profile(
+                self.config.config.get("aws_profile_name")
+            )
+            if self.config.config.get("aws_profile_name")
+            else _aws_config_.setup_session(self.config)
+        )
         self.client = self.session.client("s3")
 
     @_common_.exception_handlers()
-    def list_bucket_names(
-            self,
-            logger: Log = None
-        ) -> List:
+    def list_bucket_names(self, logger: Log = None) -> List:
         """
         Retrieves the names of all buckets in the AWS S3 service for the configured AWS account.
         This method calls the `list_buckets` method on the class's S3 client to fetch a list of all S3 buckets
@@ -39,13 +41,18 @@ class APIObjectAWSS3(metaclass=_meta_.APIObjectMeta):
         try:
             _response = self.client.list_buckets()
             if _response.get("ResponseMetadata", "").get("HTTPStatusCode", -1) == 200:
-                return [_each_bucket.get("Name") for _each_bucket in _response.get("Buckets", [])]
+                return [
+                    _each_bucket.get("Name")
+                    for _each_bucket in _response.get("Buckets", [])
+                ]
             else:
                 return []
 
         except ClientError as err:
-            _common_.error_logger(currentframe().f_code.co_name,
-                                  err,
-                                  logger=logger,
-                                  mode="error",
-                                  ignore_flag=False)
+            _common_.error_logger(
+                currentframe().f_code.co_name,
+                err,
+                logger=logger,
+                mode="error",
+                ignore_flag=False,
+            )

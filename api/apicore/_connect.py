@@ -7,14 +7,14 @@ from functools import wraps
 from api.apicore import _meta as _meta_
 from api.apicore import _common as _common_
 from api.apicore import _config as _config_
-from api.aws import _aws_s3 #this line needs to be present to dynamically load the API object at startup
+from api.aws import (
+    _aws_s3,
+)  # this line needs to be present to dynamically load the API object at startup
+
 
 @_common_.exception_handlers()
 @contextmanager
-def create_session(
-        object_type: str | None,
-        logger: Log | None = None
-    ) -> Callable:
+def create_session(object_type: str | None, logger: Log | None = None) -> Callable:
     """
     This function initializes a session for a given object type by leveraging a configuration
     singleton and an API object registration singleton. It looks up the requested object type
@@ -38,23 +38,27 @@ def create_session(
 
     """
     config = _config_.ConfigSingleton()
-    object_dict = {object_name.lower(): object_val for object_name, object_val in
-                    _meta_.APIObjectSingleton().object_registration.items()}
+    object_dict = {
+        object_name.lower(): object_val
+        for object_name, object_val in _meta_.APIObjectSingleton().object_registration.items()
+    }
 
     if object_type.lower() not in object_dict.keys():
-        _common_.error_logger(currentframe().f_code.co_name,
-                              f"{object_type} is not found, currently {' '.join(object_dict.keys())} are supported",
-                              logger=logger,
-                              mode="error",
-                              ignore_flag=False)
+        _common_.error_logger(
+            currentframe().f_code.co_name,
+            f"{object_type} is not found, currently {' '.join(object_dict.keys())} are supported",
+            logger=logger,
+            mode="error",
+            ignore_flag=False,
+        )
     yield object_dict.get(object_type.lower(), None).get("object_ptr")(config)
 
 
 def object_binding(
-        object_type: str | None,
-        object_name: str | None = "",
-        variable_name: str | None = "action"
-    ) -> Callable:
+    object_type: str | None,
+    object_name: str | None = "",
+    variable_name: str | None = "action",
+) -> Callable:
     """
     Binds a session object of a specified type to the decorated function.
     This function generates a decorator that, when applied to another function, dynamically injects
@@ -81,6 +85,7 @@ def object_binding(
         explicit arguments list.
 
     """
+
     def decorator(func):
         @wraps(func)
         def wrapper(*args, **kwargs):
@@ -88,11 +93,21 @@ def object_binding(
             arg_session = variable_name
             func_params = func.__code__.co_varnames
 
-            session_in_args = arg_session in func_params and func_params.index(arg_session) < len(args)
+            session_in_args = arg_session in func_params and func_params.index(
+                arg_session
+            ) < len(args)
             session_in_kwargs = arg_session in kwargs
 
-            if (session_in_args or session_in_kwargs) and variable_name in kwargs and object_type in kwargs.get(variable_name).__dict__:
-                if object_name is None or object_name in kwargs.get(variable_name).__dict__.get(object_type).__dict__:
+            if (
+                (session_in_args or session_in_kwargs)
+                and variable_name in kwargs
+                and object_type in kwargs.get(variable_name).__dict__
+            ):
+                if (
+                    object_name is None
+                    or object_name
+                    in kwargs.get(variable_name).__dict__.get(object_type).__dict__
+                ):
 
                     return func(*args, **kwargs)
             else:
@@ -100,19 +115,22 @@ def object_binding(
                 with create_session(object_type) as session:
                     if session:
                         if object_name:
-                            object_name_namespace = SimpleNamespace(**{object_name: session})
-                            kwargs[variable_name] = SimpleNamespace(**{object_type: object_name_namespace})
+                            object_name_namespace = SimpleNamespace(
+                                **{object_name: session}
+                            )
+                            kwargs[variable_name] = SimpleNamespace(
+                                **{object_type: object_name_namespace}
+                            )
                         else:
                             kwargs[variable_name] = session
                 return func(*args, **kwargs)
+
         return wrapper
+
     return decorator
 
 
-def get_object(
-        object_name: str | None,
-        logger: Log | None = None
-    ) -> object:
+def get_object(object_name: str | None, logger: Log | None = None) -> object:
     """
     Retrieves an object by its name and logs errors if any exceptions are encountered.
     This function attempts to retrieve an object specified by `object_name` using
@@ -139,8 +157,10 @@ def get_object(
     try:
         return object_binding(object_name)(lambda action: action)()
     except Exception as err:
-        _common_.error_logger(currentframe().f_code.co_name,
-                              err,
-                              logger=logger,
-                              mode="error",
-                              ignore_flag=False)
+        _common_.error_logger(
+            currentframe().f_code.co_name,
+            err,
+            logger=logger,
+            mode="error",
+            ignore_flag=False,
+        )

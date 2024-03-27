@@ -1,7 +1,29 @@
+"""
+This module provides functions for validating and fixing field values based on their data types.
+
+The module defines several functions for checking and fixing field values of different data types,
+including numeric, boolean, string, and enum. It also provides a dictionary `validation_funcs` that
+maps data types to their corresponding validation functions.
+"""
+
 from lionagi.libs import convert, StringMatch
 
 
 def check_number_field(x, fix_=True, **kwargs):
+    """
+    Checks if the given value is a valid numeric field.
+
+    Args:
+        x: The value to check.
+        fix_ (bool): Flag indicating whether to attempt fixing the value if it's invalid (default: True).
+        **kwargs: Additional keyword arguments for fixing the value.
+
+    Returns:
+        The original value if it's valid, or the fixed value if `fix_` is True.
+
+    Raises:
+        ValueError: If the value is not a valid numeric field and cannot be fixed.
+    """
     if not isinstance(x, (int, float)):
         if fix_:
             try:
@@ -16,6 +38,19 @@ def check_number_field(x, fix_=True, **kwargs):
 
 
 def check_bool_field(x, fix_=True):
+    """
+    Checks if the given value is a valid boolean field.
+
+    Args:
+        x: The value to check.
+        fix_ (bool): Flag indicating whether to attempt fixing the value if it's invalid (default: True).
+
+    Returns:
+        The original value if it's valid, or the fixed value if `fix_` is True.
+
+    Raises:
+        ValueError: If the value is not a valid boolean field and cannot be fixed.
+    """
     if not isinstance(x, bool):
         if fix_:
             try:
@@ -30,6 +65,21 @@ def check_bool_field(x, fix_=True):
 
 
 def check_str_field(x, *args, fix_=True, **kwargs):
+    """
+    Checks if the given value is a valid string field.
+
+    Args:
+        x: The value to check.
+        *args: Additional positional arguments for fixing the value.
+        fix_ (bool): Flag indicating whether to attempt fixing the value if it's invalid (default: True).
+        **kwargs: Additional keyword arguments for fixing the value.
+
+    Returns:
+        The original value if it's valid, or the fixed value if `fix_` is True.
+
+    Raises:
+        ValueError: If the value is not a valid string field and cannot be fixed.
+    """
     if not isinstance(x, str):
         if fix_:
             try:
@@ -43,12 +93,22 @@ def check_str_field(x, *args, fix_=True, **kwargs):
     return x
 
 
-def check_enum_field(x, model_fields_, choices, fix_=True, **kwargs):
-    if "choices" not in model_fields_:
-        raise ValueError(
-            "Field type ENUM requires the 'choices' attribute to be specified."
-        )
+def check_enum_field(x, choices, fix_=True, **kwargs):
+    """
+    Checks if the given value is a valid enum field.
 
+    Args:
+        x: The value to check.
+        choices: The list of valid choices for the enum field.
+        fix_ (bool): Flag indicating whether to attempt fixing the value if it's invalid (default: True).
+        **kwargs: Additional keyword arguments for fixing the value.
+
+    Returns:
+        The original value if it's valid, or the fixed value if `fix_` is True.
+
+    Raises:
+        ValueError: If the value is not a valid enum field and cannot be fixed.
+    """
     same_dtype, dtype_ = convert.is_same_dtype(choices, return_dtype=True)
     if not same_dtype:
         raise ValueError(
@@ -74,8 +134,21 @@ def check_enum_field(x, model_fields_, choices, fix_=True, **kwargs):
 
 
 def _fix_number_field(x, *args, **kwargs):
+    """
+    Attempts to fix an invalid numeric field value.
+
+    Args:
+        x: The value to fix.
+        *args: Additional positional arguments for fixing the value.
+        **kwargs: Additional keyword arguments for fixing the value.
+
+    Returns:
+        The fixed numeric value.
+
+    Raises:
+        ValueError: If the value cannot be converted into a valid numeric value.
+    """
     try:
-        x = convert.to_str(x)
         x = convert.to_num(x, *args, **kwargs)
         if isinstance(x, (int, float)):
             return x
@@ -85,6 +158,18 @@ def _fix_number_field(x, *args, **kwargs):
 
 
 def _fix_bool_field(x):
+    """
+    Attempts to fix an invalid boolean field value.
+
+    Args:
+        x: The value to fix.
+
+    Returns:
+        The fixed boolean value.
+
+    Raises:
+        ValueError: If the value cannot be converted into a valid boolean value.
+    """
     try:
         x = convert.to_str(x)
         if (
@@ -103,6 +188,18 @@ def _fix_bool_field(x):
 
 
 def _fix_str_field(x):
+    """
+    Attempts to fix an invalid string field value.
+
+    Args:
+        x: The value to fix.
+
+    Returns:
+        The fixed string value.
+
+    Raises:
+        ValueError: If the value cannot be converted into a valid string value.
+    """
     try:
         x = convert.to_str(x)
         if isinstance(x, str):
@@ -113,6 +210,20 @@ def _fix_str_field(x):
 
 
 def _fix_enum_field(x, choices, **kwargs):
+    """
+    Attempts to fix an invalid enum field value.
+
+    Args:
+        x: The value to fix.
+        choices: The list of valid choices for the enum field.
+        **kwargs: Additional keyword arguments for fixing the value.
+
+    Returns:
+        The fixed enum value.
+
+    Raises:
+        ValueError: If the value cannot be converted into a valid enum value.
+    """
     try:
         x = convert.to_str(x)
         return StringMatch.choose_most_similar(x, choices, **kwargs)
