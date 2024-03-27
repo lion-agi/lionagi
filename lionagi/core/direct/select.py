@@ -8,9 +8,13 @@ from ..branch import Branch
 
 class SelectTemplate(ScoredTemplate):
     template_name: str = "default_select"
-    sentence: str | list | dict = Field(default_factory=str, description="the given context")
-    answer: Enum | str = Field(default_factory=str, description="selection from given choices")
-    
+    sentence: str | list | dict = Field(
+        default_factory=str, description="the given context"
+    )
+    answer: Enum | str = Field(
+        default_factory=str, description="selection from given choices"
+    )
+
     signature: str = "sentence -> answer"
 
     def __init__(
@@ -18,7 +22,7 @@ class SelectTemplate(ScoredTemplate):
         sentence=None,
         choices=None,
         instruction=None,
-        reason=False, 
+        reason=False,
         confidence_score=False,
         **kwargs,
     ):
@@ -29,7 +33,7 @@ class SelectTemplate(ScoredTemplate):
         self.task = f"select 1 item, from provided choices {choices}."
         if instruction:
             self.task += f"objetive {instruction}."
-        
+
         if reason:
             self.output_fields.append("reason")
 

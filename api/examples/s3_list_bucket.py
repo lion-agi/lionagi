@@ -17,7 +17,9 @@ async def async_list_s3_bucket_example():
     tool_manager = ToolManager()
 
     # register the tool, bind the function to the tool object
-    tool_manager._register_tool(func_to_tool(object_api.list_bucket_names, docstring_style='google')[0])
+    tool_manager._register_tool(
+        func_to_tool(object_api.list_bucket_names, docstring_style="google")[0]
+    )
 
     # invoke the function in the context of the tool manager, this function doesn't take any arguments
     response = await tool_manager.invoke(("list_bucket_names", {}))
@@ -25,6 +27,7 @@ async def async_list_s3_bucket_example():
     # print the response
     print("Here are the s3 buckets in the aws account:")
     from pprint import pprint
+
     pprint(response)
 
 

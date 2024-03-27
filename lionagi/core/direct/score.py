@@ -48,12 +48,13 @@ score context according to the following constraints
         if confidence_score:
             self.output_fields.append("confidence_score")
 
-        self.out_validation_kwargs['answer'] = {
+        self.out_validation_kwargs["answer"] = {
             "upper_bound": score_range[1],
             "lower_bound": score_range[0],
             "num_type": int if num_digit == 0 else float,
             "precision": num_digit if num_digit != 0 else None,
         }
+
 
 async def _score(
     sentence,
@@ -80,7 +81,7 @@ async def _score(
     tool_manager=None,
     **kwargs,
 ):
-    
+
     if "temperature" not in kwargs:
         kwargs["temperature"] = 0.1
 
@@ -122,11 +123,12 @@ async def _score(
 
     return _template
 
+
 # async def group_score(sentence, *args, num_instances=5, **kwargs):
 #     sentences = [sentence for _ in range(num_instances)]
-    
+
 #     outs_ = await func_call.alcall(sentences, _score, *args, **kwargs)
-    
+
 #     return np.mean([i.answer for i in outs_])
 
 
@@ -159,7 +161,7 @@ async def score(
 ):
     async def _inner(i=0):
         return await _score(
-            sentence=sentence, 
+            sentence=sentence,
             instruction=instruction,
             score_range=score_range,
             inclusive=inclusive,
@@ -181,13 +183,13 @@ async def score(
             datalogger=datalogger,
             persist_path=persist_path,
             tool_manager=tool_manager,
-            **kwargs
+            **kwargs,
         )
 
     if num_instances == 1:
         _out = await _inner()
         return _out if return_template else _out.answer
-        
+
     elif num_instances > 1:
         _outs = await func_call.alcall(range(num_instances), _inner)
         return _outs if return_template else np.mean([i.answer for i in _outs])

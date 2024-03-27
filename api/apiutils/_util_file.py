@@ -3,9 +3,7 @@ from api.apicore import _common as _common_
 
 
 @_common_.exception_handlers()
-def is_file_empty(
-        filepath: str | None
-    ) -> bool:
+def is_file_empty(filepath: str | None) -> bool:
     """
     Determines whether a specified file is empty.
 

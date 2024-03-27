@@ -4,10 +4,7 @@ from api.apiutils import _util_file as _util_file_
 
 
 class ConfigSingleton:
-    def __new__(
-            cls,
-            config_loc: str | None = None
-    ):
+    def __new__(cls, config_loc: str | None = None):
         """
         Create a new instance of the ConfigSingleton class if one doesn't already exist.
         If an instance already exists, return the existing instance. This ensures that

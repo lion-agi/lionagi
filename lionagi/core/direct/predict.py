@@ -39,7 +39,7 @@ class PredictTemplate(ScoredTemplate):
 
 
 async def predict(
-    sentence,
+    sentence=None,
     num_sentences=1,
     confidence_score=False,
     reason=False,

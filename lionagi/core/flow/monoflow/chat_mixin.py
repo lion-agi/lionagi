@@ -56,7 +56,13 @@ class MonoChatConfigMixin(ABC):
 class MonoChatInvokeMixin(ABC):
 
     async def _output(
-        self, invoke, out, output_fields, func_calls_=None, prompt_template=None
+        self,
+        invoke,
+        out,
+        output_fields,
+        func_calls_=None,
+        prompt_template=None,
+        return_template=True,
     ):
         # sourcery skip: use-contextlib-suppress
         content_ = self.branch.last_message_content
@@ -70,7 +76,7 @@ class MonoChatInvokeMixin(ABC):
         response_ = self._return_response(content_, output_fields)
         if prompt_template:
             prompt_template._process_response(response_)
-            return prompt_template.out
+            return prompt_template if return_template else prompt_template.out
 
         if out:
             return response_
