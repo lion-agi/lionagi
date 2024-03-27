@@ -1,3 +1,10 @@
+"""
+This module defines the PromptTemplate and ScoredTemplate classes for creating and managing prompt templates.
+
+The PromptTemplate class is a base class for creating prompt templates with input and output fields, validation,
+and processing. The ScoredTemplate class extends the PromptTemplate class and adds fields for confidence score and reason.
+"""
+
 from typing import Any
 from lionagi.libs import convert, func_call
 from lionagi.core.schema.base_node import BaseComponent
@@ -19,6 +26,54 @@ _non_prompt_words = [
 
 
 class PromptTemplate(BaseComponent):
+    """
+    A base class for creating and managing prompt templates.
+
+    Attributes:
+        signature (str): The signature indicating the input and output fields.
+        choices (dict[str, list[str]]): The choices to select from for each field.
+        out_validation_kwargs (dict[str, Any]): The validation keyword arguments for output fields.
+        in_validation_kwargs (dict[str, Any]): The validation keyword arguments for input fields.
+        task (str | dict[str, Any] | None): The task to follow.
+        fix_input (bool): Whether to fix input fields.
+        fix_output (bool): Whether to fix output fields.
+        template_name (str): The name of the prompt template.
+        version (str | float | int): The version of the prompt template.
+        description (dict | str | None): The description of the prompt template.
+        input_fields (list[str]): The input fields of the prompt template.
+        output_fields (list[str]): The output fields of the prompt template.
+
+    Methods:
+        __init__(self, template_name="default_prompt_template", version_=None, description_=None, task=None, **kwargs):
+            Initializes a new instance of the PromptTemplate class.
+        _validate_input_choices(self, fix_=fix_input):
+            Validates the input choices based on the defined choices.
+        _validate_output_choices(self, fix_=fix_output):
+            Validates the output choices based on the defined choices.
+        _get_input_output_fields(str_) -> tuple[list[str], list[str]]:
+            Extracts the input and output fields from the signature string.
+        instruction_context(self) -> str:
+            Returns the instruction context based on the input fields.
+        instruction(self) -> str:
+            Returns the instruction based on the task and input/output fields.
+        instruction_output_fields(self) -> dict[str, str]:
+            Returns a dictionary mapping output fields to their descriptions.
+        prompt_fields_annotation(self) -> dict[str, list[str]]:
+            Returns a dictionary mapping prompt fields to their annotated types.
+        _validate_field(self, k, v, choices=None, fix_=False, **kwargs) -> bool:
+            Validates a single field based on its annotated type and choices.
+        _process_input(self, fix_=False):
+            Processes and validates the input fields.
+        _process_response(self, out_, fix_=True):
+            Processes and validates the output fields.
+        in_(self) -> dict[str, Any]:
+            Returns a dictionary mapping input fields to their values.
+        out(self) -> dict[str, Any]:
+            Returns a dictionary mapping output fields to their values.
+        process(self, in_=None, out_=None):
+            Processes and validates the input and output fields.
+    """
+
     signature: str = Field("null", description="signature indicating inputs, outputs")
     choices: dict[str, list[str]] = Field(
         default_factory=dict, description="choices to select from"
