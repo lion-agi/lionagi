@@ -38,7 +38,7 @@ All notebooks should run, as of 0.0.313,
 
 \* if there are models on providers that have not been configured, you can do so by configuring your own AI providers, and endpoints. 
 
-\*\* Structured Input/Output, Graph based agent system, as well as more advanced propting techniques are undergoing fast interations...
+\*\* Structured Input/Output, Graph based agent system, as well as more advanced prompting techniques are undergoing fast interations...
 
 ### Why Automating Workflows?
 
