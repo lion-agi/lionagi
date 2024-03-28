@@ -19,8 +19,8 @@ It is an intelligent agentic workflow automation framework. It introduces advanc
 
 #### Currently, it can
 
-- generate inferences from almost all models including local
-- run most model inferencing in parallel
+- interact with from almost all models including local
+- run interactions in parallel for most models
 - produce structured pydantic outputs with flexible usage
 - automate workflow via graph based agents
 - use advanced prompting techniques, i.e. ReAct (reason-action)
