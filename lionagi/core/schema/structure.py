@@ -504,7 +504,9 @@ class Structure(BaseRelatableNode):
         Args:
             node (BaseNode): The node to add.
         """
-        func_call.lcall(node, self.graph.add_node)
+        nodes = [node] if isinstance(node, BaseNode) else node
+        for i in nodes:
+            self.graph.add_node(i)
 
     def add_relationship(
         self,
