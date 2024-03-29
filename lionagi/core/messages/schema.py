@@ -173,7 +173,7 @@ class Instruction(BaseMessage):
 
         if output_fields:
             format_ = f"""
-            Follow the following response format.
+            MUST EXACTLY Follow the following response format. NO ADDITIONAL COMMENTS ALLOWED!
             ```json
             {output_fields}
             ```

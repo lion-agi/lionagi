@@ -159,7 +159,7 @@ async def react(
             return_branch=return_branch,
             **kwargs,
         )
-
+        
     if num_instances == 1:
         return await _inner()
 
