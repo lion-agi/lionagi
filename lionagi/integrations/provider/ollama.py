@@ -11,7 +11,7 @@ allowed_kwargs = [
     "seed",
     "stop",
     "stream",
-    "temperature",
+    # "temperature",
     "top_p",
     "tools",
     "tool_choice",

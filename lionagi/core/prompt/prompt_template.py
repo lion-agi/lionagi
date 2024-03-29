@@ -207,6 +207,10 @@ class PromptTemplate(BaseComponent):
             setattr(self, k, v_)
             return True
 
+        if "lionagi.core.prompt.action_template.actionrequest" in str_:
+            self.__setattr__(k, validation_funcs["action"](v))
+            return True
+
         elif "bool" in str_:
             self.__setattr__(k, validation_funcs["bool"](v, fix_=fix_, **kwargs))
             return True
@@ -227,48 +231,50 @@ class PromptTemplate(BaseComponent):
             if k not in kwargs:
                 kwargs = {k: {}}
 
-            try:
-                if (
-                    self.model_fields[k].json_schema_extra["choices"] is not None
-                    and "choices" in self.model_fields[k].json_schema_extra
+            if self._field_has_choices(k):
+                self.choices[k] = self.model_fields[k].json_schema_extra["choices"]
+                if self._validate_field(
+                    k, v, choices=self.choices[k], fix_=fix_, **kwargs[k]
                 ):
-                    self.choices[k] = self.model_fields[k].json_schema_extra["choices"]
-                    if self._validate_field(
-                        k, v, choices=self.choices[k], fix_=fix_, **kwargs[k]
-                    ):
-                        continue
-                    else:
-                        raise ValueError(f"{k} has no choices")
-
-            except Exception as e:
-                if self._validate_field(k, v, fix_=fix_, **kwargs[k]):
                     continue
                 else:
-                    raise ValueError(f"failed to validate field {k}") from e
+                    raise ValueError(f"{k} has no choices")
+
+            elif self._validate_field(k, v, fix_=fix_, **kwargs[k]):
+                continue
+            else:
+                raise ValueError(f"failed to validate field {k}")
+
+    def _field_has_choices(self, k):
+        try:
+            a = (
+                self.model_fields[k].json_schema_extra["choices"] is not None
+                and "choices" in self.model_fields[k].json_schema_extra
+            )
+            return a if isinstance(a, bool) else False
+        except Exception:
+            return False
 
     def _process_response(self, out_, fix_=True):
         kwargs = self.out_validation_kwargs.copy()
         for k, v in out_.items():
             if k not in kwargs:
                 kwargs = {k: {}}
-            try:
-                if (
-                    self.model_fields[k].json_schema_extra["choices"] is not None
-                    and "choices" in self.model_fields[k].json_schema_extra
-                ):
-                    self.choices[k] = self.model_fields[k].json_schema_extra["choices"]
-                    if self._validate_field(
-                        k, v, choices=self.choices[k], fix_=fix_, **kwargs[k]
-                    ):
-                        continue
-                    else:
-                        raise ValueError(f"{k} has no choices")
 
-            except Exception as e:
-                if self._validate_field(k, v, fix_=fix_, **kwargs[k]):
+            if self._field_has_choices(k):
+                self.choices[k] = self.model_fields[k].json_schema_extra["choices"]
+                if self._validate_field(
+                    k, v, choices=self.choices[k], fix_=fix_, **kwargs[k]
+                ):
                     continue
                 else:
-                    raise ValueError(f"failed to validate field {k}") from e
+                    raise ValueError(f"{k} has no choices")
+
+            elif self._validate_field(k, v, fix_=fix_, **kwargs[k]):
+                continue
+
+            else:
+                raise ValueError(f"failed to validate field {k} with value {v}")
 
     @property
     def in_(self):
@@ -286,16 +292,6 @@ class PromptTemplate(BaseComponent):
             self._process_response(out_, fix_=self.fix_output)
             self._validate_output_choices(fix_=self.fix_output)
         return self
-
-
-class ScoredTemplate(PromptTemplate):
-    confidence_score: float | None = Field(
-        -1,
-        description="a numeric score between 0 to 1 formatted in num:0.2f",
-    )
-    reason: str | None = Field(
-        default_factory=str, description="brief reason for the given output"
-    )
 
 
 # class Weather(PromptTemplate):

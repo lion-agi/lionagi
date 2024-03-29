@@ -12,7 +12,7 @@ ScoreTemplate class and a language model.
 from pydantic import Field
 import numpy as np
 from lionagi.libs import func_call, convert
-from ..prompt.prompt_template import ScoredTemplate
+from ..prompt.scored_template import ScoredTemplate
 from ..branch import Branch
 
 
@@ -183,6 +183,7 @@ async def _score(
 
 async def score(
     sentence,
+    *,
     num_instances=1,
     instruction=None,
     score_range=(1, 10),
