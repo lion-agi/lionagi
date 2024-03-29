@@ -38,7 +38,7 @@ class ToolManager:
     def has_tools(self):
         return self.registry != {}
 
-    def _register_tool(self, tool: Tool) -> None:
+    def _register_tool(self, tool: Tool | Callable) -> None:
         """
         Registers a tool in the registry. Raises a TypeError if the object is not an instance of Tool.
 
@@ -48,6 +48,8 @@ class ToolManager:
         Raises:
                 TypeError: If the provided object is not an instance of Tool.
         """
+        if isinstance(tool, Callable):
+            tool = func_to_tool(tool)[0]
         if not isinstance(tool, Tool):
             raise TypeError("Please register a Tool object.")
         name = tool.schema_["function"]["name"]

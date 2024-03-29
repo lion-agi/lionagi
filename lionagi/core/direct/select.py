@@ -13,7 +13,7 @@ from enum import Enum
 from pydantic import Field
 
 from lionagi.libs import func_call, StringMatch
-from ..prompt.prompt_template import ScoredTemplate
+from ..prompt.scored_template import ScoredTemplate
 from ..branch import Branch
 
 

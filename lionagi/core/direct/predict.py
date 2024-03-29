@@ -6,9 +6,10 @@ using a language model. It includes fields for the input sentence, number of sen
 confidence score, and reason for the prediction.
 """
 
-from pydantic import Field
 from lionagi.libs import func_call
-from ..prompt.prompt_template import ScoredTemplate
+from lionagi.integrations.bridge.pydantic_.pydantic_bridge import Field
+
+from ..prompt.scored_template import ScoredTemplate
 from ..branch import Branch
 
 
