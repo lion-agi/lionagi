@@ -43,14 +43,15 @@ class PredictTemplate(ScoredTemplate):
         default_factory=int, description="the number of sentences to predict"
     )
     answer: str | list = Field(
-        default_factory=str, description="the predicted sentence(s)"
+        default_factory=str, description="the predicted sentence(s) or desired output"
     )
     signature: str = "sentence -> answer"
 
     def __init__(
         self,
         sentence=None,
-        num_sentences=None,
+        instruction=None,
+        num_sentences=1,
         confidence_score=False,
         reason=False,
         **kwargs,
@@ -67,9 +68,9 @@ class PredictTemplate(ScoredTemplate):
         """
         super().__init__(**kwargs)
 
-        self.sentence = sentence
+        self.sentence = sentence or ''
         self.num_sentences = num_sentences
-        self.task = f"predict the next {self.num_sentences} sentence(s)"
+        self.task = f"follow instruction to predict the next {self.num_sentences} sentence(s). Instruction: {instruction}."
 
         if reason:
             self.output_fields.append("reason")
@@ -82,6 +83,8 @@ async def predict(
     sentence=None,
     num_sentences=1,
     confidence_score=False,
+    instruction=None,
+    branch=None,
     reason=False,
     retries=2,
     delay=0.5,
@@ -128,7 +131,7 @@ async def predict(
     Returns:
         PredictTemplate: The predict template with the predicted sentence(s).
     """
-    branch = Branch(
+    branch = branch or Branch(
         name=branch_name,
         system=system,
         messages=messages,
@@ -142,6 +145,7 @@ async def predict(
     )
 
     predict_template = PredictTemplate(
+        instruction=instruction,
         sentence=sentence,
         num_sentences=num_sentences,
         confidence_score=confidence_score,
