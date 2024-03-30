@@ -39,9 +39,7 @@ class SelectTemplate(ScoredTemplate):
     answer: Enum | str = Field(
         default_factory=str, description="selection from given choices"
     )
-    choices: list = Field(
-        default_factory=list, description="the given choices"
-    )
+    choices: list = Field(default_factory=list, description="the given choices")
 
     signature: str = "sentence -> answer"
 
