@@ -3,11 +3,12 @@ from lionagi.libs import func_call, convert, AsyncUtil
 from lionagi.integrations.bridge.pydantic_.pydantic_bridge import Field
 from ..prompt.action_template import ActionedTemplate
 from ..branch import Branch
+from .utils import _process_tools
 
 
 class ReactTemplate(ActionedTemplate):
     template_name: str = "default_react"
-    sentence: str | list | dict = Field(
+    sentence: str | list | dict | None= Field(
         default_factory=str,
         description="the given sentence(s) to reason and take actions on",
     )
@@ -29,7 +30,7 @@ class ReactTemplate(ActionedTemplate):
 
 
 async def _react(
-    sentence,
+    sentence=None,
     *,
     instruction=None,
     branch=None,
@@ -58,6 +59,9 @@ async def _react(
 
     instruction = instruction or ""
 
+    if branch and tools:
+        _process_tools(tools, branch)
+        
     branch = branch or Branch(
         name=branch_name,
         system=system,
@@ -109,7 +113,7 @@ async def _react(
 
 
 async def react(
-    sentence,
+    sentence=None,
     *,
     instruction=None,
     num_instances=1,
