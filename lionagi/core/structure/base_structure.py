@@ -63,6 +63,33 @@ class BaseStructure(BaseNode):
         )
 
     @singledispatchmethod
+    def pop_node(self, node: Any) -> None:
+        raise NotImplementedError
+
+    @pop_node.register(str)
+    def _(self, node: str) -> None:
+        if node in self.nodes:
+            return self.nodes.pop(node)
+        raise KeyError(f"Node {node} not found in structure.")
+
+    @pop_node.register(BaseNode)
+    def _(self, node: BaseNode) -> None:
+        if node.id_ in self.nodes:
+            return self.nodes.pop(node.id_)
+        raise KeyError(f"Node {node.id_} not found in structure.")
+
+    @pop_node.register(list)
+    def _(self, node: list[str | BaseNode]) -> None:
+        try:
+            nodes = convert.to_list(node)
+            _nodes = []
+            for _node in nodes:
+                _nodes.append(self.pop_node(_node))
+            return _nodes
+        except Exception as e:
+            raise e
+
+    @singledispatchmethod
     def has_node(self, node: Any) -> bool:
         raise NotImplementedError
 
