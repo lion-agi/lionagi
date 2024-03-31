@@ -8,7 +8,6 @@ from typing import Any, TypeVar
 from pydantic import Field, AliasChoices
 from lionagi.libs import SysUtil, convert
 
-from functools import singledispatchmethod
 from .base_mixin import BaseComponentMixin
 
 T = TypeVar("T", bound="BaseComponent")
@@ -121,29 +120,21 @@ class BaseNode(BaseComponent):
         else:
             return False
 
-    @singledispatchmethod
-    def pop_relation(self, node: Any, default=None) -> None:
-        raise NotImplementedError
-
-    @pop_relation.register(BaseComponent)
-    def _(self, node: BaseComponent, default=None) -> None:
-        if node.id_ in self.in_relations:
-            return self.in_relations.pop(node.id_, default)
-        return self.out_relations.pop(node.id_, default)
-
-    @pop_relation.register(str)
-    def _(self, node: str, default=None) -> None:
-        if node in self.in_relations:
-            return self.in_relations.pop(node, default)
-        return self.out_relations.pop(node, default)
-
-    @pop_relation.register(list)
-    def _(self, node: list[str | BaseComponent], default=None) -> None:
-        outs = []
-        for _node in convert.to_list(node):
-            outs.append(self.pop_relation(_node))
-        return outs if any(outs) else default
-
+    def pop_relation(self,  relationship: Any = None, node=None) -> None:
+        k = relationship.id_ if isinstance(relationship, BaseComponent) else relationship
+        
+        if k in self.in_relations:
+            self.in_relations.pop(k)
+        if k in self.out_relations:
+            self.out_relations.pop(k)
+        
+        if k in node.in_relations:
+            node.in_relations.pop(k)
+        elif k in node.out_relations:
+            node.out_relations.pop(k)
+        
+        return relationship
+    
     @property
     def predecessors(self):
         return list(self.in_relations.keys())

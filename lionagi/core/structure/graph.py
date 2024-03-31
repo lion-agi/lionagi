@@ -68,14 +68,17 @@ class Graph(BaseStructure):
     def get_node_successors(self, node: BaseNode):
         return self.get_node(node.successors)
 
-    def remove_relationship(self, relationship: Relationship = None) -> Relationship:
-        in_node: BaseNode = self.get_node(relationship.source_node_id)
-        out_node: BaseNode = self.get_node(relationship.target_node_id)
+    def remove_relationship(self, relationship: Relationship | str = None) -> Relationship:
+        if isinstance(relationship, str):
+            relationship = self.relationships.get(relationship, None)
+        
+        source_node: BaseNode = self.get_node(relationship.source_node_id)
+        target_node: BaseNode = self.get_node(relationship.target_node_id)
 
-        in_node.pop_relation(out_node)
-        out_node.pop_relation(in_node)
-
+        source_node.pop_relation(relationship, target_node)
         self.relationships.pop(relationship.id_)
+        return relationship
+
 
     def remove_node(self, node: BaseNode) -> bool:
         for i in node.all_relationships:

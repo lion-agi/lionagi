@@ -10,8 +10,6 @@ from lionagi.core.schema import BaseNode
 
 class BaseStructure(BaseNode):
     nodes: dict[str, BaseNode] = Field(default_factory=dict)
-    in_relationships: dict = Field(default_factory=dict)
-    out_relationships: dict = Field(default_factory=dict)
 
     @singledispatchmethod
     def add_node(self, node: Any) -> None:
