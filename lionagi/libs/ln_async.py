@@ -20,25 +20,25 @@ class AsyncUtil:
         functions.
 
         Args:
-                func (Callable):
-                        The function to call.
-                *args:
-                        Positional arguments to pass to the function.
-                error_map (Dict[type, Callable], optional):
-                        A dictionary mapping error types to handler functions.
-                **kwargs:
-                        Keyword arguments to pass to the function.
+                                        func (Callable):
+                                                                        The function to call.
+                                        *args:
+                                                                        Positional arguments to pass to the function.
+                                        error_map (Dict[type, Callable], optional):
+                                                                        A dictionary mapping error types to handler functions.
+                                        **kwargs:
+                                                                        Keyword arguments to pass to the function.
 
         Returns:
-                Any: The result of the function call.
+                                        Any: The result of the function call.
 
         Raises:
-                Exception: Propagates any exceptions not handled by the error_map.
+                                        Exception: Propagates any exceptions not handled by the error_map.
 
         examples:
-                >>> async def async_add(x, y): return x + y
-                >>> asyncio.run(_call_handler(async_add, 1, 2))
-                3
+                                        >>> async def async_add(x, y): return x + y
+                                        >>> asyncio.run(_call_handler(async_add, 1, 2))
+                                        3
         """
         try:
             if not AsyncUtil.is_coroutine_func(func):
@@ -71,10 +71,10 @@ class AsyncUtil:
         Checks whether a function is an asyncio coroutine function.
 
         Args:
-                func: The function to check.
+                                        func: The function to check.
 
         Returns:
-                True if the function is a coroutine function, False otherwise.
+                                        True if the function is a coroutine function, False otherwise.
         """
         return asyncio.iscoroutinefunction(func)
 
@@ -87,15 +87,15 @@ class AsyncUtil:
         handle errors based on a given error mapping.
 
         Args:
-                error (Exception):
-                        The error to handle.
-                error_map (Mapping[type, Callable]):
-                        A dictionary mapping error types to handler functions.
+                                        error (Exception):
+                                                                        The error to handle.
+                                        error_map (Mapping[type, Callable]):
+                                                                        A dictionary mapping error types to handler functions.
 
         examples:
-                >>> def handle_value_error(e): print("ValueError occurred")
-                >>> custom_error_handler(ValueError(), {ValueError: handle_value_error})
-                ValueError occurred
+                                        >>> def handle_value_error(e): print("ValueError occurred")
+                                        >>> custom_error_handler(ValueError(), {ValueError: handle_value_error})
+                                        ValueError occurred
         """
         if handler := error_map.get(type(error)):
             handler(error)
@@ -110,12 +110,12 @@ class AsyncUtil:
         Executes a function, automatically handling synchronous and asynchronous functions.
 
         Args:
-                func: The function to execute.
-                *args: Positional arguments for the function.
-                **kwargs: Keyword arguments for the function.
+                                        func: The function to execute.
+                                        *args: Positional arguments for the function.
+                                        **kwargs: Keyword arguments for the function.
 
         Returns:
-                The result of the function execution.
+                                        The result of the function execution.
         """
 
         try:

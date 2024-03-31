@@ -113,8 +113,8 @@ class TestFuzzyParseJson(unittest.TestCase):
             Sample function.
 
             Args:
-                    param1 (int): Description of param1.
-                    param2 (str): Description of param2.
+                                            param1 (int): Description of param1.
+                                            param2 (str): Description of param2.
             """
             pass
 

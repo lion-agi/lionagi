@@ -14,11 +14,11 @@ def to_langchain_document(datanode: T, **kwargs: Any) -> Any:
     to match the Langchain Document schema before creating a Langchain Document object.
 
     Args:
-            datanode (T): The data node to convert. Must have a `to_dict` method.
-            **kwargs: Additional keyword arguments to be passed to the Langchain Document constructor.
+                                    datanode (T): The data node to convert. Must have a `to_dict` method.
+                                    **kwargs: Additional keyword arguments to be passed to the Langchain Document constructor.
 
     Returns:
-            Any: An instance of `LangchainDocument` populated with data from the input node.
+                                    Any: An instance of `LangchainDocument` populated with data from the input node.
     """
 
     SysUtil.check_import("langchain")
@@ -43,20 +43,20 @@ def langchain_loader(
     It passes specified arguments and keyword arguments to the loader for data retrieval or processing.
 
     Args:
-            loader (Union[str, Callable]): A string representing the loader's name or a callable loader function.
-            loader_args (List[Any], optional): A list of positional arguments for the loader.
-            loader_kwargs (Dict[str, Any], optional): A dictionary of keyword arguments for the loader.
+                                    loader (Union[str, Callable]): A string representing the loader's name or a callable loader function.
+                                    loader_args (List[Any], optional): A list of positional arguments for the loader.
+                                    loader_kwargs (Dict[str, Any], optional): A dictionary of keyword arguments for the loader.
 
     Returns:
-            Any: The result returned by the loader function, typically data loaded into a specified format.
+                                    Any: The result returned by the loader function, typically data loaded into a specified format.
 
     Raises:
-            ValueError: If the loader cannot be initialized or fails to load data.
+                                    ValueError: If the loader cannot be initialized or fails to load data.
 
     Examples:
-            >>> data = langchain_loader("json_loader", loader_args=["data.json"])
-            >>> isinstance(data, dict)
-            True
+                                    >>> data = langchain_loader("json_loader", loader_args=["data.json"])
+                                    >>> isinstance(data, dict)
+                                    True
     """
 
     SysUtil.check_import("langchain")
@@ -91,16 +91,16 @@ def langchain_text_splitter(
     or documents into chunks. The splitter can be configured with additional arguments and keyword arguments.
 
     Args:
-            data (Union[str, List]): The text or list of texts to be split.
-            splitter (Union[str, Callable]): The name of the splitter function or the splitter function itself.
-            splitter_args (List[Any], optional): Positional arguments to pass to the splitter function.
-            splitter_kwargs (Dict[str, Any], optional): Keyword arguments to pass to the splitter function.
+                                    data (Union[str, List]): The text or list of texts to be split.
+                                    splitter (Union[str, Callable]): The name of the splitter function or the splitter function itself.
+                                    splitter_args (List[Any], optional): Positional arguments to pass to the splitter function.
+                                    splitter_kwargs (Dict[str, Any], optional): Keyword arguments to pass to the splitter function.
 
     Returns:
-            List[str]: A list of text chunks produced by the text splitter.
+                                    List[str]: A list of text chunks produced by the text splitter.
 
     Raises:
-            ValueError: If the splitter is invalid or fails during the split operation.
+                                    ValueError: If the splitter is invalid or fails during the split operation.
     """
     splitter_args = splitter_args or []
     splitter_kwargs = splitter_kwargs or {}

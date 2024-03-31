@@ -5,7 +5,6 @@ from lionagi.core.schema import DataNode
 from ..bridge.langchain_.langchain_bridge import LangchainBridge
 from ..bridge.llamaindex_.llama_index_bridge import LlamaIndexBridge
 
-
 from ..loader.load_util import ChunkerType, file_to_chunks, _datanode_parser
 
 

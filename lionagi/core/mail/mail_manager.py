@@ -12,9 +12,9 @@ class MailManager:
     and deletion of sources, and it handles the collection and dispatch of mails to and from these sources.
 
     Attributes:
-            sources (Dict[str, Any]): A dictionary mapping source identifiers to their attributes.
-            mails (Dict[str, Dict[str, deque]]): A nested dictionary storing queued mail items, organized by recipient
-                    and sender.
+        sources (Dict[str, Any]): A dictionary mapping source identifiers to their attributes.
+        mails (Dict[str, Dict[str, deque]]): A nested dictionary storing queued mail items, organized by recipient
+                                        and sender.
     """
 
     def __init__(self, sources):

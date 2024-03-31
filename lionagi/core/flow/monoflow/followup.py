@@ -7,7 +7,7 @@ process instructions, system messages, and invoke tools during the conversation.
 
 from typing import Callable
 from lionagi.core.messages import Instruction
-from lionagi.core.schema import Tool
+from ...tool.tool import Tool
 from .chat import MonoChat
 
 
@@ -17,26 +17,26 @@ class MonoFollowup(MonoChat):
     and optionally invoking tools.
 
     Attributes:
-        FOLLOWUP_PROMPT (str): The default prompt for followup chats.
-        OUTPUT_PROMPT (str): The default prompt for presenting the final output to the user.
+                    FOLLOWUP_PROMPT (str): The default prompt for followup chats.
+                    OUTPUT_PROMPT (str): The default prompt for presenting the final output to the user.
 
     Methods:
-        async followup(self, instruction, context=None, sender=None, system=None, tools=None,
-                       max_followup=1, followup_prompt=None, output_prompt=None, **kwargs):
-            Performs a series of followup chats with an LLM, processing instructions and system messages,
-            and optionally invoking tools.
+                    async followup(self, instruction, context=None, sender=None, system=None, tools=None,
+                                                                       max_followup=1, followup_prompt=None, output_prompt=None, **kwargs):
+                                    Performs a series of followup chats with an LLM, processing instructions and system messages,
+                                    and optionally invoking tools.
 
-        _get_prompt(prompt=None, default=None, num_followup=None, instruction=None) -> str:
-            Retrieves the appropriate prompt for the followup chat based on the provided parameters.
+                    _get_prompt(prompt=None, default=None, num_followup=None, instruction=None) -> str:
+                                    Retrieves the appropriate prompt for the followup chat based on the provided parameters.
 
-        _create_followup_config(self, tools, tool_choice="auto", **kwargs) -> dict:
-            Creates the configuration for the followup chat based on the provided tools and parameters.
+                    _create_followup_config(self, tools, tool_choice="auto", **kwargs) -> dict:
+                                    Creates the configuration for the followup chat based on the provided tools and parameters.
 
-        async _followup(self, instruction, context=None, sender=None, system=None, tools=None,
-                        max_followup=1, auto=False, followup_prompt=None, output_prompt=None,
-                        out=True, **kwargs) -> str:
-            Performs the actual followup chats with the LLM, processing instructions and system messages,
-            and optionally invoking tools.
+                    async _followup(self, instruction, context=None, sender=None, system=None, tools=None,
+                                                                                    max_followup=1, auto=False, followup_prompt=None, output_prompt=None,
+                                                                                    out=True, **kwargs) -> str:
+                                    Performs the actual followup chats with the LLM, processing instructions and system messages,
+                                    and optionally invoking tools.
     """
 
     FOLLOWUP_PROMPT = """
@@ -64,18 +64,18 @@ class MonoFollowup(MonoChat):
         and optionally invoking tools.
 
         Args:
-            instruction (Instruction | str | dict[str, dict | str]): The instruction for the followup chat.
-            context (Optional[Any]): Additional context for the followup chat.
-            sender (Optional[str]): The sender of the followup chat message.
-            system (Optional[Any]): System message to be processed during the followup chat.
-            tools (Optional[Any]): Specifies tools to be invoked during the followup chat.
-            max_followup (int): The maximum number of followup chats allowed (default: 1).
-            followup_prompt (Optional[str]): The prompt to use for followup chats.
-            output_prompt (Optional[str]): The prompt to use for presenting the final output to the user.
-            **kwargs: Additional keyword arguments for the followup chat.
+                        instruction (Instruction | str | dict[str, dict | str]): The instruction for the followup chat.
+                        context (Optional[Any]): Additional context for the followup chat.
+                        sender (Optional[str]): The sender of the followup chat message.
+                        system (Optional[Any]): System message to be processed during the followup chat.
+                        tools (Optional[Any]): Specifies tools to be invoked during the followup chat.
+                        max_followup (int): The maximum number of followup chats allowed (default: 1).
+                        followup_prompt (Optional[str]): The prompt to use for followup chats.
+                        output_prompt (Optional[str]): The prompt to use for presenting the final output to the user.
+                        **kwargs: Additional keyword arguments for the followup chat.
 
         Returns:
-            str: The result of the followup chat.
+                        str: The result of the followup chat.
         """
         return await self._followup(
             instruction=instruction,
@@ -95,13 +95,13 @@ class MonoFollowup(MonoChat):
         Retrieves the appropriate prompt for the followup chat based on the provided parameters.
 
         Args:
-            prompt (Optional[str]): The prompt to use for the followup chat.
-            default (Optional[str]): The default prompt to use if no specific prompt is provided.
-            num_followup (Optional[int]): The number of remaining followup chats.
-            instruction (Optional[Any]): The original user instruction.
+                        prompt (Optional[str]): The prompt to use for the followup chat.
+                        default (Optional[str]): The default prompt to use if no specific prompt is provided.
+                        num_followup (Optional[int]): The number of remaining followup chats.
+                        instruction (Optional[Any]): The original user instruction.
 
         Returns:
-            str: The appropriate prompt for the followup chat.
+                        str: The appropriate prompt for the followup chat.
         """
         if prompt is not None:
             return prompt
@@ -121,15 +121,15 @@ class MonoFollowup(MonoChat):
         Creates the configuration for the followup chat based on the provided tools and parameters.
 
         Args:
-            tools (Optional[Any]): Specifies tools to be invoked during the followup chat.
-            tool_choice (str): The choice of tools to use (default: "auto").
-            **kwargs: Additional keyword arguments for the followup chat configuration.
+                        tools (Optional[Any]): Specifies tools to be invoked during the followup chat.
+                        tool_choice (str): The choice of tools to use (default: "auto").
+                        **kwargs: Additional keyword arguments for the followup chat configuration.
 
         Returns:
-            dict: The configuration for the followup chat.
+                        dict: The configuration for the followup chat.
 
         Raises:
-            ValueError: If no tools are found and registered.
+                        ValueError: If no tools are found and registered.
         """
         if tools and isinstance(tools, list) and isinstance(tools[0], (Callable, Tool)):
             self.branch.tool_manager.register_tools(tools)
@@ -161,20 +161,20 @@ class MonoFollowup(MonoChat):
         and optionally invoking tools.
 
         Args:
-            instruction (Instruction | str | dict[str, dict | str]): The instruction for the followup chat.
-            context (Optional[Any]): Additional context for the followup chat.
-            sender (Optional[str]): The sender of the followup chat message.
-            system (Optional[Any]): System message to be processed during the followup chat.
-            tools (Optional[Any]): Specifies tools to be invoked during the followup chat.
-            max_followup (int): The maximum number of followup chats allowed (default: 1).
-            auto (bool): Flag indicating whether to automatically determine if the chat is finished (default: False).
-            followup_prompt (Optional[str]): The prompt to use for followup chats.
-            output_prompt (Optional[str]): The prompt to use for presenting the final output to the user.
-            out (bool): Flag indicating whether to return the output of the followup chat (default: True).
-            **kwargs: Additional keyword arguments for the followup chat.
+                        instruction (Instruction | str | dict[str, dict | str]): The instruction for the followup chat.
+                        context (Optional[Any]): Additional context for the followup chat.
+                        sender (Optional[str]): The sender of the followup chat message.
+                        system (Optional[Any]): System message to be processed during the followup chat.
+                        tools (Optional[Any]): Specifies tools to be invoked during the followup chat.
+                        max_followup (int): The maximum number of followup chats allowed (default: 1).
+                        auto (bool): Flag indicating whether to automatically determine if the chat is finished (default: False).
+                        followup_prompt (Optional[str]): The prompt to use for followup chats.
+                        output_prompt (Optional[str]): The prompt to use for presenting the final output to the user.
+                        out (bool): Flag indicating whether to return the output of the followup chat (default: True).
+                        **kwargs: Additional keyword arguments for the followup chat.
 
         Returns:
-            Optional[str]: The result of the followup chat, if `out` is True.
+                        Optional[str]: The result of the followup chat, if `out` is True.
         """
         config = self._create_followup_config(tools, **kwargs)
 

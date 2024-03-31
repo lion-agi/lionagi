@@ -29,20 +29,20 @@ class APIUtil:
         Returns the corresponding HTTP method function from the http_session object.
 
         Args:
-                http_session: The session object from the aiohttp library.
-                method: The HTTP method as a string.
+                                        http_session: The session object from the aiohttp library.
+                                        method: The HTTP method as a string.
 
         Returns:
-                The Callable for the specified HTTP method.
+                                        The Callable for the specified HTTP method.
 
         Raises:
-                ValueError: If the method is not one of the allowed ones.
+                                        ValueError: If the method is not one of the allowed ones.
 
         Examples:
-                >>> session = aiohttp.ClientSession()
-                >>> post_method = APIUtil.api_method(session, "post")
-                >>> print(post_method)
-                <bound method ClientSession._request of <aiohttp.client.ClientSession object at 0x...>>
+                                        >>> session = aiohttp.ClientSession()
+                                        >>> post_method = APIUtil.api_method(session, "post")
+                                        >>> print(post_method)
+                                        <bound method ClientSession._request of <aiohttp.client.ClientSession object at 0x...>>
         """
         if method in {"post", "delete", "head", "options", "patch"}:
             return getattr(http_session, method)
@@ -57,18 +57,18 @@ class APIUtil:
         Checks if the given response_json dictionary contains an "error" key.
 
         Args:
-                response_json: The JSON assistant_response as a dictionary.
+                                        response_json: The JSON assistant_response as a dictionary.
 
         Returns:
-                True if there is an error, False otherwise.
+                                        True if there is an error, False otherwise.
 
         Examples:
-                >>> response_json_with_error = {"error": "Something went wrong"}
-                >>> APIUtil.api_error(response_json_with_error)
-                True
-                >>> response_json_without_error = {"result": "Success"}
-                >>> APIUtil.api_error(response_json_without_error)
-                False
+                                        >>> response_json_with_error = {"error": "Something went wrong"}
+                                        >>> APIUtil.api_error(response_json_with_error)
+                                        True
+                                        >>> response_json_without_error = {"result": "Success"}
+                                        >>> APIUtil.api_error(response_json_without_error)
+                                        False
         """
         if "error" in response_json:
             logging.warning(f"API call failed with error: {response_json['error']}")
@@ -81,18 +81,18 @@ class APIUtil:
         Checks if the error message in the response_json dictionary contains the phrase "Rate limit".
 
         Args:
-                response_json: The JSON assistant_response as a dictionary.
+                                        response_json: The JSON assistant_response as a dictionary.
 
         Returns:
-                True if the phrase "Rate limit" is found, False otherwise.
+                                        True if the phrase "Rate limit" is found, False otherwise.
 
         Examples:
-                >>> response_json_with_rate_limit = {"error": {"message": "Rate limit exceeded"}}
-                >>> api_rate_limit_error(response_json_with_rate_limit)
-                True
-                >>> response_json_without_rate_limit = {"error": {"message": "Another error"}}
-                >>> api_rate_limit_error(response_json_without_rate_limit)
-                False
+                                        >>> response_json_with_rate_limit = {"error": {"message": "Rate limit exceeded"}}
+                                        >>> api_rate_limit_error(response_json_with_rate_limit)
+                                        True
+                                        >>> response_json_without_rate_limit = {"error": {"message": "Another error"}}
+                                        >>> api_rate_limit_error(response_json_without_rate_limit)
+                                        False
         """
         return "Rate limit" in response_json.get("error", {}).get("message", "")
 
@@ -103,18 +103,18 @@ class APIUtil:
         Extracts the API endpoint from a given URL using a regular expression.
 
         Args:
-                request_url: The full URL to the API endpoint.
+                                        request_url: The full URL to the API endpoint.
 
         Returns:
-                The extracted endpoint or an empty string if the pattern does not match.
+                                        The extracted endpoint or an empty string if the pattern does not match.
 
         Examples:
-                >>> valid_url = "https://api.example.com/v1/users"
-                >>> api_endpoint_from_url(valid_url)
-                'users'
-                >>> invalid_url = "https://api.example.com/users"
-                >>> api_endpoint_from_url(invalid_url)
-                ''
+                                        >>> valid_url = "https://api.example.com/v1/users"
+                                        >>> api_endpoint_from_url(valid_url)
+                                        'users'
+                                        >>> invalid_url = "https://api.example.com/users"
+                                        >>> api_endpoint_from_url(invalid_url)
+                                        ''
         """
         match = re.search(r"^https://[^/]+(/.+)?/v\d+/(.+)$", request_url)
         return match[2] if match else ""
@@ -127,22 +127,22 @@ class APIUtil:
         Makes an API call and automatically retries on rate limit error.
 
         Args:
-                http_session: The session object from the aiohttp library.
-                method: The HTTP method as a string.
-                url: The URL to which the request is made.
-                **kwargs: Additional keyword arguments to pass to the API call.
+                                        http_session: The session object from the aiohttp library.
+                                        method: The HTTP method as a string.
+                                        url: The URL to which the request is made.
+                                        **kwargs: Additional keyword arguments to pass to the API call.
 
         Returns:
-                The JSON assistant_response as a dictionary.
+                                        The JSON assistant_response as a dictionary.
 
         Examples:
-                >>> session = aiohttp.ClientSession()
-                >>> success_url = "https://api.example.com/v1/success"
-                >>> print(await unified_api_call(session, 'get', success_url))
-                {'result': 'Success'}
-                >>> rate_limit_url = "https://api.example.com/v1/rate_limit"
-                >>> print(await unified_api_call(session, 'get', rate_limit_url))
-                {'error': {'message': 'Rate limit exceeded'}}
+                                        >>> session = aiohttp.ClientSession()
+                                        >>> success_url = "https://api.example.com/v1/success"
+                                        >>> print(await unified_api_call(session, 'get', success_url))
+                                        {'result': 'Success'}
+                                        >>> rate_limit_url = "https://api.example.com/v1/rate_limit"
+                                        >>> print(await unified_api_call(session, 'get', rate_limit_url))
+                                        {'error': {'message': 'Rate limit exceeded'}}
         """
         api_call = APIUtil.api_method(http_session, method)
         retry_count = 3
@@ -190,14 +190,14 @@ class APIUtil:
         Retries an API call on failure, with exponential backoff.
 
         Args:
-                http_session: The aiohttp client session.
-                url: The URL to make the API call.
-                retries: The number of times to retry.
-                backoff_factor: The backoff factor for retries.
-                **kwargs: Additional arguments for the API call.
+                                        http_session: The aiohttp client session.
+                                        url: The URL to make the API call.
+                                        retries: The number of times to retry.
+                                        backoff_factor: The backoff factor for retries.
+                                        **kwargs: Additional arguments for the API call.
 
         Returns:
-                The assistant_response from the API call, if successful; otherwise, None.
+                                        The assistant_response from the API call, if successful; otherwise, None.
         """
         for attempt in range(retries):
             try:
@@ -228,21 +228,21 @@ class APIUtil:
         Uploads a file to a specified URL with a retry mechanism for handling failures.
 
         Args:
-                http_session: The HTTP session object to use for making the request.
-                url: The URL to which the file will be uploaded.
-                file_path: The path to the file that will be uploaded.
-                param_name: The name of the parameter expected by the server for the file upload.
-                additional_data: Additional data to be sent with the upload.
-                retries: The number of times to retry the upload in case of failure.
+                                        http_session: The HTTP session object to use for making the request.
+                                        url: The URL to which the file will be uploaded.
+                                        file_path: The path to the file that will be uploaded.
+                                        param_name: The name of the parameter expected by the server for the file upload.
+                                        additional_data: Additional data to be sent with the upload.
+                                        retries: The number of times to retry the upload in case of failure.
 
         Returns:
-                The HTTP assistant_response object.
+                                        The HTTP assistant_response object.
 
         Examples:
-                >>> session = aiohttp.ClientSession()
-                >>> assistant_response = await APIUtil.upload_file_with_retry(session, 'http://example.com/upload', 'path/to/file.txt')
-                >>> assistant_response.status
-                200
+                                        >>> session = aiohttp.ClientSession()
+                                        >>> assistant_response = await APIUtil.upload_file_with_retry(session, 'http://example.com/upload', 'path/to/file.txt')
+                                        >>> assistant_response.status
+                                        200
         """
         for attempt in range(retries):
             try:
@@ -274,20 +274,20 @@ class APIUtil:
         Retrieves an OAuth token from the authentication server and caches it to avoid unnecessary requests.
 
         Args:
-                http_session: The HTTP session object to use for making the request.
-                auth_url: The URL of the authentication server.
-                client_id: The client ID for OAuth authentication.
-                client_secret: The client secret for OAuth authentication.
-                scope: The scope for which the OAuth token is requested.
+                                        http_session: The HTTP session object to use for making the request.
+                                        auth_url: The URL of the authentication server.
+                                        client_id: The client ID for OAuth authentication.
+                                        client_secret: The client secret for OAuth authentication.
+                                        scope: The scope for which the OAuth token is requested.
 
         Returns:
-                The OAuth token as a string.
+                                        The OAuth token as a string.
 
         Examples:
-                >>> session = aiohttp.ClientSession()
-                >>> token = await APIUtil.get_oauth_token_with_cache(session, 'http://auth.example.com', 'client_id', 'client_secret', 'read')
-                >>> token
-                'mock_access_token'
+                                        >>> session = aiohttp.ClientSession()
+                                        >>> token = await APIUtil.get_oauth_token_with_cache(session, 'http://auth.example.com', 'client_id', 'client_secret', 'read')
+                                        >>> token
+                                        'mock_access_token'
         """
         async with http_session.post(
             auth_url,
@@ -310,12 +310,12 @@ class APIUtil:
         Makes an API call.
 
         Args:
-                http_session: The aiohttp client session.
-                url: The URL for the API call.
-                **kwargs: Additional arguments for the API call.
+                                        http_session: The aiohttp client session.
+                                        url: The URL for the API call.
+                                        **kwargs: Additional arguments for the API call.
 
         Returns:
-                The assistant_response from the API call, if successful; otherwise, None.
+                                        The assistant_response from the API call, if successful; otherwise, None.
         """
         try:
             async with http_session.get(url, **kwargs) as response:
@@ -339,20 +339,20 @@ class APIUtil:
         for the OpenAI API.
 
         Parameters:
-                payload (Mapping[str, Any]): The payload of the request.
+                                        payload (Mapping[str, Any]): The payload of the request.
 
-                api_endpoint (str): The specific API endpoint for the request.
+                                        api_endpoint (str): The specific API endpoint for the request.
 
-                token_encoding_name (str): The name of the token encoding method.
+                                        token_encoding_name (str): The name of the token encoding method.
 
         Returns:
-                int: The estimated number of tokens required for the request.
+                                        int: The estimated number of tokens required for the request.
 
         Example:
-                >>> rate_limiter = OpenAIRateLimiter(100, 200)
-                >>> payload = {'prompt': 'Translate the following text:', 'max_tokens': 50}
-                >>> rate_limiter.calculate_num_token(payload, 'completions')
-                # Expected token calculation for the given payload and endpoint.
+                                        >>> rate_limiter = OpenAIRateLimiter(100, 200)
+                                        >>> payload = {'prompt': 'Translate the following text:', 'max_tokens': 50}
+                                        >>> rate_limiter.calculate_num_token(payload, 'completions')
+                                        # Expected token calculation for the given payload and endpoint.
         """
         import tiktoken
 
@@ -424,18 +424,18 @@ class StatusTracker:
     Keeps track of various task statuses within a system.
 
     Attributes:
-            num_tasks_started (int): The number of tasks that have been initiated.
-            num_tasks_in_progress (int): The number of tasks currently being processed.
-            num_tasks_succeeded (int): The number of tasks that have completed successfully.
-            num_tasks_failed (int): The number of tasks that have failed.
-            num_rate_limit_errors (int): The number of tasks that failed due to rate limiting.
-            num_api_errors (int): The number of tasks that failed due to API errors.
-            num_other_errors (int): The number of tasks that failed due to other errors.
+                                    num_tasks_started (int): The number of tasks that have been initiated.
+                                    num_tasks_in_progress (int): The number of tasks currently being processed.
+                                    num_tasks_succeeded (int): The number of tasks that have completed successfully.
+                                    num_tasks_failed (int): The number of tasks that have failed.
+                                    num_rate_limit_errors (int): The number of tasks that failed due to rate limiting.
+                                    num_api_errors (int): The number of tasks that failed due to API errors.
+                                    num_other_errors (int): The number of tasks that failed due to other errors.
 
     Examples:
-            >>> tracker = StatusTracker()
-            >>> tracker.num_tasks_started += 1
-            >>> tracker.num_tasks_succeeded += 1
+                                    >>> tracker = StatusTracker()
+                                    >>> tracker.num_tasks_started += 1
+                                    >>> tracker.num_tasks_succeeded += 1
     """
 
     num_tasks_started: int = 0
@@ -455,12 +455,12 @@ class BaseRateLimiter(ABC):
     the replenishment of request and token capacities at regular intervals.
 
     Attributes:
-            interval: The time interval in seconds for replenishing capacities.
-            max_requests: The maximum number of requests allowed per interval.
-            max_tokens: The maximum number of tokens allowed per interval.
-            available_request_capacity: The current available request capacity.
-            available_token_capacity: The current available token capacity.
-            rate_limit_replenisher_task: The asyncio task for replenishing capacities.
+                                    interval: The time interval in seconds for replenishing capacities.
+                                    max_requests: The maximum number of requests allowed per interval.
+                                    max_tokens: The maximum number of tokens allowed per interval.
+                                    available_request_capacity: The current available request capacity.
+                                    available_token_capacity: The current available token capacity.
+                                    rate_limit_replenisher_task: The asyncio task for replenishing capacities.
     """
 
     def __init__(
@@ -533,16 +533,16 @@ class BaseRateLimiter(ABC):
         Makes an API call to the specified endpoint using the provided HTTP session.
 
         Args:
-                http_session: The aiohttp client session to use for the API call.
-                endpoint: The API endpoint to call.
-                base_url: The base URL of the API.
-                api_key: The API key for authentication.
-                max_attempts: The maximum number of attempts for the API call.
-                method: The HTTP method to use for the API call.
-                payload: The payload to send with the API call.
+                                        http_session: The aiohttp client session to use for the API call.
+                                        endpoint: The API endpoint to call.
+                                        base_url: The base URL of the API.
+                                        api_key: The API key for authentication.
+                                        max_attempts: The maximum number of attempts for the API call.
+                                        method: The HTTP method to use for the API call.
+                                        payload: The payload to send with the API call.
 
         Returns:
-                The JSON assistant_response from the API call if successful, otherwise None.
+                                        The JSON assistant_response from the API call if successful, otherwise None.
         """
         endpoint = APIUtil.api_endpoint_from_url(base_url + endpoint)
         while True:
@@ -602,13 +602,13 @@ class BaseRateLimiter(ABC):
         Creates an instance of BaseRateLimiter and starts the replenisher task.
 
         Args:
-                max_requests: The maximum number of requests allowed per interval.
-                max_tokens: The maximum number of tokens allowed per interval.
-                interval: The time interval in seconds for replenishing capacities.
-                token_encoding_name: The name of the token encoding to use.
+                                        max_requests: The maximum number of requests allowed per interval.
+                                        max_tokens: The maximum number of tokens allowed per interval.
+                                        interval: The time interval in seconds for replenishing capacities.
+                                        token_encoding_name: The name of the token encoding to use.
 
         Returns:
-                An instance of BaseRateLimiter with the replenisher task started.
+                                        An instance of BaseRateLimiter with the replenisher task started.
         """
         instance = cls(max_requests, max_tokens, interval, token_encoding_name)
         instance.rate_limit_replenisher_task = AsyncUtil.create_task(
@@ -642,25 +642,25 @@ class EndPoint:
     This class encapsulates the details of an API endpoint, including its rate limiter.
 
     Attributes:
-            endpoint (str): The API endpoint path.
-            rate_limiter_class (Type[li.BaseRateLimiter]): The class used for rate limiting requests to the endpoint.
-            max_requests (int): The maximum number of requests allowed per interval.
-            max_tokens (int): The maximum number of tokens allowed per interval.
-            interval (int): The time interval in seconds for replenishing rate limit capacities.
-            config (Mapping): Configuration parameters for the endpoint.
-            rate_limiter (Optional[li.BaseRateLimiter]): The rate limiter instance for this endpoint.
+                                    endpoint (str): The API endpoint path.
+                                    rate_limiter_class (Type[li.BaseRateLimiter]): The class used for rate limiting requests to the endpoint.
+                                    max_requests (int): The maximum number of requests allowed per interval.
+                                    max_tokens (int): The maximum number of tokens allowed per interval.
+                                    interval (int): The time interval in seconds for replenishing rate limit capacities.
+                                    config (Mapping): Configuration parameters for the endpoint.
+                                    rate_limiter (Optional[li.BaseRateLimiter]): The rate limiter instance for this endpoint.
 
     Examples:
-            # Example usage of EndPoint with SimpleRateLimiter
-            endpoint = EndPoint(
-                    max_requests=100,
-                    max_tokens=1000,
-                    interval=60,
-                    endpoint_='chat/completions',
-                    rate_limiter_class=li.SimpleRateLimiter,
-                    config={'param1': 'value1'}
-            )
-            asyncio.run(endpoint.init_rate_limiter())
+                                    # Example usage of EndPoint with SimpleRateLimiter
+                                    endpoint = EndPoint(
+                                                                    max_requests=100,
+                                                                    max_tokens=1000,
+                                                                    interval=60,
+                                                                    endpoint_='chat/completions',
+                                                                    rate_limiter_class=li.SimpleRateLimiter,
+                                                                    config={'param1': 'value1'}
+                                    )
+                                    asyncio.run(endpoint.init_rate_limiter())
     """
 
     def __init__(
@@ -698,10 +698,10 @@ class BaseService:
     This class provides a foundation for services that need to make API calls with rate limiting.
 
     Attributes:
-            api_key (Optional[str]): The API key used for authentication.
-            schema (Mapping[str, Any]): The schema defining the service's endpoints.
-            status_tracker (StatusTracker): The object tracking the status of API calls.
-            endpoints (Mapping[str, EndPoint]): A dictionary of endpoint objects.
+                                    api_key (Optional[str]): The API key used for authentication.
+                                    schema (Mapping[str, Any]): The schema defining the service's endpoints.
+                                    status_tracker (StatusTracker): The object tracking the status of API calls.
+                                    endpoints (Mapping[str, EndPoint]): A dictionary of endpoint objects.
     """
 
     base_url: str = ""
@@ -735,7 +735,7 @@ class BaseService:
         Initializes the specified endpoint or all endpoints if none is specified.
 
         Args:
-                endpoint_: The endpoint(s) to initialize. Can be a string, an EndPoint, a list of strings, or a list of EndPoints.
+                                        endpoint_: The endpoint(s) to initialize. Can be a string, an EndPoint, a list of strings, or a list of EndPoints.
         """
 
         if endpoint_:
@@ -811,15 +811,15 @@ class BaseService:
         Calls the specified API endpoint with the given payload and method.
 
         Args:
-                payload: The payload to send with the API call.
-                endpoint: The endpoint to call.
-                method: The HTTP method to use for the call.
+                                        payload: The payload to send with the API call.
+                                        endpoint: The endpoint to call.
+                                        method: The HTTP method to use for the call.
 
         Returns:
-                The assistant_response from the API call.
+                                        The assistant_response from the API call.
 
         Raises:
-                ValueError: If the endpoint has not been initialized.
+                                        ValueError: If the endpoint has not been initialized.
         """
         if endpoint not in self.endpoints.keys():
             raise ValueError(f"The endpoint {endpoint} has not initialized.")
@@ -843,13 +843,13 @@ class PayloadPackage:
         Creates a payload for the chat completion operation.
 
         Args:
-                messages: The messages to include in the chat completion.
-                llmconfig: Configuration for the language model.
-                schema: The schema describing required and optional fields.
-                **kwargs: Additional keyword arguments.
+                                        messages: The messages to include in the chat completion.
+                                        llmconfig: Configuration for the language model.
+                                        schema: The schema describing required and optional fields.
+                                        **kwargs: Additional keyword arguments.
 
         Returns:
-                The constructed payload.
+                                        The constructed payload.
         """
         return APIUtil.create_payload(
             input_=messages,
@@ -866,13 +866,13 @@ class PayloadPackage:
         Creates a payload for the fine-tuning operation.
 
         Args:
-                training_file: The file containing training data.
-                llmconfig: Configuration for the language model.
-                schema: The schema describing required and optional fields.
-                **kwargs: Additional keyword arguments.
+                                        training_file: The file containing training data.
+                                        llmconfig: Configuration for the language model.
+                                        schema: The schema describing required and optional fields.
+                                        **kwargs: Additional keyword arguments.
 
         Returns:
-                The constructed payload.
+                                        The constructed payload.
         """
         return APIUtil._create_payload(
             input_=training_file,

@@ -23,20 +23,20 @@ def to_list(input_, /, *, flatten: bool = True, dropna: bool = True) -> list[Any
     Specialized implementations may use additional keyword arguments specific to their conversion logic.
 
     Args:
-            input_ (Any): The input object to convert to a list.
-            flatten (bool): If True, and the input is a nested list, the function will attempt to flatten it.
-            dropna (bool): If True, None values will be removed from the resulting list.
+                                    input_ (Any): The input object to convert to a list.
+                                    flatten (bool): If True, and the input is a nested list, the function will attempt to flatten it.
+                                    dropna (bool): If True, None values will be removed from the resulting list.
 
     Returns:
-            list[Any]: A list representation of the input, with modifications based on `flatten` and `dropna`.
+                                    list[Any]: A list representation of the input, with modifications based on `flatten` and `dropna`.
 
     Raises:
-            ValueError: If the input type is unsupported or cannot be converted to a list.
+                                    ValueError: If the input type is unsupported or cannot be converted to a list.
 
     Note:
-            - This function uses `@singledispatch` to handle different input types via overloading.
-            - The default behavior for dictionaries is to wrap them in a list without flattening.
-            - For specific behaviors with lists, tuples, sets, and other types, see the registered implementations.
+                                    - This function uses `@singledispatch` to handle different input types via overloading.
+                                    - The default behavior for dictionaries is to wrap them in a list without flattening.
+                                    - For specific behaviors with lists, tuples, sets, and other types, see the registered implementations.
     """
     try:
         if not isinstance(input_, Iterable) or isinstance(
@@ -75,19 +75,19 @@ def to_dict(input_, /, *args, **kwargs) -> dict[Any, Any]:
     and Pydantic's BaseModel, utilizing the single dispatch mechanism for type-specific conversions.
 
     Args:
-            input_ (Any): The input object to convert to a dictionary.
-            *args: Variable length argument list for additional options in type-specific handlers.
-            **kwargs: Arbitrary keyword arguments for additional options in type-specific handlers.
+                                    input_ (Any): The input object to convert to a dictionary.
+                                    *args: Variable length argument list for additional options in type-specific handlers.
+                                    **kwargs: Arbitrary keyword arguments for additional options in type-specific handlers.
 
     Returns:
-            dict[Any, Any]: A dictionary representation of the input object.
+                                    dict[Any, Any]: A dictionary representation of the input object.
 
     Raises:
-            ValueError: If the input type is not supported or cannot be converted to a dictionary.
+                                    ValueError: If the input type is not supported or cannot be converted to a dictionary.
 
     Note:
-            - For specific behaviors with dict, str, pandas.Series, pandas.DataFrame, and BaseModel,
-              see the registered implementations.
+                                    - For specific behaviors with dict, str, pandas.Series, pandas.DataFrame, and BaseModel,
+                                      see the registered implementations.
     """
     try:
         return dict(input_, *args, **kwargs)
@@ -103,10 +103,10 @@ def _(input_) -> dict[Any, Any]:
     Handles dictionary inputs directly, returning the input without modification.
 
     Args:
-            input_ (dict[Any, Any]): The dictionary to be returned.
+                                    input_ (dict[Any, Any]): The dictionary to be returned.
 
     Returns:
-            dict[Any, Any]: The input dictionary, unchanged.
+                                    dict[Any, Any]: The input dictionary, unchanged.
     """
     return input_
 
@@ -117,15 +117,15 @@ def _(input_, /, *args, **kwargs) -> dict[Any, Any]:
     Converts a JSON-formatted string to a dictionary.
 
     Args:
-            input_ (str): The JSON string to convert.
-            *args: Variable length argument list for json.loads().
-            **kwargs: Arbitrary keyword arguments for json.loads().
+                                    input_ (str): The JSON string to convert.
+                                    *args: Variable length argument list for json.loads().
+                                    **kwargs: Arbitrary keyword arguments for json.loads().
 
     Returns:
-            dict[Any, Any]: The dictionary representation of the JSON string.
+                                    dict[Any, Any]: The dictionary representation of the JSON string.
 
     Raises:
-            ValueError: If the string cannot be decoded into a dictionary.
+                                    ValueError: If the string cannot be decoded into a dictionary.
     """
     try:
         return json.loads(input_, *args, **kwargs)
@@ -139,12 +139,12 @@ def _(input_, /, *args, **kwargs) -> dict[Any, Any]:
     Converts a pandas Series to a dictionary.
 
     Args:
-            input_ (pd.Series): The pandas Series to convert.
-            *args: Variable length argument list for Series.to_dict().
-            **kwargs: Arbitrary keyword arguments for Series.to_dict().
+                                    input_ (pd.Series): The pandas Series to convert.
+                                    *args: Variable length argument list for Series.to_dict().
+                                    **kwargs: Arbitrary keyword arguments for Series.to_dict().
 
     Returns:
-            dict[Any, Any]: The dictionary representation of the pandas Series.
+                                    dict[Any, Any]: The dictionary representation of the pandas Series.
     """
     return input_.to_dict(*args, **kwargs)
 
@@ -157,15 +157,15 @@ def _(
     Converts a pandas DataFrame to a dictionary or a list of dictionaries, based on the `orient` and `as_list` parameters.
 
     Args:
-            input_ (pd.DataFrame): The pandas DataFrame to convert.
-            *args: Variable length argument list for DataFrame.to_dict() or DataFrame.iterrows().
-            orient (str): The orientation of the data. Default is 'list'.
-            as_list (bool): If True, returns a list of dictionaries, one for each row. Default is False.
-            **kwargs: Arbitrary keyword arguments for DataFrame.to_dict().
+                                    input_ (pd.DataFrame): The pandas DataFrame to convert.
+                                    *args: Variable length argument list for DataFrame.to_dict() or DataFrame.iterrows().
+                                    orient (str): The orientation of the data. Default is 'list'.
+                                    as_list (bool): If True, returns a list of dictionaries, one for each row. Default is False.
+                                    **kwargs: Arbitrary keyword arguments for DataFrame.to_dict().
 
     Returns:
-            dict[Any, Any] | list[dict[Any, Any]]: Depending on `as_list`, either a dictionary representation
-            of the DataFrame or a list of dictionaries, one for each row.
+                                    dict[Any, Any] | list[dict[Any, Any]]: Depending on `as_list`, either a dictionary representation
+                                    of the DataFrame or a list of dictionaries, one for each row.
     """
     if as_list:
         return [row.to_dict(*args, **kwargs) for _, row in input_.iterrows()]
@@ -178,12 +178,12 @@ def _(input_, /, *args, **kwargs) -> dict[Any, Any]:
     Converts a Pydantic BaseModel instance to a dictionary.
 
     Args:
-            input_ (BaseModel): The Pydantic BaseModel instance to convert.
-            *args: Variable length argument list for the model's dict() method.
-            **kwargs: Arbitrary keyword arguments for the model's dict() method.
+                                    input_ (BaseModel): The Pydantic BaseModel instance to convert.
+                                    *args: Variable length argument list for the model's dict() method.
+                                    **kwargs: Arbitrary keyword arguments for the model's dict() method.
 
     Returns:
-            dict[Any, Any]: The dictionary representation of the BaseModel instance.
+                                    dict[Any, Any]: The dictionary representation of the BaseModel instance.
     """
     return input_.model_dump(*args, **kwargs)
 
@@ -197,17 +197,17 @@ def to_str(input_) -> str:
     providing type-specific conversions to string format.
 
     Args:
-            input_ (Any): The input object to convert to a string.
-            *args: Variable length argument list for additional options in type-specific handlers.
-            **kwargs: Arbitrary keyword arguments for additional options in type-specific handlers.
+                                    input_ (Any): The input object to convert to a string.
+                                    *args: Variable length argument list for additional options in type-specific handlers.
+                                    **kwargs: Arbitrary keyword arguments for additional options in type-specific handlers.
 
     Returns:
-            str: A string representation of the input object.
+                                    str: A string representation of the input object.
 
     Note:
-            - The base implementation simply uses the str() function for conversion.
-            - For detailed behaviors with dict, str, list, pandas.Series, and pandas.DataFrame,
-              refer to the registered implementations.
+                                    - The base implementation simply uses the str() function for conversion.
+                                    - For detailed behaviors with dict, str, list, pandas.Series, and pandas.DataFrame,
+                                      refer to the registered implementations.
     """
     return str(input_)
 
@@ -218,12 +218,12 @@ def _(input_, /, *args, **kwargs) -> str:
     Converts a dictionary to a JSON-formatted string.
 
     Args:
-            input_ (dict): The dictionary to convert.
-            *args: Variable length argument list for json.dumps().
-            **kwargs: Arbitrary keyword arguments for json.dumps().
+                                    input_ (dict): The dictionary to convert.
+                                    *args: Variable length argument list for json.dumps().
+                                    **kwargs: Arbitrary keyword arguments for json.dumps().
 
     Returns:
-            str: The JSON string representation of the dictionary.
+                                    str: The JSON string representation of the dictionary.
     """
     return json.dumps(input_, *args, **kwargs)
 
@@ -234,12 +234,12 @@ def _(input_) -> str:
     Returns the input string unchanged.
 
     Args:
-            input_ (str): The input string.
-            *args: Ignored.
-            **kwargs: Ignored.
+                                    input_ (str): The input string.
+                                    *args: Ignored.
+                                    **kwargs: Ignored.
 
     Returns:
-            str: The input string, unchanged.
+                                    str: The input string, unchanged.
     """
     return input_
 
@@ -251,15 +251,15 @@ def _(input_, /, *args, as_list: bool = False, **kwargs) -> str | list[str]:
     of the list itself or join the string representations of its elements.
 
     Args:
-            input_ (list): The list to convert.
-            *args: Variable length argument list for additional options in element conversion.
-            as_list (bool): If True, returns the string representation of the list. If False,
-                                            returns the elements joined by a comma. Default is False.
-            **kwargs: Arbitrary keyword arguments for additional options in element conversion.
+                                    input_ (list): The list to convert.
+                                    *args: Variable length argument list for additional options in element conversion.
+                                    as_list (bool): If True, returns the string representation of the list. If False,
+                                                                                                                                                                    returns the elements joined by a comma. Default is False.
+                                    **kwargs: Arbitrary keyword arguments for additional options in element conversion.
 
     Returns:
-            str: Depending on `as_list`, either the string representation of the list or a string
-                     of the elements joined by a comma.
+                                    str: Depending on `as_list`, either the string representation of the list or a string
+                                                                     of the elements joined by a comma.
     """
     lst_ = [to_str(item, *args, **kwargs) for item in input_]
     return lst_ if as_list else ", ".join(lst_)
@@ -271,12 +271,12 @@ def _(input_, /, *args, **kwargs) -> str:
     Converts a pandas Series to a JSON-formatted string.
 
     Args:
-            input_ (pd.Series): The pandas Series to convert.
-            *args: Variable length argument list for Series.to_json().
-            **kwargs: Arbitrary keyword arguments for Series.to_json().
+                                    input_ (pd.Series): The pandas Series to convert.
+                                    *args: Variable length argument list for Series.to_json().
+                                    **kwargs: Arbitrary keyword arguments for Series.to_json().
 
     Returns:
-            str: The JSON string representation of the pandas Series.
+                                    str: The JSON string representation of the pandas Series.
     """
     return input_.to_json(*args, **kwargs)
 
@@ -288,15 +288,15 @@ def _(input_, /, *args, as_list: bool = False, **kwargs) -> str | list[str]:
     first if `as_list` is True, then to a string representation of that list.
 
     Args:
-            input_ (pd.DataFrame): The pandas DataFrame to convert.
-            *args: Variable length argument list for additional options in conversion.
-            as_list (bool): If True, converts the DataFrame to a list of dictionaries before converting
-                                            to a string. Default is False.
-            **kwargs: Arbitrary keyword arguments for DataFrame.to_json() or to_dict().
+                                    input_ (pd.DataFrame): The pandas DataFrame to convert.
+                                    *args: Variable length argument list for additional options in conversion.
+                                    as_list (bool): If True, converts the DataFrame to a list of dictionaries before converting
+                                                                                                                                                                    to a string. Default is False.
+                                    **kwargs: Arbitrary keyword arguments for DataFrame.to_json() or to_dict().
 
     Returns:
-            str: Depending on `as_list`, either a JSON string representation of the DataFrame or a string
-                     representation of a list of dictionaries derived from the DataFrame.
+                                    str: Depending on `as_list`, either a JSON string representation of the DataFrame or a string
+                                                                     representation of a list of dictionaries derived from the DataFrame.
     """
     if as_list:
         return to_dict(input_, as_list=True, *args, **kwargs)
@@ -323,20 +323,20 @@ def to_df(
     The base implementation attempts to directly convert the input to a DataFrame, applying dropna and reset_index as specified.
 
     Args:
-            input_ (Any): The input data to convert into a DataFrame. Accepts a wide range of types thanks to overloads.
-            how (str): Specifies how missing values are dropped. Passed directly to DataFrame.dropna().
-            drop_kwargs (dict[str, Any] | None): Additional keyword arguments for DataFrame.dropna().
-            reset_index (bool): If True, the DataFrame index will be reset, removing the index labels.
-            **kwargs: Additional keyword arguments passed to the pandas DataFrame constructor.
+                                    input_ (Any): The input data to convert into a DataFrame. Accepts a wide range of types thanks to overloads.
+                                    how (str): Specifies how missing values are dropped. Passed directly to DataFrame.dropna().
+                                    drop_kwargs (dict[str, Any] | None): Additional keyword arguments for DataFrame.dropna().
+                                    reset_index (bool): If True, the DataFrame index will be reset, removing the index labels.
+                                    **kwargs: Additional keyword arguments passed to the pandas DataFrame constructor.
 
     Returns:
-            pd.DataFrame: A pandas DataFrame constructed from the input data.
+                                    pd.DataFrame: A pandas DataFrame constructed from the input data.
 
     Raises:
-            ValueError: If there is an error during the conversion process.
+                                    ValueError: If there is an error during the conversion process.
 
     Note:
-            - This function is overloaded to provide specialized behavior for different input types, enhancing its flexibility.
+                                    - This function is overloaded to provide specialized behavior for different input types, enhancing its flexibility.
     """
 
     if drop_kwargs is None:
@@ -407,17 +407,17 @@ def to_num(
     Converts the input to a numeric value of specified type, with optional bounds and precision.
 
     Args:
-            input_ (Any): The input value to convert. Can be of any type that `to_str` can handle.
-            upper_bound (float | None): The upper bound for the numeric value. If specified, values above this bound will raise an error.
-            lower_bound (float | None): The lower bound for the numeric value. If specified, values below this bound will raise an error.
-            num_type (Type[int | float]): The numeric type to convert to. Can be `int` or `float`.
-            precision (int | None): The number of decimal places for the result. Applies only to `float` type.
+                                    input_ (Any): The input value to convert. Can be of any type that `to_str` can handle.
+                                    upper_bound (float | None): The upper bound for the numeric value. If specified, values above this bound will raise an error.
+                                    lower_bound (float | None): The lower bound for the numeric value. If specified, values below this bound will raise an error.
+                                    num_type (Type[int | float]): The numeric type to convert to. Can be `int` or `float`.
+                                    precision (int | None): The number of decimal places for the result. Applies only to `float` type.
 
     Returns:
-            int | float: The converted numeric value, adhering to specified type and precision.
+                                    int | float: The converted numeric value, adhering to specified type and precision.
 
     Raises:
-            ValueError: If the input cannot be converted to a number, or if it violates the specified bounds.
+                                    ValueError: If the input cannot be converted to a number, or if it violates the specified bounds.
     """
     str_ = to_str(input_)
     return _str_to_num(str_, upper_bound, lower_bound, num_type, precision)
@@ -428,10 +428,10 @@ def to_readable_dict(input_: Any | list[Any]) -> str | list[Any]:
     Converts a given input to a readable dictionary format, either as a string or a list of dictionaries.
 
     Args:
-            input_ (Any | list[Any]): The input to convert to a readable dictionary format.
+                                    input_ (Any | list[Any]): The input to convert to a readable dictionary format.
 
     Returns:
-            str | list[str]: The readable dictionary format of the input.
+                                    str | list[str]: The readable dictionary format of the input.
     """
 
     try:
@@ -448,11 +448,11 @@ def is_same_dtype(
     Checks if all elements in a list or dictionary values are of the same data type.
 
     Args:
-            input_ (list | dict): The input list or dictionary to check.
-            dtype (Type | None): The data type to check against. If None, uses the type of the first element.
+                                    input_ (list | dict): The input list or dictionary to check.
+                                    dtype (Type | None): The data type to check against. If None, uses the type of the first element.
 
     Returns:
-            bool: True if all elements are of the same type (or if the input is empty), False otherwise.
+                                    bool: True if all elements are of the same type (or if the input is empty), False otherwise.
     """
     if not input_:
         return True
@@ -490,13 +490,13 @@ def strip_lower(input_: Any) -> str:
     Converts the input to a lowercase string with leading and trailing whitespace removed.
 
     Args:
-            input_ (Any): The input value to convert and process.
+                                    input_ (Any): The input value to convert and process.
 
     Returns:
-            str: The processed string.
+                                    str: The processed string.
 
     Raises:
-            ValueError: If the input cannot be converted to a string.
+                                    ValueError: If the input cannot be converted to a string.
     """
     try:
         return str(input_).strip().lower()
@@ -521,11 +521,11 @@ def is_structure_homogeneous(
     either list | dict, or None).
 
     examples:
-            >>> _is_structure_homogeneous({'a': {'b': 1}, 'c': {'d': 2}})
-            True
+                                    >>> _is_structure_homogeneous({'a': {'b': 1}, 'c': {'d': 2}})
+                                    True
 
-            >>> _is_structure_homogeneous({'a': {'b': 1}, 'c': [1, 2]})
-            False
+                                    >>> _is_structure_homogeneous({'a': {'b': 1}, 'c': [1, 2]})
+                                    False
     """
 
     # noinspection PyShadowingNames
@@ -615,17 +615,17 @@ def _flatten_list(lst_: list[Any], dropna: bool = True) -> list[Any]:
     flatten a nested list, optionally removing None values.
 
     Args:
-            lst_ (list[Any]): A nested list to flatten.
-            dropna (bool): If True, None values are removed. default is True.
+                                    lst_ (list[Any]): A nested list to flatten.
+                                    dropna (bool): If True, None values are removed. default is True.
 
     Returns:
-            list[Any]: A flattened list.
+                                    list[Any]: A flattened list.
 
     examples:
-            >>> flatten_list([[1, 2], [3, None]], dropna=True)
-            [1, 2, 3]
-            >>> flatten_list([[1, [2, None]], 3], dropna=False)
-            [1, 2, None, 3]
+                                    >>> flatten_list([[1, 2], [3, None]], dropna=True)
+                                    [1, 2, 3]
+                                    >>> flatten_list([[1, [2, None]], 3], dropna=False)
+                                    [1, 2, None, 3]
     """
     flattened_list = list(_flatten_list_generator(lst_, dropna))
     return list(_dropna_iterator(flattened_list)) if dropna else flattened_list
@@ -638,15 +638,15 @@ def _flatten_list_generator(
     Generator for flattening a nested list.
 
     Args:
-            lst_ (list[Any]): A nested list to flatten.
-            dropna (bool): If True, None values are omitted. Default is True.
+                                    lst_ (list[Any]): A nested list to flatten.
+                                    dropna (bool): If True, None values are omitted. Default is True.
 
     Yields:
-            Generator[Any, None, None]: A generator yielding flattened elements.
+                                    Generator[Any, None, None]: A generator yielding flattened elements.
 
     Examples:
-            >>> list(_flatten_list_generator([[1, [2, None]], 3], dropna=False))
-            [1, 2, None, 3]
+                                    >>> list(_flatten_list_generator([[1, [2, None]], 3], dropna=False))
+                                    [1, 2, None, 3]
     """
     for i in lst_:
         if isinstance(i, list):

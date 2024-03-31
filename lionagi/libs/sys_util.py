@@ -37,7 +37,7 @@ class SysUtil:
         Pauses execution for a specified duration.
 
         Args:
-                delay (float): The amount of time, in seconds, to pause execution.
+                                        delay (float): The amount of time, in seconds, to pause execution.
         """
         time.sleep(delay)
 
@@ -46,10 +46,10 @@ class SysUtil:
         """Returns the current time either as a Unix timestamp or a datetime object.
 
         Args:
-                datetime_ (bool): If True, returns a datetime object; otherwise, returns a Unix timestamp.
+                                        datetime_ (bool): If True, returns a datetime object; otherwise, returns a Unix timestamp.
 
         Returns:
-                Union[float, datetime.datetime]: The current time as a Unix timestamp or a datetime object.
+                                        Union[float, datetime.datetime]: The current time as a Unix timestamp or a datetime object.
         """
 
         if not datetime_:
@@ -64,12 +64,12 @@ class SysUtil:
         """Safely changes a key in a dictionary if the old key exists.
 
         Args:
-                dict_ (Dict[Any, Any]): The dictionary in which to change the key.
-                old_key (str): The old key to be changed.
-                new_key (str): The new key to replace the old key.
+                                        dict_ (Dict[Any, Any]): The dictionary in which to change the key.
+                                        old_key (str): The old key to be changed.
+                                        new_key (str): The new key to replace the old key.
 
         Returns:
-                None
+                                        None
         """
         if old_key in dict_:
             dict_[new_key] = dict_.pop(old_key)
@@ -79,11 +79,11 @@ class SysUtil:
         """Returns a timestamp string with optional custom separators and timezone.
 
         Args:
-                tz (timezone): The timezone for the timestamp.
-                sep (str): The separator to use in the timestamp string, replacing '-', ':', and '.'.
+                                        tz (timezone): The timezone for the timestamp.
+                                        sep (str): The separator to use in the timestamp string, replacing '-', ':', and '.'.
 
         Returns:
-                str: A string representation of the current timestamp.
+                                        str: A string representation of the current timestamp.
         """
         str_ = datetime.now(tz=tz).isoformat()
         if sep is not None:
@@ -104,11 +104,11 @@ class SysUtil:
         """Creates deep copies of the input, either as a single copy or a list of copies.
 
         Args:
-                input_ (Any): The input to be copied.
-                num (int): The number of copies to create.
+                                        input_ (Any): The input to be copied.
+                                        num (int): The number of copies to create.
 
         Returns:
-                Union[Any, List[Any]]: A single copy of the input or a list of deep copies.
+                                        Union[Any, List[Any]]: A single copy of the input or a list of deep copies.
         """
         if num < 1:
             raise ValueError(f"'num' must be a positive integer: {num}")
@@ -124,10 +124,10 @@ class SysUtil:
         Generates a unique identifier based on the current time and random bytes.
 
         Args:
-                n (int): The length of the generated identifier.
+                                        n (int): The length of the generated identifier.
 
         Returns:
-                str: A unique identifier string.
+                                        str: A unique identifier string.
         """
         current_time = datetime.now().isoformat().encode("utf-8")
         random_bytes = os.urandom(42)
@@ -138,11 +138,11 @@ class SysUtil:
         """Organizes indices of strings into bins based on a cumulative upper limit.
 
         Args:
-                input_ (List[str]): The list of strings to be binned.
-                upper (int): The cumulative length upper limit for each bin.
+                                        input_ (List[str]): The list of strings to be binned.
+                                        upper (int): The cumulative length upper limit for each bin.
 
         Returns:
-                List[List[int]]: A list of bins, each bin is a list of indices from the input list.
+                                        List[List[int]]: A list of bins, each bin is a list of indices from the input list.
         """
         current = 0
         bins = []
@@ -166,7 +166,7 @@ class SysUtil:
         This method categorizes some architectures as 'apple_silicon'.
 
         Returns:
-                str: A string identifying the CPU architecture ('apple_silicon' or 'other_cpu').
+                                        str: A string identifying the CPU architecture ('apple_silicon' or 'other_cpu').
         """
         arch: str = platform.machine().lower()
         return "apple_silicon" if "arm" in arch or "aarch64" in arch else "other_cpu"
@@ -184,10 +184,10 @@ class SysUtil:
         to install the package using pip and then retries the import.
 
         Args:
-                package_name: The base name of the package to import.
-                module_name: The submodule name to import from the package, if applicable. Defaults to None.
-                import_name: The specific name to import from the module or package. Defaults to None.
-                pip_name: The pip package name if different from `package_name`. Defaults to None.
+                                        package_name: The base name of the package to import.
+                                        module_name: The submodule name to import from the package, if applicable. Defaults to None.
+                                        import_name: The specific name to import from the module or package. Defaults to None.
+                                        pip_name: The pip package name if different from `package_name`. Defaults to None.
 
         Prints a message indicating success or attempts installation if the import fails.
         """
@@ -225,10 +225,10 @@ class SysUtil:
         """Checks if a package is currently installed.
 
         Args:
-                package_name: The name of the package to check.
+                                        package_name: The name of the package to check.
 
         Returns:
-                A boolean indicating whether the package is installed.
+                                        A boolean indicating whether the package is installed.
         """
         package_spec = importlib.util.find_spec(package_name)
         return package_spec is not None
@@ -248,12 +248,12 @@ class SysUtil:
         it attempts to install the package using `install_import` and then retries the import.
 
         Args:
-                package_name: The name of the package to check and potentially install.
-                module_name: The submodule name to import from the package, if applicable. Defaults to None.
-                import_name: The specific name to import from the module or package. Defaults to None.
-                pip_name: The pip package name if different from `package_name`. Defaults to None.
-                attempt_install: If attempt to install the package if uninstalled. Defaults to True.
-                error_message: Error message when the package is not installed and not attempt to install.
+                                        package_name: The name of the package to check and potentially install.
+                                        module_name: The submodule name to import from the package, if applicable. Defaults to None.
+                                        import_name: The specific name to import from the module or package. Defaults to None.
+                                        pip_name: The pip package name if different from `package_name`. Defaults to None.
+                                        attempt_install: If attempt to install the package if uninstalled. Defaults to True.
+                                        error_message: Error message when the package is not installed and not attempt to install.
         """
         try:
             if not SysUtil.is_package_installed(package_name):
@@ -310,12 +310,12 @@ class SysUtil:
         excluding files that match any pattern in the exclude list.
 
         Args:
-                dir_path (Union[Path, str]): The path to the directory to clear.
-                recursive (bool): If True, clears directories recursively. Defaults to False.
-                exclude (List[str]): A list of string patterns to exclude from deletion. Defaults to None.
+                                        dir_path (Union[Path, str]): The path to the directory to clear.
+                                        recursive (bool): If True, clears directories recursively. Defaults to False.
+                                        exclude (List[str]): A list of string patterns to exclude from deletion. Defaults to None.
 
         Raises:
-                FileNotFoundError: If the specified directory does not exist.
+                                        FileNotFoundError: If the specified directory does not exist.
         """
         dir_path = Path(dir_path)
         if not dir_path.exists():
@@ -347,10 +347,10 @@ class SysUtil:
         Splits a path into its directory and filename components.
 
         Args:
-                path (Union[Path, str]): The path to split.
+                                        path (Union[Path, str]): The path to split.
 
         Returns:
-                Tuple[Path, str]: A tuple containing the directory and filename.
+                                        Tuple[Path, str]: A tuple containing the directory and filename.
         """
         path = Path(path)
         return path.parent, path.name
@@ -368,18 +368,18 @@ class SysUtil:
         Creates a path with an optional timestamp in the specified directory.
 
         Args:
-                directory (Union[Path, str]): The directory where the file will be located.
-                filename (str): The filename. Must include a valid extension.
-                timestamp (bool): If True, adds a timestamp to the filename. Defaults to True.
-                dir_exist_ok (bool): If True, does not raise an error if the directory exists. Defaults to True.
-                time_prefix (bool): If True, adds the timestamp as a prefix; otherwise, as a suffix. Defaults to False.
-                custom_timestamp_format (str): A custom format for the timestamp. Defaults to "%Y%m%d%H%M%S".
+                                        directory (Union[Path, str]): The directory where the file will be located.
+                                        filename (str): The filename. Must include a valid extension.
+                                        timestamp (bool): If True, adds a timestamp to the filename. Defaults to True.
+                                        dir_exist_ok (bool): If True, does not raise an error if the directory exists. Defaults to True.
+                                        time_prefix (bool): If True, adds the timestamp as a prefix; otherwise, as a suffix. Defaults to False.
+                                        custom_timestamp_format (str): A custom format for the timestamp. Defaults to "%Y%m%d%H%M%S".
 
         Returns:
-                Path: The full path to the file.
+                                        Path: The full path to the file.
 
         Raises:
-                ValueError: If the filename is invalid.
+                                        ValueError: If the filename is invalid.
         """
         directory = Path(directory)
         if not re.match(r"^[\w,\s-]+\.[A-Za-z]{1,5}$", filename):

@@ -12,16 +12,16 @@ def text_reader(args, kwargs):
     Reads text files from a directory and converts them to DataNode instances.
 
     Args:
-        args: Positional arguments for the dir_to_nodes function.
-        kwargs: Keyword arguments for the dir_to_nodes function.
+                    args: Positional arguments for the dir_to_nodes function.
+                    kwargs: Keyword arguments for the dir_to_nodes function.
 
     Returns:
-        A list of DataNode instances.
+                    A list of DataNode instances.
 
     Example usage:
-        >>> args = ['path/to/text/files']
-        >>> kwargs = {'file_extension': 'txt'}
-        >>> nodes = text_reader(args, kwargs)
+                    >>> args = ['path/to/text/files']
+                    >>> kwargs = {'file_extension': 'txt'}
+                    >>> nodes = text_reader(args, kwargs)
     """
     return dir_to_nodes(*args, **kwargs)
 

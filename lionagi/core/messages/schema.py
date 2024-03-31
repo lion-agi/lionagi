@@ -99,9 +99,9 @@ class BaseMessage(DataNode):
     Represents a message in a chatbot-like system, inheriting from BaseNode.
 
     Attributes:
-            role (str | None): The role of the entity sending the message, e.g., 'user', 'system'.
-            sender (str | None): The identifier of the sender of the message.
-            content (Any): The actual content of the message.
+                                    role (str | None): The role of the entity sending the message, e.g., 'user', 'system'.
+                                    sender (str | None): The identifier of the sender of the message.
+                                    content (Any): The actual content of the message.
     """
 
     role: str | None = None
@@ -114,7 +114,7 @@ class BaseMessage(DataNode):
         Constructs and returns a dictionary representation of the message.
 
         Returns:
-                A dictionary representation of the message with 'role' and 'content' keys.
+                                        A dictionary representation of the message with 'role' and 'content' keys.
         """
         return self._to_message()
 
@@ -124,7 +124,7 @@ class BaseMessage(DataNode):
         Gets the 'content' field of the message.
 
         Returns:
-                The 'content' part of the message.
+                                        The 'content' part of the message.
         """
         return self.msg["content"]
 
@@ -133,7 +133,7 @@ class BaseMessage(DataNode):
         Constructs and returns a dictionary representation of the message.
 
         Returns:
-                dict: A dictionary representation of the message with 'role' and 'content' keys.
+                                        dict: A dictionary representation of the message with 'role' and 'content' keys.
         """
         return {"role": self.role, "content": convert.to_str(self.content)}
 
@@ -297,13 +297,13 @@ class Response(BaseMessage):
         Processes an action request response and extracts relevant information.
 
         Args:
-                response (dict): The response dictionary containing tool calls and other information.
+                                        response (dict): The response dictionary containing tool calls and other information.
 
         Returns:
-                list: A list of dictionaries, each representing a function call with action and arguments.
+                                        list: A list of dictionaries, each representing a function call with action and arguments.
 
         Raises:
-                ValueError: If the response does not conform to the expected format for action requests.
+                                        ValueError: If the response does not conform to the expected format for action requests.
         """
         try:
             tool_count = 0

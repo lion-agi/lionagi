@@ -29,19 +29,19 @@ def dir_to_path(
     Generates a list of file paths from a directory with the given file extension.
 
     Parameters:
-        dir (str): The directory to search for files.
+                    dir (str): The directory to search for files.
 
-        ext (str): The file extension to filter by.
+                    ext (str): The file extension to filter by.
 
-        recursive (bool): Whether to search subdirectories recursively. Defaults to False.
+                    recursive (bool): Whether to search subdirectories recursively. Defaults to False.
 
-        flatten (bool): Whether to flatten the list. Defaults to True.
+                    flatten (bool): Whether to flatten the list. Defaults to True.
 
     Returns:
-        List[Path]: A list of Paths to the files.
+                    List[Path]: A list of Paths to the files.
 
     Raises:
-        ValueError: If the directory or extension is invalid.
+                    ValueError: If the directory or extension is invalid.
     """
 
     def _dir_to_path(ext):
@@ -69,19 +69,19 @@ def dir_to_nodes(
     This function first retrieves a list of file paths from the specified directory, matching the given file extension. It then reads the content of these files, optionally cleaning the text, and converts each file's content into a DataNode object.
 
     Parameters:
-        dir (str): The directory path from which to read files.
-        ext: The file extension(s) to include. Can be a single string or a list/tuple of strings.
-        recursive (bool, optional): If True, the function searches for files recursively in subdirectories. Defaults to False.
-        flatten (bool, optional): If True, flattens the directory structure in the returned paths. Defaults to True.
-        clean_text (bool, optional): If True, cleans the text read from files. Defaults to True.
+                    dir (str): The directory path from which to read files.
+                    ext: The file extension(s) to include. Can be a single string or a list/tuple of strings.
+                    recursive (bool, optional): If True, the function searches for files recursively in subdirectories. Defaults to False.
+                    flatten (bool, optional): If True, flattens the directory structure in the returned paths. Defaults to True.
+                    clean_text (bool, optional): If True, cleans the text read from files. Defaults to True.
 
     Returns:
-        list: A list of DataNode objects created from the files in the specified directory.
+                    list: A list of DataNode objects created from the files in the specified directory.
 
     Example:
-        nodes = dir_to_nodes("/path/to/dir", ".txt", recursive=True)
-        # This would read all .txt files in /path/to/dir and its subdirectories,
-        # converting them into DataNode objects.
+                    nodes = dir_to_nodes("/path/to/dir", ".txt", recursive=True)
+                    # This would read all .txt files in /path/to/dir and its subdirectories,
+                    # converting them into DataNode objects.
     """
 
     path_list = dir_to_path(dir, ext, recursive, flatten)
@@ -96,19 +96,19 @@ def chunk_text(
     Chunks the input text into smaller parts, with optional overlap and threshold for final chunk.
 
     Parameters:
-        input (str): The input text to chunk.
+                    input (str): The input text to chunk.
 
-        chunk_size (int): The size of each chunk.
+                    chunk_size (int): The size of each chunk.
 
-        overlap (float): The amount of overlap between chunks.
+                    overlap (float): The amount of overlap between chunks.
 
-        threshold (int): The minimum size of the final chunk.
+                    threshold (int): The minimum size of the final chunk.
 
     Returns:
-        List[Union[str, None]]: A list of text chunks.
+                    List[Union[str, None]]: A list of text chunks.
 
     Raises:
-        ValueError: If an error occurs during chunking.
+                    ValueError: If an error occurs during chunking.
     """
 
     def _chunk_n1():
@@ -165,19 +165,19 @@ def read_text(filepath: str, clean: bool = True) -> Tuple[str, dict]:
     Reads text from a file and optionally cleans it, returning the content and metadata.
 
     Parameters:
-        filepath (str): The path to the file to read.
+                    filepath (str): The path to the file to read.
 
-        clean (bool): Whether to clean the text by replacing certain characters. Defaults to True.
+                    clean (bool): Whether to clean the text by replacing certain characters. Defaults to True.
 
     Returns:
-        Tuple[str, dict]: A tuple containing the content and metadata of the file.
+                    Tuple[str, dict]: A tuple containing the content and metadata of the file.
 
     Raises:
-        FileNotFoundError: If the file cannot be found.
+                    FileNotFoundError: If the file cannot be found.
 
-        PermissionError: If there are permissions issues.
+                    PermissionError: If there are permissions issues.
 
-        OSError: For other OS-related errors.
+                    OSError: For other OS-related errors.
     """
 
     def _get_metadata():
@@ -244,8 +244,7 @@ def _file_to_chunks(
 
 # needs doing TODO
 def file_to_chunks(
-    input,
-    #    project='project',
+    input,  # project='project',
     #    output_dir='data/logs/sources/',
     chunk_func=_file_to_chunks,
     **kwargs,

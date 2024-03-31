@@ -73,11 +73,14 @@ Generates a list of schemas for all registered tools.
 ## Usage Example
 
 ```python
-from lionagi.core.schema import Tool
+
+from lionagi.core.tool.tool import Tool
+
 
 # Define a new tool subclassing Tool
 class MyTool(Tool):
-    pass
+	pass
+
 
 # Create an instance of MyTool
 my_tool = MyTool()
@@ -86,10 +89,12 @@ my_tool = MyTool()
 tool_manager = ToolManager()
 tool_manager.register_tools([my_tool])
 
+
 # Invoke a function of the registered tool
 async def invoke_example():
-    result = await tool_manager.invoke(("my_tool_function", {"arg1": "value1"}))
-    print(result)
+	result = await tool_manager.invoke(("my_tool_function", {"arg1": "value1"}))
+	print(result)
+
 
 # Extract and use a function call from a response
 response = {"action": "function_call", "arguments": '{"arg1": "value1"}'}

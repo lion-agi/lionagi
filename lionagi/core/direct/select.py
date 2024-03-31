@@ -13,7 +13,8 @@ from enum import Enum
 from pydantic import Field
 
 from lionagi.libs import func_call, StringMatch
-from ..prompt.scored_template import ScoredTemplate
+
+from ..prompt import ScoredTemplate
 from ..branch import Branch
 
 
@@ -29,7 +30,7 @@ class SelectTemplate(ScoredTemplate):
 
     Methods:
         __init__(self, sentence=None, choices=None, instruction=None, reason=False, confidence_score=False, **kwargs):
-            Initializes a new instance of the SelectTemplate class.
+                        Initializes a new instance of the SelectTemplate class.
     """
 
     template_name: str = "default_select"

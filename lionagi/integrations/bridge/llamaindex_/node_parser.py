@@ -12,16 +12,16 @@ def get_llama_index_node_parser(node_parser: Any):
     that the class is a subclass of NodeParser.
 
     Args:
-            node_parser (Any): The node parser identifier, which can be a node parser class, a string alias
-                    for a node parser class, or None.
+                                    node_parser (Any): The node parser identifier, which can be a node parser class, a string alias
+                                                                    for a node parser class, or None.
 
     Returns:
-            Any: The llama index node parser object corresponding to the specified node parser.
+                                    Any: The llama index node parser object corresponding to the specified node parser.
 
     Raises:
-            TypeError: If the node_parser is neither a string nor a subclass of NodeParser.
-            AttributeError: If there is an issue importing the specified node parser due to it not being
-            found within the llama_index.core.node_parser module.
+                                    TypeError: If the node_parser is neither a string nor a subclass of NodeParser.
+                                    AttributeError: If there is an issue importing the specified node parser due to it not being
+                                    found within the llama_index.core.node_parser module.
     """
 
     SysUtil.check_import("llama_index", pip_name="llama-index")
@@ -56,16 +56,16 @@ def llama_index_parse_node(
     then parses documents using the node parser's `get_nodes_from_documents` method.
 
     Args:
-            documents (Any): The documents to be parsed by the node parser.
-            node_parser (Any): The node parser to use. This can be a class, a string identifier, or None.
-            parser_args (Optional[List[Any]], optional): Positional arguments to initialize the node parser.
-            parser_kwargs (Optional[Dict[str, Any]], optional): Keyword arguments to initialize the node parser.
+                                    documents (Any): The documents to be parsed by the node parser.
+                                    node_parser (Any): The node parser to use. This can be a class, a string identifier, or None.
+                                    parser_args (Optional[List[Any]], optional): Positional arguments to initialize the node parser.
+                                    parser_kwargs (Optional[Dict[str, Any]], optional): Keyword arguments to initialize the node parser.
 
     Returns:
-            Any: The nodes extracted from the documents by the node parser.
+                                    Any: The nodes extracted from the documents by the node parser.
 
     Raises:
-            ValueError: If there is an error initializing the node parser or parsing the documents.
+                                    ValueError: If there is an error initializing the node parser or parsing the documents.
     """
 
     try:

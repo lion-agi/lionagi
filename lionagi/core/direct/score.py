@@ -10,8 +10,8 @@ ScoreTemplate class and a language model.
 """
 
 from pydantic import Field
-import numpy as np
 from lionagi.libs import func_call, convert
+
 from ..prompt.scored_template import ScoredTemplate
 from ..branch import Branch
 
@@ -28,8 +28,8 @@ class ScoreTemplate(ScoredTemplate):
 
     Methods:
         __init__(self, sentence=None, instruction=None, score_range=(1, 10), inclusive=True, num_digit=0,
-                 confidence_score=False, reason=False, **kwargs):
-            Initializes a new instance of the ScoreTemplate class.
+                             confidence_score=False, reason=False, **kwargs):
+                        Initializes a new instance of the ScoreTemplate class.
     """
 
     template_name: str = "default_score"
@@ -276,4 +276,6 @@ async def score(
 
     elif num_instances > 1:
         _outs = await func_call.alcall(range(num_instances), _inner)
-        return _outs if return_template else np.mean([i.answer for i in _outs])
+        from numpy import mean as _mean
+
+        return _outs if return_template else _mean([i.answer for i in _outs])

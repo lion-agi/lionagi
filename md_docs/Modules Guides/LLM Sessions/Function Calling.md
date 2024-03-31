@@ -11,27 +11,26 @@ To utilize function calling effectively, you must first define a tool schema tha
 **Example Schema and Function:**
 
 ```python
+import lionagi.core.tool.tool
+
 tool_schema = {
-    "type": "function",
-    "function": {
-        "name": "multiply",
-        "description": "Perform multiplication on two numbers",
-        "parameters": {
-            "type": "object",
-            "properties": {
-                "number1": {"type": "number", "description": "a number to multiply"},
-                "number2": {"type": "number", "description": "a number to multiply"},
-            },
-            "required": ["number1", "number2"],
-        },
-    }
+	"type": "function", "function": {
+		"name": "multiply", "description": "Perform multiplication on two numbers", "parameters": {
+			"type": "object", "properties": {
+				"number1": {"type": "number", "description": "a number to multiply"},
+				"number2": {"type": "number", "description": "a number to multiply"},
+			}, "required": ["number1", "number2"],
+		},
+	}
 }
 
+
 def multiply(number1, number2):
-    return number1 * number2
+	return number1 * number2
+
 
 # Creating a Tool object with the defined schema
-tools = li.Tool(func=multiply, schema_=tool_schema)
+tools = lionagi.core.tool.tool.Tool(func=multiply, schema_=tool_schema)
 ```
 
 #### Preparing the Session

@@ -1,17 +1,12 @@
-"""
-This module contains the BaseAgent class, which serves as a base class for agents.
-"""
-
-from lionagi.core.mail.schema import StartMail
-from lionagi.core.schema.base_node import BaseRelatableNode
-from lionagi.core.mail.mail_manager import MailManager
+"""This module contains the BaseAgent class, which serves as a base class for agents."""
 
 from lionagi.libs import func_call, AsyncUtil
+from ..schema import BaseNode
+from ..mail import StartMail, MailManager
 
 
-class BaseAgent(BaseRelatableNode):
-    """
-    A base class for agents.
+class BaseAgent(BaseNode):
+    """A base class for agents.
 
     Attributes:
         structure: The structure of the agent.
@@ -33,8 +28,7 @@ class BaseAgent(BaseRelatableNode):
     """
 
     def __init__(self, structure, executable_obj, output_parser=None) -> None:
-        """
-        Initializes the BaseAgent instance.
+        """Initializes the BaseAgent instance.
 
         Args:
             structure: The structure of the agent.
@@ -50,8 +44,7 @@ class BaseAgent(BaseRelatableNode):
         self.start_context = None
 
     async def mail_manager_control(self, refresh_time=1):
-        """
-        Controls the mail manager execution based on the structure and executable states.
+        """Controls the mail manager execution based on the structure and executable states.
 
         Args:
             refresh_time: The time interval (in seconds) for checking the execution states (default: 1).
@@ -61,8 +54,7 @@ class BaseAgent(BaseRelatableNode):
         self.mailManager.execute_stop = True
 
     async def execute(self, context=None):
-        """
-        Executes the agent with the given context and returns the parsed output (if available).
+        """Executes the agent with the given context and returns the parsed output (if available).
 
         Args:
             context: The initial context for the agent (optional).

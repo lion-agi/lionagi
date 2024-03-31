@@ -7,7 +7,7 @@ number of generations, number of outputs to return, number of scorers, score ran
 """
 
 from lionagi.libs import func_call
-import numpy as np
+
 from .predict import predict
 from .score import score
 
@@ -15,6 +15,7 @@ from .score import score
 async def vote(
     sentence,
     directive=predict,
+    score_field="answer",
     num_generations=5,
     num_output=1,
     num_scorer=5,
@@ -23,28 +24,11 @@ async def vote(
     scorer_instruction=None,
     **kwargs,
 ):
-    """
-    Generates and scores multiple outputs and returns the top-ranked output(s).
-
-    Args:
-        sentence (str): The input sentence or context.
-        directive (function): The function used to generate outputs (default: predict).
-        num_generations (int): The number of outputs to generate (default: 5).
-        num_output (int): The number of top-ranked outputs to return (default: 1).
-        num_scorer (int): The number of scorers to use for scoring each output (default: 5).
-        score_range (tuple): The range of scores to assign (default: (0, 100)).
-        num_digit (int): The number of digits after the decimal point for scores (default: 2).
-        scorer_instruction (str): The instruction for the scorers (default: None).
-        **kwargs: Additional keyword arguments to pass to the directive function.
-
-    Returns:
-        The top-ranked output if num_output is 1, or a list of top-ranked outputs if num_output is greater than 1.
-    """
 
     async def _inner(i):
         out_ = await directive(sentence, **kwargs)
         score_ = await score(
-            out_.answer,
+            getattr(out_, score_field),
             context=sentence,
             instruction=scorer_instruction,
             score_range=score_range,
@@ -58,7 +42,9 @@ async def vote(
 
     _outs = await func_call.alcall(list(range(num_generations)), _inner)
 
-    top_index = np.argsort([i.score for i in _outs])[-num_output:]
-    final_output = list(np.array(_outs)[top_index])
+    from numpy import argsort as _argsort, array as _array
+
+    top_index = _argsort([i.score for i in _outs])[-num_output:]
+    final_output = list(_array(_outs)[top_index])
 
     return final_output[0] if len(final_output) == 1 else final_output

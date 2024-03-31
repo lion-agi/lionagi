@@ -8,15 +8,14 @@ from typing import Any, Union, TypeVar, Callable
 from lionagi.libs.sys_util import PATH_TYPE
 from lionagi.libs import StatusTracker, BaseService, convert, dataframe
 
-from ..schema import TOOL_TYPE, Tool, DataLogger
-from ..tool import ToolManager, func_to_tool
-
+from ..schema import DataLogger
+from ..tool import Tool, TOOL_TYPE, ToolManager, func_to_tool
 from ..messages import System
 from ..mail import BaseMail
 
-from .util import MessageUtil
-from .base_branch import BaseBranch
-from .branch_flow_mixin import BranchFlowMixin
+from .utils import MessageUtil
+from .base import BaseBranch
+from .flow_mixin import BranchFlowMixin
 
 from dotenv import load_dotenv
 
@@ -40,18 +39,18 @@ class Branch(BaseBranch, BranchFlowMixin):
 
     Methods:
         __init__(self, name=None, system=None, messages=None, service=None, sender=None,
-                 llmconfig=None, tools=None, datalogger=None, persist_path=None,
-                 tool_manager=None, **kwargs) -> None:
+                    llmconfig=None, tools=None, datalogger=None, persist_path=None,
+                    tool_manager=None, **kwargs) -> None:
             Initializes the Branch instance.
 
         from_csv(cls, filepath, name=None, service=None, llmconfig=None, tools=None,
-                 datalogger=None, persist_path=None, tool_manager=None, read_kwargs=None,
-                 **kwargs) -> Branch:
+                    datalogger=None, persist_path=None, tool_manager=None, read_kwargs=None,
+                    **kwargs) -> Branch:
             Creates a Branch instance from a CSV file.
 
-        from_json_string(cls, filepath, name=None, service=None, llmconfig=None, tools=None,
-                         datalogger=None, persist_path=None, tool_manager=None, read_kwargs=None,
-                         **kwargs) -> Branch:
+        from_json_string(
+                cls, filepath, name=None, service=None, llmconfig=None, tools=None,
+                datalogger=None, persist_path=None, tool_manager=None, read_kwargs=None, **kwargs) -> Branch:
             Creates a Branch instance from a JSON string file.
 
         messages_describe(self) -> dict[str, Any]:
@@ -382,10 +381,10 @@ class Branch(BaseBranch, BranchFlowMixin):
 
         Raises:
             ValueError: If there are no packages from the specified sender.
-                        If the messages format is invalid.
-                        If the tools format is invalid.
-                        If the provider format is invalid.
-                        If the llmconfig format is invalid.
+                If the messages format is invalid.
+                If the tools format is invalid.
+                If the provider format is invalid.
+                If the llmconfig format is invalid.
         """
         skipped_requests = deque()
         if sender not in self.pending_ins:
@@ -456,7 +455,7 @@ class Branch(BaseBranch, BranchFlowMixin):
         Check if the conversation has been invoked with an action response.
 
         Returns:
-                bool: True if the conversation has been invoked, False otherwise.
+            bool: True if the conversation has been invoked, False otherwise.
 
         """
         content = self.messages.iloc[-1]["content"]

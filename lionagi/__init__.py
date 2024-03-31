@@ -11,7 +11,6 @@ from .integrations.provider.services import Services
 from .integrations.chunker.chunk import chunk
 from .integrations.loader.load import load
 
-
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.INFO)
 load_dotenv()
