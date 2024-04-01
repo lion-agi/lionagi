@@ -4,15 +4,12 @@ This module contains mixins for configuring and invoking chatbots.
 
 from abc import ABC
 from typing import Any
+import contextlib
+
+from lionagi.libs import nested, func_call, convert, StringMatch
 
 from lionagi.core.messages.schema import Instruction
 from lionagi.core.tool.tool import TOOL_TYPE
-from lionagi.libs import (
-    ln_nested as nested,
-    ln_func_call as func_call,
-    ln_convert as convert,
-)
-from lionagi.libs.ln_parse import ParseUtil, StringMatch
 
 
 class MonoChatConfigMixin(ABC):
@@ -21,8 +18,8 @@ class MonoChatConfigMixin(ABC):
 
     Methods:
         _create_chat_config(self, instruction=None, context=None, sender=None, system=None,
-                            output_fields=None, prompt_template=None, tools=False, **kwargs) -> Any:
-            Creates a chat configuration based on the provided parameters.
+        output_fields=None, prompt_template=None, tools=False, **kwargs) -> Any:
+        Creates a chat configuration based on the provided parameters.
     """
 
     def _create_chat_config(
@@ -85,8 +82,8 @@ class MonoChatInvokeMixin(ABC):
     Mixin class for invoking chatbots.
 
     Methods:
-        async _output(self, invoke, out, output_fields, func_calls_=None, prompt_template=None,
-                      return_template=True):
+        async _output(self, invoke, out, output_fields, func_calls_=None, prompt_template=None，
+                    return_template=True):
             Processes the output of the chatbot.
 
         _return_response(content_, output_fields) -> Any:
@@ -134,7 +131,7 @@ class MonoChatInvokeMixin(ABC):
         response_ = self._return_response(content_, output_fields)
         if prompt_template:
             prompt_template._process_response(response_)
-            return prompt_template if return_template else prompt_template.out
+            return prompt_template if return_template else prompt_template.outputs
 
         if out:
             return response_
@@ -158,27 +155,8 @@ class MonoChatInvokeMixin(ABC):
             out_ = content_[key]
 
         if output_fields:
-            try:
-                if isinstance(out_, dict):
-                    out_ = convert.to_str(out_.values())
-
-                if isinstance(out_, str):
-                    try:
-                        out_ = ParseUtil.md_to_json(out_)
-                    except Exception:
-                        out_ = ParseUtil.md_to_json(out_.replace("'", '"'))
-
-                out_ = StringMatch.correct_keys(output_fields=output_fields, out_=out_)
-            except Exception:
-                pass
-
-        if isinstance(out_, str):
-            try:
-                out_ = ParseUtil.md_to_json(out_)
-                out_ = StringMatch.correct_keys(output_fields=output_fields, out_=out_)
-                return out_
-            except Exception:
-                pass
+            with contextlib.suppress(Exception):
+                return StringMatch.force_validate_dict(out_, keys=output_fields)
 
         return out_
 
