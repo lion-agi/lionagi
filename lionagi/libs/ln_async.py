@@ -11,6 +11,7 @@ import aiohttp
 
 class AsyncUtil:
 
+    @staticmethod
     async def _call_handler(
         func: Callable, *args, error_map: dict[type, Callable] = None, **kwargs
     ) -> Any:
@@ -19,43 +20,42 @@ class AsyncUtil:
         functions.
 
         Args:
-            func (Callable):
-                The function to call.
-            *args:
-                Positional arguments to pass to the function.
-            error_map (Dict[type, Callable], optional):
-                A dictionary mapping error types to handler functions.
-            **kwargs:
-                Keyword arguments to pass to the function.
+                func (Callable):
+                        The function to call.
+                *args:
+                        Positional arguments to pass to the function.
+                error_map (Dict[type, Callable], optional):
+                        A dictionary mapping error types to handler functions.
+                **kwargs:
+                        Keyword arguments to pass to the function.
 
         Returns:
-            Any: The result of the function call.
+                Any: The result of the function call.
 
         Raises:
-            Exception: Propagates any exceptions not handled by the error_map.
+                Exception: Propagates any exceptions not handled by the error_map.
 
         examples:
-            >>> async def async_add(x, y): return x + y
-            >>> asyncio.run(_call_handler(async_add, 1, 2))
-            3
+                >>> async def async_add(x, y): return x + y
+                >>> asyncio.run(_call_handler(async_add, 1, 2))
+                3
         """
         try:
-            if AsyncUtil.is_coroutine_func(func):
-                # Checking for a running event loop
-                try:
-                    loop = asyncio.get_running_loop()
-                except RuntimeError:  # No running event loop
-                    loop = asyncio.new_event_loop()
-                    result = loop.run_until_complete(func(*args, **kwargs))
-
-                    loop.close()
-                    return result
-
-                if loop.is_running():
-                    return await func(*args, **kwargs)
-
-            else:
+            if not AsyncUtil.is_coroutine_func(func):
                 return func(*args, **kwargs)
+
+            # Checking for a running event loop
+            try:
+                loop = asyncio.get_running_loop()
+            except RuntimeError:  # No running event loop
+                loop = asyncio.new_event_loop()
+                result = loop.run_until_complete(func(*args, **kwargs))
+
+                loop.close()
+                return result
+
+            if loop.is_running():
+                return await func(*args, **kwargs)
 
         except Exception as e:
             if error_map:
@@ -71,10 +71,10 @@ class AsyncUtil:
         Checks whether a function is an asyncio coroutine function.
 
         Args:
-            func: The function to check.
+                func: The function to check.
 
         Returns:
-            True if the function is a coroutine function, False otherwise.
+                True if the function is a coroutine function, False otherwise.
         """
         return asyncio.iscoroutinefunction(func)
 
@@ -87,18 +87,17 @@ class AsyncUtil:
         handle errors based on a given error mapping.
 
         Args:
-            error (Exception):
-                The error to handle.
-            error_map (Mapping[type, Callable]):
-                A dictionary mapping error types to handler functions.
+                error (Exception):
+                        The error to handle.
+                error_map (Mapping[type, Callable]):
+                        A dictionary mapping error types to handler functions.
 
         examples:
-            >>> def handle_value_error(e): print("ValueError occurred")
-            >>> custom_error_handler(ValueError(), {ValueError: handle_value_error})
-            ValueError occurred
+                >>> def handle_value_error(e): print("ValueError occurred")
+                >>> custom_error_handler(ValueError(), {ValueError: handle_value_error})
+                ValueError occurred
         """
-        handler = error_map.get(type(error))
-        if handler:
+        if handler := error_map.get(type(error)):
             handler(error)
         else:
             logging.error(f"Unhandled error: {error}")
@@ -111,30 +110,28 @@ class AsyncUtil:
         Executes a function, automatically handling synchronous and asynchronous functions.
 
         Args:
-            func: The function to execute.
-            *args: Positional arguments for the function.
-            **kwargs: Keyword arguments for the function.
+                func: The function to execute.
+                *args: Positional arguments for the function.
+                **kwargs: Keyword arguments for the function.
 
         Returns:
-            The result of the function execution.
+                The result of the function execution.
         """
 
         try:
-            if AsyncUtil.is_coroutine_func(func):
-
-                try:
-                    loop = asyncio.get_event_loop()
-
-                    if loop.is_running():
-                        return await func(*args, **kwargs)
-                    else:
-                        return await asyncio.run(func(*args, **kwargs))
-
-                except RuntimeError:
-                    return asyncio.run(func(*args, **kwargs))
-
-            else:
+            if not AsyncUtil.is_coroutine_func(func):
                 return func(*args, **kwargs)
+
+            try:
+                loop = asyncio.get_event_loop()
+
+                return (
+                    await func(*args, **kwargs)
+                    if loop.is_running()
+                    else await asyncio.run(func(*args, **kwargs))
+                )
+            except RuntimeError:
+                return asyncio.run(func(*args, **kwargs))
 
         except Exception as e:
             if error_map:
@@ -205,10 +202,6 @@ class AsyncUtil:
     def create_lock(*args, **kwargs):
         return asyncio.Lock(*args, **kwargs)
 
-    # @classmethod
-    # def HttpClientSession(cls):
-    #     return aiohttp.ClientSession
+    # @classmethod  # def HttpClientSession(cls):  #     return aiohttp.ClientSession
 
-    # @classmethod
-    # def HttpClientError(cls):
-    #     return aiohttp.ClientError
+    # @classmethod  # def HttpClientError(cls):  #     return aiohttp.ClientError

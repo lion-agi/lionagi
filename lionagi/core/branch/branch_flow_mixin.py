@@ -57,6 +57,7 @@ class BranchFlowMixin(ABC):
             out=out,
             invoke=invoke,
             output_fields=output_fields,
+            prompt_template=prompt_template,
             **kwargs,
         )
 

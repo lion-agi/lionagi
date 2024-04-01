@@ -1,7 +1,8 @@
 from abc import ABC
 from typing import Any
 
-from lionagi.libs.sys_util import SysUtil, PATH_TYPE
+from lionagi.libs.sys_util import PATH_TYPE
+from lionagi.libs import convert, dataframe, SysUtil
 
 import lionagi.libs.ln_convert as convert
 import lionagi.libs.ln_dataframe as dataframe
@@ -31,9 +32,9 @@ class BaseBranch(BaseRelatableNode, BranchIOMixin, ABC):
     filtering messages based on various criteria.
 
     Attributes:
-        messages (dataframe.ln_DataFrame): Holds the messages in the branch.
-        datalogger (DataLogger): Logs data related to the branch's operation.
-        persist_path (PATH_TYPE): Filesystem path for data persistence.
+            messages (dataframe.ln_DataFrame): Holds the messages in the branch.
+            datalogger (DataLogger): Logs data related to the branch's operation.
+            persist_path (PATH_TYPE): Filesystem path for data persistence.
     """
 
     _columns: list[str] = BranchColumns.COLUMNS.value
@@ -72,9 +73,8 @@ class BaseBranch(BaseRelatableNode, BranchIOMixin, ABC):
         else:
             self.messages = dataframe.ln_DataFrame(columns=self._columns)
 
-        self.datalogger = (
-            datalogger if datalogger else DataLogger(persist_path=persist_path)
-        )
+        self.datalogger = datalogger or DataLogger(persist_path=persist_path)
+        self.name = name
 
         if system is not None:
             self.add_message(system=system)
@@ -113,6 +113,7 @@ class BaseBranch(BaseRelatableNode, BranchIOMixin, ABC):
             context=context,
             response=response,
             output_fields=output_fields,
+            recipient=recipient,
             **kwargs,
         )
 
@@ -131,7 +132,7 @@ class BaseBranch(BaseRelatableNode, BranchIOMixin, ABC):
         Retrieves all chat messages without sender information.
 
         Returns:
-            A list of dictionaries representing chat messages.
+                A list of dictionaries representing chat messages.
         """
 
         return self._to_chatcompletion_message()
@@ -142,7 +143,7 @@ class BaseBranch(BaseRelatableNode, BranchIOMixin, ABC):
         Retrieves all chat messages, including sender information.
 
         Returns:
-            A list of dictionaries representing chat messages, each prefixed with its sender.
+                A list of dictionaries representing chat messages, each prefixed with its sender.
         """
 
         return self._to_chatcompletion_message(with_sender=True)
@@ -153,7 +154,7 @@ class BaseBranch(BaseRelatableNode, BranchIOMixin, ABC):
         Retrieves the last message from the branch as a pandas Series.
 
         Returns:
-            A pandas Series representing the last message in the branch.
+                A pandas Series representing the last message in the branch.
         """
 
         return MessageUtil.get_message_rows(self.messages, n=1, from_="last")
@@ -164,7 +165,7 @@ class BaseBranch(BaseRelatableNode, BranchIOMixin, ABC):
         Extracts the content of the last message in the branch.
 
         Returns:
-            A dictionary representing the content of the last message.
+                A dictionary representing the content of the last message.
         """
 
         return convert.to_dict(self.messages.content.iloc[-1])
@@ -175,7 +176,7 @@ class BaseBranch(BaseRelatableNode, BranchIOMixin, ABC):
         Retrieves the first message marked with the 'system' role.
 
         Returns:
-            A pandas Series representing the first 'system' message in the branch.
+                A pandas Series representing the first 'system' message in the branch.
         """
 
         return MessageUtil.get_message_rows(
@@ -188,7 +189,7 @@ class BaseBranch(BaseRelatableNode, BranchIOMixin, ABC):
         Retrieves the last message marked with the 'assistant' role.
 
         Returns:
-            A pandas Series representing the last 'assistant' (response) message in the branch.
+                A pandas Series representing the last 'assistant' (response) message in the branch.
         """
 
         return MessageUtil.get_message_rows(
@@ -201,7 +202,7 @@ class BaseBranch(BaseRelatableNode, BranchIOMixin, ABC):
         Extracts the content of the last 'assistant' (response) message.
 
         Returns:
-            A dictionary representing the content of the last 'assistant' message.
+                A dictionary representing the content of the last 'assistant' message.
         """
 
         return convert.to_dict(self.last_response.content.iloc[-1])
@@ -212,7 +213,7 @@ class BaseBranch(BaseRelatableNode, BranchIOMixin, ABC):
         Filters and retrieves all messages sent by 'action_request'.
 
         Returns:
-            A pandas DataFrame containing all 'action_request' messages.
+                A pandas DataFrame containing all 'action_request' messages.
         """
 
         return convert.to_df(self.messages[self.messages.sender == "action_request"])
@@ -223,7 +224,7 @@ class BaseBranch(BaseRelatableNode, BranchIOMixin, ABC):
         Filters and retrieves all messages sent by 'action_response'.
 
         Returns:
-            A pandas DataFrame containing all 'action_response' messages.
+                A pandas DataFrame containing all 'action_response' messages.
         """
 
         return convert.to_df(self.messages[self.messages.sender == "action_response"])
@@ -234,7 +235,7 @@ class BaseBranch(BaseRelatableNode, BranchIOMixin, ABC):
         Retrieves all messages marked with the 'assistant' role.
 
         Returns:
-            A pandas DataFrame containing all messages with an 'assistant' role.
+                A pandas DataFrame containing all messages with an 'assistant' role.
         """
 
         return convert.to_df(self.messages[self.messages.role == "assistant"])
@@ -245,7 +246,7 @@ class BaseBranch(BaseRelatableNode, BranchIOMixin, ABC):
         Filters 'assistant' role messages excluding 'action_request' and 'action_response'.
 
         Returns:
-            A pandas DataFrame of 'assistant' messages excluding action requests/responses.
+                A pandas DataFrame of 'assistant' messages excluding action requests/responses.
         """
 
         a_responses = self.responses[self.responses.sender != "action_response"]
@@ -268,7 +269,7 @@ class BaseBranch(BaseRelatableNode, BranchIOMixin, ABC):
         Summarizes branch information, including message counts by role.
 
         Returns:
-            A dictionary containing counts of messages categorized by their role.
+                A dictionary containing counts of messages categorized by their role.
         """
 
         return self._info()
@@ -279,7 +280,7 @@ class BaseBranch(BaseRelatableNode, BranchIOMixin, ABC):
         Provides a summary of message counts categorized by sender.
 
         Returns:
-            A dictionary with senders as keys and counts of their messages as values.
+                A dictionary with senders as keys and counts of their messages as values.
         """
 
         return self._info(use_sender=True)
@@ -290,8 +291,8 @@ class BaseBranch(BaseRelatableNode, BranchIOMixin, ABC):
         Provides a detailed description of the branch, including a summary of messages.
 
         Returns:
-            A dictionary with a summary of total messages, a breakdown by role, and
-            a preview of the first five messages.
+                A dictionary with a summary of total messages, a breakdown by role, and
+                a preview of the first five messages.
         """
 
         return {
@@ -309,7 +310,7 @@ class BaseBranch(BaseRelatableNode, BranchIOMixin, ABC):
         Removes a message from the branch based on its node ID.
 
         Args:
-            node_id: The unique identifier of the message to be removed.
+                node_id: The unique identifier of the message to be removed.
         """
         MessageUtil.remove_message(self.messages, node_id)
 
@@ -318,9 +319,9 @@ class BaseBranch(BaseRelatableNode, BranchIOMixin, ABC):
         Updates a specific column of a message identified by node_id with a new value.
 
         Args:
-            value: The new value to update the message with.
-            node_id: The unique identifier of the message to update.
-            column: The column of the message to update.
+                value: The new value to update the message with.
+                node_id: The unique identifier of the message to update.
+                column: The column of the message to update.
         """
 
         index = self.messages[self.messages["node_id"] == node_id].index[0]
@@ -336,8 +337,8 @@ class BaseBranch(BaseRelatableNode, BranchIOMixin, ABC):
         Updates the first system message with new content and/or sender.
 
         Args:
-            system: The new system message content or a System object.
-            sender: The identifier of the sender for the system message.
+                system: The new system message content or a System object.
+                sender: The identifier of the sender for the system message.
         """
 
         if len(self.messages[self.messages["role"] == "system"]) == 0:
@@ -359,7 +360,7 @@ class BaseBranch(BaseRelatableNode, BranchIOMixin, ABC):
         Removes the last 'n' messages from the branch.
 
         Args:
-            steps: The number of messages to remove from the end.
+                steps: The number of messages to remove from the end.
         """
 
         self.messages = dataframe.remove_last_n_rows(self.messages, steps)
@@ -431,10 +432,10 @@ class BaseBranch(BaseRelatableNode, BranchIOMixin, ABC):
         Helper method to generate summaries of messages either by role or sender.
 
         Args:
-            use_sender: If True, summary is categorized by sender. Otherwise, by role.
+                use_sender: If True, summary is categorized by sender. Otherwise, by role.
 
         Returns:
-            A dictionary summarizing the count of messages either by role or sender.
+                A dictionary summarizing the count of messages either by role or sender.
         """
 
         messages = self.messages["sender"] if use_sender else self.messages["role"]

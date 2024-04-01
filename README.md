@@ -5,17 +5,42 @@
 [PyPI](https://pypi.org/project/lionagi/) | [Documentation](https://ocean-lion.com/Welcome) | [Discord](https://discord.gg/xCkA5ErGmV)
 
 ```
-Documentation for v0.0.302 is in progress
+Documentation for v0.0.300+ is in progress
+
+To contribute, you need to make a fork first, and then make pull request from your fork. 
 ```
   
 # LionAGI
 
 **Powerful Intelligent Workflow Automation**
 
-LionAGI is an **intelligent agent framework**. Tailored for **big data analysis** in conjunction with advanced **machine learning** tools, designed for data-centric, production-level projects. Lionagi provides a set of robust tools, enabling flexible and rapid design of agentic workflow, for your own data.  
+It is an intelligent agentic workflow automation framework. It introduces advanced ML models into any existing workflows and data infrastructure.
 
 
-## Why Automating Workflows?
+### Currently, it can
+
+- interact with almost any models including local*
+- run interactions in parallel for most models (OpenRouter, OpenAI, Ollama, litellm...)
+- produce structured pydantic outputs with flexible usage\*\*
+- automate workflow via graph based agents
+- use advanced prompting techniques, i.e. ReAct (reason-action)
+- …
+
+### It aims to:
+
+- provide a centralized agent-managed framework for, "ML-powered tools coordination".
+- The ways of coordination and possible path can occur among nodes is what we also refers to as `workflow` (the concept of workflow is still in design).
+- such that, people can utilize intelligence to solve their problems in real life.
+- achieve the goal by dramatically lowering the barrier of entries for creating use-case/domain specific tools.
+
+
+All notebooks should run, as of 0.0.313,
+
+\* if there are models on providers that have not been configured, you can do so by configuring your own AI providers, and endpoints. 
+
+\*\* Structured Input/Output, Graph based agent system, as well as more advanced prompting techniques are undergoing fast interations...
+
+### Why Automating Workflows?
 
 Intelligent AI models such as [Large Language Model (LLM)](https://en.wikipedia.org/wiki/Large_language_model), introduced new possibilities of human-computer interaction. LLMs is drawing a lot of attention worldwide due to its “one model fits all”, and incredible performance. One way of using LLM is to use as search engine, however, this usage is complicated by the fact that LLMs [hallucinate](https://arxiv.org/abs/2311.05232).
 

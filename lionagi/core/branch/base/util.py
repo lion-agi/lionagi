@@ -1,10 +1,8 @@
+import contextlib
 from datetime import datetime
 from typing import Any
 
-from lionagi.libs import ln_convert as convert
-from lionagi.libs import ln_nested as nested
-from lionagi.libs import ln_func_call as func_call
-from lionagi.libs import ln_dataframe as dataframe
+from lionagi.libs import convert, nested, func_call, dataframe
 
 from lionagi.core.messages.base.schema import (
     BranchColumns,
@@ -32,42 +30,41 @@ class MessageUtil:
         Creates a message object based on the input parameters, ensuring only one message role is present.
 
         Args:
-            system: Information for creating a System message.
-            instruction: Information for creating an Instruction message.
-            context: Context information for the message.
-            response: Response data for creating a message.
-            **kwargs: Additional keyword arguments for message creation.
+                system: Information for creating a System message.
+                instruction: Information for creating an Instruction message.
+                context: Context information for the message.
+                response: Response data for creating a message.
+                **kwargs: Additional keyword arguments for message creation.
 
         Returns:
-            A message object of the appropriate type based on provided inputs.
+                A message object of the appropriate type based on provided inputs.
 
         Raises:
-            ValueError: If more than one of the role-specific parameters are provided.
+                ValueError: If more than one of the role-specific parameters are provided.
         """
         if sum(func_call.lcall([system, instruction, response], bool)) != 1:
             raise ValueError("Error: Message must have one and only one role.")
 
-        else:
-            if isinstance(system, System):
-                return system
-            elif isinstance(instruction, Instruction):
-                return instruction
-            elif isinstance(response, Response):
-                return response
+        if isinstance(system, System):
+            return system
+        elif isinstance(instruction, Instruction):
+            return instruction
+        elif isinstance(response, Response):
+            return response
 
-            msg = 0
-            if response:
-                msg = Response(response=response, **kwargs)
-            elif instruction:
-                msg = Instruction(
-                    instruction=instruction,
-                    context=context,
-                    output_fields=output_fields,
-                    **kwargs,
-                )
-            elif system:
-                msg = System(system=system, **kwargs)
-            return msg
+        msg = 0
+        if response:
+            msg = Response(response=response, **kwargs)
+        elif instruction:
+            msg = Instruction(
+                instruction=instruction,
+                context=context,
+                output_fields=output_fields,
+                **kwargs,
+            )
+        elif system:
+            msg = System(system=system, **kwargs)
+        return msg
 
     @staticmethod
     def validate_messages(messages: dataframe.ln_DataFrame) -> bool:
@@ -75,21 +72,21 @@ class MessageUtil:
         Validates the format and content of a DataFrame containing messages.
 
         Args:
-            messages: A DataFrame with message information.
+                messages: A DataFrame with message information.
 
         Returns:
-            True if the messages DataFrame is correctly formatted, False otherwise.
+                True if the messages DataFrame is correctly formatted, False otherwise.
 
         Raises:
-            ValueError: If the DataFrame does not match expected schema or content requirements.
+                ValueError: If the DataFrame does not match expected schema or content requirements.
         """
 
         if list(messages.columns) != BranchColumns.COLUMNS.value:
             raise ValueError("Invalid messages dataframe. Unmatched columns.")
         if messages.isnull().values.any():
             raise ValueError("Invalid messages dataframe. Cannot have null.")
-        if not all(
-            role in ["system", "user", "assistant"]
+        if any(
+            role not in ["system", "user", "assistant"]
             for role in messages["role"].unique()
         ):
             raise ValueError(
@@ -114,14 +111,14 @@ class MessageUtil:
         Appends a sender prefix to the 'content' field of each message in a DataFrame.
 
         Args:
-            messages: A DataFrame containing message data.
-            sender: The identifier of the sender to prefix to message contents.
+                messages: A DataFrame containing message data.
+                sender: The identifier of the sender to prefix to message contents.
 
         Returns:
-            A DataFrame with sender-prefixed message contents.
+                A DataFrame with sender-prefixed message contents.
 
         Raises:
-            ValueError: If the sender is None or the value is 'none'.
+                ValueError: If the sender is None or the value is 'none'.
         """
 
         if sender is None or convert.strip_lower(sender) == "none":
@@ -151,16 +148,16 @@ class MessageUtil:
         Filters messages in a DataFrame based on specified criteria.
 
         Args:
-            messages: The DataFrame to filter.
-            role: The role to filter by.
-            sender: The sender to filter by.
-            start_time: The minimum timestamp for messages.
-            end_time: The maximum timestamp for messages.
-            content_keywords: Keywords to look for in message content.
-            case_sensitive: Whether the keyword search should be case-sensitive.
+                messages: The DataFrame to filter.
+                role: The role to filter by.
+                sender: The sender to filter by.
+                start_time: The minimum timestamp for messages.
+                end_time: The maximum timestamp for messages.
+                content_keywords: Keywords to look for in message content.
+                case_sensitive: Whether the keyword search should be case-sensitive.
 
         Returns:
-            A filtered DataFrame based on the specified criteria.
+                A filtered DataFrame based on the specified criteria.
         """
 
         try:
@@ -179,7 +176,7 @@ class MessageUtil:
             return convert.to_df(outs)
 
         except Exception as e:
-            raise ValueError(f"Error in filtering messages: {e}")
+            raise ValueError(f"Error in filtering messages: {e}") from e
 
     @staticmethod
     def remove_message(messages: dataframe.ln_DataFrame, node_id: str) -> bool:
@@ -187,15 +184,15 @@ class MessageUtil:
         Removes a message from the DataFrame based on its node ID.
 
         Args:
-            messages: The DataFrame containing messages.
-            node_id: The unique identifier of the message to be removed.
+                messages: The DataFrame containing messages.
+                node_id: The unique identifier of the message to be removed.
 
         Returns:
-            If any messages are removed.
+                If any messages are removed.
 
         Examples:
-            >>> messages = dataframe.ln_DataFrame([...])
-            >>> updated_messages = MessageUtil.remove_message(messages, "node_id_123")
+                >>> messages = dataframe.ln_DataFrame([...])
+                >>> updated_messages = MessageUtil.remove_message(messages, "node_id_123")
         """
 
         initial_length = len(messages)
@@ -217,15 +214,15 @@ class MessageUtil:
         Retrieves a specified number of message rows based on sender and role.
 
         Args:
-            messages: The DataFrame containing messages.
-            sender: Filter messages by the sender.
-            role: Filter messages by the role.
-            n: The number of messages to retrieve.
-            sign_: If True, sign the message with the sender.
-            from_: Specify retrieval from the 'front' or 'last' of the DataFrame.
+                messages: The DataFrame containing messages.
+                sender: Filter messages by the sender.
+                role: Filter messages by the role.
+                n: The number of messages to retrieve.
+                sign_: If True, sign the message with the sender.
+                from_: Specify retrieval from the 'front' or 'last' of the DataFrame.
 
         Returns:
-            A DataFrame containing the filtered messages.
+                A DataFrame containing the filtered messages.
         """
 
         outs = ""
@@ -265,17 +262,17 @@ class MessageUtil:
         Extends a DataFrame with another DataFrame's rows, ensuring no duplicate 'node_id'.
 
         Args:
-            df1: The primary DataFrame.
-            df2: The DataFrame to merge with the primary DataFrame.
-            **kwargs: Additional keyword arguments for `drop_duplicates`.
+                df1: The primary DataFrame.
+                df2: The DataFrame to merge with the primary DataFrame.
+                **kwargs: Additional keyword arguments for `drop_duplicates`.
 
         Returns:
-            A DataFrame combined from df1 and df2 with duplicates removed based on 'node_id'.
+                A DataFrame combined from df1 and df2 with duplicates removed based on 'node_id'.
 
         Examples:
-            >>> df_main = dataframe.ln_DataFrame([...])
-            >>> df_additional = dataframe.ln_DataFrame([...])
-            >>> combined_df = MessageUtil.extend(df_main, df_additional, keep='first')
+                >>> df_main = dataframe.ln_DataFrame([...])
+                >>> df_additional = dataframe.ln_DataFrame([...])
+                >>> combined_df = MessageUtil.extend(df_main, df_additional, keep='first')
         """
 
         MessageUtil.validate_messages(df2)
@@ -287,7 +284,7 @@ class MessageUtil:
                 )
                 return convert.to_df(df)
         except Exception as e:
-            raise ValueError(f"Error in extending messages: {e}")
+            raise ValueError(f"Error in extending messages: {e}") from e
 
     @staticmethod
     def to_markdown_string(messages: dataframe.ln_DataFrame) -> str:
@@ -295,11 +292,11 @@ class MessageUtil:
         Converts messages in a DataFrame to a Markdown-formatted string for easy reading.
 
         Args:
-            messages: A DataFrame containing messages with columns for 'role' and 'content'.
+                messages: A DataFrame containing messages with columns for 'role' and 'content'.
 
         Returns:
-            A string formatted in Markdown, where each message's content is presented
-            according to its role in a readable format.
+                A string formatted in Markdown, where each message's content is presented
+                according to its role in a readable format.
         """
 
         answers = []
@@ -307,101 +304,20 @@ class MessageUtil:
             content = convert.to_dict(i.content)
 
             if i.role == "assistant":
-                try:
+                with contextlib.suppress(Exception):
                     a = nested.nget(content, ["action_response", "func"])
                     b = nested.nget(content, ["action_response", "arguments"])
                     c = nested.nget(content, ["action_response", "output"])
                     if a is not None:
-                        answers.append(f"Function: {a}")
-                        answers.append(f"Arguments: {b}")
-                        answers.append(f"Output: {c}")
+                        answers.extend(
+                            (f"Function: {a}", f"Arguments: {b}", f"Output: {c}")
+                        )
                     else:
                         answers.append(nested.nget(content, ["assistant_response"]))
-                except:
-                    pass
             elif i.role == "user":
-                try:
+                with contextlib.suppress(Exception):
                     answers.append(nested.nget(content, ["instruction"]))
-                except:
-                    pass
             else:
-                try:
+                with contextlib.suppress(Exception):
                     answers.append(nested.nget(content, ["system_info"]))
-                except:
-                    pass
-
-        out_ = "\n".join(answers)
-        return out_
-
-    # @staticmethod
-    # def to_json_content(value):
-    #     if isinstance(value, dict):
-    #         for key, val in value.items():
-    #             value[key] = MessageUtil.to_json_content(val)
-    #         value = json.dumps(value)
-    #     if isinstance(value, list):
-    #         for i in range(len(value)):
-    #             value[i] = MessageUtil.to_json_content(value[i])
-    #     return value
-
-    # @staticmethod
-    # def to_dict_content(value):
-    #     try:
-    #         value = json.loads(value)
-    #         if isinstance(value, dict):
-    #             for key, val in value.items():
-    #                 value[key] = MessageUtil.to_dict_content(val)
-    #         if isinstance(value, list):
-    #             for i in range(len(value)):
-    #                 value[i] = MessageUtil.to_dict_content(value[i])
-    #         return value
-    #     except:
-    #         return value
-
-    # @staticmethod
-    # def response_to_message(response: dict[str, Any], **kwargs) -> Any:
-    #     """
-    #     Processes a message response dictionary to generate an appropriate message object.
-
-    #     Args:
-    #         response: A dictionary potentially containing message information.
-    #         **kwargs: Additional keyword arguments to pass to the message constructors.
-
-    #     Returns:
-    #         An instance of a message class, such as ActionRequest or AssistantResponse,
-    #         depending on the content of the response.
-    #     """
-    #     try:
-    #         response = response["message"]
-    #         if .strip_lower(response['content']) == "none":
-
-    #             content = ActionRequest._handle_action_request(response)
-    #             return ActionRequest(action_request=content, **kwargs)
-
-    #         else:
-
-    #             try:
-    #                 if 'tool_uses' in to_dict(response[MessageField.CONTENT.value]):
-    #                     content_ = to_dict(response[MessageField.CONTENT.value])[
-    #                         'tool_uses']
-    #                     return ActionRequest(action_request=content_, **kwargs)
-
-    #                 elif MessageContentKey.RESPONSE.value in to_dict(
-    #                         response[MessageField.CONTENT.value]):
-    #                     content_ = to_dict(response[MessageField.CONTENT.value])[
-    #                         MessageContentKey.RESPONSE.value]
-    #                     return AssistantResponse(assistant_response=content_, **kwargs)
-
-    #                 elif MessageContentKey.ACTION_REQUEST.value in to_dict(
-    #                         response[MessageField.CONTENT.value]):
-    #                     content_ = to_dict(response[MessageField.CONTENT.value])[
-    #                         MessageContentKey.ACTION_REQUEST.value]
-    #                     return ActionRequest(action_request=content_, **kwargs)
-
-    #                 else:
-    #                     return AssistantResponse(assistant_response=response, **kwargs)
-
-    #             except:
-    #                 return AssistantResponse(assistant_response=response, **kwargs)
-    #     except:
-    #         return ActionResponse(action_response=response, **kwargs)
+        return "\n".join(answers)

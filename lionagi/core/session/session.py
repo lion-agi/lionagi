@@ -1,8 +1,8 @@
 from collections import deque
 from typing import Tuple
 
-from lionagi.libs.ln_api import BaseService
 from lionagi.libs.sys_util import PATH_TYPE
+from lionagi.libs import BaseService, convert, dataframe
 
 from lionagi.libs import ln_convert as convert
 from lionagi.libs import ln_dataframe as dataframe
@@ -26,10 +26,10 @@ class Session(SessionFlowMIxin):
     branches, configuring language learning models, managing tools, and handling session data logging.
 
     Attributes:
-        branches (dict[str, Branch]): A dictionary of branch instances associated with the session.
-        service (BaseService]): The external service instance associated with the | Nonesession.
-        mail_manager (BranchManager): The manager for handling branches within the session.
-        datalogger (Optional[Any]): The datalogger instance for session data logging.
+            branches (dict[str, Branch]): A dictionary of branch instances associated with the session.
+            service (BaseService]): The external service instance associated with the | Nonesession.
+            mail_manager (BranchManager): The manager for handling branches within the session.
+            datalogger (Optional[Any]): The datalogger instance for session data logging.
     """
 
     def __init__(
@@ -51,22 +51,22 @@ class Session(SessionFlowMIxin):
         """Initialize a new session with optional configuration for managing conversations.
 
         Args:
-            system (Optional[Union[str, System]]): The system message.
-            sender (str | None): the default sender name for default branch
-            llmconfig (dict[str, Any] | None): Configuration for language learning models.
-            service (BaseService]): External service  | Nonenstance.
-            branches (dict[str, Branch] | None): dictionary of branch instances.
-            default_branch (Branch | None): The default branch for the session.
-            default_branch_name (str | None): The name of the default branch.
-            tools (TOOL_TYPE | None): List of tools available for the session.
-            instruction_sets (Optional[List[Instruction]]): List of instruction sets.
-            tool_manager (Optional[Any]): Manager for handling tools.
-            messages (Optional[List[dict[str, Any]]]): Initial list of messages.
-            datalogger (Optional[Any]): Logger instance for the session.
-            persist_path (str | None): Directory path for saving session data.
+                system (Optional[Union[str, System]]): The system message.
+                sender (str | None): the default sender name for default branch
+                llmconfig (dict[str, Any] | None): Configuration for language learning models.
+                service (BaseService]): External service  | Nonenstance.
+                branches (dict[str, Branch] | None): dictionary of branch instances.
+                default_branch (Branch | None): The default branch for the session.
+                default_branch_name (str | None): The name of the default branch.
+                tools (TOOL_TYPE | None): List of tools available for the session.
+                instruction_sets (Optional[List[Instruction]]): List of instruction sets.
+                tool_manager (Optional[Any]): Manager for handling tools.
+                messages (Optional[List[dict[str, Any]]]): Initial list of messages.
+                datalogger (Optional[Any]): Logger instance for the session.
+                persist_path (str | None): Directory path for saving session data.
 
         Examples:
-            >>> session = Session(system="you are a helpful assistant", sender="researcher")
+                >>> session = Session(system="you are a helpful assistant", sender="researcher")
         """
         self.branches = branches if isinstance(branches, dict) else {}
         self.service = service
@@ -101,12 +101,12 @@ class Session(SessionFlowMIxin):
         Provides a descriptive summary of all messages in the branch.
 
         Returns:
-            dict[str, Any]: A dictionary containing summaries of messages by role and sender, total message count,
-            instruction sets, registered tools, and message details.
+                dict[str, Any]: A dictionary containing summaries of messages by role and sender, total message count,
+                instruction sets, registered tools, and message details.
 
         Examples:
-            >>> session.messages_describe
-            {'total_messages': 100, 'by_sender': {'User123': 60, 'Bot': 40}}
+                >>> session.messages_describe
+                {'total_messages': 100, 'by_sender': {'User123': 60, 'Bot': 40}}
         """
         return self.default_branch.messages_describe
 
@@ -116,11 +116,11 @@ class Session(SessionFlowMIxin):
         Checks if there are any tools registered in the tool manager.
 
         Returns:
-            bool: True if there are tools registered, False otherwise.
+                bool: True if there are tools registered, False otherwise.
 
         Examples:
-            >>> session.has_tools
-            True
+                >>> session.has_tools
+                True
         """
         return self.default_branch.has_tools
 
@@ -130,7 +130,7 @@ class Session(SessionFlowMIxin):
         Retrieves the last message from the conversation.
 
         Returns:
-            pd.Series: The last message as a pandas Series.
+                pd.Series: The last message as a pandas Series.
         """
         return self.default_branch.last_message
 
@@ -140,7 +140,7 @@ class Session(SessionFlowMIxin):
         Retrieves the first system message from the conversation.
 
         Returns:
-            pd.Series: The first system message as a pandas Series.
+                pd.Series: The first system message as a pandas Series.
         """
         return self.default_branch.first_system
 
@@ -150,7 +150,7 @@ class Session(SessionFlowMIxin):
         Retrieves the last response message from the conversation.
 
         Returns:
-            pd.Series: The last response message as a pandas Series.
+                pd.Series: The last response message as a pandas Series.
         """
         return self.default_branch.last_response
 
@@ -160,7 +160,7 @@ class Session(SessionFlowMIxin):
         Retrieves the content of the last response message from the conversation.
 
         Returns:
-            dict: The content of the last response message as a dictionary
+                dict: The content of the last response message as a dictionary
         """
         return self.default_branch.last_response_content
 
@@ -170,7 +170,7 @@ class Session(SessionFlowMIxin):
         Retrieves all tool request messages from the conversation.
 
         Returns:
-            dataframe.ln_DataFrame: A DataFrame containing all tool request messages.
+                dataframe.ln_DataFrame: A DataFrame containing all tool request messages.
         """
         return self.default_branch.tool_request
 
@@ -180,7 +180,7 @@ class Session(SessionFlowMIxin):
         Retrieves all tool response messages from the conversation.
 
         Returns:
-            dataframe.ln_DataFrame: A DataFrame containing all tool response messages.
+                dataframe.ln_DataFrame: A DataFrame containing all tool response messages.
         """
         return self.default_branch.tool_response
 
@@ -190,7 +190,7 @@ class Session(SessionFlowMIxin):
         Retrieves all response messages from the conversation.
 
         Returns:
-            dataframe.ln_DataFrame: A DataFrame containing all response messages.
+                dataframe.ln_DataFrame: A DataFrame containing all response messages.
         """
         return self.default_branch.responses
 
@@ -200,7 +200,7 @@ class Session(SessionFlowMIxin):
         Retrieves all assistant responses from the conversation, excluding tool requests and responses.
 
         Returns:
-            dataframe.ln_DataFrame: A DataFrame containing assistant responses excluding tool requests and responses.
+                dataframe.ln_DataFrame: A DataFrame containing assistant responses excluding tool requests and responses.
         """
         return self.default_branch.assistant_responses
 
@@ -210,7 +210,7 @@ class Session(SessionFlowMIxin):
         Get a summary of the conversation messages categorized by role.
 
         Returns:
-            dict[str, int]: A dictionary with keys as message roles and values as counts.
+                dict[str, int]: A dictionary with keys as message roles and values as counts.
         """
 
         return self.default_branch.info
@@ -221,7 +221,7 @@ class Session(SessionFlowMIxin):
         Provides a descriptive summary of the conversation, including total message count and summary by sender.
 
         Returns:
-            dict[str, Any]: A dictionary containing the total number of messages and a summary categorized by sender.
+                dict[str, Any]: A dictionary containing the total number of messages and a summary categorized by sender.
         """
         return self.default_branch.sender_info
 
@@ -237,8 +237,7 @@ class Session(SessionFlowMIxin):
         llmconfig: dict[str, str | int | dict] | None = None,
         service: BaseService = None,
         default_branch_name: str = "main",
-        tools: TOOL_TYPE = False,
-        # instruction_sets=None,
+        tools: TOOL_TYPE = False,  # instruction_sets=None,
         tool_manager=None,
         **kwargs,
     ) -> "Session":
@@ -246,24 +245,24 @@ class Session(SessionFlowMIxin):
         Creates a Session instance from a CSV file containing messages.
 
         Args:
-            filepath (str): Path to the CSV file.
-            name (str | None): Name of the branch, default is None.
-            instruction_sets (Optional[dict[str, InstructionSet]]): Instruction sets, default is None.
-            tool_manager (Optional[ToolManager]): Tool manager for the branch, default is None.
-            service (BaseService]): External service for the branch, default | Noneis None.
-            llmconfig (Optional[dict]): Configuration for language learning models, default is None.
-            tools (TOOL_TYPE | None): Initial list of tools to register, default is None.
-            **kwargs: Additional keyword arguments for pd.read_csv().
+                filepath (str): Path to the CSV file.
+                name (str | None): Name of the branch, default is None.
+                instruction_sets (Optional[dict[str, InstructionSet]]): Instruction sets, default is None.
+                tool_manager (Optional[ToolManager]): Tool manager for the branch, default is None.
+                service (BaseService]): External service for the branch, default | Noneis None.
+                llmconfig (Optional[dict]): Configuration for language learning models, default is None.
+                tools (TOOL_TYPE | None): Initial list of tools to register, default is None.
+                **kwargs: Additional keyword arguments for pd.read_csv().
 
         Returns:
-            Branch: A new Branch instance created from the CSV data.
+                Branch: A new Branch instance created from the CSV data.
 
         Examples:
-            >>> branch = Branch.from_csv("path/to/messages.csv", name="ImportedBranch")
+                >>> branch = Branch.from_csv("path/to/messages.csv", name="ImportedBranch")
         """
         df = dataframe.read_csv(filepath, **kwargs)
 
-        self = cls(
+        return cls(
             system=system,
             sender=sender,
             llmconfig=llmconfig,
@@ -274,8 +273,6 @@ class Session(SessionFlowMIxin):
             messages=df,
             **kwargs,
         )
-
-        return self
 
     @classmethod
     def from_json(
@@ -286,8 +283,7 @@ class Session(SessionFlowMIxin):
         llmconfig: dict[str, str | int | dict] | None = None,
         service: BaseService = None,
         default_branch_name: str = "main",
-        tools: TOOL_TYPE = False,
-        # instruction_sets=None,
+        tools: TOOL_TYPE = False,  # instruction_sets=None,
         tool_manager=None,
         **kwargs,
     ) -> "Session":
@@ -295,35 +291,32 @@ class Session(SessionFlowMIxin):
         Creates a Branch instance from a JSON file containing messages.
 
         Args:
-            filepath (str): Path to the JSON file.
-            name (str | None): Name of the branch, default is None.
-            instruction_sets (Optional[dict[str, InstructionSet]]): Instruction sets, default is None.
-            tool_manager (Optional[ToolManager]): Tool manager for the branch, default is None.
-            service (BaseService]): External service for the branch, default | Noneis None.
-            llmconfig (Optional[dict]): Configuration for language learning models, default is None.
-            **kwargs: Additional keyword arguments for pd.read_json().
+                filepath (str): Path to the JSON file.
+                name (str | None): Name of the branch, default is None.
+                instruction_sets (Optional[dict[str, InstructionSet]]): Instruction sets, default is None.
+                tool_manager (Optional[ToolManager]): Tool manager for the branch, default is None.
+                service (BaseService]): External service for the branch, default | Noneis None.
+                llmconfig (Optional[dict]): Configuration for language learning models, default is None.
+                **kwargs: Additional keyword arguments for pd.read_json().
 
         Returns:
-            Branch: A new Branch instance created from the JSON data.
+                Branch: A new Branch instance created from the JSON data.
 
         Examples:
-            >>> branch = Branch.from_json_string("path/to/messages.json", name="JSONBranch")
+                >>> branch = Branch.from_json_string("path/to/messages.json", name="JSONBranch")
         """
         df = dataframe.read_json(filepath, **kwargs)
-        self = cls(
+        return cls(
             system=system,
             sender=sender,
             llmconfig=llmconfig,
             service=service,
             default_branch_name=default_branch_name,
-            tools=tools,
-            # instruction_sets=instruction_sets,
+            tools=tools,  # instruction_sets=instruction_sets,
             tool_manager=tool_manager,
             messages=df,
             **kwargs,
         )
-
-        return self
 
     def to_csv_file(
         self,
@@ -339,17 +332,17 @@ class Session(SessionFlowMIxin):
         Saves the branch's messages to a CSV file.
 
         Args:
-            filename (str): The name of the output CSV file, default is 'messages.csv'.
-            dir_exist_ok (bool): If True, does not raise an error if the directory already exists, default is True.
-            timestamp (bool): If True, appends a timestamp to the filename, default is True.
-            time_prefix (bool): If True, adds a timestamp prefix to the filename, default is False.
-            verbose (bool): If True, prints a message upon successful save, default is True.
-            clear (bool): If True, clears the messages after saving, default is True.
-            **kwargs: Additional keyword arguments for DataFrame.to_csv().
+                filename (str): The name of the output CSV file, default is 'messages.csv'.
+                dir_exist_ok (bool): If True, does not raise an error if the directory already exists, default is True.
+                timestamp (bool): If True, appends a timestamp to the filename, default is True.
+                time_prefix (bool): If True, adds a timestamp prefix to the filename, default is False.
+                verbose (bool): If True, prints a message upon successful save, default is True.
+                clear (bool): If True, clears the messages after saving, default is True.
+                **kwargs: Additional keyword arguments for DataFrame.to_csv().
 
         Examples:
-            >>> branch.to_csv_file("exported_messages.csv")
-            >>> branch.to_csv_file("timed_export.csv", timestamp=True, time_prefix=True)
+                >>> branch.to_csv_file("exported_messages.csv")
+                >>> branch.to_csv_file("timed_export.csv", timestamp=True, time_prefix=True)
         """
         for name, branch in self.branches.items():
             f_name = f"{name}_{filename}"
@@ -377,17 +370,17 @@ class Session(SessionFlowMIxin):
         Saves the branch's messages to a JSON file.
 
         Args:
-            filename (str): The name of the output JSON file, default is 'messages.json'.
-            dir_exist_ok (bool): If True, does not raise an error if the directory already exists, default is True.
-            timestamp (bool): If True, appends a timestamp to the filename, default is True.
-            time_prefix (bool): If True, adds a timestamp prefix to the filename, default is False.
-            verbose (bool): If True, prints a message upon successful save, default is True.
-            clear (bool): If True, clears the messages after saving, default is True.
-            **kwargs: Additional keyword arguments for DataFrame.to_json().
+                filename (str): The name of the output JSON file, default is 'messages.json'.
+                dir_exist_ok (bool): If True, does not raise an error if the directory already exists, default is True.
+                timestamp (bool): If True, appends a timestamp to the filename, default is True.
+                time_prefix (bool): If True, adds a timestamp prefix to the filename, default is False.
+                verbose (bool): If True, prints a message upon successful save, default is True.
+                clear (bool): If True, clears the messages after saving, default is True.
+                **kwargs: Additional keyword arguments for DataFrame.to_json().
 
         Examples:
-            >>> branch.to_json_file("exported_messages.json")
-            >>> branch.to_json_file("timed_export.json", timestamp=True, time_prefix=True)
+                >>> branch.to_json_file("exported_messages.json")
+                >>> branch.to_json_file("timed_export.json", timestamp=True, time_prefix=True)
         """
 
         for name, branch in self.branches.items():
@@ -419,17 +412,17 @@ class Session(SessionFlowMIxin):
         to a CSV file for analysis or record-keeping.
 
         Args:
-            filename (str): The name of the output CSV file. Defaults to 'log.csv'.
-            dir_exist_ok (bool): If True, will not raise an error if the directory already exists. Defaults to True.
-            timestamp (bool): If True, appends a timestamp to the filename for uniqueness. Defaults to True.
-            time_prefix (bool): If True, adds a timestamp prefix to the filename. Defaults to False.
-            verbose (bool): If True, prints a success message upon completion. Defaults to True.
-            clear (bool): If True, clears the log after saving. Defaults to True.
-            **kwargs: Additional keyword arguments for `DataFrame.to_csv()`.
+                filename (str): The name of the output CSV file. Defaults to 'log.csv'.
+                dir_exist_ok (bool): If True, will not raise an error if the directory already exists. Defaults to True.
+                timestamp (bool): If True, appends a timestamp to the filename for uniqueness. Defaults to True.
+                time_prefix (bool): If True, adds a timestamp prefix to the filename. Defaults to False.
+                verbose (bool): If True, prints a success message upon completion. Defaults to True.
+                clear (bool): If True, clears the log after saving. Defaults to True.
+                **kwargs: Additional keyword arguments for `DataFrame.to_csv()`.
 
         Examples:
-            >>> branch.log_to_csv("branch_log.csv")
-            >>> branch.log_to_csv("detailed_branch_log.csv", timestamp=True, verbose=True)
+                >>> branch.log_to_csv("branch_log.csv")
+                >>> branch.log_to_csv("detailed_branch_log.csv", timestamp=True, verbose=True)
         """
         for name, branch in self.branches.items():
             f_name = f"{name}_{filename}"
@@ -460,17 +453,17 @@ class Session(SessionFlowMIxin):
         and services that consume JSON.
 
         Args:
-            filename (str): The name of the output JSON file. Defaults to 'log.json'.
-            dir_exist_ok (bool): If directory existence should not raise an error. Defaults to True.
-            timestamp (bool): If True, appends a timestamp to the filename. Defaults to True.
-            time_prefix (bool): If True, adds a timestamp prefix to the filename. Defaults to False.
-            verbose (bool): If True, prints a success message upon completion. Defaults to True.
-            clear (bool): If True, clears the log after saving. Defaults to True.
-            **kwargs: Additional keyword arguments for `DataFrame.to_json()`.
+                filename (str): The name of the output JSON file. Defaults to 'log.json'.
+                dir_exist_ok (bool): If directory existence should not raise an error. Defaults to True.
+                timestamp (bool): If True, appends a timestamp to the filename. Defaults to True.
+                time_prefix (bool): If True, adds a timestamp prefix to the filename. Defaults to False.
+                verbose (bool): If True, prints a success message upon completion. Defaults to True.
+                clear (bool): If True, clears the log after saving. Defaults to True.
+                **kwargs: Additional keyword arguments for `DataFrame.to_json()`.
 
         Examples:
-            >>> branch.log_to_json("branch_log.json")
-            >>> branch.log_to_json("detailed_branch_log.json", verbose=True, timestamp=True)
+                >>> branch.log_to_json("branch_log.json")
+                >>> branch.log_to_json("detailed_branch_log.json", verbose=True, timestamp=True)
         """
         for name, branch in self.branches.items():
             f_name = f"{name}_{filename}"
@@ -511,21 +504,21 @@ class Session(SessionFlowMIxin):
         """Create a new branch with the specified configurations.
 
         Args:
-            branch_name (str | None): Name of the new branch.
-            system (Optional[Union[System, str]]): System or context identifier for the new branch.
-            sender (str | None): Default sender identifier for the new branch.
-            messages (Optional[dataframe.ln_DataFrame]): Initial set of messages for the new branch.
-            instruction_sets (Optional[Any]): Instruction sets for the new branch.
-            tool_manager (Optional[Any]): Tool manager for handling tools in the new branch.
-            service (BaseService]): External service instance for the ne | None branch.
-            llmconfig (dict[str, Any] | None): Configuration for language learning models in the new branch.
-            tools (TOOL_TYPE | None): List of tools available for the new branch.
+                branch_name (str | None): Name of the new branch.
+                system (Optional[Union[System, str]]): System or context identifier for the new branch.
+                sender (str | None): Default sender identifier for the new branch.
+                messages (Optional[dataframe.ln_DataFrame]): Initial set of messages for the new branch.
+                instruction_sets (Optional[Any]): Instruction sets for the new branch.
+                tool_manager (Optional[Any]): Tool manager for handling tools in the new branch.
+                service (BaseService]): External service instance for the ne | None branch.
+                llmconfig (dict[str, Any] | None): Configuration for language learning models in the new branch.
+                tools (TOOL_TYPE | None): List of tools available for the new branch.
 
         Raises:
-            ValueError: If the branch name already exists.
+                ValueError: If the branch name already exists.
 
         Examples:
-            >>> session.new_branch("new_branch_name")
+                >>> session.new_branch("new_branch_name")
         """
         if branch_name in self.branches.keys():
             raise ValueError(
@@ -555,14 +548,14 @@ class Session(SessionFlowMIxin):
         Retrieve a branch by name or instance.
 
         Args:
-            branch (Optional[Branch | str]): The branch name or instance to retrieve.
-            get_name (bool): If True, returns a tuple of the branch instance and its name.
+                branch (Optional[Branch | str]): The branch name or instance to retrieve.
+                get_name (bool): If True, returns a tuple of the branch instance and its name.
 
         Returns:
-            Union[Branch, Tuple[Branch, str]]: The branch instance or a tuple of the branch instance and its name.
+                Union[Branch, Tuple[Branch, str]]: The branch instance or a tuple of the branch instance and its name.
 
         Raises:
-            ValueError: If the branch name does not exist or the branch input is invalid.
+                ValueError: If the branch name does not exist or the branch input is invalid.
 
         Examples:
             >>> branch_instance = session.get_branch("existing_branch_name")
@@ -571,20 +564,11 @@ class Session(SessionFlowMIxin):
         if isinstance(branch, str):
             if branch not in self.branches.keys():
                 raise ValueError(f"Invalid branch name {branch}. Not exist.")
-            else:
-                if get_name:
-                    return self.branches[branch], branch
-                return self.branches[branch]
-
+            return (
+                (self.branches[branch], branch) if get_name else self.branches[branch]
+            )
         elif isinstance(branch, Branch) and branch in self.branches.values():
-            if get_name:
-                return (
-                    branch,
-                    # [key for key, value in self.branches.items() if value == branch][0],
-                    branch.name,
-                )
-            return branch
-
+            return (branch, branch.name) if get_name else branch
         elif branch is None:
             if get_name:
                 return self.default_branch, self.default_branch_name
@@ -597,10 +581,10 @@ class Session(SessionFlowMIxin):
         """Change the default branch of the session.
 
         Args:
-            branch (str | Branch): The branch name or instance to set as the new default.
+                branch (str | Branch): The branch name or instance to set as the new default.
 
         Examples:
-            >>> session.change_default_branch("new_default_branch")
+                >>> session.change_default_branch("new_default_branch")
         """
         branch_, name_ = self.get_branch(branch, get_name=True)
         self.default_branch = branch_
@@ -610,17 +594,17 @@ class Session(SessionFlowMIxin):
         """Delete a branch from the session.
 
         Args:
-            branch (Branch | str): The branch name or instance to delete.
-            verbose (bool): If True, prints a message upon deletion.
+                branch (Branch | str): The branch name or instance to delete.
+                verbose (bool): If True, prints a message upon deletion.
 
         Returns:
-            bool: True if the branch was successfully deleted.
+                bool: True if the branch was successfully deleted.
 
         Raises:
-            ValueError: If attempting to delete the current default branch.
+                ValueError: If attempting to delete the current default branch.
 
         Examples:
-            >>> session.delete_branch("branch_to_delete")
+                >>> session.delete_branch("branch_to_delete")
         """
         _, branch_name = self.get_branch(branch, get_name=True)
 
@@ -646,13 +630,13 @@ class Session(SessionFlowMIxin):
         """Merge messages and settings from one branch to another.
 
         Args:
-            from_ (str | Branch): The source branch name or instance.
-            to_branch (str | Branch): The target branch name or instance where the merge will happen.
-            update (bool): If True, updates the target branch with the source branch's settings.
-            del_ (bool): If True, deletes the source branch after merging.
+                from_ (str | Branch): The source branch name or instance.
+                to_branch (str | Branch): The target branch name or instance where the merge will happen.
+                update (bool): If True, updates the target branch with the source branch's settings.
+                del_ (bool): If True, deletes the source branch after merging.
 
         Examples:
-            >>> session.merge_branch("source_branch", "target_branch", del_=True)
+                >>> session.merge_branch("source_branch", "target_branch", del_=True)
         """
         from_ = self.get_branch(branch=from_)
         to_branch, to_name = self.get_branch(branch=to_branch, get_name=True)
@@ -666,8 +650,8 @@ class Session(SessionFlowMIxin):
 
     def take_branch(self, branch):
         self.branches[branch.branch_name] = branch
-        self.mail_manager.sources[branch.branch_name] = branch
-        self.mail_manager.mails[branch.branch_name] = {}
+        self.mail_manager.sources[branch.id_] = branch
+        self.mail_manager.mails[branch.id_] = {}
 
     def collect(self, from_: str | Branch | list[str | Branch] | None = None):
         """
@@ -676,9 +660,9 @@ class Session(SessionFlowMIxin):
         This method is intended to aggregate data or requests from one or more branches for processing or analysis.
 
         Args:
-            from_ (Optional[Union[str, Branch, List[str | Branch]]]): The branch(es) from which to collect requests.
-                Can be a single branch name, a single branch instance, a list of branch names, a list of branch instances, or None.
-                If None, requests are collected from all branches.
+                from_ (Optional[Union[str, Branch, List[str | Branch]]]): The branch(es) from which to collect requests.
+                        Can be a single branch name, a single branch instance, a list of branch names, a list of branch instances, or None.
+                        If None, requests are collected from all branches.
 
         Examples:
             >>> session.collect("name")
@@ -686,16 +670,17 @@ class Session(SessionFlowMIxin):
             >>> session.collect()  # Collects from all branches
         """
         if from_ is None:
-            for branch in self.branches.keys():
-                self.mail_manager.collect(branch)
+            for branch in self.branches.values():
+                self.mail_manager.collect(branch.id_)
         else:
             if not isinstance(from_, list):
-                from_ = convert.to_list(from_)
+                from_ = [from_]
             for branch in from_:
-                if isinstance(branch, Branch):
-                    branch = branch.name
                 if isinstance(branch, str):
-                    self.mail_manager.collect(branch)
+                    branch = self.branches[branch]
+                    self.mail_manager.collect(branch.id_)
+                elif isinstance(branch, Branch):
+                    self.mail_manager.collect(branch.id_)
 
     def send(self, to_: str | Branch | list[str | Branch] | None = None):
         """
@@ -704,26 +689,27 @@ class Session(SessionFlowMIxin):
         This method facilitates the distribution of data or requests to one or more branches, potentially for further tool or processing.
 
         Args:
-            to_ (Optional[Union[str, Branch, List[str | Branch]]]): The target branch(es) to which to send requests.
-                Can be a single branch name, a single branch instance, a list of branch names, a list of branch instances, or None.
-                If None, requests are sent to all branches.
+                to_ (Optional[Union[str, Branch, List[str | Branch]]]): The target branch(es) to which to send requests.
+                        Can be a single branch name, a single branch instance, a list of branch names, a list of branch instances, or None.
+                        If None, requests are sent to all branches.
 
         Examples:
-            >>> session.send("target_branch")
-            >>> session.send([branch_instance_1, "target_branch_2"])
-            >>> session.send()  # Sends to all branches
+                >>> session.send("target_branch")
+                >>> session.send([branch_instance_1, "target_branch_2"])
+                >>> session.send()  # Sends to all branches
         """
         if to_ is None:
-            for branch in self.branches.keys():
-                self.mail_manager.send(branch)
+            for branch in self.branches.values():
+                self.mail_manager.send(branch.id_)
         else:
             if not isinstance(to_, list):
                 to_ = [to_]
             for branch in to_:
-                if isinstance(branch, Branch):
-                    branch = branch.name
                 if isinstance(branch, str):
-                    self.mail_manager.send(branch)
+                    branch = self.branches[branch]
+                    self.mail_manager.send(branch.id_)
+                if isinstance(branch, Branch):
+                    self.mail_manager.send(branch.id_)
 
     def collect_send_all(self, receive_all=False):
         """
@@ -733,12 +719,12 @@ class Session(SessionFlowMIxin):
         useful in scenarios where data or requests need to be aggregated and then distributed uniformly.
 
         Args:
-            receive_all (bool): If True, triggers a `receive_all` method on each branch after sending requests,
-                which can be used to process or acknowledge the received data.
+                receive_all (bool): If True, triggers a `receive_all` method on each branch after sending requests,
+                        which can be used to process or acknowledge the received data.
 
         Examples:
-            >>> session.collect_send_all()
-            >>> session.collect_send_all(receive_all=True)
+                >>> session.collect_send_all()
+                >>> session.collect_send_all(receive_all=True)
         """
         self.collect()
         self.send()
@@ -768,8 +754,7 @@ class Session(SessionFlowMIxin):
         sender,
         default_branch,
         default_branch_name,
-        messages,
-        # instruction_sets,
+        messages,  # instruction_sets,
         tool_manager,
         service,
         llmconfig,

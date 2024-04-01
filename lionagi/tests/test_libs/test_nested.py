@@ -172,14 +172,9 @@ class TestNGet(unittest.TestCase):
         result = nget(nested_structure, ["a", 1, "b"])
         self.assertEqual(result, 2)
 
-    # def test_get_with_invalid_structure_type(self):
-    #     result = nget(1, [0])  # Attempting to retrieve from an integer, not a list/dict
-    #     self.assertIsNone(result)
+    # def test_get_with_invalid_structure_type(self):  #     result = nget(1, [0])  # Attempting to retrieve from an integer, not a list/dict  #     self.assertIsNone(result)
 
-    # def test_get_with_index_out_of_bounds(self):
-    #     test_list = [1, 2, 3]
-    #     result = nget(test_list, [5])
-    #     self.assertIsNone(result)
+    # def test_get_with_index_out_of_bounds(self):  #     test_list = [1, 2, 3]  #     result = nget(test_list, [5])  #     self.assertIsNone(result)
 
 
 class TestNMerge(unittest.TestCase):
