@@ -34,18 +34,20 @@ class MailManager:
                 if v.id_ not in self.sources:
                     self.sources[v.id_] = v
                     self.mails[v.id_] = {}
+        else:
+            raise ValueError("Failed to add source, please input list or dict.")
 
     @staticmethod
     def create_mail(sender_id, recipient_id, category, package):
         return BaseMail(sender_id, recipient_id, category, package)
 
-    def add_source(self, sources: list[BaseNode]):
-        for source in sources:
-            if source.id_ in self.sources:
-                # raise ValueError(f"Source {source.id_} exists, please input a different name.")
-                continue
-            self.sources[source.id_] = source
-            self.mails[source.id_] = {}
+    # def add_source(self, sources: list[BaseNode]):
+    #     for source in sources:
+    #         if source.id_ in self.sources:
+    #             # raise ValueError(f"Source {source.id_} exists, please input a different name.")
+    #             continue
+    #         self.sources[source.id_] = source
+    #         self.mails[source.id_] = {}
 
     def delete_source(self, source_id):
         if source_id not in self.sources:
@@ -65,7 +67,7 @@ class MailManager:
                     f"Recipient source {mail_.recipient_id} does not exist"
                 )
             if mail_.sender_id not in self.mails[mail_.recipient_id]:
-                self.mails[mail_.recipient_id] = {mail_.sender_id: deque()}
+                self.mails[mail_.recipient_id].update({mail_.sender_id: deque()})
             self.mails[mail_.recipient_id][mail_.sender_id].append(mail_)
 
     def send(self, recipient_id):
