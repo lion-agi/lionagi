@@ -11,7 +11,6 @@ from lionagi.libs import convert, AsyncUtil, ParseUtil
 from ..schema import BaseRelatableNode, ActionNode
 from ..mail import BaseMail
 from ..messages import System, Instruction
-from ..agent import BaseAgent
 
 from .branch import Branch
 
@@ -145,21 +144,21 @@ class ExecutableBranch(BaseRelatableNode):
         Raises:
             ValueError: If the mail package is invalid.
         """
-        if isinstance(mail.package, System):
-            self._system_process(mail.package, verbose=self.verbose)
-            self.send(mail.sender_id, "node_id", mail.package.id_)
+        if isinstance(mail.package["package"], System):
+            self._system_process(mail.package["package"], verbose=self.verbose)
+            self.send(mail.sender_id, "node_id", {"request_source": self.id_, "package": mail.package["package"].id_})
 
-        elif isinstance(mail.package, Instruction):
-            await self._instruction_process(mail.package, verbose=self.verbose)
-            self.send(mail.sender_id, "node_id", mail.package.id_)
+        elif isinstance(mail.package["package"], Instruction):
+            await self._instruction_process(mail.package["package"], verbose=self.verbose)
+            self.send(mail.sender_id, "node_id", {"request_source": self.id_, "package": mail.package["package"].id_})
 
-        elif isinstance(mail.package, ActionNode):
-            await self._action_process(mail.package, verbose=self.verbose)
-            self.send(mail.sender_id, "node_id", mail.package.instruction.id_)
+        elif isinstance(mail.package["package"], ActionNode):
+            await self._action_process(mail.package["package"], verbose=self.verbose)
+            self.send(mail.sender_id, "node_id", {"request_source": self.id_, "package": mail.package["package"].instruction.id_})
         else:
             try:
-                await self._agent_process(mail.package, verbose=self.verbose)
-                self.send(mail.sender_id, "node_id", mail.package.id_)
+                await self._agent_process(mail.package["package"], verbose=self.verbose)
+                self.send(mail.sender_id, "node_id", {"request_source": self.id_, "package": mail.package["package"].id_})
             except:
                 raise ValueError(f"Invalid mail to process. Mail:{mail}")
 
@@ -173,7 +172,7 @@ class ExecutableBranch(BaseRelatableNode):
         Raises:
             ValueError: If multiple path selection is not supported.
         """
-        self.send(mail.sender_id, "end", "end")
+        self.send(mail.sender_id, "end", {"request_source": self.id_, "package": "end"})
         self.execute_stop = True
         raise ValueError("Multiple path selection is currently not supported")
 
@@ -184,10 +183,10 @@ class ExecutableBranch(BaseRelatableNode):
         Args:
             mail (BaseMail): The condition mail to process.
         """
-        relationship = mail.package
+        relationship = mail.package["package"]
         check_result = relationship.condition(self)
-        back_mail = {"relationship_id": mail.package.id_, "check_result": check_result}
-        self.send(mail.sender_id, "condition", back_mail)
+        back_mail = {"from": self.branch.id_, "relationship_id": mail.package["package"].id_, "check_result": check_result}
+        self.send(mail.sender_id, "condition", {"request_source": self.id_, "package": back_mail})
 
     def _system_process(self, system: System, verbose=True, context_verbose=False):
         """
@@ -205,6 +204,8 @@ class ExecutableBranch(BaseRelatableNode):
 
         if verbose:
             print(f"------------------Welcome: {system.sender}--------------------")
+            with contextlib.suppress(Exception):
+                system.content = ParseUtil.fuzzy_parse_json(system.content)
             display(Markdown(f"system: {convert.to_str(system.system_info)}"))
             if self.context and context_verbose:
                 display(Markdown(f"context: {convert.to_str(self.context)}"))
@@ -228,6 +229,8 @@ class ExecutableBranch(BaseRelatableNode):
         from IPython.display import Markdown, display
 
         if verbose:
+            with contextlib.suppress(Exception):
+                instruction.content = ParseUtil.fuzzy_parse_json(instruction.content)
             display(
                 Markdown(
                     f"{instruction.sender}: {convert.to_str(instruction.instruct)}"
@@ -334,7 +337,7 @@ class ExecutableBranch(BaseRelatableNode):
         """
         start_mail_content = mail.package
         self.context = start_mail_content["context"]
-        self.send(start_mail_content["structure_id"], "start", "start")
+        self.send(start_mail_content["structure_id"], "start", {"request_source": self.id_, "package": "start"})
 
     def _process_end(self, mail):
         """
@@ -344,4 +347,4 @@ class ExecutableBranch(BaseRelatableNode):
             mail (BaseMail): The end mail to process.
         """
         self.execute_stop = True
-        self.send(mail.sender_id, "end", "end")
+        self.send(mail.sender_id, "end", {"request_source": self.id_, "package": "end"})

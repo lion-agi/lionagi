@@ -852,8 +852,8 @@ class Session:
 
     def take_branch(self, branch):
         self.branches[branch.branch_name] = branch
-        self.mail_manager.sources[branch.branch_name] = branch
-        self.mail_manager.mails[branch.branch_name] = {}
+        self.mail_manager.sources[branch.id_] = branch
+        self.mail_manager.mails[branch.id_] = {}
 
     def collect(self, from_: str | Branch | list[str | Branch] | None = None):
         """
@@ -872,16 +872,17 @@ class Session:
                 >>> session.collect()  # Collects from all branches
         """
         if from_ is None:
-            for branch in self.branches.keys():
-                self.mail_manager.collect(branch)
+            for branch in self.branches.values():
+                self.mail_manager.collect(branch.id_)
         else:
             if not isinstance(from_, list):
-                from_ = convert.to_list(from_)
+                from_ = [from_]
             for branch in from_:
-                if isinstance(branch, Branch):
-                    branch = branch.name
                 if isinstance(branch, str):
-                    self.mail_manager.collect(branch)
+                    branch = self.branches[branch]
+                    self.mail_manager.collect(branch.id_)
+                elif isinstance(branch, Branch):
+                    self.mail_manager.collect(branch.id_)
 
     def send(self, to_: str | Branch | list[str | Branch] | None = None):
         """
@@ -900,16 +901,17 @@ class Session:
                 >>> session.send()  # Sends to all branches
         """
         if to_ is None:
-            for branch in self.branches.keys():
-                self.mail_manager.send(branch)
+            for branch in self.branches.values():
+                self.mail_manager.send(branch.id_)
         else:
             if not isinstance(to_, list):
                 to_ = [to_]
             for branch in to_:
-                if isinstance(branch, Branch):
-                    branch = branch.name
                 if isinstance(branch, str):
-                    self.mail_manager.send(branch)
+                    branch = self.branches[branch]
+                    self.mail_manager.send(branch.id_)
+                if isinstance(branch, Branch):
+                    self.mail_manager.send(branch.id_)
 
     def collect_send_all(self, receive_all=False):
         """
