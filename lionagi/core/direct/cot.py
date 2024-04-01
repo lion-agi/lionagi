@@ -16,7 +16,23 @@ async def chain_of_thoughts(
     return_branch=False,
     **kwargs,
 ):
+    """
+    Generates a chain of thoughts based on the given sentence, instruction, and number of steps.
 
+    Args:
+        sentence (str | None): The input sentence for generating the chain of thoughts.
+        branch (Branch | None): The branch to use for generating the chain of thoughts.
+        instruction (str | None): The instruction for generating the chain of thoughts.
+        reason (bool): Whether to include the reason for each thought in the output (default: False).
+        confidence_score (bool): Whether to include the confidence score for each thought in the output (default: False).
+        num_steps (int): The number of steps in the chain of thoughts (default: 3).
+        directive_kwargs (dict): Additional keyword arguments for the directive functions (default: {}).
+        return_branch (bool): Whether to return the branch along with the plan template (default: False).
+        **kwargs: Additional keyword arguments for the `plan` function.
+
+    Returns:
+        PlanTemplate | tuple[PlanTemplate, Branch]: The plan template with the chain of thoughts, or a tuple of the plan template and the branch if `return_branch` is True.
+    """
     out_, outs, answer, reasons, _confidence_score = "", [], "", [], 0
     if branch is not None:
         out_ = await plan(
@@ -76,6 +92,23 @@ async def chain_of_react(
     return_branch=False,
     **kwargs,
 ):
+    """
+    Generates a chain of reactions based on the given sentence, instruction, number of steps, and tools.
+
+    Args:
+        sentence (str | None): The input sentence for generating the chain of reactions.
+        branch (Branch | None): The branch to use for generating the chain of reactions.
+        instruction (str | None): The instruction for generating the chain of reactions.
+        num_steps (int): The number of steps in the chain of reactions (default: 3).
+        tools (list | None): The tools to use for generating the reactions.
+        directive_system (Any | None): The system configuration for the directive functions.
+        directive_kwargs (dict): Additional keyword arguments for the directive functions (default: {}).
+        return_branch (bool): Whether to return the branch along with the plan template (default: False).
+        **kwargs: Additional keyword arguments for the `plan` function.
+
+    Returns:
+        PlanTemplate | tuple[PlanTemplate, Branch]: The plan template with the chain of reactions, or a tuple of the plan template and the branch if `return_branch` is True.
+    """
     out_, outs, reasons, actions, action_responses = "", [], [], [], []
     if branch is not None:
         out_ = await plan(

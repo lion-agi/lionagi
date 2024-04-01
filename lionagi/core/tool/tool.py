@@ -10,10 +10,10 @@ class Tool(BaseNode):
     Represents a tool, extending BaseRelatableNode with specific functionalities and configurations.
 
     Attributes:
-                                    func: The main function or capability of the tool.
-                                    schema_: An optional schema defining the structure and constraints of data the tool works with.
-                                    manual: Optional documentation or manual for using the tool.
-                                    parser: An optional parser associated with the tool for data processing or interpretation.
+        func: The main function or capability of the tool.
+        schema_: An optional schema defining the structure and constraints of data the tool works with.
+        manual: Optional documentation or manual for using the tool.
+        parser: An optional parser associated with the tool for data processing or interpretation.
     """
 
     func: Any

@@ -22,10 +22,10 @@ class Session:
     branches, configuring language learning models, managing tools, and handling session data logging.
 
     Attributes:
-                                    branches (dict[str, Branch]): A dictionary of branch instances associated with the session.
-                                    service (BaseService]): The external service instance associated with the | Nonesession.
-                                    mail_manager (BranchManager): The manager for handling branches within the session.
-                                    datalogger (Optional[Any]): The datalogger instance for session data logging.
+        branches (dict[str, Branch]): A dictionary of branch instances associated with the session.
+        service (BaseService]): The external service instance associated with the | Nonesession.
+        mail_manager (BranchManager): The manager for handling branches within the session.
+        datalogger (Optional[Any]): The datalogger instance for session data logging.
     """
 
     def __init__(
@@ -47,22 +47,22 @@ class Session:
         """Initialize a new session with optional configuration for managing conversations.
 
         Args:
-                                        system (Optional[Union[str, System]]): The system message.
-                                        sender (str | None): the default sender name for default branch
-                                        llmconfig (dict[str, Any] | None): Configuration for language learning models.
-                                        service (BaseService]): External service  | Nonenstance.
-                                        branches (dict[str, Branch] | None): dictionary of branch instances.
-                                        default_branch (Branch | None): The default branch for the session.
-                                        default_branch_name (str | None): The name of the default branch.
-                                        tools (TOOL_TYPE | None): List of tools available for the session.
-                                        instruction_sets (Optional[List[Instruction]]): List of instruction sets.
-                                        tool_manager (Optional[Any]): Manager for handling tools.
-                                        messages (Optional[List[dict[str, Any]]]): Initial list of messages.
-                                        datalogger (Optional[Any]): Logger instance for the session.
-                                        persist_path (str | None): Directory path for saving session data.
+            system (Optional[Union[str, System]]): The system message.
+            sender (str | None): the default sender name for default branch
+            llmconfig (dict[str, Any] | None): Configuration for language learning models.
+            service (BaseService]): External service  | Nonenstance.
+            branches (dict[str, Branch] | None): dictionary of branch instances.
+            default_branch (Branch | None): The default branch for the session.
+            default_branch_name (str | None): The name of the default branch.
+            tools (TOOL_TYPE | None): List of tools available for the session.
+            instruction_sets (Optional[List[Instruction]]): List of instruction sets.
+            tool_manager (Optional[Any]): Manager for handling tools.
+            messages (Optional[List[dict[str, Any]]]): Initial list of messages.
+            datalogger (Optional[Any]): Logger instance for the session.
+            persist_path (str | None): Directory path for saving session data.
 
         Examples:
-                                        >>> session = Session(system="you are a helpful assistant", sender="researcher")
+            >>> session = Session(system="you are a helpful assistant", sender="researcher")
         """
         self.branches = branches if isinstance(branches, dict) else {}
         self.service = service
@@ -97,12 +97,12 @@ class Session:
         Provides a descriptive summary of all messages in the branch.
 
         Returns:
-                                        dict[str, Any]: A dictionary containing summaries of messages by role and sender, total message count,
-                                        instruction sets, registered tools, and message details.
+            dict[str, Any]: A dictionary containing summaries of messages by role and sender, total message count,
+            instruction sets, registered tools, and message details.
 
         Examples:
-                                        >>> session.messages_describe
-                                        {'total_messages': 100, 'by_sender': {'User123': 60, 'Bot': 40}}
+        >>> session.messages_describe
+        {'total_messages': 100, 'by_sender': {'User123': 60, 'Bot': 40}}
         """
         return self.default_branch.messages_describe
 
@@ -112,11 +112,11 @@ class Session:
         Checks if there are any tools registered in the tool manager.
 
         Returns:
-                                        bool: True if there are tools registered, False otherwise.
+            bool: True if there are tools registered, False otherwise.
 
         Examples:
-                                        >>> session.has_tools
-                                        True
+            >>> session.has_tools
+            True
         """
         return self.default_branch.has_tools
 
@@ -126,7 +126,7 @@ class Session:
         Retrieves the last message from the conversation.
 
         Returns:
-                                        pd.Series: The last message as a pandas Series.
+            pd.Series: The last message as a pandas Series.
         """
         return self.default_branch.last_message
 
@@ -136,7 +136,7 @@ class Session:
         Retrieves the first system message from the conversation.
 
         Returns:
-                                        pd.Series: The first system message as a pandas Series.
+            pd.Series: The first system message as a pandas Series.
         """
         return self.default_branch.first_system
 
@@ -146,7 +146,7 @@ class Session:
         Retrieves the last response message from the conversation.
 
         Returns:
-                                        pd.Series: The last response message as a pandas Series.
+            pd.Series: The last response message as a pandas Series.
         """
         return self.default_branch.last_response
 
@@ -156,7 +156,7 @@ class Session:
         Retrieves the content of the last response message from the conversation.
 
         Returns:
-                                        dict: The content of the last response message as a dictionary
+            dict: The content of the last response message as a dictionary
         """
         return self.default_branch.last_response_content
 
@@ -166,7 +166,7 @@ class Session:
         Retrieves all tool request messages from the conversation.
 
         Returns:
-                                        dataframe.ln_DataFrame: A DataFrame containing all tool request messages.
+            dataframe.ln_DataFrame: A DataFrame containing all tool request messages.
         """
         return self.default_branch.tool_request
 
@@ -176,7 +176,7 @@ class Session:
         Retrieves all tool response messages from the conversation.
 
         Returns:
-                                        dataframe.ln_DataFrame: A DataFrame containing all tool response messages.
+            dataframe.ln_DataFrame: A DataFrame containing all tool response messages.
         """
         return self.default_branch.tool_response
 
@@ -186,7 +186,7 @@ class Session:
         Retrieves all response messages from the conversation.
 
         Returns:
-                                        dataframe.ln_DataFrame: A DataFrame containing all response messages.
+            dataframe.ln_DataFrame: A DataFrame containing all response messages.
         """
         return self.default_branch.responses
 
@@ -196,7 +196,7 @@ class Session:
         Retrieves all assistant responses from the conversation, excluding tool requests and responses.
 
         Returns:
-                                        dataframe.ln_DataFrame: A DataFrame containing assistant responses excluding tool requests and responses.
+            dataframe.ln_DataFrame: A DataFrame containing assistant responses excluding tool requests and responses.
         """
         return self.default_branch.assistant_responses
 
@@ -206,7 +206,7 @@ class Session:
         Get a summary of the conversation messages categorized by role.
 
         Returns:
-                                        dict[str, int]: A dictionary with keys as message roles and values as counts.
+            dict[str, int]: A dictionary with keys as message roles and values as counts.
         """
 
         return self.default_branch.info
@@ -217,7 +217,7 @@ class Session:
         Provides a descriptive summary of the conversation, including total message count and summary by sender.
 
         Returns:
-                                        dict[str, Any]: A dictionary containing the total number of messages and a summary categorized by sender.
+            dict[str, Any]: A dictionary containing the total number of messages and a summary categorized by sender.
         """
         return self.default_branch.sender_info
 
@@ -241,20 +241,20 @@ class Session:
         Creates a Session instance from a CSV file containing messages.
 
         Args:
-                                        filepath (str): Path to the CSV file.
-                                        name (str | None): Name of the branch, default is None.
-                                        instruction_sets (Optional[dict[str, InstructionSet]]): Instruction sets, default is None.
-                                        tool_manager (Optional[ToolManager]): Tool manager for the branch, default is None.
-                                        service (BaseService]): External service for the branch, default | Noneis None.
-                                        llmconfig (Optional[dict]): Configuration for language learning models, default is None.
-                                        tools (TOOL_TYPE | None): Initial list of tools to register, default is None.
-                                        **kwargs: Additional keyword arguments for pd.read_csv().
+            filepath (str): Path to the CSV file.
+            name (str | None): Name of the branch, default is None.
+            instruction_sets (Optional[dict[str, InstructionSet]]): Instruction sets, default is None.
+            tool_manager (Optional[ToolManager]): Tool manager for the branch, default is None.
+            service (BaseService]): External service for the branch, default | Noneis None.
+            llmconfig (Optional[dict]): Configuration for language learning models, default is None.
+            tools (TOOL_TYPE | None): Initial list of tools to register, default is None.
+            **kwargs: Additional keyword arguments for pd.read_csv().
 
         Returns:
-                                        Branch: A new Branch instance created from the CSV data.
+            Branch: A new Branch instance created from the CSV data.
 
         Examples:
-                                        >>> branch = Branch.from_csv("path/to/messages.csv", name="ImportedBranch")
+            >>> branch = Branch.from_csv("path/to/messages.csv", name="ImportedBranch")
         """
         df = dataframe.read_csv(filepath, **kwargs)
 
@@ -287,19 +287,19 @@ class Session:
         Creates a Branch instance from a JSON file containing messages.
 
         Args:
-                                        filepath (str): Path to the JSON file.
-                                        name (str | None): Name of the branch, default is None.
-                                        instruction_sets (Optional[dict[str, InstructionSet]]): Instruction sets, default is None.
-                                        tool_manager (Optional[ToolManager]): Tool manager for the branch, default is None.
-                                        service (BaseService]): External service for the branch, default | Noneis None.
-                                        llmconfig (Optional[dict]): Configuration for language learning models, default is None.
-                                        **kwargs: Additional keyword arguments for pd.read_json().
+            filepath (str): Path to the JSON file.
+            name (str | None): Name of the branch, default is None.
+            instruction_sets (Optional[dict[str, InstructionSet]]): Instruction sets, default is None.
+            tool_manager (Optional[ToolManager]): Tool manager for the branch, default is None.
+            service (BaseService]): External service for the branch, default | Noneis None.
+            llmconfig (Optional[dict]): Configuration for language learning models, default is None.
+            **kwargs: Additional keyword arguments for pd.read_json().
 
         Returns:
-                                        Branch: A new Branch instance created from the JSON data.
+            Branch: A new Branch instance created from the JSON data.
 
         Examples:
-                                        >>> branch = Branch.from_json_string("path/to/messages.json", name="JSONBranch")
+            >>> branch = Branch.from_json_string("path/to/messages.json", name="JSONBranch")
         """
         df = dataframe.read_json(filepath, **kwargs)
         return cls(
@@ -328,17 +328,17 @@ class Session:
         Saves the branch's messages to a CSV file.
 
         Args:
-                                        filename (str): The name of the output CSV file, default is 'messages.csv'.
-                                        dir_exist_ok (bool): If True, does not raise an error if the directory already exists, default is True.
-                                        timestamp (bool): If True, appends a timestamp to the filename, default is True.
-                                        time_prefix (bool): If True, adds a timestamp prefix to the filename, default is False.
-                                        verbose (bool): If True, prints a message upon successful save, default is True.
-                                        clear (bool): If True, clears the messages after saving, default is True.
-                                        **kwargs: Additional keyword arguments for DataFrame.to_csv().
+            filename (str): The name of the output CSV file, default is 'messages.csv'.
+            dir_exist_ok (bool): If True, does not raise an error if the directory already exists, default is True.
+            timestamp (bool): If True, appends a timestamp to the filename, default is True.
+            time_prefix (bool): If True, adds a timestamp prefix to the filename, default is False.
+            verbose (bool): If True, prints a message upon successful save, default is True.
+            clear (bool): If True, clears the messages after saving, default is True.
+            **kwargs: Additional keyword arguments for DataFrame.to_csv().
 
         Examples:
-                                        >>> branch.to_csv_file("exported_messages.csv")
-                                        >>> branch.to_csv_file("timed_export.csv", timestamp=True, time_prefix=True)
+            >>> branch.to_csv_file("exported_messages.csv")
+            >>> branch.to_csv_file("timed_export.csv", timestamp=True, time_prefix=True)
         """
         for name, branch in self.branches.items():
             f_name = f"{name}_{filename}"
@@ -366,17 +366,17 @@ class Session:
         Saves the branch's messages to a JSON file.
 
         Args:
-                                        filename (str): The name of the output JSON file, default is 'messages.json'.
-                                        dir_exist_ok (bool): If True, does not raise an error if the directory already exists, default is True.
-                                        timestamp (bool): If True, appends a timestamp to the filename, default is True.
-                                        time_prefix (bool): If True, adds a timestamp prefix to the filename, default is False.
-                                        verbose (bool): If True, prints a message upon successful save, default is True.
-                                        clear (bool): If True, clears the messages after saving, default is True.
-                                        **kwargs: Additional keyword arguments for DataFrame.to_json().
+            filename (str): The name of the output JSON file, default is 'messages.json'.
+            dir_exist_ok (bool): If True, does not raise an error if the directory already exists, default is True.
+            timestamp (bool): If True, appends a timestamp to the filename, default is True.
+            time_prefix (bool): If True, adds a timestamp prefix to the filename, default is False.
+            verbose (bool): If True, prints a message upon successful save, default is True.
+            clear (bool): If True, clears the messages after saving, default is True.
+            **kwargs: Additional keyword arguments for DataFrame.to_json().
 
         Examples:
-                                        >>> branch.to_json_file("exported_messages.json")
-                                        >>> branch.to_json_file("timed_export.json", timestamp=True, time_prefix=True)
+            >>> branch.to_json_file("exported_messages.json")
+            >>> branch.to_json_file("timed_export.json", timestamp=True, time_prefix=True)
         """
 
         for name, branch in self.branches.items():
@@ -408,17 +408,17 @@ class Session:
         to a CSV file for analysis or record-keeping.
 
         Args:
-                                        filename (str): The name of the output CSV file. Defaults to 'log.csv'.
-                                        dir_exist_ok (bool): If True, will not raise an error if the directory already exists. Defaults to True.
-                                        timestamp (bool): If True, appends a timestamp to the filename for uniqueness. Defaults to True.
-                                        time_prefix (bool): If True, adds a timestamp prefix to the filename. Defaults to False.
-                                        verbose (bool): If True, prints a success message upon completion. Defaults to True.
-                                        clear (bool): If True, clears the log after saving. Defaults to True.
-                                        **kwargs: Additional keyword arguments for `DataFrame.to_csv()`.
+            filename (str): The name of the output CSV file. Defaults to 'log.csv'.
+            dir_exist_ok (bool): If True, will not raise an error if the directory already exists. Defaults to True.
+            timestamp (bool): If True, appends a timestamp to the filename for uniqueness. Defaults to True.
+            time_prefix (bool): If True, adds a timestamp prefix to the filename. Defaults to False.
+            verbose (bool): If True, prints a success message upon completion. Defaults to True.
+            clear (bool): If True, clears the log after saving. Defaults to True.
+            **kwargs: Additional keyword arguments for `DataFrame.to_csv()`.
 
         Examples:
-                                        >>> branch.log_to_csv("branch_log.csv")
-                                        >>> branch.log_to_csv("detailed_branch_log.csv", timestamp=True, verbose=True)
+            >>> branch.log_to_csv("branch_log.csv")
+            >>> branch.log_to_csv("detailed_branch_log.csv", timestamp=True, verbose=True)
         """
         for name, branch in self.branches.items():
             f_name = f"{name}_{filename}"
@@ -449,17 +449,17 @@ class Session:
         and services that consume JSON.
 
         Args:
-                                        filename (str): The name of the output JSON file. Defaults to 'log.json'.
-                                        dir_exist_ok (bool): If directory existence should not raise an error. Defaults to True.
-                                        timestamp (bool): If True, appends a timestamp to the filename. Defaults to True.
-                                        time_prefix (bool): If True, adds a timestamp prefix to the filename. Defaults to False.
-                                        verbose (bool): If True, prints a success message upon completion. Defaults to True.
-                                        clear (bool): If True, clears the log after saving. Defaults to True.
-                                        **kwargs: Additional keyword arguments for `DataFrame.to_json()`.
+            filename (str): The name of the output JSON file. Defaults to 'log.json'.
+            dir_exist_ok (bool): If directory existence should not raise an error. Defaults to True.
+            timestamp (bool): If True, appends a timestamp to the filename. Defaults to True.
+            time_prefix (bool): If True, adds a timestamp prefix to the filename. Defaults to False.
+            verbose (bool): If True, prints a success message upon completion. Defaults to True.
+            clear (bool): If True, clears the log after saving. Defaults to True.
+            **kwargs: Additional keyword arguments for `DataFrame.to_json()`.
 
         Examples:
-                                        >>> branch.log_to_json("branch_log.json")
-                                        >>> branch.log_to_json("detailed_branch_log.json", verbose=True, timestamp=True)
+            >>> branch.log_to_json("branch_log.json")
+            >>> branch.log_to_json("detailed_branch_log.json", verbose=True, timestamp=True)
         """
         for name, branch in self.branches.items():
             f_name = f"{name}_{filename}"
@@ -497,12 +497,12 @@ class Session:
         This method prepares the messages for chat completion, sends the request to the configured service, and handles the response. The method supports additional keyword arguments that are passed directly to the service.
 
         Args:
-                                        sender (str | None): The name of the sender to be included in the chat completion request. Defaults to None.
-                                        with_sender (bool): If True, includes the sender's name in the messages. Defaults to False.
-                                        **kwargs: Arbitrary keyword arguments passed directly to the chat completion service.
+            sender (str | None): The name of the sender to be included in the chat completion request. Defaults to None.
+            with_sender (bool): If True, includes the sender's name in the messages. Defaults to False.
+            **kwargs: Arbitrary keyword arguments passed directly to the chat completion service.
 
         Examples:
-                                        >>> await branch.call_chatcompletion()
+            >>> await branch.call_chatcompletion()
         """
         branch = self.get_branch(branch)
         await branch.call_chatcompletion(
@@ -528,18 +528,18 @@ class Session:
         a chat conversation with LLM, processing instructions and system messages, optionally invoking tools.
 
         Args:
-                                        branch: The Branch instance to perform chat operations.
-                                        instruction (dict | list | Instruction | str): The instruction for the chat.
-                                        context (Optional[Any]): Additional context for the chat.
-                                        sender (str | None): The sender of the chat message.
-                                        system (Optional[Union[System, str, dict[str, Any]]]): System message to be processed.
-                                        tools (Union[bool, Tool, List[Tool], str, List[str]]): Specifies tools to be invoked.
-                                        out (bool): If True, outputs the chat response.
-                                        invoke (bool): If True, invokes tools as part of the chat.
-                                        **kwargs: Arbitrary keyword arguments for chat completion.
+            branch: The Branch instance to perform chat operations.
+            instruction (dict | list | Instruction | str): The instruction for the chat.
+            context (Optional[Any]): Additional context for the chat.
+            sender (str | None): The sender of the chat message.
+            system (Optional[Union[System, str, dict[str, Any]]]): System message to be processed.
+            tools (Union[bool, Tool, List[Tool], str, List[str]]): Specifies tools to be invoked.
+            out (bool): If True, outputs the chat response.
+            invoke (bool): If True, invokes tools as part of the chat.
+            **kwargs: Arbitrary keyword arguments for chat completion.
 
         Examples:
-                                        >>> await ChatFlow.chat(branch, "Ask about user preferences")
+            >>> await ChatFlow.chat(branch, "Ask about user preferences")
         """
 
         branch = self.get_branch(branch)
@@ -574,17 +574,17 @@ class Session:
         Performs a reason-tool cycle with optional tool invocation over multiple rounds.
 
         Args:
-                                        branch: The Branch instance to perform ReAct operations.
-                                        instruction (dict | list | Instruction | str): Initial instruction for the cycle.
-                                        context: Context relevant to the instruction.
-                                        sender (str | None): Identifier for the message sender.
-                                        system: Initial system message or configuration.
-                                        tools: Tools to be registered or used during the cycle.
-                                        num_rounds (int): Number of reason-tool cycles to perform.
-                                        **kwargs: Additional keyword arguments for customization.
+            branch: The Branch instance to perform ReAct operations.
+            instruction (dict | list | Instruction | str): Initial instruction for the cycle.
+            context: Context relevant to the instruction.
+            sender (str | None): Identifier for the message sender.
+            system: Initial system message or configuration.
+            tools: Tools to be registered or used during the cycle.
+            num_rounds (int): Number of reason-tool cycles to perform.
+            **kwargs: Additional keyword arguments for customization.
 
         Examples:
-                                        >>> await ChatFlow.ReAct(branch, "Analyze user feedback", num_rounds=2)
+            >>> await ChatFlow.ReAct(branch, "Analyze user feedback", num_rounds=2)
         """
         branch = self.get_branch(branch)
 
@@ -621,18 +621,18 @@ class Session:
         Automatically performs follow-up tools based on chat intertools and tool invocations.
 
         Args:
-                                        branch: The Branch instance to perform follow-up operations.
-                                        instruction (dict | list | Instruction | str): The initial instruction for follow-up.
-                                        context: Context relevant to the instruction.
-                                        sender (str | None): Identifier for the message sender.
-                                        system: Initial system message or configuration.
-                                        tools: Specifies tools to be considered for follow-up tools.
-                                        max_followup (int): Maximum number of follow-up chats allowed.
-                                        out (bool): If True, outputs the result of the follow-up tool.
-                                        **kwargs: Additional keyword arguments for follow-up customization.
+            branch: The Branch instance to perform follow-up operations.
+            instruction (dict | list | Instruction | str): The initial instruction for follow-up.
+            context: Context relevant to the instruction.
+            sender (str | None): Identifier for the message sender.
+            system: Initial system message or configuration.
+            tools: Specifies tools to be considered for follow-up tools.
+            max_followup (int): Maximum number of follow-up chats allowed.
+            out (bool): If True, outputs the result of the follow-up tool.
+            **kwargs: Additional keyword arguments for follow-up customization.
 
         Examples:
-                                        >>> await ChatFlow.auto_followup(branch, "Finalize report", max_followup=2)
+            >>> await ChatFlow.auto_followup(branch, "Finalize report", max_followup=2)
         """
         branch = self.get_branch(branch)
         return await branch.followup(
@@ -708,21 +708,21 @@ class Session:
         """Create a new branch with the specified configurations.
 
         Args:
-                                        branch_name (str | None): Name of the new branch.
-                                        system (Optional[Union[System, str]]): System or context identifier for the new branch.
-                                        sender (str | None): Default sender identifier for the new branch.
-                                        messages (Optional[dataframe.ln_DataFrame]): Initial set of messages for the new branch.
-                                        instruction_sets (Optional[Any]): Instruction sets for the new branch.
-                                        tool_manager (Optional[Any]): Tool manager for handling tools in the new branch.
-                                        service (BaseService]): External service instance for the ne | None branch.
-                                        llmconfig (dict[str, Any] | None): Configuration for language learning models in the new branch.
-                                        tools (TOOL_TYPE | None): List of tools available for the new branch.
+            branch_name (str | None): Name of the new branch.
+            system (Optional[Union[System, str]]): System or context identifier for the new branch.
+            sender (str | None): Default sender identifier for the new branch.
+            messages (Optional[dataframe.ln_DataFrame]): Initial set of messages for the new branch.
+            instruction_sets (Optional[Any]): Instruction sets for the new branch.
+            tool_manager (Optional[Any]): Tool manager for handling tools in the new branch.
+            service (BaseService]): External service instance for the ne | None branch.
+            llmconfig (dict[str, Any] | None): Configuration for language learning models in the new branch.
+            tools (TOOL_TYPE | None): List of tools available for the new branch.
 
         Raises:
-                                        ValueError: If the branch name already exists.
+            ValueError: If the branch name already exists.
 
         Examples:
-                                        >>> session.new_branch("new_branch_name")
+            >>> session.new_branch("new_branch_name")
         """
         if branch_name in self.branches.keys():
             raise ValueError(
@@ -752,18 +752,18 @@ class Session:
         Retrieve a branch by name or instance.
 
         Args:
-                                        branch (Optional[Branch | str]): The branch name or instance to retrieve.
-                                        get_name (bool): If True, returns a tuple of the branch instance and its name.
+            branch (Optional[Branch | str]): The branch name or instance to retrieve.
+            get_name (bool): If True, returns a tuple of the branch instance and its name.
 
         Returns:
-                                        Union[Branch, Tuple[Branch, str]]: The branch instance or a tuple of the branch instance and its name.
+            Union[Branch, Tuple[Branch, str]]: The branch instance or a tuple of the branch instance and its name.
 
         Raises:
-                                        ValueError: If the branch name does not exist or the branch input is invalid.
+            ValueError: If the branch name does not exist or the branch input is invalid.
 
         Examples:
-                                        >>> branch_instance = session.get_branch("existing_branch_name")
-                                        >>> branch_instance, branch_name = session.get_branch("existing_branch_name", get_name=True)
+            >>> branch_instance = session.get_branch("existing_branch_name")
+            >>> branch_instance, branch_name = session.get_branch("existing_branch_name", get_name=True)
         """
         if isinstance(branch, str):
             if branch not in self.branches.keys():
@@ -785,10 +785,10 @@ class Session:
         """Change the default branch of the session.
 
         Args:
-                                        branch (str | Branch): The branch name or instance to set as the new default.
+            branch (str | Branch): The branch name or instance to set as the new default.
 
         Examples:
-                                        >>> session.change_default_branch("new_default_branch")
+            >>> session.change_default_branch("new_default_branch")
         """
         branch_, name_ = self.get_branch(branch, get_name=True)
         self.default_branch = branch_
@@ -798,17 +798,17 @@ class Session:
         """Delete a branch from the session.
 
         Args:
-                                        branch (Branch | str): The branch name or instance to delete.
-                                        verbose (bool): If True, prints a message upon deletion.
+            branch (Branch | str): The branch name or instance to delete.
+            verbose (bool): If True, prints a message upon deletion.
 
         Returns:
-                                        bool: True if the branch was successfully deleted.
+            bool: True if the branch was successfully deleted.
 
         Raises:
-                                        ValueError: If attempting to delete the current default branch.
+            ValueError: If attempting to delete the current default branch.
 
         Examples:
-                                        >>> session.delete_branch("branch_to_delete")
+            >>> session.delete_branch("branch_to_delete")
         """
         _, branch_name = self.get_branch(branch, get_name=True)
 
@@ -833,13 +833,13 @@ class Session:
         """Merge messages and settings from one branch to another.
 
         Args:
-                                        from_ (str | Branch): The source branch name or instance.
-                                        to_branch (str | Branch): The target branch name or instance where the merge will happen.
-                                        update (bool): If True, updates the target branch with the source branch's settings.
-                                        del_ (bool): If True, deletes the source branch after merging.
+            from_ (str | Branch): The source branch name or instance.
+            to_branch (str | Branch): The target branch name or instance where the merge will happen.
+            update (bool): If True, updates the target branch with the source branch's settings.
+            del_ (bool): If True, deletes the source branch after merging.
 
         Examples:
-                                        >>> session.merge_branch("source_branch", "target_branch", del_=True)
+            >>> session.merge_branch("source_branch", "target_branch", del_=True)
         """
         from_ = self.get_branch(branch=from_)
         to_branch, to_name = self.get_branch(branch=to_branch, get_name=True)
@@ -863,14 +863,12 @@ class Session:
         This method is intended to aggregate data or requests from one or more branches for processing or analysis.
 
         Args:
-                                        from_ (Optional[Union[str, Branch, List[str | Branch]]]): The branch(es) from which to collect requests.
-                                                                        Can be a single branch name, a single branch instance, a list of branch names, a list of branch instances, or None.
-                                                                        If None, requests are collected from all branches.
+            from_ (Optional[Union[str, Branch, List[str | Branch]]]): The branch(es) from which to collect requests. Can be a single branch name, a single branch instance, a list of branch names, a list of branch instances, or None. If None, requests are collected from all branches.
 
         Examples:
-                                        >>> session.collect("branch_name")
-                                        >>> session.collect([branch_instance_1, "branch_name_2"])
-                                        >>> session.collect()  # Collects from all branches
+            >>> session.collect("branch_name")
+            >>> session.collect([branch_instance_1, "branch_name_2"])
+            >>> session.collect()  # Collects from all branches
         """
         if from_ is None:
             for branch in self.branches.keys():
@@ -891,14 +889,12 @@ class Session:
         This method facilitates the distribution of data or requests to one or more branches, potentially for further tool or processing.
 
         Args:
-                                        to_ (Optional[Union[str, Branch, List[str | Branch]]]): The target branch(es) to which to send requests.
-                                                                        Can be a single branch name, a single branch instance, a list of branch names, a list of branch instances, or None.
-                                                                        If None, requests are sent to all branches.
+            to_ (Optional[Union[str, Branch, List[str | Branch]]]): The target branch(es) to which to send requests. Can be a single branch name, a single branch instance, a list of branch names, a list of branch instances, or None. If None, requests are sent to all branches.
 
         Examples:
-                                        >>> session.send("target_branch")
-                                        >>> session.send([branch_instance_1, "target_branch_2"])
-                                        >>> session.send()  # Sends to all branches
+            >>> session.send("target_branch")
+            >>> session.send([branch_instance_1, "target_branch_2"])
+            >>> session.send()  # Sends to all branches
         """
         if to_ is None:
             for branch in self.branches.keys():
@@ -920,12 +916,11 @@ class Session:
         useful in scenarios where data or requests need to be aggregated and then distributed uniformly.
 
         Args:
-                                        receive_all (bool): If True, triggers a `receive_all` method on each branch after sending requests,
-                                                                        which can be used to process or acknowledge the received data.
+            receive_all (bool): If True, triggers a `receive_all` method on each branch after sending requests, which can be used to process or acknowledge the received data.
 
         Examples:
-                                        >>> session.collect_send_all()
-                                        >>> session.collect_send_all(receive_all=True)
+            >>> session.collect_send_all()
+            >>> session.collect_send_all(receive_all=True)
         """
         self.collect()
         self.send()

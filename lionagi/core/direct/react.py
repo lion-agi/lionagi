@@ -8,6 +8,20 @@ from .utils import _process_tools
 
 
 class ReactTemplate(ActionTemplate):
+    """
+    A template for generating a reaction based on a given sentence and instruction.
+
+    Attributes:
+        template_name (str): The name of the template. Default is "default_react".
+        sentence (str | list | dict | None): The given sentence(s) to reason and take actions on.
+
+    Args:
+        sentence (str | list | dict | None): The given sentence(s) to reason and take actions on.
+        instruction (str | None): The instruction for the reaction.
+        confidence_score (bool): Whether to include the confidence score in the output fields.
+        **kwargs: Additional keyword arguments.
+    """
+
     template_name: str = "default_react"
     sentence: str | list | dict | None = Field(
         default_factory=str,
@@ -54,6 +68,35 @@ async def _react(
     return_branch=False,
     **kwargs,
 ):
+    """
+    Generate a reaction based on the given sentence and instruction.
+
+    Args:
+        sentence (str | None): The given sentence to reason and take actions on.
+        instruction (str | None): The instruction for the reaction.
+        branch (Branch | None): The branch to use for the reaction.
+        confidence_score (bool): Whether to include the confidence score in the output fields.
+        retries (int): The number of retries for failed actions.
+        delay (float): The delay between retries in seconds.
+        backoff_factor (float): The backoff factor for increasing the delay between retries.
+        default_value (Any | None): The default value to return if the reaction fails.
+        timeout (float | None): The timeout for the reaction in seconds.
+        branch_name (str | None): The name of the branch.
+        system (Any | None): The system configuration for the branch.
+        messages (list | None): The initial messages for the branch.
+        service (Any | None): The service to use for the branch.
+        sender (Any | None): The sender of the reaction.
+        llmconfig (Any | None): The LLM configuration for the branch.
+        tools (list | None): The tools to use for the reaction.
+        datalogger (Any | None): The data logger for the branch.
+        persist_path (str | None): The path to persist the branch data.
+        tool_manager (Any | None): The tool manager for the branch.
+        return_branch (bool): Whether to return the branch along with the reaction template.
+        **kwargs: Additional keyword arguments.
+
+    Returns:
+        ReactTemplate | tuple: The reaction template if `return_branch` is False, or a tuple of the reaction template and the branch if `return_branch` is True.
+    """
 
     if "temperature" not in kwargs:
         kwargs["temperature"] = 0.1
@@ -138,6 +181,36 @@ async def react(
     return_branch=False,
     **kwargs,
 ):
+    """
+    Generate one or more reactions based on the given sentence and instruction.
+
+    Args:
+        sentence (str | None): The given sentence to reason and take actions on.
+        instruction (str | None): The instruction for the reaction.
+        num_instances (int): The number of reaction instances to generate.
+        branch (Branch | None): The branch to use for the reaction.
+        confidence_score (bool): Whether to include the confidence score in the output fields.
+        retries (int): The number of retries for failed actions.
+        delay (float): The delay between retries in seconds.
+        backoff_factor (float): The backoff factor for increasing the delay between retries.
+        default_value (Any | None): The default value to return if the reaction fails.
+        timeout (float | None): The timeout for the reaction in seconds.
+        branch_name (str | None): The name of the branch.
+        system (Any | None): The system configuration for the branch.
+        messages (list | None): The initial messages for the branch.
+        service (Any | None): The service to use for the branch.
+        sender (Any | None): The sender of the reaction.
+        llmconfig (Any | None): The LLM configuration for the branch.
+        tools (list | None): The tools to use for the reaction.
+        datalogger (Any | None): The data logger for the branch.
+        persist_path (str | None): The path to persist the branch data.
+        tool_manager (Any | None): The tool manager for the branch.
+        return_branch (bool): Whether to return the branch along with the reaction template.
+        **kwargs: Additional keyword arguments.
+
+    Returns:
+        ReactTemplate | list | tuple: The reaction template if `num_instances` is 1, a list of reaction templates if `num_instances` is greater than 1, or a tuple of the reaction template(s) and the branch if `return_branch` is True.
+    """
 
     async def _inner(i=0):
         return await _react(

@@ -22,19 +22,25 @@ class PolyChat(BasePolyFlow):
     A class for performing parallel chat conversations with multiple branches.
 
     Methods:
-     __init__(self, session) -> None:
-    Initializes the PolyChat instance.
+        __init__(self, session: Any) -> None:
+            Initializes the PolyChat instance.
 
-                    async parallel_chat(self, instruction, num_instances=1, context=None, sender=None, branch_system=None,
-                                                                                                     messages=None, tools=False, out=True, invoke=True, output_fields=None,
-                                                                                                     persist_path=None, branch_config=None, explode=False, **kwargs) -> Any:
-                                    Performs parallel chat conversations with multiple branches.
+        async parallel_chat(self, instruction: Union[Instruction, str], num_instances: int = 1,
+                             context: Optional[Any] = None, sender: Optional[str] = None,
+                             branch_system: Optional[Any] = None, messages: Optional[Any] = None,
+                             tools: bool = False, out: bool = True, invoke: bool = True,
+                             output_fields: Optional[Any] = None, persist_path: Optional[str] = None,
+                             branch_config: Optional[dict] = None, explode: bool = False, **kwargs) -> Any:
+            Performs parallel chat conversations with multiple branches.
 
-                    async _parallel_chat(self, instruction, num_instances=1, context=None, sender=None, messages=None,
-                                                                                                      tools=False, out=True, invoke=True, output_fields=None, persist_path=None,
-                                                                                                      branch_config={}, explode=False, include_mapping=True, default_key="response",
-                                                                                                      **kwargs) -> Any:
-                                    Internal method for performing parallel chat conversations with multiple branches.
+        async _parallel_chat(self, instruction: Union[Instruction, str], num_instances: int = 1,
+                              context: Optional[Any] = None, sender: Optional[str] = None,
+                              messages: Optional[Any] = None, tools: bool = False, out: bool = True,
+                              invoke: bool = True, output_fields: Optional[Any] = None,
+                              persist_path: Optional[str] = None, branch_config: dict = {},
+                              explode: bool = False, include_mapping: bool = True, default_key: str = "response",
+                              **kwargs) -> Any:
+            Internal method for performing parallel chat conversations with multiple branches.
     """
 
     def __init__(self, session) -> None:
@@ -42,7 +48,7 @@ class PolyChat(BasePolyFlow):
         Initializes the PolyChat instance.
 
         Args:
-                        session: The session object.
+            session: The session object.
         """
         super().__init__(session)
 
@@ -67,23 +73,23 @@ class PolyChat(BasePolyFlow):
         Performs parallel chat conversations with multiple branches.
 
         Args:
-                        instruction (Instruction | str): The instruction for the chat conversation.
-                        num_instances (int): The number of branch instances to create (default: 1).
-                        context (Optional[Any]): Additional context for the chat conversation.
-                        sender (Optional[str]): The sender of the chat message.
-                        branch_system (Optional[Any]): The system configuration for the branches.
-                        messages (Optional[Any]): Messages to initialize the branches with.
-                        tools (bool): Flag indicating whether to use tools in the chat conversation (default: False).
-                        out (bool): Flag indicating whether to return the output of the chat conversation (default: True).
-                        invoke (bool): Flag indicating whether to invoke tools during the chat conversation (default: True).
-                        output_fields (Optional[Any]): The output fields for the chat conversation.
-                        persist_path (Optional[str]): The path to persist the branch data.
-                        branch_config (Optional[dict]): Additional configuration for the branches.
-                        explode (bool): Flag indicating whether to explode the instruction and context combinations (default: False).
-                        **kwargs: Additional keyword arguments for the chat conversation.
+            instruction: The instruction for the chat conversation.
+            num_instances: The number of branch instances to create (default: 1).
+            context: Additional context for the chat conversation.
+            sender: The sender of the chat message.
+            branch_system: The system configuration for the branches.
+            messages: Messages to initialize the branches with.
+            tools: Flag indicating whether to use tools in the chat conversation (default: False).
+            out: Flag indicating whether to return the output of the chat conversation (default: True).
+            invoke: Flag indicating whether to invoke tools during the chat conversation (default: True).
+            output_fields: The output fields for the chat conversation.
+            persist_path: The path to persist the branch data.
+            branch_config: Additional configuration for the branches.
+            explode: Flag indicating whether to explode the instruction and context combinations (default: False).
+            **kwargs: Additional keyword arguments for the chat conversation.
 
         Returns:
-                        Any: The result of the parallel chat conversation.
+            The result of the parallel chat conversation.
         """
         if branch_config is None:
             branch_config = {}
@@ -126,24 +132,24 @@ class PolyChat(BasePolyFlow):
         Internal method for performing parallel chat conversations with multiple branches.
 
         Args:
-                        instruction (Instruction | str): The instruction for the chat conversation.
-                        num_instances (int): The number of branch instances to create (default: 1).
-                        context (Optional[Any]): Additional context for the chat conversation.
-                        sender (Optional[str]): The sender of the chat message.
-                        messages (Optional[Any]): Messages to initialize the branches with.
-                        tools (bool): Flag indicating whether to use tools in the chat conversation (default: False).
-                        out (bool): Flag indicating whether to return the output of the chat conversation (default: True).
-                        invoke (bool): Flag indicating whether to invoke tools during the chat conversation (default: True).
-                        output_fields (Optional[Any]): The output fields for the chat conversation.
-                        persist_path (Optional[str]): The path to persist the branch data.
-                        branch_config (dict): Additional configuration for the branches (default: {}).
-                        explode (bool): Flag indicating whether to explode the instruction and context combinations (default: False).
-                        include_mapping (bool): Flag indicating whether to include mapping information in the output (default: True).
-                        default_key (str): The default key for the output mapping (default: "response").
-                        **kwargs: Additional keyword arguments for the chat conversation.
+            instruction: The instruction for the chat conversation.
+            num_instances: The number of branch instances to create (default: 1).
+            context: Additional context for the chat conversation.
+            sender: The sender of the chat message.
+            messages: Messages to initialize the branches with.
+            tools: Flag indicating whether to use tools in the chat conversation (default: False).
+            out: Flag indicating whether to return the output of the chat conversation (default: True).
+            invoke: Flag indicating whether to invoke tools during the chat conversation (default: True).
+            output_fields: The output fields for the chat conversation.
+            persist_path: The path to persist the branch data.
+            branch_config: Additional configuration for the branches (default: {}).
+            explode: Flag indicating whether to explode the instruction and context combinations (default: False).
+            include_mapping: Flag indicating whether to include mapping information in the output (default: True).
+            default_key: The default key for the output mapping (default: "response").
+            **kwargs: Additional keyword arguments for the chat conversation.
 
         Returns:
-                        Any: The result of the parallel chat conversation.
+            The result of the parallel chat conversation.
         """
 
         branches = {}

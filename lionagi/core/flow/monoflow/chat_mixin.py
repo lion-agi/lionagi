@@ -4,6 +4,7 @@ This module contains mixins for configuring and invoking chatbots.
 
 from abc import ABC
 from typing import Any
+import contextlib
 
 from lionagi.core.messages.schema import Instruction
 from lionagi.core.tool.tool import TOOL_TYPE
@@ -20,9 +21,9 @@ class MonoChatConfigMixin(ABC):
     Mixin class for configuring chatbots.
 
     Methods:
-                    _create_chat_config(self, instruction=None, context=None, sender=None, system=None,
-                                                                                                    output_fields=None, prompt_template=None, tools=False, **kwargs) -> Any:
-                                    Creates a chat configuration based on the provided parameters.
+        _create_chat_config(self, instruction=None, context=None, sender=None, system=None,
+        output_fields=None, prompt_template=None, tools=False, **kwargs) -> Any:
+        Creates a chat configuration based on the provided parameters.
     """
 
     def _create_chat_config(
@@ -40,17 +41,17 @@ class MonoChatConfigMixin(ABC):
         Creates a chat configuration based on the provided parameters.
 
         Args:
-                        instruction (Instruction | str | dict[str, Any]): The instruction for the chatbot (optional).
-                        context (Any): The context for the chatbot (optional).
-                        sender (str): The sender of the message (optional).
-                        system (str | dict[str, Any]): The system message for the chatbot (optional).
-                        output_fields: The output fields for the chatbot (optional).
-                        prompt_template: The prompt template for the chatbot (optional).
-                        tools (TOOL_TYPE): The tools for the chatbot (default: False).
-                        **kwargs: Additional keyword arguments for the chat configuration.
+            instruction (Instruction | str | dict[str, Any]): The instruction for the chatbot (optional).
+            context (Any): The context for the chatbot (optional).
+            sender (str): The sender of the message (optional).
+            system (str | dict[str, Any]): The system message for the chatbot (optional).
+            output_fields: The output fields for the chatbot (optional).
+            prompt_template: The prompt template for the chatbot (optional).
+            tools (TOOL_TYPE): The tools for the chatbot (default: False).
+            **kwargs: Additional keyword arguments for the chat configuration.
 
         Returns:
-                        Any: The chat configuration.
+            Any: The chat configuration.
         """
         if system:
             self.branch.change_first_system_message(system)
@@ -85,21 +86,21 @@ class MonoChatInvokeMixin(ABC):
     Mixin class for invoking chatbots.
 
     Methods:
-                    async _output(self, invoke, out, output_fields, func_calls_=None, prompt_template=None,
-                                                                      return_template=True):
-                                    Processes the output of the chatbot.
+        async _output(self, invoke, out, output_fields, func_calls_=None, prompt_template=None，
+                    return_template=True):
+            Processes the output of the chatbot.
 
-                    _return_response(content_, output_fields) -> Any:
-                                    Returns the response from the chatbot.
+        _return_response(content_, output_fields) -> Any:
+            Returns the response from the chatbot.
 
-                    async _invoke_tools(self, content_=None, func_calls_=None):
-                                    Invokes the tools associated with the chatbot.
+        async _invoke_tools(self, content_=None, func_calls_=None):
+            Invokes the tools associated with the chatbot.
 
-                    _process_chatcompletion(self, payload, completion, sender):
-                                    Processes the chat completion.
+        _process_chatcompletion(self, payload, completion, sender):
+            Processes the chat completion.
 
-                    async _call_chatcompletion(self, sender=None, with_sender=False, **kwargs):
-                                    Calls the chat completion API.
+        async _call_chatcompletion(self, sender=None, with_sender=False, **kwargs):
+            Calls the chat completion API.
     """
 
     async def _output(
@@ -115,12 +116,12 @@ class MonoChatInvokeMixin(ABC):
         Processes the output of the chatbot.
 
         Args:
-                        invoke: Flag indicating whether to invoke the tools.
-                        out: Flag indicating whether to return the output.
-                        output_fields: The output fields for the chatbot.
-                        func_calls_: The function calls for invoking the tools (optional).
-                        prompt_template: The prompt template for the chatbot (optional).
-                        return_template (bool): Flag indicating whether to return the prompt template (default: True).
+            invoke: Flag indicating whether to invoke the tools.
+            out: Flag indicating whether to return the output.
+            output_fields: The output fields for the chatbot.
+            func_calls_: The function calls for invoking the tools (optional).
+            prompt_template: The prompt template for the chatbot (optional).
+            return_template (bool): Flag indicating whether to return the prompt template (default: True).
         """
 
         content_ = self.branch.last_message_content
@@ -145,11 +146,11 @@ class MonoChatInvokeMixin(ABC):
         Returns the response from the chatbot.
 
         Args:
-                        content_: The content of the last message.
-                        output_fields: The output fields for the chatbot.
+            content_: The content of the last message.
+            output_fields: The output fields for the chatbot.
 
         Returns:
-                        Any: The response from the chatbot.
+            Any: The response from the chatbot.
         """
         out_ = ""
 
@@ -166,7 +167,13 @@ class MonoChatInvokeMixin(ABC):
                     try:
                         out_ = ParseUtil.md_to_json(out_)
                     except Exception:
-                        out_ = ParseUtil.md_to_json(out_.replace("'", '"'))
+                        try:
+                            out_ = ParseUtil.md_to_json(out_.replace("'", '"'))
+                        except Exception:
+                            with contextlib.suppress(Exception):
+                                out_ = ParseUtil.fuzzy_parse_json(
+                                    out_.strip("```json").strip("```")
+                                )
 
                 out_ = StringMatch.correct_keys(output_fields=output_fields, out_=out_)
             except Exception:
@@ -187,11 +194,11 @@ class MonoChatInvokeMixin(ABC):
         Invokes the tools associated with the chatbot.
 
         Args:
-                        content_: The content of the last message (optional).
-                        func_calls_: The function calls for invoking the tools (optional).
+            content_: The content of the last message (optional).
+            func_calls_: The function calls for invoking the tools (optional).
 
         Returns:
-                        list: The results of invoking the tools.
+            list: The results of invoking the tools.
         """
         if func_calls_ is None and content_ is not None:
             tool_uses = content_
@@ -220,9 +227,9 @@ class MonoChatInvokeMixin(ABC):
         Processes the chat completion.
 
         Args:
-                        payload: The payload for the chat completion.
-                        completion: The completed chat response.
-                        sender: The sender of the message.
+            payload: The payload for the chat completion.
+            completion: The completed chat response.
+            sender: The sender of the message.
         """
         if "choices" in completion:
             add_msg_config = {"response": completion["choices"][0]}
@@ -240,9 +247,9 @@ class MonoChatInvokeMixin(ABC):
         Calls the chat completion API.
 
         Args:
-                        sender: The sender of the message (optional).
-                        with_sender (bool): Flag indicating whether to include the sender in the chat messages (default: False).
-                        **kwargs: Additional keyword arguments for the chat completion API.
+            sender: The sender of the message (optional).
+            with_sender (bool): Flag indicating whether to include the sender in the chat messages (default: False).
+            **kwargs: Additional keyword arguments for the chat completion API.
         """
         messages = (
             self.branch.chat_messages_with_sender

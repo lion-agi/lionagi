@@ -1,18 +1,29 @@
 from typing import List, Any
 from pydantic import Field
-from lionagi.libs import func_call, SysUtil
-
+from lionagi.libs import SysUtil
 from ..relations import Relationship
 from ..schema import BaseNode
 from .base_structure import BaseStructure
 
 
 class Graph(BaseStructure):
+    """
+    A class representing a graph structure.
+
+    Attributes:
+        relationships (dict): A dictionary storing the relationships between nodes.
+    """
 
     relationships: dict = Field(default={})
 
     @property
     def node_relationships(self):
+        """
+        Get the node relationships in the graph.
+
+        Returns:
+            dict: A dictionary containing the incoming and outgoing relationships for each node.
+        """
         _output = {}
         for _node in self.nodes.values():
             _output[_node.id_] = {
@@ -22,6 +33,15 @@ class Graph(BaseStructure):
         return _output
 
     def has_relationship(self, relationship: Relationship | str) -> bool:
+        """
+        Check if a relationship exists in the graph.
+
+        Args:
+            relationship (Relationship | str): The relationship object or its ID.
+
+        Returns:
+            bool: True if the relationship exists, False otherwise.
+        """
         return (
             True
             if self.relationships.get(
@@ -36,6 +56,15 @@ class Graph(BaseStructure):
         )
 
     def add_relationship(self, relationship: Relationship) -> None:
+        """
+        Add a relationship to the graph.
+
+        Args:
+            relationship (Relationship): The relationship object to add.
+
+        Raises:
+            ValueError: If there is an error adding the relationship.
+        """
         try:
             in_node: BaseNode = self.get_node(relationship.source_node_id)
             out_node: BaseNode = self.get_node(relationship.target_node_id)
@@ -51,6 +80,19 @@ class Graph(BaseStructure):
     def get_node_relationships(
         self, node: BaseNode = None, out_edge=True
     ) -> List[Relationship]:
+        """
+        Get the relationships of a node.
+
+        Args:
+            node (BaseNode, optional): The node to get relationships for. If None, all relationships are returned.
+            out_edge (bool, optional): If True, get outgoing relationships. If False, get incoming relationships.
+
+        Returns:
+            List[Relationship]: A list of relationships for the node.
+
+        Raises:
+            KeyError: If the node is not found in the graph.
+        """
         if node is None:
             return list(self.relationships.values())
 
@@ -63,15 +105,45 @@ class Graph(BaseStructure):
         return list(node.in_relations.values())
 
     def get_node_predecessors(self, node: BaseNode):
+        """
+        Get the predecessor nodes of a node.
+
+        Args:
+            node (BaseNode): The node to get predecessors for.
+
+        Returns:
+            List[BaseNode]: A list of predecessor nodes.
+        """
+
         return self.get_node(node.predecessors)
 
     def get_node_successors(self, node: BaseNode):
+        """
+        Get the successor nodes of a node.
+
+        Args:
+            node (BaseNode): The node to get successors for.
+
+        Returns:
+            List[BaseNode]: A list of successor nodes.
+        """
         return self.get_node(node.successors)
 
-    def remove_relationship(self, relationship: Relationship | str = None) -> Relationship:
+    def remove_relationship(
+        self, relationship: Relationship | str = None
+    ) -> Relationship:
+        """
+        Remove a relationship from the graph.
+
+        Args:
+            relationship (Relationship | str, optional): The relationship object or its ID to remove.
+
+        Returns:
+            Relationship: The removed relationship object.
+        """
         if isinstance(relationship, str):
             relationship = self.relationships.get(relationship, None)
-        
+
         source_node: BaseNode = self.get_node(relationship.source_node_id)
         target_node: BaseNode = self.get_node(relationship.target_node_id)
 
@@ -79,8 +151,16 @@ class Graph(BaseStructure):
         self.relationships.pop(relationship.id_)
         return relationship
 
-
     def remove_node(self, node: BaseNode) -> bool:
+        """
+        Remove a node from the graph.
+
+        Args:
+            node (BaseNode): The node to remove.
+
+        Returns:
+            bool: True if the node is successfully removed, False otherwise.
+        """
         for i in node.all_relationships:
             j = self.relationships[i]
             self.remove_relationship(j)
@@ -93,6 +173,15 @@ class Graph(BaseStructure):
         self.relationships.clear()
 
     def to_networkx(self, **kwargs) -> Any:
+        """
+        Convert the graph to a NetworkX graph.
+
+        Args:
+            **kwargs: Additional keyword arguments to pass to the NetworkX graph constructor.
+
+        Returns:
+            Any: The NetworkX graph object.
+        """
         SysUtil.check_import("networkx")
 
         from networkx import DiGraph

@@ -73,14 +73,19 @@ class BaseComponent(BaseComponentMixin, ABC):
 
 class BaseNode(BaseComponent):
     """
-    A base class for nodes, representing a fundamental unit in a graph or tree structure,
-    extending BaseComponent with content handling capabilities.
+    A base class for nodes, representing a fundamental unit in a graph or tree structure.
+
+    This class extends BaseComponent with content handling capabilities.
 
     Attributes:
-        content: The content of the node, which can be a string, a dictionary with any structure,
-        None, or any other type. It is flexible to accommodate various types of content.
-        This attribute also supports aliasing through validation_alias for compatibility with
-        different naming conventions like "text", "page_content", or "chunk_content".
+        content (str | dict[str, Any] | None | Any): The content of the node, which can be a string,
+            a dictionary with any structure, None, or any other type. It is flexible to accommodate
+            various types of content. This attribute also supports aliasing through validation_alias
+            for compatibility with different naming conventions like "text", "page_content", or
+            "chunk_content".
+        label (str | None): The label of the node.
+        in_relations (dict[str, str | Any | None]): The incoming relations of the node.
+        out_relations (dict[str, str | Any | None]): The outgoing relations of the node.
     """
 
     content: str | dict[str, Any] | None | Any = Field(
@@ -94,17 +99,66 @@ class BaseNode(BaseComponent):
 
     @property
     def related_nodes(self):
+        """
+        Get the related nodes of the node.
+
+        Returns:
+            list: A list of the ids of the related nodes.
+        """
         return convert.to_list(
             list(self.in_relations.keys()) + list(self.out_relations.keys())
         )
 
     @property
     def has_relations(self) -> bool:
+        """
+        Check if the node has any relations.
+
+        Returns:
+            bool: True if the node has relations, False otherwise.
+        """
         return True if len(self.relations) > 0 else False
 
+    def get_relation(self, node: BaseComponent) -> str | None:
+        """
+        Get the relation with a specific node.
+
+        Args:
+            node (BaseComponent | str): The node or node id to get the relation with.
+
+        Returns:
+            str | None: The relation with the node, or None if no relation exists.
+        """
+        if isinstance(node, BaseComponent):
+            if node.id_ in self.in_relations:
+                return self.in_relations[node.id_]
+            elif node.id_ in self.out_relations:
+                return self.out_relations[node.id_]
+        elif isinstance(node, str):
+            if node in self.in_relations:
+                return self.in_relations[node]
+            elif node in self.out_relations:
+                return self.out_relations[node]
+        else:
+            return None
+
     def add_relation(
-        self, node: BaseComponent, relationship=None, direction=None
-    ) -> None:
+        self,
+        node: BaseComponent | str,
+        relationship: Any = None,
+        direction: str | None = None,
+    ) -> bool:
+        """
+        Add a relation to the node.
+
+        Args:
+            node (BaseComponent | str): The node or node id to add the relation with.
+            relationship (Any): The relationship to add.
+            direction (str | None): The direction of the relation, either "in" or "out".
+
+        Returns:
+            bool: True if the relation was added successfully, False otherwise.
+        """
         if isinstance(node, BaseComponent):
             if direction == "in":
                 self.in_relations[node.id_] = relationship
@@ -120,31 +174,63 @@ class BaseNode(BaseComponent):
         else:
             return False
 
-    def pop_relation(self,  relationship: Any = None, node=None) -> None:
-        k = relationship.id_ if isinstance(relationship, BaseComponent) else relationship
-        
+    def pop_relation(self, relationship: Any, node: BaseComponent | str) -> Any:
+        """
+        Remove a relation from the node.
+
+        Args:
+            relationship (Any): The relationship to remove.
+            node (BaseComponent | str): The node or node id to remove the relation with.
+
+        Returns:
+            Any: The removed relationship.
+        """
+        k = (
+            relationship.id_
+            if isinstance(relationship, BaseComponent)
+            else relationship
+        )
+
         if k in self.in_relations:
             self.in_relations.pop(k)
         if k in self.out_relations:
             self.out_relations.pop(k)
-        
+
         if k in node.in_relations:
             node.in_relations.pop(k)
-        elif k in node.out_relations:
+        if k in node.out_relations:
             node.out_relations.pop(k)
-        
+
         return relationship
-    
+
     @property
     def predecessors(self):
+        """
+        Get the predecessors of the node.
+
+        Returns:
+            list: A list of the ids of the predecessor nodes.
+        """
         return list(self.in_relations.keys())
 
     @property
     def successors(self):
+        """
+        Get the successors of the node.
+
+        Returns:
+            list: A list of the ids of the successor nodes.
+        """
         return list(self.out_relations.keys())
 
     @property
     def all_relationships(self):
+        """
+        Get all the relationships of the node.
+
+        Returns:
+            list: A list of all the relationship ids.
+        """
         a = []
         try:
             for i in self.in_relations.values():
@@ -161,11 +247,10 @@ class BaseNode(BaseComponent):
     @property
     def content_str(self):
         """
-        Attempts to serialize the node's content to a string.
+        Get the content of the node as a string.
 
         Returns:
-            str: The serialized content string. If serialization fails, returns "null" and
-                logs an error message indicating the content is not serializable.
+            str: The content of the node as a string, or "null" if the content is not serializable.
         """
         try:
             return convert.to_str(self.content)
@@ -177,11 +262,11 @@ class BaseNode(BaseComponent):
 
     def __str__(self):
         """
-        Provides a string representation of the BaseNode instance, including a content preview,
-        metadata preview, and optionally the timestamp if present.
+        Get a string representation of the node.
 
         Returns:
-            str: A string representation of the instance.
+            str: A string representation of the node, including the id, content preview,
+                metadata preview, and timestamp (if available).
         """
         timestamp = f" ({self.timestamp})" if self.timestamp else ""
         if self.content:

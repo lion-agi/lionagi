@@ -11,6 +11,16 @@ from .base_structure import BaseStructure
 
 
 class Structure(BaseStructure):
+    """
+    A class representing a structure of nodes with relationships.
+
+    Attributes:
+        graph (Graph): The graph representing the structure.
+        pending_ins (dict): A dictionary of pending incoming mails.
+        pending_outs (deque): A deque of pending outgoing mails.
+        execute_stop (bool): A flag indicating whether to stop execution.
+        condition_check_result (bool | None): The result of a condition check.
+    """
 
     graph: Graph = Graph()
     pending_ins: dict = {}
@@ -20,10 +30,10 @@ class Structure(BaseStructure):
 
     def add_node(self, node: BaseNode | list[BaseNode]):
         """
-        Adds a node to the structure's graph.
+        Add a node or a list of nodes to the structure's graph.
 
         Args:
-            node (BaseNode): The node to add.
+            node (BaseNode | list[BaseNode]): The node or list of nodes to add.
         """
         nodes = [node] if isinstance(node, BaseNode) else node
         for i in nodes:
@@ -31,6 +41,12 @@ class Structure(BaseStructure):
 
     @property
     def relationships(self):
+        """
+        Get the relationships in the structure's graph.
+
+        Returns:
+            dict: The relationships in the graph.
+        """
         return self.graph.relationships
 
     def add_relationship(
@@ -41,6 +57,19 @@ class Structure(BaseStructure):
         condition=None,
         **kwargs,
     ):
+        """
+        Add a relationship between two nodes in the structure's graph.
+
+        Args:
+            from_node (BaseNode): The source node of the relationship.
+            to_node (BaseNode): The target node of the relationship.
+            bundle (bool, optional): Whether the relationship is bundled. Defaults to False.
+            condition (Any, optional): The condition for the relationship. Defaults to None.
+            **kwargs: Additional keyword arguments for the relationship.
+
+        Raises:
+            ValueError: If the source node is of type Tool or ActionSelection.
+        """
         if isinstance(from_node, Tool) or isinstance(from_node, ActionSelection):
             raise ValueError(
                 f"type {type(from_node)} should not be the head of the relationship, "
@@ -56,6 +85,17 @@ class Structure(BaseStructure):
         self.graph.add_relationship(relationship)
 
     def get_node_relationships(self, node: BaseNode, out_edge=True, labels=None):
+        """
+        Get the relationships of a node in the structure's graph.
+
+        Args:
+            node (BaseNode): The node to get relationships for.
+            out_edge (bool, optional): Whether to get outgoing relationships. Defaults to True.
+            labels (Any, optional): The labels to filter the relationships. Defaults to None.
+
+        Returns:
+            list[Relationship]: The relationships of the node.
+        """
         relationships = self.graph.get_node_relationships(node, out_edge)
         if labels:
             if not isinstance(labels, list):
@@ -68,27 +108,96 @@ class Structure(BaseStructure):
         return relationships
 
     def get_predecessors(self, node: BaseNode):
+        """
+        Get the predecessor nodes of a node in the structure's graph.
+
+        Args:
+            node (BaseNode): The node to get predecessors for.
+
+        Returns:
+            list[BaseNode]: The predecessor nodes of the node.
+        """
         return self.graph.get_node_predecessors(node)
 
     def get_successors(self, node: BaseNode):
+        """
+        Get the successor nodes of a node in the structure's graph.
+
+        Args:
+            node (BaseNode): The node to get successors for.
+
+        Returns:
+            list[BaseNode]: The successor nodes of the node.
+        """
         return self.graph.get_node_successors(node)
 
-    def has_node(self, node: BaseNode) -> bool:
+    def has_node(self, node: BaseNode | str | list) -> bool:
+        """
+        Check if a node exists in the structure's graph.
+
+        Args:
+            node (BaseNode): The node to check.
+
+        Returns:
+            bool: True if the node exists, False otherwise.
+        """
         return self.graph.has_node(node)
 
-    def has_relationship(self, relationship: Relationship) -> bool:
+    def has_relationship(self, relationship: Relationship | str) -> bool:
+        """
+        Check if a relationship exists in the structure's graph.
+
+        Args:
+            relationship (Relationship): The relationship to check.
+
+        Returns:
+            bool: True if the relationship exists, False otherwise.
+        """
+
         return self.graph.has_relationship(relationship)
 
-    def remove_node(self, node: BaseNode) -> BaseNode:
+    def remove_node(self, node: BaseNode | str | list) -> BaseNode:
+        """
+        Remove a node from the structure's graph.
+
+        Args:
+            node (BaseNode): The node to remove.
+
+        Returns:
+            BaseNode: The removed node.
+        """
         return self.graph.remove_node(node)
 
     def remove_relationship(self, relationship: Relationship) -> Relationship:
+        """
+        Remove a relationship from the structure's graph.
+
+        Args:
+            relationship (Relationship): The relationship to remove.
+
+        Returns:
+            Relationship: The removed relationship.
+        """
         return self.graph.remove_relationship(relationship)
 
+    @property
     def is_empty(self) -> bool:
-        return self.graph.is_empty()
+        """
+        Check if the structure's graph is empty.
+
+        Returns:
+            bool: True if the graph is empty, False otherwise.
+        """
+
+        return self.graph.is_empty
 
     def get_heads(self):
+        """
+        Get the head nodes (nodes with no incoming relationships) in the structure's graph.
+
+        Returns:
+            list[BaseNode]: The head nodes.
+        """
         heads = []
         for key in self.graph.node_relationships:
             if not self.graph.node_relationships[key]["in"]:
@@ -97,6 +206,19 @@ class Structure(BaseStructure):
 
     @staticmethod
     def parse_to_action(instruction: BaseNode, bundled_nodes: deque):
+        """
+        Parse an instruction node and bundled nodes into an ActionNode.
+
+        Args:
+            instruction (BaseNode): The instruction node.
+            bundled_nodes (deque): The bundled nodes.
+
+        Returns:
+            ActionNode: The parsed ActionNode.
+
+        Raises:
+            ValueError: If any of the bundled nodes are invalid.
+        """
         action_node = ActionNode(instruction)
         while bundled_nodes:
             node = bundled_nodes.popleft()
@@ -110,6 +232,20 @@ class Structure(BaseStructure):
         return action_node
 
     async def check_condition(self, relationship: Relationship, executable_id):
+        """
+        Check the condition of a relationship.
+
+        Args:
+            relationship (Relationship): The relationship to check the condition for.
+            executable_id (str): The ID of the executable.
+
+        Returns:
+            bool: The result of the condition check.
+
+        Raises:
+            ValueError: If the source type of the condition is invalid.
+        """
+
         if relationship.condition.source_type == "structure":
             return self.check_condition_structure(relationship)
         elif relationship.condition.source_type == "executable":
@@ -127,9 +263,28 @@ class Structure(BaseStructure):
             raise ValueError("Invalid source_type.")
 
     def check_condition_structure(self, relationship: Relationship):
+        """
+        Check the condition of a relationship within the structure.
+
+        Args:
+            relationship (Relationship): The relationship to check the condition for.
+
+        Returns:
+            bool: The result of the condition check.
+        """
         return relationship.condition(self)
 
     async def get_next_step(self, current_node: BaseNode, executable_id):
+        """
+        Get the next step nodes based on the current node.
+
+        Args:
+            current_node (BaseNode): The current node.
+            executable_id (str): The ID of the executable.
+
+        Returns:
+            list[BaseNode]: The next step nodes.
+        """
         next_nodes = []
         next_relationships = self.get_node_relationships(current_node)
         for relationship in next_relationships:
@@ -153,6 +308,12 @@ class Structure(BaseStructure):
         return next_nodes
 
     def acyclic(self):
+        """
+        Check if the structure's graph is acyclic.
+
+        Returns:
+            bool: True if the graph is acyclic, False otherwise.
+        """
         check_deque = deque(self.graph.nodes.keys())
         check_dict = {
             key: 0 for key in self.graph.nodes.keys()
@@ -185,6 +346,14 @@ class Structure(BaseStructure):
         return True
 
     def send(self, recipient_id: str, category: str, package: Any) -> None:
+        """
+        Send a mail to a recipient.
+
+        Args:
+            recipient_id (str): The ID of the recipient.
+            category (str): The category of the mail.
+            package (Any): The package to send.
+        """
         mail = BaseMail(
             sender_id=self.id_,
             recipient_id=recipient_id,
@@ -194,6 +363,12 @@ class Structure(BaseStructure):
         self.pending_outs.append(mail)
 
     def process_relationship_condition(self, relationship_id):
+        """
+        Process the condition of a relationship.
+
+        Args:
+            relationship_id (str): The ID of the relationship.
+        """
         for key in list(self.pending_ins.keys()):
             skipped_requests = deque()
             while self.pending_ins[key]:
@@ -209,7 +384,7 @@ class Structure(BaseStructure):
 
     async def process(self) -> None:
         """
-        Processes the pending incoming mails and performs the corresponding actions.
+        Process the pending incoming mails and perform the corresponding actions.
         """
         for key in list(self.pending_ins.keys()):
             while self.pending_ins[key]:
@@ -255,6 +430,15 @@ class Structure(BaseStructure):
                         )
 
     async def execute(self, refresh_time=1):
+        """
+        Execute the structure.
+
+        Args:
+            refresh_time (int, optional): The refresh time in seconds. Defaults to 1.
+
+        Raises:
+            ValueError: If the structure's graph is not acyclic.
+        """
         if not self.acyclic():
             raise ValueError("Structure is not acyclic")
 
@@ -266,6 +450,18 @@ class Structure(BaseStructure):
     def _build_relationship(
         from_node: BaseNode, to_node: BaseNode, condition=None, **kwargs
     ):
+        """
+        Build a relationship between two nodes.
+
+        Args:
+            from_node (BaseNode): The source node of the relationship.
+            to_node (BaseNode): The target node of the relationship.
+            condition (Any, optional): The condition for the relationship. Defaults to None.
+            **kwargs: Additional keyword arguments for the relationship.
+
+        Returns:
+            Relationship: The built relationship.
+        """
         relationship = Relationship(
             source_node_id=from_node.id_, target_node_id=to_node.id_, **kwargs
         )
