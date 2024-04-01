@@ -1,7 +1,7 @@
 from abc import ABC
 from typing import Any, Optional, Union, TypeVar
 
-from ..schema import TOOL_TYPE, Tool
+from ..tool import Tool, TOOL_TYPE
 from ..messages import Instruction, System
 from ..flow.monoflow import MonoChat, MonoFollowup, MonoReAct
 

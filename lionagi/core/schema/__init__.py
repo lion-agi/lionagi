@@ -1,22 +1,19 @@
-from .base_node import BaseNode, BaseRelatableNode, Tool, TOOL_TYPE
+from .base_node import BaseNode
 from .data_node import DataNode
 from .data_logger import DLog, DataLogger
-from .structure import Relationship, Graph, Structure
+from .edge import Edge, Condition
 from .action_node import ActionNode, ActionSelection
-from .condition import Condition
+
 
 __all__ = [
     "BaseNode",
-    "BaseRelatableNode",
+    "BaseNode",
     "Tool",
+    "Edge",
     "DataNode",
     "DLog",
     "DataLogger",
-    "Relationship",
-    "Graph",
-    "Structure",
     "ActionNode",
-    "TOOL_TYPE",
     "ActionSelection",
     "Condition",
 ]

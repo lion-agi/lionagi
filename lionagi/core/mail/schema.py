@@ -1,7 +1,7 @@
 from collections import deque
 from enum import Enum
 
-from lionagi.core.schema.base_node import BaseRelatableNode
+from lionagi.core.schema.base_node import BaseNode
 
 
 class MailCategory(str, Enum):
@@ -39,7 +39,7 @@ class BaseMail:
         self.package = package
 
 
-class StartMail(BaseRelatableNode):
+class StartMail(BaseNode):
 
     def __init__(self, **kwargs):
         super().__init__(**kwargs)

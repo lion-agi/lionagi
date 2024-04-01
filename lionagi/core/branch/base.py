@@ -4,7 +4,7 @@ from typing import Any
 from lionagi.libs.sys_util import PATH_TYPE
 from lionagi.libs import convert, dataframe, SysUtil
 
-from ..schema.base_node import BaseRelatableNode
+from ..schema.base_node import BaseNode
 from ..schema.data_logger import DataLogger, DLog
 from ..messages.schema import (
     BranchColumns,
@@ -16,7 +16,7 @@ from ..messages.schema import (
 from .util import MessageUtil
 
 
-class BaseBranch(BaseRelatableNode, ABC):
+class BaseBranch(BaseNode, ABC):
     """
     Base class for managing branches of conversation, incorporating messages
     and logging functionality.
@@ -636,7 +636,6 @@ class BaseBranch(BaseRelatableNode, ABC):
             case_sensitive=case_sensitive,
         )
 
-    # noinspection PyTestUnpassedFixture
     def _info(self, use_sender: bool = False) -> dict[str, int]:
         """
         Helper method to generate summaries of messages either by role or sender.

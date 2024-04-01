@@ -1,7 +1,7 @@
 from typing import Callable
 from lionagi.libs import convert
-from ..tool import func_to_tool
-from ..schema import Tool
+from ..tool import func_to_tool, Tool
+
 from .predict import predict
 from .plan import plan
 from .react import react

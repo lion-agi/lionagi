@@ -363,6 +363,7 @@ class SysUtil:
         dir_exist_ok: bool = True,
         time_prefix: bool = False,
         custom_timestamp_format: str | None = None,
+        random_hash_digits=0,
     ) -> Path:
         """
         Creates a path with an optional timestamp in the specified directory.
@@ -400,7 +401,11 @@ class SysUtil:
         else:
             filename = name
 
-        full_filename = f"{filename}{ext}"
+
+        random_hash = SysUtil.create_id(random_hash_digits) if random_hash_digits > 0 else ""
+
+
+        full_filename = f"{filename}{random_hash}{ext}"
         full_path = directory / full_filename
         full_path.parent.mkdir(parents=True, exist_ok=dir_exist_ok)
 

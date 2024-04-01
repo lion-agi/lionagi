@@ -7,7 +7,7 @@ during the chat conversation. It extends the BaseMonoFlow and MonoChatMixin clas
 
 from typing import Any
 
-from lionagi.core.flow.base.baseflow import BaseMonoFlow
+from lionagi.core.flow.baseflow import BaseMonoFlow
 from lionagi.core.flow.monoflow.chat_mixin import MonoChatMixin
 
 

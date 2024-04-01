@@ -1,117 +1,280 @@
 """
-Module for base component model definition using Pydantic.
+Module for defining base component models using Pydantic, with a focus on
+graph or tree structure components like nodes and relationships.
 """
 
-from abc import ABC
-from typing import Any, TypeVar
+from typing import Any, Dict, List, TypeVar
+from pydantic import Field
+from enum import Enum
 
-from pydantic import Field, field_serializer, AliasChoices
-from lionagi.libs import SysUtil, convert
+from lionagi.libs import convert
+from lionagi.core.schema.base_component import BaseComponent
+from lionagi.core.schema.edge import Edge
 
-from .base_mixin import BaseComponentMixin
-
-T = TypeVar("T", bound="BaseComponent")
+T = TypeVar("T")
 
 
-class BaseComponent(BaseComponentMixin, ABC):
-    """
-    A base component model that provides common attributes and utility methods for metadata management.
-    It includes functionality to interact with metadata in various ways, such as retrieving, modifying,
-    and validating metadata keys and values.
+class EdgeDirection(str, Enum):
+    """Defines possible directions for edges in a graph."""
 
-    Attributes:
-            id_ (str): Unique identifier, defaulted using SysUtil.create_id.
-            timestamp (str | None): Timestamp of creation or modification.
-            metadata (dict[str, Any]): Metadata associated with the component.
-    """
-
-    id_: str = Field(default_factory=SysUtil.create_id, alias="node_id")
-    timestamp: str | None = Field(default_factory=SysUtil.get_timestamp)
-    metadata: dict[str, Any] = Field(default_factory=dict, alias="meta")
-
-    class Config:
-        """Model configuration settings."""
-
-        extra = "allow"
-        arbitrary_types_allowed = True
-        populate_by_name = True
-        validate_assignment = True
-        validate_return = True
-        str_strip_whitespace = True
-
-    @classmethod
-    def class_name(cls) -> str:
-        """
-        Retrieves the name of the class.
-        """
-        return cls.__name__
-
-    @property
-    def property_schema(self):
-        return self.model_json_schema()["properties"]
-
-    @property
-    def property_keys(self):
-        return list(self.model_json_schema()["properties"].keys())
-
-    def copy(self, *args, **kwargs) -> T:
-        """
-        Creates a deep copy of the instance, with an option to update specific fields.
-
-        Args:
-                *args: Variable length argument list for additional options.
-                **kwargs: Arbitrary keyword arguments specifying updates to the instance.
-
-        Returns:
-                BaseComponent: A new instance of BaseComponent as a deep copy of the original, with updates applied.
-        """
-        return self.model_copy(*args, **kwargs)
-
-    def __repr__(self):
-        return f"{self.__class__.__name__}({self.to_dict()})"
+    IN = "in"  # Incoming-edge direction
+    OUT = "out"  # Outgoing-edge direction
 
 
 class BaseNode(BaseComponent):
     """
-    A base class for nodes, representing a fundamental unit in a graph or tree structure,
-    extending BaseComponent with content handling capabilities.
+    Represents a node within a graph or tree structure, extending a base component model.
 
     Attributes:
-            content: The content of the node, which can be a string, a dictionary with any structure,
-                    None, or any other type. It is flexible to accommodate various types of content.
-                    This attribute also supports aliasing through validation_alias for compatibility with
-                    different naming conventions like "text", "page_content", or "chunk_content".
+        content: Content stored within the node, which can be a string,
+            a dictionary, None, or any other type, providing flexibility for different use cases.
+        in_relations: A dictionary mapping other node IDs to incoming `Relationship` objects.
+        out_relations: A dictionary mapping other node IDs to outgoing `Relationship` objects.
+
+    The class provides properties and methods for accessing and modifying the node's relationships
+    and its content in a flexible manner suitable for various graph-based applications.
+
+    Note:
+        Clarification:
+        1. Node refers to this class, BaseNode.
+        2. Relationship (alias edge) refers to the Relationship class object.
+        3. relation is a {node_id: edge}
     """
 
-    content: str | dict[str, Any] | None | Any = Field(
-        default=None,
-        validation_alias=AliasChoices("text", "page_content", "chunk_content"),
+    in_relations: Dict[str, Edge] = Field(
+        default_factory=dict,
+        description="Incoming relationships indexed by other node IDs.",
     )
+    out_relations: Dict[str, Edge] = Field(
+        default_factory=dict,
+        description="Outgoing relationships indexed by other node IDs.",
+    )
+
+    @property
+    def relations(self) -> Dict[str, Edge]:
+        """
+        Combines incoming and outgoing relationships into a single dictionary.
+        """
+        return {**self.in_relations, **self.out_relations}
+
+    @property
+    def in_edges(self) -> List[Edge]:
+        """
+        Lists all incoming relationships to the node.
+        """
+        return list(self.in_relations.values())
+
+    @property
+    def out_edges(self) -> List[Edge]:
+        """
+        Lists all outgoing relationships from the node.
+        """
+        return list(self.out_relations.values())
+
+    @property
+    def edges(self) -> List[Edge]:
+        """
+        Lists all relationships connected to the node, both incoming and outgoing.
+        """
+        return self.in_edges + self.out_edges
+
+    @property
+    def predecessors(self) -> List[str]:
+        """
+        Lists node IDs for all nodes that have an outgoing relationship to this node.
+        """
+        return list(self.in_relations.keys())
+
+    @property
+    def successors(self) -> List[str]:
+        """
+        Lists node IDs for all nodes that this node has an outgoing relationship to.
+        """
+        return list(self.out_relations.keys())
+
+    @property
+    def related_nodes(self) -> List[str]:
+        """
+        Lists all node IDs related to this node,
+        both predecessors and successors.
+        """
+        return self.predecessors + self.successors
+
+    @property
+    def is_related(self) -> bool:
+        """
+        Checks if the node is connected to any other nodes through edges.
+        """
+        return bool(self.edges)
+
+    def has_edge(self, edge: Edge | str) -> bool:
+        """
+        Checks if a specific edge is connected to the node.
+
+        Args:
+            edge: The edge or edge ID to check.
+
+        Returns:
+            True if the edge exists, False otherwise.
+        """
+        k = edge.id_ if isinstance(edge, Edge) else edge
+        return k in [e.id_ for e in self.edges]
+
+    def get_edge(self, related_node: BaseComponent | str) -> Edge | None:
+        """
+        Retrieves the edge ID for a specific related node.
+
+        Args:
+            related_node: The related node or its ID.
+
+        Returns:
+            The edge ID if found, None otherwise.
+        """
+        k = (
+            related_node.id_
+            if isinstance(related_node, BaseComponent)
+            else related_node
+        )
+        return self.relations.get(k, None)
+
+    def is_predecessor_of(self, node: BaseComponent | str) -> bool:
+        """
+        Determines if this node is a predecessor of another node.
+
+        Args:
+            node: The node or its ID to check against.
+
+        Returns:
+            True if this node is a predecessor, False otherwise.
+        """
+        k = node.id_ if isinstance(node, BaseComponent) else node
+        return k in self.successors
+
+    def is_successor_of(self, node: BaseComponent | str) -> bool:
+        """
+        Determines if this node is a successor of another node.
+
+        Args:
+            node: The node or its ID to check against.
+
+        Returns:
+            True if this node is a successor, False otherwise.
+        """
+        k = node.id_ if isinstance(node, BaseComponent) else node
+        return k in self.predecessors
+
+    def is_related_with(self, node: BaseComponent | str) -> bool:
+        """
+        Checks if this node is related to another node, either as a predecessor or successor.
+
+        Args:
+            node: The node or its ID to check against.
+
+        Returns:
+            True if related, False otherwise.
+        """
+        k = node.id_ if isinstance(node, BaseComponent) else node
+        return k in self.related_nodes
+
+    def add_edge(
+        self,
+        node: BaseComponent,
+        edge: Edge | None | str = None,
+        direction: EdgeDirection | None = EdgeDirection.OUT,
+        label: str | None = None,
+        **kwargs,
+    ) -> bool:
+        """
+        Adds an edge between this node and another node, creating a new `Relationship` if needed.
+
+        Args:
+            node: The node to connect with.
+            relationship: An existing `Relationship` object, if any.
+            direction: The direction of the relationship ('in' or 'out').
+            label: A label for the relationship.
+            **kwargs: Additional arguments for the `Relationship` constructor, if a new relationship is created.
+
+        Returns:
+            True if the edge was successfully added, False otherwise.
+        """
+        try:
+            _edge = edge
+            if not edge:
+                if direction == EdgeDirection.OUT:
+                    _edge = Edge(
+                        source_node_id=self.id_,
+                        target_node_id=node.id_,
+                        label=label,
+                        **kwargs,
+                    )
+                elif direction == EdgeDirection.IN:
+                    _edge = Edge(
+                        source_node_id=node.id_,
+                        target_node_id=self.id_,
+                        label=label,
+                        **kwargs,
+                    )
+
+            if direction == EdgeDirection.OUT:
+                self.out_relations[node.id_] = _edge
+                node.in_relations[self.id_] = _edge
+
+            elif direction == EdgeDirection.IN:
+                self.in_relations[node.id_] = _edge
+                node.out_relations[self.id_] = _edge
+
+            return True
+        except Exception:
+            return False
+
+    def pop_edge(self, node: BaseComponent) -> Edge | None:
+        """
+        Removes a specific edge between this node and another node.
+
+        Args:
+            node: The other node involved in the edge.
+            edge: The edge or its ID to remove.
+
+        Returns:
+            The removed edge-object, or None if not found.
+        """
+        edge = None
+        ks = [self.id_, node.id_]
+
+        for i in [
+            self.in_relations,
+            self.out_relations,
+            node.in_relations,
+            node.out_relations,
+        ]:
+            for j in ks:
+                if j in i:
+                    a = i.pop(j, None)
+                    if a:
+                        edge = a
+
+        return edge
 
     @property
     def content_str(self):
         """
-        Attempts to serialize the node's content to a string.
+        Provides a string representation of the node's content.
 
         Returns:
-                str: The serialized content string. If serialization fails, returns "null" and
-                        logs an error message indicating the content is not serializable.
+            A string representation of the content, or "null" if conversion fails.
         """
         try:
             return convert.to_str(self.content)
         except ValueError:
-            print(
-                f"Content is not serializable for Node: {self._id}, defaulting to 'null'"
-            )
+
             return "null"
 
     def __str__(self):
         """
-        Provides a string representation of the BaseNode instance, including a content preview,
-        metadata preview, and optionally the timestamp if present.
+        Generates a string representation of the BaseNode, showing key information.
 
         Returns:
-                str: A string representation of the instance.
+            A formatted string representing the node, including content preview and metadata.
         """
         timestamp = f" ({self.timestamp})" if self.timestamp else ""
         if self.content:
@@ -129,71 +292,4 @@ class BaseNode(BaseComponent):
             f"{self.class_name()}({self.id_}, {content_preview}, {meta_preview},"
             f"{timestamp})"
         )
-
-
-class BaseRelatableNode(BaseNode):
-    """
-    Extends BaseNode with functionality to manage relationships with other nodes.
-
-    Attributes:
-            related_nodes: A list of identifiers (str) for nodes that are related to this node.
-            label: An optional label for the node, providing additional context or classification.
-    """
-
-    related_nodes: list[str] = Field(default_factory=list)
-    label: str | None = None
-
-    def add_related_node(self, node_id: str) -> bool:
-        """
-        Adds a node to the list of related nodes if it's not already present.
-
-        Args:
-                node_id: The identifier of the node to add.
-
-        Returns:
-                bool: True if the node was added, False if it was already in the list.
-        """
-        if node_id not in self.related_nodes:
-            self.related_nodes.append(node_id)
-            return True
-        return False
-
-    def remove_related_node(self, node_id: str) -> bool:
-        """
-        Removes a node from the list of related nodes if it's present.
-
-        Args:
-                node_id: The identifier of the node to remove.
-
-        Returns:
-                bool: True if the node was removed, False if it was not found in the list.
-        """
-
-        if node_id in self.related_nodes:
-            self.related_nodes.remove(node_id)
-            return True
-        return False
-
-
-class Tool(BaseRelatableNode):
-    """
-    Represents a tool, extending BaseRelatableNode with specific functionalities and configurations.
-
-    Attributes:
-            func: The main function or capability of the tool.
-            schema_: An optional schema defining the structure and constraints of data the tool works with.
-            manual: Optional documentation or manual for using the tool.
-            parser: An optional parser associated with the tool for data processing or interpretation.
-    """
-
-    func: Any
-    schema_: dict | None = None
-    manual: Any | None = None
-    parser: Any | None = None
-
-    @field_serializer("func")
-    def serialize_func(self, func):
-        return func.__name__
-
-
-TOOL_TYPE = bool | Tool | str | list[Tool | str | dict] | dict
+    

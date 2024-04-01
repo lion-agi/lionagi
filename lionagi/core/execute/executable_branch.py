@@ -8,14 +8,14 @@ from typing import Any
 
 from lionagi.libs import convert, AsyncUtil, ParseUtil
 
-from ..schema import BaseRelatableNode, ActionNode
-from ..mail import BaseMail
-from ..messages import System, Instruction
+from lionagi.core.schema import BaseNode, ActionNode
+from lionagi.core.mail import BaseMail
+from lionagi.core.messages import System, Instruction
 
-from .branch import Branch
+from lionagi.core.branch.branch import Branch
 
 
-class ExecutableBranch(BaseRelatableNode):
+class ExecutableBranch(BaseNode):
     """
     Represents an executable branch in a conversation tree.
 

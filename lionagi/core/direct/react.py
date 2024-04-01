@@ -1,12 +1,12 @@
 from lionagi.libs import func_call, convert, AsyncUtil
 
 from lionagi.integrations.bridge.pydantic_.pydantic_bridge import Field
-from ..prompt.action_template import ActionedTemplate
+from ..prompt.action_template import ActionTemplate
 from ..branch import Branch
 from .utils import _process_tools
 
 
-class ReactTemplate(ActionedTemplate):
+class ReactTemplate(ActionTemplate):
     template_name: str = "default_react"
     sentence: str | list | dict | None= Field(
         default_factory=str,

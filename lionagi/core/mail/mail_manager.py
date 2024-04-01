@@ -1,6 +1,5 @@
 from collections import deque
 from lionagi.libs import AsyncUtil
-from ..schema import BaseNode
 from .schema import BaseMail
 
 

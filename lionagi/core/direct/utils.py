@@ -1,6 +1,6 @@
 from typing import Callable
-from ..tool import func_to_tool
-from ..schema import Tool
+from ..tool import func_to_tool, Tool
+
 # import contextlib
 # from lionagi.libs import ParseUtil, StringMatch, convert, func_call
 

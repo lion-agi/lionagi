@@ -9,8 +9,16 @@ maps data types to their corresponding validation functions.
 from lionagi.libs import convert, StringMatch, ParseUtil
 
 
-def _has_action_keys(dict_):
-    return list(dict_.keys()) >= ["function", "arguments"]
+def check_dict_field(x, keys: list[str] | dict, fix_=True, **kwargs):
+    if isinstance(x, dict):
+        return x
+    if fix_:
+        try:
+            x = convert.to_str(x)
+            return StringMatch.force_validate_dict(x, keys=keys, **kwargs)
+        except Exception as e:
+            raise ValueError("Invalid dict field type.") from e
+    raise ValueError(f"Default value for DICT must be a dict, got {type(x).__name__}")
 
 
 def check_action_field(x, fix_=True, **kwargs):
@@ -25,26 +33,6 @@ def check_action_field(x, fix_=True, **kwargs):
         return x
     except Exception as e:
         raise ValueError("Invalid action field type.") from e
-
-
-def _fix_action_field(x, discard_=True):
-    corrected = []
-    if isinstance(x, str):
-        x = ParseUtil.fuzzy_parse_json(x)
-
-    try:
-        x = convert.to_list(x)
-
-        for i in x:
-            i = convert.to_dict(i)
-            if _has_action_keys(i):
-                corrected.append(i)
-            elif not discard_:
-                raise ValueError(f"Invalid action field: {i}")
-    except Exception as e:
-        raise ValueError(f"Invalid action field: {e}") from e
-
-    return corrected
 
 
 def check_number_field(x, fix_=True, **kwargs):
@@ -171,6 +159,30 @@ def check_enum_field(x, choices, fix_=True, **kwargs):
     return x
 
 
+def _has_action_keys(dict_):
+    return list(dict_.keys()) >= ["function", "arguments"]
+
+
+def _fix_action_field(x, discard_=True):
+    corrected = []
+    if isinstance(x, str):
+        x = ParseUtil.fuzzy_parse_json(x)
+
+    try:
+        x = convert.to_list(x)
+
+        for i in x:
+            i = convert.to_dict(i)
+            if _has_action_keys(i):
+                corrected.append(i)
+            elif not discard_:
+                raise ValueError(f"Invalid action field: {i}")
+    except Exception as e:
+        raise ValueError(f"Invalid action field: {e}") from e
+
+    return corrected
+
+
 def _fix_number_field(x, *args, **kwargs):
     """
     Attempts to fix an invalid numeric field value.
@@ -275,4 +287,5 @@ validation_funcs = {
     "str": check_str_field,
     "enum": check_enum_field,
     "action": check_action_field,
+    "dict": check_dict_field,
 }

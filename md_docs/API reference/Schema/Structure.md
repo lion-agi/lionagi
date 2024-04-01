@@ -2,7 +2,7 @@
 tags:
   - API
   - Graph
-  - Relationship
+  - Edge
 created: 2024-02-26
 completed: true
 ---

@@ -7,7 +7,7 @@ from .scored_template import ScoredTemplate
 class ActionRequest: ...
 
 
-class ActionedTemplate(ScoredTemplate):
+class ActionTemplate(ScoredTemplate):
 
     action_needed: bool | None = Field(
         False, description="true if actions are needed else false"

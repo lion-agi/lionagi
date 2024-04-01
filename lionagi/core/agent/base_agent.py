@@ -3,13 +3,13 @@ This module contains the BaseAgent class, which serves as a base class for agent
 """
 
 from lionagi.core.mail.schema import StartMail
-from lionagi.core.schema.base_node import BaseRelatableNode
+from lionagi.core.schema.base_node import BaseNode
 from lionagi.core.mail.mail_manager import MailManager
 
 from lionagi.libs import func_call, AsyncUtil
 
 
-class BaseAgent(BaseRelatableNode):
+class BaseAgent(BaseNode):
     """
     A base class for agents.
 
