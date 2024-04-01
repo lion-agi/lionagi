@@ -1,6 +1,6 @@
 from collections import deque
 
-from lionagi.core.mail.schema import BaseMail
+from lionagi.core.mail.schema import StartMail
 from lionagi.core.schema.base_node import BaseRelatableNode
 from lionagi.core.mail.mail_manager import MailManager
 
@@ -8,24 +8,7 @@ import lionagi.libs.ln_func_call as func_call
 from lionagi.libs.ln_async import AsyncUtil
 
 
-class Start(BaseRelatableNode):
-
-    def __init__(self):
-        super().__init__()
-        self.pending_outs = deque()
-
-    def trigger(self, context, structure_id, executable_id):
-        start_mail_content = {"context": context, "structure_id": structure_id}
-        start_mail = BaseMail(
-            sender_id=self.id_,
-            recipient_id=executable_id,
-            category="start",
-            package=start_mail_content,
-        )
-        self.pending_outs.append(start_mail)
-
-
-class Agent(BaseRelatableNode):
+class BaseAgent(BaseRelatableNode):
     def __init__(
         self,
         structure,
@@ -36,7 +19,7 @@ class Agent(BaseRelatableNode):
         super().__init__()
         self.structure = structure
         self.executable = executable_class(**executable_class_kwargs)
-        self.start = Start()
+        self.start = StartMail()
         self.mailManager = MailManager([self.structure, self.executable, self.start])
         self.output_parser = output_parser
 
@@ -63,4 +46,3 @@ class Agent(BaseRelatableNode):
 
         if self.output_parser:
             return self.output_parser(self)
-

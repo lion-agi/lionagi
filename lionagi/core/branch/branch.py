@@ -11,7 +11,7 @@ from lionagi.core.schema.data_logger import DataLogger
 from lionagi.core.tool.tool_manager import ToolManager, func_to_tool
 
 from lionagi.core.branch.base.base_branch import BaseBranch
-from ..messages.system import System
+from lionagi.core.messages.system import System
 from lionagi.core.mail.schema import BaseMail
 
 from lionagi.core.branch.base.util import MessageUtil
@@ -130,7 +130,6 @@ class Branch(BaseBranch, BranchFlowMixin):
         # add pending ins and outs for mails
         self.pending_ins = {}
         self.pending_outs = deque()
-
 
     @property
     def has_tools(self) -> bool:

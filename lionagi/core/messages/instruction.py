@@ -39,7 +39,6 @@ class Instruction(BaseMessage):
     def instruct(self, value):
         self.content.update({"instruction": value})
 
-
     @property
     def context(self):
         """
@@ -49,7 +48,6 @@ class Instruction(BaseMessage):
             The 'context' part of the message.
         """
         return nested.nget(self.content, ["context"], "null")
-
 
     @context.setter
     def context(self, value):
@@ -69,10 +67,8 @@ class Instruction(BaseMessage):
     def response_format(self, value):
         self.content.update({"response_format": value})
 
-
     def __str__(self):
         return f"Instruction: {self.instruction}"
-
 
     def _add_context(self, context=None):
         if context:
