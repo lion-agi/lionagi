@@ -1,11 +1,10 @@
 from functools import singledispatchmethod
+
 from typing import Any
+from pydantic import Field, AliasChoices
+
 from lionagi.libs import convert, func_call
-from lionagi.integrations.bridge.pydantic_.pydantic_bridge import Field
-
-from pydantic import Field
-
-from lionagi.core.schema import BaseNode
+from ..schema import BaseNode, Edge
 
 
 class BaseStructure(BaseNode):
@@ -16,10 +15,118 @@ class BaseStructure(BaseNode):
         nodes (dict[str, BaseNode]): A dictionary of nodes in the structure, where the keys are node IDs.
     """
 
-    nodes: dict[str, BaseNode] = Field(default_factory=dict)
+    structure_edges: dict[str, Edge] = Field(
+        default_factory=dict,
+        alias=AliasChoices("relationships", "structure_relationships"),
+        description="a dictionary of all relationships in the graph, key is the edge id",
+    )
+
+    structure_nodes: dict[str, BaseNode] = Field(
+        default_factory=dict,
+        alias=AliasChoices("nodes", "graph_nodes", "tree_nodes"),
+        description="a dictionary of all nodes in the graph, key is the node id",
+    )
+
+    def get_node_predecessors(self, node: BaseNode):
+        """
+        Get the predecessor nodes of a node.
+
+        Args:
+            node (BaseNode): The node to get predecessors for.
+
+        Returns:
+            List[BaseNode]: A list of predecessor nodes.
+        """
+
+        return self.get_structure_node(node.predecessors)
+
+    def get_node_successors(self, node: BaseNode):
+        """
+        Get the successor nodes of a node.
+
+        Args:
+            node (BaseNode): The node to get successors for.
+
+        Returns:
+            List[BaseNode]: A list of successor nodes.
+        """
+        return self.get_structure_node(node.successors)
+
+    @property
+    def node_edges(self):
+        _edges = {}
+        for _node in self.structure_nodes.values():
+            _edges[_node.id_] = {
+                "in": _node.in_relations,
+                "out": _node.out_relations,
+            }
+        return _edges
+
+    def get_node_edges(
+        self, node: BaseNode | str = None, direction="out"
+    ) -> list[Edge]:
+        node = self.get_structure_node(node)
+
+        if node is None:
+            return list(self.structure_edges.values())
+
+        if node.id_ not in self.structure_nodes:
+            raise KeyError(f"node {node.id_} is not found")
+
+        if direction == "out":
+            return node.out_edges
+
+        if direction == "in":
+            return node.in_edges
+
+        if direction == "all":
+            return node.edges
+
+    def has_structure_edge(self, edge: Edge | str) -> bool:
+        k = edge if isinstance(edge, str) else edge.id_
+        return k in self.structure_edges
+
+    def get_structure_edge(self, edge: Edge | str) -> bool:
+        k = edge if isinstance(edge, str) else edge.id_
+        return self.structure_edges.get(k, None)
+
+    def add_structure_edge(self, edge: Edge) -> None:
+        try:
+            in_node: BaseNode = self.get_structure_node(edge.source_node_id)
+            out_node: BaseNode = self.get_structure_node(edge.target_node_id)
+
+            if self.has_structure_node([in_node.id_, out_node.id_]):
+                in_node.add_edge(out_node, edge, direction="out")
+                out_node.add_edge(in_node, edge, direction="in")
+
+            self.structure_edges[edge.id_] = edge
+        except Exception as e:
+            raise ValueError(f"Error adding edge: {e}")
+
+    def remove_structure_edge(self, edge: Edge | str) -> None:
+        if isinstance(edge, str):
+            edge = self.relationships.get(edge, None)
+
+        source_node: BaseNode = self.get_structure_node(edge.source_node_id)
+        target_node: BaseNode = self.get_structure_node(edge.target_node_id)
+
+        source_node.pop_edge(node=target_node, edge=edge)
+        self.structure_edges.pop(edge.id_)
+        return edge
+
+    def remove_structure_node(self, node: BaseNode | str) -> None:
+        try:
+            for i in node.edges:
+                j = self.get_structure_edge(i)
+                self.remove_structure_edge(j)
+
+            self.pop_structure_node(node)
+            return True
+        except Exception as e:
+            raise ValueError(f"Error removing node: {e}")
 
     @singledispatchmethod
-    def add_node(self, node: Any) -> None:
+    def add_structure_node(self, node: Any) -> None:
         """
         Add a node to the structure.
 
@@ -31,7 +138,7 @@ class BaseStructure(BaseNode):
         """
         raise NotImplementedError
 
-    @add_node.register(BaseNode)
+    @add_structure_node.register(BaseNode)
     def _(self, node: BaseNode) -> None:
         """
         Add a BaseNode instance to the structure.
@@ -39,10 +146,10 @@ class BaseStructure(BaseNode):
         Args:
             node (BaseNode): The BaseNode instance to add.
         """
+        if node.id_ not in self.structure_nodes:
+            self.structure_nodes[node.id_] = node
 
-        self.nodes[node.id_] = node
-
-    @add_node.register(list)
+    @add_structure_node.register(list)
     def _(self, node: list[BaseNode]) -> None:
         """
         Add a list of BaseNode instances to the structure.
@@ -51,9 +158,9 @@ class BaseStructure(BaseNode):
             node (list[BaseNode]): The list of BaseNode instances to add.
         """
         for _node in node:
-            self.add_node(_node)
+            self.add_structure_node(_node)
 
-    @add_node.register(dict)
+    @add_structure_node.register(dict)
     def _(self, node: dict[str, BaseNode]) -> None:
         """
         Add a dictionary of BaseNode instances to the structure.
@@ -62,10 +169,10 @@ class BaseStructure(BaseNode):
             node (dict[str, BaseNode]): The dictionary of BaseNode instances to add, where the keys are node IDs.
         """
         for _node in node.values():
-            self.add_node(_node)
+            self.add_structure_node(_node)
 
     @singledispatchmethod
-    def get_node(self, node: Any, add_new=False):
+    def get_structure_node(self, node: Any, **kwargs):
         """
         Get a node from the structure.
 
@@ -76,11 +183,10 @@ class BaseStructure(BaseNode):
         Raises:
             NotImplementedError: If the node type is not supported.
         """
+        return node
 
-        raise NotImplementedError
-
-    @get_node.register(str)
-    def _(self, node: str, add_new=False, **kwargs):
+    @get_structure_node.register(str)
+    def _(self, node: str, **kwargs):
         """
         Get a node from the structure by its ID.
 
@@ -92,10 +198,10 @@ class BaseStructure(BaseNode):
         Returns:
             BaseNode | None: The node with the given ID, or None if it doesn't exist.
         """
-        return self.nodes.get(node, None)
+        return self.structure_nodes.get(node, None)
 
-    @get_node.register(BaseNode)
-    def _(self, node: BaseNode, add_new=False, **kwargs):
+    @get_structure_node.register(BaseNode)
+    def _(self, node: BaseNode, **kwargs):
         """
         Get a BaseNode instance from the structure.
 
@@ -107,17 +213,13 @@ class BaseStructure(BaseNode):
         Returns:
             BaseNode | None: The BaseNode instance, or None if it doesn't exist.
         """
-        if not add_new:
-            return self.nodes.get(node.id_, None)
-        if node.id_ not in self.nodes:
-            self.add_node(node)
-        return node
+        return node if node.id_ in self.structure_nodes else None
 
-    @get_node.register(list)
+
+    @get_structure_node.register(list)
     def _(
         self,
         node: list[str | BaseNode],
-        add_new=False,
         dropna=True,
         flatten=True,
         **kwargs,
@@ -138,13 +240,13 @@ class BaseStructure(BaseNode):
         nodes = convert.to_list(node)
         return func_call.lcall(
             nodes,
-            lambda x: self.get_node(x, add_new=add_new),
+            lambda x: self.get_structure_node(x),
             dropna=dropna,
             flatten=flatten,
         )
 
     @singledispatchmethod
-    def pop_node(self, node: Any) -> None:
+    def pop_structure_node(self, node: Any) -> None:
         """
         Remove a node from the structure.
 
@@ -156,7 +258,7 @@ class BaseStructure(BaseNode):
         """
         raise NotImplementedError
 
-    @pop_node.register(str)
+    @pop_structure_node.register(str)
     def _(self, node: str) -> None:
         """
         Remove a node from the structure by its ID.
@@ -167,11 +269,11 @@ class BaseStructure(BaseNode):
         Raises:
             KeyError: If the node is not found in the structure.
         """
-        if node in self.nodes:
-            return self.nodes.pop(node)
+        if node in self.structure_nodes:
+            return self.structure_nodes.pop(node)
         raise KeyError(f"Node {node} not found in structure.")
 
-    @pop_node.register(BaseNode)
+    @pop_structure_node.register(BaseNode)
     def _(self, node: BaseNode) -> None:
         """
         Remove a BaseNode instance from the structure.
@@ -182,11 +284,11 @@ class BaseStructure(BaseNode):
         Raises:
             KeyError: If the node is not found in the structure.
         """
-        if node.id_ in self.nodes:
-            return self.nodes.pop(node.id_)
+        if node.id_ in self.structure_nodes:
+            return self.structure_nodes.pop(node.id_)
         raise KeyError(f"Node {node.id_} not found in structure.")
 
-    @pop_node.register(list)
+    @pop_structure_node.register(list)
     def _(self, node: list[str | BaseNode]) -> None:
         """
         Remove a list of nodes from the structure.
@@ -201,13 +303,13 @@ class BaseStructure(BaseNode):
             nodes = convert.to_list(node)
             _nodes = []
             for _node in nodes:
-                _nodes.append(self.pop_node(_node))
+                _nodes.append(self.pop_structure_node(_node))
             return _nodes
         except Exception as e:
             raise e
 
     @singledispatchmethod
-    def has_node(self, node: Any) -> bool:
+    def has_structure_node(self, node: Any) -> bool:
         """
         Check if a node exists in the structure.
 
@@ -219,7 +321,7 @@ class BaseStructure(BaseNode):
         """
         raise NotImplementedError
 
-    @has_node.register(str)
+    @has_structure_node.register(str)
     def _(self, node: str) -> bool:
         """
         Check if a node exists in the structure by its ID.
@@ -230,9 +332,9 @@ class BaseStructure(BaseNode):
         Returns:
             bool: True if the node exists, False otherwise.
         """
-        return node in self.nodes
+        return node in self.structure_nodes
 
-    @has_node.register(BaseNode)
+    @has_structure_node.register(BaseNode)
     def _(self, node: BaseNode) -> bool:
         """
         Check if a BaseNode instance exists in the structure.
@@ -243,9 +345,9 @@ class BaseStructure(BaseNode):
         Returns:
             bool: True if the node exists, False otherwise.
         """
-        return node.id_ in self.nodes
+        return node.id_ in self.structure_nodes
 
-    @has_node.register(list)
+    @has_structure_node.register(list)
     def _(self, node: list[str | BaseNode]) -> bool:
         """
         Check if all nodes in a list exist in the structure.
@@ -257,7 +359,7 @@ class BaseStructure(BaseNode):
             bool: True if all nodes exist, False otherwise.
         """
         nodes = convert.to_list(node)
-        return all([self.has_node(n) for n in nodes])
+        return all([self.has_structure_node(n) for n in nodes])
 
     @property
     def is_empty(self) -> bool:
@@ -267,10 +369,11 @@ class BaseStructure(BaseNode):
         Returns:
             bool: True if the structure is empty, False otherwise.
         """
-        return len(self.nodes) == 0
+        return len(self.structure_nodes) == 0
 
     def clear(self) -> None:
         """
         Clear all nodes from the structure.
         """
-        self.nodes.clear()
+        self.structure_nodes.clear()
+        self.edges.clear()

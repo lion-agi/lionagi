@@ -2,7 +2,7 @@
 
 from lionagi.libs import convert
 
-from .tree_node import TreeNode
+from ..schema import TreeNode
 from .graph import Graph
 
 
@@ -11,8 +11,8 @@ class Tree(Graph):
 
     def add_parent_to_child(self, child: str | TreeNode, parent: str | TreeNode):
         try:
-            child = self.get_node(child, add_new=True)
-            parent = self.get_node(parent, add_new=True)
+            child = self.get_structure_node(child, add_new=True)
+            parent = self.get_structure_node(parent, add_new=True)
             child.add_parent(parent)
         except Exception as e:
             raise ValueError(f"Error adding parent to node: {e}")
@@ -23,20 +23,20 @@ class Tree(Graph):
 
     def find_parent(self, child: str | TreeNode) -> TreeNode | None:
         try:
-            node = self.get_node(child)
-            return self.get_node(node.parent)
+            node: TreeNode = self.get_structure_node(child)
+            return self.get_structure_node(node.parent)
         except Exception as e:
             raise ValueError(f"Error finding parent node: {e}")
 
     def find_children(self, node: str | TreeNode) -> list[TreeNode]:
-        node = self.get_node(node)
+        node: TreeNode = self.get_structure_node(node)
         if node.children is not None:
-            return [self.get_node(i) for i in node.children]
+            return [self.get_structure_node(i) for i in node.children]
 
     def _add_child_to_parent(self, parent: str | TreeNode, child: str | TreeNode):
         try:
-            parent = self.get_node(parent, add_new=True)
-            child = self.get_node(child, add_new=True)
+            parent = self.get_structure_node(parent, add_new=True)
+            child = self.get_structure_node(child, add_new=True)
             parent.add_child(child)
         except Exception as e:
             raise ValueError(f"Error adding child to node: {e}")

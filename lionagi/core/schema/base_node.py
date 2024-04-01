@@ -1,272 +1,274 @@
 """
-Module for base component model definition using Pydantic.
+Module for defining base component models using Pydantic, with a focus on
+graph or tree structure components like nodes and relationships.
 """
 
-from abc import ABC
-from typing import Any, TypeVar
+from typing import Any, Dict, List, TypeVar
+from pydantic import Field
+from enum import Enum
 
-from pydantic import Field, AliasChoices
-from lionagi.libs import SysUtil, convert
+from lionagi.libs import convert
+from .base_component import BaseComponent
+from .edge import Edge
 
-from .base_mixin import BaseComponentMixin
-
-T = TypeVar("T", bound="BaseComponent")
+T = TypeVar("T")
 
 
-class BaseComponent(BaseComponentMixin, ABC):
-    """
-    A base component model that provides common attributes and utility methods for metadata management.
-    It includes functionality to interact with metadata in various ways, such as retrieving, modifying,
-    and validating metadata keys and values.
+class EdgeDirection(str, Enum):
+    """Defines possible directions for edges in a graph."""
 
-    Attributes:
-        id_ (str): Unique identifier, defaulted using SysUtil.create_id.
-        timestamp (str | None): Timestamp of creation or modification.
-        metadata (dict[str, Any]): Metadata associated with the component.
-    """
-
-    id_: str = Field(default_factory=SysUtil.create_id, alias="node_id")
-    timestamp: str | None = Field(default_factory=SysUtil.get_timestamp)
-    metadata: dict[str, Any] = Field(default_factory=dict, alias="meta")
-
-    class Config:
-        """Model configuration settings."""
-
-        extra = "allow"
-        arbitrary_types_allowed = True
-        populate_by_name = True
-        validate_assignment = True
-        validate_return = True
-        str_strip_whitespace = True
-
-    @classmethod
-    def class_name(cls) -> str:
-        """
-        Retrieves the name of the class.
-        """
-        return cls.__name__
-
-    @property
-    def property_schema(self):
-        return self.model_json_schema()["properties"]
-
-    @property
-    def property_keys(self):
-        return list(self.model_json_schema()["properties"].keys())
-
-    def copy(self, *args, **kwargs) -> T:
-        """
-        Creates a deep copy of the instance, with an option to update specific fields.
-
-        Args:
-            *args: Variable length argument list for additional options.
-            **kwargs: Arbitrary keyword arguments specifying updates to the instance.
-
-        Returns:
-            BaseComponent: A new instance of BaseComponent as a deep copy of the original, with updates applied.
-        """
-        return self.model_copy(*args, **kwargs)
-
-    def __repr__(self):
-        return f"{self.__class__.__name__}({self.to_dict()})"
+    IN = "in"  # Incoming-edge direction
+    OUT = "out"  # Outgoing-edge direction
 
 
 class BaseNode(BaseComponent):
     """
-    A base class for nodes, representing a fundamental unit in a graph or tree structure.
-
-    This class extends BaseComponent with content handling capabilities.
+    Represents a node within a graph or tree structure, extending a base component model.
 
     Attributes:
-        content (str | dict[str, Any] | None | Any): The content of the node, which can be a string,
-            a dictionary with any structure, None, or any other type. It is flexible to accommodate
-            various types of content. This attribute also supports aliasing through validation_alias
-            for compatibility with different naming conventions like "text", "page_content", or
-            "chunk_content".
-        label (str | None): The label of the node.
-        in_relations (dict[str, str | Any | None]): The incoming relations of the node.
-        out_relations (dict[str, str | Any | None]): The outgoing relations of the node.
+        content: Content stored within the node, which can be a string,
+            a dictionary, None, or any other type, providing flexibility for different use cases.
+        in_relations: A dictionary mapping other node IDs to incoming `Relationship` objects.
+        out_relations: A dictionary mapping other node IDs to outgoing `Relationship` objects.
+
+    The class provides properties and methods for accessing and modifying the node's relationships
+    and its content in a flexible manner suitable for various graph-based applications.
+
+    Note:
+        Clarification:
+        1. Node refers to this class, BaseNode.
+        2. Relationship (alias edge) refers to the Relationship class object.
+        3. relation is a {node_id: edge}
     """
 
-    content: str | dict[str, Any] | None | Any = Field(
-        default=None,
-        validation_alias=AliasChoices("text", "page_content", "chunk_content"),
+    in_relations: Dict[str, Edge] = Field(
+        default_factory=dict,
+        description="Incoming relationships indexed by other node IDs.",
+    )
+    out_relations: Dict[str, Edge] = Field(
+        default_factory=dict,
+        description="Outgoing relationships indexed by other node IDs.",
     )
 
-    label: str | None = None
-    in_relations: dict[str, str | Any | None] = Field(default={})
-    out_relations: dict[str, str | Any | None] = Field(default={})
+    @property
+    def relations(self) -> Dict[str, Edge]:
+        """
+        Combines incoming and outgoing relationships into a single dictionary.
+        """
+        return {**self.in_relations, **self.out_relations}
 
     @property
-    def related_nodes(self):
+    def in_edges(self) -> List[Edge]:
         """
-        Get the related nodes of the node.
-
-        Returns:
-            list: A list of the ids of the related nodes.
+        Lists all incoming relationships to the node.
         """
-        return convert.to_list(
-            list(self.in_relations.keys()) + list(self.out_relations.keys())
-        )
+        return list(self.in_relations.values())
 
     @property
-    def has_relations(self) -> bool:
+    def out_edges(self) -> List[Edge]:
         """
-        Check if the node has any relations.
-
-        Returns:
-            bool: True if the node has relations, False otherwise.
+        Lists all outgoing relationships from the node.
         """
-        return True if len(self.relations) > 0 else False
-
-    def get_relation(self, node: BaseComponent) -> str | None:
-        """
-        Get the relation with a specific node.
-
-        Args:
-            node (BaseComponent | str): The node or node id to get the relation with.
-
-        Returns:
-            str | None: The relation with the node, or None if no relation exists.
-        """
-        if isinstance(node, BaseComponent):
-            if node.id_ in self.in_relations:
-                return self.in_relations[node.id_]
-            elif node.id_ in self.out_relations:
-                return self.out_relations[node.id_]
-        elif isinstance(node, str):
-            if node in self.in_relations:
-                return self.in_relations[node]
-            elif node in self.out_relations:
-                return self.out_relations[node]
-        else:
-            return None
-
-    def add_relation(
-        self,
-        node: BaseComponent | str,
-        relationship: Any = None,
-        direction: str | None = None,
-    ) -> bool:
-        """
-        Add a relation to the node.
-
-        Args:
-            node (BaseComponent | str): The node or node id to add the relation with.
-            relationship (Any): The relationship to add.
-            direction (str | None): The direction of the relation, either "in" or "out".
-
-        Returns:
-            bool: True if the relation was added successfully, False otherwise.
-        """
-        if isinstance(node, BaseComponent):
-            if direction == "in":
-                self.in_relations[node.id_] = relationship
-            elif direction == "out":
-                self.out_relations[node.id_] = relationship
-            return True
-        elif isinstance(node, str):
-            if direction == "in":
-                self.in_relations[node] = relationship
-            elif direction == "out":
-                self.out_relations[node] = relationship
-            return True
-        else:
-            return False
-
-    def pop_relation(self, relationship: Any, node: BaseComponent | str) -> Any:
-        """
-        Remove a relation from the node.
-
-        Args:
-            relationship (Any): The relationship to remove.
-            node (BaseComponent | str): The node or node id to remove the relation with.
-
-        Returns:
-            Any: The removed relationship.
-        """
-        k = (
-            relationship.id_
-            if isinstance(relationship, BaseComponent)
-            else relationship
-        )
-
-        if k in self.in_relations:
-            self.in_relations.pop(k)
-        if k in self.out_relations:
-            self.out_relations.pop(k)
-
-        if k in node.in_relations:
-            node.in_relations.pop(k)
-        if k in node.out_relations:
-            node.out_relations.pop(k)
-
-        return relationship
+        return list(self.out_relations.values())
 
     @property
-    def predecessors(self):
+    def edges(self) -> List[Edge]:
         """
-        Get the predecessors of the node.
+        Lists all relationships connected to the node, both incoming and outgoing.
+        """
+        return self.in_edges + self.out_edges
 
-        Returns:
-            list: A list of the ids of the predecessor nodes.
+    @property
+    def predecessors(self) -> List[str]:
+        """
+        Lists node IDs for all nodes that have an outgoing relationship to this node.
         """
         return list(self.in_relations.keys())
 
     @property
-    def successors(self):
+    def successors(self) -> List[str]:
         """
-        Get the successors of the node.
-
-        Returns:
-            list: A list of the ids of the successor nodes.
+        Lists node IDs for all nodes that this node has an outgoing relationship to.
         """
         return list(self.out_relations.keys())
 
     @property
-    def all_relationships(self):
+    def related_nodes(self) -> List[str]:
         """
-        Get all the relationships of the node.
+        Lists all node IDs related to this node,
+        both predecessors and successors.
+        """
+        return self.predecessors + self.successors
+
+    @property
+    def is_related(self) -> bool:
+        """
+        Checks if the node is connected to any other nodes through edges.
+        """
+        return bool(self.edges)
+
+    def has_edge(self, edge: Edge | str) -> bool:
+        """
+        Checks if a specific edge is connected to the node.
+
+        Args:
+            edge: The edge or edge ID to check.
 
         Returns:
-            list: A list of all the relationship ids.
+            True if the edge exists, False otherwise.
         """
-        a = []
+        k = edge.id_ if isinstance(edge, Edge) else edge
+        return k in [e.id_ for e in self.edges]
+
+    def get_edge(self, related_node: BaseComponent | str) -> Edge | None:
+        """
+        Retrieves the edge ID for a specific related node.
+
+        Args:
+            related_node: The related node or its ID.
+
+        Returns:
+            The edge ID if found, None otherwise.
+        """
+        k = (
+            related_node.id_
+            if isinstance(related_node, BaseComponent)
+            else related_node
+        )
+        return self.relations.get(k, None)
+
+    def is_predecessor_of(self, node: BaseComponent | str) -> bool:
+        """
+        Determines if this node is a predecessor of another node.
+
+        Args:
+            node: The node or its ID to check against.
+
+        Returns:
+            True if this node is a predecessor, False otherwise.
+        """
+        k = node.id_ if isinstance(node, BaseComponent) else node
+        return k in self.successors
+
+    def is_successor_of(self, node: BaseComponent | str) -> bool:
+        """
+        Determines if this node is a successor of another node.
+
+        Args:
+            node: The node or its ID to check against.
+
+        Returns:
+            True if this node is a successor, False otherwise.
+        """
+        k = node.id_ if isinstance(node, BaseComponent) else node
+        return k in self.predecessors
+
+    def is_related_with(self, node: BaseComponent | str) -> bool:
+        """
+        Checks if this node is related to another node, either as a predecessor or successor.
+
+        Args:
+            node: The node or its ID to check against.
+
+        Returns:
+            True if related, False otherwise.
+        """
+        k = node.id_ if isinstance(node, BaseComponent) else node
+        return k in self.related_nodes
+
+    def add_edge(
+        self,
+        node: BaseComponent,
+        edge: Edge | None | str = None,
+        direction: EdgeDirection | None = EdgeDirection.OUT,
+        label: str | None = None,
+        **kwargs,
+    ) -> bool:
+        """
+        Adds an edge between this node and another node, creating a new `Relationship` if needed.
+
+        Args:
+            node: The node to connect with.
+            relationship: An existing `Relationship` object, if any.
+            direction: The direction of the relationship ('in' or 'out').
+            label: A label for the relationship.
+            **kwargs: Additional arguments for the `Relationship` constructor, if a new relationship is created.
+
+        Returns:
+            True if the edge was successfully added, False otherwise.
+        """
         try:
-            for i in self.in_relations.values():
-                a.append(i.id_)
-        except:
-            pass
-        try:
-            for i in self.out_relations.values():
-                a.append(i.id_)
-        except:
-            pass
-        return a
+            _edge = edge
+            if not edge:
+                if direction == EdgeDirection.OUT:
+                    _edge = Edge(
+                        source_node_id=self.id_,
+                        target_node_id=node.id_,
+                        label=label,
+                        **kwargs,
+                    )
+                elif direction == EdgeDirection.IN:
+                    _edge = Edge(
+                        source_node_id=node.id_,
+                        target_node_id=self.id_,
+                        label=label,
+                        **kwargs,
+                    )
+
+            if direction == EdgeDirection.OUT:
+                self.out_relations[node.id_] = _edge
+                node.in_relations[self.id_] = _edge
+
+            elif direction == EdgeDirection.IN:
+                self.in_relations[node.id_] = _edge
+                node.out_relations[self.id_] = _edge
+
+            return True
+        except Exception:
+            return False
+
+    def pop_edge(self, node: BaseComponent, edge: Edge | str) -> Edge | None:
+        """
+        Removes a specific edge between this node and another node.
+
+        Args:
+            node: The other node involved in the edge.
+            edge: The edge or its ID to remove.
+
+        Returns:
+            The removed edge-object, or None if not found.
+        """
+        k = edge.id_ if isinstance(edge, Edge) else edge
+        for i in [
+            self.in_relations,
+            self.out_relations,
+            node.in_relations,
+            node.out_relations,
+        ]:
+            if k in i:
+                i.pop(k)
+        return edge
 
     @property
     def content_str(self):
         """
-        Get the content of the node as a string.
+        Provides a string representation of the node's content.
 
         Returns:
-            str: The content of the node as a string, or "null" if the content is not serializable.
+            A string representation of the content, or "null" if conversion fails.
         """
         try:
             return convert.to_str(self.content)
         except ValueError:
-            print(
-                f"Content is not serializable for Node: {self._id}, defaulting to 'null'"
-            )
+
             return "null"
 
     def __str__(self):
         """
-        Get a string representation of the node.
+        Generates a string representation of the BaseNode, showing key information.
 
         Returns:
-            str: A string representation of the node, including the id, content preview,
-                metadata preview, and timestamp (if available).
+            A formatted string representing the node, including content preview and metadata.
         """
         timestamp = f" ({self.timestamp})" if self.timestamp else ""
         if self.content:

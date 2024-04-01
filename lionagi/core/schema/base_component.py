@@ -3,7 +3,7 @@ from functools import singledispatchmethod
 from typing import Any, TypeVar, Type, Callable
 
 import pandas as pd
-from pydantic import BaseModel, ValidationError
+from pydantic import BaseModel, ValidationError, Field, AliasChoices
 
 from lionagi.libs import nested, convert, ParseUtil, SysUtil
 
@@ -21,12 +21,11 @@ class BaseToObjectMixin(ABC, BaseModel):
         string. It supports passing arbitrary arguments to the underlying `model_dump_json` method.
 
         Args:
-                                        *args: Variable-length argument list to be passed to `model_dump_json`.
-                                        **kwargs: Arbitrary keyword arguments, with `by_alias=True` set by default to use
-                                                                                                          model field aliases in the output JSON, if any.
+            *args: Variable-length argument list to be passed to `model_dump_json`.
+            **kwargs: Arbitrary keyword arguments, with `by_alias=True` set by default to use model field aliases in the output JSON, if any.
 
         Returns:
-                                        str: A JSON string representation of the model instance.
+            str: A JSON string representation of the model instance.
         """
         return self.model_dump_json(*args, by_alias=True, **kwargs)
 
@@ -39,12 +38,11 @@ class BaseToObjectMixin(ABC, BaseModel):
         aliases instead of the original field names.
 
         Args:
-                                        *args: Variable-length argument list for the `model_dump` method.
-                                        **kwargs: Arbitrary keyword arguments. By default, `by_alias=True` is applied, indicating
-                                                                                                          that field aliases should be used as keys in the resulting dictionary.
+            *args: Variable-length argument list for the `model_dump` method.
+            **kwargs: Arbitrary keyword arguments. By default, `by_alias=True` is applied, indicating that field aliases should be used as keys in the resulting dictionary.
 
         Returns:
-                                        dict[str, Any]: The dictionary representation of the model instance.
+            dict[str, Any]: The dictionary representation of the model instance.
         """
         return self.model_dump(*args, by_alias=True, **kwargs)
 
@@ -57,7 +55,7 @@ class BaseToObjectMixin(ABC, BaseModel):
         The root element of the XML tree is named after the class of the model instance.
 
         Returns:
-                                        str: An XML string representation of the model instance.
+            str: An XML string representation of the model instance.
         """
 
         import xml.etree.ElementTree as ET
@@ -86,13 +84,11 @@ class BaseToObjectMixin(ABC, BaseModel):
 
         Args:
             *args: Variable-length argument list for the `to_dict` method.
-            pd_kwargs (dict | None): Optional dictionary of keyword arguments to pass to the pandas Series constructor. Defaults to None, in which case an empty
-                                                                                                                                                                                                        dictionary is used.
-                                        **kwargs: Arbitrary keyword arguments for the `to_dict` method, influencing the dictionary
-                                                                                                          representation used for Series creation.
+            pd_kwargs (dict | None): Optional dictionary of keyword arguments to pass to the pandas Series constructor. Defaults to None, in which case an empty           dictionary is used.
+            **kwargs: Arbitrary keyword arguments for the `to_dict` method, influencing the dictionary representation used for Series creation.
 
         Returns:
-                                        pd.Series: A pandas Series representation of the model instance.
+            pd.Series: A pandas Series representation of the model instance.
         """
         pd_kwargs = {} if pd_kwargs is None else pd_kwargs
         dict_ = self.to_dict(*args, **kwargs)
@@ -159,11 +155,11 @@ class BaseMetaManageMixin(ABC, BaseModel):
         Retrieves a list of metadata keys.
 
         Args:
-                                        flattened (bool): If True, returns keys from a flattened metadata structure.
-                                        **kwargs: Additional keyword arguments passed to the flattening function.
+            flattened (bool): If True, returns keys from a flattened metadata structure.
+            **kwargs: Additional keyword arguments passed to the flattening function.
 
         Returns:
-                                        list[str]: List of metadata keys.
+            list[str]: List of metadata keys.
         """
         if flattened:
             return nested.get_flattened_keys(self.metadata, **kwargs)
@@ -174,12 +170,12 @@ class BaseMetaManageMixin(ABC, BaseModel):
         Checks if a specified key exists in the metadata.
 
         Args:
-                                        key (str): The key to check.
-                                        flattened (bool): If True, checks within a flattened metadata structure.
-                                        **kwargs: Additional keyword arguments for flattening.
+            key (str): The key to check.
+            flattened (bool): If True, checks within a flattened metadata structure.
+            **kwargs: Additional keyword arguments for flattening.
 
         Returns:
-                                        bool: True if key exists, False otherwise.
+            bool: True if key exists, False otherwise.
         """
         if flattened:
             return key in nested.get_flattened_keys(self.metadata, **kwargs)
@@ -192,12 +188,12 @@ class BaseMetaManageMixin(ABC, BaseModel):
         Retrieves the value associated with a given key from the metadata.
 
         Args:
-                                        key (str): The key for the desired value.
-                                        indices: Optional indices for nested retrieval.
-                                        default (Any): The default value to return if the key is not found.
+            key (str): The key for the desired value.
+            indices: Optional indices for nested retrieval.
+            default (Any): The default value to return if the key is not found.
 
         Returns:
-                                        Any: The value associated with the key or the default value.
+            Any: The value associated with the key or the default value.
         """
         if indices:
             return nested.nget(self.metadata, key, indices, default)
@@ -208,11 +204,11 @@ class BaseMetaManageMixin(ABC, BaseModel):
         Renames a key in the metadata.
 
         Args:
-                                        old_key (str): The current key name.
-                                        new_key (str): The new key name.
+            old_key (str): The current key name.
+            new_key (str): The new key name.
 
         Returns:
-                                        bool: True if the key was changed, False otherwise.
+            bool: True if the key was changed, False otherwise.
         """
         if old_key in self.metadata:
             SysUtil.change_dict_key(self.metadata, old_key, new_key)
@@ -224,26 +220,25 @@ class BaseMetaManageMixin(ABC, BaseModel):
         Inserts a value into the metadata at specified indices.
 
         Args:
-                                        indices (str | list): The indices where the value should be inserted.
-                                        value (Any): The value to insert.
-                                        **kwargs: Additional keyword arguments.
+            indices (str | list): The indices where the value should be inserted.
+            value (Any): The value to insert.
+            **kwargs: Additional keyword arguments.
 
         Returns:
-                                        bool: True if the insertion was successful, False otherwise.
+            bool: True if the insertion was successful, False otherwise.
         """
         return nested.ninsert(self.metadata, indices, value, **kwargs)
 
-    # ToDo: do a nested pop
     def meta_pop(self, key: str, default: Any = None) -> Any:
         """
         Removes a key from the metadata and returns its value.
 
         Args:
-                                        key (str): The key to remove.
-                                        default (Any): The default value to return if the key is not found.
+            key (str): The key to remove.
+            default (Any): The default value to return if the key is not found.
 
         Returns:
-                                        Any: The value of the removed key or the default value.
+            Any: The value of the removed key or the default value.
         """
         return self.metadata.pop(key, default)
 
@@ -254,12 +249,12 @@ class BaseMetaManageMixin(ABC, BaseModel):
         Merges additional metadata into the existing metadata.
 
         Args:
-                                        additional_metadata (dict[str, Any]): The metadata to merge in.
-                                        overwrite (bool): If True, existing keys will be overwritten by those in additional_metadata.
-                                        **kwargs: Additional keyword arguments for the merge.
+            additional_metadata (dict[str, Any]): The metadata to merge in.
+            overwrite (bool): If True, existing keys will be overwritten by those in additional_metadata.
+            **kwargs: Additional keyword arguments for the merge.
 
         Returns:
-                                        None
+            None
         """
         nested.nmerge(
             [self.metadata, additional_metadata], overwrite=overwrite, **kwargs
@@ -274,7 +269,7 @@ class BaseMetaManageMixin(ABC, BaseModel):
         Clears all metadata.
 
         Returns:
-                                        None
+            None
         """
         self.metadata.clear()
 
@@ -283,13 +278,77 @@ class BaseMetaManageMixin(ABC, BaseModel):
         Filters the metadata based on a condition.
 
         Args:
-                                        condition (Callable[[Any, Any], bool]): The condition function to apply.
+            condition (Callable[[Any, Any], bool]): The condition function to apply.
 
         Returns:
-                                        dict[str, Any]: The filtered metadata.
+            dict[str, Any]: The filtered metadata.
         """
         return nested.nfilter(self.metadata, condition)
 
 
 class BaseComponentMixin(BaseFromObjectMixin, BaseToObjectMixin, BaseMetaManageMixin):
     pass
+
+
+class BaseComponent(BaseComponentMixin, ABC):
+    """
+    A base component model that provides common attributes and utility methods for metadata management.
+    It includes functionality to interact with metadata in various ways, such as retrieving, modifying,
+    and validating metadata keys and values.
+
+    Attributes:
+        id_ (str): Unique identifier, defaulted using SysUtil.create_id.
+        timestamp (str | None): Timestamp of creation or modification.
+        metadata (dict[str, Any]): Metadata associated with the component.
+    """
+
+    content: str | dict[str, Any] | None | Any = Field(
+        default=None,
+        validation_alias=AliasChoices("text", "page_content", "chunk_content"),
+        description="Flexible content of the node.",
+    )
+    id_: str = Field(default_factory=SysUtil.create_id, alias="node_id")
+    timestamp: str | None = Field(default_factory=SysUtil.get_timestamp)
+    metadata: dict[str, Any] = Field(default_factory=dict, alias="meta")
+    label: str | None = None
+
+    class Config:
+        """Model configuration settings."""
+
+        extra = "allow"
+        arbitrary_types_allowed = True
+        populate_by_name = True
+        validate_assignment = True
+        validate_return = True
+        str_strip_whitespace = True
+
+    @classmethod
+    def class_name(cls) -> str:
+        """
+        Retrieves the name of the class.
+        """
+        return cls.__name__
+
+    @property
+    def property_schema(self):
+        return self.model_json_schema()["properties"]
+
+    @property
+    def property_keys(self):
+        return list(self.model_json_schema()["properties"].keys())
+
+    def copy(self, *args, **kwargs) -> T:
+        """
+        Creates a deep copy of the instance, with an option to update specific fields.
+
+        Args:
+            *args: Variable length argument list for additional options.
+            **kwargs: Arbitrary keyword arguments specifying updates to the instance.
+
+        Returns:
+            BaseComponent: A new instance of BaseComponent as a deep copy of the original, with updates applied.
+        """
+        return self.model_copy(*args, **kwargs)
+
+    def __repr__(self):
+        return f"{self.__class__.__name__}({self.to_dict()})"

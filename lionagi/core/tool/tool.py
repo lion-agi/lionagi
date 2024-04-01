@@ -1,7 +1,6 @@
 from typing import Any
 
 from pydantic import field_serializer
-
 from lionagi.core.schema import BaseNode
 
 

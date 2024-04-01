@@ -4,13 +4,12 @@ from typing import Tuple
 from lionagi.libs.sys_util import PATH_TYPE
 from lionagi.libs import BaseService, convert, dataframe
 
-from lionagi.core.schema import DataLogger
-from lionagi.core.tool.tool import Tool, TOOL_TYPE
-from lionagi.core.tool import ToolManager
-from lionagi.core.mail import MailManager
-from lionagi.core.messages import System, Instruction
-from lionagi.core.branch import Branch
-from lionagi.core.flow.polyflow import PolyChat
+from ..schema import DataLogger
+from ..tool import Tool, TOOL_TYPE, ToolManager
+from ..mail import MailManager
+from ..messages import System, Instruction
+from ..branch import Branch
+from ..flow.polyflow import PolyChat
 
 
 class Session:

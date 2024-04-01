@@ -135,7 +135,7 @@ class MonoChatInvokeMixin(ABC):
         response_ = self._return_response(content_, output_fields)
         if prompt_template:
             prompt_template._process_response(response_)
-            return prompt_template if return_template else prompt_template.out
+            return prompt_template if return_template else prompt_template.outputs
 
         if out:
             return response_
@@ -160,30 +160,7 @@ class MonoChatInvokeMixin(ABC):
 
         if output_fields:
             try:
-                if isinstance(out_, dict):
-                    out_ = convert.to_str(out_.values())
-
-                if isinstance(out_, str):
-                    try:
-                        out_ = ParseUtil.md_to_json(out_)
-                    except Exception:
-                        try:
-                            out_ = ParseUtil.md_to_json(out_.replace("'", '"'))
-                        except Exception:
-                            with contextlib.suppress(Exception):
-                                out_ = ParseUtil.fuzzy_parse_json(
-                                    out_.strip("```json").strip("```")
-                                )
-
-                out_ = StringMatch.correct_keys(output_fields=output_fields, out_=out_)
-            except Exception:
-                pass
-
-        if isinstance(out_, str):
-            try:
-                out_ = ParseUtil.md_to_json(out_)
-                out_ = StringMatch.correct_keys(output_fields=output_fields, out_=out_)
-                return out_
+                return StringMatch.force_validate_dict(out_, keys=output_fields)
             except Exception:
                 pass
 

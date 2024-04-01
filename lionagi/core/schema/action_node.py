@@ -1,5 +1,3 @@
-from enum import Enum
-
 from .base_node import BaseNode
 
 

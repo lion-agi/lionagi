@@ -3,7 +3,7 @@
 from lionagi.libs import func_call, AsyncUtil
 from ..schema import BaseNode
 from ..mail import StartMail, MailManager
-
+from ..execute import ExecutableStructure
 
 class BaseAgent(BaseNode):
     """A base class for agents.
@@ -36,7 +36,7 @@ class BaseAgent(BaseNode):
             output_parser: A function for parsing the agent's output (optional).
         """
         super().__init__()
-        self.structure = structure
+        self.structure: ExecutableStructure = structure
         self.executable = executable_obj
         self.start = StartMail()
         self.mailManager = MailManager([self.structure, self.executable, self.start])

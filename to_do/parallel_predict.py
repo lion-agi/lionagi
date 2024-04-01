@@ -39,7 +39,7 @@
 # ):
 
 #     async def _inner():
-#         out_ = await _parallel_predict(
+#         dict_ = await _parallel_predict(
 #             sentence=sentence,
 #             num_sentences=num_sentences,
 #             default_key=default_key,
@@ -48,10 +48,10 @@
 #             include_mapping=include_mapping,
 #             **kwargs,
 #         )
-#         if out_ is None:
+#         if dict_ is None:
 #             raise ValueError("No output from the model")
 
-#         return out_
+#         return dict_
 
 #     if "retries" not in retry_kwargs:
 #         retry_kwargs["retries"] = 2
@@ -110,7 +110,7 @@
 
 #     session = Session()
 
-#     out_ = await session.parallel_chat(
+#     dict_ = await session.parallel_chat(
 #         _instruct,
 #         context=sentence,
 #         output_fields=_output_fields,
@@ -119,7 +119,7 @@
 #     )
 
 #     return _handle_multi_out(
-#         out_,
+#         dict_,
 #         default_key=default_key,
 #         to_type="str",
 #         to_default=True,

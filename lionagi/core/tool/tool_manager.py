@@ -1,9 +1,8 @@
+import asyncio
 from typing import Tuple, Any, TypeVar, Callable
 
-import asyncio
-
 from lionagi.libs import func_call, convert, ParseUtil
-from lionagi.core.tool.tool import Tool, TOOL_TYPE
+from .tool import Tool, TOOL_TYPE
 
 T = TypeVar("T", bound=Tool)
 

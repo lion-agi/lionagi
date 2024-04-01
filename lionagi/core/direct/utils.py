@@ -36,7 +36,7 @@ def _process_tool(tool_obj, branch):
 
 
 # def _handle_single_out(
-#     out_,
+#     dict_,
 #     default_key="answer",
 #     choices=None,
 #     to_type="dict",
@@ -46,17 +46,17 @@ def _process_tool(tool_obj, branch):
 
 #     if to_type_kwargs is None:
 #         to_type_kwargs = {}
-#     out_ = _parse_out(out_)
+#     dict_ = _parse_out(dict_)
 
-#     if default_key not in out_:
+#     if default_key not in dict_:
 #         raise ValueError(f"Key {default_key} not found in output")
 
-#     answer = out_[default_key]
+#     answer = dict_[default_key]
 
 #     if (
 #         choices is not None
 #         and answer not in choices
-#         and convert.strip_lower(out_) in ["", "none", "null", "na", "n/a"]
+#         and convert.strip_lower(dict_) in ["", "none", "null", "na", "n/a"]
 #     ):
 #         raise ValueError(f"Answer {answer} not in choices {choices}")
 
@@ -66,13 +66,13 @@ def _process_tool(tool_obj, branch):
 #     elif to_type == "num":
 #         answer = convert.to_num(answer, **to_type_kwargs)
 
-#     out_[default_key] = answer
+#     dict_[default_key] = answer
 
-#     return answer if to_default else out_
+#     return answer if to_default else dict_
 
 
 # def _handle_multi_out(
-#     out_,
+#     dict_,
 #     default_key="answer",
 #     choices=None,
 #     to_type="dict",
@@ -84,7 +84,7 @@ def _process_tool(tool_obj, branch):
 #         to_type_kwargs = {}
 
 #     if include_mapping:
-#         for i in out_:
+#         for i in dict_:
 #             i[default_key] = _handle_single_out(
 #                 i[default_key],
 #                 choices=choices,
@@ -95,7 +95,7 @@ def _process_tool(tool_obj, branch):
 #             )
 #     else:
 #         _out = []
-#         for i in out_:
+#         for i in dict_:
 #             i = _handle_single_out(
 #                 i,
 #                 choices=choices,
@@ -107,4 +107,4 @@ def _process_tool(tool_obj, branch):
 #             _out.append(i)
 #         return _out
 
-#     return out_ if len(out_) > 1 else out_[0]
+#     return dict_ if len(dict_) > 1 else dict_[0]
