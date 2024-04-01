@@ -377,8 +377,8 @@ class APIUtil:
                 num_tokens += 2  # every reply is primed with <im_start>assistant
                 return num_tokens + completion_tokens
             else:
-                prompt = payload["prompt"]
-                if isinstance(prompt, str):  # single prompt
+                prompt = payload["format_prompt"]
+                if isinstance(prompt, str):  # single format_prompt
                     prompt_tokens = len(encoding.encode(prompt))
                     return prompt_tokens + completion_tokens
                 elif isinstance(prompt, list):  # multiple prompts
@@ -386,7 +386,7 @@ class APIUtil:
                     return prompt_tokens + completion_tokens * len(prompt)
                 else:
                     raise TypeError(
-                        'Expecting either string or list of strings for "prompt" field in completion request'
+                        'Expecting either string or list of strings for "format_prompt" field in completion request'
                     )
         elif api_endpoint == "embeddings":
             input = payload["input"]

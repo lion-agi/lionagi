@@ -4,13 +4,13 @@ from typing import Any
 
 from lionagi.libs import convert, nested, func_call, dataframe
 
-from lionagi.core.messages.schema import (
-    System,
-    Instruction,
-    Response,
-    BaseMessage,
+from lionagi.core.messages.base.schema import (
     BranchColumns,
 )
+from lionagi.core.messages.response import Response
+from lionagi.core.messages.system import System
+from lionagi.core.messages.instruction import Instruction
+from lionagi.core.messages.base.base_message import BaseMessage
 
 CUSTOM_TYPE = dict[str, Any] | str | list[Any] | None
 
