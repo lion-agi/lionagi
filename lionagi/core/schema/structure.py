@@ -699,7 +699,7 @@ class Structure(BaseRelatableNode):
                 raise ValueError("Invalid bundles nodes")
         return action_node
 
-    async def check_condition(self, relationship, executable_id):
+    async def check_condition(self, relationship, executable_id, request_source):
         """
         Checks the condition of a relationship.
 
@@ -717,7 +717,7 @@ class Structure(BaseRelatableNode):
             return self.check_condition_structure(relationship)
         elif relationship.condition.source_type == "executable":
             self.send(
-                recipient_id=executable_id, category="condition", package=relationship
+                recipient_id=executable_id, category="condition", package={"request_source": request_source, "package": relationship}
             )
             while self.condition_check_result is None:
                 await AsyncUtil.sleep(0.1)
@@ -741,7 +741,7 @@ class Structure(BaseRelatableNode):
         """
         return relationship.condition(self)
 
-    async def get_next_step(self, current_node: BaseNode, executable_id):
+    async def get_next_step(self, current_node: BaseNode, executable_id, request_source):
         """
         Retrieves the next step nodes based on the current node and executable ID.
 
@@ -758,7 +758,7 @@ class Structure(BaseRelatableNode):
             if relationship.bundle:
                 continue
             if relationship.condition:
-                check = await self.check_condition(relationship, executable_id)
+                check = await self.check_condition(relationship, executable_id, request_source)
                 if not check:
                     continue
             node = self.graph.nodes[relationship.target_node_id]
@@ -840,9 +840,9 @@ class Structure(BaseRelatableNode):
                 mail = self.pending_ins[key].popleft()
                 if (
                     mail.category == "condition"
-                    and mail.package["relationship_id"] == relationship_id
+                    and mail.package["package"]["relationship_id"] == relationship_id
                 ):
-                    self.condition_check_result = mail.package["check_result"]
+                    self.condition_check_result = mail.package["package"]["check_result"]
                 else:
                     skipped_requests.append(mail)
             self.pending_ins[key] = skipped_requests
@@ -860,38 +860,40 @@ class Structure(BaseRelatableNode):
                     self.execute_stop = True
                     return
                 elif mail.category == "node_id":
-                    if mail.package not in self.graph.nodes:
+                    if mail.package["package"] not in self.graph.nodes:
                         raise ValueError(
                             f"Node {mail.package} does not exist in the structure {self.id_}"
                         )
                     next_nodes = await self.get_next_step(
-                        self.graph.nodes[mail.package], mail.sender_id
+                        self.graph.nodes[mail.package["package"]], mail.sender_id, mail.package["request_source"]
                     )
-                elif mail.category == "node" and isinstance(mail.package, BaseNode):
-                    if not self.node_exist(mail.package):
+                elif mail.category == "node" and isinstance(mail.package["package"], BaseNode):
+                    if not self.node_exist(mail.package["package"]):
                         raise ValueError(
                             f"Node {mail.package} does not exist in the structure {self.id_}"
                         )
-                    next_nodes = await self.get_next_step(mail.package, mail.sender_id)
+                    next_nodes = await self.get_next_step(mail.package["package"], mail.sender_id, mail.package["request_source"])
                 else:
                     raise ValueError(f"Invalid mail type for structure")
 
                 if not next_nodes:  # tail
                     self.send(
-                        recipient_id=mail.sender_id, category="end", package="end"
+                        recipient_id=mail.sender_id,
+                        category="end",
+                        package={"request_source": mail.package["request_source"], "package": "end"}
                     )
                 else:
                     if len(next_nodes) == 1:
                         self.send(
                             recipient_id=mail.sender_id,
                             category="node",
-                            package=next_nodes[0],
+                            package={"request_source": mail.package["request_source"], "package": next_nodes[0]}
                         )
                     else:
                         self.send(
                             recipient_id=mail.sender_id,
                             category="node_list",
-                            package=next_nodes,
+                            package={"request_source": mail.package["request_source"], "package": next_nodes}
                         )
 
     async def execute(self, refresh_time=1):
