@@ -1,364 +1,471 @@
-# """
-# This module contains the Branch class, which represents a branch in a conversation tree.
-# """
+"""
+This module contains the Branch class, which represents a branch in a conversation tree.
+"""
 
-# from collections import deque
-# from typing import Any, TypeVar, Callable
+from collections import deque
+from typing import Any, Union, TypeVar, Callable
 
-# from lionagi.libs.sys_util import PATH_TYPE
-# from lionagi.libs import StatusTracker, BaseService, convert, dataframe
+from lionagi.libs.sys_util import PATH_TYPE
+from lionagi.libs import StatusTracker, BaseService, convert, dataframe
 
-# from ..schema import TOOL_TYPE, Tool, DataLogger
-# from ..tool import ToolManager, func_to_tool
+from ..schema import TOOL_TYPE, Tool, DataLogger
+from ..tool import ToolManager, func_to_tool
 
-# from lionagi.core.branch.base.base_branch import BaseBranch
-# from lionagi.core.messages.system import System
-# from lionagi.core.mail.schema import BaseMail
+from ..messages import System
+from ..mail import BaseMail
 
-# from lionagi.core.branch.base.util import MessageUtil
+from .util import MessageUtil
+from .base_branch import BaseBranch
+from .branch_flow_mixin import BranchFlowMixin
 
-# from .util import MessageUtil
-# from .base_branch import BaseBranch
-# from .branch_flow_mixin import BranchFlowMixin
+from dotenv import load_dotenv
 
-# from dotenv import load_dotenv
+load_dotenv()
 
-# load_dotenv()
-
-# T = TypeVar("T", bound=Tool)
+T = TypeVar("T", bound=Tool)
 
 
-# class Branch(BaseBranch, BranchFlowMixin):
-#     """
-#     Represents a conversational branch, encapsulating messaging, tools, and service integration.
+class Branch(BaseBranch, BranchFlowMixin):
+    """
+    Represents a branch in a conversation tree.
 
-#     A Branch is a key component in managing conversational flows, tools, and external services
-#     within a conversational AI framework. It extends the BaseBranch with additional functionalities
-#     such as tool management, service interactions, and the ability to send and receive packaged data
-#     (mails) between branches or external services.
+    Attributes:
+        sender (str): The sender of the branch (default: "system").
+        tool_manager (ToolManager): The tool manager for the branch.
+        service (BaseService): The service associated with the branch.
+        llmconfig (dict): The configuration for the language model.
+        status_tracker (StatusTracker): The status tracker for the branch.
+        pending_ins (dict): The pending incoming mails for the branch.
+        pending_outs (deque): The pending outgoing mails for the branch.
 
-#     Attributes:
-#         branch_name (str | None): Optional name for the branch.
-#         system (dict | list | System | None): System configuration or predefined system messages.
-#         messages (dataframe.ln_DataFrame | None): Dataframe containing the messages within the branch.
-#         service (BaseService | None): The service associated with this branch for external API calls.
-#         sender (str | None): Default identifier for the sender of messages from this branch.
-#         llmconfig (dict[str, str | int | dict] | None): Configuration details for language model interactions.
-#         tools (list[Callable | Tool] | None): List of tools or callable functions registered to the branch.
-#         datalogger (DataLogger | None): Logger for tracking branch operations and data flows.
-#         persist_path (PATH_TYPE | None): Filesystem path for persisting branch data, if necessary.
-#         tool_manager (ToolManager | None): Manages the registration and invocation of tools within the branch.
-#         status_tracker (StatusTracker): Tracks the status of various operations within the branch.
-#         pending_ins (dict): A dictionary holding pending incoming mails, categorized by sender.
-#         pending_outs (deque): A queue of pending outgoing mails to be processed or sent.
+    Methods:
+        __init__(self, name=None, system=None, messages=None, service=None, sender=None,
+                 llmconfig=None, tools=None, datalogger=None, persist_path=None,
+                 tool_manager=None, **kwargs) -> None:
+            Initializes the Branch instance.
 
-#     The Branch class facilitates the creation of complex conversational flows, tool integrations,
-#     and interactions with external services, providing a robust framework for developing advanced
-#     conversational AI applications.
+        from_csv(cls, filepath, name=None, service=None, llmconfig=None, tools=None,
+                 datalogger=None, persist_path=None, tool_manager=None, read_kwargs=None,
+                 **kwargs) -> Branch:
+            Creates a Branch instance from a CSV file.
 
-#     Example:
-#         >>> branch = Branch(name="CustomerSupport", service=my_service, llmconfig=my_llm_config)
-#         >>> branch.register_tools([my_tool])
-#         >>> branch.send(recipient="other_branch", category="tools", package=my_tool)
-#     """
+        from_json_string(cls, filepath, name=None, service=None, llmconfig=None, tools=None,
+                         datalogger=None, persist_path=None, tool_manager=None, read_kwargs=None,
+                         **kwargs) -> Branch:
+            Creates a Branch instance from a JSON string file.
 
-#     def __init__(
-#         self,
-#         name: str | None = None,
-#         system: dict | list | System | None = None,
-#         messages: dataframe.ln_DataFrame | None = None,
-#         service: BaseService | None = None,
-#         sender: str | None = None,
-#         llmconfig: dict[str, str | int | dict] | None = None,
-#         tools: list[Callable | Tool] | None = None,
-#         datalogger: None | DataLogger = None,
-#         persist_path: PATH_TYPE | None = None,  # instruction_sets=None,
-#         tool_manager: ToolManager | None = None,
-#         **kwargs,
-#     ):
-#         """
-#         Initializes a new Branch instance with various configurations.
+        messages_describe(self) -> dict[str, Any]:
+            Describes the messages in the branch.
 
-#         Args:
-#             name (str | None): Optional name for the branch.
-#             system (dict | list | System | None): System configuration or messages.
-#             messages (dataframe.ln_DataFrame | None): Initial messages for the branch.
-#             service (BaseService | None): The service associated with this branch.
-#             sender (str | None): Default sender for messages from this branch.
-#             llmconfig (dict[str, str | int | dict] | None): LLM configuration.
-#             tools (list[Callable | Tool] | None): List of tools or functions to be registered.
-#             datalogger (DataLogger | None): Optional data logger for branch operations.
-#             persist_path (PATH_TYPE | None): File system path for data persistence.
-#             tool_manager (ToolManager | None): Tool manager for handling tools.
-#             **kwargs: Additional keyword arguments.
-#         """
+        has_tools(self) -> bool:
+            Checks if the branch has any registered tools.
 
-#         super().__init__(
-#             messages=messages,
-#             datalogger=datalogger,
-#             persist_path=persist_path,
-#             name=name,
-#             **kwargs,
-#         )
+        merge_branch(self, branch: Branch, update=True) -> None:
+            Merges another branch into the current branch.
 
-#         # add branch name
-#         self.name = name
-#         self.sender = sender or "system"
-#         self.tool_manager = tool_manager or ToolManager()
+        register_tools(self, tools: Union[Tool, list[Tool]]) -> None:
+            Registers tools in the branch's tool manager.
 
-#         if tools:
-#             try:
-#                 tools_ = []
-#                 _tools = convert.to_list(tools)
-#                 for i in _tools:
-#                     if isinstance(i, Tool):
-#                         tools_.append(i)
-#                     else:
-#                         tools_.append(func_to_tool(i))
+        delete_tools(self, tools: Union[T, list[T], str, list[str]], verbose=True) -> bool:
+            Deletes tools from the branch's tool manager.
 
-#                 self.register_tools(tools_)
-#             except Exception as e:
-#                 raise TypeError(f"Error in registering tools: {e}") from e
+        send(self, recipient: str, category: str, package: Any) -> None:
+            Sends a mail to a recipient.
 
-#         self.service, self.llmconfig = self._add_service(service, llmconfig)
-#         self.status_tracker = StatusTracker()
+        receive(self, sender: str, messages=True, tools=True, service=True, llmconfig=True) -> None:
+            Receives mails from a sender and updates the branch accordingly.
 
-#         # add instruction sets
-#         # self.instruction_sets = instruction_sets
+        receive_all(self) -> None:
+            Receives all pending mails and updates the branch accordingly.
 
-#         self.pending_ins = {}
-#         self.pending_outs = deque()
+        _add_service(service, llmconfig) -> tuple[BaseService, dict]:
+            Adds a service and its configuration to the branch.
 
-#     @property
-#     def has_tools(self) -> bool:
-#         """
-#         Checks if the branch has any tools registered.
+        _is_invoked(self) -> bool:
+            Checks if the conversation has been invoked with an action response.
+    """
 
-#         Returns:
-#             bool: True if there are tools registered, False otherwise.
-#         """
-#         return self.tool_manager.registry != {}
+    def __init__(
+        self,
+        name: str | None = None,
+        system: dict | list | System | None = None,
+        messages: dataframe.ln_DataFrame | None = None,
+        service: BaseService | None = None,
+        sender: str | None = None,
+        llmconfig: dict[str, str | int | dict] | None = None,
+        tools: list[Callable | Tool] | None = None,
+        datalogger: None | DataLogger = None,
+        persist_path: PATH_TYPE | None = None,  # instruction_sets=None,
+        tool_manager: ToolManager | None = None,
+        **kwargs,
+    ):
+        """
+        Initializes the Branch instance.
 
-#     # todo: also update other attributes
-#     def merge_branch(self, branch: "Branch", update: bool = True) -> None:
-#         """
-#         Merges another branch into this one, including messages and tools.
+        Args:
+            name (str): The name of the branch (optional).
+            system (dict | list | System): The system message for the branch (optional).
+            messages (dataframe.ln_DataFrame): The messages in the branch (optional).
+            service (BaseService): The service associated with the branch (optional).
+            sender (str): The sender of the branch (optional, default: "system").
+            llmconfig (dict[str, str | int | dict]): The configuration for the language model (optional).
+            tools (list[Callable | Tool]): The tools to register in the branch (optional).
+            datalogger (DataLogger): The data logger for the branch (optional).
+            persist_path (PATH_TYPE): The path to persist the branch data (optional).
+            tool_manager (ToolManager): The tool manager for the branch (optional).
+            **kwargs: Additional keyword arguments.
 
-#         Args:
-#             branch (Branch): The branch to merge into this one.
-#             update (bool): If True, updates the tool registry and other attributes. Defaults to True.
-#         """
+        Raises:
+            TypeError: If there is an error in registering the tools.
+        """
 
-#         Args:
-#             branch (Branch): The branch to merge.
-#             update (bool): Whether to update the existing attributes or add new ones (default: True).
-#         """
-#         message_copy = branch.messages.copy()
-#         self.messages = self.messages.merge(message_copy, how="outer")
-#         self.datalogger.extend(branch.datalogger.log)
+        super().__init__(
+            messages=messages,
+            datalogger=datalogger,
+            persist_path=persist_path,
+            name=name,
+            **kwargs,
+        )
 
-#         if update:
-#             # self.instruction_sets.update(branch.instruction_sets)
-#             self.tool_manager.registry.update(branch.tool_manager.registry)
-#         else:
-#             for key, value in branch.instruction_sets.items():
-#                 if key not in self.instruction_sets:
-#                     self.instruction_sets[key] = value
+        self.sender = sender or "system"
+        self.tool_manager = tool_manager or ToolManager()
 
-#             for key, value in branch.tool_manager.registry.items():
-#                 if key not in self.tool_manager.registry:
-#                     self.tool_manager.registry[key] = value
+        if tools:
+            try:
+                tools_ = []
+                _tools = convert.to_list(tools)
+                for i in _tools:
+                    if isinstance(i, Tool):
+                        tools_.append(i)
+                    else:
+                        tools_.append(func_to_tool(i))
 
-#     # ----- tool manager methods ----- #
-#     def register_tools(
-#         self, tools: Union[Tool, list[Tool | Callable], Callable]
-#     ) -> None:
-#         """
-#         Registers tools in the branch's tool manager.
+                self.register_tools(tools_)
+            except Exception as e:
+                raise TypeError(f"Error in registering tools: {e}") from e
 
-#         Args:
-#             tools (Union[Tool, list[Tool]]): The tool(s) to register.
-#         """
-#         if not isinstance(tools, list):
-#             tools = [tools]
-#         self.tool_manager.register_tools(tools=tools)
+        self.service, self.llmconfig = self._add_service(service, llmconfig)
+        self.status_tracker = StatusTracker()
 
-#     def delete_tools(
-#         self,
-#         tools: TOOL_TYPE,
-#         verbose: bool = True,
-#     ) -> bool:
-#         """
-#         Deletes tools from the branch's tool manager.
+        # add instruction sets
+        # self.instruction_sets = instruction_sets
 
-#         Args:
-#             tools (Union[T, list[T], str, list[str]]): The tool(s) to delete.
-#             verbose (bool): Whether to print success/failure messages (default: True).
+        self.pending_ins = {}
+        self.pending_outs = deque()
 
-#         Returns:
-#             bool: True if the tools were successfully deleted, False otherwise.
-#         """
-#         if not isinstance(tools, list):
-#             tools = [tools]
-#         if convert.is_same_dtype(tools, str):
-#             for act_ in tools:
-#                 if act_ in self.tool_manager.registry:
-#                     self.tool_manager.registry.pop(act_)
-#             if verbose:
-#                 print("tools successfully deleted")
-#             return True
-#         elif convert.is_same_dtype(tools, Tool):
-#             for act_ in tools:
-#                 if act_.schema_["function"]["name"] in self.tool_manager.registry:
-#                     self.tool_manager.registry.pop(act_.schema_["function"]["name"])
-#             if verbose:
-#                 print("tools successfully deleted")
-#             return True
-#         if verbose:
-#             print("tools deletion failed")
-#         return False
+        if system is not None:
+            self.add_message(system=system)
 
-#     def send(self, recipient: str, category: str, package: Any) -> None:
-#         """
-#         Sends a mail to a recipient.
+    @classmethod
+    def from_csv(
+        cls,
+        filepath,
+        name: str | None = None,
+        service: BaseService | None = None,
+        llmconfig: dict[str, str | int | dict] | None = None,
+        tools: TOOL_TYPE | None = None,
+        datalogger: None | DataLogger = None,
+        persist_path: PATH_TYPE | None = None,  # instruction_sets=None,
+        tool_manager: ToolManager | None = None,
+        read_kwargs=None,
+        **kwargs,
+    ) -> "Branch":
+        """
+        Creates a Branch instance from a CSV file.
 
-#         Args:
-#             recipient (str): The recipient of the mail.
-#             category (str): The category of the mail.
-#             package (Any): The package to send in the mail.
-#         """
-#         mail_ = BaseMail(
-#             sender=self.sender, recipient=recipient, category=category, package=package
-#         )
-#         self.pending_outs.append(mail_)
+        Args:
+            filepath: The path to the CSV file.
+            name (str): The name of the branch (optional).
+            service (BaseService): The service associated with the branch (optional).
+            llmconfig (dict[str, str | int | dict]): The configuration for the language model (optional).
+            tools (TOOL_TYPE): The tools to register in the branch (optional).
+            datalogger (DataLogger): The data logger for the branch (optional).
+            persist_path (PATH_TYPE): The path to persist the branch data (optional).
+            tool_manager (ToolManager): The tool manager for the branch (optional).
+            read_kwargs: Additional keyword arguments for reading the CSV file (optional).
+            **kwargs: Additional keyword arguments.
 
-#     def receive(
-#         self,
-#         sender: str,
-#         messages: bool = True,
-#         tools: bool = True,
-#         service: bool = True,
-#         llmconfig: bool = True,
-#     ) -> None:
-#         """
-#         Receives mails from a sender and updates the branch accordingly.
+        Returns:
+            Branch: The created Branch instance.
+        """
+        return cls._from_csv(
+            filepath=filepath,
+            read_kwargs=read_kwargs,
+            name=name,
+            service=service,
+            llmconfig=llmconfig,
+            tools=tools,
+            datalogger=datalogger,
+            persist_path=persist_path,
+            # instruction_sets=instruction_sets,
+            tool_manager=tool_manager,
+            **kwargs,
+        )
 
-#         Args:
-#             sender (str): The sender of the mails.
-#             messages (bool): Whether to receive message updates (default: True).
-#             tools (bool): Whether to receive tool updates (default: True).
-#             service (bool): Whether to receive service updates (default: True).
-#             llmconfig (bool): Whether to receive language model configuration updates (default: True).
+    @classmethod
+    def from_json_string(
+        cls,
+        filepath,
+        name: str | None = None,
+        service: BaseService | None = None,
+        llmconfig: dict[str, str | int | dict] | None = None,
+        tools: TOOL_TYPE | None = None,
+        datalogger: None | DataLogger = None,
+        persist_path: PATH_TYPE | None = None,  # instruction_sets=None,
+        tool_manager: ToolManager | None = None,
+        read_kwargs=None,
+        **kwargs,
+    ) -> "Branch":
+        """
+        Creates a Branch instance from a JSON string file.
 
-#         Raises:
-#             ValueError: If there are no packages from the specified sender.
-#                         If the messages format is invalid.
-#                         If the tools format is invalid.
-#                         If the provider format is invalid.
-#                         If the llmconfig format is invalid.
-#         """
-#         skipped_requests = deque()
-#         if sender not in self.pending_ins:
-#             raise ValueError(f"No package from {sender}")
-#         while self.pending_ins[sender]:
-#             mail_ = self.pending_ins[sender].popleft()
+        Args:
+            filepath: The path to the JSON string file.
+            name (str): The name of the branch (optional).
+            service (BaseService): The service associated with the branch (optional).
+            llmconfig (dict[str, str | int | dict]): The configuration for the language model (optional).
+            tools (TOOL_TYPE): The tools to register in the branch (optional).
+            datalogger (DataLogger): The data logger for the branch (optional).
+            persist_path (PATH_TYPE): The path to persist the branch data (optional).
+            tool_manager (ToolManager): The tool manager for the branch (optional).
+            read_kwargs: Additional keyword arguments for reading the JSON string file (optional).
+            **kwargs: Additional keyword arguments.
 
-#             if mail_.category == "messages" and messages:
-#                 if not isinstance(mail_.package, dataframe.ln_DataFrame):
-#                     raise ValueError("Invalid messages format")
-#                 MessageUtil.validate_messages(mail_.package)
-#                 self.messages = self.messages.merge(mail_.package, how="outer")
+        Returns:
+            Branch: The created Branch instance.
+        """
+        return cls._from_json(
+            filepath=filepath,
+            read_kwargs=read_kwargs,
+            name=name,
+            service=service,
+            llmconfig=llmconfig,
+            tools=tools,
+            datalogger=datalogger,
+            persist_path=persist_path,
+            # instruction_sets=instruction_sets,
+            tool_manager=tool_manager,
+            **kwargs,
+        )
 
-#             elif mail_.category == "tools" and tools:
-#                 if not isinstance(mail_.package, Tool):
-#                     raise ValueError("Invalid tools format")
-#                 self.tool_manager.register_tools([mail_.package])
+    def messages_describe(self) -> dict[str, Any]:
+        """
+        Describes the messages in the branch.
 
-#             elif mail_.category == "provider" and service:
-#                 from lionagi.libs.ln_api import BaseService
+        Returns:
+            dict[str, Any]: A dictionary describing the messages in the branch.
+        """
+        return dict(
+            total_messages=len(self.messages),
+            summary_by_role=self._info(),
+            summary_by_sender=self._info(use_sender=True),
+            # instruction_sets=self.instruction_sets,
+            registered_tools=self.tool_manager.registry,
+            messages=[msg.to_dict() for _, msg in self.messages.iterrows()],
+        )
 
-#                 if not isinstance(mail_.package, BaseService):
-#                     raise ValueError("Invalid provider format")
-#                 self.service = mail_.package
+    @property
+    def has_tools(self) -> bool:
+        """
+        Checks if the branch has any registered tools.
 
-#             elif mail_.category == "llmconfig" and llmconfig:
-#                 if not isinstance(mail_.package, dict):
-#                     raise ValueError("Invalid llmconfig format")
-#                 self.llmconfig.update(mail_.package)
+        Returns:
+            bool: True if the branch has registered tools, False otherwise.
+        """
+        return self.tool_manager.registry != {}
 
-#             else:
-#                 skipped_requests.append(mail_)
+    # todo: also update other attributes
+    def merge_branch(self, branch: "Branch", update: bool = True) -> None:
+        """
+        Merges another branch into the current branch.
 
-#         self.pending_ins[sender] = skipped_requests
-#         if self.pending_ins[sender] == deque():
-#             self.pending_ins.pop(sender)
+        Args:
+            branch (Branch): The branch to merge.
+            update (bool): Whether to update the existing attributes or add new ones (default: True).
+        """
+        message_copy = branch.messages.copy()
+        self.messages = self.messages.merge(message_copy, how="outer")
+        self.datalogger.extend(branch.datalogger.log)
 
-#     def receive_all(self) -> None:
-#         """
-#         Receives all pending mails and updates the branch accordingly.
-#         """
-#         for key in list(self.pending_ins.keys()):
-#             self.receive(key)
+        if update:
+            # self.instruction_sets.update(branch.instruction_sets)
+            self.tool_manager.registry.update(branch.tool_manager.registry)
+        else:
+            for key, value in branch.instruction_sets.items():
+                if key not in self.instruction_sets:
+                    self.instruction_sets[key] = value
 
-#     @staticmethod
-#     def _add_service(service, llmconfig):
-#         """
-#         Initializes the service and LLM configuration for the branch.
+            for key, value in branch.tool_manager.registry.items():
+                if key not in self.tool_manager.registry:
+                    self.tool_manager.registry[key] = value
 
-#         This static method provides a way to set up the service and LLM configuration
-#         based on provided parameters or defaults to a suitable service and configuration.
+    # ----- tool manager methods ----- #
+    def register_tools(
+        self, tools: Union[Tool, list[Tool | Callable], Callable]
+    ) -> None:
+        """
+        Registers tools in the branch's tool manager.
 
-#         Args:
-#             service (BaseService | None): The service to be used by the branch.
-#             llmconfig (dict | None): The LLM configuration for the branch.
+        Args:
+            tools (Union[Tool, list[Tool]]): The tool(s) to register.
+        """
+        if not isinstance(tools, list):
+            tools = [tools]
+        self.tool_manager.register_tools(tools=tools)
 
-#         Returns:
-#             tuple: A tuple containing the initialized service and LLM configuration.
+    def delete_tools(
+        self,
+        tools: Union[T, list[T], str, list[str]],
+        verbose: bool = True,
+    ) -> bool:
+        """
+        Deletes tools from the branch's tool manager.
 
-#         Raises:
-#             ValueError: If no suitable service is available or specified.
+        Args:
+            tools (Union[T, list[T], str, list[str]]): The tool(s) to delete.
+            verbose (bool): Whether to print success/failure messages (default: True).
 
-#         Examples:
-#             >>> service, llmconfig = Branch._add_service(None, None)
-#         """
-#         from lionagi.integrations.provider.oai import OpenAIService
+        Returns:
+            bool: True if the tools were successfully deleted, False otherwise.
+        """
+        if not isinstance(tools, list):
+            tools = [tools]
+        if convert.is_same_dtype(tools, str):
+            for act_ in tools:
+                if act_ in self.tool_manager.registry:
+                    self.tool_manager.registry.pop(act_)
+            if verbose:
+                print("tools successfully deleted")
+            return True
+        elif convert.is_same_dtype(tools, Tool):
+            for act_ in tools:
+                if act_.schema_["function"]["name"] in self.tool_manager.registry:
+                    self.tool_manager.registry.pop(act_.schema_["function"]["name"])
+            if verbose:
+                print("tools successfully deleted")
+            return True
+        if verbose:
+            print("tools deletion failed")
+        return False
 
-#         if service is None:
-#             try:
-#                 from lionagi.integrations.provider import Services
+    def send(self, recipient: str, category: str, package: Any) -> None:
+        """
+        Sends a mail to a recipient.
 
-#                 service = Services.OpenAI()
+        Args:
+            recipient (str): The recipient of the mail.
+            category (str): The category of the mail.
+            package (Any): The package to send in the mail.
+        """
+        mail_ = BaseMail(
+            sender=self.sender, recipient=recipient, category=category, package=package
+        )
+        self.pending_outs.append(mail_)
 
-#             except:
-#                 raise ValueError("No available service")
-#         if llmconfig is None:
-#             if isinstance(service, OpenAIService):
-#                 from lionagi.integrations.config import oai_schema
+    def receive(
+        self,
+        sender: str,
+        messages: bool = True,
+        tools: bool = True,
+        service: bool = True,
+        llmconfig: bool = True,
+    ) -> None:
+        """
+        Receives mails from a sender and updates the branch accordingly.
 
-#                 llmconfig = oai_schema["chat/completions"]["config"]
-#             else:
-#                 llmconfig = {}
-#         return service, llmconfig
+        Args:
+            sender (str): The sender of the mails.
+            messages (bool): Whether to receive message updates (default: True).
+            tools (bool): Whether to receive tool updates (default: True).
+            service (bool): Whether to receive service updates (default: True).
+            llmconfig (bool): Whether to receive language model configuration updates (default: True).
 
-#     def _is_invoked(self) -> bool:
-#         """
-#         Checks if the conversation has been invoked with an action response.
+        Raises:
+            ValueError: If there are no packages from the specified sender.
+                        If the messages format is invalid.
+                        If the tools format is invalid.
+                        If the provider format is invalid.
+                        If the llmconfig format is invalid.
+        """
+        skipped_requests = deque()
+        if sender not in self.pending_ins:
+            raise ValueError(f"No package from {sender}")
+        while self.pending_ins[sender]:
+            mail_ = self.pending_ins[sender].popleft()
 
-#         This method determines whether the latest message in the conversation
-#         includes an action response, indicating that a specific action or command
-#         has been invoked.
+            if mail_.category == "messages" and messages:
+                if not isinstance(mail_.package, dataframe.ln_DataFrame):
+                    raise ValueError("Invalid messages format")
+                MessageUtil.validate_messages(mail_.package)
+                self.messages = self.messages.merge(mail_.package, how="outer")
 
-#         Returns:
-#                 bool: True if the conversation has been invoked, False otherwise.
+            elif mail_.category == "tools" and tools:
+                if not isinstance(mail_.package, Tool):
+                    raise ValueError("Invalid tools format")
+                self.tool_manager.register_tools([mail_.package])
 
-#         """
-#         content = self.messages.iloc[-1]["content"]
-#         try:
-#             if convert.to_dict(content)["action_response"].keys() >= {
-#                 "function",
-#                 "arguments",
-#                 "output",
-#             }:
-#                 return True
-#         except Exception:
-#             return False
+            elif mail_.category == "provider" and service:
+                from lionagi.libs.ln_api import BaseService
+
+                if not isinstance(mail_.package, BaseService):
+                    raise ValueError("Invalid provider format")
+                self.service = mail_.package
+
+            elif mail_.category == "llmconfig" and llmconfig:
+                if not isinstance(mail_.package, dict):
+                    raise ValueError("Invalid llmconfig format")
+                self.llmconfig.update(mail_.package)
+
+            else:
+                skipped_requests.append(mail_)
+
+        self.pending_ins[sender] = skipped_requests
+        if self.pending_ins[sender] == deque():
+            self.pending_ins.pop(sender)
+
+    def receive_all(self) -> None:
+        """
+        Receives all pending mails and updates the branch accordingly.
+        """
+        for key in list(self.pending_ins.keys()):
+            self.receive(key)
+
+    @staticmethod
+    def _add_service(service, llmconfig):
+        from lionagi.integrations.provider.oai import OpenAIService
+
+        if service is None:
+            try:
+                from lionagi.integrations.provider import Services
+
+                service = Services.OpenAI()
+
+            except:
+                raise ValueError("No available service")
+        if llmconfig is None:
+            if isinstance(service, OpenAIService):
+                from lionagi.integrations.config import oai_schema
+
+                llmconfig = oai_schema["chat/completions"]["config"]
+            else:
+                llmconfig = {}
+        return service, llmconfig
+
+    def _is_invoked(self) -> bool:
+        """
+        Check if the conversation has been invoked with an action response.
+
+        Returns:
+                bool: True if the conversation has been invoked, False otherwise.
+
+        """
+        content = self.messages.iloc[-1]["content"]
+        try:
+            if convert.to_dict(content)["action_response"].keys() >= {
+                "function",
+                "arguments",
+                "output",
+            }:
+                return True
+        except Exception:
+            return False

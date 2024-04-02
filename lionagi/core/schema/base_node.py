@@ -2,6 +2,7 @@
 Module for base component model definition using Pydantic.
 """
 
+from abc import ABC
 from typing import Any, TypeVar
 
 from pydantic import Field, field_serializer, AliasChoices

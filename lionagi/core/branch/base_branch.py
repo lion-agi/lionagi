@@ -4,32 +4,22 @@ from typing import Any
 from lionagi.libs.sys_util import PATH_TYPE
 from lionagi.libs import convert, dataframe, SysUtil
 
-import lionagi.libs.ln_convert as convert
-import lionagi.libs.ln_dataframe as dataframe
-
-from lionagi.core.messages.system import System
-from lionagi.core.messages.instruction import Instruction
-from lionagi.core.messages.response import Response
-
-
-from lionagi.core.schema.base_node import BaseRelatableNode
-from lionagi.core.schema.data_logger import DataLogger
-from lionagi.core.messages.base.schema import (
+from ..schema.base_node import BaseRelatableNode
+from ..schema.data_logger import DataLogger, DLog
+from ..messages.schema import (
     BranchColumns,
+    System,
+    Response,
+    Instruction,
+    BaseMessage,
 )
-from lionagi.core.messages.system import System
-from lionagi.core.messages.instruction import Instruction
-from lionagi.core.messages.base.base_message import BaseMessage
-from lionagi.core.branch.base.util import MessageUtil
-from lionagi.core.branch.base.branch_io_mixin import BranchIOMixin
+from .util import MessageUtil
 
 
-class BaseBranch(BaseRelatableNode, BranchIOMixin, ABC):
+class BaseBranch(BaseRelatableNode, ABC):
     """
     Base class for managing branches of conversation, incorporating messages
-    and logging functionality. This class provides a structured way to store and
-    manipulate conversation data, including adding messages, exporting data, and
-    filtering messages based on various criteria.
+    and logging functionality.
 
     Attributes:
             messages (dataframe.ln_DataFrame): Holds the messages in the branch.
@@ -41,30 +31,13 @@ class BaseBranch(BaseRelatableNode, BranchIOMixin, ABC):
 
     def __init__(
         self,
-        name: str | None = None,
         messages: dataframe.ln_DataFrame | None = None,
         datalogger: DataLogger | None = None,
         persist_path: PATH_TYPE | None = None,
-        system=None,
+        name=None,
         **kwargs,
     ) -> None:
-        """Initializes a new instance of the BaseBranch class.
-
-        Sets up the branch with an optional initial set of messages, a data logger for operation logging,
-        and a path for data persistence. If messages are not provided, an empty dataframe is initialized
-        with predefined columns for message management.
-
-        Args:
-            messages (dataframe.ln_DataFrame | None): Initial set of messages for the branch. Defaults to None.
-            datalogger (DataLogger | None): Data logger instance for the branch. Defaults to None.
-            persist_path (PATH_TYPE | None): Filesystem path for data persistence. Defaults to None.
-            **kwargs: Additional keyword arguments.
-
-        Raises:
-            ValueError: If the provided messages dataframe is not in the expected format.
-        """
         super().__init__(**kwargs)
-        self.system_node = None
         if isinstance(messages, dataframe.ln_DataFrame):
             if MessageUtil.validate_messages(messages):
                 self.messages = messages
@@ -76,36 +49,25 @@ class BaseBranch(BaseRelatableNode, BranchIOMixin, ABC):
         self.datalogger = datalogger or DataLogger(persist_path=persist_path)
         self.name = name
 
-        if system is not None:
-            self.add_message(system=system)
-
-        self.name = name
-
     def add_message(
         self,
         system: dict | list | System | None = None,
         instruction: dict | list | Instruction | None = None,
         context: str | dict[str, Any] | None = None,
         response: dict | list | BaseMessage | None = None,
-        output_fields: dict | None = None,
+        output_fields=None,
+        recipient=None,
         **kwargs,
     ) -> None:
         """
-        Adds a message to the branch, enriching the conversation flow.
+        Adds a message to the branch.
 
         Args:
-            system (dict | list | System | None): System-related information for the message.
-            instruction (dict | list | Instruction | None): Instruction details for the message.
-            context (str | dict[str, Any] | None): Contextual information for the message.
-            response (dict | list | BaseMessage | None): Response data for the message.
-            output_fields (Optional): Specifies fields to be included in the output.
-            **kwargs: Additional keyword arguments for custom message creation.
-
-        Raises:
-            ValueError: If the messages format is invalid.
-
-        Examples:
-            >>> branch.add_message(instruction={'command': 'start'}, context="User action")
+                system: Information for creating a System message.
+                instruction: Information for creating an Instruction message.
+                context: Context information for the message.
+                response: Response data for creating a message.
+                **kwargs: Additional keyword arguments for message creation.
         """
         _msg = MessageUtil.create_message(
             system=system,
@@ -120,11 +82,60 @@ class BaseBranch(BaseRelatableNode, BranchIOMixin, ABC):
         if isinstance(_msg, System):
             self.system_node = _msg
 
+        # sourcery skip: merge-nested-ifs
+        if isinstance(_msg, Instruction):
+            if recipient is None and self.name is not None:
+                _msg.recipient = self.name
+
         if isinstance(_msg, Response):
-            _msg.sender = self.name
+            if "action_response" in _msg.content.keys():
+                if recipient is None and self.name is not None:
+                    _msg.recipient = self.name
+                if recipient is not None and self.name is None:
+                    _msg.recipient = recipient
+            if "response" in _msg.content.keys():
+                if self.name is not None:
+                    _msg.sender = self.name
 
         _msg.content = _msg.msg_content
         self.messages.loc[len(self.messages)] = _msg.to_pd_series()
+
+    def _to_chatcompletion_message(
+        self, with_sender: bool = False
+    ) -> list[dict[str, Any]]:
+        """
+        Converts messages to a list of dictionaries formatted for chat completion,
+        optionally including sender information.
+
+        Args:
+                with_sender: Flag to include sender information in the output.
+
+        Returns:
+                A list of message dictionaries, each with 'role' and 'content' keys,
+                and optionally prefixed by 'Sender' if with_sender is True.
+        """
+
+        message = []
+
+        for _, row in self.messages.iterrows():
+            content_ = row["content"]
+            if content_.startswith("Sender"):
+                content_ = content_.split(":", 1)[1]
+
+            # if isinstance(content_, str):
+            #     try:
+            #         content_ = json.dumps(to_dict(content_))
+            #     except Exception as e:
+            #         raise ValueError(
+            #             f"Error in serializing, {row['node_id']} {content_}: {e}"
+            #         )
+
+            out = {"role": row["role"], "content": content_}
+            if with_sender:
+                out["content"] = f"Sender {row['sender']}: {content_}"
+
+            message.append(out)
+        return message
 
     @property
     def chat_messages(self) -> list[dict[str, Any]]:
@@ -254,13 +265,7 @@ class BaseBranch(BaseRelatableNode, BranchIOMixin, ABC):
         return convert.to_df(a_responses)
 
     @property
-    def last_assistant_response(self) -> dataframe.ln_Series:
-        """
-        Filters 'assistant' role messages excluding 'action_request' and 'action_response'.
-
-        Returns:
-            A pandas DataFrame of 'assistant' messages excluding action requests/responses.
-        """
+    def last_assistant_response(self):
         return self.assistant_responses.iloc[-1]
 
     @property
@@ -298,12 +303,217 @@ class BaseBranch(BaseRelatableNode, BranchIOMixin, ABC):
         return {
             "total_messages": len(self.messages),
             "summary_by_role": self._info(),
-            "summary_by_sender": self._info(use_sender=True),
-            "registered_tools": self.tool_manager.registry,
             "messages": [msg.to_dict() for _, msg in self.messages.iterrows()][
                 : len(self.messages) - 1 if len(self.messages) < 5 else 5
             ],
         }
+
+    @classmethod
+    def _from_csv(cls, filename: str, read_kwargs=None, **kwargs) -> "BaseBranch":
+        read_kwargs = {} if read_kwargs is None else read_kwargs
+        messages = dataframe.read_csv(filename, **read_kwargs)
+        return cls(messages=messages, **kwargs)
+
+    @classmethod
+    def from_csv(cls, **kwargs) -> "BaseBranch":
+
+        return cls._from_csv(**kwargs)
+
+    @classmethod
+    def from_json_string(cls, **kwargs) -> "BaseBranch":
+
+        return cls._from_json(**kwargs)
+
+    @classmethod
+    def _from_json(cls, filename: str, read_kwargs=None, **kwargs) -> "BaseBranch":
+        read_kwargs = {} if read_kwargs is None else read_kwargs
+        messages = dataframe.read_json(filename, **read_kwargs)
+        return cls(messages=messages, **kwargs)
+
+    def to_csv_file(
+        self,
+        filename: PATH_TYPE = "messages.csv",
+        dir_exist_ok: bool = True,
+        timestamp: bool = True,
+        time_prefix: bool = False,
+        verbose: bool = True,
+        clear: bool = True,
+        **kwargs,
+    ) -> None:
+        """
+        Exports the branch messages to a CSV file.
+
+        Args:
+                filepath: Destination path for the CSV file. Defaults to 'messages.csv'.
+                dir_exist_ok: If False, an error is raised if the directory exists. Defaults to True.
+                timestamp: If True, appends a timestamp to the filename. Defaults to True.
+                time_prefix: If True, prefixes the filename with a timestamp. Defaults to False.
+                verbose: If True, prints a message upon successful export. Defaults to True.
+                clear: If True, clears the messages after exporting. Defaults to True.
+                **kwargs: Additional keyword arguments for pandas.DataFrame.to_csv().
+        """
+
+        if not filename.endswith(".csv"):
+            filename += ".csv"
+
+        filename = SysUtil.create_path(
+            self.datalogger.persist_path,
+            filename,
+            timestamp=timestamp,
+            dir_exist_ok=dir_exist_ok,
+            time_prefix=time_prefix,
+        )
+
+        try:
+            self.messages.to_csv(filename, **kwargs)
+            if verbose:
+                print(f"{len(self.messages)} messages saved to {filename}")
+            if clear:
+                self.clear_messages()
+        except Exception as e:
+            raise ValueError(f"Error in saving to csv: {e}") from e
+
+    def to_json_file(
+        self,
+        filename: PATH_TYPE = "messages.json",
+        dir_exist_ok: bool = True,
+        timestamp: bool = True,
+        time_prefix: bool = False,
+        verbose: bool = True,
+        clear: bool = True,
+        **kwargs,
+    ) -> None:
+        """
+        Exports the branch messages to a JSON file.
+
+        Args:
+                filename: Destination path for the JSON file. Defaults to 'messages.json'.
+                dir_exist_ok: If False, an error is raised if the dirctory exists. Defaults to True.
+                timestamp: If True, appends a timestamp to the filename. Defaults to True.
+                time_prefix: If True, prefixes the filename with a timestamp. Defaults to False.
+                verbose: If True, prints a message upon successful export. Defaults to True.
+                clear: If True, clears the messages after exporting. Defaults to True.
+                **kwargs: Additional keyword arguments for pandas.DataFrame.to_json().
+        """
+
+        if not filename.endswith(".json"):
+            filename += ".json"
+
+        filename = SysUtil.create_path(
+            self.datalogger.persist_path,
+            filename,
+            timestamp=timestamp,
+            dir_exist_ok=dir_exist_ok,
+            time_prefix=time_prefix,
+        )
+
+        try:
+            self.messages.to_json(
+                filename, orient="records", lines=True, date_format="iso", **kwargs
+            )
+            if verbose:
+                print(f"{len(self.messages)} messages saved to {filename}")
+            if clear:
+                self.clear_messages()
+        except Exception as e:
+            raise ValueError(f"Error in saving to json: {e}") from e
+
+    def log_to_csv(
+        self,
+        filename: PATH_TYPE = "log.csv",
+        dir_exist_ok: bool = True,
+        timestamp: bool = True,
+        time_prefix: bool = False,
+        verbose: bool = True,
+        clear: bool = True,
+        flatten_=True,
+        sep="[^_^]",
+        **kwargs,
+    ) -> None:
+        """
+        Exports the data logger contents to a CSV file.
+
+        Args:
+                filename: Destination path for the CSV file. Defaults to 'log.csv'.
+                dir_exist_ok: If False, an error is raised if the directory exists. Defaults to True.
+                timestamp: If True, appends a timestamp to the filename. Defaults to True.
+                time_prefix: If True, prefixes the filename with a timestamp. Defaults to False.
+                verbose: If True, prints a message upon successful export. Defaults to True.
+                clear: If True, clears the logger after exporting. Defaults to True.
+                **kwargs: Additional keyword arguments for pandas.DataFrame.to_csv().
+        """
+        self.datalogger.to_csv_file(
+            filename=filename,
+            dir_exist_ok=dir_exist_ok,
+            timestamp=timestamp,
+            time_prefix=time_prefix,
+            verbose=verbose,
+            clear=clear,
+            flatten_=flatten_,
+            sep=sep,
+            **kwargs,
+        )
+
+    def log_to_json(
+        self,
+        filename: PATH_TYPE = "log.json",
+        dir_exist_ok: bool = True,
+        timestamp: bool = True,
+        time_prefix: bool = False,
+        verbose: bool = True,
+        clear: bool = True,
+        flatten_=True,
+        sep="[^_^]",
+        **kwargs,
+    ) -> None:
+        """
+        Exports the data logger contents to a JSON file.
+
+        Args:
+                filename: Destination path for the JSON file. Defaults to 'log.json'.
+                dir_exist_ok: If False, an error is raised if the directory exists. Defaults to True.
+                timestamp: If True, appends a timestamp to the filename. Defaults to True.
+                time_prefix: If True, prefixes the filename with a timestamp. Defaults to False.
+                verbose: If True, prints a message upon successful export. Defaults to True.
+                clear: If True, clears the logger after exporting. Defaults to True.
+                **kwargs: Additional keyword arguments for pandas.DataFrame.to_json().
+        """
+
+        self.datalogger.to_json_file(
+            filename=filename,
+            dir_exist_ok=dir_exist_ok,
+            timestamp=timestamp,
+            time_prefix=time_prefix,
+            verbose=verbose,
+            clear=clear,
+            flatten_=flatten_,
+            sep=sep,
+            **kwargs,
+        )
+
+    def load_log(self, filename, flattened=True, sep="[^_^]", verbose=True, **kwargs):
+        df = ""
+        try:
+            if filename.endswith(".csv"):
+                df = dataframe.read_csv(filename, **kwargs)
+
+            elif filename.endswith(".json"):
+                df = dataframe.read_json(filename, **kwargs)
+
+            for _, row in df.iterrows():
+                self.datalogger.log.append(
+                    DLog.deserialize(
+                        input_str=row.input_data,
+                        output_str=row.output_data,
+                        unflatten_=flattened,
+                        sep=sep,
+                    )
+                )
+
+            if verbose:
+                print(f"Loaded {len(df)} logs from {filename}")
+        except Exception as e:
+            raise ValueError(f"Error in loading log: {e}") from e
 
     def remove_message(self, node_id: str) -> None:
         """
@@ -442,32 +652,3 @@ class BaseBranch(BaseRelatableNode, BranchIOMixin, ABC):
         result = messages.value_counts().to_dict()
         result["total"] = len(self.messages)
         return result
-
-    def _to_chatcompletion_message(
-        self, with_sender: bool = False
-    ) -> list[dict[str, Any]]:
-        """
-        Converts messages to a list of dictionaries formatted for chat completion,
-        optionally including sender information.
-
-        Args:
-            with_sender: Flag to include sender information in the output.
-
-        Returns:
-            A list of message dictionaries, each with 'role' and 'content' keys,
-            and optionally prefixed by 'Sender' if with_sender is True.
-        """
-
-        message = []
-
-        for _, row in self.messages.iterrows():
-            content_ = row["content"]
-            if content_.startswith("Sender"):
-                content_ = content_.split(":", 1)[1]
-
-            out = {"role": row["role"], "content": content_}
-            if with_sender:
-                out["content"] = f"Sender {row['sender']}: {content_}"
-
-            message.append(out)
-        return message

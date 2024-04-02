@@ -10,10 +10,11 @@ class MailCategory(str, Enum):
     SERVICE = "service"
     MODEL = "model"
     NODE = "node"
-    CONTEXT = "context"
+    NODE_LIST = "node_list"
     NODE_ID = "node_id"
     START = "start"
     END = "end"
+    CONDITION = "condition"
 
 
 class BaseMail:
@@ -40,8 +41,8 @@ class BaseMail:
 
 class StartMail(BaseRelatableNode):
 
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
+    def __init__(self, **kwargs):
+        super().__init__(**kwargs)
         self.pending_outs = deque()
 
     def trigger(self, context, structure_id, executable_id):
