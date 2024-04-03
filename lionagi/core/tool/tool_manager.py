@@ -1,8 +1,9 @@
 import asyncio
+
 from typing import Tuple, Any, TypeVar, Callable
 from lionagi.libs import func_call, convert, ParseUtil
 
-from .tool import Tool, TOOL_TYPE
+from lionagi.core.tool.tool import Tool, TOOL_TYPE
 
 T = TypeVar("T", bound=Tool)
 
@@ -153,7 +154,7 @@ class ToolManager:
                 return tool.schema_
             elif isinstance(tool, str):
                 if self.name_existed(tool):
-                    tool = self.registry[tool]
+                    tool: Tool = self.registry[tool]
                     return tool.schema_
                 else:
                     raise ValueError(f"Function {tool} is not registered.")

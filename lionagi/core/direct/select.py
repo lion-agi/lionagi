@@ -13,8 +13,8 @@ from enum import Enum
 from pydantic import Field
 
 from lionagi.libs import func_call, StringMatch
-from ..prompt.scored_template import ScoredTemplate
-from ..branch import Branch
+from lionagi.core.prompt.scored_template import ScoredTemplate
+from lionagi.core.branch import Branch
 
 
 class SelectTemplate(ScoredTemplate):

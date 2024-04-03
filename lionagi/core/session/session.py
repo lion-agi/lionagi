@@ -5,7 +5,7 @@ from lionagi.libs.sys_util import PATH_TYPE
 from lionagi.libs import BaseService, convert, dataframe
 
 from lionagi.core.schema import DataLogger
-from lionagi.core.tool import ToolManager, TOOL_TYPE, Tool
+from lionagi.core.tool import ToolManager, Tool, TOOL_TYPE
 from lionagi.core.mail import MailManager
 from lionagi.core.messages import System, Instruction
 from lionagi.core.branch import Branch
@@ -983,3 +983,4 @@ class Session:
             self.default_branch.add_message(system=system, sender=sender)
 
         self.llmconfig = self.default_branch.llmconfig
+        

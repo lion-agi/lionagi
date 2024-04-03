@@ -1,8 +1,6 @@
 from enum import Enum
 from pydantic import Field
-from lionagi.libs import convert, func_call
 from lionagi.core.schema.base_node import BaseNode
-from lionagi.core.schema.edge import Edge
 
 
 class TREE_LABEL(str, Enum):
@@ -30,12 +28,6 @@ class TreeNode(BaseNode):
     parent: BaseNode | None = Field(None, description="The parent node", alias="_parent")
     children: list[str] = Field(default_factory=list, description="The list of child node IDs.", alias="_children")
 
-    def add_parent(self, parent: BaseNode):
-        self._add_parent(parent)
-
-    def remove_parent(self, parent: BaseNode):
-        self._remove_parent(parent)
-
     def change_parent(self, old_parent: BaseNode, new_parent: BaseNode):
         self._remove_parent(old_parent)
         self._add_parent(new_parent)
@@ -50,16 +42,14 @@ class TreeNode(BaseNode):
         for _child in children:
             self._remove_child(_child)
 
-    def has_child(self, child: BaseNode) -> bool:
-        return self._has_child(child)
 
-    def _has_child(self, child: BaseNode) -> bool:
+    def has_child(self, child: BaseNode) -> bool:
         relationship = self.get_edge(child)
         if child.id_ in self.out_relations and relationship and relationship.label == TREE_LABEL.PARENT:
             return True
         return False
 
-    def _add_parent(self, parent: BaseNode):
+    def add_parent(self, parent: BaseNode):
         self.add_edge(parent, label=TREE_LABEL.CHILD)
         self.parent = parent
 
@@ -67,12 +57,11 @@ class TreeNode(BaseNode):
         self.add_edge(child, label=TREE_LABEL.PARENT)
         self.children.append(child.id_)
 
-    def _remove_parent(self, parent: BaseNode):
+    def remove_parent(self, parent: BaseNode):
         self.pop_edge(parent)
         self.parent = None
 
     def _remove_child(self, child: BaseNode):
         self.pop_edge(child)
         self.children.remove(child.id_)
-
 

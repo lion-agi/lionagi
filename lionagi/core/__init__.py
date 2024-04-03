@@ -1,6 +1,6 @@
 from . import *
 
-from .branch import Branch, ExecutableBranch
+from .branch import Branch
 from .session import Session
 from .schema import (
 	ActionNode, ActionSelection,

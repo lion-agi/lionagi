@@ -1,4 +1,4 @@
-from .base_node import BaseNode
+from lionagi.core.schema.base_node import BaseNode
 
 
 class ActionSelection(BaseNode):

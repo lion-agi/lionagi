@@ -1,10 +1,8 @@
-from typing import Callable
 from lionagi.libs import convert
-from ..tool import func_to_tool, Tool
 
-from .predict import predict
-from .plan import plan
-from .react import react
+from lionagi.core.direct.predict import predict
+from lionagi.core.direct.plan import plan
+from lionagi.core.direct.react import react
 
 from .utils import _process_tools
 

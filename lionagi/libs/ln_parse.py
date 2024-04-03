@@ -642,40 +642,33 @@ class StringMatch:
         max_score_index = np.argmax(scores)
         return correct_words_list[max_score_index]
 
-    @singledispatchmethod
     @staticmethod
-    def force_validate_dict(
-        x: Any, *, keys: dict | list[str]) -> dict:
-        raise TypeError(f"Unsupported type for force_validate_dict: {type(x)}")
-
-    @force_validate_dict.register(dict)
-    @staticmethod
-    def _(x: dict, *, keys: dict | list[str]) -> dict:
-        try:
-            return StringMatch.correct_dict_keys(keys, x)
-        except Exception as e:
-            raise ValueError(f"Failed to force_validate_dict for input: {x}") from e
-
-    @force_validate_dict.register(str)
-    @staticmethod
-    def _(x: str, *, keys: dict | list[str]) -> dict:
+    def force_validate_dict(x, keys: dict | list[str]) -> dict:
         out_ = x
-        try:
-            out_ = ParseUtil.md_to_json(x)
-        except Exception:
-            try:
-                out_ = ParseUtil.md_to_json(x.replace("'", '"'))
+        
+        if isinstance(out_, str):
+            # first try to parse it straight as a fuzzy json
+            try:                
+                out_ = ParseUtil.fuzzy_parse_json(out_)
             except Exception:
-                with contextlib.suppress(Exception):
-                    out_ = ParseUtil.fuzzy_parse_json(x.strip("```json").strip("```"))
-        try:
-            if isinstance(out_, str):
-                with contextlib.suppress(Exception):
+                try:
+                    # if failed we try to extract the json block and parse it
                     out_ = ParseUtil.md_to_json(out_)
-
-            if isinstance(out_, dict):
-                return StringMatch.force_validate_dict(out_, keys=keys)
-            else:
-                raise ValueError(f"Failed to force_validate_dict for input: {x}")
-        except Exception as e:
-            raise ValueError(f"Failed to force_validate_dict for input: {x}") from e
+                except Exception:
+                    # if still failed we try to extract the json block using re and parse it again
+                    match = re.search(r'```json\n({.*?})\n```', out_, re.DOTALL)
+                    if match:
+                        out_ = match.group(1)
+                        try:
+                            out_ = ParseUtil.fuzzy_parse_json(out_)
+                        except:
+                            try:
+                                out_ = ParseUtil.fuzzy_parse_json(out_.replace("\'", '\"'))
+                            except:
+                                pass
+        
+        if isinstance(out_, dict):
+            try:
+                return StringMatch.correct_dict_keys(keys, out_)
+            except Exception as e:
+                raise ValueError(f"Failed to force_validate_dict for input: {x}") from e

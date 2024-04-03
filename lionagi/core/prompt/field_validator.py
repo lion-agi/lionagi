@@ -221,17 +221,13 @@ def _fix_bool_field(x):
         ValueError: If the value cannot be converted into a valid boolean value.
     """
     try:
-        x = convert.to_str(x)
-        if (
-            convert.strip_lower(x) in ["true", "1", "correct", "yes"]
-            or convert.to_num(x) == 1
-        ):
+        x = convert.strip_lower(convert.to_str(x))
+        if x in ["true", "1", "correct", "yes"]:
             return True
-        elif (
-            convert.strip_lower(x) in ["false", "0", "incorrect", "no", "none", "n/a"]
-            or convert.to_num(x) == 0
-        ):
+        
+        elif x in ["false", "0", "incorrect", "no", "none", "n/a"]:
             return False
+        
         raise ValueError(f"Failed to convert {x} into a boolean value")
     except Exception as e:
         raise ValueError(f"Failed to convert {x} into a boolean value") from e

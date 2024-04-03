@@ -3,6 +3,7 @@ from .data_node import DataNode
 from .data_logger import DLog, DataLogger
 from .edge import Edge, Condition
 from .action_node import ActionNode, ActionSelection
+from .tree_node import TreeNode
 
 
 __all__ = [
@@ -16,4 +17,5 @@ __all__ = [
     "ActionNode",
     "ActionSelection",
     "Condition",
+    "TreeNode"
 ]

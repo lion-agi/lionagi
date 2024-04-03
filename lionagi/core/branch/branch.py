@@ -8,15 +8,14 @@ from typing import Any, Union, TypeVar, Callable
 from lionagi.libs.sys_util import PATH_TYPE
 from lionagi.libs import StatusTracker, BaseService, convert, dataframe
 
-from ..schema import DataLogger
-from ..tool import ToolManager, func_to_tool, Tool, TOOL_TYPE
+from lionagi.core.schema import DataLogger
+from lionagi.core.tool import ToolManager, func_to_tool, Tool, TOOL_TYPE
+from lionagi.core.messages import System
+from lionagi.core.mail import BaseMail
 
-from ..messages import System
-from ..mail import BaseMail
-
-from .util import MessageUtil
-from .base import BaseBranch
-from .flow_mixin import BranchFlowMixin
+from lionagi.core.branch.util import MessageUtil
+from lionagi.core.branch.base import BaseBranch
+from lionagi.core.branch.flow_mixin import BranchFlowMixin
 
 from dotenv import load_dotenv
 
@@ -358,7 +357,7 @@ class Branch(BaseBranch, BranchFlowMixin):
             package (Any): The package to send in the mail.
         """
         mail_ = BaseMail(
-            sender=self.sender, recipient=recipient, category=category, package=package
+            sender_id=self.sender, recipient_id=recipient, category=category, package=package
         )
         self.pending_outs.append(mail_)
 

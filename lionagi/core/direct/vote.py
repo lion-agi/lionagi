@@ -8,8 +8,8 @@ number of generations, number of outputs to return, number of scorers, score ran
 
 from lionagi.libs import func_call
 import numpy as np
-from .predict import predict
-from .score import score
+from lionagi.core.direct.predict import predict
+from lionagi.core.direct.score import score
 
 
 async def vote(

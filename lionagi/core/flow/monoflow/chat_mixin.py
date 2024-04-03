@@ -4,12 +4,11 @@ This module contains mixins for configuring and invoking chatbots.
 
 from abc import ABC
 from typing import Any
-import contextlib
 
-from lionagi.libs import nested, func_call, convert, StringMatch
-
-from lionagi.core.messages.schema import Instruction
+import re
+from lionagi.libs import nested, func_call, convert, StringMatch, ParseUtil
 from lionagi.core.tool.tool import TOOL_TYPE
+from lionagi.core.messages.schema import Instruction
 
 
 class MonoChatConfigMixin(ABC):
@@ -82,7 +81,7 @@ class MonoChatInvokeMixin(ABC):
     Mixin class for invoking chatbots.
 
     Methods:
-        async _output(self, invoke, out, output_fields, func_calls_=None, prompt_template=None，
+        async _output(self, invoke, out, output_fields, func_calls_=None, prompt_template=None,
                     return_template=True):
             Processes the output of the chatbot.
 
@@ -129,6 +128,7 @@ class MonoChatInvokeMixin(ABC):
                 pass
 
         response_ = self._return_response(content_, output_fields)
+        
         if prompt_template:
             prompt_template._process_response(response_)
             return prompt_template if return_template else prompt_template.outputs
@@ -155,8 +155,18 @@ class MonoChatInvokeMixin(ABC):
             out_ = content_[key]
 
         if output_fields:
-            with contextlib.suppress(Exception):
-                return StringMatch.force_validate_dict(out_, keys=output_fields)
+            try:
+                return StringMatch.force_validate_dict(out_, keys=list(output_fields.keys()))
+            except Exception:
+                pass
+
+        if isinstance(out_, str):
+            try:
+                match = re.search(r'```json\n({.*?})\n```', out_, re.DOTALL)
+                if match:
+                    out_ = ParseUtil.fuzzy_parse_json(match.group(1))
+            except Exception:
+                pass
 
         return out_
 

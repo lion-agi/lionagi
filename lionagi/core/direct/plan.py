@@ -2,8 +2,8 @@
 
 from lionagi.libs import func_call, ParseUtil
 from lionagi.integrations.bridge.pydantic_.pydantic_bridge import Field
-from ..prompt.scored_template import ScoredTemplate
-from ..branch import Branch
+from lionagi.core.prompt.scored_template import ScoredTemplate
+from lionagi.core.branch import Branch
 
 
 class PlanTemplate(ScoredTemplate):

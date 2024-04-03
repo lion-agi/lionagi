@@ -1,6 +1,7 @@
 from collections import deque
 from lionagi.libs import AsyncUtil
-from .schema import BaseMail
+from lionagi.core.schema.base_node import BaseNode
+from lionagi.core.mail.schema import BaseMail, MailCategory
 
 
 class MailManager:
@@ -96,3 +97,6 @@ class MailManager:
             self.collect_all()
             self.send_all()
             await AsyncUtil.sleep(refresh_time)
+            
+            
+

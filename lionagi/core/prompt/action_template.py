@@ -1,7 +1,7 @@
 from typing import Any
 from lionagi.integrations.bridge.pydantic_.pydantic_bridge import Field
 
-from .scored_template import ScoredTemplate
+from lionagi.core.prompt.scored_template import ScoredTemplate
 
 
 class ActionRequest: ...

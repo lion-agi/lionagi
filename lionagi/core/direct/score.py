@@ -12,8 +12,8 @@ ScoreTemplate class and a language model.
 from pydantic import Field
 import numpy as np
 from lionagi.libs import func_call, convert
-from ..prompt.scored_template import ScoredTemplate
-from ..branch import Branch
+from lionagi.core.prompt.scored_template import ScoredTemplate
+from lionagi.core.branch import Branch
 
 
 class ScoreTemplate(ScoredTemplate):

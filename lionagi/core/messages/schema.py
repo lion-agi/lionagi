@@ -1,8 +1,8 @@
 from enum import Enum
 
 from lionagi.libs import nested, convert
-from ..schema import DataNode
-from ..prompt.prompt_template import PromptTemplate
+from lionagi.core.schema.data_node import DataNode
+from lionagi.core.prompt.prompt_template import PromptTemplate
 
 _message_fields = ["node_id", "timestamp", "role", "sender", "recipient", "content"]
 

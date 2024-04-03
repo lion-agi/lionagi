@@ -54,3 +54,12 @@ class StartMail(BaseNode):
             package=start_mail_content,
         )
         self.pending_outs.append(start_mail)
+
+
+class MailTransfer(BaseNode):
+    def __init__(self):
+        super().__init__()
+        self.pending_ins = {}
+        self.pending_outs = deque()
+        
+        

@@ -1,6 +1,6 @@
 from lionagi.integrations.bridge.pydantic_.pydantic_bridge import Field
 
-from .prompt_template import PromptTemplate
+from lionagi.core.prompt.prompt_template import PromptTemplate
 
 
 class ScoredTemplate(PromptTemplate):

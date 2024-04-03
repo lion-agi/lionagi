@@ -1,6 +1,6 @@
 from abc import ABC
 from typing import Any
-from .field_validator import validation_funcs
+from lionagi.core.prompt.field_validator import validation_funcs
 
 
 from lionagi.libs import convert, func_call
