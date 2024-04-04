@@ -12,12 +12,12 @@ from lionagi.core.execute.base_executor import BaseExecutor
 class MailExecutor(BaseExecutor, ABC):
     condition_check_result: bool | None = None
 
-    async def check_edge_condition(self, edge: Edge, executable_id):
+    async def check_edge_condition(self, edge: Edge, executable_id, request_source):
         if edge.condition.source_type == "structure":
             return edge.condition(self)
 
         elif edge.condition.source_type == "executable":
-            return await self._check_executable_condition(edge, executable_id)
+            return await self._check_executable_condition(edge, executable_id, request_source)
 
         else:
             raise ValueError("Invalid source_type.")
@@ -95,7 +95,7 @@ class MailExecutor(BaseExecutor, ABC):
         else:
             raise ValueError(f"Invalid mail type for structure")
 
-    async def _next_node(self, current_node: BaseNode, executable_id):
+    async def _next_node(self, current_node: BaseNode, executable_id, request_source):
         """
         Get the next step nodes based on the current node.
 
@@ -112,7 +112,7 @@ class MailExecutor(BaseExecutor, ABC):
             if edge.bundle:
                 continue
             if edge.condition:
-                check = await self.check_edge_condition(edge, executable_id)
+                check = await self.check_edge_condition(edge, executable_id, request_source)
                 if not check:
                     continue
             node = self.structure_nodes[edge.target_node_id]
