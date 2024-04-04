@@ -107,7 +107,7 @@ class BranchExecutor(Branch, BaseExecutor):
             )
             print("-----------------------------------------------------")
 
-        self.responses.append(result)
+        self.execution_responses.append(result)
 
     async def _action_process(self, action: ActionNode, verbose=True):
         from lionagi.libs import SysUtil
@@ -150,7 +150,7 @@ class BranchExecutor(Branch, BaseExecutor):
             )
             print("-----------------------------------------------------")
 
-        self.responses.append(result)
+        self.execution_responses.append(result)
 
     async def _agent_process(self, agent, verbose=True):
         """
