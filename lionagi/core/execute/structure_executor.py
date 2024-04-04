@@ -57,10 +57,7 @@ class StructureExecutor(Graph, MailExecutor):
                     next_nodes = await self._handle_mail(mail)
                 except Exception as e:
                     raise ValueError(f"Error handling mail: {e}") from e
-                if next_nodes:
-                    self._send_mail(next_nodes, mail)
-                else:
-                    return
+                self._send_mail(next_nodes, mail)
 
     async def execute(self, refresh_time=1):
         if not self.acyclic():
