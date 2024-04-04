@@ -53,7 +53,7 @@ class InstructionMapExecutor(BaseExecutor):
                     self.pending_outs.append(mail)
 
     def _process_start(self, start_mail: BaseMail):
-        branch = BranchExecutor(verbose=self.verbose, **self.kwargs)
+        branch = BranchExecutor(verbose=self.verbose, **self.branch_kwargs)
         branch.context = start_mail.package["context"]
         self.branches[branch.id_] = branch
         self.mail_manager.add_sources([branch])
@@ -69,7 +69,7 @@ class InstructionMapExecutor(BaseExecutor):
         node_list = nl_mail.package["package"]
         shared_context = self.branches[source_branch_id].context
         shared_context_log = self.branches[source_branch_id].context_log
-        base_branch = self.branches[source_branch_id].branch
+        base_branch = self.branches[source_branch_id]
 
         first_node_mail = BaseMail(sender_id=self.mail_transfer.id_,
                                    recipient_id=source_branch_id,
@@ -99,7 +99,7 @@ class InstructionMapExecutor(BaseExecutor):
         self.mail_manager.collect_all()
         self.mail_manager.send_all()
         tasks = [branch.forward() for branch in self.branches.values() if branch.pending_ins]
-        await AsyncUtil.execute_tasks(*tasks)
+        await asyncio.gather(*tasks)
         return
 
     async def execute(self, refresh_time=1):
