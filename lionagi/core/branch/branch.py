@@ -347,7 +347,7 @@ class Branch(BaseBranch, BranchFlowMixin):
             print("tools deletion failed")
         return False
 
-    def send(self, recipient: str, category: str, package: Any) -> None:
+    def send(self, recipient_id: str, category: str, package: Any) -> None:
         """
         Sends a mail to a recipient.
 
