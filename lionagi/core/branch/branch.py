@@ -356,10 +356,13 @@ class Branch(BaseBranch, BranchFlowMixin):
             category (str): The category of the mail.
             package (Any): The package to send in the mail.
         """
-        mail_ = BaseMail(
-            sender_id=self.sender, recipient_id=recipient, category=category, package=package
+        mail = BaseMail(
+            sender_id=self.id_,
+            recipient_id=recipient_id,
+            category=category,
+            package=package,
         )
-        self.pending_outs.append(mail_)
+        self.pending_outs.append(mail)
 
     def receive(
         self,
