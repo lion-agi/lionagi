@@ -56,7 +56,7 @@ class BranchExecutor(Branch, BaseExecutor):
     def _process_condition(self, mail: BaseMail):
         relationship = mail.package["package"]
         check_result = relationship.condition(self)
-        back_mail = {"from": self.id_, "relationship_id": mail.package["package"].id_, "check_result": check_result}
+        back_mail = {"from": self.id_, "edge_id": mail.package["package"].id_, "check_result": check_result}
         self.send(mail.sender_id, "condition", {"request_source": self.id_, "package": back_mail})
 
     def _system_process(self, system: System, verbose=True, context_verbose=False):
