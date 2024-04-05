@@ -54,6 +54,9 @@ class StructureExecutor(Graph, MailExecutor):
             while self.pending_ins[key]:
                 mail = self.pending_ins[key].popleft()
                 try:
+                    if mail.category == "end":
+                        self.execute_stop = True
+                        return
                     next_nodes = await self._handle_mail(mail)
                 except Exception as e:
                     raise ValueError(f"Error handling mail: {e}") from e
