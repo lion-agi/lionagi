@@ -1,8 +1,8 @@
 from enum import Enum
 
 from lionagi.libs import nested, convert
-from lionagi.core.schema.data_node import DataNode
-from lionagi.core.prompt.prompt_template import PromptTemplate
+from lionagi.core.generic import Node
+from lionagi.core.form.form import Form
 
 _message_fields = ["node_id", "timestamp", "role", "sender", "recipient", "content"]
 
@@ -91,7 +91,7 @@ class MessageType(dict, Enum):
     }
 
 
-class BaseMessage(DataNode):
+class BaseMessage(Node):
     """
     Represents a message in a chatbot-like system, inheriting from BaseNode.
 
@@ -184,16 +184,16 @@ class Instruction(BaseMessage):
         return self.content["instruction"]
 
     @classmethod
-    def from_prompt_template(
+    def from_form(
         cls,
-        prompt_template: PromptTemplate,
+        form: Form,
         sender: str | None = None,
         recipient=None,
     ):
         return cls(
-            instruction=prompt_template.instruction,
-            context=prompt_template.instruction_context,
-            output_fields=prompt_template.instruction_output_fields,
+            instruction=form.instruction,
+            context=form.instruction_context,
+            output_fields=form.instruction_output_fields,
             sender=sender,
             recipient=recipient,
         )

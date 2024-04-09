@@ -1,14 +1,14 @@
 from collections import deque
 from typing import Tuple
 
-from lionagi.libs.sys_util import PATH_TYPE
+from pathlib import Path
 from lionagi.libs import BaseService, convert, dataframe
 
-from lionagi.core.schema import DataLogger
+from lionagi.core.generic import DataLogger
 from lionagi.core.tool import ToolManager, Tool, TOOL_TYPE
-from lionagi.core.mail import MailManager
-from lionagi.core.messages import System, Instruction
-from lionagi.core.branch import Branch
+from lionagi.core.mail.mail_manager import MailManager
+from lionagi.core.messages.schema import System, Instruction
+from lionagi.core.branch.branch import Branch
 from lionagi.core.flow.polyflow import PolyChat
 
 
@@ -41,7 +41,7 @@ class Session:
         tool_manager: ToolManager | None = None,
         messages: dataframe.ln_DataFrame | None = None,
         datalogger: None | DataLogger = None,
-        persist_path: PATH_TYPE | None = None,
+        persist_path: Path | str | None = None,
     ):
         """Initialize a new session with optional configuration for managing conversations.
 
@@ -226,7 +226,7 @@ class Session:
     @classmethod
     def from_csv(
         cls,
-        filepath: PATH_TYPE,
+        filepath: Path | str,
         system: dict | list | System | None = None,
         sender: str | None = None,
         llmconfig: dict[str, str | int | dict] | None = None,
@@ -272,7 +272,7 @@ class Session:
     @classmethod
     def from_json(
         cls,
-        filepath: PATH_TYPE,
+        filepath: Path | str,
         system: dict | list | System | None = None,
         sender: str | None = None,
         llmconfig: dict[str, str | int | dict] | None = None,

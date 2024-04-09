@@ -12,11 +12,11 @@ ScoreTemplate class and a language model.
 from pydantic import Field
 import numpy as np
 from lionagi.libs import func_call, convert
-from lionagi.core.prompt.scored_template import ScoredTemplate
-from lionagi.core.branch import Branch
+from lionagi.core.form.scored_form import ScoredForm
+from lionagi.core.branch.branch import Branch
 
 
-class ScoreTemplate(ScoredTemplate):
+class ScoreTemplate(ScoredForm):
     """
     A class for scoring a given context using a language model.
 
@@ -169,7 +169,7 @@ async def _score(
 
     await func_call.rcall(
         branch.chat,
-        prompt_template=_template,
+        form=_template,
         retries=retries,
         delay=delay,
         backoff_factor=backoff_factor,

@@ -8,7 +8,7 @@ process instructions, system messages, and invoke tools during the conversation.
 from typing import Callable
 from lionagi.core.flow.monoflow.chat import MonoChat
 from lionagi.core.tool import Tool
-from lionagi.core.messages import Instruction
+from lionagi.core.messages.schema import Instruction
 
 
 class MonoReAct(MonoChat):

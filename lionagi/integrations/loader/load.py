@@ -1,6 +1,6 @@
 from typing import Callable
 
-from lionagi.core.schema import DataNode
+from lionagi.core.generic import Node
 from ..bridge.langchain_.langchain_bridge import LangchainBridge
 from ..bridge.llamaindex_.llama_index_bridge import LlamaIndexBridge
 
@@ -9,14 +9,14 @@ from .load_util import dir_to_nodes, ReaderType, _datanode_parser
 
 def text_reader(args, kwargs):
     """
-    Reads text files from a directory and converts them to DataNode instances.
+    Reads text files from a directory and converts them to Node instances.
 
     Args:
         args: Positional arguments for the dir_to_nodes function.
         kwargs: Keyword arguments for the dir_to_nodes function.
 
     Returns:
-        A list of DataNode instances.
+        A list of Node instances.
 
     Example usage:
         >>> args = ['path/to/text/files']
@@ -96,7 +96,7 @@ def _plain_reader(reader, reader_args, reader_kwargs):
 def _langchain_reader(reader, reader_args, reader_kwargs, to_datanode: bool | Callable):
     nodes = LangchainBridge.langchain_loader(reader, reader_args, reader_kwargs)
     if isinstance(to_datanode, bool) and to_datanode is True:
-        nodes = [DataNode.from_langchain(i) for i in nodes]
+        nodes = [Node.from_langchain(i) for i in nodes]
 
     elif isinstance(to_datanode, Callable):
         nodes = _datanode_parser(nodes, to_datanode)
@@ -115,7 +115,7 @@ def _llama_index_reader(
         reader, reader_args, reader_kwargs, load_args, load_kwargs
     )
     if isinstance(to_datanode, bool) and to_datanode is True:
-        nodes = [DataNode.from_llama_index(i) for i in nodes]
+        nodes = [Node.from_llama_index(i) for i in nodes]
     elif isinstance(to_datanode, Callable):
         nodes = _datanode_parser(nodes, to_datanode)
     return nodes
@@ -138,7 +138,7 @@ def _self_defined_reader(
         ) from e
 
     if isinstance(to_datanode, bool) and to_datanode is True:
-        raise ValueError("Please define a valid parser to DataNode.")
+        raise ValueError("Please define a valid parser to Node.")
     elif isinstance(to_datanode, Callable):
         nodes = _datanode_parser(nodes, to_datanode)
     return nodes

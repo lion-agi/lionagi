@@ -99,7 +99,10 @@ def _process_tools(tool_obj, branch):
 
 
 def _process_tool(tool_obj, branch):
-    if isinstance(tool_obj, Tool) and tool_obj.schema_["function"]["name"] not in branch.tool_manager.registry:
+    if (
+        isinstance(tool_obj, Tool)
+        and tool_obj.schema_["function"]["name"] not in branch.tool_manager.registry
+    ):
         branch.register_tools(tool_obj)
     if isinstance(tool_obj, Callable):
         tool = func_to_tool(tool_obj)[0]

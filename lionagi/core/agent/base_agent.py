@@ -6,16 +6,17 @@ from typing import Any, Callable
 
 from lionagi.libs import func_call, AsyncUtil
 
+
 from lionagi.core.mail.schema import StartMail
-from lionagi.core.schema.base_node import BaseNode
+from lionagi.core.generic import Node
 from lionagi.core.mail.mail_manager import MailManager
 from lionagi.core.execute.base_executor import BaseExecutor
 from lionagi.core.execute.structure_executor import StructureExecutor
 
 
-class BaseAgent(BaseNode):
+class BaseAgent(Node):
 
-    def __init__(self, structure: StructureExecutor, executable: BaseExecutor, output_parser=None) -> None:
+    def __init__(self, structure: StructureExecutor, executable: BaseExecutor, output_parser=None, **kwargs) -> None:
         """
         Initializes the BaseAgent instance.
 
@@ -27,6 +28,8 @@ class BaseAgent(BaseNode):
         super().__init__()
         self.structure: StructureExecutor = structure
         self.executable: BaseExecutor = executable
+        for v, k in kwargs.items():
+            executable.__setattr__(v, k)
         self.start: StartMail = StartMail()
         self.mailManager: MailManager = MailManager([self.structure, self.executable, self.start])
         self.output_parser: Callable | None = output_parser

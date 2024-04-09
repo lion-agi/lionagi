@@ -5,7 +5,7 @@ from pathlib import Path
 from typing import List, Union, Dict, Any, Tuple
 
 from lionagi.libs import convert, func_call
-from lionagi.core.schema import DataNode
+from lionagi.core.generic import Node
 
 
 class ReaderType(str, Enum):
@@ -62,11 +62,11 @@ def dir_to_nodes(
     recursive: bool = False,
     flatten: bool = True,
     clean_text: bool = True,
-) -> List[DataNode]:
+) -> List[Node]:
     """
-    Converts directory contents into DataNode objects based on specified file extensions.
+    Converts directory contents into Node objects based on specified file extensions.
 
-    This function first retrieves a list of file paths from the specified directory, matching the given file extension. It then reads the content of these files, optionally cleaning the text, and converts each file's content into a DataNode object.
+    This function first retrieves a list of file paths from the specified directory, matching the given file extension. It then reads the content of these files, optionally cleaning the text, and converts each file's content into a Node object.
 
     Parameters:
         dir (str): The directory path from which to read files.
@@ -76,17 +76,17 @@ def dir_to_nodes(
         clean_text (bool, optional): If True, cleans the text read from files. Defaults to True.
 
     Returns:
-        list: A list of DataNode objects created from the files in the specified directory.
+        list: A list of Node objects created from the files in the specified directory.
 
     Example:
         nodes = dir_to_nodes("/path/to/dir", ".txt", recursive=True)
         # This would read all .txt files in /path/to/dir and its subdirectories,
-        # converting them into DataNode objects.
+        # converting them into Node objects.
     """
 
     path_list = dir_to_path(dir, ext, recursive, flatten)
     files_info = func_call.lcall(path_list, read_text, clean=clean_text)
-    return func_call.lcall(files_info, lambda x: DataNode(content=x[0], metadata=x[1]))
+    return func_call.lcall(files_info, lambda x: Node(content=x[0], metadata=x[1]))
 
 
 def chunk_text(
@@ -263,4 +263,4 @@ def _datanode_parser(nodes, parser):
     try:
         return parser(nodes)
     except Exception as e:
-        raise ValueError(f"DataNode parser {parser} failed. Error:{e}") from e
+        raise ValueError(f"Node parser {parser} failed. Error:{e}") from e

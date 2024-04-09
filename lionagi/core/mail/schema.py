@@ -1,7 +1,7 @@
 from collections import deque
 from enum import Enum
 
-from lionagi.core.schema.base_node import BaseNode
+from lionagi.core.generic import Node
 
 
 class MailCategory(str, Enum):
@@ -39,7 +39,7 @@ class BaseMail:
         self.package = package
 
 
-class StartMail(BaseNode):
+class StartMail(Node):
 
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
@@ -56,7 +56,7 @@ class StartMail(BaseNode):
         self.pending_outs.append(start_mail)
 
 
-class MailTransfer(BaseNode):
+class MailTransfer(Node):
     def __init__(self):
         super().__init__()
         self.pending_ins = {}

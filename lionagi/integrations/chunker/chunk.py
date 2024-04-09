@@ -1,7 +1,7 @@
 from typing import Union, Callable
 
 from lionagi.libs import func_call
-from lionagi.core.schema import DataNode
+from lionagi.core.generic import Node
 from ..bridge.langchain_.langchain_bridge import LangchainBridge
 from ..bridge.llamaindex_.llama_index_bridge import LlamaIndexBridge
 
@@ -12,7 +12,7 @@ from ..loader.load_util import ChunkerType, file_to_chunks, _datanode_parser
 def datanodes_convert(documents, chunker_type):
 
     for i in range(len(documents)):
-        if type(documents[i]) == DataNode:
+        if type(documents[i]) == Node:
             if chunker_type == ChunkerType.LLAMAINDEX:
                 documents[i] = documents[i].to_llama_index()
             elif chunker_type == ChunkerType.LANGCHAIN:
@@ -25,7 +25,7 @@ def text_chunker(documents, args, kwargs):
     def chunk_node(node):
         chunks = file_to_chunks(node.to_dict(), *args, **kwargs)
         func_call.lcall(chunks, lambda chunk: chunk.pop("node_id"))
-        return [DataNode.from_obj({**chunk}) for chunk in chunks]
+        return [Node.from_obj({**chunk}) for chunk in chunks]
 
     return [chunk_node(doc) for doc in documents]
 
@@ -106,7 +106,7 @@ def _self_defined_chunker(
         ) from e
 
     if isinstance(to_datanode, bool) and to_datanode is True:
-        raise ValueError("Please define a valid parser to DataNode.")
+        raise ValueError("Please define a valid parser to Node.")
     elif isinstance(to_datanode, Callable):
         nodes = _datanode_parser(nodes, to_datanode)
     return nodes
@@ -127,7 +127,7 @@ def _llama_index_chunker(
     )
 
     if isinstance(to_datanode, bool) and to_datanode is True:
-        nodes = [DataNode.from_llama_index(i) for i in nodes]
+        nodes = [Node.from_llama_index(i) for i in nodes]
     elif isinstance(to_datanode, Callable):
         nodes = _datanode_parser(nodes, to_datanode)
     return nodes
@@ -148,9 +148,9 @@ def _langchain_chunker(
     )
     if isinstance(to_datanode, bool) and to_datanode is True:
         if isinstance(documents, str):
-            nodes = [DataNode(content=i) for i in nodes]
+            nodes = [Node(content=i) for i in nodes]
         else:
-            nodes = [DataNode.from_langchain(i) for i in nodes]
+            nodes = [Node.from_langchain(i) for i in nodes]
     elif isinstance(to_datanode, Callable):
         nodes = _datanode_parser(nodes, to_datanode)
     return nodes

@@ -1,10 +1,10 @@
 from abc import ABC
 from typing import Any
 
-from lionagi.libs.sys_util import PATH_TYPE
+from pathlib import Path
 from lionagi.libs import convert, dataframe, SysUtil
 
-from lionagi.core.schema import BaseNode, DataLogger, DLog
+from lionagi.core.generic import BaseNode, DataLogger, DLog
 from lionagi.core.messages.schema import (
     BranchColumns,
     System,
@@ -23,7 +23,7 @@ class BaseBranch(BaseNode, ABC):
     Attributes:
             messages (dataframe.ln_DataFrame): Holds the messages in the branch.
             datalogger (DataLogger): Logs data related to the branch's operation.
-            persist_path (PATH_TYPE): Filesystem path for data persistence.
+            persist_path (str | Path): Filesystem path for data persistence.
     """
 
     _columns: list[str] = BranchColumns.COLUMNS.value
@@ -32,7 +32,7 @@ class BaseBranch(BaseNode, ABC):
         self,
         messages: dataframe.ln_DataFrame | None = None,
         datalogger: DataLogger | None = None,
-        persist_path: PATH_TYPE | None = None,
+        persist_path: str | Path | None = None,
         name=None,
         **kwargs,
     ) -> None:
@@ -331,7 +331,7 @@ class BaseBranch(BaseNode, ABC):
 
     def to_csv_file(
         self,
-        filename: PATH_TYPE = "messages.csv",
+        filename: str | Path = "messages.csv",
         dir_exist_ok: bool = True,
         timestamp: bool = True,
         time_prefix: bool = False,
@@ -374,7 +374,7 @@ class BaseBranch(BaseNode, ABC):
 
     def to_json_file(
         self,
-        filename: PATH_TYPE = "messages.json",
+        filename: str | Path = "messages.json",
         dir_exist_ok: bool = True,
         timestamp: bool = True,
         time_prefix: bool = False,
@@ -419,7 +419,7 @@ class BaseBranch(BaseNode, ABC):
 
     def log_to_csv(
         self,
-        filename: PATH_TYPE = "log.csv",
+        filename: str | Path = "log.csv",
         dir_exist_ok: bool = True,
         timestamp: bool = True,
         time_prefix: bool = False,
@@ -455,7 +455,7 @@ class BaseBranch(BaseNode, ABC):
 
     def log_to_json(
         self,
-        filename: PATH_TYPE = "log.json",
+        filename: str | Path = "log.json",
         dir_exist_ok: bool = True,
         timestamp: bool = True,
         time_prefix: bool = False,

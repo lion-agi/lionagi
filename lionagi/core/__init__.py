@@ -1,11 +1,11 @@
 from . import *
 
-from .branch import Branch
-from .session import Session
-from .schema import (
+from .branch.branch import Branch
+from .session.session import Session
+from .generic import (
 	ActionNode, ActionSelection,
 	Condition,
 )
-from .agent import BaseAgent
-from .messages import Instruction, System, Response
+from .agent.base_agent import BaseAgent
+from .messages.schema import Instruction, System, Response
 from .tool import func_to_tool

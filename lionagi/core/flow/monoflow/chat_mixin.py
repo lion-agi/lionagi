@@ -17,7 +17,7 @@ class MonoChatConfigMixin(ABC):
 
     Methods:
         _create_chat_config(self, instruction=None, context=None, sender=None, system=None,
-        output_fields=None, prompt_template=None, tools=False, **kwargs) -> Any:
+        output_fields=None, form=None, tools=False, **kwargs) -> Any:
         Creates a chat configuration based on the provided parameters.
     """
 
@@ -28,7 +28,7 @@ class MonoChatConfigMixin(ABC):
         sender: str | None = None,
         system: str | dict[str, Any] | None = None,
         output_fields=None,
-        prompt_template=None,
+        form=None,
         tools: TOOL_TYPE = False,
         **kwargs,
     ) -> Any:
@@ -41,7 +41,7 @@ class MonoChatConfigMixin(ABC):
             sender (str): The sender of the message (optional).
             system (str | dict[str, Any]): The system message for the chatbot (optional).
             output_fields: The output fields for the chatbot (optional).
-            prompt_template: The prompt template for the chatbot (optional).
+            form: The prompt template for the chatbot (optional).
             tools (TOOL_TYPE): The tools for the chatbot (default: False).
             **kwargs: Additional keyword arguments for the chat configuration.
 
@@ -51,7 +51,7 @@ class MonoChatConfigMixin(ABC):
         if system:
             self.branch.change_first_system_message(system)
 
-        if not prompt_template:
+        if not form:
             self.branch.add_message(
                 instruction=instruction,
                 context=context,
@@ -59,7 +59,7 @@ class MonoChatConfigMixin(ABC):
                 output_fields=output_fields,
             )
         else:
-            instruct_ = Instruction.from_prompt_template(prompt_template)
+            instruct_ = Instruction.from_form(form)
             self.branch.add_message(instruction=instruct_)
 
         if "tool_parsed" in kwargs:
@@ -81,7 +81,7 @@ class MonoChatInvokeMixin(ABC):
     Mixin class for invoking chatbots.
 
     Methods:
-        async _output(self, invoke, out, output_fields, func_calls_=None, prompt_template=None,
+        async _output(self, invoke, out, output_fields, func_calls_=None, form=None,
                     return_template=True):
             Processes the output of the chatbot.
 
@@ -104,7 +104,7 @@ class MonoChatInvokeMixin(ABC):
         out,
         output_fields,
         func_calls_=None,
-        prompt_template=None,
+        form=None,
         return_template=True,
     ):
         """
@@ -115,7 +115,7 @@ class MonoChatInvokeMixin(ABC):
             out: Flag indicating whether to return the output.
             output_fields: The output fields for the chatbot.
             func_calls_: The function calls for invoking the tools (optional).
-            prompt_template: The prompt template for the chatbot (optional).
+            form: The prompt template for the chatbot (optional).
             return_template (bool): Flag indicating whether to return the prompt template (default: True).
         """
 
@@ -128,10 +128,10 @@ class MonoChatInvokeMixin(ABC):
                 pass
 
         response_ = self._return_response(content_, output_fields)
-        
-        if prompt_template:
-            prompt_template._process_response(response_)
-            return prompt_template if return_template else prompt_template.outputs
+
+        if form:
+            form._process_response(response_)
+            return form if return_template else form.outputs
 
         if out:
             return response_

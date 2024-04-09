@@ -4,14 +4,14 @@ This module contains the Branch class, which represents a branch in a conversati
 
 from collections import deque
 from typing import Any, Union, TypeVar, Callable
+from pathlib import Path
 
-from lionagi.libs.sys_util import PATH_TYPE
 from lionagi.libs import StatusTracker, BaseService, convert, dataframe
 
-from lionagi.core.schema import DataLogger
+from lionagi.core.generic import DataLogger
 from lionagi.core.tool import ToolManager, func_to_tool, Tool, TOOL_TYPE
-from lionagi.core.messages import System
-from lionagi.core.mail import BaseMail
+from lionagi.core.messages.schema import System
+from lionagi.core.mail.schema import BaseMail
 
 from lionagi.core.branch.util import MessageUtil
 from lionagi.core.branch.base import BaseBranch
@@ -94,7 +94,7 @@ class Branch(BaseBranch, BranchFlowMixin):
         llmconfig: dict[str, str | int | dict] | None = None,
         tools: list[Callable | Tool] | None = None,
         datalogger: None | DataLogger = None,
-        persist_path: PATH_TYPE | None = None,  # instruction_sets=None,
+        persist_path: str | Path | None = None,  # instruction_sets=None,
         tool_manager: ToolManager | None = None,
         **kwargs,
     ):
@@ -110,7 +110,7 @@ class Branch(BaseBranch, BranchFlowMixin):
             llmconfig (dict[str, str | int | dict]): The configuration for the language model (optional).
             tools (list[Callable | Tool]): The tools to register in the branch (optional).
             datalogger (DataLogger): The data logger for the branch (optional).
-            persist_path (PATH_TYPE): The path to persist the branch data (optional).
+            persist_path (str | Path): The path to persist the branch data (optional).
             tool_manager (ToolManager): The tool manager for the branch (optional).
             **kwargs: Additional keyword arguments.
 
@@ -164,7 +164,7 @@ class Branch(BaseBranch, BranchFlowMixin):
         llmconfig: dict[str, str | int | dict] | None = None,
         tools: TOOL_TYPE | None = None,
         datalogger: None | DataLogger = None,
-        persist_path: PATH_TYPE | None = None,  # instruction_sets=None,
+        persist_path: str | Path | None = None,  # instruction_sets=None,
         tool_manager: ToolManager | None = None,
         read_kwargs=None,
         **kwargs,
@@ -179,7 +179,7 @@ class Branch(BaseBranch, BranchFlowMixin):
             llmconfig (dict[str, str | int | dict]): The configuration for the language model (optional).
             tools (TOOL_TYPE): The tools to register in the branch (optional).
             datalogger (DataLogger): The data logger for the branch (optional).
-            persist_path (PATH_TYPE): The path to persist the branch data (optional).
+            persist_path (str | Path): The path to persist the branch data (optional).
             tool_manager (ToolManager): The tool manager for the branch (optional).
             read_kwargs: Additional keyword arguments for reading the CSV file (optional).
             **kwargs: Additional keyword arguments.
@@ -210,7 +210,7 @@ class Branch(BaseBranch, BranchFlowMixin):
         llmconfig: dict[str, str | int | dict] | None = None,
         tools: TOOL_TYPE | None = None,
         datalogger: None | DataLogger = None,
-        persist_path: PATH_TYPE | None = None,  # instruction_sets=None,
+        persist_path: str | Path | None = None,  # instruction_sets=None,
         tool_manager: ToolManager | None = None,
         read_kwargs=None,
         **kwargs,
@@ -225,7 +225,7 @@ class Branch(BaseBranch, BranchFlowMixin):
             llmconfig (dict[str, str | int | dict]): The configuration for the language model (optional).
             tools (TOOL_TYPE): The tools to register in the branch (optional).
             datalogger (DataLogger): The data logger for the branch (optional).
-            persist_path (PATH_TYPE): The path to persist the branch data (optional).
+            persist_path (str | Path): The path to persist the branch data (optional).
             tool_manager (ToolManager): The tool manager for the branch (optional).
             read_kwargs: Additional keyword arguments for reading the JSON string file (optional).
             **kwargs: Additional keyword arguments.

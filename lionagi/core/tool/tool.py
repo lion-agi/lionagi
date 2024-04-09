@@ -1,10 +1,10 @@
 from typing import Any
 
 from pydantic import field_serializer
-from lionagi.core.schema import BaseNode
+from lionagi.core.generic import Node
 
 
-class Tool(BaseNode):
+class Tool(Node):
     """
     Represents a tool, extending BaseNode with specific functionalities and configurations.
 

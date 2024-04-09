@@ -1,14 +1,14 @@
 from lionagi.libs import func_call, AsyncUtil
 
 from lionagi.integrations.bridge.pydantic_.pydantic_bridge import Field
-from lionagi.core.prompt.action_template import ActionTemplate
-from lionagi.core.branch import Branch
+from lionagi.core.form.action_form import ActionForm
+from lionagi.core.branch.branch import Branch
 from lionagi.core.direct.utils import _process_tools
 
 
-class ReactTemplate(ActionTemplate):
+class ReactTemplate(ActionForm):
     template_name: str = "default_react"
-    sentence: str | list | dict | None= Field(
+    sentence: str | list | dict | None = Field(
         default_factory=str,
         description="the given sentence(s) to reason and take actions on",
     )
@@ -61,7 +61,7 @@ async def _react(
 
     if branch and tools:
         _process_tools(tools, branch)
-        
+
     branch = branch or Branch(
         name=branch_name,
         system=system,
@@ -83,7 +83,7 @@ async def _react(
 
     await func_call.rcall(
         branch.chat,
-        prompt_template=_template,
+        form=_template,
         retries=retries,
         delay=delay,
         backoff_factor=backoff_factor,

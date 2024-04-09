@@ -1,10 +1,10 @@
 import contextlib
 from lionagi.libs import convert, AsyncUtil, ParseUtil
-from lionagi.core.schema import ActionNode
-from lionagi.core.mail import BaseMail
-from lionagi.core.messages import System, Instruction
+from lionagi.core.generic import ActionNode, Edge
+from lionagi.core.mail.schema import BaseMail
+from lionagi.core.messages.schema import System, Instruction
 
-from lionagi.core.branch import Branch
+from lionagi.core.branch.branch import Branch
 from lionagi.core.execute.base_executor import BaseExecutor
 
 class BranchExecutor(Branch, BaseExecutor):
@@ -54,7 +54,7 @@ class BranchExecutor(Branch, BaseExecutor):
         raise ValueError("Multiple path selection is currently not supported")
 
     def _process_condition(self, mail: BaseMail):
-        relationship = mail.package["package"]
+        relationship: Edge = mail.package["package"]
         check_result = relationship.condition(self)
         back_mail = {"from": self.id_, "edge_id": mail.package["package"].id_, "check_result": check_result}
         self.send(mail.sender_id, "condition", {"request_source": self.id_, "package": back_mail})
@@ -182,7 +182,7 @@ class BranchExecutor(Branch, BaseExecutor):
         self.context = start_mail_content["context"]
         self.send(start_mail_content["structure_id"], "start", {"request_source": self.id_, "package": "start"})
 
-    def _process_end(self, mail):
+    def _process_end(self, mail: BaseMail):
         """
         Processes an end mail.
 

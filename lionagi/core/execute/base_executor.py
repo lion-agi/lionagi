@@ -4,17 +4,18 @@ from typing import Any
 
 from pydantic import Field
 
-from lionagi.core.schema import BaseNode
-from lionagi.core.mail import BaseMail
+from lionagi.core.generic import BaseComponent
+from lionagi.core.mail.schema import BaseMail
 
-class BaseExecutor(BaseNode, ABC):
+class BaseExecutor(BaseComponent, ABC):
     pending_ins: dict = Field(default_factory=dict, description="The pending incoming mails.")
     pending_outs: deque = Field(default_factory=deque, description="The pending outgoing mails.")
     execute_stop: bool = Field(False, description="A flag indicating whether to stop execution.")
-    context_buffer: dict | str | None = Field(None, description="The context buffer for the next instruction.")
+    context: dict | str | None = Field(None, description="The context buffer for the next instruction.")
     execution_responses: list = Field(default_factory=list, description="The list of responses.")
     context_log: list = Field(default_factory=list, description="The context log.")
     verbose: bool = Field(True, description="A flag indicating whether to provide verbose output.")
+    execute_stop: bool = Field(False, description="A flag indicating whether to stop execution.")
 
     def send(self, recipient_id: str, category: str, package: Any) -> None:
         """
@@ -32,12 +33,3 @@ class BaseExecutor(BaseNode, ABC):
             package=package,
         )
         self.pending_outs.append(mail)
-
-    @abstractmethod
-    async def execute(self, refresh_time=1) -> None:
-        ...
-
-    @abstractmethod
-    async def forward(self) -> None:
-        ...
-        

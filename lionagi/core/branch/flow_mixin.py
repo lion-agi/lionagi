@@ -2,7 +2,7 @@ from abc import ABC
 from typing import Any, Optional, Union, TypeVar
 
 from lionagi.core.tool import Tool, TOOL_TYPE
-from lionagi.core.messages import Instruction, System
+from lionagi.core.messages.schema import Instruction, System
 from lionagi.core.flow.monoflow import MonoChat, MonoFollowup, MonoReAct
 
 T = TypeVar("T", bound=Tool)
@@ -20,7 +20,7 @@ class BranchFlowMixin(ABC):
         out: bool = True,
         invoke: bool = True,
         output_fields=None,
-        prompt_template=None,
+        form=None,
         **kwargs,
     ) -> Any:
         flow = MonoChat(self)
@@ -33,7 +33,7 @@ class BranchFlowMixin(ABC):
             out=out,
             invoke=invoke,
             output_fields=output_fields,
-            prompt_template=prompt_template,
+            form=form,
             **kwargs,
         )
 
