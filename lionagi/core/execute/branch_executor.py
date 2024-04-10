@@ -92,6 +92,7 @@ class BranchExecutor(Branch, BaseExecutor):
 
         if self.context:
             instruction.content.update({"context": self.context})
+            self.context_log.append(self.context)
             self.context = None
 
         result = await self.chat(instruction, **kwargs)
