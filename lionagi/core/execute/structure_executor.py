@@ -117,7 +117,7 @@ class StructureExecutor(BaseExecutor, Graph):
             list[Node]: The next step nodes.
         """
         next_nodes = []
-        next_edges: dict[Edge] = self.get_node_edges(current_node)
+        next_edges: dict[Edge] = self.get_node_edges(current_node, node_as="out")
         for edge in convert.to_list(list(next_edges.values())):
             if edge.bundle:
                 continue
@@ -126,7 +126,7 @@ class StructureExecutor(BaseExecutor, Graph):
                 if not check:
                     continue
             node = self.internal_nodes[edge.tail]
-            further_edges: dict[Edge] = self.get_node_edges(node)
+            further_edges: dict[Edge] = self.get_node_edges(node, node_as="out")
             bundled_nodes = deque()
             for f_edge in convert.to_list(list(further_edges.values())):
                 if f_edge.bundle:
