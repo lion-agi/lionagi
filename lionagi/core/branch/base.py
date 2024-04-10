@@ -95,7 +95,8 @@ class BaseBranch(BaseNode, ABC):
             if "response" in _msg.content.keys():
                 if self.name is not None:
                     _msg.sender = self.name
-
+                    
+        setattr(_msg, "node_id", _msg.id_)
         _msg.content = _msg.msg_content
         self.messages.loc[len(self.messages)] = _msg.to_pd_series()
 

@@ -113,8 +113,8 @@ class TreeNode(Node):
             self.unrelate(self.parent)
         self.relate(
             parent,
-            node_as="head",
-            label=TreeLabel.CHILD,
+            node_as="tail",
+            label=TreeLabel.PARENT,
             condition=condition,
             bundle=bundle,
         )
