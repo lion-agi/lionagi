@@ -26,6 +26,10 @@ class Condition(BaseModel, ABC):
     """
     source_type: str = Field(..., description="The type of source for the condition.")
 
+    class Config:
+        """Model configuration settings."""
+        extra = "allow"
+
     @abstractmethod
     def __call__(self, *args, **kwargs) -> bool:
         """Evaluates the condition based on implemented logic.
