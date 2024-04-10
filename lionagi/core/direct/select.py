@@ -13,11 +13,11 @@ from enum import Enum
 from pydantic import Field
 
 from lionagi.libs import func_call, StringMatch
-from ..prompt.scored_template import ScoredTemplate
-from ..branch import Branch
+from lionagi.core.form.scored_form import ScoredForm
+from lionagi.core.branch.branch import Branch
 
 
-class SelectTemplate(ScoredTemplate):
+class SelectTemplate(ScoredForm):
     """
     A class for selecting an item from given choices based on a given context.
 
@@ -153,7 +153,7 @@ async def select(
 
     await func_call.rcall(
         branch.chat,
-        prompt_template=_template,
+        form=_template,
         retries=retries,
         delay=delay,
         backoff_factor=backoff_factor,

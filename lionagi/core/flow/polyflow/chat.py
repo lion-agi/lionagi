@@ -8,13 +8,10 @@ created branches within the session.
 
 from typing import Any
 
-from lionagi.libs import ln_convert as convert
-from lionagi.libs.ln_async import AsyncUtil
-
+from lionagi.libs import convert, AsyncUtil
 from lionagi.core.messages.schema import Instruction
 from lionagi.core.branch.branch import Branch
-
-from lionagi.core.flow.base.baseflow import BasePolyFlow
+from lionagi.core.flow.baseflow import BasePolyFlow
 
 
 class PolyChat(BasePolyFlow):
@@ -22,17 +19,23 @@ class PolyChat(BasePolyFlow):
     A class for performing parallel chat conversations with multiple branches.
 
     Methods:
-        __init__(self, session) -> None:
+        __init__(self, session: Any) -> None:
             Initializes the PolyChat instance.
 
-        async parallel_chat(self, instruction, num_instances=1, context=None, sender=None, branch_system=None,
-                             messages=None, tools=False, out=True, invoke=True, output_fields=None,
-                             persist_path=None, branch_config=None, explode=False, **kwargs) -> Any:
+        async parallel_chat(self, instruction: Union[Instruction, str], num_instances: int = 1,
+                             context: Optional[Any] = None, sender: Optional[str] = None,
+                             branch_system: Optional[Any] = None, messages: Optional[Any] = None,
+                             tools: bool = False, out: bool = True, invoke: bool = True,
+                             output_fields: Optional[Any] = None, persist_path: Optional[str] = None,
+                             branch_config: Optional[dict] = None, explode: bool = False, **kwargs) -> Any:
             Performs parallel chat conversations with multiple branches.
 
-        async _parallel_chat(self, instruction, num_instances=1, context=None, sender=None, messages=None,
-                              tools=False, out=True, invoke=True, output_fields=None, persist_path=None,
-                              branch_config={}, explode=False, include_mapping=True, default_key="response",
+        async _parallel_chat(self, instruction: Union[Instruction, str], num_instances: int = 1,
+                              context: Optional[Any] = None, sender: Optional[str] = None,
+                              messages: Optional[Any] = None, tools: bool = False, out: bool = True,
+                              invoke: bool = True, output_fields: Optional[Any] = None,
+                              persist_path: Optional[str] = None, branch_config: dict = {},
+                              explode: bool = False, include_mapping: bool = True, default_key: str = "response",
                               **kwargs) -> Any:
             Internal method for performing parallel chat conversations with multiple branches.
     """

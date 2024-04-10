@@ -1,15 +1,26 @@
 from . import *
 
-from .branch import Branch, ExecutableBranch
-from .session import Session
-from .schema import (
-    Tool,
-    Structure,
+from .branch.branch import Branch
+from .session.session import Session
+from .generic import (
     ActionNode,
-    Relationship,
     ActionSelection,
     Condition,
 )
-from .agent import BaseAgent
-from .messages import Instruction, System, Response
+from .agent.base_agent import BaseAgent
+from .messages.schema import Instruction, System, Response
 from .tool import func_to_tool
+
+
+__all__ = [
+    "ActionNode",
+    "ActionSelection",
+    "Branch",
+    "Condition",
+    "Session",
+    "System",
+    "Instruction",
+    "Response",
+    "BaseAgent",
+    "func_to_tool",
+]

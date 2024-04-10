@@ -9,11 +9,11 @@ confidence score, and reason for the prediction.
 from lionagi.libs import func_call
 from lionagi.integrations.bridge.pydantic_.pydantic_bridge import Field
 
-from ..prompt.scored_template import ScoredTemplate
-from ..branch import Branch
+from lionagi.core.form.scored_form import ScoredForm
+from lionagi.core.branch.branch import Branch
 
 
-class PredictTemplate(ScoredTemplate):
+class PredictTemplate(ScoredForm):
     """
     A class for predicting the next sentence(s) based on a given sentence.
 
@@ -68,7 +68,7 @@ class PredictTemplate(ScoredTemplate):
         """
         super().__init__(**kwargs)
 
-        self.sentence = sentence or ''
+        self.sentence = sentence or ""
         self.num_sentences = num_sentences
         self.task = f"follow instruction to predict the next {self.num_sentences} sentence(s). Instruction: {instruction}."
 
@@ -154,7 +154,7 @@ async def predict(
 
     await func_call.rcall(
         branch.chat,
-        prompt_template=predict_template,
+        form=predict_template,
         retries=retries,
         delay=delay,
         backoff_factor=backoff_factor,

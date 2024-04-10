@@ -2,18 +2,20 @@
 
 from lionagi.libs import func_call, ParseUtil
 from lionagi.integrations.bridge.pydantic_.pydantic_bridge import Field
-from ..prompt.scored_template import ScoredTemplate
-from ..branch import Branch
+from lionagi.core.form.scored_form import ScoredForm
+from lionagi.core.branch.branch import Branch
 
 
-class PlanTemplate(ScoredTemplate):
+class PlanTemplate(ScoredForm):
     template_name: str = "default_plan"
     sentence: str | list | dict = Field(
         default_factory=str,
         description="the given sentence(s) or context to generate a plan for",
     )
-    plan: dict | str= Field(
-        default_factory=dict, description="the generated step by step plan, return as a dictionary following {step_n: {plan: ..., reason: ...}} format")
+    plan: dict | str = Field(
+        default_factory=dict,
+        description="the generated step by step plan, return as a dictionary following {step_n: {plan: ..., reason: ...}} format",
+    )
     signature: str = "sentence -> plan"
 
     def __init__(
@@ -89,7 +91,7 @@ async def _plan(
 
     await func_call.rcall(
         branch.chat,
-        prompt_template=_template,
+        form=_template,
         retries=retries,
         delay=delay,
         backoff_factor=backoff_factor,
@@ -97,7 +99,7 @@ async def _plan(
         timeout=timeout,
         **kwargs,
     )
-    
+
     _template.plan = ParseUtil.fuzzy_parse_json(_template.plan)
 
     return (_template, branch) if return_branch else _template

@@ -7,7 +7,7 @@ during the chat conversation. It extends the BaseMonoFlow and MonoChatMixin clas
 
 from typing import Any
 
-from lionagi.core.flow.base.baseflow import BaseMonoFlow
+from lionagi.core.flow.baseflow import BaseMonoFlow
 from lionagi.core.flow.monoflow.chat_mixin import MonoChatMixin
 
 
@@ -24,7 +24,7 @@ class MonoChat(BaseMonoFlow, MonoChatMixin):
             Initializes the MonoChat instance.
 
         async chat(self, instruction=None, context=None, sender=None, system=None, tools=False,
-                   out=True, invoke=True, output_fields=None, prompt_template=None, **kwargs) -> Any:
+                   out=True, invoke=True, output_fields=None, form=None, **kwargs) -> Any:
             Performs a chat conversation with an LLM, processing instructions and system messages,
             and optionally invoking tools.
     """
@@ -48,7 +48,7 @@ class MonoChat(BaseMonoFlow, MonoChatMixin):
         out: bool = True,
         invoke: bool = True,
         output_fields=None,
-        prompt_template=None,
+        form=None,
         **kwargs,
     ) -> Any:
         """
@@ -64,7 +64,7 @@ class MonoChat(BaseMonoFlow, MonoChatMixin):
             out (bool): If True, outputs the chat response.
             invoke (bool): If True, invokes tools as part of the chat.
             output_fields (Optional[Any]): The output fields for the chat.
-            prompt_template (Optional[Any]): The prompt template for the chat.
+            form (Optional[Any]): The prompt template for the chat.
             **kwargs: Arbitrary keyword arguments for chat completion.
 
         Returns:
@@ -79,7 +79,7 @@ class MonoChat(BaseMonoFlow, MonoChatMixin):
             context=context,
             sender=sender,
             system=system,
-            prompt_template=prompt_template,
+            form=form,
             tools=tools,
             output_fields=output_fields,
             **kwargs,
@@ -91,5 +91,5 @@ class MonoChat(BaseMonoFlow, MonoChatMixin):
             invoke=invoke,
             out=out,
             output_fields=output_fields,
-            prompt_template=prompt_template,
+            form=form,
         )

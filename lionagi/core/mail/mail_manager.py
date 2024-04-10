@@ -1,7 +1,7 @@
 from collections import deque
 from lionagi.libs import AsyncUtil
-from ..schema import BaseNode
-from .schema import BaseMail
+from lionagi.core.generic import Node
+from lionagi.core.mail.schema import BaseMail, MailCategory
 
 
 class MailManager:
@@ -41,7 +41,7 @@ class MailManager:
     def create_mail(sender_id, recipient_id, category, package):
         return BaseMail(sender_id, recipient_id, category, package)
 
-    # def add_source(self, sources: list[BaseNode]):
+    # def add_source(self, sources: list[Node]):
     #     for source in sources:
     #         if source.id_ in self.sources:
     #             # raise ValueError(f"Source {source.id_} exists, please input a different name.")
