@@ -180,7 +180,7 @@ class TestValidationFunctions(unittest.TestCase):
     def test_check_enum_field_invalid_fixable(self):
         x = "option3"
         choices = ["option1", "option2"]
-        with patch("field_validator._fix_enum_field", return_value="option1"):
+        with patch("lionagi.libs.ln_field_validator._fix_enum_field", return_value="option1"):
             result = check_enum_field(x, choices, fix_=True)
         self.assertEqual(result, "option1")
 
@@ -330,7 +330,7 @@ class TestValidationFunctions(unittest.TestCase):
         x = "option3"
         choices = ["option1", "option2"]
         with patch(
-            "field_validator.StringMatch.choose_most_similar", return_value="option1"
+            "lionagi.libs.StringMatch.choose_most_similar", return_value="option1"
         ):
             result = _fix_enum_field(x, choices)
         self.assertEqual(result, "option1")
@@ -339,7 +339,7 @@ class TestValidationFunctions(unittest.TestCase):
         x = "option3"
         choices = ["option1", "option2"]
         with patch(
-            "field_validator.StringMatch.choose_most_similar",
+            "lionagi.libs.StringMatch.choose_most_similar",
             side_effect=ValueError("No match found"),
         ):
             with self.assertRaises(ValueError) as cm:
