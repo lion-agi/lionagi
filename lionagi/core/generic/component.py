@@ -111,8 +111,8 @@ class BaseComponent(BaseModel, ABC):
         """
         raise TypeError(f"Unsupported type {type(field_name)}")
 
-    @_get_field_annotation.register
-    def _(self, field_name: str) -> dict[str, Any]:
+    @_get_field_annotation.register(str)
+    def _(self, field_name) -> dict[str, Any]:
         """
         Get the annotation for a field as a dictionary.
 
@@ -133,13 +133,13 @@ class BaseComponent(BaseModel, ABC):
                 dict_[k] = [v.__name__]
         return dict_
 
-    @_get_field_annotation.register
-    def _(self, field_name: list | tuple) -> dict[str, Any]:
+    @_get_field_annotation.register(list)
+    def _(self, field_name) -> dict[str, Any]:
         """
         Get the annotations for multiple fields as a dictionary.
 
         Args:
-            field_name (list | tuple): A list or tuple of field names.
+            field_name (list): A list or tuple of field names.
 
         Returns:
             dict[str, Any]: A dictionary mapping field names to their
@@ -149,6 +149,25 @@ class BaseComponent(BaseModel, ABC):
         for i in field_name:
             dict_.update(self._get_field_annotation(i))
         return dict_
+
+
+    @_get_field_annotation.register(tuple)
+    def _(self, field_name) -> dict[str, Any]:
+        """
+        Get the annotations for multiple fields as a dictionary.
+
+        Args:
+            field_name (tuple): A list or tuple of field names.
+
+        Returns:
+            dict[str, Any]: A dictionary mapping field names to their
+                annotations.
+        """
+        dict_ = {}
+        for i in field_name:
+            dict_.update(self._get_field_annotation(i))
+        return dict_
+
 
     def _field_has_attr(self, k: str, attr: str) -> bool:
         """
