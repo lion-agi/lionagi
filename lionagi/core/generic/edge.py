@@ -91,7 +91,7 @@ class Edge(BaseComponent):
         """
 
         return (
-            f"Edge (id_={self.id_}, from={self.source_node_id}, to={self.target_node_id}, "
+            f"Edge (id_={self.id_}, from={self.head}, to={self.tail}, "
             f"label={self.label})"
         )
 
