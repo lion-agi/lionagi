@@ -5,13 +5,12 @@ from lionagi.core.generic.mail import Mail
 from typing import Any
 
 
-class Signal(BaseNode, ABC):
-    ...
+class Signal(BaseNode, ABC): ...
 
 
 class Start(Signal):
     pending_outs: deque = deque()
-    
+
     def trigger(self, context: Any, structure_id: str, executable_id: str):
         start_mail_content = {"context": context, "structure_id": structure_id}
         start_mail = Mail(
@@ -21,4 +20,3 @@ class Start(Signal):
             package=start_mail_content,
         )
         self.pending_outs.append(start_mail)
-

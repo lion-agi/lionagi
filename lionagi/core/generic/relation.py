@@ -26,21 +26,21 @@ class Relations:
             node, with the edge ID as the key and the `Edge` object as the
             value. Represents edges from other nodes leading to this node.
     """
-    
+
     points_to: dict[str, Edge] = Field(
         title="Outgoing edges",
-        default_factory=dict, 
+        default_factory=dict,
         description="The Outgoing edges of the node, reads self precedes other, \
             {edge_id: Edge}",
     )
-    
+
     pointed_by: dict[str, Edge] = Field(
         title="Incoming edges",
-        default_factory=dict, 
+        default_factory=dict,
         description="The Incoming edges of the node, reads self succeeds other, \
             {edge_id: Edge}",
     )
-    
+
     @property
     def all_edges(self) -> dict[str, Edge]:
         """
@@ -52,7 +52,7 @@ class Relations:
                 edges, indexed by edge IDs.
         """
         return {**self.points_to, **self.pointed_by}
-    
+
     @property
     def all_nodes(self) -> set[str]:
         """
@@ -67,8 +67,4 @@ class Relations:
             set[str]: A set of unique node IDs connected to this node, derived
                 from both incoming and outgoing edges.
         """
-        return set(
-            convert.to_list(
-                [[i.head, i.tail] for i in self.all_edges.values()]
-            )
-        )
+        return set(convert.to_list([[i.head, i.tail] for i in self.all_edges.values()]))

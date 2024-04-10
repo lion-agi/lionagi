@@ -7,6 +7,7 @@ The module includes the following classes:
 - Mail: Represents a mail message sent from one component to another.
 - MailBox: Represents a mailbox that stores pending incoming and outgoing mails.
 """
+
 from typing import Any
 from enum import Enum
 
@@ -42,20 +43,17 @@ class MailPackageCategory(str, Enum):
     START = "start"
     END = "end"
     CONDITION = "condition"
-    
+
 
 class Package(BaseComponent):
     category: MailPackageCategory = Field(
-        ...,
-        title="Category",
-        description="The category of the mail package."
+        ..., title="Category", description="The category of the mail package."
     )
 
     package: Any = Field(
-        ...,
-        title="Package",
-        description="The package to send in the mail."
+        ..., title="Package", description="The package to send in the mail."
     )
+
 
 class Mail(BaseComponent):
     """
@@ -68,17 +66,17 @@ class Mail(BaseComponent):
         category (MailPackageCategory): The category of the mail package.
         package (Any): The content of the mail package.
     """
-    
+
     sender: str = Field(
         title="Sender",
-        description="The id of the sender node.", 
+        description="The id of the sender node.",
     )
-    
+
     recipient: str = Field(
         title="Recipient",
         description="The id of the recipient node.",
     )
-    
+
     packages: dict[str, Package] = Field(
         title="Packages",
         default_factory=dict,

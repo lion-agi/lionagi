@@ -43,8 +43,6 @@ non_prompt_words = [
 ]
 
 
-
-
 class Form(BaseComponent):
     template_name: str = Field(
         default="default_form",
@@ -131,7 +129,7 @@ class Form(BaseComponent):
             self._process_response(out_)
             self._validate_output_choices()
         return self
-    
+
     def _validate_field_choices(self, fields, fix_: bool = False):
         if len(self.choices) >= 1:
             for k, choices in self.choices.items():

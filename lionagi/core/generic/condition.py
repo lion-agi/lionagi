@@ -11,9 +11,11 @@ class ConditionSource(str, Enum):
         STRUCTURE: Represents a condition based on the structure.
         EXECUTABLE: Represents a condition that can be executed or evaluated.
     """
+
     STRUCTURE = "structure"
     EXECUTABLE = "executable"
-    
+
+
 class Condition(BaseModel, ABC):
     """
     Abstract base class for defining conditions associated with edges.
@@ -24,10 +26,12 @@ class Condition(BaseModel, ABC):
     Methods:
         check: Abstract method that should be implemented to evaluate the condition.
     """
+
     source_type: str = Field(..., description="The type of source for the condition.")
 
     class Config:
         """Model configuration settings."""
+
         extra = "allow"
 
     @abstractmethod
@@ -38,4 +42,3 @@ class Condition(BaseModel, ABC):
             bool: The boolean result of the condition evaluation.
         """
         pass
-    

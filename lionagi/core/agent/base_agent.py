@@ -1,6 +1,7 @@
 """
 This module contains the BaseAgent class, which serves as a base class for agents.
 """
+
 from pydantic import Field
 from typing import Any, Callable
 
@@ -16,7 +17,13 @@ from lionagi.core.execute.structure_executor import StructureExecutor
 
 class BaseAgent(Node):
 
-    def __init__(self, structure: StructureExecutor, executable: BaseExecutor, output_parser=None, **kwargs) -> None:
+    def __init__(
+        self,
+        structure: StructureExecutor,
+        executable: BaseExecutor,
+        output_parser=None,
+        **kwargs,
+    ) -> None:
         """
         Initializes the BaseAgent instance.
 
@@ -31,10 +38,11 @@ class BaseAgent(Node):
         for v, k in kwargs.items():
             executable.__setattr__(v, k)
         self.start: StartMail = StartMail()
-        self.mailManager: MailManager = MailManager([self.structure, self.executable, self.start])
+        self.mailManager: MailManager = MailManager(
+            [self.structure, self.executable, self.start]
+        )
         self.output_parser: Callable | None = output_parser
         self.start_context: Any | None = None
-
 
     async def mail_manager_control(self, refresh_time=1):
         """
@@ -79,4 +87,3 @@ class BaseAgent(Node):
 
         if self.output_parser:
             return self.output_parser(self)
-        

@@ -41,10 +41,10 @@ class TreeNode(Node):
     """
 
     parent: Node | None = Field(
-        default=None, 
+        default=None,
         description="The parent node, as an instance of Node.",
     )
-    
+
     @property
     def children(self) -> list[str]:
         """
@@ -57,9 +57,7 @@ class TreeNode(Node):
             return list(self.related_nodes)
         else:
             return [
-                node_id
-                for node_id in self.related_nodes
-                if node_id != self.parent.id_
+                node_id for node_id in self.related_nodes if node_id != self.parent.id_
             ]
 
     def relate_child(
@@ -91,7 +89,7 @@ class TreeNode(Node):
             )
             if isinstance(_child, TreeNode):
                 _child.parent = self
-        
+
     def relate_parent(
         self,
         parent: Node,
@@ -119,14 +117,14 @@ class TreeNode(Node):
             bundle=bundle,
         )
         self.parent = parent
-  
+
     def unrelate_parent(self):
         """
         Removes the parent relationship of this node.
         """
         self.unrelate(self.parent)
         self.parent = None
-    
+
     def unrelate_child(self, child: Node | list[Node]):
         """
         Removes the child relationship between this node and the given child
@@ -153,10 +151,9 @@ class Tree(Graph):
     Attributes:
         root (TreeNode | None): The root node of the tree. Defaults to None.
     """
-    
+
     root: TreeNode | None = Field(
-        default=None, 
-        description="The root node of the tree graph."
+        default=None, description="The root node of the tree graph."
     )
 
     def relate_parent_child(
@@ -182,12 +179,12 @@ class Tree(Graph):
         for child in children:
             if child.id_ not in self.internal_nodes:
                 self.add_node(child)
-        
+
         for child in children:
             parent.relate_child(child, condition=condition, bundle=bundle)
-        
+
         if parent.id_ not in self.internal_nodes:
             self.add_node(parent)
-        
+
         if self.root is None:
             self.root = parent

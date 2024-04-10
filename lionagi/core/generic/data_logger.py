@@ -9,7 +9,6 @@ from typing import Any, Dict, List
 from lionagi.libs import SysUtil, convert, nested
 
 
-
 # TODO: there should be a global data logger, under setting
 
 
@@ -43,20 +42,20 @@ class DLog:
             'output_data', and 'timestamp'.
         """
         log_dict = {}
-        
+
         def _process_data(data, field):
             try:
                 data = convert.to_str(data)
                 if "{" not in data:
                     log_dict[field] = convert.to_str(data)
-                
+
                 else:
                     with contextlib.suppress(Exception):
                         data = convert.to_dict(data)
-                
-                    if isinstance(self.input_data , dict) and flatten_:
+
+                    if isinstance(self.input_data, dict) and flatten_:
                         log_dict[field] = convert.to_str(nested.flatten(data, sep=sep))
-                        
+
                     else:
                         log_dict[field] = convert.to_str(data)
 
@@ -66,7 +65,7 @@ class DLog:
 
         _process_data(self.input_data, "input_data")
         _process_data(self.output_data, "output_data")
-        
+
         log_dict["timestamp"] = SysUtil.get_timestamp()
 
         return log_dict
@@ -304,4 +303,3 @@ class DataLogger:
         """
         if self.log:
             self.to_csv_file("unsaved_logs.csv", clear=False)
-            

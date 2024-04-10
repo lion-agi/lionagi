@@ -983,4 +983,3 @@ class Session:
             self.default_branch.add_message(system=system, sender=sender)
 
         self.llmconfig = self.default_branch.llmconfig
-        

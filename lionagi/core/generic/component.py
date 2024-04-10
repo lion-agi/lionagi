@@ -26,12 +26,12 @@ class BaseComponent(BaseModel, ABC):
         title="ID",
         default_factory=SysUtil.create_id,
         validation_alias=AliasChoices("node_id", "ID", "id"),
-        description="A 32-char unique hash identifier for the node."
+        description="A 32-char unique hash identifier for the node.",
     )
 
     timestamp: str = Field(
         default_factory=lambda: SysUtil.get_timestamp(sep=None),
-        description="The timestamp of when the node was created."
+        description="The timestamp of when the node was created.",
     )
 
     class Config:
@@ -218,9 +218,7 @@ class BaseComponent(BaseModel, ABC):
         convert(self.to_dict(), root)
         return ET.tostring(root, encoding="unicode")
 
-    def to_pd_series(
-        self, *args, pd_kwargs: dict | None = None, **kwargs
-    ) -> Series:
+    def to_pd_series(self, *args, pd_kwargs: dict | None = None, **kwargs) -> Series:
         """
         Convert the node to a Pandas Series.
 
@@ -243,16 +241,14 @@ class BaseNode(BaseComponent):
 
     content: Any | None = Field(
         default=None,
-        validation_alias=AliasChoices(
-            "text", "page_content", "chunk_content", "data"
-        ),
-        description="The optional content of the node."
+        validation_alias=AliasChoices("text", "page_content", "chunk_content", "data"),
+        description="The optional content of the node.",
     )
 
     metadata: dict[str, Any] = Field(
         default_factory=dict,
         alias="meta",
-        description="Additional metadata for the node."
+        description="Additional metadata for the node.",
     )
 
     @singledispatchmethod
@@ -334,9 +330,7 @@ class BaseNode(BaseComponent):
 
     @from_obj.register(DataFrame)
     @classmethod
-    def _from_pd_dataframe(
-        cls, obj, *args, pd_kwargs=None, **kwargs
-    ) -> list[T]:
+    def _from_pd_dataframe(cls, obj, *args, pd_kwargs=None, **kwargs) -> list[T]:
         """
         Create a list of node instances from a Pandas DataFrame.
 
@@ -349,8 +343,7 @@ class BaseNode(BaseComponent):
         if pd_kwargs is None:
             pd_kwargs = {}
         return [
-            cls.from_obj(row, *args, **pd_kwargs, **kwargs)
-            for _, row in obj.iterrows()
+            cls.from_obj(row, *args, **pd_kwargs, **kwargs) for _, row in obj.iterrows()
         ]
 
     @from_obj.register(BaseModel)
@@ -427,8 +420,7 @@ class BaseNode(BaseComponent):
         return nested.ninsert(self.metadata, indices, value, **kwargs)
 
     def meta_merge(
-        self, additional_metadata: dict[str, Any], overwrite: bool = False,
-        **kwargs
+        self, additional_metadata: dict[str, Any], overwrite: bool = False, **kwargs
     ) -> None:
         """
         Merge additional metadata into the existing metadata dictionary.
@@ -444,4 +436,3 @@ class BaseNode(BaseComponent):
         self.metadata = nested.nmerge(
             [self.metadata, additional_metadata], overwrite=overwrite, **kwargs
         )
-        

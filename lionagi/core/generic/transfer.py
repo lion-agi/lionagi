@@ -8,12 +8,12 @@ from lionagi.core.generic.signal import Signal
 
 @dataclass
 class Transfer:
-    
+
     schedule: dict[str, deque[Mail | Signal]] = Field(
-        default_factory=dict, 
-        description="The sequence of all pending mails - {direction: deque[mail_id]}"
+        default_factory=dict,
+        description="The sequence of all pending mails - {direction: deque[mail_id]}",
     )
-    
+
     @property
     def is_empty(self) -> bool:
         """Returns a flag indicating whether the transfer is empty."""

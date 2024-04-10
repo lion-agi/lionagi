@@ -61,5 +61,3 @@ class MailTransfer(Node):
         super().__init__()
         self.pending_ins = {}
         self.pending_outs = deque()
-        
-        

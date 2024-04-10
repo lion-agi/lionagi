@@ -27,11 +27,13 @@ class StructureExecutor(BaseExecutor, Graph):
             return edge.condition(self)
 
         elif edge.condition.source_type == "executable":
-            return await self._check_executable_condition(edge, executable_id, request_source)
+            return await self._check_executable_condition(
+                edge, executable_id, request_source
+            )
 
         else:
             raise ValueError("Invalid source_type.")
-        
+
     def _process_edge_condition(self, edge_id):
         """
         Process the condition of a edge.
@@ -47,14 +49,20 @@ class StructureExecutor(BaseExecutor, Graph):
                     mail.category == "condition"
                     and mail.package["package"]["edge_id"] == edge_id
                 ):
-                    self.condition_check_result = mail.package["package"]["check_result"]
+                    self.condition_check_result = mail.package["package"][
+                        "check_result"
+                    ]
                 else:
                     skipped_requests.append(mail)
             self.pending_ins[key] = skipped_requests
 
-    async def _check_executable_condition(self, edge: Edge, executable_id, request_source):
+    async def _check_executable_condition(
+        self, edge: Edge, executable_id, request_source
+    ):
         self.send(
-            recipient_id=executable_id, category="condition", package={"request_source": request_source, "package": edge}
+            recipient_id=executable_id,
+            category="condition",
+            package={"request_source": request_source, "package": edge},
         )
         while self.condition_check_result is None:
             await AsyncUtil.sleep(0.1)
@@ -63,7 +71,6 @@ class StructureExecutor(BaseExecutor, Graph):
         check_result = self.condition_check_result
         self.condition_check_result = None
         return check_result
-    
 
     async def _handle_node_id(self, mail: BaseMail):
         if mail.package["package"] not in self.internal_nodes:
@@ -71,7 +78,9 @@ class StructureExecutor(BaseExecutor, Graph):
                 f"Node {mail.package} does not exist in the structure {self.id_}"
             )
         return await self._next_node(
-            self.internal_nodes[mail.package["package"]], mail.sender_id, mail.package["request_source"]
+            self.internal_nodes[mail.package["package"]],
+            mail.sender_id,
+            mail.package["request_source"],
         )
 
     async def _handle_node(self, mail: BaseMail):
@@ -79,7 +88,9 @@ class StructureExecutor(BaseExecutor, Graph):
             raise ValueError(
                 f"Node {mail.package} does not exist in the structure {self.id_}"
             )
-        return await self._next_node(mail.package["package"], mail.sender_id, mail.package["request_source"])
+        return await self._next_node(
+            mail.package["package"], mail.sender_id, mail.package["request_source"]
+        )
 
     async def _handle_mail(self, mail: BaseMail):
 
@@ -122,7 +133,9 @@ class StructureExecutor(BaseExecutor, Graph):
             if edge.bundle:
                 continue
             if edge.condition:
-                check = await self.check_edge_condition(edge, executable_id, request_source)
+                check = await self.check_edge_condition(
+                    edge, executable_id, request_source
+                )
                 if not check:
                     continue
             node = self.internal_nodes[edge.tail]
@@ -130,9 +143,7 @@ class StructureExecutor(BaseExecutor, Graph):
             bundled_nodes = deque()
             for f_edge in convert.to_list(list(further_edges.values())):
                 if f_edge.bundle:
-                    bundled_nodes.append(
-                        self.internal_nodes[f_edge.tail]
-                    )
+                    bundled_nodes.append(self.internal_nodes[f_edge.tail])
             if bundled_nodes:
                 node = self.parse_bundled_to_action(node, bundled_nodes)
             next_nodes.append(node)
@@ -143,20 +154,29 @@ class StructureExecutor(BaseExecutor, Graph):
             self.send(
                 recipient_id=mail.sender_id,
                 category="end",
-                package={"request_source": mail.package["request_source"], "package": "end"}
+                package={
+                    "request_source": mail.package["request_source"],
+                    "package": "end",
+                },
             )
         else:
             if len(next_nodes) == 1:
                 self.send(
                     recipient_id=mail.sender_id,
                     category="node",
-                    package={"request_source": mail.package["request_source"], "package": next_nodes[0]}
+                    package={
+                        "request_source": mail.package["request_source"],
+                        "package": next_nodes[0],
+                    },
                 )
             else:
                 self.send(
                     recipient_id=mail.sender_id,
                     category="node_list",
-                    package={"request_source": mail.package["request_source"], "package": next_nodes}
+                    package={
+                        "request_source": mail.package["request_source"],
+                        "package": next_nodes,
+                    },
                 )
 
     @staticmethod
@@ -172,7 +192,7 @@ class StructureExecutor(BaseExecutor, Graph):
             else:
                 raise ValueError("Invalid bundles nodes")
         return action_node
-        
+
     async def forward(self) -> None:
         """
         Process the pending incoming mails and perform the corresponding actions.
@@ -188,7 +208,6 @@ class StructureExecutor(BaseExecutor, Graph):
                     self._send_mail(next_nodes, mail)
                 except Exception as e:
                     raise ValueError(f"Error handling mail: {e}") from e
-                
 
     async def execute(self, refresh_time=1):
         if not self.acyclic:
@@ -197,4 +216,3 @@ class StructureExecutor(BaseExecutor, Graph):
         while not self.execute_stop:
             await self.forward()
             await AsyncUtil.sleep(refresh_time)
-            

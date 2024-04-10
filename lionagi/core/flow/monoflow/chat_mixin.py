@@ -156,13 +156,15 @@ class MonoChatInvokeMixin(ABC):
 
         if output_fields:
             try:
-                return StringMatch.force_validate_dict(out_, keys=list(output_fields.keys()))
+                return StringMatch.force_validate_dict(
+                    out_, keys=list(output_fields.keys())
+                )
             except Exception:
                 pass
 
         if isinstance(out_, str):
             try:
-                match = re.search(r'```json\n({.*?})\n```', out_, re.DOTALL)
+                match = re.search(r"```json\n({.*?})\n```", out_, re.DOTALL)
                 if match:
                     out_ = ParseUtil.fuzzy_parse_json(match.group(1))
             except Exception:

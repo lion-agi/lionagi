@@ -9,6 +9,7 @@ maps data types to their corresponding validation functions.
 from .ln_convert import to_str, is_same_dtype, to_list, to_dict, to_num, strip_lower
 from .ln_parse import StringMatch, ParseUtil
 
+
 def check_dict_field(x, keys: list[str] | dict, fix_=True, **kwargs):
     if isinstance(x, dict):
         return x

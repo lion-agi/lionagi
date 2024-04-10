@@ -224,10 +224,10 @@ def _fix_bool_field(x):
         x = convert.strip_lower(convert.to_str(x))
         if x in ["true", "1", "correct", "yes"]:
             return True
-        
+
         elif x in ["false", "0", "incorrect", "no", "none", "n/a"]:
             return False
-        
+
         raise ValueError(f"Failed to convert {x} into a boolean value")
     except Exception as e:
         raise ValueError(f"Failed to convert {x} into a boolean value") from e

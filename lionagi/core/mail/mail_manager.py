@@ -97,5 +97,3 @@ class MailManager:
             self.collect_all()
             self.send_all()
             await AsyncUtil.sleep(refresh_time)
-            
-            

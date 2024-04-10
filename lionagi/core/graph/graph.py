@@ -22,10 +22,10 @@ class Graph(BaseStructure):
 
     def get_heads(self):
         return [
-            node for node in self.internal_nodes.values()
+            node
+            for node in self.internal_nodes.values()
             if not node.relations.pointed_by
         ]
-        
 
     @property
     def acyclic(self) -> bool:
@@ -40,8 +40,8 @@ class Graph(BaseStructure):
         """
         node_ids = list(self.internal_nodes.keys())
         check_deque = deque(node_ids)
-        check_dict = {key: 0 for key in node_ids}    # 0: not visited, 1: temp, 2: perm
-        
+        check_dict = {key: 0 for key in node_ids}  # 0: not visited, 1: temp, 2: perm
+
         def visit(key):
             if check_dict[key] == 2:
                 return True
@@ -49,7 +49,7 @@ class Graph(BaseStructure):
                 return False
 
             check_dict[key] = 1
-            
+
             points_to_edges = self.internal_nodes[key].relations.points_to
 
             for _, edge in points_to_edges.items():
@@ -95,7 +95,6 @@ class Graph(BaseStructure):
             node_info.update({"class_name": node.class_name()})
             g.add_node(node_id, **node_info)
 
-
         for _edge in list(self.internal_edges.values()):
             edge_info = _edge.to_dict()
             edge_info.pop("id_")
@@ -125,4 +124,3 @@ class Graph(BaseStructure):
 
         g = self.to_networkx(**kwargs)
         draw(g)
-        

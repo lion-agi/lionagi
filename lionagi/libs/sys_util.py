@@ -416,7 +416,11 @@ class SysUtil:
         else:
             filename = name
 
-        random_hash = "-" + SysUtil.create_id(random_hash_digits) if random_hash_digits > 0 else ""
+        random_hash = (
+            "-" + SysUtil.create_id(random_hash_digits)
+            if random_hash_digits > 0
+            else ""
+        )
 
         full_filename = f"{filename}{random_hash}{ext}"
         full_path = directory / full_filename

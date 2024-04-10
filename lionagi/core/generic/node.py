@@ -41,25 +41,25 @@ class Node(BaseNode):
     Raises:
         ValueError: When invalid parameters are provided to methods.
     """
-    
+
     relations: Relations = Field(
-        default_factory=Relations, 
+        default_factory=Relations,
         description="The relations of the node.",
-        alias="node_relations"
+        alias="node_relations",
     )
 
     mailbox: MailBox = Field(
         default_factory=MailBox,
-        description="The mailbox for incoming and outgoing mails."
+        description="The mailbox for incoming and outgoing mails.",
     )
-    
+
     @property
     def related_nodes(self) -> list[str]:
         """Returns a set of node IDs related to this node, excluding itself."""
         nodes = set(self.relations.all_nodes)
         nodes.discard(self.id_)
         return list(nodes)
-    
+
     @property
     def edges(self) -> dict[str, Edge]:
         """Returns a dictionary of all edges connected to this node."""
@@ -92,19 +92,21 @@ class Node(BaseNode):
     @property
     def precedessors(self) -> list[str]:
         """return a list of nodes id that precede this node"""
-        return [
-            k for k, v in self.node_relations["pointed_by"].items() if len(v) > 0
-        ]
+        return [k for k, v in self.node_relations["pointed_by"].items() if len(v) > 0]
 
     @property
     def successors(self) -> list[str]:
         """return a list of nodes id that succeed this node"""
-        return [
-            k for k, v in self.node_relations["points_to"].items() if len(v) > 0
-        ]
+        return [k for k, v in self.node_relations["points_to"].items() if len(v) > 0]
 
-    def relate(self, node: 'Node', node_as: str = "head",
-               condition: Condition | None = None, label: str | None=None, bundle=False) -> None:
+    def relate(
+        self,
+        node: "Node",
+        node_as: str = "head",
+        condition: Condition | None = None,
+        label: str | None = None,
+        bundle=False,
+    ) -> None:
         """Relates this node to another node with an edge.
 
         Args:
@@ -119,12 +121,16 @@ class Node(BaseNode):
             ValueError: If `self_as` is not 'head' or 'tail'.
         """
         if node_as == "head":
-            edge = Edge(head=self, tail=node, condition=condition, bundle=bundle, label=label)
+            edge = Edge(
+                head=self, tail=node, condition=condition, bundle=bundle, label=label
+            )
             self.relations.points_to[edge.id_] = edge
             node.relations.pointed_by[edge.id_] = edge
 
         elif node_as == "tail":
-            edge = Edge(head=node, tail=self, condition=condition, label=label, bundle=bundle)
+            edge = Edge(
+                head=node, tail=self, condition=condition, label=label, bundle=bundle
+            )
             self.relations.pointed_by[edge.id_] = edge
             node.relations.points_to[edge.id_] = edge
 
@@ -136,33 +142,36 @@ class Node(BaseNode):
     def remove_edge(self, node: "Node", edge: Edge | str) -> bool:
         if node.id_ not in self.related_nodes:
             raise ValueError(f"Node {self.id_} is not related to node {node.id_}.")
-        
+
         edge_id = edge.id_ if isinstance(edge, Edge) else edge
-        
-        if (edge_id not in self.relations.all_edges or
-                edge_id not in node.relations.all_edges):
+
+        if (
+            edge_id not in self.relations.all_edges
+            or edge_id not in node.relations.all_edges
+        ):
             raise ValueError(
                 f"Edge {edge_id} does not exist between nodes {self.id_} and "
                 f"{node.id_}."
             )
-            
+
         all_dicts = [
-            self.relations.points_to, self.relations.pointed_by,
-            node.relations.points_to, node.relations.pointed_by
+            self.relations.points_to,
+            self.relations.pointed_by,
+            node.relations.points_to,
+            node.relations.pointed_by,
         ]
         try:
             for _dict in all_dicts:
                 edge_id = edge.id_ if isinstance(edge, Edge) else edge
                 _dict.pop(edge_id, None)
             return True
-        
+
         except Exception as e:
             raise ValueError(
-                f"Failed to remove edge between nodes {self.id_} and "
-                f"{node.id_}."
+                f"Failed to remove edge between nodes {self.id_} and " f"{node.id_}."
             ) from e
 
-    def unrelate(self, node: 'Node', edge: Edge | str = "all") -> bool:
+    def unrelate(self, node: "Node", edge: Edge | str = "all") -> bool:
         """
         Removes one or all relations between this node and another.
 
@@ -178,28 +187,25 @@ class Node(BaseNode):
             ValueError: If the node is not related or the edge does not exist.
         """
         if edge == "all":
-            edge = (self.node_relations["points_to"].get(node.id_, []) +
-                    self.node_relations["pointed_by"].get(node.id_, []))
+            edge = self.node_relations["points_to"].get(
+                node.id_, []
+            ) + self.node_relations["pointed_by"].get(node.id_, [])
         else:
             edge = [edge.id_] if isinstance(edge, Edge) else [edge]
 
         if len(edge) == 0:
-            raise ValueError(
-                f"Node {self.id_} is not related to node {node.id_}."
-            )
-        
+            raise ValueError(f"Node {self.id_} is not related to node {node.id_}.")
+
         try:
             for edge_id in edge:
                 self.remove_edge(node, edge_id)
             return True
         except Exception as e:
             raise ValueError(
-                f"Failed to remove edge between nodes {self.id_} and "
-                f"{node.id_}."
+                f"Failed to remove edge between nodes {self.id_} and " f"{node.id_}."
             ) from e
 
-    def to_llama_index(self, node_type: Type | str | Any = None,
-                       **kwargs) -> Any:
+    def to_llama_index(self, node_type: Type | str | Any = None, **kwargs) -> Any:
         """
         Serializes this node for LlamaIndex.
 
@@ -243,10 +249,10 @@ class Node(BaseNode):
     @classmethod
     def from_langchain(cls, lc_doc: Any) -> "Node":
         """Deserializes a node from Langchain data.
-        
+
         Args:
             lc_doc (Any): The Langchain document data.
-            
+
         Returns:
             Node: The deserialized node.
         """
@@ -257,7 +263,7 @@ class Node(BaseNode):
     def __str__(self) -> str:
         """
         Provides a string representation of the node.
-        
+
         Returns:
             str: The string representation of the node.
         """

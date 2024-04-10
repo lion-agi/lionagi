@@ -7,6 +7,7 @@ from lionagi.core.messages.schema import System, Instruction
 from lionagi.core.branch.branch import Branch
 from lionagi.core.execute.base_executor import BaseExecutor
 
+
 class BranchExecutor(Branch, BaseExecutor):
 
     async def forward(self) -> None:
@@ -32,19 +33,43 @@ class BranchExecutor(Branch, BaseExecutor):
     async def _process_node(self, mail: BaseMail):
         if isinstance(mail.package["package"], System):
             self._system_process(mail.package["package"], verbose=self.verbose)
-            self.send(mail.sender_id, "node_id", {"request_source": self.id_, "package": mail.package["package"].id_})
+            self.send(
+                mail.sender_id,
+                "node_id",
+                {"request_source": self.id_, "package": mail.package["package"].id_},
+            )
 
         elif isinstance(mail.package["package"], Instruction):
-            await self._instruction_process(mail.package["package"], verbose=self.verbose)
-            self.send(mail.sender_id, "node_id", {"request_source": self.id_, "package": mail.package["package"].id_})
+            await self._instruction_process(
+                mail.package["package"], verbose=self.verbose
+            )
+            self.send(
+                mail.sender_id,
+                "node_id",
+                {"request_source": self.id_, "package": mail.package["package"].id_},
+            )
 
         elif isinstance(mail.package["package"], ActionNode):
             await self._action_process(mail.package["package"], verbose=self.verbose)
-            self.send(mail.sender_id, "node_id", {"request_source": self.id_, "package": mail.package["package"].instruction.id_})
+            self.send(
+                mail.sender_id,
+                "node_id",
+                {
+                    "request_source": self.id_,
+                    "package": mail.package["package"].instruction.id_,
+                },
+            )
         else:
             try:
                 await self._agent_process(mail.package["package"], verbose=self.verbose)
-                self.send(mail.sender_id, "node_id", {"request_source": self.id_, "package": mail.package["package"].id_})
+                self.send(
+                    mail.sender_id,
+                    "node_id",
+                    {
+                        "request_source": self.id_,
+                        "package": mail.package["package"].id_,
+                    },
+                )
             except:
                 raise ValueError(f"Invalid mail to process. Mail:{mail}")
 
@@ -56,8 +81,16 @@ class BranchExecutor(Branch, BaseExecutor):
     def _process_condition(self, mail: BaseMail):
         relationship: Edge = mail.package["package"]
         check_result = relationship.condition(self)
-        back_mail = {"from": self.id_, "edge_id": mail.package["package"].id_, "check_result": check_result}
-        self.send(mail.sender_id, "condition", {"request_source": self.id_, "package": back_mail})
+        back_mail = {
+            "from": self.id_,
+            "edge_id": mail.package["package"].id_,
+            "check_result": check_result,
+        }
+        self.send(
+            mail.sender_id,
+            "condition",
+            {"request_source": self.id_, "package": back_mail},
+        )
 
     def _system_process(self, system: System, verbose=True, context_verbose=False):
         from lionagi.libs import SysUtil
@@ -75,7 +108,9 @@ class BranchExecutor(Branch, BaseExecutor):
 
         self.add_message(system=system)
 
-    async def _instruction_process(self, instruction: Instruction, verbose=True, **kwargs):
+    async def _instruction_process(
+        self, instruction: Instruction, verbose=True, **kwargs
+    ):
         from lionagi.libs import SysUtil
 
         SysUtil.check_import("IPython")
@@ -181,7 +216,11 @@ class BranchExecutor(Branch, BaseExecutor):
         """
         start_mail_content = mail.package
         self.context = start_mail_content["context"]
-        self.send(start_mail_content["structure_id"], "start", {"request_source": self.id_, "package": "start"})
+        self.send(
+            start_mail_content["structure_id"],
+            "start",
+            {"request_source": self.id_, "package": "start"},
+        )
 
     def _process_end(self, mail: BaseMail):
         """
@@ -192,4 +231,3 @@ class BranchExecutor(Branch, BaseExecutor):
         """
         self.execute_stop = True
         self.send(mail.sender_id, "end", {"request_source": self.id_, "package": "end"})
-        

@@ -645,10 +645,10 @@ class StringMatch:
     @staticmethod
     def force_validate_dict(x, keys: dict | list[str]) -> dict:
         out_ = x
-        
+
         if isinstance(out_, str):
             # first try to parse it straight as a fuzzy json
-            try:                
+            try:
                 out_ = ParseUtil.fuzzy_parse_json(out_)
             except Exception:
                 try:
@@ -656,17 +656,19 @@ class StringMatch:
                     out_ = ParseUtil.md_to_json(out_)
                 except Exception:
                     # if still failed we try to extract the json block using re and parse it again
-                    match = re.search(r'```json\n({.*?})\n```', out_, re.DOTALL)
+                    match = re.search(r"```json\n({.*?})\n```", out_, re.DOTALL)
                     if match:
                         out_ = match.group(1)
                         try:
                             out_ = ParseUtil.fuzzy_parse_json(out_)
                         except:
                             try:
-                                out_ = ParseUtil.fuzzy_parse_json(out_.replace("\'", '\"'))
+                                out_ = ParseUtil.fuzzy_parse_json(
+                                    out_.replace("'", '"')
+                                )
                             except:
                                 pass
-        
+
         if isinstance(out_, dict):
             try:
                 return StringMatch.correct_dict_keys(keys, out_)
