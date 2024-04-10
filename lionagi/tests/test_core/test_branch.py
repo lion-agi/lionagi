@@ -11,6 +11,7 @@
 # from collections import deque
 
 
+
 # class TestBranch(unittest.TestCase):
 #     def setUp(self):
 #         # Assuming no need for actual files or external services for initialization
@@ -84,6 +85,7 @@
 #         self.branch.register_tools(self.tool)
 #         self.assertTrue(self.branch.has_tools)
 
+
 #     # @patch("lionagi.core.branch.BaseBranch._from_csv")
 #     # def test_from_csv(self, mock_from_csv):
 #     #     """Test creating a Branch instance from a CSV file."""
@@ -117,6 +119,7 @@
 #     #         persist_path=None,
 #     #         tool_manager=None,
 #     #     )
+
 
 #     def test_messages_describe(self):
 #         """Test the messages_describe method for accuracy."""
