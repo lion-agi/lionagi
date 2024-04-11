@@ -1,12 +1,12 @@
 import re
-from .conditional_template import ConditionalTemplate
+from experiments.directive.base_template import BaseDirectiveTemplate
 from typing import Dict, Any
 
 import re
 from typing import Dict, Any
 
 
-class LoopTemplate(ConditionalTemplate):
+class LoopTemplate(BaseDirectiveTemplate):
     def __init__(self, template_str: str):
         super().__init__(template_str)
 

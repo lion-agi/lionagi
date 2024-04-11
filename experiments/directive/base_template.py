@@ -1,5 +1,5 @@
 from typing import Any, Dict
-
+import re
 from experiments.evaluator.base_evaluator import BaseEvaluator
 
 
@@ -98,23 +98,6 @@ class BaseDirectiveTemplate:
     def fill(self, template_str: str = "", context: Dict[str, Any] = {}) -> str:
         """Fills the template with values from context."""
         # Method implementation remains the same
-
-
-class ExtendedDirective(baseDirectiveTemplate):
-    def __init__(self, name, priority):
-        super().__init__(name)
-        self.priority = priority
-
-    def execute(self):
-        print(f"Executing {self.name} with priority {self.priority}")
-
-    def display_priority(self):
-        print(f"Priority of {self.name} is {self.priority}")
-
-    def schedule_execution(self, delay_seconds):
-        print(f"Scheduling {self.name} for execution in {delay_seconds} seconds.")
-        time.sleep(delay_seconds)
-        self.execute()
 
 
 class DirectiveGroup:
