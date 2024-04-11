@@ -1,6 +1,6 @@
 import asyncio
 from typing import Callable, Dict, Any, Optional, Union
-
+from lionagi.core.branch.branch import Branch
 
 class Agent:
     def __init__(self, name: Optional[str] = None):
@@ -225,44 +225,44 @@ class ServiceAccessLayer:
         return await service(*args, **kwargs)
 
 
-class ConversationContextManager:
-    def __init__(self, conversation_storage: "ConversationStorage"):
-        self.conversation_storage = conversation_storage
+# class ConversationContextManager:
+#     def __init__(self, conversation_storage: "ConversationStorage"):
+#         self.conversation_storage = conversation_storage
 
-    def get_conversation_history(self, conversation_id: str) -> Dict[str, Any]:
-        """
-        Retrieve the conversation history given a conversation ID.
-        """
-        return self.conversation_storage.get_history(conversation_id)
+#     def get_conversation_history(self, conversation_id: str) -> Dict[str, Any]:
+#         """
+#         Retrieve the conversation history given a conversation ID.
+#         """
+#         return self.conversation_storage.get_history(conversation_id)
 
-    def update_conversation_context(
-            self, conversation_id: str, update: Dict[str, Any]
-    ) -> None:
-        """
-        Update the conversation context for a specific conversation ID.
-        """
-        self.conversation_storage.update_context(conversation_id, update)
+#     def update_conversation_context(
+#             self, conversation_id: str, update: Dict[str, Any]
+#     ) -> None:
+#         """
+#         Update the conversation context for a specific conversation ID.
+#         """
+#         self.conversation_storage.update_context(conversation_id, update)
 
 
-class LearningFramework:
-    def __init__(self, learning_model: Any, learning_service: Any):
-        self.learning_model = learning_model
-        self.learning_service = learning_service
+# class LearningFramework:
+#     def __init__(self, learning_model: Any, learning_service: Any):
+#         self.learning_model = learning_model
+#         self.learning_service = learning_service
 
-    async def learn_from_interaction(self, interaction_data: Dict[str, Any]) -> None:
-        """
-        Update the learning model based on interaction data.
-        """
-        # Update the embedded model
-        self.learning_model.update(interaction_data)
+#     async def learn_from_interaction(self, interaction_data: Dict[str, Any]) -> None:
+#         """
+#         Update the learning model based on interaction data.
+#         """
+#         # Update the embedded model
+#         self.learning_model.update(interaction_data)
 
-        # Optionally send data to an external learning provider
-        await self.learning_service.send_data_for_learning(interaction_data)
+#         # Optionally send data to an external learning provider
+#         await self.learning_service.send_data_for_learning(interaction_data)
 
-    async def adapt_response_strategy(self, context: Dict[str, Any]) -> Dict[str, Any]:
-        """
-        Adapt the assistant_response strategy based on learned patterns and context.
-        """
-        # Use the learning model to determine the adaptation strategy
-        adaptation_strategy = self.learning_model.determine_strategy(context)
-        return adaptation_strategy
+#     async def adapt_response_strategy(self, context: Dict[str, Any]) -> Dict[str, Any]:
+#         """
+#         Adapt the assistant_response strategy based on learned patterns and context.
+#         """
+#         # Use the learning model to determine the adaptation strategy
+#         adaptation_strategy = self.learning_model.determine_strategy(context)
+#         return adaptation_strategy
