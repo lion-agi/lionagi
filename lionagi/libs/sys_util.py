@@ -457,3 +457,33 @@ class SysUtil:
             return sum(f.stat().st_size for f in path.glob("**/*") if f.is_file())
         else:
             raise FileNotFoundError(f"{path} does not exist.")
+
+    @staticmethod
+    def save_to_file(
+        text, 
+        directory: Path | str,
+        filename: str,
+        timestamp: bool = True,
+        dir_exist_ok: bool = True,
+        time_prefix: bool = False,
+        custom_timestamp_format: str | None = None,
+        random_hash_digits=0,
+        verbose=True,
+    ):
+        file_path = SysUtil.create_path(
+            directory=directory,
+            filename=filename,
+            timestamp=timestamp,
+            dir_exist_ok=dir_exist_ok,
+            time_prefix=time_prefix,
+            custom_timestamp_format=custom_timestamp_format,
+            random_hash_digits=random_hash_digits,
+        )
+        
+        with open(file_path, 'w') as file:
+            file.write(text)
+
+        if verbose:
+            print(f"Text saved to: {file_path}")
+        
+        return True
