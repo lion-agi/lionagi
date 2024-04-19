@@ -33,7 +33,7 @@ class BaseAgent(Node):
             output_parser: A function for parsing the agent's output (optional).
         """
         super().__init__()
-        self.structure: StructureExecutor = structure
+        self.structure: BaseExecutor = structure
         self.executable: BaseExecutor = executable
         for v, k in kwargs.items():
             executable.__setattr__(v, k)
