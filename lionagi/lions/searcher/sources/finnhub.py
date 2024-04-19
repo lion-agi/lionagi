@@ -1,5 +1,5 @@
 import os
-from ..utils.pd_util import to_pd_df
+from lionagi.libs import convert
 
 finnhub_key_scheme = 'FINNHUB_API_KEY'
 
@@ -36,7 +36,7 @@ class FinnHub:
             ImportError: If there is an error while importing the 'finnhub' library.
         """
         try: 
-            import finnhub
+            import lionagi.lions.searcher.sources.finnhub as finnhub
             return finnhub.Client(api_key=api_key or cls.api_key)
         except Exception as e:
             raise ImportError(f"Error occured during importing finnhub: {e}")
@@ -63,7 +63,7 @@ class FinnHub:
         try:
             results = info_func(**kwargs)
             try: 
-                df = to_pd_df(results)
+                df = convert.to_df(results)
                 return df
             except Exception as e:
                 raise ValueError(f"Error occured during converting {info_kind} to DataFrame: {e}")

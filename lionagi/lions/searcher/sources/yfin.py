@@ -14,6 +14,8 @@ def get_stock_prices(symbol, **kwargs):
         - You can customize the query further by providing keyword arguments, such as 'start' and 'end' to specify a date range.
         - For a full list of available keyword arguments, refer to the Yahoo Finance API documentation.
     """
+    from lionagi.libs import SysUtil
+    SysUtil.check_import("yfinance")
     from yfinance import Ticker
     
     stock = Ticker(symbol)
