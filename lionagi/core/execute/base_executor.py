@@ -18,7 +18,7 @@ class BaseExecutor(BaseComponent, ABC):
     execute_stop: bool = Field(
         False, description="A flag indicating whether to stop execution."
     )
-    context: dict | str | None = Field(
+    context: dict | str | list | None = Field(
         None, description="The context buffer for the next instruction."
     )
     execution_responses: list = Field(
@@ -27,9 +27,6 @@ class BaseExecutor(BaseComponent, ABC):
     context_log: list = Field(default_factory=list, description="The context log.")
     verbose: bool = Field(
         True, description="A flag indicating whether to provide verbose output."
-    )
-    execute_stop: bool = Field(
-        False, description="A flag indicating whether to stop execution."
     )
 
     def send(self, recipient_id: str, category: str, package: Any) -> None:

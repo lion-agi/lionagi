@@ -196,7 +196,7 @@ class BranchExecutor(Branch, BaseExecutor):
             agent: The agent to process.
             verbose (bool): A flag indicating whether to provide verbose output (default: True).
         """
-        context = self.responses
+        context = list(self.messages['content'])
         if verbose:
             print("*****************************************************")
         result = await agent.execute(context)
@@ -204,8 +204,12 @@ class BranchExecutor(Branch, BaseExecutor):
         if verbose:
             print("*****************************************************")
 
-        self.context = result
-        self.responses.append(result)
+        from pandas import DataFrame
+        if isinstance(result, DataFrame):
+            self.context = list(result['content'])
+        else:
+            self.context = result
+        self.execution_responses.append(result)
 
     def _process_start(self, mail):
         """

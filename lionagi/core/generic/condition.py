@@ -35,7 +35,7 @@ class Condition(BaseModel, ABC):
         extra = "allow"
 
     @abstractmethod
-    def __call__(self, *args, **kwargs) -> bool:
+    def __call__(self, executable) -> bool:
         """Evaluates the condition based on implemented logic.
 
         Returns:

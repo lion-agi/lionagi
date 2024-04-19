@@ -19,7 +19,7 @@ class BaseAgent(Node):
 
     def __init__(
         self,
-        structure: StructureExecutor,
+        structure: BaseExecutor,
         executable: BaseExecutor,
         output_parser=None,
         **kwargs,
