@@ -86,6 +86,21 @@ class Edge(BaseComponent):
         return self.condition(obj)
 
     def string_condition(self):
+        """
+        Retrieves the source code of the condition class associated with this edge as a string.
+
+        This method is useful for serialization and debugging, allowing the condition logic to be inspected or stored
+        in a human-readable format. It employs advanced introspection techniques to locate and extract the exact class
+        definition, handling edge cases like dynamically defined classes or classes defined in interactive environments.
+
+        Returns:
+            str: The source code of the condition's class, if available. If the condition is None or the source code
+                cannot be located, this method returns None.
+
+        Raises:
+            TypeError: If the source code of the condition's class cannot be found due to the class being defined in a
+                non-standard manner or in the interactive interpreter (__main__ context).
+        """
         if self.condition is None:
             return
 

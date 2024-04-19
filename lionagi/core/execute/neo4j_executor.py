@@ -17,6 +17,17 @@ from lionagi.libs import AsyncUtil
 
 
 class Neo4jExecutor(BaseExecutor):
+    """
+    Executes tasks within a Neo4j graph database, handling dynamic instruction flows and conditional logic across various nodes and agents.
+
+    Attributes:
+        driver (Neo4j | None): Connection driver to the Neo4j database.
+        structure_id (str | None): Identifier for the structure being executed within the graph.
+        structure_name (str | None): Name of the structure being executed.
+        middle_agents (list | None): List of agents operating within the structure.
+        default_agent_executable (BaseExecutor): Default executor for running tasks not handled by specific agents.
+        condition_check_result (bool | None): Result of the last condition check performed during execution.
+    """
     driver: Neo4j | None
     structure_id: str = None
     structure_name: str = None
@@ -25,6 +36,19 @@ class Neo4jExecutor(BaseExecutor):
     condition_check_result: bool | None = None
 
     async def check_edge_condition(self, condition, executable_id, request_source, head, tail):
+        """
+        Evaluates the condition associated with an edge in the graph, determining if execution should proceed along that edge.
+
+        Args:
+            condition: The condition object or logic to be evaluated.
+            executable_id (str): ID of the executor responsible for this condition check.
+            request_source (str): Origin of the request prompting this check.
+            head (str): ID of the head node in the edge.
+            tail (str): ID of the tail node in the edge.
+
+        Returns:
+            bool: Result of the condition check.
+        """
         if condition.source_type == "structure":
             return condition(self)
         elif condition.source_type == "executable":
@@ -53,6 +77,19 @@ class Neo4jExecutor(BaseExecutor):
             self.pending_ins[key] = skipped_requests
 
     async def _check_executable_condition(self, condition, executable_id, head, tail, request_source):
+        """
+        Sends a condition to be checked by an external executable and awaits the result.
+
+        Args:
+            condition: The condition object to be evaluated.
+            executable_id (str): ID of the executable that will evaluate the condition.
+            head (str): Starting node of the edge.
+            tail (str): Ending node of the edge.
+            request_source (str): Source of the request for condition evaluation.
+
+        Returns:
+            bool: The result of the condition check.
+        """
         edge = Edge(head=head, tail=tail, condition=condition)
         self.send(
             recipient_id=executable_id,
@@ -69,6 +106,16 @@ class Neo4jExecutor(BaseExecutor):
 
     @staticmethod
     def parse_bundled_to_action(instruction, bundle_list):
+        """
+        Parses bundled actions and tools from a list of nodes, creating a composite action node from them.
+
+        Args:
+            instruction: The initial instruction leading to this bundle.
+            bundle_list (list): List of nodes bundled together.
+
+        Returns:
+            ActionNode: A node representing a composite action constructed from the bundled nodes.
+        """
         bundled_nodes = deque()
         for node_labels, node_properties in bundle_list:
             try:
@@ -95,6 +142,15 @@ class Neo4jExecutor(BaseExecutor):
         return action_node
 
     def parse_agent(self, node_properties):
+        """
+        Parses agent properties and creates an agent executor.
+
+        Args:
+            node_properties (dict): Properties defining the agent.
+
+        Returns:
+            BaseAgent: An agent executor configured with the given properties.
+        """
         output_parser = ParseNode.convert_to_def(node_properties["outputParser"])
 
         structure = Neo4jExecutor(driver=self.driver, structure_id=node_properties["structureId"])
@@ -104,6 +160,19 @@ class Neo4jExecutor(BaseExecutor):
         return agent
 
     async def _next_node(self, query_list, node_id=None, executable_id=None, request_source=None):
+        """
+        Processes the next set of nodes based on the results of a query list, applying conditions and preparing nodes
+        for further execution.
+
+        Args:
+            query_list (list): List of nodes and their properties.
+            node_id (str | None): Current node ID, if applicable.
+            executable_id (str | None): ID of the executor handling these nodes.
+            request_source (str | None): Source of the node processing request.
+
+        Returns:
+            list: Next nodes ready for processing.
+        """
         next_nodes = []
         for edge_properties, node_labels, node_properties in query_list:
             if 'condition' in edge_properties.keys():
@@ -144,6 +213,12 @@ class Neo4jExecutor(BaseExecutor):
         return next_nodes
 
     async def _handle_start(self):
+        """
+        Handles the start of execution, fetching and processing head nodes from the structure.
+
+        Raises:
+            ValueError: If there is an issue with finding or starting the structure.
+        """
         try:
             id, head_list = await self.driver.get_heads(self.structure_name, self.structure_id)
             self.structure_id = id
@@ -152,6 +227,17 @@ class Neo4jExecutor(BaseExecutor):
             raise ValueError(f"Error in searching for structure in Neo4j. Error: {e}")
 
     async def _handle_node_id(self, node_id, executable_id, request_source):
+        """
+        Handles the processing of a specific node ID, fetching its forward connections and conditions.
+
+        Args:
+            node_id (str): The node ID to process.
+            executable_id (str): ID of the executor handling this node.
+            request_source (str): Source of the node processing request.
+
+        Returns:
+            list: Next nodes derived from the given node ID.
+        """
         check = await self.driver.node_exist(node_id)
         if not check:
             raise ValueError(f"Node {node_id} if not found in the database")
@@ -159,6 +245,15 @@ class Neo4jExecutor(BaseExecutor):
         return await self._next_node(node_list, node_id, executable_id, request_source)
 
     async def _handle_mail(self, mail: BaseMail):
+        """
+        Processes incoming mail, determining the next action based on the mail's category and content.
+
+        Args:
+            mail (BaseMail): The incoming mail to be processed.
+
+        Raises:
+            ValueError: If there is an error processing the mail.
+        """
         if mail.category == "start":
             try:
                 return await self._handle_start()
@@ -189,6 +284,13 @@ class Neo4jExecutor(BaseExecutor):
             raise ValueError(f"Invalid mail type for structure")
 
     def _send_mail(self, next_nodes: list | None, mail: BaseMail):
+        """
+         Sends out mail to the next nodes or marks the execution as ended if there are no next nodes.
+
+         Args:
+             next_nodes (list | None): List of next nodes to which mail should be sent.
+             mail (BaseMail): The current mail being processed.
+         """
         if not next_nodes:  # tail
             self.send(
                 recipient_id=mail.sender_id,
@@ -219,6 +321,9 @@ class Neo4jExecutor(BaseExecutor):
                 )
 
     async def forward(self) -> None:
+        """
+        Forwards execution by processing all pending mails and advancing to next nodes or actions.
+        """
         for key in list(self.pending_ins.keys()):
             while self.pending_ins[key]:
                 mail: BaseMail = self.pending_ins[key].popleft()
@@ -232,6 +337,12 @@ class Neo4jExecutor(BaseExecutor):
                     raise ValueError(f"Error handling mail: {e}") from e
 
     async def execute(self, refresh_time=1):
+        """
+        Continuously executes the forward process at specified intervals until instructed to stop.
+
+        Args:
+            refresh_time (int): The time in seconds between execution cycles.
+        """
         while not self.execute_stop:
             await self.forward()
             await AsyncUtil.sleep(refresh_time)

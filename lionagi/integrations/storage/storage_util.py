@@ -12,6 +12,17 @@ from lionagi.core import func_to_tool
 
 
 def output_node_list(structure):
+    """
+    Processes a structure object to extract and format all associated nodes into a summary list and detailed output dictionary.
+
+    This function traverses a structure, extracting key properties of nodes and organizing them by type into a dictionary for easy access and manipulation.
+
+    Args:
+        structure: The structure object containing nodes and potentially other nested structures.
+
+    Returns:
+        tuple: A tuple containing a summary list of all nodes and a dictionary categorizing nodes by type.
+    """
     summary_list = []
     output = {}
 
@@ -48,6 +59,17 @@ def output_node_list(structure):
 
 
 def output_edge_list(structure):
+    """
+    Extracts and formats all edges from a given structure into a list and maps any associated condition classes.
+
+    This function collects edge data from a structure, including identifiers, timestamps, labels, and conditions. It also compiles any unique condition classes associated with these edges.
+
+    Args:
+        structure: The structure object containing edges.
+
+    Returns:
+        tuple: A tuple containing a list of all edges with their details and a list of unique condition classes.
+    """
     edge_list = []
     edge_cls_dict = {}
     for edge in structure.internal_edges.values():
@@ -76,8 +98,25 @@ def output_edge_list(structure):
 
 
 class ParseNode:
+    """
+    Provides static methods for converting code strings to functional definitions, classes, and for parsing various types of structured nodes based on dictionary definitions.
+
+    This utility class facilitates the dynamic execution of code and the instantiation of objects from serialized data.
+    """
     @staticmethod
     def convert_to_def(function_code):
+        """
+         Converts a string containing a function definition into a callable function object.
+
+         Args:
+             function_code (str): The string code of the function to convert.
+
+         Returns:
+             function: The converted function as a callable.
+
+         Raises:
+             ValueError: If the function code is invalid or the function name cannot be detected.
+         """
         import re
 
         match = re.search(r"def (\w+)\(", function_code)
@@ -94,6 +133,18 @@ class ParseNode:
 
     @staticmethod
     def convert_to_class(cls_code):
+        """
+        Converts a string containing a class definition into a class object.
+
+        Args:
+            cls_code (str): The string code of the class to convert.
+
+        Returns:
+            class: The converted class.
+
+        Raises:
+            ValueError: If the class code is invalid or the class name cannot be detected.
+        """
         import re
 
         match = re.search(r"class (\w+)\s*(?:\(([^)]+)\))?:", cls_code)
@@ -110,6 +161,15 @@ class ParseNode:
 
     @staticmethod
     def parse_system(info_dict):
+        """
+        Parses dictionary information into a System node object.
+
+        Args:
+            info_dict (dict): A dictionary containing properties of a system node.
+
+        Returns:
+            System: An instantiated System node filled with properties from info_dict.
+        """
         node = System(" ")
         node.id_ = info_dict['id']
         node.timestamp = info_dict['timestamp']
@@ -120,6 +180,15 @@ class ParseNode:
 
     @staticmethod
     def parse_instruction(info_dict):
+        """
+        Parses dictionary information into an Instruction node object.
+
+        Args:
+            info_dict (dict): A dictionary containing properties of an instruction node.
+
+        Returns:
+            Instruction: An instantiated Instruction node filled with properties from info_dict.
+        """
         node = Instruction(" ")
         node.id_ = info_dict['id']
         node.timestamp = info_dict['timestamp']
@@ -130,6 +199,15 @@ class ParseNode:
 
     @staticmethod
     def parse_actionSelection(info_dict):
+        """
+        Parses dictionary information into an ActionSelection node object.
+
+        Args:
+            info_dict (dict): A dictionary containing properties of an action selection node.
+
+        Returns:
+            ActionSelection: An instantiated ActionSelection node filled with properties from info_dict.
+        """
         node = ActionSelection()
         node.id_ = info_dict['id']
         node.action = info_dict['action']
@@ -143,6 +221,18 @@ class ParseNode:
 
     @staticmethod
     def parse_tool(info_dict):
+        """
+        Parses dictionary information into a Tool node object, converting associated function code into a callable.
+
+        Args:
+            info_dict (dict): A dictionary containing properties and function code for a tool node.
+
+        Returns:
+            Tool: An instantiated Tool node with the function converted from code.
+
+        Raises:
+            ValueError: If unsafe code is detected in the function definition.
+        """
         func_code = info_dict['function']
         if "import os" in func_code or "__" in func_code or "import sys" in func_code:
             raise ValueError("Unsafe code detected in Tool function. Please double check or implement explicitly")
@@ -160,6 +250,19 @@ class ParseNode:
 
     @staticmethod
     def parse_condition(condition, cls_code):
+        """
+        Parses a condition dictionary and corresponding class code into a class instance representing the condition.
+
+        Args:
+            condition (dict): A dictionary containing the serialized form of the condition's arguments.
+            cls_code (str): The class code to instantiate the condition class.
+
+        Returns:
+            An instance of the condition class filled with properties from the condition dictionary.
+
+        Raises:
+            ValueError: If the condition or class code is invalid.
+        """
         args = condition["args"]
         cls = ParseNode.convert_to_class(cls_code)
 

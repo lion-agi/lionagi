@@ -11,6 +11,10 @@ from lionagi.core.execute.base_executor import BaseExecutor
 class BranchExecutor(Branch, BaseExecutor):
 
     async def forward(self) -> None:
+        """
+        Forwards the execution by processing all pending incoming mails in each branch. Depending on the category of the mail,
+        it processes starts, nodes, node lists, conditions, or ends, accordingly executing different functions.
+        """
         for key in list(self.pending_ins.keys()):
             while self.pending_ins[key]:
                 mail = self.pending_ins[key].popleft()
@@ -26,11 +30,27 @@ class BranchExecutor(Branch, BaseExecutor):
                     self._process_end(mail)
 
     async def execute(self, refresh_time=1) -> None:
+        """
+        Executes the forward process repeatedly at specified time intervals until execution is instructed to stop.
+
+        Args:
+            refresh_time (int): The interval, in seconds, at which the forward method is called repeatedly.
+        """
         while not self.execute_stop:
             await self.forward()
             await AsyncUtil.sleep(refresh_time)
 
     async def _process_node(self, mail: BaseMail):
+        """
+        Processes a single node based on the node type specified in the mail's package. It handles different types of nodes such as System,
+        Instruction, ActionNode, and generic nodes through separate processes.
+
+        Args:
+            mail (BaseMail): The mail containing the node to be processed along with associated details.
+
+        Raises:
+            ValueError: If an invalid mail is encountered or the process encounters errors.
+        """
         if isinstance(mail.package["package"], System):
             self._system_process(mail.package["package"], verbose=self.verbose)
             self.send(
@@ -74,11 +94,26 @@ class BranchExecutor(Branch, BaseExecutor):
                 raise ValueError(f"Invalid mail to process. Mail:{mail}")
 
     def _process_node_list(self, mail: BaseMail):
+        """
+        Processes a list of nodes provided in the mail, but currently only sends an end signal as multiple path selection is not supported.
+
+        Args:
+            mail (BaseMail): The mail containing a list of nodes to be processed.
+
+        Raises:
+            ValueError: When trying to process multiple paths which is currently unsupported.
+        """
         self.send(mail.sender_id, "end", {"request_source": self.id_, "package": "end"})
         self.execute_stop = True
         raise ValueError("Multiple path selection is currently not supported")
 
     def _process_condition(self, mail: BaseMail):
+        """
+        Processes a condition associated with an edge based on the mail's package, setting up the result of the condition check.
+
+        Args:
+            mail (BaseMail): The mail containing the condition to be processed.
+        """
         relationship: Edge = mail.package["package"]
         check_result = relationship.condition(self)
         back_mail = {
@@ -93,6 +128,14 @@ class BranchExecutor(Branch, BaseExecutor):
         )
 
     def _system_process(self, system: System, verbose=True, context_verbose=False):
+        """
+        Processes a system node, possibly displaying its content and context if verbose is enabled.
+
+        Args:
+            system (System): The system node to process.
+            verbose (bool): Flag to enable verbose output.
+            context_verbose (bool): Flag to enable verbose output specifically for context.
+        """
         from lionagi.libs import SysUtil
 
         SysUtil.check_import("IPython")
@@ -108,9 +151,15 @@ class BranchExecutor(Branch, BaseExecutor):
 
         self.add_message(system=system)
 
-    async def _instruction_process(
-        self, instruction: Instruction, verbose=True, **kwargs
-    ):
+    async def _instruction_process(self, instruction: Instruction, verbose=True, **kwargs):
+        """
+        Processes an instruction node, possibly displaying its content if verbose is enabled, and handling any additional keyword arguments.
+
+        Args:
+            instruction (Instruction): The instruction node to process.
+            verbose (bool): Flag to enable verbose output.
+            **kwargs: Additional keyword arguments that might affect how instructions are processed.
+        """
         from lionagi.libs import SysUtil
 
         SysUtil.check_import("IPython")
@@ -146,6 +195,13 @@ class BranchExecutor(Branch, BaseExecutor):
         self.execution_responses.append(result)
 
     async def _action_process(self, action: ActionNode, verbose=True):
+        """
+        Processes an action node, executing the defined action along with any tools specified within the node.
+
+        Args:
+            action (ActionNode): The action node to process.
+            verbose (bool): Flag to enable verbose output of the action results.
+        """
         from lionagi.libs import SysUtil
 
         SysUtil.check_import("IPython")
