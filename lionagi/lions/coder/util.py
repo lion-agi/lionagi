@@ -12,7 +12,7 @@ def set_up_interpreter(interpreter_provider="e2b", key_scheme=E2B_key_scheme):
 
         SysUtil.check_import("e2b_code_interpreter")
 
-        from e2b_code_interpreter import CodeInterpreter
+        from e2b_code_interpreter import CodeInterpreter # type: ignore
         from os import getenv
 
         return CodeInterpreter(api_key=getenv(key_scheme))
