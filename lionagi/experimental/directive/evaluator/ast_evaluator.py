@@ -49,7 +49,7 @@ class ASTEvaluator:
             raise ValueError(
                 "Unsupported AST node type encountered in condition evaluation."
             )
-            
+
 
 class ASTEvaluationEngine:
     """

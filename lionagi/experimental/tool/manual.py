@@ -43,8 +43,8 @@ class BaseManual:
         template_with_conditionals = self._render_conditionals(context)
         final_output = self._render_placeholders(template_with_conditionals, context)
         return final_output
-    
-    
+
+
 # from experiments.executor.executor import SafeEvaluator
 
 # class DecisionTreeManual:

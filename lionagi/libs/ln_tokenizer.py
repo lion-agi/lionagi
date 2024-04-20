@@ -9,6 +9,7 @@ class BaseToken:
     def __repr__(self):
         return f"BaseDirectiveToken({self.type}, {self.value})"
 
+
 class BaseTokenizer:
     TOKEN_TYPES = {
         "KEYWORD": r"\b(BEGIN|END|IF|ELSE|FOR|IN|TRY|EXCEPT|ENDIF|ENDFOR|ENDTRY|DO)\b",

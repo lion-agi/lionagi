@@ -24,7 +24,6 @@ class Tool(Node):
     def serialize_func(self, func):
         return func.__name__
 
-
     @singledispatchmethod
     async def invoke(self, values: Any) -> Any:
         raise TypeError(f"Unsupported type {type(values)}")
@@ -33,12 +32,12 @@ class Tool(Node):
     async def _(self, kwargs: dict):
 
         out = None
-        
+
         if self.pre_processor:
             kwargs = await func_call.unified_call(self.pre_processor, kwargs)
         try:
             out = await func_call.unified_call(self.func, **kwargs)
-            
+
         except Exception as e:
             _logging.error(f"Error invoking function {self.func_name}: {e}")
             return None
@@ -55,5 +54,6 @@ class Tool(Node):
     @invoke.register
     async def _(self, values: list):
         return await func_call.alcall(self.invoke, values)
-     
+
+
 TOOL_TYPE = bool | Tool | str | list[Tool | str | dict] | dict

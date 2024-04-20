@@ -1,7 +1,8 @@
 import os
 from lionagi.libs import convert
 
-finnhub_key_scheme = 'FINNHUB_API_KEY'
+finnhub_key_scheme = "FINNHUB_API_KEY"
+
 
 class FinnHub:
     """
@@ -19,7 +20,7 @@ class FinnHub:
     """
 
     api_key = os.getenv(finnhub_key_scheme)
-    
+
     @classmethod
     def get_client(cls, api_key=None):
         """
@@ -35,15 +36,17 @@ class FinnHub:
         Raises:
             ImportError: If there is an error while importing the 'finnhub' library.
         """
-        try: 
+        try:
             from lionagi.libs import SysUtil
+
             SysUtil.check_import("finnhub")
-            
+
             import finnhub
+
             return finnhub.Client(api_key=api_key or cls.api_key)
         except Exception as e:
             raise ImportError(f"Error occured during importing finnhub: {e}")
-    
+
     @classmethod
     def get_info_df(cls, info_kind="company_news", api_key=None, **kwargs):
         """
@@ -65,13 +68,17 @@ class FinnHub:
         info_func = cls.get_finnhub_method(client, info_kind)
         try:
             results = info_func(**kwargs)
-            try: 
+            try:
                 df = convert.to_df(results)
                 return df
             except Exception as e:
-                raise ValueError(f"Error occured during converting {info_kind} to DataFrame: {e}")
+                raise ValueError(
+                    f"Error occured during converting {info_kind} to DataFrame: {e}"
+                )
         except Exception as e:
-            raise ValueError(f"Error occured during getting {info_kind} from FinnHub: {e}")
+            raise ValueError(
+                f"Error occured during getting {info_kind} from FinnHub: {e}"
+            )
 
     @staticmethod
     def get_finnhub_method(client, info_kind):
@@ -179,7 +186,6 @@ class FinnHub:
             "congressional_trading": client.congressional_trading,
             "price_metrics": client.price_metrics,
             "market_holiday": client.market_holiday,
-            "market_status": client.market_status
+            "market_status": client.market_status,
         }
         return info_func.get(info_kind, None)
-    

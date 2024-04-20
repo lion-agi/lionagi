@@ -38,6 +38,6 @@ class FunctionCalling(BaseModel):
             return cls(**convert.to_dict(func_call))
         except Exception as e:
             raise ValueError(f"Invalid string {func_call}") from e
-        
+
     def __str__(self):
         return f"{self.func_name}({self.kwargs})"

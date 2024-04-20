@@ -112,8 +112,9 @@ class KnowledgeBase:
         """
         try:
             from lionagi.libs import SysUtil
+
             SysUtil.check_import("wikipedia")
-            import wikipedia # type: ignore
+            import wikipedia  # type: ignore
         except Exception as e:
             raise Exception("wikipedia package is not installed {e}")
 
@@ -276,13 +277,17 @@ class KGTripletExtractor:
         article_publish_date=None,
         verbose=False,
     ):
-        from lionagi.integrations.bridge.transformers_.install_ import install_transformers
+        from lionagi.integrations.bridge.transformers_.install_ import (
+            install_transformers,
+        )
+
         try:
-            from transformers import AutoModelForSeq2SeqLM, AutoTokenizer # type: ignore
+            from transformers import AutoModelForSeq2SeqLM, AutoTokenizer  # type: ignore
         except ImportError:
             install_transformers()
-        from transformers import AutoModelForSeq2SeqLM, AutoTokenizer # type: ignore
-        import torch # type: ignore
+        from transformers import AutoModelForSeq2SeqLM, AutoTokenizer  # type: ignore
+        import torch  # type: ignore
+
         """
         Extract knowledge graph triplets from text and create a KnowledgeBase (KB) containing entities and relations.
 
@@ -373,8 +378,8 @@ class KGTripletExtractor:
                 kb.add_relation(relation, article_title, article_publish_date)
             i += 1
         return kb
-    
-    
+
+
 class KGraph:
     """
     A class representing a Knowledge Graph (KGraph) for extracting relations from text.

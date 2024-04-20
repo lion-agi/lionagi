@@ -4,6 +4,7 @@ from lionagi.libs import AsyncUtil
 from .base_evaluator import BaseEvaluator
 from .sandbox_ import SandboxTransformer
 
+
 class ScriptEngine:
     def __init__(self):
         self.variables = {}

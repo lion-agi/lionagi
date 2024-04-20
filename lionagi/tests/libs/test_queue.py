@@ -15,18 +15,20 @@ class TestAsyncQueue(unittest.TestCase):
 
     def test_enqueue_dequeue(self):
         async def test():
-            await self.queue.enqueue('task1')
+            await self.queue.enqueue("task1")
             result = await self.queue.dequeue()
-            self.assertEqual(result, 'task1')
+            self.assertEqual(result, "task1")
+
         self.loop.run_until_complete(test())
 
     def test_stop(self):
         async def test():
             await self.queue.stop()
             self.assertTrue(self.queue.stopped())
+
         self.loop.run_until_complete(test())
 
-    @patch('lionagi.libs.ln_func_call.rcall', autospec=True)
+    @patch("lionagi.libs.ln_func_call.rcall", autospec=True)
     def test_process_requests(self, mock_rcall):
         future = asyncio.Future()
         future.set_result("Processed successfully")
@@ -42,7 +44,7 @@ class TestAsyncQueue(unittest.TestCase):
             await self.queue.stop()
 
         async def process():
-            await self.queue.process_requests(processor, retry_kwargs={'retries': 2})
+            await self.queue.process_requests(processor, retry_kwargs={"retries": 2})
 
         self.loop.create_task(add_tasks())
         self.loop.run_until_complete(process())
@@ -59,6 +61,7 @@ class TestAsyncQueue(unittest.TestCase):
 
         self.loop.run_until_complete(add_tasks())
         self.loop.run_until_complete(process())
+
 
 if __name__ == "__main__":
     unittest.main()

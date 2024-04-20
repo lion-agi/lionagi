@@ -12,6 +12,7 @@ def get_stock_prices(symbol, **kwargs):
         - For a full list of available keyword arguments, refer to the Yahoo Finance API documentation.
     """
     from lionagi.libs import SysUtil
+
     SysUtil.check_import("yfinance")
     from yfinance import Ticker
 

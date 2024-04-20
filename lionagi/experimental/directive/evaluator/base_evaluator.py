@@ -149,8 +149,8 @@ class BaseEvaluator:
                 )
         else:
             raise ValueError("Unsupported node type in expression.")
-        
-        
+
+
 class BaseEvaluationEngine:
     def __init__(self) -> None:
         self.variables: Dict[str, Any] = {}

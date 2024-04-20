@@ -13,16 +13,18 @@ from .worker import Worker
 
 class WorkFunction(BaseComponent):
     """Work function management and execution."""
+
     function: Callable
     args: List[Any] = Field(default_factory=list)
     kwargs: Dict[str, Any] = Field(default_factory=dict)
     retry_kwargs: Dict[str, Any] = Field(default_factory=dict)
     worklog: WorkLog = Field(default_factory=WorkLog)
-    instruction: str = Field(default="", description="Instruction for the work function")
+    instruction: str = Field(
+        default="", description="Instruction for the work function"
+    )
     refresh_time: float = Field(
         default=0.5, description="Time to wait before checking for pending work"
     )
-
 
     @property
     def name(self):
@@ -47,7 +49,7 @@ class WorkFunction(BaseComponent):
                     "and cannot be executed."
                 )
             await asyncio.sleep(self.refresh_time)
-            
+
     async def _execute(self, work: Work):
         """Execute a single work item."""
         work.status = WorkStatus.IN_PROGRESS
@@ -58,13 +60,13 @@ class WorkFunction(BaseComponent):
 
 
 def workfunc(func):
-    
+
     @wraps(func)
     async def wrapper(self: Worker, *args, **kwargs):
         # Retrieve the worker instance ('self')
-        if not hasattr(self, 'work_functions'):
+        if not hasattr(self, "work_functions"):
             self.work_functions = {}
-                
+
         if func.__name__ not in self.work_functions:
             # Create WorkFunction with the function and its docstring as instruction
             self.work_functions[func.__name__] = WorkFunction(
@@ -72,9 +74,9 @@ def workfunc(func):
                 instruction=func.__doc__,
                 args=args,
                 kwargs=kwargs,
-                retry_kwargs=kwargs.pop('retry_kwargs', {})
+                retry_kwargs=kwargs.pop("retry_kwargs", {}),
             )
-        
+
         # Retrieve the existing WorkFunction
         work_function: WorkFunction = self.work_functions[func.__name__]
         # Update args and kwargs for this call

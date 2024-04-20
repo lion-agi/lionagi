@@ -6,6 +6,7 @@ from typing import Any, Callable
 import asyncio
 from lionagi.libs import func_call
 
+
 class AsyncQueue:
     """
     This class handles the enqueueing and processing of tasks with a limit on
@@ -18,7 +19,7 @@ class AsyncQueue:
         max_concurrent_tasks (int): Maximum number of tasks processed concurrently.
         semaphore (asyncio.Semaphore): Controls concurrent access to task execution.
     """
-    
+
     def __init__(self, max_concurrent_tasks=5):
         """
         Initializes the AsyncQueue with a concurrency limit.
@@ -66,7 +67,7 @@ class AsyncQueue:
             bool: True if the queue has been stopped, otherwise False.
         """
         return self._stop_event.is_set()
-    
+
     async def process_requests(self, func: Callable, retry_kwargs: dict = {}) -> None:
         """
         Processes tasks from the queue using the provided function with retries.
@@ -91,7 +92,9 @@ class AsyncQueue:
                 if input_ is None:
                     await self.stop()
                     break
-                task = asyncio.create_task(func_call.rcall(func, input_, **retry_kwargs))
+                task = asyncio.create_task(
+                    func_call.rcall(func, input_, **retry_kwargs)
+                )
                 tasks.add(task)
 
         if tasks:

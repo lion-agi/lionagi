@@ -53,7 +53,7 @@ class TestWorkFunction(unittest.TestCase):
     @patch("asyncio.sleep", new_callable=AsyncMock)
     async def test_execute(self, mocked_sleep):
         """Test executing work changes its status and handles results."""
-        with patch.object(func_call, 'rcall', new_callable=AsyncMock) as mock_rcall:
+        with patch.object(func_call, "rcall", new_callable=AsyncMock) as mock_rcall:
             mock_rcall.return_value = "completed"
             await self.work_function.execute()
             self.assertEqual(self.work.status, WorkStatus.COMPLETED)
@@ -62,7 +62,7 @@ class TestWorkFunction(unittest.TestCase):
     @patch("asyncio.sleep", new_callable=AsyncMock)
     async def test_execute_failure(self, mocked_sleep):
         """Test handling failure during work execution."""
-        with patch.object(func_call, 'rcall', side_effect=Exception("Error")):
+        with patch.object(func_call, "rcall", side_effect=Exception("Error")):
             await self.work_function.execute()
             self.assertEqual(self.work.status, WorkStatus.FAILED)
             self.assertIn("123", self.work_function.worklog.errored)

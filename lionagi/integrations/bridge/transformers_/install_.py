@@ -1,6 +1,7 @@
 import subprocess
 from lionagi.libs import SysUtil
 
+
 def get_pytorch_install_command():
     cpu_arch = SysUtil.get_cpu_architecture()
 
@@ -19,6 +20,7 @@ def install_pytorch():
     except subprocess.CalledProcessError as e:
         print(f"Failed to install PyTorch: {e}")
 
+
 def install_transformers():
     if not SysUtil.is_package_installed("torch"):
         in_ = input(
@@ -31,6 +33,4 @@ def install_transformers():
             "transformers is required. Would you like to install it now? (y/n): "
         )
         if in_ == "y":
-            SysUtil.install_import(
-                package_name="transformers", import_name="pipeline"
-            )
+            SysUtil.install_import(package_name="transformers", import_name="pipeline")

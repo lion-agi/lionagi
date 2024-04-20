@@ -1,6 +1,7 @@
 from typing import Tuple
 from lionagi.libs import convert
 
+
 def parse_tool_response(response: dict) -> Tuple[str, dict]:
     try:
         func = response["action"][7:]
