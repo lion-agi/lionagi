@@ -17,10 +17,11 @@ class MailManager:
                     and sender.
     """
 
-    def __init__(self, sources):
+    def __init__(self, sources=None):
         self.sources = {}
         self.mails = {}
-        self.add_sources(sources)
+        if sources:
+            self.add_sources(sources)
         self.execute_stop = False
 
     def add_sources(self, sources):
