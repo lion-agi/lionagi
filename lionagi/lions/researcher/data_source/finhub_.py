@@ -36,7 +36,10 @@ class FinnHub:
             ImportError: If there is an error while importing the 'finnhub' library.
         """
         try: 
-            import lionagi.lions.searcher.sources.finnhub as finnhub
+            from lionagi.libs import SysUtil
+            SysUtil.check_import("finnhub")
+            
+            import finnhub
             return finnhub.Client(api_key=api_key or cls.api_key)
         except Exception as e:
             raise ImportError(f"Error occured during importing finnhub: {e}")
