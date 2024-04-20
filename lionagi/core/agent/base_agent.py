@@ -19,7 +19,7 @@ class BaseAgent(Node):
 
     def __init__(
         self,
-        structure: StructureExecutor,
+        structure: BaseExecutor,
         executable: BaseExecutor,
         output_parser=None,
         **kwargs,
@@ -33,7 +33,7 @@ class BaseAgent(Node):
             output_parser: A function for parsing the agent's output (optional).
         """
         super().__init__()
-        self.structure: StructureExecutor = structure
+        self.structure: BaseExecutor = structure
         self.executable: BaseExecutor = executable
         for v, k in kwargs.items():
             executable.__setattr__(v, k)
@@ -87,4 +87,3 @@ class BaseAgent(Node):
 
         if self.output_parser:
             return self.output_parser(self)
-        

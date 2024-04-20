@@ -272,7 +272,7 @@ class SysUtil:
         """
         try:
             if not SysUtil.is_package_installed(package_name):
-                print("check")
+                # print("check")
                 if attempt_install:
                     logging.info(
                         f"Package {package_name} not found. Attempting to install."
