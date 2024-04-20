@@ -31,20 +31,20 @@ class StructureExecutor(BaseExecutor, Graph):
 
     async def check_edge_condition(self, edge: Edge, executable_id, request_source):
         """
-         Evaluates the condition associated with an edge, determining if execution should proceed along that edge based
-         on the condition's source type.
+        Evaluates the condition associated with an edge, determining if execution should proceed along that edge based
+        on the condition's source type.
 
-         Args:
-             edge (Edge): The edge whose condition needs to be checked.
-             executable_id (str): ID of the executor handling this edge's condition.
-             request_source (str): Origin of the request prompting this condition check.
+        Args:
+            edge (Edge): The edge whose condition needs to be checked.
+            executable_id (str): ID of the executor handling this edge's condition.
+            request_source (str): Origin of the request prompting this condition check.
 
-         Returns:
-             bool: Result of the condition evaluation.
+        Returns:
+            bool: Result of the condition evaluation.
 
-         Raises:
-             ValueError: If the source_type of the condition is invalid.
-         """
+        Raises:
+            ValueError: If the source_type of the condition is invalid.
+        """
         if edge.condition.source_type == "structure":
             return edge.condition(self)
 
@@ -78,7 +78,9 @@ class StructureExecutor(BaseExecutor, Graph):
                     skipped_requests.append(mail)
             self.pending_ins[key] = skipped_requests
 
-    async def _check_executable_condition(self, edge: Edge, executable_id, request_source):
+    async def _check_executable_condition(
+        self, edge: Edge, executable_id, request_source
+    ):
         """
         Sends the edge's condition to an external executable for evaluation and waits for the result.
 

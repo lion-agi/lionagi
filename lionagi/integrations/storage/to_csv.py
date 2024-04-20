@@ -5,7 +5,9 @@ from pathlib import Path
 from lionagi.integrations.storage.storage_util import output_node_list, output_edge_list
 
 
-def _output_csv(node_list, node_dict, edge_list, edge_cls_list, zipname='structure_storage'):
+def _output_csv(
+    node_list, node_dict, edge_list, edge_cls_list, zipname="structure_storage"
+):
     """
     Writes provided node and edge data into multiple CSV files and compresses them into a ZIP archive.
 
@@ -24,22 +26,22 @@ def _output_csv(node_list, node_dict, edge_list, edge_cls_list, zipname='structu
     Returns:
         None: This function does not return a value but outputs a ZIP file containing the CSVs.
     """
-    tables = {'Nodes': pd.DataFrame(node_list), 'Edges': pd.DataFrame(edge_list)}
+    tables = {"Nodes": pd.DataFrame(node_list), "Edges": pd.DataFrame(edge_list)}
     if edge_cls_list:
-        tables['EdgesCondClass'] = pd.DataFrame(edge_cls_list)
+        tables["EdgesCondClass"] = pd.DataFrame(edge_cls_list)
     for i in node_dict:
         tables[i] = pd.DataFrame(node_dict[i])
 
-    zipname = zipname + '.zip'
+    zipname = zipname + ".zip"
 
-    with zipfile.ZipFile(zipname, 'w') as zf:
+    with zipfile.ZipFile(zipname, "w") as zf:
         for i in tables:
-            filename = i + '.csv'
-            with zf.open(filename, 'w') as file:
+            filename = i + ".csv"
+            with zf.open(filename, "w") as file:
                 tables[i].to_csv(file, index=False)
 
 
-def to_csv(structure, filename='structure_storage'):
+def to_csv(structure, filename="structure_storage"):
     """
     Converts a structure into a series of CSV files and stores them in a compressed ZIP archive.
 

@@ -151,7 +151,9 @@ class BranchExecutor(Branch, BaseExecutor):
 
         self.add_message(system=system)
 
-    async def _instruction_process(self, instruction: Instruction, verbose=True, **kwargs):
+    async def _instruction_process(
+        self, instruction: Instruction, verbose=True, **kwargs
+    ):
         """
         Processes an instruction node, possibly displaying its content if verbose is enabled, and handling any additional keyword arguments.
 
@@ -252,7 +254,7 @@ class BranchExecutor(Branch, BaseExecutor):
             agent: The agent to process.
             verbose (bool): A flag indicating whether to provide verbose output (default: True).
         """
-        context = list(self.messages['content'])
+        context = list(self.messages["content"])
         if verbose:
             print("*****************************************************")
         result = await agent.execute(context)
@@ -261,8 +263,9 @@ class BranchExecutor(Branch, BaseExecutor):
             print("*****************************************************")
 
         from pandas import DataFrame
+
         if isinstance(result, DataFrame):
-            self.context = list(result['content'])
+            self.context = list(result["content"])
         else:
             self.context = result
         self.execution_responses.append(result)
