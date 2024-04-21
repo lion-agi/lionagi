@@ -2,7 +2,7 @@
 
 # ChatCompletion
 oai_chat_llmconfig = {
-    "model": "gpt-4-turbo-preview",
+    "model": "gpt-4-turbo",
     "frequency_penalty": 0,
     "max_tokens": None,
     "n": 1,
