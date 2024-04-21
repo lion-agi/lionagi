@@ -46,8 +46,7 @@ class MonoReAct(MonoChat):
     """
 
     ACTION_PROMPT = """
-    You have {num_steps} steps left in the current task. If further actions are needed, invoke tool usage.
-    If you are done, present the final result to the user without further tool usage.
+    You have {num_steps} steps left in the current task. invoke tool usage.
     """
 
     OUTPUT_PROMPT = "Notice: Present the final output to the user. Original user instruction: {instruction}"
@@ -127,15 +126,15 @@ class MonoReAct(MonoChat):
 
     def _create_followup_config(self, tools, tool_choice="auto", **kwargs):
         """
-        Creates the configuration for the followup steps based on the provided tools and parameters.
+        Creates the configuration for the followup chat based on the provided tools and parameters.
 
         Args:
-            tools (Optional[Any]): Specifies tools to be invoked during the followup steps.
+            tools (Optional[Any]): Specifies tools to be invoked during the followup chat.
             tool_choice (str): The choice of tools to use (default: "auto").
-            **kwargs: Additional keyword arguments for the followup configuration.
+            **kwargs: Additional keyword arguments for the followup chat configuration.
 
         Returns:
-            dict: The configuration for the followup steps.
+            dict: The configuration for the followup chat.
 
         Raises:
             ValueError: If no tools are found and registered.
@@ -159,7 +158,7 @@ class MonoReAct(MonoChat):
         system=None,
         tools=None,
         num_rounds: int = 1,
-        auto=False,
+        auto=True,
         reason_prompt=None,
         action_prompt=None,
         output_prompt=None,
@@ -188,6 +187,7 @@ class MonoReAct(MonoChat):
             The result of the reasoning and action steps.
         """
         config = self._create_followup_config(tools, **kwargs)
+        kwargs.pop("tools", None)
 
         i = 0
         _out = ""
@@ -220,19 +220,19 @@ class MonoReAct(MonoChat):
 
             _out = await self.chat(_prompt, sender=sender, **config)
 
-            if auto and not self.branch._is_invoked():
+            if not self.branch._is_invoked():
                 return _out if out else None
 
             i += 1
 
-        if auto:
-            if not self.branch._is_invoked():
-                return _out if out else None
 
-            _prompt = self._get_prompt(
-                prompt=output_prompt,
-                default=self.OUTPUT_PROMPT,
-                instruction=instruction,
-            )
-            _out = await self.chat(_prompt, sender=sender, **kwargs)
+        if not self.branch._is_invoked():
             return _out if out else None
+
+        _prompt = self._get_prompt(
+            prompt=output_prompt,
+            default=self.OUTPUT_PROMPT,
+            instruction=instruction,
+        )
+        _out = await self.chat(_prompt, sender=sender, **kwargs)
+        return _out if out else None

@@ -471,3 +471,4 @@ class Branch(BaseBranch, BranchFlowMixin):
                 return True
         except Exception:
             return False
+        return False

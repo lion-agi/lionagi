@@ -150,7 +150,7 @@ class MonoFollowup(MonoChat):
         system=None,
         tools=None,
         max_followup: int = 1,
-        auto=False,
+        auto=True,
         followup_prompt=None,
         output_prompt=None,
         out=True,
@@ -196,19 +196,18 @@ class MonoFollowup(MonoChat):
             else:
                 _out = await self.chat(_prompt, sender=sender, **config)
 
-            if auto and not self.branch._is_invoked():
+            if not self.branch._is_invoked():
                 return _out if out else None
 
             i += 1
 
-        if auto:
-            if not self.branch._is_invoked():
-                return _out if out else None
-
-            _prompt = self._get_prompt(
-                prompt=output_prompt,
-                default=self.OUTPUT_PROMPT,
-                instruction=instruction,
-            )
-            _out = await self.chat(_prompt, sender=sender, **kwargs)
+        if not self.branch._is_invoked():
             return _out if out else None
+
+        _prompt = self._get_prompt(
+            prompt=output_prompt,
+            default=self.OUTPUT_PROMPT,
+            instruction=instruction,
+        )
+        _out = await self.chat(_prompt, sender=sender, **kwargs)
+        return _out if out else None
