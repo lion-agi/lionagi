@@ -1,3 +1,6 @@
+from typing import Any
+from pathlib import Path
+
 E2B_key_scheme = "E2B_API_KEY"
 
 
@@ -19,32 +22,6 @@ def set_up_interpreter(interpreter_provider="e2b", key_scheme=E2B_key_scheme):
 
     else:
         raise ValueError("Invalid interpreter provider")
-
-
-def extract_code_blocks(code):
-    print("Extracting code blocks...")
-    code_blocks = []
-    lines = code.split("\n")
-    inside_code_block = False
-    current_block = []
-
-    for line in lines:
-        if line.startswith("```"):
-            if inside_code_block:
-                code_blocks.append("\n".join(current_block))
-                current_block = []
-                inside_code_block = False
-            else:
-                inside_code_block = True
-        elif inside_code_block:
-            current_block.append(line)
-
-    if current_block:
-        code_blocks.append("\n".join(current_block))
-
-    print(f"Extracted {len(code_blocks)} code block(s).")
-    return "\n\n".join(code_blocks)
-
 
 def install_missing_dependencies(required_libraries):
     print("Checking for missing dependencies...")
@@ -89,3 +66,28 @@ def install_library(library):
         print(
             "You may need to run the script with administrative privileges or use a virtual environment."
         )
+
+def save_code_file(
+    code: Any,
+    directory: Path | str = None,
+    filename: str = "code.py",
+    timestamp: bool = True,
+    dir_exist_ok: bool = True,
+    time_prefix: bool = False,
+    custom_timestamp_format: str | None = None,
+    random_hash_digits: int = 3,
+    verbose: bool = True,
+):
+
+    from lionagi.libs import SysUtil
+    return SysUtil.save_to_file(
+        text=code,
+        directory=directory,
+        filename=filename,
+        timestamp=timestamp,
+        dir_exist_ok=dir_exist_ok,
+        time_prefix=time_prefix,
+        custom_timestamp_format=custom_timestamp_format,
+        random_hash_digits=random_hash_digits,
+        verbose=verbose,
+    )

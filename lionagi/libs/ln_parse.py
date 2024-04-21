@@ -103,12 +103,12 @@ class ParseUtil:
     # inspired by langchain_core.output_parsers.json (MIT License)
     # https://github.com/langchain-ai/langchain/blob/master/libs/core/langchain_core/output_parsers/json.py
     @staticmethod
-    def extract_code_block(
+    def extract_json_block(
         str_to_parse: str,
         language: str | None = None,
         regex_pattern: str | None = None,
         *,
-        parser: Callable[[str], Any],
+        parser: Callable[[str], Any] = None,
     ) -> Any:
         """
         Extracts and parses a code block from Markdown content.
@@ -152,6 +152,29 @@ class ParseUtil:
         return parser(code_str)
 
     @staticmethod
+    def extract_code_blocks(code):
+        code_blocks = []
+        lines = code.split('\n')
+        inside_code_block = False
+        current_block = []
+
+        for line in lines:
+            if line.startswith('```'):
+                if inside_code_block:
+                    code_blocks.append('\n'.join(current_block))
+                    current_block = []
+                    inside_code_block = False
+                else:
+                    inside_code_block = True
+            elif inside_code_block:
+                current_block.append(line)
+
+        if current_block:
+            code_blocks.append('\n'.join(current_block))
+
+        return '\n\n'.join(code_blocks)
+
+    @staticmethod
     def md_to_json(
         str_to_parse: str,
         *,
@@ -181,7 +204,7 @@ class ParseUtil:
                 >>> md_to_json('```json\\n{"key": "value"}\\n```', expected_keys=['key'])
                 {'key': 'value'}
         """
-        json_obj = ParseUtil.extract_code_block(
+        json_obj = ParseUtil.extract_json_block(
             str_to_parse, language="json", parser=parser or ParseUtil.fuzzy_parse_json
         )
 
