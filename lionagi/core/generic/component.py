@@ -55,7 +55,7 @@ class BaseComponent(BaseModel, ABC):
         return cls.__name__
 
     @property
-    def _field_annotations(self) -> dict:
+    def field_annotations(self) -> dict:
         """
         Return the annotations for each field in the model.
 
@@ -84,8 +84,9 @@ class BaseComponent(BaseModel, ABC):
         try:
             if not self._field_has_attr(k, attr):
                 raise ValueError(f"field {k} has no attribute {attr}")
+        
             field = self.model_fields[k]
-            a = getattr(field, attr)
+            a = getattr(field, attr, None)
             if not a:
                 try:
                     a = field.json_schema_extra[attr]
