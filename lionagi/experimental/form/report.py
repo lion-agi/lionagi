@@ -9,10 +9,69 @@ requirements,
 the assignments name should be consistent within a report, 
 meaning, all forms will refer to the same field value when using the same name.
 
-the same input field can be used in multiple forms, but each unique output field should be filled only once.
+the same input field can be used in multiple forms, but each unique output field 
+should be filled only once.
 meaning, not two forms should have the any output fields in common.
 
 a filled field cannot be None
+
+usage pattern:
+
+class Report1(Report):
+    a: Any = None
+    b: Any = None
+    c: Any = None
+    d: Any = None
+    e: Any = None
+    f: Any = None
+    
+    assignments: list = [
+        "a, b -> c", 
+        "c -> d", 
+        "b, d -> e"
+    ]
+
+this means that the report will have 3 work steps, each corresponding to an unique 
+form. the context for the report is the fields that cannot be output by any work 
+teps in the report. 
+
+the deliverable for the report is the fields that are output produced by the work 
+steps but not used as input for any other work steps in the same report.
+
+under the hood:
+
+the report first create three forms and add to its forms dictionary
+
+form1 = Form1(assignment="a, b -> c")
+form2 = Form2(assignment="c -> d")
+form3 = Form3(assignment="b -> e")
+form3 = Form3(assignment="d, e -> f")
+
+The Form1, Form2, Form3 can be a single form class or multiple form classes, 
+as long as they have the same fields to interact
+
+report is created by intaking different context inputs, in this case, we 
+need to provide a and b to the report
+
+report let work scheduler know which form to fill next, by using the next_forms() method, 
+this method check if the dependencies of a form are filled, if so, all such forms are 
+deemed to be next to fill. 
+
+so to begin with we need the context fields, a and b, then the report checks the 
+next forms, notice, for (a, b -> c), we have a and b, so this form can be filled next
+also for (b -> e), we have b, so this form can also be filled next
+
+thus the report will first send forms of those two assignments to the scheduler. 
+
+as work gets done, forms get filled, the completed forms will be sent back to scheduler, 
+and the scheduler is in charge of filling in the fields onto the report. After each 
+time a report gets new fields filled, the scheduler will check the next forms to fill, 
+and the process continues until all forms are filled.
+
+so as (a, b -> c) is done, we get c, thus c -> d is then the next form
+and d, e -> f is the last form to fill
+once all forms are filled and all fields transfered to reports, the report is completed.
+
 """
 
 
@@ -35,7 +94,7 @@ class Report(BaseComponent):
         default_factory=dict, description="intermediate fields for the report"
     )
     filled: bool = Field(False, description="whether the report is completed")
-    assignment: str = Field(..., examples=["input1, input2 -> output"])
+    assignments: list = Field([], description="assignment for the report")
 
     def fill_report(self, form: Form | str):
         form = self.forms[form] if isinstance(form, str) else form
@@ -100,7 +159,7 @@ class Report(BaseComponent):
     def next_forms(self):
         to_do = []
         for i in self._unfilled_forms:
-            if all([i in self._filled_fields for i in i.input_fields]):
+            if all([j in self._filled_fields for j in i.input_fields]):
                 to_do.append(i)
         return to_do[0] if len(to_do) == 1 else to_do or None
 
