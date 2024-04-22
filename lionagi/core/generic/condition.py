@@ -14,6 +14,7 @@ class ConditionSource(str, Enum):
 
     STRUCTURE = "structure"
     EXECUTABLE = "executable"
+    RULE = "rule"
 
 
 class Condition(BaseModel, ABC):

@@ -2,7 +2,7 @@
 
 from abc import ABC
 from functools import singledispatchmethod
-from typing import Any, TypeVar
+from typing import Any, TypeVar, Type
 
 from pydantic import AliasChoices, BaseModel, Field, ValidationError
 from pandas import DataFrame, Series
@@ -40,9 +40,9 @@ class BaseComponent(BaseModel, ABC):
         extra = "allow"
         arbitrary_types_allowed = True
         populate_by_name = True
-        validate_assignment = True
-        validate_return = True
-        str_strip_whitespace = True
+        # validate_assignment = True
+        # validate_return = True
+        # str_strip_whitespace = True
 
     @classmethod
     def class_name(cls) -> str:
@@ -247,6 +247,16 @@ class BaseComponent(BaseModel, ABC):
         dict_ = self.to_dict(*args, **kwargs)
         return Series(dict_, **pd_kwargs)
 
+    def _add_field(
+        self, field_name: str=None, annotation: Type=None, 
+        default: Any|None = None, value: Any|None = None, field: Any=None, 
+        **kwargs
+    ):
+        a: annotation = field or Field(default=default, **kwargs)
+        self.model_fields[field_name] = a
+        if annotation:
+            self.model_fields[field_name].annotation = annotation
+        self.__setattr__(field_name, value)
 
 class BaseNode(BaseComponent):
     """
