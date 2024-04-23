@@ -1,51 +1,84 @@
-from typing import Any
+from typing import Any, Type
 from pydantic import Field
-from lionagi.experimental.form.form import Form
 from lionagi import logging as _logging
+from lionagi.core.generic import BaseComponent
+from lionagi.experimental.form.form import Form
+from lionagi.experimental.form.util import get_input_output_fields
 
 
-class Report(Form):
+class Report(BaseComponent):
 
     assignment: str = Field(
         ..., 
-        examples=["a, b -> h"]
+        examples=["input1, input2 -> output"]
     )
-
+    
     forms: dict[str, Form] = Field(
         default_factory=dict,
-        description="A dictionary of forms related to the report, in {form.id_: form} format."
+        description="A dictionary of forms related to the report, in {assignment: Form} format."
     )
 
-    assignments: list = Field(
+    form_assignments: list = Field(
         [],
         description="assignment for the report", 
         examples=[["a, b -> c", "a -> e", "b -> f", "c -> g", "e, f, g -> h"]]
     )
 
-    def fill(self, form: Form | str = None, **kwargs):
-        if form:
-            form: Form = self.forms[form] if isinstance(form, str) else form
-            if not form.filled or form not in self.forms.values():
-                raise ValueError("The form is not filled or not in the report.")
-            
-            for k, v in form.work_fields.items():
-                if k not in self.model_fields:
-                    field = form.model_fields[k]
-                    self._add_field(k, value=v, field=field)
-        else:
-            for k, v in kwargs.items():
-                if k in self.model_fields:
-                    self._add_field(k, v)
+    form_template: Type[Form] = Field(
+        Form,
+        description="The template for the forms in the report."
+    )
 
-    @property
-    def filled(self) -> bool:
-        return all([value is not None for _, value in self.work_fields.items()])
+    input_fields: list[str] = Field(default_factory=list)
+    output_fields: list[str] = Field(default_factory=list)
     
+    def __init__(self, **kwargs):
+        """
+        at initialization, all relevant fields if not already provided, are set to None
+        """
+        super().__init__(**kwargs)
+        self.input_fields, self.output_fields = get_input_output_fields(
+            self.assignment
+        )
+        
+        # if assignments is not provided, set it to assignment
+        if self.form_assignments == []:
+            self.form_assignments.append(self.assignment)
+
+        # create forms
+        new_forms = {
+            i: self.form_template(assignment=i) for i in self.form_assignments
+        }
+        
+        # add new forms into the report (will ignore new forms already in the 
+        # report with same assignment)
+        for k, v in new_forms.items():
+            if k not in self.forms:
+                self.forms[k] = v
+
+        # if the fields are not declared in the report, add them to report
+        # with value set to None
+        for k, v in self.forms.items():
+            for f in list(v.work_fields.keys()):
+                if f not in self.model_fields:
+                    field = v.model_fields[f]
+                    self._add_field(f, value=None, field=field)
+        
+        # if there are fields in the report that are not in the forms, add them to
+        # the forms with values
+        for k, v in self.model_fields.items():
+            if getattr(self, k, None) is not None:
+                for f in self.forms.values():
+                    if k in f.work_fields:
+                        f.fill(**{k: getattr(self, k)})
+
     @property
     def work_fields(self) -> dict[str, Any]:
         """
-        all work fields across all forms, including intermediate output fields
+        all work fields across all forms, including intermediate output fields, 
+        this information is extracted from the forms
         """
+        
         all_fields = {}
         for form in self.forms.values():
             for k, v in form.work_fields.items():
@@ -53,51 +86,63 @@ class Report(Form):
                     all_fields[k] = v
         return all_fields
 
-    @property
-    def _filled_forms(self) -> list[Form]:
-        return [form for form in self.forms.values() if form.filled]
+
+    def fill(self, **kwargs):
+        """
+        fill the information to both the report and forms
+        """
+        kwargs = {**self.work_fields, **kwargs}
+        for k, v in kwargs.items():
+            if k in self.work_fields and getattr(self, k, None) is None:
+                setattr(self, k, v)
+        
+        for form in self.forms.values():
+            if not form.filled:
+                _kwargs = {
+                    k: v for k, v in kwargs.items() if k in form.work_fields
+                }
+                form.fill(**_kwargs)
 
     @property
-    def _unfilled_forms(self) -> list[Form]:
-        return [form for form in self.forms.values() if not form.filled]
-
-    @property
-    def _filled_fields(self) -> list[str]:
-        filled_fields = []
-        for i in self.work_fields:
-            if getattr(self, i, None) is not None:
-                filled_fields.append(i)
-        return filled_fields
-
-    @property
-    def _unfilled_fields(self) -> list[str]:
-        return [i for i in self.work_fields if i not in self._filled_fields]
+    def filled(self):
+        return all([value is not None for _, value in self.work_fields.items()])
 
     @property
     def workable(self) -> bool:
+        
+        if self.filled:
+            # _logging.info("The report is already filled, no need to work on it.")
+            return False
 
+        for i in self.input_fields:
+            if not getattr(self, i, None):
+                _logging.error(f"Field '{i}' is required to work on the report.")
+                return False
+        
+        # this is the required fields from report's own assignment
         fields = self.input_fields
         fields.extend(self.output_fields)
 
+        # if the report's own assignment is not in the forms, return False
         for f in fields:
             if f not in self.work_fields:
-                _logging.error(f"Field {f} is not assigned in the forms for the report.")
+                # _logging.error(f"Field {f} is a required deliverable, not found in work field.")
                 return False
 
+        # get all the output fields from all the forms
         outs = []
         for form in self.forms.values():
             outs.extend(form.output_fields)
 
+        # all output fields should be unique, not a single output field should be 
+        # calculated by more than one form
         if len(outs) != len(set(outs)):
-            _logging.error(f"Output fields should be unique across all forms.")
+            # _logging.error("There are duplicate output fields in the forms.")
             return False
 
         return True
 
     @property
     def next_forms(self) -> list[Form] | None:
-        to_do = []
-        for i in self._unfilled_forms:
-            if all([j in self._filled_fields for j in i.input_fields]):
-                to_do.append(i)
-        return to_do if len(to_do) > 0 else None
+        a = [i for i in self.forms.values() if i.workable]
+        return a if len(a) > 0 else None

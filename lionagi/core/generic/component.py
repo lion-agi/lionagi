@@ -3,6 +3,7 @@
 from abc import ABC
 from functools import singledispatchmethod
 from typing import Any, TypeVar, Type
+import json
 
 from pydantic import AliasChoices, BaseModel, Field, ValidationError
 from pandas import DataFrame, Series
@@ -202,8 +203,11 @@ class BaseComponent(BaseModel, ABC):
         Returns:
             str: The JSON string representation of the component.
         """
-        return self.model_dump_json(*args, by_alias=True, **kwargs)
+        dict_ = self.to_dict(*args, **kwargs)
+        return json.dumps(dict_)
 
+    # modified to_dict methods to include fields that are added after initialization
+    # such as via the _add_field method
     def to_dict(self, *args, **kwargs) -> dict[str, Any]:
         """
         Convert the component to a dictionary.
@@ -211,7 +215,11 @@ class BaseComponent(BaseModel, ABC):
         Returns:
             dict[str, Any]: The dictionary representation of the component.
         """
-        return self.model_dump(*args, by_alias=True, **kwargs)
+        dict_ = self.model_dump(*args, by_alias=True, **kwargs)
+        for i in list(self.model_fields.keys()):
+            if i not in dict_:
+                dict_[i] = getattr(self, i, None)
+        return dict_
 
     def to_xml(self) -> str:
         """
@@ -248,10 +256,15 @@ class BaseComponent(BaseModel, ABC):
         return Series(dict_, **pd_kwargs)
 
     def _add_field(
-        self, field_name: str=None, annotation: Type=None, 
+        self, field_name: str=None, annotation: Any|None|Type=Any, 
         default: Any|None = None, value: Any|None = None, field: Any=None, 
         **kwargs
     ):
+        """
+        add a field to the model after initialization, can use either a field info object
+        or raw information to create a field info object, default is None, and value is set to None
+        if not provided
+        """
         a: annotation = field or Field(default=default, **kwargs)
         self.model_fields[field_name] = a
         if annotation:
