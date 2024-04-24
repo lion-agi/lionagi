@@ -38,7 +38,7 @@ system_fields = [
 
 
 def get_input_output_fields(str_: str) -> list[list[str]]:
-    
+
     inputs, outputs = str_.split("->")
 
     input_fields = [convert.strip_lower(i) for i in inputs.split(",")]

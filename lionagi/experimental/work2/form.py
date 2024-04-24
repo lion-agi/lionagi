@@ -2,7 +2,7 @@ from typing import Any
 from pydantic import Field
 from lionagi.core.generic import BaseComponent
 from lionagi.libs import validation_funcs, convert
-from lionagi.experimental.form.util import get_input_output_fields
+from lionagi.experimental.report.util import get_input_output_fields
 
 
 class Form(BaseComponent):

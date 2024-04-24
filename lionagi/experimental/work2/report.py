@@ -1,10 +1,17 @@
 from typing import Any
 from pydantic import Field
-from lionagi.experimental.form.form import Form
+from lionagi.experimental.report.form import Form
 from lionagi.core.generic import BaseComponent
-from lionagi.experimental.form.util import get_input_output_fields
+from lionagi.experimental.report.util import get_input_output_fields
 
 """
+## Report Usage Pattern
+
+
+
+
+
+
 requirements, 
 the assignments name should be consistent within a report, 
 meaning, all forms will refer to the same field value when using the same name.
