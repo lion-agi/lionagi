@@ -29,12 +29,16 @@ class Work(BaseComponent):
             result = await self.async_task
             self.result = result
             self.status = WorkStatus.COMPLETED
+            self.async_task = None
         except Exception as e:
             self.error = e
             self.status = WorkStatus.FAILED
         finally:
             self.completion_timestamp = SysUtil.get_timestamp()
-        
+
+
+    def __str__(self):
+        return f"Work(id={self.id_}, status={self.status}, created_at={self.timestamp}, completed_at={self.completion_timestamp})"
 
 class WorkLog:
     
@@ -60,6 +64,7 @@ class WorkLog:
     async def stop(self):
         await self.queue.stop()
 
+    @property
     def stopped(self):
         return self.queue.stopped
 

@@ -43,10 +43,12 @@ class WorkQueue:
             async with self.semaphore:
                 next = await self.dequeue()
                 if next is None:
-                    await self.stop()
                     break
                 task = asyncio.create_task(next.perform())
                 tasks.add(task)
 
             if tasks:
                 await asyncio.wait(tasks)
+        await asyncio.sleep(refresh_time)
+
+
