@@ -1,5 +1,5 @@
 from .schema import Work, WorkStatus
-from ._logger import WorkLog
+from ..work.worklog import WorkLog
 from .work_function import WorkFunction
 
 import unittest

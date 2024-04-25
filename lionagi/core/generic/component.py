@@ -2,7 +2,8 @@
 
 from abc import ABC
 from functools import singledispatchmethod
-from typing import Any, TypeVar
+from typing import Any, TypeVar, Type
+import json
 
 from pydantic import AliasChoices, BaseModel, Field, ValidationError
 from pandas import DataFrame, Series
@@ -40,9 +41,9 @@ class BaseComponent(BaseModel, ABC):
         extra = "allow"
         arbitrary_types_allowed = True
         populate_by_name = True
-        validate_assignment = True
-        validate_return = True
-        str_strip_whitespace = True
+        # validate_assignment = True
+        # validate_return = True
+        # str_strip_whitespace = True
 
     @classmethod
     def class_name(cls) -> str:
@@ -55,7 +56,7 @@ class BaseComponent(BaseModel, ABC):
         return cls.__name__
 
     @property
-    def _field_annotations(self) -> dict:
+    def field_annotations(self) -> dict:
         """
         Return the annotations for each field in the model.
 
@@ -84,8 +85,9 @@ class BaseComponent(BaseModel, ABC):
         try:
             if not self._field_has_attr(k, attr):
                 raise ValueError(f"field {k} has no attribute {attr}")
+        
             field = self.model_fields[k]
-            a = getattr(field, attr)
+            a = getattr(field, attr, None)
             if not a:
                 try:
                     a = field.json_schema_extra[attr]
@@ -201,8 +203,11 @@ class BaseComponent(BaseModel, ABC):
         Returns:
             str: The JSON string representation of the component.
         """
-        return self.model_dump_json(*args, by_alias=True, **kwargs)
+        dict_ = self.to_dict(*args, **kwargs)
+        return json.dumps(dict_)
 
+    # modified to_dict methods to include fields that are added after initialization
+    # such as via the _add_field method
     def to_dict(self, *args, **kwargs) -> dict[str, Any]:
         """
         Convert the component to a dictionary.
@@ -210,7 +215,11 @@ class BaseComponent(BaseModel, ABC):
         Returns:
             dict[str, Any]: The dictionary representation of the component.
         """
-        return self.model_dump(*args, by_alias=True, **kwargs)
+        dict_ = self.model_dump(*args, by_alias=True, **kwargs)
+        for i in list(self.model_fields.keys()):
+            if i not in dict_:
+                dict_[i] = getattr(self, i, None)
+        return dict_
 
     def to_xml(self) -> str:
         """
@@ -246,6 +255,21 @@ class BaseComponent(BaseModel, ABC):
         dict_ = self.to_dict(*args, **kwargs)
         return Series(dict_, **pd_kwargs)
 
+    def _add_field(
+        self, field_name: str=None, annotation: Any|None|Type=Any, 
+        default: Any|None = None, value: Any|None = None, field: Any=None, 
+        **kwargs
+    ):
+        """
+        add a field to the model after initialization, can use either a field info object
+        or raw information to create a field info object, default is None, and value is set to None
+        if not provided
+        """
+        a: annotation = field or Field(default=default, **kwargs)
+        self.model_fields[field_name] = a
+        if annotation:
+            self.model_fields[field_name].annotation = annotation
+        self.__setattr__(field_name, value)
 
 class BaseNode(BaseComponent):
     """
