@@ -9,7 +9,7 @@ from lionagi.core.execute.base_executor import BaseExecutor
 from lionagi.core.execute.instruction_map_executor import InstructionMapExecutor
 
 
-def excel_reload(structure_name=None, structure_id=None, file_path="structure_storage"):
+def excel_reload(structure_name=None, structure_id=None, dir="structure_storage"):
     """
     Loads a structure from an Excel file into a StructureExecutor instance.
 
@@ -19,7 +19,7 @@ def excel_reload(structure_name=None, structure_id=None, file_path="structure_st
     Args:
         structure_name (str, optional): The name of the structure to reload.
         structure_id (str, optional): The unique identifier of the structure to reload.
-        file_path (str): The directory path where the Excel files are stored.
+        dir (str): The directory path where the Excel files are stored.
 
     Returns:
         StructureExecutor: An instance of StructureExecutor containing the reloaded structure.
@@ -28,7 +28,7 @@ def excel_reload(structure_name=None, structure_id=None, file_path="structure_st
         ValueError: If neither structure_name nor structure_id is provided, or if multiple or no files
                     are found matching the criteria.
     """
-    excel_structure = StructureExcel(structure_name, structure_id, file_path)
+    excel_structure = StructureExcel(structure_name, structure_id, dir)
     excel_structure.reload()
     return excel_structure.structure
 
