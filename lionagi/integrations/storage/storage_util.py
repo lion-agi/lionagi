@@ -32,7 +32,7 @@ def output_node_list(structure):
         "type": structure.class_name(),
     }
     summary_list.append(structure_output.copy())
-    structure_output["head_nodes"] = [i.id_ for i in structure.get_heads()]
+    structure_output["head_nodes"] = json.dumps([i.id_ for i in structure.get_heads()])
     # structure_output['nodes'] = json.dumps([i for i in structure.internal_nodes.keys()])
     # structure_output['edges'] = json.dumps([i for i in structure.internal_edges.keys()])
     output[structure_output["type"]] = [structure_output]

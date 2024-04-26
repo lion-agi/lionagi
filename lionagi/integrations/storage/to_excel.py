@@ -4,9 +4,7 @@ from lionagi.libs import SysUtil
 from lionagi.integrations.storage.storage_util import output_node_list, output_edge_list
 
 
-def _output_excel(
-    node_list, node_dict, edge_list, edge_cls_list, filename="structure_storage"
-):
+def _output_excel(node_list, node_dict, edge_list, edge_cls_list, structure_name, dir="structure_storage"):
     """
     Writes provided node and edge data into multiple sheets of a single Excel workbook.
 
@@ -20,7 +18,7 @@ def _output_excel(
                           node attributes for nodes of that type.
         edge_list (list): A list of dictionaries where each dictionary contains attributes of a single edge.
         edge_cls_list (list): A list of dictionaries where each dictionary contains attributes of edge conditions.
-        filename (str): The base name for the output Excel file. The '.xlsx' extension will be added
+        structure_name (str): The base name for the output Excel file. The '.xlsx' extension will be added
                         automatically if not included.
 
     Returns:
@@ -31,20 +29,30 @@ def _output_excel(
     """
     SysUtil.check_import("openpyxl")
 
+    structure_id = ""
+
     tables = {"Nodes": pd.DataFrame(node_list), "Edges": pd.DataFrame(edge_list)}
     if edge_cls_list:
         tables["EdgesCondClass"] = pd.DataFrame(edge_cls_list)
     for i in node_dict:
+        if i == "StructureExecutor":
+            structure_node = node_dict[i][0]
+            structure_node["name"] = structure_name
+            structure_id = structure_node["id"]
         tables[i] = pd.DataFrame(node_dict[i])
 
-    filename = filename + ".xlsx"
+    import os
+    filepath = os.path.join(dir, f"{structure_name}_{structure_id}.xlsx")
 
-    with pd.ExcelWriter(filename) as writer:
+    if not os.path.exists(dir):
+        os.makedirs(dir)
+
+    with pd.ExcelWriter(filepath) as writer:
         for i in tables:
             tables[i].to_excel(writer, sheet_name=i, index=False)
 
 
-def to_excel(structure, filename="structure_storage"):
+def to_excel(structure, structure_name, dir="structure_storage"):
     """
     Converts a structure into a series of Excel sheets within a single workbook.
 
@@ -55,7 +63,7 @@ def to_excel(structure, filename="structure_storage"):
     Args:
         structure: An object representing the structure to be serialized. This should have methods
                    to return lists of nodes and edges suitable for output.
-        filename (str): The base name of the output Excel file. The '.xlsx' extension will be added
+        structure_name (str): The base name of the output Excel file. The '.xlsx' extension will be added
                         automatically if not included.
 
     Returns:
@@ -64,4 +72,5 @@ def to_excel(structure, filename="structure_storage"):
     node_list, node_dict = output_node_list(structure)
     edge_list, edge_cls_list = output_edge_list(structure)
 
-    _output_excel(node_list, node_dict, edge_list, edge_cls_list, filename)
+    _output_excel(node_list, node_dict, edge_list, edge_cls_list, structure_name, dir)
+

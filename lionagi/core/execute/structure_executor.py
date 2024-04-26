@@ -312,3 +312,7 @@ class StructureExecutor(BaseExecutor, Graph):
         while not self.execute_stop:
             await self.forward()
             await AsyncUtil.sleep(refresh_time)
+
+    def to_excel(self, structure_name, dir="structure_storage"):
+        from lionagi.integrations.storage.to_excel import to_excel
+        to_excel(self, structure_name, dir)
