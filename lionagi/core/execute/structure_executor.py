@@ -312,3 +312,23 @@ class StructureExecutor(BaseExecutor, Graph):
         while not self.execute_stop:
             await self.forward()
             await AsyncUtil.sleep(refresh_time)
+
+    def to_excel(self, structure_name, dir="structure_storage"):
+        """
+        Exports the current structure to an Excel file using a specified structure name and directory.
+
+        This method utilizes the `to_excel` function from the `lionagi.integrations.storage.to_excel` module,
+        saving the current structure instance into an Excel file format. The Excel file will contain details
+        about nodes, edges, and other relevant data as separate sheets within the file.
+
+        Args:
+            structure_name (str): The name to assign to the structure within the Excel file. This name is
+                                  used as part of the file naming convention.
+            dir (str, optional): The directory where the Excel file will be saved. Defaults to "structure_storage".
+
+        Raises:
+            Exception: Propagates any exceptions raised by the `to_excel` function, which might occur during
+                       the file writing process or data formatting.
+        """
+        from lionagi.integrations.storage.to_excel import to_excel
+        to_excel(self, structure_name, dir)
