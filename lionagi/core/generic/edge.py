@@ -1,15 +1,15 @@
 """
-Module for representing conditions and edges between nodes in a graph structure.
+Module for representing conditions and edges between nodes in a graph.
 
-This module provides the base for creating and managing edges that connect nodes
-within a graph. It includes support for conditional edges, allowing the dynamic
-evaluation of connections based on custom logic.
+This module provides the base for creating and managing edges that connect
+nodes within a graph. It includes support for conditional edges, allowing
+the dynamic evaluation of connections based on custom logic.
 """
 
 from typing import Any
 from pydantic import Field, field_validator
-from lionagi.core.generic.component import BaseComponent, BaseNode
-from lionagi.core.generic.condition import Condition
+from .component import BaseComponent
+from .condition import Condition
 
 
 class Edge(BaseComponent):
@@ -19,12 +19,14 @@ class Edge(BaseComponent):
     Attributes:
         head (str): The identifier of the head node of the edge.
         tail (str): The identifier of the tail node of the edge.
-        condition (Optional[Condition]): An optional condition that must be met
+        condition (Condition | None): Optional condition that must be met
             for the edge to be considered active.
-        label (Optional[str]): An optional label for the edge.
+        label (str | None): An optional label for the edge.
+        bundle (bool): A flag indicating if the edge is bundled.
 
     Methods:
-        check_condition: Evaluates if the condition associated with the edge is met.
+        check_condition: Evaluates if the condition is met.
+        string_condition: Retrieves the condition class source code.
     """
 
     head: str = Field(
@@ -37,7 +39,8 @@ class Edge(BaseComponent):
     )
     condition: Condition | None = Field(
         default=None,
-        description="An optional condition that must be met for the edge to be considered active.",
+        description="Optional condition that must be met for the edge "
+                    "to be considered active.",
     )
     label: str | None = Field(
         default=None,
@@ -51,20 +54,19 @@ class Edge(BaseComponent):
     @field_validator("head", "tail", mode="before")
     def _validate_head_tail(cls, value):
         """
-        Validates the head and tail fields to ensure they are valid node identifiers.
+        Validates head and tail fields to ensure valid node identifiers.
 
         Args:
-            value: The value of the field being validated.
-            values: A dictionary of all other values on the model.
-            field: The model field being validated.
+            value (Any): The value of the field being validated.
 
         Returns:
-            The validated value, ensuring it is a valid identifier.
+            str: The validated value, ensuring it is a valid identifier.
 
         Raises:
             ValueError: If the validation fails.
         """
-        if isinstance(value, BaseNode):
+
+        if isinstance(value, BaseComponent):
             return value.id_
         return value
 
@@ -73,7 +75,7 @@ class Edge(BaseComponent):
         Evaluates if the condition associated with the edge is met.
 
         Args:
-            obj (dict[str, Any]): The context object used for condition evaluation.
+            obj (dict[str, Any]): Context for condition evaluation.
 
         Returns:
             bool: True if the condition is met, False otherwise.
@@ -87,19 +89,23 @@ class Edge(BaseComponent):
 
     def string_condition(self):
         """
-        Retrieves the source code of the condition class associated with this edge as a string.
+        Retrieves the condition class source code as a string.
 
-        This method is useful for serialization and debugging, allowing the condition logic to be inspected or stored
-        in a human-readable format. It employs advanced introspection techniques to locate and extract the exact class
-        definition, handling edge cases like dynamically defined classes or classes defined in interactive environments.
+        This method is useful for serialization and debugging, allowing
+        the condition logic to be inspected or stored in a human-readable
+        format. It employs advanced introspection techniques to locate and
+        extract the exact class definition, handling edge cases like
+        dynamically defined classes or classes defined interactively.
 
         Returns:
-            str: The source code of the condition's class, if available. If the condition is None or the source code
-                cannot be located, this method returns None.
+            str | None: The condition class source code if available.
+                If the condition is None or the source code cannot be
+                located, this method returns None.
 
         Raises:
-            TypeError: If the source code of the condition's class cannot be found due to the class being defined in a
-                non-standard manner or in the interactive interpreter (__main__ context).
+            TypeError: If the condition class source code cannot be found
+                due to the class being defined in a non-standard manner or
+                in the interactive interpreter (__main__ context).
         """
         if self.condition is None:
             return
@@ -139,9 +145,8 @@ class Edge(BaseComponent):
 
     def __str__(self) -> str:
         """
-        Returns a simple string representation of the Relationship.
+        Returns a simple string representation of the Edge.
         """
-
         return (
             f"Edge (id_={self.id_}, from={self.head}, to={self.tail}, "
             f"label={self.label})"
@@ -149,12 +154,7 @@ class Edge(BaseComponent):
 
     def __repr__(self) -> str:
         """
-        Returns a detailed string representation of the Relationship.
-
-        Examples:
-            >>> edge = Relationship(source_node_id="node1", target_node_id="node2")
-            >>> repr(edge)
-            'Relationship(id_=None, from=node1, to=node2, content=None, metadata=None, label=None)'
+        Returns a detailed string representation of the Edge.
         """
         return (
             f"Edge(id_={self.id_}, from={self.head}, to={self.tail}, "
