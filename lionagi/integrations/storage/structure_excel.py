@@ -18,9 +18,9 @@ def excel_reload(structure_name=None, structure_id=None, file_path="structure_st
 class StructureExcel:
     structure: StructureExecutor = StructureExecutor()
     default_agent_executable: BaseExecutor = InstructionMapExecutor()
-    middle_structures: list | None = None
 
     def __init__(self, structure_name=None, structure_id=None, file_path="structure_storage"):
+        self.file_path = file_path
         if not structure_name and not structure_id:
             raise ValueError("Please provide the structure name or id")
         if structure_name and structure_id:
@@ -70,7 +70,7 @@ class StructureExcel:
     def parse_agent(self, info_dict):
         output_parser = ParseNode.convert_to_def(info_dict["output_parser"])
 
-        structure_excel = StructureExcel(structure_id=info_dict["structure_id"])
+        structure_excel = StructureExcel(structure_id=info_dict["structure_id"], file_path=self.file_path)
         structure_excel.reload()
         structure = structure_excel.structure
         agent = BaseAgent(structure=structure, executable=self.default_agent_executable, output_parser=output_parser)
