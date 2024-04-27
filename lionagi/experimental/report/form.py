@@ -1,7 +1,7 @@
 from pydantic import Field
 
 # from lionagi import logging as _logging
-from lionagi.core.generic import BaseComponent
+from lionagi.core.generic.component import BaseComponent
 from lionagi.experimental.report.util import get_input_output_fields, system_fields
 
 

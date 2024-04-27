@@ -1,10 +1,7 @@
-from .schema import WorkLog
-from .work_function import WorkFunction, work
+from ._decorator import work
+from .record.form import Form
+from .record.report import Report
 from .worker import Worker
 
-__all__ = [
-    "WorkLog",
-    "WorkFunction",
-    "work",
-    "Worker",
-]
+
+__all__ = ["Form", "Report", "Worker", "work"]
