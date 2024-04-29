@@ -288,7 +288,7 @@ class StructureExecutor(BaseExecutor, Graph):
             while self.pending_ins[key]:
                 mail: BaseMail = self.pending_ins[key].popleft()
                 try:
-                    if mail == "end":
+                    if mail.category == "end":
                         self.execute_stop = True
                         return
                     next_nodes = await self._handle_mail(mail)
