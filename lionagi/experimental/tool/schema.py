@@ -34,16 +34,16 @@ class Tool(Node):
         out = None
 
         if self.pre_processor:
-            kwargs = await func_call.unified_call(self.pre_processor, kwargs)
+            kwargs = await func_call.call_handler(self.pre_processor, kwargs)
         try:
-            out = await func_call.unified_call(self.func, **kwargs)
+            out = await func_call.call_handler(self.func, **kwargs)
 
         except Exception as e:
             _logging.error(f"Error invoking function {self.func_name}: {e}")
             return None
 
         if self.post_processor:
-            return await func_call.unified_call(self.post_processor, out)
+            return await func_call.call_handler(self.post_processor, out)
 
         return out
 

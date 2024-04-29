@@ -75,7 +75,7 @@ class ToolManager:
         func = tool.func
         parser = tool.parser
         try:
-            out = await func_call.unified_call(func, **kwargs)
+            out = await func_call.call_handler(func, **kwargs)
             return parser(out) if parser else out
 
         except Exception as e:

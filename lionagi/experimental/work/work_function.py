@@ -1,89 +1,67 @@
 import asyncio
-from typing import Any, Callable, Dict, List
-from pydantic import Field
-from functools import wraps
-from lionagi import logging as _logging
+from typing import Callable, Any
 from lionagi.libs import func_call
+from functools import wraps
+from pydantic import Field
+
 from lionagi.core.generic import BaseComponent
 
-from .schema import Work, WorkStatus
-from ._logger import WorkLog
-from .worker import Worker
+from .schema import Work, WorkLog
 
 
-class WorkFunction(BaseComponent):
-    """Work function management and execution."""
 
-    function: Callable
-    args: List[Any] = Field(default_factory=list)
-    kwargs: Dict[str, Any] = Field(default_factory=dict)
-    retry_kwargs: Dict[str, Any] = Field(default_factory=dict)
-    worklog: WorkLog = Field(default_factory=WorkLog)
-    instruction: str = Field(
-        default="", description="Instruction for the work function"
-    )
-    refresh_time: float = Field(
-        default=0.5, description="Time to wait before checking for pending work"
-    )
-
+class WorkFunction:
+    
+    def __init__(
+        self, assignment, function, retry_kwargs=None, 
+        instruction = None, capacity=5
+    ):
+        
+        self.assignment = assignment
+        self.function = function
+        self.retry_kwargs = retry_kwargs or {}
+        self.instruction = instruction or function.__doc__
+        self.worklog = WorkLog(capacity=capacity)
+    
+    
     @property
     def name(self):
-        """Get the name of the work function."""
         return self.function.__name__
 
-    async def execute(self):
-        """Execute pending work items."""
-        while self.worklog.pending:
-            work_id = self.worklog.pending.popleft()
-            work = self.worklog.logs[work_id]
-            if work.status == WorkStatus.PENDING:
-                try:
-                    await func_call.rcall(self._execute, work, **work.retry_kwargs)
-                except Exception as e:
-                    work.status = WorkStatus.FAILED
-                    _logging.error(f"Work {work.id_} failed with error: {e}")
-                    self.worklog.errored.append(work.id_)
-            else:
-                _logging.warning(
-                    f"Work {work.id_} is in {work.status} state "
-                    "and cannot be executed."
+    async def perform(self, *args, **kwargs):
+        kwargs = {**self.retry_kwargs, **kwargs}
+        return await func_call.rcall(self.function, *args, **kwargs)
+    
+    async def process(self, refresh_time=1):
+        await self.worklog.process(refresh_time=refresh_time)
+    
+    async def stop(self):
+        await self.worklog.queue.stop()
+    
+    
+    
+def work(assignment, capacity=5):
+    def decorator(func):
+        @wraps(func)
+        async def wrapper(self, *args, retry_kwargs=None, instruction=None, **kwargs):
+            if getattr(self, "work_functions", None) is None:
+                self.work_functions = {}
+            
+            if func.__name__ not in self.work_functions:                
+                self.work_functions[func.__name__] = WorkFunction(
+                    assignment=assignment,
+                    function=func,
+                    retry_kwargs=retry_kwargs or {},
+                    instruction=instruction or func.__doc__,
+                    capacity=capacity
                 )
-            await asyncio.sleep(self.refresh_time)
-
-    async def _execute(self, work: Work):
-        """Execute a single work item."""
-        work.status = WorkStatus.IN_PROGRESS
-        result = await self.function(*self.args, **self.kwargs)
-        work.deliverables = result
-        work.status = WorkStatus.COMPLETED
-        return result
-
-
-def workfunc(func):
-
-    @wraps(func)
-    async def wrapper(self: Worker, *args, **kwargs):
-        # Retrieve the worker instance ('self')
-        if not hasattr(self, "work_functions"):
-            self.work_functions = {}
-
-        if func.__name__ not in self.work_functions:
-            # Create WorkFunction with the function and its docstring as instruction
-            self.work_functions[func.__name__] = WorkFunction(
-                function=func,
-                instruction=func.__doc__,
-                args=args,
-                kwargs=kwargs,
-                retry_kwargs=kwargs.pop("retry_kwargs", {}),
-            )
-
-        # Retrieve the existing WorkFunction
-        work_function: WorkFunction = self.work_functions[func.__name__]
-        # Update args and kwargs for this call
-        work_function.args = args
-        work_function.kwargs = kwargs
-
-        # Execute the function using WorkFunction's managed execution process
-        return await work_function.execute()
-
-    return wrapper
+                
+            work_func: WorkFunction = self.work_functions[func.__name__]
+            task = asyncio.create_task(work_func.perform(*args, **kwargs))
+            work = Work(async_task=task)
+            work_func: WorkFunction = self.work_functions[func.__name__]
+            await work_func.worklog.append(work)
+            return True
+        
+        return wrapper
+    return decorator
