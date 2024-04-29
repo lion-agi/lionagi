@@ -29,7 +29,7 @@ def output_node_list(structure):
     structure_output = {
         "id": structure.id_,
         "timestamp": structure.timestamp,
-        "type": structure.class_name(),
+        "type": structure.class_name,
     }
     summary_list.append(structure_output.copy())
     structure_output["head_nodes"] = json.dumps([i.id_ for i in structure.get_heads()])
@@ -40,7 +40,7 @@ def output_node_list(structure):
         node_output = {
             "id": node.id_,
             "timestamp": node.timestamp,
-            "type": node.class_name(),
+            "type": node.class_name,
         }
         summary_list.append(node_output.copy())
         if isinstance(node, System) or isinstance(node, Instruction):
