@@ -92,7 +92,7 @@ class Graph(BaseStructure):
         for node_id, node in self.internal_nodes.items():
             node_info = node.to_dict()
             node_info.pop("id_")
-            node_info.update({"class_name": node.class_name()})
+            node_info.update({"class_name": node.class_name})
             g.add_node(node_id, **node_info)
 
         for _edge in list(self.internal_edges.values()):
