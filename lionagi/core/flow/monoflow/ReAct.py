@@ -145,7 +145,9 @@ class MonoReAct(MonoChat):
         if not self.branch.tool_manager.has_tools:
             raise ValueError("No tools found. You need to register tools.")
 
-        config = self.branch.tool_manager.parse_tool(tools=True, **kwargs)
+        if tools is None:
+            tools = True
+        config = self.branch.tool_manager.parse_tool(tools=tools, **kwargs)
         config["tool_parsed"] = True
         config["tool_choice"] = tool_choice
         return config

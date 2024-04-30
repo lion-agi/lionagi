@@ -159,15 +159,16 @@ class ToolManager:
                 else:
                     raise ValueError(f"Function {tool} is not registered.")
 
-        if isinstance(tools, bool):
-            tool_kwarg = {"tools": self.to_tool_schema_list()}
-            kwargs = tool_kwarg | kwargs
+        if tools:
+            if isinstance(tools, bool):
+                tool_kwarg = {"tools": self.to_tool_schema_list()}
+                kwargs = tool_kwarg | kwargs
 
-        else:
-            if not isinstance(tools, list):
-                tools = [tools]
-            tool_kwarg = {"tools": func_call.lcall(tools, tool_check)}
-            kwargs = tool_kwarg | kwargs
+            else:
+                if not isinstance(tools, list):
+                    tools = [tools]
+                tool_kwarg = {"tools": func_call.lcall(tools, tool_check)}
+                kwargs = tool_kwarg | kwargs
 
         return kwargs
 
