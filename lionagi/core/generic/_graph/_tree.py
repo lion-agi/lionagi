@@ -179,16 +179,10 @@ class Tree(Graph):
             bundle (bool): Indicates whether to bundle the relations into a
                 single transaction. Defaults to False.
         """
-        children = _to_list_type(children)
-        for child in children:
-            if child.id_ not in self.internal_nodes:
-                self.add_node(child)
 
-        for child in children:
-            parent.relate_child(child, condition=condition, bundle=bundle)
-
-        if parent.id_ not in self.internal_nodes:
-            self.add_node(parent)
+        for i in _to_list_type(children):
+            
+            self.add_edge(parent, i, condition=condition, bundle=bundle, label=TreeLabel.PARENT)
 
         if self.root is None:
             self.root = parent

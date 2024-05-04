@@ -29,7 +29,7 @@ non_prompt_words = [
     "instruction_context",
     "instruction",
     "instruction_output_fields",
-    "in_",
+    "in",
     "out",
     "process",
     "_validate_field",

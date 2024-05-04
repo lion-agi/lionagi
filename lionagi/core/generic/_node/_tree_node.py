@@ -3,6 +3,7 @@ from pydantic import Field
 
 from ..abc import Condition
 from .._node._node import Node
+from .._util import _to_list_type
 
 
 class TreeLabel(str, Enum):
@@ -33,7 +34,7 @@ class TreeNode(Node):
         bundle: bool = False,
     ) -> None:
 
-        children = [node] if isinstance(node, Node) else node
+        children = _to_list_type(node)
         for _child in children:
             self.relate(
                 _child,
@@ -55,7 +56,7 @@ class TreeNode(Node):
             self.unrelate(self.parent)
         self.relate(
             node,
-            direction="in_",
+            direction="in",
             label=TreeLabel.PARENT,
             condition=condition,
             bundle=bundle,

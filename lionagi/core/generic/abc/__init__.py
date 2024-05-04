@@ -1,6 +1,6 @@
 """abc: Abstract Base Classes for lionagi."""
 
-from ._concepts import Record, Ordering, Condition, Actionable, Workable, Relatable
+from ._concepts import Record, Ordering, Condition, Actionable, Workable, Relatable, Rule
 from ._component import Component, LionIDable, get_lion_id
 from ._exceptions import (
     LionTypeError,
@@ -18,6 +18,7 @@ __all__ = [
     "Actionable",
     "Workable",
     "Component",
+    "Rule",
     "LionIDable",
     "get_lion_id",
     "LionTypeError",

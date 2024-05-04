@@ -1,7 +1,7 @@
-from typing import TypeVar
+from typing import TypeVar, Any
 from pydantic import Field
 from ..abc import Component, LionIDable, Record
-from ._pile import Pile
+from ._pile import Pile, pile
 
 
 T = TypeVar("T", bound=Component)
@@ -9,19 +9,31 @@ T = TypeVar("T", bound=Component)
 
 class CategoricalPile(Component, Record):
 
-    categories: dict[str, Pile] = Field({"main": Pile()})
+    categories: dict[str, Any] = Field(default_factory=lambda: {"main":pile()})
 
     def all_items(self) -> Pile[T]:
-        return Pile(set({item for pile in self.values() for item in pile}))
+        if self.categories is None:
+            return pile()
+        
+        else:
+            pile1 = pile()
+            for k, v in self.categories.items():
+                if v and not v.is_empty():
+                    for i in v:
+                        pile1 += i                
+                if v is None:
+                    self.categories[k] = pile()
+                    
+            return pile1
 
     def keys(self):
-        iter(self.categories.keys())
+        yield from self.categories.keys()
 
     def values(self):
-        iter(self.categories.values())
+        yield from self.categories.values()
 
     def items(self):
-        iter(self.categories.items())
+        yield from self.categories.items()
 
     def get(self, key: str, default=..., /):
         if key in self.categories:

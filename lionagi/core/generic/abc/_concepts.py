@@ -171,3 +171,18 @@ class Workable(ABC):
     @abstractmethod
     async def perform(self, /, *args: Any, **kwargs: Any) -> Any:
         """Perform the work with the given arguments."""
+
+
+class Rule(Condition, Actionable):
+
+    def __init__(self, **kwargs):
+        self.validation_kwargs = kwargs
+        self.fix = kwargs.get("fix", False)
+
+    @abstractmethod
+    async def applies(self, /, *args: Any, **kwargs: Any) -> Any:
+        ...
+
+    @abstractmethod
+    async def invoke(self, /, *args: Any, **kwargs: Any) -> Any:
+        ...

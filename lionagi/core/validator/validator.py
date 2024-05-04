@@ -1,4 +1,4 @@
-from ..generic import Rule
+from ..generic.abc import Rule
 from ._default_rules import DEFAULT_RULES
 
 
@@ -33,7 +33,7 @@ class BaseValidator:
                 try:
                     if await self.rules[i].applies(value, *args, **kwargs):
                         if (
-                            a := await self.rules[i].validate(value, *args, **kwargs)
+                            a := await self.rules[i].invoke(value, *args, **kwargs)
                         ) is not None:
                             return a
                 except Exception as e:

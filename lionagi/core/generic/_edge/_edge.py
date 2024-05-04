@@ -40,7 +40,7 @@ class Edge(Component, Ordering):
     async def check_condition(self, obj: dict[str, Any]) -> bool:
         if not self.condition:
             raise ValueError("The condition for the edge is not set.")
-        if self.condition.applies(obj):
+        if await self.condition.applies(obj):
             return True
         return False
 
@@ -55,15 +55,5 @@ class Edge(Component, Ordering):
         Returns a simple string representation of the Edge.
         """
         return (
-            f"Edge (id_={self.ln_id}, from={self.head}, to={self.tail}, "
-            f"label={self.label})"
-        )
-
-    def __repr__(self) -> str:
-        """
-        Returns a detailed string representation of the Edge.
-        """
-        return (
-            f"Edge(id_={self.ln_id}, from={self.head}, to={self.tail}, "
-            f"label={self.label})"
+            f"Edge (id_={self.ln_id}, from={self.head}, to={self.tail}, label={self.label})"
         )

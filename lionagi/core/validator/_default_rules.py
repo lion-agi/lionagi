@@ -1,4 +1,4 @@
-from ..generic import Rule
+from ..generic.abc import Rule
 from lionagi.libs import validation_funcs
 
 

@@ -23,9 +23,13 @@ from lionagi.libs import ParseUtil, SysUtil
 from lionagi.libs.ln_convert import strip_lower, to_dict, to_str
 from lionagi.libs.ln_func_call import lcall
 
-from _exceptions import LionFieldError, LionTypeError, LionValueError
+from ._exceptions import LionFieldError, LionTypeError, LionValueError
+from ._util import base_lion_fields, llama_meta_fields, lc_meta_fields
 
 T = TypeVar("T")
+
+
+
 
 
 class Component(BaseModel, ABC):
@@ -50,7 +54,7 @@ class Component(BaseModel, ABC):
         title="ID",
         description="A 32-char unique hash identifier.",
         frozen=True,
-        validation_alias=AliasChoices("node_id", "ID", "id", "id_"),
+        validation_alias=AliasChoices("node_id", "ID", "id"),
     )
 
     timestamp: str = Field(
@@ -115,14 +119,23 @@ class Component(BaseModel, ABC):
         if not isinstance(obj, (dict, str, list, Series, DataFrame, BaseModel)):
             type_ = str(type(obj))
             if "llama_index" in type_:
-                return cls.from_obj(obj.to_dict())
+                dict_ = obj.to_dict()
+                
+                SysUtil.change_dict_key(dict_, "text", "content")
+                metadata = dict_.pop("metadata", {})
+                for i in llama_meta_fields:
+                    metadata[i] = dict_.pop(i, None)
+                
+                SysUtil.change_dict_key(metadata, "class_name", "llama_index_class")
+                SysUtil.change_dict_key(metadata, "id_", "llama_index_id")
+                SysUtil.change_dict_key(metadata, "relationships", "llama_index_relationships")
+
+                dict_["metadata"] = metadata
+                return cls.from_obj(dict_)
+            
             elif "langchain" in type_:
-                langchain_json = obj.to_json()
-                langchain_dict = {
-                    "lc_id": langchain_json["id"],
-                    **langchain_json["kwargs"],
-                }
-                return cls.from_obj(langchain_dict)
+                dict_ = obj.to_json()
+                return cls.from_obj(dict_)
 
         raise LionTypeError(f"Unsupported type: {type(obj)}")
 
@@ -131,7 +144,74 @@ class Component(BaseModel, ABC):
     def _from_dict(cls, obj: dict, /, *args, **kwargs) -> T:
         """Create a Component instance from a dictionary."""
         try:
-            return cls.model_validate(obj, *args, **kwargs)
+            dict_ = {**obj, **kwargs}
+            
+            if "lc" in dict_:
+                SysUtil.change_dict_key(dict_, "page_content", "content")
+                
+                metadata = dict_.pop("metadata", {})
+                metadata.update(dict_.pop("kwargs", {}))
+                
+                if not isinstance(metadata, dict):
+                    metadata = {"extra_meta": metadata}
+                               
+                for i in base_lion_fields:
+                    if i in metadata:
+                        dict_[i] = metadata.pop(i)
+                
+                for k in list(metadata.keys()):
+                    if k not in lc_meta_fields:
+                        dict_[k] = metadata.pop(k)
+
+                for i in lc_meta_fields:
+                    if i in dict_:
+                        metadata[i] = dict_.pop(i)
+                
+                SysUtil.change_dict_key(metadata, "lc", "langchain")
+                SysUtil.change_dict_key(metadata, "type", "lc_type")
+                SysUtil.change_dict_key(metadata, "id", "lc_id")
+                
+                extra_fields = {k:v for k, v in metadata.items() if k not in lc_meta_fields}
+                metadata = {k:v for k, v in metadata.items() if k in lc_meta_fields}
+                dict_["metadata"] = metadata
+                dict_.update(extra_fields)
+            
+            else:
+                meta_ = dict_.pop("metadata", None) or {}
+                if not isinstance(meta_, dict):
+                    meta_ = {"extra_meta": meta_}
+                
+                for k in list(dict_.keys()):
+                    if k not in base_lion_fields:
+                        meta_[k] = dict_.pop(k)
+                
+                if not dict_.get("content", None):
+                    if "page_content" in meta_:
+                        dict_["content"] = meta_.pop("page_content")
+                    elif "text" in meta_: 
+                        dict_["content"] = meta_.pop("text")
+                    elif "chunk_content" in meta_:
+                        dict_["content"] = meta_.pop("chunk_content")
+                    elif "data" in meta_:
+                        dict_["content"] = meta_.pop("data")
+                        
+                dict_["metadata"] = meta_
+                
+                if "ln_id" not in dict_:
+                    if "ln_id" in meta_:
+                        dict_["ln_id"] = meta_.pop("ln_id")
+                    else:
+                        dict_["ln_id"] = SysUtil.create_id()
+                if "timestamp" not in dict_:
+                    dict_["timestamp"] = SysUtil.get_timestamp(sep=None)[:-6]
+                if "metadata" not in dict_:
+                    dict_["metadata"] = {}
+                if "extra_fields" not in dict_:
+                    dict_["extra_fields"] = {}
+
+            self = cls.model_validate(dict_, *args, **kwargs)
+            return self
+            
         except ValidationError as e:
             raise LionValueError("Invalid dictionary for deserialization.") from e
 
@@ -258,10 +338,8 @@ class Component(BaseModel, ABC):
     def __setattr__(self, name, value):
         super().__setattr__(name, value)
         if not "last_updated" in self.metadata:
-            self.metadata["last_updated"] = []
-        self.metadata["last_updated"].append(
-            (name, SysUtil.get_timestamp(sep=None)[:-6])
-        )
+            self.metadata["last_updated"] = {}
+        self.metadata["last_updated"][name] = SysUtil.get_timestamp(sep=None)[:-6]
 
     def _add_field(
         self,

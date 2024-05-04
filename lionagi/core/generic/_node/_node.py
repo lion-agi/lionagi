@@ -1,7 +1,7 @@
 from pydantic import Field
 from lionagi.libs.ln_convert import to_list
 from ..abc import Component, Condition, ItemNotFoundError, Relatable
-from .._pile import Pile, CategoricalPile
+from .._pile import Pile, CategoricalPile, pile
 from .._edge._edge import Edge
 
 
@@ -9,7 +9,7 @@ class Node(Component, Relatable):
 
     relations: CategoricalPile = Field(
         default_factory=lambda: CategoricalPile(
-            categories={"in_": Pile(None, Edge), "out": Pile(None, Edge)}
+            categories={"in": pile(), "out": pile()}
         ),
         description="The relations of the node.",
     )
@@ -30,30 +30,34 @@ class Node(Component, Relatable):
     @property
     def node_relations(self) -> dict:
         """Categorizes preceding and succeeding relations to this node."""
-        out_nodes = {}
-        for edge in self.relations["out"]:
-            for i in self.related_nodes:
-                if edge.tail == i:
-                    if i in out_nodes:
-                        out_nodes[i].append(edge)
-                    else:
-                        out_nodes[i] = [edge]
+        out_node_edges = {}
 
-        in_nodes = {}
-        for edge in self.relations["in_"]:
-            for i in self.related_nodes:
-                if edge.head == i:
-                    if i in in_nodes:
-                        in_nodes[i].append(edge)
-                    else:
-                        in_nodes[i] = [edge]
+        if not self.relations["out"].is_empty():
+            for edge in self.relations["out"]:
+                for i in self.related_nodes:
+                    if edge.tail == i:
+                        if i in out_node_edges:
+                            out_node_edges[i].append(edge)
+                        else:
+                            out_node_edges[i] = [edge]
 
-        return {"out": out_nodes, "in_": in_nodes}
+        in_node_edges = {}
+
+        if not self.relations["in"].is_empty():
+            for edge in self.relations["in"]:
+                for i in self.related_nodes:
+                    if edge.head == i:
+                        if i in in_node_edges:
+                            in_node_edges[i].append(edge)
+                        else:
+                            in_node_edges[i] = [edge]
+
+        return {"out": out_node_edges, "in": in_node_edges}
 
     @property
     def precedessors(self) -> list[str]:
         """return a list of nodes id that precede this node"""
-        return [k for k, v in self.node_relations["in_"].items() if len(v) > 0]
+        return [k for k, v in self.node_relations["in"].items() if len(v) > 0]
 
     @property
     def successors(self) -> list[str]:
@@ -72,24 +76,26 @@ class Node(Component, Relatable):
             edge = Edge(
                 head=self, tail=node, condition=condition, bundle=bundle, label=label
             )
-            self.relations["out"] += edge
-            node.relations["in_"] += edge
 
-        elif direction == "in_":
+            self.relations["out"] += edge
+            node.relations["in"] += edge
+
+        elif direction == "in":
             edge = Edge(
                 head=node, tail=self, condition=condition, label=label, bundle=bundle
             )
-            self.relations["in_"] += edge
+                
+            self.relations["in"] += edge
             node.relations["out"] += edge
 
         else:
             raise ValueError(
-                f"Invalid value for direction: {direction}, must be 'in_' or 'out'"
+                f"Invalid value for direction: {direction}, must be 'in' or 'out'"
             )
 
     def remove_edge(self, node: "Node", edge: Edge | str) -> bool:
         if node.ln_id not in self.related_nodes:
-            raise ValueError(f"Node {self.ln_id} is not related to node {node.id_}.")
+            raise ValueError(f"Node {self.ln_id} is not related to node {node.ln_id}.")
 
         if edge not in self.relations or edge not in node.relations:
             raise ItemNotFoundError(f"Edge {edge} does not exist between nodes.")
@@ -102,8 +108,8 @@ class Node(Component, Relatable):
     def unrelate(self, node: "Node", edge: Edge | str = "all") -> bool:
         if edge == "all":
             edge = self.node_relations["out"].get(node.ln_id, []) + self.node_relations[
-                "in_"
-            ].get(node.id_, [])
+                "in"
+            ].get(node.ln_id, [])
 
         else:
             edge = [edge.ln_id] if isinstance(edge, Edge) else [edge]
@@ -117,27 +123,3 @@ class Node(Component, Relatable):
             return True
         except Exception as e:
             raise ValueError(f"Failed to remove edge between nodes.") from e
-
-    def __str__(self) -> str:
-        """
-        Provides a string representation of the node.
-
-        Returns:
-            str: The string representation of the node.
-        """
-        timestamp = f" ({self.timestamp})" if self.timestamp else ""
-        if self.content:
-            content_preview = (
-                f"{self.content[:50]}..." if len(self.content) > 50 else self.content
-            )
-        else:
-            content_preview = ""
-        meta_preview = (
-            f"{str(self.metadata)[:50]}..."
-            if len(str(self.metadata)) > 50
-            else str(self.metadata)
-        )
-        return (
-            f"{self.class_name()}({self.id_}, {content_preview}, {meta_preview},"
-            f"{timestamp})"
-        )

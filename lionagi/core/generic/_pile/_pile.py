@@ -1,5 +1,5 @@
 from collections.abc import Generator, Mapping, Iterable
-from typing import TypeVar, Type, Tuple, Any
+from typing import TypeVar, Type, Tuple, Any, Generic
 import contextlib
 from pydantic import Field, field_validator
 
@@ -12,7 +12,7 @@ from ..abc._exceptions import LionValueError, LionTypeError, ItemNotFoundError
 T = TypeVar("T", bound=Component)
 
 
-class Pile(Component, Record):
+class Pile(Component, Record, Generic[T]):
 
     pile: dict[str, T] = Field(default_factory=dict)
     item_type: set[Type[Component]] | None = Field(default=None)
@@ -143,7 +143,7 @@ class Pile(Component, Record):
 
 def pile(
     items: Iterable[T] | None = None, item_type: set[Type] | None = None, /
-) -> Pile:
+) -> Pile[T]:
     """Create a new Pile instance."""
     if not items:
         return Pile(item_type=item_type) if item_type else Pile()
