@@ -10,11 +10,11 @@ Documentation for v0.0.300+ is in progress
 To contribute, you need to make a fork first, and then make pull request from your fork. 
 ```
   
-# LionAGI
+# Language InterOperable Network - LION
 
 **Powerful Intelligent Workflow Automation**
 
-It is an intelligent agentic workflow automation framework. It introduces advanced ML models into any existing workflows and data infrastructure.
+lionagi is an intelligent agentic workflow automation framework. It introduces advanced ML models into any existing workflows and data infrastructure.
 
 
 ### Currently, it can
