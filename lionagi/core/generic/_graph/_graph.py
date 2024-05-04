@@ -216,12 +216,17 @@ class Graph(Node):
             node_size=500, node_color='orange', alpha=0.9,
             labels=nx.get_node_attributes(g, "class_name")
         )
-    
-        nx.draw_networkx_edge_labels(
-            g, pos,
-            edge_labels=nx.get_edge_attributes(g, 'class_name'),
-            font_color='purple'
-        )
+        
+        labels = nx.get_edge_attributes(g, 'label')
+        labels = {k: v for k, v in labels.items() if v}
+        
+        if labels:
+            nx.draw_networkx_edge_labels(
+                g, pos,
+                edge_labels=labels,
+                font_color='purple'
+            )
+            
         plt.axis('off')
         plt.show()
 
