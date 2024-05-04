@@ -9,21 +9,21 @@ T = TypeVar("T", bound=Component)
 
 class CategoricalPile(Component, Record):
 
-    categories: dict[str, Any] = Field(default_factory=lambda: {"main":pile()})
+    categories: dict[str, Any] = Field(default_factory=lambda: {"main": pile()})
 
     def all_items(self) -> Pile[T]:
         if self.categories is None:
             return pile()
-        
+
         else:
             pile1 = pile()
             for k, v in self.categories.items():
                 if v and not v.is_empty():
                     for i in v:
-                        pile1 += i                
+                        pile1 += i
                 if v is None:
                     self.categories[k] = pile()
-                    
+
             return pile1
 
     def keys(self):

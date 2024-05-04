@@ -54,6 +54,4 @@ class Edge(Component, Ordering):
         """
         Returns a simple string representation of the Edge.
         """
-        return (
-            f"Edge (id_={self.ln_id}, from={self.head}, to={self.tail}, label={self.label})"
-        )
+        return f"Edge (id_={self.ln_id}, from={self.head}, to={self.tail}, label={self.label})"

@@ -15,11 +15,10 @@ class Graph(Node):
 
     @property
     def internal_edges(self) -> Pile[Edge]:
-        return pile({
-            edge.ln_id: edge 
-            for node in self.internal_nodes 
-            for edge in node.edges
-        }, Edge)
+        return pile(
+            {edge.ln_id: edge for node in self.internal_nodes for edge in node.edges},
+            Edge,
+        )
 
     def is_empty(self) -> bool:
         return self.internal_nodes.is_empty()
@@ -86,11 +85,15 @@ class Graph(Node):
 
         if label:
             return (
-                pile([
-                    edge for edge in edges if edge.label 
-                    in to_list(label, dropna=True, flatten=True)
-                ])
-                if edges else None
+                pile(
+                    [
+                        edge
+                        for edge in edges
+                        if edge.label in to_list(label, dropna=True, flatten=True)
+                    ]
+                )
+                if edges
+                else None
             )
         return pile(edges) if edges else None
 
@@ -111,9 +114,13 @@ class Graph(Node):
 
         head.unrelate(tail, edge=edge)
 
-    def get_heads(self):
+    def get_heads(self) -> Pile:
         return pile(
-            [node for node in self.internal_nodes if node.relations["in"].is_empty() and not isinstance(node, Actionable)]
+            [
+                node
+                for node in self.internal_nodes
+                if node.relations["in"].is_empty() and not isinstance(node, Actionable)
+            ]
         )
 
     def is_acyclic(self) -> bool:
@@ -203,8 +210,9 @@ class Graph(Node):
                 constructor.
         """
         from lionagi.libs import SysUtil
+
         SysUtil.check_import("networkx")
-        SysUtil.check_import("matplotlib")
+        SysUtil.check_import("matplotlib", "pyplot")
 
         import networkx as nx
         import matplotlib.pyplot as plt
@@ -212,22 +220,26 @@ class Graph(Node):
         g = self.to_networkx(**kwargs)
         pos = nx.spring_layout(g)
         nx.draw(
-            g, pos, edge_color='black', width=1, linewidths=1,
-            node_size=500, node_color='orange', alpha=0.9,
-            labels=nx.get_node_attributes(g, "class_name")
+            g,
+            pos,
+            edge_color="black",
+            width=1,
+            linewidths=1,
+            node_size=500,
+            node_color="orange",
+            alpha=0.9,
+            labels=nx.get_node_attributes(g, "class_name"),
         )
-        
-        labels = nx.get_edge_attributes(g, 'label')
+
+        labels = nx.get_edge_attributes(g, "label")
         labels = {k: v for k, v in labels.items() if v}
-        
+
         if labels:
             nx.draw_networkx_edge_labels(
-                g, pos,
-                edge_labels=labels,
-                font_color='purple'
+                g, pos, edge_labels=labels, font_color="purple"
             )
-            
-        plt.axis('off')
+
+        plt.axis("off")
         plt.show()
 
     def size(self) -> int:

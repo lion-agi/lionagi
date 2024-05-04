@@ -84,7 +84,7 @@ class Node(Component, Relatable):
             edge = Edge(
                 head=node, tail=self, condition=condition, label=label, bundle=bundle
             )
-                
+
             self.relations["in"] += edge
             node.relations["out"] += edge
 
