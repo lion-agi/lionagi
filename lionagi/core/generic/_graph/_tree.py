@@ -67,10 +67,9 @@ class Tree(Graph):
         """
 
         for i in _to_list_type(children):
-
-            self.add_edge(
-                parent, i, condition=condition, bundle=bundle, label=TreeLabel.PARENT
-            )
-
+            i.relate_parent(parent, condition=condition, bundle=bundle)
+        
         if self.root is None:
             self.root = parent
+            
+        self.add_node([parent, *children])
