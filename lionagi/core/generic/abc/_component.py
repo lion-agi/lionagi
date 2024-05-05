@@ -5,7 +5,7 @@ from functools import singledispatchmethod
 from typing import Any, TypeVar, Type, TypeAlias, Union
 
 from pandas import DataFrame, Series
-from pydantic import AliasChoices, BaseModel, Field, ValidationError
+from pydantic import BaseModel, Field, ValidationError, AliasChoices
 
 from lionagi.libs import ParseUtil, SysUtil
 from lionagi.libs.ln_convert import strip_lower, to_dict, to_str
@@ -19,8 +19,7 @@ T = TypeVar("T")
 
 
 class Component(BaseModel, ABC):
-    """
-    Represents a distinguishable, temporal entity in the LionAGI system.
+    """Represents a distinguishable, temporal entity in the LionAGI system.
 
     Encapsulates essential attributes and behaviors needed for individual
     components within the system's architecture. Each component is uniquely
@@ -46,7 +45,7 @@ class Component(BaseModel, ABC):
     timestamp: str = Field(
         default_factory=lambda: SysUtil.get_timestamp(sep=None)[:-6],
         title="Creation Timestamp",
-        description="The UTC timestamp of creation, down to milliseconds.",
+        description="The UTC timestamp of creation",
         frozen=True,
         alias="created",
         validation_alias=AliasChoices("created_on", "creation_date"),
@@ -66,7 +65,7 @@ class Component(BaseModel, ABC):
         ),
     )
 
-    content: Any | None = Field(
+    content: Any = Field(
         default=None,
         description="The optional content of the node.",
         validation_alias=AliasChoices("text", "page_content", "chunk_content", "data"),
@@ -82,9 +81,8 @@ class Component(BaseModel, ABC):
 
     @singledispatchmethod
     @classmethod
-    def from_obj(cls, obj: Any, /, *args, **kwargs) -> T:
-        """
-        Create Component instance(s) from various input types.
+    def from_obj(cls, obj: Any, /, **kwargs) -> T:
+        """Create Component instance(s) from various input types.
 
         This method dynamically handles different types of input data, allowing
         the creation of Component instances from dictionaries, strings (JSON),
@@ -307,9 +305,9 @@ class Component(BaseModel, ABC):
         convert(self.to_dict(*args, **kwargs), root)
         return ET.tostring(root, encoding="unicode")
 
-    def to_pd_series(self, *args, pd_kwargs: dict | None = None, **kwargs) -> Series:
+    def to_pd_series(self, *args, pd_kwargs=None, **kwargs) -> Series:
         """Convert the node to a Pandas Series."""
-        pd_kwargs = {} if pd_kwargs is None else pd_kwargs
+        pd_kwargs = pd_kwargs or {}
         dict_ = self.to_dict(*args, **kwargs)
         return Series(dict_, **pd_kwargs)
 
@@ -349,9 +347,9 @@ class Component(BaseModel, ABC):
         dict_ = flatten(dict_)
         try:
             out_ = dict_.pop(indices, default) if default != ... else dict_.pop(indices)
-        except KeyError:
+        except KeyError as e:
             if default == ...:
-                raise KeyError(f"Key {indices} not found in metadata.")
+                raise KeyError(f"Key {indices} not found in metadata.") from e
             return default
         a = unflatten(dict_)
         self.metadata.clear()
@@ -454,8 +452,8 @@ class Component(BaseModel, ABC):
         if not attr in str(field):
             try:
                 a = (
-                    self._all_fields[k].json_schema_extra[attr] is not None
-                    and attr in self._all_fields[k].json_schema_extra
+                    attr in self._all_fields[k].json_schema_extra
+                    and self._all_fields[k].json_schema_extra[attr] is not None
                 )
                 return a if isinstance(a, bool) else False
             except Exception:
@@ -466,7 +464,10 @@ class Component(BaseModel, ABC):
         lastupdate = self.metadata.get("last_updated", [])
         if lastupdate:
             lastupdate = list(lastupdate.values())[-1][1][:-7]
-        return f"{self.class_name()}(ln_id: {self.ln_id}, updated: {lastupdate or self.timestamp[:-7]})"
+        return (
+            f"{self.class_name()}(ln_id: {self.ln_id}, "
+            f"updated: {lastupdate or self.timestamp[:-7]})"
+        )
 
     def __repr__(self):
         return self.__str__()

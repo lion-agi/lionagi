@@ -1,18 +1,19 @@
 from enum import Enum
 from pydantic import Field
-
 from ..abc import Condition
 from .._node._node import Node
 from .._util import _to_list_type
 
 
 class TreeLabel(str, Enum):
+    """Enumeration representing tree relationships."""
 
     PARENT = "parent"
     CHILD = "child"
 
 
 class TreeNode(Node):
+    """Represents a node in a tree structure."""
 
     parent: Node | None = Field(
         default=None,
@@ -21,7 +22,7 @@ class TreeNode(Node):
 
     @property
     def children(self) -> list[str]:
-
+        """Return a list of child node ids."""
         if not self.parent:
             return list(self.related_nodes)
         else:
@@ -33,7 +34,7 @@ class TreeNode(Node):
         condition: Condition | None = None,
         bundle: bool = False,
     ) -> None:
-
+        """Establish a parent-child relationship with the given node(s)."""
         children = _to_list_type(node)
         for _child in children:
             self.relate(
@@ -52,6 +53,7 @@ class TreeNode(Node):
         condition: Condition | None = None,
         bundle: bool = False,
     ) -> None:
+        """Establish a parent-child relationship with the given parent node."""
         if self.parent:
             self.unrelate(self.parent)
         self.relate(
@@ -64,10 +66,12 @@ class TreeNode(Node):
         self.parent = node
 
     def unrelate_parent(self):
+        """Remove the parent-child relationship with the parent node."""
         self.unrelate(self.parent)
         self.parent = None
 
     def unrelate_child(self, child: Node | list[Node]):
+        """Remove the parent-child relationship with the given child node(s)."""
         children: list[Node] = [child] if isinstance(child, Node) else child
         for _child in children:
             self.unrelate(_child)

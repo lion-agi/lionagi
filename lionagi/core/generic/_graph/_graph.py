@@ -1,6 +1,5 @@
 from collections import deque
 from typing import Any
-from pydantic import Field
 
 from lionagi.libs.ln_convert import to_list
 from ..abc import Condition, Actionable, LionTypeError, ItemNotFoundError, LionIDable
@@ -10,20 +9,24 @@ from .._pile import Pile, pile
 
 
 class Graph(Node):
+    """Represents a graph structure with nodes and edges."""
 
     internal_nodes: Pile = pile()
 
     @property
     def internal_edges(self) -> Pile[Edge]:
+        """Return a pile of all edges in the graph."""
         return pile(
             {edge.ln_id: edge for node in self.internal_nodes for edge in node.edges},
             Edge,
         )
 
     def is_empty(self) -> bool:
+        """Check if the graph is empty (has no nodes)."""
         return self.internal_nodes.is_empty()
 
     def clear(self):
+        """Clear all nodes and edges from the graph."""
         self.internal_nodes.clear()
 
     def add_edge(
@@ -35,9 +38,7 @@ class Graph(Node):
         label=None,
         **kwargs,
     ):
-        """
-        relate and include nodes in the structure
-        """
+        """Add an edge between two nodes in the graph."""
         if isinstance(head, Actionable):
             raise LionTypeError("Actionable nodes cannot be related as head.")
         if isinstance(tail, Actionable):
@@ -56,14 +57,15 @@ class Graph(Node):
         )
 
     def remove_edge(self, edge: Any) -> bool:
-        if all(self._remove_edge(i) for i in edge):
-            return True
-        return False
+        """Remove an edge from the graph."""
+        return all(self._remove_edge(i) for i in edge)
 
     def add_node(self, node: Any) -> None:
+        """Add a node to the graph."""
         self.internal_nodes.update(node)
 
     def get_node(self, item: LionIDable, default=...):
+        """Get a node from the graph by its identifier."""
         return self.internal_nodes.get(item, default)
 
     def get_node_edges(
@@ -72,7 +74,7 @@ class Graph(Node):
         direction: str = "both",
         label: list | str = None,
     ) -> Pile[Edge] | None:
-
+        """Get the edges of a node in the specified direction and with the given label."""
         node = self.internal_nodes[node]
         edges = None
         match direction:
@@ -97,14 +99,16 @@ class Graph(Node):
             )
         return pile(edges) if edges else None
 
-    def pop_node(self, item, default: ..., /):
+    def pop_node(self, item, default=...):
+        """Remove and return a node from the graph by its identifier."""
         return self.internal_nodes.pop(item, default)
 
-    def remove_node(self, item, /):
+    def remove_node(self, item):
+        """Remove a node from the graph by its identifier."""
         return self.internal_nodes.remove(item)
 
     def _remove_edge(self, edge: Edge | str) -> bool:
-
+        """Remove a specific edge from the graph."""
         if edge not in self.internal_edges:
             raise ItemNotFoundError(f"Edge {edge} does not exist in structure.")
 
@@ -113,8 +117,10 @@ class Graph(Node):
         tail: Node = self.internal_nodes[edge.tail]
 
         head.unrelate(tail, edge=edge)
+        return True
 
     def get_heads(self) -> Pile:
+        """Get all head nodes in the graph."""
         return pile(
             [
                 node
@@ -124,15 +130,7 @@ class Graph(Node):
         )
 
     def is_acyclic(self) -> bool:
-        """
-        Checks if the graph is acyclic.
-
-        An acyclic graph contains no cycles and can be represented as a directed
-        acyclic graph (DAG).
-
-        Returns:
-            bool: True if the graph is acyclic, False otherwise.
-        """
+        """Check if the graph is acyclic (contains no cycles)."""
         node_ids = list(self.internal_nodes.keys())
         check_deque = deque(node_ids)
         check_dict = {key: 0 for key in node_ids}  # 0: not visited, 1: temp, 2: perm
@@ -161,20 +159,7 @@ class Graph(Node):
         return True
 
     def to_networkx(self, **kwargs) -> Any:
-        """
-        Converts the graph into a NetworkX graph object.
-
-        The NetworkX graph object can be used for further analysis or
-        visualization.
-
-        Args:
-            **kwargs: Additional keyword arguments to pass to the NetworkX graph
-                constructor.
-
-        Returns:
-            Any: A NetworkX graph object representing the current graph
-            structure.
-        """
+        """Convert the graph to a NetworkX graph object."""
         from lionagi.libs import SysUtil
 
         SysUtil.check_import("networkx")
@@ -199,16 +184,7 @@ class Graph(Node):
         return g
 
     def display(self, **kwargs):
-        """
-        Displays the graph using NetworkX's drawing capabilities.
-
-        This method requires NetworkX and a compatible plotting library (like
-        matplotlib) to be installed.
-
-        Args:
-            **kwargs: Additional keyword arguments to pass to the NetworkX graph
-                constructor.
-        """
+        """Display the graph using NetworkX and Matplotlib."""
         from lionagi.libs import SysUtil
 
         SysUtil.check_import("networkx")
@@ -243,4 +219,5 @@ class Graph(Node):
         plt.show()
 
     def size(self) -> int:
+        """Return the number of nodes in the graph."""
         return len(self.internal_nodes)

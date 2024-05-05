@@ -13,23 +13,29 @@ T = TypeVar("T", bound=Component)
 
 
 class Pile(Component, Record, Generic[T]):
+    """A collection of unique LionAGI items."""
 
     pile: dict[str, T] = Field(default_factory=dict)
     item_type: set[Type[Component]] | None = Field(default=None)
 
     def keys(self) -> Generator[str, None, None]:
+        """Yield the keys of the items in the pile."""
         yield from self.pile.keys()
 
     def values(self) -> Generator[T, None, None]:
+        """Yield the values of the items in the pile."""
         yield from self.pile.values()
 
     def items(self) -> Generator[Tuple[str, T], None, None]:
+        """Yield the key-value pairs of the items in the pile."""
         yield from self.pile.items()
 
     def __getitem__(self, item: LionIDable) -> T:
+        """Get an item from the pile using its LionIDable."""
         return self.pile.get(get_lion_id(item))
 
     def __setitem__(self, key: LionIDable, value: T) -> None:
+        """Set an item in the pile using its LionIDable."""
         if "lionagi" not in str(type(value)):
             raise LionTypeError("Value must be part of lionagi system.")
         if self.item_type and type(value) not in self.item_type:
@@ -37,53 +43,69 @@ class Pile(Component, Record, Generic[T]):
         self.pile[get_lion_id(key)] = value
 
     def __contains__(self, item: LionIDable) -> bool:
+        """Check if an item is in the pile using its LionIDable."""
         return get_lion_id(item) in self.pile
 
-    def pop(self, item: LionIDable, default=..., /) -> T | None:
+    def pop(self, item: LionIDable, default=...) -> T | None:
+        """Remove and return an item from the pile."""
         with contextlib.suppress(KeyError):
             return self.pile.pop(get_lion_id(item))
         if default == ...:
             raise ItemNotFoundError(item)
         return default
 
-    def get(self, item: LionIDable, default: Any = ..., /) -> T | None:
+    def get(
+        self,
+        item: LionIDable,
+        default: Any = ...,
+    ) -> T | None:
+        """Get an item from the pile, returning a default if not found."""
         with contextlib.suppress(LionTypeError):
             return self[item]
         if default == ...:
             raise ItemNotFoundError(item)
         return default
 
-    def remove(self, item: LionIDable, /):
-        """remove, raise error if not found"""
+    def remove(
+        self,
+        item: LionIDable,
+    ):
+        """Remove an item from the pile, raising an error if not found."""
         self.pop(item)
 
-    def update(self, other: any, /):
+    def update(self, other: any):
+        """Update the pile with items from another pile or mapping."""
         self.pile.update(self._validate_pile(other))
 
     def clear(self):
-        """Removes all items from the pile."""
+        """Remove all items from the pile."""
         self.pile.clear()
 
-    def include(self, item: T, /) -> bool:
+    def include(self, item: T) -> bool:
+        """Include an item in the pile."""
         with contextlib.suppress(Exception):
             if item not in self:
                 self[item] = item
         return item in self
 
-    def exclude(self, item: LionIDable, /) -> bool:
+    def exclude(self, item: LionIDable) -> bool:
+        """Exclude an item from the pile."""
         with contextlib.suppress(Exception):
             if item in self:
                 self.pop(item)
         return item not in self
 
     def is_homogenous(self) -> bool:
+        """Check if all items in the pile have the same type."""
         return len(self.pile) < 2 or all(is_same_dtype(self.pile.values()))
 
     def is_empty(self) -> bool:
+        """Check if the pile is empty."""
         return not self.pile
 
     @field_validator("item_type", mode="before")
     def _validate_item_type(cls, value):
+        """Validate the item_type field."""
         if value is None:
             return None
 
@@ -138,26 +160,29 @@ class Pile(Component, Record, Generic[T]):
         if _copy.exclude(other):
             return _copy
         raise ItemNotFoundError(other)
-        
+
     def __add__(self, other: T) -> "Pile":
         """Add an lion item to the pile using the + operator."""
         _copy = self.model_copy(deep=True)
         if _copy.include(other):
             return _copy
         raise LionValueError("Item cannot be included in the pile.")
-        
+
     def __radd__(self, other: T) -> "Pile":
+        """Add an item to the pile using the + operator."""
         return other + self
 
     def __str__(self):
+        """Return a string representation of the pile."""
         return f"Pile({len(self.pile)})"
-    
+
     def __repr__(self):
+        """Return a string representation of the pile."""
         return f"Pile({len(self.pile)})"
 
 
 def pile(
-    items: Iterable[T] | None = None, item_type: set[Type] | None = None, /
+    items: Iterable[T] | None = None, item_type: set[Type] | None = None
 ) -> Pile[T]:
     """Create a new Pile instance."""
     if not items:

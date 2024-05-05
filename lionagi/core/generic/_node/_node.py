@@ -6,6 +6,7 @@ from .._edge._edge import Edge
 
 
 class Node(Component, Relatable):
+    """Represents a node in a graph with relations to other nodes."""
 
     relations: CategoricalPile = Field(
         default_factory=lambda: CategoricalPile(
@@ -16,10 +17,12 @@ class Node(Component, Relatable):
 
     @property
     def edges(self) -> Pile[Edge]:
+        """Return all edges connected to the node."""
         return self.relations.all_items()
 
     @property
     def related_nodes(self) -> list[str]:
+        """Return a list of node ids related to the node."""
         all_nodes = set(
             to_list([[i.head, i.tail] for i in self.edges], flatten=True, dropna=True)
         )
@@ -29,7 +32,7 @@ class Node(Component, Relatable):
 
     @property
     def node_relations(self) -> dict:
-        """Categorizes preceding and succeeding relations to this node."""
+        """Categorize preceding and succeeding relations to the node."""
         out_node_edges = {}
 
         if not self.relations["out"].is_empty():
@@ -56,12 +59,12 @@ class Node(Component, Relatable):
 
     @property
     def precedessors(self) -> list[str]:
-        """return a list of nodes id that precede this node"""
+        """Return a list of node ids that precede the node."""
         return [k for k, v in self.node_relations["in"].items() if len(v) > 0]
 
     @property
     def successors(self) -> list[str]:
-        """return a list of nodes id that succeed this node"""
+        """Return a list of node ids that succeed the node."""
         return [k for k, v in self.node_relations["out"].items() if len(v) > 0]
 
     def relate(
@@ -72,6 +75,7 @@ class Node(Component, Relatable):
         label: str | None = None,
         bundle=False,
     ) -> None:
+        """Establish a relation between the node and another node."""
         if direction == "out":
             edge = Edge(
                 head=self, tail=node, condition=condition, bundle=bundle, label=label
@@ -94,18 +98,17 @@ class Node(Component, Relatable):
             )
 
     def remove_edge(self, node: "Node", edge: Edge | str) -> bool:
+        """Remove an edge between the node and another node."""
         if node.ln_id not in self.related_nodes:
             raise ValueError(f"Node {self.ln_id} is not related to node {node.ln_id}.")
 
         if edge not in self.relations or edge not in node.relations:
             raise ItemNotFoundError(f"Edge {edge} does not exist between nodes.")
 
-        if self.relations.exclude(edge) and node.relations.exclude(edge):
-            return True
-
-        return False
+        return self.relations.exclude(edge) and node.relations.exclude(edge)
 
     def unrelate(self, node: "Node", edge: Edge | str = "all") -> bool:
+        """Remove all relations or a specific edge between the node and another node."""
         if edge == "all":
             edge = self.node_relations["out"].get(node.ln_id, []) + self.node_relations[
                 "in"
@@ -122,10 +125,12 @@ class Node(Component, Relatable):
                 self.remove_edge(node, edge_id)
             return True
         except Exception as e:
-            raise ValueError(f"Failed to remove edge between nodes.") from e
+            raise ValueError("Failed to remove edge between nodes.") from e
 
     def __str__(self) -> str:
+        """Return a string representation of the node."""
         return f"Node(ln_id={self.ln_id})"
 
     def __repr__(self) -> str:
+        """Return a string representation of the node."""
         return self.__str__()
