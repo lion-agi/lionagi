@@ -5,21 +5,61 @@ from collections import deque
 from typing import Any
 from lionagi.libs.ln_convert import is_same_dtype
 from pydantic import Field, field_validator
-from ..abc import Record, Component, LionTypeError
+from ..abc import Record, Component, LionTypeError, get_lion_id
 from .._util import _to_list_type
 from .._pile._pile import Pile, pile
 from .._pile._categorical_pile import CategoricalPile
 
-from ._progression import Progression
+from ._progression import Progression, progression
+
 
 
 class Flow(Component):
 
-    branches: Pile[Any] = Field(default_factory=lambda: pile({}, Progression))
-
-    def next(self, branch=None, /):
-        return self.popleft(branch)
-
+    branches: Pile[Progression] = Field(default_factory=lambda: pile({}, Progression))
+    registry: dict[str, str] = {}
+    default_name: str = "main"
+    
+    def include(self, branch: Progression, name: str = None):
+        if (name := branch.name or name) is None:
+            if self.default_name in self.registry:
+                name = branch.ln_id
+            else:
+                name = self.default_name
+        if name in self.registry:
+            raise LionTypeError(f"Branch '{name}' already exists.")
+        self.branches.include(branch)
+        self.registry[name] = branch.ln_id
+    
+    def append(self, item, branch=None, /):
+        if not branch:
+            if self.default_name in self.registry:
+                branch = self.registry[self.default_name]
+                self.branches[branch].include(item)
+                return
+            
+            p = progression(item, self.default_name)
+            self.include(p)
+            return
+                
+        if branch in self.branches:
+            self.branches[branch]
+            return
+        
+        if branch in self.registry:
+            self.branches[self.registry[branch]] += item
+            return 
+        
+        p = progression(item, branch if isinstance(branch, str) else None)
+        self.include(p)
+    
+    
+    
+    
+    
+    
+    
+    
     def popleft(self, branch=None, /):
         try:
             return self.branches[branch or self.default_name].popleft()

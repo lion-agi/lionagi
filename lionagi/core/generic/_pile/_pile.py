@@ -55,11 +55,7 @@ class Pile(Component, Record, Generic[T]):
 
     def remove(self, item: LionIDable, /):
         """remove, raise error if not found"""
-        try:
-            self.pop(item)
-            return True
-        except Exception as e:
-            raise e
+        self.pop(item)
 
     def update(self, other: any, /):
         self.pile.update(self._validate_pile(other))
@@ -132,30 +128,30 @@ class Pile(Component, Record, Generic[T]):
 
     def __iadd__(self, other: T) -> "Pile":
         """Add an lion item to the pile using the += operator."""
-        self.include(other)
-        return self
+        return self + other
 
     def __isub__(self, other: LionIDable) -> "Pile":
-        """
-        Remove an item from the pile using the -= operator.
-        raise ItemNotFoundError if item is not found.
-        """
-        self.remove(other)
-        return self
+        return self - other
 
+    def __sub__(self, other):
+        _copy = self.model_copy(deep=True)
+        if _copy.exclude(other):
+            return _copy
+        raise ItemNotFoundError(other)
+        
     def __add__(self, other: T) -> "Pile":
         """Add an lion item to the pile using the + operator."""
-        a = self.pile.copy()
-        a.update(other.pile.copy())
-        return pile(a)
-
+        _copy = self.model_copy(deep=True)
+        if _copy.include(other):
+            return _copy
+        raise LionValueError("Item cannot be included in the pile.")
+        
     def __radd__(self, other: T) -> "Pile":
-        """Add an lion item to the pile using the + operator."""
-        return self + other
+        return other + self
 
     def __str__(self):
         return f"Pile({len(self.pile)})"
-
+    
     def __repr__(self):
         return f"Pile({len(self.pile)})"
 

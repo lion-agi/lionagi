@@ -1,30 +1,20 @@
-from abc import ABC
-from typing import Any
 
-from pathlib import Path
-from lionagi.libs import convert, dataframe, SysUtil
 
-from lionagi.core.generic import BaseNode, DataLogger, DLog
-from lionagi.core.messages.schema import (
-    BranchColumns,
-    System,
-    Response,
-    Instruction,
-    BaseMessage,
-)
-from lionagi.core.branch.util import MessageUtil
+
+
+
+
+
+
+
+
+
+
+
 
 
 class BaseBranch(BaseNode, ABC):
-    """
-    Base class for managing branches of conversation, incorporating messages
-    and logging functionality.
 
-    Attributes:
-            messages (dataframe.ln_DataFrame): Holds the messages in the branch.
-            datalogger (DataLogger): Logs data related to the branch's operation.
-            persist_path (str | Path): Filesystem path for data persistence.
-    """
 
     _columns: list[str] = BranchColumns.COLUMNS.value
 

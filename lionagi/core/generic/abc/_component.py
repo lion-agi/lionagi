@@ -481,5 +481,5 @@ LionIDable: TypeAlias = Union[str, Component]
 def get_lion_id(item: LionIDable) -> str:
     """Get the Lion ID of an item."""
     if not isinstance(item, (str, Component)):
-        raise LionTypeError
+        raise LionTypeError("Item must be a single LionIDable object.")
     return item.ln_id if isinstance(item, Component) else item

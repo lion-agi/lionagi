@@ -8,6 +8,7 @@ from ._concepts import (
     Workable,
     Relatable,
     Rule,
+    Progressable
 )
 from ._component import Component, LionIDable, get_lion_id
 from ._exceptions import (
@@ -35,4 +36,5 @@ __all__ = [
     "LionFieldError",
     "LionOperationError",
     "Relatable",
+    "Progressable"
 ]
