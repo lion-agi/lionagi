@@ -14,7 +14,7 @@ from pydantic import Field
 
 from ._graph import Graph
 from ..abc import Condition
-from .._node._node import Node
+from .._node._tree_node import TreeNode
 from .._util import _to_list_type
 
 
@@ -29,120 +29,6 @@ class TreeLabel(str, Enum):
 
     PARENT = "parent"
     CHILD = "child"
-
-
-class TreeNode(Node):
-    """
-    A specialized node representing a node within a tree structure.
-
-    Extends the basic node functionality with parent-child relationships.
-
-    Attributes:
-        parent (Node | None): The parent node. Defaults to None if the node has
-            no parent.
-    """
-
-    parent: Node | None = Field(
-        default=None,
-        description="The parent node, as an instance of Node.",
-    )
-
-    @property
-    def children(self) -> list[str]:
-        """
-        Retrieves the IDs of all child nodes.
-
-        Returns:
-            list[str]: A list containing the IDs of the child nodes.
-        """
-        if not self.parent:
-            return list(self.related_nodes)
-        else:
-            return [
-                node_id
-                for node_id in self.related_nodes
-                if node_id != self.parent.ln_id
-            ]
-
-    def relate_child(
-        self,
-        child: Node | list[Node],
-        condition: Condition | None = None,
-        bundle: bool = False,
-    ) -> None:
-        """
-        Establishes a parent-child relationship between this node and the given
-        child node(s).
-
-        Args:
-            child (Node | list[Node]): The child node or list of child nodes to
-                be related.
-            condition (Condition | None): The condition associated with the
-                relationship, if any.
-            bundle (bool): Indicates whether to bundle the relation into a
-                single transaction. Defaults to False.
-        """
-        children = _to_list_type(child)
-        for _child in children:
-            self.relate(
-                _child,
-                node_as="head",
-                label=TreeLabel.PARENT,
-                condition=condition,
-                bundle=bundle,
-            )
-            if isinstance(_child, TreeNode):
-                _child.parent = self
-
-    def relate_parent(
-        self,
-        parent: Node,
-        condition: Condition | None = None,
-        bundle: bool = False,
-    ) -> None:
-        """
-        Establishes a parent-child relationship between the given parent node
-        and this node.
-
-        Args:
-            parent (Node): The parent node to be related.
-            condition (Condition | None): The condition associated with the
-                relationship, if any.
-            bundle (bool): Indicates whether to bundle the relation into a
-                single transaction. Defaults to False.
-        """
-        if self.parent:
-            self.unrelate(self.parent)
-        self.relate(
-            parent,
-            node_as="tail",
-            label=TreeLabel.PARENT,
-            condition=condition,
-            bundle=bundle,
-        )
-        self.parent = parent
-
-    def unrelate_parent(self):
-        """
-        Removes the parent relationship of this node.
-        """
-        self.unrelate(self.parent)
-        self.parent = None
-
-    def unrelate_child(self, child: Node | list[Node]):
-        """
-        Removes the child relationship between this node and the given child
-        node(s).
-
-        Args:
-            child (Node | list[Node]): The child node or list of child nodes to
-                be unrelated.
-        """
-        children: list[Node] = _to_list_type(child)
-        for _child in children:
-            self.unrelate(_child)
-            if isinstance(_child, TreeNode):
-                _child.parent = None
 
 
 class Tree(Graph):
