@@ -51,7 +51,7 @@ class Edge(Component, Ordering):
         return get_lion_id(item) in (self.head, self.tail)
 
     def __str__(self) -> str:
-        """
-        Returns a simple string representation of the Edge.
-        """
-        return f"Edge (id_={self.ln_id}, from={self.head}, to={self.tail}, label={self.label})"
+        return f"Edge(ln_id={self.ln_id})"
+
+    def __repr__(self) -> str:
+        return f"Edge(ln_id={self.ln_id})"

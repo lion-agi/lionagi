@@ -3,6 +3,7 @@
 from collections.abc import Generator
 from abc import ABC, abstractmethod
 from typing import Any, Iterator, Tuple, TypeVar
+from pydantic import BaseModel, Field
 from ._component import LionIDable
 
 T = TypeVar("T")

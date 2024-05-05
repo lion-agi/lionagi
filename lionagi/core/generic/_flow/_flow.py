@@ -16,7 +16,6 @@ from ._progression import Progression
 class Flow(Component):
 
     branches: Pile[Any] = Field(default_factory=lambda: pile({}, Progression))
-    
 
     def next(self, branch=None, /):
         return self.popleft(branch)

@@ -1,39 +1,30 @@
-from .base import BaseMessage, MessageRole, SYSTEM_FIELDS
+from ..generic.abc import LionIDable
+from .message import RoledMessage, MessageRole, SYSTEM_FIELDS
 
 
-class Instruction(BaseMessage):
-    """
-    Represents an instruction message with contextual data. Extends BaseMessage.
-    """
+class Instruction(RoledMessage):
 
     def __init__(
         self,
-        instruction=None,
-        context=None,
-        sender=None,
-        output_fields=None,
-        recipient=None,
-        **kwargs,  # additional context fields
+        instruction: str | None = None,
+        context: dict | str | None = None,
+        sender: LionIDable | None = None,
+        recipient: LionIDable | None = None,
+        requested_fields: dict | None = None,  # {"field": "description"}
+        **kwargs,
     ):
         """
-        Initializes an Instruction message with a set role and optional fields.
-
-        Parameters:
-        - instruction: The main instruction, defaults to "N/A" if not provided.
-        - context: JSON serializable context for the instruction.
-        - sender: Sender's identifier.
-        - output_fields: Expected output fields for the instruction.
-        - recipient: Recipient's identifier.
-        - **kwargs: Additional context fields.
+        kwargs are additional context fields to be added to the
+        message content have to be JSON serializable
         """
         super().__init__(
             role=MessageRole.USER,
-            sender=sender,
+            sender=sender or "N/A",
             content={"instruction": instruction or "N/A"},
-            recipient=recipient,
+            recipient=recipient or "N/A",
         )
 
-        self._initiate_content(context, output_fields, **kwargs)
+        self._initiate_content(context, requested_fields, **kwargs)
 
     def _initiate_content(self, context, output_fields, **kwargs):
         """
@@ -55,7 +46,7 @@ class Instruction(BaseMessage):
     @staticmethod
     def _format_output_field(output_fields):
         format_ = f"""
-        MUST EXACTLY FOLLOW THE RESPONSE FORMAT. NO ADDITIONAL COMMENTS ALLOWED!
+        MUST EXACTLY FOLLOW THE RESPONSE FORMAT NO ADDITIONAL COMMENTS ALLOWED!
         ```json
         {output_fields}
         ```

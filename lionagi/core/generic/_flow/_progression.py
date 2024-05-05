@@ -23,7 +23,8 @@ class Progression(Component, Ordering):
             return deque([value.ln_id])
 
         value = [
-            i for item in _to_list_type(value)
+            i
+            for item in _to_list_type(value)
             if isinstance(i := get_lion_id(item), str)
         ]
 
@@ -58,7 +59,7 @@ class Progression(Component, Ordering):
             try:
                 l_.remove(i)
             except:
-                raise ItemNotFoundError(f"index {i}")
+                raise ItemNotFoundError(f"{i}")
         self.order = deque(l_)
 
     def discard_all(self, item):
@@ -80,7 +81,7 @@ class Progression(Component, Ordering):
         return progression(self.order + other.order)
 
     def __radd__(self, other):
-        return other.order + self.order
+        return other + self
 
     def __setitem__(self, key, value):
         l_ = list(self.order)
@@ -106,7 +107,7 @@ class Progression(Component, Ordering):
     #     return self.order.popleft()
 
     def __repr__(self):
-        return f"Progression({[i for i in self.order]})".replace("'", "")
+        return f"Progression({len(self.order)})"
 
     def __str__(self):
         return self.__repr__()

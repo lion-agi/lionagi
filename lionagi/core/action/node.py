@@ -1,10 +1,11 @@
 from pydantic import Field
 
-from ..generic.node import Node
+from ..generic.abc import Actionable
+from ..generic import Node
 from .tool import Tool
 
 
-class ActionSelection(Node):
+class ActionSelection(Node, Actionable):
     action_kwargs: dict = Field(
         default_factory=dict,
         description="The arguments for the action",

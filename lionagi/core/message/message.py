@@ -1,31 +1,12 @@
 from enum import Enum
-from pydantic import Field, field_validator
-from lionagi.libs import convert
 
-from ..generic import Mail, BaseNode, BaseComponent
-
-# List of system fields to exclude from additional context processing
-SYSTEM_FIELDS = [
-    "id_",
-    "node_id",
-    "meta",
-    "metadata",
-    "timestamp",
-    "content",
-    "page_content",
-    "assignment",
-    "assignments",
-    "instruction",
-    "context",
-    "response_format",
-    "sender",
-    "recipient",
-    "output_fields",
-]
+from pydantic import Field
+from lionagi.libs.ln_convert import to_str
+from ..generic import Mail, Node
 
 
 # Enums for defining message fields and roles
-class MessageField(Enum):
+class MessageField(str, Enum):
     """
     Enum to store message fields for consistent referencing.
     """
@@ -38,7 +19,7 @@ class MessageField(Enum):
     CONTENT = "content"
 
 
-class MessageRole(Enum):
+class MessageRole(str, Enum):
     """
     Enum for possible roles a message can assume in a conversation.
     """
@@ -49,7 +30,7 @@ class MessageRole(Enum):
 
 
 # Base class for messages
-class BaseMessage(BaseNode, Mail):
+class RoledMessage(Node, Mail):
     """
     A base class representing a message with validators and properties.
     """
@@ -61,23 +42,29 @@ class BaseMessage(BaseNode, Mail):
     )
 
     @property
-    def chat_msg(self):
+    def chat_msg(self) -> dict | None:
+        """return message in chat representation"""
         try:
             return self._check_chat_msg()
         except:
             return None
 
     def _check_chat_msg(self):
-        if not self.role:
+        if self.role is None:
             raise ValueError("Message role not set")
+
+        role = self.role.value if isinstance(self.role, Enum) else self.role
+        if role not in [i.value for i in MessageRole]:
+            raise ValueError(f"Invalid message role: {role}")
+
         try:
-            role = self.role.value if isinstance(self.role, MessageRole) else self.role
-            content_str = convert.to_str(self.content)
-            return {role: content_str}
+            content_str = to_str(self.content)
         except Exception as e:
             raise ValueError(
                 f"Failed to convert {self.content} into a string value"
             ) from e
+
+        return {role: content_str}
 
     def __str__(self):
         """

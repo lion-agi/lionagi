@@ -123,3 +123,9 @@ class Node(Component, Relatable):
             return True
         except Exception as e:
             raise ValueError(f"Failed to remove edge between nodes.") from e
+
+    def __str__(self) -> str:
+        return f"Node(ln_id={self.ln_id})"
+
+    def __repr__(self) -> str:
+        return self.__str__()

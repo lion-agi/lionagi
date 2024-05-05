@@ -107,6 +107,9 @@ class Pile(Component, Record, Generic[T]):
 
     @field_validator("pile", mode="before")
     def _validate_pile(cls, value, /):
+        if isinstance(value, Component):
+            return {value.ln_id: value}
+
         value = _to_list_type(value)
         if getattr(cls, "item_type", None) is not None:
             for i in value:
@@ -139,6 +142,22 @@ class Pile(Component, Record, Generic[T]):
         """
         self.remove(other)
         return self
+
+    def __add__(self, other: T) -> "Pile":
+        """Add an lion item to the pile using the + operator."""
+        a = self.pile.copy()
+        a.update(other.pile.copy())
+        return pile(a)
+
+    def __radd__(self, other: T) -> "Pile":
+        """Add an lion item to the pile using the + operator."""
+        return self + other
+
+    def __str__(self):
+        return f"Pile({len(self.pile)})"
+
+    def __repr__(self):
+        return f"Pile({len(self.pile)})"
 
 
 def pile(

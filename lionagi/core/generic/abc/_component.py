@@ -1,16 +1,4 @@
-"""
-This module defines the Component class, a foundational building block in the
-LionAGI system. The Component class represents distinguishable, temporal
-entities within the system, encapsulating both data and behavior pertinent to
-individual elements processed or managed by LionAGI.
-
-Each instance of Component is uniquely identifiable, timestamped, and capable
-of holding varied content alongside structured metadata. The class supports
-dynamic field management, allowing for flexible adaptation to different use
-cases. It also includes comprehensive methods for serialization and
-deserialization across multiple formats, facilitating integration with various
-data processing libraries and external systems.
-"""
+"""Component class, base building block in LionAGI"""
 
 from abc import ABC
 from functools import singledispatchmethod
@@ -477,8 +465,14 @@ class Component(BaseModel, ABC):
     def __str__(self):
         lastupdate = self.metadata.get("last_updated", [])
         if lastupdate:
-            lastupdate = lastupdate[-1][1][:-7]
-        return f"{self.class_name()}(id: {self.ln_id}, created: {self.timestamp[:-7]}, updated: {lastupdate})"
+            lastupdate = list(lastupdate.values())[-1][1][:-7]
+        return f"{self.class_name()}(ln_id: {self.ln_id}, updated: {lastupdate or self.timestamp[:-7]})"
+
+    def __repr__(self):
+        return self.__str__()
+
+    def __len__(self):
+        return 1
 
 
 LionIDable: TypeAlias = Union[str, Component]

@@ -9,29 +9,10 @@ T = TypeVar("T", bound=Tool)
 
 
 class ToolManager:
-    """
-    A manager class for handling the registration and invocation of tools that are subclasses of Tool.
-
-    This class maintains a registry of tool instances, allowing for dynamic invocation based on
-    tool name and provided arguments. It supports both synchronous and asynchronous tool function
-    calls.
-
-    Attributes:
-        registry (dict[str, Tool]): A dictionary to hold registered tools, keyed by their names.
-    """
 
     registry: dict = {}
 
     def name_existed(self, name: str) -> bool:
-        """
-        Checks if a tool name already exists in the registry.
-
-        Args:
-            name (str): The name of the tool to check.
-
-        Returns:
-            bool: True if the name exists, False otherwise.
-        """
         return name in self.registry
 
     @property
@@ -39,15 +20,6 @@ class ToolManager:
         return self.registry != {}
 
     def _register_tool(self, tool: Tool | Callable) -> None:
-        """
-        Registers a tool in the registry. Raises a TypeError if the object is not an instance of Tool.
-
-        Args:
-            tool (Tool): The tool instance to register.
-
-        Raises:
-            TypeError: If the provided object is not an instance of Tool.
-        """
         if isinstance(tool, Callable):
             tool = func_to_tool(tool)[0]
         if not isinstance(tool, Tool):
@@ -56,18 +28,6 @@ class ToolManager:
         self.registry.update({name: tool})
 
     async def invoke(self, func_calls: Tuple[str, dict[str, Any]]) -> Any:
-        """
-        Invokes a registered tool's function with the given arguments. Supports both coroutine and regular functions.
-
-        Args:
-            func_call (Tuple[str, Dict[str, Any]]): A tuple containing the function name and a dictionary of keyword arguments.
-
-        Returns:
-            Any: The result of the function call.
-
-        Raises:
-            ValueError: If the function name is not registered or if there's an error during function invocation.
-        """
         name, kwargs = func_calls
         if not self.name_existed(name):
             raise ValueError(f"Function {name} is not registered.")
@@ -89,18 +49,6 @@ class ToolManager:
 
     @staticmethod
     def get_function_call(response: dict) -> Tuple[str, dict]:
-        """
-        Extracts a function call and arguments from a response dictionary.
-
-        Args:
-            response (dict): The response dictionary containing the function call information.
-
-        Returns:
-            Tuple[str, dict]: A tuple containing the function name and a dictionary of arguments.
-
-        Raises:
-            ValueError: If the response does not contain valid function call information.
-        """
         try:
             func = response["action"][7:]
             args = convert.to_dict(response["arguments"])
@@ -114,38 +62,12 @@ class ToolManager:
                 raise ValueError("response is not a valid function call")
 
     def register_tools(self, tools: list[Tool]) -> None:
-        """
-        Registers multiple tools in the registry.
-
-        Args:
-            tools (list[Tool]): A list of tool instances to register.
-        """
         func_call.lcall(tools, self._register_tool)
 
     def to_tool_schema_list(self) -> list[dict[str, Any]]:
-        """
-        Generates a list of schemas for all registered tools.
-
-        Returns:
-            list[dict[str, Any]]: A list of tool schemas.
-
-        """
         return [tool.schema_ for tool in self.registry.values()]
 
     def parse_tool(self, tools: TOOL_TYPE, **kwargs) -> dict:
-        """
-        Parses tool information and generates a dictionary for tool invocation.
-
-        Args:
-            tools: Tool information which can be a single Tool instance, a list of Tool instances, a tool name, or a list of tool names.
-            **kwargs: Additional keyword arguments.
-
-        Returns:
-            dict: A dictionary containing tool schema information and any additional keyword arguments.
-
-        Raises:
-            ValueError: If a tool name is provided that is not registered.
-        """
 
         def tool_check(tool):
             if isinstance(tool, dict):

@@ -1,28 +1,65 @@
-from typing import Any
+from typing import Callable
+from pydantic import field_serializer, Field
+from lionagi.libs.ln_func_call import call_handler
+from ..generic.abc import Actionable
+from ..generic import Node
+from .function_calling import FunctionCalling
 
-from pydantic import field_serializer
-from lionagi.core.generic import Node
 
+class Tool(Node, Actionable):
 
-class Tool(Node):
-    """
-    Represents a tool, extending BaseNode with specific functionalities and configurations.
+    function: Callable = Field(
+        ...,
+        description="The callable function or capability of the tool.",
+    )
 
-    Attributes:
-        func: The main function or capability of the tool.
-        schema_: An optional schema defining the structure and constraints of data the tool works with.
-        manual: Optional documentation or manual for using the tool.
-        parser: An optional parser associated with the tool for data processing or interpretation.
-    """
+    schema_: dict | None = Field(
+        None,
+        description="schema in openai format",
+    )
 
-    func: Any
-    schema_: dict | None = None
-    manual: Any | None = None
-    parser: Any | None = None
+    pre_processor: Callable | None = None
+    pre_processor_kwargs: dict | None = None
+
+    post_processor: Callable | None = None
+    post_processor_kwargs: dict | None = None
+
+    parser: Callable | None = None  # parse result to json serializable format
 
     @field_serializer("func")
     def serialize_func(self, func):
         return func.__name__
+
+    @property
+    def name(self):
+        return self.schema_["function"]["name"]
+
+    @field_serializer("func")
+    def serialize_func(self, func):
+        return func.__name__
+
+    def create_function_calling(self, kwargs):
+        return FunctionCalling.create(tuple(self.function, kwargs))
+
+    async def invoke(self, kwargs={}, func_calling=None):
+        if self.pre_processor:
+            pre_process_kwargs = self.pre_processor_kwargs or {}
+            kwargs = await call_handler(
+                self.pre_processor(kwargs, **pre_process_kwargs)
+            )
+            if not isinstance(kwargs, dict):
+                raise ValueError("Pre-processor must return a dictionary.")
+
+        func_call_ = func_calling or self.create_function_calling(kwargs)
+        result = await func_call_.invoke()
+
+        if self.post_processor:
+            post_process_kwargs = self.post_processor_kwargs or {}
+            result = await call_handler(
+                self.post_processor(result, **post_process_kwargs)
+            )
+
+        return result if not self.parser else self.parser(result)
 
 
 TOOL_TYPE = bool | Tool | str | list[Tool | str | dict] | dict
