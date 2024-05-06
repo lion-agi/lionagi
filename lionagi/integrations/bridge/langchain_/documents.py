@@ -28,6 +28,10 @@ def to_langchain_document(datanode: T, **kwargs: Any) -> Any:
     SysUtil.change_dict_key(dnode, old_key="content", new_key="page_content")
     SysUtil.change_dict_key(dnode, old_key="lc_id", new_key="id_")
     dnode = {**dnode, **kwargs}
+    dnode = {k: v for k, v in dnode.items() if v is not None}
+    if "page_content" not in dnode:
+        dnode["page_content"] = ""
+
     return LangchainDocument(**dnode)
 
 
