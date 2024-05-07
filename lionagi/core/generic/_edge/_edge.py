@@ -1,9 +1,11 @@
 from pydantic import Field, field_validator
 from typing import Any
+
 from ..abc import Component, Ordering, get_lion_id, LionIDable, Condition
 
 
 class Edge(Component, Ordering):
+    """Represents a directed edge between two nodes in a graph."""
 
     head: str = Field(
         ...,
@@ -33,25 +35,21 @@ class Edge(Component, Ordering):
         description="A flag indicating if the edge is bundled.",
     )
 
-    @field_validator("head", "tail", mode="before")
-    def _validate_head_tail(cls, value):
-        return get_lion_id(value)
-
     async def check_condition(self, obj: dict[str, Any]) -> bool:
+        """Check if the edge condition is met for the given object."""
         if not self.condition:
             raise ValueError("The condition for the edge is not set.")
-        if await self.condition.applies(obj):
-            return True
-        return False
+        return await self.condition.applies(obj)
+    
+    @field_validator("head", "tail", mode="before")
+    def _validate_head_tail(cls, value):
+        """Validate the head and tail fields."""
+        return get_lion_id(value)
 
     def __len__(self):
+        """Return the length of the edge (always 1)."""
         return 1
 
     def __contains__(self, item: LionIDable) -> bool:
+        """Check if the given item is the head or tail of the edge."""
         return get_lion_id(item) in (self.head, self.tail)
-
-    def __str__(self) -> str:
-        return f"Edge(ln_id={self.ln_id})"
-
-    def __repr__(self) -> str:
-        return f"Edge(ln_id={self.ln_id})"

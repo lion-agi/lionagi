@@ -16,7 +16,7 @@ class ActionSelection(Node, Actionable):
     )
 
 
-class ActionNode(ActionSelection):
+class ActionNode(Node, Actionable):
     tools: list[Tool] | Tool | None = Field(
         default_factory=list,
         description="The tools to be used in the action",

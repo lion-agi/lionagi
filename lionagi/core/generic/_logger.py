@@ -14,13 +14,12 @@ from lionagi.libs import SysUtil, convert, nested
 
 @dataclass
 class DLog:
-    """
-    Defines a log entry structure for data processing operations.
+    """Defines a log entry structure for data processing operations.
 
-    This class encapsulates both the input to and output from a data processing operation,
-    along with an automatically generated timestamp indicating when the log entry was
-    created. It aims to standardize logging across applications for easier analysis
-    and debugging.
+    This class encapsulates both the input to and output from a data processing
+    operation, along with an automatically generated timestamp indicating when
+    the log entry was created. It aims to standardize logging across applications
+    for easier analysis and debugging.
 
     Attributes:
         input_data: The data input to the operation. Can be of any type.
@@ -31,7 +30,7 @@ class DLog:
     output_data: Any
 
     def serialize(self, *, flatten_: bool = True, sep: str = "[^_^]") -> dict[str, Any]:
-        """Serializes the DLog instance into a dictionary with an added timestamp.
+        """Serialize the DLog instance into a dictionary with an added timestamp.
 
         Args:
             flatten_ (bool): If True, flattens dictionary inputs for serialization.
@@ -48,14 +47,12 @@ class DLog:
                 data = convert.to_str(data)
                 if "{" not in data:
                     log_dict[field] = convert.to_str(data)
-
                 else:
                     with contextlib.suppress(Exception):
                         data = convert.to_dict(data)
 
                     if isinstance(self.input_data, dict) and flatten_:
                         log_dict[field] = convert.to_str(nested.flatten(data, sep=sep))
-
                     else:
                         log_dict[field] = convert.to_str(data)
 
@@ -79,37 +76,39 @@ class DLog:
         unflatten_: bool = True,
         sep: str = "[^_^]",
     ) -> "DLog":
-        """Deserializes log entries from string representations of input and output data.
+        """Deserialize log entries from string representations.
 
-        This method reconstructs a DLog instance from serialized string data, optionally
-        unflattening nested dictionary structures if they were flattened during the
-        serialization process. The method is particularly useful for reading logs from
-        storage formats like JSON or CSV where data is represented as strings.
+        This method reconstructs a DLog instance from serialized string data,
+        optionally unflattening nested dictionary structures if they were
+        flattened during the serialization process. The method is particularly
+        useful for reading logs from storage formats like JSON or CSV where
+        data is represented as strings.
 
         Note:
-            The separator '[^_^]' is reserved and should not be used within dictionary
-            keys to ensure proper structure preservation during unflattening.
+            The separator '[^_^]' is reserved and should not be used within
+            dictionary keys to ensure proper structure preservation during
+            unflattening.
 
         Args:
             input_str: String representation of the input data.
             output_str: String representation of the output data.
-            unflatten_ (bool): Indicates whether to unflatten the string data back into
-                               nested dictionaries.
+            unflatten_ (bool): Indicates whether to unflatten the string data
+                               back into nested dictionaries.
             sep (str): Separator used if unflattening is performed.
 
         Returns:
             An instance of DLog reconstructed from the provided string data.
 
         Raises:
-            ValueError: If deserialization or unflattening fails due to incorrect data
-                        format or separator issues.
+            ValueError: If deserialization or unflattening fails due to incorrect
+                        data format or separator issues.
         """
 
         def _process_data(data):
             if unflatten_:
                 try:
                     return nested.unflatten(convert.to_dict(data), sep=sep)
-                except:
+                except Exception:
                     return data
             else:
                 return data
@@ -121,13 +120,10 @@ class DLog:
 
 
 class DataLogger:
-    """
-    Manages logging for data processing activities within an application.
+    """Manages logging for data processing activities within an application.
 
-    This class handles the accumulation,
-    structuring, and persistence of log entries.
-    It supports exporting logs to disk in both CSV and JSON formats,
-    with features for
+    This class handles the accumulation, structuring, and persistence of log entries.
+    It supports exporting logs to disk in both CSV and JSON formats, with features for
     automatic log saving at program exit and customizable file naming.
 
     Attributes:
@@ -142,11 +138,11 @@ class DataLogger:
         log: List[Dict] | None = None,
         filename: str | None = None,
     ) -> None:
-        """
-        Initializes the DataLogger with optional custom settings for log storage.
+        """Initialize the DataLogger with optional custom settings for log storage.
 
         Args:
-            persist_path: The file system path for storing log files. Defaults to 'data/logs/'.
+            persist_path: The file system path for storing log files.
+                          Defaults to 'data/logs/'.
             log: Initial log entries.
             filename: Base name for exported log files.
         """
@@ -156,8 +152,7 @@ class DataLogger:
         atexit.register(self.save_at_exit)
 
     def extend(self, logs) -> None:
-        """
-        Extends the log deque with multiple log entries.
+        """Extend the log deque with multiple log entries.
 
         This method allows for bulk addition of log entries, which can be useful for
         importing logs from external sources or consolidating logs from different parts
@@ -173,8 +168,7 @@ class DataLogger:
             self.log = deque(log1)
 
     def append(self, *, input_data: Any, output_data: Any) -> None:
-        """
-        Appends a new log entry from provided input and output data.
+        """Append a new log entry from provided input and output data.
 
         Args:
             input_data: Input data to the operation.
@@ -192,13 +186,13 @@ class DataLogger:
         time_prefix: bool = False,
         verbose: bool = True,
         clear: bool = True,
-        flatten_=True,
-        sep="[^_^]",
-        index=False,
-        random_hash_digits=3,
+        flatten_: bool = True,
+        sep: str = "[^_^]",
+        index: bool = False,
+        random_hash_digits: int = 3,
         **kwargs,
     ) -> None:
-        """Exports log entries to a CSV file with customizable options.
+        """Export log entries to a CSV file with customizable options.
 
         Args:
             filename: Filename for the exported CSV. Defaults to 'log.csv'.
@@ -210,9 +204,9 @@ class DataLogger:
             flatten_: If True, flattens dictionary data for serialization.
             sep: Separator for flattening nested dictionaries.
             index: If True, includes an index column in the CSV.
+            random_hash_digits: Number of random hash digits to add to the filename.
             **kwargs: Additional arguments for DataFrame.to_csv().
         """
-
         if not filename.endswith(".csv"):
             filename += ".csv"
 
@@ -244,13 +238,13 @@ class DataLogger:
         time_prefix: bool = False,
         verbose: bool = True,
         clear: bool = True,
-        flatten_=True,
-        sep="[^_^]",
-        index=False,
-        random_hash_digits=3,
+        flatten_: bool = True,
+        sep: str = "[^_^]",
+        index: bool = False,
+        random_hash_digits: int = 3,
         **kwargs,
     ) -> None:
-        """Exports log entries to a JSON file with customizable options.
+        """Export log entries to a JSON file with customizable options.
 
         Args:
             filename: Filename for the exported JSON. Defaults to 'log.json'.
@@ -262,6 +256,7 @@ class DataLogger:
             flatten_: If True, flattens dictionary data for serialization.
             sep: Separator for flattening nested dictionaries.
             index: If True, includes an index in the JSON.
+            random_hash_digits: Number of random hash digits to add to the filename.
             **kwargs: Additional arguments for DataFrame.to_json().
         """
         if not filename.endswith(".json"):
@@ -285,21 +280,24 @@ class DataLogger:
             if clear:
                 self.log.clear()
         except Exception as e:
-            raise ValueError(f"Error in saving to csv: {e}") from e
+            raise ValueError(f"Error in saving to json: {e}") from e
 
     def save_at_exit(self):
-        """
-        Registers an at-exit handler to ensure that any unsaved logs are automatically
-        persisted to a file upon program termination. This safeguard helps prevent the
-        loss of log data due to unexpected shutdowns or program exits.
+        """Save any unsaved logs automatically upon program termination.
+
+        This method is registered as an at-exit handler to ensure that any unsaved
+        logs are automatically persisted to a file upon program termination. This
+        safeguard helps prevent the loss of log data due to unexpected shutdowns
+        or program exits.
 
         The method is configured to save the logs to a CSV file, named
-        'unsaved_logs.csv', which is stored in the designated persisting directory. This
-        automatic save operation is triggered only if there are unsaved logs present at
-        the time of program exit.
+        'unsaved_logs.csv', which is stored in the designated persisting directory.
+        This automatic save operation is triggered only if there are unsaved logs
+        present at the time of program exit.
 
-        Note: This method does not clear the logs after saving, allowing for the
-        possibility of manual.py review or recovery after the program has terminated.
+        Note:
+            This method does not clear the logs after saving, allowing for the
+            possibility of manual review or recovery after the program has terminated.
         """
         if self.log:
             self.to_csv_file("unsaved_logs.csv", clear=False)
