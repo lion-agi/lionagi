@@ -1,5 +1,7 @@
 # Default configs for the OpenAI API
 
+API_key_schema = "OPENAI_API_KEY",
+    
 # ChatCompletion
 oai_chat_llmconfig = {
     "model": "gpt-4-turbo",
@@ -120,4 +122,5 @@ oai_schema = {
     "audio_speech": oai_audio_speech_schema,
     "audio_transcriptions": oai_audio_transcriptions_schema,
     "audio_translations": oai_audio_translations_schema,
+    "API_key_schema": API_key_schema,
 }

@@ -1,28 +1,35 @@
 from ..generic.abc import Component
-from ..generic import Pile, Progression, progression, pile
+from ..generic import Pile, Progression, Flow, progression, pile, flow, Model, DataLogger
+from ..message import System
+from lionagi.libs.ln_api import BaseService
+from typing import Any, Tuple
+from ..action.tool import Tool, TOOL_TYPE
+from ..action.tool_manager import ToolManager
 
-
-class Session(Component):
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    ...
+from lionagi.libs import SysUtil
 
 
 
-
-
-
-
+class Session:
+    
+    def __init__(
+        self, 
+        system = None,  # the default system message node for the session
+        model = None, 
+        datalogger = None,
+        persist_path = None,
+    ):
+        
+        self.ln_id = SysUtil.create_id()
+        self.timestamp = SysUtil.get_timestamp(sep=None)[:-6]
+        self.system = system or System(
+            system_info="You are a helpful assistant.",
+            sender=self.ln_id, 
+            recipient="assistant",
+        )
+        self.model = model or Model()
+        self.datalogger = datalogger or DataLogger(persist_path)
+        
 
 
 

@@ -11,7 +11,7 @@ class MessageField(str, Enum):
     Enum to store message fields for consistent referencing.
     """
 
-    NODE_ID = "node_id"
+    LION_ID = "lion_id"
     TIMESTAMP = "timestamp"
     ROLE = "role"
     SENDER = "sender"

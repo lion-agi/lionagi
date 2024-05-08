@@ -20,8 +20,7 @@ class CategoricalPile(Component, Record):
             pile1 = pile()
             for k, v in self.categories.items():
                 if v and not v.is_empty():
-                    for i in v:
-                        pile1 += i
+                    pile1.include(v)
                 if v is None:
                     self.categories[k] = pile()
 

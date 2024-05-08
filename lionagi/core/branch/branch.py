@@ -1,6 +1,243 @@
-"""
-This module contains the Branch class, which represents a branch in a conversation tree.
-"""
+from ..generic import Node, Pile, pile, DataLogger, progression, Progression
+from ..message import MessageRole, RoledMessage, MessageField, System, Instruction, AssistantResponse, ActionRequest, ActionResponse
+from ..action import Tool, ToolManager
+from .util import MessageUtil
+
+
+_msg_fields = [i.value for i in MessageField]
+
+class Branch(Node):
+   
+    messages: Pile[RoledMessage] = pile({}, RoledMessage)
+    datalogger: DataLogger = DataLogger()
+    prog: Progression = progression()
+    tool_manager: ToolManager = ToolManager()
+    
+    
+    
+    
+    
+    def __init__(
+        self, 
+        system: System | None = None,
+        messages: Pile[RoledMessage] = None,
+        datalogger: DataLogger = None,
+        persist_path: str | None = None,
+        prog: Progression = None,
+        tool_manager: ToolManager = None,
+        tools: Any = None
+    ):
+        super().__init__()
+        self.messages = messages or pile({}, RoledMessage)
+        self.datalogger = datalogger or DataLogger(persist_path)
+        self.prog = prog or progression()
+        self.tool_manager = tool_manager or ToolManager()
+        
+        if system:
+            self.system_node = system if isinstance(system, System) else System(system)
+        else:
+            self.system_node = None
+            
+        if tools:
+            self.tool_manager.register_tools(tools)
+    
+    
+    def add_message(
+        self,
+        system = None,
+        instruction = None,
+        context = None,
+        response = None,
+        requested_fields=None,
+        sender=None,
+        recipient=None,
+        **kwargs,
+    ) -> None:
+        
+        _msg = MessageUtil.create_message(
+            system=system,
+            instruction=instruction,
+            context=context,
+            response=response,
+            requested_fields=requested_fields,
+            sender=sender,
+            recipient=recipient,
+            **kwargs,
+        )
+        
+        if isinstance(_msg, System):
+            _msg.sender = sender or "system"
+            _msg.recipient = self.ln_id     # the branch itself
+        
+        if isinstance(_msg, Instruction):
+            _msg.sender = sender or "user"
+            _msg.recipient = self.ln_id
+        
+        if isinstance(_msg, AssistantResponse):
+            _msg.sender = sender or self.ln_id
+            _msg.recipient = recipient or "user"
+
+        if isinstance(_msg, ActionRequest):
+            
+        
+        
+        
+        
+        
+        
+        _msg = MessageUtil.create_message(
+            system=system,
+            instruction=instruction,
+            context=context,
+            response=response,
+            requested_fields=requested_fields,
+            recipient=recipient,
+            **kwargs,
+        )
+
+        if isinstance(_msg, System):
+            self.system_node = _msg
+
+        # sourcery skip: merge-nested-ifs
+        if isinstance(_msg, Instruction):
+            if recipient is None and self.name is not None:
+                _msg.recipient = self.name
+
+        if isinstance(_msg, Response):
+            if "action_response" in _msg.content.keys():
+                if recipient is None and self.name is not None:
+                    _msg.recipient = self.name
+                if recipient is not None and self.name is None:
+                    _msg.recipient = recipient
+            if "response" in _msg.content.keys():
+                if self.name is not None:
+                    _msg.sender = self.name
+
+        setattr(_msg, "node_id", _msg.id_)
+        _msg.content = _msg.msg_content
+        self.messages.loc[len(self.messages)] = _msg.to_pd_series()
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+class BaseBranch(BaseNode, ABC):
+
+
+    _columns: list[str] = BranchColumns.COLUMNS.value
+
+    def __init__(
+        self,
+        messages: dataframe.ln_DataFrame | None = None,
+        datalogger: DataLogger | None = None,
+        persist_path: str | Path | None = None,
+        name=None,
+        **kwargs,
+    ) -> None:
+        super().__init__(**kwargs)
+        if isinstance(messages, dataframe.ln_DataFrame):
+            if MessageUtil.validate_messages(messages):
+                self.messages = messages
+            else:
+                raise ValueError("Invalid messages format")
+        else:
+            self.messages = dataframe.ln_DataFrame(columns=self._columns)
+
+        self.datalogger = datalogger or DataLogger(persist_path=persist_path)
+        self.name = name
+
+    def add_message(
+        self,
+        system: dict | list | System | None = None,
+        instruction: dict | list | Instruction | None = None,
+        context: str | dict[str, Any] | None = None,
+        response: dict | list | BaseMessage | None = None,
+        requested_fields=None,
+        recipient=None,
+        **kwargs,
+    ) -> None:
+
+        _msg = MessageUtil.create_message(
+            system=system,
+            instruction=instruction,
+            context=context,
+            response=response,
+            requested_fields=requested_fields,
+            recipient=recipient,
+            **kwargs,
+        )
+
+        if isinstance(_msg, System):
+            self.system_node = _msg
+
+        # sourcery skip: merge-nested-ifs
+        if isinstance(_msg, Instruction):
+            if recipient is None and self.name is not None:
+                _msg.recipient = self.name
+
+        if isinstance(_msg, Response):
+            if "action_response" in _msg.content.keys():
+                if recipient is None and self.name is not None:
+                    _msg.recipient = self.name
+                if recipient is not None and self.name is None:
+                    _msg.recipient = recipient
+            if "response" in _msg.content.keys():
+                if self.name is not None:
+                    _msg.sender = self.name
+
+        setattr(_msg, "node_id", _msg.id_)
+        _msg.content = _msg.msg_content
+        self.messages.loc[len(self.messages)] = _msg.to_pd_series()
+
+    def _to_chatcompletion_message(
+        self, with_sender: bool = False
+    ) -> list[dict[str, Any]]:
+
+
+        message = []
+
+        for _, row in self.messages.iterrows():
+            content_ = row["content"]
+            if content_.startswith("Sender"):
+                content_ = content_.split(":", 1)[1]
+
+            # if isinstance(content_, str):
+            #     try:
+            #         content_ = json.dumps(to_dict(content_))
+            #     except Exception as e:
+            #         raise ValueError(
+            #             f"Error in serializing, {row['node_id']} {content_}: {e}"
+            #         )
+
+            out = {"role": row["role"], "content": content_}
+            if with_sender:
+                out["content"] = f"Sender {row['sender']}: {content_}"
+
+            message.append(out)
+        return message
+
+
+
+
+
+
+
+
+
+
+
+
 
 from collections import deque
 from typing import Any, Union, TypeVar, Callable
@@ -25,65 +262,6 @@ T = TypeVar("T", bound=Tool)
 
 
 class Branch(BaseBranch, BranchFlowMixin):
-    """
-    Represents a branch in a conversation tree.
-
-    Attributes:
-        sender (str): The sender of the branch (default: "system").
-        tool_manager (ToolManager): The tool manager for the branch.
-        service (BaseService): The service associated with the branch.
-        llmconfig (dict): The configuration for the language model.
-        status_tracker (StatusTracker): The status tracker for the branch.
-        pending_ins (dict): The pending incoming mails for the branch.
-        pending_outs (deque): The pending outgoing mails for the branch.
-
-    Methods:
-        __init__(self, name=None, system=None, messages=None, service=None, sender=None,
-                 llmconfig=None, tools=None, datalogger=None, persist_path=None,
-                 tool_manager=None, **kwargs) -> None:
-            Initializes the Branch instance.
-
-        from_csv(cls, filepath, name=None, service=None, llmconfig=None, tools=None,
-                 datalogger=None, persist_path=None, tool_manager=None, read_kwargs=None,
-                 **kwargs) -> Branch:
-            Creates a Branch instance from a CSV file.
-
-        from_json_string(cls, filepath, name=None, service=None, llmconfig=None, tools=None,
-                         datalogger=None, persist_path=None, tool_manager=None, read_kwargs=None,
-                         **kwargs) -> Branch:
-            Creates a Branch instance from a JSON string file.
-
-        messages_describe(self) -> dict[str, Any]:
-            Describes the messages in the branch.
-
-        has_tools(self) -> bool:
-            Checks if the branch has any registered tools.
-
-        merge_branch(self, branch: Branch, update=True) -> None:
-            Merges another branch into the current branch.
-
-        register_tools(self, tools: Union[Tool, list[Tool]]) -> None:
-            Registers tools in the branch's tool manager.
-
-        delete_tools(self, tools: Union[T, list[T], str, list[str]], verbose=True) -> bool:
-            Deletes tools from the branch's tool manager.
-
-        send(self, recipient: str, category: str, package: Any) -> None:
-            Sends a mail to a recipient.
-
-        receive(self, sender: str, messages=True, tools=True, service=True, llmconfig=True) -> None:
-            Receives mails from a sender and updates the branch accordingly.
-
-        receive_all(self) -> None:
-            Receives all pending mails and updates the branch accordingly.
-
-        _add_service(service, llmconfig) -> tuple[BaseService, dict]:
-            Adds a service and its configuration to the branch.
-
-        _is_invoked(self) -> bool:
-            Checks if the conversation has been invoked with an action response.
-    """
-
     def __init__(
         self,
         name: str | None = None,
@@ -98,26 +276,6 @@ class Branch(BaseBranch, BranchFlowMixin):
         tool_manager: ToolManager | None = None,
         **kwargs,
     ):
-        """
-        Initializes the Branch instance.
-
-        Args:
-            name (str): The name of the branch (optional).
-            system (dict | list | System): The system message for the branch (optional).
-            messages (dataframe.ln_DataFrame): The messages in the branch (optional).
-            service (BaseService): The service associated with the branch (optional).
-            sender (str): The sender of the branch (optional, default: "system").
-            llmconfig (dict[str, str | int | dict]): The configuration for the language model (optional).
-            tools (list[Callable | Tool]): The tools to register in the branch (optional).
-            datalogger (DataLogger): The data logger for the branch (optional).
-            persist_path (str | Path): The path to persist the branch data (optional).
-            tool_manager (ToolManager): The tool manager for the branch (optional).
-            **kwargs: Additional keyword arguments.
-
-        Raises:
-            TypeError: If there is an error in registering the tools.
-        """
-
         super().__init__(
             messages=messages,
             datalogger=datalogger,
@@ -155,105 +313,8 @@ class Branch(BaseBranch, BranchFlowMixin):
         if system is not None:
             self.add_message(system=system)
 
-    @classmethod
-    def from_csv(
-        cls,
-        filepath,
-        name: str | None = None,
-        service: BaseService | None = None,
-        llmconfig: dict[str, str | int | dict] | None = None,
-        tools: TOOL_TYPE | None = None,
-        datalogger: None | DataLogger = None,
-        persist_path: str | Path | None = None,  # instruction_sets=None,
-        tool_manager: ToolManager | None = None,
-        read_kwargs=None,
-        **kwargs,
-    ) -> "Branch":
-        """
-        Creates a Branch instance from a CSV file.
-
-        Args:
-            filepath: The path to the CSV file.
-            name (str): The name of the branch (optional).
-            service (BaseService): The service associated with the branch (optional).
-            llmconfig (dict[str, str | int | dict]): The configuration for the language model (optional).
-            tools (TOOL_TYPE): The tools to register in the branch (optional).
-            datalogger (DataLogger): The data logger for the branch (optional).
-            persist_path (str | Path): The path to persist the branch data (optional).
-            tool_manager (ToolManager): The tool manager for the branch (optional).
-            read_kwargs: Additional keyword arguments for reading the CSV file (optional).
-            **kwargs: Additional keyword arguments.
-
-        Returns:
-            Branch: The created Branch instance.
-        """
-        return cls._from_csv(
-            filepath=filepath,
-            read_kwargs=read_kwargs,
-            name=name,
-            service=service,
-            llmconfig=llmconfig,
-            tools=tools,
-            datalogger=datalogger,
-            persist_path=persist_path,
-            # instruction_sets=instruction_sets,
-            tool_manager=tool_manager,
-            **kwargs,
-        )
-
-    @classmethod
-    def from_json_string(
-        cls,
-        filepath,
-        name: str | None = None,
-        service: BaseService | None = None,
-        llmconfig: dict[str, str | int | dict] | None = None,
-        tools: TOOL_TYPE | None = None,
-        datalogger: None | DataLogger = None,
-        persist_path: str | Path | None = None,  # instruction_sets=None,
-        tool_manager: ToolManager | None = None,
-        read_kwargs=None,
-        **kwargs,
-    ) -> "Branch":
-        """
-        Creates a Branch instance from a JSON string file.
-
-        Args:
-            filepath: The path to the JSON string file.
-            name (str): The name of the branch (optional).
-            service (BaseService): The service associated with the branch (optional).
-            llmconfig (dict[str, str | int | dict]): The configuration for the language model (optional).
-            tools (TOOL_TYPE): The tools to register in the branch (optional).
-            datalogger (DataLogger): The data logger for the branch (optional).
-            persist_path (str | Path): The path to persist the branch data (optional).
-            tool_manager (ToolManager): The tool manager for the branch (optional).
-            read_kwargs: Additional keyword arguments for reading the JSON string file (optional).
-            **kwargs: Additional keyword arguments.
-
-        Returns:
-            Branch: The created Branch instance.
-        """
-        return cls._from_json(
-            filepath=filepath,
-            read_kwargs=read_kwargs,
-            name=name,
-            service=service,
-            llmconfig=llmconfig,
-            tools=tools,
-            datalogger=datalogger,
-            persist_path=persist_path,
-            # instruction_sets=instruction_sets,
-            tool_manager=tool_manager,
-            **kwargs,
-        )
 
     def messages_describe(self) -> dict[str, Any]:
-        """
-        Describes the messages in the branch.
-
-        Returns:
-            dict[str, Any]: A dictionary describing the messages in the branch.
-        """
         return dict(
             total_messages=len(self.messages),
             summary_by_role=self._info(),
@@ -265,23 +326,10 @@ class Branch(BaseBranch, BranchFlowMixin):
 
     @property
     def has_tools(self) -> bool:
-        """
-        Checks if the branch has any registered tools.
-
-        Returns:
-            bool: True if the branch has registered tools, False otherwise.
-        """
         return self.tool_manager.registry != {}
 
     # todo: also update other attributes
     def merge_branch(self, branch: "Branch", update: bool = True) -> None:
-        """
-        Merges another branch into the current branch.
-
-        Args:
-            branch (Branch): The branch to merge.
-            update (bool): Whether to update the existing attributes or add new ones (default: True).
-        """
         message_copy = branch.messages.copy()
         self.messages = self.messages.merge(message_copy, how="outer")
         self.datalogger.extend(branch.datalogger.log)
@@ -302,12 +350,6 @@ class Branch(BaseBranch, BranchFlowMixin):
     def register_tools(
         self, tools: Union[Tool, list[Tool | Callable], Callable]
     ) -> None:
-        """
-        Registers tools in the branch's tool manager.
-
-        Args:
-            tools (Union[Tool, list[Tool]]): The tool(s) to register.
-        """
         if not isinstance(tools, list):
             tools = [tools]
         self.tool_manager.register_tools(tools=tools)
@@ -317,16 +359,6 @@ class Branch(BaseBranch, BranchFlowMixin):
         tools: Union[T, list[T], str, list[str]],
         verbose: bool = True,
     ) -> bool:
-        """
-        Deletes tools from the branch's tool manager.
-
-        Args:
-            tools (Union[T, list[T], str, list[str]]): The tool(s) to delete.
-            verbose (bool): Whether to print success/failure messages (default: True).
-
-        Returns:
-            bool: True if the tools were successfully deleted, False otherwise.
-        """
         if not isinstance(tools, list):
             tools = [tools]
         if convert.is_same_dtype(tools, str):
@@ -348,14 +380,6 @@ class Branch(BaseBranch, BranchFlowMixin):
         return False
 
     def send(self, recipient_id: str, category: str, package: Any) -> None:
-        """
-        Sends a mail to a recipient.
-
-        Args:
-            recipient (str): The recipient of the mail.
-            category (str): The category of the mail.
-            package (Any): The package to send in the mail.
-        """
         mail = BaseMail(
             sender_id=self.id_,
             recipient_id=recipient_id,
@@ -372,23 +396,6 @@ class Branch(BaseBranch, BranchFlowMixin):
         service: bool = True,
         llmconfig: bool = True,
     ) -> None:
-        """
-        Receives mails from a sender and updates the branch accordingly.
-
-        Args:
-            sender (str): The sender of the mails.
-            messages (bool): Whether to receive message updates (default: True).
-            tools (bool): Whether to receive tool updates (default: True).
-            service (bool): Whether to receive service updates (default: True).
-            llmconfig (bool): Whether to receive language model configuration updates (default: True).
-
-        Raises:
-            ValueError: If there are no packages from the specified sender.
-                        If the messages format is invalid.
-                        If the tools format is invalid.
-                        If the provider format is invalid.
-                        If the llmconfig format is invalid.
-        """
         skipped_requests = deque()
         if sender not in self.pending_ins:
             raise ValueError(f"No package from {sender}")
@@ -426,9 +433,6 @@ class Branch(BaseBranch, BranchFlowMixin):
             self.pending_ins.pop(sender)
 
     def receive_all(self) -> None:
-        """
-        Receives all pending mails and updates the branch accordingly.
-        """
         for key in list(self.pending_ins.keys()):
             self.receive(key)
 
@@ -454,13 +458,6 @@ class Branch(BaseBranch, BranchFlowMixin):
         return service, llmconfig
 
     def _is_invoked(self) -> bool:
-        """
-        Check if the conversation has been invoked with an action response.
-
-        Returns:
-                bool: True if the conversation has been invoked, False otherwise.
-
-        """
         content = self.messages.iloc[-1]["content"]
         try:
             if convert.to_dict(content)["action_response"].keys() >= {

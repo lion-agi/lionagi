@@ -19,29 +19,13 @@ class MessageUtil:
 
     @staticmethod
     def create_message(
-        system: System | CUSTOM_TYPE = None,
-        instruction: Instruction | CUSTOM_TYPE = None,
-        context: str | dict[str, Any] | None = None,
-        response: Response | CUSTOM_TYPE = None,
+        system= None,
+        instruction = None,
+        context = None,
         output_fields=None,
         **kwargs,
     ) -> BaseMessage:
-        """
-        Creates a message object based on the input parameters, ensuring only one message role is present.
 
-        Args:
-                system: Information for creating a System message.
-                instruction: Information for creating an Instruction message.
-                context: Context information for the message.
-                response: Response data for creating a message.
-                **kwargs: Additional keyword arguments for message creation.
-
-        Returns:
-                A message object of the appropriate type based on provided inputs.
-
-        Raises:
-                ValueError: If more than one of the role-specific parameters are provided.
-        """
         if sum(func_call.lcall([system, instruction, response], bool)) != 1:
             raise ValueError("Error: Message must have one and only one role.")
 

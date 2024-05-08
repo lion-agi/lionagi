@@ -8,7 +8,7 @@ from pandas import DataFrame, Series
 from pydantic import BaseModel, Field, ValidationError, AliasChoices
 
 from lionagi.libs import ParseUtil, SysUtil
-from lionagi.libs.ln_convert import strip_lower, to_dict, to_str, to_df
+from lionagi.libs.ln_convert import strip_lower, to_dict, to_str
 from lionagi.libs.ln_func_call import lcall
 from lionagi.libs.ln_nested import nget, nset, ninsert, flatten, unflatten
 
