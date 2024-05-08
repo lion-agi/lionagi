@@ -238,11 +238,15 @@ class Pile(Component, Record, Generic[T]):
         return other + self
 
     def size(self):
-        """Return the number of items in the pile."""
-        return len(self.pile)
+        """Return the total size of the pile."""
+        return sum([len(i) for i in self])
 
     def append(self, item: T):
-        """Append an item to the pile."""
+        """
+        Append an item to the pile.
+        This is the only way to add a pile into another pile.
+        all other methods assume pile as a container only
+        """
         self.pile[item.ln_id] = item
         self.order.append(item.ln_id)
 
