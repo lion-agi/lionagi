@@ -16,78 +16,82 @@ class Flow(Component):
     sequences: Pile[Progression] = Field(default_factory=lambda: pile({}, Progression))
     registry: dict[str, str] = {}
     default_name: str = "main"
-    
-    
+
     @field_validator("sequences", mode="before")
     def _validate_sequences(cls, value):
         if not value:
             return pile({}, Progression)
         if isinstance(value, dict):
             return pile(value, Progression)
-        if isinstance(value, list) and len(value) > 0 and isinstance(value[0], Progression):
+        if (
+            isinstance(value, list)
+            and len(value) > 0
+            and isinstance(value[0], Progression)
+        ):
             return pile({i.ln_id: i for i in value}, Progression)
         return pile({}, Progression)
-    
-    
+
     def all_orders(self) -> list[list[str]]:
         return [list(seq) for seq in self.sequences]
-    
+
     def all_unique_items(self) -> Tuple[str]:
         return tuple({item for seq in self.sequences for item in seq})
-    
+
     def keys(self):
         yield from self.sequences.keys()
-    
+
     def values(self):
         yield from self.sequences.values()
-    
+
     def items(self):
         yield from self.sequences.pile()
-        
+
     def get(self, seq=None, default=...):
-       
+
         if seq is None:
             if self.default_name in self.registry:
                 seq = self.registry[self.default_name]
                 seq = self.sequences[seq]
             else:
                 raise ItemNotFoundError("No sequence found.")
-            
+
         elif seq is not None and seq in self:
             if not isinstance(seq, (str, Progression)):
                 raise LionTypeError("Sequence must be of type Progression.")
-            
+
             if isinstance(seq, str):
                 seq = self.registry[seq]
-                
-        return self.sequences[seq] if default == ... else self.sequences.get(seq, default)
-        
+
+        return (
+            self.sequences[seq] if default == ... else self.sequences.get(seq, default)
+        )
+
     def __getitem__(self, seq=None, /):
         return self.get(seq)
-        
-    def __setitem__(self, seq: LionIDable | str, index=None,  value=None, /):
+
+    def __setitem__(self, seq: LionIDable | str, index=None, value=None, /):
         if seq not in self:
             raise ItemNotFoundError(f"Sequence {seq}")
 
         if index:
             self.sequences[seq][index] = value
             return
-            
+
         self.sequences[seq] = value
 
     def __contains__(self, item):
         return (
-            item in self.registry or
-            item in self.sequences or
-            item in self.all_unique_items()
+            item in self.registry
+            or item in self.sequences
+            or item in self.all_unique_items()
         )
-        
+
     def shape(self):
         return (len(self.all_orders()), [len(i) for i in self.all_orders()])
-    
+
     def size(self):
         return sum(len(seq) for seq in self.all_orders())
-    
+
     def clear(self):
         self.sequences.clear()
         self.registry.clear()
@@ -101,7 +105,7 @@ class Flow(Component):
             if item:
                 self.append(item, name)
                 return item in self
-            
+
         else:
             if _sequence in self:
                 if not item and not name:
@@ -109,21 +113,21 @@ class Flow(Component):
                 if item:
                     self.append(item, _sequence)
                     return item in self
-                return True # will ignore name if sequence is already found
-            
+                return True  # will ignore name if sequence is already found
+
             else:
                 if isinstance(seq, Progression):
                     if item and seq.include(item):
                         self.register(seq, name)
                     return seq in self
-                
+
                 return False
 
-    def exclude(self, seq: LionIDable=None, item=None, name=None):
-        
+    def exclude(self, seq: LionIDable = None, item=None, name=None):
+
         # if sequence is not None, we will not check the name
         if seq is not None:
-        
+
             with contextlib.suppress(ItemNotFoundError):
                 if item:
                     # if there is item, we exclude it from the sequence
@@ -133,10 +137,9 @@ class Flow(Component):
                     a = self.registry.pop(seq.name or seq.ln_id, None)
                     return a is not None and self.sequences.exclude(seq)
             return False
-        
-        
+
         elif name is not None:
-            
+
             with contextlib.suppress(ItemNotFoundError):
                 if item:
                     # if there is item, we exclude it from the sequence
@@ -146,20 +149,20 @@ class Flow(Component):
                     a = self.registry.pop(name, None)
                     return a is not None and self.sequences.exclude(a)
             return False
-        
+
     def register(self, sequence: Progression, name: str = None):
         if not isinstance(sequence, Progression):
             raise LionTypeError(f"Sequence must be of type Progression.")
-        
+
         if name is None and sequence.name is None:
             if self.default_name in self.registry:
                 name = sequence.ln_id
             else:
                 name = self.default_name
-        
+
         if name in self.registry:
             raise ValueError(f"Sequence '{name}' already exists.")
-        
+
         self.sequences.include(sequence)
         self.registry[name] = sequence.ln_id
 
@@ -169,22 +172,22 @@ class Flow(Component):
                 sequence = self.registry[self.default_name]
                 self.sequences[sequence].include(item)
                 return
-            
+
             p = progression(item, self.default_name)
             self.register(p)
             return
-                
+
         if sequence in self.sequences:
             self.sequences[sequence] += item
             return
-        
+
         if sequence in self.registry:
             self.sequences[self.registry[sequence]] += item
-            return 
-        
+            return
+
         p = progression(item, sequence if isinstance(sequence, str) else None)
         self.register(p)
-        
+
     def popleft(self, sequence=None, /):
         sequence = self._find_sequence(sequence)
         return self.sequences[sequence].popleft()
@@ -205,7 +208,7 @@ class Flow(Component):
         if sequence == "all":
             for seq in self.sequences:
                 seq.remove(item)
-                   
+
         sequence = self._find_sequence(sequence)
         self.sequences[sequence].remove(item)
 
@@ -220,17 +223,17 @@ class Flow(Component):
 
     def _find_sequence(self, sequence=None, default=...):
         """find the sequence id in the registry or sequencees. can be name, progression obj or id"""
-        
+
         if not sequence:
             if self.default_name in self.registry:
                 return self.registry[self.default_name]
             if default != ...:
                 return default
             raise ItemNotFoundError("No sequence found.")
-                
+
         if sequence in self.sequences:
             return sequence.ln_id if isinstance(sequence, Progression) else sequence
-        
+
         if sequence in self.registry:
             return self.registry[sequence]
 
@@ -238,15 +241,14 @@ class Flow(Component):
         return self.sequences.to_df()
 
 
-
 def flow(sequences=None, default_name=None, /):
     if sequences is None:
         return Flow()
-    
+
     flow = Flow()
     if default_name:
         flow.default_name = default_name
-    
+
     # if mapping we assume a dictionary of in {name: data} format
     if isinstance(sequences, (Mapping, Record)):
         for name, seq in sequences.items():
@@ -260,7 +262,7 @@ def flow(sequences=None, default_name=None, /):
             else:
                 flow.register(seq, seq.ln_id)
         return flow
-    
+
     for seq in sequences:
         if not isinstance(seq, Progression):
             try:

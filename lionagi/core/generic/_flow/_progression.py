@@ -15,7 +15,6 @@ from .._util import _to_list_type
 
 class Progression(Component, Ordering):
 
-
     name: str | None = Field(
         None,
         title="Name",
@@ -26,7 +25,7 @@ class Progression(Component, Ordering):
         title="Order",
         description="The order of the progression.",
     )
-    
+
     @field_validator("order", mode="before")
     def _validate_order(cls, value) -> list[str]:
         """Validate and convert the order field."""
@@ -58,10 +57,10 @@ class Progression(Component, Ordering):
 
     def keys(self):
         yield from range(len(self))
-    
+
     def values(self):
         yield from self.order
-    
+
     def items(self):
         for idx, item in enumerate(self.order):
             yield idx, item
@@ -99,13 +98,13 @@ class Progression(Component, Ordering):
         if item in self:
             item = self._validate_order(item)
             l_ = SysUtil.create_copy(self.order)
-            
+
             with contextlib.suppress(Exception):
                 for i in item:
                     l_.remove(i)
                 self.order = l_
                 return
-            
+
         raise ItemNotFoundError(f"{item}")
 
     def __list__(self):

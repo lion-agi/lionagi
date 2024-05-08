@@ -19,9 +19,9 @@ class MessageUtil:
 
     @staticmethod
     def create_message(
-        system= None,
-        instruction = None,
-        context = None,
+        system=None,
+        instruction=None,
+        context=None,
         output_fields=None,
         **kwargs,
     ) -> BaseMessage:

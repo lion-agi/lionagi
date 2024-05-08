@@ -132,6 +132,6 @@ class Node(Component, Relatable):
         _dict = self.to_dict()
         _dict["relations"] = [len(self.relations["in"]), len(self.relations["out"])]
         return Series(_dict).__str__()
-    
+
     def __repr__(self):
         return self.__str__()

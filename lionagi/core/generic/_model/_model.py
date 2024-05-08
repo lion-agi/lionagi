@@ -12,19 +12,19 @@ load_dotenv()
 class Model:
 
     def __init__(
-        self, 
-        model_name : str = None,
+        self,
+        model_name: str = None,
         model_config: dict = {},
-        provider : Type[BaseService] = OpenAIService,
+        provider: Type[BaseService] = OpenAIService,
         provider_schema: dict = oai_schema,
         endpoint: str = "chat/completions",
         token_encoding_name: str = "cl100k_base",
-        api_key : str = None,
+        api_key: str = None,
         max_tokens: int = 100_000,
         max_requests: int = 1_000,
         interval: int = 60,
-        service : BaseService = None,
-        **kwargs,                       # additional parameters for the model
+        service: BaseService = None,
+        **kwargs,  # additional parameters for the model
     ):
         self.ln_id = SysUtil.create_id()
         self.timestamp = SysUtil.get_timestamp(sep=None)[:-6]
@@ -32,10 +32,10 @@ class Model:
         self.endpoint_schema = provider_schema[endpoint]
         self.provider = provider
         self.api_key = api_key or os.getenv(provider_schema["API_key_schema"][0])
-        
+
         self.service = self._set_up_service(
-            service=service, 
-            provider=self.provider, 
+            service=service,
+            provider=self.provider,
             api_key=self.api_key,
             schema=provider_schema,
             token_encoding_name=token_encoding_name,
@@ -43,12 +43,11 @@ class Model:
             max_requests=max_requests,
             interval=interval,
         )
-        
+
         self.model_config = self._set_up_params(
-            model_config or provider_schema[endpoint]["config"],
-            **kwargs
+            model_config or provider_schema[endpoint]["config"], **kwargs
         )
-    
+
         if model_name and self.model_config["model"] != model_name:
             self.model_name = model_name
             self.model_config["model"] = model_name
@@ -59,19 +58,26 @@ class Model:
 
     def _set_up_condif(self, model_config, **kwargs):
         return {**model_config, **kwargs}
-    
+
     def _set_up_service(self, service=None, provider=None, **kwargs):
         service = service or provider(**kwargs)
         return service
-        
+
     def _set_up_params(self, default_config={}, **kwargs):
         params = {**default_config, **kwargs}
-        allowed_params = self.endpoint_schema["required"] + self.endpoint_schema["optional"]
-    
+        allowed_params = (
+            self.endpoint_schema["required"] + self.endpoint_schema["optional"]
+        )
+
         if allowed_params != []:
-            if len(not_allowed := [k for k in params.keys() if k not in allowed_params]) > 0:
-                raise ValueError(f'Not allowed parameters: {not_allowed}')
-        
+            if (
+                len(
+                    not_allowed := [k for k in params.keys() if k not in allowed_params]
+                )
+                > 0
+            ):
+                raise ValueError(f"Not allowed parameters: {not_allowed}")
+
         return params
 
     async def predict(self, messages, **kwargs):

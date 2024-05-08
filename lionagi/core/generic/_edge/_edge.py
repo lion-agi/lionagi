@@ -40,7 +40,7 @@ class Edge(Component, Ordering):
         if not self.condition:
             raise ValueError("The condition for the edge is not set.")
         return await self.condition.applies(obj)
-    
+
     @field_validator("head", "tail", mode="before")
     def _validate_head_tail(cls, value):
         """Validate the head and tail fields."""
