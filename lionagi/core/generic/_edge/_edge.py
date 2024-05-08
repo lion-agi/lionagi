@@ -1,10 +1,10 @@
 from pydantic import Field, field_validator
 from typing import Any
 
-from ..abc import Component, Ordering, get_lion_id, LionIDable, Condition
+from ..abc import Component, get_lion_id, LionIDable, Condition
 
 
-class Edge(Component, Ordering):
+class Edge(Component):
     """Represents a directed edge between two nodes in a graph."""
 
     head: str = Field(

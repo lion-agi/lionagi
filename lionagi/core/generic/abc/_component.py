@@ -18,22 +18,7 @@ from ._util import base_lion_fields, llama_meta_fields, lc_meta_fields
 T = TypeVar("T")
 
 
-class Component(BaseModel, ABC):
-    """Represents a distinguishable, temporal entity in the LionAGI system.
-
-    Encapsulates essential attributes and behaviors needed for individual
-    components within the system's architecture. Each component is uniquely
-    identifiable, with built-in version control and metadata handling.
-
-    Attributes:
-        ln_id (str): A unique identifier for the component.
-        timestamp (str): The UTC timestamp when the component was created.
-        metadata (dict): Additional metadata for the component.
-        extra_fields (dict): Additional fields for the component.
-        last_updated (str): The UTC timestamp of the last update.
-        content (Any): Optional content of the component.
-    """
-
+class Element(BaseModel, ABC):
     ln_id: str = Field(
         default_factory=SysUtil.create_id,
         title="ID",
@@ -50,6 +35,23 @@ class Component(BaseModel, ABC):
         alias="created",
         validation_alias=AliasChoices("created_on", "creation_date"),
     )
+
+
+class Component(Element, ABC):
+    """Represents a distinguishable, temporal entity in the LionAGI system.
+
+    Encapsulates essential attributes and behaviors needed for individual
+    components within the system's architecture. Each component is uniquely
+    identifiable, with built-in version control and metadata handling.
+
+    Attributes:
+        ln_id (str): A unique identifier for the component.
+        timestamp (str): The UTC timestamp when the component was created.
+        metadata (dict): Additional metadata for the component.
+        extra_fields (dict): Additional fields for the component.
+        last_updated (str): The UTC timestamp of the last update.
+        content (Any): Optional content of the component.
+    """
 
     metadata: dict[str, Any] = Field(
         default_factory=dict,
@@ -318,13 +320,13 @@ class Component(BaseModel, ABC):
         dict_ = self.to_dict(*args, **kwargs)
         return Series(dict_, **pd_kwargs)
 
-    def to_llama_index(self, node_type: Type | str | Any = None, **kwargs) -> Any:
+    def to_llama_index_node(self, node_type: Type | str | Any = None, **kwargs) -> Any:
         """Serializes this node for LlamaIndex."""
         from lionagi.integrations.bridge import LlamaIndexBridge
 
         return LlamaIndexBridge.to_llama_index_node(self, node_type=node_type, **kwargs)
 
-    def to_langchain(self, **kwargs) -> Any:
+    def to_langchain_doc(self, **kwargs) -> Any:
         """Serializes this node for Langchain."""
         from lionagi.integrations.bridge import LangchainBridge
 

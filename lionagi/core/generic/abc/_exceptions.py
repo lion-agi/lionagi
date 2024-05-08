@@ -75,6 +75,15 @@ class ConcurrencyError(LionOperationError):
         super().__init__(operation, "A concurrency error occurred during")
 
 
+class RelationError(LionAGIError):
+    """Exception raised for errors in relation operations."""
+
+    def __init__(self, message=None):
+        if message is None:
+            message = "Nodes are not related."
+        super().__init__(message)
+
+
 class ResourceLimitExceededError(LionOperationError):
     """Exception raised when a resource limit is exceeded."""
 

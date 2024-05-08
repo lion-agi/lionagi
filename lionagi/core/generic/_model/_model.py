@@ -26,8 +26,8 @@ class Model:
         service: BaseService = None,
         **kwargs,  # additional parameters for the model
     ):
-        self.ln_id = SysUtil.create_id()
-        self.timestamp = SysUtil.get_timestamp(sep=None)[:-6]
+        self.ln_id: str = SysUtil.create_id()
+        self.timestamp: str = SysUtil.get_timestamp(sep=None)[:-6]
         self.endpoint = endpoint
         self.endpoint_schema = provider_schema[endpoint]
         self.provider = provider

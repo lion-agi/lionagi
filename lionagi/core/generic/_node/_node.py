@@ -1,25 +1,29 @@
 from pydantic import Field
 from lionagi.libs.ln_convert import to_list
 from pandas import Series
-from ..abc import Component, Condition, ItemNotFoundError, Relatable
-from .._pile import Pile, CategoricalPile, pile
+from ..abc import (
+    Component,
+    Condition,
+    Relatable,
+    RelationError,
+    get_lion_id,
+)
+from .._pile import Pile, pile
 from .._edge._edge import Edge
 
 
 class Node(Component, Relatable):
     """Represents a node in a graph with relations to other nodes."""
 
-    relations: CategoricalPile = Field(
-        default_factory=lambda: CategoricalPile(
-            categories={"in": pile(), "out": pile()}
-        ),
+    relations: dict[str, Pile] = Field(
+        default_factory=lambda: {"in": pile(), "out": pile()},
         description="The relations of the node.",
     )
 
     @property
     def edges(self) -> Pile[Edge]:
         """Return all edges connected to the node."""
-        return self.relations.all_items()
+        return self.relations["in"] + self.relations["out"]
 
     @property
     def related_nodes(self) -> list[str]:
@@ -33,7 +37,10 @@ class Node(Component, Relatable):
 
     @property
     def node_relations(self) -> dict:
-        """Categorize preceding and succeeding relations to the node."""
+        """
+        Categorize preceding and succeeding relations to the node.
+        {"in": {node_id: [edge, ...]}, "out": {node_id: [edge, ...]}
+        """
         out_node_edges = {}
 
         if not self.relations["out"].is_empty():
@@ -100,33 +107,36 @@ class Node(Component, Relatable):
 
     def remove_edge(self, node: "Node", edge: Edge | str) -> bool:
         """Remove an edge between the node and another node."""
-        if node.ln_id not in self.related_nodes:
-            raise ValueError(f"Node {self.ln_id} is not related to node {node.ln_id}.")
 
-        if edge not in self.relations or edge not in node.relations:
-            raise ItemNotFoundError(f"Edge {edge} does not exist between nodes.")
+        l_ = [
+            self.relations["in"],
+            self.relations["out"],
+            node.relations["in"],
+            node.relations["out"],
+        ]
 
-        return self.relations.exclude(edge) and node.relations.exclude(edge)
+        if not all(i.exclude(edge) for i in l_):
+            raise RelationError(f"Failed to remove edge between nodes.")
 
     def unrelate(self, node: "Node", edge: Edge | str = "all") -> bool:
         """Remove all relations or a specific edge between the node and another node."""
+
         if edge == "all":
             edge = self.node_relations["out"].get(node.ln_id, []) + self.node_relations[
                 "in"
             ].get(node.ln_id, [])
-
         else:
-            edge = [edge.ln_id] if isinstance(edge, Edge) else [edge]
+            edge = [get_lion_id(edge)]
 
         if len(edge) == 0:
-            raise ItemNotFoundError(f"Node is not related to {node.ln_id}.")
+            raise RelationError(f"Node is not related to {node.ln_id}.")
 
         try:
             for edge_id in edge:
                 self.remove_edge(node, edge_id)
             return True
-        except Exception as e:
-            raise ValueError("Failed to remove edge between nodes.") from e
+        except RelationError as e:
+            raise RelationError("Failed to unrelate nodes.") from e
 
     def __str__(self):
         _dict = self.to_dict()

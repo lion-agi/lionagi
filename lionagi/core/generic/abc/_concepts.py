@@ -2,9 +2,12 @@
 
 from abc import ABC, abstractmethod
 from collections.abc import Generator
-from typing import Any, Iterator, Tuple, TypeVar
+from typing import Any, Iterator, TypeVar
 
-from ._component import LionIDable
+from pydantic import Field, BaseModel, field_validator
+from ._component import LionIDable, get_lion_id
+from ._exceptions import LionTypeError
+
 
 T = TypeVar("T")
 
@@ -135,3 +138,35 @@ class Relatable(ABC):
     @abstractmethod
     def relate(self, /, *args: Any, **kwargs: Any) -> None:
         """Establish a relationship based on the provided arguments."""
+
+
+class Sendable(BaseModel, ABC):
+
+    sender: str = Field(
+        "N/A",
+        title="Sender",
+        description=("The id of the sender node, or 'system', 'user', or 'assistant'."),
+    )
+
+    recipient: str = Field(
+        "N/A",
+        title="Recipient",
+        description=(
+            "The id of the recipient node, or 'system', 'user', or 'assistant'."
+        ),
+    )
+
+    @field_validator("sender", "recipient", mode="before")
+    def _validate_sender_recipient(cls, value):
+        """Validate the sender and recipient fields."""
+        if value in ["system", "user", "assistant", "N/A"]:
+            return value
+
+        a = get_lion_id(value)
+        if not isinstance(a, str) or len(a) != 32:
+            raise LionTypeError(
+                "Invalid sender or recipient value. "
+                "Expected a valid node id or one of "
+                "'system', 'user', or 'assistant'."
+            )
+        return a

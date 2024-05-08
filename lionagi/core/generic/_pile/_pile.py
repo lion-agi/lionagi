@@ -142,7 +142,7 @@ class Pile(Component, Record, Generic[T]):
                 raise e
             return default
 
-    def update(self, other: any):
+    def update(self, other: Any):
         """
         Update the pile with another collection of items.
         This can include another pile or any iterable of items.
@@ -232,7 +232,8 @@ class Pile(Component, Record, Generic[T]):
         Modifies the pile in-place by excluding the specified item.
         Returns the modified pile.
         """
-        return self - other
+        self.exclude(other)
+        return self
 
     def __radd__(self, other: T) -> "Pile":
         return other + self
@@ -240,6 +241,14 @@ class Pile(Component, Record, Generic[T]):
     def size(self):
         """Return the total size of the pile."""
         return sum([len(i) for i in self])
+
+    def insert(self, index, item):
+        if not isinstance(index, int):
+            raise ValueError("Index must be an integer for pile insertion.")
+        item = self._validate_pile(item)
+        for k, v in item.items():
+            self.order.insert(index, k)
+            self.pile[k] = v
 
     def append(self, item: T):
         """

@@ -1,5 +1,15 @@
 """abc: Abstract Base Classes for lionagi."""
 
+from pydantic import Field
+from ._exceptions import (
+    LionTypeError,
+    LionValueError,
+    ItemNotFoundError,
+    LionFieldError,
+    LionOperationError,
+    RelationError,
+)
+from ._component import Element, Component, LionIDable, get_lion_id
 from ._concepts import (
     Record,
     Ordering,
@@ -9,18 +19,12 @@ from ._concepts import (
     Relatable,
     Rule,
     Progressable,
-)
-from ._component import Component, LionIDable, get_lion_id
-from ._exceptions import (
-    LionTypeError,
-    LionValueError,
-    ItemNotFoundError,
-    LionFieldError,
-    LionOperationError,
+    Sendable,
 )
 
 
 __all__ = [
+    "Element",
     "Record",
     "Ordering",
     "Condition",
@@ -37,4 +41,7 @@ __all__ = [
     "LionOperationError",
     "Relatable",
     "Progressable",
+    "RelationError",
+    "Sendable",
+    "Field",
 ]
