@@ -1,24 +1,21 @@
-from collections import deque
-from pydantic import Field
-from pydantic.dataclasses import dataclass
-
-from lionagi.core.generic.mail import Mail
+from ..generic.abc import Element, Field
+from ..generic import Pile, Progression, pile, progression
+from .mail import Mail
 
 
-@dataclass
-class MailBox:
-
-    pile: dict[str, Mail] = Field(
-        default_factory=dict, description="The pile of all mails - {mail_id: Mail}"
+class MailBox(Element):
+    pile: Pile[Mail] = Field(
+        default_factory=lambda: pile({}, Mail),
+        description="The pile of all mails - {mail_id: Mail}",
+    )
+    
+    sequence_in: Pile[Progression] = Field(
+        default_factory=lambda: pile({}, Progression),
+        description="The sequences of all mails - {sequence_id: Progression}",
     )
 
-    sequence_in: dict[str, deque] = Field(
-        default_factory=dict,
-        description="The sequence of all incoming mails - {sender_id: deque[mail_id]}",
-    )
-
-    sequence_out: deque = Field(
-        default_factory=deque,
+    sequence_out: Progression = Field(
+        default_factory=progression,
         description="The sequence of all outgoing mails - deque[mail_id]",
     )
 
@@ -31,6 +28,7 @@ class MailBox:
                 outgoing mails in the MailBox.
         """
         return (
-            f"MailBox with {len(self.receieving)} pending incoming mails and "
-            f"{len(self.sending)} pending outgoing mails."
+            f"Mailbox with {len(self.pile)} pending items"
+            f", {self.sequence_in.size()} pending incoming mails and "
+            f"{len(self.sequence_out)} pending outgoing mails."
         )

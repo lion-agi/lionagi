@@ -20,6 +20,7 @@ from ._concepts import (
     Rule,
     Progressable,
     Sendable,
+    Executable,
 )
 
 
@@ -44,4 +45,5 @@ __all__ = [
     "RelationError",
     "Sendable",
     "Field",
+    "Executable",
 ]

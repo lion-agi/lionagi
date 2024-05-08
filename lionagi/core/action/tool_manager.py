@@ -3,7 +3,7 @@ from typing import Any, Callable
 from lionagi.libs import ParseUtil
 from lionagi.libs.ln_convert import to_list
 from lionagi.libs.ln_func_call import lcall
-from ..generic.abc import Actionable
+from lionagi.core.generic.abc import Actionable
 from .function_calling import FunctionCalling
 from .tool import Tool, TOOL_TYPE
 

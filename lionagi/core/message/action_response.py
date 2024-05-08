@@ -8,20 +8,18 @@ class ActionResponse(RoledMessage):
 
     action_request: str | None = Field(
         None,
-        description="The id of the action request that this response corresponds to",
-    )
+        description="The id of the action request that this response corresponds to",)
 
     function: str | None = Field(None, description="The name of the function called")
-
     arguments: dict | None = Field(None, description="The keyword arguments provided")
+    func_outputs: any | None = Field(None, description="The output of the function call")
 
-    output: any | None = Field(None, description="The output of the function call")
 
     def __init__(
         self,
         action_request: ActionRequest,
-        sender: str | None = None,
-        output=None,
+        sender: str | None = None,      # the sender of action request
+        func_outputs=None,
     ):
         if action_request.is_responded():
             raise ValueError("Action request has already been responded to")
@@ -33,6 +31,6 @@ class ActionResponse(RoledMessage):
         )
         self.function = action_request.function
         self.arguments = action_request.arguments
-        self.output = output
+        self.func_outputs = func_outputs
         self.action_request = action_request.ln_id
         action_request.action_response = self.ln_id

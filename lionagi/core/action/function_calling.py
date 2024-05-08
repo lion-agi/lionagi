@@ -3,8 +3,8 @@ from typing import Any, Callable, Tuple, Dict
 
 from lionagi.libs import ParseUtil
 from lionagi.libs.ln_func_call import call_handler
-from ..generic.abc import Actionable, Element
-from ..message.action_request import ActionRequest
+from lionagi.core.generic.abc import Actionable, Element
+from lionagi.core.message.action_request import ActionRequest
 
 
 class FunctionCalling(Element, Actionable):

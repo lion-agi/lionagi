@@ -170,3 +170,12 @@ class Sendable(BaseModel, ABC):
                 "'system', 'user', or 'assistant'."
             )
         return a
+
+
+
+class Executable(ABC):
+    
+    @abstractmethod
+    async def execute(self, /, *args: Any, **kwargs: Any) -> Any:
+        """Execute the object with the given arguments asynchronously."""
+        pass

@@ -1,8 +1,8 @@
 from typing import Callable
 from pydantic import field_serializer, Field
 from lionagi.libs.ln_func_call import call_handler
-from ..generic.abc import Actionable
-from ..generic import Node
+from lionagi.core.generic.abc import Actionable
+from lionagi.core.generic import Node
 from .function_calling import FunctionCalling
 
 

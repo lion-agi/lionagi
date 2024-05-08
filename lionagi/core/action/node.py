@@ -1,7 +1,7 @@
 from pydantic import Field
 
-from ..generic.abc import Actionable
-from ..generic import Node
+from lionagi.core.generic.abc import Actionable
+from lionagi.core.generic import Node
 from .tool import Tool
 
 

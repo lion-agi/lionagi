@@ -8,9 +8,8 @@ from ..abc import (
     get_lion_id,
     ItemNotFoundError,
     LionIDable,
-    LionTypeError,
 )
-from .._util import _to_list_type
+from .._util import _validate_order
 
 
 class Progression(Component, Ordering):
@@ -29,17 +28,7 @@ class Progression(Component, Ordering):
     @field_validator("order", mode="before")
     def _validate_order(cls, value) -> list[str]:
         """Validate and convert the order field."""
-        if value is None:
-            return []
-        if isinstance(value, str) and len(value) == 32:
-            return [value]
-        elif isinstance(value, Component):
-            return [value.ln_id]
-
-        try:
-            return [i for item in _to_list_type(value) if (i := get_lion_id(item))]
-        except Exception as e:
-            raise LionTypeError("Progression must only contain lion ids.") from e
+        return _validate_order(value)
 
     def __contains__(self, item):
         """Check if an item or items are in the progression."""

@@ -1,10 +1,11 @@
 from collections import deque
 from lionagi.libs import AsyncUtil
-from lionagi.core.generic import Node
-from lionagi.core.mail.schema import BaseMail, MailCategory
+
+from ..generic.abc import Executable
+from .mail import Mail
 
 
-class MailManager:
+class MailManager(Executable):
     """
     Manages the sending, receiving, and storage of mail items between various sources.
 
@@ -39,8 +40,8 @@ class MailManager:
             raise ValueError("Failed to add source, please input list or dict.")
 
     @staticmethod
-    def create_mail(sender_id, recipient_id, category, package):
-        return BaseMail(sender_id, recipient_id, category, package)
+    def create_mail(sender, recipient, category, package):
+        return Mail(sender, recipient, category, package)
 
     # def add_source(self, sources: list[Node]):
     #     for source in sources:
@@ -58,32 +59,32 @@ class MailManager:
         self.sources.pop(source_id)
         self.mails.pop(source_id)
 
-    def collect(self, sender_id):
-        if sender_id not in self.sources:
-            raise ValueError(f"Sender source {sender_id} does not exist.")
-        while self.sources[sender_id].pending_outs:
-            mail_ = self.sources[sender_id].pending_outs.popleft()
-            if mail_.recipient_id not in self.sources:
+    def collect(self, sender):
+        if sender not in self.sources:
+            raise ValueError(f"Sender source {sender} does not exist.")
+        while self.sources[sender].pending_outs:
+            mail_: Mail = self.sources[sender].pending_outs.popleft()
+            if mail_.recipient not in self.sources:
                 raise ValueError(
-                    f"Recipient source {mail_.recipient_id} does not exist"
+                    f"Recipient source {mail_.recipient} does not exist"
                 )
-            if mail_.sender_id not in self.mails[mail_.recipient_id]:
-                self.mails[mail_.recipient_id].update({mail_.sender_id: deque()})
-            self.mails[mail_.recipient_id][mail_.sender_id].append(mail_)
+            if mail_.sender not in self.mails[mail_.recipient]:
+                self.mails[mail_.recipient].update({mail_.sender: deque()})
+            self.mails[mail_.recipient][mail_.sender].append(mail_)
 
-    def send(self, recipient_id):
-        if recipient_id not in self.sources:
-            raise ValueError(f"Recipient source {recipient_id} does not exist.")
-        if not self.mails[recipient_id]:
+    def send(self, recipient):
+        if recipient not in self.sources:
+            raise ValueError(f"Recipient source {recipient} does not exist.")
+        if not self.mails[recipient]:
             return
-        for key in list(self.mails[recipient_id].keys()):
-            mails_deque = self.mails[recipient_id].pop(key)
-            if key not in self.sources[recipient_id].pending_ins:
-                self.sources[recipient_id].pending_ins[key] = mails_deque
+        for key in list(self.mails[recipient].keys()):
+            mails_deque = self.mails[recipient].pop(key)
+            if key not in self.sources[recipient].pending_ins:
+                self.sources[recipient].pending_ins[key] = mails_deque
             else:
                 while mails_deque:
                     mail_ = mails_deque.popleft()
-                    self.sources[recipient_id].pending_ins[key].append(mail_)
+                    self.sources[recipient].pending_ins[key].append(mail_)
 
     def collect_all(self):
         for ids in self.sources:

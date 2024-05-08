@@ -1,7 +1,7 @@
 from ..generic import Node, Pile, pile, DataLogger, progression, Progression
 from ..message import MessageRole, RoledMessage, MessageField, System, Instruction, AssistantResponse, ActionRequest, ActionResponse
 from ..action import Tool, ToolManager
-from .util import MessageUtil
+from ..message.util import MessageUtil
 
 
 _msg_fields = [i.value for i in MessageField]
@@ -250,7 +250,7 @@ from lionagi.core.tool import ToolManager, func_to_tool, Tool, TOOL_TYPE
 from lionagi.core.messages.schema import System
 from lionagi.core.mail.schema import BaseMail
 
-from lionagi.core.branch.util import MessageUtil
+from lionagi.core.message.util import MessageUtil
 from lionagi.core.branch.base import BaseBranch
 from lionagi.core.branch.flow_mixin import BranchFlowMixin
 
