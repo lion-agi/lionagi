@@ -26,14 +26,14 @@ class PolyChat(BasePolyFlow):
                              context: Optional[Any] = None, sender: Optional[str] = None,
                              branch_system: Optional[Any] = None, messages: Optional[Any] = None,
                              tools: bool = False, out: bool = True, invoke: bool = True,
-                             output_fields: Optional[Any] = None, persist_path: Optional[str] = None,
+                             requested_fields: Optional[Any] = None, persist_path: Optional[str] = None,
                              branch_config: Optional[dict] = None, explode: bool = False, **kwargs) -> Any:
             Performs parallel chat conversations with multiple branches.
 
         async _parallel_chat(self, instruction: Union[Instruction, str], num_instances: int = 1,
                               context: Optional[Any] = None, sender: Optional[str] = None,
                               messages: Optional[Any] = None, tools: bool = False, out: bool = True,
-                              invoke: bool = True, output_fields: Optional[Any] = None,
+                              invoke: bool = True, requested_fields: Optional[Any] = None,
                               persist_path: Optional[str] = None, branch_config: dict = {},
                               explode: bool = False, include_mapping: bool = True, default_key: str = "response",
                               **kwargs) -> Any:
@@ -60,7 +60,7 @@ class PolyChat(BasePolyFlow):
         tools=False,
         out=True,
         invoke: bool = True,
-        output_fields=None,
+        requested_fields=None,
         persist_path=None,
         branch_config=None,
         explode=False,
@@ -79,7 +79,7 @@ class PolyChat(BasePolyFlow):
             tools (bool): Flag indicating whether to use tools in the chat conversation (default: False).
             out (bool): Flag indicating whether to return the output of the chat conversation (default: True).
             invoke (bool): Flag indicating whether to invoke tools during the chat conversation (default: True).
-            output_fields (Optional[Any]): The output fields for the chat conversation.
+            requested_fields (Optional[Any]): The output fields for the chat conversation.
             persist_path (Optional[str]): The path to persist the branch data.
             branch_config (Optional[dict]): Additional configuration for the branches.
             explode (bool): Flag indicating whether to explode the instruction and context combinations (default: False).
@@ -100,7 +100,7 @@ class PolyChat(BasePolyFlow):
             tools=tools,
             out=out,
             invoke=invoke,
-            output_fields=output_fields,
+            requested_fields=requested_fields,
             persist_path=persist_path,
             branch_config=branch_config,
             explode=explode,
@@ -117,7 +117,7 @@ class PolyChat(BasePolyFlow):
         tools=False,
         out=True,
         invoke: bool = True,
-        output_fields=None,
+        requested_fields=None,
         persist_path=None,
         branch_config={},
         explode=False,
@@ -137,7 +137,7 @@ class PolyChat(BasePolyFlow):
             tools (bool): Flag indicating whether to use tools in the chat conversation (default: False).
             out (bool): Flag indicating whether to return the output of the chat conversation (default: True).
             invoke (bool): Flag indicating whether to invoke tools during the chat conversation (default: True).
-            output_fields (Optional[Any]): The output fields for the chat conversation.
+            requested_fields (Optional[Any]): The output fields for the chat conversation.
             persist_path (Optional[str]): The path to persist the branch data.
             branch_config (dict): Additional configuration for the branches (default: {}).
             explode (bool): Flag indicating whether to explode the instruction and context combinations (default: False).
@@ -173,7 +173,7 @@ class PolyChat(BasePolyFlow):
                 tools=tools,
                 invoke=invoke,
                 out=out,
-                output_fields=output_fields,
+                requested_fields=requested_fields,
                 **kwargs,
             )
 

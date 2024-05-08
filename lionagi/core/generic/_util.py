@@ -15,6 +15,7 @@ def _to_list_type(value):
         return list(value)
     return [value]
 
+
 def _validate_order(value) -> list[str]:
     """Validate and convert the order field."""
     if value is None:

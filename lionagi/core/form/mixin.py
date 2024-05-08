@@ -22,7 +22,7 @@ non_prompt_words = [
     "fix_input",
     "fix_output",
     "input_fields",
-    "output_fields",
+    "requested_fields",
     "choices",
     "prompt_fields",
     "prompt_fields_annotation",
@@ -56,7 +56,7 @@ class PromptTemplateMixin(ABC):
         return self._validate_field_choices(self.input_fields, self.fix_input)
 
     def _validate_output_choices(self):
-        return self._validate_field_choices(self.output_fields, self.fix_output)
+        return self._validate_field_choices(self.requested_fields, self.fix_output)
 
     def _validate_field(self, k, v, choices=None, keys=None, fix_=False, **kwargs):
 
@@ -196,9 +196,9 @@ class PromptTemplateMixin(ABC):
         inputs, outputs = str_.split("->")
 
         input_fields = [convert.strip_lower(i) for i in inputs.split(",")]
-        output_fields = [convert.strip_lower(o) for o in outputs.split(",")]
+        requested_fields = [convert.strip_lower(o) for o in outputs.split(",")]
 
-        return input_fields, output_fields
+        return input_fields, requested_fields
 
     @property
     def _prompt_fields_annotation(self):

@@ -8,13 +8,13 @@ class MailBox(Element):
         default_factory=lambda: pile({}, Mail),
         description="The pile of all mails - {mail_id: Mail}",
     )
-    
-    sequence_in: Pile[Progression] = Field(
-        default_factory=lambda: pile({}, Progression),
-        description="The sequences of all mails - {sequence_id: Progression}",
+
+    pending_ins: dict[str, Progression] = Field(
+        default_factory=dict,
+        description="The sequences of all mails - {sender_id: Progression}",
     )
 
-    sequence_out: Progression = Field(
+    pending_outs: Progression = Field(
         default_factory=progression,
         description="The sequence of all outgoing mails - deque[mail_id]",
     )
@@ -29,6 +29,16 @@ class MailBox(Element):
         """
         return (
             f"Mailbox with {len(self.pile)} pending items"
-            f", {self.sequence_in.size()} pending incoming mails and "
-            f"{len(self.sequence_out)} pending outgoing mails."
+            f", {self.pending_ins.size()} pending incoming mails and "
+            f"{len(self.pending_outs)} pending outgoing mails."
         )
+
+    def include(self, mail, direction="in"):
+        if direction == "in":
+            if mail.sender not in self.pending_ins:
+                self.pending_ins[mail.sender] = progression()
+            return self.pile.include(mail) and self.pending_ins[mail.sender].include(
+                mail
+            )
+
+        return self.pile.include(mail) and self.pending_outs.include(mail)

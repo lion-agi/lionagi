@@ -16,7 +16,7 @@ class Form(BaseComponent):
         default=None,
     )
     input_fields: list[str] = Field(default_factory=list)
-    output_fields: list[str] = Field(default_factory=list)
+    requested_fields: list[str] = Field(default_factory=list)
     examples: Any = Field(
         default=None,
     )
@@ -26,7 +26,7 @@ class Form(BaseComponent):
 
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
-        self.input_fields, self.output_fields = get_input_output_fields(self.assignment)
+        self.input_fields, self.requested_fields = get_input_output_fields(self.assignment)
 
         for field in self.input_fields:
             if not hasattr(self, field):
@@ -35,7 +35,7 @@ class Form(BaseComponent):
 
     @property
     def work_fields(self):
-        return self.input_fields + self.output_fields
+        return self.input_fields + self.requested_fields
 
     @property
     def is_completed(self):
@@ -277,7 +277,7 @@ class JokeForm(Form):
 #         self.assertEqual(form.form_name, "default_form")
 #         self.assertIsNone(form.description)
 #         self.assertEqual(form.input_fields, ["input1", "input2"])
-#         self.assertEqual(form.output_fields, ["output1"])
+#         self.assertEqual(form.requested_fields, ["output1"])
 #         self.assertFalse(form.filled)
 #         self.assertFalse(form.fix_input)
 #         self.assertTrue(form.fix_output)
@@ -295,7 +295,7 @@ class JokeForm(Form):
 #         self.assertEqual(form.form_name, "custom_form")
 #         self.assertEqual(form.description, "Test Form")
 #         self.assertEqual(form.input_fields, ["a", "b"])
-#         self.assertEqual(form.output_fields, ["c"])
+#         self.assertEqual(form.requested_fields, ["c"])
 
 #     def test_process_inputs_outputs(self):
 #         class Form1(Form):
@@ -336,7 +336,7 @@ class JokeForm(Form):
 
 #         form = Form1(assignment="x, y -> z")
 #         self.assertEqual(form.input_fields, ["x", "y"])
-#         self.assertEqual(form.output_fields, ["z"])
+#         self.assertEqual(form.requested_fields, ["z"])
 
 #     def test_validation_failure(self):
 #         class Form1(Form):

@@ -26,7 +26,21 @@ class Instruction(RoledMessage):
 
         self._initiate_content(context, requested_fields, **kwargs)
 
-    def _initiate_content(self, context, output_fields, **kwargs):
+    def _add_context(self, context: dict | str | None = None, **kwargs):
+        if "context" not in self.content:
+            self.content["context"] = {}
+        if isinstance(context, dict):
+            self.content["context"].update(context)
+        elif isinstance(context, str):
+            self.content["context"]["additional_context"] = context
+
+    def _update_requested_fields(self, requested_fields: dict):
+        if "context" not in self.content:
+            self.content["context"] = {}
+            self.content["context"]["requested_fields"] = {}
+        self.content["context"]["requested_fields"].update(requested_fields)
+
+    def _initiate_content(self, context, requested_fields, **kwargs):
         """
         Processes context and output fields to update message content.
         """
@@ -40,15 +54,19 @@ class Instruction(RoledMessage):
                 context["additional_context"] = additional_context
             self.content.update(context)
 
-        if output_fields:
-            self.content["output_fields"] = self._format_output_field(output_fields)
+        if requested_fields:
+            self.content["requested_fields"] = self._format_output_field(requested_fields)
 
     @staticmethod
-    def _format_output_field(output_fields):
+    def _format_output_field(requested_fields):
         format_ = f"""
         MUST EXACTLY FOLLOW THE RESPONSE FORMAT NO ADDITIONAL COMMENTS ALLOWED!
         ```json
-        {output_fields}
+        {requested_fields}
         ```
         """
         return {"response_format": format_.replace("        ", "")}
+
+    # TODO: add from_form method
+    def from_form(self, form):
+        pass

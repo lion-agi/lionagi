@@ -27,14 +27,14 @@ class Report(BaseComponent):
     )
 
     input_fields: list[str] = Field(default_factory=list)
-    output_fields: list[str] = Field(default_factory=list)
+    requested_fields: list[str] = Field(default_factory=list)
 
     def __init__(self, **kwargs):
         """
         at initialization, all relevant fields if not already provided, are set to None
         """
         super().__init__(**kwargs)
-        self.input_fields, self.output_fields = get_input_output_fields(self.assignment)
+        self.input_fields, self.requested_fields = get_input_output_fields(self.assignment)
 
         # if assignments is not provided, set it to assignment
         if self.form_assignments == []:
@@ -111,7 +111,7 @@ class Report(BaseComponent):
 
         # this is the required fields from report's own assignment
         fields = self.input_fields
-        fields.extend(self.output_fields)
+        fields.extend(self.requested_fields)
 
         # if the report's own assignment is not in the forms, return False
         for f in fields:
@@ -122,7 +122,7 @@ class Report(BaseComponent):
         # get all the output fields from all the forms
         outs = []
         for form in self.forms.values():
-            outs.extend(form.output_fields)
+            outs.extend(form.requested_fields)
 
         # all output fields should be unique, not a single output field should be
         # calculated by more than one form

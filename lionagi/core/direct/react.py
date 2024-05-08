@@ -26,7 +26,7 @@ class ReactTemplate(ActionForm):
         self.task = f"Think step by step. Perform reasoning and prepare actions with given tools only.Instruction: {instruction}. Absolutely DO NOT MAKE UP FUNCTIONS !!!"
 
         if confidence_score:
-            self.output_fields.append("confidence_score")
+            self.requested_fields.append("confidence_score")
 
 
 async def _react(

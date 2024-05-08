@@ -1,12 +1,12 @@
 from functools import singledispatchmethod
-from typing import Any, Callable
+from typing import Any, Callable, Tuple
 from lionagi.libs import ParseUtil
-from lionagi.libs.ln_convert import to_list
+from lionagi.libs.ln_convert import to_list, to_dict
 from lionagi.libs.ln_func_call import lcall
 from lionagi.core.generic.abc import Actionable
 from .function_calling import FunctionCalling
 from .tool import Tool, TOOL_TYPE
-
+from .util import parse_tool_response
 
 class ToolManager(Actionable):
 
@@ -98,6 +98,47 @@ class ToolManager(Actionable):
     @_get_tool_schema.register(list)
     def _(self, tools):
         return lcall(tools, self._get_tool_schema)
+
+    def parse_tool(self, tools: TOOL_TYPE, **kwargs) -> dict:
+
+        def tool_check(tool):
+            if isinstance(tool, dict):
+                return tool
+            elif isinstance(tool, Tool):
+                return tool.schema_
+            elif isinstance(tool, str):
+                if tool in self.registry:
+                    tool: Tool = self.registry[tool]
+                    return tool.schema_
+                else:
+                    raise ValueError(f"Function {tool} is not registered.")
+
+        if tools:
+            if isinstance(tools, bool):
+                tool_kwarg = {"tools": self._schema_list}
+                kwargs = tool_kwarg | kwargs
+
+            else:
+                if not isinstance(tools, list):
+                    tools = [tools]
+                tool_kwarg = {"tools": lcall(tools, tool_check)}
+                kwargs = tool_kwarg | kwargs
+
+        return kwargs
+
+    @staticmethod
+    def get_function_call(response: dict) -> Tuple[str, dict]:
+        try:
+            func = response["action"][7:]
+            args = to_dict(response["arguments"])
+            return func, args
+        except Exception:
+            try:
+                func = response["recipient_name"].split(".")[-1]
+                args = response["parameters"]
+                return func, args
+            except:
+                raise ValueError("response is not a valid function call")
 
 
 def func_to_tool(

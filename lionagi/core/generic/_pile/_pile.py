@@ -115,7 +115,7 @@ class Pile(Component, Record, Generic[T]):
         """
         key = _to_list_type(key)
         items = []
-        
+
         for i in key:
             if i not in self:
                 if default == ...:
@@ -170,7 +170,7 @@ class Pile(Component, Record, Generic[T]):
         """
         Exclude items from the pile if present.
         Returns True if the item is successfully excluded; otherwise, False.
-        """ 
+        """
         item = _to_list_type(item)
         for i in item:
             if item in self:
@@ -215,7 +215,7 @@ class Pile(Component, Record, Generic[T]):
         _copy = self.model_copy(deep=True)
         if other not in self:
             raise ItemNotFoundError(other)
-        
+
         length = len(_copy)
         if not _copy.exclude(other) or len(_copy) == length:
             raise LionValueError("Item cannot be excluded from the pile.")
@@ -274,8 +274,8 @@ class Pile(Component, Record, Generic[T]):
 
     @field_validator("order", mode="before")
     def _validate_order(cls, value):
-        return _validate_order(value)        
-        
+        return _validate_order(value)
+
     @field_validator("item_type", mode="before")
     def _validate_item_type(cls, value):
         """
@@ -346,7 +346,9 @@ class Pile(Component, Record, Generic[T]):
 
 
 def pile(
-    items: Iterable[T] | None = None, item_type: set[Type] | None = None, order=None,
+    items: Iterable[T] | None = None,
+    item_type: set[Type] | None = None,
+    order=None,
 ) -> Pile[T]:
     """Create a new Pile instance."""
     if not items:
@@ -355,7 +357,9 @@ def pile(
     a = Pile(pile=items, item_type=item_type)
     order = order or list(a.pile.keys())
     if not len(order) == len(a):
-        raise ValueError("The length of the order does not match the length of the pile")
-    
+        raise ValueError(
+            "The length of the order does not match the length of the pile"
+        )
+
     a.order = order
     return a

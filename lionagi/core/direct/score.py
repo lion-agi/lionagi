@@ -69,10 +69,10 @@ score context according to the following constraints
 """
 
         if reason:
-            self.output_fields.append("reason")
+            self.requested_fields.append("reason")
 
         if confidence_score:
-            self.output_fields.append("confidence_score")
+            self.requested_fields.append("confidence_score")
 
         self.out_validation_kwargs["answer"] = {
             "upper_bound": score_range[1],

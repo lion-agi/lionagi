@@ -73,10 +73,10 @@ class PredictTemplate(ScoredForm):
         self.task = f"follow instruction to predict the next {self.num_sentences} sentence(s). Instruction: {instruction}."
 
         if reason:
-            self.output_fields.append("reason")
+            self.requested_fields.append("reason")
 
         if confidence_score:
-            self.output_fields.append("confidence_score")
+            self.requested_fields.append("confidence_score")
 
 
 async def predict(

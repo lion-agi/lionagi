@@ -6,7 +6,7 @@ class AssistantResponse(RoledMessage):
 
     def __init__(
         self,
-        response: Any = None,
+        assistant_response: Any = None,
         sender: str | None = None,
         recipient: str | None = None,
     ):
@@ -14,6 +14,6 @@ class AssistantResponse(RoledMessage):
         super().__init__(
             role=MessageRole.ASSISTANT,
             sender=sender,
-            content={"assistant_response": response},
+            content={"assistant_response": assistant_response},
             recipient=recipient,
         )

@@ -17,5 +17,5 @@ SYSTEM_FIELDS = [
     "response_format",
     "sender",
     "recipient",
-    "output_fields",
+    "requested_fields",
 ]

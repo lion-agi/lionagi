@@ -24,7 +24,7 @@ class MonoChat(BaseMonoFlow, MonoChatMixin):
             Initializes the MonoChat instance.
 
         async chat(self, instruction=None, context=None, sender=None, system=None, tools=False,
-                   out=True, invoke=True, output_fields=None, form=None, **kwargs) -> Any:
+                   out=True, invoke=True, requested_fields=None, form=None, **kwargs) -> Any:
             Performs a chat conversation with an LLM, processing instructions and system messages,
             and optionally invoking tools.
     """
@@ -47,7 +47,7 @@ class MonoChat(BaseMonoFlow, MonoChatMixin):
         tools=False,
         out: bool = True,
         invoke: bool = True,
-        output_fields=None,
+        requested_fields=None,
         form=None,
         **kwargs,
     ) -> Any:
@@ -63,7 +63,7 @@ class MonoChat(BaseMonoFlow, MonoChatMixin):
             tools (Union[bool, Tool, List[Tool], str, List[str]]): Specifies tools to be invoked.
             out (bool): If True, outputs the chat response.
             invoke (bool): If True, invokes tools as part of the chat.
-            output_fields (Optional[Any]): The output fields for the chat.
+            requested_fields (Optional[Any]): The output fields for the chat.
             form (Optional[Any]): The prompt template for the chat.
             **kwargs: Arbitrary keyword arguments for chat completion.
 
@@ -81,7 +81,7 @@ class MonoChat(BaseMonoFlow, MonoChatMixin):
             system=system,
             form=form,
             tools=tools,
-            output_fields=output_fields,
+            requested_fields=requested_fields,
             **kwargs,
         )
 
@@ -90,6 +90,6 @@ class MonoChat(BaseMonoFlow, MonoChatMixin):
         return await self._output(
             invoke=invoke,
             out=out,
-            output_fields=output_fields,
+            requested_fields=requested_fields,
             form=form,
         )

@@ -2,7 +2,7 @@ import os
 from typing import Type
 from dotenv import load_dotenv
 
-from lionagi.libs import SysUtil, BaseService
+from lionagi.libs import SysUtil, BaseService, StatusTracker
 from lionagi.integrations.config.oai_configs import oai_schema
 from lionagi.integrations.provider.oai import OpenAIService
 
@@ -13,8 +13,8 @@ class Model:
 
     def __init__(
         self,
-        model_name: str = None,
-        model_config: dict = {},
+        model: str = None,
+        config: dict = {},
         provider: Type[BaseService] = OpenAIService,
         provider_schema: dict = oai_schema,
         endpoint: str = "chat/completions",
@@ -32,8 +32,9 @@ class Model:
         self.endpoint_schema = provider_schema[endpoint]
         self.provider = provider
         self.api_key = api_key or os.getenv(provider_schema["API_key_schema"][0])
+        self.status_tracker = StatusTracker()
 
-        self.service = self._set_up_service(
+        self.service: BaseService = self._set_up_service(
             service=service,
             provider=self.provider,
             api_key=self.api_key,
@@ -44,17 +45,17 @@ class Model:
             interval=interval,
         )
 
-        self.model_config = self._set_up_params(
-            model_config or provider_schema[endpoint]["config"], **kwargs
+        self.config = self._set_up_params(
+            config or provider_schema[endpoint]["config"], **kwargs
         )
 
-        if model_name and self.model_config["model"] != model_name:
-            self.model_name = model_name
-            self.model_config["model"] = model_name
-            self.endpoint_schema["config"]["model"] = model_name
+        if model and self.config["model"] != model:
+            self.model_name = model
+            self.config["model"] = model
+            self.endpoint_schema["config"]["model"] = model
 
         else:
-            self.model_name = self.model_config["model"]
+            self.model_name = self.config["model"]
 
     def _set_up_condif(self, model_config, **kwargs):
         return {**model_config, **kwargs}
@@ -88,5 +89,5 @@ class Model:
             "ln_id": self.ln_id,
             "timestamp": self.timestamp,
             "provider": self.provider.__name__.replace("Service", ""),
-            **self.model_config,
+            **self.config,
         }

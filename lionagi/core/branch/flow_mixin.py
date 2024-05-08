@@ -19,7 +19,7 @@ class BranchFlowMixin(ABC):
         tools: TOOL_TYPE = False,
         out: bool = True,
         invoke: bool = True,
-        output_fields=None,
+        requested_fields=None,
         form=None,
         **kwargs,
     ) -> Any:
@@ -32,7 +32,7 @@ class BranchFlowMixin(ABC):
             tools=tools,
             out=out,
             invoke=invoke,
-            output_fields=output_fields,
+            requested_fields=requested_fields,
             form=form,
             **kwargs,
         )

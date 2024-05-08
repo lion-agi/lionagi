@@ -114,7 +114,7 @@ class Report(BaseComponent):
                 if i not in self.deliverable:
                     self.intermediate[i] = getattr(form, i)
 
-        for i in form.output_fields:
+        for i in form.requested_fields:
             setattr(self, i, getattr(form, i))
             if i not in self.deliverable:
                 self.intermediate[i] = getattr(form, i)
@@ -146,7 +146,7 @@ class Report(BaseComponent):
 
         outs = []
         for form in self.forms.values():
-            outs.extend(form.output_fields)
+            outs.extend(form.requested_fields)
 
         if len(outs) != len(set(outs)):
             raise ValueError(f"Output fields should be unique across all forms.")

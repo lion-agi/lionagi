@@ -24,7 +24,7 @@ non_prompt_words = [
     "fix_input",
     "fix_output",
     "input_fields",
-    "output_fields",
+    "requested_fields",
     "choices",
     "prompt_fields",
     "prompt_fields_annotation",
@@ -69,7 +69,7 @@ class Form(BaseComponent):
     input_fields: list[str] = Field(
         default_factory=list, description="Extracted input fields from the signature."
     )
-    output_fields: list[str] = Field(
+    requested_fields: list[str] = Field(
         default_factory=list, description="Extracted output fields from the signature."
     )
     choices: dict[str, list[str]] = Field(
@@ -78,14 +78,14 @@ class Form(BaseComponent):
 
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
-        self.input_fields, self.output_fields = self._get_input_output_fields(
+        self.input_fields, self.requested_fields = self._get_input_output_fields(
             self.signature
         )
         self.process(in_=True)
 
     @property
     def prompt_fields(self):
-        return self.input_fields + self.output_fields
+        return self.input_fields + self.requested_fields
 
     @property
     def instruction_context(self):
@@ -104,14 +104,14 @@ class Form(BaseComponent):
         ccc = f"""
         0. Your task is {self.task},
         1. provided: {self.input_fields}, 
-        2. requested: {self.output_fields}
+        2. requested: {self.requested_fields}
         ----------
         """
         return ccc.replace("        ", "")
 
     @property
     def instruction_output_fields(self):
-        return {i: self.model_fields[i].description for i in self.output_fields}
+        return {i: self.model_fields[i].description for i in self.requested_fields}
 
     @property
     def inputs(self):
@@ -119,7 +119,7 @@ class Form(BaseComponent):
 
     @property
     def outputs(self):
-        return {i: getattr(self, i) for i in self.output_fields}
+        return {i: getattr(self, i) for i in self.requested_fields}
 
     def process(self, in_=None, out_=None):
         if in_:
@@ -144,7 +144,7 @@ class Form(BaseComponent):
         return self._validate_field_choices(self.input_fields, self.fix_input)
 
     def _validate_output_choices(self):
-        return self._validate_field_choices(self.output_fields, self.fix_output)
+        return self._validate_field_choices(self.requested_fields, self.fix_output)
 
     def _validate_field(self, k, v, choices=None, keys=None, fix_=False, **kwargs):
 
@@ -284,9 +284,9 @@ class Form(BaseComponent):
         inputs, outputs = str_.split("->")
 
         input_fields = [convert.strip_lower(i) for i in inputs.split(",")]
-        output_fields = [convert.strip_lower(o) for o in outputs.split(",")]
+        requested_fields = [convert.strip_lower(o) for o in outputs.split(",")]
 
-        return input_fields, output_fields
+        return input_fields, requested_fields
 
     @property
     def _prompt_fields_annotation(self):

@@ -10,7 +10,7 @@ class Form(BaseComponent):
     assignment: str = Field(..., examples=["input1, input2 -> output"])
 
     input_fields: list[str] = Field(default_factory=list)
-    output_fields: list[str] = Field(default_factory=list)
+    requested_fields: list[str] = Field(default_factory=list)
 
     def __init__(self, **kwargs):
         """
@@ -18,8 +18,8 @@ class Form(BaseComponent):
         not every field is required to be filled, nor required to be declared at initialization
         """
         super().__init__(**kwargs)
-        self.input_fields, self.output_fields = get_input_output_fields(self.assignment)
-        for i in self.input_fields + self.output_fields:
+        self.input_fields, self.requested_fields = get_input_output_fields(self.assignment)
+        for i in self.input_fields + self.requested_fields:
             if i not in self.model_fields:
                 self._add_field(i, value=None)
 
@@ -40,7 +40,7 @@ class Form(BaseComponent):
         return {
             k: v
             for k, v in dict_.items()
-            if k not in system_fields and k in self.input_fields + self.output_fields
+            if k not in system_fields and k in self.input_fields + self.requested_fields
         }
 
     @property

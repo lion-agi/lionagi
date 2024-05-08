@@ -33,10 +33,10 @@ class PlanTemplate(ScoredForm):
         self.task = f"Generate a {num_step}_step plan based on the given context. Instruction: {instruction}."
 
         if reason:
-            self.output_fields.append("reason")
+            self.requested_fields.append("reason")
 
         if confidence_score:
-            self.output_fields.append("confidence_score")
+            self.requested_fields.append("confidence_score")
 
 
 async def _plan(
