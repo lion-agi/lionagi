@@ -34,7 +34,6 @@ class Worker(ABC):
             _logging.error(f"Could not stop worklogs: {non_stopped_}")
         _logging.info(f"Stopped worker {self.name}")
 
-
     # TODO: Implement process method
 
     # async def process(self, refresh_time=1):

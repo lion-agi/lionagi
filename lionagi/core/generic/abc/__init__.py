@@ -1,7 +1,7 @@
 """abc: Abstract Base Classes for lionagi."""
 
 from pydantic import Field
-from ._exceptions import (
+from .exceptions import (
     LionTypeError,
     LionValueError,
     ItemNotFoundError,
@@ -9,8 +9,8 @@ from ._exceptions import (
     LionOperationError,
     RelationError,
 )
-from ._component import Element, Component, LionIDable, get_lion_id
-from ._concepts import (
+from .component import Element, Component, LionIDable, get_lion_id
+from .concepts import (
     Record,
     Ordering,
     Condition,

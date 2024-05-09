@@ -7,7 +7,8 @@ from .version import __version__
 from dotenv import load_dotenv
 
 
-from lionagi.core.generic import progression as prog, flow, pile, Node, Model
+from lionagi.core.generic.abc import Field
+from lionagi.core.generic import progression as progre, flow, pile, Node, Model
 
 
 logger = logging.getLogger(__name__)
