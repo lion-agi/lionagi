@@ -1,6 +1,6 @@
 from collections import deque
 from lionagi.libs import AsyncUtil
-from lionagi.core.generic.node import Node
+from lionagi.core.generic import Node
 from lionagi.core.mail.schema import BaseMail, MailCategory
 
 

@@ -1,7 +1,10 @@
-from ._decorator import work
-from .record.form import Form
-from .record.report import Report
+from .schema import WorkLog
+from .work_function import WorkFunction, work
 from .worker import Worker
 
-
-__all__ = ["Form", "Report", "Worker", "work"]
+__all__ = [
+    "WorkLog",
+    "WorkFunction",
+    "work",
+    "Worker",
+]
