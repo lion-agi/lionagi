@@ -81,7 +81,7 @@ class Model:
 
         return params
 
-    async def predict(self, messages, **kwargs):
+    async def call_chat_completion(self, messages, **kwargs):
         return await self.service.serve_chat(messages, **kwargs)
 
     def to_dict(self):

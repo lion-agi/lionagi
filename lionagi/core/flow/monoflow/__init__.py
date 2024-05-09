@@ -1,5 +1,5 @@
 from .chat import MonoChat
-from .followup import MonoFollowup
+from ...new_direct.followup import MonoFollowup
 from .ReAct import MonoReAct
 
 __all__ = [

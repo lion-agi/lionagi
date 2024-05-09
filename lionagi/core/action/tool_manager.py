@@ -8,6 +8,7 @@ from .function_calling import FunctionCalling
 from .tool import Tool, TOOL_TYPE
 from .util import parse_tool_response
 
+
 class ToolManager(Actionable):
 
     def __init__(self, registry: dict[str, Tool] = None) -> None:

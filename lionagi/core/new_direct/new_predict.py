@@ -1,3 +1,7 @@
+"""
+the base directive
+"""
+
 import re
 from abc import ABC
 import contextlib
@@ -25,14 +29,14 @@ class BaseDirective(ABC):
 
 class MonoDirect(BaseDirective):
 
-    def __init__(self, branch: Branch, model: Model=None) -> None:
+    def __init__(self, branch: Branch, model: Model = None) -> None:
         self.branch = branch or Branch()
         if model and isinstance(model, Model):
             branch.model = model
             self.model = model
         else:
             self.model = branch.model
-        
+
     def _create_chat_config(
         self,
         system=None,  # system node - JSON serializable
@@ -48,7 +52,7 @@ class MonoDirect(BaseDirective):
 
         if system:
             self.branch.add_message(system=system)
-        
+
         if not form:
             self.branch.add_message(
                 instruction=instruction,
@@ -57,7 +61,7 @@ class MonoDirect(BaseDirective):
                 recipient=recipient,
                 requested_fields=requested_fields,
             )
-            
+
         else:
             instruct_ = Instruction.from_form(form)
             self.branch.add_message(instruction=instruct_)
@@ -66,7 +70,7 @@ class MonoDirect(BaseDirective):
             kwargs.pop("tool_parsed")
             tool_kwarg = {"tools": tools}
             kwargs = tool_kwarg | kwargs
-            
+
         elif tools and self.branch.has_tools:
             kwargs = self.branch.tool_manager.parse_tool(tools=tools, **kwargs)
 
@@ -76,32 +80,25 @@ class MonoDirect(BaseDirective):
 
         return config
 
-    async def _output(
-        self,
-        invoke_tool,
-        out,
-        requested_fields,
-        function_calling=None,
-        form=None,
-        return_form=True,
-    ):
-        content_ = self.branch.messages[-1].content
+    async def _call_chatcompletion(self, **kwargs):
+        return await self.model.call_chat_completion(
+            self.branch.to_chat_messages(), **kwargs
+        )
 
-        if invoke_tool:
-            with contextlib.suppress(Exception):
-                await self._invoke_tools(content_, function_calling=function_calling)
-                
-        response_ = self._return_response(content_, requested_fields)
+    async def _process_chatcompletion(self, payload, completion, sender):
+        if "choices" in completion:
+            add_msg_config = {"response": completion["choices"][0]}
+            if sender is not None:
+                add_msg_config["sender"] = sender
 
-        if form:
-            form._process_response(response_)
-            return form if return_form else form.outputs
-
-        if out:
-            return response_
+            self.branch.datalogger.append(input_data=payload, output_data=completion)
+            self.branch.add_message(**add_msg_config)
+            self.branch.model.status_tracker.num_tasks_succeeded += 1
+        else:
+            self.branch.model.status_tracker.num_tasks_failed += 1
 
     @staticmethod
-    def _return_response(content_, requested_fields):
+    def _process_model_response(content_, requested_fields):
         out_ = ""
 
         if len(content_.items()) == 1 and len(get_flattened_keys(content_)) == 1:
@@ -113,13 +110,12 @@ class MonoDirect(BaseDirective):
                 return StringMatch.force_validate_dict(out_, requested_fields)
 
         if isinstance(out_, str):
-            with contextlib.suppress(Exception):                
+            with contextlib.suppress(Exception):
                 match = re.search(r"```json\n({.*?})\n```", out_, re.DOTALL)
                 if match:
                     out_ = ParseUtil.fuzzy_parse_json(match.group(1))
 
         return out_
-
 
     # TODO: modify direct tool invokation with action request/response
     async def _invoke_tools(self, content_=None, function_calling=None):
@@ -145,20 +141,29 @@ class MonoDirect(BaseDirective):
 
         return a
 
-    def _process_chatcompletion(self, payload, completion, sender):
-        if "choices" in completion:
-            add_msg_config = {"response": completion["choices"][0]}
-            if sender is not None:
-                add_msg_config["sender"] = sender
+    async def _output(
+        self,
+        invoke_tool,
+        out,
+        requested_fields,
+        function_calling=None,
+        form=None,
+        return_form=True,
+    ):
+        content_ = self.branch.messages[-1].content
 
-            self.branch.datalogger.append(input_data=payload, output_data=completion)
-            self.branch.add_message(**add_msg_config)
-            self.branch.model.status_tracker.num_tasks_succeeded += 1
-        else:
-            self.branch.model.status_tracker.num_tasks_failed += 1
+        if invoke_tool:
+            with contextlib.suppress(Exception):
+                await self._invoke_tools(content_, function_calling=function_calling)
 
-    async def _call_chatcompletion(self, **kwargs):
-        return await self.model.predict(**kwargs)
+        response_ = self._process_model_response(content_, requested_fields)
+
+        if form:
+            form._process_response(response_)
+            return form if return_form else form.outputs
+
+        if out:
+            return response_
 
     async def chat(
         self,
@@ -170,7 +175,7 @@ class MonoDirect(BaseDirective):
         requested_fields=None,  # dict[str, str]
         form=None,
         tools=False,
-        invoke_tool=True, 
+        invoke_tool=True,
         out=True,
         **kwargs,
     ) -> Any:
@@ -194,4 +199,34 @@ class MonoDirect(BaseDirective):
             out=out,
             requested_fields=requested_fields,
             form=form,
+        )
+
+    async def predict(
+        self,
+        system=None,
+        instruction=None,
+        context=None,
+        sender=None,
+        recipient=None,
+        requested_fields=None,
+        form=None,
+        tools=False,
+        invoke_tool=True,
+        out=True,
+        **kwargs,
+    ) -> Any:
+
+        self.branch.messages.clear()
+        return await self.chat(
+            system=system,
+            instruction=instruction,
+            context=context,
+            sender=sender,
+            recipient=recipient,
+            requested_fields=requested_fields,
+            form=form,
+            tools=tools,
+            invoke_tool=invoke_tool,
+            out=out,
+            **kwargs,
         )

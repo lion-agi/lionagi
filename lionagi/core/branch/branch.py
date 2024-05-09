@@ -18,7 +18,6 @@ from ..message import (
 )
 
 
-
 class Branch(Node):
 
     messages: Pile[RoledMessage] = Field(None)
@@ -239,6 +238,7 @@ class Branch(Node):
         for key in list(self.mailbox.pending_ins.keys()):
             self.receive(key)
 
+    # TODO: need to modify this method to include the new message types
     def _is_invoked(self) -> bool:
         content = self.messages[self.progre[-1]].content
 

@@ -26,7 +26,9 @@ class Form(BaseComponent):
 
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
-        self.input_fields, self.requested_fields = get_input_output_fields(self.assignment)
+        self.input_fields, self.requested_fields = get_input_output_fields(
+            self.assignment
+        )
 
         for field in self.input_fields:
             if not hasattr(self, field):

@@ -5,6 +5,6 @@ from .worker import Worker
 __all__ = [
     "WorkLog",
     "WorkFunction",
-    "work",
+    "schema",
     "Worker",
 ]

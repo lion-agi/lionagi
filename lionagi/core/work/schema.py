@@ -1,12 +1,9 @@
-from collections import deque
 from enum import Enum
 import asyncio
 from typing import Any
 
 from lionagi.libs import SysUtil
-from lionagi.core.generic import BaseComponent
-
-from .async_queue import WorkQueue
+from ..generic.abc import Component
 
 
 class WorkStatus(str, Enum):
@@ -18,7 +15,7 @@ class WorkStatus(str, Enum):
     FAILED = "FAILED"
 
 
-class Work(BaseComponent):
+class Work(Component):
     status: WorkStatus = WorkStatus.PENDING
     result: Any = None
     error: Any = None
@@ -38,36 +35,4 @@ class Work(BaseComponent):
             self.completion_timestamp = SysUtil.get_timestamp()
 
     def __str__(self):
-        return f"Work(id={self.id_}, status={self.status}, created_at={self.timestamp}, completed_at={self.completion_timestamp})"
-
-
-class WorkLog:
-
-    def __init__(self, capacity=5, pile=None):
-        self.pile = pile or {}
-        self.pending_sequence = deque()
-        self.queue = WorkQueue(capacity=capacity)
-
-    async def append(self, work: Work):
-        self.pile[work.id_] = work
-        self.pending_sequence.append(work.id_)
-
-    async def forward(self):
-        if not self.queue.available_capacity:
-            return
-        else:
-            while self.pending_sequence and self.queue.available_capacity:
-                work = self.pile[self.pending_sequence.popleft()]
-                work.status = WorkStatus.IN_PROGRESS
-                await self.queue.enqueue(work)
-
-    async def stop(self):
-        await self.queue.stop()
-
-    @property
-    def stopped(self):
-        return self.queue.stopped
-
-    @property
-    def completed_work(self):
-        return {k: v for k, v in self.pile.items() if v.status == WorkStatus.COMPLETED}
+        return f"Work(id={self.ln_id[:8]}.., status={self.status.value}, created_at={self.timestamp[:-7]}, completed_at={self.completion_timestamp[:-7]})"
