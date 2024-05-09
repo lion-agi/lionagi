@@ -8,7 +8,7 @@ from pathlib import Path
 
 from lionagi.libs import StatusTracker, BaseService, convert, dataframe
 
-from lionagi.core.generic.data_logger import DataLogger
+from lionagi.core.generic import DataLogger
 from lionagi.core.tool import ToolManager, func_to_tool, Tool, TOOL_TYPE
 from lionagi.core.messages.schema import System
 from lionagi.core.mail.schema import BaseMail

@@ -1,5 +1,20 @@
 from lionagi.libs import validation_funcs
-from .rule import Rule
+from abc import abstractmethod
+
+
+class Rule:
+
+    def __init__(self, **kwargs):
+        self.validation_kwargs = kwargs
+        self.fix = kwargs.get("fix", False)
+
+    @abstractmethod
+    def condition(self, **kwargs):
+        pass
+
+    @abstractmethod
+    async def validate(self, value, **kwargs):
+        pass
 
 
 class ChoiceRule(Rule):

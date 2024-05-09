@@ -1,6 +1,6 @@
 from typing import Callable
 
-from lionagi.core.generic.node import Node
+from lionagi.core.generic import Node
 from ..bridge.langchain_.langchain_bridge import LangchainBridge
 from ..bridge.llamaindex_.llama_index_bridge import LlamaIndexBridge
 

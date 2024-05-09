@@ -4,7 +4,7 @@ from typing import Tuple
 from pathlib import Path
 from lionagi.libs import BaseService, convert, dataframe
 
-from lionagi.core.generic.data_logger import DataLogger
+from lionagi.core.generic import DataLogger
 from lionagi.core.tool import ToolManager, Tool, TOOL_TYPE
 from lionagi.core.mail.mail_manager import MailManager
 from lionagi.core.messages.schema import System, Instruction

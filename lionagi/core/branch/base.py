@@ -4,8 +4,7 @@ from typing import Any
 from pathlib import Path
 from lionagi.libs import convert, dataframe, SysUtil
 
-from lionagi.core.generic.data_logger import DataLogger, DLog
-from lionagi.core.generic.node import BaseNode
+from lionagi.core.generic import BaseNode, DataLogger, DLog
 from lionagi.core.messages.schema import (
     BranchColumns,
     System,
@@ -82,6 +81,7 @@ class BaseBranch(BaseNode, ABC):
         if isinstance(_msg, System):
             self.system_node = _msg
 
+        # sourcery skip: merge-nested-ifs
         if isinstance(_msg, Instruction):
             if recipient is None and self.name is not None:
                 _msg.recipient = self.name

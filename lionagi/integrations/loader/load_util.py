@@ -5,7 +5,7 @@ from pathlib import Path
 from typing import List, Union, Dict, Any, Tuple
 
 from lionagi.libs import convert, func_call
-from lionagi.core.generic.node import Node
+from lionagi.core.generic import Node
 
 
 class ReaderType(str, Enum):
