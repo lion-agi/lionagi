@@ -1,25 +1,7 @@
 from lionagi.libs import convert
 
 
-system_fields = [
-    "ln_id",
-    "timestamp",
-    "metadata",
-    "meta",
-    "extra_fields",
-    "content",
-    "created",
-    "form",
-    "report",
-    "work",
-    "assignment",
-    "assignments",
-    "input_fields",
-    "requested_fields",
-    "instruction",
-    "system",
-    "strict",
-]
+
 
 
 def get_input_output_fields(str_: str) -> list[list[str]]:

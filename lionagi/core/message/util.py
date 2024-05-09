@@ -57,14 +57,8 @@ def create_message(
     if not sum(lcall([system, instruction, assistant_response], bool)) == 1:
         raise ValueError("Error: Message can only have one role")
 
-    dict_ = {
-        "system": system,
-        "instruction": instruction,
-        "assistant_response": assistant_response,
-    }
-
     if not func_outputs:
-        for v in dict_.values:
+        for v in [system, instruction, assistant_response]:
             if v is not None and isinstance(v, RoledMessage):
                 if isinstance(v, Instruction):
                     if context:

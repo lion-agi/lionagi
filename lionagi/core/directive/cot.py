@@ -4,6 +4,13 @@ from .chat import Chat
 
 class ChainOfThoughts(Chat):
 
+
+
+
+
+
+
+
     async def chain_of_thoughts(
         sentence=None,
         branch=None,

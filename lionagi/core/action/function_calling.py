@@ -34,8 +34,8 @@ class FunctionCalling(Element, Actionable):
         """
         return self.function.__name__
 
-    @classmethod
     @singledispatchmethod
+    @classmethod
     def create(cls, func_call: Any) -> "FunctionCalling":
         """
         Creates an instance of FunctionCalling based on the type of input.
@@ -52,8 +52,8 @@ class FunctionCalling(Element, Actionable):
         """
         raise TypeError(f"Unsupported type {type(func_call)}")
 
-    @create.register
-    def _(cls, function_calling: Tuple[Callable, Dict]):
+    @create.register(tuple)
+    def _(cls, function_calling):
         """
         Handles creation from a tuple input.
 
@@ -71,8 +71,8 @@ class FunctionCalling(Element, Actionable):
         else:
             raise ValueError(f"Invalid function call {function_calling}")
 
-    @create.register
-    def _(cls, function_calling: Dict[str, Any]):
+    @create.register(dict)
+    def _(cls, function_calling):
         """
         Handles creation from a dictionary input.
 
@@ -93,8 +93,8 @@ class FunctionCalling(Element, Actionable):
             )
         raise ValueError(f"Invalid function call {function_calling}")
 
-    @create.register
-    def _(cls, function_calling: ActionRequest):
+    @create.register(ActionRequest)
+    def _(cls, function_calling):
         """
         Handles creation from an ActionRequest object.
 
@@ -106,8 +106,8 @@ class FunctionCalling(Element, Actionable):
         """
         return cls.create((function_calling.function, function_calling.arguments))
 
-    @create.register
-    def _(cls, function_calling: str):
+    @create.register(str)
+    def _(cls, function_calling):
         """
         Handles creation from a JSON string input.
 

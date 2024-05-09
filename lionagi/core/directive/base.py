@@ -14,15 +14,14 @@ from lionagi.libs.ln_parse import ParseUtil, StringMatch
 
 from ..generic import Model
 from ..message import Instruction
-from ..branch.branch import Branch
 
 
 class BaseDirective(ABC):
 
     default_template = None
 
-    def __init__(self, branch: Branch, model: Model = None, template_=None) -> None:
-        self.branch = branch or Branch()
+    def __init__(self, branch, model: Model = None, template_=None) -> None:
+        self.branch = branch
         if model and isinstance(model, Model):
             branch.model = model
             self.model = model
@@ -88,7 +87,7 @@ class BaseDirective(ABC):
 
     async def _process_chatcompletion(self, payload, completion, sender):
         if "choices" in completion:
-            add_msg_config = {"response": completion["choices"][0]}
+            add_msg_config = {"assistant_response": completion["choices"][0]}
             if sender is not None:
                 add_msg_config["sender"] = sender
 
@@ -124,7 +123,7 @@ class BaseDirective(ABC):
             tool_uses = content_
             function_calling = lcall(
                 [to_dict(i) for i in tool_uses["action_request"]],
-                self.branch.tool_manager.get_function_call,
+                self.branch.tool_manager.parse_tool_response,
             )
 
         outs = await alcall(function_calling, self.branch.tool_manager.invoke)

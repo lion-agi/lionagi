@@ -1,5 +1,5 @@
-from ..generic.abc import LionIDable
-from .message import RoledMessage, MessageRole, SYSTEM_FIELDS
+from ..generic.abc import LionIDable, SYSTEM_FIELDS
+from .message import RoledMessage, MessageRole
 
 
 class Instruction(RoledMessage):

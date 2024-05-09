@@ -1,7 +1,7 @@
 from collections.abc import Mapping, Generator
 from collections import deque
 
-from .abc import LionTypeError, Record, Ordering, Component, get_lion_id
+from .abc import LionTypeError, Record, Ordering, Component, get_lion_id, Element
 
 
 def to_list_type(value):
@@ -22,7 +22,7 @@ def _validate_order(value) -> list[str]:
         return []
     if isinstance(value, str) and len(value) == 32:
         return [value]
-    elif isinstance(value, Component):
+    elif isinstance(value, Element):
         return [value.ln_id]
 
     try:

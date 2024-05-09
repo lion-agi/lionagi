@@ -4,9 +4,8 @@ from lionagi.libs import ParseUtil
 from lionagi.libs.ln_convert import to_list, to_dict
 from lionagi.libs.ln_func_call import lcall
 from lionagi.core.generic.abc import Actionable
-from .function_calling import FunctionCalling
-from .tool import Tool, TOOL_TYPE
-from .util import parse_tool_response
+from lionagi.core.action.function_calling import FunctionCalling
+from lionagi.core.action.tool import Tool, TOOL_TYPE
 
 
 class ToolManager(Actionable):
@@ -16,23 +15,22 @@ class ToolManager(Actionable):
 
     @singledispatchmethod
     def register_tools(self, tools: Any):
+        if isinstance(tools, Callable):
+            tool = func_to_tool(tools)[0]
+            return self.register_tools(tool)
+        
         raise TypeError(f"Unsupported type {type(tools)}")
 
-    @register_tools.register(Tool)
-    def _(self, tools):
+    @register_tools.register
+    def _(self, tools: Tool):
         if tools.name in self.registry:
             raise ValueError(f"Function {tools.name} is already registered.")
         else:
             self.registry[tools.name] = tools
             return True
 
-    @register_tools.register(Callable)
-    def _(self, tools):
-        tool = func_to_tool(tools)[0]
-        return self.register_tools(tool)
-
-    @register_tools.register(list)
-    def _(self, tools):
+    @register_tools.register
+    def _(self, tools: list):
         return all(lcall(tools, self.register_tools))
 
     async def invoke(self, func_calling=None):
@@ -128,7 +126,7 @@ class ToolManager(Actionable):
         return kwargs
 
     @staticmethod
-    def get_function_call(response: dict) -> Tuple[str, dict]:
+    def parse_tool_response(response: dict) -> Tuple[str, dict]:
         try:
             func = response["action"][7:]
             args = to_dict(response["arguments"])

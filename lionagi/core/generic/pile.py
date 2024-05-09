@@ -5,6 +5,7 @@ from pydantic import Field, field_validator
 
 from lionagi.libs.ln_convert import is_same_dtype, to_df
 from .abc import (
+    Element,
     Record,
     Component,
     LionIDable,
@@ -16,14 +17,14 @@ from .abc import (
 from .util import to_list_type, _validate_order
 
 # Define a type variable for components bound to the Component type
-T = TypeVar("T", bound=Component)
+T = TypeVar("T", bound=Element)
 
 
-class Pile(Component, Record, Generic[T]):
+class Pile(Element, Record, Generic[T]):
     """A collection of unique LionAGI items."""
 
     pile: dict[str, T] = Field(default_factory=dict)
-    item_type: set[Type[Component]] | None = Field(default=None)
+    item_type: set[Type[Element]] | None = Field(default=None)
     name: str | None = None
     order: list[str] = Field(default_factory=list)
 
@@ -213,7 +214,7 @@ class Pile(Component, Record, Generic[T]):
             return _copy
         raise LionValueError("Item cannot be included in the pile.")
 
-    def __sub__(self, other):
+    def __sub__(self, other) -> "Pile":
         """
         Remove an item from the pile using the - operator.
         Returns a new Pile instance without the removed item.
@@ -247,7 +248,7 @@ class Pile(Component, Record, Generic[T]):
     def __radd__(self, other: T) -> "Pile":
         return other + self
 
-    def size(self):
+    def size(self) -> int:
         """Return the total size of the pile."""
         return sum([len(i) for i in self])
 

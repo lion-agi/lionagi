@@ -3,11 +3,12 @@ from typing import Any
 from lionagi.libs.ln_convert import is_same_dtype, to_dict
 
 from ..generic.abc import Field
-from ..generic import Node, Pile, pile, DataLogger, progression, Progression, Model
+from ..generic import Node, Pile, pile, DataLogger, progression, Progression, Model, Exchange
 from ..action import Tool, ToolManager
-from ..mail import MailBox, Mail
+from ..mail.mail import Mail
 
-# from ..flow.monoflow import MonoChat
+
+from .directive_mixin import DirectiveMixin
 from ..message import (
     RoledMessage,
     create_message,
@@ -19,7 +20,7 @@ from ..message import (
 )
 
 
-class Branch(Node):
+class Branch(Node, DirectiveMixin):
 
     messages: Pile[RoledMessage] = Field(None)
     datalogger: DataLogger = Field(None)
@@ -27,7 +28,7 @@ class Branch(Node):
     tool_manager: ToolManager = Field(None)
     system: System = Field(None)
     user: str = Field(None)
-    mailbox: MailBox = Field(None)
+    mailbox: Exchange = Field(None)
     model: Model = Field(None)
 
     def __init__(
@@ -48,6 +49,7 @@ class Branch(Node):
         super().__init__()
         self.system = None
 
+        system = system or "You are a helpful assistant, let's think step by step"
         if system:
             self.system = (
                 system
@@ -64,7 +66,7 @@ class Branch(Node):
         self.datalogger = datalogger or DataLogger(persist_path)
         self.progre = progre or progression()
         self.tool_manager = tool_manager or ToolManager()
-        self.mailbox = mailbox or MailBox()
+        self.mailbox = mailbox or Exchange()
         self.model = model or Model()
         if tools:
             self.tool_manager.register_tools(tools)
@@ -180,64 +182,64 @@ class Branch(Node):
             print("tools deletion failed")
         return False
 
-    def send(self, recipient: str, category: str, package: Any) -> None:
-        mail = Mail(
-            sender=self.ln_id,
-            recipient=recipient,
-            category=category,
-            package=package,
-        )
-        self.mailbox.include(mail, direction="out")
+    # def send(self, recipient: str, category: str, package: Any) -> None:
+    #     mail = Mail(
+    #         sender=self.ln_id,
+    #         recipient=recipient,
+    #         category=category,
+    #         package=package,
+    #     )
+    #     self.mailbox.include(mail, direction="out")
 
-    # TODO: need to modify this method to include the new message types
-    def receive(
-        self,
-        sender: str,
-        messages: bool = True,
-        tools: bool = True,
-        service: bool = True,
-        llmconfig: bool = True,
-    ) -> None:
-        skipped_requests = deque()
-        if sender not in self.pending_ins:
-            raise ValueError(f"No package from {sender}")
-        while self.pending_ins[sender]:
-            mail_ = self.pending_ins[sender].popleft()
+    # # TODO: need to modify this method to include the new message types
+    # def receive(
+    #     self,
+    #     sender: str,
+    #     messages: bool = True,
+    #     tools: bool = True,
+    #     service: bool = True,
+    #     llmconfig: bool = True,
+    # ) -> None:
+    #     skipped_requests = deque()
+    #     if sender not in self.pending_ins:
+    #         raise ValueError(f"No package from {sender}")
+    #     while self.pending_ins[sender]:
+    #         mail_ = self.pending_ins[sender].popleft()
 
-            # if mail_.category == "messages" and messages:
-            #     if not isinstance(mail_.package, dataframe.ln_DataFrame):
-            #         raise ValueError("Invalid messages format")
-            #     MessageUtil.validate_messages(mail_.package)
-            #     self.messages = self.messages.merge(mail_.package, how="outer")
+    #         # if mail_.category == "messages" and messages:
+    #         #     if not isinstance(mail_.package, dataframe.ln_DataFrame):
+    #         #         raise ValueError("Invalid messages format")
+    #         #     MessageUtil.validate_messages(mail_.package)
+    #         #     self.messages = self.messages.merge(mail_.package, how="outer")
 
-            if mail_.category == "tools" and tools:
-                if not isinstance(mail_.package, Tool):
-                    raise ValueError("Invalid tools format")
-                self.tool_manager.register_tools([mail_.package])
+    #         if mail_.category == "tools" and tools:
+    #             if not isinstance(mail_.package, Tool):
+    #                 raise ValueError("Invalid tools format")
+    #             self.tool_manager.register_tools([mail_.package])
 
-            elif mail_.category == "provider" and service:
-                from lionagi.libs.ln_api import BaseService
+    #         elif mail_.category == "provider" and service:
+    #             from lionagi.libs.ln_api import BaseService
 
-                if not isinstance(mail_.package, BaseService):
-                    raise ValueError("Invalid provider format")
-                self.service = mail_.package
+    #             if not isinstance(mail_.package, BaseService):
+    #                 raise ValueError("Invalid provider format")
+    #             self.service = mail_.package
 
-            elif mail_.category == "llmconfig" and llmconfig:
-                if not isinstance(mail_.package, dict):
-                    raise ValueError("Invalid llmconfig format")
-                self.llmconfig.update(mail_.package)
+    #         elif mail_.category == "llmconfig" and llmconfig:
+    #             if not isinstance(mail_.package, dict):
+    #                 raise ValueError("Invalid llmconfig format")
+    #             self.llmconfig.update(mail_.package)
 
-            else:
-                skipped_requests.append(mail_)
+    #         else:
+    #             skipped_requests.append(mail_)
 
-        self.mailbox.pending_ins[sender] = skipped_requests
+    #     self.mailbox.pending_ins[sender] = skipped_requests
 
-        if len(self.mailbox.pending_ins[sender]) == 0:
-            self.mailbox.pending_ins.pop(sender)
+    #     if len(self.mailbox.pending_ins[sender]) == 0:
+    #         self.mailbox.pending_ins.pop(sender)
 
-    def receive_all(self) -> None:
-        for key in list(self.mailbox.pending_ins.keys()):
-            self.receive(key)
+    # def receive_all(self) -> None:
+    #     for key in list(self.mailbox.pending_ins.keys()):
+    #         self.receive(key)
 
     # TODO: need to modify this method to include the new message types
     def _is_invoked(self) -> bool:
@@ -253,3 +255,5 @@ class Branch(Node):
         except Exception:
             return False
         return False
+
+

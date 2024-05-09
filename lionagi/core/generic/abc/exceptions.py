@@ -51,10 +51,10 @@ class ItemInvalidError(LionItemError):
 class LionFieldError(LionAGIError):
     """Exception raised for errors in field validation."""
 
-    def __init__(self, field, message=None):
+    def __init__(self, message=None):
         if message is None:
             message = "An error occurred with the specified field."
-        super().__init__(f"{message} Field: '{field}'.")
+        super().__init__(f"{message}.")
 
 
 class LionOperationError(LionAGIError):

@@ -8,6 +8,7 @@ from .graph import Graph
 from .tree import Tree
 from ._logger import DataLogger
 from .model import Model
+from .exchange import Exchange
 
 
 __all__ = [
@@ -25,4 +26,5 @@ __all__ = [
     "DataLogger",
     "progression",
     "Model",
+    "Exchange",
 ]

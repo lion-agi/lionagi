@@ -50,12 +50,15 @@ class Model:
         )
 
         if model and self.config["model"] != model:
-            self.model_name = model
+            self.iModel_name = model
             self.config["model"] = model
             self.endpoint_schema["config"]["model"] = model
 
         else:
-            self.model_name = self.config["model"]
+            self.iModel_name = self.config["model"]
+
+    def update_config(self, **kwargs):
+        self.config = self._set_up_params(self.config, **kwargs)
 
     def _set_up_config(self, model_config, **kwargs):
         return {**model_config, **kwargs}
@@ -95,3 +98,8 @@ class Model:
             "provider": self.provider.__name__.replace("Service", ""),
             **self.config,
         }
+
+    def __setattr__(self, name, value) -> None:
+        if name in ["ln_id", "timestamp"]:
+            return
+        super().__setattr__(name, value)

@@ -5,13 +5,13 @@ from collections import deque
 from typing import Tuple
 from pydantic import Field, field_validator
 import contextlib
-from .abc import Record, Component, LionTypeError, ItemNotFoundError, LionIDable
+from .abc import Record, Component, LionTypeError, ItemNotFoundError, LionIDable, Element
 from .pile import Pile, pile
 
 from .progression import Progression, progression
 
 
-class Flow(Component):
+class Flow(Element):
 
     sequences: Pile[Progression] = Field(default_factory=lambda: pile({}, Progression))
     registry: dict[str, str] = {}

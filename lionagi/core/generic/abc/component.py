@@ -1,5 +1,5 @@
 """Component class, base building block in LionAGI"""
-
+from collections.abc import Sequence
 from abc import ABC
 from functools import singledispatchmethod
 from typing import Any, TypeVar, Type, TypeAlias, Union
@@ -19,6 +19,7 @@ T = TypeVar("T")
 
 
 class Element(BaseModel, ABC):
+    
     ln_id: str = Field(
         default_factory=SysUtil.create_id,
         title="ID",
@@ -35,10 +36,11 @@ class Element(BaseModel, ABC):
         alias="created",
         validation_alias=AliasChoices("created_on", "creation_date"),
     )
-
+    
 
 class Component(Element, ABC):
-    """Represents a distinguishable, temporal entity in the LionAGI system.
+    """
+    Represents a distinguishable, temporal entity in the LionAGI system.
 
     Encapsulates essential attributes and behaviors needed for individual
     components within the system's architecture. Each component is uniquely
@@ -52,7 +54,7 @@ class Component(Element, ABC):
         last_updated (str): The UTC timestamp of the last update.
         content (Any): Optional content of the component.
     """
-
+    
     metadata: dict[str, Any] = Field(
         default_factory=dict,
         validation_alias=AliasChoices("meta", "info"),
@@ -84,7 +86,8 @@ class Component(Element, ABC):
     @singledispatchmethod
     @classmethod
     def from_obj(cls, obj: Any, /, **kwargs) -> T:
-        """Create Component instance(s) from various input types.
+        """
+        Create Component instance(s) from various input types.
 
         This method dynamically handles different types of input data, allowing
         the creation of Component instances from dictionaries, strings (JSON),
@@ -489,6 +492,11 @@ LionIDable: TypeAlias = Union[str, Component]
 
 def get_lion_id(item: LionIDable) -> str:
     """Get the Lion ID of an item."""
-    if not isinstance(item, (str, Component)):
-        raise LionTypeError("Item must be a single LionIDable object.")
-    return item.ln_id if isinstance(item, Component) else item
+    if isinstance(item, Sequence) and len(item) == 1:
+        item = item[0]
+    if isinstance(item, str) and len(item) == 32:
+        return item
+    if getattr(item, "ln_id", None) is not None:
+        return item.ln_id
+    raise LionTypeError("Item must be a single LionIDable object.")
+

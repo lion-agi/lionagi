@@ -26,17 +26,13 @@ class Tool(Node, Actionable):
 
     parser: Callable | None = None  # parse result to json serializable format
 
-    @field_serializer("func")
+    @field_serializer("func", check_fields=False)
     def serialize_func(self, func):
         return func.__name__
 
     @property
     def name(self):
         return self.schema_["function"]["name"]
-
-    @field_serializer("func")
-    def serialize_func(self, func):
-        return func.__name__
 
     def create_function_calling(self, kwargs):
         return FunctionCalling.create(tuple(self.function, kwargs))

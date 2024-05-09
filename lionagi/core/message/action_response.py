@@ -1,3 +1,4 @@
+from typing import Any
 from pydantic import Field
 from .message import RoledMessage, MessageRole
 from .action_request import ActionRequest
@@ -13,7 +14,7 @@ class ActionResponse(RoledMessage):
 
     function: str | None = Field(None, description="The name of the function called")
     arguments: dict | None = Field(None, description="The keyword arguments provided")
-    func_outputs: any | None = Field(
+    func_outputs: Any | None = Field(
         None, description="The output of the function call"
     )
 

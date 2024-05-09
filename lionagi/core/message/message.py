@@ -64,7 +64,7 @@ class RoledMessage(Node, Sendable):
                 f"Failed to convert {self.content} into a string value"
             ) from e
 
-        return {role: content_str}
+        return {"role": role, "content": content_str}
 
     def __str__(self):
         """

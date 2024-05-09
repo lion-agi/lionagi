@@ -31,7 +31,7 @@ class Session:
         self.ln_id = SysUtil.create_id()
         self.timestamp = SysUtil.get_timestamp(sep=None)[:-6]
         self.system = system or System(
-            system_info="You are a helpful assistant.",
+            system="You are a helpful assistant.",
             sender=self.ln_id,
             recipient="assistant",
         )

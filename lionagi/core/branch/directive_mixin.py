@@ -1,8 +1,9 @@
+from ..directive.chat import Chat
 from abc import ABC
 from typing import Any, Optional, Union, TypeVar
 
 
-class BranchFlowMixin(ABC):
+class DirectiveMixin(ABC):
 
     async def chat(
         self,
@@ -17,8 +18,8 @@ class BranchFlowMixin(ABC):
         form=None,
         **kwargs,
     ) -> Any:
-        flow = MonoChat(self)
-        return await flow.chat(
+        directive = Chat(self)
+        return await directive.chat(
             instruction=instruction,
             context=context,
             sender=sender,

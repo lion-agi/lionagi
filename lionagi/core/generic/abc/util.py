@@ -22,3 +22,23 @@ llama_meta_fields = [
     "metadata_template",
     "metadata_seperator",
 ]
+
+SYSTEM_FIELDS = [
+    "ln_id",
+    "timestamp",
+    "metadata",
+    "meta",
+    "extra_fields",
+    "content",
+    "created",
+    "form",
+    "report",
+    "work",
+    "assignment",
+    "assignments",
+    "input_fields",
+    "requested_fields",
+    "instruction",
+    "system",
+    "strict",
+]

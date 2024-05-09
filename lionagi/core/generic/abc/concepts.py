@@ -151,9 +151,13 @@ class Sendable(BaseModel, ABC):
     @field_validator("sender", "recipient", mode="before")
     def _validate_sender_recipient(cls, value):
         """Validate the sender and recipient fields."""
+        if value is None:
+            return "N/A"
+        
         if value in ["system", "user", "assistant", "N/A"]:
             return value
 
+        print(value)
         a = get_lion_id(value)
         if not isinstance(a, str) or len(a) != 32:
             raise LionTypeError(

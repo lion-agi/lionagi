@@ -2,7 +2,7 @@ from ..generic.abc import Progressable
 from ..generic import pile, progression, Pile
 
 from .schema import Work, WorkStatus
-from .async_queue import WorkQueue
+from .work_queue import WorkQueue
 
 
 class WorkLog(Progressable):

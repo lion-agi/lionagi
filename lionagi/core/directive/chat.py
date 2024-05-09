@@ -30,8 +30,9 @@ class Chat(BaseDirective):
             **kwargs,
         )
 
-        await self._call_chatcompletion(**config)
-
+        payload, completion = await self._call_chatcompletion(**config)
+        await self._process_chatcompletion(payload, completion, sender)
+        
         return await self._output(
             invoke_tool=invoke_tool,
             out=out,

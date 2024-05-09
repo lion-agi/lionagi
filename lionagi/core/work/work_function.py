@@ -1,17 +1,12 @@
-import asyncio
-from typing import Callable, Any
-from lionagi.libs import func_call
-from functools import wraps
+from typing import Callable
+from lionagi.libs.ln_func_call import rcall
 from pydantic import Field
 
-from ..generic.abc import Component
-
-
-from .schema import Work
+from ..generic.abc import Element
 from .worklog import WorkLog
 
 
-class WorkFunction(Component):
+class WorkFunction(Element):
 
     assignment: str = Field(...)
     function: Callable = Field(...)
@@ -34,4 +29,4 @@ class WorkFunction(Component):
 
     async def perform(self, *args, **kwargs):
         kwargs = {**self.retry_kwargs, **kwargs}
-        return await func_call.rcall(self.function, *args, **kwargs)
+        return await rcall(self.function, *args, **kwargs)

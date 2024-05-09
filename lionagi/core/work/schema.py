@@ -3,7 +3,7 @@ import asyncio
 from typing import Any
 
 from lionagi.libs import SysUtil
-from ..generic.abc import Component
+from ..generic.abc import Element
 
 
 class WorkStatus(str, Enum):
@@ -15,7 +15,7 @@ class WorkStatus(str, Enum):
     FAILED = "FAILED"
 
 
-class Work(Component):
+class Work(Element):
     status: WorkStatus = WorkStatus.PENDING
     result: Any = None
     error: Any = None

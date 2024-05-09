@@ -1,18 +1,11 @@
 import contextlib
 from lionagi.libs import SysUtil
 from pydantic import Field, field_validator
-
-from .abc import (
-    Component,
-    Ordering,
-    get_lion_id,
-    ItemNotFoundError,
-    LionIDable,
-)
+from .abc import Ordering, get_lion_id, ItemNotFoundError, LionIDable, Element
 from .util import _validate_order
 
 
-class Progression(Component, Ordering):
+class Progression(Element, Ordering):
 
     name: str | None = Field(
         None,
