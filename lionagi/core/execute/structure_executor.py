@@ -15,7 +15,7 @@ from lionagi.core.generic import Node, ActionSelection, Edge
 from lionagi.core.tool import Tool
 
 from lionagi.core.mail.schema import BaseMail
-from lionagi.core.graph.graph import Graph
+from lionagi.core.generic.structure._graph import Graph
 
 
 class StructureExecutor(BaseExecutor, Graph):
@@ -331,4 +331,5 @@ class StructureExecutor(BaseExecutor, Graph):
                        the file writing process or data formatting.
         """
         from lionagi.integrations.storage.to_excel import to_excel
+
         to_excel(self, structure_name, dir)

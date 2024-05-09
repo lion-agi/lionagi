@@ -52,10 +52,13 @@ class StructureExcel:
         parse(node_list, parent_node=None): Recursively parses nodes and their relationships from the structure.
         reload(): Reloads the structure from the Excel file based on the initially provided parameters.
     """
+
     structure: StructureExecutor = StructureExecutor()
     default_agent_executable: BaseExecutor = InstructionMapExecutor()
 
-    def __init__(self, structure_name=None, structure_id=None, file_path="structure_storage"):
+    def __init__(
+        self, structure_name=None, structure_id=None, file_path="structure_storage"
+    ):
         """
         Initializes the StructureExcel class with specified parameters.
 
@@ -91,7 +94,8 @@ class StructureExcel:
                     continue
             if len(filename) > 1:
                 raise ValueError(
-                    f"Multiple files starting with the same structure name {structure_name} has found, please specify the structure id")
+                    f"Multiple files starting with the same structure name {structure_name} has found, please specify the structure id"
+                )
             self.filename = f"{file_path}/{filename[0]}"
             self.file = pd.read_excel(self.filename, sheet_name=None)
         elif structure_id and not structure_name:
@@ -100,7 +104,8 @@ class StructureExcel:
             filename = [file.name for file in files]
             if len(filename) > 1:
                 raise ValueError(
-                    f"Multiple files with the same structure id {structure_id} has found, please double check the stored structure")
+                    f"Multiple files with the same structure id {structure_id} has found, please double check the stored structure"
+                )
             self.filename = f"{file_path}/{filename[0]}"
             self.file = pd.read_excel(self.filename, sheet_name=None)
         self.nodes = self.file["Nodes"]
@@ -154,10 +159,16 @@ class StructureExcel:
         """
         output_parser = ParseNode.convert_to_def(info_dict["output_parser"])
 
-        structure_excel = StructureExcel(structure_id=info_dict["structure_id"], file_path=self.file_path)
+        structure_excel = StructureExcel(
+            structure_id=info_dict["structure_id"], file_path=self.file_path
+        )
         structure_excel.reload()
         structure = structure_excel.structure
-        agent = BaseAgent(structure=structure, executable=self.default_agent_executable, output_parser=output_parser)
+        agent = BaseAgent(
+            structure=structure,
+            executable=self.default_agent_executable,
+            output_parser=output_parser,
+        )
         agent.id_ = info_dict["id"]
         agent.timestamp = info_dict["timestamp"]
         return agent
@@ -217,16 +228,21 @@ class StructureExcel:
         """
         if not parent_node:
             return
-        row = self.edges[(self.edges["head"] == parent_node.id_) & (self.edges["tail"] == node.id_)]
+        row = self.edges[
+            (self.edges["head"] == parent_node.id_) & (self.edges["tail"] == node.id_)
+        ]
         if len(row) > 1:
             raise ValueError(
-                f"currently does not support handle multiple edges between two nodes, Error node: from {parent_node.id_} to {node.id_}")
-        if row['condition'].isna().any():
+                f"currently does not support handle multiple edges between two nodes, Error node: from {parent_node.id_} to {node.id_}"
+            )
+        if row["condition"].isna().any():
             self.structure.relate_nodes(parent_node, node)
         else:
             cond = json.loads(row["condition"].iloc[0])
             cond_cls = cond["class"]
-            cond_row = self.file["EdgesCondClass"][self.file["EdgesCondClass"]["class_name"] == cond_cls]
+            cond_row = self.file["EdgesCondClass"][
+                self.file["EdgesCondClass"]["class_name"] == cond_cls
+            ]
             cond_code = cond_row["class"].iloc[0]
             condition = ParseNode.parse_condition(cond, cond_code)
             self.structure.relate_nodes(parent_node, node, condition=condition)

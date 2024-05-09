@@ -8,7 +8,7 @@ from typing import Any, Callable
 from lionagi.libs import func_call, AsyncUtil
 
 
-from lionagi.core.mail.schema import StartMail
+from lionagi.core.mail.start_mail import StartMail
 from lionagi.core.generic import Node
 from lionagi.core.mail.mail_manager import MailManager
 from lionagi.core.execute.base_executor import BaseExecutor

@@ -361,6 +361,8 @@ def _(
     reset_index: bool = True,
     **kwargs,
 ) -> pd.DataFrame:
+    if not input_:
+        return pd.DataFrame()
     if not isinstance(input_[0], (pd.DataFrame, pd.Series, pd.core.generic.NDFrame)):
         if drop_kwargs is None:
             drop_kwargs = {}
