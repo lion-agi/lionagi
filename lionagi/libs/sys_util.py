@@ -430,6 +430,19 @@ class SysUtil:
 
     @staticmethod
     def list_files(dir_path: Path | str, extension: str = None) -> list[Path]:
+        """
+        Lists all files in a specified directory with an optional filter for file extensions.
+
+        Args:
+            dir_path (Path | str): The directory path where files are listed.
+            extension (str, optional): Filter files by extension. Default is None, which lists all files.
+
+        Returns:
+            list[Path]: A list of Path objects representing files in the directory.
+
+        Raises:
+            NotADirectoryError: If the provided dir_path is not a directory.
+        """
         dir_path = Path(dir_path)
         if not dir_path.is_dir():
             raise NotADirectoryError(f"{dir_path} is not a directory.")
@@ -440,6 +453,16 @@ class SysUtil:
 
     @staticmethod
     def copy_file(src: Path | str, dest: Path | str) -> None:
+        """
+        Copies a file from a source path to a destination path.
+
+        Args:
+            src (Path | str): The source file path.
+            dest (Path | str): The destination file path.
+
+        Raises:
+            FileNotFoundError: If the source file does not exist or is not a file.
+        """
         from shutil import copy2
 
         src, dest = Path(src), Path(dest)
@@ -450,6 +473,18 @@ class SysUtil:
 
     @staticmethod
     def get_size(path: Path | str) -> int:
+        """
+        Gets the size of a file or total size of files in a directory.
+
+        Args:
+            path (Path | str): The file or directory path.
+
+        Returns:
+            int: The size in bytes.
+
+        Raises:
+            FileNotFoundError: If the path does not exist.
+        """
         path = Path(path)
         if path.is_file():
             return path.stat().st_size
@@ -457,3 +492,50 @@ class SysUtil:
             return sum(f.stat().st_size for f in path.glob("**/*") if f.is_file())
         else:
             raise FileNotFoundError(f"{path} does not exist.")
+
+    @staticmethod
+    def save_to_file(
+        text, 
+        directory: Path | str,
+        filename: str,
+        timestamp: bool = True,
+        dir_exist_ok: bool = True,
+        time_prefix: bool = False,
+        custom_timestamp_format: str | None = None,
+        random_hash_digits=0,
+        verbose=True,
+    ):
+        """
+        Saves text to a file within a specified directory, optionally adding a timestamp, hash, and verbose logging.
+
+        Args:
+            text (str): The text to save.
+            directory (Path | str): The directory path to save the file.
+            filename (str): The filename for the saved text.
+            timestamp (bool): If True, append a timestamp to the filename. Default is True.
+            dir_exist_ok (bool): If True, creates the directory if it does not exist. Default is True.
+            time_prefix (bool): If True, prepend the timestamp instead of appending. Default is False.
+            custom_timestamp_format (str | None): A custom format for the timestamp, if None uses default format. Default is None.
+            random_hash_digits (int): Number of random hash digits to append to filename. Default is 0.
+            verbose (bool): If True, prints the file path after saving. Default is True.
+
+        Returns:
+            bool: True if the text was successfully saved.
+        """
+        file_path = SysUtil.create_path(
+            directory=directory,
+            filename=filename,
+            timestamp=timestamp,
+            dir_exist_ok=dir_exist_ok,
+            time_prefix=time_prefix,
+            custom_timestamp_format=custom_timestamp_format,
+            random_hash_digits=random_hash_digits,
+        )
+        
+        with open(file_path, 'w') as file:
+            file.write(text)
+
+        if verbose:
+            print(f"Text saved to: {file_path}")
+        
+        return True
