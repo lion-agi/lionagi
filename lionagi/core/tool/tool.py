@@ -1,7 +1,7 @@
 from typing import Any
 
 from pydantic import field_serializer
-from lionagi.core.generic import Node
+from lionagi.core.generic.node import Node
 
 
 class Tool(Node):

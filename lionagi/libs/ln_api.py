@@ -715,11 +715,12 @@ class BaseService:
         max_tokens: int = 100_000,
         max_requests: int = 1_000,
         interval: int = 60,
+        endpoints: Mapping[str, EndPoint] = None,
     ) -> None:
         self.api_key = api_key
         self.schema = schema or {}
         self.status_tracker = StatusTracker()
-        self.endpoints: Mapping[str, EndPoint] = {}
+        self.endpoints: Mapping[str, EndPoint] = endpoints or {}
         self.token_encoding_name = token_encoding_name
         self.chat_config_rate_limit = {
             "max_requests": max_requests,

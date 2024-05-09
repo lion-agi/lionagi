@@ -294,6 +294,7 @@ async def rcall(
     backoff_factor: float = 2.0,
     default: Any = None,
     timeout: float | None = None,
+    timing: bool = False,
     **kwargs,
 ) -> Any:
     """
@@ -338,10 +339,13 @@ async def rcall(
     """
     last_exception = None
     result = None
-
+    start_time = SysUtil.get_now(datetime_=False)
     for attempt in range(retries + 1) if retries == 0 else range(retries):
         try:
-            return await _tcall(func, *args, timeout=timeout, **kwargs)
+            result = await _tcall(func, *args, timeout=timeout, **kwargs)
+            if timing:
+                return (result, SysUtil.get_now(datetime_=False) - start_time)
+            return result
         except Exception as e:
             last_exception = e
             if attempt < retries:
@@ -1093,6 +1097,14 @@ class CallDecorator:
 
         return wrapper
 
+    @staticmethod
+    def count_calls(func):
+        async def wrapper(*args, **kwargs):
+            wrapper.calls += 1
+            return await func(*args, **kwargs)
+
+        wrapper.calls = 0
+        return wrapper
 
 class Throttle:
     """

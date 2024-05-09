@@ -3,7 +3,7 @@ from pydantic import Field
 
 from lionagi.libs import convert, func_call
 
-from lionagi.core.generic import BaseComponent
+from lionagi.core.generic.component import BaseComponent
 from lionagi.core.form.field_validator import validation_funcs
 
 

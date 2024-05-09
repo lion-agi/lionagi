@@ -1,7 +1,7 @@
 from collections import deque
 from enum import Enum
 
-from lionagi.core.generic import Node
+from lionagi.core.generic.node import Node
 
 
 class MailCategory(str, Enum):
