@@ -55,12 +55,12 @@ class Instruction(RoledMessage):
             self.content.update(context)
 
         if requested_fields:
-            self.content["requested_fields"] = self._format_output_field(
+            self.content["requested_fields"] = self._format_requested_fields(
                 requested_fields
             )
 
     @staticmethod
-    def _format_output_field(requested_fields):
+    def _format_requested_fields(requested_fields):
         format_ = f"""
         MUST EXACTLY FOLLOW THE RESPONSE FORMAT NO ADDITIONAL COMMENTS ALLOWED!
         ```json
