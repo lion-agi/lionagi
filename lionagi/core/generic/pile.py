@@ -13,7 +13,7 @@ from .abc import (
     LionTypeError,
     ItemNotFoundError,
 )
-from .util import _to_list_type, _validate_order
+from .util import to_list_type, _validate_order
 
 # Define a type variable for components bound to the Component type
 T = TypeVar("T", bound=Component)
@@ -47,7 +47,7 @@ class Pile(Component, Record, Generic[T]):
         except IndexError as e:
             raise ItemNotFoundError(key) from e
 
-        keys = _to_list_type(key)
+        keys = to_list_type(key)
 
         if not all(keys):
             raise LionTypeError(
@@ -92,7 +92,7 @@ class Pile(Component, Record, Generic[T]):
                 self.pile.pop(_key)
             return
 
-        if len(_to_list_type(key)) != len(item):
+        if len(to_list_type(key)) != len(item):
             raise ValueError("The length of keys does not match the length of values")
 
         self.pile.update(item)
@@ -103,7 +103,7 @@ class Pile(Component, Record, Generic[T]):
         Check if the item or items are present in the pile.
         This method accepts both individual items and collections of items.
         """
-        item = _to_list_type(item)
+        item = to_list_type(item)
         for i in item:
             try:
                 a = i if isinstance(i, str) else get_lion_id(i)
@@ -120,7 +120,7 @@ class Pile(Component, Record, Generic[T]):
         If the key is not found and no default is specified, raises
         ItemNotFoundError.
         """
-        key = _to_list_type(key)
+        key = to_list_type(key)
         items = []
 
         for i in key:
@@ -168,7 +168,7 @@ class Pile(Component, Record, Generic[T]):
         Include items in the pile if not already present.
         Returns True if the item is successfully included; otherwise, False.
         """
-        item = _to_list_type(item)
+        item = to_list_type(item)
         if item not in self:
             self[item] = item
         return item in self
@@ -178,7 +178,7 @@ class Pile(Component, Record, Generic[T]):
         Exclude items from the pile if present.
         Returns True if the item is successfully excluded; otherwise, False.
         """
-        item = _to_list_type(item)
+        item = to_list_type(item)
         for i in item:
             if item in self:
                 self.pop(i)
@@ -293,7 +293,7 @@ class Pile(Component, Record, Generic[T]):
         if value is None:
             return None
 
-        value = _to_list_type(value)
+        value = to_list_type(value)
 
         for i in value:
             if not isinstance(i, type(Component)):
@@ -319,7 +319,7 @@ class Pile(Component, Record, Generic[T]):
         if isinstance(value, Component):
             return {value.ln_id: value}
 
-        value = _to_list_type(value)
+        value = to_list_type(value)
         if getattr(cls, "item_type", None) is not None:
             for i in value:
                 if not type(i) in cls.item_type:

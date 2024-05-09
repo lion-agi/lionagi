@@ -332,6 +332,7 @@ class Component(Element, ABC):
 
         return LangchainBridge.to_langchain_document(self, **kwargs)
 
+    # TODO; whether to keep the count, or just last updated
     def _update_count(self, name):
         if (a := nget(self.metadata, ["last_updated", name], None)) is None:
             ninsert(

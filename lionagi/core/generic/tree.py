@@ -5,7 +5,7 @@ from pydantic import Field
 from .graph import Graph
 from .abc import Condition
 from .tree_node import TreeNode
-from .util import _to_list_type
+from .util import to_list_type
 
 
 class Tree(Graph):
@@ -40,7 +40,7 @@ class Tree(Graph):
                            transaction. Defaults to False.
         """
 
-        for i in _to_list_type(children):
+        for i in to_list_type(children):
             i.relate_parent(parent, condition=condition, bundle=bundle)
 
         if self.root is None:

@@ -1,18 +1,18 @@
-import contextlib
 from typing import Any, Type
 
-from ..generic.abc import Component, Field
+from ..generic.abc import Field
+from ..generic import Pile, pile
+
 from .form import Form
 from .util import get_input_output_fields
+from .base import BaseForm
 
 
-class Report(Component):
+class Report(BaseForm):
 
-    assignment: str = Field(..., examples=["a, b -> h"])
-
-    forms: dict[str, Form] = Field(
-        default_factory=dict,
-        description="A dictionary of forms related to the report, in {assignment: Form} format.",
+    forms: Pile[Form] = Field(
+        default_factory=lambda: pile({}, Form),
+        description="A pile of forms related to the report.",
     )
 
     form_assignments: list = Field(
@@ -24,9 +24,6 @@ class Report(Component):
     form_template: Type[Form] = Field(
         Form, description="The template for the forms in the report."
     )
-
-    input_fields: list[str] = Field(default_factory=list)
-    requested_fields: list[str] = Field(default_factory=list)
 
     def __init__(self, **kwargs):
         """
@@ -42,49 +39,29 @@ class Report(Component):
             self.form_assignments.append(self.assignment)
 
         # create forms
-        new_forms = {i: self.form_template(assignment=i) for i in self.form_assignments}
-
-        # add new forms into the report (will ignore new forms already in the
-        # report with same assignment)
-        for k, v in new_forms.items():
-            if k not in self.forms:
-                self.forms[k] = v
+        self.forms = pile(
+            [self.form_template(assignment=i) for i in self.form_assignments], Form
+        )
 
         # if the fields are not declared in the report, add them to report
         # with value set to None
-        for k, v in self.forms.items():
-            for f in list(v.work_fields.keys()):
-                if f not in self.model_fields:
-                    field = v.model_fields[f]
-                    self._add_field(f, value=None, field=field)
+        for v in self.forms:
+            for _field in list(v.work_fields.keys()):
+                if _field not in self.model_fields:
+                    field = v.model_fields[_field]
+                    self._add_field(_field, value=None, field=field)
 
         # if there are fields in the report that are not in the forms, add them to
         # the forms with values
         for k, v in self.model_fields.items():
             if getattr(self, k, None) is not None:
-                for f in self.forms.values():
-                    if k in f.work_fields:
-                        f.fill(**{k: getattr(self, k)})
+                for _form in self.forms:
+                    if k in _form.work_fields:
+                        _form.fill(**{k: getattr(self, k)})
 
-    @property
-    def filled(self):
-        with contextlib.suppress(ValueError):
-            return self._is_filled()
-        return False
-
-    @property
-    def workable(self):
-        with contextlib.suppress(ValueError):
-            return self._is_workable()
-        return False
-
+    # implement abstract methods
     @property
     def work_fields(self) -> dict[str, Any]:
-        """
-        all work fields across all forms, including intermediate output fields,
-        this information is extracted from the forms
-        """
-
         all_fields = {}
         for form in self.forms.values():
             for k, v in form.work_fields.items():
@@ -92,32 +69,33 @@ class Report(Component):
                     all_fields[k] = v
         return all_fields
 
-    @property
-    def next_forms(self) -> list[Form] | None:
-        a = [i for i in self.forms.values() if i.workable]
-        return a if len(a) > 0 else None
+    def fill(self, form=None, strict=False, **kwargs):
 
-    def fill(self, **kwargs):
-        """
-        fill the information to both the report and forms
-        """
-        kwargs = {**self.work_fields, **kwargs}
-        for k, v in kwargs.items():
+        if self.filled:
+            if strict:
+                raise ValueError("Report is already filled, and be worked on again")
+            return
+
+        # gather all unique valid fields from input form,
+        # kwargs and self workfields data
+        all_fields = self._get_all_fields(form, **kwargs)
+
+        # if there are information in the forms that are not in the report,
+        # add them to the report
+        for k, v in all_fields.items():
             if k in self.work_fields and getattr(self, k, None) is None:
                 setattr(self, k, v)
 
-        for form in self.forms.values():
-            if not form.filled:
-                _kwargs = {k: v for k, v in kwargs.items() if k in form.work_fields}
-                form.fill(**_kwargs)
+        # if there are information in the report that are not in the forms,
+        # add them to the forms
+        for _form in self.forms:
+            for k, v in _form.work_fields:
+                _kwargs = {}
+                if v is None and (a := getattr(self, k, None)) is not None:
+                    _kwargs[k] = a
+                _form.fill(**_kwargs)
 
-    def _is_filled(self):
-        for k, value in self.work_fields.items():
-            if value is None:
-                raise ValueError(f"Field {k} is not filled")
-        return True
-
-    def _is_workable(self) -> bool:
+    def is_workable(self) -> bool:
 
         if self.filled:
             raise ValueError("Form is already filled, cannot be worked on again")
@@ -146,3 +124,7 @@ class Report(Component):
             raise ValueError("Output fields are not unique")
 
         return True
+
+    def next_forms(self) -> Pile[Form]:
+        a = [i for i in self.forms if i.workable]
+        return pile(a, Form) if len(a) > 0 else None

@@ -1,11 +1,12 @@
-from pydantic import Field
-import numpy as np
-from lionagi.libs import func_call, convert
-from lionagi.core.form.scored_form import ScoredForm
-from lionagi.core.branch.branch import Branch
+from enum import Enum
+from lionagi.libs.ln_convert import to_str
+
+from ..generic.abc import Field
+from ..report.form import Form
+from ..message.action_request import ActionRequest
 
 
-class ScoreTemplate(ScoredForm):
+class ScoreTemplate(Form):
 
     template_name: str = "default_score"
     sentence: str | list | dict = Field(
@@ -33,12 +34,12 @@ class ScoreTemplate(ScoredForm):
         if num_digit == 0:
             return_precision = "integer"
         else:
-            return_precision = f"num:{convert.to_str(num_digit)}f"
+            return_precision = f"num:{to_str(num_digit)}f"
 
         self.task = f"""
 score context according to the following constraints
-1. objective, {convert.to_str(instruction)}
-2. score range, {convert.to_str(score_range)}
+1. objective, {to_str(instruction)}
+2. score range, {to_str(score_range)}
 3. include_endpoints, {"yes" if inclusive else "no"}
 4. format the score in {return_precision}
 """
@@ -57,15 +58,7 @@ score context according to the following constraints
         }
 
 
-# plan.py
-
-from lionagi.libs import func_call, ParseUtil
-from lionagi.integrations.bridge.pydantic_.pydantic_bridge import Field
-from lionagi.core.form.scored_form import ScoredForm
-from lionagi.core.branch.branch import Branch
-
-
-class PlanTemplate(ScoredForm):
+class PlanTemplate(Form):
     template_name: str = "default_plan"
     sentence: str | list | dict = Field(
         default_factory=str,
@@ -98,14 +91,7 @@ class PlanTemplate(ScoredForm):
             self.requested_fields.append("confidence_score")
 
 
-from lionagi.libs import func_call
-from lionagi.integrations.bridge.pydantic_.pydantic_bridge import Field
-
-from lionagi.core.form.scored_form import ScoredForm
-from lionagi.core.branch.branch import Branch
-
-
-class PredictTemplate(ScoredForm):
+class PredictTemplate(Form):
 
     template_name: str = "default_predict"
     sentence: str | list | dict = Field(
@@ -142,15 +128,7 @@ class PredictTemplate(ScoredForm):
             self.requested_fields.append("confidence_score")
 
 
-from lionagi.libs import func_call, AsyncUtil
-
-from lionagi.integrations.bridge.pydantic_.pydantic_bridge import Field
-from lionagi.core.form.action_form import ActionForm
-from lionagi.core.branch.branch import Branch
-from lionagi.core.directive.utils import _process_tools
-
-
-class ReactTemplate(ActionForm):
+class ReactTemplate(Form):
     template_name: str = "default_react"
     sentence: str | list | dict | None = Field(
         default_factory=str,
@@ -173,28 +151,23 @@ class ReactTemplate(ActionForm):
             self.requested_fields.append("confidence_score")
 
 
-class ActionForm(ScoredForm):
+class ActionForm(Form):
 
     action_needed: bool | None = Field(
         False, description="true if actions are needed else false"
     )
 
-    actions: list[dict | ActionRequest | Any] | None = Field(
+    actions: list[dict | ActionRequest] | None = Field(
         default_factory=list,
         description="""provide The list of action(s) to take, each action in {"function": function_name, "arguments": {param1:..., param2:..., ...}}. Leave blank if no further actions are needed, you must use provided parameters for each action, DO NOT MAKE UP KWARG NAME!!!""",
     )
 
-    answer: str | dict | Any | None = Field(
+    answer: str | dict | None = Field(
         default_factory=str,
         description="output answer to the questions asked if further actions are not needed, leave blank if an accurate answer cannot be provided from context during this step",
     )
 
     signature: str = "sentence -> reason, action_needed, actions, answer"
-
-
-from lionagi.integrations.bridge.pydantic_.pydantic_bridge import Field
-
-from lionagi.core.form.form import Form
 
 
 class ScoredForm(Form):
@@ -207,28 +180,7 @@ class ScoredForm(Form):
     )
 
 
-from enum import Enum
-from pydantic import Field
-
-from lionagi.libs import func_call, StringMatch
-from lionagi.core.form.scored_form import ScoredForm
-from lionagi.core.branch.branch import Branch
-
-
 class SelectTemplate(ScoredForm):
-    """
-    A class for selecting an item from given choices based on a given context.
-
-    Attributes:
-        template_name (str): The name of the select template (default: "default_select").
-        sentence (str | list | dict): The given context.
-        answer (Enum | str): The selected item from the given choices.
-        signature (str): The signature indicating the input and output fields (default: "sentence -> answer").
-
-    Methods:
-        __init__(self, sentence=None, choices=None, instruction=None, reason=False, confidence_score=False, **kwargs):
-            Initializes a new instance of the SelectTemplate class.
-    """
 
     template_name: str = "default_select"
     sentence: str | list | dict = Field(
@@ -250,17 +202,6 @@ class SelectTemplate(ScoredForm):
         confidence_score=False,
         **kwargs,
     ):
-        """
-        Initializes a new instance of the SelectTemplate class.
-
-        Args:
-            sentence (Optional[str | list | dict]): The given context.
-            choices (Optional[list]): The list of choices to select from.
-            instruction (Optional[str]): The instruction for selection.
-            reason (bool): Whether to include the reason for the selection in the output (default: False).
-            confidence_score (bool): Whether to include the confidence score in the output (default: False).
-            **kwargs: Additional keyword arguments.
-        """
         super().__init__(**kwargs)
 
         self.sentence = sentence

@@ -18,6 +18,7 @@ system_fields = [
     "requested_fields",
     "instruction",
     "system",
+    "strict",
 ]
 
 

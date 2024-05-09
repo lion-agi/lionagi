@@ -4,6 +4,42 @@ from lionagi.libs import convert, ParseUtil
 from .message import RoledMessage, MessageRole
 
 
+"""
+assistant_function_calling = [1,2,3,4,5]
+
+for i in assitant_func_call:
+    messages += ActionRequest(tool, kwargs)
+
+for tools:
+    tool.invoke
+
+for i in results:
+    messages += ActionResponse(actionreuqest, result)
+
+
+
+-------
+- 
+-
+-
+-
+-
+
+---
+
+-
+-
+-
+-
+-
+
+
+
+
+
+"""
+
+
 class ActionRequest(RoledMessage):
 
     function: str | None = Field(

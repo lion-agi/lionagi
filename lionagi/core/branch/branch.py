@@ -6,7 +6,8 @@ from ..generic.abc import Field
 from ..generic import Node, Pile, pile, DataLogger, progression, Progression, Model
 from ..action import Tool, ToolManager
 from ..mail import MailBox, Mail
-from ..flow.monoflow import MonoChat
+
+# from ..flow.monoflow import MonoChat
 from ..message import (
     RoledMessage,
     create_message,

@@ -2,7 +2,7 @@ from enum import Enum
 from pydantic import Field
 from .abc import Condition
 from .node import Node
-from .util import _to_list_type
+from .util import to_list_type
 
 
 class TreeLabel(str, Enum):
@@ -35,7 +35,7 @@ class TreeNode(Node):
         bundle: bool = False,
     ) -> None:
         """Establish a parent-child relationship with the given node(s)."""
-        children = _to_list_type(node)
+        children = to_list_type(node)
         for _child in children:
             self.relate(
                 _child,

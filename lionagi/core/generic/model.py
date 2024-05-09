@@ -84,6 +84,10 @@ class Model:
     async def call_chat_completion(self, messages, **kwargs):
         return await self.service.serve_chat(messages, **kwargs)
 
+    # TODO: add more endpoints
+    # async def call_embedding(self, input_file, **kwargs):
+    #     return await self.service.serve(input_file, "embedding", **kwargs)
+
     def to_dict(self):
         return {
             "ln_id": self.ln_id,
