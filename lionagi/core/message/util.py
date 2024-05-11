@@ -38,12 +38,12 @@ def create_message(
             )
 
         if isinstance(action_response, ActionResponse):
-            action_response.update_request(action_request)
+            action_response.update_request(action_request);
             return action_response
 
         return ActionResponse(
             action_request=action_request, sender=sender, func_outputs=func_outputs,
-        )
+        );
 
     if action_request:
         if not isinstance(action_request, ActionRequest):

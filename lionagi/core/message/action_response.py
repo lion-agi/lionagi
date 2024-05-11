@@ -33,11 +33,8 @@ class ActionResponse(RoledMessage):
             recipient=action_request.sender,  # recipient is the assistant who made the request
             content = {"action_response": {"function": action_request.function, "arguments": action_request.arguments, "func_outputs": func_outputs}}
         )
-        self.function = action_request.function
-        self.arguments = action_request.arguments
+        self.update_request(action_request)
         self.func_outputs = func_outputs
-        self.action_request = action_request.ln_id
-        action_request.action_response = self.ln_id
 
     def update_request(self, action_request: ActionRequest):
         self.function = action_request.function

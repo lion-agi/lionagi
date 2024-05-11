@@ -8,13 +8,11 @@ import contextlib
 from abc import ABC
 from typing import Any
 
-from lionagi.libs.ln_convert import to_dict, to_list
-from lionagi.libs.ln_nested import get_flattened_keys, nget
-from lionagi.libs.ln_func_call import lcall, alcall
+from lionagi.libs.ln_nested import get_flattened_keys
 from lionagi.libs.ln_parse import ParseUtil, StringMatch
 
 from ..generic import Model
-from ..message import Instruction, AssistantResponse, ActionRequest, ActionResponse
+from ..message import Instruction
 from ..message.util import _parse_action_request
 
 
@@ -64,7 +62,7 @@ class BaseDirective(ABC):
         requested_fields=None,
         form=None,
         tools=False,
-        **kwargs,
+        **kwargs,       # additional config for the model
     ) -> Any:
 
         if system:
@@ -143,17 +141,12 @@ class BaseDirective(ABC):
             tasks = []
             for i in a:
                 tool = self.branch.tool_manager.registry[i.function]
-                tasks.append(asyncio.create_task(tool.invoke(i.arguments)))
+                tasks.append(asyncio.create_task(tool.invoke(i.arguments)));
             
-            results = await asyncio.gather(*tasks)
-            results = to_list(results, flatten=True)
+            results = await asyncio.gather(*tasks);
             
-            for _result, _request in zip(results, a):
-                self.branch.add_message(
-                    action_request=_request, 
-                    func_outputs=_result,
-                    sender=_request.recipient,
-                )
+            for idx, item in enumerate(results):
+                self.branch.add_message(action_request=a[idx], func_outputs=item,)
                 
         return None
 

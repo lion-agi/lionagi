@@ -71,7 +71,7 @@ class BaseAgent(Node):
             structure_id=self.structure.id_,
             executable_id=self.executable.id_,
         )
-        await func_call.mcall(
+        await func_call.mcall(saz
             [0.1, 0.1, 0.1, 0.1],
             [
                 self.structure.execute,
