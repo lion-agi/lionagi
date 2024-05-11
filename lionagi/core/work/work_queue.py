@@ -1,4 +1,5 @@
 import asyncio
+from ..generic.abc import Progressable
 
 
 class WorkQueue:
@@ -32,7 +33,7 @@ class WorkQueue:
     def stopped(self) -> bool:
         return self._stop_event.is_set()
 
-    async def process(self, refresh_time=1) -> None:
+    async def process(self) -> None:
         tasks = set()
         while self.queue.qsize() > 0 and not self.stopped:
             if not self.available_capacity and tasks:
@@ -48,4 +49,3 @@ class WorkQueue:
 
             if tasks:
                 await asyncio.wait(tasks)
-        await asyncio.sleep(refresh_time)

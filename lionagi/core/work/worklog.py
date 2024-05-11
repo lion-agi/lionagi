@@ -1,7 +1,7 @@
 from ..generic.abc import Progressable
 from ..generic import pile, progression, Pile
 
-from .schema import Work, WorkStatus
+from .work import Work, WorkStatus
 from .work_queue import WorkQueue
 
 
@@ -31,9 +31,19 @@ class WorkLog(Progressable):
         await self.queue.stop()
 
     @property
+    def pending_work(self):
+        return pile([i for i in self.pile if i.status == WorkStatus.PENDING])
+
+    @property
     def stopped(self):
         return self.queue.stopped
 
     @property
     def completed_work(self):
-        return {k: v for k, v in self.pile.items() if v.status == WorkStatus.COMPLETED}
+        return pile([i for i in self.pile if i.status == WorkStatus.COMPLETED])
+        
+    def __contains__(self, work):
+        return work in self.pile
+    
+    def __iter__(self):
+        return iter(self.pile)

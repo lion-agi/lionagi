@@ -87,7 +87,7 @@ class BaseDirective(ABC):
 
     async def _process_chatcompletion(self, payload, completion, sender):
         if "choices" in completion:
-            add_msg_config = {"assistant_response": completion["choices"][0]}
+            add_msg_config = {"assistant_response": completion["choices"][0]["message"]}
             if sender is not None:
                 add_msg_config["sender"] = sender
 

@@ -1,11 +1,11 @@
 from functools import wraps
-from typing import Any, Callable, Tuple
 
 from abc import ABC, abstractmethod
+from lionagi.libs.ln_func_call import pcall
 from lionagi import logging as _logging
 from .work_function import WorkFunction
 import asyncio
-from .schema import Work
+from .work import Work
 from .worklog import WorkLog
 
 
@@ -33,6 +33,16 @@ class Worker(ABC):
         if len(non_stopped_) > 0:
             _logging.error(f"Could not stop worklogs: {non_stopped_}")
         _logging.info(f"Stopped worker {self.name}")
+
+    async def is_progressable(self):
+        return any([await i.is_progressable() for i in self.work_functions.values()]) and not self.stopped
+
+    async def process(self, refresh_time=1):
+        while await self.is_progressable():
+            await pcall([i.process(refresh_time) for i in self.work_functions.values()])
+            asyncio.sleep(refresh_time)
+
+
 
     # TODO: Implement process method
 
@@ -68,14 +78,13 @@ class Worker(ABC):
             )
 
         work_func: WorkFunction = self.work_functions[func.__name__]
-        task = asyncio.create_task(work_func.perform(*args, **kwargs))
+        task = asyncio.create_task(work_func.perform(self, *args, **kwargs))
         work = Work(async_task=task)
-        work_func: WorkFunction = self.work_functions[func.__name__]
         await work_func.worklog.append(work)
         return True
 
 
-def work(assignment, capacity=10, guidance=None, retry_kwargs=None):
+def work(assignment=None, capacity=10, guidance=None, retry_kwargs=None, refresh_time=1, timeout=10):
     def decorator(func):
         @wraps(func)
         async def wrapper(
@@ -88,6 +97,8 @@ def work(assignment, capacity=10, guidance=None, retry_kwargs=None):
             guidance=guidance,
             **kwargs,
         ):
+            retry_kwargs = retry_kwargs or {}
+            retry_kwargs["timeout"] = retry_kwargs.get("timeout", timeout)
             return await self._wrapper(
                 *args,
                 func=func,

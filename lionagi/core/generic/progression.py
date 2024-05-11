@@ -49,7 +49,7 @@ class Progression(Element, Ordering):
 
     def copy(self):
         """create a deep copy"""
-        return progression(self.order, self.name)
+        return self.model_copy()
 
     def append(self, item):
         """Append an item to the end of the progression."""

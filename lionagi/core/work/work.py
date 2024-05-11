@@ -3,7 +3,7 @@ import asyncio
 from typing import Any
 
 from lionagi.libs import SysUtil
-from ..generic.abc import Element
+from ..generic.abc import Component
 
 
 class WorkStatus(str, Enum):
@@ -15,24 +15,26 @@ class WorkStatus(str, Enum):
     FAILED = "FAILED"
 
 
-class Work(Element):
+class Work(Component):
     status: WorkStatus = WorkStatus.PENDING
     result: Any = None
     error: Any = None
     async_task: asyncio.Task | None = None
     completion_timestamp: str | None = None
+    duration: float | None = None
 
     async def perform(self):
         try:
-            result = await self.async_task
+            result, duration = await self.async_task
             self.result = result
             self.status = WorkStatus.COMPLETED
-            self.async_task = None
+            self.duration = duration
+            del self.async_task
         except Exception as e:
             self.error = e
             self.status = WorkStatus.FAILED
         finally:
-            self.completion_timestamp = SysUtil.get_timestamp()
+            self.completion_timestamp = SysUtil.get_timestamp(sep=None)[:-6]
 
     def __str__(self):
-        return f"Work(id={self.ln_id[:8]}.., status={self.status.value}, created_at={self.timestamp[:-7]}, completed_at={self.completion_timestamp[:-7]})"
+        return f"Work(id={self.ln_id[:8]}.., status={self.status.value}, created_at={self.timestamp[:-7]}, completed_at={self.completion_timestamp[:-7]}, duration={float(self.duration) if self.duration else 0:.04f} sec(s)"

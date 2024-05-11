@@ -49,18 +49,6 @@ class Branch(Node, DirectiveMixin):
         super().__init__()
         self.system = None
 
-        system = system or "You are a helpful assistant, let's think step by step"
-        if system:
-            self.system = (
-                system
-                if isinstance(system, System)
-                else create_message(
-                    system=system,
-                    recipient=self.ln_id,
-                    sender=system_sender or "system",
-                )
-            )
-
         self.user = user or "user"
         self.messages = messages or pile({}, RoledMessage)
         self.datalogger = datalogger or DataLogger(persist_path)
@@ -71,6 +59,9 @@ class Branch(Node, DirectiveMixin):
         if tools:
             self.tool_manager.register_tools(tools)
 
+        system = system or "You are a helpful assistant, let's think step by step"
+        self.add_message(system=system, sender=system_sender)
+        
     def add_message(
         self,
         *,
@@ -181,6 +172,13 @@ class Branch(Node, DirectiveMixin):
         if verbose:
             print("tools deletion failed")
         return False
+
+    def to_df(self):
+        ...
+
+
+
+
 
     # def send(self, recipient: str, category: str, package: Any) -> None:
     #     mail = Mail(

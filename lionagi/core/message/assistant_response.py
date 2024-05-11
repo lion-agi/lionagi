@@ -14,6 +14,6 @@ class AssistantResponse(RoledMessage):
         super().__init__(
             role=MessageRole.ASSISTANT,
             sender=sender,
-            content={"assistant_response": assistant_response},
+            content={"assistant_response": assistant_response["content"]},
             recipient=recipient,
         )
