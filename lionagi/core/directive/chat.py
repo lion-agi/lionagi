@@ -15,6 +15,7 @@ class Chat(BaseDirective):
         tools=False,
         invoke_tool=True,
         out=True,
+        return_form=True,
         **kwargs,
     ):
 
@@ -31,11 +32,14 @@ class Chat(BaseDirective):
         )
 
         payload, completion = await self._call_chatcompletion(**config)
-        await self._process_chatcompletion(payload, completion, sender)
         
         return await self._output(
+            payload=payload,
+            completion=completion,
+            sender=sender,
             invoke_tool=invoke_tool,
             out=out,
             requested_fields=requested_fields,
             form=form,
+            return_form=return_form
         )

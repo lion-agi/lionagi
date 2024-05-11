@@ -34,10 +34,7 @@ class Tool(Node, Actionable):
     def name(self):
         return self.schema_["function"]["name"]
 
-    def create_function_calling(self, kwargs):
-        return FunctionCalling.create(tuple(self.function, kwargs))
-
-    async def invoke(self, kwargs={}, func_calling=None):
+    async def invoke(self, kwargs={}):
         if self.pre_processor:
             pre_process_kwargs = self.pre_processor_kwargs or {}
             kwargs = await call_handler(
@@ -46,7 +43,7 @@ class Tool(Node, Actionable):
             if not isinstance(kwargs, dict):
                 raise ValueError("Pre-processor must return a dictionary.")
 
-        func_call_ = func_calling or self.create_function_calling(kwargs)
+        func_call_ = FunctionCalling(function=self.function, arguments=kwargs)
         result = await func_call_.invoke()
 
         if self.post_processor:

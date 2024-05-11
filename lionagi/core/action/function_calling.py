@@ -7,7 +7,7 @@ from lionagi.core.generic.abc import Actionable, Element
 from lionagi.core.message.action_request import ActionRequest
 
 
-class FunctionCalling(Element, Actionable):
+class FunctionCalling(Actionable):
     """Class for dynamically invoking functions based on various input types,
     allowing function and arguments to be specified through multiple formats.
     """
@@ -137,7 +137,7 @@ class FunctionCalling(Element, Actionable):
         Returns:
             Any: The result of the function call.
         """
-        return await call_handler(self.func, **self.arguments)
+        return await call_handler(self.function, **self.arguments)
 
     def __str__(self) -> str:
         """

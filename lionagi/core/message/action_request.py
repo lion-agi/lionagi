@@ -27,7 +27,7 @@ class ActionRequest(RoledMessage):
         recipient=None,  # recipient is the actionable component
     ):
 
-        function = function if inspect.isfunction(function) else function.__name__
+        function = function.__name__ if inspect.isfunction(function) else function
         arguments = _prepare_arguments(arguments)
 
         super().__init__(
@@ -36,6 +36,8 @@ class ActionRequest(RoledMessage):
             recipient=recipient,
             content={"action_request": {"function": function, "arguments": arguments}},
         )
+        self.function = function
+        self.arguments = arguments
 
     def is_responded(self):
         return self.action_response is not None

@@ -30,7 +30,7 @@ class Instruction(RoledMessage):
         if "context" not in self.content:
             self.content["context"] = {}
         if isinstance(context, dict):
-            self.content["context"].update(context)
+            self.content["context"].update({**context, **kwargs})
         elif isinstance(context, str):
             self.content["context"]["additional_context"] = context
 

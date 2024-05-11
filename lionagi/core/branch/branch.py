@@ -1,9 +1,9 @@
 from collections import deque
 from typing import Any
-from lionagi.libs.ln_convert import is_same_dtype, to_dict
+from lionagi.libs.ln_convert import is_same_dtype, to_dict, to_df
 
 from ..generic.abc import Field
-from ..generic import Node, Pile, pile, DataLogger, progression, Progression, Model, Exchange
+from ..generic import Node, Pile, pile, progression, Progression, Model, Exchange
 from ..action import Tool, ToolManager
 from ..mail.mail import Mail
 
@@ -23,7 +23,6 @@ from ..message import (
 class Branch(Node, DirectiveMixin):
 
     messages: Pile[RoledMessage] = Field(None)
-    datalogger: DataLogger = Field(None)
     progre: Progression = Field(None)
     tool_manager: ToolManager = Field(None)
     system: System = Field(None)
@@ -37,8 +36,6 @@ class Branch(Node, DirectiveMixin):
         system_sender: str | None = None,
         user: str | None = None,
         messages: Pile[RoledMessage] = None,
-        datalogger: DataLogger = None,
-        persist_path: str | None = None,
         progre: Progression = None,
         tool_manager: ToolManager = None,
         tools: Any = None,
@@ -51,7 +48,6 @@ class Branch(Node, DirectiveMixin):
 
         self.user = user or "user"
         self.messages = messages or pile({}, RoledMessage)
-        self.datalogger = datalogger or DataLogger(persist_path)
         self.progre = progre or progression()
         self.tool_manager = tool_manager or ToolManager()
         self.mailbox = mailbox or Exchange()
@@ -77,6 +73,8 @@ class Branch(Node, DirectiveMixin):
         sender=None,  # str
         recipient=None,  # str
         requested_fields=None,  # dict[str, str]
+        metadata: dict | None = None,  # extra metadata
+        **kwargs        # additional context fields
     ) -> bool:
 
         _msg = create_message(
@@ -92,6 +90,7 @@ class Branch(Node, DirectiveMixin):
             sender=sender,
             recipient=recipient,
             requested_fields=requested_fields,
+            **kwargs,
         )
 
         if isinstance(_msg, System):
@@ -115,6 +114,9 @@ class Branch(Node, DirectiveMixin):
             _msg.sender = sender or "N/A"
             _msg.recipient = recipient or self.ln_id
 
+        if metadata:
+            _msg._meta_insert(["extra"], metadata)
+            
         return self.messages.include(_msg) and self.progre.include(_msg)
 
     def to_chat_messages(self) -> list[dict[str, Any]]:
@@ -173,9 +175,24 @@ class Branch(Node, DirectiveMixin):
             print("tools deletion failed")
         return False
 
-    def to_df(self):
-        ...
+    def update_last_instruction_meta(self, meta):
+        for i in reversed(self.progre):
+            if isinstance(self.messages[i], Instruction):
+                self.messages[i]._meta_insert(["extra"], meta)
+                return 
 
+    def to_df(self) -> Any:
+        fields = ["ln_id", "message_type", "timestamp",  "role", "content", "metadata", "sender", "recipient"]
+        dicts_ = []
+        for i in self.progre:
+            _d = {}
+            for j in fields:
+                _d.update({j: getattr(self.messages[i], j, None)})
+                _d["message_type"] = self.messages[i].class_name
+            dicts_.append(_d)
+        
+        return to_df(dicts_)
+        
 
 
 

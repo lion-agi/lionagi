@@ -126,7 +126,7 @@ class ToolManager(Actionable):
         return kwargs
 
     @staticmethod
-    def parse_tool_response(response: dict) -> Tuple[str, dict]:
+    def parse_tool_request(response: dict) -> Tuple[str, dict]:
         try:
             func = response["action"][7:]
             args = to_dict(response["arguments"])
@@ -156,7 +156,7 @@ def func_to_tool(
 
         for idx in range(len(funcs)):
             f_ = lambda _f: Tool(
-                func=_f,
+                function=_f,
                 schema_=ParseUtil._func_to_schema(_f, style=docstring_style),
                 parser=parsers[idx] if len(parsers) > 1 else parsers[0],
             )
@@ -167,7 +167,7 @@ def func_to_tool(
         fs = lcall(
             funcs,
             lambda _f: Tool(
-                func=_f, schema_=ParseUtil._func_to_schema(_f, style=docstring_style)
+                function=_f, schema_=ParseUtil._func_to_schema(_f, style=docstring_style)
             ),
         )
 

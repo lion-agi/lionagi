@@ -280,8 +280,13 @@ class Component(Element, ABC):
                 ) from e
         return cls.from_obj(config_ | kwargs)
 
+    @property
+    def class_name(self) -> str:
+        """Get the class name."""
+        return self._class_name()
+
     @classmethod
-    def class_name(cls) -> str:
+    def _class_name(cls) -> str:
         """Get the class name."""
         return cls.__name__
 
@@ -336,18 +341,18 @@ class Component(Element, ABC):
         return LangchainBridge.to_langchain_document(self, **kwargs)
 
     # TODO; whether to keep the count, or just last updated
-    def _update_count(self, name):
+    def _add_last_update(self, name):
         if (a := nget(self.metadata, ["last_updated", name], None)) is None:
             ninsert(
                 self.metadata,
-                ["last_updated", name],
-                (1, SysUtil.get_timestamp(sep=None)[:-6]),
+                ["last_updated", name], 
+                SysUtil.get_timestamp(sep=None)[:-6],
             )
         elif isinstance(a, tuple) and isinstance(a[0], int):
             nset(
                 self.metadata,
                 ["last_updated", name],
-                (a[0] + 1, SysUtil.get_timestamp(sep=None)[:-6]),
+                SysUtil.get_timestamp(sep=None)[:-6],
             )
 
     def _meta_pop(self, indices, default=...):
@@ -384,7 +389,7 @@ class Component(Element, ABC):
         if name == "metadata":
             return
         super().__setattr__(name, value)
-        self._update_count(name)
+        self._add_last_update(name)
 
     def _add_field(
         self,

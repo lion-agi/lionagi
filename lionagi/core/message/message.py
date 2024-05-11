@@ -71,7 +71,7 @@ class RoledMessage(Node, Sendable):
         Provides a string representation of the message with content preview.
         """
         content_preview = (
-            f"{self.content[:75]}..."
+            f"{str(self.content)[:75]}..."
             if len(str(self.content)) > 75
             else str(self.content)
         )

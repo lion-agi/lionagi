@@ -11,7 +11,7 @@ class System(RoledMessage):
             content={"system_info": system},
             recipient=recipient or "N/A",
         )
-
+    
     @property
     def system_info(self):
         """

@@ -184,6 +184,10 @@ class Progression(Element, Ordering):
         """Return a list representation of the progression."""
         return SysUtil.create_copy(self.order)
 
+    def __reversed__(self):
+        """Return a reversed progression."""
+        return reversed(self.order)
+
     def clear(self):
         """Clear the progression."""
         self.order = []

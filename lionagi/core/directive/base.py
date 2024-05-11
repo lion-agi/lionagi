@@ -2,18 +2,35 @@
 the base directive
 """
 
+import asyncio
 import re
 import contextlib
 from abc import ABC
 from typing import Any
 
 from lionagi.libs.ln_convert import to_dict, to_list
-from lionagi.libs.ln_nested import get_flattened_keys
+from lionagi.libs.ln_nested import get_flattened_keys, nget
 from lionagi.libs.ln_func_call import lcall, alcall
 from lionagi.libs.ln_parse import ParseUtil, StringMatch
 
 from ..generic import Model
-from ..message import Instruction
+from ..message import Instruction, AssistantResponse, ActionRequest, ActionResponse
+from ..message.util import _parse_action_request
+
+
+oai_fields = [
+    "id", "object", "created", "model", "choices", "usage", "system_fingerprint"
+]
+
+choices_fields = [
+    "index", "message", "logprobs", "finish_reason"
+]
+
+usage_fields = [
+    "prompt_tokens", "completion_tokens", "total_tokens"
+]
+
+
 
 
 class BaseDirective(ABC):
@@ -85,17 +102,91 @@ class BaseDirective(ABC):
             self.branch.to_chat_messages(), **kwargs
         )
 
-    async def _process_chatcompletion(self, payload, completion, sender):
+    async def _process_chatcompletion(self, payload, completion, sender, invoke_tool=False):
+        
+        # process the raw chat completion response
+        _msg = None
         if "choices" in completion:
-            add_msg_config = {"assistant_response": completion["choices"][0]["message"]}
-            if sender is not None:
-                add_msg_config["sender"] = sender
-
-            self.branch.datalogger.append(input_data=payload, output_data=completion)
-            self.branch.add_message(**add_msg_config)
-            self.branch.model.status_tracker.num_tasks_succeeded += 1
+            
+            aa = payload.pop("messages", None)
+            self.branch.update_last_instruction_meta(payload)
+            msg = completion.pop("choices", None)
+            if msg and isinstance(msg, list):
+                msg = msg[0]
+            
+            if isinstance(msg, dict):
+                _msg = msg.pop("message", None)
+                completion.update(msg)
+                                    
+                self.branch.add_message(
+                    assistant_response=_msg, metadata=completion, sender=sender
+                )
+                self.branch.model.status_tracker.num_tasks_succeeded += 1
         else:
             self.branch.model.status_tracker.num_tasks_failed += 1
+
+        # if the assistant response contains action request, we add each as a message to branch
+        a = _parse_action_request(_msg)
+        if a is None:
+            return _msg
+        
+        if a:
+            for i in a:
+                if i.function in self.branch.tool_manager.registry:
+                    i.recipient = self.branch.tool_manager.registry[i.function].ln_id   # recipient is the tool
+                else:
+                    raise ValueError(f"Tool {i.function} not found in registry")
+                self.branch.add_message(action_request=i, recipient=i.recipient)
+
+        if invoke_tool:
+            # invoke tools and add action response to branch
+            tasks = []
+            for i in a:
+                tool = self.branch.tool_manager.registry[i.function]
+                tasks.append(asyncio.create_task(tool.invoke(i.arguments)))
+            
+            results = await asyncio.gather(*tasks)
+            results = to_list(results, flatten=True)
+            
+            for _result, _request in zip(results, a):
+                self.branch.add_message(
+                    action_request=_request, 
+                    func_outputs=_result,
+                    sender=_request.recipient,
+                )
+                
+        return None
+
+    async def _output(
+        self,
+        payload, 
+        completion, 
+        sender,
+        invoke_tool,
+        out,
+        requested_fields,
+        form=None,
+        return_form=True,
+    ):
+        content_ = await self._process_chatcompletion(
+            payload=payload, 
+            completion=completion, 
+            sender=sender, 
+            invoke_tool=invoke_tool
+        )
+        
+        if content_ is None:
+            return None
+    
+        response_ = self._process_model_response(content_, requested_fields)
+
+        if form:
+            form._process_response(response_)
+            return form if return_form else form.outputs
+
+        if out:
+            return response_
+
 
     @staticmethod
     def _process_model_response(content_, requested_fields):
@@ -116,51 +207,3 @@ class BaseDirective(ABC):
                     out_ = ParseUtil.fuzzy_parse_json(match.group(1))
 
         return out_
-
-    # TODO: modify direct tool invokation with action request/response
-    async def _invoke_tools(self, content_=None, function_calling=None):
-        if function_calling is None and content_ is not None:
-            tool_uses = content_
-            function_calling = lcall(
-                [to_dict(i) for i in tool_uses["action_request"]],
-                self.branch.tool_manager.parse_tool_response,
-            )
-
-        outs = await alcall(function_calling, self.branch.tool_manager.invoke)
-        outs = to_list(outs, flatten=True)
-
-        a = []
-        for out_, f in zip(outs, function_calling):
-            res = {
-                "function": f[0],
-                "arguments": f[1],
-                "output": out_,
-            }
-            self.branch.add_message(response=res)
-            a.append(res)
-
-        return a
-
-    async def _output(
-        self,
-        invoke_tool,
-        out,
-        requested_fields,
-        function_calling=None,
-        form=None,
-        return_form=True,
-    ):
-        content_ = self.branch.messages[-1].content
-
-        if invoke_tool:
-            with contextlib.suppress(Exception):
-                await self._invoke_tools(content_, function_calling=function_calling)
-
-        response_ = self._process_model_response(content_, requested_fields)
-
-        if form:
-            form._process_response(response_)
-            return form if return_form else form.outputs
-
-        if out:
-            return response_
