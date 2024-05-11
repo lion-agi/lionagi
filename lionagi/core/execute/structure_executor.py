@@ -15,14 +15,36 @@ from lionagi.core.generic import Node, ActionSelection, Edge
 from lionagi.core.tool import Tool
 
 from lionagi.core.mail.schema import BaseMail
-from lionagi.core.graph.graph import Graph
+from lionagi.core.generic.structure._graph import Graph
 
 
 class StructureExecutor(BaseExecutor, Graph):
+    """
+    Executes tasks within a graph structure, handling dynamic node flows and conditional edge logic.
+
+    Attributes:
+        condition_check_result (bool | None): Result of the last condition check performed during execution,
+            used to control flow based on dynamic conditions.
+    """
 
     condition_check_result: bool | None = None
 
     async def check_edge_condition(self, edge: Edge, executable_id, request_source):
+        """
+        Evaluates the condition associated with an edge, determining if execution should proceed along that edge based
+        on the condition's source type.
+
+        Args:
+            edge (Edge): The edge whose condition needs to be checked.
+            executable_id (str): ID of the executor handling this edge's condition.
+            request_source (str): Origin of the request prompting this condition check.
+
+        Returns:
+            bool: Result of the condition evaluation.
+
+        Raises:
+            ValueError: If the source_type of the condition is invalid.
+        """
         if edge.condition.source_type == "structure":
             return edge.condition(self)
 
@@ -59,6 +81,17 @@ class StructureExecutor(BaseExecutor, Graph):
     async def _check_executable_condition(
         self, edge: Edge, executable_id, request_source
     ):
+        """
+        Sends the edge's condition to an external executable for evaluation and waits for the result.
+
+        Args:
+            edge (Edge): The edge containing the condition to be checked.
+            executable_id (str): ID of the executable that will evaluate the condition.
+            request_source (str): Source of the request for condition evaluation.
+
+        Returns:
+            bool: The result of the condition check.
+        """
         self.send(
             recipient_id=executable_id,
             category="condition",
@@ -73,6 +106,16 @@ class StructureExecutor(BaseExecutor, Graph):
         return check_result
 
     async def _handle_node_id(self, mail: BaseMail):
+        """
+        Processes the node identified by its ID in the mail's package, ensuring it exists and retrieving the next set of
+        nodes based on the current node.
+
+        Args:
+            mail (BaseMail): The mail containing the node ID and related execution details.
+
+        Raises:
+            ValueError: If the node does not exist within the structure.
+        """
         if mail.package["package"] not in self.internal_nodes:
             raise ValueError(
                 f"Node {mail.package} does not exist in the structure {self.id_}"
@@ -84,6 +127,15 @@ class StructureExecutor(BaseExecutor, Graph):
         )
 
     async def _handle_node(self, mail: BaseMail):
+        """
+        Processes the node specified in the mail's package, ensuring it exists within the structure.
+
+        Args:
+            mail (BaseMail): The mail containing the node details to be processed.
+
+        Raises:
+            ValueError: If the node does not exist within the structure.
+        """
         if not self.node_exist(mail.package["package"]):
             raise ValueError(
                 f"Node {mail.package} does not exist in the structure {self.id_}"
@@ -93,7 +145,15 @@ class StructureExecutor(BaseExecutor, Graph):
         )
 
     async def _handle_mail(self, mail: BaseMail):
+        """
+        Processes incoming mail based on its category, initiating node execution or structure operations accordingly.
 
+        Args:
+            mail (BaseMail): The mail to be processed, containing category and package information.
+
+        Raises:
+            ValueError: If the mail type is invalid for the current structure or an error occurs in handling the node ID.
+        """
         if mail.category == "start":
             return self.get_heads()
 
@@ -116,7 +176,7 @@ class StructureExecutor(BaseExecutor, Graph):
         else:
             raise ValueError(f"Invalid mail type for structure")
 
-    async def _next_node(self, current_node: BaseNode, executable_id, request_source):
+    async def _next_node(self, current_node: Node, executable_id, request_source):
         """
         Get the next step nodes based on the current node.
 
@@ -128,7 +188,7 @@ class StructureExecutor(BaseExecutor, Graph):
             list[Node]: The next step nodes.
         """
         next_nodes = []
-        next_edges: dict[Edge] = self.get_node_edges(current_node, node_as="out")
+        next_edges = self.get_node_edges(current_node, node_as="out")
         for edge in convert.to_list(list(next_edges.values())):
             if edge.bundle:
                 continue
@@ -139,7 +199,7 @@ class StructureExecutor(BaseExecutor, Graph):
                 if not check:
                     continue
             node = self.internal_nodes[edge.tail]
-            further_edges: dict[Edge] = self.get_node_edges(node, node_as="out")
+            further_edges = self.get_node_edges(node, node_as="out")
             bundled_nodes = deque()
             for f_edge in convert.to_list(list(further_edges.values())):
                 if f_edge.bundle:
@@ -150,6 +210,13 @@ class StructureExecutor(BaseExecutor, Graph):
         return next_nodes
 
     def _send_mail(self, next_nodes: list | None, mail: BaseMail):
+        """
+        Sends mails to the next nodes or signals the end of execution if no next nodes exist.
+
+        Args:
+            next_nodes (list | None): List of next nodes to process or None if no further nodes are available.
+            mail (BaseMail): The base mail used for sending follow-up actions.
+        """
         if not next_nodes:  # tail
             self.send(
                 recipient_id=mail.sender_id,
@@ -181,6 +248,26 @@ class StructureExecutor(BaseExecutor, Graph):
 
     @staticmethod
     def parse_bundled_to_action(instruction: Node, bundled_nodes: deque):
+        """
+        Constructs an action node from a bundle of nodes, combining various types of nodes like ActionSelection or Tool
+        into a single actionable unit.
+
+        This method takes a bundle of nodes and systematically integrates their functionalities into a single `ActionNode`.
+        This is crucial in scenarios where multiple actions or tools need to be executed sequentially or in a coordinated
+        manner as part of a larger instruction flow.
+
+        Args:
+            instruction (Node): The initial instruction node leading to this action.
+            bundled_nodes (deque): A deque containing nodes to be bundled into the action. These nodes typically represent
+                either actions to be taken or tools to be utilized.
+
+        Returns:
+            ActionNode: An `ActionNode` that encapsulates the combined functionality of the bundled nodes, ready for execution.
+
+        Raises:
+            ValueError: If an unrecognized node type is encountered within the bundled nodes. Only `ActionSelection` and
+                `Tool` nodes are valid for bundling into an `ActionNode`.
+        """
         action_node = ActionNode(instruction=instruction)
         while bundled_nodes:
             node = bundled_nodes.popleft()
@@ -201,7 +288,7 @@ class StructureExecutor(BaseExecutor, Graph):
             while self.pending_ins[key]:
                 mail: BaseMail = self.pending_ins[key].popleft()
                 try:
-                    if mail == "end":
+                    if mail.category == "end":
                         self.execute_stop = True
                         return
                     next_nodes = await self._handle_mail(mail)
@@ -210,9 +297,39 @@ class StructureExecutor(BaseExecutor, Graph):
                     raise ValueError(f"Error handling mail: {e}") from e
 
     async def execute(self, refresh_time=1):
+        """
+        Executes the forward processing loop, checking conditions and processing nodes at defined intervals.
+
+        Args:
+            refresh_time (int): The delay between execution cycles, allowing for asynchronous operations to complete.
+
+        Raises:
+            ValueError: If the graph structure is found to be cyclic, which is unsupported.
+        """
         if not self.acyclic:
             raise ValueError("Structure is not acyclic")
 
         while not self.execute_stop:
             await self.forward()
             await AsyncUtil.sleep(refresh_time)
+
+    def to_excel(self, structure_name, dir="structure_storage"):
+        """
+        Exports the current structure to an Excel file using a specified structure name and directory.
+
+        This method utilizes the `to_excel` function from the `lionagi.integrations.storage.to_excel` module,
+        saving the current structure instance into an Excel file format. The Excel file will contain details
+        about nodes, edges, and other relevant data as separate sheets within the file.
+
+        Args:
+            structure_name (str): The name to assign to the structure within the Excel file. This name is
+                                  used as part of the file naming convention.
+            dir (str, optional): The directory where the Excel file will be saved. Defaults to "structure_storage".
+
+        Raises:
+            Exception: Propagates any exceptions raised by the `to_excel` function, which might occur during
+                       the file writing process or data formatting.
+        """
+        from lionagi.integrations.storage.to_excel import to_excel
+
+        to_excel(self, structure_name, dir)

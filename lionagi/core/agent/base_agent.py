@@ -8,7 +8,7 @@ from typing import Any, Callable
 from lionagi.libs import func_call, AsyncUtil
 
 
-from lionagi.core.mail.schema import StartMail
+from lionagi.core.mail.start_mail import StartMail
 from lionagi.core.generic import Node
 from lionagi.core.mail.mail_manager import MailManager
 from lionagi.core.execute.base_executor import BaseExecutor
@@ -19,7 +19,7 @@ class BaseAgent(Node):
 
     def __init__(
         self,
-        structure: StructureExecutor,
+        structure: BaseExecutor,
         executable: BaseExecutor,
         output_parser=None,
         **kwargs,
@@ -33,7 +33,7 @@ class BaseAgent(Node):
             output_parser: A function for parsing the agent's output (optional).
         """
         super().__init__()
-        self.structure: StructureExecutor = structure
+        self.structure: BaseExecutor = structure
         self.executable: BaseExecutor = executable
         for v, k in kwargs.items():
             executable.__setattr__(v, k)
@@ -87,4 +87,3 @@ class BaseAgent(Node):
 
         if self.output_parser:
             return self.output_parser(self)
-        

@@ -52,7 +52,7 @@ def nset(nested_structure: dict | list, indices: list[int | str], value: Any) ->
 def nget(
     nested_structure: dict | list,
     indices: list[int | str],
-    default: Any | None = None,
+    default=...,
 ) -> Any:
     """
     retrieves a value from a nested list or dictionary structure, with an option to
@@ -98,12 +98,12 @@ def nget(
             return target_container[last_index]
         elif isinstance(target_container, dict) and last_index in target_container:
             return target_container[last_index]
-        elif default is not None:
+        elif default is not ...:
             return default
         else:
             raise LookupError("Target not found and no default value provided.")
     except (IndexError, KeyError, TypeError):
-        if default is not None:
+        if default is not ...:
             return default
         else:
             raise LookupError("Target not found and no default value provided.")
@@ -116,7 +116,7 @@ def nmerge(
     *,
     overwrite: bool = False,
     dict_sequence: bool = False,
-    sequence_separator: str = "_",
+    sequence_separator: str = "[^_^]",
     sort_list: bool = False,
     custom_sort: Callable[[Any], Any] | None = None,
 ) -> dict | list:
@@ -176,7 +176,7 @@ def flatten(
     /,
     *,
     parent_key: str = "",
-    sep: str = "_",
+    sep: str = "[^_^]",
     max_depth: int | None = None,
     inplace: bool = False,
     dict_only: bool = False,
@@ -238,7 +238,7 @@ def unflatten(
     flat_dict: dict[str, Any],
     /,
     *,
-    sep: str = "_",
+    sep: str = "[^_^]",
     custom_logic: Callable[[str], Any] | None = None,
     max_depth: int | None = None,
 ) -> dict | list:
@@ -330,7 +330,7 @@ def ninsert(
     indices: list[str | int],
     value: Any,
     *,
-    sep: str = "_",
+    sep: str = "[^_^]",
     max_depth: int | None = None,
     current_depth: int = 0,
 ) -> None:
@@ -393,12 +393,11 @@ def ninsert(
         nested_structure[last_part] = value
 
 
-# noinspection PyDecorator
 def get_flattened_keys(
     nested_structure: Any,
     /,
     *,
-    sep: str = "_",
+    sep: str = "[^_^]",
     max_depth: int | None = None,
     dict_only: bool = False,
     inplace: bool = False,
@@ -448,7 +447,7 @@ def _dynamic_flatten_in_place(
     /,
     *,
     parent_key: str = "",
-    sep: str = "_",
+    sep: str = "[^_^]",
     max_depth: int | None = None,
     current_depth: int = 0,
     dict_only: bool = False,
@@ -581,7 +580,7 @@ def _deep_update(original: dict, update: dict) -> dict:
 def _dynamic_flatten_generator(
     nested_structure: Any,
     parent_key: tuple[str, ...],
-    sep: str = "_",
+    sep: str = "[^_^]",
     max_depth: int | None = None,
     current_depth: int = 0,
     dict_only: bool = False,
