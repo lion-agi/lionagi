@@ -14,8 +14,9 @@ class Chat(BaseDirective):
         form=None,
         tools=False,
         invoke_tool=True,
-        out=True,
         return_form=True,
+        strict=False,
+        validator=None,
         **kwargs,
     ):
 
@@ -38,8 +39,9 @@ class Chat(BaseDirective):
             completion=completion,
             sender=sender,
             invoke_tool=invoke_tool,
-            out=out,
             requested_fields=requested_fields,
             form=form,
             return_form=return_form,
+            strict=strict,
+            validator=validator,
         )

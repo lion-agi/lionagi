@@ -149,10 +149,11 @@ class BaseDirective(ABC):
         completion,
         sender,
         invoke_tool,
-        out,
         requested_fields,
         form=None,
         return_form=True,
+        strict=False,
+        validator=None,
     ):
         _msg = await self._process_chatcompletion(
             payload=payload,
@@ -167,11 +168,18 @@ class BaseDirective(ABC):
         response_ = self._process_model_response(_msg, requested_fields)
 
         if form:
-            form._process_response(response_)
-            return form if return_form else form.outputs
+            await form._handle_model_response(response_, strict, validator)
+            return (
+                form
+                if return_form
+                else {
+                    i: form.work_fields[i]
+                    for i in form.requested_fields
+                    if form.work_fields[i] is not None
+                }
+            )
 
-        if out:
-            return response_
+        return response_
 
     @staticmethod
     def _process_model_response(content_, requested_fields):

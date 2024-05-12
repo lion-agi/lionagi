@@ -98,24 +98,6 @@ class Actionable(ABC):
         """Invoke the action asynchronously with the given arguments."""
 
 
-class Rule(Condition, Actionable):
-    """Combines a condition and an action that can be applied based on it."""
-
-    def __init__(self, **kwargs):
-        self.validation_kwargs = kwargs
-        self.fix = kwargs.get("fix", False)
-
-    @abstractmethod
-    async def applies(self, /, *args: Any, **kwargs: Any) -> Any:
-        """Determine if the condition applies asynchronously."""
-        pass
-
-    @abstractmethod
-    async def invoke(self, /, *args: Any, **kwargs: Any) -> Any:
-        """Invoke the action asynchronously based on the condition."""
-        pass
-
-
 class Progressable(ABC):
     """Represents a process that can progress forward asynchronously."""
 

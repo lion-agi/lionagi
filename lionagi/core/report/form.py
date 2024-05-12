@@ -49,37 +49,77 @@ class Form(BaseForm):
 
         return True
 
-    async def _process_response(self, response, strict=False, validator=Validator()):
+    async def validate_with_annotation(
+        self, response: dict | str, strict=False, validator=None
+    ):
+        validator = validator or Validator()
         if isinstance(response, str):
             if len(self.requested_fields) == 1:
-                self.fill(**{self.requested_fields[0]: response})
-                return
-        else:
-            dict_ = {}
-            for k, v in response.items():
+                response = {self.requested_fields[0]: response}
+            else:
+                raise ValueError(
+                    "Response is a string, but form has multiple fields to be filled"
+                )
 
-                if k in self.requested_fields:
-                    _annotation = self._field_annotations[k]
+        dict_ = {}
+        for k, v in response.items():
 
-                    if (
-                        _choices := self._get_field_attr(k, "choices", None)
-                    ) is not None:
-                        await validator.validate(
-                            v, _annotation, strict=strict, choices=_choices
+            if k in self.requested_fields:
+                _annotation = self._field_annotations[k]
+
+                if (_choices := self._get_field_attr(k, "choices", None)) is not None:
+                    await validator.validate(
+                        v, _annotation, strict=strict, choices=_choices
+                    )
+
+                elif (_keys := self._get_field_attr(k, "keys", None)) is not None:
+                    if not "dict" in str(_annotation):
+                        raise ValueError(
+                            f"keys attribute is only applicable to dict fields"
                         )
+                    await validator.validate(v, _annotation, strict=strict, keys=_keys)
 
-                    elif (_keys := self._get_field_attr(k, "keys", None)) is not None:
-                        if not "dict" in str(_annotation):
-                            raise ValueError(
-                                f"keys attribute is only applicable to dict fields"
-                            )
-                        await validator.validate(
-                            v, _annotation, strict=strict, keys=_keys
+                else:
+                    await validator.validate(v, _annotation, strict=strict)
+
+                dict_[k] = v
+
+        self.fill(**dict_)
+
+    async def validate_with_custom_rule(self, response, strict=False, validator=None):
+        validator = validator or Validator()
+        if isinstance(response, str):
+            if len(self.requested_fields) == 1:
+                response = {self.requested_fields[0]: response}
+
+        dict_ = {}
+        for k, v in response.items():
+
+            if k in self.requested_fields:
+                _annotation = self._field_annotations[k]
+
+                if (_choices := self._get_field_attr(k, "choices", None)) is not None:
+                    await validator.validate(
+                        v, _annotation, strict=strict, choices=_choices
+                    )
+
+                elif (_keys := self._get_field_attr(k, "keys", None)) is not None:
+                    if not "dict" in str(_annotation):
+                        raise ValueError(
+                            f"keys attribute is only applicable to dict fields"
                         )
+                    await validator.validate(v, _annotation, strict=strict, keys=_keys)
 
-                    else:
-                        await validator.validate(v, _annotation, strict=strict)
+                else:
+                    await validator.validate(v, _annotation, strict=strict)
 
-                    dict_[k] = v
+                dict_[k] = v
 
-            self.fill(**dict_)
+        self.fill(**dict_)
+
+    def correlate_field_rule(self, rules=None, validator=None):
+        """
+        rules: {rule_name: [fields applies]}
+        """
+
+        ...
