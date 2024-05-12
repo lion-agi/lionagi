@@ -1,4 +1,4 @@
-from ..generic.abc import Rule, LionFieldError
+from ..generic.abc import LionFieldError
 from ._default_rules import DEFAULT_RULES
 
 
@@ -21,12 +21,13 @@ order_ = [
 ]
 
 
-class BaseValidator:
+class Validator:
 
-    rules: dict[str, Rule] = rules_
-    order: list[str] = order_
+    def __init__(self, rules=None, order=None):
+        self.rules = rules or rules_
+        self.order = order or order_
 
-    async def validate(self, value, *args, strict=False, **kwargs):
+    async def validate(self, value, annotation, strict=False, **kwargs):
 
         # iterate through the rules according to the order
         for i in self.order:
@@ -35,10 +36,16 @@ class BaseValidator:
 
                 try:
                     # here we check whether the rule applies to the value
-                    if await self.rules[i].applies(value, *args, **kwargs):
+                    special_kwargs = {}
+                    if "choices" in kwargs:
+                        special_kwargs["choices"] = kwargs["choices"]
+                    elif "keys" in kwargs:
+                        special_kwargs["keys"] = kwargs["keys"]
+
+                    if await self.rules[i].applies(value, annotation, **special_kwargs):
                         # if the rule applies, we invoke the rule
                         if (
-                            a := await self.rules[i].invoke(value, *args, **kwargs)
+                            a := await self.rules[i].invoke(value, **kwargs)
                         ) is not None:
                             return a
 

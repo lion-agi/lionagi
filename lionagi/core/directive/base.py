@@ -8,27 +8,11 @@ import contextlib
 from abc import ABC
 from typing import Any
 
-from lionagi.libs.ln_nested import get_flattened_keys
 from lionagi.libs.ln_parse import ParseUtil, StringMatch
 
 from ..generic import Model
 from ..message import Instruction
 from ..message.util import _parse_action_request
-
-
-oai_fields = [
-    "id",
-    "object",
-    "created",
-    "model",
-    "choices",
-    "usage",
-    "system_fingerprint",
-]
-
-choices_fields = ["index", "message", "logprobs", "finish_reason"]
-
-usage_fields = ["prompt_tokens", "completion_tokens", "total_tokens"]
 
 
 class BaseDirective(ABC):
@@ -153,6 +137,8 @@ class BaseDirective(ABC):
                 self.branch.add_message(
                     action_request=a[idx],
                     func_outputs=item,
+                    sender=a[idx].recipient,
+                    recipient=a[idx].sender,
                 )
 
         return None
@@ -168,17 +154,17 @@ class BaseDirective(ABC):
         form=None,
         return_form=True,
     ):
-        content_ = await self._process_chatcompletion(
+        _msg = await self._process_chatcompletion(
             payload=payload,
             completion=completion,
             sender=sender,
             invoke_tool=invoke_tool,
         )
 
-        if content_ is None:
+        if _msg is None:
             return None
 
-        response_ = self._process_model_response(content_, requested_fields)
+        response_ = self._process_model_response(_msg, requested_fields)
 
         if form:
             form._process_response(response_)
@@ -191,9 +177,8 @@ class BaseDirective(ABC):
     def _process_model_response(content_, requested_fields):
         out_ = ""
 
-        if len(content_.items()) == 1 and len(get_flattened_keys(content_)) == 1:
-            key = get_flattened_keys(content_)[0]
-            out_ = content_[key]
+        if "content" in content_:
+            out_ = content_["content"]
 
         if requested_fields:
             with contextlib.suppress(Exception):
@@ -205,4 +190,4 @@ class BaseDirective(ABC):
                 if match:
                     out_ = ParseUtil.fuzzy_parse_json(match.group(1))
 
-        return out_
+        return out_ or content_

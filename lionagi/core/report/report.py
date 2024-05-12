@@ -47,13 +47,13 @@ class Report(BaseForm):
         # with value set to None
         for v in self.forms:
             for _field in list(v.work_fields.keys()):
-                if _field not in self.model_fields:
-                    field = v.model_fields[_field]
-                    self._add_field(_field, value=None, field=field)
+                if _field not in self._all_fields:
+                    field = v._all_fields[_field]
+                    self._add_field(_field, value=None, field_obj=field)
 
         # if there are fields in the report that are not in the forms, add them to
         # the forms with values
-        for k, v in self.model_fields.items():
+        for k, v in self._all_fields.items():
             if getattr(self, k, None) is not None:
                 for _form in self.forms:
                     if k in _form.work_fields:
@@ -89,7 +89,7 @@ class Report(BaseForm):
         # if there are information in the report that are not in the forms,
         # add them to the forms
         for _form in self.forms:
-            for k, v in _form.work_fields:
+            for k, v in _form.work_fields.items():
                 _kwargs = {}
                 if v is None and (a := getattr(self, k, None)) is not None:
                     _kwargs[k] = a

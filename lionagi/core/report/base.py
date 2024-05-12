@@ -5,15 +5,10 @@ from ..generic.abc import Component, Field
 from ..generic.util import to_list_type
 
 
-class BaseForm(ABC, Component):
+class BaseForm(Component):
     assignment: str = Field(..., examples=["input1, input2 -> output"])
     input_fields: list[str] = Field(default_factory=list)
     requested_fields: list[str] = Field(default_factory=list)
-
-    @abstractmethod
-    @property
-    def work_fields(self) -> dict[str, Any]:
-        pass
 
     @abstractmethod
     def fill(self, /, *args, **kwargs):

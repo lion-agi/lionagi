@@ -4,15 +4,14 @@ from lionagi.libs import validation_funcs
 
 class ChoiceRule(Rule):
 
-    async def applies(self, choices=None):
-        return choices is not None
+    async def applies(self, annotation=None, choices=None, **kwargs):
+        return "enum" in str(annotation) or choices is not None
 
     async def invoke(self, value, choices=None, **kwargs):
         if value in self.check_choices(choices):
             return value
-        if self.perform_fix:
-            kwargs = {**self.validation_kwargs, **kwargs}
-            return await self.perform_fix(value, choices, **kwargs)
+        if self.fix:
+            return await self.perform_fix(value, choices, **self.validation_kwargs)
         raise ValueError(f"{value} is not in chocies {choices}")
 
     async def perform_fix(self, value, choices=None, **kwargs):
@@ -30,10 +29,10 @@ class ChoiceRule(Rule):
 
 class ActionRequestRule(Rule):
 
-    async def applies(self, annotation=None):
+    async def applies(self, annotation=None, **kwargs):
         return any("actionrequest" in i for i in annotation)
 
-    async def invoke(self, value):
+    async def invoke(self, value, **kwargs):
         try:
             return validation_funcs["action"](value)
         except Exception as e:
@@ -42,10 +41,10 @@ class ActionRequestRule(Rule):
 
 class BooleanRule(Rule):
 
-    async def applies(self, annotation=None):
+    async def applies(self, annotation=None, **kwargs):
         return "bool" in annotation and "str" not in annotation
 
-    async def invoke(self, value):
+    async def invoke(self, value, **kwargs):
         try:
             return validation_funcs["bool"](
                 value, fix_=self.fix, **self.validation_kwargs
@@ -56,13 +55,13 @@ class BooleanRule(Rule):
 
 class NumberRule(Rule):
 
-    async def applies(self, annotation=None):
+    async def applies(self, annotation=None, **kwargs):
         return (
             any([i in annotation for i in ["int", "float", "number"]])
             and "str" not in annotation
         )
 
-    async def invoke(self, value):
+    async def invoke(self, value, **kwargs):
         try:
             return validation_funcs["number"](
                 value, fix_=self.fix, **self.validation_kwargs
@@ -73,26 +72,24 @@ class NumberRule(Rule):
 
 class DictRule(Rule):
 
-    async def applies(self, annotation=None):
-        return "dict" in annotation
+    async def applies(self, annotation=None, keys=None, **kwargs):
+        return ("dict" in annotation) and (keys or "str" not in annotation)
 
-    async def invoke(self, value, annotation=None, keys=None):
-        if "str" not in annotation or keys:
-            try:
-                return validation_funcs["dict"](
-                    value, keys=keys, fix_=self.fix, **self.validation_kwargs
-                )
-            except Exception as e:
-                raise ValueError(f"failed to validate field") from e
-        raise ValueError(f"failed to validate field") from e
+    async def invoke(self, value, keys=None, **kwargs):
+        try:
+            return validation_funcs["dict"](
+                value, keys=keys, fix_=self.fix, **self.validation_kwargs
+            )
+        except Exception as e:
+            raise ValueError(f"failed to validate field") from e
 
 
 class StringRule(Rule):
 
-    async def applies(self, annotation=None):
+    async def applies(self, annotation=None, **kwargs):
         return "str" in annotation
 
-    async def invoke(self, value):
+    async def invoke(self, value, **kwargs):
         try:
             return validation_funcs["str"](
                 value, fix_=self.fix, **self.validation_kwargs
