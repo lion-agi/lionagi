@@ -1,3 +1,33 @@
+"""
+The `Progression` class extends `Element` and implements ordering 
+functionalities to manage a sequence of `Element` instances, identified
+by their Lion IDs. Efficiently handles ordered collections where elements
+need to be accessed, modified, or iterated in a specific sequence.
+
+Attributes:
+   name (str | None): Optional descriptive name for progression.
+   order (list): List maintaining sequence of Lion IDs.
+
+Methods:
+   __getitem__: Access elements by index, providing list-like access.
+   __setitem__: Assign new value to position at specified index.
+   __len__: Return number of elements in progression.
+   append: Add single element to end of progression.
+   extend: Add multiple elements to end of progression.
+   include: Add elements only if not already included.
+   remove: Remove element by Lion ID, raises ItemNotFoundError if not found.
+   pop: Remove and return element by index, defaulting to last item.
+   popleft: Remove and return first element in progression.
+   clear: Remove all elements from progression.
+   __contains__: Check if specific item(s) present in progression.
+   __iter__, __next__, __reversed__: Support iteration in different orders.
+   __add__, __radd__, __iadd__, __sub__, __isub__: Support arithmetic ops.
+   __str__, __repr__, __list__: Provide string and list representations.
+
+Versatile, supporting list-like operations with type checks and validation. 
+Suitable for scenarios requiring reliable and orderly manipulation.
+"""
+
 import contextlib
 from lionagi.libs import SysUtil
 from pydantic import Field, field_validator
@@ -35,24 +65,27 @@ class Progression(Element, Ordering):
         return all([i in self.order for i in item])
 
     def __len__(self):
+        """Return the number of elements in the progression."""
         return len(self.order)
 
     def keys(self):
         yield from range(len(self))
 
     def values(self):
+        """Yield the Lion IDs of the elements in the progression."""
         yield from self.order
 
     def items(self):
+        """Yield index and Lion ID pairs for elements in the progression."""
         for idx, item in enumerate(self.order):
             yield idx, item
 
     def copy(self):
-        """create a deep copy"""
+        """Create a deep copy of the progression."""
         return self.model_copy()
 
     def append(self, item):
-        """Append an item to the end of the progression."""
+        """Append an item, identified by its Lion ID, to end of progression."""
         id_ = get_lion_id(item)
         self.order.append(id_)
 
@@ -65,12 +98,13 @@ class Progression(Element, Ordering):
         self.order.extend(order)
 
     def include(self, item) -> bool:
-        """Include item(s) in the progression. return true if the item is included."""
+        """Include item(s) if not already present, return True if included."""
         if item not in self:
             self.extend(item)
         return item in self
 
     def __getitem__(self, key):
+        """Retrieve an item by its index in the progression."""
         with contextlib.suppress(IndexError):
             return self.order[key]
         raise ItemNotFoundError(f"index {key}")

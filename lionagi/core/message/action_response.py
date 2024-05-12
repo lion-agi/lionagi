@@ -31,7 +31,13 @@ class ActionResponse(RoledMessage):
             role=MessageRole.ASSISTANT,
             sender=sender or "N/A",  # sender is the actionable component
             recipient=action_request.sender,  # recipient is the assistant who made the request
-            content = {"action_response": {"function": action_request.function, "arguments": action_request.arguments, "func_outputs": func_outputs}}
+            content={
+                "action_response": {
+                    "function": action_request.function,
+                    "arguments": action_request.arguments,
+                    "func_outputs": func_outputs,
+                }
+            },
         )
         self.update_request(action_request)
         self.func_outputs = func_outputs

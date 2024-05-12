@@ -18,7 +18,7 @@ class ToolManager(Actionable):
         if isinstance(tools, Callable):
             tool = func_to_tool(tools)[0]
             return self.register_tools(tool)
-        
+
         raise TypeError(f"Unsupported type {type(tools)}")
 
     @register_tools.register
@@ -167,7 +167,8 @@ def func_to_tool(
         fs = lcall(
             funcs,
             lambda _f: Tool(
-                function=_f, schema_=ParseUtil._func_to_schema(_f, style=docstring_style)
+                function=_f,
+                schema_=ParseUtil._func_to_schema(_f, style=docstring_style),
             ),
         )
 

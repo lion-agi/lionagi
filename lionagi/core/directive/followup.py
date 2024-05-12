@@ -45,7 +45,7 @@ class Followup(Chat):
     def _get_prompt(prompt=None, default=None, num_followup=None, instruction=None):
         if prompt is not None:
             return prompt
-        
+
         try:
             if num_followup is not None:
                 return default.format(num_followup=num_followup)

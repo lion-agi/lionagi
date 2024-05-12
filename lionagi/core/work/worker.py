@@ -35,14 +35,15 @@ class Worker(ABC):
         _logging.info(f"Stopped worker {self.name}")
 
     async def is_progressable(self):
-        return any([await i.is_progressable() for i in self.work_functions.values()]) and not self.stopped
+        return (
+            any([await i.is_progressable() for i in self.work_functions.values()])
+            and not self.stopped
+        )
 
     async def process(self, refresh_time=1):
         while await self.is_progressable():
             await pcall([i.process(refresh_time) for i in self.work_functions.values()])
             asyncio.sleep(refresh_time)
-
-
 
     # TODO: Implement process method
 
@@ -84,7 +85,14 @@ class Worker(ABC):
         return True
 
 
-def work(assignment=None, capacity=10, guidance=None, retry_kwargs=None, refresh_time=1, timeout=10):
+def work(
+    assignment=None,
+    capacity=10,
+    guidance=None,
+    retry_kwargs=None,
+    refresh_time=1,
+    timeout=10,
+):
     def decorator(func):
         @wraps(func)
         async def wrapper(

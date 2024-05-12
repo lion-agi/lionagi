@@ -13,28 +13,27 @@ class Exchange(Element):
 
     pile: Pile[Sendable] = Field(
         default_factory=lambda: pile(),
-        description="The pile of items in the exchange.", 
-        title="pending items"
+        description="The pile of items in the exchange.",
+        title="pending items",
     )
 
     pending_ins: dict[str, Progression] = Field(
-        default_factory=dict, 
-        description="The pending incoming items to the exchange.", 
-        title="pending incoming items", 
-        examples=["{'sender_id': Progression}"]        
+        default_factory=dict,
+        description="The pending incoming items to the exchange.",
+        title="pending incoming items",
+        examples=["{'sender_id': Progression}"],
     )
 
     pending_outs: Progression = progression()
-
 
     def __contains__(self, item):
         return item in self.pile
 
     def exclude(self, item):
         return (
-            self.pile.exclude(item) and
-            all([v.exclude(item) for v in self.pending_ins.values()]) and
-            self.pending_outs.exclude(item)
+            self.pile.exclude(item)
+            and all([v.exclude(item) for v in self.pending_ins.values()])
+            and self.pending_outs.exclude(item)
         )
 
     def include(self, item, direction="in"):
@@ -49,9 +48,8 @@ class Exchange(Element):
         if direction == "in":
             if item.sender not in self.pending_ins:
                 self.pending_ins[item.sender] = progression()
-            return (
-                self.pile.include(item) and 
-                self.pending_ins[item.sender].include(item)
+            return self.pile.include(item) and self.pending_ins[item.sender].include(
+                item
             )
 
         return self.pile.include(item) and self.pending_outs.include(item)

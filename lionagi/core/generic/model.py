@@ -20,8 +20,8 @@ class Model:
         endpoint: str = "chat/completions",
         token_encoding_name: str = "cl100k_base",
         api_key: str = None,
-        max_tokens: int = 100_000,
-        max_requests: int = 1_000,
+        interval_tokens: int = 100_000,
+        interval_requests: int = 1_000,
         interval: int = 60,
         service: BaseService = None,
         **kwargs,  # additional parameters for the model
@@ -31,7 +31,10 @@ class Model:
         self.endpoint = endpoint
         self.endpoint_schema = provider_schema[endpoint]
         self.provider = provider
-        self.api_key = api_key or os.getenv(provider_schema["API_key_schema"][0])
+        if provider_schema["API_key_schema"][0] == "null":
+            self.api_key = None
+        else:
+            self.api_key = api_key or os.getenv(provider_schema["API_key_schema"][0])
         self.status_tracker = StatusTracker()
 
         self.service: BaseService = self._set_up_service(
@@ -40,8 +43,8 @@ class Model:
             api_key=self.api_key,
             schema=provider_schema,
             token_encoding_name=token_encoding_name,
-            max_tokens=max_tokens,
-            max_requests=max_requests,
+            max_tokens=interval_tokens,
+            max_requests=interval_requests,
             interval=interval,
         )
 
@@ -87,19 +90,21 @@ class Model:
     async def call_chat_completion(self, messages, **kwargs):
         return await self.service.serve_chat(messages, **kwargs)
 
-    # TODO: add more endpoints
-    # async def call_embedding(self, input_file, **kwargs):
-    #     return await self.service.serve(input_file, "embedding", **kwargs)
-
     def to_dict(self):
         return {
             "ln_id": self.ln_id,
             "timestamp": self.timestamp,
             "provider": self.provider.__name__.replace("Service", ""),
+            "api_key": self.api_key[:4]
+            + "*" * (len(self.api_key) - 8)
+            + self.api_key[-4:],
+            "endpoint": self.endpoint,
+            "token_encoding_name": self.service.token_encoding_name,
             **self.config,
         }
 
-    def __setattr__(self, name, value) -> None:
-        if name in ["ln_id", "timestamp"]:
-            return
-        super().__setattr__(name, value)
+    # TODO: add more endpoints
+    # async def call_embedding(self, input_file, **kwargs):
+    #     return await self.service.serve(input_file, "embedding", **kwargs)
+
+    # TODO: add from_dict method

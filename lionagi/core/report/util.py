@@ -1,9 +1,6 @@
 from lionagi.libs import convert
 
 
-
-
-
 def get_input_output_fields(str_: str) -> list[list[str]]:
 
     inputs, outputs = str_.split("->")

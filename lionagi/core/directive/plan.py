@@ -38,9 +38,6 @@ class Predict(Chat):
         )
 
 
-
-
-
 class Plan(Chat):
 
     default_template = PlanTemplate

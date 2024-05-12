@@ -57,7 +57,7 @@ class Branch(Node, DirectiveMixin):
 
         system = system or "You are a helpful assistant, let's think step by step"
         self.add_message(system=system, sender=system_sender)
-        
+
     def add_message(
         self,
         *,
@@ -74,7 +74,7 @@ class Branch(Node, DirectiveMixin):
         recipient=None,  # str
         requested_fields=None,  # dict[str, str]
         metadata: dict | None = None,  # extra metadata
-        **kwargs        # additional context fields
+        **kwargs,  # additional context fields
     ) -> bool:
 
         _msg = create_message(
@@ -116,7 +116,7 @@ class Branch(Node, DirectiveMixin):
 
         if metadata:
             _msg._meta_insert(["extra"], metadata)
-            
+
         return self.messages.include(_msg) and self.progre.include(_msg)
 
     def to_chat_messages(self) -> list[dict[str, Any]]:
@@ -179,10 +179,19 @@ class Branch(Node, DirectiveMixin):
         for i in reversed(self.progre):
             if isinstance(self.messages[i], Instruction):
                 self.messages[i]._meta_insert(["extra"], meta)
-                return 
+                return
 
     def to_df(self) -> Any:
-        fields = ["ln_id", "message_type", "timestamp",  "role", "content", "metadata", "sender", "recipient"]
+        fields = [
+            "ln_id",
+            "message_type",
+            "timestamp",
+            "role",
+            "content",
+            "metadata",
+            "sender",
+            "recipient",
+        ]
         dicts_ = []
         for i in self.progre:
             _d = {}
@@ -190,12 +199,8 @@ class Branch(Node, DirectiveMixin):
                 _d.update({j: getattr(self.messages[i], j, None)})
                 _d["message_type"] = self.messages[i].class_name
             dicts_.append(_d)
-        
+
         return to_df(dicts_)
-        
-
-
-
 
     # def send(self, recipient: str, category: str, package: Any) -> None:
     #     mail = Mail(
@@ -270,5 +275,3 @@ class Branch(Node, DirectiveMixin):
         except Exception:
             return False
         return False
-
-

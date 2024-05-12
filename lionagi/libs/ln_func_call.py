@@ -127,9 +127,11 @@ async def alcall(
 
     return to_list(outs_, flatten=flatten, dropna=dropna)
 
+
 async def pcall(funcs):
     task = [asyncio.create_task(func) for func in funcs]
     return await asyncio.gather(*task)
+
 
 async def mcall(
     input_: Any, /, func: Any, *, explode: bool = False, **kwargs
@@ -348,10 +350,10 @@ async def rcall(
         try:
             if timing:
                 return (
-                    await _tcall(func, *args, timeout=timeout, **kwargs), 
-                    SysUtil.get_now(datetime_=False) - start
+                    await _tcall(func, *args, timeout=timeout, **kwargs),
+                    SysUtil.get_now(datetime_=False) - start,
                 )
-                
+
             return await _tcall(func, *args, timeout=timeout, **kwargs)
         except Exception as e:
             last_exception = e

@@ -5,7 +5,14 @@ from collections import deque
 from typing import Tuple
 from pydantic import Field, field_validator
 import contextlib
-from .abc import Record, Component, LionTypeError, ItemNotFoundError, LionIDable, Element
+from .abc import (
+    Record,
+    Component,
+    LionTypeError,
+    ItemNotFoundError,
+    LionIDable,
+    Element,
+)
 from .pile import Pile, pile
 
 from .progression import Progression, progression

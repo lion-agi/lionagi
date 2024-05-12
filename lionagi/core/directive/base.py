@@ -17,18 +17,18 @@ from ..message.util import _parse_action_request
 
 
 oai_fields = [
-    "id", "object", "created", "model", "choices", "usage", "system_fingerprint"
+    "id",
+    "object",
+    "created",
+    "model",
+    "choices",
+    "usage",
+    "system_fingerprint",
 ]
 
-choices_fields = [
-    "index", "message", "logprobs", "finish_reason"
-]
+choices_fields = ["index", "message", "logprobs", "finish_reason"]
 
-usage_fields = [
-    "prompt_tokens", "completion_tokens", "total_tokens"
-]
-
-
+usage_fields = ["prompt_tokens", "completion_tokens", "total_tokens"]
 
 
 class BaseDirective(ABC):
@@ -62,7 +62,7 @@ class BaseDirective(ABC):
         requested_fields=None,
         form=None,
         tools=False,
-        **kwargs,       # additional config for the model
+        **kwargs,  # additional config for the model
     ) -> Any:
 
         if system:
@@ -100,22 +100,24 @@ class BaseDirective(ABC):
             self.branch.to_chat_messages(), **kwargs
         )
 
-    async def _process_chatcompletion(self, payload, completion, sender, invoke_tool=False):
-        
+    async def _process_chatcompletion(
+        self, payload, completion, sender, invoke_tool=False
+    ):
+
         # process the raw chat completion response
         _msg = None
         if "choices" in completion:
-            
+
             aa = payload.pop("messages", None)
             self.branch.update_last_instruction_meta(payload)
             msg = completion.pop("choices", None)
             if msg and isinstance(msg, list):
                 msg = msg[0]
-            
+
             if isinstance(msg, dict):
                 _msg = msg.pop("message", None)
                 completion.update(msg)
-                                    
+
                 self.branch.add_message(
                     assistant_response=_msg, metadata=completion, sender=sender
                 )
@@ -127,11 +129,13 @@ class BaseDirective(ABC):
         a = _parse_action_request(_msg)
         if a is None:
             return _msg
-        
+
         if a:
             for i in a:
                 if i.function in self.branch.tool_manager.registry:
-                    i.recipient = self.branch.tool_manager.registry[i.function].ln_id   # recipient is the tool
+                    i.recipient = self.branch.tool_manager.registry[
+                        i.function
+                    ].ln_id  # recipient is the tool
                 else:
                     raise ValueError(f"Tool {i.function} not found in registry")
                 self.branch.add_message(action_request=i, recipient=i.recipient)
@@ -141,19 +145,22 @@ class BaseDirective(ABC):
             tasks = []
             for i in a:
                 tool = self.branch.tool_manager.registry[i.function]
-                tasks.append(asyncio.create_task(tool.invoke(i.arguments)));
-            
-            results = await asyncio.gather(*tasks);
-            
+                tasks.append(asyncio.create_task(tool.invoke(i.arguments)))
+
+            results = await asyncio.gather(*tasks)
+
             for idx, item in enumerate(results):
-                self.branch.add_message(action_request=a[idx], func_outputs=item,)
-                
+                self.branch.add_message(
+                    action_request=a[idx],
+                    func_outputs=item,
+                )
+
         return None
 
     async def _output(
         self,
-        payload, 
-        completion, 
+        payload,
+        completion,
         sender,
         invoke_tool,
         out,
@@ -162,15 +169,15 @@ class BaseDirective(ABC):
         return_form=True,
     ):
         content_ = await self._process_chatcompletion(
-            payload=payload, 
-            completion=completion, 
-            sender=sender, 
-            invoke_tool=invoke_tool
+            payload=payload,
+            completion=completion,
+            sender=sender,
+            invoke_tool=invoke_tool,
         )
-        
+
         if content_ is None:
             return None
-    
+
         response_ = self._process_model_response(content_, requested_fields)
 
         if form:
@@ -179,7 +186,6 @@ class BaseDirective(ABC):
 
         if out:
             return response_
-
 
     @staticmethod
     def _process_model_response(content_, requested_fields):

@@ -32,7 +32,7 @@ class Chat(BaseDirective):
         )
 
         payload, completion = await self._call_chatcompletion(**config)
-    
+
         # async with async_suppress_print():
         return await self._output(
             payload=payload,
@@ -42,5 +42,5 @@ class Chat(BaseDirective):
             out=out,
             requested_fields=requested_fields,
             form=form,
-            return_form=return_form
+            return_form=return_form,
         )

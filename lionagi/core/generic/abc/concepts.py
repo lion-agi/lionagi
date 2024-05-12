@@ -153,7 +153,7 @@ class Sendable(BaseModel, ABC):
         """Validate the sender and recipient fields."""
         if value is None:
             return "N/A"
-        
+
         if value in ["system", "user", "N/A"]:
             return value
 

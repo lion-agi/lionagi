@@ -1,6 +1,7 @@
 """Component class, base building block in LionAGI"""
-from collections.abc import Sequence
+
 from abc import ABC
+from collections.abc import Sequence
 from functools import singledispatchmethod
 from typing import Any, TypeVar, Type, TypeAlias, Union
 
@@ -19,7 +20,8 @@ T = TypeVar("T")
 
 
 class Element(BaseModel, ABC):
-    
+    """Base class for elements within the LionAGI system."""
+
     ln_id: str = Field(
         default_factory=SysUtil.create_id,
         title="ID",
@@ -36,7 +38,7 @@ class Element(BaseModel, ABC):
         alias="created",
         validation_alias=AliasChoices("created_on", "creation_date"),
     )
-    
+
 
 class Component(Element, ABC):
     """
@@ -51,10 +53,9 @@ class Component(Element, ABC):
         timestamp (str): The UTC timestamp when the component was created.
         metadata (dict): Additional metadata for the component.
         extra_fields (dict): Additional fields for the component.
-        last_updated (str): The UTC timestamp of the last update.
         content (Any): Optional content of the component.
     """
-    
+
     metadata: dict[str, Any] = Field(
         default_factory=dict,
         validation_alias=AliasChoices("meta", "info"),
@@ -92,7 +93,8 @@ class Component(Element, ABC):
         This method dynamically handles different types of input data, allowing
         the creation of Component instances from dictionaries, strings (JSON),
         lists, pandas Series, pandas DataFrames, and instances of other
-        classes, including Pydantic models.
+        classes, including Pydantic models. Additionally, it includes support
+        for custom types such as LlamaIndex and Langchain specific data.
 
         The type of the input data determines how it is processed:
         - `dict`: Treated as field-value pairs for the Component.
@@ -104,33 +106,66 @@ class Component(Element, ABC):
         - `pandas.DataFrame`: Each row is treated as a separate Component;
                               returns a list of Components.
         - `Pydantic BaseModel`: Extracts data directly from the Pydantic model.
+        - `LlamaIndex model`: Converts using LlamaIndex-specific logic to extract
+                              data suitable for Component creation.
+        - `Langchain model`: Processes Langchain-specific structures to produce
+                             Component data.
+
+        Raises:
+            LionTypeError: If the input type is not supported.
         """
-        if not isinstance(obj, (dict, str, list, Series, DataFrame, BaseModel)):
-            type_ = str(type(obj))
-            if "llama_index" in type_:
-                dict_ = obj.to_dict()
+        if isinstance(obj, (dict, str, list, Series, DataFrame, BaseModel)):
+            return cls._dispatch_from_obj(obj, **kwargs)
 
-                SysUtil.change_dict_key(dict_, "text", "content")
-                metadata = dict_.pop("metadata", {})
-                for i in llama_meta_fields:
-                    metadata[i] = dict_.pop(i, None)
+        type_ = str(type(obj))
 
-                SysUtil.change_dict_key(metadata, "class_name", "llama_index_class")
-                SysUtil.change_dict_key(metadata, "id_", "llama_index_id")
-                SysUtil.change_dict_key(
-                    metadata, "relationships", "llama_index_relationships"
-                )
-
-                dict_["metadata"] = metadata
-                return cls.from_obj(dict_)
-
-            elif "langchain" in type_:
-                dict_ = obj.to_json()
-                return cls.from_obj(dict_)
+        if "llama_index" in type_:
+            return cls._from_llama_index(obj)
+        elif "langchain" in type_:
+            return cls._from_langchain(obj)
 
         raise LionTypeError(f"Unsupported type: {type(obj)}")
 
-    @from_obj.register(dict)
+    @classmethod
+    def _dispatch_from_obj(cls, obj: Any, **kwargs) -> T:
+        """Dispatch the from_obj method based on the input type."""
+        if isinstance(obj, dict):
+            return cls._from_dict(obj, **kwargs)
+        elif isinstance(obj, str):
+            return cls._from_str(obj, **kwargs)
+        elif isinstance(obj, list):
+            return cls._from_list(obj, **kwargs)
+        elif isinstance(obj, Series):
+            return cls._from_pd_series(obj, **kwargs)
+        elif isinstance(obj, DataFrame):
+            return cls._from_pd_dataframe(obj, **kwargs)
+        elif isinstance(obj, BaseModel):
+            return cls._from_base_model(obj, **kwargs)
+
+    @classmethod
+    def _from_llama_index(cls, obj: Any) -> T:
+        """Create a Component instance from a LlamaIndex object."""
+        dict_ = obj.to_dict()
+
+        SysUtil.change_dict_key(dict_, "text", "content")
+        metadata = dict_.pop("metadata", {})
+
+        for field in llama_meta_fields:
+            metadata[field] = dict_.pop(field, None)
+
+        SysUtil.change_dict_key(metadata, "class_name", "llama_index_class")
+        SysUtil.change_dict_key(metadata, "id_", "llama_index_id")
+        SysUtil.change_dict_key(metadata, "relationships", "llama_index_relationships")
+
+        dict_["metadata"] = metadata
+        return cls.from_obj(dict_)
+
+    @classmethod
+    def _from_langchain(cls, obj: Any) -> T:
+        """Create a Component instance from a Langchain object."""
+        dict_ = obj.to_json()
+        return cls.from_obj(dict_)
+
     @classmethod
     def _from_dict(cls, obj: dict, /, *args, **kwargs) -> T:
         """Create a Component instance from a dictionary."""
@@ -138,77 +173,80 @@ class Component(Element, ABC):
             dict_ = {**obj, **kwargs}
 
             if "lc" in dict_:
-                SysUtil.change_dict_key(dict_, "page_content", "content")
-
-                metadata = dict_.pop("metadata", {})
-                metadata.update(dict_.pop("kwargs", {}))
-
-                if not isinstance(metadata, dict):
-                    metadata = {"extra_meta": metadata}
-
-                for i in base_lion_fields:
-                    if i in metadata:
-                        dict_[i] = metadata.pop(i)
-
-                for k in list(metadata.keys()):
-                    if k not in lc_meta_fields:
-                        dict_[k] = metadata.pop(k)
-
-                for i in lc_meta_fields:
-                    if i in dict_:
-                        metadata[i] = dict_.pop(i)
-
-                SysUtil.change_dict_key(metadata, "lc", "langchain")
-                SysUtil.change_dict_key(metadata, "type", "lc_type")
-                SysUtil.change_dict_key(metadata, "id", "lc_id")
-
-                extra_fields = {
-                    k: v for k, v in metadata.items() if k not in lc_meta_fields
-                }
-                metadata = {k: v for k, v in metadata.items() if k in lc_meta_fields}
-                dict_["metadata"] = metadata
-                dict_.update(extra_fields)
-
+                dict_ = cls._process_langchain_dict(dict_)
             else:
-                meta_ = dict_.pop("metadata", None) or {}
-                if not isinstance(meta_, dict):
-                    meta_ = {"extra_meta": meta_}
+                dict_ = cls._process_generic_dict(dict_)
 
-                for k in list(dict_.keys()):
-                    if k not in base_lion_fields:
-                        meta_[k] = dict_.pop(k)
-
-                if not dict_.get("content", None):
-                    if "page_content" in meta_:
-                        dict_["content"] = meta_.pop("page_content")
-                    elif "text" in meta_:
-                        dict_["content"] = meta_.pop("text")
-                    elif "chunk_content" in meta_:
-                        dict_["content"] = meta_.pop("chunk_content")
-                    elif "data" in meta_:
-                        dict_["content"] = meta_.pop("data")
-
-                dict_["metadata"] = meta_
-
-                if "ln_id" not in dict_:
-                    if "ln_id" in meta_:
-                        dict_["ln_id"] = meta_.pop("ln_id")
-                    else:
-                        dict_["ln_id"] = SysUtil.create_id()
-                if "timestamp" not in dict_:
-                    dict_["timestamp"] = SysUtil.get_timestamp(sep=None)[:-6]
-                if "metadata" not in dict_:
-                    dict_["metadata"] = {}
-                if "extra_fields" not in dict_:
-                    dict_["extra_fields"] = {}
-
-            self = cls.model_validate(dict_, *args, **kwargs)
-            return self
+            return cls.model_validate(dict_, *args, **kwargs)
 
         except ValidationError as e:
             raise LionValueError("Invalid dictionary for deserialization.") from e
 
-    @from_obj.register(str)
+    @classmethod
+    def _process_langchain_dict(cls, dict_: dict) -> dict:
+        """Process a dictionary containing Langchain-specific data."""
+        SysUtil.change_dict_key(dict_, "page_content", "content")
+
+        metadata = dict_.pop("metadata", {})
+        metadata.update(dict_.pop("kwargs", {}))
+
+        if not isinstance(metadata, dict):
+            metadata = {"extra_meta": metadata}
+
+        for field in base_lion_fields:
+            if field in metadata:
+                dict_[field] = metadata.pop(field)
+
+        for key in list(metadata.keys()):
+            if key not in lc_meta_fields:
+                dict_[key] = metadata.pop(key)
+
+        for field in lc_meta_fields:
+            if field in dict_:
+                metadata[field] = dict_.pop(field)
+
+        SysUtil.change_dict_key(metadata, "lc", "langchain")
+        SysUtil.change_dict_key(metadata, "type", "lc_type")
+        SysUtil.change_dict_key(metadata, "id", "lc_id")
+
+        extra_fields = {k: v for k, v in metadata.items() if k not in lc_meta_fields}
+        metadata = {k: v for k, v in metadata.items() if k in lc_meta_fields}
+        dict_["metadata"] = metadata
+        dict_.update(extra_fields)
+
+        return dict_
+
+    @classmethod
+    def _process_generic_dict(cls, dict_: dict) -> dict:
+        """Process a generic dictionary."""
+        meta_ = dict_.pop("metadata", None) or {}
+
+        if not isinstance(meta_, dict):
+            meta_ = {"extra_meta": meta_}
+
+        for key in list(dict_.keys()):
+            if key not in base_lion_fields:
+                meta_[key] = dict_.pop(key)
+
+        if not dict_.get("content", None):
+            for field in ["page_content", "text", "chunk_content", "data"]:
+                if field in meta_:
+                    dict_["content"] = meta_.pop(field)
+                    break
+
+        dict_["metadata"] = meta_
+
+        if "ln_id" not in dict_:
+            dict_["ln_id"] = meta_.pop("ln_id", SysUtil.create_id())
+        if "timestamp" not in dict_:
+            dict_["timestamp"] = SysUtil.get_timestamp(sep=None)[:-6]
+        if "metadata" not in dict_:
+            dict_["metadata"] = {}
+        if "extra_fields" not in dict_:
+            dict_["extra_fields"] = {}
+
+        return dict_
+
     @classmethod
     def _from_str(cls, obj: str, /, *args, fuzzy_parse: bool = False, **kwargs) -> T:
         """Create a Component instance from a JSON string."""
@@ -218,13 +256,11 @@ class Component(Element, ABC):
         except ValidationError as e:
             raise LionValueError("Invalid JSON for deserialization: ") from e
 
-    @from_obj.register(list)
     @classmethod
     def _from_list(cls, obj: list, /, *args, **kwargs) -> list[T]:
         """Create a list of node instances from a list of objects."""
         return [cls.from_obj(item, *args, **kwargs) for item in obj]
 
-    @from_obj.register(Series)
     @classmethod
     def _from_pd_series(
         cls, obj: Series, /, *args, pd_kwargs: dict | None = None, **kwargs
@@ -233,7 +269,6 @@ class Component(Element, ABC):
         pd_kwargs = pd_kwargs or {}
         return cls.from_obj(obj.to_dict(**pd_kwargs), *args, **kwargs)
 
-    @from_obj.register(DataFrame)
     @classmethod
     def _from_pd_dataframe(
         cls,
@@ -256,7 +291,6 @@ class Component(Element, ABC):
 
         return _objs
 
-    @from_obj.register(BaseModel)
     @classmethod
     def _from_base_model(cls, obj, /, pydantic_kwargs=None, **kwargs) -> T:
         """Create a node instance from a Pydantic BaseModel."""
@@ -298,9 +332,11 @@ class Component(Element, ABC):
     def to_dict(self, *args, **kwargs) -> dict[str, Any]:
         """Convert the component to a dictionary."""
         dict_ = self.model_dump(*args, by_alias=True, **kwargs)
+
         for field_name in list(self.extra_fields.keys()):
             if field_name not in dict_:
                 dict_[field_name] = getattr(self, field_name, None)
+
         dict_.pop("extra_fields", None)
         return dict_
 
@@ -340,12 +376,11 @@ class Component(Element, ABC):
 
         return LangchainBridge.to_langchain_document(self, **kwargs)
 
-    # TODO; whether to keep the count, or just last updated
     def _add_last_update(self, name):
         if (a := nget(self.metadata, ["last_updated", name], None)) is None:
             ninsert(
                 self.metadata,
-                ["last_updated", name], 
+                ["last_updated", name],
                 SysUtil.get_timestamp(sep=None)[:-6],
             )
         elif isinstance(a, tuple) and isinstance(a[0], int):
@@ -359,16 +394,18 @@ class Component(Element, ABC):
         indices = (
             indices
             if not isinstance(indices, list)
-            else "[^_^]".join([i if isinstance(i, str) else str(i) for i in indices])
+            else "[^_^]".join([str(i) for i in indices])
         )
         dict_ = self.metadata.copy()
         dict_ = flatten(dict_)
+
         try:
             out_ = dict_.pop(indices, default) if default != ... else dict_.pop(indices)
         except KeyError as e:
             if default == ...:
                 raise KeyError(f"Key {indices} not found in metadata.") from e
             return default
+
         a = unflatten(dict_)
         self.metadata.clear()
         self.metadata.update(a)
@@ -463,11 +500,10 @@ class Component(Element, ABC):
 
     def _field_has_attr(self, k: str, attr: str) -> bool:
         """Check if a field has a specific attribute."""
-
         if not (field := self._all_fields.get(k, None)):
             raise KeyError(f"Field {k} not found in model fields.")
 
-        if not attr in str(field):
+        if attr not in str(field):
             try:
                 a = (
                     attr in self._all_fields[k].json_schema_extra
@@ -480,12 +516,12 @@ class Component(Element, ABC):
 
     def __str__(self):
         dict_ = self.to_dict()
-        dict_["class_name"] = self.class_name()
+        dict_["class_name"] = self.class_name
         return Series(dict_).__str__()
 
     def __repr__(self):
         dict_ = self.to_dict()
-        dict_["class_name"] = self.class_name()
+        dict_["class_name"] = self.class_name
         return Series(dict_).__repr__()
 
     def __len__(self):
@@ -504,4 +540,3 @@ def get_lion_id(item: LionIDable) -> str:
     if getattr(item, "ln_id", None) is not None:
         return item.ln_id
     raise LionTypeError("Item must be a single LionIDable object.")
-

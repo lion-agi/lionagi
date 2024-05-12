@@ -32,7 +32,7 @@ class BaseValidator:
         for i in self.order:
             # we will skip the rule if it is not present in validator
             if i in self.rules:
-                
+
                 try:
                     # here we check whether the rule applies to the value
                     if await self.rules[i].applies(value, *args, **kwargs):
@@ -41,10 +41,10 @@ class BaseValidator:
                             a := await self.rules[i].invoke(value, *args, **kwargs)
                         ) is not None:
                             return a
-                        
+
                 except Exception as e:
                     raise LionFieldError(f"failed to validate field") from e
-        
+
         # this means no rule applied to the value,
         # if strict is True, we raise an error, else we return the original value
         if strict:
