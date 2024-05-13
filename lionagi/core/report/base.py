@@ -9,7 +9,13 @@ class BaseForm(Component):
     assignment: str = Field(..., examples=["input1, input2 -> output"])
     input_fields: list[str] = Field(default_factory=list)
     requested_fields: list[str] = Field(default_factory=list)
-
+    task: str = Field(default_factory=str)
+    validation_kwargs: dict = {}
+    
+    @property
+    def work_fields(self) -> dict[str, Any]:
+        raise NotImplementedError
+    
     @abstractmethod
     def fill(self, /, *args, **kwargs):
         pass
@@ -36,7 +42,7 @@ class BaseForm(Component):
                 raise ValueError(f"Field {k} is not filled")
         return True
 
-    def _get_all_fields(self, form=None, **kwargs):
+    def _get_all_fields(self, form=None, **kwargs) -> dict[str, Any]:
         """
         given a form, or collections of a form, and additional fields,
         gather all fields together including self fields with valid value

@@ -1,3 +1,4 @@
+from typing import Any
 from enum import Enum
 from lionagi.libs.ln_convert import to_str
 
@@ -9,16 +10,21 @@ from ..message.action_request import ActionRequest
 class ScoreTemplate(Form):
 
     template_name: str = "default_score"
-    sentence: str | list | dict = Field(
-        default_factory=str, description="the given context to score"
-    )
-    answer: float = Field(default_factory=float, description=f"a numeric score")
-    signature: str = "sentence -> answer"
-
+    score: float =  None
+    confidence_score: float = Field(
+        -1,
+        description="a numeric score between 0 to 1 formatted in num:0.2f",)
+    
+    reason: str = Field(
+        default_factory=str, description="brief reason for the given output",)
+    
+    signature: str = "context -> score"
+    
     def __init__(
         self,
-        sentence=None,
-        instruction=None,
+        *,
+        instruction=None, 
+        context=None,
         score_range=(1, 10),
         inclusive=True,
         num_digit=0,
@@ -28,9 +34,9 @@ class ScoreTemplate(Form):
     ):
         super().__init__(**kwargs)
 
-        self.sentence = sentence
-
+        self.context = context or ""
         return_precision = ""
+        
         if num_digit == 0:
             return_precision = "integer"
         else:
@@ -38,7 +44,7 @@ class ScoreTemplate(Form):
 
         self.task = f"""
 score context according to the following constraints
-1. objective, {to_str(instruction)}
+1. objective, {to_str(instruction or "N/A")}
 2. score range, {to_str(score_range)}
 3. include_endpoints, {"yes" if inclusive else "no"}
 4. format the score in {return_precision}
@@ -50,12 +56,18 @@ score context according to the following constraints
         if confidence_score:
             self.requested_fields.append("confidence_score")
 
-        self.out_validation_kwargs["answer"] = {
+        self.validation_kwargs["score"] = {
             "upper_bound": score_range[1],
             "lower_bound": score_range[0],
             "num_type": int if num_digit == 0 else float,
             "precision": num_digit if num_digit != 0 else None,
         }
+
+
+
+
+
+
 
 
 class PlanTemplate(Form):

@@ -402,7 +402,7 @@ def to_num(
     *,
     upper_bound: int | float | None = None,
     lower_bound: int | float | None = None,
-    num_type: Type[int | float] = int,
+    num_type: Type[int | float] = float,
     precision: int | None = None,
 ) -> int | float:
     """
@@ -425,15 +425,9 @@ def to_num(
     return _str_to_num(str_, upper_bound, lower_bound, num_type, precision)
 
 
-def to_readable_dict(input_: Any | list[Any]) -> str | list[Any]:
+def to_readable_dict(input_: Any) -> str:
     """
-    Converts a given input to a readable dictionary format, either as a string or a list of dictionaries.
-
-    Args:
-            input_ (Any | list[Any]): The input to convert to a readable dictionary format.
-
-    Returns:
-            str | list[str]: The readable dictionary format of the input.
+    Converts a given input to a readable dictionary format
     """
 
     try:

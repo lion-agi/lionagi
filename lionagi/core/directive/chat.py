@@ -5,8 +5,9 @@ class Chat(BaseDirective):
 
     async def chat(
         self,
-        system=None,  # system node - JSON serializable
         instruction=None,  # Instruction node - JSON serializable
+        *,
+        system=None,  # system node - JSON serializable
         context=None,  # JSON serializable
         sender=None,  # str
         recipient=None,  # str
@@ -17,6 +18,7 @@ class Chat(BaseDirective):
         return_form=True,
         strict=False,
         validator=None,
+        model=None,
         **kwargs,
     ):
 
@@ -32,7 +34,7 @@ class Chat(BaseDirective):
             **kwargs,
         )
 
-        payload, completion = await self._call_chatcompletion(**config)
+        payload, completion = await self._call_chatcompletion(model=model, **config)
 
         return await self._output(
             payload=payload,

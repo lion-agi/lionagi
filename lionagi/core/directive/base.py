@@ -79,8 +79,9 @@ class BaseDirective(ABC):
 
         return config
 
-    async def _call_chatcompletion(self, **kwargs):
-        return await self.model.call_chat_completion(
+    async def _call_chatcompletion(self, model=None, **kwargs):
+        model = model or self.model
+        return await model.call_chat_completion(
             self.branch.to_chat_messages(), **kwargs
         )
 

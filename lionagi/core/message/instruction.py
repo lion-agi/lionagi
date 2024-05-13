@@ -1,5 +1,7 @@
 from ..generic.abc import LionIDable, SYSTEM_FIELDS
+from ..report.form import Form
 from .message import RoledMessage, MessageRole
+
 
 
 class Instruction(RoledMessage):
@@ -69,6 +71,17 @@ class Instruction(RoledMessage):
         """
         return {"response_format": format_.replace("        ", "")}
 
-    # TODO: add from_form method
-    def from_form(self, form):
-        pass
+    @classmethod
+    def from_form(
+        cls,
+        form: Form,
+        sender: str | None = None,
+        recipient=None,
+    ):
+        return cls(
+            instruction=form._instruction_prompt,
+            context=form._instruction_context,
+            requested_fields=form._instruction_requested_fields,
+            sender=sender,
+            recipient=recipient,
+        )

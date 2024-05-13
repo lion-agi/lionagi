@@ -8,9 +8,10 @@ from ..rules.base import Rule
 from ..rules._default import DEFAULT_RULES
 from ..rules.rulebook import RuleBook
 from ..report.form import Form
+from ..report.report import Report
 
 
-DEFAULT_RULEORDER = [
+_DEFAULT_RULEORDER = [
     "choice",
     "actionrequest",
     "bool",
@@ -33,6 +34,7 @@ class Validator:
 
     def __init__(
         self,
+        *,
         rulebook: RuleBook = None,
         rules=None,
         order: list[str] = None,
@@ -42,7 +44,7 @@ class Validator:
         self.ln_id: str = SysUtil.create_id()
         self.timestamp: str = SysUtil.get_timestamp(sep=None)[:-6]
         self.rulebook = rulebook or RuleBook(
-            rules or _DEFAULT_RULES, order or DEFAULT_RULEORDER, init_config
+            rules or _DEFAULT_RULES, order or _DEFAULT_RULEORDER, init_config
         )
         self.active_rules: dict[str, Rule] = active_rules or self._initiate_rules()
 
@@ -54,13 +56,14 @@ class Validator:
                     f"Invalid rule class for {rule_name}, must be a subclass of Rule"
                 )
 
-            _config = self.rulebook.initiate_config[rule_name]
+            _config = self.rulebook.rule_config[rule_name] or {}
             if not isinstance(_config, dict):
                 raise LionFieldError(
                     f"Invalid config for {rule_name}, must be a dictionary"
                 )
 
-            _rule = self.rulebook.rules[rule_name](**_config)
+            _rule = self.rulebook.rules[rule_name](**_config.get("config", {}))
+            _rule.fields = _config.get("fields", [])
             return _rule
 
         _rules = lcall(self.rulebook.ruleorder, _init_rule)
@@ -71,7 +74,79 @@ class Validator:
             if getattr(_rules[idx], "_is_init", None) == True
         }
 
-    async def validate(
+    async def validate_report(
+        self, report: Report, forms, strict: bool = False
+    ) -> Report:
+        report.fill(forms, strict=strict)
+        return report
+
+    async def validate_response(
+        self,
+        form: Form,
+        response: dict | str,
+        strict: bool = False,
+        use_annotation: bool = True,
+    ) -> Form:
+        if isinstance(response, str):
+            if len(form.requested_fields) == 1:
+                response = {form.requested_fields[0]: response}
+            else:
+                raise ValueError(
+                    "Response is a string, but form has multiple fields to be filled"
+                )
+
+        dict_ = {}
+        for k, v in response.items():
+
+            if k in form.requested_fields:
+                kwargs = form.validation_kwargs.get(k, {})
+                _annotation = form._field_annotations[k]
+
+                if (keys := form._get_field_attr(k, "choices", None)) is not None:
+                    v = await self.validate_field(
+                        field=k,
+                        value=v,
+                        form=form,
+                        annotation=_annotation,
+                        strict=strict,
+                        keys=keys,
+                        use_annotation=use_annotation,
+                        **kwargs
+                    )
+
+                elif (_keys := form._get_field_attr(k, "keys", None)) is not None:
+                    if not "dict" in str(_annotation):
+                        raise ValueError(
+                            f"keys attribute is only applicable to dict fields"
+                        )
+                    v = await self.validate_field(
+                        field=k,
+                        value=v,
+                        form=form,
+                        annotation=_annotation,
+                        strict=strict,
+                        keys=_keys,
+                        use_annotation=use_annotation,
+                        **kwargs
+                    )
+
+                else:
+                    v = await self.validate_field(
+                        field=k,
+                        value=v,
+                        form=form,
+                        annotation=_annotation,
+                        strict=strict,
+                        use_annotation=use_annotation,
+                        **kwargs
+                    )
+
+                dict_[k] = v
+
+        form.fill(**dict_)
+        return form
+
+    async def validate_field(
         self,
         field: str,
         value: Any,
@@ -79,13 +154,20 @@ class Validator:
         *args,
         annotation=None,
         strict=True,
+        use_annotation=True,
         **kwargs,
-    ):
+    ) -> Any:
 
         for rule in self.active_rules.values():
             try:
                 if await rule.applies(
-                    field, value, form, *args, annotation=annotation, **kwargs
+                    field,
+                    value,
+                    form,
+                    *args,
+                    annotation=annotation,
+                    use_annotation=use_annotation,
+                    **kwargs,
                 ):
                     return await rule.invoke(value)
             except Exception as e:
@@ -95,4 +177,3 @@ class Validator:
             raise LionFieldError(
                 f"failed to validate {field} because no rule applied, if you want to return the original value directly when no rule applies, set strict=False"
             )
-        return value

@@ -1,14 +1,17 @@
 from lionagi.libs.ln_func_call import lcall
 from ..rules.base import Rule
 
-DEFAULT_RULEORDER = [
-    "choice",
-    "actionrequest",
-    "bool",
-    "number",
-    "mapping",
-    "str",
-]
+"""
+rule config schema 
+
+{
+    rule_name: {
+        "fields: [],
+        "config": {}, 
+        ...
+    }
+}
+"""
 
 
 class RuleBook:
@@ -16,12 +19,12 @@ class RuleBook:
     def __init__(
         self,
         rules: dict[str, Rule] | list[Rule] = None,
-        order: list[str] = None,
-        init_config: dict[str, dict] = None,
+        ruleorder: list[str] = None,
+        rule_config: dict[str, dict] = None,
     ):
         self.rules = rules
-        self.ruleorder = order
-        self.initiate_config = init_config or {k: {} for k in self.ruleorder}
+        self.ruleorder = ruleorder
+        self.rule_config = rule_config or {k: {} for k in self.ruleorder}
 
     @property
     def _all_applied_log(self):

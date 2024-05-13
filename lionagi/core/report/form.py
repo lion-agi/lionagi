@@ -1,13 +1,11 @@
 from ..generic.abc.util import SYSTEM_FIELDS
 from .util import get_input_output_fields
 from .base import BaseForm
-from ..validator.validator import Validator
 
 
 class Form(BaseForm):
 
     def __init__(self, **kwargs):
-
         super().__init__(**kwargs)
         self.input_fields, self.requested_fields = get_input_output_fields(
             self.assignment
@@ -49,77 +47,28 @@ class Form(BaseForm):
 
         return True
 
-    async def validate_with_annotation(
-        self, response: dict | str, strict=False, validator=None
-    ):
-        validator = validator or Validator()
-        if isinstance(response, str):
-            if len(self.requested_fields) == 1:
-                response = {self.requested_fields[0]: response}
-            else:
-                raise ValueError(
-                    "Response is a string, but form has multiple fields to be filled"
-                )
-
-        dict_ = {}
-        for k, v in response.items():
-
-            if k in self.requested_fields:
-                _annotation = self._field_annotations[k]
-
-                if (_choices := self._get_field_attr(k, "choices", None)) is not None:
-                    await validator.validate(
-                        v, _annotation, strict=strict, choices=_choices
-                    )
-
-                elif (_keys := self._get_field_attr(k, "keys", None)) is not None:
-                    if not "dict" in str(_annotation):
-                        raise ValueError(
-                            f"keys attribute is only applicable to dict fields"
-                        )
-                    await validator.validate(v, _annotation, strict=strict, keys=_keys)
-
-                else:
-                    await validator.validate(v, _annotation, strict=strict)
-
-                dict_[k] = v
-
-        self.fill(**dict_)
-
-    async def validate_with_custom_rule(self, response, strict=False, validator=None):
-        validator = validator or Validator()
-        if isinstance(response, str):
-            if len(self.requested_fields) == 1:
-                response = {self.requested_fields[0]: response}
-
-        dict_ = {}
-        for k, v in response.items():
-
-            if k in self.requested_fields:
-                _annotation = self._field_annotations[k]
-
-                if (_choices := self._get_field_attr(k, "choices", None)) is not None:
-                    await validator.validate(
-                        v, _annotation, strict=strict, choices=_choices
-                    )
-
-                elif (_keys := self._get_field_attr(k, "keys", None)) is not None:
-                    if not "dict" in str(_annotation):
-                        raise ValueError(
-                            f"keys attribute is only applicable to dict fields"
-                        )
-                    await validator.validate(v, _annotation, strict=strict, keys=_keys)
-
-                else:
-                    await validator.validate(v, _annotation, strict=strict)
-
-                dict_[k] = v
-
-        self.fill(**dict_)
-
-    def correlate_field_rule(self, rules=None, validator=None):
+    @property
+    def _instruction_context(self):
+        a = "".join(
+            f"""
+        ## input: {i}:
+        - description: {getattr(self._all_fields[i], "description", "N/A")}
+        - value: {str(self.__getattribute__(self.input_fields[idx]))}
         """
-        rules: {rule_name: [fields applies]}
-        """
+            for idx, i in enumerate(self.input_fields)
+        )
+        return a.replace("        ", "")
 
-        ...
+    @property
+    def _instruction_prompt(self):
+        ccc = f"""
+        0. Your in is {self.task},
+        1. provided: {self.input_fields}, 
+        2. requested: {self.requested_fields}
+        ----------
+        """
+        return ccc.replace("        ", "")
+
+    @property
+    def _instruction_requested_fields(self):
+        return {i: getattr(self._all_fields[i], "description", "N/A") for i in self.requested_fields}

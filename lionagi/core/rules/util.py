@@ -1,5 +1,5 @@
 from lionagi.libs.ln_convert import is_same_dtype
-from collections.abc import Iterable, Mapping, Generator
+from collections.abc import Mapping, Generator
 
 
 def validate_keys(keys):
