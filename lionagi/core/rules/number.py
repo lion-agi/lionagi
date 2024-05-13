@@ -20,7 +20,7 @@ class NumberRule(Rule):
     async def validate(self, value):
         return isinstance(value, (int, float, complex))
 
-    async def fix_field(self, value):
+    async def perform_fix(self, value):
         if isinstance(value, (int, float, complex)):
             return value
 

@@ -3,7 +3,6 @@ from ..report.form import Form
 from .message import RoledMessage, MessageRole
 
 
-
 class Instruction(RoledMessage):
 
     def __init__(

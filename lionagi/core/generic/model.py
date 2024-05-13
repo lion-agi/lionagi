@@ -9,7 +9,7 @@ from lionagi.integrations.provider.oai import OpenAIService
 load_dotenv()
 
 
-class Model:
+class iModel:
 
     def __init__(
         self,

@@ -111,7 +111,7 @@ class Validator:
                         strict=strict,
                         keys=keys,
                         use_annotation=use_annotation,
-                        **kwargs
+                        **kwargs,
                     )
 
                 elif (_keys := form._get_field_attr(k, "keys", None)) is not None:
@@ -127,7 +127,7 @@ class Validator:
                         strict=strict,
                         keys=_keys,
                         use_annotation=use_annotation,
-                        **kwargs
+                        **kwargs,
                     )
 
                 else:
@@ -138,7 +138,7 @@ class Validator:
                         annotation=_annotation,
                         strict=strict,
                         use_annotation=use_annotation,
-                        **kwargs
+                        **kwargs,
                     )
 
                 dict_[k] = v

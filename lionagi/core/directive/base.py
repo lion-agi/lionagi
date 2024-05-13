@@ -10,7 +10,7 @@ from typing import Any
 
 from lionagi.libs.ln_parse import ParseUtil, StringMatch
 
-from ..generic import Model
+from ..generic import iModel
 from ..message import Instruction
 from ..message.util import _parse_action_request
 
@@ -19,13 +19,13 @@ class BaseDirective(ABC):
 
     default_template = None
 
-    def __init__(self, branch, model: Model = None, template_=None) -> None:
+    def __init__(self, branch, imodel: iModel = None, template_=None) -> None:
         self.branch = branch
-        if model and isinstance(model, Model):
-            branch.model = model
-            self.model = model
+        if imodel and isinstance(imodel, iModel):
+            branch.imodel = imodel
+            self.imodel = imodel
         else:
-            self.model = branch.model
+            self.imodel = branch.imodel
         self.form_template = template_ or self.default_template
 
     @property
@@ -73,15 +73,15 @@ class BaseDirective(ABC):
         elif tools and self.branch.has_tools:
             kwargs = self.branch.tool_manager.parse_tool(tools=tools, **kwargs)
 
-        config = {**self.model.config, **kwargs}
+        config = {**self.imodel.config, **kwargs}
         if sender is not None:
             config["sender"] = sender
 
         return config
 
-    async def _call_chatcompletion(self, model=None, **kwargs):
-        model = model or self.model
-        return await model.call_chat_completion(
+    async def _call_chatcompletion(self, imodel=None, **kwargs):
+        imodel = imodel or self.imodel
+        return await imodel.call_chat_completion(
             self.branch.to_chat_messages(), **kwargs
         )
 
@@ -106,9 +106,9 @@ class BaseDirective(ABC):
                 self.branch.add_message(
                     assistant_response=_msg, metadata=completion, sender=sender
                 )
-                self.branch.model.status_tracker.num_tasks_succeeded += 1
+                self.branch.imodel.status_tracker.num_tasks_succeeded += 1
         else:
-            self.branch.model.status_tracker.num_tasks_failed += 1
+            self.branch.imodel.status_tracker.num_tasks_failed += 1
 
         # if the assistant response contains action request, we add each as a message to branch
         a = _parse_action_request(_msg)

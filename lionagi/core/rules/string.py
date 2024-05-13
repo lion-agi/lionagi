@@ -10,7 +10,7 @@ class StringRule(Rule):
     async def validate(self, value):
         return isinstance(value, str)
 
-    async def fix_field(self, value):
+    async def perform_fix(self, value):
         try:
             return to_str(value, **self.validation_kwargs)
         except Exception as e:

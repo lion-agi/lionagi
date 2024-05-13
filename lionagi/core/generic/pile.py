@@ -20,7 +20,7 @@ from .abc import (
     LionTypeError,
     ItemNotFoundError,
 )
-from .model import Model
+from .model import iModel
 from .util import to_list_type, _validate_order
 
 T = TypeVar("T")
@@ -457,7 +457,7 @@ class Pile(Element, Record, Generic[T]):
         value = to_list_type(value)
 
         for i in value:
-            if not isinstance(i, (type(Element), type(Model))):
+            if not isinstance(i, (type(Element), type(iModel))):
                 raise LionTypeError(
                     "Invalid item type. Expected a subclass of Component."
                 )

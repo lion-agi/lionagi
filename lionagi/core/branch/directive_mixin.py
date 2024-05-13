@@ -1,4 +1,3 @@
-from ..directive.chat import Chat
 from abc import ABC
 from typing import Any, Optional, Union, TypeVar
 
@@ -7,28 +6,39 @@ class DirectiveMixin(ABC):
 
     async def chat(
         self,
-        instruction=None,
-        context=None,
-        sender=None,
-        system=None,
-        tools=False,
-        out=True,
-        invoke=True,
-        requested_fields=None,
+        instruction=None,  # Instruction node - JSON serializable
+        *,
+        system=None,  # system node - JSON serializable
+        context=None,  # JSON serializable
+        sender=None,  # str
+        recipient=None,  # str
+        requested_fields=None,  # dict[str, str]
         form=None,
+        tools=False,
+        invoke_tool=True,
+        return_form=True,
+        strict=False,
+        validator=None,
+        imodel=None,
         **kwargs,
     ) -> Any:
+        from lionagi.core.directive.chat import Chat
+
         directive = Chat(self)
         return await directive.chat(
             instruction=instruction,
+            system=system,
             context=context,
             sender=sender,
-            system=system,
-            tools=tools,
-            out=out,
-            invoke=invoke,
+            recipient=recipient,
             requested_fields=requested_fields,
             form=form,
+            tools=tools,
+            invoke_tool=invoke_tool,
+            return_form=return_form,
+            strict=strict,
+            validator=validator,
+            imodel=imodel,
             **kwargs,
         )
 

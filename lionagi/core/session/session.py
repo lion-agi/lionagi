@@ -6,7 +6,7 @@ from ..generic import (
     progression,
     pile,
     flow,
-    Model,
+    iModel,
     DataLogger,
 )
 from ..message import System
@@ -35,7 +35,7 @@ class Session:
             sender=self.ln_id,
             recipient="assistant",
         )
-        self.model = model or Model()
+        self.model = model or iModel()
         self.datalogger = datalogger or DataLogger(persist_path)
 
 

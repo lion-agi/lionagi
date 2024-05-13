@@ -18,7 +18,7 @@ class Chat(BaseDirective):
         return_form=True,
         strict=False,
         validator=None,
-        model=None,
+        imodel=None,
         **kwargs,
     ):
 
@@ -34,7 +34,7 @@ class Chat(BaseDirective):
             **kwargs,
         )
 
-        payload, completion = await self._call_chatcompletion(model=model, **config)
+        payload, completion = await self._call_chatcompletion(imodel=imodel, **config)
 
         return await self._output(
             payload=payload,

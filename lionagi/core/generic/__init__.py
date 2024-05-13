@@ -7,7 +7,7 @@ from .tree_node import TreeNode
 from .graph import Graph
 from .tree import Tree
 from ._logger import DataLogger
-from .model import Model
+from .model import iModel
 from .exchange import Exchange
 
 
@@ -25,6 +25,6 @@ __all__ = [
     "Tree",
     "DataLogger",
     "progression",
-    "Model",
+    "iModel",
     "Exchange",
 ]

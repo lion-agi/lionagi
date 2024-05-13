@@ -10,20 +10,26 @@ from ..message.action_request import ActionRequest
 class ScoreTemplate(Form):
 
     template_name: str = "default_score"
-    score: float =  None
+    score: float = Field(
+        None,
+        description="the given score to evaluate",
+    )
     confidence_score: float = Field(
         -1,
-        description="a numeric score between 0 to 1 formatted in num:0.2f",)
-    
+        description="a numeric score between 0 to 1 formatted in num:0.2f",
+    )
+
     reason: str = Field(
-        default_factory=str, description="brief reason for the given output",)
-    
+        default_factory=str,
+        description="brief reason for the given output",
+    )
+
     signature: str = "context -> score"
-    
+
     def __init__(
         self,
         *,
-        instruction=None, 
+        instruction=None,
         context=None,
         score_range=(1, 10),
         inclusive=True,
@@ -36,7 +42,7 @@ class ScoreTemplate(Form):
 
         self.context = context or ""
         return_precision = ""
-        
+
         if num_digit == 0:
             return_precision = "integer"
         else:
@@ -62,12 +68,6 @@ score context according to the following constraints
             "num_type": int if num_digit == 0 else float,
             "precision": num_digit if num_digit != 0 else None,
         }
-
-
-
-
-
-
 
 
 class PlanTemplate(Form):
@@ -171,7 +171,7 @@ class ActionForm(Form):
 
     actions: list[dict | ActionRequest] | None = Field(
         default_factory=list,
-        description="""provide The list of action(s) to take, each action in {"function": function_name, "arguments": {param1:..., param2:..., ...}}. Leave blank if no further actions are needed, you must use provided parameters for each action, DO NOT MAKE UP KWARG NAME!!!""",
+        description="""provide The list of action(s) to take, each action in format of {"function": function_name, "arguments": {param1:..., param2:..., ...}}. Leave blank if no further actions are needed, you must use provided parameters for each action, DO NOT MAKE UP NAME!!!""",
     )
 
     answer: str | dict | None = Field(

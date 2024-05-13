@@ -3,7 +3,7 @@ from typing import Any
 from lionagi.libs.ln_convert import is_same_dtype, to_dict, to_df
 
 from ..generic.abc import Field
-from ..generic import Node, Pile, pile, progression, Progression, Model, Exchange
+from ..generic import Node, Pile, pile, progression, Progression, iModel, Exchange
 from ..action import Tool, ToolManager
 from ..mail.mail import Mail
 
@@ -28,7 +28,7 @@ class Branch(Node, DirectiveMixin):
     system: System = Field(None)
     user: str = Field(None)
     mailbox: Exchange = Field(None)
-    model: Model = Field(None)
+    imodel: iModel = Field(None)
 
     def __init__(
         self,
@@ -40,7 +40,7 @@ class Branch(Node, DirectiveMixin):
         tool_manager: ToolManager = None,
         tools: Any = None,
         mailbox=None,
-        model=None,
+        imodel=None,
     ):
 
         super().__init__()
@@ -51,7 +51,7 @@ class Branch(Node, DirectiveMixin):
         self.progre = progre or progression()
         self.tool_manager = tool_manager or ToolManager()
         self.mailbox = mailbox or Exchange()
-        self.model = model or Model()
+        self.imodel = imodel or iModel()
         if tools:
             self.tool_manager.register_tools(tools)
 
@@ -135,7 +135,7 @@ class Branch(Node, DirectiveMixin):
         self, branch: "Branch", update_tool: bool = False, update_model=False
     ) -> None:
 
-        if update_model and not branch.model:
+        if update_model and not branch.imodel:
             raise ValueError(
                 "Cannot update model: The branch to be merged has no model"
             )
@@ -149,7 +149,7 @@ class Branch(Node, DirectiveMixin):
                 self.tool_manager.registry.update(branch.tool_manager.registry)
 
             if update_model:
-                self.model = branch.model
+                self.imodel = branch.imodel
 
     def register_tools(self, tools) -> None:
         self.tool_manager.register_tools(tools=tools)

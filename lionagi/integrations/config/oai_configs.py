@@ -4,7 +4,7 @@ API_key_schema = ("OPENAI_API_KEY",)
 
 # ChatCompletion
 oai_chat_llmconfig = {
-    "model": "gpt-4-turbo",
+    "model": "gpt-4o",
     "frequency_penalty": 0,
     "max_tokens": None,
     "n": 1,

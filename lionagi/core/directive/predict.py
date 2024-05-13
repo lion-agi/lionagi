@@ -14,7 +14,6 @@ class Predict(Chat):
         form=None,
         tools=False,
         invoke_tool=True,
-        out=True,
         **kwargs,
     ):
 
@@ -29,6 +28,5 @@ class Predict(Chat):
             form=form,
             tools=tools,
             invoke_tool=invoke_tool,
-            out=out,
             **kwargs,
         )

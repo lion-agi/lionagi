@@ -1,17 +1,31 @@
+"""
+This module introduces the Report class, an extension of the BaseForm class
+designed to manage and synchronize a collection of Form instances based on
+specific assignments. The Report class handles the creation and updating of
+forms, ensuring each is properly configured according to the report's
+requirements.
+"""
+
 from typing import Any, Type
 
 from ..generic.abc import Field
 from ..generic import Pile, pile
 
+from .base import BaseForm
 from .form import Form
 from .util import get_input_output_fields
 from .base import BaseForm
 
 
 class Report(BaseForm):
+    """
+    Extends BaseForm to handle a collection of Form instances based on specific
+    assignments, managing a pile of forms and ensuring synchronization and
+    proper configuration.
+    """
 
     forms: Pile[Form] = Field(
-        default_factory=lambda: pile({}, Form),
+        None,
         description="A pile of forms related to the report.",
     )
 
@@ -27,41 +41,44 @@ class Report(BaseForm):
 
     def __init__(self, **kwargs):
         """
-        at initialization, all relevant fields if not already provided, are set to None
+        Initializes the Report with input and requested fields based on the
+        report's assignment, creating forms dynamically from provided assignments.
         """
         super().__init__(**kwargs)
         self.input_fields, self.requested_fields = get_input_output_fields(
             self.assignment
         )
 
-        # if assignments is not provided, set it to assignment
+        # if assignments is not provided, set it to report assignment
         if self.form_assignments == []:
             self.form_assignments.append(self.assignment)
 
         # create forms
         self.forms = pile(
-            [self.form_template(assignment=i) for i in self.form_assignments], Form
+            [self.form_template(assignment=i) for i in self.form_assignments],
+            [Form, BaseForm, Report],
         )
 
-        # if the fields are not declared in the report, add them to report
-        # with value set to None
+        # Add undeclared fields to report with None values
         for v in self.forms:
             for _field in list(v.work_fields.keys()):
                 if _field not in self._all_fields:
-                    field = v._all_fields[_field]
-                    self._add_field(_field, value=None, field_obj=field)
+                    field_obj = v._all_fields[_field]
+                    self._add_field(_field, value=None, field_obj=field_obj)
 
-        # if there are fields in the report that are not in the forms, add them to
-        # the forms with values
+        # Synchronize fields between report and forms
         for k, v in self._all_fields.items():
             if getattr(self, k, None) is not None:
                 for _form in self.forms:
                     if k in _form.work_fields:
                         _form.fill(**{k: getattr(self, k)})
 
-    # implement abstract methods
     @property
     def work_fields(self) -> dict[str, Any]:
+        """
+        Aggregates all work fields from the contained forms into a single
+        dictionary, ensuring uniqueness of field names across all forms.
+        """
         all_fields = {}
         for form in self.forms.values():
             for k, v in form.work_fields.items():
@@ -69,12 +86,14 @@ class Report(BaseForm):
                     all_fields[k] = v
         return all_fields
 
-    def fill(self, form=None, strict=False, **kwargs):
-
+    def fill(self, form: Form | list[Form] | dict[Form] = None, strict=True, **kwargs):
+        """
+        Fills the report from another form or kwargs, enforces strict mode if set,
+        where no further changes are allowed if already filled.
+        """
         if self.filled:
             if strict:
-                raise ValueError("Report is already filled, and be worked on again")
-            return
+                raise ValueError("Form is filled, cannot be worked on again")
 
         # gather all unique valid fields from input form,
         # kwargs and self workfields data
@@ -96,7 +115,10 @@ class Report(BaseForm):
                 _form.fill(**_kwargs)
 
     def is_workable(self) -> bool:
-
+        """
+        Checks if the report is ready for processing, ensuring all necessary fields
+        are filled and output fields are unique across forms.
+        """
         if self.filled:
             raise ValueError("Form is already filled, cannot be worked on again")
 
@@ -126,5 +148,8 @@ class Report(BaseForm):
         return True
 
     def next_forms(self) -> Pile[Form]:
+        """
+        Returns a pile of workable forms based on current form states within the report.
+        """
         a = [i for i in self.forms if i.workable]
         return pile(a, Form) if len(a) > 0 else None
