@@ -1,25 +1,34 @@
+"""
+This module defines the FunctionCalling class, which facilitates dynamic
+invocation of functions based on various input types. It supports initializing
+function calls from tuples, dictionaries, ActionRequest objects, or JSON strings.
+"""
+
 from functools import singledispatchmethod
-from typing import Any, Callable, Tuple, Dict
+from typing import Any, Callable
 
 from lionagi.libs import ParseUtil
 from lionagi.libs.ln_func_call import call_handler
-from lionagi.core.generic.abc import Actionable, Element
+from lionagi.core.generic.abc import Actionable
 from lionagi.core.message.action_request import ActionRequest
 
 
 class FunctionCalling(Actionable):
-    """Class for dynamically invoking functions based on various input types,
-    allowing function and arguments to be specified through multiple formats.
+    """
+    A class for dynamically invoking functions based on various input types,
+    allowing for specification of the function and arguments through multiple
+    formats including tuples, dictionaries, ActionRequests, or JSON strings.
     """
 
     def __init__(self, function: Callable, arguments: dict = None):
         """
-        Initializes a new instance of FunctionCalling.
+        Initializes a new instance of FunctionCalling with the given function
+        and optional arguments.
 
         Args:
             function (Callable): The function to be called.
-            arguments (Dict, optional): A dictionary of arguments to pass to the function.
-                                        Defaults to None, which sets it to an empty dictionary.
+            arguments (Dict[str, Any]): Arguments to pass to the function.
+                                        Defaults to an empty dictionary.
         """
         self.function = function
         self.arguments = arguments or {}
@@ -54,18 +63,6 @@ class FunctionCalling(Actionable):
 
     @create.register(tuple)
     def _(cls, function_calling):
-        """
-        Handles creation from a tuple input.
-
-        Args:
-            func_call (Tuple[Callable, Dict]): Tuple containing a function and its arguments.
-
-        Returns:
-            FunctionCalling: An initialized FunctionCalling instance.
-
-        Raises:
-            ValueError: If the tuple does not contain exactly two elements.
-        """
         if len(function_calling) == 2:
             return cls(function=function_calling[0], arguments=function_calling[1])
         else:
@@ -73,18 +70,6 @@ class FunctionCalling(Actionable):
 
     @create.register(dict)
     def _(cls, function_calling):
-        """
-        Handles creation from a dictionary input.
-
-        Args:
-            func_call (Dict[str, Any]): Dictionary specifying the function and arguments.
-
-        Returns:
-            FunctionCalling: An initialized FunctionCalling instance.
-
-        Raises:
-            ValueError: If the dictionary structure is not as expected.
-        """
         if len(function_calling) == 2 and (
             ["function", "arguments"] <= list(function_calling.keys())
         ):
@@ -95,31 +80,10 @@ class FunctionCalling(Actionable):
 
     @create.register(ActionRequest)
     def _(cls, function_calling):
-        """
-        Handles creation from an ActionRequest object.
-
-        Args:
-            func_call (ActionRequest): An ActionRequest object containing the function and arguments.
-
-        Returns:
-            FunctionCalling: An initialized FunctionCalling instance.
-        """
         return cls.create((function_calling.function, function_calling.arguments))
 
     @create.register(str)
     def _(cls, function_calling):
-        """
-        Handles creation from a JSON string input.
-
-        Args:
-            func_call (str): JSON string describing the function and arguments.
-
-        Returns:
-            FunctionCalling: An initialized FunctionCalling instance.
-
-        Raises:
-            ValueError: If parsing fails or the JSON does not represent a valid function call.
-        """
         _call = None
         try:
             _call = ParseUtil.fuzzy_parse_json(function_calling)

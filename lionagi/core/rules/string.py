@@ -5,7 +5,7 @@ from .base import Rule
 class StringRule(Rule):
 
     def __init__(self, apply_type="str", **kwargs):
-        super().__init__(apply_type, **kwargs)
+        super().__init__(apply_type=apply_type, **kwargs)
 
     async def validate(self, value):
         return isinstance(value, str)

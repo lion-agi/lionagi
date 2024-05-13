@@ -35,3 +35,6 @@ class RuleBook:
     def _all_invoked_log(self):
         """return all invoked logs from all rules in the rulebook"""
         return lcall(self.rules.values(), lambda x: x.invoked_log, flatten=True)
+
+    def __getitem__(self, key: str) -> Rule:
+        return self.rules[key]

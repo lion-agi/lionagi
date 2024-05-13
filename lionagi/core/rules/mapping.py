@@ -8,7 +8,7 @@ from .choice import ChoiceRule
 class MappingRule(ChoiceRule):
 
     def __init__(self, apply_type="dict", **kwargs):
-        super().__init__(apply_type, **kwargs)
+        super().__init__(apply_type=apply_type, **kwargs)
 
     async def validate(self, value, *args, **kwargs):
         if not isinstance(value, Mapping):

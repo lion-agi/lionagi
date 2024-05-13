@@ -10,9 +10,10 @@ class Rule(Component, Condition, Actionable):
     apply_type: str = None
     fix: bool = False
     fields: list[str] = []
-    validation_kwargs: dict[str, any] = {}
+    validation_kwargs: dict = {}
     applied_log: list = []
     invoked_log: list = []
+    _is_init: bool = False
 
     def add_log(self, field, form, apply=True, **kwargs):
         a = {
@@ -46,21 +47,13 @@ class Rule(Component, Condition, Actionable):
 
         if use_annotation:
             annotation = annotation or form._get_field_annotation(field)
+            annotation = [annotation] if isinstance(annotation, str) else annotation
 
-            if isinstance(self.apply_type, str):
-                if self.apply_type.lower() in str(annotation):
+            for i in annotation:
+                if i in self.apply_type:
                     self.add_log(field, form, **kwargs)
                     return True
-
-            elif isinstance(self.apply_type, list):
-                a = any([i.lower() in str(annotation) for i in self.apply_type])
-                if a:
-                    self.add_log(field, form, **kwargs)
-                    return True
-                return False
-
-            else:
-                return False
+            return False
 
         a = await self.rule_condition(field, value, *args, **kwargs)
 

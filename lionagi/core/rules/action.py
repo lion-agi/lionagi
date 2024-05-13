@@ -13,7 +13,7 @@ class ActionRequestKeys(Enum):
 class ActionRequestRule(MappingRule):
 
     def __init__(self, apply_type="actionrequest", discard=None, **kwargs):
-        super().__init__(apply_type, keys=ActionRequestKeys, **kwargs)
+        super().__init__(apply_type=apply_type, keys=ActionRequestKeys, **kwargs)
         self.discard = discard or self.validation_kwargs.get("discard", False)
 
     async def validate(self, value):

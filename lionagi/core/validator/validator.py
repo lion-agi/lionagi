@@ -64,6 +64,7 @@ class Validator:
 
             _rule = self.rulebook.rules[rule_name](**_config.get("config", {}))
             _rule.fields = _config.get("fields", [])
+            _rule._is_init = True
             return _rule
 
         _rules = lcall(self.rulebook.ruleorder, _init_rule)
@@ -101,7 +102,6 @@ class Validator:
             if k in form.requested_fields:
                 kwargs = form.validation_kwargs.get(k, {})
                 _annotation = form._field_annotations[k]
-
                 if (keys := form._get_field_attr(k, "choices", None)) is not None:
                     v = await self.validate_field(
                         field=k,
@@ -142,7 +142,6 @@ class Validator:
                     )
 
                 dict_[k] = v
-
         form.fill(**dict_)
         return form
 
@@ -157,7 +156,6 @@ class Validator:
         use_annotation=True,
         **kwargs,
     ) -> Any:
-
         for rule in self.active_rules.values():
             try:
                 if await rule.applies(
@@ -169,7 +167,7 @@ class Validator:
                     use_annotation=use_annotation,
                     **kwargs,
                 ):
-                    return await rule.invoke(value)
+                    return await rule.invoke(field, value, form)
             except Exception as e:
                 raise LionFieldError(f"failed to validate {field}") from e
 

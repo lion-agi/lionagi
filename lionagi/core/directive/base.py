@@ -13,6 +13,7 @@ from lionagi.libs.ln_parse import ParseUtil, StringMatch
 from ..generic import iModel
 from ..message import Instruction
 from ..message.util import _parse_action_request
+from ..validator.validator import Validator
 
 
 class BaseDirective(ABC):
@@ -155,7 +156,8 @@ class BaseDirective(ABC):
         return_form=True,
         strict=False,
         validator=None,
-    ):
+        use_annotation=True,
+    ) -> Any:
         _msg = await self._process_chatcompletion(
             payload=payload,
             completion=completion,
@@ -169,7 +171,14 @@ class BaseDirective(ABC):
         response_ = self._process_model_response(_msg, requested_fields)
 
         if form:
-            await form._handle_model_response(response_, strict, validator)
+            validator = validator or Validator()
+            form = await validator.validate_response(
+                form=form,
+                response=response_,
+                strict=strict,
+                use_annotation=use_annotation,
+            )
+
             return (
                 form
                 if return_form

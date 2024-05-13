@@ -15,16 +15,26 @@ class NumberRule(Rule):
     """
 
     def __init__(self, apply_type="int, float", **kwargs):
-        super().__init__(apply_type, **kwargs)
+        super().__init__(apply_type=apply_type, **kwargs)
 
     async def validate(self, value):
-        return isinstance(value, (int, float, complex))
+        if isinstance(value, (int, float, complex)):
+            return value
+        raise ValueError(f"Invalid number field: {value}")
 
     async def perform_fix(self, value):
         if isinstance(value, (int, float, complex)):
             return value
 
-        value = to_num(value, **self.validation_kwargs)
+        value = to_num(
+            value,
+            **{
+                k: v
+                for k, v in self.validation_kwargs.items()
+                if k in ["num_type", "precision", "upper_bound", "lower_bound"]
+            },
+        )
+
         if isinstance(value, (int, float)):
             return value
         raise ValueError(f"Failed to convert {value} into a numeric value")

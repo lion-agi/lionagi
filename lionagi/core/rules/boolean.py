@@ -5,7 +5,7 @@ from .base import Rule
 class BooleanRule(Rule):
 
     def __init__(self, apply_type="bool", **kwargs):
-        super().__init__(apply_type, **kwargs)
+        super().__init__(apply_type=apply_type, **kwargs)
 
     async def validate(self, value):
         if isinstance(value, bool):

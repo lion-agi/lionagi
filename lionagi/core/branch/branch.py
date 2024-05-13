@@ -202,6 +202,9 @@ class Branch(Node, DirectiveMixin):
 
         return to_df(dicts_)
 
+    def _is_invoked(self) -> bool:
+        return isinstance(self.messages[-1], ActionResponse)
+
     # def send(self, recipient: str, category: str, package: Any) -> None:
     #     mail = Mail(
     #         sender=self.ln_id,
@@ -260,18 +263,3 @@ class Branch(Node, DirectiveMixin):
     # def receive_all(self) -> None:
     #     for key in list(self.mailbox.pending_ins.keys()):
     #         self.receive(key)
-
-    # TODO: need to modify this method to include the new message types
-    def _is_invoked(self) -> bool:
-        content = self.messages[self.progre[-1]].content
-
-        try:
-            if to_dict(content)["action_response"].keys() >= {
-                "function",
-                "arguments",
-                "output",
-            }:
-                return True
-        except Exception:
-            return False
-        return False
