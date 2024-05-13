@@ -115,10 +115,7 @@ class Validator:
                     )
 
                 elif (_keys := form._get_field_attr(k, "keys", None)) is not None:
-                    if not "dict" in str(_annotation):
-                        raise ValueError(
-                            f"keys attribute is only applicable to dict fields"
-                        )
+                    
                     v = await self.validate_field(
                         field=k,
                         value=v,
