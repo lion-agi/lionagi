@@ -25,6 +25,7 @@ class BaseForm(Component):
         task (Any): The work to be done by the form, including custom instructions.
         validation_kwargs (Dict[str, Dict[str, Any]]): Additional validation constraints for the form fields.
     """
+    template_name: str = "default_directive"
 
     assignment: str = Field(
         ...,

@@ -22,7 +22,7 @@ from ..message import (
 
 class Branch(Node, DirectiveMixin):
 
-    messages: Pile[RoledMessage] = Field(None)
+    messages: Pile = Field(None)
     progre: Progression = Field(None)
     tool_manager: ToolManager = Field(None)
     system: System = Field(None)
@@ -35,7 +35,7 @@ class Branch(Node, DirectiveMixin):
         system: System | None = None,
         system_sender: str | None = None,
         user: str | None = None,
-        messages: Pile[RoledMessage] = None,
+        messages: Pile = None,
         progre: Progression = None,
         tool_manager: ToolManager = None,
         tools: Any = None,
@@ -47,7 +47,7 @@ class Branch(Node, DirectiveMixin):
         self.system = None
 
         self.user = user or "user"
-        self.messages = messages or pile({}, RoledMessage)
+        self.messages = messages or pile({})
         self.progre = progre or progression()
         self.tool_manager = tool_manager or ToolManager()
         self.mailbox = mailbox or Exchange()

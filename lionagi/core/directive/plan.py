@@ -1,7 +1,7 @@
 from lionagi.libs.ln_func_call import rcall, alcall
 from ..branch.branch import Branch
 
-from ._default_templates import PlanTemplate
+from .template._default_templates import PlanTemplate
 from .chat import Chat
 
 

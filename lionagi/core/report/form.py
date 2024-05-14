@@ -32,9 +32,34 @@ class Form(BaseForm):
         self.input_fields, self.requested_fields = get_input_output_fields(
             self.assignment
         )
+          
+        for i in self.input_fields:
+            self.append_to_input(i)
+        
         for i in self.input_fields + self.requested_fields:
             if i not in self._all_fields:
                 self._add_field(i, value=None)
+
+    def append_to_request(self, field: str, field_obj=None):
+        if field not in self._all_fields:
+            self._add_field(field, field_obj=field_obj)
+        
+        if field not in self.requested_fields:
+            self.requested_fields.append(field)
+            self.validation_kwargs[field] = self._get_field_attr(
+                field, "validation_kwargs", {}
+            )
+        
+    def append_to_input(self, field: str, field_obj=None):
+        if field not in self._all_fields:
+            self._add_field(field, field_obj=field_obj)
+        
+        if field not in self.input_fields:
+            self.input_fields.append(field)
+            self.validation_kwargs[field] = self._get_field_attr(
+                field, "validation_kwargs", {}
+            )
+        
 
     @property
     def work_fields(self) -> Dict[str, Any]:

@@ -126,7 +126,7 @@ class Progression(Element, Ordering):
 
     def __add__(self, other):
         """Add an item or items to the end of the progression."""
-        _copy = progression(self.order, self.name)
+        _copy = self.copy()
         _copy.include(other)
         return _copy
 
