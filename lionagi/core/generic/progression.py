@@ -226,6 +226,10 @@ class Progression(Element, Ordering):
         """Clear the progression."""
         self.order = []
 
+    def to_dict(self):
+        """Return a dictionary representation of the progression."""
+        return {"name": self.name, "order": self.order}
+
 
 def progression(order=None, name=None, /) -> Progression:
     return Progression(order=order, name=name)

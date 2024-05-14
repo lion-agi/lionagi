@@ -9,8 +9,8 @@ def to_list_type(value):
         return [value]
     if isinstance(value, (Mapping, Record)):
         return list(value.values())
-    if isinstance(value, Ordering):
-        return list(value.order)
+    # if isinstance(value, Ordering):
+    #     return list(value.order)
     if isinstance(value, (tuple, list, set, Generator, deque)):
         return list(value)
     return [value]

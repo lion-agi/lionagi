@@ -170,13 +170,13 @@ class Graph(Node):
         for node in self.internal_nodes:
             node_info = node.to_dict()
             node_info.pop("ln_id")
-            node_info.update({"class_name": node.class_name()})
+            node_info.update({"class_name": node.class_name})
             g.add_node(node.ln_id, **node_info)
 
         for _edge in self.internal_edges:
             edge_info = _edge.to_dict()
             edge_info.pop("ln_id")
-            edge_info.update({"class_name": _edge.class_name()})
+            edge_info.update({"class_name": _edge.class_name})
             source_node_id = edge_info.pop("head")
             target_node_id = edge_info.pop("tail")
             g.add_edge(source_node_id, target_node_id, **edge_info)

@@ -73,6 +73,12 @@ class Pile(Element, Record, Generic[T]):
             raise ItemNotFoundError(key) from e
 
         keys = to_list_type(key)
+        for idx, item in enumerate(keys):
+            if isinstance(item, str):
+                keys[idx] = item
+                continue
+            if hasattr(item, "ln_id"):
+                keys[idx] = item.ln_id
 
         if not all(keys):
             raise LionTypeError("Invalid item type. Expected LionIDable object(s).")
