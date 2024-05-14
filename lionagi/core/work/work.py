@@ -27,7 +27,7 @@ class Work(Component):
         completion_timestamp (str | None): The timestamp when the work was completed.
         duration (float | None): The duration of the work.
     """
-    
+
     status: WorkStatus = WorkStatus.PENDING
     result: Any = None
     error: Any = None
@@ -50,7 +50,9 @@ class Work(Component):
             self.completion_timestamp = SysUtil.get_timestamp(sep=None)[:-6]
 
     def __str__(self):
-        return (f"Work(id={self.ln_id[:8]}.., status={self.status.value}, "
-                f"created_at={self.timestamp[:-7]}, "
-                f"completed_at={self.completion_timestamp[:-7]}, "
-                f"duration={float(self.duration) if self.duration else 0:.04f} sec(s))")
+        return (
+            f"Work(id={self.ln_id[:8]}.., status={self.status.value}, "
+            f"created_at={self.timestamp[:-7]}, "
+            f"completed_at={self.completion_timestamp[:-7]}, "
+            f"duration={float(self.duration) if self.duration else 0:.04f} sec(s))"
+        )

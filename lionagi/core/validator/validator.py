@@ -56,6 +56,7 @@ class Validator:
         Returns:
             dict: A dictionary of active rules.
         """
+
         def _init_rule(rule_name: str) -> Rule:
             if not issubclass(self.rulebook[rule_name], Rule):
                 raise LionFieldError(
@@ -74,7 +75,7 @@ class Validator:
             return _rule
 
         _rules = lcall(self.rulebook.ruleorder, _init_rule)
-        
+
         return {
             rule_name: _rules[idx]
             for idx, rule_name in enumerate(self.rulebook.ruleorder)
@@ -135,7 +136,6 @@ class Validator:
             self.log_validation_error(field, value, error_message)
             raise LionFieldError(error_message)
 
-
     async def validate_report(
         self, report: Report, forms: List[Form], strict: bool = False
     ) -> Report:
@@ -185,7 +185,7 @@ class Validator:
 
         dict_ = {}
         for k, v in response.items():
-            
+
             if k in form.requested_fields:
                 kwargs = form.validation_kwargs.get(k, {})
                 _annotation = form._field_annotations[k]
@@ -200,9 +200,9 @@ class Validator:
                         use_annotation=use_annotation,
                         **kwargs,
                     )
-                    
+
                 elif (_keys := form._get_field_attr(k, "keys", None)) is not None:
-                    
+
                     v = await self.validate_field(
                         field=k,
                         value=v,
@@ -213,7 +213,7 @@ class Validator:
                         use_annotation=use_annotation,
                         **kwargs,
                     )
-                    
+
                 else:
                     v = await self.validate_field(
                         field=k,
@@ -224,11 +224,10 @@ class Validator:
                         use_annotation=use_annotation,
                         **kwargs,
                     )
-                    
+
                 dict_[k] = v
         form.fill(**dict_)
         return form
-    
 
     def add_rule(self, rule_name: str, rule: Rule, config: dict = None):
         """
@@ -331,9 +330,7 @@ class Validator:
         """
         summary = {
             "total_attempts": len(self.validation_log),
-            "errors": [
-                log for log in self.validation_log if "error" in log
-            ],
+            "errors": [log for log in self.validation_log if "error" in log],
             "successful_attempts": [
                 log for log in self.validation_log if "result" in log
             ],

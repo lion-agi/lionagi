@@ -9,8 +9,7 @@ class WorkLog(Progressable):
 
     def __init__(self, capacity=10, workpile=None):
         self.pile = (
-            workpile if workpile and isinstance(workpile, Pile) 
-            else pile({}, Work)
+            workpile if workpile and isinstance(workpile, Pile) else pile({}, Work)
         )
         self.pending = progression(workpile) if workpile else progression()
         self.queue = WorkQueue(capacity=capacity)
@@ -33,8 +32,7 @@ class WorkLog(Progressable):
 
     @property
     def pending_work(self):
-        return pile([i for i in self.pile 
-                     if i.status == WorkStatus.PENDING])
+        return pile([i for i in self.pile if i.status == WorkStatus.PENDING])
 
     @property
     def stopped(self):
@@ -42,8 +40,7 @@ class WorkLog(Progressable):
 
     @property
     def completed_work(self):
-        return pile([i for i in self.pile 
-                     if i.status == WorkStatus.COMPLETED])
+        return pile([i for i in self.pile if i.status == WorkStatus.COMPLETED])
 
     def __contains__(self, work):
         return work in self.pile

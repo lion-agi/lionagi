@@ -2,6 +2,7 @@ from typing import Any
 from lionagi.libs.ln_convert import to_str, strip_lower
 from .base import Rule
 
+
 class BooleanRule(Rule):
     """
     Rule for validating that a value is a boolean.
@@ -46,8 +47,8 @@ class BooleanRule(Rule):
         value = strip_lower(to_str(value))
         if value in ["true", "1", "correct", "yes"]:
             return True
-        
+
         elif value in ["false", "0", "incorrect", "no", "none", "n/a"]:
             return False
-        
+
         raise ValueError(f"Failed to convert {value} into a boolean value")

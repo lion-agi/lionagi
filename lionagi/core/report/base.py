@@ -129,7 +129,9 @@ class BaseForm(Component):
                 raise ValueError(f"Field {k} is not filled")
         return True
 
-    def _get_all_fields(self, form: List["BaseForm"] = None, **kwargs) -> Dict[str, Any]:
+    def _get_all_fields(
+        self, form: List["BaseForm"] = None, **kwargs
+    ) -> Dict[str, Any]:
         """
         Given a form or collections of forms, and additional fields, gather
         all fields together including self fields with valid value.

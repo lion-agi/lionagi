@@ -2,6 +2,7 @@ from typing import Any
 from lionagi.libs.ln_convert import to_num
 from .base import Rule
 
+
 class NumberRule(Rule):
     """
     Rule for validating that a value is a number within specified bounds.

@@ -41,7 +41,6 @@ class RuleBook:
     def __getitem__(self, key: str) -> Rule:
         return self.rules[key]
 
-
     # def add_rule(self, rule_name: str, rule: Rule, config: dict = None):
     #     if rule_name in self.rules:
     #         raise ValueError(f"Rule '{rule_name}' already exists.")

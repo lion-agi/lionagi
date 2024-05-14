@@ -1,47 +1,86 @@
-"""flow as categorical sequences"""
-
 from collections.abc import Mapping
 from collections import deque
 from typing import Tuple
-from pydantic import Field, field_validator
+from pydantic import Field
 import contextlib
 from .abc import (
     Record,
-    Component,
     LionTypeError,
     ItemNotFoundError,
     LionIDable,
     Element,
 )
 from .pile import Pile, pile
-
 from .progression import Progression, progression
 
 
 class Flow(Element):
+    """
+    Represents a flow of categorical sequences.
 
-    sequences: Pile[Progression] = Field(default_factory=lambda: pile({}, Progression))
+    Attributes:
+        sequences (Pile[Progression]): A collection of progression sequences.
+        registry (dict[str, str]): A registry mapping sequence names to IDs.
+        default_name (str): The default name for the flow.
+    """
+
+    sequences: Pile[Progression] = Field(
+        default_factory=lambda: pile({}, Progression, use_obj=True)
+    )
+
     registry: dict[str, str] = {}
     default_name: str = "main"
 
-    @field_validator("sequences", mode="before")
-    def _validate_sequences(cls, value):
+    def __init__(self, sequences=None, default_name=None):
+        """
+        Initializes a Flow instance.
+
+        Args:
+            sequences (optional): Initial sequences to include in the flow.
+            default_name (optional): Default name for the flow.
+        """
+        super().__init__()
+        self.sequences = self._validate_sequences(sequences)
+        self.default_name = default_name or "main"
+
+    def _validate_sequences(self, value):
+        """
+        Validates and initializes the sequences.
+
+        Args:
+            value: Sequences to validate and initialize.
+
+        Returns:
+            Pile[Progression]: A pile of progression sequences.
+        """
         if not value:
-            return pile({}, Progression)
+            return pile({}, Progression, use_obj=True)
         if isinstance(value, dict):
-            return pile(value, Progression)
+            return pile(value, Progression, use_obj=True)
         if (
             isinstance(value, list)
             and len(value) > 0
             and isinstance(value[0], Progression)
         ):
-            return pile({i.ln_id: i for i in value}, Progression)
-        return pile({}, Progression)
+            return pile({i.ln_id: i for i in value}, Progression, use_obj=True)
+        return pile({}, Progression, use_obj=True)
 
     def all_orders(self) -> list[list[str]]:
+        """
+        Retrieves all orders in the flow.
+
+        Returns:
+            list[list[str]]: A list of lists containing sequence orders.
+        """
         return [list(seq) for seq in self.sequences]
 
     def all_unique_items(self) -> Tuple[str]:
+        """
+        Retrieves all unique items across sequences.
+
+        Returns:
+            Tuple[str]: A tuple of unique items.
+        """
         return tuple({item for seq in self.sequences for item in seq})
 
     def keys(self):
@@ -54,6 +93,16 @@ class Flow(Element):
         yield from self.sequences.pile()
 
     def get(self, seq=None, default=...):
+        """
+        Retrieves a sequence by name or returns the default sequence.
+
+        Args:
+            seq (optional): The name of the sequence.
+            default (optional): Default value if sequence is not found.
+
+        Returns:
+            Progression: The requested sequence.
+        """
 
         if seq is None:
             if self.default_name in self.registry:
@@ -131,7 +180,17 @@ class Flow(Element):
                 return False
 
     def exclude(self, seq: LionIDable = None, item=None, name=None):
+        """
+        Excludes an item or sequence from the flow.
 
+        Args:
+            seq (LionIDable, optional): The sequence to exclude from.
+            item (optional): The item to exclude.
+            name (optional): The name of the sequence.
+
+        Returns:
+            bool: True if exclusion was successful, False otherwise.
+        """
         # if sequence is not None, we will not check the name
         if seq is not None:
 
@@ -158,10 +217,23 @@ class Flow(Element):
             return False
 
     def register(self, sequence: Progression, name: str = None):
+        """
+        Registers a sequence with a name.
+
+        Args:
+            sequence (Progression): The sequence to register.
+            name (str, optional): The name for the sequence.
+
+        Raises:
+            LionTypeError: If the sequence is not of type Progression.
+            ValueError: If the sequence name already exists.
+        """
+
         if not isinstance(sequence, Progression):
             raise LionTypeError(f"Sequence must be of type Progression.")
 
-        if name is None and sequence.name is None:
+        name = name or sequence.name
+        if not name:
             if self.default_name in self.registry:
                 name = sequence.ln_id
             else:
@@ -174,6 +246,13 @@ class Flow(Element):
         self.registry[name] = sequence.ln_id
 
     def append(self, item, sequence=None, /):
+        """
+        Appends an item to a sequence.
+
+        Args:
+            item: The item to append.
+            sequence (optional): The sequence to append to.
+        """
         if not sequence:
             if self.default_name in self.registry:
                 sequence = self.registry[self.default_name]
@@ -196,22 +275,42 @@ class Flow(Element):
         self.register(p)
 
     def popleft(self, sequence=None, /):
+        """
+        Removes and returns an item from the left end of a sequence.
+
+        Args:
+            sequence (optional): The sequence to remove the item from.
+
+        Returns:
+            The removed item.
+        """
         sequence = self._find_sequence(sequence)
         return self.sequences[sequence].popleft()
 
     def shape(self):
         return {sequence: len(seq) for sequence, seq in self.items()}
 
-    def get(self, sequence: str, /, default=False) -> deque[str] | None:
+    def get(self, sequence: str, /, default=...) -> deque[str] | None:
+        sequence = getattr(sequence, "ln_id", None) or sequence
+
+        if sequence in self.registry:
+            return self.sequences[self.registry[sequence]]
+
         try:
             return self.sequences[sequence]
         except KeyError as e:
-            if default == False:
+            if default == ...:
                 raise e
             return default
 
     def remove(self, item, sequence="all"):
-        """if sequence is 'all', will attempt to remove the item from all sequencees."""
+        """
+        Removes an item from a sequence or all sequences.
+
+        Args:
+            item: The item to remove.
+            sequence (str, optional): The sequence to remove the item from. Defaults to "all".
+        """
         if sequence == "all":
             for seq in self.sequences:
                 seq.remove(item)
@@ -229,7 +328,19 @@ class Flow(Element):
         return next(self.__iter__())
 
     def _find_sequence(self, sequence=None, default=...):
-        """find the sequence id in the registry or sequencees. can be name, progression obj or id"""
+        """
+        Finds the sequence ID in the registry or sequences.
+
+        Args:
+            sequence (optional): The sequence to find.
+            default (optional): The default value if sequence is not found.
+
+        Returns:
+            The found sequence ID.
+
+        Raises:
+            ItemNotFoundError: If no sequence is found.
+        """
 
         if not sequence:
             if self.default_name in self.registry:
@@ -249,6 +360,16 @@ class Flow(Element):
 
 
 def flow(sequences=None, default_name=None, /):
+    """
+    Creates a new Flow instance.
+
+    Args:
+        sequences (optional): Initial sequences to include in the flow.
+        default_name (optional): Default name for the flow.
+
+    Returns:
+        Flow: A new Flow instance.
+    """
     if sequences is None:
         return Flow()
 

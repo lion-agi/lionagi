@@ -14,6 +14,7 @@ from .abc import (
     Element,
     Record,
     Component,
+    Ordering,
     LionIDable,
     get_lion_id,
     LionValueError,
@@ -40,10 +41,33 @@ class Pile(Element, Record, Generic[T]):
         order (list[str]): Order of item identifiers.
     """
 
+    use_obj: bool = (
+        False  # if use_obj is True, we will treat Record and Ordering as objects, instead of their internal elements
+    )
     pile: dict[str, T] = Field(default_factory=dict)
     item_type: set[Type[Element]] | None = Field(default=None)
     name: str | None = None
     order: list[str] = Field(default_factory=list)
+
+    def __init__(
+        self,
+        items=None,
+        item_type=None,
+        order=None,
+        use_obj=None,
+    ):
+        super().__init__()
+
+        self.use_obj = use_obj or False
+        self.pile = self._validate_pile(items or {})
+        self.item_type = self._validate_item_type(item_type)
+
+        order = order or list(self.pile.keys())
+        if not len(order) == len(self):
+            raise ValueError(
+                "The length of the order does not match the length of the pile"
+            )
+        self.order = order
 
     def __getitem__(self, key) -> T | "Pile[T]":
         """
@@ -338,7 +362,7 @@ class Pile(Element, Record, Generic[T]):
         """
         _copy = self.model_copy(deep=True)
         if _copy.include(other):
-            return pile(_copy)
+            return _copy
         raise LionValueError("Item cannot be included in the pile.")
 
     def __sub__(self, other) -> "Pile":
@@ -364,7 +388,7 @@ class Pile(Element, Record, Generic[T]):
         length = len(_copy)
         if not _copy.exclude(other) or len(_copy) == length:
             raise LionValueError("Item cannot be excluded from the pile.")
-        return pile(_copy)
+        return _copy
 
     def __iadd__(self, other: T) -> "Pile":
         """
@@ -376,8 +400,7 @@ class Pile(Element, Record, Generic[T]):
         Args:
             other: Item(s) to include. Can be single item or collection.
         """
-        if self.include(other):
-            return self
+        return self + other
 
     def __isub__(self, other: LionIDable) -> "Pile":
         """
@@ -392,10 +415,7 @@ class Pile(Element, Record, Generic[T]):
         Returns:
             Modified pile after excluding item(s).
         """
-        length = len(self)
-        if not self.exclude(other) or len(self) == length:
-            raise LionValueError("Item cannot be excluded from the pile.")
-        return self
+        return self - other
 
     def __radd__(self, other: T) -> "Pile":
         return other + self
@@ -455,8 +475,7 @@ class Pile(Element, Record, Generic[T]):
     def _validate_order(cls, value):
         return _validate_order(value)
 
-    @field_validator("item_type", mode="before")
-    def _validate_item_type(cls, value):
+    def _validate_item_type(self, value):
         if value is None:
             return None
 
@@ -474,25 +493,42 @@ class Pile(Element, Record, Generic[T]):
         if len(value) > 0:
             return set(value)
 
-    @field_validator("pile", mode="before")
     def _validate_pile(
-        cls,
+        self,
         value,
     ):
+        if value == {}:
+            return value
+
         if isinstance(value, Component):
             return {value.ln_id: value}
 
+        if self.use_obj:
+            if not isinstance(value, list):
+                value = [value]
+            if isinstance(value[0], (Record, Ordering)):
+                return {getattr(i, "ln_id"): i for i in value}
+
         value = to_list_type(value)
-        if getattr(cls, "item_type", None) is not None:
+        if getattr(self, "item_type", None) is not None:
             for i in value:
-                if not type(i) in cls.item_type:
+                if not type(i) in self.item_type:
                     raise LionTypeError(
-                        f"Invalid item type in pile. Expected {cls.item_type}"
+                        f"Invalid item type in pile. Expected {self.item_type}"
                     )
 
         if isinstance(value, list):
             if len(value) == 1:
-                return {value[0].ln_id: value[0]}
+                if isinstance(value[0], dict) and value[0] != {}:
+                    k = list(value[0].keys())[0]
+                    v = value[0][k]
+                    return {k: v}
+
+                # [item]
+                k = getattr(value[0], "ln_id", None)
+                if k:
+                    return {k: value[0]}
+
             return {i.ln_id: i for i in value}
 
         raise LionValueError("Invalid pile value")
@@ -519,17 +555,6 @@ def pile(
     items: Iterable[T] | None = None,
     item_type: set[Type] | None = None,
     order=None,
+    use_obj=None,
 ) -> Pile[T]:
-    """Create a new Pile instance."""
-    if not items:
-        return Pile(item_type=item_type) if item_type else Pile()
-
-    a = Pile(pile=items, item_type=item_type)
-    order = order or list(a.pile.keys())
-    if not len(order) == len(a):
-        raise ValueError(
-            "The length of the order does not match the length of the pile"
-        )
-
-    a.order = order
-    return a
+    return Pile(items, item_type, order, use_obj)

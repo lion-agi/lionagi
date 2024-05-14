@@ -1,7 +1,6 @@
 import asyncio
 
 
-
 class WorkQueue:
     """
     A class representing a queue for managing work.
@@ -52,8 +51,7 @@ class WorkQueue:
         tasks = set()
         while self.queue.qsize() > 0 and not self.stopped:
             if not self.available_capacity and tasks:
-                _, done = await asyncio.wait(
-                    tasks, return_when=asyncio.FIRST_COMPLETED)
+                _, done = await asyncio.wait(tasks, return_when=asyncio.FIRST_COMPLETED)
                 tasks.difference_update(done)
 
             async with self.semaphore:

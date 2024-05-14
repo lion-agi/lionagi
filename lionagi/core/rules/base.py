@@ -26,7 +26,7 @@ class Rule(Component, Condition, Actionable):
     applied_log: list = []
     invoked_log: list = []
     _is_init: bool = False
-    
+
     def add_log(self, field: str, form: Any, apply: bool = True, **kwargs) -> None:
         """
         Adds an entry to the applied or invoked log.
@@ -59,7 +59,7 @@ class Rule(Component, Condition, Actionable):
         *args,
         annotation: List[str] = None,
         use_annotation: bool = True,
-        **kwargs
+        **kwargs,
     ) -> bool:
         """
         Determines whether the rule applies to a given field and value.

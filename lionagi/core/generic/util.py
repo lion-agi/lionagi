@@ -22,6 +22,9 @@ def _validate_order(value) -> list[str]:
         return []
     if isinstance(value, str) and len(value) == 32:
         return [value]
+    elif isinstance(value, Ordering):
+        return value.order
+
     elif isinstance(value, Element):
         return [value.ln_id]
 
