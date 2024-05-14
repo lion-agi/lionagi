@@ -2,8 +2,6 @@ from collections.abc import Callable
 import re
 import inspect
 import itertools
-import contextlib
-from functools import singledispatchmethod
 from typing import Any
 import numpy as np
 import lionagi.libs.ln_convert as convert
@@ -657,7 +655,7 @@ class StringMatch:
         # Calculate Jaro-Winkler similarity scores for each potential match
         scores = np.array(
             [
-                score_func(convert.to_str(word), correct_word)
+                score_func(str(word), str(correct_word))
                 for correct_word in correct_words_list
             ]
         )

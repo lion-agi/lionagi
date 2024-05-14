@@ -5,7 +5,7 @@ function calls from tuples, dictionaries, ActionRequest objects, or JSON strings
 """
 
 from functools import singledispatchmethod
-from typing import Any, Callable
+from typing import Any, Callable, Dict
 
 from lionagi.libs import ParseUtil
 from lionagi.libs.ln_func_call import call_handler
@@ -20,7 +20,7 @@ class FunctionCalling(Actionable):
     formats including tuples, dictionaries, ActionRequests, or JSON strings.
     """
 
-    def __init__(self, function: Callable, arguments: dict = None):
+    def __init__(self, function: Callable, arguments: Dict[str, Any] = None):
         """
         Initializes a new instance of FunctionCalling with the given function
         and optional arguments.
@@ -62,16 +62,16 @@ class FunctionCalling(Actionable):
         raise TypeError(f"Unsupported type {type(func_call)}")
 
     @create.register(tuple)
-    def _(cls, function_calling):
+    def _(cls, function_calling: tuple) -> "FunctionCalling":
         if len(function_calling) == 2:
             return cls(function=function_calling[0], arguments=function_calling[1])
         else:
             raise ValueError(f"Invalid function call {function_calling}")
 
     @create.register(dict)
-    def _(cls, function_calling):
+    def _(cls, function_calling: Dict[str, Any]) -> "FunctionCalling":
         if len(function_calling) == 2 and (
-            ["function", "arguments"] <= list(function_calling.keys())
+            {"function", "arguments"} <= function_calling.keys()
         ):
             return cls.create(
                 (function_calling["function"], function_calling["arguments"])
@@ -79,11 +79,11 @@ class FunctionCalling(Actionable):
         raise ValueError(f"Invalid function call {function_calling}")
 
     @create.register(ActionRequest)
-    def _(cls, function_calling):
+    def _(cls, function_calling: ActionRequest) -> "FunctionCalling":
         return cls.create((function_calling.function, function_calling.arguments))
 
     @create.register(str)
-    def _(cls, function_calling):
+    def _(cls, function_calling: str) -> "FunctionCalling":
         _call = None
         try:
             _call = ParseUtil.fuzzy_parse_json(function_calling)

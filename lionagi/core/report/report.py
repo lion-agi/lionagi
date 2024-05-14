@@ -75,10 +75,6 @@ class Report(BaseForm):
 
     @property
     def work_fields(self) -> dict[str, Any]:
-        """
-        Aggregates all work fields from the contained forms into a single
-        dictionary, ensuring uniqueness of field names across all forms.
-        """
         all_fields = {}
         for form in self.forms.values():
             for k, v in form.work_fields.items():
@@ -87,10 +83,6 @@ class Report(BaseForm):
         return all_fields
 
     def fill(self, form: Form | list[Form] | dict[Form] = None, strict=True, **kwargs):
-        """
-        Fills the report from another form or kwargs, enforces strict mode if set,
-        where no further changes are allowed if already filled.
-        """
         if self.filled:
             if strict:
                 raise ValueError("Form is filled, cannot be worked on again")
@@ -118,6 +110,9 @@ class Report(BaseForm):
         """
         Checks if the report is ready for processing, ensuring all necessary fields
         are filled and output fields are unique across forms.
+
+        Returns:
+            bool: True if the report is workable, otherwise raises ValueError.
         """
         if self.filled:
             raise ValueError("Form is already filled, cannot be worked on again")
@@ -150,6 +145,9 @@ class Report(BaseForm):
     def next_forms(self) -> Pile[Form]:
         """
         Returns a pile of workable forms based on current form states within the report.
+
+        Returns:
+            Pile[Form]: A pile of workable forms or None if there are no workable forms.
         """
         a = [i for i in self.forms if i.workable]
         return pile(a, Form) if len(a) > 0 else None

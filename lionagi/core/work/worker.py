@@ -10,8 +10,10 @@ from .worklog import WorkLog
 
 
 class Worker(ABC):
-    # This is a class that will be used to create a worker object
-    # work_functions are keyed by assignment {assignment: WorkFunction}
+    """
+    This is a class that will be used to create a worker object.
+    Work functions are keyed by assignment {assignment: WorkFunction}.
+    """
 
     name: str = "Worker"
     work_functions: dict[str, WorkFunction] = {}
@@ -36,13 +38,15 @@ class Worker(ABC):
 
     async def is_progressable(self):
         return (
-            any([await i.is_progressable() for i in self.work_functions.values()])
+            any([await i.is_progressable() 
+                 for i in self.work_functions.values()])
             and not self.stopped
         )
 
     async def process(self, refresh_time=1):
         while await self.is_progressable():
-            await pcall([i.process(refresh_time) for i in self.work_functions.values()])
+            await pcall([i.process(refresh_time) 
+                         for i in self.work_functions.values()])
             asyncio.sleep(refresh_time)
 
     # TODO: Implement process method

@@ -8,6 +8,16 @@ from .worklog import WorkLog
 
 
 class WorkFunction:
+    """
+    A class representing a work function.
+
+    Attributes:
+        assignment (str): The assignment description of the work function.
+        function (Callable): The function to be performed.
+        retry_kwargs (dict): The retry arguments for the function.
+        worklog (WorkLog): The work log for the function.
+        guidance (str): The guidance or documentation for the function.
+    """
 
     def __init__(
         self, assignment, function, retry_kwargs=None, guidance=None, capacity=10

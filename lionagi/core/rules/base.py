@@ -1,11 +1,23 @@
-from lionagi.libs import SysUtil
 from abc import abstractmethod
+from typing import Any, List, Dict
 from pandas import Series
+from lionagi.libs import SysUtil
 from ..generic.abc import Condition, Actionable, Component
 
 
 class Rule(Component, Condition, Actionable):
-    """Combines a condition and an action that can be applied based on it."""
+    """
+    Combines a condition and an action that can be applied based on it.
+
+    Attributes:
+        apply_type (str): The type of data to which the rule applies.
+        fix (bool): Indicates whether the rule includes a fix action.
+        fields (list[str]): List of fields to which the rule applies.
+        validation_kwargs (dict): Keyword arguments for validation.
+        applied_log (list): Log of applied rules.
+        invoked_log (list): Log of invoked rules.
+        _is_init (bool): Indicates whether the rule is initialized.
+    """
 
     apply_type: str = None
     fix: bool = False
@@ -14,8 +26,17 @@ class Rule(Component, Condition, Actionable):
     applied_log: list = []
     invoked_log: list = []
     _is_init: bool = False
+    
+    def add_log(self, field: str, form: Any, apply: bool = True, **kwargs) -> None:
+        """
+        Adds an entry to the applied or invoked log.
 
-    def add_log(self, field, form, apply=True, **kwargs):
+        Args:
+            field (str): The field being validated.
+            form (Any): The form being validated.
+            apply (bool): Indicates whether the log is for an applied rule.
+            **kwargs: Additional configuration parameters.
+        """
         a = {
             "type": "rule",
             "class": self.class_name,
@@ -32,14 +53,29 @@ class Rule(Component, Condition, Actionable):
 
     async def applies(
         self,
-        field,
-        value,
-        form,
+        field: str,
+        value: Any,
+        form: Any,
         *args,
-        annotation: list[str] = None,
+        annotation: List[str] = None,
         use_annotation: bool = True,
-        **kwargs,
-    ):
+        **kwargs
+    ) -> bool:
+        """
+        Determines whether the rule applies to a given field and value.
+
+        Args:
+            field (str): The field being validated.
+            value (Any): The value of the field.
+            form (Any): The form being validated.
+            *args: Additional arguments.
+            annotation (list[str], optional): Annotations for the field.
+            use_annotation (bool): Indicates whether to use annotations.
+            **kwargs: Additional keyword arguments.
+
+        Returns:
+            bool: True if the rule applies, otherwise False.
+        """
         if self.fields:
             if field in self.fields:
                 self.add_log(field, form, **kwargs)
@@ -62,7 +98,21 @@ class Rule(Component, Condition, Actionable):
             return True
         return False
 
-    async def invoke(self, field, value, form):
+    async def invoke(self, field: str, value: Any, form: Any) -> Any:
+        """
+        Invokes the rule's validation logic on a field and value.
+
+        Args:
+            field (str): The field being validated.
+            value (Any): The value of the field.
+            form (Any): The form being validated.
+
+        Returns:
+            Any: The validated or fixed value.
+
+        Raises:
+            ValueError: If validation or fixing fails.
+        """
         try:
             a = await self.validate(value, **self.validation_kwargs)
             self.add_log(field, form, apply=False, **self.validation_kwargs)
@@ -79,19 +129,58 @@ class Rule(Component, Condition, Actionable):
             raise ValueError(f"failed to validate field") from e1
 
     async def rule_condition(self, *args, **kwargs) -> bool:
-        """additional condition, if choose not to use annotation as qualifier"""
+        """
+        Additional condition, if choosing not to use annotation as a qualifier.
+
+        Args:
+            *args: Additional arguments.
+            **kwargs: Additional keyword arguments.
+
+        Returns:
+            bool: False by default, should be overridden by subclasses.
+        """
         return False
 
-    async def perform_fix(self, value, *args, **kwargs):
-        """return value or raise error"""
+    async def perform_fix(self, value: Any, *args, **kwargs) -> Any:
+        """
+        Attempts to fix a value if validation fails.
+
+        Args:
+            value (Any): The value to fix.
+            *args: Additional arguments.
+            **kwargs: Additional keyword arguments.
+
+        Returns:
+            Any: The fixed value.
+
+        Raises:
+            ValueError: If the fix fails.
+        """
         return value
 
     @abstractmethod
-    async def validate(self, value):
-        """return value or raise error"""
+    async def validate(self, value: Any) -> Any:
+        """
+        Abstract method to validate a value.
+
+        Args:
+            value (Any): The value to validate.
+
+        Returns:
+            Any: The validated value.
+
+        Raises:
+            ValueError: If validation fails.
+        """
         pass
 
-    def _to_dict(self):
+    def _to_dict(self) -> Dict[str, Any]:
+        """
+        Converts the rule's attributes to a dictionary.
+
+        Returns:
+            dict: A dictionary representation of the rule.
+        """
         return {
             "ln_id": self.ln_id[:8] + "...",
             "rule": self.__class__.__name__,
@@ -103,10 +192,22 @@ class Rule(Component, Condition, Actionable):
             "num_invoked": len(self.invoked_log),
         }
 
-    def __str__(self):
+    def __str__(self) -> str:
+        """
+        Returns a string representation of the rule using a pandas Series.
+
+        Returns:
+            str: A string representation of the rule.
+        """
         series = Series(self._to_dict())
         return series.__str__()
 
-    def __repr__(self):
+    def __repr__(self) -> str:
+        """
+        Returns a string representation of the rule using a pandas Series.
+
+        Returns:
+            str: A string representation of the rule.
+        """
         series = Series(self._to_dict())
         return series.__repr__()

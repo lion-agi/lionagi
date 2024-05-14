@@ -5,6 +5,7 @@ functionalities for initializing fields, filling forms with data, and
 validating the readiness of forms for further processing.
 """
 
+from typing import Dict, Any
 from ..generic.abc.util import SYSTEM_FIELDS
 from .util import get_input_output_fields
 from .base import BaseForm
@@ -16,6 +17,10 @@ class Form(BaseForm):
     dynamically based on specified assignments. Supports initialization and
     management of input and requested fields, handles form filling operations,
     and ensures forms are properly configured for use.
+
+    Attributes:
+        input_fields (List[str]): Fields required to carry out the objective of the form.
+        requested_fields (List[str]): Fields requested to be filled by the user.
     """
 
     def __init__(self, **kwargs):
@@ -32,11 +37,14 @@ class Form(BaseForm):
                 self._add_field(i, value=None)
 
     @property
-    def work_fields(self) -> dict:
+    def work_fields(self) -> Dict[str, Any]:
         """
         Retrieves a dictionary of the fields relevant to the current task,
         excluding any SYSTEM_FIELDS and including only the input and requested
         fields.
+
+        Returns:
+            Dict[str, Any]: The relevant fields for the current task.
         """
         dict_ = self.to_dict()
         return {
@@ -45,11 +53,15 @@ class Form(BaseForm):
             if k not in SYSTEM_FIELDS and k in self.input_fields + self.requested_fields
         }
 
-    def fill(self, form: "Form" = None, strict=True, **kwargs):
+    def fill(self, form: "Form" = None, strict: bool = True, **kwargs) -> None:
         """
         Fills the form from another form instance or provided keyword arguments.
-        Raises an error if the form is already filled. return a bool indicating
-        is the filling operation was successful.
+        Raises an error if the form is already filled.
+
+        Args:
+            form (Form, optional): The form to fill from.
+            strict (bool, optional): Whether to enforce strict filling. Defaults to True.
+            **kwargs: Additional fields to fill.
         """
         if self.filled:
             if strict:
@@ -70,6 +82,9 @@ class Form(BaseForm):
         Determines if the form is ready for processing. Checks if all required
         fields are filled and raises an error if the form is already filled or
         if any required field is missing.
+
+        Returns:
+            bool: True if the form is workable, otherwise raises ValueError.
         """
         if self.filled:
             raise ValueError("Form is already filled, cannot be worked on again")
@@ -85,6 +100,9 @@ class Form(BaseForm):
         """
         Generates a detailed description of the input fields, including their
         current values and descriptions.
+
+        Returns:
+            str: A detailed description of the input fields.
         """
         a = "".join(
             f"""
@@ -101,6 +119,9 @@ class Form(BaseForm):
         """
         Generates a brief summary of the form's context, including the task
         description and lists of provided and requested fields.
+
+        Returns:
+            str: A brief summary of the form's context.
         """
         ccc = f"""
         0. Your in is {self.task},
@@ -111,10 +132,13 @@ class Form(BaseForm):
         return ccc.replace("        ", "")
 
     @property
-    def _instruction_requested_fields(self) -> dict:
+    def _instruction_requested_fields(self) -> Dict[str, str]:
         """
         Provides a dictionary mapping requested field names to their
         descriptions.
+
+        Returns:
+            Dict[str, str]: A dictionary of requested field descriptions.
         """
         return {
             i: getattr(self._all_fields[i], "description", "N/A")

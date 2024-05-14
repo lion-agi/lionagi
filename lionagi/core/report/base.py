@@ -17,6 +17,13 @@ class BaseForm(Component):
     Base class for handling form-like structures within an application.
     Manages form components and operations such as filling forms and
     checking their state (filled, workable).
+
+    Attributes:
+        assignment (str): The objective of the form specifying input/output fields.
+        input_fields (List[str]): Fields required to carry out the objective of the form.
+        requested_fields (List[str]): Fields requested to be filled by the user.
+        task (Any): The work to be done by the form, including custom instructions.
+        validation_kwargs (Dict[str, Dict[str, Any]]): Additional validation constraints for the form fields.
     """
 
     assignment: str = Field(
@@ -51,6 +58,9 @@ class BaseForm(Component):
         """
         Get the fields relevant to the current task, including input and
         requested fields. Must be implemented by subclasses.
+
+        Returns:
+            Dict[str, Any]: The fields relevant to the current task.
         """
         raise NotImplementedError
 
@@ -59,6 +69,10 @@ class BaseForm(Component):
         """
         Fill the form from various sources, including other forms and
         additional fields. Implement this method in subclasses.
+
+        Args:
+            *args: Additional positional arguments.
+            **kwargs: Additional keyword arguments.
         """
         pass
 
@@ -67,6 +81,9 @@ class BaseForm(Component):
         """
         Check if the form object is ready for work execution. Raise an error
         if the form is not workable. Use with the workable property.
+
+        Returns:
+            bool: True if the form is workable, otherwise False.
         """
         pass
 
@@ -75,6 +92,9 @@ class BaseForm(Component):
         """
         Check if the form is filled with all required fields. Uses the
         _is_filled method and suppresses any ValueError raised by it.
+
+        Returns:
+            bool: True if the form is filled, otherwise False.
         """
         with contextlib.suppress(ValueError):
             return self._is_filled()
@@ -85,6 +105,9 @@ class BaseForm(Component):
         """
         Check if the form is workable. This property does not raise an error
         and will return True or False.
+
+        Returns:
+            bool: True if the form is workable, otherwise False.
         """
         with contextlib.suppress(ValueError):
             return self.is_workable()
@@ -94,16 +117,29 @@ class BaseForm(Component):
         """
         Private method to check if all work fields are filled. Raises a
         ValueError if any field is not filled.
+
+        Returns:
+            bool: True if all work fields are filled, otherwise raises ValueError.
+
+        Raises:
+            ValueError: If any field is not filled.
         """
         for k, value in self.work_fields.items():
             if value is None:
                 raise ValueError(f"Field {k} is not filled")
         return True
 
-    def _get_all_fields(self, form=None, **kwargs) -> dict[str, Any]:
+    def _get_all_fields(self, form: List["BaseForm"] = None, **kwargs) -> Dict[str, Any]:
         """
         Given a form or collections of forms, and additional fields, gather
         all fields together including self fields with valid value.
+
+        Args:
+            form (List[BaseForm], optional): A list of forms to gather fields from.
+            **kwargs: Additional fields to include.
+
+        Returns:
+            Dict[str, Any]: A dictionary of all gathered fields.
         """
         form: list["BaseForm"] = to_list_type(form) if form else []
         all_fields = self.work_fields.copy()

@@ -6,7 +6,7 @@ strings, or specialized objects.
 """
 
 from functools import singledispatchmethod
-from typing import Any, Callable, Tuple
+from typing import Any, Callable, List, Union, Tuple
 from lionagi.libs import ParseUtil
 from lionagi.libs.ln_convert import to_list, to_dict
 from lionagi.libs.ln_func_call import lcall
@@ -195,12 +195,13 @@ class ToolManager(Actionable):
 
 
 def func_to_tool(
-    func_: Callable | list[Callable], parser=None, docstring_style="google"
-) -> list[Tool]:
+    func_: Union[Callable, List[Callable]],
+    parser: Union[Callable, List[Callable]] = None,
+    docstring_style: str = "google",
+) -> List[Tool]:
     """
-    Converts a callable or a list of callables into Tool objects. This function
-    optionally associates parsers with each function and applies a specified
-    docstring parsing style to generate tool schemas.
+    Converts functions to Tool objects, optionally associating parsers with each function
+    and applying a specified docstring parsing style to generate tool schemas.
 
     Args:
         func_ (Callable | List[Callable]): The function(s) to convert into tool(s).
