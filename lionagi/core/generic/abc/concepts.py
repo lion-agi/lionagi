@@ -155,3 +155,19 @@ class Executable(ABC):
     async def execute(self, /, *args: Any, **kwargs: Any) -> Any:
         """Execute the object with the given arguments asynchronously."""
         pass
+
+
+class Directive(ABC):
+
+    @abstractmethod
+    async def direct(self, *args, **kwargs):
+        pass
+
+    @property
+    def class_name(self) -> str:
+        return self._class_name()
+
+    @classmethod
+    def _class_name(cls) -> str:
+        return cls.__name__
+    

@@ -1,5 +1,5 @@
 from abc import ABC
-from typing import Any, Optional, Union, TypeVar
+from lionagi.libs.ln_convert import strip_lower
 
 
 class DirectiveMixin(ABC):
@@ -35,7 +35,7 @@ class DirectiveMixin(ABC):
         throttle_period: int = None,
         return_branch=False,
         **kwargs,
-    ) -> Any:
+    ):
         from lionagi.core.directive.chat import Chat
 
         directive = Chat(self, imodel=imodel, rulebook=rulebook)
@@ -76,6 +76,8 @@ class DirectiveMixin(ABC):
 
         from lionagi.core.directive._mapping import DIRECTIVE_MAPPING
 
+        directive = strip_lower(directive)
+
         if directive not in DIRECTIVE_MAPPING:
             raise ValueError(f"Directive {directive} not found in DIRECTIVE_MAPPING")
 
@@ -96,7 +98,7 @@ class DirectiveMixin(ABC):
         **kwargs,
     ):
 
-        from lionagi.core.directive.chain import Chain
+        from lionagi.core.directive.structure.chain import Chain
 
         _chain = Chain(self)
 

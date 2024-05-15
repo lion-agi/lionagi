@@ -1,37 +1,35 @@
-from enum import Enum
+from lionagi.libs.ln_convert import to_str
 from lionagi.core.generic.abc import Field
-from .base import DirectiveTemplate
-from .chat import Chat
+from .base import UnitTemplate, Chat
 
 
-class SelectTemplate(DirectiveTemplate):
+class PlanTemplate(UnitTemplate):
 
-    template_name: str = "default_select"
+    template_name: str = "plan_template"
 
-    selection: Enum | str | list = Field(
-        default_factory=str, description="selection from given choices"
+    plan: dict | str = Field(
+        default_factory=dict,
+        description="the generated step by step plan, return as a dictionary following {step_n: {plan: ..., reason: ...}} format",
     )
-    choices: list = Field(default_factory=list, description="the given choices")
 
-    signature: str = "task -> selection"
+    signature: str = "task -> plans"
 
     def __init__(
         self,
         *,
         instruction=None,
         context=None,
-        choices=None,
-        reason=False,
         confidence_score=False,
+        reason=False,
+        num_step=3,
         **kwargs,
     ):
         super().__init__(**kwargs)
 
-        self.choices = choices
         self.task = f"""
-select 1 item from the provided choices {choices}.        
-1. additional objective: {instruction or "N/A"}.
-2. additional information: {context or "N/A"}.     
+Generate a {num_step}_step plan based on the given context
+1. additional instruction, {to_str(instruction or "N/A")}
+2. additional context, {to_str(context or "N/A")}
 """
         if reason:
             self.append_to_request("reason")
@@ -40,11 +38,11 @@ select 1 item from the provided choices {choices}.
             self.append_to_request("confidence_score")
 
 
-class Select(Chat):
+class Plan(Chat):
 
-    defalut_template = SelectTemplate
+    defalut_template = PlanTemplate
 
-    async def select(
+    async def plan(
         self,
         context=None,
         instruction=None,
@@ -52,7 +50,7 @@ class Select(Chat):
         system=None,
         sender=None,
         recipient=None,
-        choices=None,
+        num_step=3,
         confidence_score=None,
         reason=False,
         requested_fields=None,
@@ -73,16 +71,17 @@ class Select(Chat):
         timing: bool = False,
         max_concurrency: int = 10_000,
         throttle_period: int = None,
+        branch=None,
         **kwargs,
     ):
 
-        return await self._select(
+        return await self._plan(
             context=context,
             instruction=instruction,
             system=system,
             sender=sender,
             recipient=recipient,
-            choices=choices,
+            num_step=num_step,
             confidence_score=confidence_score,
             reason=reason,
             requested_fields=requested_fields,
@@ -103,22 +102,26 @@ class Select(Chat):
             timing=timing,
             max_concurrency=max_concurrency,
             throttle_period=throttle_period,
+            branch=branch,
             **kwargs,
         )
 
-    async def _select(
+    async def _plan(
         self,
         form=None,
-        choices=None,
+        num_step=None,
         reason=False,
         confidence_score=None,
         **kwargs,
     ):
         if not form:
             form = self.default_template(
-                choices=choices,
+                num_step=num_step,
                 reason=reason,
                 confidence_score=confidence_score,
             )
 
         return await self.chat(form=form, **kwargs)
+
+    async def direct(self, *args, **kwargs):
+        return await self.plan(*args, **kwargs)

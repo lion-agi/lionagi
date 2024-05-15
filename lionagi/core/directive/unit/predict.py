@@ -1,9 +1,9 @@
 from lionagi.core.generic.abc import Field
-from .base import DirectiveTemplate
+from .base import UnitTemplate
 from .chat import Chat
 
 
-class PredictTemplate(DirectiveTemplate):
+class PredictTemplate(UnitTemplate):
 
     template_name: str = "predict_template"
 

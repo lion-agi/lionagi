@@ -19,6 +19,7 @@ from .concepts import (
     Progressable,
     Sendable,
     Executable,
+    Directive,
 )
 from .util import SYSTEM_FIELDS
 
@@ -44,4 +45,5 @@ __all__ = [
     "Field",
     "Executable",
     "SYSTEM_FIELDS",
+    "Directive",
 ]

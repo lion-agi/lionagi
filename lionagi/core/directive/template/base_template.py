@@ -4,7 +4,7 @@ import re
 from ..evaluator.base_evaluator import BaseEvaluator
 
 
-class BaseDirectiveTemplate:
+class DirectiveTemplate:
     """Enhanced base template class for processing templates with conditionals and loops."""
 
     def __init__(self, template_str: str):

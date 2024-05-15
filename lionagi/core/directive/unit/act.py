@@ -1,16 +1,14 @@
 from lionagi.libs.ln_convert import to_list
-from ..message.action_request import ActionRequest
-from ..message.action_response import ActionResponse
+from lionagi.core.message.action_request import ActionRequest
+from lionagi.core.message.action_response import ActionResponse
+from lionagi.core.generic.abc import Field
 
-from .chat import Chat
+from .base import UnitTemplate, Chat
+from ..structure.chain import Chain
 from .util import process_tools
 
-from lionagi.core.generic.abc import Field
-from .base import DirectiveTemplate
-from .chain import Chain
 
-
-class ActionTemplate(DirectiveTemplate):
+class ActionTemplate(UnitTemplate):
     template_name: str = "Action"
 
     action_required: bool = Field(

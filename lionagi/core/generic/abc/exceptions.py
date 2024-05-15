@@ -1,3 +1,13 @@
+import logging
+
+# Configure logging
+logging.basicConfig(
+    filename="lionagi_tool_manager.log",
+    level=logging.INFO,
+    format="%(asctime)s:%(levelname)s:%(message)s",
+)
+
+
 class LionAGIError(Exception):
     """Base class for all exceptions in the LionAGI system."""
 
@@ -96,3 +106,19 @@ class TimeoutError(LionOperationError):
 
     def __init__(self, operation, timeout):
         super().__init__(operation, f"Operation timed out after {timeout} seconds.")
+
+
+class ServiceError(LionAGIError):
+    """Exception raised for errors in endpoint configuration."""
+
+    def __init__(self, message, errors=None):
+        super().__init__(message, errors)
+
+    @classmethod
+    def unavailable(cls, endpoint, service, err_msg=None):
+        msg = f"{endpoint} is currently unavailable"
+        if err_msg:
+            msg += f": {err_msg}"
+        else:
+            msg += f" for {service.__class__.__name__}"
+        return cls(msg)

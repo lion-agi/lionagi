@@ -1,17 +1,12 @@
 from .chat import Chat
-from .predict import Predict
-from .plan import Plan
-from .score import Score
-from .act import Act
-from .select import Select
-
-from .ReAct import ReAct
-from .followup import FollowUp
+from .unit.predict import Predict
+from .unit.plan import Plan
+from .unit.score import Score
+from .unit.act import Act
+from .unit.select import Select
 
 
 DIRECTIVE_MAPPING = {
-    "ReAct": ReAct,
-    "followup": FollowUp,
     "chat": Chat,
     "plan": Plan,
     "predict": Predict,

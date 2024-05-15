@@ -1,10 +1,10 @@
 from lionagi.libs.ln_convert import to_str
 from lionagi.core.generic.abc import Field
-from .base import DirectiveTemplate
+from .base import UnitTemplate
 from .chat import Chat
 
 
-class ScoreTemplate(DirectiveTemplate):
+class ScoreTemplate(UnitTemplate):
 
     template_name: str = "score_template"
 

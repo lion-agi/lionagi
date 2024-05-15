@@ -1,6 +1,7 @@
 from typing import Type
-from .base import BaseDirective
-from ._mapping import *
+from lionagi.libs.ln_convert import strip_lower
+from ..unit.base import Directive
+from .._mapping import *
 
 
 class Chain(Chat):
@@ -18,7 +19,7 @@ class Chain(Chat):
         return_branch=False,
         plan_params={},
         plan_kwargs={},
-        directive: Type[BaseDirective] | str = None,
+        directive: Type[Directive] | str = None,
         directive_obj=None,
         directive_params={},
         directive_kwargs={},
@@ -55,10 +56,10 @@ class Chain(Chat):
 
         if not directive_obj:
             if isinstance(directive, str):
-                directive = DIRECTIVE_MAPPING.get(directive, Predict)
+                directive = DIRECTIVE_MAPPING.get(strip_lower(directive), Predict)
             if isinstance(directive, type):
                 directive = directive or Predict
-            if not issubclass(directive, BaseDirective):
+            if not issubclass(directive, Directive):
                 raise ValueError(
                     f"directive must be a subclass of BaseDirective, got {type(directive)}"
                 )
