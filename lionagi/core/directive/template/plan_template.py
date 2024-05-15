@@ -7,12 +7,12 @@ class PlanTemplate(DirectiveTemplate):
     
     template_name: str = "plan_template"
     
-    answer: dict | str = Field(
+    plan: dict | str = Field(
         default_factory=dict,
         description="the generated step by step plan, return as a dictionary following {step_n: {plan: ..., reason: ...}} format",
     )
     
-    signature: str = "task -> answer"
+    signature: str = "task -> plans"
 
     def __init__(
         self,

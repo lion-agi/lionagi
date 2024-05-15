@@ -17,7 +17,7 @@ class Chat(BaseDirective):
         invoke_tool=True,
         return_form=True,
         strict=False,
-        validator=None,
+        rulebook=None,
         imodel=None,
         **kwargs,
     ):
@@ -45,5 +45,5 @@ class Chat(BaseDirective):
             form=form,
             return_form=return_form,
             strict=strict,
-            validator=validator,
+            rulebook=rulebook,
         )

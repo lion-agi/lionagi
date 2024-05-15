@@ -11,12 +11,12 @@ class PredictTemplate(DirectiveTemplate):
         description="the number of sentences to predict"
     )
     
-    answer: str | list = Field(
+    prediction: str | list = Field(
         default_factory=str, 
         description="the predicted sentence(s) or desired output"
     )
     
-    signature: str = "task -> answer"
+    signature: str = "task -> prediction"
 
     def __init__(
         self,

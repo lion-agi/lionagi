@@ -6,13 +6,12 @@ class ScoreTemplate(DirectiveTemplate):
     
     template_name: str = "score_template"
     
-    answer: float = Field(
+    score: float = Field(
         None,
         description="a score for the given context and task, numeric",
-        alias = "answer",
     )
     
-    signature: str = "task -> answer"
+    signature: str = "task -> score"
 
     def __init__(
         self,

@@ -155,7 +155,7 @@ class BaseDirective(ABC):
         form=None,
         return_form=True,
         strict=False,
-        validator=None,
+        rulebook=None,
         use_annotation=True,
     ) -> Any:
         _msg = await self._process_chatcompletion(
@@ -171,7 +171,13 @@ class BaseDirective(ABC):
         response_ = self._process_model_response(_msg, requested_fields)
 
         if form:
-            validator = validator or Validator()
+            validator = None
+            
+            if rulebook is None:
+                validator = Validator()
+            else:
+                validator = Validator(rulebook=rulebook)
+            
             form = await validator.validate_response(
                 form=form,
                 response=response_,

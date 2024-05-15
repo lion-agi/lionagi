@@ -41,6 +41,17 @@ class Validator:
         init_config: Dict[str, Dict] = None,
         active_rules: Dict[str, Rule] = None,
     ):
+        """
+        Initialize the Validator.
+
+        Args:
+            rulebook (RuleBook, optional): The RuleBook containing validation rules.
+            rules (Dict[str, Rule], optional): Dictionary of validation rules.
+            order (List[str], optional): List defining the order of rule application.
+            init_config (Dict[str, Dict], optional): Configuration for initializing rules.
+            active_rules (Dict[str, Rule], optional): Dictionary of currently active rules.
+        """
+        
         self.ln_id: str = SysUtil.create_id()
         self.timestamp: str = SysUtil.get_timestamp(sep=None)[:-6]
         self.rulebook = rulebook or RuleBook(
@@ -58,6 +69,7 @@ class Validator:
         """
 
         def _init_rule(rule_name: str) -> Rule:
+            
             if not issubclass(self.rulebook[rule_name], Rule):
                 raise LionFieldError(
                     f"Invalid rule class for {rule_name}, must be a subclass of Rule"
@@ -137,7 +149,7 @@ class Validator:
             raise LionFieldError(error_message)
 
     async def validate_report(
-        self, report: Report, forms: List[Form], strict: bool = False
+        self, report: Report, forms: List[Form], strict: bool = True
     ) -> Report:
         """
         Validate a report based on active rules.
@@ -157,7 +169,7 @@ class Validator:
         self,
         form: Form,
         response: Union[dict, str],
-        strict: bool = False,
+        strict: bool = True,
         use_annotation: bool = True,
     ) -> Form:
         """
