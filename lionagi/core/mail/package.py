@@ -35,9 +35,9 @@ class Package(Element):
         if value is None:
             raise ValueError("Package category cannot be None.")
         if isinstance(value, PackageCategory):
-            value = value
+            return value
         else:
             try:
-                value = PackageCategory(value)
+                return PackageCategory(value)
             except Exception as e:
                 raise ValueError(f"Invalid value for category: {value}.") from e

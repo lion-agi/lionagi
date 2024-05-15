@@ -36,7 +36,7 @@ class Exchange(Element):
             and self.pending_outs.exclude(item)
         )
 
-    def include(self, item, direction="in"):
+    def include(self, item, direction):
         if self.pile.include(item):
             item = self.pile[item]
             for i in item:
@@ -44,7 +44,7 @@ class Exchange(Element):
                     return False
             return True
 
-    def _include(self, item: Sendable, direction="in"):
+    def _include(self, item: Sendable, direction):
         if direction == "in":
             if item.sender not in self.pending_ins:
                 self.pending_ins[item.sender] = progression()

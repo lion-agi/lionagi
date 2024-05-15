@@ -47,3 +47,11 @@ class ActionResponse(RoledMessage):
         self.arguments = action_request.arguments
         self.action_request = action_request.ln_id
         action_request.action_response = self.ln_id
+
+    def _to_dict(self):
+        return {
+            "action_request": self.action_request,
+            "function": self.function,
+            "arguments": self.arguments,
+            "func_outputs": self.func_outputs,
+        }

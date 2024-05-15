@@ -1,10 +1,9 @@
 from typing import Callable
 from .chat import Chat
-from ..message import Instruction
 from ..action import Tool
 
 
-class Followup(Chat):
+class FollowUp(Chat):
 
     FOLLOWUP_PROMPT = """
     In the current task, you are allowed a maximum of another {num_followup} followup chats. 

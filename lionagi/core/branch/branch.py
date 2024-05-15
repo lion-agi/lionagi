@@ -127,7 +127,7 @@ class Branch(Node, DirectiveMixin):
         self.progre.exclude(self.system)
         self.system = None
 
-    def clear_messages(self) -> None:
+    def clear(self) -> None:
         self.messages.clear()
         self.progre.clear()
 

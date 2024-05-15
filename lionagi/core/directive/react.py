@@ -1,153 +1,9 @@
-# async def _react(
-#     sentence=None,
-#     *,
-#     instruction=None,
-#     branch=None,
-#     confidence_score=False,
-#     retries=2,
-#     delay=0.5,
-#     backoff_factor=2,
-#     default_value=None,
-#     timeout=None,
-#     branch_name=None,
-#     system=None,
-#     messages=None,
-#     service=None,
-#     sender=None,
-#     llmconfig=None,
-#     tools=None,
-#     datalogger=None,
-#     persist_path=None,
-#     tool_manager=None,
-#     return_branch=False,
-#     **kwargs,
-# ):
-
-#     if "temperature" not in kwargs:
-#         kwargs["temperature"] = 0.1
-
-#     instruction = instruction or ""
-
-#     if branch and tools:
-#         _process_tools(tools, branch)
-
-#     branch = branch or Branch(
-#         name=branch_name,
-#         system=system,
-#         messages=messages,
-#         service=service,
-#         sender=sender,
-#         llmconfig=llmconfig,
-#         tools=tools,
-#         datalogger=datalogger,
-#         persist_path=persist_path,
-#         tool_manager=tool_manager,
-#     )
-
-#     _template = ReactTemplate(
-#         sentence=sentence,
-#         instruction=instruction,
-#         confidence_score=confidence_score,
-#     )
-
-#     await func_call.rcall(
-#         branch.chat,
-#         form=_template,
-#         retries=retries,
-#         delay=delay,
-#         backoff_factor=backoff_factor,
-#         default=default_value,
-#         timeout=timeout,
-#         **kwargs,
-#     )
-
-#     if _template.action_needed:
-#         actions = _template.actions
-#         tasks = [branch.tool_manager.invoke(i.values()) for i in actions]
-#         results = await AsyncUtil.execute_tasks(*tasks)
-
-#         a = []
-#         for idx, item in enumerate(actions):
-#             res = {
-#                 "function": item["function"],
-#                 "arguments": item["arguments"],
-#                 "output": results[idx],
-#             }
-#             branch.add_message(response=res)
-#             a.append(res)
-
-#         _template.__setattr__("action_response", a)
-
-#     return (_template, branch) if return_branch else _template
-
-
-# async def react(
-#     sentence=None,
-#     *,
-#     instruction=None,
-#     num_instances=1,
-#     branch=None,
-#     confidence_score=False,
-#     retries=2,
-#     delay=0.5,
-#     backoff_factor=2,
-#     default_value=None,
-#     timeout=None,
-#     branch_name=None,
-#     system=None,
-#     messages=None,
-#     service=None,
-#     sender=None,
-#     llmconfig=None,
-#     tools=None,
-#     datalogger=None,
-#     persist_path=None,
-#     tool_manager=None,
-#     return_branch=False,
-#     **kwargs,
-# ):
-
-#     async def _inner(i=0):
-#         return await _react(
-#             sentence=sentence,
-#             instruction=instruction,
-#             num_instances=num_instances,
-#             branch=branch,
-#             confidence_score=confidence_score,
-#             retries=retries,
-#             delay=delay,
-#             backoff_factor=backoff_factor,
-#             default_value=default_value,
-#             timeout=timeout,
-#             branch_name=branch_name,
-#             system=system,
-#             messages=messages,
-#             service=service,
-#             sender=sender,
-#             llmconfig=llmconfig,
-#             tools=tools,
-#             datalogger=datalogger,
-#             persist_path=persist_path,
-#             tool_manager=tool_manager,
-#             return_branch=return_branch,
-#             **kwargs,
-#         )
-
-#     if num_instances == 1:
-#         return await _inner()
-
-#     elif num_instances > 1:
-#         return await func_call.alcall(range(num_instances), _inner)
-
-
 from typing import Callable
-from lionagi.core.flow.monoflow.chat import MonoChat
-from lionagi.core.tool import Tool
-from lionagi.core.messages.schema import Instruction
+from ..action.tool import Tool
+from .chat import Chat
 
 
-class MonoReAct(MonoChat):
-
+class ReAct(Chat):
     REASON_PROMPT = """
     You have {num_steps} steps left in the current task. If available, integrate previous tool responses.
     Perform reasoning and prepare an action plan according to available tools only. Apply divide and conquer technique.
@@ -161,7 +17,7 @@ class MonoReAct(MonoChat):
 
     async def ReAct(
         self,
-        instruction: Instruction | str | dict[str, dict | str],
+        instruction=None,
         context=None,
         sender=None,
         system=None,
@@ -216,7 +72,7 @@ class MonoReAct(MonoChat):
 
     async def _ReAct(
         self,
-        instruction: Instruction | str | dict[str, dict | str],
+        instruction=None,
         context=None,
         sender=None,
         system=None,
@@ -278,3 +134,6 @@ class MonoReAct(MonoChat):
         )
         _out = await self.chat(_prompt, sender=sender, **kwargs)
         return _out if out else None
+
+    async def direct(self, *args, **kwargs):
+        return await self.ReAct(*args, **kwargs)

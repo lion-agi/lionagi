@@ -5,29 +5,38 @@ the base directive
 import asyncio
 import re
 import contextlib
-from abc import ABC
+from abc import ABC, abstractmethod
 from typing import Any
 
 from lionagi.libs.ln_parse import ParseUtil, StringMatch
 
+from ..generic.abc import Field
 from ..generic import iModel
 from ..message import Instruction
 from ..message.util import _parse_action_request
 from ..validator.validator import Validator
+from ..report.form import Form
 
 
 class BaseDirective(ABC):
 
     default_template = None
 
-    def __init__(self, branch, imodel: iModel = None, template_=None) -> None:
+    def __init__(
+        self, branch, imodel: iModel = None, template=None, rulebook=None
+    ) -> None:
         self.branch = branch
         if imodel and isinstance(imodel, iModel):
             branch.imodel = imodel
             self.imodel = imodel
         else:
             self.imodel = branch.imodel
-        self.form_template = template_ or self.default_template
+        self.form_template = template or self.default_template
+        self.validator = Validator(rulebook=rulebook) if rulebook else Validator()
+
+    @abstractmethod
+    async def direct(self, *args, **kwargs):
+        pass
 
     @property
     def class_name(self) -> str:
@@ -80,22 +89,27 @@ class BaseDirective(ABC):
 
         return config
 
-    async def _call_chatcompletion(self, imodel=None, **kwargs):
+    async def _call_chatcompletion(self, imodel=None, branch=None, **kwargs):
         imodel = imodel or self.imodel
-        return await imodel.call_chat_completion(
-            self.branch.to_chat_messages(), **kwargs
-        )
+        branch = branch or self.branch
+        return await imodel.call_chat_completion(branch.to_chat_messages(), **kwargs)
 
     async def _process_chatcompletion(
-        self, payload, completion, sender, invoke_tool=False
+        self,
+        payload,
+        completion,
+        sender,
+        invoke_tool=True,
+        branch=None,
+        action_request=None,
     ):
-
+        branch = branch or self.branch
         # process the raw chat completion response
         _msg = None
         if "choices" in completion:
 
             aa = payload.pop("messages", None)
-            self.branch.update_last_instruction_meta(payload)
+            branch.update_last_instruction_meta(payload)
             msg = completion.pop("choices", None)
             if msg and isinstance(msg, list):
                 msg = msg[0]
@@ -104,43 +118,54 @@ class BaseDirective(ABC):
                 _msg = msg.pop("message", None)
                 completion.update(msg)
 
-                self.branch.add_message(
+                branch.add_message(
                     assistant_response=_msg, metadata=completion, sender=sender
                 )
-                self.branch.imodel.status_tracker.num_tasks_succeeded += 1
+                branch.imodel.status_tracker.num_tasks_succeeded += 1
         else:
-            self.branch.imodel.status_tracker.num_tasks_failed += 1
+            branch.imodel.status_tracker.num_tasks_failed += 1
 
+        return await self._process_action_request(
+            _msg=_msg,
+            branch=branch,
+            invoke_tool=invoke_tool,
+            action_request=action_request,
+        )
+
+    async def _process_action_request(
+        self, _msg=None, branch=None, invoke_tool=True, action_request=None
+    ):
         # if the assistant response contains action request, we add each as a message to branch
-        a = _parse_action_request(_msg)
-        if a is None:
-            return _msg
+        action_request = action_request or _parse_action_request(_msg)
 
-        if a:
-            for i in a:
-                if i.function in self.branch.tool_manager.registry:
-                    i.recipient = self.branch.tool_manager.registry[
+        if action_request is None:
+            return _msg if _msg else False
+
+        if action_request:
+            for i in action_request:
+                if i.function in branch.tool_manager.registry:
+                    i.recipient = branch.tool_manager.registry[
                         i.function
                     ].ln_id  # recipient is the tool
                 else:
                     raise ValueError(f"Tool {i.function} not found in registry")
-                self.branch.add_message(action_request=i, recipient=i.recipient)
+                branch.add_message(action_request=i, recipient=i.recipient)
 
         if invoke_tool:
             # invoke tools and add action response to branch
             tasks = []
-            for i in a:
-                tool = self.branch.tool_manager.registry[i.function]
+            for i in action_request:
+                tool = branch.tool_manager.registry[i.function]
                 tasks.append(asyncio.create_task(tool.invoke(i.arguments)))
 
             results = await asyncio.gather(*tasks)
 
             for idx, item in enumerate(results):
-                self.branch.add_message(
-                    action_request=a[idx],
+                branch.add_message(
+                    action_request=action_request[idx],
                     func_outputs=item,
-                    sender=a[idx].recipient,
-                    recipient=a[idx].sender,
+                    sender=action_request[idx].recipient,
+                    recipient=action_request[idx].sender,
                 )
 
         return None
@@ -157,6 +182,7 @@ class BaseDirective(ABC):
         strict=False,
         rulebook=None,
         use_annotation=True,
+        template_name=None,
     ) -> Any:
         _msg = await self._process_chatcompletion(
             payload=payload,
@@ -172,18 +198,20 @@ class BaseDirective(ABC):
 
         if form:
             validator = None
-            
+
             if rulebook is None:
-                validator = Validator()
+                validator = self.validator
             else:
                 validator = Validator(rulebook=rulebook)
-            
+
             form = await validator.validate_response(
                 form=form,
                 response=response_,
                 strict=strict,
                 use_annotation=use_annotation,
             )
+            if template_name:
+                form.template_name = template_name
 
             return (
                 form
@@ -215,3 +243,22 @@ class BaseDirective(ABC):
                     out_ = ParseUtil.fuzzy_parse_json(match.group(1))
 
         return out_ or content_
+
+
+class DirectiveTemplate(Form):
+
+    confidence_score: float = Field(
+        None,
+        description="a numeric score between 0 to 1 formatted in num:0.2f, 1 being very confident and 0 being not confident at all, just guessing",
+        validation_kwargs={
+            "upper_bound": 1,
+            "lower_bound": 0,
+            "num_type": float,
+            "precision": 2,
+        },
+    )
+
+    reason: str = Field(
+        default_factory=str,
+        description="brief reason for the given output, format: This is my best response because ...",
+    )

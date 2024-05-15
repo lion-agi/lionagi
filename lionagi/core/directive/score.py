@@ -1,130 +1,146 @@
-# async def _score(
-#     sentence,
-#     instruction=None,
-#     score_range=(1, 10),
-#     inclusive=True,
-#     num_digit=0,
-#     confidence_score=False,
-#     reason=False,
-#     retries=2,
-#     delay=0.5,
-#     backoff_factor=2,
-#     default_value=None,
-#     timeout=None,
-#     branch_name=None,
-#     system=None,
-#     messages=None,
-#     service=None,
-#     sender=None,
-#     llmconfig=None,
-#     tools=None,
-#     datalogger=None,
-#     persist_path=None,
-#     tool_manager=None,
-#     **kwargs,
-# ):
-#     if "temperature" not in kwargs:
-#         kwargs["temperature"] = 0.1
-
-#     instruction = instruction or ""
-
-#     branch = Branch(
-#         name=branch_name,
-#         system=system,
-#         messages=messages,
-#         service=service,
-#         sender=sender,
-#         llmconfig=llmconfig,
-#         tools=tools,
-#         datalogger=datalogger,
-#         persist_path=persist_path,
-#         tool_manager=tool_manager,
-#     )
-
-#     _template = ScoreTemplate(
-#         sentence=sentence,
-#         instruction=instruction,
-#         score_range=score_range,
-#         inclusive=inclusive,
-#         num_digit=num_digit,
-#         confidence_score=confidence_score,
-#         reason=reason,
-#     )
-
-#     await func_call.rcall(
-#         branch.chat,
-#         form=_template,
-#         retries=retries,
-#         delay=delay,
-#         backoff_factor=backoff_factor,
-#         default=default_value,
-#         timeout=timeout,
-#         **kwargs,
-#     )
-
-#     return _template
+from lionagi.libs.ln_convert import to_str
+from lionagi.core.generic.abc import Field
+from .base import DirectiveTemplate
+from .chat import Chat
 
 
-# async def score(
-#     sentence,
-#     *,
-#     num_instances=1,
-#     instruction=None,
-#     score_range=(1, 10),
-#     inclusive=True,
-#     num_digit=0,
-#     confidence_score=False,
-#     reason=False,
-#     retries=2,
-#     delay=0.5,
-#     backoff_factor=2,
-#     default_value=None,
-#     timeout=None,
-#     branch_name=None,
-#     system=None,
-#     messages=None,
-#     service=None,
-#     sender=None,
-#     llmconfig=None,
-#     tools=None,
-#     datalogger=None,
-#     persist_path=None,
-#     tool_manager=None,
-#     return_template=True,
-#     **kwargs,
-# ) -> ScoreTemplate | float:
+class ScoreTemplate(DirectiveTemplate):
 
-#     async def _inner(i=0):
-#         return await _score(
-#             sentence=sentence,
-#             instruction=instruction,
-#             score_range=score_range,
-#             inclusive=inclusive,
-#             num_digit=num_digit,
-#             confidence_score=confidence_score,
-#             reason=reason,
-#             retries=retries,
-#             delay=delay,
-#             backoff_factor=backoff_factor,
-#             default_value=default_value,
-#             timeout=timeout,
-#             branch_name=branch_name,
-#             system=system,
-#             messages=messages,
-#             service=service,
-#             sender=sender,
-#             llmconfig=llmconfig,
-#             tools=tools,
-#             datalogger=datalogger,
-#             persist_path=persist_path,
-#             tool_manager=tool_manager,
-#             **kwargs,
-#         )
+    template_name: str = "score_template"
 
-#     if num_instances == 1:
-#         _out = await _inner()
-#         return _out if return_template else _out.answer
+    score: float = Field(
+        None,
+        description="a score for the given context and task, numeric",
+    )
 
-#     elif num_instances > 1:
-#         _outs = await func_call.alcall(range(num_instances), _inner)
-#         return _outs if return_template else np.mean([i.answer for i in _outs])
+    signature: str = "task -> score"
+
+    def __init__(
+        self,
+        *,
+        instruction=None,
+        context=None,
+        score_range=(1, 10),
+        include_endpoints=True,
+        num_digit=0,
+        confidence_score=False,
+        reason=False,
+        **kwargs,
+    ):
+        super().__init__(**kwargs)
+
+        return_precision = ""
+
+        if num_digit == 0:
+            return_precision = "integer"
+        else:
+            return_precision = f"num:{to_str(num_digit)}f"
+
+        self.task = f"""
+perform scoring task according to the following constraints:
+1. additional objective: {to_str(instruction or "N/A")}.
+2. score range: {to_str(score_range)}.
+3. include_endpoints: {"yes" if include_endpoints else "no"}.
+4. precision, (max number of digits allowed after "."): {return_precision}.
+5. additional information: {to_str(context or "N/A")}.
+"""
+        if reason:
+            self.append_to_request("reason")
+
+        if confidence_score:
+            self.append_to_request("confidence_score")
+
+        self.validation_kwargs["score"] = {
+            "upper_bound": score_range[1],
+            "lower_bound": score_range[0],
+            "num_type": int if num_digit == 0 else float,
+            "precision": num_digit if num_digit != 0 else None,
+        }
+
+
+class Score(Chat):
+
+    defalut_template = ScoreTemplate
+
+    async def score(
+        self,
+        context=None,
+        instruction=None,
+        *,
+        system=None,
+        sender=None,
+        recipient=None,
+        score_range=(0, 10),
+        include_endpoints=True,
+        num_digit=0,
+        confidence_score=None,
+        reason=False,
+        requested_fields=None,
+        form=None,
+        return_form=True,
+        strict=False,
+        rulebook=None,
+        imodel=None,
+        template_name=None,
+        use_annotation=True,
+        retries: int = 3,
+        delay: float = 0,
+        backoff_factor: float = 1,
+        default=None,
+        timeout: float | None = None,
+        timing: bool = False,
+        max_concurrency: int = 10_000,
+        throttle_period: int = None,
+        **kwargs,
+    ):
+
+        return await self._score(
+            context=context,
+            instruction=instruction,
+            system=system,
+            sender=sender,
+            recipient=recipient,
+            score_range=score_range,
+            include_endpoints=include_endpoints,
+            num_digit=num_digit,
+            confidence_score=confidence_score,
+            reason=reason,
+            requested_fields=requested_fields,
+            form=form,
+            return_form=return_form,
+            strict=strict,
+            rulebook=rulebook,
+            imodel=imodel,
+            template_name=template_name,
+            use_annotation=use_annotation,
+            retries=retries,
+            delay=delay,
+            backoff_factor=backoff_factor,
+            default=default,
+            timeout=timeout,
+            timing=timing,
+            max_concurrency=max_concurrency,
+            throttle_period=throttle_period,
+            **kwargs,
+        )
+
+    async def _score(
+        self,
+        form=None,
+        score_range=None,
+        include_endpoints=None,
+        num_digit=None,
+        reason=False,
+        confidence_score=None,
+        **kwargs,
+    ):
+        if not form:
+            form = self.default_template(
+                score_range=score_range,
+                include_endpoints=include_endpoints,
+                num_digit=num_digit,
+                reason=reason,
+                confidence_score=confidence_score,
+            )
+
+        return await self.chat(form=form, **kwargs)

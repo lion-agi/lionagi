@@ -1,3 +1,14 @@
+retry_kwargs = {
+    "retries": 3,  # kwargs for rcall, number of retries if failed
+    "delay": 0,  # number of seconds to delay before retrying
+    "backoff_factor": 1,  # exponential backoff factor, default 1 (no backoff)
+    "default": None,  # default value to return if all retries failed
+    "timeout": None,  # timeout for the rcall, default None (no timeout)
+    "timing": False,  # if timing will return a tuple (output, duration)
+    "max_concurrency": 10_000,
+    "throttle_period": None,
+}
+
 oai_fields = [
     "id",
     "object",
@@ -104,7 +115,7 @@ from lionagi.core.tool import func_to_tool, Tool
 #     return out_ if len(out_) > 1 else out_[0]
 
 
-def _process_tools(tool_obj, branch):
+def process_tools(tool_obj, branch):
     if isinstance(tool_obj, Callable):
         _process_tool(tool_obj, branch)
     else:

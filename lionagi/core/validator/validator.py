@@ -51,7 +51,7 @@ class Validator:
             init_config (Dict[str, Dict], optional): Configuration for initializing rules.
             active_rules (Dict[str, Rule], optional): Dictionary of currently active rules.
         """
-        
+
         self.ln_id: str = SysUtil.create_id()
         self.timestamp: str = SysUtil.get_timestamp(sep=None)[:-6]
         self.rulebook = rulebook or RuleBook(
@@ -69,7 +69,7 @@ class Validator:
         """
 
         def _init_rule(rule_name: str) -> Rule:
-            
+
             if not issubclass(self.rulebook[rule_name], Rule):
                 raise LionFieldError(
                     f"Invalid rule class for {rule_name}, must be a subclass of Rule"
