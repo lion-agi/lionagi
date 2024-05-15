@@ -45,7 +45,7 @@ class Chat(BaseDirective):
             throttle = Throttle(period=throttle_period)
             _inner = throttle(_inner)
 
-        return await _inner(
+        a = await _inner(
             context=context,
             instruction=instruction,
             system=system,
@@ -71,6 +71,9 @@ class Chat(BaseDirective):
             return_branch=return_branch,
             **kwargs,
         )
+        
+        if isinstance(a, tuple):
+            return a[0]
 
     async def _chat(
         self,
@@ -125,9 +128,9 @@ class Chat(BaseDirective):
             strict=strict,
             rulebook=rulebook,
             use_annotation=use_annotation,
-            template_name=template_name,
         )
 
+        
         return out_, branch if return_branch else out_
 
     async def direct(self, *args, **kwargs):
