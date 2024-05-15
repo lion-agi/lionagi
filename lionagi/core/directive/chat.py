@@ -72,8 +72,11 @@ class Chat(BaseDirective):
             **kwargs,
         )
         
-        if isinstance(a, tuple):
+        if isinstance(a, tuple) and isinstance(a[0], tuple):
+            return a[0][0], a[1]
+        if isinstance(a, tuple) and not isinstance(a[0], tuple):
             return a[0]
+        
 
     async def _chat(
         self,
