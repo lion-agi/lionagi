@@ -4,7 +4,7 @@ from lionagi.core.generic import ActionNode, Edge
 from lionagi.core.mail.schema import BaseMail
 from lionagi.core.messages.schema import System, Instruction
 
-from lionagi.core.branch.branch import Branch
+from lionagi.core.session.branch import Branch
 from lionagi.core.execute.base_executor import BaseExecutor
 
 
