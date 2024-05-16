@@ -6,6 +6,17 @@ from .action_request import ActionRequest
 
 # action response must correlates to a specific action request
 class ActionResponse(RoledMessage):
+    """
+    Represents a response to a specific action request.
+
+    Inherits from `RoledMessage` and provides attributes specific to action responses.
+
+    Attributes:
+        action_request (str): The ID of the action request that this response corresponds to.
+        function (str): The name of the function called.
+        arguments (dict): The keyword arguments provided.
+        func_outputs (Any): The output of the function call.
+    """
 
     action_request: str | None = Field(
         None,
@@ -24,6 +35,17 @@ class ActionResponse(RoledMessage):
         sender: str | None = None,  # the sender of action request
         func_outputs=None,
     ):
+        """
+        Initializes the ActionResponse.
+
+        Args:
+            action_request (ActionRequest): The action request that this response corresponds to.
+            sender (str, optional): The sender of the action request.
+            func_outputs (Any, optional): The output of the function call.
+
+        Raises:
+            ValueError: If the action request has already been responded to.
+        """
         if action_request.is_responded():
             raise ValueError("Action request has already been responded to")
 
@@ -43,12 +65,24 @@ class ActionResponse(RoledMessage):
         self.func_outputs = func_outputs
 
     def update_request(self, action_request: ActionRequest):
+        """
+        Updates the action request details in the action response.
+
+        Args:
+            action_request (ActionRequest): The action request to update from.
+        """
         self.function = action_request.function
         self.arguments = action_request.arguments
         self.action_request = action_request.ln_id
         action_request.action_response = self.ln_id
 
     def _to_dict(self):
+        """
+        Converts the action response to a dictionary.
+
+        Returns:
+            dict: A dictionary representation of the action response.
+        """
         return {
             "action_request": self.action_request,
             "function": self.function,

@@ -1,8 +1,6 @@
 from lionagi.libs.ln_convert import strip_lower, to_dict
 from lionagi.libs.ln_nested import nget
 
-from lionagi.libs.ln_func_call import lcall
-
 from .message import RoledMessage
 from .system import System
 from .instruction import Instruction
@@ -30,6 +28,30 @@ def create_message(
     # order of handling
     # action response - action request - other regular messages
     # if the message is output from function calling we will ignore other message types
+    """
+    Creates a message based on the provided parameters.
+
+    Args:
+        system (dict, optional): The system node (JSON serializable).
+        instruction (dict, optional): The instruction node (JSON serializable).
+        context (dict, optional): Additional context (JSON serializable).
+        assistant_response (dict, optional): The assistant response node (JSON serializable).
+        function (str, optional): The function name for action requests.
+        arguments (dict, optional): The arguments for the function.
+        func_outputs (Any, optional): The outputs from the function.
+        action_request (ActionRequest, optional): The action request node.
+        action_response (ActionResponse, optional): The action response node.
+        sender (str, optional): The sender of the message.
+        recipient (str, optional): The recipient of the message.
+        requested_fields (dict[str, str], optional): The requested fields for the instruction.
+        **kwargs: Additional context fields.
+
+    Returns:
+        RoledMessage: The constructed message based on the provided parameters.
+
+    Raises:
+        ValueError: If the parameters are invalid or missing required values.
+    """
 
     if func_outputs or action_response:
         if not action_request:
@@ -107,7 +129,18 @@ def create_message(
 
 
 def _parse_action_request(response):
+    """
+    Parses an action request from the response.
 
+    Args:
+        response (dict): The response containing the action request.
+
+    Returns:
+        list[ActionRequest] or None: A list of action requests or None if invalid.
+
+    Raises:
+        ActionError: If the action request is invalid.
+    """
     message = to_dict(response) if not isinstance(response, dict) else response
     content_ = None
 
@@ -154,6 +187,18 @@ def _parse_action_request(response):
 
 
 def _handle_action_request(response):
+    """
+    Handles the action request parsing from the response.
+
+    Args:
+        response (dict): The response containing the action request details.
+
+    Returns:
+        list[dict]: A list of function call details.
+
+    Raises:
+        ValueError: If the response message is invalid.
+    """
     try:
         tool_count = 0
         func_list = []
