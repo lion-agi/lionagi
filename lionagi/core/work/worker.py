@@ -1,18 +1,19 @@
+from abc import ABC
 from functools import wraps
-
-from abc import ABC, abstractmethod
-from lionagi.libs.ln_func_call import pcall
-from lionagi import logging as _logging
-from .work_function import WorkFunction
 import asyncio
+from lionagi import logging as _logging
+from lionagi.libs.ln_func_call import pcall
+from .work_function import WorkFunction
 from .work import Work
-from .worklog import WorkLog
 
 
 class Worker(ABC):
     """
-    This is a class that will be used to create a worker object.
-    Work functions are keyed by assignment {assignment: WorkFunction}.
+    This class represents a worker that handles multiple work functions.
+
+    Attributes:
+        name (str): The name of the worker.
+        work_functions (dict[str, WorkFunction]): Dictionary mapping assignments to WorkFunction objects.
     """
 
     name: str = "Worker"
@@ -22,6 +23,9 @@ class Worker(ABC):
         self.stopped = False
 
     async def stop(self):
+        """
+        Stops the worker and all associated work functions.
+        """
         self.stopped = True
         _logging.info(f"Stopping worker {self.name}")
         non_stopped_ = []
@@ -37,15 +41,28 @@ class Worker(ABC):
         _logging.info(f"Stopped worker {self.name}")
 
     async def is_progressable(self):
+        """
+        Checks if any work function is progressable and the worker is not stopped.
+
+        Returns:
+            bool: True if any work function is progressable and the worker is not stopped, else False.
+        """
+
         return (
             any([await i.is_progressable() for i in self.work_functions.values()])
             and not self.stopped
         )
 
     async def process(self, refresh_time=1):
+        """
+        Processes all work functions periodically.
+
+        Args:
+            refresh_time (int): Time interval between each process cycle.
+        """
         while await self.is_progressable():
             await pcall([i.process(refresh_time) for i in self.work_functions.values()])
-            asyncio.sleep(refresh_time)
+            await asyncio.sleep(refresh_time)
 
     # TODO: Implement process method
 
@@ -68,6 +85,16 @@ class Worker(ABC):
         guidance=None,
         **kwargs,
     ):
+        """
+        Internal wrapper to handle work function execution.
+
+        Args:
+            func (Callable): The function to be executed.
+            assignment (str): The assignment description.
+            capacity (int): Capacity for the work log.
+            retry_kwargs (dict): Retry arguments for the function.
+            guidance (str): Guidance or documentation for the function.
+        """
         if getattr(self, "work_functions", None) is None:
             self.work_functions = {}
 
@@ -95,6 +122,17 @@ def work(
     refresh_time=1,
     timeout=10,
 ):
+    """
+    Decorator to mark a method as a work function.
+
+    Args:
+        assignment (str): The assignment description of the work function.
+        capacity (int): Capacity for the work log.
+        guidance (str): Guidance or documentation for the work function.
+        retry_kwargs (dict): Retry arguments for the work function.
+        refresh_time (int): Time interval between each process cycle.
+        timeout (int): Timeout for the work function.
+    """
     def decorator(func):
         @wraps(func)
         async def wrapper(
