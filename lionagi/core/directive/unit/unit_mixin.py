@@ -1,5 +1,5 @@
 """
-the base directive
+The base directive module.
 """
 
 import asyncio
@@ -9,23 +9,14 @@ from typing import Any
 from abc import ABC
 
 from lionagi.libs.ln_parse import ParseUtil, StringMatch
-
 from lionagi.core.generic.abc import ActionError
-
 from lionagi.core.message import Instruction
 from lionagi.core.message.util import _parse_action_request
 from lionagi.core.validator.validator import Validator
-
-
 from lionagi.core.message.action_request import ActionRequest
 from lionagi.core.message.action_response import ActionResponse
 from ..util import process_tools
 from .template.action import ActionTemplate
-
-from typing import Any
-
-from lionagi.libs import convert, AsyncUtil
-from lionagi.core.session.branch import Branch
 
 
 class DirectiveMixin(ABC):
@@ -52,6 +43,32 @@ class DirectiveMixin(ABC):
         return_branch=False,
         **kwargs,
     ):
+        """
+        Handles the base chat operation by configuring the chat and processing the response.
+
+        Args:
+            instruction (Any, optional): Instruction for the chat.
+            system (Any, optional): System context for the chat.
+            context (Any, optional): Context to perform the instruction on.
+            sender (Any, optional): Sender of the instruction.
+            recipient (Any, optional): Recipient of the instruction.
+            requested_fields (Any, optional): Fields to request from the context.
+            form (Any, optional): Form to create instruction from.
+            tools (bool, optional): Whether to use tools in the chat.
+            invoke_tool (bool, optional): Whether to invoke tools when function calling.
+            return_form (bool, optional): Whether to return the form.
+            strict (bool, optional): Whether to enforce strict rule validation.
+            rulebook (Any, optional): Rulebook for validation.
+            imodel (Any, optional): Swappable iModel for commands.
+            use_annotation (bool, optional): Whether to use annotation as rule qualifier.
+            branch (Any, optional): Branch to use for the chat.
+            clear_messages (bool, optional): Whether to clear messages in the branch.
+            return_branch (bool, optional): Whether to return the branch.
+            **kwargs: Additional arguments for configuration.
+
+        Returns:
+            Tuple[Any, Any]: Processed output and optionally the branch.
+        """
         branch = branch or self.branch
         if clear_messages:
             branch.clear()
@@ -99,7 +116,23 @@ class DirectiveMixin(ABC):
         tools=False,
         **kwargs,  # additional config for the model
     ) -> Any:
+        """
+        Creates the chat configuration based on the provided parameters.
 
+        Args:
+            system (Any, optional): System context for the chat.
+            instruction (Any, optional): Instruction for the chat.
+            context (Any, optional): Context to perform the instruction on.
+            sender (Any, optional): Sender of the instruction.
+            recipient (Any, optional): Recipient of the instruction.
+            requested_fields (Any, optional): Fields to request from the context.
+            form (Any, optional): Form to create instruction from.
+            tools (bool, optional): Whether to use tools in the chat.
+            **kwargs: Additional arguments for configuration.
+
+        Returns:
+            Any: The configuration for the chat.
+        """
         if system:
             self.branch.add_message(system=system)
 
@@ -131,6 +164,17 @@ class DirectiveMixin(ABC):
         return config
 
     async def _call_chatcompletion(self, imodel=None, branch=None, **kwargs):
+        """
+        Calls the chat completion model.
+
+        Args:
+            imodel (Any, optional): The iModel to use.
+            branch (Any, optional): The branch to use.
+            **kwargs: Additional arguments for the chat completion.
+
+        Returns:
+            Any: The chat completion response.
+        """
         imodel = imodel or self.imodel
         branch = branch or self.branch
         return await imodel.call_chat_completion(branch.to_chat_messages(), **kwargs)
@@ -144,6 +188,20 @@ class DirectiveMixin(ABC):
         branch=None,
         action_request=None,
     ):
+        """
+        Processes the chat completion response.
+
+        Args:
+            payload (Any): The payload for the chat completion.
+            completion (Any): The chat completion response.
+            sender (Any): The sender of the instruction.
+            invoke_tool (bool, optional): Whether to invoke tools when function calling.
+            branch (Any, optional): The branch to use.
+            action_request (Any, optional): The action request.
+
+        Returns:
+            Any: The processed action request.
+        """
         branch = branch or self.branch
         # process the raw chat completion response
         _msg = None
@@ -176,6 +234,18 @@ class DirectiveMixin(ABC):
     async def _process_action_request(
         self, _msg=None, branch=None, invoke_tool=True, action_request=None
     ):
+        """
+        Processes an action request from the assistant response.
+
+        Args:
+            _msg (Any, optional): The assistant response message.
+            branch (Any, optional): The branch to use.
+            invoke_tool (bool, optional): Whether to invoke tools when function calling.
+            action_request (Any, optional): The action request.
+
+        Returns:
+            Any: The processed action request.
+        """
         # if the assistant response contains action request, we add each as a message to branch
         action_request = action_request or _parse_action_request(_msg)
 
@@ -225,6 +295,25 @@ class DirectiveMixin(ABC):
         use_annotation=True,
         template_name=None,
     ) -> Any:
+        """
+        Outputs the final processed response.
+
+        Args:
+            payload (Any): The payload for the chat completion.
+            completion (Any): The chat completion response.
+            sender (Any): The sender of the instruction.
+            invoke_tool (bool): Whether to invoke tools when function calling.
+            requested_fields (Any): Fields to request from the context.
+            form (Any, optional): Form to create instruction from.
+            return_form (bool, optional): Whether to return the form.
+            strict (bool, optional): Whether to enforce strict rule validation.
+            rulebook (Any, optional): Rulebook for validation.
+            use_annotation (bool, optional): Whether to use annotation as rule qualifier.
+            template_name (Any, optional): Template name for the form.
+
+        Returns:
+            Any: The final processed response.
+        """
         _msg = await self._process_chatcompletion(
             payload=payload,
             completion=completion,
@@ -268,6 +357,16 @@ class DirectiveMixin(ABC):
 
     @staticmethod
     def _process_model_response(content_, requested_fields):
+        """
+        Processes the model response content.
+
+        Args:
+            content_ (Any): The content from the model response.
+            requested_fields (Any): Fields to request from the context.
+
+        Returns:
+            Any: The processed model response.
+        """
         out_ = ""
 
         if "content" in content_:
@@ -309,7 +408,33 @@ class DirectiveMixin(ABC):
         return_branch=False,
         **kwargs,
     ):
+        """
+        Handles the chat operation.
 
+        Args:
+            instruction (Any, optional): Instruction for the chat.
+            context (Any, optional): Context to perform the instruction on.
+            system (Any, optional): System context for the chat.
+            sender (Any, optional): Sender of the instruction.
+            recipient (Any, optional): Recipient of the instruction.
+            branch (Any, optional): Branch to use for the chat.
+            requested_fields (Any, optional): Fields to request from the context.
+            form (Any, optional): Form to create instruction from.
+            tools (bool, optional): Whether to use tools in the chat.
+            invoke_tool (bool, optional): Whether to invoke tools when function calling.
+            return_form (bool, optional): Whether to return the form.
+            strict (bool, optional): Whether to enforce strict rule validation.
+            rulebook (Any, optional): Rulebook for validation.
+            imodel (Any, optional): Swappable iModel for commands.
+            clear_messages (bool, optional): Whether to clear messages in the branch.
+            use_annotation (bool, optional): Whether to use annotation as rule qualifier.
+            timeout (float | None, optional): Timeout for the rcall.
+            return_branch (bool, optional): Whether to return the branch.
+            **kwargs: Additional arguments for configuration.
+
+        Returns:
+            Any: The chat response.
+        """
         a = await self._base_chat(
             context=context,
             instruction=instruction,
@@ -350,6 +475,23 @@ class DirectiveMixin(ABC):
         return_branch=False,
         **kwargs,
     ):
+        """
+        Performs an action based on the provided parameters.
+
+        Args:
+            form (Any, optional): Form to create instruction from.
+            template (Any, optional): Template for the action.
+            branch (Any, optional): Branch to use for the action.
+            tools (Any, optional): Tools to use in the action.
+            confidence_score (Any, optional): Confidence score for the action.
+            instruction (Any, optional): Instruction for the action.
+            context (Any, optional): Context to perform the action on.
+            return_branch (bool, optional): Whether to return the branch.
+            **kwargs: Additional arguments for the action.
+
+        Returns:
+            Any: The action response.
+        """
         branch = branch or self.branch
         if not form:
             form = template(
@@ -430,6 +572,23 @@ class DirectiveMixin(ABC):
         branch=None,
         **kwargs,
     ):
+        """
+        Selects a response based on the provided parameters.
+
+        Args:
+            form (Any, optional): Form to create instruction from.
+            choices (Any, optional): Choices for the selection.
+            reason (bool, optional): Whether to include a reason for the selection.
+            confidence_score (Any, optional): Confidence score for the selection.
+            instruction (Any, optional): Instruction for the selection.
+            template (Any, optional): Template for the selection.
+            context (Any, optional): Context to perform the selection on.
+            branch (Any, optional): Branch to use for the selection.
+            **kwargs: Additional arguments for the selection.
+
+        Returns:
+            Any: The selection response.
+        """
         branch = branch or self.branch
 
         if not form:
@@ -455,6 +614,23 @@ class DirectiveMixin(ABC):
         template=None,
         **kwargs,
     ):
+        """
+        Predicts a response based on the provided parameters.
+
+        Args:
+            form (Any, optional): Form to create instruction from.
+            num_sentences (Any, optional): Number of sentences for the prediction.
+            reason (bool, optional): Whether to include a reason for the prediction.
+            confidence_score (Any, optional): Confidence score for the prediction.
+            instruction (Any, optional): Instruction for the prediction.
+            context (Any, optional): Context to perform the prediction on.
+            branch (Any, optional): Branch to use for the prediction.
+            template (Any, optional): Template for the prediction.
+            **kwargs: Additional arguments for the prediction.
+
+        Returns:
+            Any: The prediction response.
+        """
         branch = branch or self.branch
 
         if not form:
