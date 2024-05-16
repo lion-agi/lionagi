@@ -28,7 +28,7 @@ class FunctionCalling(Actionable):
         Args:
             function (Callable): The function to be called.
             arguments (Dict[str, Any]): Arguments to pass to the function.
-                                        Defaults to an empty dictionary.
+                Defaults to an empty dictionary.
         """
         self.function = function
         self.arguments = arguments or {}
@@ -51,10 +51,11 @@ class FunctionCalling(Actionable):
 
         Args:
             func_call (Any): The function call description, which can be a tuple, dict,
-                             ActionRequest, or JSON string.
+                ActionRequest, or JSON string.
 
         Returns:
-            FunctionCalling: An instance of FunctionCalling prepared to invoke the specified function.
+            FunctionCalling: An instance of FunctionCalling prepared to invoke
+                the specified function.
 
         Raises:
             TypeError: If the input type is not supported.

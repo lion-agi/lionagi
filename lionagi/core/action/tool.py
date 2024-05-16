@@ -13,12 +13,12 @@ class Tool(Node, Actionable):
 
     Attributes:
         function (Callable): The callable function or capability of the tool.
-        schema_ (dict | None): Schema in OpenAI format.
-        pre_processor (Callable | None): Function to preprocess input arguments.
-        pre_processor_kwargs (dict | None): Keyword arguments for the pre-processor.
-        post_processor (Callable | None): Function to post-process the result.
-        post_processor_kwargs (dict | None): Keyword arguments for the post-processor.
-        parser (Callable | None): Function to parse the result to a JSON serializable format.
+        schema_ (Union[Dict, None]): Schema in OpenAI format.
+        pre_processor (Union[Callable, None]): Function to preprocess input arguments.
+        pre_processor_kwargs (Union[Dict, None]): Keyword arguments for the pre-processor.
+        post_processor (Union[Callable, None]): Function to post-process the result.
+        post_processor_kwargs (Union[Dict, None]): Keyword arguments for the post-processor.
+        parser (Union[Callable, None]): Function to parse the result to a JSON serializable format.
     """
 
     function: Callable = Field(

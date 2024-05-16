@@ -36,9 +36,9 @@ class DirectiveMixin(ABC):
         return_branch=False,
         **kwargs,
     ):
-        from lionagi.core.directive.unit_template import Chat
+        from lionagi.core.directive.unit.unit import Unit
 
-        directive = Chat(self, imodel=imodel, rulebook=rulebook)
+        directive = Unit(self, imodel=imodel, rulebook=rulebook)
         if system:
             self.add_message(system=system)
 
@@ -68,52 +68,52 @@ class DirectiveMixin(ABC):
             **kwargs,
         )
 
-    async def direct(
-        self,
-        directive: str,  # examples, "chat", "predict", "act"
-        instruction=None,  # additional instruction
-        context=None,  # context to perform the instruction on
-        return_branch=False,
-        **kwargs,
-    ):
+    # async def direct(
+    #     self,
+    #     directive: str,  # examples, "chat", "predict", "act"
+    #     instruction=None,  # additional instruction
+    #     context=None,  # context to perform the instruction on
+    #     return_branch=False,
+    #     **kwargs,
+    # ):
 
-        import lionagi.core.directive.direct as _direct
+    #     import lionagi.core.directive.direct as _direct
 
-        directive = getattr(_direct, strip_lower(directive))
+    #     directive = getattr(_direct, strip_lower(directive))
 
-        output = await directive(
-            context=context,
-            instruction=instruction,
-            return_branch=return_branch,
-            **kwargs,
-        )
-        return output
+    #     output = await directive(
+    #         context=context,
+    #         instruction=instruction,
+    #         return_branch=return_branch,
+    #         **kwargs,
+    #     )
+    #     return output
 
-        # _out = []
-        # for item in list(output):
-        #     if item not in _out:
-        #         _out.append(item)
+    # _out = []
+    # for item in list(output):
+    #     if item not in _out:
+    #         _out.append(item)
 
-        # if not return_branch:
-        #     return _out[0]
-        # return _out
+    # if not return_branch:
+    #     return _out[0]
+    # return _out
 
-    # default is chain of predict
-    async def chain_of_direct(
-        self,
-        directive: str,
-        instruction=None,  # additional instruction
-        context=None,  # context to perform the instruction on
-        **kwargs,
-    ):
+    # # default is chain of predict
+    # async def chain_of_direct(
+    #     self,
+    #     directive: str,
+    #     instruction=None,  # additional instruction
+    #     context=None,  # context to perform the instruction on
+    #     **kwargs,
+    # ):
 
-        from lionagi.core.directive.structure.chain import Chain
+    #     from lionagi.core.directive.structure.chain import Chain
 
-        _chain = Chain(self)
+    #     _chain = Chain(self)
 
-        return await _chain.direct(
-            context=context,
-            instruction=instruction,
-            directive=directive,
-            **kwargs,
-        )
+    #     return await _chain.direct(
+    #         context=context,
+    #         instruction=instruction,
+    #         directive=directive,
+    #         **kwargs,
+    #     )

@@ -22,6 +22,13 @@ class ToolManager(Actionable):
     """
 
     def __init__(self, registry: dict[str, Tool] = None) -> None:
+        """
+        Initializes a new instance of ToolManager.
+
+        Args:
+            registry (dict[str, Tool], optional): A dictionary to store registered tools.
+                Defaults to an empty dictionary.
+        """
         self.registry = registry or {}
 
     @singledispatchmethod
@@ -43,6 +50,15 @@ class ToolManager(Actionable):
 
     @register_tools.register
     def _(self, tools: Tool):
+        """
+        Registers a single Tool.
+
+        Args:
+            tools (Tool): The Tool to register.
+
+        Raises:
+            ValueError: If the Tool is already registered.
+        """
         if tools.name in self.registry:
             raise ValueError(f"Function {tools.name} is already registered.")
         else:
@@ -51,17 +67,34 @@ class ToolManager(Actionable):
 
     @register_tools.register
     def _(self, tools: list):
+        """
+        Registers multiple Tools.
+
+        Args:
+            tools (list): The list of Tools to register.
+
+        Returns:
+            bool: True if all tools are successfully registered.
+        """
         return all(lcall(tools, self.register_tools))
 
     async def invoke(self, func_calling=None):
         """
         Invokes a function based on the provided function calling description.
 
-        - tuple: (name, kwargs)
-        - dict: {"function": name, "arguments": kwargs}
-        - str: json string of dict format
-        - ActionRequest object
-        - FunctionCalling object
+        Args:
+            func_calling (Any, optional): The function calling description, which can be:
+                - tuple: (name, kwargs)
+                - dict: {"function": name, "arguments": kwargs}
+                - str: JSON string of dict format
+                - ActionRequest object
+                - FunctionCalling object
+
+        Returns:
+            Any: The result of the function call.
+
+        Raises:
+            ValueError: If func_calling is None or the function is not registered.
         """
         if not func_calling:
             raise ValueError("func_calling is required.")
@@ -82,7 +115,7 @@ class ToolManager(Actionable):
         Lists all tool schemas currently registered in the ToolManager.
 
         Returns:
-            List[Dict[str, Any]]: A list of tool schemas.
+            list[dict[str, Any]]: A list of tool schemas.
         """
         return [tool.schema_ for tool in self.registry.values()]
 
@@ -120,11 +153,31 @@ class ToolManager(Actionable):
 
     @_get_tool_schema.register(dict)
     def _(self, tool):
-        """assuming that the tool is a schema"""
+        """
+        Assumes that the tool is a schema and returns it.
+
+        Args:
+            tool (dict): The tool schema.
+
+        Returns:
+            dict: The tool schema.
+        """
         return tool
 
     @_get_tool_schema.register(Tool)
     def _(self, tool):
+        """
+        Retrieves the schema for a Tool object.
+
+        Args:
+            tool (Tool): The Tool object.
+
+        Returns:
+            dict: The tool schema.
+
+        Raises:
+            ValueError: If the Tool is not registered.
+        """
         if tool.name in self.registry:
             return self.registry[tool.name].schema_
         else:
@@ -133,7 +186,18 @@ class ToolManager(Actionable):
 
     @_get_tool_schema.register(str)
     def _(self, tool):
-        """assuming that the tool is a name"""
+        """
+        Assumes that the tool is a name and retrieves its schema.
+
+        Args:
+            tool (str): The tool name.
+
+        Returns:
+            dict: The tool schema.
+
+        Raises:
+            ValueError: If the tool name is not registered.
+        """
         if tool in self.registry:
             return self.registry[tool].schema_
         else:
@@ -142,6 +206,15 @@ class ToolManager(Actionable):
 
     @_get_tool_schema.register(list)
     def _(self, tools):
+        """
+        Retrieves the schema for a list of tools.
+
+        Args:
+            tools (list): The list of tools.
+
+        Returns:
+            list: A list of tool schemas.
+        """
         return lcall(tools, self._get_tool_schema)
 
     def parse_tool(self, tools: TOOL_TYPE, **kwargs) -> dict:
@@ -153,9 +226,8 @@ class ToolManager(Actionable):
             **kwargs: Additional keyword arguments to be merged with the tool schema.
 
         Returns:
-            Dict[str, Any]: The merged tool schema and additional arguments.
+            dict: The merged tool schema and additional arguments.
         """
-
         if tools:
             if isinstance(tools, bool):
                 tool_kwarg = {"tools": self._schema_list}
@@ -173,10 +245,10 @@ class ToolManager(Actionable):
         Parses a tool request from a given response dictionary.
 
         Args:
-            response (Dict[str, Any]): The response data containing the tool request.
+            response (dict): The response data containing the tool request.
 
         Returns:
-            Tuple[str, Dict[str, Any]]: The function name and its arguments.
+            Tuple[str, dict]: The function name and its arguments.
 
         Raises:
             ValueError: If the response is not a valid function call.
@@ -204,14 +276,14 @@ def func_to_tool(
     and applying a specified docstring parsing style to generate tool schemas.
 
     Args:
-        func_ (Callable | List[Callable]): The function(s) to convert into tool(s).
-        parser (Callable | List[Callable], optional): Parser(s) to associate with
+        func_ (Callable | list[Callable]): The function(s) to convert into tool(s).
+        parser (Callable | list[Callable], optional): Parser(s) to associate with
             the function(s). If a list is provided, it should match the length of func_.
         docstring_style (str, optional): The style of the docstring parser to use when
             generating tool schemas. Defaults to "google".
 
     Returns:
-        List[Tool]: A list of Tool objects created from the provided function(s).
+        list[Tool]: A list of Tool objects created from the provided function(s).
 
     Raises:
         ValueError: If the length of the parsers does not match the length of the
@@ -227,7 +299,6 @@ def func_to_tool(
         # Convert multiple functions with multiple parsers
         tools = func_to_tool([func_one, func_two], [parser_one, parser_two])
     """
-
     fs = []
     funcs = to_list(func_, flatten=True, dropna=True)
     parsers = to_list(parser, flatten=True, dropna=True)
