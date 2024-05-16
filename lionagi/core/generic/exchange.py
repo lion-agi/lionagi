@@ -1,4 +1,4 @@
-from typing import TypeVar
+from typing import TypeVar, Generic
 from .abc import Element, Field, Sendable
 from .pile import Pile, pile
 from .progression import Progression, progression
@@ -6,12 +6,12 @@ from .progression import Progression, progression
 T = TypeVar("T")
 
 
-class Exchange(Element):
+class Exchange(Element, Generic[T]):
     """
     Item exchange system designed to handle incoming and outgoing flows of items
     """
 
-    pile: Pile[Sendable] = Field(
+    pile: Pile[T] = Field(
         default_factory=lambda: pile(),
         description="The pile of items in the exchange.",
         title="pending items",

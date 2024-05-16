@@ -1,62 +1,36 @@
-from typing import Any
-
-from lionagi.libs import convert, AsyncUtil
-from lionagi.core.messages.schema import Instruction
+from lionagi.libs.ln_func_call import rcall
+from lionagi.core.generic.abc import Directive
+from lionagi.core.validator.validator import Validator
+from lionagi.core.generic import iModel
 from lionagi.core.session.branch import Branch
-from lionagi.core.flow.baseflow import BasePolyFlow
+from lionagi.libs import convert, AsyncUtil
+
+from ..util import retry_kwargs
 
 
-class PolyChat(BasePolyFlow):
+class ParallelUnit(Directive):
 
-    def __init__(self, session) -> None:
-        """
-        Initializes the PolyChat instance.
+    default_template = None
 
-        Args:
-            session: The session object.
-        """
-        super().__init__(session)
+    def __init__(
+        self, session, imodel: iModel = None, template=None, rulebook=None
+    ) -> None:
+        self.branch = session
+        if imodel and isinstance(imodel, iModel):
+            session.imodel = imodel
+            self.imodel = imodel
+        else:
+            self.imodel = session.imodel
+        self.form_template = template or self.default_template
+        self.validator = Validator(rulebook=rulebook) if rulebook else Validator()
 
-    async def parallel_chat(
-        self,
-        instruction: Instruction | str,
-        num_instances=1,
-        context=None,
-        sender=None,
-        branch_system=None,
-        messages=None,
-        tools=False,
-        out=True,
-        invoke: bool = True,
-        requested_fields=None,
-        persist_path=None,
-        branch_config=None,
-        explode=False,
-        **kwargs,
-    ) -> Any:
-
-        if branch_config is None:
-            branch_config = {}
-        return await self._parallel_chat(
-            instruction,
-            num_instances=num_instances,
-            context=context,
-            sender=sender,
-            branch_system=branch_system,
-            messages=messages,
-            tools=tools,
-            out=out,
-            invoke=invoke,
-            requested_fields=requested_fields,
-            persist_path=persist_path,
-            branch_config=branch_config,
-            explode=explode,
-            **kwargs,
-        )
+    async def pchat(self, *args, **kwargs):
+        kwargs = {**retry_kwargs, **kwargs}
+        return await rcall(self._parallel_chat, *args, **kwargs)
 
     async def _parallel_chat(
         self,
-        instruction: Instruction | str,
+        instruction: str,
         num_instances=1,
         context=None,
         sender=None,
@@ -71,7 +45,7 @@ class PolyChat(BasePolyFlow):
         include_mapping=True,
         default_key="response",
         **kwargs,
-    ) -> Any:
+    ):
 
         branches = {}
 

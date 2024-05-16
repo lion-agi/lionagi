@@ -1,12 +1,8 @@
 from enum import Enum
-from lionagi.core.generic.abc import Field
-from .base import UnitDirective, Chat
-from lionagi.core.session.branch import Branch
-
-from lionagi.core.report.form import Form
+from .base import UnitForm, Field
 
 
-class SelectTemplate(Form):
+class SelectTemplate(UnitForm):
 
     confidence_score: float | None = Field(
         None,
@@ -35,7 +31,7 @@ class SelectTemplate(Form):
 
     @property
     def answer(self):
-        return self.selection
+        return getattr(self, "selection", None)
 
     def __init__(
         self,
@@ -60,39 +56,3 @@ select 1 item from the provided choices {choices}.
 
         if confidence_score:
             self.append_to_request("confidence_score")
-
-
-class Select(UnitDirective):
-
-    async def _select(
-        self,
-        form=None,
-        choices=None,
-        reason=False,
-        confidence_score=None,
-        instruction=None,
-        context=None,
-        branch=None,
-        system=None,
-        **kwargs,
-    ):
-
-        branch = branch or Branch(system=system)
-
-        if not form:
-            form = SelectTemplate(
-                choices=choices,
-                reason=reason,
-                confidence_score=confidence_score,
-                instruction=instruction,
-                context=context,
-            )
-
-        directive = Chat(branch)
-        return await directive.chat(form=form, return_form=True, **kwargs)
-
-    async def select(self, *args, **kwargs):
-        return await self._select(*args, **kwargs)
-
-    async def direct(self, *args, **kwargs):
-        return await self._select(*args, **kwargs)

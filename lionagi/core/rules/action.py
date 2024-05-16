@@ -1,3 +1,4 @@
+from lionagi.core.generic.abc import ActionError
 from enum import Enum
 
 from lionagi.libs import ParseUtil
@@ -21,7 +22,7 @@ class ActionRequestRule(MappingRule):
     async def validate(self, value):
         if isinstance(value, dict) and list(value.keys()) >= ["function", "arguments"]:
             return value
-        raise ValueError(f"Invalid action request field: {value}")
+        raise ActionError(f"Invalid action request: {value}")
 
     async def perform_fix(self, value):
         corrected = []
@@ -35,8 +36,8 @@ class ActionRequestRule(MappingRule):
                 if list(i.keys()) >= ["function", "arguments"]:
                     corrected.append(i)
                 elif not self.discard:
-                    raise ValueError(f"Invalid action field: {i}")
+                    raise ActionError(f"Invalid action request: {i}")
         except Exception as e:
-            raise ValueError(f"Invalid action field: {e}") from e
+            raise ActionError(f"Invalid action field: ") from e
 
         return corrected

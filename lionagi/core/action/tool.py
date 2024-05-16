@@ -39,7 +39,7 @@ class Tool(Node, Actionable):
 
     parser: Union[Callable, None] = None  # Parse result to JSON serializable format
 
-    @field_serializer("func", check_fields=False)
+    @field_serializer("function", check_fields=False)
     def serialize_func(self, func: Callable) -> str:
         """
         Serialize the function for storage or transmission.

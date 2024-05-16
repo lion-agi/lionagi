@@ -1,8 +1,8 @@
 """unit directive"""
 
-from .base import UnitDirective, Chat
+from ..unit.unit_mixin import UnitDirective, Chat
 from .predict import Predict
-from .plan import Plan
+from ....agent.planner.unit_template import Plan
 from .score import Score
 from .act import Act
 from .select import Select

@@ -1,7 +1,7 @@
 from typing import Any, Dict, List, Union
 from lionagi.libs import SysUtil
 from lionagi.libs.ln_func_call import lcall
-from lionagi.core.generic.abc import LionFieldError
+from lionagi.core.generic.abc import FieldError
 from ..rules.base import Rule
 from ..rules._default import DEFAULT_RULES
 from ..rules.rulebook import RuleBook
@@ -71,13 +71,13 @@ class Validator:
         def _init_rule(rule_name: str) -> Rule:
 
             if not issubclass(self.rulebook[rule_name], Rule):
-                raise LionFieldError(
+                raise FieldError(
                     f"Invalid rule class for {rule_name}, must be a subclass of Rule"
                 )
 
             _config = self.rulebook.rule_config[rule_name] or {}
             if not isinstance(_config, dict):
-                raise LionFieldError(
+                raise FieldError(
                     f"Invalid config for {rule_name}, must be a dictionary"
                 )
 
@@ -138,7 +138,7 @@ class Validator:
                     return await rule.invoke(field, value, form)
             except Exception as e:
                 self.log_validation_error(field, value, str(e))
-                raise LionFieldError(f"Failed to validate {field}") from e
+                raise FieldError(f"Failed to validate {field}") from e
 
         if strict:
             error_message = (
@@ -146,7 +146,7 @@ class Validator:
                 f"original value directly when no rule applies, set strict=False."
             )
             self.log_validation_error(field, value, error_message)
-            raise LionFieldError(error_message)
+            raise FieldError(error_message)
 
     async def validate_report(
         self, report: Report, forms: List[Form], strict: bool = True

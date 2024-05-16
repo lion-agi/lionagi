@@ -1,6 +1,6 @@
 from lionagi.libs.ln_convert import to_str
 from lionagi.core.generic.abc import Field
-from .base import Chat
+from ...directive.unit.unit_mixin import Chat
 from lionagi.core.report.form import Form
 
 
@@ -33,7 +33,7 @@ class ScoreTemplate(Form):
 
     @property
     def answer(self):
-        return self.score
+        return getattr(self, "score", None)
 
     def __init__(
         self,
@@ -82,7 +82,7 @@ class Score(Chat):
 
     defalut_template = ScoreTemplate
 
-    async def direct(
+    async def _score(
         self,
         form=None,
         score_range=None,
@@ -112,4 +112,7 @@ class Score(Chat):
         return await directive.chat(form=form, return_form=True, **kwargs)
 
     async def score(self, *args, **kwargs):
-        return await self.direct(*args, **kwargs)
+        return await self._score(*args, **kwargs)
+
+    async def direct(self, *args, **kwargs):
+        return await self._score(*args, **kwargs)

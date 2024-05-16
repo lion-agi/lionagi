@@ -13,7 +13,7 @@ from lionagi.libs.ln_convert import strip_lower, to_dict, to_str
 from lionagi.libs.ln_func_call import lcall
 from lionagi.libs.ln_nested import nget, nset, ninsert, flatten, unflatten
 
-from .exceptions import LionFieldError, LionTypeError, LionValueError
+from .exceptions import FieldError, LionTypeError, LionValueError
 from .util import base_lion_fields, llama_meta_fields, lc_meta_fields
 
 T = TypeVar("T")
@@ -460,7 +460,7 @@ class Component(Element, ABC):
         """Get the value of a field attribute."""
         try:
             if not self._field_has_attr(k, attr):
-                raise LionFieldError(f"field {k} has no attribute {attr}")
+                raise FieldError(f"field {k} has no attribute {attr}")
 
             field = self._all_fields[k]
             if not (a := getattr(field, attr, None)):

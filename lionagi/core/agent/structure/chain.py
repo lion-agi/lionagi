@@ -1,6 +1,6 @@
 from lionagi.libs.ln_convert import to_list
 from lionagi.libs.ln_convert import strip_lower
-from ..unit import Directive, Plan, Predict, UNIT_DIRECTIVE_MAPPING
+from ..unit.unit import Directive, Plan, Predict, UNIT_DIRECTIVE_MAPPING
 
 
 class Chain(Plan):

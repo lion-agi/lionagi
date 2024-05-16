@@ -1,4 +1,5 @@
 from abc import ABC
+from lionagi.libs.ln_convert import strip_lower
 
 
 class DirectiveMixin(ABC):
@@ -35,7 +36,7 @@ class DirectiveMixin(ABC):
         return_branch=False,
         **kwargs,
     ):
-        from lionagi.core.directive.unit import Chat
+        from lionagi.core.directive.unit_template import Chat
 
         directive = Chat(self, imodel=imodel, rulebook=rulebook)
         if system:
@@ -76,26 +77,26 @@ class DirectiveMixin(ABC):
         **kwargs,
     ):
 
-        from lionagi.core.directive.unit.direct import Direct
+        import lionagi.core.directive.direct as _direct
 
-        _direct = Direct(self)
+        directive = getattr(_direct, strip_lower(directive))
 
-        output = await _direct.direct(
-            directive=directive,
+        output = await directive(
             context=context,
             instruction=instruction,
             return_branch=return_branch,
             **kwargs,
         )
+        return output
 
-        _out = []
-        for item in list(output):
-            if item not in _out:
-                _out.append(item)
+        # _out = []
+        # for item in list(output):
+        #     if item not in _out:
+        #         _out.append(item)
 
-        if not return_branch:
-            return _out[0]
-        return _out
+        # if not return_branch:
+        #     return _out[0]
+        # return _out
 
     # default is chain of predict
     async def chain_of_direct(

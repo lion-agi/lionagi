@@ -6,94 +6,29 @@ import asyncio
 import re
 import contextlib
 from typing import Any
+from abc import ABC
 
 from lionagi.libs.ln_parse import ParseUtil, StringMatch
-from lionagi.libs.ln_func_call import rcall, CallDecorator as cd, Throttle
 
-from lionagi.core.generic.abc import Directive
-from lionagi.core.generic import iModel
+from lionagi.core.generic.abc import ActionError
+
 from lionagi.core.message import Instruction
 from lionagi.core.message.util import _parse_action_request
 from lionagi.core.validator.validator import Validator
 
 
-class UnitDirective(Directive):
+from lionagi.core.message.action_request import ActionRequest
+from lionagi.core.message.action_response import ActionResponse
+from ..util import process_tools
+from .template.action import ActionTemplate
 
-    default_template = None
+from typing import Any
 
-    def __init__(
-        self, branch, imodel: iModel = None, template=None, rulebook=None
-    ) -> None:
-        self.branch = branch
-        if imodel and isinstance(imodel, iModel):
-            branch.imodel = imodel
-            self.imodel = imodel
-        else:
-            self.imodel = branch.imodel
-        self.form_template = template or self.default_template
-        self.validator = Validator(rulebook=rulebook) if rulebook else Validator()
+from lionagi.libs import convert, AsyncUtil
+from lionagi.core.session.branch import Branch
 
 
-class Chat(UnitDirective):
-
-    async def chat(self, *args, **kwargs):
-        return await self._chat(*args, **kwargs)
-
-    async def direct(self, *args, **kwargs):
-        return await self._chat(*args, **kwargs)
-
-    async def _chat(
-        self,
-        instruction=None,  # additional instruction
-        context=None,  # context to perform the instruction on
-        system=None,  # optionally swap system message
-        sender=None,  # sender of the instruction, default "user"
-        recipient=None,  # recipient of the instruction, default "branch.ln_id"
-        branch=None,
-        requested_fields=None,  # fields to request from the context, default None
-        form=None,  # form to create instruction from, default None,
-        tools=False,  # the tools to use, use True to consider all tools, no tools by default
-        invoke_tool=True,  # whether to invoke the tool when function calling, default True
-        return_form=True,  # whether to return the form if a form is passed in, otherwise return a dict/str
-        strict=False,  # whether to strictly enforce the rule validation, default False
-        rulebook=None,  # the rulebook to use for validation, default None, use default rulebook
-        imodel=None,  # the optinally swappable iModel for the commands, otherwise self.branch.imodel
-        clear_messages=False,
-        use_annotation=True,  # whether to use annotation as rule qualifier, default True, (need rulebook if False)
-        timeout: (
-            float | None
-        ) = None,  # timeout for the rcall, default None (no timeout)
-        return_branch=False,
-        **kwargs,
-    ):
-
-        a = await self._base_chat(
-            context=context,
-            instruction=instruction,
-            system=system,
-            sender=sender,
-            recipient=recipient,
-            requested_fields=requested_fields,
-            form=form,
-            tools=tools,
-            invoke_tool=invoke_tool,
-            return_form=return_form,
-            strict=strict,
-            rulebook=rulebook,
-            imodel=imodel,
-            use_annotation=use_annotation,
-            timeout=timeout,
-            branch=branch,
-            clear_messages=clear_messages,
-            return_branch=return_branch,
-            **kwargs,
-        )
-
-        a = list(a)
-        if len(a) == 2 and a[0] == a[1]:
-            return a[0] if not isinstance(a[0], tuple) else a[0][0]
-
-        return a[0], a[1]
+class DirectiveMixin(ABC):
 
     async def _base_chat(
         self,
@@ -254,7 +189,7 @@ class Chat(UnitDirective):
                         i.function
                     ].ln_id  # recipient is the tool
                 else:
-                    raise ValueError(f"Tool {i.function} not found in registry")
+                    raise ActionError(f"Tool {i.function} not found in registry")
                 branch.add_message(action_request=i, recipient=i.recipient)
 
         if invoke_tool:
@@ -349,3 +284,186 @@ class Chat(UnitDirective):
                     out_ = ParseUtil.fuzzy_parse_json(match.group(1))
 
         return out_ or content_
+
+    async def _chat(
+        self,
+        instruction=None,  # additional instruction
+        context=None,  # context to perform the instruction on
+        system=None,  # optionally swap system message
+        sender=None,  # sender of the instruction, default "user"
+        recipient=None,  # recipient of the instruction, default "branch.ln_id"
+        branch=None,
+        requested_fields=None,  # fields to request from the context, default None
+        form=None,  # form to create instruction from, default None,
+        tools=False,  # the tools to use, use True to consider all tools, no tools by default
+        invoke_tool=True,  # whether to invoke the tool when function calling, default True
+        return_form=True,  # whether to return the form if a form is passed in, otherwise return a dict/str
+        strict=False,  # whether to strictly enforce the rule validation, default False
+        rulebook=None,  # the rulebook to use for validation, default None, use default rulebook
+        imodel=None,  # the optinally swappable iModel for the commands, otherwise self.branch.imodel
+        clear_messages=False,
+        use_annotation=True,  # whether to use annotation as rule qualifier, default True, (need rulebook if False)
+        timeout: (
+            float | None
+        ) = None,  # timeout for the rcall, default None (no timeout)
+        return_branch=False,
+        **kwargs,
+    ):
+
+        a = await self._base_chat(
+            context=context,
+            instruction=instruction,
+            system=system,
+            sender=sender,
+            recipient=recipient,
+            requested_fields=requested_fields,
+            form=form,
+            tools=tools,
+            invoke_tool=invoke_tool,
+            return_form=return_form,
+            strict=strict,
+            rulebook=rulebook,
+            imodel=imodel,
+            use_annotation=use_annotation,
+            timeout=timeout,
+            branch=branch,
+            clear_messages=clear_messages,
+            return_branch=return_branch,
+            **kwargs,
+        )
+
+        a = list(a)
+        if len(a) == 2 and a[0] == a[1]:
+            return a[0] if not isinstance(a[0], tuple) else a[0][0]
+
+        return a[0], a[1]
+
+    async def _act(
+        self,
+        form=None,
+        template=ActionTemplate,
+        branch=None,
+        tools=None,
+        confidence_score=None,
+        instruction=None,
+        context=None,
+        return_branch=False,
+        **kwargs,
+    ):
+        branch = branch or self.branch
+        if not form:
+            form = template(
+                confidence_score=confidence_score,
+                instruction=instruction,
+                context=context,
+            )
+
+        if tools:
+            process_tools(tools, branch)
+
+        form, branch = await self._chat(
+            form=form,
+            return_branch=True,
+            branch=branch,
+            tools=tools,
+            **kwargs,
+        )
+
+        if getattr(form, "action_required", False):
+            actions = getattr(form, "actions", None)
+            if actions:
+                actions = [actions] if not isinstance(actions, list) else actions
+
+                try:
+                    requests = []
+                    for action in actions:
+                        msg = ActionRequest(
+                            function=action["function"],
+                            arguments=action["arguments"],
+                            sender=branch.ln_id,
+                            recipient=branch.tool_manager.registry[
+                                action["function"]
+                            ].ln_id,
+                        )
+                        requests.append(msg)
+                        self.branch.add_message(msg)
+
+                    if requests:
+                        out = self._process_action_request(
+                            branch=branch, invoke_tool=True, action_request=requests
+                        )
+
+                        if out == False:
+                            raise ValueError(
+                                "Error processing action request: No requests found."
+                            )
+
+                        len_actions = len(actions)
+                        action_responses = branch.messages[-len_actions:]
+
+                        if not all(
+                            isinstance(i, ActionResponse) for i in action_responses
+                        ):
+                            raise ValueError(
+                                "Error processing action request: Invalid action response."
+                            )
+
+                        action_responses = [i._to_dict() for i in action_responses]
+                        form._add_field(
+                            "action_response", list[dict], None, action_responses
+                        )
+                except Exception as e:
+                    raise ValueError(f"Error processing action request: {e}")
+            raise ValueError("Error processing action request: No requests found.")
+
+        return form, branch if return_branch else form
+
+    async def _select(
+        self,
+        form=None,
+        choices=None,
+        reason=False,
+        confidence_score=None,
+        instruction=None,
+        template=None,
+        context=None,
+        branch=None,
+        **kwargs,
+    ):
+        branch = branch or self.branch
+
+        if not form:
+            form = template(
+                choices=choices,
+                reason=reason,
+                confidence_score=confidence_score,
+                instruction=instruction,
+                context=context,
+            )
+
+        return await self._chat(form=form, return_form=True, **kwargs)
+
+    async def _predict(
+        self,
+        form=None,
+        num_sentences=None,
+        reason=False,
+        confidence_score=None,
+        instruction=None,
+        context=None,
+        branch=None,
+        template=None,
+        **kwargs,
+    ):
+        branch = branch or self.branch
+
+        if not form:
+            form = template(
+                instruction=instruction,
+                context=context,
+                num_sentences=num_sentences,
+                confidence_score=confidence_score,
+                reason=reason,
+            )
+
+        return await self._chat(form=form, return_form=True, **kwargs)

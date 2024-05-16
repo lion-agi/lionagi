@@ -31,7 +31,7 @@ class BooleanRule(Rule):
         """
         if isinstance(value, bool):
             return value
-        raise ValueError(f"Invalid boolean field type.")
+        raise ValueError(f"Invalid boolean value.")
 
     async def perform_fix(self, value: Any) -> bool:
         """

@@ -1,3 +1,4 @@
+from lionagi.core.generic.abc import FieldError
 from abc import abstractmethod
 from typing import Any, List, Dict
 from pandas import Series
@@ -126,8 +127,8 @@ class Rule(Component, Condition, Actionable):
                     self.add_log(field, form, apply=False, **self.validation_kwargs)
                     return a
                 except Exception as e2:
-                    raise ValueError(f"failed to fix field") from e2
-            raise ValueError(f"failed to validate field") from e1
+                    raise FieldError(f"failed to fix field") from e2
+            raise FieldError(f"failed to validate field") from e1
 
     async def rule_condition(self, *args, **kwargs) -> bool:
         """

@@ -1,10 +1,7 @@
-from lionagi.core.generic.abc import Field, Directive
-from .base import Chat, UnitDirective
-from lionagi.core.report.form import Form
-from lionagi.core.session.branch import Branch
+from .base import UnitForm, Field
 
 
-class PredictTemplate(Form):
+class PredictTemplate(UnitForm):
 
     confidence_score: float | None = Field(
         None,
@@ -64,39 +61,3 @@ predict the next sentence(s) according to the following constraints
 
         if confidence_score:
             self.append_to_request("confidence_score")
-
-
-class Predict(UnitDirective):
-    default_template = PredictTemplate
-
-    async def _predict(
-        self,
-        form=None,
-        num_sentences=None,
-        reason=False,
-        confidence_score=None,
-        instruction=None,
-        context=None,
-        branch=None,
-        system=None,
-        **kwargs,
-    ):
-        branch = branch or Branch(system=system)
-
-        if not form:
-            form = self.default_template(
-                instruction=instruction,
-                context=context,
-                num_sentences=num_sentences,
-                confidence_score=confidence_score,
-                reason=reason,
-            )
-
-        directive = Chat(branch)
-        return await directive.chat(form=form, return_form=True, **kwargs)
-
-    async def predict(self, *args, **kwargs):
-        return await self._predict(*args, **kwargs)
-
-    async def direct(self, *args, **kwargs):
-        return await self.predict(*args, **kwargs)

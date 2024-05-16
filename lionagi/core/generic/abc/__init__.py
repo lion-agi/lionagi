@@ -5,9 +5,10 @@ from .exceptions import (
     LionTypeError,
     LionValueError,
     ItemNotFoundError,
-    LionFieldError,
+    FieldError,
     LionOperationError,
     RelationError,
+    ActionError,
 )
 from .component import Element, Component, LionIDable, get_lion_id
 from .concepts import (
@@ -35,8 +36,9 @@ __all__ = [
     "get_lion_id",
     "LionTypeError",
     "LionValueError",
+    "ActionError",
     "ItemNotFoundError",
-    "LionFieldError",
+    "FieldError",
     "LionOperationError",
     "Relatable",
     "Progressable",
