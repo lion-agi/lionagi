@@ -15,6 +15,8 @@ class NumberRule(Rule):
         precision (int | None): The precision for floating point numbers.
     """
 
+    fields: list[str] = ["confidence_score", "score"]
+
     def __init__(self, apply_type="int, float", **kwargs):
         super().__init__(apply_type=apply_type, **kwargs)
         self.upper_bound = self.validation_kwargs.get("upper_bound")

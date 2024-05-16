@@ -1,18 +1,41 @@
 from enum import Enum
 from lionagi.core.generic.abc import Field
-from .base import UnitTemplate, Chat
+from .base import UnitDirective, Chat
+from lionagi.core.session.branch import Branch
+
+from lionagi.core.report.form import Form
 
 
-class SelectTemplate(UnitTemplate):
+class SelectTemplate(Form):
+
+    confidence_score: float | None = Field(
+        None,
+        description="a numeric score between 0 to 1 formatted in num:0.2f, 1 being very confident and 0 being not confident at all, just guessing",
+        validation_kwargs={
+            "upper_bound": 1,
+            "lower_bound": 0,
+            "num_type": float,
+            "precision": 2,
+        },
+    )
+
+    reason: str | None = Field(
+        default_factory=str,
+        description="brief reason for the given output, format: This is my best response because ...",
+    )
 
     template_name: str = "default_select"
 
-    selection: Enum | str | list = Field(
-        default_factory=str, description="selection from given choices"
+    selection: Enum | str | list | None = Field(
+        None, description="selection from given choices"
     )
     choices: list = Field(default_factory=list, description="the given choices")
 
-    signature: str = "task -> selection"
+    assignment: str = "task -> selection"
+
+    @property
+    def answer(self):
+        return self.selection
 
     def __init__(
         self,
@@ -39,71 +62,7 @@ select 1 item from the provided choices {choices}.
             self.append_to_request("confidence_score")
 
 
-class Select(Chat):
-
-    defalut_template = SelectTemplate
-
-    async def select(
-        self,
-        context=None,
-        instruction=None,
-        *,
-        system=None,
-        sender=None,
-        recipient=None,
-        choices=None,
-        confidence_score=None,
-        reason=False,
-        requested_fields=None,
-        form=None,
-        tools=False,
-        invoke_tool=True,
-        return_form=True,
-        strict=False,
-        rulebook=None,
-        imodel=None,
-        template_name=None,
-        use_annotation=True,
-        retries: int = 3,
-        delay: float = 0,
-        backoff_factor: float = 1,
-        default=None,
-        timeout: float | None = None,
-        timing: bool = False,
-        max_concurrency: int = 10_000,
-        throttle_period: int = None,
-        **kwargs,
-    ):
-
-        return await self._select(
-            context=context,
-            instruction=instruction,
-            system=system,
-            sender=sender,
-            recipient=recipient,
-            choices=choices,
-            confidence_score=confidence_score,
-            reason=reason,
-            requested_fields=requested_fields,
-            form=form,
-            tools=tools,
-            invoke_tool=invoke_tool,
-            return_form=return_form,
-            strict=strict,
-            rulebook=rulebook,
-            imodel=imodel,
-            template_name=template_name,
-            use_annotation=use_annotation,
-            retries=retries,
-            delay=delay,
-            backoff_factor=backoff_factor,
-            default=default,
-            timeout=timeout,
-            timing=timing,
-            max_concurrency=max_concurrency,
-            throttle_period=throttle_period,
-            **kwargs,
-        )
+class Select(UnitDirective):
 
     async def _select(
         self,
@@ -111,13 +70,29 @@ class Select(Chat):
         choices=None,
         reason=False,
         confidence_score=None,
+        instruction=None,
+        context=None,
+        branch=None,
+        system=None,
         **kwargs,
     ):
+
+        branch = branch or Branch(system=system)
+
         if not form:
-            form = self.default_template(
+            form = SelectTemplate(
                 choices=choices,
                 reason=reason,
                 confidence_score=confidence_score,
+                instruction=instruction,
+                context=context,
             )
 
-        return await self.chat(form=form, **kwargs)
+        directive = Chat(branch)
+        return await directive.chat(form=form, return_form=True, **kwargs)
+
+    async def select(self, *args, **kwargs):
+        return await self._select(*args, **kwargs)
+
+    async def direct(self, *args, **kwargs):
+        return await self._select(*args, **kwargs)

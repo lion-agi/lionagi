@@ -10,19 +10,17 @@ from typing import Any
 from lionagi.libs.ln_parse import ParseUtil, StringMatch
 from lionagi.libs.ln_func_call import rcall, CallDecorator as cd, Throttle
 
-from lionagi.core.generic.abc import Field, Directive
+from lionagi.core.generic.abc import Directive
 from lionagi.core.generic import iModel
 from lionagi.core.message import Instruction
 from lionagi.core.message.util import _parse_action_request
 from lionagi.core.validator.validator import Validator
-from lionagi.core.report.form import Form
 
 
-
-class Chat(Directive):
+class UnitDirective(Directive):
 
     default_template = None
-    
+
     def __init__(
         self, branch, imodel: iModel = None, template=None, rulebook=None
     ) -> None:
@@ -34,15 +32,20 @@ class Chat(Directive):
             self.imodel = branch.imodel
         self.form_template = template or self.default_template
         self.validator = Validator(rulebook=rulebook) if rulebook else Validator()
-        
+
+
+class Chat(UnitDirective):
+
+    async def chat(self, *args, **kwargs):
+        return await self._chat(*args, **kwargs)
+
     async def direct(self, *args, **kwargs):
-        return await self.chat(*args, **kwargs)
-    
-    async def chat(
+        return await self._chat(*args, **kwargs)
+
+    async def _chat(
         self,
         instruction=None,  # additional instruction
         context=None,  # context to perform the instruction on
-        *,
         system=None,  # optionally swap system message
         sender=None,  # sender of the instruction, default "user"
         recipient=None,  # recipient of the instruction, default "branch.ln_id"
@@ -57,29 +60,14 @@ class Chat(Directive):
         imodel=None,  # the optinally swappable iModel for the commands, otherwise self.branch.imodel
         clear_messages=False,
         use_annotation=True,  # whether to use annotation as rule qualifier, default True, (need rulebook if False)
-        retries: int = 3,  # kwargs for rcall, number of retries if failed
-        delay: float = 0,  # number of seconds to delay before retrying
-        backoff_factor: float = 1,  # exponential backoff factor, default 1 (no backoff)
-        default=None,  # default value to return if all retries failed
         timeout: (
             float | None
         ) = None,  # timeout for the rcall, default None (no timeout)
-        timing: bool = False,  # if timing will return a tuple (output, duration)
-        max_concurrency: int = 10_000,  # max concurrency for the chat, default 10_000 (global max concurrency)
-        throttle_period: int = None,
         return_branch=False,
         **kwargs,
     ):
 
-        @cd.max_concurrency(max_concurrency)
-        async def _inner(**_kwargs):
-            return await rcall(self._chat, **_kwargs)
-
-        if throttle_period:
-            throttle = Throttle(period=throttle_period)
-            _inner = throttle(_inner)
-
-        a = await _inner(
+        a = await self._base_chat(
             context=context,
             instruction=instruction,
             system=system,
@@ -94,24 +82,20 @@ class Chat(Directive):
             rulebook=rulebook,
             imodel=imodel,
             use_annotation=use_annotation,
-            retries=retries,
-            delay=delay,
-            backoff_factor=backoff_factor,
-            default=default,
             timeout=timeout,
-            timing=timing,
             branch=branch,
             clear_messages=clear_messages,
             return_branch=return_branch,
             **kwargs,
         )
 
-        if isinstance(a, tuple) and isinstance(a[0], tuple):
-            return a[0][0], a[1]
-        if isinstance(a, tuple) and not isinstance(a[0], tuple):
-            return a[0]
+        a = list(a)
+        if len(a) == 2 and a[0] == a[1]:
+            return a[0] if not isinstance(a[0], tuple) else a[0][0]
 
-    async def _chat(
+        return a[0], a[1]
+
+    async def _base_chat(
         self,
         instruction=None,
         *,
@@ -365,22 +349,3 @@ class Chat(Directive):
                     out_ = ParseUtil.fuzzy_parse_json(match.group(1))
 
         return out_ or content_
-
-
-class UnitTemplate(Form):
-
-    confidence_score: float = Field(
-        None,
-        description="a numeric score between 0 to 1 formatted in num:0.2f, 1 being very confident and 0 being not confident at all, just guessing",
-        validation_kwargs={
-            "upper_bound": 1,
-            "lower_bound": 0,
-            "num_type": float,
-            "precision": 2,
-        },
-    )
-
-    reason: str = Field(
-        default_factory=str,
-        description="brief reason for the given output, format: This is my best response because ...",
-    )

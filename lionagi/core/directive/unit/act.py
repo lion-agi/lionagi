@@ -1,40 +1,51 @@
-from lionagi.libs.ln_convert import to_list
 from lionagi.core.message.action_request import ActionRequest
 from lionagi.core.message.action_response import ActionResponse
-from lionagi.core.generic.abc import Field
-
-from .base import UnitTemplate, Chat
-from ..structure.chain import Chain
+from lionagi.core.generic.abc import Field, Component
+from lionagi.core.report.form import Form
+from lionagi.libs.ln_func_call import rcall
+from .base import Chat
 from .util import process_tools
 
 
-class ActionTemplate(UnitTemplate):
-    template_name: str = "Action"
-
-    action_required: bool = Field(
-        False, description="true if actions are needed else false"
+class ActionTemplate(Form):
+    confidence_score: float | None = Field(
+        None,
+        description="a numeric score between 0 to 1 formatted in num:0.2f, 1 being very confident and 0 being not confident at all, just guessing",
+        validation_kwargs={
+            "upper_bound": 1,
+            "lower_bound": 0,
+            "num_type": float,
+            "precision": 2,
+        },
     )
 
-    actions: list[dict] = Field(
+    reason: str | None = Field(
+        "",
+        description="brief reason for the given output, format: This is my best response because ...",
+    )
+
+    template_name: str = "Action"
+
+    action_required: bool | None = Field(
+        None, description="True if actions are needed else False"
+    )
+
+    actions: list[dict] | None = Field(
         None,
         description="""
-provide The list of action(s) to take, each action in format of 
-{"function": function_name, "arguments": {param1:..., param2:..., ...}}. 
-Leave blank if no further actions are needed, 
-you must use provided parameters for each action, DO NOT MAKE UP NAME!!!
+provide The list of action(s) to take, [{"function": func, "arguments": {"param1":..., "param2":..., ...}}, ...] Leave blank if no further actions are needed, you must use provided parameters for each action, DO NOT MAKE UP NAME!!!
 """,
     )
 
-    answer: str | dict | None = Field(
-        default_factory=str,
+    answer: str | None = Field(
+        None,
         description="output answer to the questions asked if further actions are not needed, leave blank if an accurate answer cannot be provided from context during this step",
     )
 
-    signature: str = "task -> reason, action_needed, actions, answer"
+    assignment: str = "task -> reason, action_required, actions, answer"
 
     def __init__(
         self,
-        *,
         instruction=None,
         context=None,
         confidence_score=False,
@@ -54,66 +65,6 @@ Perform reasoning and prepare actions with GIVEN TOOLS ONLY.
 
 class Act(Chat):
 
-    defalut_template = ActionTemplate
-
-    async def act(
-        self,
-        context=None,
-        instruction=None,
-        *,
-        system=None,
-        sender=None,
-        recipient=None,
-        confidence_score=None,
-        requested_fields=None,
-        form=None,
-        tools=False,
-        invoke_tool=True,
-        return_form=True,
-        strict=False,
-        rulebook=None,
-        imodel=None,
-        template_name=None,
-        use_annotation=True,
-        retries: int = 3,
-        delay: float = 0,
-        backoff_factor: float = 1,
-        default=None,
-        timeout: float | None = None,
-        timing: bool = False,
-        max_concurrency: int = 10_000,
-        throttle_period: int = None,
-        **kwargs,
-    ):
-
-        return await self._act(
-            context=context,
-            instruction=instruction,
-            system=system,
-            sender=sender,
-            recipient=recipient,
-            confidence_score=confidence_score,
-            requested_fields=requested_fields,
-            form=form,
-            tools=tools,
-            invoke_tool=invoke_tool,
-            return_form=return_form,
-            strict=strict,
-            rulebook=rulebook,
-            imodel=imodel,
-            template_name=template_name,
-            use_annotation=use_annotation,
-            retries=retries,
-            delay=delay,
-            backoff_factor=backoff_factor,
-            default=default,
-            timeout=timeout,
-            timing=timing,
-            max_concurrency=max_concurrency,
-            throttle_period=throttle_period,
-            **kwargs,
-        )
-
     async def _act(
         self,
         form=None,
@@ -127,7 +78,7 @@ class Act(Chat):
     ):
         branch = branch or self.branch
         if not form:
-            form = self.default_template(
+            form = ActionTemplate(
                 confidence_score=confidence_score,
                 instruction=instruction,
                 context=context,
@@ -138,14 +89,13 @@ class Act(Chat):
 
         form, branch = await self.chat(
             form=form,
-            return_form=True,
             return_branch=True,
-            branch=branch or self.branch,
+            branch=branch,
             tools=tools,
             **kwargs,
         )
 
-        if getattr(form, "action_needed", False):
+        if getattr(form, "action_required", False):
             actions = getattr(form, "actions", None)
             if actions:
                 actions = [actions] if not isinstance(actions, list) else actions
@@ -162,6 +112,7 @@ class Act(Chat):
                             ].ln_id,
                         )
                         requests.append(msg)
+                        self.branch.add_message(msg)
 
                     if requests:
                         out = self._process_action_request(
@@ -193,50 +144,8 @@ class Act(Chat):
 
         return form, branch if return_branch else form
 
+    async def act(self, *args, **kwargs):
+        return await rcall(self._act, *args, **kwargs)
+
     async def direct(self, *args, **kwargs):
         return await self.act(*args, **kwargs)
-
-    async def chain_of_act(
-        self,
-        context=None,
-        instruction=None,
-        confidence_score=None,
-        return_branch=False,
-        rulebook=None,
-        branch=None,
-        imodel=None,
-        num_step=None,
-        plan_params={},
-        plan_kwargs={},
-    ):
-
-        branch = branch or self.branch
-        cot = Chain(branch=branch)
-
-        cot_form, branch = await cot.chain(
-            context=context,
-            instruction=instruction,
-            confidence_score=confidence_score,
-            rulebook=rulebook,
-            imodel=imodel,
-            num_step=num_step,
-            plan_params=plan_params,
-            plan_kwargs=plan_kwargs,
-            return_branch=True,
-            reason=True,
-            directive_obj=self,
-        )
-
-        act_forms = cot_form.chain_forms
-        fields = ["answer", "reason", "actions", "action_response"]
-        for i in fields:
-            _v = [getattr(j, i, None) for j in act_forms]
-            _v = to_list(_v, flatten=True, dropna=True)
-            cot_form._add_field(
-                field=f"chain_{i}", annotation=list, default=None, value=_v
-            )
-
-        if return_branch:
-            return cot_form, branch
-
-        return cot_form

@@ -4,11 +4,15 @@ from .base import Rule
 
 class StringRule(Rule):
 
+    fields: list[str] = ["reason", "prediction", "answer"]
+
     def __init__(self, apply_type="str", **kwargs):
         super().__init__(apply_type=apply_type, **kwargs)
 
     async def validate(self, value):
-        return isinstance(value, str)
+        if isinstance(value, str) or value == "":
+            return value
+        raise ValueError(f"Invalid string field type.")
 
     async def perform_fix(self, value):
         try:

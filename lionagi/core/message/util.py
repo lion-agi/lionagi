@@ -64,12 +64,20 @@ def create_message(
             recipient=recipient,
         )
 
-    if not sum(lcall([system, instruction, assistant_response], bool)) == 1:
+    a = {
+        "system": system,
+        "instruction": instruction,
+        "assistant_response": assistant_response,
+    }
+
+    a = {k: v for k, v in a.items() if v is not None}
+
+    if not len(a) == 1:
         raise ValueError("Error: Message can only have one role")
 
     if not func_outputs:
-        for v in [system, instruction, assistant_response]:
-            if v is not None and isinstance(v, RoledMessage):
+        for k, v in a.items():
+            if isinstance(v, RoledMessage):
                 if isinstance(v, Instruction):
                     if context:
                         v._add_context(context)
@@ -80,7 +88,14 @@ def create_message(
     if system:
         return System(system=system, sender=sender, recipient=recipient)
 
-    elif instruction:
+    elif assistant_response:
+        return AssistantResponse(
+            assistant_response=assistant_response,
+            sender=sender,
+            recipient=recipient,
+        )
+
+    else:
         return Instruction(
             instruction=instruction,
             context=context,
@@ -88,13 +103,6 @@ def create_message(
             recipient=recipient,
             requested_fields=requested_fields,
             **kwargs,
-        )
-
-    elif assistant_response:
-        return AssistantResponse(
-            assistant_response=assistant_response,
-            sender=sender,
-            recipient=recipient,
         )
 
 

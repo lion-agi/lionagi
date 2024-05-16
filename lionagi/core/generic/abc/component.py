@@ -487,7 +487,7 @@ class Component(Element, ABC):
                 v = v.split("|")
                 dict_[k] = lcall(v, strip_lower)
             else:
-                dict_[k] = [v.__name__]
+                dict_[k] = [v.__name__] if v else None
         return dict_
 
     @_get_field_annotation.register(list)

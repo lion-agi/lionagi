@@ -1,26 +1,46 @@
 from lionagi.libs.ln_convert import to_str
 from lionagi.core.generic.abc import Field
-from .base import UnitTemplate
-from .chat import Chat
+from .base import Chat
+from lionagi.core.report.form import Form
 
 
-class ScoreTemplate(UnitTemplate):
+class ScoreTemplate(Form):
+
+    confidence_score: float | None = Field(
+        None,
+        description="a numeric score between 0 to 1 formatted in num:0.2f, 1 being very confident and 0 being not confident at all, just guessing",
+        validation_kwargs={
+            "upper_bound": 1,
+            "lower_bound": 0,
+            "num_type": float,
+            "precision": 2,
+        },
+    )
+
+    reason: str | None = Field(
+        None,
+        description="brief reason for the given output, format: This is my best response because ...",
+    )
 
     template_name: str = "score_template"
 
-    score: float = Field(
+    score: float | None = Field(
         None,
         description="a score for the given context and task, numeric",
     )
 
-    signature: str = "task -> score"
+    assignment: str = "task -> score"
+
+    @property
+    def answer(self):
+        return self.score
 
     def __init__(
         self,
         *,
         instruction=None,
         context=None,
-        score_range=(1, 10),
+        score_range=(0, 10),
         include_endpoints=True,
         num_digit=0,
         confidence_score=False,
@@ -62,69 +82,7 @@ class Score(Chat):
 
     defalut_template = ScoreTemplate
 
-    async def score(
-        self,
-        context=None,
-        instruction=None,
-        *,
-        system=None,
-        sender=None,
-        recipient=None,
-        score_range=(0, 10),
-        include_endpoints=True,
-        num_digit=0,
-        confidence_score=None,
-        reason=False,
-        requested_fields=None,
-        form=None,
-        return_form=True,
-        strict=False,
-        rulebook=None,
-        imodel=None,
-        template_name=None,
-        use_annotation=True,
-        retries: int = 3,
-        delay: float = 0,
-        backoff_factor: float = 1,
-        default=None,
-        timeout: float | None = None,
-        timing: bool = False,
-        max_concurrency: int = 10_000,
-        throttle_period: int = None,
-        **kwargs,
-    ):
-
-        return await self._score(
-            context=context,
-            instruction=instruction,
-            system=system,
-            sender=sender,
-            recipient=recipient,
-            score_range=score_range,
-            include_endpoints=include_endpoints,
-            num_digit=num_digit,
-            confidence_score=confidence_score,
-            reason=reason,
-            requested_fields=requested_fields,
-            form=form,
-            return_form=return_form,
-            strict=strict,
-            rulebook=rulebook,
-            imodel=imodel,
-            template_name=template_name,
-            use_annotation=use_annotation,
-            retries=retries,
-            delay=delay,
-            backoff_factor=backoff_factor,
-            default=default,
-            timeout=timeout,
-            timing=timing,
-            max_concurrency=max_concurrency,
-            throttle_period=throttle_period,
-            **kwargs,
-        )
-
-    async def _score(
+    async def direct(
         self,
         form=None,
         score_range=None,
@@ -132,6 +90,10 @@ class Score(Chat):
         num_digit=None,
         reason=False,
         confidence_score=None,
+        instruction=None,
+        context=None,
+        branch=None,
+        system=None,
         **kwargs,
     ):
         if not form:
@@ -141,6 +103,13 @@ class Score(Chat):
                 num_digit=num_digit,
                 reason=reason,
                 confidence_score=confidence_score,
+                instruction=instruction,
+                context=context,
+                system=system,
             )
 
-        return await self.chat(form=form, **kwargs)
+        directive = Chat(branch)
+        return await directive.chat(form=form, return_form=True, **kwargs)
+
+    async def score(self, *args, **kwargs):
+        return await self.direct(*args, **kwargs)

@@ -1,5 +1,4 @@
 from abc import ABC
-from lionagi.libs.ln_convert import strip_lower
 
 
 class DirectiveMixin(ABC):
@@ -36,13 +35,15 @@ class DirectiveMixin(ABC):
         return_branch=False,
         **kwargs,
     ):
-        from lionagi.core.directive.chat import Chat
+        from lionagi.core.directive.unit import Chat
 
         directive = Chat(self, imodel=imodel, rulebook=rulebook)
+        if system:
+            self.add_message(system=system)
+
         return await directive.chat(
             context=context,
             instruction=instruction,
-            system=system,
             sender=sender,
             recipient=recipient,
             requested_fields=requested_fields,
@@ -71,23 +72,30 @@ class DirectiveMixin(ABC):
         directive: str,  # examples, "chat", "predict", "act"
         instruction=None,  # additional instruction
         context=None,  # context to perform the instruction on
+        return_branch=False,
         **kwargs,
     ):
 
-        from lionagi.core.directive._mapping import DIRECTIVE_MAPPING
+        from lionagi.core.directive.unit.direct import Direct
 
-        directive = strip_lower(directive)
+        _direct = Direct(self)
 
-        if directive not in DIRECTIVE_MAPPING:
-            raise ValueError(f"Directive {directive} not found in DIRECTIVE_MAPPING")
-
-        directive = DIRECTIVE_MAPPING[directive](self)
-
-        return await directive.direct(
+        output = await _direct.direct(
+            directive=directive,
             context=context,
             instruction=instruction,
+            return_branch=return_branch,
             **kwargs,
         )
+
+        _out = []
+        for item in list(output):
+            if item not in _out:
+                _out.append(item)
+
+        if not return_branch:
+            return _out[0]
+        return _out
 
     # default is chain of predict
     async def chain_of_direct(
@@ -102,7 +110,7 @@ class DirectiveMixin(ABC):
 
         _chain = Chain(self)
 
-        return await _chain.chain(
+        return await _chain.direct(
             context=context,
             instruction=instruction,
             directive=directive,

@@ -63,7 +63,7 @@ class Instruction(RoledMessage):
     @staticmethod
     def _format_requested_fields(requested_fields):
         format_ = f"""
-        MUST EXACTLY FOLLOW THE RESPONSE FORMAT NO ADDITIONAL COMMENTS ALLOWED!
+        MUST EXACTLY FOLLOW THE RESPONSE GUIDE BELOW RETURN IN JSON PARSEABLED FORMAT:
         ```json
         {requested_fields}
         ```

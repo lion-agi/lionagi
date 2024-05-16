@@ -1,9 +1,26 @@
 from lionagi.libs.ln_convert import to_str
 from lionagi.core.generic.abc import Field
-from .base import UnitTemplate, Chat
+from .base import Chat
+from lionagi.core.report.form import Form
 
 
-class PlanTemplate(UnitTemplate):
+class PlanTemplate(Form):
+
+    confidence_score: float = Field(
+        None,
+        description="a numeric score between 0 to 1 formatted in num:0.2f, 1 being very confident and 0 being not confident at all, just guessing",
+        validation_kwargs={
+            "upper_bound": 1,
+            "lower_bound": 0,
+            "num_type": float,
+            "precision": 2,
+        },
+    )
+
+    reason: str = Field(
+        default_factory=str,
+        description="brief reason for the given output, format: This is my best response because ...",
+    )
 
     template_name: str = "plan_template"
 
@@ -13,6 +30,10 @@ class PlanTemplate(UnitTemplate):
     )
 
     signature: str = "task -> plans"
+
+    @property
+    def answer(self):
+        return self.plan
 
     def __init__(
         self,
@@ -42,71 +63,7 @@ class Plan(Chat):
 
     defalut_template = PlanTemplate
 
-    async def plan(
-        self,
-        context=None,
-        instruction=None,
-        *,
-        system=None,
-        sender=None,
-        recipient=None,
-        num_step=3,
-        confidence_score=None,
-        reason=False,
-        requested_fields=None,
-        form=None,
-        tools=False,
-        invoke_tool=True,
-        return_form=True,
-        strict=False,
-        rulebook=None,
-        imodel=None,
-        template_name=None,
-        use_annotation=True,
-        retries: int = 3,
-        delay: float = 0,
-        backoff_factor: float = 1,
-        default=None,
-        timeout: float | None = None,
-        timing: bool = False,
-        max_concurrency: int = 10_000,
-        throttle_period: int = None,
-        branch=None,
-        **kwargs,
-    ):
-
-        return await self._plan(
-            context=context,
-            instruction=instruction,
-            system=system,
-            sender=sender,
-            recipient=recipient,
-            num_step=num_step,
-            confidence_score=confidence_score,
-            reason=reason,
-            requested_fields=requested_fields,
-            form=form,
-            tools=tools,
-            invoke_tool=invoke_tool,
-            return_form=return_form,
-            strict=strict,
-            rulebook=rulebook,
-            imodel=imodel,
-            template_name=template_name,
-            use_annotation=use_annotation,
-            retries=retries,
-            delay=delay,
-            backoff_factor=backoff_factor,
-            default=default,
-            timeout=timeout,
-            timing=timing,
-            max_concurrency=max_concurrency,
-            throttle_period=throttle_period,
-            branch=branch,
-            **kwargs,
-        )
-
-    async def _plan(
+    async def direct(
         self,
         form=None,
         num_step=None,
@@ -123,5 +80,5 @@ class Plan(Chat):
 
         return await self.chat(form=form, **kwargs)
 
-    async def direct(self, *args, **kwargs):
-        return await self.plan(*args, **kwargs)
+    async def plan(self, *args, **kwargs):
+        return await self.direct(*args, **kwargs)

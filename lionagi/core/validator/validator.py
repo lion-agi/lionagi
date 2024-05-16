@@ -11,10 +11,10 @@ from ..report.report import Report
 _DEFAULT_RULEORDER = [
     "choice",
     "actionrequest",
-    "bool",
     "number",
     "mapping",
     "str",
+    "bool",
 ]
 
 _DEFAULT_RULES = {
@@ -197,7 +197,6 @@ class Validator:
 
         dict_ = {}
         for k, v in response.items():
-
             if k in form.requested_fields:
                 kwargs = form.validation_kwargs.get(k, {})
                 _annotation = form._field_annotations[k]
@@ -236,8 +235,7 @@ class Validator:
                         use_annotation=use_annotation,
                         **kwargs,
                     )
-
-                dict_[k] = v
+            dict_[k] = v
         form.fill(**dict_)
         return form
 

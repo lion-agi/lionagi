@@ -19,8 +19,9 @@ class Rule(Component, Condition, Actionable):
         _is_init (bool): Indicates whether the rule is initialized.
     """
 
-    apply_type: str = None
-    fix: bool = False
+    exclude_type: list[str] = []
+    apply_type: list[str] | str = None
+    fix: bool = True
     fields: list[str] = []
     validation_kwargs: dict = {}
     applied_log: list = []
@@ -86,7 +87,7 @@ class Rule(Component, Condition, Actionable):
             annotation = [annotation] if isinstance(annotation, str) else annotation
 
             for i in annotation:
-                if i in self.apply_type:
+                if i in self.apply_type and i not in self.exclude_type:
                     self.add_log(field, form, **kwargs)
                     return True
             return False

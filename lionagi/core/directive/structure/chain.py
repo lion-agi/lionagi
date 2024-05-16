@@ -1,13 +1,64 @@
-from typing import Type
+from lionagi.libs.ln_convert import to_list
 from lionagi.libs.ln_convert import strip_lower
-from ..unit.base import Directive
-from .._mapping import *
+from ..unit import Directive, Plan, Predict, UNIT_DIRECTIVE_MAPPING
 
 
-class Chain(Chat):
+class Chain(Plan):
 
-    async def chain(
+    async def chain_of_act(
         self,
+        context=None,
+        instruction=None,
+        confidence_score=None,
+        return_branch=False,
+        rulebook=None,
+        branch=None,
+        imodel=None,
+        num_step=None,
+        plan_params={},
+        plan_kwargs={},
+    ):
+
+        branch = branch or self.branch
+        cot = Chain(branch=branch)
+
+        cot_form, branch = await cot._chain(
+            context=context,
+            instruction=instruction,
+            confidence_score=confidence_score,
+            rulebook=rulebook,
+            imodel=imodel,
+            num_step=num_step,
+            plan_params=plan_params,
+            plan_kwargs=plan_kwargs,
+            return_branch=True,
+            reason=True,
+            directive_obj=self,
+        )
+
+        act_forms = cot_form.chain_forms
+        fields = ["answer", "reason", "actions", "action_response"]
+        for i in fields:
+            _v = [getattr(j, i, None) for j in act_forms]
+            _v = to_list(_v, flatten=True, dropna=True)
+            _v = " ".join(_v) if i in ["answer", "reason"] else _v
+            cot_form._add_field(
+                field=f"chain_{i}", annotation=list, default=None, value=_v
+            )
+
+        if return_branch:
+            return cot_form, branch
+
+        return cot_form
+
+    async def chain_of_thoughts(self, context=None, instruction=None, **kwargs):
+
+        kwargs["directive"] = "predict"
+        return await self.direct(instruction=instruction, context=context, **kwargs)
+
+    async def direct(
+        self,
+        directive: str,
         context=None,
         instruction=None,
         confidence_score=None,
@@ -17,37 +68,24 @@ class Chain(Chat):
         imodel=None,
         num_step=None,
         return_branch=False,
-        plan_params={},
-        plan_kwargs={},
-        directive: Type[Directive] | str = None,
         directive_obj=None,
         directive_params={},
         directive_kwargs={},
         **kwargs,
     ):
         branch = branch or self.branch
-        plan_params["rulebook"] = rulebook or plan_params.get("rulebook", None)
-
-        direct_plan = Plan(branch=branch, **plan_params)
-
-        plan_kwargs["imodel"] = imodel or plan_kwargs.get("imodel", None)
-        plan_kwargs["reason"] = reason or plan_kwargs.get("reason", None)
-        plan_kwargs["confidence_score"] = confidence_score or plan_kwargs.get(
-            "confidence_score", None
-        )
-        plan_kwargs["num_step"] = num_step or plan_kwargs.get("num_step", 3)
-        plan_kwargs["timing"] = False
-
-        out_form, branch = await direct_plan.plan(
+        out_form, branch = await self.plan(
+            confidence_score=confidence_score,
+            reason=reason,
+            num_step=num_step,
+            imodel=imodel,
             context=context,
             branch=branch,
             instruction=instruction,
             return_branch=True,
-            **plan_kwargs,
         )
 
         plan = out_form.plan
-        # directives = out_form.directives
         plan = [plan] if isinstance(plan, dict) else plan
 
         directive_params["rulebook"] = rulebook or directive_params.get(
@@ -56,9 +94,7 @@ class Chain(Chat):
 
         if not directive_obj:
             if isinstance(directive, str):
-                directive = DIRECTIVE_MAPPING.get(strip_lower(directive), Predict)
-            if isinstance(directive, type):
-                directive = directive or Predict
+                directive = UNIT_DIRECTIVE_MAPPING.get(strip_lower(directive), Predict)
             if not issubclass(directive, Directive):
                 raise ValueError(
                     f"directive must be a subclass of BaseDirective, got {type(directive)}"

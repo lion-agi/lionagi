@@ -1,7 +1,7 @@
 from typing import List, Optional
 
 from lionagi.libs.ln_tokenizer import BaseToken
-from ..unit.schema import IfNode, TryNode, ForNode
+from ..template.schema import IfNode, TryNode, ForNode
 
 
 class BaseDirectiveParser:

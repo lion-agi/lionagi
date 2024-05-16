@@ -4,7 +4,7 @@ from lionagi.libs.ln_api import BaseService
 from lionagi.integrations.config.mlx_configs import model
 
 
-class MlXService(BaseService):
+class MLXService(BaseService):
     def __init__(self, model=model, **kwargs):
 
         SysUtil.check_import("mlx_lm")

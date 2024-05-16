@@ -1,26 +1,48 @@
-from lionagi.core.generic.abc import Field
-from .base import UnitTemplate
-from .chat import Chat
+from lionagi.core.generic.abc import Field, Directive
+from .base import Chat, UnitDirective
+from lionagi.core.report.form import Form
+from lionagi.core.session.branch import Branch
 
 
-class PredictTemplate(UnitTemplate):
+class PredictTemplate(Form):
+
+    confidence_score: float | None = Field(
+        None,
+        description="a numeric score between 0 to 1 formatted in num:0.2f, 1 being very confident and 0 being not confident at all, just guessing",
+        validation_kwargs={
+            "upper_bound": 1,
+            "lower_bound": 0,
+            "num_type": float,
+            "precision": 2,
+        },
+    )
+
+    reason: str | None = Field(
+        None,
+        description="brief reason for the given output, format: This is my best response because ...",
+    )
 
     template_name: str = "predict_template"
 
-    num_sentences: int = Field(1, description="the number of sentences to predict")
+    num_sentences: int = Field(2, description="the number of sentences to predict")
 
-    prediction: str | list = Field(
-        default_factory=str, description="the predicted sentence(s) or desired output"
+    prediction: None | str | list = Field(
+        None,
+        description="the predicted sentence(s) or desired output",
     )
 
-    signature: str = "task -> prediction"
+    assignment: str = "task -> prediction"
+
+    @property
+    def answer(self):
+        return self.prediction
 
     def __init__(
         self,
         *,
         instruction=None,
         context=None,
-        num_sentences=1,
+        num_sentences=2,
         confidence_score=False,
         reason=False,
         **kwargs,
@@ -44,69 +66,8 @@ predict the next sentence(s) according to the following constraints
             self.append_to_request("confidence_score")
 
 
-class Predict(Chat):
-
+class Predict(UnitDirective):
     default_template = PredictTemplate
-
-    async def predict(
-        self,
-        context=None,  # context to perform the instruction on
-        instruction=None,  # additional instruction
-        *,
-        system=None,  # optionally swap system message
-        sender=None,  # sender of the instruction, default "user"
-        recipient=None,  # recipient of the instruction, default "branch.ln_id"
-        num_sentences=3,  # number of sentences to generate, default 3
-        confidence_score=None,
-        reason=False,
-        requested_fields=None,  # fields to request from the context, default None
-        form=None,  # form to create instruction from, default None,
-        return_form=True,  # whether to return the form if a form is passed in, otherwise return a dict/str
-        strict=False,  # whether to strictly enforce the rule validation, default False
-        rulebook=None,  # the rulebook to use for validation, default None, use default rulebook
-        imodel=None,  # the optinally swappable iModel for the commands, otherwise self.branch.imodel
-        template_name=None,
-        use_annotation=True,  # whether to use annotation as rule qualifier, default True, (need rulebook if False)
-        retries: int = 3,  # kwargs for rcall, number of retries if failed
-        delay: float = 0,  # number of seconds to delay before retrying
-        backoff_factor: float = 1,  # exponential backoff factor, default 1 (no backoff)
-        default=None,  # default value to return if all retries failed
-        timeout: (
-            float | None
-        ) = None,  # timeout for the rcall, default None (no timeout)
-        timing: bool = False,  # if timing will return a tuple (output, duration)
-        max_concurrency: int = 10_000,  # max concurrency for the chat, default 10_000 (global max concurrency)
-        throttle_period: int = None,
-        **kwargs,
-    ):
-
-        return await self._predict(
-            context=context,
-            instruction=instruction,
-            system=system,
-            sender=sender,
-            recipient=recipient,
-            num_sentences=num_sentences,
-            confidence_score=confidence_score,
-            reason=reason,
-            requested_fields=requested_fields,
-            form=form,
-            return_form=return_form,
-            strict=strict,
-            rulebook=rulebook,
-            imodel=imodel,
-            template_name=template_name,
-            use_annotation=use_annotation,
-            retries=retries,
-            delay=delay,
-            backoff_factor=backoff_factor,
-            default=default,
-            timeout=timeout,
-            timing=timing,
-            max_concurrency=max_concurrency,
-            throttle_period=throttle_period,
-            **kwargs,
-        )
 
     async def _predict(
         self,
@@ -114,16 +75,28 @@ class Predict(Chat):
         num_sentences=None,
         reason=False,
         confidence_score=None,
+        instruction=None,
+        context=None,
+        branch=None,
+        system=None,
         **kwargs,
     ):
+        branch = branch or Branch(system=system)
+
         if not form:
             form = self.default_template(
+                instruction=instruction,
+                context=context,
                 num_sentences=num_sentences,
                 confidence_score=confidence_score,
                 reason=reason,
             )
 
-        form = await self.chat(form=form, return_form=True, **kwargs)
+        directive = Chat(branch)
+        return await directive.chat(form=form, return_form=True, **kwargs)
+
+    async def predict(self, *args, **kwargs):
+        return await self._predict(*args, **kwargs)
 
     async def direct(self, *args, **kwargs):
         return await self.predict(*args, **kwargs)

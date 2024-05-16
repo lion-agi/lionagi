@@ -170,4 +170,3 @@ class Directive(ABC):
     @classmethod
     def _class_name(cls) -> str:
         return cls.__name__
-    

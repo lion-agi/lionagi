@@ -1,10 +1,6 @@
 import os
-from typing import Type
 from dotenv import load_dotenv
-
 from lionagi.libs import SysUtil, BaseService, StatusTracker
-from lionagi.integrations.config.oai_configs import oai_schema
-from lionagi.integrations.provider.oai import OpenAIService
 
 load_dotenv()
 
@@ -15,11 +11,12 @@ class iModel:
         self,
         model: str = None,
         config: dict = {},
-        provider: Type[BaseService] = OpenAIService,
-        provider_schema: dict = oai_schema,
+        provider: str = None,
+        provider_schema: dict = None,
         endpoint: str = "chat/completions",
         token_encoding_name: str = "cl100k_base",
         api_key: str = None,
+        api_key_schema: str = None,
         interval_tokens: int = 100_000,
         interval_requests: int = 1_000,
         interval: int = 60,
@@ -29,19 +26,36 @@ class iModel:
         self.ln_id: str = SysUtil.create_id()
         self.timestamp: str = SysUtil.get_timestamp(sep=None)[:-6]
         self.endpoint = endpoint
-        self.endpoint_schema = provider_schema[endpoint]
-        self.provider = provider
-        if provider_schema["API_key_schema"][0] == "null":
-            self.api_key = None
+
+        if isinstance(provider, type):
+            provider = provider.__name__.replace("Service", "").lower()
+
         else:
-            self.api_key = api_key or os.getenv(provider_schema["API_key_schema"][0])
+            provider = str(provider).lower() if provider else "openai"
+
+        from lionagi.integrations.provider._mapping import SERVICE_PROVIDERS_MAPPING
+
+        self.provider_schema = (
+            provider_schema or SERVICE_PROVIDERS_MAPPING[provider]["schema"]
+        )
+        self.provider = SERVICE_PROVIDERS_MAPPING[provider]["service"]
+        self.endpoint_schema = self.provider_schema[endpoint]
+
+        if api_key is not None:
+            self.api_key = api_key
+
+        elif api_key_schema is not None:
+            self.api_key = os.getenv(api_key_schema)
+        else:
+            self.api_key = os.getenv(self.provider_schema["API_key_schema"][0])
+
         self.status_tracker = StatusTracker()
 
         self.service: BaseService = self._set_up_service(
             service=service,
             provider=self.provider,
             api_key=self.api_key,
-            schema=provider_schema,
+            schema=self.provider_schema,
             token_encoding_name=token_encoding_name,
             max_tokens=interval_tokens,
             max_requests=interval_requests,
@@ -49,7 +63,7 @@ class iModel:
         )
 
         self.config = self._set_up_params(
-            config or provider_schema[endpoint]["config"], **kwargs
+            config or self.endpoint_schema["config"], **kwargs
         )
 
         if model and self.config["model"] != model:
@@ -67,7 +81,9 @@ class iModel:
         return {**model_config, **kwargs}
 
     def _set_up_service(self, service=None, provider=None, **kwargs):
-        service = service or provider(**kwargs)
+        if not service:
+            provider = provider or self.provider
+            return provider(**kwargs)
         return service
 
     def _set_up_params(self, default_config={}, **kwargs):
