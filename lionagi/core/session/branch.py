@@ -1,16 +1,12 @@
 from collections import deque
 from typing import Any
 from lionagi.libs.ln_convert import is_same_dtype, to_dict, to_df
-
 from ..generic.abc import Field
 from ..generic import Node, Pile, pile, progression, Progression, iModel, Exchange
 from ..action import Tool, ToolManager
 from ..mail.mail import Mail
-
-
 from .directive_mixin import DirectiveMixin
 from ..message import (
-    RoledMessage,
     create_message,
     System,
     Instruction,
@@ -21,6 +17,18 @@ from ..message import (
 
 
 class Branch(Node, DirectiveMixin):
+    """
+    A class representing a branch in a messaging system.
+
+    Attributes:
+        messages (Pile): A pile of messages.
+        progre (Progression): A progression of messages.
+        tool_manager (ToolManager): A manager for handling tools.
+        system (System): The system associated with the branch.
+        user (str): The user associated with the branch.
+        mailbox (Exchange): An exchange for managing mail.
+        imodel (iModel): The model associated with the branch.
+    """
 
     messages: Pile = Field(None)
     progre: Progression = Field(None)
@@ -42,7 +50,20 @@ class Branch(Node, DirectiveMixin):
         mailbox=None,
         imodel=None,
     ):
+        """
+        Initializes a new instance of the Branch class.
 
+        Args:
+            system (System, optional): The system associated with the branch.
+            system_sender (str, optional): The sender of the system message.
+            user (str, optional): The user associated with the branch.
+            messages (Pile, optional): A pile of messages.
+            progre (Progression, optional): A progression of messages.
+            tool_manager (ToolManager, optional): A manager for handling tools.
+            tools (Any, optional): Tools to be registered with the tool manager.
+            mailbox (Exchange, optional): An exchange for managing mail.
+            imodel (iModel, optional): The model associated with the branch.
+        """
         super().__init__()
         self.system = None
 
@@ -76,7 +97,28 @@ class Branch(Node, DirectiveMixin):
         metadata: dict | None = None,  # extra metadata
         **kwargs,  # additional context fields
     ) -> bool:
+        """
+        Adds a message to the branch.
 
+        Args:
+            system (Any, optional): The system node (JSON serializable).
+            instruction (Any, optional): The instruction node (JSON serializable).
+            context (Any, optional): Additional context (JSON serializable).
+            assistant_response (Any, optional): The assistant's response (JSON serializable).
+            function (Any, optional): The function associated with the message.
+            arguments (Any, optional): The arguments for the function.
+            func_outputs (Any, optional): The outputs of the function.
+            action_request (Any, optional): The action request node.
+            action_response (Any, optional): The action response node.
+            sender (str, optional): The sender of the message.
+            recipient (str, optional): The recipient of the message.
+            requested_fields (dict[str, str], optional): Requested fields for the message.
+            metadata (dict, optional): Extra metadata for the message.
+            **kwargs: Additional context fields.
+
+        Returns:
+            bool: True if the message was successfully added, else False.
+        """
         _msg = create_message(
             system=system,
             instruction=instruction,
@@ -120,25 +162,53 @@ class Branch(Node, DirectiveMixin):
         return self.messages.include(_msg) and self.progre.include(_msg)
 
     def to_chat_messages(self) -> list[dict[str, Any]]:
+        """
+        Converts the messages to chat message format.
+
+        Returns:
+            list[dict[str, Any]]: A list of chat messages.
+        """
         return [self.messages[j].chat_msg for j in self.progre]
 
     def _remove_system(self) -> None:
+        """
+        Removes the system message from the branch.
+        """
         self.messages.exclude(self.system)
         self.progre.exclude(self.system)
         self.system = None
 
     def clear(self) -> None:
+        """
+        Clears all messages and progression in the branch.
+        """
         self.messages.clear()
         self.progre.clear()
 
     @property
     def has_tools(self) -> bool:
+        """
+        Checks if the branch has tools.
+
+        Returns:
+            bool: True if the branch has tools, else False.
+        """
         return self.tool_manager.registry != {}
 
     def merge_branch(
         self, branch: "Branch", update_tool: bool = False, update_model=False
     ) -> None:
+        """
+        Merges another branch into this branch.
 
+        Args:
+            branch (Branch): The branch to merge.
+            update_tool (bool, optional): Whether to update the tool manager.
+            update_model (bool, optional): Whether to update the model.
+
+        Raises:
+            ValueError: If the branch to be merged has no model and update_model is True.
+        """
         if update_model and not branch.imodel:
             raise ValueError(
                 "Cannot update model: The branch to be merged has no model"
@@ -156,9 +226,25 @@ class Branch(Node, DirectiveMixin):
                 self.imodel = branch.imodel
 
     def register_tools(self, tools) -> None:
+        """
+        Registers tools with the tool manager.
+
+        Args:
+            tools (Any): The tools to register.
+        """
         self.tool_manager.register_tools(tools=tools)
 
     def delete_tools(self, tools, verbose: bool = True) -> bool:
+        """
+        Deletes tools from the tool manager.
+
+        Args:
+            tools (Any): The tools to delete.
+            verbose (bool, optional): Whether to print deletion status.
+
+        Returns:
+            bool: True if tools were successfully deleted, else False.
+        """
         if not isinstance(tools, list):
             tools = [tools]
         if is_same_dtype(tools, str):
@@ -180,12 +266,25 @@ class Branch(Node, DirectiveMixin):
         return False
 
     def update_last_instruction_meta(self, meta):
+        """
+        Updates metadata of the last instruction.
+
+        Args:
+            meta (dict): The metadata to update.
+        """
+
         for i in reversed(self.progre):
             if isinstance(self.messages[i], Instruction):
                 self.messages[i]._meta_insert(["extra"], meta)
                 return
 
     def to_df(self) -> Any:
+        """
+        Converts the messages to a DataFrame.
+
+        Returns:
+            Any: A DataFrame representation of the messages.
+        """
         fields = [
             "ln_id",
             "message_type",
@@ -207,6 +306,12 @@ class Branch(Node, DirectiveMixin):
         return to_df(dicts_)
 
     def _is_invoked(self) -> bool:
+        """
+        Checks if the last message is an ActionResponse.
+
+        Returns:
+            bool: True if the last message is an ActionResponse, else False.
+        """
         return isinstance(self.messages[-1], ActionResponse)
 
     # def send(self, recipient: str, category: str, package: Any) -> None:

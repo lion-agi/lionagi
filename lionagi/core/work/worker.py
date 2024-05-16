@@ -133,6 +133,7 @@ def work(
         refresh_time (int): Time interval between each process cycle.
         timeout (int): Timeout for the work function.
     """
+
     def decorator(func):
         @wraps(func)
         async def wrapper(
