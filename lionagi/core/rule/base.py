@@ -130,7 +130,7 @@ class Rule(Component, Condition, Actionable):
                     raise FieldError(f"failed to fix field") from e2
             raise FieldError(f"failed to validate field") from e1
 
-    async def rule_condition(self, *args, **kwargs) -> bool:
+    async def rule_condition(self, field, value, *args, **kwargs) -> bool:
         """
         Additional condition, if choosing not to use annotation as a qualifier.
 

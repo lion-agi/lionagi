@@ -10,7 +10,7 @@ from typing import Any, Callable, List, Union, Tuple
 from lionagi.libs import ParseUtil
 from lionagi.libs.ln_convert import to_list, to_dict
 from lionagi.libs.ln_func_call import lcall
-from lionagi.core.generic.abc import Actionable
+from lionagi.core.collections.abc import Actionable
 from lionagi.core.action.function_calling import FunctionCalling
 from lionagi.core.action.tool import Tool, TOOL_TYPE
 
@@ -233,7 +233,7 @@ class ToolManager(Actionable):
                 tool_kwarg = {"tools": self._schema_list}
                 kwargs = tool_kwarg | kwargs
             else:
-                tools = to_list(tools) if not isinstance(tools, list) else tools
+                tools = to_list(tools) if not isinstance(tools, list) else [tools]
                 tool_kwarg = {"tools": lcall(tools, self._get_tool_schema)}
                 kwargs = tool_kwarg | kwargs
 
