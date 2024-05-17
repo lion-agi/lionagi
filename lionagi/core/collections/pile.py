@@ -39,11 +39,10 @@ class Pile(Element, Record, Generic[T]):
         item_type (set[Type[Element]] | None): Allowed item types.
         name (str | None): Optional name for the pile.
         order (list[str]): Order of item identifiers.
+        use_obj (bool): If True, treat Record and Ordering as objects.
     """
 
-    use_obj: bool = (
-        False  # if use_obj is True, we will treat Record and Ordering as objects, instead of their internal elements
-    )
+    use_obj: bool = False
     pile: dict[str, T] = Field(default_factory=dict)
     item_type: set[Type[Element]] | None = Field(default=None)
     name: str | None = None
@@ -76,7 +75,10 @@ class Pile(Element, Record, Generic[T]):
         Supports multiple types of key access:
         - By index or slice (list-like access)
         - By LionID (dictionary-like access)
-        - By other complex types if item is LionIDable
+        - By other complex types if item is of LionIDable
+
+        Args:
+            key: Key to retrieve items.
 
         Returns:
             The requested item(s). Single items returned directly,
@@ -257,7 +259,7 @@ class Pile(Element, Record, Generic[T]):
         pile, overwriting existing items with same keys.
 
         Args:
-            other: Collection to update with. Can be `Pile` or iterable.
+            other: Collection to update with. Can be any LionIDable
         """
         p = pile(other)
         self[p] = p
@@ -298,7 +300,7 @@ class Pile(Element, Record, Generic[T]):
             item: Item(s) to exclude. Can be single item or collection.
 
         Returns:
-            `True` if item(s) not in pile after operation, `False` otherwise.
+            `True` if item(s) not in pile after operation, `False` else.
         """
         item = to_list_type(item)
         for i in item:
@@ -308,11 +310,11 @@ class Pile(Element, Record, Generic[T]):
 
     def is_homogenous(self) -> bool:
         """
-        Check if all items have same data type.
+        Check if all items have the same data type.
 
         Returns:
-            `True` if all items have same type, `False` otherwise.
-            Empty pile or single item pile considered homogenous.
+            `True` if all items have the same type, `False` otherwise.
+            Empty pile or single-item pile considered homogenous.
         """
         return len(self.pile) < 2 or all(is_same_dtype(self.pile.values()))
 
@@ -326,8 +328,7 @@ class Pile(Element, Record, Generic[T]):
         return not self.pile
 
     def __iter__(self):
-        """
-        Return an iterator over the items in the pile.
+        """Return an iterator over the items in the pile.
 
         Yields:
             The items in the pile in the order they were added.
@@ -335,8 +336,7 @@ class Pile(Element, Record, Generic[T]):
         return iter(self.values())
 
     def __len__(self) -> int:
-        """
-        Get the number of items in the pile.
+        """Get the number of items in the pile.
 
         Returns:
             int: The number of items in the pile.
@@ -344,10 +344,9 @@ class Pile(Element, Record, Generic[T]):
         return len(self.pile)
 
     def __add__(self, other: T) -> "Pile":
-        """
-        Create new pile by including item(s) using `+`.
+        """Create a new pile by including item(s) using `+`.
 
-        Returns new `Pile` with all items from current pile plus
+        Returns a new `Pile` with all items from the current pile plus
         provided item(s). Raises `LionValueError` if item(s) can't be
         included.
 
@@ -367,9 +366,9 @@ class Pile(Element, Record, Generic[T]):
 
     def __sub__(self, other) -> "Pile":
         """
-        Create new pile by excluding item(s) using `-`.
+        Create a new pile by excluding item(s) using `-`.
 
-        Returns new `Pile` with all items from current pile except
+        Returns a new `Pile` with all items from the current pile except
         provided item(s). Raises `ItemNotFoundError` if item(s) not found.
 
         Args:
@@ -392,22 +391,23 @@ class Pile(Element, Record, Generic[T]):
 
     def __iadd__(self, other: T) -> "Pile":
         """
-        Include item(s) in current pile in place using `+=`.
+        Include item(s) in the current pile in place using `+=`.
 
-        Modifies current pile in-place by including item(s). Returns
-        modified pile.
+        Modifies the current pile in-place by including item(s). Returns
+        the modified pile.
 
         Args:
             other: Item(s) to include. Can be single item or collection.
         """
+
         return self + other
 
     def __isub__(self, other: LionIDable) -> "Pile":
         """
-        Exclude item(s) from current pile using `-=`.
+        Exclude item(s) from the current pile using `-=`.
 
-        Modifies current pile in-place by excluding item(s). Returns
-        modified pile.
+        Modifies the current pile in-place by excluding item(s). Returns
+        the modified pile.
 
         Args:
             other: Item(s) to exclude. Can be single item or collection.

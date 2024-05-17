@@ -5,7 +5,8 @@ from .message import RoledMessage, MessageRole
 
 
 class ActionRequest(RoledMessage):
-    """Represents a request for an action with function and arguments.
+    """
+    Represents a request for an action with function and arguments.
 
     Inherits from `RoledMessage` and provides attributes specific to action requests.
 

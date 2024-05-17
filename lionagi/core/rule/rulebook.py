@@ -1,5 +1,5 @@
 from lionagi.libs.ln_func_call import lcall
-from ..rules.base import Rule
+from lionagi.core.rule.base import Rule
 
 
 """

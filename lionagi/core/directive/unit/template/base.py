@@ -1,4 +1,4 @@
-from lionagi.core.generic.abc import Field
+from lionagi.core.collections.abc import Field
 from lionagi.core.report.form import Form
 
 

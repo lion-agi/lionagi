@@ -1,10 +1,10 @@
 from typing import Any, Dict, List, Union
 from lionagi.libs import SysUtil
 from lionagi.libs.ln_func_call import lcall
-from lionagi.core.generic.abc import FieldError
-from ..rules.base import Rule
-from ..rules._default import DEFAULT_RULES
-from ..rules.rulebook import RuleBook
+from lionagi.core.collections.abc import FieldError
+from ..rule.base import Rule
+from ..rule._default import DEFAULT_RULES
+from ..rule.rulebook import RuleBook
 from ..report.form import Form
 from ..report.report import Report
 

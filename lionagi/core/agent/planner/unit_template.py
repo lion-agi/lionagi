@@ -1,41 +1,44 @@
-from lionagi.libs.ln_convert import to_str
-from ...directive.unit.template.base import UnitForm, Field
+# TODO
 
 
-class PlanTemplate(UnitForm):
+# from lionagi.libs.ln_convert import to_str
+# from ...directive.unit.template.base import UnitForm, Field
 
-    template_name: str = "plan_template"
 
-    plan: dict | str = Field(
-        default_factory=dict,
-        description="the generated step by step plan, return as a dictionary following {step_n: {plan: ..., reason: ...}} format",
-    )
+# class PlanTemplate(UnitForm):
 
-    signature: str = "task -> plan"
+#     template_name: str = "plan_template"
 
-    @property
-    def answer(self):
-        return getattr(self, "plan", None)
+#     plan: dict | str = Field(
+#         default_factory=dict,
+#         description="the generated step by step plan, return as a dictionary following {step_n: {plan: ..., reason: ...}} format",
+#     )
 
-    def __init__(
-        self,
-        *,
-        instruction=None,
-        context=None,
-        confidence_score=False,
-        reason=False,
-        num_step=3,
-        **kwargs,
-    ):
-        super().__init__(**kwargs)
+#     signature: str = "task -> plan"
 
-        self.task = f"""
-Generate a {num_step}_step plan based on the given context
-1. additional instruction, {to_str(instruction or "N/A")}
-2. additional context, {to_str(context or "N/A")}
-"""
-        if reason:
-            self.append_to_request("reason")
+#     @property
+#     def answer(self):
+#         return getattr(self, "plan", None)
 
-        if confidence_score:
-            self.append_to_request("confidence_score")
+#     def __init__(
+#         self,
+#         *,
+#         instruction=None,
+#         context=None,
+#         confidence_score=False,
+#         reason=False,
+#         num_step=3,
+#         **kwargs,
+#     ):
+#         super().__init__(**kwargs)
+
+#         self.task = f"""
+# Generate a {num_step}_step plan based on the given context
+# 1. additional instruction, {to_str(instruction or "N/A")}
+# 2. additional context, {to_str(context or "N/A")}
+# """
+#         if reason:
+#             self.append_to_request("reason")
+
+#         if confidence_score:
+#             self.append_to_request("confidence_score")

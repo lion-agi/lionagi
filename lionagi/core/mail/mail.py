@@ -1,4 +1,4 @@
-from ..generic.abc import Element, Field, Sendable
+from lionagi.core.collections.abc import Element, Field, Sendable
 from .package import PackageCategory, Package
 
 

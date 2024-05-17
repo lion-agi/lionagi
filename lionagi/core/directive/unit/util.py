@@ -5,8 +5,6 @@ retry_kwargs = {
     "default": None,  # default value to return if all retries failed
     "timeout": None,  # timeout for the rcall, default None (no timeout)
     "timing": False,  # if timing will return a tuple (output, duration)
-    "max_concurrency": 10_000,
-    "throttle_period": None,
 }
 
 oai_fields = [

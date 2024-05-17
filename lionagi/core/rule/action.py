@@ -1,8 +1,8 @@
 from enum import Enum
-from lionagi.core.generic.abc import ActionError
+from lionagi.core.collections.abc import ActionError
 from lionagi.libs import ParseUtil
 from lionagi.libs.ln_convert import to_list, to_dict
-from .mapping import MappingRule
+from lionagi.core.rule.mapping import MappingRule
 
 
 class ActionRequestKeys(Enum):

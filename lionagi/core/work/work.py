@@ -3,7 +3,7 @@ import asyncio
 from typing import Any
 
 from lionagi.libs import SysUtil
-from ..generic.abc import Component
+from lionagi.core.collections.abc import Component
 
 
 class WorkStatus(str, Enum):

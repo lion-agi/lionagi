@@ -1,7 +1,7 @@
-from ..generic.abc import Progressable
-from ..generic import pile, progression, Pile
-from .work import Work, WorkStatus
-from .work_queue import WorkQueue
+from lionagi.core.collections.abc import Progressable
+from lionagi.core.collections import pile, progression, Pile
+from lionagi.core.work.work import Work, WorkStatus
+from lionagi.core.work.work_queue import WorkQueue
 
 
 class WorkLog(Progressable):

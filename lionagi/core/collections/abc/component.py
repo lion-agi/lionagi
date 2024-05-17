@@ -1,4 +1,4 @@
-"""Component class, base building block in LionAGI"""
+"""Component class, base building block in LionAGI."""
 
 from abc import ABC
 from collections.abc import Sequence
@@ -20,7 +20,12 @@ T = TypeVar("T")
 
 
 class Element(BaseModel, ABC):
-    """Base class for elements within the LionAGI system."""
+    """Base class for elements within the LionAGI system.
+
+    Attributes:
+        ln_id (str): A 32-char unique hash identifier.
+        timestamp (str): The UTC timestamp of creation.
+    """
 
     ln_id: str = Field(
         default_factory=SysUtil.create_id,
@@ -42,7 +47,7 @@ class Element(BaseModel, ABC):
 
 class Component(Element, ABC):
     """
-    Represents a distinguishable, temporal entity in the LionAGI system.
+    Represents a distinguishable, temporal entity in LionAGI.
 
     Encapsulates essential attributes and behaviors needed for individual
     components within the system's architecture. Each component is uniquely
@@ -90,26 +95,36 @@ class Component(Element, ABC):
         """
         Create Component instance(s) from various input types.
 
-        This method dynamically handles different types of input data, allowing
-        the creation of Component instances from dictionaries, strings (JSON),
-        lists, pandas Series, pandas DataFrames, and instances of other
-        classes, including Pydantic models. Additionally, it includes support
-        for custom types such as LlamaIndex and Langchain specific data.
+        This method dynamically handles different types of input data,
+        allowing the creation of Component instances from dictionaries,
+        strings (JSON), lists, pandas Series, pandas DataFrames, and
+        instances of other classes, including Pydantic models. Additionally,
+        it includes support for custom types such as LlamaIndex and
+        Langchain specific data.
 
         The type of the input data determines how it is processed:
         - `dict`: Treated as field-value pairs for the Component.
         - `str`: Expected to be JSON format; parsed into a dictionary first.
-        - `list`: Each item is processed independently, and a list of Components
-                  is returned.
+        - `list`: Each item is processed independently, and a list of
+                  Components is returned.
         - `pandas.Series`: Converted to a dictionary; treated as field-value
                            pairs.
         - `pandas.DataFrame`: Each row is treated as a separate Component;
                               returns a list of Components.
-        - `Pydantic BaseModel`: Extracts data directly from the Pydantic model.
-        - `LlamaIndex model`: Converts using LlamaIndex-specific logic to extract
-                              data suitable for Component creation.
-        - `Langchain model`: Processes Langchain-specific structures to produce
-                             Component data.
+        - `Pydantic BaseModel`: Extracts data directly from the Pydantic
+                                model.
+        - `LlamaIndex model`: Converts using LlamaIndex-specific logic to
+                              extract data suitable for Component creation.
+        - `Langchain model`: Processes Langchain-specific structures to
+                             produce Component data.
+
+        Args:
+            obj: The input object to create Component instance(s) from.
+            **kwargs: Additional keyword arguments to pass to the creation
+                      method.
+
+        Returns:
+            T: The created Component instance(s).
 
         Raises:
             LionTypeError: If the input type is not supported.
@@ -528,7 +543,7 @@ class Component(Element, ABC):
         return 1
 
 
-LionIDable: TypeAlias = Union[str, Component]
+LionIDable: TypeAlias = Union[str, Element]
 
 
 def get_lion_id(item: LionIDable) -> str:

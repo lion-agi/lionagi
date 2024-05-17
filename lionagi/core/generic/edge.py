@@ -1,7 +1,6 @@
 from pydantic import Field, field_validator
 from typing import Any
-
-from .abc import Component, get_lion_id, LionIDable, Condition
+from lionagi.core.collections.abc import Component, get_lion_id, LionIDable, Condition
 
 
 class Edge(Component):

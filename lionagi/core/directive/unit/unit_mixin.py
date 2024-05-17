@@ -9,14 +9,12 @@ from typing import Any
 from abc import ABC
 
 from lionagi.libs.ln_parse import ParseUtil, StringMatch
-from lionagi.core.generic.abc import ActionError
-from lionagi.core.message import Instruction
+from lionagi.core.collections.abc import ActionError
+from lionagi.core.message import Instruction, ActionRequest, ActionResponse
 from lionagi.core.message.util import _parse_action_request
 from lionagi.core.validator.validator import Validator
-from lionagi.core.message.action_request import ActionRequest
-from lionagi.core.message.action_response import ActionResponse
-from ..util import process_tools
-from .template.action import ActionTemplate
+from lionagi.core.directive.unit.util import process_tools
+from lionagi.core.directive.unit.template.action import ActionTemplate
 
 
 class DirectiveMixin(ABC):

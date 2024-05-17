@@ -1,9 +1,9 @@
-from lionagi.core.generic.abc import FieldError
 from abc import abstractmethod
 from typing import Any, List, Dict
 from pandas import Series
 from lionagi.libs import SysUtil
-from ..generic.abc import Condition, Actionable, Component
+
+from lionagi.core.collections.abc import FieldError, Condition, Actionable, Component
 
 
 class Rule(Component, Condition, Actionable):

@@ -8,8 +8,8 @@ implement specific form behaviors and configurations.
 from abc import abstractmethod
 from typing import Any, List, Dict
 import contextlib
-from ..generic.abc import Component, Field
-from ..generic.util import to_list_type
+from lionagi.core.collections.abc import Component, Field
+from ..collections.util import to_list_type
 
 
 class BaseForm(Component):

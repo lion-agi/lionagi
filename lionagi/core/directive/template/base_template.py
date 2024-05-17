@@ -1,7 +1,7 @@
 from typing import Any, Dict
 import re
 
-from ..evaluator.base_evaluator import BaseEvaluator
+from ..engine.base_evaluator import BaseEvaluator
 
 
 class DirectiveTemplate:

@@ -3,7 +3,7 @@ from collections.abc import Mapping
 from lionagi.libs.ln_convert import to_dict
 from lionagi.libs import StringMatch
 
-from .choice import ChoiceRule
+from lionagi.core.rule.choice import ChoiceRule
 
 
 class MappingRule(ChoiceRule):

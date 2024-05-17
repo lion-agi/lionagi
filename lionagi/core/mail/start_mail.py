@@ -1,6 +1,6 @@
 from collections import deque
-from ..generic import Node
-from .mail import Mail
+from lionagi.core.generic.node import Node
+from lionagi.core.mail.mail import Mail
 
 
 class StartMail(Node):

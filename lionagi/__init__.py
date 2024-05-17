@@ -13,7 +13,7 @@ from lionagi.core.work.worker import work, Worker
 from lionagi.core.session.branch import Branch
 from lionagi.core.report import Form, Report
 from lionagi.integrations.provider.services import Services
-import lionagi.core.directive.direct as direct
+import lionagi.core.agent.director.direct as direct
 
 
 logger = logging.getLogger(__name__)

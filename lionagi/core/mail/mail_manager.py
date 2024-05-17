@@ -1,7 +1,6 @@
 from collections import deque
 from lionagi.libs import AsyncUtil
-
-from ..generic.abc import Executable
+from lionagi.core.collections.abc import Executable
 from .mail import Mail
 
 

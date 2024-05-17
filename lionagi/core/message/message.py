@@ -1,8 +1,8 @@
 from enum import Enum
 from lionagi.libs.ln_convert import to_str
 
-from ..generic.abc import Sendable, Field
-from ..generic import Node
+from lionagi.core.collections.abc import Sendable, Field
+from lionagi.core.generic.node import Node
 
 
 # Enums for defining message fields and roles

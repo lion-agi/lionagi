@@ -1,5 +1,5 @@
 from lionagi.libs.ln_func_call import rcall
-from .worklog import WorkLog
+from lionagi.core.work.worklog import WorkLog
 
 
 class WorkFunction:

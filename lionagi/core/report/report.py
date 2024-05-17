@@ -7,14 +7,11 @@ requirements.
 """
 
 from typing import Any, Type
-
-from ..generic.abc import Field
-from ..generic import Pile, pile
-
-from .base import BaseForm
-from .form import Form
-from .util import get_input_output_fields
-from .base import BaseForm
+from lionagi.core.collections.abc import Field
+from lionagi.core.collections import Pile, pile
+from lionagi.core.report.util import get_input_output_fields
+from lionagi.core.report.base import BaseForm
+from lionagi.core.report.form import Form
 
 
 class Report(BaseForm):

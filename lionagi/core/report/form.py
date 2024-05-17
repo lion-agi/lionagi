@@ -6,9 +6,9 @@ validating the readiness of forms for further processing.
 """
 
 from typing import Dict, Any
-from ..generic.abc.util import SYSTEM_FIELDS
-from .util import get_input_output_fields
-from .base import BaseForm
+from lionagi.core.collections.abc import SYSTEM_FIELDS
+from lionagi.core.report.util import get_input_output_fields
+from lionagi.core.report.base import BaseForm
 
 
 class Form(BaseForm):
