@@ -32,7 +32,7 @@ class PredictTemplate(UnitForm):
 
     @property
     def answer(self):
-        return self.prediction
+        return getattr(self, "prediction", None)
 
     def __init__(
         self,
