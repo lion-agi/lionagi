@@ -5,7 +5,6 @@ from lionagi.core.collections import iModel
 from .unit_mixin import DirectiveMixin
 from .util import retry_kwargs, _direct
 
-
 class Unit(Directive, DirectiveMixin):
     """
     A class that represents a unit of action capable of performing various tasks
@@ -30,9 +29,12 @@ class Unit(Directive, DirectiveMixin):
 
         Args:
             branch (Branch): The branch of the session in which this unit operates.
-            imodel (iModel, optional): The model used for chat completion and other tasks.
-            template (Template, optional): The template used for forming instructions.
-            rulebook (Rulebook, optional): The rulebook used for validating responses.
+            imodel (iModel, optional): The model used for chat completion and 
+                other tasks.
+            template (Template, optional): The template used for forming 
+                instructions.
+            rulebook (Rulebook, optional): The rulebook used for validating 
+                responses.
         """
         self.branch = branch
         if imodel and isinstance(imodel, iModel):
@@ -45,11 +47,13 @@ class Unit(Directive, DirectiveMixin):
 
     async def chat(self, *args, **kwargs):
         """
-        Asynchronously performs a chat operation using the _chat method with retry logic.
+        Asynchronously performs a chat operation using the _chat method with 
+        retry logic.
 
         Args:
             *args: Positional arguments to pass to the _chat method.
-            **kwargs: Keyword arguments to pass to the _chat method, including retry configurations.
+            **kwargs: Keyword arguments to pass to the _chat method, including 
+                retry configurations.
 
         Returns:
             Any: The result of the chat operation.
@@ -59,11 +63,13 @@ class Unit(Directive, DirectiveMixin):
 
     async def act(self, *args, **kwargs):
         """
-        Asynchronously performs an act operation using the _act method with retry logic.
+        Asynchronously performs an act operation using the _act method with retry 
+        logic.
 
         Args:
             *args: Positional arguments to pass to the _act method.
-            **kwargs: Keyword arguments to pass to the _act method, including retry configurations.
+            **kwargs: Keyword arguments to pass to the _act method, including 
+                retry configurations.
 
         Returns:
             Any: The result of the act operation.
@@ -73,12 +79,14 @@ class Unit(Directive, DirectiveMixin):
 
     async def direct(self, directive, *args, **kwargs):
         """
-        Asynchronously performs a direct operation using the _direct method with retry logic.
+        Asynchronously performs a direct operation using the _direct method with 
+        retry logic.
 
         Args:
             directive (Any): The directive to execute.
             *args: Positional arguments to pass to the _direct method.
-            **kwargs: Keyword arguments to pass to the _direct method, including retry configurations.
+            **kwargs: Keyword arguments to pass to the _direct method, including 
+                retry configurations.
 
         Returns:
             Any: The result of the direct operation.
@@ -88,11 +96,13 @@ class Unit(Directive, DirectiveMixin):
 
     async def select(self, *args, **kwargs):
         """
-        Asynchronously performs a select operation using the _select method with retry logic.
+        Asynchronously performs a select operation using the _select method with 
+        retry logic.
 
         Args:
             *args: Positional arguments to pass to the _select method.
-            **kwargs: Keyword arguments to pass to the _select method, including retry configurations.
+            **kwargs: Keyword arguments to pass to the _select method, including 
+                retry configurations.
 
         Returns:
             Any: The result of the select operation.
@@ -105,11 +115,13 @@ class Unit(Directive, DirectiveMixin):
 
     async def predict(self, *args, **kwargs):
         """
-        Asynchronously performs a predict operation using the _predict method with retry logic.
+        Asynchronously performs a predict operation using the _predict method with 
+        retry logic.
 
         Args:
             *args: Positional arguments to pass to the _predict method.
-            **kwargs: Keyword arguments to pass to the _predict method, including retry configurations.
+            **kwargs: Keyword arguments to pass to the _predict method, including 
+                retry configurations.
 
         Returns:
             Any: The result of the predict operation.

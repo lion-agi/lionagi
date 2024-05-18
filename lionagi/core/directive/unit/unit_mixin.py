@@ -80,6 +80,7 @@ class DirectiveMixin(ABC):
             requested_fields=requested_fields,
             form=form,
             tools=tools,
+            branch=branch,
             **kwargs,
         )
 
@@ -112,6 +113,7 @@ class DirectiveMixin(ABC):
         requested_fields=None,
         form=None,
         tools=False,
+        branch=None,
         **kwargs,  # additional config for the model
     ) -> Any:
         """
@@ -131,11 +133,16 @@ class DirectiveMixin(ABC):
         Returns:
             Any: The configuration for the chat.
         """
+        branch = branch or self.branch
+        
         if system:
-            self.branch.add_message(system=system)
+            branch.add_message(system=system)
 
         if not form:
-            self.branch.add_message(
+            if recipient == "branch.ln_id":
+                recipient = branch.ln_id
+            
+            branch.add_message(
                 instruction=instruction,
                 context=context,
                 sender=sender,
@@ -145,15 +152,15 @@ class DirectiveMixin(ABC):
 
         else:
             instruct_ = Instruction.from_form(form)
-            self.branch.add_message(instruction=instruct_)
+            branch.add_message(instruction=instruct_)
 
         if "tool_parsed" in kwargs:
             kwargs.pop("tool_parsed")
             tool_kwarg = {"tools": tools}
             kwargs = tool_kwarg | kwargs
 
-        elif tools and self.branch.has_tools:
-            kwargs = self.branch.tool_manager.parse_tool(tools=tools, **kwargs)
+        elif tools and branch.has_tools:
+            kwargs = branch.tool_manager.parse_tool(tools=tools, **kwargs)
 
         config = {**self.imodel.config, **kwargs}
         if sender is not None:
@@ -501,9 +508,8 @@ class DirectiveMixin(ABC):
         if tools:
             process_tools(tools, branch)
 
-        form, branch = await self._chat(
+        form = await self._chat(
             form=form,
-            return_branch=True,
             branch=branch,
             tools=tools,
             **kwargs,

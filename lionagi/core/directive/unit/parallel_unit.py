@@ -1,4 +1,4 @@
-from lionagi.libs.ln_func_call import rcall
+from lionagi.libs.ln_func_call import rcall, pcall
 from lionagi.libs import convert, AsyncUtil
 
 from lionagi.core.collections.abc import Directive

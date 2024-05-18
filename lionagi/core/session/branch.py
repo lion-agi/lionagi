@@ -12,8 +12,6 @@ from lionagi.core.collections import (
 )
 from lionagi.core.generic.node import Node
 from lionagi.core.action import Tool, ToolManager
-from lionagi.core.mail.mail import Mail
-from lionagi.core.session.directive_mixin import DirectiveMixin
 from lionagi.core.message import (
     create_message,
     System,
@@ -23,6 +21,7 @@ from lionagi.core.message import (
     ActionResponse,
 )
 
+from lionagi.core.session.directive_mixin import DirectiveMixin
 
 class Branch(Node, DirectiveMixin):
     """
@@ -30,7 +29,7 @@ class Branch(Node, DirectiveMixin):
 
     Attributes:
         messages (Pile): A pile of messages.
-        progre (Progression): A progression of messages.
+        progress (Progression): A progression of messages.
         tool_manager (ToolManager): A manager for handling tools.
         system (System): The system associated with the branch.
         user (str): The user associated with the branch.
@@ -39,7 +38,7 @@ class Branch(Node, DirectiveMixin):
     """
 
     messages: Pile = Field(None)
-    progre: Progression = Field(None)
+    progress: Progression = Field(None)
     tool_manager: ToolManager = Field(None)
     system: System = Field(None)
     user: str = Field(None)
@@ -52,7 +51,7 @@ class Branch(Node, DirectiveMixin):
         system_sender: str | None = None,
         user: str | None = None,
         messages: Pile = None,
-        progre: Progression = None,
+        progress: Progression = None,
         tool_manager: ToolManager = None,
         tools: Any = None,
         mailbox=None,
@@ -66,7 +65,7 @@ class Branch(Node, DirectiveMixin):
             system_sender (str, optional): The sender of the system message.
             user (str, optional): The user associated with the branch.
             messages (Pile, optional): A pile of messages.
-            progre (Progression, optional): A progression of messages.
+            progress (Progression, optional): A progression of messages.
             tool_manager (ToolManager, optional): A manager for handling tools.
             tools (Any, optional): Tools to be registered with the tool manager.
             mailbox (Exchange, optional): An exchange for managing mail.
@@ -77,7 +76,7 @@ class Branch(Node, DirectiveMixin):
 
         self.user = user or "user"
         self.messages = messages or pile({})
-        self.progre = progre or progression()
+        self.progress = progress or progression()
         self.tool_manager = tool_manager or ToolManager()
         self.mailbox = mailbox or Exchange()
         self.imodel = imodel or iModel()
@@ -127,6 +126,9 @@ class Branch(Node, DirectiveMixin):
         Returns:
             bool: True if the message was successfully added, else False.
         """
+        if assistant_response:
+            sender = self.ln_id
+        
         _msg = create_message(
             system=system,
             instruction=instruction,
@@ -142,7 +144,7 @@ class Branch(Node, DirectiveMixin):
             requested_fields=requested_fields,
             **kwargs,
         )
-
+    
         if isinstance(_msg, System):
             _msg.recipient = self.ln_id  # the branch itself, system is to the branch
             self._remove_system()
@@ -167,7 +169,7 @@ class Branch(Node, DirectiveMixin):
         if metadata:
             _msg._meta_insert(["extra"], metadata)
 
-        return self.messages.include(_msg) and self.progre.include(_msg)
+        return self.messages.include(_msg) and self.progress.include(_msg)
 
     def to_chat_messages(self) -> list[dict[str, Any]]:
         """
@@ -176,14 +178,14 @@ class Branch(Node, DirectiveMixin):
         Returns:
             list[dict[str, Any]]: A list of chat messages.
         """
-        return [self.messages[j].chat_msg for j in self.progre]
+        return [self.messages[j].chat_msg for j in self.progress]
 
     def _remove_system(self) -> None:
         """
         Removes the system message from the branch.
         """
         self.messages.exclude(self.system)
-        self.progre.exclude(self.system)
+        self.progress.exclude(self.system)
         self.system = None
 
     def clear(self) -> None:
@@ -191,7 +193,7 @@ class Branch(Node, DirectiveMixin):
         Clears all messages and progression in the branch.
         """
         self.messages.clear()
-        self.progre.clear()
+        self.progress.clear()
 
     @property
     def has_tools(self) -> bool:
@@ -222,7 +224,7 @@ class Branch(Node, DirectiveMixin):
                 "Cannot update model: The branch to be merged has no model"
             )
 
-        if self.messages.include(branch.messages) and self.progre.include(
+        if self.messages.include(branch.messages) and self.progress.include(
             branch.messages
         ):
             self.datalogger.extend(branch.datalogger.log)
@@ -281,7 +283,7 @@ class Branch(Node, DirectiveMixin):
             meta (dict): The metadata to update.
         """
 
-        for i in reversed(self.progre):
+        for i in reversed(self.progress):
             if isinstance(self.messages[i], Instruction):
                 self.messages[i]._meta_insert(["extra"], meta)
                 return
@@ -304,7 +306,7 @@ class Branch(Node, DirectiveMixin):
             "recipient",
         ]
         dicts_ = []
-        for i in self.progre:
+        for i in self.progress:
             _d = {}
             for j in fields:
                 _d.update({j: getattr(self.messages[i], j, None)})
