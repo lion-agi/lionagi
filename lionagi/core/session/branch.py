@@ -86,6 +86,16 @@ class Branch(Node, DirectiveMixin):
         system = system or "You are a helpful assistant, let's think step by step"
         self.add_message(system=system, sender=system_sender)
 
+    def set_system(self, system=None) -> None:
+        """
+        Sets the system message.
+
+        Args:
+            system (System): The system message to set.
+        """
+        system = system or "You are a helpful assistant, let's think step by step"
+        self.add_message(system=system)
+
     def add_message(
         self,
         *,

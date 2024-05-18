@@ -258,14 +258,14 @@ class Executable(ABC):
 class Directive(ABC):
     """Represents a directive that can be directed with arguments."""
 
-    @abstractmethod
-    async def direct(self, *args, **kwargs):
-        """Direct the directive with the given arguments asynchronously.
+    # @abstractmethod
+    # async def direct(self, *args, **kwargs):
+    #     """Direct the directive with the given arguments asynchronously.
 
-        Args:
-            *args: Positional arguments for directing the directive.
-            **kwargs: Keyword arguments for directing the directive.
-        """
+    #     Args:
+    #         *args: Positional arguments for directing the directive.
+    #         **kwargs: Keyword arguments for directing the directive.
+    #     """
 
     @property
     def class_name(self) -> str:

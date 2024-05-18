@@ -13,11 +13,15 @@ from lionagi.core.collections.abc import ActionError
 from lionagi.core.message import Instruction, ActionRequest, ActionResponse
 from lionagi.core.message.util import _parse_action_request
 from lionagi.core.validator.validator import Validator
-from lionagi.core.directive.unit.util import process_tools
-from lionagi.core.directive.unit.template.action import ActionTemplate
+from lionagi.core.unit.util import process_tools
+from lionagi.core.unit.template.action import ActionTemplate
 
 
 class DirectiveMixin(ABC):
+    """
+    DirectiveMixin is a class for handling chat operations and processing
+    responses.
+    """
 
     async def _base_chat(
         self,
@@ -42,7 +46,8 @@ class DirectiveMixin(ABC):
         **kwargs,
     ):
         """
-        Handles the base chat operation by configuring the chat and processing the response.
+        Handles the base chat operation by configuring the chat and processing
+        the response.
 
         Args:
             instruction (Any, optional): Instruction for the chat.
@@ -53,14 +58,17 @@ class DirectiveMixin(ABC):
             requested_fields (Any, optional): Fields to request from the context.
             form (Any, optional): Form to create instruction from.
             tools (bool, optional): Whether to use tools in the chat.
-            invoke_tool (bool, optional): Whether to invoke tools when function calling.
+            invoke_tool (bool, optional): Whether to invoke tools when function
+                calling.
             return_form (bool, optional): Whether to return the form.
             strict (bool, optional): Whether to enforce strict rule validation.
             rulebook (Any, optional): Rulebook for validation.
             imodel (Any, optional): Swappable iModel for commands.
-            use_annotation (bool, optional): Whether to use annotation as rule qualifier.
+            use_annotation (bool, optional): Whether to use annotation as rule
+                qualifier.
             branch (Any, optional): Branch to use for the chat.
-            clear_messages (bool, optional): Whether to clear messages in the branch.
+            clear_messages (bool, optional): Whether to clear messages in the
+                branch.
             return_branch (bool, optional): Whether to return the branch.
             **kwargs: Additional arguments for configuration.
 
@@ -70,6 +78,7 @@ class DirectiveMixin(ABC):
         branch = branch or self.branch
         if clear_messages:
             branch.clear()
+            branch.set_system(system)
 
         config = self._create_chat_config(
             system=system,
@@ -125,7 +134,8 @@ class DirectiveMixin(ABC):
             context (Any, optional): Context to perform the instruction on.
             sender (Any, optional): Sender of the instruction.
             recipient (Any, optional): Recipient of the instruction.
-            requested_fields (Any, optional): Fields to request from the context.
+            requested_fields (Any, optional): Fields to request from the
+                context.
             form (Any, optional): Form to create instruction from.
             tools (bool, optional): Whether to use tools in the chat.
             **kwargs: Additional arguments for configuration.
@@ -200,7 +210,8 @@ class DirectiveMixin(ABC):
             payload (Any): The payload for the chat completion.
             completion (Any): The chat completion response.
             sender (Any): The sender of the instruction.
-            invoke_tool (bool, optional): Whether to invoke tools when function calling.
+            invoke_tool (bool, optional): Whether to invoke tools when function
+                calling.
             branch (Any, optional): The branch to use.
             action_request (Any, optional): The action request.
 
@@ -223,7 +234,9 @@ class DirectiveMixin(ABC):
                 completion.update(msg)
 
                 branch.add_message(
-                    assistant_response=_msg, metadata=completion, sender=sender
+                    assistant_response=_msg, 
+                    metadata=completion, 
+                    sender=sender
                 )
                 branch.imodel.status_tracker.num_tasks_succeeded += 1
         else:
@@ -237,7 +250,11 @@ class DirectiveMixin(ABC):
         )
 
     async def _process_action_request(
-        self, _msg=None, branch=None, invoke_tool=True, action_request=None
+        self,
+        _msg=None,
+        branch=None,
+        invoke_tool=True,
+        action_request=None,
     ):
         """
         Processes an action request from the assistant response.
@@ -245,7 +262,8 @@ class DirectiveMixin(ABC):
         Args:
             _msg (Any, optional): The assistant response message.
             branch (Any, optional): The branch to use.
-            invoke_tool (bool, optional): Whether to invoke tools when function calling.
+            invoke_tool (bool, optional): Whether to invoke tools when function
+                calling.
             action_request (Any, optional): The action request.
 
         Returns:
@@ -407,10 +425,9 @@ class DirectiveMixin(ABC):
         imodel=None,  # the optinally swappable iModel for the commands, otherwise self.branch.imodel
         clear_messages=False,
         use_annotation=True,  # whether to use annotation as rule qualifier, default True, (need rulebook if False)
-        timeout: (
-            float | None
-        ) = None,  # timeout for the rcall, default None (no timeout)
+        timeout: float = None,
         return_branch=False,
+        
         **kwargs,
     ):
         """
@@ -604,7 +621,7 @@ class DirectiveMixin(ABC):
                 context=context,
             )
 
-        return await self._chat(form=form, return_form=True, **kwargs)
+        return await self._chat(form=form, return_form=True, branch=branch, **kwargs)
 
     async def _predict(
         self,
@@ -646,4 +663,60 @@ class DirectiveMixin(ABC):
                 reason=reason,
             )
 
-        return await self._chat(form=form, return_form=True, **kwargs)
+        return await self._chat(form=form, return_form=True, branch=branch, **kwargs)
+
+    async def _score(
+        self,
+        form=None,
+        score_range=None,
+        include_endpoints=None,
+        num_digit=None,
+        reason=False,
+        confidence_score=None,
+        instruction=None,
+        context=None,
+        branch=None,
+        template=None,
+        **kwargs,
+    ):
+        
+        branch = branch or self.branch
+        if not form:
+            form = template(
+                score_range=score_range,
+                include_endpoints=include_endpoints,
+                num_digit=num_digit,
+                reason=reason,
+                confidence_score=confidence_score,
+                instruction=instruction,
+                context=context,
+            )
+
+        return await self._chat(form=form, return_form=True, branch=branch, **kwargs)
+    
+    async def _plan(
+        self,
+        form=None,
+        num_step=None,
+        reason=False,
+        confidence_score=None,
+        instruction=None,
+        context=None,
+        branch=None,
+        template=None,
+        **kwargs,
+    ):
+
+        branch = branch or self.branch
+        template = template or self.default_template
+
+        if not form:
+            form = template(
+                instruction=instruction,
+                context=context,
+                num_step=num_step,
+                reason=reason,
+                confidence_score=confidence_score,
+            )
+
+        return await self._chat(form=form, **kwargs)

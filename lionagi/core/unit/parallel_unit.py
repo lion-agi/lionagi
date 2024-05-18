@@ -5,7 +5,7 @@ from lionagi.core.collections.abc import Directive
 from lionagi.core.collections import iModel
 from lionagi.core.validator.validator import Validator
 from lionagi.core.session.branch import Branch
-from lionagi.core.directive.unit.util import retry_kwargs
+from lionagi.core.unit.util import retry_kwargs
 
 
 class ParallelUnit(Directive):

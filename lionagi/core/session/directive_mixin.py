@@ -1,6 +1,8 @@
 # lionagi/core/session/directive_mixin.py
 
-from lionagi.core.directive.unit.unit import Unit
+from lionagi.libs.ln_convert import strip_lower
+from lionagi.core.unit import Unit
+
 
 class DirectiveMixin:
     """
@@ -9,31 +11,28 @@ class DirectiveMixin:
 
     async def chat(
         self,
-        instruction=None,
-        context=None,
-        *,
-        system=None,
-        sender="user",
-        recipient="branch.ln_id",
+        instruction,  # additional instruction
+        context=None,  # context to perform the instruction on
+        system=None,  # optionally swap system message
+        sender=None,  # sender of the instruction, default "user"
+        recipient=None,  # recipient of the instruction, default "branch.ln_id"
         branch=None,
-        requested_fields=None,
-        form=None,
-        tools=False,
-        invoke_tool=True,
-        return_form=True,
-        strict=False,
-        rulebook=None,
-        imodel=None,
+        requested_fields=None,  # fields to request from the context, default None
+        form=None,  # form to create instruction from, default None,
+        tools=False,  # the tools to use, use True to consider all tools, no tools by default
+        invoke_tool=True,  # whether to invoke the tool when function calling, default True
+        return_form=True,  # whether to return the form if a form is passed in, otherwise return a dict/str
+        strict=False,  # whether to strictly enforce the rule validation, default False
+        rulebook=None,  # the rulebook to use for validation, default None, use default rulebook
+        imodel=None,  # the optinally swappable iModel for the commands, otherwise self.branch.imodel
         clear_messages=False,
-        use_annotation=True,
+        use_annotation=True,  # whether to use annotation as rule qualifier, default True, (need rulebook if False)
         retries: int = 3,
         delay: float = 0,
         backoff_factor: float = 1,
         default=None,
         timeout: float = None,
         timing: bool = False,
-        max_concurrency: int = 10_000,
-        throttle_period: int = None,
         return_branch=False,
         **kwargs,
     ):
@@ -83,10 +82,6 @@ class DirectiveMixin:
                 (no timeout).
             timing (bool, optional): If True, will return a tuple (output, 
                 duration), default is False.
-            max_concurrency (int, optional): Max concurrency for the chat, default 
-                is 10_000 (global max concurrency).
-            throttle_period (int, optional): Throttle period for limiting 
-                execution, default is None.
             return_branch (bool, optional): Whether to return the branch after 
                 processing, default is False.
             **kwargs: Additional keyword arguments for further customization.
@@ -108,8 +103,8 @@ class DirectiveMixin:
             self.add_message(system=system)
 
         return await directive.chat(
-            context=context,
             instruction=instruction,
+            context=context,
             sender=sender,
             recipient=recipient,
             requested_fields=requested_fields,
@@ -128,57 +123,34 @@ class DirectiveMixin:
             branch=branch,
             clear_messages=clear_messages,
             return_branch=return_branch,
-            max_concurrency=max_concurrency,
-            throttle_period=throttle_period,
             **kwargs,
         )
 
-    # async def direct(
-    #     self,
-    #     directive: str,  # examples, "chat", "predict", "act"
-    #     instruction=None,  # additional instruction
-    #     context=None,  # context to perform the instruction on
-    #     return_branch=False,
-    #     **kwargs,
-    # ):
+    async def direct(
+        self,
+        directive: str,  # examples, "chat", "predict", "act"
+        instruction=None,  # additional instruction
+        context=None,  # context to perform the instruction on
+        return_branch=False,
+        imodel=None,  # the optinally swappable iModel for the commands, otherwise self.branch.imodel
+        rulebook=None,  # the rulebook to use for validation, default None, use default rulebook
+        system=None,  # optionally swap system message
+        
+        **kwargs,
+    ):
 
-    #     import lionagi.core.directive.direct as _direct
+        _direct = Unit(self, imodel=imodel, rulebook=rulebook)
+        if system:
+            self.add_message(system=system)
+        
+        if hasattr(_direct, strip_lower(directive)):
+            directive = getattr(_direct, strip_lower(directive))
 
-    #     directive = getattr(_direct, strip_lower(directive))
-
-    #     output = await directive(
-    #         context=context,
-    #         instruction=instruction,
-    #         return_branch=return_branch,
-    #         **kwargs,
-    #     )
-    #     return output
-
-    # _out = []
-    # for item in list(output):
-    #     if item not in _out:
-    #         _out.append(item)
-
-    # if not return_branch:
-    #     return _out[0]
-    # return _out
-
-    # # default is chain of predict
-    # async def chain_of_direct(
-    #     self,
-    #     directive: str,
-    #     instruction=None,  # additional instruction
-    #     context=None,  # context to perform the instruction on
-    #     **kwargs,
-    # ):
-
-    #     from lionagi.core.directive.structure.chain import Chain
-
-    #     _chain = Chain(self)
-
-    #     return await _chain.direct(
-    #         context=context,
-    #         instruction=instruction,
-    #         directive=directive,
-    #         **kwargs,
-    #     )
+            return await directive(
+                context=context,
+                instruction=instruction,
+                return_branch=return_branch,
+                **kwargs,
+            )
+            
+        raise ValueError(f"invalid directive: {directive}")

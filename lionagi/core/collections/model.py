@@ -6,11 +6,29 @@ load_dotenv()
 
 
 class iModel:
+    """
+    iModel is a class for managing AI model configurations and service
+    integrations.
+
+    Attributes:
+        ln_id (str): A unique identifier for the model instance.
+        timestamp (str): The timestamp when the model instance is created.
+        endpoint (str): The API endpoint for the model service.
+        provider_schema (dict): The schema for the service provider.
+        provider (BaseService): The service provider instance.
+        endpoint_schema (dict): The schema for the endpoint configuration.
+        api_key (str): The API key for the service provider.
+        status_tracker (StatusTracker): Instance of StatusTracker to track
+            service status.
+        service (BaseService): Configured service instance.
+        config (dict): Configuration dictionary for the model.
+        iModel_name (str): Name of the model.
+    """
 
     def __init__(
         self,
         model: str = None,
-        config: dict = {},
+        config: dict = None,
         provider: str = None,
         provider_schema: dict = None,
         endpoint: str = "chat/completions",
@@ -23,6 +41,29 @@ class iModel:
         service: BaseService = None,
         **kwargs,  # additional parameters for the model
     ):
+        """
+        Initializes an instance of the iModel class.
+
+        Args:
+            model (str, optional): Name of the model.
+            config (dict, optional): Configuration dictionary.
+            provider (str, optional): Name or class of the provider.
+            provider_schema (dict, optional): Schema dictionary for the
+                provider.
+            endpoint (str, optional): Endpoint string, default is
+                "chat/completions".
+            token_encoding_name (str, optional): Name of the token encoding,
+                default is "cl100k_base".
+            api_key (str, optional): API key for the provider.
+            api_key_schema (str, optional): Schema for the API key.
+            interval_tokens (int, optional): Token interval limit, default is
+                100,000.
+            interval_requests (int, optional): Request interval limit, default
+                is 1,000.
+            interval (int, optional): Time interval in seconds, default is 60.
+            service (BaseService, optional): An instance of BaseService.
+            **kwargs: Additional parameters for the model.
+        """
         self.ln_id: str = SysUtil.create_id()
         self.timestamp: str = SysUtil.get_timestamp(sep=None)[:-6]
         self.endpoint = endpoint
@@ -33,7 +74,9 @@ class iModel:
         else:
             provider = str(provider).lower() if provider else "openai"
 
-        from lionagi.integrations.provider._mapping import SERVICE_PROVIDERS_MAPPING
+        from lionagi.integrations.provider._mapping import (
+            SERVICE_PROVIDERS_MAPPING,
+        )
 
         self.provider_schema = (
             provider_schema or SERVICE_PROVIDERS_MAPPING[provider]["schema"]
@@ -75,18 +118,59 @@ class iModel:
             self.iModel_name = self.config["model"]
 
     def update_config(self, **kwargs):
+        """
+        Updates the configuration with additional parameters.
+
+        Args:
+            **kwargs: Additional parameters to update the configuration.
+        """
         self.config = self._set_up_params(self.config, **kwargs)
 
     def _set_up_config(self, model_config, **kwargs):
+        """
+        Sets up the model configuration.
+
+        Args:
+            model_config (dict): The default configuration dictionary.
+            **kwargs: Additional parameters to update the configuration.
+
+        Returns:
+            dict: Updated configuration dictionary.
+        """
         return {**model_config, **kwargs}
 
     def _set_up_service(self, service=None, provider=None, **kwargs):
+        """
+        Sets up the service for the model.
+
+        Args:
+            service (BaseService, optional): An instance of BaseService.
+            provider (str, optional): Provider name or instance.
+            **kwargs: Additional parameters for the service.
+
+        Returns:
+            BaseService: Configured service instance.
+        """
         if not service:
             provider = provider or self.provider
             return provider(**kwargs)
         return service
 
-    def _set_up_params(self, default_config={}, **kwargs):
+    def _set_up_params(self, default_config=None, **kwargs):
+        """
+        Sets up the parameters for the model.
+
+        Args:
+            default_config (dict, optional): The default configuration
+                dictionary.
+            **kwargs: Additional parameters to update the configuration.
+
+        Returns:
+            dict: Updated parameters dictionary.
+
+        Raises:
+            ValueError: If any parameter is not allowed.
+        """
         params = {**default_config, **kwargs}
         allowed_params = (
             self.endpoint_schema["required"] + self.endpoint_schema["optional"]
@@ -104,9 +188,25 @@ class iModel:
         return params
 
     async def call_chat_completion(self, messages, **kwargs):
+        """
+        Asynchronous method to call the chat completion service.
+
+        Args:
+            messages (list): List of messages for the chat completion.
+            **kwargs: Additional parameters for the service call.
+
+        Returns:
+            dict: Response from the chat completion service.
+        """
         return await self.service.serve_chat(messages, **kwargs)
 
     def to_dict(self):
+        """
+        Converts the model instance to a dictionary representation.
+
+        Returns:
+            dict: Dictionary representation of the model instance.
+        """
         return {
             "ln_id": self.ln_id,
             "timestamp": self.timestamp,

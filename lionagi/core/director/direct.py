@@ -1,4 +1,4 @@
-from lionagi.core.directive.unit.unit import Unit
+from lionagi.core.unit.unit import Unit
 from lionagi.core.session.branch import Branch
 
 
@@ -108,6 +108,7 @@ async def predict(
     form=None,
     confidence_score=None,
     reason=False,
+    num_sentences=1, 
     **kwargs,
 ):
     """
@@ -140,6 +141,7 @@ async def predict(
         form=form,
         confidence_score=confidence_score,
         reason=reason,
+        num_sentences=num_sentences,
         **kwargs,
     )
 
@@ -186,5 +188,70 @@ async def act(
         form=form,
         confidence_score=confidence_score,
         reason=reason,
+        **kwargs,
+    )
+
+async def score(
+    instruction=None,
+    context=None,
+    system=None,
+    sender=None,
+    recipient=None,
+    branch=None,
+    form=None,
+    confidence_score=None,
+    reason=False,
+    score_range=None,
+    include_endpoints=None,
+    num_digit=None,
+    **kwargs,
+):
+    
+    branch = branch or Branch()
+    unit = Unit(branch)
+
+    return await unit.score(
+        instruction=instruction,
+        context=context,
+        system=system,
+        sender=sender,
+        recipient=recipient,
+        form=form,
+        confidence_score=confidence_score,
+        reason=reason,
+        score_range=score_range,
+        include_endpoints=include_endpoints,
+        num_digit=num_digit,
+        **kwargs,
+    )
+    
+    
+async def plan(
+    instruction=None,
+    context=None,
+    system=None,
+    sender=None,
+    recipient=None,
+    branch=None,
+    form=None,
+    confidence_score=None,
+    reason=False,
+    num_step=3,
+    **kwargs,
+):
+    
+    branch = branch or Branch()
+    unit = Unit(branch)
+
+    return await unit.plan(
+        instruction=instruction,
+        context=context,
+        system=system,
+        sender=sender,
+        recipient=recipient,
+        form=form,
+        confidence_score=confidence_score,
+        reason=reason,
+        num_step=num_step,
         **kwargs,
     )

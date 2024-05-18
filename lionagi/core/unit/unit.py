@@ -131,3 +131,17 @@ class Unit(Directive, DirectiveMixin):
         kwargs = {**retry_kwargs, **kwargs}
         kwargs["template"] = kwargs.get("template", PredictTemplate)
         return await rcall(self._predict, *args, **kwargs)
+
+    async def score(self, *args, **kwargs):
+        from .template.score  import ScoreTemplate
+
+        kwargs = {**retry_kwargs, **kwargs}
+        kwargs["template"] = kwargs.get("template", ScoreTemplate)
+        return await rcall(self._score, *args, **kwargs)
+
+    async def plan(self, *args, **kwargs):
+        from .template.plan import PlanTemplate
+
+        kwargs = {**retry_kwargs, **kwargs}
+        kwargs["template"] = kwargs.get("template", PlanTemplate)
+        return await rcall(self._plan, *args, **kwargs)
