@@ -1,6 +1,7 @@
 from pydantic import Field, field_validator
 from typing import Any
 from lionagi.core.collections.abc import Component, get_lion_id, LionIDable, Condition
+from lionagi.core.generic.edge_condition import EdgeCondition
 
 
 class Edge(Component):
@@ -18,7 +19,7 @@ class Edge(Component):
         description="The identifier of the tail node of the edge.",
     )
 
-    condition: Condition | None = Field(
+    condition: Condition | EdgeCondition | None = Field(
         default=None,
         description="Optional condition that must be met for the edge "
         "to be considered active.",
@@ -34,11 +35,12 @@ class Edge(Component):
         description="A flag indicating if the edge is bundled.",
     )
 
-    async def check_condition(self, obj: dict[str, Any]) -> bool:
+    async def check_condition(self, obj: Any) -> bool:
         """Check if the edge condition is met for the given object."""
         if not self.condition:
             raise ValueError("The condition for the edge is not set.")
-        return await self.condition.applies(obj)
+        check = await self.condition.applies(obj)
+        return check
 
     @field_validator("head", "tail", mode="before")
     def _validate_head_tail(cls, value):

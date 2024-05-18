@@ -39,6 +39,7 @@ class Exchange(Element, Generic[T]):
     def include(self, item, direction):
         if self.pile.include(item):
             item = self.pile[item]
+            item = [item] if not isinstance(item, list) else item
             for i in item:
                 if not self._include(i, direction):
                     return False
@@ -53,3 +54,6 @@ class Exchange(Element, Generic[T]):
             )
 
         return self.pile.include(item) and self.pending_outs.include(item)
+
+    def to_dict(self):
+        return self.model_dump(by_alias=True)

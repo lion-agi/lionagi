@@ -87,9 +87,9 @@ class Graph(Node):
         match direction:
             case "both":
                 edges = node.edges
-            case "head", "predecessor", "outgoing", "out", "predecessors":
+            case "head" | "predecessor" | "outgoing" | "out" | "predecessors":
                 edges = node.relations["out"]
-            case "tail", "successor", "incoming", "in", "successors":
+            case "tail" | "successor" | "incoming" | "in" | "successors":
                 edges = node.relations["in"]
 
         if label:

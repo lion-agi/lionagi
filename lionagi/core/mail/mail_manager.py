@@ -1,10 +1,13 @@
 from collections import deque
+from pydantic import Field
 from lionagi.libs import AsyncUtil
-from lionagi.core.collections.abc import Executable
-from .mail import Mail
+from lionagi.core.collections.abc import Executable, Element
+from lionagi.core.collections import Exchange
+from lionagi.core.collections.util import to_list_type, get_lion_id
+from .mail import Mail, Package
+from lionagi.core.collections import Pile, pile, Progression, progression
 
-
-class MailManager(Executable):
+class MailManager(Element, Executable):
     """
     Manages the sending, receiving, and storage of mail items between various sources.
 
@@ -16,39 +19,44 @@ class MailManager(Executable):
             mails (Dict[str, Dict[str, deque]]): A nested dictionary storing queued mail items, organized by recipient
                     and sender.
     """
+    sources: Pile[Element] = Field(
+        default_factory=lambda: pile(),
+        description="The pile of managed sources",
+    )
+
+    mails: dict[str, dict[str, deque]] = Field(
+        default_factory=dict,
+        description="The mails waiting to be sent",
+        examples=["{'recipient_id': {'sender_id': deque()}}"],
+    )
+
+    execute_stop: bool = Field(
+        False, description="A flag indicating whether to stop execution."
+    )
 
     def __init__(self, sources=None):
-        self.sources = {}
-        self.mails = {}
+        super().__init__()
         if sources:
             self.add_sources(sources)
-        self.execute_stop = False
 
     def add_sources(self, sources):
-        if isinstance(sources, dict):
-            for _, v in sources.items():
-                if v.id_ not in self.sources:
-                    self.sources[v.id_] = v
-                    self.mails[v.id_] = {}
-        elif isinstance(sources, list):
-            for v in sources:
-                if v.id_ not in self.sources:
-                    self.sources[v.id_] = v
-                    self.mails[v.id_] = {}
-        else:
-            raise ValueError("Failed to add source, please input list or dict.")
+        try:
+            sources = to_list_type(sources)
+            self.sources.include(sources)
+            for item in sources:
+                self.mails[item.ln_id] = {}
+        except Exception as e:
+            raise ValueError(f"Failed to add source. Error {e}")
 
     @staticmethod
     def create_mail(sender, recipient, category, package):
-        return Mail(sender, recipient, category, package)
-
-    # def add_source(self, sources: list[Node]):
-    #     for source in sources:
-    #         if source.id_ in self.sources:
-    #             # raise ValueError(f"Source {source.id_} exists, please input a different name.")
-    #             continue
-    #         self.sources[source.id_] = source
-    #         self.mails[source.id_] = {}
+        pack = Package(category=category, package=package)
+        mail = Mail(
+            sender=sender,
+            recipient=recipient,
+            package=pack,
+        )
+        return mail
 
     def delete_source(self, source_id):
         if source_id not in self.sources:
@@ -61,13 +69,15 @@ class MailManager(Executable):
     def collect(self, sender):
         if sender not in self.sources:
             raise ValueError(f"Sender source {sender} does not exist.")
-        while self.sources[sender].pending_outs:
-            mail_: Mail = self.sources[sender].pending_outs.popleft()
-            if mail_.recipient not in self.sources:
-                raise ValueError(f"Recipient source {mail_.recipient} does not exist")
-            if mail_.sender not in self.mails[mail_.recipient]:
-                self.mails[mail_.recipient].update({mail_.sender: deque()})
-            self.mails[mail_.recipient][mail_.sender].append(mail_)
+        mailbox = self.sources[sender] if isinstance(self.sources[sender], Exchange) else self.sources[sender].mailbox
+        while mailbox.pending_outs:
+            mail_id = mailbox.pending_outs.popleft()
+            mail = mailbox.pile.pop(mail_id)
+            if mail.recipient not in self.sources:
+                raise ValueError(f"Recipient source {mail.recipient} does not exist")
+            if mail.sender not in self.mails[mail.recipient]:
+                self.mails[mail.recipient].update({mail.sender: deque()})
+            self.mails[mail.recipient][mail.sender].append(mail)
 
     def send(self, recipient):
         if recipient not in self.sources:
@@ -75,21 +85,20 @@ class MailManager(Executable):
         if not self.mails[recipient]:
             return
         for key in list(self.mails[recipient].keys()):
-            mails_deque = self.mails[recipient].pop(key)
-            if key not in self.sources[recipient].pending_ins:
-                self.sources[recipient].pending_ins[key] = mails_deque
-            else:
-                while mails_deque:
-                    mail_ = mails_deque.popleft()
-                    self.sources[recipient].pending_ins[key].append(mail_)
+            pending_mails = self.mails[recipient].pop(key)
+            mailbox = self.sources[recipient] if isinstance(self.sources[recipient], Exchange) \
+                else self.sources[recipient].mailbox
+            while pending_mails:
+                mail = pending_mails.popleft()
+                mailbox.include(mail, "in")
 
     def collect_all(self):
-        for ids in self.sources:
-            self.collect(ids)
+        for source in self.sources:
+            self.collect(get_lion_id(source))
 
     def send_all(self):
-        for ids in self.sources:
-            self.send(ids)
+        for source in self.sources:
+            self.send(get_lion_id(source))
 
     async def execute(self, refresh_time=1):
         while not self.execute_stop:

@@ -40,12 +40,16 @@ class Instruction(RoledMessage):
         """
         super().__init__(
             role=MessageRole.USER,
-            sender=sender or "N/A",
+            sender=sender or "user",
             content={"instruction": instruction or "N/A"},
             recipient=recipient or "N/A",
         )
 
         self._initiate_content(context, requested_fields, **kwargs)
+
+    @property
+    def instruct(self):
+        return self.content["instruction"]
 
     def _add_context(self, context: dict | str | None = None, **kwargs):
         """
