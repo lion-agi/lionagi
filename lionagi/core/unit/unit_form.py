@@ -29,6 +29,7 @@ class UnitForm(BaseUnitForm):
         description=(
             "Provide the answer to the questions asked. If an accurate answer cannot "
             "be provided at this step, set `extend_required` to True and reply with 'PLEASE_EXTEND'."
+            "if actions are required at this step, set `action_required` to True and reply with 'PELASE_ACTION`."
         )
     )
 

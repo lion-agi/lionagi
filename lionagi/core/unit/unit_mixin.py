@@ -518,6 +518,10 @@ class DirectiveMixin(ABC):
                 form._add_field("extension_forms", list, None, [])
             form.extension_forms.extend(extension_forms)
 
+        if "PLEASE_ACTION" in form.answer:
+            answer = await self._chat("please provide final answer basing on the above information, only provide answer field as a string",)
+            form.answer = answer.replace('{"answer": "', '').replace('"}', '')
+
         return form, branch if return_branch else form
  
 
@@ -584,7 +588,6 @@ class DirectiveMixin(ABC):
 
     async def _act(self, form, branch, actions=None):
         if actions:
-            print(actions)
 
             keys = [f"action_{i+1}" for i in range(len(actions))]
             actions = StringMatch.force_validate_dict(actions, keys)
@@ -625,11 +628,19 @@ class DirectiveMixin(ABC):
                             "Error processing action request: Invalid action response."
                         )
 
-                    action_responses = [i._to_dict() for i in action_responses]
+                    _action_responses = {}
+                    for idx, item in enumerate(action_responses):
+                        _action_responses[f"action_{idx+1}"] = item._to_dict()
+                        
                     form._add_field(
-                        "action_response", list[dict], None, action_responses
+                        "action_response", dict, None, _action_responses
                     )
                     form.append_to_request("action_response")
+                    
+                    form._add_field(
+                        "action_performed", bool, None, True
+                    )
+                    form.append_to_request("action_performed")
 
             except Exception as e:
                 raise ValueError(f"Error processing action request: {e}")

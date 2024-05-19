@@ -88,5 +88,5 @@ class ActionResponse(RoledMessage):
         return {
             "function": self.function,
             "arguments": self.arguments,
-            "func_outputs": self.func_outputs,
+            "output": self.func_outputs,
         }
