@@ -31,42 +31,26 @@ class ToolManager(Actionable):
         """
         self.registry = registry or {}
 
-    @singledispatchmethod
-    def register_tools(self, tools: Any):
+    def _register_tool(self, tool: Tool | Callable):
         """
         Registers a single tool or multiple tools based on the input type.
 
         Args:
-            tools (Any): Can be a single Tool, a list of Tools, a callable, or other forms.
+            tool (Any): Can be a single Tool, a list of Tools, a callable, or other forms.
 
         Raises:
             TypeError: If the tools argument type is unsupported.
         """
-        if isinstance(tools, Callable):
-            tool = func_to_tool(tools)[0]
-            return self.register_tools(tool)
+        if isinstance(tool, Callable):
+            tool = func_to_tool(tool)[0]
+        if not isinstance(tool, Tool):
+            raise TypeError("Please register a Tool object.")
+        if tool.name in self.registry:
+            raise ValueError(f"Function {tool.name} is already registered.")
+        self.registry[tool.name] = tool
+        return True
 
-        raise TypeError(f"Unsupported type {type(tools)}")
-
-    @register_tools.register
-    def _(self, tools: Tool):
-        """
-        Registers a single Tool.
-
-        Args:
-            tools (Tool): The Tool to register.
-
-        Raises:
-            ValueError: If the Tool is already registered.
-        """
-        if tools.name in self.registry:
-            raise ValueError(f"Function {tools.name} is already registered.")
-        else:
-            self.registry[tools.name] = tools
-            return True
-
-    @register_tools.register
-    def _(self, tools: list):
+    def register_tools(self, tools: list | Tool | Callable):
         """
         Registers multiple Tools.
 
@@ -76,7 +60,10 @@ class ToolManager(Actionable):
         Returns:
             bool: True if all tools are successfully registered.
         """
-        return all(lcall(tools, self.register_tools))
+        if isinstance(tools, Tool) or isinstance(tools, Callable):
+            return self._register_tool(tools)
+        else:
+            return all(lcall(tools, self._register_tool))
 
     async def invoke(self, func_calling=None):
         """
