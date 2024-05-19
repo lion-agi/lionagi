@@ -9,6 +9,7 @@ from dotenv import load_dotenv
 
 from lionagi.core.collections.abc import Field
 from lionagi.core.collections import progression, flow, pile, iModel
+from lionagi.core.generic import Node, Graph, Tree, Edge
 from lionagi.core.work.worker import work, Worker
 from lionagi.core.session.branch import Branch
 from lionagi.core.report import Form, Report
@@ -30,6 +31,10 @@ __all__ = [
     "Report",
     "Services",
     "direct",
+    "Node",
+    "Graph",
+    "Tree",
+    "Edge",
 ]
 
 
