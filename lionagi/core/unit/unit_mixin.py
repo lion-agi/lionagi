@@ -506,6 +506,7 @@ class DirectiveMixin(ABC):
                 directive_kwargs["instruction"] = plan[i]
                 last_form = await self._direct(**directive_kwargs)
                 extension_forms.append(last_form)
+                directive_kwargs["max_extension"] -= 1
                 if not last_form.extension_required:
                     break
 
@@ -703,4 +704,3 @@ class DirectiveMixin(ABC):
             )
 
         return await self._chat(form=form, **kwargs)
-    

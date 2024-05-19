@@ -128,35 +128,7 @@ class DirectiveMixin:
 
     async def direct(
         self,
-        directive: str,  # examples, "chat", "predict", "act"
-        instruction=None,  # additional instruction
-        context=None,  # context to perform the instruction on
-        return_branch=False,
-        imodel=None,  # the optinally swappable iModel for the commands, otherwise self.branch.imodel
-        rulebook=None,  # the rulebook to use for validation, default None, use default rulebook
-        system=None,  # optionally swap system message
-        
-        **kwargs,
-    ):
-
-        _direct = Unit(self, imodel=imodel, rulebook=rulebook)
-        if system:
-            self.add_message(system=system)
-        
-        if hasattr(_direct, strip_lower(directive)):
-            directive = getattr(_direct, strip_lower(directive))
-
-            return await directive(
-                context=context,
-                instruction=instruction,
-                return_branch=return_branch,
-                **kwargs,
-            )
-            
-        raise ValueError(f"invalid directive: {directive}")
-
-    async def direct(
-        self,
+        *,
         instruction=None,
         context=None,
         form=None,
@@ -183,11 +155,24 @@ class DirectiveMixin:
         directive=None,
         **kwargs, 
     ):
-        directive = Unit(self, imodel=imodel, rulebook=rulebook)
         if system:
             self.add_message(system=system)
-
-        return await directive.direct(
+            
+        _directive = Unit(self, imodel=imodel, rulebook=rulebook)
+        
+        if directive and isinstance(directive, str):
+            return await _directive.direct(
+                directive=directive,
+                instruction=instruction,
+                context=context,
+                branch=branch,
+                tools=tools,
+                reason=reason,
+                confidence=confidence,
+                **kwargs,
+            )
+        
+        return await _directive.direct(
             instruction=instruction,
             context=context,
             form=form,

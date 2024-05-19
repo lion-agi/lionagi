@@ -68,36 +68,6 @@ class Unit(Directive, DirectiveMixin):
             **kwargs,
         )
 
-
-    async def _mono_direct(
-        self,
-        directive: str,  # examples, "chat", "predict", "act"
-        instruction=None,  # additional instruction
-        context=None,  # context to perform the instruction on
-        system=None,  # optionally swap system message
-        branch=None,
-        tools=None,
-        **kwargs,
-    ):
-
-        kwargs = {**retry_kwargs, **kwargs}
-        branch = branch or self.branch
-        
-        if system:
-            branch.add_message(system=system)
-        
-        if hasattr(self, strip_lower(directive)):
-            directive = getattr(self, strip_lower(directive))
-
-            return await directive(
-                context=context,
-                instruction=instruction,
-                tools=tools,
-                **kwargs,
-            )
-            
-        raise ValueError(f"invalid directive: {directive}")
-
     async def direct(
         self,
         instruction=None,
@@ -153,14 +123,13 @@ class Unit(Directive, DirectiveMixin):
                 **kwargs,
             )
             
-        return await self._mono_direct(
+        return await rcall(
+            self._mono_direct,
             directive=directive,
             instruction=instruction,
             context=context,
             branch=branch,
             tools=tools,
-            reason=reason,
-            confidence=confidence,
             **kwargs,
         )
         
@@ -215,3 +184,36 @@ class Unit(Directive, DirectiveMixin):
         kwargs = {**retry_kwargs, **kwargs}
         kwargs["template"] = kwargs.get("template", PlanTemplate)
         return await rcall(self._plan, *args, **kwargs)
+
+    async def _mono_direct(
+        self,
+        directive: str,  # examples, "chat", "predict", "act"
+        instruction=None,  # additional instruction
+        context=None,  # context to perform the instruction on
+        system=None,  # optionally swap system message
+        branch=None,
+        tools=None,
+        template=None,
+        **kwargs,
+    ):
+
+        if template:
+            kwargs["template"] = template
+            
+        kwargs = {**retry_kwargs, **kwargs}
+        branch = branch or self.branch
+        
+        if system:
+            branch.add_message(system=system)
+        
+        if hasattr(self, strip_lower(directive)):
+            directive = getattr(self, strip_lower(directive))
+
+            return await directive(
+                context=context,
+                instruction=instruction,
+                tools=tools,
+                **kwargs,
+            )
+            
+        raise ValueError(f"invalid directive: {directive}")
