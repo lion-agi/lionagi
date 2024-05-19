@@ -9,6 +9,7 @@ class AssistantResponse(RoledMessage):
         assistant_response: Any = None,
         sender: str | None = None,
         recipient: str | None = None,
+        **kwargs,
     ):
 
         super().__init__(
@@ -16,4 +17,5 @@ class AssistantResponse(RoledMessage):
             sender=sender or "N/A",
             content={"assistant_response": assistant_response["content"]},
             recipient=recipient,
+            **kwargs,
         )

@@ -1,7 +1,7 @@
-from .base import UnitForm, Field
+from .base import BaseUnitForm, Field
 
 
-class PredictTemplate(UnitForm):
+class PredictTemplate(BaseUnitForm):
 
     confidence_score: float | None = Field(
         None,

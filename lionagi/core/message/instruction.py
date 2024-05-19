@@ -25,6 +25,7 @@ class Instruction(RoledMessage):
         sender: LionIDable | None = None,
         recipient: LionIDable | None = None,
         requested_fields: dict | None = None,  # {"field": "description"}
+        additional_context: dict | None = None,
         **kwargs,
     ):
         """
@@ -43,9 +44,11 @@ class Instruction(RoledMessage):
             sender=sender or "user",
             content={"instruction": instruction or "N/A"},
             recipient=recipient or "N/A",
+            **kwargs,
         )
-
-        self._initiate_content(context, requested_fields, **kwargs)
+        
+        additional_context = additional_context or {}
+        self._initiate_content(context, requested_fields, **additional_context)
 
     @property
     def instruct(self):

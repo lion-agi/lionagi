@@ -35,6 +35,7 @@ class ActionRequest(RoledMessage):
         arguments=None,
         sender=None,  # sender is the assistant who made the request
         recipient=None,  # recipient is the actionable component
+        **kwargs,
     ):
         """
         Initializes the ActionRequest.
@@ -53,6 +54,7 @@ class ActionRequest(RoledMessage):
             sender=sender,
             recipient=recipient,
             content={"action_request": {"function": function, "arguments": arguments}},
+            **kwargs, 
         )
         self.function = function
         self.arguments = arguments

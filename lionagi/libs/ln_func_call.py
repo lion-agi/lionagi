@@ -300,6 +300,7 @@ async def rcall(
     default: Any = None,
     timeout: float | None = None,
     timing: bool = False,
+    verbose: bool = True,
     **kwargs,
 ) -> Any:
     """
@@ -348,9 +349,10 @@ async def rcall(
     start = SysUtil.get_now(datetime_=False)
     for attempt in range(retries + 1) if retries == 0 else range(retries):
         try:
+            err_msg = f"Attempt {attempt + 1}/{retries}: " if retries > 0 else None
             if timing:
                 return (
-                    await _tcall(func, *args, timeout=timeout, **kwargs),
+                    await _tcall(func, *args, err_msg=err_msg, timeout=timeout, **kwargs),
                     SysUtil.get_now(datetime_=False) - start,
                 )
 
@@ -358,6 +360,8 @@ async def rcall(
         except Exception as e:
             last_exception = e
             if attempt < retries:
+                if verbose:
+                    print(f"Attempt {attempt + 1}/{retries} failed: {e}, retrying...")
                 await AsyncUtil.sleep(delay)
                 delay *= backoff_factor
             else:
@@ -365,7 +369,7 @@ async def rcall(
     if result is None and default is not None:
         return default
     elif last_exception is not None:
-        raise last_exception
+        raise RuntimeError(f"Operation failed after {retries} attempts: {last_exception}") from last_exception
     else:
         raise RuntimeError("rcall failed without catching an exception")
 
@@ -470,8 +474,7 @@ async def _tcall(
         duration = SysUtil.get_now(datetime_=False) - start_time
         return (result, duration) if timing else result
     except asyncio.TimeoutError as e:
-        err_msg = f"{err_msg} Error: {e}" if err_msg else f"An error occurred: {e}"
-        print(err_msg)
+        err_msg = f"{err_msg or ''}Timeout {timeout} seconds exceeded"
         if ignore_err:
             return (
                 (default, SysUtil.get_now(datetime_=False) - start_time)
@@ -479,7 +482,7 @@ async def _tcall(
                 else default
             )
         else:
-            raise e  # Re-raise the timeout exception
+            raise asyncio.TimeoutError(err_msg)  # Re-raise the timeout exception
     except Exception as e:
         err_msg = f"{err_msg} Error: {e}" if err_msg else f"An error occurred: {e}"
         print(err_msg)

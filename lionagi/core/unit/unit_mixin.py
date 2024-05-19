@@ -14,7 +14,6 @@ from lionagi.core.message import Instruction, ActionRequest, ActionResponse
 from lionagi.core.message.util import _parse_action_request
 from lionagi.core.validator.validator import Validator
 from lionagi.core.unit.util import process_tools
-from lionagi.core.unit.template.action import ActionTemplate
 
 
 class DirectiveMixin(ABC):
@@ -48,32 +47,6 @@ class DirectiveMixin(ABC):
         """
         Handles the base chat operation by configuring the chat and processing
         the response.
-
-        Args:
-            instruction (Any, optional): Instruction for the chat.
-            system (Any, optional): System context for the chat.
-            context (Any, optional): Context to perform the instruction on.
-            sender (Any, optional): Sender of the instruction.
-            recipient (Any, optional): Recipient of the instruction.
-            requested_fields (Any, optional): Fields to request from the context.
-            form (Any, optional): Form to create instruction from.
-            tools (bool, optional): Whether to use tools in the chat.
-            invoke_tool (bool, optional): Whether to invoke tools when function
-                calling.
-            return_form (bool, optional): Whether to return the form.
-            strict (bool, optional): Whether to enforce strict rule validation.
-            rulebook (Any, optional): Rulebook for validation.
-            imodel (Any, optional): Swappable iModel for commands.
-            use_annotation (bool, optional): Whether to use annotation as rule
-                qualifier.
-            branch (Any, optional): Branch to use for the chat.
-            clear_messages (bool, optional): Whether to clear messages in the
-                branch.
-            return_branch (bool, optional): Whether to return the branch.
-            **kwargs: Additional arguments for configuration.
-
-        Returns:
-            Tuple[Any, Any]: Processed output and optionally the branch.
         """
         branch = branch or self.branch
         if clear_messages:
@@ -123,35 +96,20 @@ class DirectiveMixin(ABC):
         form=None,
         tools=False,
         branch=None,
-        **kwargs,  # additional config for the model
+        **kwargs,
     ) -> Any:
         """
         Creates the chat configuration based on the provided parameters.
-
-        Args:
-            system (Any, optional): System context for the chat.
-            instruction (Any, optional): Instruction for the chat.
-            context (Any, optional): Context to perform the instruction on.
-            sender (Any, optional): Sender of the instruction.
-            recipient (Any, optional): Recipient of the instruction.
-            requested_fields (Any, optional): Fields to request from the
-                context.
-            form (Any, optional): Form to create instruction from.
-            tools (bool, optional): Whether to use tools in the chat.
-            **kwargs: Additional arguments for configuration.
-
-        Returns:
-            Any: The configuration for the chat.
         """
         branch = branch or self.branch
-        
+
         if system:
             branch.add_message(system=system)
 
         if not form:
             if recipient == "branch.ln_id":
                 recipient = branch.ln_id
-            
+
             branch.add_message(
                 instruction=instruction,
                 context=context,
@@ -159,7 +117,6 @@ class DirectiveMixin(ABC):
                 recipient=recipient,
                 requested_fields=requested_fields,
             )
-
         else:
             instruct_ = Instruction.from_form(form)
             branch.add_message(instruction=instruct_)
@@ -168,7 +125,6 @@ class DirectiveMixin(ABC):
             kwargs.pop("tool_parsed")
             tool_kwarg = {"tools": tools}
             kwargs = tool_kwarg | kwargs
-
         elif tools and branch.has_tools:
             kwargs = branch.tool_manager.parse_tool(tools=tools, **kwargs)
 
@@ -181,14 +137,6 @@ class DirectiveMixin(ABC):
     async def _call_chatcompletion(self, imodel=None, branch=None, **kwargs):
         """
         Calls the chat completion model.
-
-        Args:
-            imodel (Any, optional): The iModel to use.
-            branch (Any, optional): The branch to use.
-            **kwargs: Additional arguments for the chat completion.
-
-        Returns:
-            Any: The chat completion response.
         """
         imodel = imodel or self.imodel
         branch = branch or self.branch
@@ -205,24 +153,10 @@ class DirectiveMixin(ABC):
     ):
         """
         Processes the chat completion response.
-
-        Args:
-            payload (Any): The payload for the chat completion.
-            completion (Any): The chat completion response.
-            sender (Any): The sender of the instruction.
-            invoke_tool (bool, optional): Whether to invoke tools when function
-                calling.
-            branch (Any, optional): The branch to use.
-            action_request (Any, optional): The action request.
-
-        Returns:
-            Any: The processed action request.
         """
         branch = branch or self.branch
-        # process the raw chat completion response
         _msg = None
         if "choices" in completion:
-
             aa = payload.pop("messages", None)
             branch.update_last_instruction_meta(payload)
             msg = completion.pop("choices", None)
@@ -234,9 +168,9 @@ class DirectiveMixin(ABC):
                 completion.update(msg)
 
                 branch.add_message(
-                    assistant_response=_msg, 
-                    metadata=completion, 
-                    sender=sender
+                    assistant_response=_msg,
+                    metadata=completion,
+                    sender=sender,
                 )
                 branch.imodel.status_tracker.num_tasks_succeeded += 1
         else:
@@ -258,20 +192,8 @@ class DirectiveMixin(ABC):
     ):
         """
         Processes an action request from the assistant response.
-
-        Args:
-            _msg (Any, optional): The assistant response message.
-            branch (Any, optional): The branch to use.
-            invoke_tool (bool, optional): Whether to invoke tools when function
-                calling.
-            action_request (Any, optional): The action request.
-
-        Returns:
-            Any: The processed action request.
         """
-        # if the assistant response contains action request, we add each as a message to branch
         action_request = action_request or _parse_action_request(_msg)
-
         if action_request is None:
             return _msg if _msg else False
 
@@ -280,13 +202,12 @@ class DirectiveMixin(ABC):
                 if i.function in branch.tool_manager.registry:
                     i.recipient = branch.tool_manager.registry[
                         i.function
-                    ].ln_id  # recipient is the tool
+                    ].ln_id
                 else:
                     raise ActionError(f"Tool {i.function} not found in registry")
                 branch.add_message(action_request=i, recipient=i.recipient)
 
         if invoke_tool:
-            # invoke tools and add action response to branch
             tasks = []
             for i in action_request:
                 tool = branch.tool_manager.registry[i.function]
@@ -320,22 +241,6 @@ class DirectiveMixin(ABC):
     ) -> Any:
         """
         Outputs the final processed response.
-
-        Args:
-            payload (Any): The payload for the chat completion.
-            completion (Any): The chat completion response.
-            sender (Any): The sender of the instruction.
-            invoke_tool (bool): Whether to invoke tools when function calling.
-            requested_fields (Any): Fields to request from the context.
-            form (Any, optional): Form to create instruction from.
-            return_form (bool, optional): Whether to return the form.
-            strict (bool, optional): Whether to enforce strict rule validation.
-            rulebook (Any, optional): Rulebook for validation.
-            use_annotation (bool, optional): Whether to use annotation as rule qualifier.
-            template_name (Any, optional): Template name for the form.
-
-        Returns:
-            Any: The final processed response.
         """
         _msg = await self._process_chatcompletion(
             payload=payload,
@@ -350,13 +255,7 @@ class DirectiveMixin(ABC):
         response_ = self._process_model_response(_msg, requested_fields)
 
         if form:
-            validator = None
-
-            if rulebook is None:
-                validator = self.validator
-            else:
-                validator = Validator(rulebook=rulebook)
-
+            validator = Validator(rulebook=rulebook) if rulebook else self.validator
             form = await validator.validate_response(
                 form=form,
                 response=response_,
@@ -382,18 +281,8 @@ class DirectiveMixin(ABC):
     def _process_model_response(content_, requested_fields):
         """
         Processes the model response content.
-
-        Args:
-            content_ (Any): The content from the model response.
-            requested_fields (Any): Fields to request from the context.
-
-        Returns:
-            Any: The processed model response.
         """
-        out_ = ""
-
-        if "content" in content_:
-            out_ = content_["content"]
+        out_ = content_.get("content", "")
 
         if requested_fields:
             with contextlib.suppress(Exception):
@@ -409,54 +298,26 @@ class DirectiveMixin(ABC):
 
     async def _chat(
         self,
-        instruction=None,  # additional instruction
-        context=None,  # context to perform the instruction on
-        system=None,  # optionally swap system message
-        sender=None,  # sender of the instruction, default "user"
-        recipient=None,  # recipient of the instruction, default "branch.ln_id"
+        instruction=None,
+        context=None,
+        system=None,
+        sender=None,
+        recipient=None,
         branch=None,
-        requested_fields=None,  # fields to request from the context, default None
-        form=None,  # form to create instruction from, default None,
-        tools=False,  # the tools to use, use True to consider all tools, no tools by default
-        invoke_tool=True,  # whether to invoke the tool when function calling, default True
-        return_form=True,  # whether to return the form if a form is passed in, otherwise return a dict/str
-        strict=False,  # whether to strictly enforce the rule validation, default False
-        rulebook=None,  # the rulebook to use for validation, default None, use default rulebook
-        imodel=None,  # the optinally swappable iModel for the commands, otherwise self.branch.imodel
+        requested_fields=None,
+        form=None,
+        tools=False,
+        invoke_tool=True,
+        return_form=True,
+        strict=False,
+        rulebook=None,
+        imodel=None,
         clear_messages=False,
-        use_annotation=True,  # whether to use annotation as rule qualifier, default True, (need rulebook if False)
+        use_annotation=True,
         timeout: float = None,
         return_branch=False,
-        
         **kwargs,
     ):
-        """
-        Handles the chat operation.
-
-        Args:
-            instruction (Any, optional): Instruction for the chat.
-            context (Any, optional): Context to perform the instruction on.
-            system (Any, optional): System context for the chat.
-            sender (Any, optional): Sender of the instruction.
-            recipient (Any, optional): Recipient of the instruction.
-            branch (Any, optional): Branch to use for the chat.
-            requested_fields (Any, optional): Fields to request from the context.
-            form (Any, optional): Form to create instruction from.
-            tools (bool, optional): Whether to use tools in the chat.
-            invoke_tool (bool, optional): Whether to invoke tools when function calling.
-            return_form (bool, optional): Whether to return the form.
-            strict (bool, optional): Whether to enforce strict rule validation.
-            rulebook (Any, optional): Rulebook for validation.
-            imodel (Any, optional): Swappable iModel for commands.
-            clear_messages (bool, optional): Whether to clear messages in the branch.
-            use_annotation (bool, optional): Whether to use annotation as rule qualifier.
-            timeout (float | None, optional): Timeout for the rcall.
-            return_branch (bool, optional): Whether to return the branch.
-            **kwargs: Additional arguments for configuration.
-
-        Returns:
-            Any: The chat response.
-        """
         a = await self._base_chat(
             context=context,
             instruction=instruction,
@@ -485,46 +346,63 @@ class DirectiveMixin(ABC):
 
         return a[0], a[1]
 
-    async def _act(
+    async def _direct(
         self,
+        instruction=None,
+        *,
+        context=None,
         form=None,
-        template=ActionTemplate,
         branch=None,
         tools=None,
-        confidence_score=None,
-        instruction=None,
-        context=None,
-        return_branch=False,
+        reason: bool = None,
+        predict: bool = None,
+        score: bool=None,
+        select: bool=None,
+        plan: bool = None,
+        allow_action: bool = None,
+        allow_extension: bool = None,
+        confidence: bool = None,
+        max_extension: int = None,
+        score_num_digits=None,
+        score_range=None,
+        select_choices=None,
+        plan_num_step=None,
+        predict_num_sentences=None,
         **kwargs,
     ):
-        """
-        Performs an action based on the provided parameters.
-
-        Args:
-            form (Any, optional): Form to create instruction from.
-            template (Any, optional): Template for the action.
-            branch (Any, optional): Branch to use for the action.
-            tools (Any, optional): Tools to use in the action.
-            confidence_score (Any, optional): Confidence score for the action.
-            instruction (Any, optional): Instruction for the action.
-            context (Any, optional): Context to perform the action on.
-            return_branch (bool, optional): Whether to return the branch.
-            **kwargs: Additional arguments for the action.
-
-        Returns:
-            Any: The action response.
-        """
+        
+        # Ensure branch is initialized
         branch = branch or self.branch
+
+        # Set a default max_extension if allow_extension is True and max_extension is None
+        if allow_extension and not max_extension:
+            max_extension = 3  # Set a default limit for recursion
+        
         if not form:
-            form = template(
-                confidence_score=confidence_score,
+            form = self.form_template(
                 instruction=instruction,
                 context=context,
+                reason=reason,
+                predict=predict,
+                score=score,
+                select=select,
+                plan=plan,
+                allow_action=allow_action,
+                allow_extension=allow_extension,
+                max_extension=max_extension,
+                confidence=confidence,
+                score_num_digits=score_num_digits,
+                score_range=score_range,
+                select_choices=select_choices,
+                plan_num_step=plan_num_step,
+                predict_num_sentences=predict_num_sentences,
             )
 
+        # Process tools if provided
         if tools:
             process_tools(tools, branch)
 
+        # Call the base chat method
         form = await self._chat(
             form=form,
             branch=branch,
@@ -532,54 +410,159 @@ class DirectiveMixin(ABC):
             **kwargs,
         )
 
-        if getattr(form, "action_required", False):
+        # Handle actions if allowed and required
+        if allow_action and getattr(form, "action_required", None):
             actions = getattr(form, "actions", None)
-            if actions:
-                actions = [actions] if not isinstance(actions, list) else actions
+            await self._act(form, branch, actions=actions)
 
-                try:
-                    requests = []
-                    for action in actions:
-                        msg = ActionRequest(
-                            function=action["function"],
-                            arguments=action["arguments"],
-                            sender=branch.ln_id,
-                            recipient=branch.tool_manager.registry[
-                                action["function"]
-                            ].ln_id,
+        last_form = form
+
+        # Handle extensions if allowed and required
+        extension_forms = []
+        while (
+            allow_extension and
+            getattr(last_form, "extension_required", None) and 
+            getattr(last_form, "answer", None) == "PLEASE_EXTEND"
+        ):
+            if max_extension <= 0:
+                break
+            max_extension -= 1
+            
+            last_form = await self._extend(
+                form = last_form,
+                tools = tools,
+                reason = reason,
+                predict = predict,
+                score = score,
+                select = select,
+                plan = getattr(last_form, "plan", None),
+                allow_action=allow_action,
+                confidence=confidence,
+                score_num_digits=score_num_digits,
+                score_range=score_range,
+                select_choices=select_choices,
+                predict_num_sentences=predict_num_sentences,
+                allow_extension=isinstance(max_extension, int) and max_extension > 0,
+                max_extension=max_extension,
+                **kwargs,
+            )
+            
+            extension_forms.extend(last_form)
+            last_form = last_form[0] if last_form else None
+
+        if extension_forms:
+            if not getattr(form, "extension_forms", None):
+                form._add_field("extension_forms", list, None, [])
+            form.extension_forms.extend(extension_forms)
+        
+        return form
+ 
+
+    async def _extend(
+        self, 
+        form, 
+        tools, 
+        reason, 
+        predict, 
+        score, 
+        select, 
+        plan, 
+        allow_action, 
+        confidence, 
+        score_num_digits, 
+        score_range, 
+        select_choices, 
+        predict_num_sentences, 
+        allow_extension, 
+        max_extension, 
+        **kwargs
+    ):
+        extension_forms = []
+ 
+        # Ensure the next step in the plan is handled
+        directive_kwargs = {
+            "tools": tools,
+            "reason": reason,
+            "predict": predict,
+            "score": score,
+            "select": select,
+            "allow_action": allow_action,
+            "confidence": confidence,
+            "score_num_digits": score_num_digits,
+            "score_range": score_range,
+            "select_choices": select_choices,
+            "predict_num_sentences": predict_num_sentences,
+            "allow_extension": allow_extension,
+            "max_extension": max_extension,
+            **kwargs,
+        }
+
+        if plan:
+            keys = [f"step_{i+1}" for i in range(len(plan))]
+            plan = StringMatch.force_validate_dict(plan, keys)
+            
+            # If plan is provided, process each step
+            for i in keys:
+                directive_kwargs["instruction"] = plan[i]
+                last_form = await self._direct(**directive_kwargs)
+                extension_forms.append(last_form)
+                if not last_form.extension_required:
+                    break
+
+        else:
+            # Handle single step extension
+            directive_kwargs["instruction"] = form.instruction
+            last_form = await self._direct(**directive_kwargs)
+            extension_forms.append(last_form)
+
+        return extension_forms
+
+
+    async def _act(self, form, branch, actions=None):
+        if actions:
+            actions = [actions] if not isinstance(actions, list) else actions
+
+            try:
+                requests = []
+                for action in actions:
+                    msg = ActionRequest(
+                        function=action["function"],
+                        arguments=action["arguments"],
+                        sender=branch.ln_id,
+                        recipient=branch.tool_manager.registry[
+                            action["function"]
+                        ].ln_id,
+                    )
+                    requests.append(msg)
+                    branch.add_message(msg)
+
+                if requests:
+                    out = await self._process_action_request(
+                        branch=branch, invoke_tool=True, action_request=requests
+                    )
+
+                    if out is False:
+                        raise ValueError(
+                            "Error processing action request: No requests found."
                         )
-                        requests.append(msg)
-                        self.branch.add_message(msg)
 
-                    if requests:
-                        out = self._process_action_request(
-                            branch=branch, invoke_tool=True, action_request=requests
+                    len_actions = len(actions)
+                    action_responses = branch.messages[-len_actions:]
+
+                    if not all(
+                        isinstance(i, ActionResponse) for i in action_responses
+                    ):
+                        raise ValueError(
+                            "Error processing action request: Invalid action response."
                         )
 
-                        if out == False:
-                            raise ValueError(
-                                "Error processing action request: No requests found."
-                            )
+                    action_responses = [i._to_dict() for i in action_responses]
+                    form._add_field(
+                        "action_response", list[dict], None, action_responses
+                    )
 
-                        len_actions = len(actions)
-                        action_responses = branch.messages[-len_actions:]
-
-                        if not all(
-                            isinstance(i, ActionResponse) for i in action_responses
-                        ):
-                            raise ValueError(
-                                "Error processing action request: Invalid action response."
-                            )
-
-                        action_responses = [i._to_dict() for i in action_responses]
-                        form._add_field(
-                            "action_response", list[dict], None, action_responses
-                        )
-                except Exception as e:
-                    raise ValueError(f"Error processing action request: {e}")
-            raise ValueError("Error processing action request: No requests found.")
-
-        return form, branch if return_branch else form
+            except Exception as e:
+                raise ValueError(f"Error processing action request: {e}")
 
     async def _select(
         self,
@@ -720,3 +703,4 @@ class DirectiveMixin(ABC):
             )
 
         return await self._chat(form=form, **kwargs)
+    

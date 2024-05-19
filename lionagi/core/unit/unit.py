@@ -1,41 +1,19 @@
+from lionagi.libs.ln_convert import strip_lower
 from lionagi.libs.ln_func_call import rcall
 from lionagi.core.collections.abc import Directive
 from lionagi.core.validator.validator import Validator
 from lionagi.core.collections import iModel
+from .unit_form import UnitForm
 from .unit_mixin import DirectiveMixin
-from .util import retry_kwargs, _direct
+from .util import retry_kwargs
 
 class Unit(Directive, DirectiveMixin):
-    """
-    A class that represents a unit of action capable of performing various tasks
-    such as chatting, acting, directing, selecting, and predicting. It leverages
-    directives and mixins to perform these tasks asynchronously with retry logic.
 
-    Attributes:
-        branch (Branch): The branch of the session in which this unit operates.
-        imodel (iModel): The model used for chat completion and other tasks.
-        form_template (Template): The template used for forming instructions.
-        validator (Validator): The validator used for validating responses.
-        default_template (Template, optional): The default template for forms.
-    """
-
-    default_template = None
+    default_template = UnitForm
 
     def __init__(
         self, branch, imodel: iModel = None, template=None, rulebook=None
     ) -> None:
-        """
-        Initializes the Unit with the given branch, model, template, and rulebook.
-
-        Args:
-            branch (Branch): The branch of the session in which this unit operates.
-            imodel (iModel, optional): The model used for chat completion and 
-                other tasks.
-            template (Template, optional): The template used for forming 
-                instructions.
-            rulebook (Rulebook, optional): The rulebook used for validating 
-                responses.
-        """
         self.branch = branch
         if imodel and isinstance(imodel, iModel):
             branch.imodel = imodel
@@ -45,55 +23,147 @@ class Unit(Directive, DirectiveMixin):
         self.form_template = template or self.default_template
         self.validator = Validator(rulebook=rulebook) if rulebook else Validator()
 
-    async def chat(self, *args, **kwargs):
-        """
-        Asynchronously performs a chat operation using the _chat method with 
-        retry logic.
-
-        Args:
-            *args: Positional arguments to pass to the _chat method.
-            **kwargs: Keyword arguments to pass to the _chat method, including 
-                retry configurations.
-
-        Returns:
-            Any: The result of the chat operation.
-        """
+    async def chat(
+        self,
+        instruction=None,
+        context=None,
+        system=None,
+        sender=None,
+        recipient=None,
+        branch=None,
+        requested_fields=None,
+        form=None,
+        tools=False,
+        invoke_tool=True,
+        return_form=True,
+        strict=False,
+        rulebook=None,
+        imodel=None,
+        clear_messages=False,
+        use_annotation=True,
+        return_branch=False,
+        **kwargs,
+        
+):
         kwargs = {**retry_kwargs, **kwargs}
-        return await rcall(self._chat, *args, **kwargs)
+        return await rcall(
+            self._chat,
+            instruction=instruction,
+            context=context,
+            system=system,
+            sender=sender,
+            recipient=recipient,
+            branch=branch,
+            requested_fields=requested_fields,
+            form=form,
+            tools=tools,
+            invoke_tool=invoke_tool,
+            return_form=return_form,
+            strict=strict,
+            rulebook=rulebook,
+            imodel=imodel,
+            clear_messages=clear_messages,
+            use_annotation=use_annotation,
+            return_branch=return_branch,
+            **kwargs,
+        )
 
-    async def act(self, *args, **kwargs):
-        """
-        Asynchronously performs an act operation using the _act method with retry 
-        logic.
 
-        Args:
-            *args: Positional arguments to pass to the _act method.
-            **kwargs: Keyword arguments to pass to the _act method, including 
-                retry configurations.
+    async def _mono_direct(
+        self,
+        directive: str,  # examples, "chat", "predict", "act"
+        instruction=None,  # additional instruction
+        context=None,  # context to perform the instruction on
+        system=None,  # optionally swap system message
+        branch=None,
+        tools=None,
+        **kwargs,
+    ):
 
-        Returns:
-            Any: The result of the act operation.
-        """
         kwargs = {**retry_kwargs, **kwargs}
-        return await rcall(self._act, *args, **kwargs)
+        branch = branch or self.branch
+        
+        if system:
+            branch.add_message(system=system)
+        
+        if hasattr(self, strip_lower(directive)):
+            directive = getattr(self, strip_lower(directive))
 
-    async def direct(self, directive, *args, **kwargs):
-        """
-        Asynchronously performs a direct operation using the _direct method with 
-        retry logic.
+            return await directive(
+                context=context,
+                instruction=instruction,
+                tools=tools,
+                **kwargs,
+            )
+            
+        raise ValueError(f"invalid directive: {directive}")
 
-        Args:
-            directive (Any): The directive to execute.
-            *args: Positional arguments to pass to the _direct method.
-            **kwargs: Keyword arguments to pass to the _direct method, including 
-                retry configurations.
-
-        Returns:
-            Any: The result of the direct operation.
-        """
+    async def direct(
+        self,
+        instruction=None,
+        *,
+        context=None,
+        form=None,
+        branch=None,
+        tools=None,
+        return_branch=False,
+        reason: bool = False,
+        predict: bool = False,
+        score=None,
+        select=None,
+        plan=None,
+        allow_action: bool = False,
+        allow_extension: bool = False,
+        max_extension: int = None,
+        confidence=None,
+        score_num_digits=None,
+        score_range=None,
+        select_choices=None,
+        plan_num_step=None,
+        predict_num_sentences=None,
+        directive: str=None,
+        **kwargs, 
+    ):
         kwargs = {**retry_kwargs, **kwargs}
-        return await rcall(_direct, directive, *args, **kwargs)
-
+        
+        if not directive:
+        
+            return await rcall(
+                self._direct,
+                instruction=instruction,
+                context=context,
+                form=form,
+                branch=branch,
+                tools=tools,
+                return_branch=return_branch,
+                reason=reason,
+                predict=predict,
+                score=score,
+                select=select,
+                plan=plan,
+                allow_action=allow_action,
+                allow_extension=allow_extension,
+                max_extension=max_extension,
+                confidence=confidence,
+                score_num_digits=score_num_digits,
+                score_range=score_range,
+                select_choices=select_choices,
+                plan_num_step=plan_num_step,
+                predict_num_sentences=predict_num_sentences,
+                **kwargs,
+            )
+            
+        return await self._mono_direct(
+            directive=directive,
+            instruction=instruction,
+            context=context,
+            branch=branch,
+            tools=tools,
+            reason=reason,
+            confidence=confidence,
+            **kwargs,
+        )
+        
     async def select(self, *args, **kwargs):
         """
         Asynchronously performs a select operation using the _select method with 

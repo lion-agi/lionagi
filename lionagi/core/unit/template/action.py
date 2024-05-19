@@ -1,22 +1,29 @@
-from .base import UnitForm, Field
+from .base import BaseUnitForm, Field
 
 
-class ActionTemplate(UnitForm):
+class ActionTemplate(BaseUnitForm):
 
     action_required: bool | None = Field(
-        None, description="True if actions are needed else False"
+        None,
+        description="Set to True if actions are required. Provide actions if True."
     )
 
     actions: list[dict] | None = Field(
         None,
-        description="""
-provide The list of action(s) to take, [{"function": func, "arguments": {"param1":..., "param2":..., ...}}, ...] Leave blank if no further actions are needed, you must use provided parameters for each action, DO NOT MAKE UP NAME!!!
-""",
+        description=(
+            "A list of actions to take. Format: [{'function': func, 'arguments': "
+            "{'param1':..., 'param2':...}}]. Leave blank if no actions are needed."
+            "must use provided functions and parameters, DO NOT MAKE UP NAMES!!!"
+            "Flag `action_required` as True if filled."
+        )
     )
 
     answer: str | None = Field(
         None,
-        description="output answer to the questions asked if further actions are not needed, leave blank if an accurate answer cannot be provided from context during this step",
+        description=(
+            "output answer to the questions asked if further actions are not needed,"
+            " leave blank if an accurate answer cannot be provided from context"
+            " during this step"),
     )
 
     assignment: str = "task -> reason, action_required, actions, answer"
@@ -34,7 +41,6 @@ provide The list of action(s) to take, [{"function": func, "arguments": {"param1
 Perform reasoning and prepare actions with GIVEN TOOLS ONLY.
 1. additional instruction: {instruction or "N/A"}. 
 2. additional context: {context or "N/A"}.
-3. Absolutely DO NOT MAKE UP FUNCTIONS !!!
 """
         if confidence_score:
             self.append_to_request("confidence_score")

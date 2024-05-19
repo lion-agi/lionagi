@@ -1,8 +1,8 @@
 from lionagi.libs.ln_convert import to_str
-from .base import UnitForm, Field
+from .base import BaseUnitForm, Field
 
 
-class PlanTemplate(UnitForm):
+class PlanTemplate(BaseUnitForm):
 
     template_name: str = "plan_template"
 

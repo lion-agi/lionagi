@@ -34,6 +34,7 @@ class ActionResponse(RoledMessage):
         action_request: ActionRequest,
         sender: str | None = None,  # the sender of action request
         func_outputs=None,
+        **kwargs,
     ):
         """
         Initializes the ActionResponse.
@@ -60,6 +61,7 @@ class ActionResponse(RoledMessage):
                     "func_outputs": func_outputs,
                 }
             },
+            **kwargs,
         )
         self.update_request(action_request)
         self.func_outputs = func_outputs

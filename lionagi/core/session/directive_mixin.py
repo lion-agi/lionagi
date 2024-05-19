@@ -154,3 +154,60 @@ class DirectiveMixin:
             )
             
         raise ValueError(f"invalid directive: {directive}")
+
+    async def direct(
+        self,
+        instruction=None,
+        context=None,
+        form=None,
+        branch=None,
+        tools=None,
+        return_branch=False,
+        reason: bool = False,
+        predict: bool = False,
+        score=None,
+        select=None,
+        plan=None,
+        allow_action: bool = False,
+        allow_extension: bool = False,
+        max_extension: int = None,
+        confidence=None,
+        score_num_digits=None,
+        score_range=None,
+        select_choices=None,
+        plan_num_step=None,
+        predict_num_sentences=None,
+        imodel=None, 
+        system=None,
+        rulebook=None,
+        directive=None,
+        **kwargs, 
+    ):
+        directive = Unit(self, imodel=imodel, rulebook=rulebook)
+        if system:
+            self.add_message(system=system)
+
+        return await directive.direct(
+            instruction=instruction,
+            context=context,
+            form=form,
+            branch=branch,
+            tools=tools,
+            return_branch=return_branch,
+            reason=reason,
+            predict=predict,
+            score=score,
+            select=select,
+            plan=plan,
+            allow_action=allow_action,
+            allow_extension=allow_extension,
+            max_extension=max_extension,
+            confidence=confidence,
+            score_num_digits=score_num_digits,
+            score_range=score_range,
+            select_choices=select_choices,
+            plan_num_step=plan_num_step,
+            predict_num_sentences=predict_num_sentences,
+            **kwargs,
+        )
+

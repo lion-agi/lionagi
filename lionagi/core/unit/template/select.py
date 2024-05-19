@@ -1,8 +1,8 @@
 from enum import Enum
-from .base import UnitForm, Field
+from .base import BaseUnitForm, Field
 
 
-class SelectTemplate(UnitForm):
+class SelectTemplate(BaseUnitForm):
 
     confidence_score: float | None = Field(
         None,
