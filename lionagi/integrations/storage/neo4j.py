@@ -63,16 +63,12 @@ class Neo4j:
             MERGE (n:System:LionNode {id: $id})
             SET n.timestamp = $timestamp
             SET n.content = $content
-            SET n.sender = $sender
-            SET n.recipient = $recipient
             """
         await tx.run(
             query,
             id=node["id"],
             timestamp=node["timestamp"],
-            content=node["content"],
-            sender=node["sender"],
-            recipient=node["recipient"],
+            content=node["content"]
         )
 
     @staticmethod
@@ -88,16 +84,12 @@ class Neo4j:
             MERGE (n:Instruction:LionNode {id: $id})
             SET n.timestamp = $timestamp
             SET n.content = $content
-            SET n.sender = $sender
-            SET n.recipient = $recipient
             """
         await tx.run(
             query,
             id=node["id"],
             timestamp=node["timestamp"],
-            content=node["content"],
-            sender=node["sender"],
-            recipient=node["recipient"],
+            content=node["content"]
         )
 
     # TODO: tool.manual
@@ -125,24 +117,24 @@ class Neo4j:
         )
 
     @staticmethod
-    async def add_actionSelection_node(tx, node):
+    async def add_directiveSelection_node(tx, node):
         """
-        Asynchronously adds an action selection node to the graph.
+        Asynchronously adds an directive selection node to the graph.
 
         Args:
             tx: The Neo4j transaction.
-            node (dict): The properties of the action selection node including 'id', 'action', and 'actionKwargs'.
+            node (dict): The properties of the directive selection node including 'id', 'directive', and 'directiveKwargs'.
         """
         query = """
-            MERGE (n:ActionSelection:LionNode {id: $id})
-            SET n.action = $action
-            SET n.actionKwargs = $actionKwargs
+            MERGE (n:DirectiveSelection:LionNode {id: $id})
+            SET n.directive = $directive
+            SET n.directiveKwargs = $directiveKwargs
             """
         await tx.run(
             query,
             id=node["id"],
-            action=node["action"],
-            actionKwargs=node["action_kwargs"],
+            directive=node["directive"],
+            directiveKwargs=node["directive_kwargs"],
         )
 
     @staticmethod
@@ -234,13 +226,13 @@ class Neo4j:
             structure: The structure node from which head relationships are established.
         """
         for head in structure.get_heads():
-            head_id = head.id_
+            head_id = head.ln_id
             query = """
                 MATCH (m:Structure) WHERE m.id = $structureId
                 MATCH (n:LionNode) WHERE n.id = $headId
                 MERGE (m)-[:HEAD]->(n)
                 """
-            await tx.run(query, structureId=structure.id_, headId=head_id)
+            await tx.run(query, structureId=structure.ln_id, headId=head_id)
 
     @staticmethod
     async def add_single_condition_cls(tx, condCls):
@@ -252,7 +244,7 @@ class Neo4j:
             condCls (dict): The properties of the condition class node including 'className' and 'code'.
         """
         query = """
-            MERGE (n:Condition:LionNode {className: $className})
+            MERGE (n:EdgeCondition:LionNode {className: $className})
             SET n.code = $code
             """
         await tx.run(query, className=condCls["class_name"], code=condCls["class"])
@@ -285,8 +277,8 @@ class Neo4j:
                 [await self.add_instruction_node(tx, i) for i in node_list]
             elif node == "Tool":
                 [await self.add_tool_node(tx, i) for i in node_list]
-            elif node == "ActionSelection":
-                [await self.add_actionSelection_node(tx, i) for i in node_list]
+            elif node == "DirectiveSelection":
+                [await self.add_directiveSelection_node(tx, i) for i in node_list]
             elif node == "BaseAgent":
                 [await self.add_baseAgent_node(tx, i) for i in node_list]
             else:
@@ -525,7 +517,7 @@ class Neo4j:
             The code of the condition class if found, otherwise None.
         """
         query = """
-            MATCH (n:Condition) WHERE n.className = $name
+            MATCH (n:EdgeCondition) WHERE n.className = $name
             RETURN n.code
             """
         result = await tx.run(query, name=name)

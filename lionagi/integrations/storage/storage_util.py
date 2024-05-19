@@ -2,13 +2,11 @@ import json
 import inspect
 import re
 
-from lionagi.core import System, Instruction
-from lionagi.core.tool import Tool
-from lionagi.generic.action.action import ActionSelection
+from lionagi.core.message import System, Instruction
+from lionagi.core.action import Tool, DirectiveSelection, func_to_tool
+from lionagi.core.action import DirectiveSelection
 from lionagi.core.agent.base_agent import BaseAgent
-from lionagi.core.generic.condition import Condition
-
-from lionagi.core import func_to_tool
+from lionagi.core.generic.edge_condition import EdgeCondition
 
 
 def output_node_list(structure):
@@ -27,38 +25,38 @@ def output_node_list(structure):
     output = {}
 
     structure_output = {
-        "id": structure.id_,
+        "id": structure.ln_id,
         "timestamp": structure.timestamp,
         "type": structure.class_name,
     }
     summary_list.append(structure_output.copy())
-    structure_output["head_nodes"] = json.dumps([i.id_ for i in structure.get_heads()])
+    structure_output["head_nodes"] = json.dumps([i.ln_id for i in structure.get_heads()])
     # structure_output['nodes'] = json.dumps([i for i in structure.internal_nodes.keys()])
     # structure_output['edges'] = json.dumps([i for i in structure.internal_edges.keys()])
     output[structure_output["type"]] = [structure_output]
     for node in structure.internal_nodes.values():
         node_output = {
-            "id": node.id_,
+            "id": node.ln_id,
             "timestamp": node.timestamp,
             "type": node.class_name,
         }
         summary_list.append(node_output.copy())
         if isinstance(node, System) or isinstance(node, Instruction):
             node_output["content"] = json.dumps(node.content)
-            node_output["sender"] = node.sender
-            node_output["recipient"] = node.recipient
+            # node_output["sender"] = node.sender
+            # node_output["recipient"] = node.recipient
         elif isinstance(node, Tool):
-            node_output["function"] = inspect.getsource(node.func)
+            node_output["function"] = inspect.getsource(node.function)
             # node_output['manual'] = node.manual
             node_output["parser"] = (
                 inspect.getsource(node.parser) if node.parser else None
             )
-        elif isinstance(node, ActionSelection):
-            node_output["action"] = node.action
-            node_output["action_kwargs"] = json.dumps(node.action_kwargs)
+        elif isinstance(node, DirectiveSelection):
+            node_output["directive"] = node.directive
+            node_output["directive_kwargs"] = json.dumps(node.directive_kwargs)
         elif isinstance(node, BaseAgent):
-            node_output["structure_id"] = node.structure.id_
-            node_output["output_parser"] = inspect.getsource(node.output_parser)
+            node_output["structure_id"] = node.structure.ln_id
+            node_output["output_parser"] = inspect.getsource(node.output_parser) if node.output_parser else None
         else:
             raise ValueError("Not supported node type detected")
         if node_output["type"] not in output:
@@ -84,7 +82,7 @@ def output_edge_list(structure):
     edge_cls_dict = {}
     for edge in structure.internal_edges.values():
         edge_output = {
-            "id": edge.id_,
+            "id": edge.ln_id,
             "timestamp": edge.timestamp,
             "head": edge.head,
             "tail": edge.tail,
@@ -184,7 +182,7 @@ class ParseNode:
             System: An instantiated System node filled with properties from info_dict.
         """
         node = System(" ")
-        node.id_ = info_dict["id"]
+        node.ln_id = info_dict["id"]
         node.timestamp = info_dict["timestamp"]
         node.content = json.loads(info_dict["content"])
         node.sender = info_dict["sender"]
@@ -203,7 +201,7 @@ class ParseNode:
             Instruction: An instantiated Instruction node filled with properties from info_dict.
         """
         node = Instruction(" ")
-        node.id_ = info_dict["id"]
+        node.ln_id = info_dict["id"]
         node.timestamp = info_dict["timestamp"]
         node.content = json.loads(info_dict["content"])
         node.sender = info_dict["sender"]
@@ -221,8 +219,8 @@ class ParseNode:
         Returns:
             ActionSelection: An instantiated ActionSelection node filled with properties from info_dict.
         """
-        node = ActionSelection()
-        node.id_ = info_dict["id"]
+        node = DirectiveSelection()
+        node.ln_id = info_dict["id"]
         node.action = info_dict["action"]
         if "action_kwargs" in info_dict:
             if info_dict["action_kwargs"]:
@@ -259,7 +257,7 @@ class ParseNode:
                 tool = func_to_tool(func, docstring_style="reST")
 
         tool = tool[0]
-        tool.id_ = info_dict["id"]
+        tool.ln_id = info_dict["id"]
         tool.timestamp = info_dict["timestamp"]
         return tool
 
