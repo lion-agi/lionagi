@@ -12,8 +12,6 @@ class System(RoledMessage):
             if 'metadata' in kwargs and 'system' in kwargs['metadata']:
                 system = kwargs['metadata'].pop('system')
 
-        print(f"kwargs: {kwargs}")
-
         super().__init__(
             role=MessageRole.SYSTEM,
             sender=sender or "system",
