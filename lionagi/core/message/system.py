@@ -1,7 +1,11 @@
+from typing import Any
+from ..collections.abc import Field
 from .message import RoledMessage, MessageRole
 
 
 class System(RoledMessage):
+
+    system: str | Any | None = Field(None)
 
     def __init__(self, system, sender=None, recipient=None, **kwargs):
 
