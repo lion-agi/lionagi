@@ -40,15 +40,22 @@ class Form(BaseForm):
             if i not in self._all_fields:
                 self._add_field(i, value=None)
 
-    def append_to_request(self, field: str, field_obj=None):
-        if field not in self._all_fields:
-            self._add_field(field, field_obj=field_obj)
+    def append_to_request(self, field: str):
+        if "," in field:
+            field = field.split(",")
+        if not isinstance(field, list):
+            field = [field]
+        
+        for i in field:
+            i = i.strip()
+            if i not in self._all_fields:
+                self._add_field(i)
 
-        if field not in self.requested_fields:
-            self.requested_fields.append(field)
-            self.validation_kwargs[field] = self._get_field_attr(
-                field, "validation_kwargs", {}
-            )
+            if i not in self.requested_fields:
+                self.requested_fields.append(i)
+                self.validation_kwargs[i] = self._get_field_attr(
+                    i, "validation_kwargs", {}
+                )
 
     def append_to_input(self, field: str, field_obj=None):
         if field not in self._all_fields:

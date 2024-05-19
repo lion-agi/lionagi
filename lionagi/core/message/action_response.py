@@ -86,7 +86,6 @@ class ActionResponse(RoledMessage):
             dict: A dictionary representation of the action response.
         """
         return {
-            "action_request": self.action_request,
             "function": self.function,
             "arguments": self.arguments,
             "func_outputs": self.func_outputs,

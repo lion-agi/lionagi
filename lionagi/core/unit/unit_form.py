@@ -7,13 +7,15 @@ from .template.base import BaseUnitForm
 class UnitForm(BaseUnitForm):
     """Form for managing unit directives and outputs."""
 
-    actions: list[dict] | None = Field(
+    actions: dict | None = Field(
         None,
         description=(
-            "A list of actions to take. Format: [{'function': func, 'arguments': "
-            "{'param1':..., 'param2':...}}]. Leave blank if no actions are needed."
+            "Actions to take. {action_n: {function: ..., arguments: {'param1':..., 'param2':...}}}"
+            "Leave blank if no actions are needed."
             "must use provided functions and parameters, DO NOT MAKE UP NAMES!!!"
             "Flag `action_required` as True if filled."
+            "When providing parameters, you must follow the provided type and format, "
+            "if the parameter is a number, you should provide a number like 1, 2, or 1.1 if float is allowed."
         )
     )
 
@@ -101,6 +103,7 @@ class UnitForm(BaseUnitForm):
 
         if allow_action:
             self.append_to_request("actions, action_required, reason")
+            
             self.task += (
                 "- Perform reasoning and prepare actions with GIVEN TOOLS ONLY.\n"
             )

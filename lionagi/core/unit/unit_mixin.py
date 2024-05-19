@@ -346,7 +346,65 @@ class DirectiveMixin(ABC):
 
         return a[0], a[1]
 
+
     async def _direct(
+        self,
+        instruction=None,
+        context=None,
+        form=None,
+        branch=None,
+        tools=None,
+        reason: bool = None,
+        predict: bool = None,
+        score: bool=None,
+        select: bool=None,
+        plan: bool = None,
+        allow_action: bool = None,
+        allow_extension: bool = None,
+        confidence: bool = None,
+        max_extension: int = None,
+        score_num_digits=None,
+        score_range=None,
+        select_choices=None,
+        plan_num_step=None,
+        predict_num_sentences=None,
+        clear_messages=False,
+        return_branch=False,
+        **kwargs,
+    ):
+        a = await self._base_direct(
+            instruction=instruction,
+            context=context,
+            form=form,
+            branch=branch,
+            tools=tools,
+            reason=reason,
+            predict=predict,
+            score=score,
+            select=select,
+            plan=plan,
+            allow_action=allow_action,
+            allow_extension=allow_extension,
+            confidence=confidence,
+            max_extension=max_extension,
+            score_num_digits=score_num_digits,
+            score_range=score_range,
+            select_choices=select_choices,
+            plan_num_step=plan_num_step,
+            predict_num_sentences=predict_num_sentences,
+            clear_messages=clear_messages,
+            return_branch=return_branch,
+            **kwargs,
+        )
+
+        a = list(a)
+        if len(a) == 2 and a[0] == a[1]:
+            return a[0] if not isinstance(a[0], tuple) else a[0][0]
+
+        return a[0], a[1]
+
+
+    async def _base_direct(
         self,
         instruction=None,
         *,
@@ -368,11 +426,15 @@ class DirectiveMixin(ABC):
         select_choices=None,
         plan_num_step=None,
         predict_num_sentences=None,
+        clear_messages=False,
+        return_branch=False,
         **kwargs,
     ):
         
         # Ensure branch is initialized
         branch = branch or self.branch
+        if clear_messages:
+            branch.clear()
 
         # Set a default max_extension if allow_extension is True and max_extension is None
         if allow_extension and not max_extension:
@@ -413,7 +475,8 @@ class DirectiveMixin(ABC):
         # Handle actions if allowed and required
         if allow_action and getattr(form, "action_required", None):
             actions = getattr(form, "actions", None)
-            await self._act(form, branch, actions=actions)
+            if actions:
+                form = await self._act(form, branch, actions=actions)
 
         last_form = form
 
@@ -447,15 +510,15 @@ class DirectiveMixin(ABC):
                 **kwargs,
             )
             
-            extension_forms.extend(last_form)
+            extension_forms.extend([last_form])
             last_form = last_form[0] if last_form else None
 
         if extension_forms:
             if not getattr(form, "extension_forms", None):
                 form._add_field("extension_forms", list, None, [])
             form.extension_forms.extend(extension_forms)
-        
-        return form
+
+        return form, branch if return_branch else form
  
 
     async def _extend(
@@ -521,21 +584,26 @@ class DirectiveMixin(ABC):
 
     async def _act(self, form, branch, actions=None):
         if actions:
-            actions = [actions] if not isinstance(actions, list) else actions
+            print(actions)
+
+            keys = [f"action_{i+1}" for i in range(len(actions))]
+            actions = StringMatch.force_validate_dict(actions, keys)
 
             try:
                 requests = []
-                for action in actions:
+                for k in keys:
+                    _func = actions[k]["function"]
+                    _func = _func.replace("functions.", "")
                     msg = ActionRequest(
-                        function=action["function"],
-                        arguments=action["arguments"],
+                        function=_func,
+                        arguments=actions[k]["arguments"],
                         sender=branch.ln_id,
                         recipient=branch.tool_manager.registry[
-                            action["function"]
+                            _func
                         ].ln_id,
                     )
                     requests.append(msg)
-                    branch.add_message(msg)
+                    branch.add_message(action_request=msg)
 
                 if requests:
                     out = await self._process_action_request(
@@ -561,9 +629,13 @@ class DirectiveMixin(ABC):
                     form._add_field(
                         "action_response", list[dict], None, action_responses
                     )
+                    form.append_to_request("action_response")
 
             except Exception as e:
                 raise ValueError(f"Error processing action request: {e}")
+
+        return form
+
 
     async def _select(
         self,
