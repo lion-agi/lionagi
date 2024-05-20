@@ -177,7 +177,7 @@ class Branch(Node, DirectiveMixin):
             self.system = _msg
 
         if isinstance(_msg, Instruction):
-            _msg.sender = sender or self.user or "user"
+            _msg.sender = sender or self.user
             _msg.recipient = recipient or self.ln_id
 
         if isinstance(_msg, AssistantResponse):

@@ -18,6 +18,8 @@ class PackageCategory(str, Enum):
 
 class Package(Element):
 
+    request_source:str | None = None
+
     category: PackageCategory = Field(
         None,
         title="Category",

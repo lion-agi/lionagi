@@ -63,6 +63,9 @@ class Progression(Element, Ordering):
         for idx, item in enumerate(self.order):
             yield idx, item
 
+    def size(self):
+        return len(self)
+
     def copy(self):
         """create a deep copy"""
         return self.model_copy()
@@ -209,6 +212,9 @@ class Progression(Element, Ordering):
     def to_dict(self):
         """Return a dictionary representation of the progression."""
         return {"order": self.order, "name": self.name}
+
+    def __bool__(self):
+        return True
 
 
 def progression(order=None, name=None, /) -> Progression:

@@ -45,6 +45,10 @@ class Exchange(Element, Generic[T]):
     def __contains__(self, item):
         return item in self.pile
 
+    @property
+    def senders(self):
+        return list(self.pending_ins.keys())
+
     def exclude(self, item):
         return (
             self.pile.exclude(item)
@@ -73,3 +77,6 @@ class Exchange(Element, Generic[T]):
 
     def to_dict(self):
         return self.model_dump(by_alias=True)
+
+    def __bool__(self):
+        return True
