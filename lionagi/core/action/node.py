@@ -28,3 +28,22 @@ class ActionNode(DirectiveSelection):
     instruction: Node = Field(
         ..., description="The instruction for the action", alias="instruct"
     )
+
+    async def invoke(self, branch, context=None):
+        if self.directive == "chat":
+            return await branch.chat(
+                instruction=self.instruction.instruct,
+                tools=self.tools,
+                **self.directive_kwargs
+            )
+        elif self.directive == "direct":
+            if self.tools:
+                self.directive_kwargs["allow_action"] = True
+            return await branch.direct(
+                instruction=self.instruction.instruct,
+                context=context,
+                tools=self.tools,
+                **self.directive_kwargs
+            )
+        else:
+            raise ValueError("Invalid directive, valid directives are: \"chat\", \"direct\"")

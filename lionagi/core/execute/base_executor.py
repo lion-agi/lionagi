@@ -18,18 +18,13 @@ class BaseExecutor(Element, ABC):
     context: dict | str | list | None = Field(
         None, description="The context buffer for the next instruction."
     )
-    # execution_responses: list = Field(
-    #     default_factory=list, description="The list of responses."
-    # )
+    execution_responses: list = Field(
+        default_factory=list, description="The list of responses."
+    )
     context_log: list = Field(default_factory=list, description="The context log.")
     verbose: bool = Field(
         True, description="A flag indicating whether to provide verbose output."
     )
-
-    def __init__(self, context=None, verbose=True):
-        super().__init__()
-        self.context = context
-        self.verbose = verbose
 
     def send(self, recipient_id: str, category: str, package: Any) -> None:
         """

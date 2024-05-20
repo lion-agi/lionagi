@@ -2,7 +2,7 @@ import json
 import inspect
 import re
 
-from lionagi.core.message import System, Instruction
+from lionagi.core.message import System, Instruction, RoledMessage
 from lionagi.core.action import Tool, DirectiveSelection, func_to_tool
 from lionagi.core.action import DirectiveSelection
 from lionagi.core.agent.base_agent import BaseAgent
@@ -25,7 +25,7 @@ def output_node_list(structure):
     output = {}
 
     structure_output = {
-        "id": structure.ln_id,
+        "ln_id": structure.ln_id,
         "timestamp": structure.timestamp,
         "type": structure.class_name,
     }
@@ -36,7 +36,7 @@ def output_node_list(structure):
     output[structure_output["type"]] = [structure_output]
     for node in structure.internal_nodes.values():
         node_output = {
-            "id": node.ln_id,
+            "ln_id": node.ln_id,
             "timestamp": node.timestamp,
             "type": node.class_name,
         }
@@ -82,7 +82,7 @@ def output_edge_list(structure):
     edge_cls_dict = {}
     for edge in structure.internal_edges.values():
         edge_output = {
-            "id": edge.ln_id,
+            "ln_id": edge.ln_id,
             "timestamp": edge.timestamp,
             "head": edge.head,
             "tail": edge.tail,
@@ -181,12 +181,8 @@ class ParseNode:
         Returns:
             System: An instantiated System node filled with properties from info_dict.
         """
-        node = System(" ")
-        node.ln_id = info_dict["id"]
-        node.timestamp = info_dict["timestamp"]
-        node.content = json.loads(info_dict["content"])
-        node.sender = info_dict["sender"]
-        node.recipient = info_dict["recipient"]
+        info_dict["system"] = json.loads(info_dict.pop("content"))["system_info"]
+        node = System.from_obj(info_dict)
         return node
 
     @staticmethod
@@ -200,18 +196,14 @@ class ParseNode:
         Returns:
             Instruction: An instantiated Instruction node filled with properties from info_dict.
         """
-        node = Instruction(" ")
-        node.ln_id = info_dict["id"]
-        node.timestamp = info_dict["timestamp"]
-        node.content = json.loads(info_dict["content"])
-        node.sender = info_dict["sender"]
-        node.recipient = info_dict["recipient"]
+        info_dict["instruction"] = json.loads(info_dict.pop("content"))["instruction"]
+        node = Instruction.from_obj(info_dict)
         return node
 
     @staticmethod
-    def parse_actionSelection(info_dict):
+    def parse_directiveSelection(info_dict):
         """
-        Parses dictionary information into an ActionSelection node object.
+        Parses dictionary information into an DirectiveSelection node object.
 
         Args:
             info_dict (dict): A dictionary containing properties of an action selection node.
@@ -219,15 +211,14 @@ class ParseNode:
         Returns:
             ActionSelection: An instantiated ActionSelection node filled with properties from info_dict.
         """
-        node = DirectiveSelection()
-        node.ln_id = info_dict["id"]
-        node.action = info_dict["action"]
-        if "action_kwargs" in info_dict:
-            if info_dict["action_kwargs"]:
-                node.action_kwargs = json.loads(info_dict["action_kwargs"])
-        elif "actionKwargs" in info_dict:
-            if info_dict["actionKwargs"]:
-                node.action_kwargs = json.loads(info_dict["actionKwargs"])
+        node = DirectiveSelection(ln_id=info_dict["ln_id"])
+        node.directive = info_dict["directive"]
+        if "directive_kwargs" in info_dict:
+            if info_dict["directive_kwargs"]:
+                node.directive_kwargs = json.loads(info_dict["directive_kwargs"])
+        elif "directiveKwargs" in info_dict:
+            if info_dict["directiveKwargs"]:
+                node.directive_kwargs = json.loads(info_dict["directiveKwargs"])
         return node
 
     @staticmethod
@@ -251,14 +242,12 @@ class ParseNode:
             )
 
         func = ParseNode.convert_to_def(func_code)
-        tool = func_to_tool(func)
+        tool = func_to_tool(func, ln_id=info_dict["ln_id"], timestamp=info_dict["timestamp"])
         if func.__doc__:
             if re.search(r":param \w+:", func.__doc__):
-                tool = func_to_tool(func, docstring_style="reST")
+                tool = func_to_tool(func, docstring_style="reST", ln_id=info_dict["ln_id"], timestamp=info_dict["timestamp"])
 
         tool = tool[0]
-        tool.ln_id = info_dict["id"]
-        tool.timestamp = info_dict["timestamp"]
         return tool
 
     @staticmethod

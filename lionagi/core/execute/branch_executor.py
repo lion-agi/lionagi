@@ -193,7 +193,7 @@ class BranchExecutor(Branch, BaseExecutor):
             result = await self.chat(instruction=instruction.instruct, context=self.context, **kwargs)
             self.context = None
         else:
-            result = await self.chat(instruction=instruction, **kwargs)
+            result = await self.chat(instruction=instruction.instruct, **kwargs)
             # instruction._add_context(context=self.context)
             # self.context_log.append(self.context)
             # self.context = None
@@ -210,7 +210,7 @@ class BranchExecutor(Branch, BaseExecutor):
             )
             print("-----------------------------------------------------")
 
-        # self.execution_responses.append(result)
+        self.execution_responses.append(result)
 
     async def _action_process(self, action: ActionNode, verbose=True):
         """
@@ -240,13 +240,14 @@ class BranchExecutor(Branch, BaseExecutor):
         # if action.tools:
         #     self.register_tools(action.tools)
         # if self.context:
-        result = await self.direct(
-            action.directive,
-            instruction=action.instruction.instruct,
-            context=self.context,
-            tools=action.tools,
-            **action.directive_kwargs,
-        )
+        # result = await self.direct(
+        #     action.directive,
+        #     instruction=action.instruction.instruct,
+        #     context=self.context,
+        #     tools=action.tools,
+        #     **action.directive_kwargs,
+        # )
+        result = await action.invoke(branch=self, context=self.context)
         self.context = None
         # else:
         #     result = await self.direct(
@@ -269,7 +270,7 @@ class BranchExecutor(Branch, BaseExecutor):
                     display(Markdown(f"{k}: \n{v}\n"))
             print("-----------------------------------------------------")
 
-        # self.execution_responses.append(result)
+        self.execution_responses.append(result)
 
     async def _agent_process(self, agent, verbose=True):
         """
@@ -293,7 +294,7 @@ class BranchExecutor(Branch, BaseExecutor):
         #     self.context = list(result["content"])
         # else:
         self.context = result
-        # self.execution_responses.append(result)
+        self.execution_responses.append(result)
 
     def _process_start(self, mail):
         """

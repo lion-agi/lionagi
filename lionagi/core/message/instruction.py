@@ -55,6 +55,10 @@ class Instruction(RoledMessage):
             requested_fields (dict, optional): Fields requested in the instruction.
             **kwargs: Additional context fields to be added to the message content, must be JSON serializable.
         """
+        if not instruction:
+            if "metadata" in kwargs and "instruction" in kwargs["metadata"]:
+                instruction = kwargs["metadata"].pop("instruction")
+
         super().__init__(
             role=MessageRole.USER,
             sender=sender or "user",

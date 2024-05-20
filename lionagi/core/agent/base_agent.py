@@ -32,11 +32,9 @@ class BaseAgent(Node):
             executable_obj: The executable object of the agent.
             output_parser: A function for parsing the agent's output (optional).
         """
-        super().__init__()
+        super().__init__(**kwargs)
         self.structure: BaseExecutor = structure
         self.executable: BaseExecutor = executable
-        for v, k in kwargs.items():
-            executable.__setattr__(v, k)
         self.start: StartMail = StartMail()
         self.mail_manager: MailManager = MailManager(
             [self.structure, self.executable, self.start]
