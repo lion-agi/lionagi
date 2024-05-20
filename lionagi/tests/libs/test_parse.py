@@ -55,7 +55,7 @@ class TestFuzzyParseJson(unittest.TestCase):
     def test_extract_code_block(self):
         """Test extracting and parsing code blocks from Markdown."""
         markdown = '```python\nprint("Hello, world!")\n```'
-        result = ParseUtil.extract_code_block(
+        result = ParseUtil.extract_json_block(
             markdown, language="python", parser=lambda x: x
         )
         self.assertEqual(result, 'print("Hello, world!")')

@@ -1,5 +1,5 @@
 openrouter_chat_llmconfig = {
-    "model": "gpt-4-turbo",
+    "model": "gpt-4o",
     "frequency_penalty": 0,
     "max_tokens": None,
     "num": 1,
@@ -8,7 +8,7 @@ openrouter_chat_llmconfig = {
     "seed": None,
     "stop": None,
     "stream": False,
-    "temperature": 0.7,
+    "temperature": 0.3,
     "top_p": 1,
     "tools": None,
     "tool_choice": "none",

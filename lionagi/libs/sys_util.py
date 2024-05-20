@@ -1,28 +1,17 @@
 """
-MIT License
+Copyright 2024 HaiyangLi
 
-Copyright (c) 2023 HaiyangLi quantocean.li@gmail.com
+Licensed under the Apache License, Version 2.0 (the "License");
+you may not use this file except in compliance with the License.
+You may obtain a copy of the License at
 
-Permission is hereby granted, free of charge, to any person 
-obtaining a copy of this software and associated documentation 
-files (the "Software"), to deal in the Software without 
-restriction, including without limitation the rights to use, 
-copy, modify, merge, publish, distribute, sublicense, and/or 
-sell copies of the Software, and to permit persons to whom 
-the Software is furnished to do so, subject to the following 
-conditions:
+    http://www.apache.org/licenses/LICENSE-2.0
 
-The above copyright notice and this permission notice shall be 
-included in all copies or substantial portions of the Software.
-
-THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, 
-EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES 
-OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND 
-NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS 
-BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN 
-ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN 
-CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE 
-SOFTWARE.
+Unless required by applicable law or agreed to in writing, software
+distributed under the License is distributed on an "AS IS" BASIS,
+WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+See the License for the specific language governing permissions and
+limitations under the License.
 """
 
 import copy
@@ -430,6 +419,19 @@ class SysUtil:
 
     @staticmethod
     def list_files(dir_path: Path | str, extension: str = None) -> list[Path]:
+        """
+        Lists all files in a specified directory with an optional filter for file extensions.
+
+        Args:
+            dir_path (Path | str): The directory path where files are listed.
+            extension (str, optional): Filter files by extension. Default is None, which lists all files.
+
+        Returns:
+            list[Path]: A list of Path objects representing files in the directory.
+
+        Raises:
+            NotADirectoryError: If the provided dir_path is not a directory.
+        """
         dir_path = Path(dir_path)
         if not dir_path.is_dir():
             raise NotADirectoryError(f"{dir_path} is not a directory.")
@@ -440,6 +442,16 @@ class SysUtil:
 
     @staticmethod
     def copy_file(src: Path | str, dest: Path | str) -> None:
+        """
+        Copies a file from a source path to a destination path.
+
+        Args:
+            src (Path | str): The source file path.
+            dest (Path | str): The destination file path.
+
+        Raises:
+            FileNotFoundError: If the source file does not exist or is not a file.
+        """
         from shutil import copy2
 
         src, dest = Path(src), Path(dest)
@@ -450,6 +462,18 @@ class SysUtil:
 
     @staticmethod
     def get_size(path: Path | str) -> int:
+        """
+        Gets the size of a file or total size of files in a directory.
+
+        Args:
+            path (Path | str): The file or directory path.
+
+        Returns:
+            int: The size in bytes.
+
+        Raises:
+            FileNotFoundError: If the path does not exist.
+        """
         path = Path(path)
         if path.is_file():
             return path.stat().st_size
@@ -457,3 +481,50 @@ class SysUtil:
             return sum(f.stat().st_size for f in path.glob("**/*") if f.is_file())
         else:
             raise FileNotFoundError(f"{path} does not exist.")
+
+    @staticmethod
+    def save_to_file(
+        text,
+        directory: Path | str,
+        filename: str,
+        timestamp: bool = True,
+        dir_exist_ok: bool = True,
+        time_prefix: bool = False,
+        custom_timestamp_format: str | None = None,
+        random_hash_digits=0,
+        verbose=True,
+    ):
+        """
+        Saves text to a file within a specified directory, optionally adding a timestamp, hash, and verbose logging.
+
+        Args:
+            text (str): The text to save.
+            directory (Path | str): The directory path to save the file.
+            filename (str): The filename for the saved text.
+            timestamp (bool): If True, append a timestamp to the filename. Default is True.
+            dir_exist_ok (bool): If True, creates the directory if it does not exist. Default is True.
+            time_prefix (bool): If True, prepend the timestamp instead of appending. Default is False.
+            custom_timestamp_format (str | None): A custom format for the timestamp, if None uses default format. Default is None.
+            random_hash_digits (int): Number of random hash digits to append to filename. Default is 0.
+            verbose (bool): If True, prints the file path after saving. Default is True.
+
+        Returns:
+            bool: True if the text was successfully saved.
+        """
+        file_path = SysUtil.create_path(
+            directory=directory,
+            filename=filename,
+            timestamp=timestamp,
+            dir_exist_ok=dir_exist_ok,
+            time_prefix=time_prefix,
+            custom_timestamp_format=custom_timestamp_format,
+            random_hash_digits=random_hash_digits,
+        )
+
+        with open(file_path, "w") as file:
+            file.write(text)
+
+        if verbose:
+            print(f"Text saved to: {file_path}")
+
+        return True

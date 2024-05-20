@@ -1,285 +1,220 @@
-from typing import Any, Type
+"""
+This module defines the Node class, representing a node in a graph-like
+structure within LionAGI. Nodes can form relationships with other nodes
+through directed edges, enabling construction and manipulation of complex
+relational networks.
+
+Includes functionality for managing relationships, such as adding,
+modifying, and removing edges, and querying related nodes and connections.
+"""
+
 from pydantic import Field
-from lionagi.integrations.bridge import LlamaIndexBridge, LangchainBridge
+from pandas import Series
 
-from lionagi.core.generic.component import BaseNode
-from lionagi.core.generic.condition import Condition
+from lionagi.libs.ln_convert import to_list
+
+from lionagi.core.collections.abc import (
+    Component,
+    Condition,
+    Relatable,
+    RelationError,
+    get_lion_id,
+)
+from lionagi.core.collections import pile, Pile
 from lionagi.core.generic.edge import Edge
-from lionagi.core.generic.relation import Relations
-from lionagi.core.generic.mailbox import MailBox
 
 
-class Node(BaseNode):
+class Node(Component, Relatable):
     """
-    Represents a node with relations to other nodes.
+    Node in a graph structure, can connect to other nodes via edges.
+
+    Extends `Component` by incorporating relational capabilities, allowing
+    nodes to connect through 'in' and 'out' directed edges, representing
+    incoming and outgoing relationships.
 
     Attributes:
-        relations (Relations): The relations of the node, managed through a
-            `Relations` instance.
-
-    Properties:
-        related_nodes: A set of IDs representing nodes related to this node.
-        edges: A dictionary of all edges connected to this node.
-        node_relations: A dictionary categorizing preceding and succeeding
-            relations to this node.
-        precedessors: A list of node IDs that precede this node.
-        successors: A list of node IDs that succeed this node.
-
-    Methods:
-        relate(node, self_as, condition, **kwargs): Relates this node to
-            another node with an edge.
-        unrelate(node, edge): Removes one or all relations between this node
-            and another.
-        to_llama_index(node_type, **kwargs): Serializes this node for
-            LlamaIndex.
-        to_langchain(**kwargs): Serializes this node for Langchain.
-        from_llama_index(llama_node, **kwargs): Deserializes a node from
-            LlamaIndex data.
-        from_langchain(lc_doc): Deserializes a node from Langchain data.
-        __str__(): String representation of the node.
-
-    Raises:
-        ValueError: When invalid parameters are provided to methods.
+        relations (dict[str, Pile]): Dictionary holding 'Pile' instances
+            for incoming ('in') and outgoing ('out') edges.
     """
 
-    relations: Relations = Field(
-        default_factory=Relations,
+    relations: dict[str, Pile] = Field(
+        default_factory=lambda: {"in": pile(), "out": pile()},
         description="The relations of the node.",
-        alias="node_relations",
     )
 
-    mailbox: MailBox = Field(
-        default_factory=MailBox,
-        description="The mailbox for incoming and outgoing mails.",
-    )
+    @property
+    def edges(self) -> Pile[Edge]:
+        """
+        Get unified view of all incoming and outgoing edges.
+
+        Returns:
+            Combined pile of all edges connected to this node.
+        """
+        return self.relations["in"] + self.relations["out"]
 
     @property
     def related_nodes(self) -> list[str]:
-        """Returns a set of node IDs related to this node, excluding itself."""
-        nodes = set(self.relations.all_nodes)
-        nodes.discard(self.id_)
-        return list(nodes)
+        """
+        Get list of all unique node IDs directly related to this node.
 
-    @property
-    def edges(self) -> dict[str, Edge]:
-        """Returns a dictionary of all edges connected to this node."""
-        return self.relations.all_edges
+        Returns:
+            List of node IDs related to this node.
+        """
+        all_nodes = set(
+            to_list([[i.head, i.tail] for i in self.edges], flatten=True, dropna=True)
+        )
+        all_nodes.discard(self.ln_id)
+        return list(all_nodes)
 
     @property
     def node_relations(self) -> dict:
-        """Categorizes preceding and succeeding relations to this node."""
+        """
+        Get categorized view of direct relationships into groups.
 
-        points_to_nodes = {}
-        for edge in self.relations.points_to.values():
-            for i in self.related_nodes:
-                if edge.tail == i:
-                    if i in points_to_nodes:
-                        points_to_nodes[i].append(edge)
-                    else:
-                        points_to_nodes[i] = [edge]
+        Returns:
+            Dict with keys 'in' and 'out', each containing a mapping of
+            related node IDs to lists of edges representing relationships.
+        """
+        out_node_edges = {}
+        if not self.relations["out"].is_empty():
+            for edge in self.relations["out"]:
+                for node_id in self.related_nodes:
+                    if edge.tail == node_id:
+                        out_node_edges.setdefault(node_id, []).append(edge)
 
-        pointed_by_nodes = {}
-        for edge in self.relations.pointed_by.values():
-            for i in self.related_nodes:
-                if edge.head == i:
-                    if i in pointed_by_nodes:
-                        pointed_by_nodes[i].append(edge)
-                    else:
-                        pointed_by_nodes[i] = [edge]
+        in_node_edges = {}
+        if not self.relations["in"].is_empty():
+            for edge in self.relations["in"]:
+                for node_id in self.related_nodes:
+                    if edge.head == node_id:
+                        in_node_edges.setdefault(node_id, []).append(edge)
 
-        return {"points_to": points_to_nodes, "pointed_by": pointed_by_nodes}
+        return {"out": out_node_edges, "in": in_node_edges}
 
     @property
-    def precedessors(self) -> list[str]:
-        """return a list of nodes id that precede this node"""
-        return [k for k, v in self.node_relations["pointed_by"].items() if len(v) > 0]
+    def predecessors(self) -> list[str]:
+        """
+        Get list of IDs of nodes with direct incoming relation to this.
+
+        Returns:
+            List of node IDs that precede this node.
+        """
+        return [
+            node_id for node_id, edges in self.node_relations["in"].items() if edges
+        ]
 
     @property
     def successors(self) -> list[str]:
-        """return a list of nodes id that succeed this node"""
-        return [k for k, v in self.node_relations["points_to"].items() if len(v) > 0]
+        """
+        Get list of IDs of nodes with direct outgoing relation from this.
+
+        Returns:
+            List of node IDs that succeed this node.
+        """
+        return [
+            node_id for node_id, edges in self.node_relations["out"].items() if edges
+        ]
 
     def relate(
         self,
         node: "Node",
-        node_as: str = "head",
+        direction: str = "out",
         condition: Condition | None = None,
         label: str | None = None,
-        bundle=False,
+        bundle: bool = False,
     ) -> None:
-        """Relates this node to another node with an edge.
+        """
+        Establish directed relationship from this node to another.
 
         Args:
-            node (Node): The node to relate to.
-            self_as (str): Specifies whether this node is the 'head' or 'tail'
-                of the relation. Defaults to "head".
-            condition (Condition | None): The condition associated with the
-                edge, if any. Defaults to None.
-            **kwargs: Additional keyword arguments for edge creation.
+            node: Target node to relate to.
+            direction: Direction of edge ('in' or 'out'). Default 'out'.
+            condition: Optional condition to associate with edge.
+            label: Optional label for edge.
+            bundle: Whether to bundle edge with others. Default False.
 
         Raises:
-            ValueError: If `self_as` is not 'head' or 'tail'.
+            ValueError: If direction is neither 'in' nor 'out'.
         """
-        if node_as == "head":
-            edge = Edge(
-                head=self, tail=node, condition=condition, bundle=bundle, label=label
-            )
-            self.relations.points_to[edge.id_] = edge
-            node.relations.pointed_by[edge.id_] = edge
-
-        elif node_as == "tail":
-            edge = Edge(
-                head=node, tail=self, condition=condition, label=label, bundle=bundle
-            )
-            self.relations.pointed_by[edge.id_] = edge
-            node.relations.points_to[edge.id_] = edge
-
-        else:
+        if direction not in ["in", "out"]:
             raise ValueError(
-                f"Invalid value for self_as: {node_as}, must be 'head' or 'tail'"
+                f"Invalid value for direction: {direction}, " "must be 'in' or 'out'"
             )
+
+        edge = Edge(
+            head=self if direction == "out" else node,
+            tail=node if direction == "out" else self,
+            condition=condition,
+            bundle=bundle,
+            label=label,
+        )
+
+        self.relations[direction].include(edge)
+        node.relations["in" if direction == "out" else "out"].include(edge)
 
     def remove_edge(self, node: "Node", edge: Edge | str) -> bool:
-        if node.id_ not in self.related_nodes:
-            raise ValueError(f"Node {self.id_} is not related to node {node.id_}.")
+        """
+        Remove specified edge or all edges between this and another node.
 
-        edge_id = edge.id_ if isinstance(edge, Edge) else edge
+        Args:
+            node: Other node involved in edge.
+            edge: Specific edge to remove or 'all' to remove all edges.
 
-        if (
-            edge_id not in self.relations.all_edges
-            or edge_id not in node.relations.all_edges
-        ):
-            raise ValueError(
-                f"Edge {edge_id} does not exist between nodes {self.id_} and "
-                f"{node.id_}."
-            )
+        Returns:
+            True if edge(s) successfully removed, False otherwise.
 
-        all_dicts = [
-            self.relations.points_to,
-            self.relations.pointed_by,
-            node.relations.points_to,
-            node.relations.pointed_by,
+        Raises:
+            RelationError: If removal fails or edge does not exist.
+        """
+        edge_piles = [
+            self.relations["in"],
+            self.relations["out"],
+            node.relations["in"],
+            node.relations["out"],
         ]
-        try:
-            for _dict in all_dicts:
-                edge_id = edge.id_ if isinstance(edge, Edge) else edge
-                _dict.pop(edge_id, None)
-            return True
 
-        except Exception as e:
-            raise ValueError(
-                f"Failed to remove edge between nodes {self.id_} and " f"{node.id_}."
-            ) from e
+        if not all(pile.exclude(edge) for pile in edge_piles):
+            raise RelationError(f"Failed to remove edge between nodes.")
+        return True
 
     def unrelate(self, node: "Node", edge: Edge | str = "all") -> bool:
         """
-        Removes one or all relations between this node and another.
+        Remove all or specific relationships between this and another node.
 
         Args:
-            node (Node): The node to unrelate from.
-            edge (Edge | str): Specific edge or 'all' to remove all relations.
-                Defaults to "all".
+            node: Other node to unrelate from.
+            edge: Specific edge to remove or 'all' for all. Default 'all'.
 
         Returns:
-            bool: True if the operation is successful, False otherwise.
+            True if relationships successfully removed, False otherwise.
 
         Raises:
-            ValueError: If the node is not related or the edge does not exist.
+            RelationError: If operation fails to unrelate nodes.
         """
         if edge == "all":
-            edge = self.node_relations["points_to"].get(
-                node.id_, []
-            ) + self.node_relations["pointed_by"].get(node.id_, [])
+            edges = self.node_relations["out"].get(
+                node.ln_id, []
+            ) + self.node_relations["in"].get(node.ln_id, [])
         else:
-            edge = [edge.id_] if isinstance(edge, Edge) else [edge]
+            edges = [get_lion_id(edge)]
 
-        if len(edge) == 0:
-            raise ValueError(f"Node {self.id_} is not related to node {node.id_}.")
+        if not edges:
+            raise RelationError(f"Node is not related to {node.ln_id}.")
 
         try:
-            for edge_id in edge:
+            for edge_id in edges:
                 self.remove_edge(node, edge_id)
             return True
-        except Exception as e:
-            raise ValueError(
-                f"Failed to remove edge between nodes {self.id_} and " f"{node.id_}."
-            ) from e
+        except RelationError as e:
+            raise RelationError("Failed to unrelate nodes.") from e
 
-    def to_llama_index(self, node_type: Type | str | Any = None, **kwargs) -> Any:
-        """
-        Serializes this node for LlamaIndex.
+    def __str__(self):
+        _dict = self.to_dict()
+        _dict["relations"] = [
+            len(self.relations["in"]),
+            len(self.relations["out"]),
+        ]
+        return Series(_dict).__str__()
 
-        Args:
-            node_type (Type | str | Any): The type of node in LlamaIndex.
-                Defaults to None.
-            **kwargs: Additional keyword arguments for serialization.
-
-        Returns:
-            Any: The serialized node for LlamaIndex.
-        """
-        return LlamaIndexBridge.to_llama_index_node(self, node_type=node_type, **kwargs)
-
-    def to_langchain(self, **kwargs) -> Any:
-        """
-        Serializes this node for Langchain.
-
-        Args:
-            **kwargs: Additional keyword arguments for serialization.
-
-        Returns:
-            Any: The serialized node for Langchain.
-        """
-        return LangchainBridge.to_langchain_document(self, **kwargs)
-
-    @classmethod
-    def from_llama_index(cls, llama_node: Any, **kwargs) -> "Node":
-        """
-        Deserializes a node from LlamaIndex data.
-
-        Args:
-            llama_node (Any): The LlamaIndex node data.
-            **kwargs: Additional keyword arguments for deserialization.
-
-        Returns:
-            Node: The deserialized node.
-        """
-        llama_dict = llama_node.to_dict(**kwargs)
-        return cls.from_obj(llama_dict)
-
-    @classmethod
-    def from_langchain(cls, lc_doc: Any) -> "Node":
-        """Deserializes a node from Langchain data.
-
-        Args:
-            lc_doc (Any): The Langchain document data.
-
-        Returns:
-            Node: The deserialized node.
-        """
-        langchain_json = lc_doc.to_json()
-        langchain_dict = {"lc_id": langchain_json["id"], **langchain_json["kwargs"]}
-        return cls.from_obj(langchain_dict)
-
-    def __str__(self) -> str:
-        """
-        Provides a string representation of the node.
-
-        Returns:
-            str: The string representation of the node.
-        """
-        timestamp = f" ({self.timestamp})" if self.timestamp else ""
-        if self.content:
-            content_preview = (
-                f"{self.content[:50]}..." if len(self.content) > 50 else self.content
-            )
-        else:
-            content_preview = ""
-        meta_preview = (
-            f"{str(self.metadata)[:50]}..."
-            if len(str(self.metadata)) > 50
-            else str(self.metadata)
-        )
-        return (
-            f"{self.class_name()}({self.id_}, {content_preview}, {meta_preview},"
-            f"{timestamp})"
-        )
+    def __repr__(self):
+        return self.__str__()

@@ -4,7 +4,14 @@ from lionagi.libs import SysUtil
 from lionagi.integrations.storage.storage_util import output_node_list, output_edge_list
 
 
-def _output_excel(node_list, node_dict, edge_list, edge_cls_list, structure_name, dir="structure_storage"):
+def _output_excel(
+    node_list,
+    node_dict,
+    edge_list,
+    edge_cls_list,
+    structure_name,
+    dir="structure_storage",
+):
     """
     Writes provided node and edge data into multiple sheets of a single Excel workbook.
 
@@ -42,6 +49,7 @@ def _output_excel(node_list, node_dict, edge_list, edge_cls_list, structure_name
         tables[i] = pd.DataFrame(node_dict[i])
 
     import os
+
     filepath = os.path.join(dir, f"{structure_name}_{structure_id}.xlsx")
 
     if not os.path.exists(dir):
@@ -73,4 +81,3 @@ def to_excel(structure, structure_name, dir="structure_storage"):
     edge_list, edge_cls_list = output_edge_list(structure)
 
     _output_excel(node_list, node_dict, edge_list, edge_cls_list, structure_name, dir)
-

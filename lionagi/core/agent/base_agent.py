@@ -8,8 +8,8 @@ from typing import Any, Callable
 from lionagi.libs import func_call, AsyncUtil
 
 
-from lionagi.core.mail.schema import StartMail
-from lionagi.core.generic import Node
+from lionagi.core.mail.start_mail import StartMail
+from lionagi.core.generic.node import Node
 from lionagi.core.mail.mail_manager import MailManager
 from lionagi.core.execute.base_executor import BaseExecutor
 from lionagi.core.execute.structure_executor import StructureExecutor
@@ -32,13 +32,11 @@ class BaseAgent(Node):
             executable_obj: The executable object of the agent.
             output_parser: A function for parsing the agent's output (optional).
         """
-        super().__init__()
+        super().__init__(**kwargs)
         self.structure: BaseExecutor = structure
         self.executable: BaseExecutor = executable
-        for v, k in kwargs.items():
-            executable.__setattr__(v, k)
         self.start: StartMail = StartMail()
-        self.mailManager: MailManager = MailManager(
+        self.mail_manager: MailManager = MailManager(
             [self.structure, self.executable, self.start]
         )
         self.output_parser: Callable | None = output_parser
@@ -53,7 +51,7 @@ class BaseAgent(Node):
         """
         while not self.structure.execute_stop or not self.executable.execute_stop:
             await AsyncUtil.sleep(refresh_time)
-        self.mailManager.execute_stop = True
+        self.mail_manager.execute_stop = True
 
     async def execute(self, context=None):
         """
@@ -68,22 +66,22 @@ class BaseAgent(Node):
         self.start_context = context
         self.start.trigger(
             context=context,
-            structure_id=self.structure.id_,
-            executable_id=self.executable.id_,
+            structure_id=self.structure.ln_id,
+            executable_id=self.executable.ln_id,
         )
         await func_call.mcall(
             [0.1, 0.1, 0.1, 0.1],
             [
                 self.structure.execute,
                 self.executable.execute,
-                self.mailManager.execute,
+                self.mail_manager.execute,
                 self.mail_manager_control,
             ],
         )
 
         self.structure.execute_stop = False
         self.executable.execute_stop = False
-        self.mailManager.execute_stop = False
+        self.mail_manager.execute_stop = False
 
         if self.output_parser:
             return self.output_parser(self)

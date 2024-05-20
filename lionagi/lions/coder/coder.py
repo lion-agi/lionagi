@@ -1,18 +1,49 @@
 import asyncio
+from pathlib import Path
+
+from lionagi import logging as _logging
 from lionagi.core import Session
+from lionagi.libs import ParseUtil
 
 from .base_prompts import CODER_PROMPTS
-from .util import extract_code_blocks, install_missing_dependencies, set_up_interpreter
+from .util import install_missing_dependencies, set_up_interpreter, save_code_file
+
+
+class Coder:
+
+    def __init__(
+        self,
+        prompts: dict = None,
+        session: Session = None,
+        session_kwargs: dict = None,
+        required_libraries: list = None,
+        work_dir: Path | str = None,
+    ) -> None:
+
+        self.prompts = prompts or CODER_PROMPTS
+        self.session = session or self._create_session(session_kwargs)
+        self.required_libraries = required_libraries or ["lionagi"]
+        self.work_dir = work_dir or Path.cwd() / "coder" / "code_files"
+
+    def _create_session(self, session_kwargs: dict = None) -> Session:
+        session_kwargs = session_kwargs or {}
+        return Session(system=self.prompts["system"], **session_kwargs)
 
 
 class Coder:
     def __init__(
-        self, prompts=None, session=None, session_kwargs=None, required_libraries=None
+        self,
+        prompts=None,
+        session=None,
+        session_kwargs=None,
+        required_libraries=None,
+        work_dir=None,
     ):
         print("Initializing Coder...")
         self.prompts = prompts or CODER_PROMPTS
         self.session = session or self._create_session(session_kwargs)
         self.required_libraries = required_libraries or ["lionagi"]
+        self.work_dir = work_dir or Path.cwd() / "coder" / "code_files"
         print("Coder initialized.")
 
     def _create_session(self, session_kwargs=None):
@@ -32,7 +63,7 @@ class Coder:
         print("Writing code...")
         code = await self.session.chat(self.prompts["write_code"], context=context)
         print("Code writing completed.")
-        return extract_code_blocks(code)
+        return ParseUtil.extract_code_blocks(code)
 
     async def _review_code(self, context=None):
         print("Reviewing code...")
@@ -77,6 +108,22 @@ class Coder:
                 execution = sandbox.notebook.exec_cell(code, **kwargs)
             print("Code execution completed.")
             return execution
+
+    def _save_code_file(self, code, **kwargs):
+        print("Saving code...")
+        save_code_file(code, self.work_dir, **kwargs)
+        print("Code saved.")
+
+    @staticmethod
+    def _load_code_file(file_path):
+        print("Loading code...")
+        try:
+            with open(file_path, "r") as file:
+                print("Code loaded.")
+                return file.read()
+        except FileNotFoundError:
+            _logging.error(f"File not found: {file_path}")
+            return None
 
 
 async def main():

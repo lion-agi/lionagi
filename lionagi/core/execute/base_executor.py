@@ -1,19 +1,16 @@
-from collections import deque
 from abc import ABC, abstractmethod
 from typing import Any
 
 from pydantic import Field
 
-from lionagi.core.generic import BaseComponent
-from lionagi.core.mail.schema import BaseMail
+from lionagi.core.collections.abc import Element
+from lionagi.core.collections import Exchange
+from lionagi.core.mail.mail import Mail, Package
 
 
-class BaseExecutor(BaseComponent, ABC):
-    pending_ins: dict = Field(
-        default_factory=dict, description="The pending incoming mails."
-    )
-    pending_outs: deque = Field(
-        default_factory=deque, description="The pending outgoing mails."
+class BaseExecutor(Element, ABC):
+    mailbox: Exchange = Field(
+        default_factory=Exchange[Mail], description="The pending mails"
     )
     execute_stop: bool = Field(
         False, description="A flag indicating whether to stop execution."
@@ -38,10 +35,13 @@ class BaseExecutor(BaseComponent, ABC):
             category (str): The category of the mail.
             package (Any): The package to send in the mail.
         """
-        mail = BaseMail(
-            sender_id=self.id_,
-            recipient_id=recipient_id,
-            category=category,
-            package=package,
+        pack = Package(category=category, package=package)
+        mail = Mail(
+            sender=self.ln_id,
+            recipient=recipient_id,
+            package=pack,
         )
-        self.pending_outs.append(mail)
+        self.mailbox.include(mail, "out")
+
+    def to_dict(self):
+        return self.model_dump(by_alias=True)

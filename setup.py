@@ -22,7 +22,7 @@ setuptools.setup(
     name="lionagi",
     version=__version__,
     author="HaiyangLi",
-    author_email="ocean@lionagi.ai",
+    author_email="quantocean.li@gmail.com",
     description="Towards automated general intelligence.",
     long_description=open("README.md").read(),
     long_description_content_type="text/markdown",

@@ -1,8 +1,10 @@
 # Default configs for the OpenAI API
 
+API_key_schema = ("OPENAI_API_KEY",)
+
 # ChatCompletion
 oai_chat_llmconfig = {
-    "model": "gpt-4-turbo",
+    "model": "gpt-4o",
     "frequency_penalty": 0,
     "max_tokens": None,
     "n": 1,
@@ -11,7 +13,7 @@ oai_chat_llmconfig = {
     "seed": None,
     "stop": None,
     "stream": False,
-    "temperature": 0.7,
+    "temperature": 0.3,
     "top_p": 1,
     "tools": None,
     "tool_choice": "none",
@@ -120,4 +122,5 @@ oai_schema = {
     "audio_speech": oai_audio_speech_schema,
     "audio_transcriptions": oai_audio_transcriptions_schema,
     "audio_translations": oai_audio_translations_schema,
+    "API_key_schema": API_key_schema,
 }

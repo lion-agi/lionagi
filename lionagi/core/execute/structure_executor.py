@@ -1,21 +1,16 @@
-from typing import overload
-
-from abc import ABC
 from collections import deque
 
 from lionagi.libs import AsyncUtil, convert
 
-from lionagi.core.generic import BaseNode, ActionNode, ActionSelection, Edge
-from lionagi.core.tool import Tool
-from lionagi.core.mail.schema import BaseMail
+from lionagi.core.generic.node import Node
+from lionagi.core.generic.edge import Edge
 from lionagi.core.execute.base_executor import BaseExecutor
 
-from lionagi.libs import AsyncUtil
-from lionagi.core.generic import Node, ActionSelection, Edge
-from lionagi.core.tool import Tool
+from lionagi.core.action import Tool, DirectiveSelection, ActionNode
 
-from lionagi.core.mail.schema import BaseMail
-from lionagi.core.graph.graph import Graph
+from lionagi.core.mail import Mail
+from lionagi.core.generic.graph import Graph
+from lionagi.core.collections.progression import progression
 
 
 class StructureExecutor(BaseExecutor, Graph):
@@ -45,10 +40,10 @@ class StructureExecutor(BaseExecutor, Graph):
         Raises:
             ValueError: If the source_type of the condition is invalid.
         """
-        if edge.condition.source_type == "structure":
-            return edge.condition(self)
+        if edge.condition.source == "structure" or isinstance(edge.condition.source, Node):
+            return await edge.check_condition(self)
 
-        elif edge.condition.source_type == "executable":
+        elif edge.condition.source == "executable":
             return await self._check_executable_condition(
                 edge, executable_id, request_source
             )
@@ -63,20 +58,22 @@ class StructureExecutor(BaseExecutor, Graph):
         Args:
             edge_id (str): The ID of the edge.
         """
-        for key in list(self.pending_ins.keys()):
-            skipped_requests = deque()
-            while self.pending_ins[key]:
-                mail: BaseMail = self.pending_ins[key].popleft()
+        for key in list(self.mailbox.pending_ins.keys()):
+            skipped_requests = progression()
+            while self.mailbox.pending_ins[key]:
+                mail_id = self.mailbox.pending_ins[key].popleft()
+                mail = self.mailbox.pile[mail_id]
                 if (
                     mail.category == "condition"
-                    and mail.package["package"]["edge_id"] == edge_id
+                    and mail.package.package["package"]["edge_id"] == edge_id
                 ):
-                    self.condition_check_result = mail.package["package"][
+                    self.mailbox.pile.pop(mail_id)
+                    self.condition_check_result = mail.package.package["package"][
                         "check_result"
                     ]
                 else:
                     skipped_requests.append(mail)
-            self.pending_ins[key] = skipped_requests
+            self.mailbox.pending_ins[key] = skipped_requests
 
     async def _check_executable_condition(
         self, edge: Edge, executable_id, request_source
@@ -99,13 +96,13 @@ class StructureExecutor(BaseExecutor, Graph):
         )
         while self.condition_check_result is None:
             await AsyncUtil.sleep(0.1)
-            self._process_edge_condition(edge.id_)
+            self._process_edge_condition(edge.ln_id)
             continue
         check_result = self.condition_check_result
         self.condition_check_result = None
         return check_result
 
-    async def _handle_node_id(self, mail: BaseMail):
+    async def _handle_node_id(self, mail: Mail):
         """
         Processes the node identified by its ID in the mail's package, ensuring it exists and retrieving the next set of
         nodes based on the current node.
@@ -116,17 +113,17 @@ class StructureExecutor(BaseExecutor, Graph):
         Raises:
             ValueError: If the node does not exist within the structure.
         """
-        if mail.package["package"] not in self.internal_nodes:
+        if mail.package.package["package"] not in self.internal_nodes:
             raise ValueError(
-                f"Node {mail.package} does not exist in the structure {self.id_}"
+                f"{mail.package.package}: Node does not exist in the structure {self.ln_id}"
             )
         return await self._next_node(
-            self.internal_nodes[mail.package["package"]],
-            mail.sender_id,
-            mail.package["request_source"],
+            self.internal_nodes[mail.package.package["package"]],
+            mail.sender,
+            mail.package.package["request_source"],
         )
 
-    async def _handle_node(self, mail: BaseMail):
+    async def _handle_node(self, mail: Mail):
         """
         Processes the node specified in the mail's package, ensuring it exists within the structure.
 
@@ -136,15 +133,15 @@ class StructureExecutor(BaseExecutor, Graph):
         Raises:
             ValueError: If the node does not exist within the structure.
         """
-        if not self.node_exist(mail.package["package"]):
+        if not self.node_exist(mail.package.package["package"]):
             raise ValueError(
-                f"Node {mail.package} does not exist in the structure {self.id_}"
+                f"{mail.package.package}: Node does not exist in the structure {self.ln_id}"
             )
         return await self._next_node(
-            mail.package["package"], mail.sender_id, mail.package["request_source"]
+            mail.package.package["package"], mail.sender, mail.package.package["request_source"]
         )
 
-    async def _handle_mail(self, mail: BaseMail):
+    async def _handle_mail(self, mail: Mail):
         """
         Processes incoming mail based on its category, initiating node execution or structure operations accordingly.
 
@@ -165,9 +162,9 @@ class StructureExecutor(BaseExecutor, Graph):
             try:
                 return await self._handle_node_id(mail)
             except Exception as e:
-                raise ValueError(f"Error handling node id: {e}") from e
+                raise ValueError(f"Error handling node_id: {e}") from e
 
-        elif mail.category == "node" and isinstance(mail.package["package"], BaseNode):
+        elif mail.category == "node" and isinstance(mail.package.package["package"], Node):
             try:
                 return await self._handle_node(mail)
             except Exception as e:
@@ -188,7 +185,7 @@ class StructureExecutor(BaseExecutor, Graph):
             list[Node]: The next step nodes.
         """
         next_nodes = []
-        next_edges = self.get_node_edges(current_node, node_as="out")
+        next_edges = self.get_node_edges(current_node, direction="out")
         for edge in convert.to_list(list(next_edges.values())):
             if edge.bundle:
                 continue
@@ -199,7 +196,7 @@ class StructureExecutor(BaseExecutor, Graph):
                 if not check:
                     continue
             node = self.internal_nodes[edge.tail]
-            further_edges = self.get_node_edges(node, node_as="out")
+            further_edges = self.get_node_edges(node, direction="out")
             bundled_nodes = deque()
             for f_edge in convert.to_list(list(further_edges.values())):
                 if f_edge.bundle:
@@ -209,7 +206,7 @@ class StructureExecutor(BaseExecutor, Graph):
             next_nodes.append(node)
         return next_nodes
 
-    def _send_mail(self, next_nodes: list | None, mail: BaseMail):
+    def _send_mail(self, next_nodes: list | None, mail: Mail):
         """
         Sends mails to the next nodes or signals the end of execution if no next nodes exist.
 
@@ -219,29 +216,29 @@ class StructureExecutor(BaseExecutor, Graph):
         """
         if not next_nodes:  # tail
             self.send(
-                recipient_id=mail.sender_id,
+                recipient_id=mail.sender,
                 category="end",
                 package={
-                    "request_source": mail.package["request_source"],
+                    "request_source": mail.package.package["request_source"],
                     "package": "end",
                 },
             )
         else:
             if len(next_nodes) == 1:
                 self.send(
-                    recipient_id=mail.sender_id,
+                    recipient_id=mail.sender,
                     category="node",
                     package={
-                        "request_source": mail.package["request_source"],
+                        "request_source": mail.package.package["request_source"],
                         "package": next_nodes[0],
                     },
                 )
             else:
                 self.send(
-                    recipient_id=mail.sender_id,
+                    recipient_id=mail.sender,
                     category="node_list",
                     package={
-                        "request_source": mail.package["request_source"],
+                        "request_source": mail.package.package["request_source"],
                         "package": next_nodes,
                     },
                 )
@@ -271,9 +268,9 @@ class StructureExecutor(BaseExecutor, Graph):
         action_node = ActionNode(instruction=instruction)
         while bundled_nodes:
             node = bundled_nodes.popleft()
-            if isinstance(node, ActionSelection):
-                action_node.action = node.action
-                action_node.action_kwargs = node.action_kwargs
+            if isinstance(node, DirectiveSelection):
+                action_node.directive = node.directive
+                action_node.directive_kwargs = node.directive_kwargs
             elif isinstance(node, Tool):
                 action_node.tools.append(node)
             else:
@@ -284,9 +281,10 @@ class StructureExecutor(BaseExecutor, Graph):
         """
         Process the pending incoming mails and perform the corresponding actions.
         """
-        for key in list(self.pending_ins.keys()):
-            while self.pending_ins[key]:
-                mail: BaseMail = self.pending_ins[key].popleft()
+        for key in list(self.mailbox.pending_ins.keys()):
+            while self.mailbox.pending_ins[key]:
+                mail_id = self.mailbox.pending_ins[key].popleft()
+                mail = self.mailbox.pile.pop(mail_id)
                 try:
                     if mail.category == "end":
                         self.execute_stop = True
@@ -295,6 +293,8 @@ class StructureExecutor(BaseExecutor, Graph):
                     self._send_mail(next_nodes, mail)
                 except Exception as e:
                     raise ValueError(f"Error handling mail: {e}") from e
+            if not self.mailbox.pending_ins[key]:
+                self.mailbox.pending_ins.pop(key)
 
     async def execute(self, refresh_time=1):
         """
@@ -306,7 +306,7 @@ class StructureExecutor(BaseExecutor, Graph):
         Raises:
             ValueError: If the graph structure is found to be cyclic, which is unsupported.
         """
-        if not self.acyclic:
+        if not self.is_acyclic():
             raise ValueError("Structure is not acyclic")
 
         while not self.execute_stop:
@@ -331,4 +331,5 @@ class StructureExecutor(BaseExecutor, Graph):
                        the file writing process or data formatting.
         """
         from lionagi.integrations.storage.to_excel import to_excel
+
         to_excel(self, structure_name, dir)
