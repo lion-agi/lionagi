@@ -10,16 +10,16 @@ from .util import install_missing_dependencies, set_up_interpreter, save_code_fi
 
 
 class Coder:
-    
+
     def __init__(
-        self, 
+        self,
         prompts: dict = None,
         session: Session = None,
         session_kwargs: dict = None,
         required_libraries: list = None,
-        work_dir: Path | str = None    
+        work_dir: Path | str = None,
     ) -> None:
-        
+
         self.prompts = prompts or CODER_PROMPTS
         self.session = session or self._create_session(session_kwargs)
         self.required_libraries = required_libraries or ["lionagi"]
@@ -32,8 +32,12 @@ class Coder:
 
 class Coder:
     def __init__(
-        self, prompts=None, session=None, session_kwargs=None, required_libraries=None, 
-        work_dir=None
+        self,
+        prompts=None,
+        session=None,
+        session_kwargs=None,
+        required_libraries=None,
+        work_dir=None,
     ):
         print("Initializing Coder...")
         self.prompts = prompts or CODER_PROMPTS
@@ -114,14 +118,14 @@ class Coder:
     def _load_code_file(file_path):
         print("Loading code...")
         try:
-            with open(file_path, 'r') as file:
+            with open(file_path, "r") as file:
                 print("Code loaded.")
                 return file.read()
         except FileNotFoundError:
             _logging.error(f"File not found: {file_path}")
             return None
-            
-            
+
+
 async def main():
     print("Starting main function...")
     coder = Coder()

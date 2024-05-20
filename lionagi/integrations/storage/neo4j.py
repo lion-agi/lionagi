@@ -37,15 +37,15 @@ class Neo4j:
 
         Args:
             tx: The Neo4j transaction.
-            node (dict): The properties of the node to be added, including 'id' and 'timestamp'.
+            node (dict): The properties of the node to be added, including 'ln_id' and 'timestamp'.
             name (str): The name of the structure, which is set on the node.
         """
         query = """
-            MERGE (n:Structure:LionNode {id:$id})
+            MERGE (n:Structure:LionNode {ln_id:$ln_id})
             SET n.timestamp = $timestamp
             SET n.name = $name
             """
-        await tx.run(query, id=node["id"], timestamp=node["timestamp"], name=name)
+        await tx.run(query, ln_id=node["ln_id"], timestamp=node["timestamp"], name=name)
         # heads=node['head_nodes'],
         # nodes=node['nodes'],
         # edges=node['edges'])
@@ -57,22 +57,18 @@ class Neo4j:
 
         Args:
             tx: The Neo4j transaction.
-            node (dict): The properties of the system node including 'id', 'timestamp', 'content', 'sender', and 'recipient'.
+            node (dict): The properties of the system node including 'ln_id', 'timestamp', 'content', 'sender', and 'recipient'.
         """
         query = """
-            MERGE (n:System:LionNode {id: $id})
+            MERGE (n:System:LionNode {ln_id: $ln_id})
             SET n.timestamp = $timestamp
             SET n.content = $content
-            SET n.sender = $sender
-            SET n.recipient = $recipient
             """
         await tx.run(
             query,
-            id=node["id"],
+            ln_id=node["ln_id"],
             timestamp=node["timestamp"],
-            content=node["content"],
-            sender=node["sender"],
-            recipient=node["recipient"],
+            content=node["content"]
         )
 
     @staticmethod
@@ -82,22 +78,18 @@ class Neo4j:
 
         Args:
             tx: The Neo4j transaction.
-            node (dict): The properties of the instruction node including 'id', 'timestamp', 'content', 'sender', and 'recipient'.
+            node (dict): The properties of the instruction node including 'ln_id', 'timestamp', 'content', 'sender', and 'recipient'.
         """
         query = """
-            MERGE (n:Instruction:LionNode {id: $id})
+            MERGE (n:Instruction:LionNode {ln_id: $ln_id})
             SET n.timestamp = $timestamp
             SET n.content = $content
-            SET n.sender = $sender
-            SET n.recipient = $recipient
             """
         await tx.run(
             query,
-            id=node["id"],
+            ln_id=node["ln_id"],
             timestamp=node["timestamp"],
-            content=node["content"],
-            sender=node["sender"],
-            recipient=node["recipient"],
+            content=node["content"]
         )
 
     # TODO: tool.manual
@@ -108,41 +100,41 @@ class Neo4j:
 
         Args:
             tx: The Neo4j transaction.
-            node (dict): The properties of the tool node including 'id', 'timestamp', 'function', and 'parser'.
+            node (dict): The properties of the tool node including 'ln_id', 'timestamp', 'function', and 'parser'.
         """
         query = """
-            MERGE (n:Tool:LionNode {id: $id})
+            MERGE (n:Tool:LionNode {ln_id: $ln_id})
             SET n.timestamp = $timestamp
             SET n.function = $function
             SET n.parser = $parser
             """
         await tx.run(
             query,
-            id=node["id"],
+            ln_id=node["ln_id"],
             timestamp=node["timestamp"],
             function=node["function"],
             parser=node["parser"],
         )
 
     @staticmethod
-    async def add_actionSelection_node(tx, node):
+    async def add_directiveSelection_node(tx, node):
         """
-        Asynchronously adds an action selection node to the graph.
+        Asynchronously adds an directive selection node to the graph.
 
         Args:
             tx: The Neo4j transaction.
-            node (dict): The properties of the action selection node including 'id', 'action', and 'actionKwargs'.
+            node (dict): The properties of the directive selection node including 'ln_id', 'directive', and 'directiveKwargs'.
         """
         query = """
-            MERGE (n:ActionSelection:LionNode {id: $id})
-            SET n.action = $action
-            SET n.actionKwargs = $actionKwargs
+            MERGE (n:DirectiveSelection:LionNode {ln_id: $ln_id})
+            SET n.directive = $directive
+            SET n.directiveKwargs = $directiveKwargs
             """
         await tx.run(
             query,
-            id=node["id"],
-            action=node["action"],
-            actionKwargs=node["action_kwargs"],
+            ln_id=node["ln_id"],
+            directive=node["directive"],
+            directiveKwargs=node["directive_kwargs"],
         )
 
     @staticmethod
@@ -152,17 +144,17 @@ class Neo4j:
 
         Args:
             tx: The Neo4j transaction.
-            node (dict): The properties of the agent node including 'id', 'timestamp', 'structureId', and 'outputParser'.
+            node (dict): The properties of the agent node including 'ln_id', 'timestamp', 'structureId', and 'outputParser'.
         """
         query = """
-            MERGE (n:Agent:LionNode {id:$id})
+            MERGE (n:Agent:LionNode {ln_id:$ln_id})
             SET n.timestamp = $timestamp
             SET n.structureId = $structureId
             SET n.outputParser = $outputParser
             """
         await tx.run(
             query,
-            id=node["id"],
+            ln_id=node["ln_id"],
             timestamp=node["timestamp"],
             structureId=node["structure_id"],
             outputParser=node["output_parser"],
@@ -175,20 +167,20 @@ class Neo4j:
 
         Args:
             tx: The Neo4j transaction.
-            edge (dict): The properties of the edge including 'id', 'timestamp', 'head', 'tail', 'label', and 'condition'.
+            edge (dict): The properties of the edge including 'ln_id', 'timestamp', 'head', 'tail', 'label', and 'condition'.
         """
         query = """
-            MATCH (m:LionNode) WHERE m.id = $head
-            MATCH (n:LionNode) WHERE n.id = $tail
+            MATCH (m:LionNode) WHERE m.ln_id = $head
+            MATCH (n:LionNode) WHERE n.ln_id = $tail
             MERGE (m)-[r:FORWARD]->(n)
-            SET r.id = $id
+            SET r.ln_id = $ln_id
             SET r.timestamp = $timestamp
             SET r.label = $label
             SET r.condition = $condition
             """
         await tx.run(
             query,
-            id=edge["id"],
+            ln_id=edge["ln_id"],
             timestamp=edge["timestamp"],
             head=edge["head"],
             tail=edge["tail"],
@@ -203,20 +195,20 @@ class Neo4j:
 
         Args:
             tx: The Neo4j transaction.
-            edge (dict): The properties of the edge including 'id', 'timestamp', 'head', 'tail', 'label', and 'condition'.
+            edge (dict): The properties of the edge including 'ln_id', 'timestamp', 'head', 'tail', 'label', and 'condition'.
         """
         query = """
-            MATCH (m:LionNode) WHERE m.id = $head
-            MATCH (n:LionNode) WHERE n.id = $tail
+            MATCH (m:LionNode) WHERE m.ln_id = $head
+            MATCH (n:LionNode) WHERE n.ln_id = $tail
             MERGE (m)-[r:BUNDLE]->(n)
-            SET r.id = $id
+            SET r.ln_id = $ln_id
             SET r.timestamp = $timestamp
             SET r.label = $label
             SET r.condition = $condition
             """
         await tx.run(
             query,
-            id=edge["id"],
+            ln_id=edge["ln_id"],
             timestamp=edge["timestamp"],
             head=edge["head"],
             tail=edge["tail"],
@@ -234,13 +226,13 @@ class Neo4j:
             structure: The structure node from which head relationships are established.
         """
         for head in structure.get_heads():
-            head_id = head.id_
+            head_id = head.ln_id
             query = """
-                MATCH (m:Structure) WHERE m.id = $structureId
-                MATCH (n:LionNode) WHERE n.id = $headId
+                MATCH (m:Structure) WHERE m.ln_id = $structureId
+                MATCH (n:LionNode) WHERE n.ln_id = $headId
                 MERGE (m)-[:HEAD]->(n)
                 """
-            await tx.run(query, structureId=structure.id_, headId=head_id)
+            await tx.run(query, structureId=structure.ln_id, headId=head_id)
 
     @staticmethod
     async def add_single_condition_cls(tx, condCls):
@@ -252,7 +244,7 @@ class Neo4j:
             condCls (dict): The properties of the condition class node including 'className' and 'code'.
         """
         query = """
-            MERGE (n:Condition:LionNode {className: $className})
+            MERGE (n:EdgeCondition:LionNode {className: $className})
             SET n.code = $code
             """
         await tx.run(query, className=condCls["class_name"], code=condCls["class"])
@@ -285,8 +277,8 @@ class Neo4j:
                 [await self.add_instruction_node(tx, i) for i in node_list]
             elif node == "Tool":
                 [await self.add_tool_node(tx, i) for i in node_list]
-            elif node == "ActionSelection":
-                [await self.add_actionSelection_node(tx, i) for i in node_list]
+            elif node == "DirectiveSelection":
+                [await self.add_directiveSelection_node(tx, i) for i in node_list]
             elif node == "BaseAgent":
                 [await self.add_baseAgent_node(tx, i) for i in node_list]
             else:
@@ -335,7 +327,7 @@ class Neo4j:
     @staticmethod
     async def check_id_constraint(tx):
         """
-        Asynchronously applies a unique constraint on the 'id' attribute for all nodes of type 'LionNode' in the graph.
+        Asynchronously applies a unique constraint on the 'ln_id' attribute for all nodes of type 'LionNode' in the graph.
 
         This constraint ensures that each node in the graph has a unique identifier.
 
@@ -344,7 +336,7 @@ class Neo4j:
         """
         query = """
             CREATE CONSTRAINT node_id IF NOT EXISTS
-            FOR (n:LionNode) REQUIRE (n.id) IS UNIQUE
+            FOR (n:LionNode) REQUIRE (n.ln_id) IS UNIQUE
             """
         await tx.run(query)
 
@@ -421,10 +413,10 @@ class Neo4j:
             A dictionary containing the properties of the node if found, otherwise None.
         """
         query = """
-            MATCH (n:LionNode) WHERE n.id = $id
+            MATCH (n:LionNode) WHERE n.ln_id = $ln_id
             RETURN labels(n), n{.*}
             """
-        result = await tx.run(query, id=node_id)
+        result = await tx.run(query, ln_id=node_id)
         result = [record.values() async for record in result]
         if result:
             return result[0]
@@ -445,7 +437,7 @@ class Neo4j:
         """
         query = """
             MATCH (n:Structure) WHERE n.name = $name
-            RETURN n.id
+            RETURN n.ln_id
             """
         result = await tx.run(query, name=name)
         result = [record.values() async for record in result]
@@ -465,7 +457,7 @@ class Neo4j:
             A list of dictionaries representing the properties and labels of each head node connected to the structure.
         """
         query = """
-            MATCH (n:Structure)-[r:HEAD]->(m) WHERE n.id = $nodeId
+            MATCH (n:Structure)-[r:HEAD]->(m) WHERE n.ln_id = $nodeId
             RETURN r{.*}, labels(m), m{.*}
             """
         result = await tx.run(query, nodeId=node_id)
@@ -485,7 +477,7 @@ class Neo4j:
             A list of dictionaries representing the properties and labels of each node connected by a forward relationship.
         """
         query = """
-            MATCH (n:LionNode)-[r:FORWARD]->(m) WHERE n.id = $nodeId
+            MATCH (n:LionNode)-[r:FORWARD]->(m) WHERE n.ln_id = $nodeId
             RETURN r{.*}, labels(m), m{.*}
             """
         result = await tx.run(query, nodeId=node_id)
@@ -505,7 +497,7 @@ class Neo4j:
             A list of dictionaries representing the properties and labels of each node connected by a bundle relationship.
         """
         query = """
-            MATCH (n:LionNode)-[r:BUNDLE]->(m) WHERE n.id = $nodeId
+            MATCH (n:LionNode)-[r:BUNDLE]->(m) WHERE n.ln_id = $nodeId
             RETURN labels(m), m{.*}
             """
         result = await tx.run(query, nodeId=node_id)
@@ -525,7 +517,7 @@ class Neo4j:
             The code of the condition class if found, otherwise None.
         """
         query = """
-            MATCH (n:Condition) WHERE n.className = $name
+            MATCH (n:EdgeCondition) WHERE n.className = $name
             RETURN n.code
             """
         result = await tx.run(query, name=name)
@@ -557,7 +549,7 @@ class Neo4j:
                 to any existing structure.
         """
         if not structure_name and not structure_id:
-            raise ValueError("Please provide the structure name or id")
+            raise ValueError("Please provide the structure name or ln_id")
         if structure_name:
             id = await self.match_structure_id(tx, structure_name)
             if not id:

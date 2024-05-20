@@ -2,10 +2,17 @@ from collections import deque
 from typing import Any
 
 from lionagi.libs.ln_convert import to_list
-from .abc import Condition, Actionable, LionTypeError, ItemNotFoundError, LionIDable
-from .edge import Edge
-from .node import Node
-from .pile import Pile, pile
+from lionagi.core.collections.abc import (
+    Condition,
+    Actionable,
+    LionTypeError,
+    ItemNotFoundError,
+    LionIDable,
+)
+from lionagi.core.collections import pile, Pile
+
+from lionagi.core.generic.edge import Edge
+from lionagi.core.generic.node import Node
 
 
 class Graph(Node):
@@ -80,9 +87,9 @@ class Graph(Node):
         match direction:
             case "both":
                 edges = node.edges
-            case "head", "predecessor", "outgoing", "out", "predecessors":
+            case "head" | "predecessor" | "outgoing" | "out" | "predecessors":
                 edges = node.relations["out"]
-            case "tail", "successor", "incoming", "in", "successors":
+            case "tail" | "successor" | "incoming" | "in" | "successors":
                 edges = node.relations["in"]
 
         if label:
@@ -170,13 +177,13 @@ class Graph(Node):
         for node in self.internal_nodes:
             node_info = node.to_dict()
             node_info.pop("ln_id")
-            node_info.update({"class_name": node.class_name()})
+            node_info.update({"class_name": node.class_name})
             g.add_node(node.ln_id, **node_info)
 
         for _edge in self.internal_edges:
             edge_info = _edge.to_dict()
             edge_info.pop("ln_id")
-            edge_info.update({"class_name": _edge.class_name()})
+            edge_info.update({"class_name": _edge.class_name})
             source_node_id = edge_info.pop("head")
             target_node_id = edge_info.pop("tail")
             g.add_edge(source_node_id, target_node_id, **edge_info)

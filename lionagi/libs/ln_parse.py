@@ -1,9 +1,23 @@
+"""
+Copyright 2024 HaiyangLi
+
+Licensed under the Apache License, Version 2.0 (the "License");
+you may not use this file except in compliance with the License.
+You may obtain a copy of the License at
+
+    http://www.apache.org/licenses/LICENSE-2.0
+
+Unless required by applicable law or agreed to in writing, software
+distributed under the License is distributed on an "AS IS" BASIS,
+WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+See the License for the specific language governing permissions and
+limitations under the License.
+"""
+
 from collections.abc import Callable
 import re
 import inspect
 import itertools
-import contextlib
-from functools import singledispatchmethod
 from typing import Any
 import numpy as np
 import lionagi.libs.ln_convert as convert
@@ -154,14 +168,14 @@ class ParseUtil:
     @staticmethod
     def extract_code_blocks(code):
         code_blocks = []
-        lines = code.split('\n')
+        lines = code.split("\n")
         inside_code_block = False
         current_block = []
 
         for line in lines:
-            if line.startswith('```'):
+            if line.startswith("```"):
                 if inside_code_block:
-                    code_blocks.append('\n'.join(current_block))
+                    code_blocks.append("\n".join(current_block))
                     current_block = []
                     inside_code_block = False
                 else:
@@ -170,9 +184,9 @@ class ParseUtil:
                 current_block.append(line)
 
         if current_block:
-            code_blocks.append('\n'.join(current_block))
+            code_blocks.append("\n".join(current_block))
 
-        return '\n\n'.join(code_blocks)
+        return "\n\n".join(code_blocks)
 
     @staticmethod
     def md_to_json(
@@ -657,7 +671,7 @@ class StringMatch:
         # Calculate Jaro-Winkler similarity scores for each potential match
         scores = np.array(
             [
-                score_func(convert.to_str(word), correct_word)
+                score_func(str(word), str(correct_word))
                 for correct_word in correct_words_list
             ]
         )

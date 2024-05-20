@@ -5,13 +5,13 @@ from typing import Callable
 from lionagi.core.execute.base_executor import BaseExecutor
 from lionagi.integrations.storage.neo4j import Neo4j
 from lionagi.integrations.storage.storage_util import ParseNode
-from lionagi.core.generic import ActionNode
 from lionagi.core.agent.base_agent import BaseAgent
 from lionagi.core.execute.instruction_map_executor import InstructionMapExecutor
 
-from lionagi.core.mail.schema import BaseMail
-from lionagi.core.tool import Tool
-from lionagi.core.generic import ActionSelection, Edge
+from lionagi.core.mail import Mail
+from lionagi.core.action import Tool, DirectiveSelection, ActionNode
+from lionagi.core.generic.edge import Edge
+from lionagi.core.collections.progression import progression
 
 from lionagi.libs import AsyncUtil
 
@@ -36,6 +36,9 @@ class Neo4jExecutor(BaseExecutor):
     default_agent_executable: BaseExecutor = InstructionMapExecutor()
     condition_check_result: bool | None = None
 
+    class Config:
+        arbitrary_types_allowed = True
+
     async def check_edge_condition(
         self, condition, executable_id, request_source, head, tail
     ):
@@ -52,9 +55,9 @@ class Neo4jExecutor(BaseExecutor):
         Returns:
             bool: Result of the condition check.
         """
-        if condition.source_type == "structure":
-            return condition(self)
-        elif condition.source_type == "executable":
+        if condition.source == "structure":
+            return condition.applies(self)
+        elif condition.source == "executable":
             return await self._check_executable_condition(
                 condition, executable_id, head, tail, request_source
             )
@@ -66,20 +69,22 @@ class Neo4jExecutor(BaseExecutor):
         Args:
             edge_id (str): The ID of the edge.
         """
-        for key in list(self.pending_ins.keys()):
-            skipped_requests = deque()
-            while self.pending_ins[key]:
-                mail: BaseMail = self.pending_ins[key].popleft()
+        for key in list(self.mailbox.pending_ins.keys()):
+            skipped_requests = progression()
+            while self.mailbox.pending_ins[key]:
+                mail_id = self.mailbox.pending_ins[key].popleft()
+                mail = self.mailbox.pile[mail_id]
                 if (
                     mail.category == "condition"
-                    and mail.package["package"]["edge_id"] == edge_id
+                    and mail.package.package["package"]["edge_id"] == edge_id
                 ):
-                    self.condition_check_result = mail.package["package"][
+                    self.mailbox.pile.pop(mail_id)
+                    self.condition_check_result = mail.package.package["package"][
                         "check_result"
                     ]
                 else:
                     skipped_requests.append(mail)
-            self.pending_ins[key] = skipped_requests
+            self.mailbox.pending_ins[key] = skipped_requests
 
     async def _check_executable_condition(
         self, condition, executable_id, head, tail, request_source
@@ -105,7 +110,7 @@ class Neo4jExecutor(BaseExecutor):
         )
         while self.condition_check_result is None:
             await AsyncUtil.sleep(0.1)
-            self._process_edge_condition(edge.id_)
+            self._process_edge_condition(edge.ln_id)
             continue
         check_result = self.condition_check_result
         self.condition_check_result = None
@@ -126,27 +131,27 @@ class Neo4jExecutor(BaseExecutor):
         bundled_nodes = deque()
         for node_labels, node_properties in bundle_list:
             try:
-                if "ActionSelection" in node_labels:
-                    node = ParseNode.parse_actionSelection(node_properties)
+                if "DirectiveSelection" in node_labels:
+                    node = ParseNode.parse_directiveSelection(node_properties)
                     bundled_nodes.append(node)
                 elif "Tool" in node_labels:
                     node = ParseNode.parse_tool(node_properties)
                     bundled_nodes.append(node)
                 else:
                     raise ValueError(
-                        f"Invalid bundle node {node_properties.id}. Valid nodes are ActionSelection or Tool"
+                        f"Invalid bundle node {node_properties.ln_id}. Valid nodes are ActionSelection or Tool"
                     )
             except Exception as e:
                 raise ValueError(
-                    f"Failed to parse ActionSelection or Tool node {node_properties.id}. Error: {e}"
+                    f"Failed to parse ActionSelection or Tool node {node_properties.ln_id}. Error: {e}"
                 )
 
         action_node = ActionNode(instruction=instruction)
         while bundled_nodes:
             node = bundled_nodes.popleft()
-            if isinstance(node, ActionSelection):
-                action_node.action = node.action
-                action_node.action_kwargs = node.action_kwargs
+            if isinstance(node, DirectiveSelection):
+                action_node.directive = node.directive
+                action_node.directive_kwargs = node.directive_kwargs
             elif isinstance(node, Tool):
                 action_node.tools.append(node)
         return action_node
@@ -161,7 +166,7 @@ class Neo4jExecutor(BaseExecutor):
         Returns:
             BaseAgent: An agent executor configured with the given properties.
         """
-        output_parser = ParseNode.convert_to_def(node_properties["outputParser"])
+        output_parser = ParseNode.convert_to_def(node_properties["outputParser"]) if "outputParser" in node_properties else None
 
         structure = Neo4jExecutor(
             driver=self.driver, structure_id=node_properties["structureId"]
@@ -170,9 +175,11 @@ class Neo4jExecutor(BaseExecutor):
             structure=structure,
             executable=self.default_agent_executable,
             output_parser=output_parser,
+            ln_id=node_properties["ln_id"],
+            timestamp=node_properties["timestamp"]
         )
-        agent.id_ = node_properties["id"]
-        agent.timestamp = node_properties["timestamp"]
+        # agent.ln_id = node_properties["ln_id"]
+        # agent.timestamp = node_properties["timestamp"]
         return agent
 
     async def _next_node(
@@ -202,7 +209,7 @@ class Neo4jExecutor(BaseExecutor):
                     condition_obj = ParseNode.parse_condition(condition, condition_cls)
 
                     head = node_id
-                    tail = node_properties["id"]
+                    tail = node_properties["ln_id"]
                     check = await self.check_edge_condition(
                         condition_obj, executable_id, request_source, head, tail
                     )
@@ -210,7 +217,7 @@ class Neo4jExecutor(BaseExecutor):
                         continue
                 except Exception as e:
                     raise ValueError(
-                        f"Failed to use condition {edge_properties['condition']} from {node_id} to {node_properties['id']}, Error: {e}"
+                        f"Failed to use condition {edge_properties['condition']} from {node_id} to {node_properties['ln_id']}, Error: {e}"
                     )
 
             try:
@@ -223,14 +230,14 @@ class Neo4jExecutor(BaseExecutor):
 
                 else:
                     raise ValueError(
-                        f"Invalid start node {node_properties.id}. Valid nodes are System or Instruction"
+                        f"Invalid start node {node_properties.ln_id}. Valid nodes are System or Instruction"
                     )
             except Exception as e:
                 raise ValueError(
-                    f"Failed to parse System or Instruction node {node_properties.id}. Error: {e}"
+                    f"Failed to parse System or Instruction node {node_properties.ln_id}. Error: {e}"
                 )
 
-            bundle_list = await self.driver.get_bundle(node.id_)
+            bundle_list = await self.driver.get_bundle(node.ln_id)
 
             if bundle_list and "System" in node_labels:
                 raise ValueError("System node does not support bundle edge")
@@ -273,12 +280,12 @@ class Neo4jExecutor(BaseExecutor):
         node_list = await self.driver.get_forwards(node_id)
         return await self._next_node(node_list, node_id, executable_id, request_source)
 
-    async def _handle_mail(self, mail: BaseMail):
+    async def _handle_mail(self, mail: Mail):
         """
         Processes incoming mail, determining the next action based on the mail's category and content.
 
         Args:
-            mail (BaseMail): The incoming mail to be processed.
+            mail (Mail): The incoming mail to be processed.
 
         Raises:
             ValueError: If there is an error processing the mail.
@@ -295,9 +302,9 @@ class Neo4jExecutor(BaseExecutor):
 
         elif mail.category == "node_id":
             try:
-                node_id = mail.package["package"]
-                executable_id = mail.sender_id
-                request_source = mail.package["request_source"]
+                node_id = mail.package.package["package"]
+                executable_id = mail.sender
+                request_source = mail.package.package["request_source"]
                 return await self._handle_node_id(
                     node_id, executable_id, request_source
                 )
@@ -305,9 +312,9 @@ class Neo4jExecutor(BaseExecutor):
                 raise ValueError(f"Error in handling node_id: {e}")
         elif mail.category == "node":
             try:
-                node_id = mail.package["package"].id_
-                executable_id = mail.sender_id
-                request_source = mail.package["request_source"]
+                node_id = mail.package.package["package"].ln_id
+                executable_id = mail.sender
+                request_source = mail.package.package["request_source"]
                 return await self._handle_node_id(
                     node_id, executable_id, request_source
                 )
@@ -316,39 +323,39 @@ class Neo4jExecutor(BaseExecutor):
         else:
             raise ValueError(f"Invalid mail type for structure")
 
-    def _send_mail(self, next_nodes: list | None, mail: BaseMail):
+    def _send_mail(self, next_nodes: list | None, mail: Mail):
         """
         Sends out mail to the next nodes or marks the execution as ended if there are no next nodes.
 
         Args:
             next_nodes (list | None): List of next nodes to which mail should be sent.
-            mail (BaseMail): The current mail being processed.
+            mail (Mail): The current mail being processed.
         """
         if not next_nodes:  # tail
             self.send(
-                recipient_id=mail.sender_id,
+                recipient_id=mail.sender,
                 category="end",
                 package={
-                    "request_source": mail.package["request_source"],
+                    "request_source": mail.package.package["request_source"],
                     "package": "end",
                 },
             )
         else:
             if len(next_nodes) == 1:
                 self.send(
-                    recipient_id=mail.sender_id,
+                    recipient_id=mail.sender,
                     category="node",
                     package={
-                        "request_source": mail.package["request_source"],
+                        "request_source": mail.package.package["request_source"],
                         "package": next_nodes[0],
                     },
                 )
             else:
                 self.send(
-                    recipient_id=mail.sender_id,
+                    recipient_id=mail.sender,
                     category="node_list",
                     package={
-                        "request_source": mail.package["request_source"],
+                        "request_source": mail.package.package["request_source"],
                         "package": next_nodes,
                     },
                 )
@@ -357,9 +364,10 @@ class Neo4jExecutor(BaseExecutor):
         """
         Forwards execution by processing all pending mails and advancing to next nodes or actions.
         """
-        for key in list(self.pending_ins.keys()):
-            while self.pending_ins[key]:
-                mail: BaseMail = self.pending_ins[key].popleft()
+        for key in list(self.mailbox.pending_ins.keys()):
+            while self.mailbox.pending_ins[key]:
+                mail_id = self.mailbox.pending_ins[key].popleft()
+                mail = self.mailbox.pile.pop(mail_id)
                 try:
                     if mail == "end":
                         self.execute_stop = True

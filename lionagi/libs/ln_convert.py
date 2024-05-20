@@ -1,3 +1,19 @@
+"""
+Copyright 2024 HaiyangLi
+
+Licensed under the Apache License, Version 2.0 (the "License");
+you may not use this file except in compliance with the License.
+You may obtain a copy of the License at
+
+    http://www.apache.org/licenses/LICENSE-2.0
+
+Unless required by applicable law or agreed to in writing, software
+distributed under the License is distributed on an "AS IS" BASIS,
+WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+See the License for the specific language governing permissions and
+limitations under the License.
+"""
+
 import json
 import re
 from functools import singledispatch
@@ -402,7 +418,7 @@ def to_num(
     *,
     upper_bound: int | float | None = None,
     lower_bound: int | float | None = None,
-    num_type: Type[int | float] = int,
+    num_type: Type[int | float] = float,
     precision: int | None = None,
 ) -> int | float:
     """
@@ -425,15 +441,9 @@ def to_num(
     return _str_to_num(str_, upper_bound, lower_bound, num_type, precision)
 
 
-def to_readable_dict(input_: Any | list[Any]) -> str | list[Any]:
+def to_readable_dict(input_: Any) -> str:
     """
-    Converts a given input to a readable dictionary format, either as a string or a list of dictionaries.
-
-    Args:
-            input_ (Any | list[Any]): The input to convert to a readable dictionary format.
-
-    Returns:
-            str | list[str]: The readable dictionary format of the input.
+    Converts a given input to a readable dictionary format
     """
 
     try:

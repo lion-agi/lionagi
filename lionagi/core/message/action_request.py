@@ -1,3 +1,19 @@
+"""
+Copyright 2024 HaiyangLi
+
+Licensed under the Apache License, Version 2.0 (the "License");
+you may not use this file except in compliance with the License.
+You may obtain a copy of the License at
+
+    http://www.apache.org/licenses/LICENSE-2.0
+
+Unless required by applicable law or agreed to in writing, software
+distributed under the License is distributed on an "AS IS" BASIS,
+WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+See the License for the specific language governing permissions and
+limitations under the License.
+"""
+
 import inspect
 from pydantic import Field
 from lionagi.libs import convert, ParseUtil
@@ -5,6 +21,16 @@ from .message import RoledMessage, MessageRole
 
 
 class ActionRequest(RoledMessage):
+    """
+    Represents a request for an action with function and arguments.
+
+    Inherits from `RoledMessage` and provides attributes specific to action requests.
+
+    Attributes:
+        function (str): The name of the function to be called.
+        arguments (dict): The keyword arguments to be passed to the function.
+        action_response (str): The ID of the action response that this request corresponds to.
+    """
 
     function: str | None = Field(
         None, description="The name of the function to be called"
@@ -25,9 +51,18 @@ class ActionRequest(RoledMessage):
         arguments=None,
         sender=None,  # sender is the assistant who made the request
         recipient=None,  # recipient is the actionable component
+        **kwargs,
     ):
+        """
+        Initializes the ActionRequest.
 
-        function = function if inspect.isfunction(function) else function.__name__
+        Args:
+            function (str or function, optional): The function to be called.
+            arguments (dict, optional): The keyword arguments for the function.
+            sender (str, optional): The sender of the request.
+            recipient (str, optional): The recipient of the request.
+        """
+        function = function.__name__ if inspect.isfunction(function) else function
         arguments = _prepare_arguments(arguments)
 
         super().__init__(
@@ -35,13 +70,34 @@ class ActionRequest(RoledMessage):
             sender=sender,
             recipient=recipient,
             content={"action_request": {"function": function, "arguments": arguments}},
+            **kwargs, 
         )
+        self.function = function
+        self.arguments = arguments
 
     def is_responded(self):
+        """
+        Checks if the action request has been responded to.
+
+        Returns:
+            bool: True if the action request has a response, otherwise False.
+        """
         return self.action_response is not None
 
 
 def _prepare_arguments(arguments):
+    """
+    Prepares the arguments for the action request.
+
+    Args:
+        arguments (Any): The arguments to be prepared.
+
+    Returns:
+        dict: The prepared arguments.
+
+    Raises:
+        ValueError: If the arguments are invalid.
+    """
     if not isinstance(arguments, dict):
         try:
             arguments = ParseUtil.fuzzy_parse_json(convert.to_str(arguments))

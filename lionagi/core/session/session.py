@@ -1,19 +1,34 @@
-from ..generic.abc import Component
-from ..generic import (
+"""
+Copyright 2024 HaiyangLi
+
+Licensed under the Apache License, Version 2.0 (the "License");
+you may not use this file except in compliance with the License.
+You may obtain a copy of the License at
+
+    http://www.apache.org/licenses/LICENSE-2.0
+
+Unless required by applicable law or agreed to in writing, software
+distributed under the License is distributed on an "AS IS" BASIS,
+WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+See the License for the specific language governing permissions and
+limitations under the License.
+"""
+
+from lionagi.core.collections.abc import Component
+from lionagi.core.collections import (
     Pile,
     Progression,
     Flow,
     progression,
     pile,
     flow,
-    Model,
-    DataLogger,
+    iModel,
 )
-from ..message import System
+from lionagi.core.message import System
 from lionagi.libs.ln_api import BaseService
 from typing import Any, Tuple
-from ..action.tool import Tool, TOOL_TYPE
-from ..action.tool_manager import ToolManager
+from lionagi.core.action.tool import Tool, TOOL_TYPE
+from lionagi.core.action.tool_manager import ToolManager
 
 from lionagi.libs import SysUtil
 
@@ -35,7 +50,7 @@ class Session:
             sender=self.ln_id,
             recipient="assistant",
         )
-        self.model = model or Model()
+        self.model = model or iModel()
         self.datalogger = datalogger or DataLogger(persist_path)
 
 

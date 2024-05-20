@@ -1,19 +1,41 @@
+"""
+This module defines the Node class, representing a node in a graph-like
+structure within LionAGI. Nodes can form relationships with other nodes
+through directed edges, enabling construction and manipulation of complex
+relational networks.
+
+Includes functionality for managing relationships, such as adding,
+modifying, and removing edges, and querying related nodes and connections.
+"""
+
 from pydantic import Field
-from lionagi.libs.ln_convert import to_list
 from pandas import Series
-from .abc import (
+
+from lionagi.libs.ln_convert import to_list
+
+from lionagi.core.collections.abc import (
     Component,
     Condition,
     Relatable,
     RelationError,
     get_lion_id,
 )
-from .pile import Pile, pile
-from .edge import Edge
+from lionagi.core.collections import pile, Pile
+from lionagi.core.generic.edge import Edge
 
 
 class Node(Component, Relatable):
-    """Represents a node in a graph with relations to other nodes."""
+    """
+    Node in a graph structure, can connect to other nodes via edges.
+
+    Extends `Component` by incorporating relational capabilities, allowing
+    nodes to connect through 'in' and 'out' directed edges, representing
+    incoming and outgoing relationships.
+
+    Attributes:
+        relations (dict[str, Pile]): Dictionary holding 'Pile' instances
+            for incoming ('in') and outgoing ('out') edges.
+    """
 
     relations: dict[str, Pile] = Field(
         default_factory=lambda: {"in": pile(), "out": pile()},
@@ -22,58 +44,76 @@ class Node(Component, Relatable):
 
     @property
     def edges(self) -> Pile[Edge]:
-        """Return all edges connected to the node."""
+        """
+        Get unified view of all incoming and outgoing edges.
+
+        Returns:
+            Combined pile of all edges connected to this node.
+        """
         return self.relations["in"] + self.relations["out"]
 
     @property
     def related_nodes(self) -> list[str]:
-        """Return a list of node ids related to the node."""
+        """
+        Get list of all unique node IDs directly related to this node.
+
+        Returns:
+            List of node IDs related to this node.
+        """
         all_nodes = set(
             to_list([[i.head, i.tail] for i in self.edges], flatten=True, dropna=True)
         )
-
         all_nodes.discard(self.ln_id)
         return list(all_nodes)
 
     @property
     def node_relations(self) -> dict:
         """
-        Categorize preceding and succeeding relations to the node.
-        {"in": {node_id: [edge, ...]}, "out": {node_id: [edge, ...]}
+        Get categorized view of direct relationships into groups.
+
+        Returns:
+            Dict with keys 'in' and 'out', each containing a mapping of
+            related node IDs to lists of edges representing relationships.
         """
         out_node_edges = {}
-
         if not self.relations["out"].is_empty():
             for edge in self.relations["out"]:
-                for i in self.related_nodes:
-                    if edge.tail == i:
-                        if i in out_node_edges:
-                            out_node_edges[i].append(edge)
-                        else:
-                            out_node_edges[i] = [edge]
+                for node_id in self.related_nodes:
+                    if edge.tail == node_id:
+                        out_node_edges.setdefault(node_id, []).append(edge)
 
         in_node_edges = {}
-
         if not self.relations["in"].is_empty():
             for edge in self.relations["in"]:
-                for i in self.related_nodes:
-                    if edge.head == i:
-                        if i in in_node_edges:
-                            in_node_edges[i].append(edge)
-                        else:
-                            in_node_edges[i] = [edge]
+                for node_id in self.related_nodes:
+                    if edge.head == node_id:
+                        in_node_edges.setdefault(node_id, []).append(edge)
 
         return {"out": out_node_edges, "in": in_node_edges}
 
     @property
-    def precedessors(self) -> list[str]:
-        """Return a list of node ids that precede the node."""
-        return [k for k, v in self.node_relations["in"].items() if len(v) > 0]
+    def predecessors(self) -> list[str]:
+        """
+        Get list of IDs of nodes with direct incoming relation to this.
+
+        Returns:
+            List of node IDs that precede this node.
+        """
+        return [
+            node_id for node_id, edges in self.node_relations["in"].items() if edges
+        ]
 
     @property
     def successors(self) -> list[str]:
-        """Return a list of node ids that succeed the node."""
-        return [k for k, v in self.node_relations["out"].items() if len(v) > 0]
+        """
+        Get list of IDs of nodes with direct outgoing relation from this.
+
+        Returns:
+            List of node IDs that succeed this node.
+        """
+        return [
+            node_id for node_id, edges in self.node_relations["out"].items() if edges
+        ]
 
     def relate(
         self,
@@ -81,58 +121,88 @@ class Node(Component, Relatable):
         direction: str = "out",
         condition: Condition | None = None,
         label: str | None = None,
-        bundle=False,
+        bundle: bool = False,
     ) -> None:
-        """Establish a relation between the node and another node."""
-        if direction == "out":
-            edge = Edge(
-                head=self, tail=node, condition=condition, bundle=bundle, label=label
-            )
+        """
+        Establish directed relationship from this node to another.
 
-            self.relations["out"].include(edge)
-            node.relations["in"].include(edge)
+        Args:
+            node: Target node to relate to.
+            direction: Direction of edge ('in' or 'out'). Default 'out'.
+            condition: Optional condition to associate with edge.
+            label: Optional label for edge.
+            bundle: Whether to bundle edge with others. Default False.
 
-        elif direction == "in":
-            edge = Edge(
-                head=node, tail=self, condition=condition, label=label, bundle=bundle
-            )
-
-            self.relations["in"].include(edge)
-            node.relations["out"].include(edge)
-
-        else:
+        Raises:
+            ValueError: If direction is neither 'in' nor 'out'.
+        """
+        if direction not in ["in", "out"]:
             raise ValueError(
-                f"Invalid value for direction: {direction}, must be 'in' or 'out'"
+                f"Invalid value for direction: {direction}, " "must be 'in' or 'out'"
             )
+
+        edge = Edge(
+            head=self if direction == "out" else node,
+            tail=node if direction == "out" else self,
+            condition=condition,
+            bundle=bundle,
+            label=label,
+        )
+
+        self.relations[direction].include(edge)
+        node.relations["in" if direction == "out" else "out"].include(edge)
 
     def remove_edge(self, node: "Node", edge: Edge | str) -> bool:
-        """Remove an edge between the node and another node."""
+        """
+        Remove specified edge or all edges between this and another node.
 
-        l_ = [
+        Args:
+            node: Other node involved in edge.
+            edge: Specific edge to remove or 'all' to remove all edges.
+
+        Returns:
+            True if edge(s) successfully removed, False otherwise.
+
+        Raises:
+            RelationError: If removal fails or edge does not exist.
+        """
+        edge_piles = [
             self.relations["in"],
             self.relations["out"],
             node.relations["in"],
             node.relations["out"],
         ]
 
-        if not all(i.exclude(edge) for i in l_):
+        if not all(pile.exclude(edge) for pile in edge_piles):
             raise RelationError(f"Failed to remove edge between nodes.")
+        return True
 
     def unrelate(self, node: "Node", edge: Edge | str = "all") -> bool:
-        """Remove all relations or a specific edge between the node and another node."""
+        """
+        Remove all or specific relationships between this and another node.
 
+        Args:
+            node: Other node to unrelate from.
+            edge: Specific edge to remove or 'all' for all. Default 'all'.
+
+        Returns:
+            True if relationships successfully removed, False otherwise.
+
+        Raises:
+            RelationError: If operation fails to unrelate nodes.
+        """
         if edge == "all":
-            edge = self.node_relations["out"].get(node.ln_id, []) + self.node_relations[
-                "in"
-            ].get(node.ln_id, [])
+            edges = self.node_relations["out"].get(
+                node.ln_id, []
+            ) + self.node_relations["in"].get(node.ln_id, [])
         else:
-            edge = [get_lion_id(edge)]
+            edges = [get_lion_id(edge)]
 
-        if len(edge) == 0:
+        if not edges:
             raise RelationError(f"Node is not related to {node.ln_id}.")
 
         try:
-            for edge_id in edge:
+            for edge_id in edges:
                 self.remove_edge(node, edge_id)
             return True
         except RelationError as e:
@@ -140,7 +210,10 @@ class Node(Component, Relatable):
 
     def __str__(self):
         _dict = self.to_dict()
-        _dict["relations"] = [len(self.relations["in"]), len(self.relations["out"])]
+        _dict["relations"] = [
+            len(self.relations["in"]),
+            len(self.relations["out"]),
+        ]
         return Series(_dict).__str__()
 
     def __repr__(self):

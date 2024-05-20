@@ -1,18 +1,34 @@
-from typing import Callable
+"""
+Copyright 2024 HaiyangLi
+
+Licensed under the Apache License, Version 2.0 (the "License");
+you may not use this file except in compliance with the License.
+You may obtain a copy of the License at
+
+    http://www.apache.org/licenses/LICENSE-2.0
+
+Unless required by applicable law or agreed to in writing, software
+distributed under the License is distributed on an "AS IS" BASIS,
+WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+See the License for the specific language governing permissions and
+limitations under the License.
+"""
+
 from lionagi.libs.ln_func_call import rcall
-from pydantic import Field
-
-from ..generic.abc import Element
-from .worklog import WorkLog
+from lionagi.core.work.worklog import WorkLog
 
 
-class WorkFunction(Element):
+class WorkFunction:
+    """
+    A class representing a work function.
 
-    assignment: str = Field(...)
-    function: Callable = Field(...)
-    retry_kwargs: dict = Field(None)
-    guidance: str = Field(None)
-    worklog: WorkLog = Field(None)
+    Attributes:
+        assignment (str): The assignment description of the work function.
+        function (Callable): The function to be performed.
+        retry_kwargs (dict): The retry arguments for the function.
+        worklog (WorkLog): The work log for the function.
+        guidance (str): The guidance or documentation for the function.
+    """
 
     def __init__(
         self, assignment, function, retry_kwargs=None, guidance=None, capacity=10
@@ -27,6 +43,13 @@ class WorkFunction(Element):
     def name(self):
         return self.function.__name__
 
+    def is_progressable(self):
+        return self.worklog.pending_work and not self.worklog.stopped
+
     async def perform(self, *args, **kwargs):
         kwargs = {**self.retry_kwargs, **kwargs}
-        return await rcall(self.function, *args, **kwargs)
+        return await rcall(self.function, *args, timing=True, **kwargs)
+
+    async def forward(self):
+        await self.worklog.forward()
+        await self.worklog.queue.process()

@@ -23,6 +23,7 @@ def set_up_interpreter(interpreter_provider="e2b", key_scheme=E2B_key_scheme):
     else:
         raise ValueError("Invalid interpreter provider")
 
+
 def install_missing_dependencies(required_libraries):
     print("Checking for missing dependencies...")
     missing_libraries = [
@@ -67,6 +68,7 @@ def install_library(library):
             "You may need to run the script with administrative privileges or use a virtual environment."
         )
 
+
 def save_code_file(
     code: Any,
     directory: Path | str = None,
@@ -80,6 +82,7 @@ def save_code_file(
 ):
 
     from lionagi.libs import SysUtil
+
     return SysUtil.save_to_file(
         text=code,
         directory=directory,

@@ -1,25 +1,50 @@
+"""
+Copyright 2024 HaiyangLi
+
+Licensed under the Apache License, Version 2.0 (the "License");
+you may not use this file except in compliance with the License.
+You may obtain a copy of the License at
+
+    http://www.apache.org/licenses/LICENSE-2.0
+
+Unless required by applicable law or agreed to in writing, software
+distributed under the License is distributed on an "AS IS" BASIS,
+WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+See the License for the specific language governing permissions and
+limitations under the License.
+"""
+
+"""
+This module defines the FunctionCalling class, which facilitates dynamic
+invocation of functions based on various input types. It supports initializing
+function calls from tuples, dictionaries, ActionRequest objects, or JSON strings.
+"""
+
 from functools import singledispatchmethod
-from typing import Any, Callable, Tuple, Dict
+from typing import Any, Callable, Dict
 
 from lionagi.libs import ParseUtil
 from lionagi.libs.ln_func_call import call_handler
-from lionagi.core.generic.abc import Actionable, Element
+from lionagi.core.collections.abc import Actionable
 from lionagi.core.message.action_request import ActionRequest
 
 
-class FunctionCalling(Element, Actionable):
-    """Class for dynamically invoking functions based on various input types,
-    allowing function and arguments to be specified through multiple formats.
+class FunctionCalling(Actionable):
+    """
+    A class for dynamically invoking functions based on various input types,
+    allowing for specification of the function and arguments through multiple
+    formats including tuples, dictionaries, ActionRequests, or JSON strings.
     """
 
-    def __init__(self, function: Callable, arguments: dict = None):
+    def __init__(self, function: Callable, arguments: Dict[str, Any] = None):
         """
-        Initializes a new instance of FunctionCalling.
+        Initializes a new instance of FunctionCalling with the given function
+        and optional arguments.
 
         Args:
             function (Callable): The function to be called.
-            arguments (Dict, optional): A dictionary of arguments to pass to the function.
-                                        Defaults to None, which sets it to an empty dictionary.
+            arguments (Dict[str, Any]): Arguments to pass to the function.
+                Defaults to an empty dictionary.
         """
         self.function = function
         self.arguments = arguments or {}
@@ -42,10 +67,11 @@ class FunctionCalling(Element, Actionable):
 
         Args:
             func_call (Any): The function call description, which can be a tuple, dict,
-                             ActionRequest, or JSON string.
+                ActionRequest, or JSON string.
 
         Returns:
-            FunctionCalling: An instance of FunctionCalling prepared to invoke the specified function.
+            FunctionCalling: An instance of FunctionCalling prepared to invoke
+                the specified function.
 
         Raises:
             TypeError: If the input type is not supported.
@@ -53,40 +79,16 @@ class FunctionCalling(Element, Actionable):
         raise TypeError(f"Unsupported type {type(func_call)}")
 
     @create.register(tuple)
-    def _(cls, function_calling):
-        """
-        Handles creation from a tuple input.
-
-        Args:
-            func_call (Tuple[Callable, Dict]): Tuple containing a function and its arguments.
-
-        Returns:
-            FunctionCalling: An initialized FunctionCalling instance.
-
-        Raises:
-            ValueError: If the tuple does not contain exactly two elements.
-        """
+    def _(cls, function_calling: tuple) -> "FunctionCalling":
         if len(function_calling) == 2:
             return cls(function=function_calling[0], arguments=function_calling[1])
         else:
             raise ValueError(f"Invalid function call {function_calling}")
 
     @create.register(dict)
-    def _(cls, function_calling):
-        """
-        Handles creation from a dictionary input.
-
-        Args:
-            func_call (Dict[str, Any]): Dictionary specifying the function and arguments.
-
-        Returns:
-            FunctionCalling: An initialized FunctionCalling instance.
-
-        Raises:
-            ValueError: If the dictionary structure is not as expected.
-        """
+    def _(cls, function_calling: Dict[str, Any]) -> "FunctionCalling":
         if len(function_calling) == 2 and (
-            ["function", "arguments"] <= list(function_calling.keys())
+            {"function", "arguments"} <= function_calling.keys()
         ):
             return cls.create(
                 (function_calling["function"], function_calling["arguments"])
@@ -94,32 +96,11 @@ class FunctionCalling(Element, Actionable):
         raise ValueError(f"Invalid function call {function_calling}")
 
     @create.register(ActionRequest)
-    def _(cls, function_calling):
-        """
-        Handles creation from an ActionRequest object.
-
-        Args:
-            func_call (ActionRequest): An ActionRequest object containing the function and arguments.
-
-        Returns:
-            FunctionCalling: An initialized FunctionCalling instance.
-        """
+    def _(cls, function_calling: ActionRequest) -> "FunctionCalling":
         return cls.create((function_calling.function, function_calling.arguments))
 
     @create.register(str)
-    def _(cls, function_calling):
-        """
-        Handles creation from a JSON string input.
-
-        Args:
-            func_call (str): JSON string describing the function and arguments.
-
-        Returns:
-            FunctionCalling: An initialized FunctionCalling instance.
-
-        Raises:
-            ValueError: If parsing fails or the JSON does not represent a valid function call.
-        """
+    def _(cls, function_calling: str) -> "FunctionCalling":
         _call = None
         try:
             _call = ParseUtil.fuzzy_parse_json(function_calling)
@@ -137,7 +118,7 @@ class FunctionCalling(Element, Actionable):
         Returns:
             Any: The result of the function call.
         """
-        return await call_handler(self.func, **self.arguments)
+        return await call_handler(self.function, **self.arguments)
 
     def __str__(self) -> str:
         """

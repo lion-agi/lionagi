@@ -2,13 +2,11 @@ import json
 import inspect
 import re
 
-from lionagi.core import System, Instruction
-from lionagi.core.tool import Tool
-from lionagi.generic.action.action import ActionSelection
+from lionagi.core.message import System, Instruction, RoledMessage
+from lionagi.core.action import Tool, DirectiveSelection, func_to_tool
+from lionagi.core.action import DirectiveSelection
 from lionagi.core.agent.base_agent import BaseAgent
-from lionagi.core.generic.condition import Condition
-
-from lionagi.core import func_to_tool
+from lionagi.core.generic.edge_condition import EdgeCondition
 
 
 def output_node_list(structure):
@@ -27,38 +25,38 @@ def output_node_list(structure):
     output = {}
 
     structure_output = {
-        "id": structure.id_,
+        "ln_id": structure.ln_id,
         "timestamp": structure.timestamp,
         "type": structure.class_name,
     }
     summary_list.append(structure_output.copy())
-    structure_output["head_nodes"] = json.dumps([i.id_ for i in structure.get_heads()])
+    structure_output["head_nodes"] = json.dumps([i.ln_id for i in structure.get_heads()])
     # structure_output['nodes'] = json.dumps([i for i in structure.internal_nodes.keys()])
     # structure_output['edges'] = json.dumps([i for i in structure.internal_edges.keys()])
     output[structure_output["type"]] = [structure_output]
     for node in structure.internal_nodes.values():
         node_output = {
-            "id": node.id_,
+            "ln_id": node.ln_id,
             "timestamp": node.timestamp,
             "type": node.class_name,
         }
         summary_list.append(node_output.copy())
         if isinstance(node, System) or isinstance(node, Instruction):
             node_output["content"] = json.dumps(node.content)
-            node_output["sender"] = node.sender
-            node_output["recipient"] = node.recipient
+            # node_output["sender"] = node.sender
+            # node_output["recipient"] = node.recipient
         elif isinstance(node, Tool):
-            node_output["function"] = inspect.getsource(node.func)
+            node_output["function"] = inspect.getsource(node.function)
             # node_output['manual'] = node.manual
             node_output["parser"] = (
                 inspect.getsource(node.parser) if node.parser else None
             )
-        elif isinstance(node, ActionSelection):
-            node_output["action"] = node.action
-            node_output["action_kwargs"] = json.dumps(node.action_kwargs)
+        elif isinstance(node, DirectiveSelection):
+            node_output["directive"] = node.directive
+            node_output["directive_kwargs"] = json.dumps(node.directive_kwargs)
         elif isinstance(node, BaseAgent):
-            node_output["structure_id"] = node.structure.id_
-            node_output["output_parser"] = inspect.getsource(node.output_parser)
+            node_output["structure_id"] = node.structure.ln_id
+            node_output["output_parser"] = inspect.getsource(node.output_parser) if node.output_parser else None
         else:
             raise ValueError("Not supported node type detected")
         if node_output["type"] not in output:
@@ -84,7 +82,7 @@ def output_edge_list(structure):
     edge_cls_dict = {}
     for edge in structure.internal_edges.values():
         edge_output = {
-            "id": edge.id_,
+            "ln_id": edge.ln_id,
             "timestamp": edge.timestamp,
             "head": edge.head,
             "tail": edge.tail,
@@ -183,12 +181,8 @@ class ParseNode:
         Returns:
             System: An instantiated System node filled with properties from info_dict.
         """
-        node = System(" ")
-        node.id_ = info_dict["id"]
-        node.timestamp = info_dict["timestamp"]
-        node.content = json.loads(info_dict["content"])
-        node.sender = info_dict["sender"]
-        node.recipient = info_dict["recipient"]
+        info_dict["system"] = json.loads(info_dict.pop("content"))["system_info"]
+        node = System.from_obj(info_dict)
         return node
 
     @staticmethod
@@ -202,18 +196,14 @@ class ParseNode:
         Returns:
             Instruction: An instantiated Instruction node filled with properties from info_dict.
         """
-        node = Instruction(" ")
-        node.id_ = info_dict["id"]
-        node.timestamp = info_dict["timestamp"]
-        node.content = json.loads(info_dict["content"])
-        node.sender = info_dict["sender"]
-        node.recipient = info_dict["recipient"]
+        info_dict["instruction"] = json.loads(info_dict.pop("content"))["instruction"]
+        node = Instruction.from_obj(info_dict)
         return node
 
     @staticmethod
-    def parse_actionSelection(info_dict):
+    def parse_directiveSelection(info_dict):
         """
-        Parses dictionary information into an ActionSelection node object.
+        Parses dictionary information into an DirectiveSelection node object.
 
         Args:
             info_dict (dict): A dictionary containing properties of an action selection node.
@@ -221,15 +211,14 @@ class ParseNode:
         Returns:
             ActionSelection: An instantiated ActionSelection node filled with properties from info_dict.
         """
-        node = ActionSelection()
-        node.id_ = info_dict["id"]
-        node.action = info_dict["action"]
-        if "action_kwargs" in info_dict:
-            if info_dict["action_kwargs"]:
-                node.action_kwargs = json.loads(info_dict["action_kwargs"])
-        elif "actionKwargs" in info_dict:
-            if info_dict["actionKwargs"]:
-                node.action_kwargs = json.loads(info_dict["actionKwargs"])
+        node = DirectiveSelection(ln_id=info_dict["ln_id"])
+        node.directive = info_dict["directive"]
+        if "directive_kwargs" in info_dict:
+            if info_dict["directive_kwargs"]:
+                node.directive_kwargs = json.loads(info_dict["directive_kwargs"])
+        elif "directiveKwargs" in info_dict:
+            if info_dict["directiveKwargs"]:
+                node.directive_kwargs = json.loads(info_dict["directiveKwargs"])
         return node
 
     @staticmethod
@@ -253,14 +242,12 @@ class ParseNode:
             )
 
         func = ParseNode.convert_to_def(func_code)
-        tool = func_to_tool(func)
+        tool = func_to_tool(func, ln_id=info_dict["ln_id"], timestamp=info_dict["timestamp"])
         if func.__doc__:
             if re.search(r":param \w+:", func.__doc__):
-                tool = func_to_tool(func, docstring_style="reST")
+                tool = func_to_tool(func, docstring_style="reST", ln_id=info_dict["ln_id"], timestamp=info_dict["timestamp"])
 
         tool = tool[0]
-        tool.id_ = info_dict["id"]
-        tool.timestamp = info_dict["timestamp"]
         return tool
 
     @staticmethod

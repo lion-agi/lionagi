@@ -131,6 +131,6 @@ class Services:
                 kwargs (Optional[Any]): additional kwargs for calling the model
         """
 
-        from lionagi.integrations.provider.mlx_service import MlXService
+        from lionagi.integrations.provider.mlx_service import MLXService
 
-        return MlXService(**kwargs)
+        return MLXService(**kwargs)

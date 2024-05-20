@@ -1,3 +1,19 @@
+"""
+Copyright 2024 HaiyangLi
+
+Licensed under the Apache License, Version 2.0 (the "License");
+you may not use this file except in compliance with the License.
+You may obtain a copy of the License at
+
+    http://www.apache.org/licenses/LICENSE-2.0
+
+Unless required by applicable law or agreed to in writing, software
+distributed under the License is distributed on an "AS IS" BASIS,
+WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+See the License for the specific language governing permissions and
+limitations under the License.
+"""
+
 from __future__ import annotations
 
 import functools
@@ -126,6 +142,11 @@ async def alcall(
         outs_.append(await i if isinstance(i, (Coroutine, asyncio.Future)) else i)
 
     return to_list(outs_, flatten=flatten, dropna=dropna)
+
+
+async def pcall(funcs):
+    task = [asyncio.create_task(func) for func in funcs]
+    return await asyncio.gather(*task)
 
 
 async def mcall(
@@ -294,6 +315,8 @@ async def rcall(
     backoff_factor: float = 2.0,
     default: Any = None,
     timeout: float | None = None,
+    timing: bool = False,
+    verbose: bool = True,
     **kwargs,
 ) -> Any:
     """
@@ -339,12 +362,22 @@ async def rcall(
     last_exception = None
     result = None
 
+    start = SysUtil.get_now(datetime_=False)
     for attempt in range(retries + 1) if retries == 0 else range(retries):
         try:
+            err_msg = f"Attempt {attempt + 1}/{retries}: " if retries > 0 else None
+            if timing:
+                return (
+                    await _tcall(func, *args, err_msg=err_msg, timeout=timeout, **kwargs),
+                    SysUtil.get_now(datetime_=False) - start,
+                )
+
             return await _tcall(func, *args, timeout=timeout, **kwargs)
         except Exception as e:
             last_exception = e
             if attempt < retries:
+                if verbose:
+                    print(f"Attempt {attempt + 1}/{retries} failed: {e}, retrying...")
                 await AsyncUtil.sleep(delay)
                 delay *= backoff_factor
             else:
@@ -352,7 +385,7 @@ async def rcall(
     if result is None and default is not None:
         return default
     elif last_exception is not None:
-        raise last_exception
+        raise RuntimeError(f"Operation failed after {retries} attempts: {last_exception}") from last_exception
     else:
         raise RuntimeError("rcall failed without catching an exception")
 
@@ -457,8 +490,7 @@ async def _tcall(
         duration = SysUtil.get_now(datetime_=False) - start_time
         return (result, duration) if timing else result
     except asyncio.TimeoutError as e:
-        err_msg = f"{err_msg} Error: {e}" if err_msg else f"An error occurred: {e}"
-        print(err_msg)
+        err_msg = f"{err_msg or ''}Timeout {timeout} seconds exceeded"
         if ignore_err:
             return (
                 (default, SysUtil.get_now(datetime_=False) - start_time)
@@ -466,7 +498,7 @@ async def _tcall(
                 else default
             )
         else:
-            raise e  # Re-raise the timeout exception
+            raise asyncio.TimeoutError(err_msg)  # Re-raise the timeout exception
     except Exception as e:
         err_msg = f"{err_msg} Error: {e}" if err_msg else f"An error occurred: {e}"
         print(err_msg)
