@@ -45,7 +45,7 @@ def _output_excel(
         if i == "StructureExecutor":
             structure_node = node_dict[i][0]
             structure_node["name"] = structure_name
-            structure_id = structure_node["id"]
+            structure_id = structure_node["ln_id"]
         tables[i] = pd.DataFrame(node_dict[i])
 
     import os

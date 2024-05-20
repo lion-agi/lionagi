@@ -137,9 +137,9 @@ class StructureExcel:
         Returns:
             dict: A dictionary containing the properties and values for the specified node.
         """
-        node_type = self.nodes[self.nodes["id"] == node_id]["type"].iloc[0]
+        node_type = self.nodes[self.nodes["ln_id"] == node_id]["type"].iloc[0]
         node_file = self.file[node_type]
-        row = node_file[node_file["id"] == node_id].iloc[0]
+        row = node_file[node_file["ln_id"] == node_id].iloc[0]
         info_dict = row.to_dict()
         return info_dict
 
@@ -168,9 +168,9 @@ class StructureExcel:
             structure=structure,
             executable=self.default_agent_executable,
             output_parser=output_parser,
+            ln_id=info_dict["ln_id"],
+            timestamp=info_dict["timestamp"]
         )
-        agent.id_ = info_dict["id"]
-        agent.timestamp = info_dict["timestamp"]
         return agent
 
     def parse_node(self, info_dict):
@@ -192,8 +192,8 @@ class StructureExcel:
             return ParseNode.parse_instruction(info_dict)
         elif info_dict["type"] == "Tool":
             return ParseNode.parse_tool(info_dict)
-        elif info_dict["type"] == "ActionSelection":
-            return ParseNode.parse_actionSelection(info_dict)
+        elif info_dict["type"] == "DirectiveSelection":
+            return ParseNode.parse_directiveSelection(info_dict)
         elif info_dict["type"] == "BaseAgent":
             return self.parse_agent(info_dict)
 
@@ -229,14 +229,14 @@ class StructureExcel:
         if not parent_node:
             return
         row = self.edges[
-            (self.edges["head"] == parent_node.id_) & (self.edges["tail"] == node.id_)
+            (self.edges["head"] == parent_node.ln_id) & (self.edges["tail"] == node.ln_id)
         ]
         if len(row) > 1:
             raise ValueError(
-                f"currently does not support handle multiple edges between two nodes, Error node: from {parent_node.id_} to {node.id_}"
+                f"currently does not support handle multiple edges between two nodes, Error node: from {parent_node.ln_id} to {node.ln_id}"
             )
         if row["condition"].isna().any():
-            self.structure.relate_nodes(parent_node, node)
+            self.structure.add_edge(parent_node, node)
         else:
             cond = json.loads(row["condition"].iloc[0])
             cond_cls = cond["class"]
@@ -245,7 +245,7 @@ class StructureExcel:
             ]
             cond_code = cond_row["class"].iloc[0]
             condition = ParseNode.parse_condition(cond, cond_code)
-            self.structure.relate_nodes(parent_node, node, condition=condition)
+            self.structure.add_edge(parent_node, node, condition=condition)
 
     def parse(self, node_list, parent_node=None):
         """
@@ -265,7 +265,7 @@ class StructureExcel:
             info_dict = self._reload_info_dict(node_id)
             node = self.parse_node(info_dict)
 
-            if node.id_ not in self.structure.internal_nodes:
+            if node.ln_id not in self.structure.internal_nodes:
                 self.structure.add_node(node)
             self.relate(parent_node, node)
 
