@@ -105,7 +105,7 @@ class Neo4jExecutor(BaseExecutor):
             recipient=executable_id,
             category="condition",
             package=edge,
-            request_source=request_source
+            request_source=request_source,
         )
         while self.condition_check_result is None:
             await AsyncUtil.sleep(0.1)
@@ -165,7 +165,11 @@ class Neo4jExecutor(BaseExecutor):
         Returns:
             BaseAgent: An agent executor configured with the given properties.
         """
-        output_parser = ParseNode.convert_to_def(node_properties["outputParser"]) if "outputParser" in node_properties else None
+        output_parser = (
+            ParseNode.convert_to_def(node_properties["outputParser"])
+            if "outputParser" in node_properties
+            else None
+        )
 
         structure = Neo4jExecutor(
             driver=self.driver, structure_id=node_properties["structureId"]
@@ -175,7 +179,7 @@ class Neo4jExecutor(BaseExecutor):
             executable=self.default_agent_executable,
             output_parser=output_parser,
             ln_id=node_properties["ln_id"],
-            timestamp=node_properties["timestamp"]
+            timestamp=node_properties["timestamp"],
         )
         return agent
 
@@ -333,7 +337,7 @@ class Neo4jExecutor(BaseExecutor):
                 recipient=mail.sender,
                 category="end",
                 package="end",
-                request_source=mail.package.request_source
+                request_source=mail.package.request_source,
             )
         else:
             if len(next_nodes) == 1:
@@ -341,14 +345,14 @@ class Neo4jExecutor(BaseExecutor):
                     recipient=mail.sender,
                     category="node",
                     package=next_nodes[0],
-                    request_source=mail.package.request_source
+                    request_source=mail.package.request_source,
                 )
             else:
                 self.send(
                     recipient=mail.sender,
                     category="node_list",
                     package=next_nodes,
-                    request_source=mail.package.request_source
+                    request_source=mail.package.request_source,
                 )
 
     async def forward(self) -> None:

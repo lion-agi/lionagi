@@ -125,14 +125,14 @@ class Instruction(RoledMessage):
                 requested_fields
             )
 
-    def copy(self, **kwargs):
+    def clone(self, **kwargs):
         import json
+
         content = json.dumps(self.content)
         instruction_copy = Instruction(**kwargs)
         instruction_copy.content = json.loads(content)
         instruction_copy.metadata["origin_ln_id"] = self.ln_id
         return instruction_copy
-
 
     @staticmethod
     def _format_requested_fields(requested_fields):

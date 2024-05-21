@@ -36,8 +36,9 @@ class AssistantResponse(RoledMessage):
             **kwargs,
         )
 
-    def copy(self, **kwargs):
+    def clone(self, **kwargs):
         import json
+
         content = json.dumps(self.content["assistant_response"])
         content = {"content": json.loads(content)}
         response_copy = AssistantResponse(assistant_response=content, **kwargs)

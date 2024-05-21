@@ -69,7 +69,11 @@ class MailManager(Element, Executable):
     def collect(self, sender):
         if sender not in self.sources:
             raise ValueError(f"Sender source {sender} does not exist.")
-        mailbox = self.sources[sender] if isinstance(self.sources[sender], Exchange) else self.sources[sender].mailbox
+        mailbox = (
+            self.sources[sender]
+            if isinstance(self.sources[sender], Exchange)
+            else self.sources[sender].mailbox
+        )
         while mailbox.pending_outs.size() > 0:
             mail_id = mailbox.pending_outs.popleft()
             mail = mailbox.pile.pop(mail_id)

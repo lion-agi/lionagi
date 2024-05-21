@@ -36,7 +36,7 @@ from lionagi.core.message import (
     AssistantResponse,
     ActionRequest,
     ActionResponse,
-    RoledMessage
+    RoledMessage,
 )
 
 from lionagi.core.session.directive_mixin import DirectiveMixin
@@ -359,11 +359,7 @@ class Branch(Node, DirectiveMixin):
         return isinstance(self.messages[-1], ActionResponse)
 
     def send(
-        self,
-        recipient: str,
-        category: str,
-        package: Any,
-        request_source: str = None
+        self, recipient: str, category: str, package: Any, request_source: str = None
     ) -> None:
         """
         Sends a mail to a recipient.
@@ -374,7 +370,9 @@ class Branch(Node, DirectiveMixin):
             package (Any): The package to send in the mail.
             request_source (str): The source of the request.
         """
-        pack = Package(category=category, package=package, request_source=request_source)
+        pack = Package(
+            category=category, package=package, request_source=request_source
+        )
         mail = Mail(
             sender=self.ln_id,
             recipient=recipient,
@@ -400,7 +398,7 @@ class Branch(Node, DirectiveMixin):
             if mail.category == "message" and message:
                 if not isinstance(mail.package.package, RoledMessage):
                     raise ValueError("Invalid message format")
-                new_message = mail.package.package.copy()
+                new_message = mail.package.package.clone()
                 new_message.sender = mail.sender
                 new_message.recipient = self.ln_id
                 self.messages.include(new_message)

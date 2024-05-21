@@ -12,10 +12,30 @@ from lionagi.core.execute.base_executor import BaseExecutor
 
 class BranchExecutor(Branch, BaseExecutor):
 
-    def __init__(self, context=None, verbose=True, system=None, user=None, messages=None,
-                 progress=None, tool_manager=None, tools=None, mailbox=None, imodel=None, **kwargs):
-        super().__init__(system=system, user=user, messages=messages, progress=progress, tool_manager=tool_manager,
-                         tools=tools, imodel=imodel, **kwargs)
+    def __init__(
+        self,
+        context=None,
+        verbose=True,
+        system=None,
+        user=None,
+        messages=None,
+        progress=None,
+        tool_manager=None,
+        tools=None,
+        mailbox=None,
+        imodel=None,
+        **kwargs,
+    ):
+        super().__init__(
+            system=system,
+            user=user,
+            messages=messages,
+            progress=progress,
+            tool_manager=tool_manager,
+            tools=tools,
+            imodel=imodel,
+            **kwargs,
+        )
         self.context = context
         self.verbose = verbose
 
@@ -70,18 +90,16 @@ class BranchExecutor(Branch, BaseExecutor):
                 recipient=mail.sender,
                 category="node_id",
                 package=node.ln_id,
-                request_source=self.ln_id
+                request_source=self.ln_id,
             )
 
         elif isinstance(node, Instruction):
-            await self._instruction_process(
-                node, verbose=self.verbose
-            )
+            await self._instruction_process(node, verbose=self.verbose)
             self.send(
                 recipient=mail.sender,
                 category="node_id",
                 package=node.ln_id,
-                request_source=self.ln_id
+                request_source=self.ln_id,
             )
 
         elif isinstance(node, ActionNode):
@@ -90,7 +108,7 @@ class BranchExecutor(Branch, BaseExecutor):
                 recipient=mail.sender,
                 category="node_id",
                 package=node.instruction.ln_id,
-                request_source=self.ln_id
+                request_source=self.ln_id,
             )
         else:
             try:
@@ -99,7 +117,7 @@ class BranchExecutor(Branch, BaseExecutor):
                     recipient=mail.sender,
                     category="node_id",
                     package=node.ln_id,
-                    request_source=self.ln_id
+                    request_source=self.ln_id,
                 )
             except:
                 raise ValueError(f"Invalid mail to process. Mail:{mail}")
@@ -136,7 +154,7 @@ class BranchExecutor(Branch, BaseExecutor):
             recipient=mail.sender,
             category="condition",
             package=back_mail,
-            request_source=self.ln_id
+            request_source=self.ln_id,
         )
 
     def _system_process(self, system: System, verbose=True, context_verbose=False):
@@ -189,7 +207,9 @@ class BranchExecutor(Branch, BaseExecutor):
             )
 
         if self.context:
-            result = await self.chat(instruction=instruction.instruct, context=self.context, **kwargs)
+            result = await self.chat(
+                instruction=instruction.instruct, context=self.context, **kwargs
+            )
             self.context = None
         else:
             result = await self.chat(instruction=instruction.instruct, **kwargs)
@@ -202,11 +222,7 @@ class BranchExecutor(Branch, BaseExecutor):
             if "assistant_response" in result.keys():
                 result = result["assistant_response"]
         if verbose:
-            display(
-                Markdown(
-                    f"assistant {self.ln_id}: {convert.to_str(result)}"
-                )
-            )
+            display(Markdown(f"assistant {self.ln_id}: {convert.to_str(result)}"))
             print("-----------------------------------------------------")
 
         self.execution_responses.append(result)
@@ -258,11 +274,7 @@ class BranchExecutor(Branch, BaseExecutor):
 
         if verbose:
             if action.directive == "chat":
-                display(
-                    Markdown(
-                        f"assistant {self.ln_id}: {convert.to_str(result)}"
-                    )
-                )
+                display(Markdown(f"assistant {self.ln_id}: {convert.to_str(result)}"))
             else:
                 display(Markdown(f"assistant {self.ln_id}:\n"))
                 for k, v in result.work_fields.items():
@@ -303,7 +315,7 @@ class BranchExecutor(Branch, BaseExecutor):
             recipient=start_mail_content["structure_id"],
             category="start",
             package="start",
-            request_source=self.ln_id
+            request_source=self.ln_id,
         )
 
     def _process_end(self, mail: Mail):
@@ -318,5 +330,5 @@ class BranchExecutor(Branch, BaseExecutor):
             recipient=mail.sender,
             category="end",
             package="end",
-            request_source=self.ln_id
+            request_source=self.ln_id,
         )

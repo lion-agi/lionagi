@@ -40,7 +40,9 @@ class StructureExecutor(BaseExecutor, Graph):
         Raises:
             ValueError: If the source_type of the condition is invalid.
         """
-        if edge.condition.source == "structure" or isinstance(edge.condition.source, Node):
+        if edge.condition.source == "structure" or isinstance(
+            edge.condition.source, Node
+        ):
             return await edge.check_condition(self)
 
         elif edge.condition.source == "executable":
@@ -91,7 +93,7 @@ class StructureExecutor(BaseExecutor, Graph):
             recipient=executable_id,
             category="condition",
             package=edge,
-            request_source=request_source
+            request_source=request_source,
         )
         while self.condition_check_result is None:
             await AsyncUtil.sleep(0.1)
@@ -218,7 +220,7 @@ class StructureExecutor(BaseExecutor, Graph):
                 recipient=mail.sender,
                 category="end",
                 package="end",
-                request_source=mail.package.request_source
+                request_source=mail.package.request_source,
             )
         else:
             if len(next_nodes) == 1:
@@ -226,14 +228,14 @@ class StructureExecutor(BaseExecutor, Graph):
                     recipient=mail.sender,
                     category="node",
                     package=next_nodes[0],
-                    request_source=mail.package.request_source
+                    request_source=mail.package.request_source,
                 )
             else:
                 self.send(
                     recipient=mail.sender,
                     category="node_list",
                     package=next_nodes,
-                    request_source=mail.package.request_source
+                    request_source=mail.package.request_source,
                 )
 
     @staticmethod

@@ -8,6 +8,7 @@ from lionagi.core.execute.base_executor import BaseExecutor
 from lionagi.core.execute.branch_executor import BranchExecutor
 from lionagi.core.collections import progression, pile, Pile
 
+
 class InstructionMapExecutor(BaseExecutor):
     """
     Manages the execution of a mapped set of instructions across multiple branches within an executable structure.
@@ -127,7 +128,9 @@ class InstructionMapExecutor(BaseExecutor):
         shared_context_log = self.branches[source_branch_id].context_log
         base_branch = self.branches[source_branch_id]
 
-        pack = Package(category="node", package=node_list[0], request_source=source_branch_id)
+        pack = Package(
+            category="node", package=node_list[0], request_source=source_branch_id
+        )
         mail = Mail(
             sender=self.mail_transfer.ln_id,
             recipient=source_branch_id,
@@ -136,22 +139,22 @@ class InstructionMapExecutor(BaseExecutor):
         self.mail_transfer.include(mail, "out")
 
         for i in range(1, len(node_list)):
-            system = base_branch.system.copy() if base_branch.system else None
+            system = base_branch.system.clone() if base_branch.system else None
             if system:
                 system.sender = base_branch.ln_id
             progress = progression()
             messages = pile()
 
             for id_ in base_branch.progress:
-                copy_message = base_branch.messages[id_].copy()
-                progress.append(copy_message.ln_id)
-                messages.append(copy_message)
+                clone_message = base_branch.messages[id_].clone()
+                progress.append(clone_message.ln_id)
+                messages.append(clone_message)
 
             branch = BranchExecutor(
                 verbose=self.verbose,
                 messages=messages,
                 user=base_branch.user,
-                system=base_branch.system.copy(),
+                system=base_branch.system.clone(),
                 progress=progress,
                 imodel=base_branch.imodel,
             )
@@ -163,7 +166,9 @@ class InstructionMapExecutor(BaseExecutor):
             branch.context_log = shared_context_log
             self.branches[branch.ln_id] = branch
             self.mail_manager.add_sources([branch])
-            node_pacakge = Package(category="node", package=node_list[i], request_source=source_branch_id)
+            node_pacakge = Package(
+                category="node", package=node_list[i], request_source=source_branch_id
+            )
             node_mail = Mail(
                 sender=self.mail_transfer.ln_id,
                 recipient=branch.ln_id,
@@ -180,7 +185,9 @@ class InstructionMapExecutor(BaseExecutor):
         self.mail_manager.collect_all()
         self.mail_manager.send_all()
         tasks = [
-            branch.forward() for branch in self.branches.values() if branch.mailbox.pending_ins
+            branch.forward()
+            for branch in self.branches.values()
+            if branch.mailbox.pending_ins
         ]
         await asyncio.gather(*tasks)
         return
