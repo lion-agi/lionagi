@@ -27,6 +27,9 @@ from lionagi.core.session.branch import Branch
 from lionagi.core.report import Form, Report
 from lionagi.integrations.provider.services import Services
 import lionagi.core.director.direct as direct
+from lionagi.integrations.chunker.chunk import chunk
+from lionagi.integrations.loader.load import load
+
 
 
 
@@ -47,6 +50,8 @@ __all__ = [
     "Graph",
     "Tree",
     "Edge",
+    "chunk",
+    "load",
 ]
 
 
