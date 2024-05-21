@@ -106,3 +106,13 @@ class ActionResponse(RoledMessage):
             "arguments": self.arguments,
             "output": self.func_outputs,
         }
+
+    def copy(self, **kwargs):
+        import json
+        arguments = json.dumps(self.arguments)
+        action_request = ActionRequest(function=self.function, arguments=json.loads(arguments))
+        action_response_copy = ActionResponse(action_request=action_request, **kwargs)
+        action_response_copy.action_request = self.action_request
+        action_response_copy.func_outputs = self.func_outputs
+        action_response_copy.metadata["origin_ln_id"] = self.ln_id
+        return action_response_copy

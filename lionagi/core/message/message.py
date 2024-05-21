@@ -13,8 +13,13 @@ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the License for the specific language governing permissions and
 limitations under the License.
 """
-
+import typing
 from enum import Enum
+from typing import Any
+
+# from pydantic._internal._utils import AbstractSetIntStr, MappingIntStrAny
+# from pydantic.main import Model
+
 from lionagi.libs.ln_convert import to_str
 
 from lionagi.core.collections.abc import Sendable, Field

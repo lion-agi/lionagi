@@ -43,3 +43,10 @@ class System(RoledMessage):
         Retrieves the system information stored in the message content.
         """
         return self.content["system_info"]
+
+    def copy(self, **kwargs):
+        import json
+        system = json.dumps(self.system_info)
+        system_copy = System(system=json.loads(system), **kwargs)
+        system_copy.metadata["origin_ln_id"] = self.ln_id
+        return system_copy

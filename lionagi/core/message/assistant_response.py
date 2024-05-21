@@ -35,3 +35,11 @@ class AssistantResponse(RoledMessage):
             recipient=recipient,
             **kwargs,
         )
+
+    def copy(self, **kwargs):
+        import json
+        content = json.dumps(self.content["assistant_response"])
+        content = {"content": json.loads(content)}
+        response_copy = AssistantResponse(assistant_response=content, **kwargs)
+        response_copy.metadata["origin_ln_id"] = self.ln_id
+        return response_copy

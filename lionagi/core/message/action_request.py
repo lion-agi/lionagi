@@ -84,6 +84,14 @@ class ActionRequest(RoledMessage):
         """
         return self.action_response is not None
 
+    def copy(self, **kwargs):
+        import json
+        arguments = json.dumps(self.arguments)
+        request_copy = ActionRequest(function=self.function, arguments=json.loads(arguments), **kwargs)
+        request_copy.action_response = self.action_response
+        request_copy.metadata["origin_ln_id"] = self.ln_id
+        return request_copy
+
 
 def _prepare_arguments(arguments):
     """

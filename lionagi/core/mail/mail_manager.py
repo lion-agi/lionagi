@@ -61,8 +61,6 @@ class MailManager(Element, Executable):
     def delete_source(self, source_id):
         if source_id not in self.sources:
             raise ValueError(f"Source {source_id} does not exist.")
-        # if self.mails[source_id]:
-        #     raise ValueError(f"None empty pending mails in source {source_id}")
         self.sources.pop(source_id)
         self.mails.pop(source_id)
 
@@ -70,7 +68,7 @@ class MailManager(Element, Executable):
         if sender not in self.sources:
             raise ValueError(f"Sender source {sender} does not exist.")
         mailbox = self.sources[sender] if isinstance(self.sources[sender], Exchange) else self.sources[sender].mailbox
-        while mailbox.pending_outs:
+        while mailbox.pending_outs.size() > 0:
             mail_id = mailbox.pending_outs.popleft()
             mail = mailbox.pile.pop(mail_id)
             if mail.recipient not in self.sources:
