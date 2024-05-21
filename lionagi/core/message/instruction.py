@@ -66,7 +66,7 @@ class Instruction(RoledMessage):
             recipient=recipient or "N/A",
             **kwargs,
         )
-        
+
         additional_context = additional_context or {}
         self._initiate_content(context, requested_fields, **additional_context)
 

@@ -25,15 +25,15 @@ class System(RoledMessage):
 
     def __init__(self, system=None, sender=None, recipient=None, **kwargs):
         if not system:
-            if 'metadata' in kwargs and 'system' in kwargs['metadata']:
-                system = kwargs['metadata'].pop('system')
+            if "metadata" in kwargs and "system" in kwargs["metadata"]:
+                system = kwargs["metadata"].pop("system")
 
         super().__init__(
             role=MessageRole.SYSTEM,
             sender=sender or "system",
             content={"system_info": system},
             recipient=recipient or "N/A",
-            system = system,
+            system=system,
             **kwargs,
         )
 

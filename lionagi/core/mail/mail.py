@@ -21,5 +21,5 @@ class Mail(Element, Sendable):
             "ln_id": self.ln_id,
             "created": self.timestamp,
             "package_category": self.package.category,
-            "package_id": self.package.ln_id
+            "package_id": self.package.ln_id,
         }

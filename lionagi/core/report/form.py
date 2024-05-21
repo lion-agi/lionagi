@@ -61,7 +61,7 @@ class Form(BaseForm):
             field = field.split(",")
         if not isinstance(field, list):
             field = [field]
-        
+
         for i in field:
             i = i.strip()
             if i not in self._all_fields:

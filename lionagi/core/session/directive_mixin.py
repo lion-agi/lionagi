@@ -55,10 +55,10 @@ class DirectiveMixin:
         """
         Asynchronously handles a chat interaction within the directive framework.
 
-        This method processes an instruction with the given context and optional 
-        parameters, interacting with tools, models, and validation rules as needed. 
-        It manages retries, timeouts, concurrency, and can optionally clear 
-        previous messages, swap system messages, and control the use of 
+        This method processes an instruction with the given context and optional
+        parameters, interacting with tools, models, and validation rules as needed.
+        It manages retries, timeouts, concurrency, and can optionally clear
+        previous messages, swap system messages, and control the use of
         annotations and rulebooks.
 
         Args:
@@ -66,44 +66,44 @@ class DirectiveMixin:
             context (Any, optional): Context to perform the instruction on.
             system (str, optional): Optionally swap the system message.
             sender (str, optional): Sender of the instruction, default is "user".
-            recipient (str, optional): Recipient of the instruction, default is 
+            recipient (str, optional): Recipient of the instruction, default is
                 "branch.ln_id".
             branch (Branch, optional): The branch to use for the instruction.
-            requested_fields (dict[str, str], optional): Fields to request from 
+            requested_fields (dict[str, str], optional): Fields to request from
                 the context.
             form (Any, optional): Form to create instruction from, default is None.
-            tools (bool, optional): Tools to use, use True to consider all tools, 
+            tools (bool, optional): Tools to use, use True to consider all tools,
                 no tools by default.
-            invoke_tool (bool, optional): Whether to invoke the tool when function 
+            invoke_tool (bool, optional): Whether to invoke the tool when function
                 calling, default is True.
-            return_form (bool, optional): Whether to return the form if a form is 
+            return_form (bool, optional): Whether to return the form if a form is
                 passed in, otherwise return a dict/str.
-            strict (bool, optional): Whether to strictly enforce rule validation, 
+            strict (bool, optional): Whether to strictly enforce rule validation,
                 default is False.
-            rulebook (Any, optional): The rulebook to use for validation, default 
+            rulebook (Any, optional): The rulebook to use for validation, default
                 is None (uses default rulebook).
-            imodel (iModel, optional): Optionally swappable iModel for the 
+            imodel (iModel, optional): Optionally swappable iModel for the
                 commands, otherwise self.branch.imodel.
-            clear_messages (bool, optional): Whether to clear previous messages, 
+            clear_messages (bool, optional): Whether to clear previous messages,
                 default is False.
-            use_annotation (bool, optional): Whether to use annotation as rule 
+            use_annotation (bool, optional): Whether to use annotation as rule
                 qualifier, default is True (needs rulebook if False).
             retries (int, optional): Number of retries if failed, default is 3.
-            delay (float, optional): Number of seconds to delay before retrying, 
+            delay (float, optional): Number of seconds to delay before retrying,
                 default is 0.
-            backoff_factor (float, optional): Exponential backoff factor, default 
+            backoff_factor (float, optional): Exponential backoff factor, default
                 is 1 (no backoff).
             default (Any, optional): Default value to return if all retries failed.
-            timeout (float, optional): Timeout for the rcall, default is None 
+            timeout (float, optional): Timeout for the rcall, default is None
                 (no timeout).
-            timing (bool, optional): If True, will return a tuple (output, 
+            timing (bool, optional): If True, will return a tuple (output,
                 duration), default is False.
-            return_branch (bool, optional): Whether to return the branch after 
+            return_branch (bool, optional): Whether to return the branch after
                 processing, default is False.
             **kwargs: Additional keyword arguments for further customization.
 
         Returns:
-            Any: The result of the chat processing, format determined by the 
+            Any: The result of the chat processing, format determined by the
                 `return_form` parameter.
 
         Raises:
@@ -113,7 +113,7 @@ class DirectiveMixin:
             >>> result = await self.chat(instruction="Hello", context={"data": "example"})
             >>> print(result)
         """
-        
+
         directive = Unit(self, imodel=imodel, rulebook=rulebook)
         if system:
             self.add_message(system=system)
@@ -165,17 +165,17 @@ class DirectiveMixin:
         select_choices=None,
         plan_num_step=None,
         predict_num_sentences=None,
-        imodel=None, 
+        imodel=None,
         system=None,
         rulebook=None,
         directive=None,
-        **kwargs, 
+        **kwargs,
     ):
         if system:
             self.add_message(system=system)
-            
+
         _directive = Unit(self, imodel=imodel, rulebook=rulebook)
-        
+
         if directive and isinstance(directive, str):
             return await _directive.direct(
                 directive=directive,
@@ -187,7 +187,7 @@ class DirectiveMixin:
                 confidence=confidence,
                 **kwargs,
             )
-        
+
         return await _directive.direct(
             instruction=instruction,
             context=context,
@@ -211,4 +211,3 @@ class DirectiveMixin:
             predict_num_sentences=predict_num_sentences,
             **kwargs,
         )
-

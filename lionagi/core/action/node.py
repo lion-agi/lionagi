@@ -34,7 +34,7 @@ class ActionNode(DirectiveSelection):
             return await branch.chat(
                 instruction=self.instruction.instruct,
                 tools=self.tools,
-                **self.directive_kwargs
+                **self.directive_kwargs,
             )
         elif self.directive == "direct":
             if self.tools:
@@ -43,7 +43,9 @@ class ActionNode(DirectiveSelection):
                 instruction=self.instruction.instruct,
                 context=context,
                 tools=self.tools,
-                **self.directive_kwargs
+                **self.directive_kwargs,
             )
         else:
-            raise ValueError("Invalid directive, valid directives are: \"chat\", \"direct\"")
+            raise ValueError(
+                'Invalid directive, valid directives are: "chat", "direct"'
+            )

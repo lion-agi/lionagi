@@ -1,4 +1,3 @@
-
 """
 Copyright 2024 HaiyangLi
 
@@ -14,6 +13,7 @@ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the License for the specific language governing permissions and
 limitations under the License.
 """
+
 from .base import BaseUnitForm, Field
 
 
@@ -21,7 +21,7 @@ class ActionTemplate(BaseUnitForm):
 
     action_required: bool | None = Field(
         None,
-        description="Set to True if actions are required. Provide actions if True."
+        description="Set to True if actions are required. Provide actions if True.",
     )
 
     actions: list[dict] | None = Field(
@@ -31,7 +31,7 @@ class ActionTemplate(BaseUnitForm):
             "{'param1':..., 'param2':...}}]. Leave blank if no actions are needed."
             "must use provided functions and parameters, DO NOT MAKE UP NAMES!!!"
             "Flag `action_required` as True if filled."
-        )
+        ),
     )
 
     answer: str | None = Field(
@@ -39,7 +39,8 @@ class ActionTemplate(BaseUnitForm):
         description=(
             "output answer to the questions asked if further actions are not needed,"
             " leave blank if an accurate answer cannot be provided from context"
-            " during this step"),
+            " during this step"
+        ),
     )
 
     assignment: str = "task -> reason, action_required, actions, answer"

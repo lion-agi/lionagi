@@ -70,7 +70,7 @@ class ActionRequest(RoledMessage):
             sender=sender,
             recipient=recipient,
             content={"action_request": {"function": function, "arguments": arguments}},
-            **kwargs, 
+            **kwargs,
         )
         self.function = function
         self.arguments = arguments

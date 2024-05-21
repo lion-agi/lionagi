@@ -52,7 +52,7 @@ class DirectiveMixin(ABC):
     ) -> Any:
         """
         Creates the chat configuration based on the provided parameters.
-        
+
         Args:
             system: System message.
             instruction: Instruction message.
@@ -64,7 +64,7 @@ class DirectiveMixin(ABC):
             tools: Flag indicating if tools should be used.
             branch: Branch instance.
             kwargs: Additional keyword arguments.
-        
+
         Returns:
             dict: The chat configuration.
         """
@@ -102,10 +102,7 @@ class DirectiveMixin(ABC):
         return config
 
     async def _call_chatcompletion(
-        self,
-        imodel: Optional[Any] = None,
-        branch: Optional[Any] = None,
-        **kwargs
+        self, imodel: Optional[Any] = None, branch: Optional[Any] = None, **kwargs
     ) -> Any:
         """
         Calls the chat completion model.
@@ -200,9 +197,7 @@ class DirectiveMixin(ABC):
         if action_request:
             for i in action_request:
                 if i.function in branch.tool_manager.registry:
-                    i.recipient = branch.tool_manager.registry[
-                        i.function
-                    ].ln_id
+                    i.recipient = branch.tool_manager.registry[i.function].ln_id
                 else:
                     raise ActionError(f"Tool {i.function} not found in registry")
                 branch.add_message(action_request=i, recipient=i.recipient)
@@ -455,7 +450,6 @@ class DirectiveMixin(ABC):
 
         return a[0], a[1]
 
-
     async def _direct(
         self,
         instruction=None,
@@ -465,8 +459,8 @@ class DirectiveMixin(ABC):
         tools=None,
         reason: bool = None,
         predict: bool = None,
-        score: bool=None,
-        select: bool=None,
+        score: bool = None,
+        select: bool = None,
         plan: bool = None,
         allow_action: bool = None,
         allow_extension: bool = None,
@@ -542,7 +536,6 @@ class DirectiveMixin(ABC):
 
         return a[0], a[1]
 
-
     async def _base_direct(
         self,
         instruction=None,
@@ -553,8 +546,8 @@ class DirectiveMixin(ABC):
         tools=None,
         reason: bool = None,
         predict: bool = None,
-        score: bool=None,
-        select: bool=None,
+        score: bool = None,
+        select: bool = None,
         plan: bool = None,
         allow_action: bool = None,
         allow_extension: bool = None,
@@ -607,7 +600,7 @@ class DirectiveMixin(ABC):
         # Set a default max_extension if allow_extension is True and max_extension is None
         if allow_extension and not max_extension:
             max_extension = 3  # Set a default limit for recursion
-        
+
         if not form:
             form = self.form_template(
                 instruction=instruction,
@@ -651,22 +644,22 @@ class DirectiveMixin(ABC):
         # Handle extensions if allowed and required
         extension_forms = []
         while (
-            allow_extension and
-            getattr(last_form, "extension_required", None) and 
-            getattr(last_form, "answer", None) == "PLEASE_EXTEND"
+            allow_extension
+            and getattr(last_form, "extension_required", None)
+            and getattr(last_form, "answer", None) == "PLEASE_EXTEND"
         ):
             if max_extension <= 0:
                 break
             max_extension -= 1
-            
+
             last_form = await self._extend(
-                form = last_form,
-                tools = tools,
-                reason = reason,
-                predict = predict,
-                score = score,
-                select = select,
-                plan = getattr(last_form, "plan", None),
+                form=last_form,
+                tools=tools,
+                reason=reason,
+                predict=predict,
+                score=score,
+                select=select,
+                plan=getattr(last_form, "plan", None),
                 allow_action=allow_action,
                 confidence=confidence,
                 score_num_digits=score_num_digits,
@@ -677,7 +670,7 @@ class DirectiveMixin(ABC):
                 max_extension=max_extension,
                 **kwargs,
             )
-            
+
             extension_forms.extend([last_form])
             last_form = last_form[0] if last_form else None
 
@@ -687,29 +680,31 @@ class DirectiveMixin(ABC):
             form.extension_forms.extend(extension_forms)
 
         if "PLEASE_ACTION" in form.answer:
-            answer = await self._chat("please provide final answer basing on the above information, only provide answer field as a string",)
-            form.answer = str(answer).replace('{"answer": "', '').replace('"}', '')
+            answer = await self._chat(
+                "please provide final answer basing on the above information, only provide answer field as a string",
+            )
+            form.answer = str(answer).replace('{"answer": "', "").replace('"}', "")
 
         return form, branch if return_branch else form
 
     async def _extend(
-        self, 
-        form, 
-        tools, 
-        reason, 
-        predict, 
-        score, 
-        select, 
-        plan, 
-        allow_action, 
-        confidence, 
-        score_num_digits, 
-        score_range, 
-        select_choices, 
-        predict_num_sentences, 
-        allow_extension, 
-        max_extension, 
-        **kwargs
+        self,
+        form,
+        tools,
+        reason,
+        predict,
+        score,
+        select,
+        plan,
+        allow_action,
+        confidence,
+        score_num_digits,
+        score_range,
+        select_choices,
+        predict_num_sentences,
+        allow_extension,
+        max_extension,
+        **kwargs,
     ):
         """
         Handles the extension of the form based on the provided parameters.
@@ -736,7 +731,7 @@ class DirectiveMixin(ABC):
             list: The extended forms.
         """
         extension_forms = []
- 
+
         # Ensure the next step in the plan is handled
         directive_kwargs = {
             "tools": tools,
@@ -758,7 +753,7 @@ class DirectiveMixin(ABC):
         if plan:
             keys = [f"step_{i+1}" for i in range(len(plan))]
             plan = StringMatch.force_validate_dict(plan, keys)
-            
+
             # If plan is provided, process each step
             for i in keys:
                 directive_kwargs["instruction"] = plan[i]
@@ -802,9 +797,7 @@ class DirectiveMixin(ABC):
                         function=_func,
                         arguments=actions[k]["arguments"],
                         sender=branch.ln_id,
-                        recipient=branch.tool_manager.registry[
-                            _func
-                        ].ln_id,
+                        recipient=branch.tool_manager.registry[_func].ln_id,
                     )
                     requests.append(msg)
                     branch.add_message(action_request=msg)
@@ -822,9 +815,7 @@ class DirectiveMixin(ABC):
                     len_actions = len(actions)
                     action_responses = branch.messages[-len_actions:]
 
-                    if not all(
-                        isinstance(i, ActionResponse) for i in action_responses
-                    ):
+                    if not all(isinstance(i, ActionResponse) for i in action_responses):
                         raise ValueError(
                             "Error processing action request: Invalid action response."
                         )
@@ -832,15 +823,11 @@ class DirectiveMixin(ABC):
                     _action_responses = {}
                     for idx, item in enumerate(action_responses):
                         _action_responses[f"action_{idx+1}"] = item._to_dict()
-                        
-                    form._add_field(
-                        "action_response", dict, None, _action_responses
-                    )
+
+                    form._add_field("action_response", dict, None, _action_responses)
                     form.append_to_request("action_response")
-                    
-                    form._add_field(
-                        "action_performed", bool, None, True
-                    )
+
+                    form._add_field("action_performed", bool, None, True)
                     form.append_to_request("action_performed")
 
             except Exception as e:
@@ -978,7 +965,7 @@ class DirectiveMixin(ABC):
             )
 
         return await self._chat(form=form, return_form=True, branch=branch, **kwargs)
-    
+
     async def _plan(
         self,
         form=None,

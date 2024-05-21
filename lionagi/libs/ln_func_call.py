@@ -368,7 +368,9 @@ async def rcall(
             err_msg = f"Attempt {attempt + 1}/{retries}: " if retries > 0 else None
             if timing:
                 return (
-                    await _tcall(func, *args, err_msg=err_msg, timeout=timeout, **kwargs),
+                    await _tcall(
+                        func, *args, err_msg=err_msg, timeout=timeout, **kwargs
+                    ),
                     SysUtil.get_now(datetime_=False) - start,
                 )
 
@@ -385,7 +387,9 @@ async def rcall(
     if result is None and default is not None:
         return default
     elif last_exception is not None:
-        raise RuntimeError(f"Operation failed after {retries} attempts: {last_exception}") from last_exception
+        raise RuntimeError(
+            f"Operation failed after {retries} attempts: {last_exception}"
+        ) from last_exception
     else:
         raise RuntimeError("rcall failed without catching an exception")
 
