@@ -163,20 +163,15 @@ class Form(BaseForm):
 
     @property
     def _instruction_prompt(self) -> str:
+        instruction = f"""
+        ## Task Instructions
+        Please follow prompts to complete the task:
+        1. Your task is: {self.task}
+        2. The provided input fields are: {', '.join(self.input_fields)}
+        3. The requested output fields are: {', '.join(self.requested_fields)}
+        4. Provide your response in the specified JSON format.
         """
-        Generates a brief summary of the form's context, including the task
-        description and lists of provided and requested fields.
-
-        Returns:
-            str: A brief summary of the form's context.
-        """
-        ccc = f"""
-        0. Your in is {self.task},
-        1. provided: {self.input_fields}, 
-        2. requested: {self.requested_fields}
-        ----------
-        """
-        return ccc.replace("        ", "")
+        return instruction.replace("        ", "")
 
     @property
     def _instruction_requested_fields(self) -> Dict[str, str]:

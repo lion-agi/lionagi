@@ -26,7 +26,8 @@ class UnitForm(BaseUnitForm):
     actions: dict | None = Field(
         None,
         description=(
-            "Actions to take. {action_n: {function: ..., arguments: {'param1':..., 'param2':...}}}"
+            "Actions to take based on the context and instruction."
+            " Format: {action_n: {function: ..., arguments: {param1: ..., param2: ...}}}."
             "Leave blank if no actions are needed."
             "must use provided functions and parameters, DO NOT MAKE UP NAMES!!!"
             "Flag `action_required` as True if filled."
@@ -44,7 +45,7 @@ class UnitForm(BaseUnitForm):
         None,
         description=(
             "Provide the answer to the questions asked. If an accurate answer cannot "
-            "be provided at this step, set `extend_required` to True and reply with 'PLEASE_EXTEND'."
+            "be provided at this step, set `extend_required` to True."
             "if actions are required at this step, set `action_required` to True and reply with 'PELASE_ACTION`."
         ),
     )
@@ -67,20 +68,20 @@ class UnitForm(BaseUnitForm):
         description=(
             "Provide a step-by-step plan. Format: {step_n: {plan: ..., reason: ...}}. "
             "Achieve the final answer at the last step. Set `extend_required` to True "
-            "if providing a plan."
+            "if plan requires more steps."
         ),
     )
 
     score: float | None = Field(
         None,
         description=(
-            "Provide a numeric score. Higher is better. If not otherwise instructed,"
-            " fill this field with your own performance rating."
+            "A numeric score. Higher is better. If not otherwise instructed,"
+            " fill this field with your own performance rating. Try hard and be self-critical"
         ),
     )
 
     selection: Enum | str | list | None = Field(
-        None, description="Provide a selection from the given choices."
+        None, description="a single item from the choices."
     )
 
     assignment: str = "task -> answer"
@@ -90,9 +91,9 @@ class UnitForm(BaseUnitForm):
         instruction=None,
         *,
         context=None,
-        reason: bool = False,
+        reason: bool = True,
         predict: bool = False,
-        score=None,
+        score=True,
         select=None,
         plan=None,
         allow_action: bool = False,
@@ -116,22 +117,17 @@ class UnitForm(BaseUnitForm):
 
         if reason:
             self.append_to_request("reason")
-
+            
         if allow_action:
             self.append_to_request("actions, action_required, reason")
-
-            self.task += (
-                "- Perform reasoning and prepare actions with GIVEN TOOLS ONLY.\n"
-            )
+            self.task += "Perform reasoning and prepare actions with GIVEN TOOLS ONLY.\n"
 
         if plan:
             plan_num_step = plan_num_step or 3
             max_extension = max_extension or plan_num_step
             allow_extension = True
-            self.append_to_request("plan")
-            self.task += (
-                f"- Generate a {plan_num_step}-step plan based on the context.\n"
-            )
+            self.append_to_request("plan, extension_required")
+            self.task += f"- Generate a {plan_num_step}-step plan based on the context.\n"
 
         if allow_extension:
             self.append_to_request("extension_required")
@@ -139,17 +135,10 @@ class UnitForm(BaseUnitForm):
 
         if predict:
             self.append_to_request("prediction")
-            self.task += (
-                f"- Predict the next {predict_num_sentences or 1} sentence(s).\n"
-            )
+            self.task += f"- Predict the next {predict_num_sentences or 1} sentence(s).\n"
 
         if score:
             self.append_to_request("score")
-
-            if score_num_digits in [0, None]:
-                return_precision = "integer"
-            else:
-                return_precision = f"num:.{score_num_digits}f"
 
             score_range = score_range or [0, 10]
             score_num_digits = score_num_digits or 0
@@ -162,15 +151,14 @@ class UnitForm(BaseUnitForm):
             }
 
             self.task += (
-                f"- Perform scoring according to score range: [{to_str(score_range)}] "
-                f"and precision: {return_precision}.\n"
+                f"- Perform scoring a numeric score in [{score_range[0]}, {score_range[1]}] "
+                f"and precision of {score_num_digits or 0} decimal places.\n"
             )
 
         if select:
             self.append_to_request("selection")
-            self.task += (
-                f"- Select 1 item from the provided choices: {select_choices}.\n"
-            )
+            self.task += f"- Select 1 item from the provided choices: {select_choices}.\n"
 
         if confidence:
             self.append_to_request("confidence_score")
+            

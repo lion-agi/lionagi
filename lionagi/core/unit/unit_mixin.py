@@ -646,7 +646,6 @@ class DirectiveMixin(ABC):
         while (
             allow_extension
             and getattr(last_form, "extension_required", None)
-            and getattr(last_form, "answer", None) == "PLEASE_EXTEND"
         ):
             if max_extension <= 0:
                 break
