@@ -60,6 +60,10 @@ class Element(BaseModel, ABC):
         validation_alias=AliasChoices("created_on", "creation_date"),
     )
 
+    # element is always true
+    def __bool__(self):
+        return True
+
 
 class Component(Element, ABC):
     """
@@ -477,6 +481,9 @@ class Component(Element, ABC):
             value = a
 
         self.__setattr__(field, value)
+
+    def add_field(self, field, value, annotation=None, **kwargs):
+        self._add_field(field, annotation, value=value, **kwargs)
 
     @property
     def _all_fields(self):

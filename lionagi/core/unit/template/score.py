@@ -19,7 +19,6 @@ from lionagi.core.collections.abc import Field
 from lionagi.core.unit import UnitForm
 
 
-
 class ScoreTemplate(UnitForm):
 
     confidence_score: float | None = Field(

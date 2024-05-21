@@ -41,6 +41,7 @@ from lionagi.core.message import (
 
 from lionagi.core.session.directive_mixin import DirectiveMixin
 
+
 class Branch(Node, DirectiveMixin):
     """
     A class representing a branch in a messaging system.
@@ -161,7 +162,7 @@ class Branch(Node, DirectiveMixin):
         """
         if assistant_response:
             sender = self.ln_id
-        
+
         _msg = create_message(
             system=system,
             instruction=instruction,
@@ -177,7 +178,7 @@ class Branch(Node, DirectiveMixin):
             requested_fields=requested_fields,
             **kwargs,
         )
-    
+
         if isinstance(_msg, System):
             _msg.recipient = self.ln_id  # the branch itself, system is to the branch
             self._remove_system()

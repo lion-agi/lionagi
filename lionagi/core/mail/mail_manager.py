@@ -5,7 +5,8 @@ from lionagi.core.collections.abc import Executable, Element
 from lionagi.core.collections import Exchange
 from lionagi.core.collections.util import to_list_type, get_lion_id
 from .mail import Mail, Package
-from lionagi.core.collections import Pile, pile, Progression, progression
+from lionagi.core.collections import Pile, pile
+
 
 class MailManager(Element, Executable):
     """
@@ -19,6 +20,7 @@ class MailManager(Element, Executable):
             mails (Dict[str, Dict[str, deque]]): A nested dictionary storing queued mail items, organized by recipient
                     and sender.
     """
+
     sources: Pile[Element] = Field(
         default_factory=lambda: pile(),
         description="The pile of managed sources",
@@ -84,8 +86,11 @@ class MailManager(Element, Executable):
             return
         for key in list(self.mails[recipient].keys()):
             pending_mails = self.mails[recipient].pop(key)
-            mailbox = self.sources[recipient] if isinstance(self.sources[recipient], Exchange) \
+            mailbox = (
+                self.sources[recipient]
+                if isinstance(self.sources[recipient], Exchange)
                 else self.sources[recipient].mailbox
+            )
             while pending_mails:
                 mail = pending_mails.popleft()
                 mailbox.include(mail, "in")

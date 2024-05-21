@@ -23,6 +23,7 @@ from .unit_form import UnitForm
 from .unit_mixin import DirectiveMixin
 from .util import retry_kwargs
 
+
 class Unit(Directive, DirectiveMixin):
 
     default_template = UnitForm
@@ -59,8 +60,7 @@ class Unit(Directive, DirectiveMixin):
         use_annotation=True,
         return_branch=False,
         **kwargs,
-        
-):
+    ):
         kwargs = {**retry_kwargs, **kwargs}
         return await rcall(
             self._chat,
@@ -107,13 +107,13 @@ class Unit(Directive, DirectiveMixin):
         select_choices=None,
         plan_num_step=None,
         predict_num_sentences=None,
-        directive: str=None,
-        **kwargs, 
+        directive: str = None,
+        **kwargs,
     ):
         kwargs = {**retry_kwargs, **kwargs}
-        
+
         if not directive:
-        
+
             return await rcall(
                 self._direct,
                 instruction=instruction,
@@ -138,7 +138,7 @@ class Unit(Directive, DirectiveMixin):
                 predict_num_sentences=predict_num_sentences,
                 **kwargs,
             )
-            
+
         return await rcall(
             self._mono_direct,
             directive=directive,
@@ -148,15 +148,15 @@ class Unit(Directive, DirectiveMixin):
             tools=tools,
             **kwargs,
         )
-        
+
     async def select(self, *args, **kwargs):
         """
-        Asynchronously performs a select operation using the _select method with 
+        Asynchronously performs a select operation using the _select method with
         retry logic.
 
         Args:
             *args: Positional arguments to pass to the _select method.
-            **kwargs: Keyword arguments to pass to the _select method, including 
+            **kwargs: Keyword arguments to pass to the _select method, including
                 retry configurations.
 
         Returns:
@@ -170,12 +170,12 @@ class Unit(Directive, DirectiveMixin):
 
     async def predict(self, *args, **kwargs):
         """
-        Asynchronously performs a predict operation using the _predict method with 
+        Asynchronously performs a predict operation using the _predict method with
         retry logic.
 
         Args:
             *args: Positional arguments to pass to the _predict method.
-            **kwargs: Keyword arguments to pass to the _predict method, including 
+            **kwargs: Keyword arguments to pass to the _predict method, including
                 retry configurations.
 
         Returns:
@@ -188,7 +188,7 @@ class Unit(Directive, DirectiveMixin):
         return await rcall(self._predict, *args, **kwargs)
 
     async def score(self, *args, **kwargs):
-        from .template.score  import ScoreTemplate
+        from .template.score import ScoreTemplate
 
         kwargs = {**retry_kwargs, **kwargs}
         kwargs["template"] = kwargs.get("template", ScoreTemplate)
@@ -215,13 +215,13 @@ class Unit(Directive, DirectiveMixin):
 
         if template:
             kwargs["template"] = template
-            
+
         kwargs = {**retry_kwargs, **kwargs}
         branch = branch or self.branch
-        
+
         if system:
             branch.add_message(system=system)
-        
+
         if hasattr(self, strip_lower(directive)):
             directive = getattr(self, strip_lower(directive))
 
@@ -231,5 +231,5 @@ class Unit(Directive, DirectiveMixin):
                 tools=tools,
                 **kwargs,
             )
-            
+
         raise ValueError(f"invalid directive: {directive}")

@@ -32,12 +32,12 @@ class UnitForm(BaseUnitForm):
             "Flag `action_required` as True if filled."
             "When providing parameters, you must follow the provided type and format, "
             "if the parameter is a number, you should provide a number like 1, 23, or 1.1 if float is allowed."
-        )
+        ),
     )
 
     action_required: bool | None = Field(
         None,
-        description="Set to True if actions are required. Provide actions if True."
+        description="Set to True if actions are required. Provide actions if True.",
     )
 
     answer: str | None = Field(
@@ -46,7 +46,7 @@ class UnitForm(BaseUnitForm):
             "Provide the answer to the questions asked. If an accurate answer cannot "
             "be provided at this step, set `extend_required` to True and reply with 'PLEASE_EXTEND'."
             "if actions are required at this step, set `action_required` to True and reply with 'PELASE_ACTION`."
-        )
+        ),
     )
 
     extension_required: bool | None = Field(
@@ -54,12 +54,12 @@ class UnitForm(BaseUnitForm):
         description=(
             "Set to True if more steps are needed to provide an accurate answer. If "
             "True, additional rounds are allowed."
-        )
+        ),
     )
 
     prediction: None | str = Field(
         None,
-        description="Provide the desired prediction based on context and instruction."
+        description="Provide the desired prediction based on context and instruction.",
     )
 
     plan: dict | str | None = Field(
@@ -68,7 +68,7 @@ class UnitForm(BaseUnitForm):
             "Provide a step-by-step plan. Format: {step_n: {plan: ..., reason: ...}}. "
             "Achieve the final answer at the last step. Set `extend_required` to True "
             "if providing a plan."
-        )
+        ),
     )
 
     score: float | None = Field(
@@ -76,12 +76,11 @@ class UnitForm(BaseUnitForm):
         description=(
             "Provide a numeric score. Higher is better. If not otherwise instructed,"
             " fill this field with your own performance rating."
-        )
+        ),
     )
 
     selection: Enum | str | list | None = Field(
-        None,
-        description="Provide a selection from the given choices."
+        None, description="Provide a selection from the given choices."
     )
 
     assignment: str = "task -> answer"
@@ -120,13 +119,13 @@ class UnitForm(BaseUnitForm):
 
         if allow_action:
             self.append_to_request("actions, action_required, reason")
-            
+
             self.task += (
                 "- Perform reasoning and prepare actions with GIVEN TOOLS ONLY.\n"
             )
-            
+
         if plan:
-            plan_num_step=plan_num_step or 3
+            plan_num_step = plan_num_step or 3
             max_extension = max_extension or plan_num_step
             allow_extension = True
             self.append_to_request("plan")
@@ -136,9 +135,7 @@ class UnitForm(BaseUnitForm):
 
         if allow_extension:
             self.append_to_request("extension_required")
-            self.task += (
-                f"- Allow auto-extension for another {max_extension} rounds.\n"
-            )
+            self.task += f"- Allow auto-extension for another {max_extension} rounds.\n"
 
         if predict:
             self.append_to_request("prediction")

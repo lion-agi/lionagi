@@ -32,7 +32,7 @@ class BaseUnitForm(Form):
             "lower_bound": 0,
             "num_type": float,
             "precision": 2,
-        }
+        },
     )
 
     reason: str | None = Field(
@@ -40,6 +40,5 @@ class BaseUnitForm(Form):
         description=(
             "Provide a brief reason for the output. Must start with: Let's think step by step, "
             "because ..."
-        )
+        ),
     )
-

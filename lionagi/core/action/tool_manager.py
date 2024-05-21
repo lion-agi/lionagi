@@ -273,7 +273,7 @@ def func_to_tool(
     func_: Union[Callable, List[Callable]],
     parser: Union[Callable, List[Callable]] = None,
     docstring_style: str = "google",
-    **kwargs
+    **kwargs,
 ) -> List[Tool]:
     """
     Converts functions to Tool objects, optionally associating parsers with each function
@@ -318,7 +318,7 @@ def func_to_tool(
                 function=_f,
                 schema_=ParseUtil._func_to_schema(_f, style=docstring_style),
                 parser=parsers[idx] if len(parsers) > 1 else parsers[0],
-                **kwargs
+                **kwargs,
             )
 
             fs.append(f_)
@@ -329,7 +329,7 @@ def func_to_tool(
             lambda _f: Tool(
                 function=_f,
                 schema_=ParseUtil._func_to_schema(_f, style=docstring_style),
-                **kwargs
+                **kwargs,
             ),
         )
 

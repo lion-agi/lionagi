@@ -124,7 +124,7 @@ async def predict(
     form=None,
     confidence_score=None,
     reason=False,
-    num_sentences=1, 
+    num_sentences=1,
     **kwargs,
 ):
     """
@@ -207,6 +207,7 @@ async def act(
         **kwargs,
     )
 
+
 async def score(
     instruction=None,
     context=None,
@@ -222,7 +223,7 @@ async def score(
     num_digit=None,
     **kwargs,
 ):
-    
+
     branch = branch or Branch()
     unit = Unit(branch)
 
@@ -240,8 +241,8 @@ async def score(
         num_digit=num_digit,
         **kwargs,
     )
-    
-    
+
+
 async def plan(
     instruction=None,
     context=None,
@@ -255,7 +256,7 @@ async def plan(
     num_step=3,
     **kwargs,
 ):
-    
+
     branch = branch or Branch()
     unit = Unit(branch)
 
