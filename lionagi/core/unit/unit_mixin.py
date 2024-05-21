@@ -1028,6 +1028,9 @@ class DirectiveMixin(ABC):
 
         if isinstance(out_, str):
             with contextlib.suppress(Exception):
+                return ParseUtil.fuzzy_parse_json(out_)
+            
+            with contextlib.suppress(Exception):
                 match = re.search(r"```json\n({.*?})\n```", out_, re.DOTALL)
                 if match:
                     out_ = ParseUtil.fuzzy_parse_json(match.group(1))
