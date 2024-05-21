@@ -71,17 +71,15 @@ class Neo4jExecutor(BaseExecutor):
         """
         for key in list(self.mailbox.pending_ins.keys()):
             skipped_requests = progression()
-            while self.mailbox.pending_ins[key]:
+            while self.mailbox.pending_ins[key].size() > 0:
                 mail_id = self.mailbox.pending_ins[key].popleft()
                 mail = self.mailbox.pile[mail_id]
                 if (
                     mail.category == "condition"
-                    and mail.package.package["package"]["edge_id"] == edge_id
+                    and mail.package.package["edge_id"] == edge_id
                 ):
                     self.mailbox.pile.pop(mail_id)
-                    self.condition_check_result = mail.package.package["package"][
-                        "check_result"
-                    ]
+                    self.condition_check_result = mail.package.package["check_result"]
                 else:
                     skipped_requests.append(mail)
             self.mailbox.pending_ins[key] = skipped_requests
@@ -104,9 +102,10 @@ class Neo4jExecutor(BaseExecutor):
         """
         edge = Edge(head=head, tail=tail, condition=condition)
         self.send(
-            recipient_id=executable_id,
+            recipient=executable_id,
             category="condition",
-            package={"request_source": request_source, "package": edge},
+            package=edge,
+            request_source=request_source
         )
         while self.condition_check_result is None:
             await AsyncUtil.sleep(0.1)
@@ -178,8 +177,6 @@ class Neo4jExecutor(BaseExecutor):
             ln_id=node_properties["ln_id"],
             timestamp=node_properties["timestamp"]
         )
-        # agent.ln_id = node_properties["ln_id"]
-        # agent.timestamp = node_properties["timestamp"]
         return agent
 
     async def _next_node(
@@ -254,10 +251,10 @@ class Neo4jExecutor(BaseExecutor):
             ValueError: If there is an issue with finding or starting the structure.
         """
         try:
-            id, head_list = await self.driver.get_heads(
+            id_, head_list = await self.driver.get_heads(
                 self.structure_name, self.structure_id
             )
-            self.structure_id = id
+            self.structure_id = id_
             return await self._next_node(head_list)
         except Exception as e:
             raise ValueError(f"Error in searching for structure in Neo4j. Error: {e}")
@@ -302,9 +299,9 @@ class Neo4jExecutor(BaseExecutor):
 
         elif mail.category == "node_id":
             try:
-                node_id = mail.package.package["package"]
+                node_id = mail.package.package
                 executable_id = mail.sender
-                request_source = mail.package.package["request_source"]
+                request_source = mail.package.request_source
                 return await self._handle_node_id(
                     node_id, executable_id, request_source
                 )
@@ -312,9 +309,9 @@ class Neo4jExecutor(BaseExecutor):
                 raise ValueError(f"Error in handling node_id: {e}")
         elif mail.category == "node":
             try:
-                node_id = mail.package.package["package"].ln_id
+                node_id = mail.package.package.ln_id
                 executable_id = mail.sender
-                request_source = mail.package.package["request_source"]
+                request_source = mail.package.request_source
                 return await self._handle_node_id(
                     node_id, executable_id, request_source
                 )
@@ -333,31 +330,25 @@ class Neo4jExecutor(BaseExecutor):
         """
         if not next_nodes:  # tail
             self.send(
-                recipient_id=mail.sender,
+                recipient=mail.sender,
                 category="end",
-                package={
-                    "request_source": mail.package.package["request_source"],
-                    "package": "end",
-                },
+                package="end",
+                request_source=mail.package.request_source
             )
         else:
             if len(next_nodes) == 1:
                 self.send(
-                    recipient_id=mail.sender,
+                    recipient=mail.sender,
                     category="node",
-                    package={
-                        "request_source": mail.package.package["request_source"],
-                        "package": next_nodes[0],
-                    },
+                    package=next_nodes[0],
+                    request_source=mail.package.request_source
                 )
             else:
                 self.send(
-                    recipient_id=mail.sender,
+                    recipient=mail.sender,
                     category="node_list",
-                    package={
-                        "request_source": mail.package.package["request_source"],
-                        "package": next_nodes,
-                    },
+                    package=next_nodes,
+                    request_source=mail.package.request_source
                 )
 
     async def forward(self) -> None:
@@ -365,7 +356,7 @@ class Neo4jExecutor(BaseExecutor):
         Forwards execution by processing all pending mails and advancing to next nodes or actions.
         """
         for key in list(self.mailbox.pending_ins.keys()):
-            while self.mailbox.pending_ins[key]:
+            while self.mailbox.pending_ins[key].size() > 0:
                 mail_id = self.mailbox.pending_ins[key].popleft()
                 mail = self.mailbox.pile.pop(mail_id)
                 try:

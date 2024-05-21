@@ -60,17 +60,15 @@ class StructureExecutor(BaseExecutor, Graph):
         """
         for key in list(self.mailbox.pending_ins.keys()):
             skipped_requests = progression()
-            while self.mailbox.pending_ins[key]:
+            while self.mailbox.pending_ins[key].size() > 0:
                 mail_id = self.mailbox.pending_ins[key].popleft()
                 mail = self.mailbox.pile[mail_id]
                 if (
                     mail.category == "condition"
-                    and mail.package.package["package"]["edge_id"] == edge_id
+                    and mail.package.package["edge_id"] == edge_id
                 ):
                     self.mailbox.pile.pop(mail_id)
-                    self.condition_check_result = mail.package.package["package"][
-                        "check_result"
-                    ]
+                    self.condition_check_result = mail.package.package["check_result"]
                 else:
                     skipped_requests.append(mail)
             self.mailbox.pending_ins[key] = skipped_requests
@@ -90,9 +88,10 @@ class StructureExecutor(BaseExecutor, Graph):
             bool: The result of the condition check.
         """
         self.send(
-            recipient_id=executable_id,
+            recipient=executable_id,
             category="condition",
-            package={"request_source": request_source, "package": edge},
+            package=edge,
+            request_source=request_source
         )
         while self.condition_check_result is None:
             await AsyncUtil.sleep(0.1)
@@ -113,14 +112,14 @@ class StructureExecutor(BaseExecutor, Graph):
         Raises:
             ValueError: If the node does not exist within the structure.
         """
-        if mail.package.package["package"] not in self.internal_nodes:
+        if mail.package.package not in self.internal_nodes:
             raise ValueError(
-                f"{mail.package.package}: Node does not exist in the structure {self.ln_id}"
+                f"Node {mail.package.package}: Node does not exist in the structure {self.ln_id}"
             )
         return await self._next_node(
-            self.internal_nodes[mail.package.package["package"]],
+            self.internal_nodes[mail.package.package],
             mail.sender,
-            mail.package.package["request_source"],
+            mail.package.request_source,
         )
 
     async def _handle_node(self, mail: Mail):
@@ -133,12 +132,12 @@ class StructureExecutor(BaseExecutor, Graph):
         Raises:
             ValueError: If the node does not exist within the structure.
         """
-        if not self.node_exist(mail.package.package["package"]):
+        if not self.node_exist(mail.package.package):
             raise ValueError(
-                f"{mail.package.package}: Node does not exist in the structure {self.ln_id}"
+                f"Node {mail.package.package.ln_id}: does not exist in the structure {self.ln_id}"
             )
         return await self._next_node(
-            mail.package.package["package"], mail.sender, mail.package.package["request_source"]
+            mail.package.package, mail.sender, mail.package.request_source
         )
 
     async def _handle_mail(self, mail: Mail):
@@ -164,7 +163,7 @@ class StructureExecutor(BaseExecutor, Graph):
             except Exception as e:
                 raise ValueError(f"Error handling node_id: {e}") from e
 
-        elif mail.category == "node" and isinstance(mail.package.package["package"], Node):
+        elif mail.category == "node" and isinstance(mail.package.package, Node):
             try:
                 return await self._handle_node(mail)
             except Exception as e:
@@ -216,31 +215,25 @@ class StructureExecutor(BaseExecutor, Graph):
         """
         if not next_nodes:  # tail
             self.send(
-                recipient_id=mail.sender,
+                recipient=mail.sender,
                 category="end",
-                package={
-                    "request_source": mail.package.package["request_source"],
-                    "package": "end",
-                },
+                package="end",
+                request_source=mail.package.request_source
             )
         else:
             if len(next_nodes) == 1:
                 self.send(
-                    recipient_id=mail.sender,
+                    recipient=mail.sender,
                     category="node",
-                    package={
-                        "request_source": mail.package.package["request_source"],
-                        "package": next_nodes[0],
-                    },
+                    package=next_nodes[0],
+                    request_source=mail.package.request_source
                 )
             else:
                 self.send(
-                    recipient_id=mail.sender,
+                    recipient=mail.sender,
                     category="node_list",
-                    package={
-                        "request_source": mail.package.package["request_source"],
-                        "package": next_nodes,
-                    },
+                    package=next_nodes,
+                    request_source=mail.package.request_source
                 )
 
     @staticmethod
@@ -282,7 +275,7 @@ class StructureExecutor(BaseExecutor, Graph):
         Process the pending incoming mails and perform the corresponding actions.
         """
         for key in list(self.mailbox.pending_ins.keys()):
-            while self.mailbox.pending_ins[key]:
+            while self.mailbox.pending_ins[key].size() > 0:
                 mail_id = self.mailbox.pending_ins[key].popleft()
                 mail = self.mailbox.pile.pop(mail_id)
                 try:
@@ -293,7 +286,7 @@ class StructureExecutor(BaseExecutor, Graph):
                     self._send_mail(next_nodes, mail)
                 except Exception as e:
                     raise ValueError(f"Error handling mail: {e}") from e
-            if not self.mailbox.pending_ins[key]:
+            if self.mailbox.pending_ins[key].size() == 0:
                 self.mailbox.pending_ins.pop(key)
 
     async def execute(self, refresh_time=1):

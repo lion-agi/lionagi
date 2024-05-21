@@ -6,7 +6,7 @@ from lionagi.core.collections import Exchange
 from lionagi.core.mail.mail_manager import MailManager
 from lionagi.core.execute.base_executor import BaseExecutor
 from lionagi.core.execute.branch_executor import BranchExecutor
-
+from lionagi.core.collections import progression, pile, Pile
 
 class InstructionMapExecutor(BaseExecutor):
     """
@@ -21,7 +21,7 @@ class InstructionMapExecutor(BaseExecutor):
         mail_manager (MailManager): Manages the distribution and collection of mails across branches.
     """
 
-    branches: dict[str, BranchExecutor] = Field(
+    branches: Pile[BranchExecutor] = Field(
         default_factory=dict, description="The branches of the instruction mapping."
     )
     structure_id: str = Field("", description="The ID of the executable structure.")
@@ -53,20 +53,20 @@ class InstructionMapExecutor(BaseExecutor):
         of branches or the routing of node and condition mails.
         """
         for key in list(self.mailbox.pending_ins.keys()):
-            while self.mailbox.pending_ins[key]:
+            while self.mailbox.pending_ins[key].size() > 0:
                 mail_id = self.mailbox.pending_ins[key].popleft()
                 mail = self.mailbox.pile.pop(mail_id)
-                if mail.package.category == "start":
+                if mail.category == "start":
                     self._process_start(mail)
-                elif mail.package.category == "node_list":
+                elif mail.category == "node_list":
                     self._process_node_list(mail)
                 elif (
-                    (mail.package.category == "node")
-                    or (mail.package.category == "condition")
-                    or (mail.package.category == "end")
+                    (mail.category == "node")
+                    or (mail.category == "condition")
+                    or (mail.category == "end")
                 ):
                     mail.sender = self.mail_transfer.ln_id
-                    mail.recipient = mail.package.package["request_source"]
+                    mail.recipient = mail.package.request_source
                     self.mail_transfer.include(mail, "out")
 
     def transfer_outs(self):
@@ -75,10 +75,10 @@ class InstructionMapExecutor(BaseExecutor):
         other mails to appropriate recipients.
         """
         for key in list(self.mail_transfer.pending_ins.keys()):
-            while self.mail_transfer.pending_ins[key]:
+            while self.mail_transfer.pending_ins[key].size() > 0:
                 mail_id = self.mail_transfer.pending_ins[key].popleft()
                 mail = self.mail_transfer.pile.pop(mail_id)
-                if mail.package.category == "end":
+                if mail.category == "end":
                     self.num_end_branches += 1
                     if self.num_end_branches == len(
                         self.branches
@@ -105,7 +105,7 @@ class InstructionMapExecutor(BaseExecutor):
         self.mail_manager.add_sources([branch])
         self.structure_id = start_mail.package.package["structure_id"]
 
-        pack = Package(category="start", package={"request_source": branch.ln_id, "package": "start"})
+        pack = Package(category="start", package="start", request_source=branch.ln_id)
         mail = Mail(
             sender=self.ln_id,
             recipient=self.structure_id,
@@ -121,13 +121,13 @@ class InstructionMapExecutor(BaseExecutor):
         Args:
             nl_mail (BaseMail): The mail containing a list of nodes to be processed in subsequent branches.
         """
-        source_branch_id = nl_mail.package.package["request_source"]
-        node_list = nl_mail.package.package["package"]
+        source_branch_id = nl_mail.package.request_source
+        node_list = nl_mail.package.package
         shared_context = self.branches[source_branch_id].context
         shared_context_log = self.branches[source_branch_id].context_log
         base_branch = self.branches[source_branch_id]
 
-        pack = Package(category="node", package={"request_source": source_branch_id, "package": node_list[0]})
+        pack = Package(category="node", package=node_list[0], request_source=source_branch_id)
         mail = Mail(
             sender=self.mail_transfer.ln_id,
             recipient=source_branch_id,
@@ -136,19 +136,34 @@ class InstructionMapExecutor(BaseExecutor):
         self.mail_transfer.include(mail, "out")
 
         for i in range(1, len(node_list)):
+            system = base_branch.system.copy() if base_branch.system else None
+            if system:
+                system.sender = base_branch.ln_id
+            progress = progression()
+            messages = pile()
+
+            for id_ in base_branch.progress:
+                copy_message = base_branch.messages[id_].copy()
+                progress.append(copy_message.ln_id)
+                messages.append(copy_message)
+
             branch = BranchExecutor(
                 verbose=self.verbose,
-                messages=base_branch.messages.model_copy(deep=True),
+                messages=messages,
                 user=base_branch.user,
                 system=base_branch.system.copy(),
-                progress=base_branch.progress.model_copy(deep=True),
+                progress=progress,
                 imodel=base_branch.imodel,
             )
+            for message in branch.messages:
+                message.sender = base_branch.ln_id
+                message.recipient = branch.ln_id
+
             branch.context = shared_context
             branch.context_log = shared_context_log
             self.branches[branch.ln_id] = branch
             self.mail_manager.add_sources([branch])
-            node_pacakge = Package(category="node", package={"request_source": source_branch_id, "package": node_list[i]})
+            node_pacakge = Package(category="node", package=node_list[i], request_source=source_branch_id)
             node_mail = Mail(
                 sender=self.mail_transfer.ln_id,
                 recipient=branch.ln_id,

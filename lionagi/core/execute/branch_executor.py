@@ -15,7 +15,7 @@ class BranchExecutor(Branch, BaseExecutor):
     def __init__(self, context=None, verbose=True, system=None, user=None, messages=None,
                  progress=None, tool_manager=None, tools=None, mailbox=None, imodel=None, **kwargs):
         super().__init__(system=system, user=user, messages=messages, progress=progress, tool_manager=tool_manager,
-                         tools=tools, mailbox=mailbox, imodel=imodel, **kwargs)
+                         tools=tools, imodel=imodel, **kwargs)
         self.context = context
         self.verbose = verbose
 
@@ -25,20 +25,20 @@ class BranchExecutor(Branch, BaseExecutor):
         it processes starts, nodes, node lists, conditions, or ends, accordingly executing different functions.
         """
         for key in list(self.mailbox.pending_ins.keys()):
-            while self.mailbox.pending_ins[key]:
+            while self.mailbox.pending_ins[key].size() > 0:
                 mail_id = self.mailbox.pending_ins[key].popleft()
                 mail = self.mailbox.pile.pop(mail_id)
-                if mail.package.category == "start":
+                if mail.category == "start":
                     self._process_start(mail)
-                elif mail.package.category == "node":
+                elif mail.category == "node":
                     await self._process_node(mail)
-                elif mail.package.category == "node_list":
+                elif mail.category == "node_list":
                     self._process_node_list(mail)
-                elif mail.package.category == "condition":
+                elif mail.category == "condition":
                     await self._process_condition(mail)
-                elif mail.package.category == "end":
+                elif mail.category == "end":
                     self._process_end(mail)
-            if not self.mailbox.pending_ins[key]:
+            if self.mailbox.pending_ins[key].size() == 0:
                 self.mailbox.pending_ins.pop(key)
 
     async def execute(self, refresh_time=1) -> None:
@@ -63,13 +63,14 @@ class BranchExecutor(Branch, BaseExecutor):
         Raises:
             ValueError: If an invalid mail is encountered or the process encounters errors.
         """
-        node = mail.package.package["package"]
+        node = mail.package.package
         if isinstance(node, System):
             self._system_process(node, verbose=self.verbose)
             self.send(
-                mail.sender,
-                "node_id",
-                {"request_source": self.ln_id, "package": node.ln_id},
+                recipient=mail.sender,
+                category="node_id",
+                package=node.ln_id,
+                request_source=self.ln_id
             )
 
         elif isinstance(node, Instruction):
@@ -77,31 +78,28 @@ class BranchExecutor(Branch, BaseExecutor):
                 node, verbose=self.verbose
             )
             self.send(
-                mail.sender,
-                "node_id",
-                {"request_source": self.ln_id, "package": node.ln_id},
+                recipient=mail.sender,
+                category="node_id",
+                package=node.ln_id,
+                request_source=self.ln_id
             )
 
         elif isinstance(node, ActionNode):
             await self._action_process(node, verbose=self.verbose)
             self.send(
-                mail.sender,
-                "node_id",
-                {
-                    "request_source": self.ln_id,
-                    "package": node.instruction.ln_id,
-                },
+                recipient=mail.sender,
+                category="node_id",
+                package=node.instruction.ln_id,
+                request_source=self.ln_id
             )
         else:
             try:
                 await self._agent_process(node, verbose=self.verbose)
                 self.send(
-                    mail.sender,
-                    "node_id",
-                    {
-                        "request_source": self.ln_id,
-                        "package": node.ln_id,
-                    },
+                    recipient=mail.sender,
+                    category="node_id",
+                    package=node.ln_id,
+                    request_source=self.ln_id
                 )
             except:
                 raise ValueError(f"Invalid mail to process. Mail:{mail}")
@@ -116,7 +114,7 @@ class BranchExecutor(Branch, BaseExecutor):
         Raises:
             ValueError: When trying to process multiple paths which is currently unsupported.
         """
-        self.send(mail.sender, "end", {"request_source": self.ln_id, "package": "end"})
+        self.send(mail.sender, category="end", package="end", request_source=self.ln_id)
         self.execute_stop = True
         raise ValueError("Multiple path selection is not supported in BranchExecutor")
 
@@ -127,7 +125,7 @@ class BranchExecutor(Branch, BaseExecutor):
         Args:
             mail (BaseMail): The mail containing the condition to be processed.
         """
-        edge: Edge = mail.package.package["package"]
+        edge: Edge = mail.package.package
         check_result = await edge.check_condition(self)
         back_mail = {
             "from": self.ln_id,
@@ -135,9 +133,10 @@ class BranchExecutor(Branch, BaseExecutor):
             "check_result": check_result,
         }
         self.send(
-            mail.sender,
-            "condition",
-            {"request_source": self.ln_id, "package": back_mail},
+            recipient=mail.sender,
+            category="condition",
+            package=back_mail,
+            request_source=self.ln_id
         )
 
     def _system_process(self, system: System, verbose=True, context_verbose=False):
@@ -287,12 +286,7 @@ class BranchExecutor(Branch, BaseExecutor):
 
         if verbose:
             print("*****************************************************")
-        #
-        # from pandas import DataFrame
-        #
-        # if isinstance(result, DataFrame):
-        #     self.context = list(result["content"])
-        # else:
+
         self.context = result
         self.execution_responses.append(result)
 
@@ -306,9 +300,10 @@ class BranchExecutor(Branch, BaseExecutor):
         start_mail_content = mail.package.package
         self.context = start_mail_content["context"]
         self.send(
-            start_mail_content["structure_id"],
-            "start",
-            {"request_source": self.ln_id, "package": "start"},
+            recipient=start_mail_content["structure_id"],
+            category="start",
+            package="start",
+            request_source=self.ln_id
         )
 
     def _process_end(self, mail: Mail):
@@ -319,4 +314,9 @@ class BranchExecutor(Branch, BaseExecutor):
             mail (BaseMail): The end mail to process.
         """
         self.execute_stop = True
-        self.send(mail.sender, "end", {"request_source": self.ln_id, "package": "end"})
+        self.send(
+            recipient=mail.sender,
+            category="end",
+            package="end",
+            request_source=self.ln_id
+        )

@@ -129,8 +129,8 @@ class Session:
         progress = progression()
         messages = pile()
 
-        for id in branch.progress:
-            copy_message = branch.messages[id].copy()
+        for id_ in branch.progress:
+            copy_message = branch.messages[id_].copy()
             progress.append(copy_message.ln_id)
             messages.append(copy_message)
 

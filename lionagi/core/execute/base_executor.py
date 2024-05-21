@@ -46,24 +46,24 @@ class BaseExecutor(Element, Progressable, Executable, ABC):
 
     def send(
         self,
-        recipient_id: str,
+        recipient: str,
         category: str,
         package: Any,
-        request_source: str
+        request_source: str = None
     ) -> None:
         """
         Sends a mail to a recipient.
 
         Args:
-            recipient_id (str): The ID of the recipient.
+            recipient (str): The ID of the recipient.
             category (str): The category of the mail.
             package (Any): The package to send in the mail.
-            source (str): The source of the request.
+            request_source (str): The source of the request.
         """
         pack = Package(category=category, package=package, request_source=request_source)
         mail = Mail(
             sender=self.ln_id,
-            recipient=recipient_id,
+            recipient=recipient,
             package=pack,
         )
         self.mailbox.include(mail, "out")

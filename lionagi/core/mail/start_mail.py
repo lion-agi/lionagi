@@ -19,10 +19,3 @@ class StartMail(Node):
             package=pack,
         )
         self.mailbox.include(start_mail, "out")
-
-
-# class MailTransfer(Node):
-#     def __init__(self):
-#         super().__init__()
-#         self.pending_ins = {}
-#         self.pending_outs = deque()
