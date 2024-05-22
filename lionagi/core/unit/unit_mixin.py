@@ -608,7 +608,7 @@ class DirectiveMixin(ABC):
             process_tools(tools, branch)
 
         if allow_action and not tools:
-            tools=True
+            tools = True
 
         if tools:
             tool_schema = branch.tool_manager.get_tool_schema(tools)
@@ -663,8 +663,7 @@ class DirectiveMixin(ABC):
                 break
             max_extension -= 1
 
-            last_form = await self._extend(
-                form=last_form,
+            new_form = await self._extend(
                 tools=tools,
                 reason=reason,
                 predict=predict,
@@ -682,8 +681,8 @@ class DirectiveMixin(ABC):
                 **kwargs,
             )
 
-            extension_forms.extend([last_form])
-            last_form = last_form[0] if last_form else None
+            extension_forms.extend(new_form)
+            last_form = new_form[-1] if isinstance(new_form, list) else new_form
 
         if extension_forms:
             if not getattr(form, "extension_forms", None):
@@ -700,7 +699,6 @@ class DirectiveMixin(ABC):
 
     async def _extend(
         self,
-        form,
         tools,
         reason,
         predict,
@@ -771,12 +769,11 @@ class DirectiveMixin(ABC):
                 last_form = await self._direct(**directive_kwargs)
                 extension_forms.append(last_form)
                 directive_kwargs["max_extension"] -= 1
-                if not last_form.extension_required:
+                if not getattr(last_form, "extension_required", None):
                     break
 
         else:
             # Handle single step extension
-            directive_kwargs["instruction"] = form.instruction
             last_form = await self._direct(**directive_kwargs)
             extension_forms.append(last_form)
 
@@ -794,6 +791,9 @@ class DirectiveMixin(ABC):
         Returns:
             dict: The updated form.
         """
+        if getattr(form, "performed", None):
+            return form
+
         if actions:
 
             keys = [f"action_{i+1}" for i in range(len(actions))]
@@ -819,27 +819,30 @@ class DirectiveMixin(ABC):
                     )
 
                     if out is False:
-                        raise ValueError(
-                            "Error processing action request: No requests found."
-                        )
+                        raise ValueError("No requests found.")
 
                     len_actions = len(actions)
-                    action_responses = branch.messages[-len_actions:]
-
-                    if not all(isinstance(i, ActionResponse) for i in action_responses):
-                        raise ValueError(
-                            "Error processing action request: Invalid action response."
-                        )
+                    action_responses = [
+                        i
+                        for i in branch.messages[-len_actions:]
+                        if isinstance(i, ActionResponse)
+                    ]
 
                     _action_responses = {}
                     for idx, item in enumerate(action_responses):
                         _action_responses[f"action_{idx+1}"] = item._to_dict()
 
-                    form._add_field("action_response", dict, None, _action_responses)
                     form.append_to_request("action_response")
+                    if not form.action_response:
+                        form.action_response = {}
 
-                    form._add_field("action_performed", bool, None, True)
+                    for k, v in _action_responses.items():
+                        while k in form.action_response:
+                            k = f"{k}_1"
+                        form.action_response[k] = v
+
                     form.append_to_request("action_performed")
+                    form.action_performed = True
 
             except Exception as e:
                 raise ValueError(f"Error processing action request: {e}")

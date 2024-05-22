@@ -39,16 +39,16 @@ class UnitForm(BaseUnitForm):
 
     action_required: bool | None = Field(
         None,
-        description="Set to True if actions are required. Provide actions if True.",
+        description="Set to True if you provide actions, or provide actions if True.",
         examples=[True, False],
     )
 
     answer: str | None = Field(
         None,
         description=(
-            "Provide the answer to the questions asked. If an accurate answer cannot "
-            "be provided at this step, set `extend_required` to True."
-            "if actions are required at this step, set `action_required` to True and reply with 'PELASE_ACTION`."
+            "Provide the answer to the questions asked. "
+            "If an accurate answer cannot be provided at this step, set `extend_required` to True."
+            "Additionally, if actions are required at this step, set `action_required` to True and reply with `PELASE_ACTION`."
         ),
     )
 
@@ -110,7 +110,6 @@ class UnitForm(BaseUnitForm):
     def __init__(
         self,
         instruction=None,
-        *,
         context=None,
         reason: bool = True,
         predict: bool = False,
@@ -142,13 +141,13 @@ class UnitForm(BaseUnitForm):
         if reason:
             self.append_to_request("reason")
 
-        if allow_extension:
-            self.append_to_request("extension_required")
-            self.task += f"- Allow auto-extension for another {max_extension} rounds.\n"
-            
         if allow_action:
             self.append_to_request("actions, action_required, reason")
             self.task += "- Reason and prepare actions with GIVEN TOOLS ONLY.\n"
+            
+        if allow_extension:
+            self.append_to_request("extension_required")
+            self.task += f"- Allow auto-extension up to another {max_extension} rounds.\n"
             
         if tool_schema:
             self.append_to_input("tool_schema")
