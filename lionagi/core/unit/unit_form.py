@@ -34,11 +34,13 @@ class UnitForm(BaseUnitForm):
             "When providing parameters, you must follow the provided type and format, "
             "if the parameter is a number, you should provide a number like 1, 23, or 1.1 if float is allowed."
         ),
+        examples=["{action_1: {function: 'add', arguments: {num1: 1, num2: 2}}}"]
     )
 
     action_required: bool | None = Field(
         None,
         description="Set to True if actions are required. Provide actions if True.",
+        examples=[True, False],
     )
 
     answer: str | None = Field(
@@ -56,6 +58,7 @@ class UnitForm(BaseUnitForm):
             "Set to True if more steps are needed to provide an accurate answer. If "
             "True, additional rounds are allowed."
         ),
+        examples=[True, False],
     )
 
     prediction: None | str = Field(
@@ -70,6 +73,7 @@ class UnitForm(BaseUnitForm):
             "Achieve the final answer at the last step. Set `extend_required` to True "
             "if plan requires more steps."
         ),
+        examples=["{step_1: {plan: '...', reason: '...'}}"],
     )
 
     score: float | None = Field(
@@ -78,6 +82,7 @@ class UnitForm(BaseUnitForm):
             "A numeric score. Higher is better. If not otherwise instructed,"
             " fill this field with your own performance rating. Try hard and be self-critical"
         ),
+        examples=[0.2, 5, 2.7],
     )
 
     selection: Enum | str | list | None = Field(

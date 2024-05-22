@@ -1269,8 +1269,8 @@ async def call_handler(
     except Exception as e:
         if error_map:
             _custom_error_handler(e, error_map)
-        else:
-            logging.error(f"Error in call_handler: {e}")
+        # else:
+        #     logging.error(f"Error in call_handler: {e}")
         raise
 
 

@@ -14,20 +14,15 @@ See the License for the specific language governing permissions and
 limitations under the License.
 """
 
-from lionagi.core.collections.abc import Component
 from lionagi.core.collections import (
     Pile,
     Progression,
-    Flow,
     progression,
     pile,
-    flow,
     iModel,
 )
 from lionagi.core.message import System
-from lionagi.libs.ln_api import BaseService
-from typing import Any, Tuple
-from lionagi.core.action.tool import Tool, TOOL_TYPE
+from typing import Any
 from lionagi.core.action.tool_manager import ToolManager
 
 from lionagi.libs import SysUtil
@@ -36,16 +31,13 @@ from lionagi.core.collections import pile, Pile, Exchange
 from lionagi.core.collections.abc import get_lion_id
 from lionagi.core.collections.util import to_list_type
 from lionagi.core.mail.mail_manager import MailManager
-from lionagi.core.message.util import create_message
 
 
 class Session:
 
     def __init__(
         self,
-        system: (
-            str | System | None
-        ) = None,  # the default system message for the session
+        system = None,  # the default system message for the session
         branches: Any | None = None,
         system_sender: str | None = None,
         user: str | None = None,
@@ -56,7 +48,7 @@ class Session:
         system = system or "You are a helpful assistant, let's think step by step"
         self.system = System(system=system, sender=system_sender)
         self.system_sender = system_sender
-        self.branches = self._validate_branches(branches)
+        self.branches: Pile[Branch] = self._validate_branches(branches)
         self.mail_transfer = Exchange()
         self.mail_manager = MailManager([self.mail_transfer])
         self.imodel = imodel or iModel()
@@ -69,7 +61,7 @@ class Session:
 
     def _validate_branches(self, value):
         if isinstance(value, Pile):
-            for branch in value.values():
+            for branch in value:
                 if not isinstance(branch, Branch):
                     raise ValueError("The branches pile contains non-Branch object")
             return value
@@ -188,3 +180,17 @@ class Session:
         if receive_all:
             for branch in self.branches:
                 branch.receive_all()
+
+    async def chat(self, *args, branch=None, **kwargs):
+        if branch is None:
+            branch = self.default_branch
+        if branch not in self.branches:
+            raise ValueError("Branch not found in session branches")
+        return await self.branches[branch].chat(*args, **kwargs)
+    
+    async def direct(self, *args, branch=None, **kwargs):
+        if branch is None:
+            branch = self.default_branch
+        if branch not in self.branches:
+            raise ValueError("Branch not found in session branches")
+        return await self.branches[branch].direct(*args, **kwargs)

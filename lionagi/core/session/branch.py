@@ -14,9 +14,8 @@ See the License for the specific language governing permissions and
 limitations under the License.
 """
 
-from collections import deque
 from typing import Any
-from lionagi.libs.ln_convert import is_same_dtype, to_dict, to_df
+from lionagi.libs.ln_convert import is_same_dtype, to_df
 from lionagi.core.collections.abc import Field
 from lionagi.core.collections import (
     pile,
@@ -28,7 +27,7 @@ from lionagi.core.collections import (
 )
 from lionagi.core.generic.node import Node
 from lionagi.core.action import Tool, ToolManager
-from lionagi.core.mail.mail import Mail, Package
+from lionagi.core.mail import Mail, Package
 from lionagi.core.message import (
     create_message,
     System,
@@ -239,36 +238,6 @@ class Branch(Node, DirectiveMixin):
         """
         return self.tool_manager.registry != {}
 
-    # def merge_branch(
-    #     self, branch: "Branch", update_tool: bool = False, update_model=False
-    # ) -> None:
-    #     """
-    #     Merges another branch into this branch.
-    #
-    #     Args:
-    #         branch (Branch): The branch to merge.
-    #         update_tool (bool, optional): Whether to update the tool manager.
-    #         update_model (bool, optional): Whether to update the model.
-    #
-    #     Raises:
-    #         ValueError: If the branch to be merged has no model and update_model is True.
-    #     """
-    #     if update_model and not branch.imodel:
-    #         raise ValueError(
-    #             "Cannot update model: The branch to be merged has no model"
-    #         )
-    #
-    #     if self.messages.include(branch.messages) and self.progress.include(
-    #         branch.messages
-    #     ):
-    #         self.datalogger.extend(branch.datalogger.log)
-    #
-    #         if update_tool:
-    #             self.tool_manager.registry.update(branch.tool_manager.registry)
-    #
-    #         if update_model:
-    #             self.imodel = branch.imodel
-
     def register_tools(self, tools) -> None:
         """
         Registers tools with the tool manager.
@@ -380,7 +349,6 @@ class Branch(Node, DirectiveMixin):
         )
         self.mailbox.include(mail, "out")
 
-    # # TODO: need to modify this method to include the new message types
     def receive(
         self,
         sender: str,

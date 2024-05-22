@@ -16,7 +16,6 @@ limitations under the License.
 
 # lionagi/core/session/directive_mixin.py
 
-from lionagi.libs.ln_convert import strip_lower
 from lionagi.core.unit import Unit
 
 
@@ -32,7 +31,6 @@ class DirectiveMixin:
         system=None,  # optionally swap system message
         sender=None,  # sender of the instruction, default "user"
         recipient=None,  # recipient of the instruction, default "branch.ln_id"
-        branch=None,
         requested_fields=None,  # fields to request from the context, default None
         form=None,  # form to create instruction from, default None,
         tools=False,  # the tools to use, use True to consider all tools, no tools by default
@@ -68,7 +66,6 @@ class DirectiveMixin:
             sender (str, optional): Sender of the instruction, default is "user".
             recipient (str, optional): Recipient of the instruction, default is
                 "branch.ln_id".
-            branch (Branch, optional): The branch to use for the instruction.
             requested_fields (dict[str, str], optional): Fields to request from
                 the context.
             form (Any, optional): Form to create instruction from, default is None.
@@ -136,7 +133,6 @@ class DirectiveMixin:
             default=default,
             timeout=timeout,
             timing=timing,
-            branch=branch,
             clear_messages=clear_messages,
             return_branch=return_branch,
             **kwargs,
@@ -148,9 +144,7 @@ class DirectiveMixin:
         instruction=None,
         context=None,
         form=None,
-        branch=None,
         tools=None,
-        return_branch=False,
         reason: bool = False,
         predict: bool = False,
         score=None,
@@ -181,7 +175,6 @@ class DirectiveMixin:
                 directive=directive,
                 instruction=instruction,
                 context=context,
-                branch=branch,
                 tools=tools,
                 reason=reason,
                 confidence=confidence,
@@ -192,9 +185,7 @@ class DirectiveMixin:
             instruction=instruction,
             context=context,
             form=form,
-            branch=branch,
             tools=tools,
-            return_branch=return_branch,
             reason=reason,
             predict=predict,
             score=score,

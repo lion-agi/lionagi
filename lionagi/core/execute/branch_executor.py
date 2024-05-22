@@ -22,7 +22,6 @@ class BranchExecutor(Branch, BaseExecutor):
         progress=None,
         tool_manager=None,
         tools=None,
-        mailbox=None,
         imodel=None,
         **kwargs,
     ):
