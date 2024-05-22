@@ -505,7 +505,6 @@ async def _tcall(
             raise asyncio.TimeoutError(err_msg)  # Re-raise the timeout exception
     except Exception as e:
         err_msg = f"{err_msg} Error: {e}" if err_msg else f"An error occurred: {e}"
-        print(err_msg)
         if ignore_err:
             return (
                 (default, SysUtil.get_now(datetime_=False) - start_time)

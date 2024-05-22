@@ -206,24 +206,27 @@ class UnitForm(BaseUnitForm):
         
         if "tool_schema" in fields:
             tools = to_dict(fields["tool_schema"])["tools"]
-            fields["tool_used"] = [i["function"]["name"] for i in tools]
+            fields["available_tools"] = [i["function"]["name"] for i in tools]
             fields.pop("tool_schema")
             
         if "actions" in fields:
             a = ""
+            idx = 0
             for _, v in fields["actions"].items():
-                a += f"\n- **{v["function"]}**({', '.join([f'{k}: {v}' for k, v in v["arguments"].items()])}), "
+                a += f"\n \n{idx+1}. **{v["function"]}**({', '.join([f'{k}: {v}' for k, v in v["arguments"].items()])}), "
+                idx += 1
             fields["actions"] = a[:-2]
             
         if "action_response" in fields:
             a = ""
+            idx = 0
             for _, v in fields["action_response"].items():
-                a += f"\n- **{v["function"]}**({', '.join([f'{k}: {v}' for k, v in v["arguments"].items()])}"
+                a += f"\n \n{idx+1}. **{v["function"]}**({', '.join([f'{k}: {v}' for k, v in v["arguments"].items()])})"
                 if len(str(v["output"])) > 30:
-                    a += f" \n \t{v["output"]}), "
+                    a += f" \n \n {v["output"]}, "
                 else:
                     a += f") = {v["output"]}, "
-                    
+                idx += 1
             fields["action_response"] = a[:-2]    
         
         super().display(fields=fields)

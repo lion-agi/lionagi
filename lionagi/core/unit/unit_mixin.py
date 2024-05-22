@@ -212,12 +212,13 @@ class DirectiveMixin(ABC):
             results = await asyncio.gather(*tasks)
 
             for idx, item in enumerate(results):
-                branch.add_message(
-                    action_request=action_request[idx],
-                    func_outputs=item,
-                    sender=action_request[idx].recipient,
-                    recipient=action_request[idx].sender,
-                )
+                if item is not None:
+                    branch.add_message(
+                        action_request=action_request[idx],
+                        func_outputs=item,
+                        sender=action_request[idx].recipient,
+                        recipient=action_request[idx].sender,
+                    )
 
         return None
 
@@ -605,6 +606,9 @@ class DirectiveMixin(ABC):
         # Process tools if provided
         if tools:
             process_tools(tools, branch)
+
+        if allow_action and not tools:
+            tools=True
 
         if tools:
             tool_schema = branch.tool_manager.get_tool_schema(tools)
