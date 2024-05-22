@@ -11,8 +11,8 @@ from lionagi.libs import func_call, AsyncUtil
 from lionagi.core.mail.start_mail import StartMail
 from lionagi.core.generic.node import Node
 from lionagi.core.mail.mail_manager import MailManager
-from lionagi.core.execute.base_executor import BaseExecutor
-from lionagi.core.execute.structure_executor import StructureExecutor
+from lionagi.core.executor.base_executor import BaseExecutor
+from lionagi.core.executor.graph_executor import GraphExecutor
 
 
 class BaseAgent(Node):

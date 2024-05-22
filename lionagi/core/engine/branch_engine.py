@@ -7,7 +7,7 @@ from lionagi.core.message import System, Instruction
 from lionagi.core.collections import Pile, Progression
 
 from lionagi.core.session.branch import Branch
-from lionagi.core.execute.base_executor import BaseExecutor
+from lionagi.core.executor.base_executor import BaseExecutor
 
 
 class BranchExecutor(Branch, BaseExecutor):

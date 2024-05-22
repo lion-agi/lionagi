@@ -2,11 +2,11 @@ from collections import deque
 import json
 from typing import Callable
 
-from lionagi.core.execute.base_executor import BaseExecutor
+from lionagi.core.executor.base_executor import BaseExecutor
 from lionagi.integrations.storage.neo4j import Neo4j
 from lionagi.integrations.storage.storage_util import ParseNode
 from lionagi.core.agent.base_agent import BaseAgent
-from lionagi.core.execute.instruction_map_executor import InstructionMapExecutor
+from lionagi.core.engine.instruction_map_engine import InstructionMapExecutor
 
 from lionagi.core.mail import Mail
 from lionagi.core.action import Tool, DirectiveSelection, ActionNode

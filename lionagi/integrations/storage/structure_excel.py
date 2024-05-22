@@ -3,10 +3,10 @@ import json
 from pathlib import Path
 
 from lionagi.integrations.storage.storage_util import ParseNode
-from lionagi.core.execute.structure_executor import StructureExecutor
+from lionagi.core.executor.graph_executor import GraphExecutor
 from lionagi.core.agent.base_agent import BaseAgent
-from lionagi.core.execute.base_executor import BaseExecutor
-from lionagi.core.execute.instruction_map_executor import InstructionMapExecutor
+from lionagi.core.executor.base_executor import BaseExecutor
+from lionagi.core.engine.instruction_map_engine import InstructionMapExecutor
 
 
 def excel_reload(structure_name=None, structure_id=None, dir="structure_storage"):
@@ -53,7 +53,7 @@ class StructureExcel:
         reload(): Reloads the structure from the Excel file based on the initially provided parameters.
     """
 
-    structure: StructureExecutor = StructureExecutor()
+    structure: GraphExecutor = GraphExecutor()
     default_agent_executable: BaseExecutor = InstructionMapExecutor()
 
     def __init__(
@@ -279,6 +279,6 @@ class StructureExcel:
         This method initializes a new StructureExecutor and uses the Excel data to rebuild the entire structure,
         starting from the head nodes and recursively parsing and connecting all nodes defined within.
         """
-        self.structure = StructureExecutor()
+        self.structure = GraphExecutor()
         heads = self.get_heads()
         self.parse(heads)

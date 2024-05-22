@@ -4,7 +4,7 @@ from lionagi.libs import AsyncUtil, convert
 
 from lionagi.core.generic.node import Node
 from lionagi.core.generic.edge import Edge
-from lionagi.core.execute.base_executor import BaseExecutor
+from lionagi.core.executor.base_executor import BaseExecutor
 
 from lionagi.core.action import Tool, DirectiveSelection, ActionNode
 
@@ -13,7 +13,7 @@ from lionagi.core.generic.graph import Graph
 from lionagi.core.collections.progression import progression
 
 
-class StructureExecutor(BaseExecutor, Graph):
+class GraphExecutor(BaseExecutor, Graph):
     """
     Executes tasks within a graph structure, handling dynamic node flows and conditional edge logic.
 
