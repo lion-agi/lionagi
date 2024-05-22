@@ -24,8 +24,7 @@ class BaseUnitForm(Form):
     confidence_score: float = Field(
         None,
         description=(
-            "Provide a numeric confidence score between 0 and 1. Format: num:0.2f. 1 "
-            "is very confident, 0 is not confident at all."
+            "Provide a numeric confidence score on how likely you successfully achieved the task  between 0 and 1, with precision in 2 decimal places. 1 being very confident in a good job, 0 is not confident at all."
         ),
         validation_kwargs={
             "upper_bound": 1,
@@ -38,7 +37,6 @@ class BaseUnitForm(Form):
     reason: str | None = Field(
         None,
         description=(
-            "Provide a brief reason for the output. Must start with: Let's think step by step, "
-            "because ..."
+            "Explain yourself, provide concise reasoning for the process. Must start with: Let's think step by step, "
         ),
     )

@@ -15,7 +15,7 @@ limitations under the License.
 """
 
 from enum import Enum
-from lionagi.libs.ln_convert import to_str
+from lionagi.libs.ln_convert import to_str, to_dict
 from lionagi.core.collections.abc import Field
 from .template.base import BaseUnitForm
 
@@ -63,7 +63,7 @@ class UnitForm(BaseUnitForm):
 
     prediction: None | str = Field(
         None,
-        description="Provide the desired prediction based on context and instruction.",
+        description="Provide the likely prediction basing on context and instruction.",
     )
 
     plan: dict | str | None = Field(
@@ -76,6 +76,12 @@ class UnitForm(BaseUnitForm):
         examples=["{step_1: {plan: '...', reason: '...'}}"],
     )
 
+    next_steps: dict | str | None = Field(
+        None,
+        description="Brainstorm ideas on next actions to take. Format: {next_step_n: {plan: ..., reason: ...}} next_step is about anticipating the future actions, but it does not have to be in a sequential format. Set `extend_required` to True if more steps are needed.",
+    )
+
+
     score: float | None = Field(
         None,
         description=(
@@ -85,8 +91,18 @@ class UnitForm(BaseUnitForm):
         examples=[0.2, 5, 2.7],
     )
 
+    reflection: str | None = Field(
+        None,
+        description="Reason your own reasoning. create specific items on how/where/what you could improve to better achieve the task, or can the problem be solved in a different and better way. If you can think of a better solution, please provide it and flag the necessary fields in `action_required`, `extension_required`, `next_steps`.",
+    )
+
     selection: Enum | str | list | None = Field(
         None, description="a single item from the choices."
+    )
+
+    tool_schema: list | dict | None = Field(
+        None, 
+        description="The list of tools available for using."
     )
 
     assignment: str = "task -> answer"
@@ -101,6 +117,9 @@ class UnitForm(BaseUnitForm):
         score=True,
         select=None,
         plan=None,
+        brainstorm=None,
+        reflect=None,
+        tool_schema=None,
         allow_action: bool = False,
         allow_extension: bool = False,
         max_extension: int = None,
@@ -122,10 +141,22 @@ class UnitForm(BaseUnitForm):
 
         if reason:
             self.append_to_request("reason")
+
+        if allow_extension:
+            self.append_to_request("extension_required")
+            self.task += f"- Allow auto-extension for another {max_extension} rounds.\n"
             
         if allow_action:
             self.append_to_request("actions, action_required, reason")
-            self.task += "Perform reasoning and prepare actions with GIVEN TOOLS ONLY.\n"
+            self.task += "- Reason and prepare actions with GIVEN TOOLS ONLY.\n"
+            
+        if tool_schema:
+            self.append_to_input("tool_schema")
+            self.tool_schema = tool_schema
+
+        if brainstorm:
+            self.append_to_request("next_steps, extension_required")
+            self.task += "- Explore ideas on next actions to take.\n"
 
         if plan:
             plan_num_step = plan_num_step or 3
@@ -134,13 +165,16 @@ class UnitForm(BaseUnitForm):
             self.append_to_request("plan, extension_required")
             self.task += f"- Generate a {plan_num_step}-step plan based on the context.\n"
 
-        if allow_extension:
-            self.append_to_request("extension_required")
-            self.task += f"- Allow auto-extension for another {max_extension} rounds.\n"
-
         if predict:
             self.append_to_request("prediction")
             self.task += f"- Predict the next {predict_num_sentences or 1} sentence(s).\n"
+
+        if select:
+            self.append_to_request("selection")
+            self.task += f"- Select 1 item from the provided choices: {select_choices}.\n"
+
+        if confidence:
+            self.append_to_request("confidence_score")
 
         if score:
             self.append_to_request("score")
@@ -156,14 +190,40 @@ class UnitForm(BaseUnitForm):
             }
 
             self.task += (
-                f"- Perform scoring a numeric score in [{score_range[0]}, {score_range[1]}] "
+                f"- Give a numeric score in [{score_range[0]}, {score_range[1]}] "
                 f"and precision of {score_num_digits or 0} decimal places.\n"
             )
-
-        if select:
-            self.append_to_request("selection")
-            self.task += f"- Select 1 item from the provided choices: {select_choices}.\n"
-
-        if confidence:
-            self.append_to_request("confidence_score")
             
+        if reflect:
+            self.append_to_request("reflection")
+
+
+    def display(self):
+        fields = self.work_fields.copy()
+        
+        if "task" in fields and len(str(fields["task"])) > 2000:
+            fields["task"] = fields["task"][:2000] + "..."
+        
+        if "tool_schema" in fields:
+            tools = to_dict(fields["tool_schema"])["tools"]
+            fields["tool_used"] = [i["function"]["name"] for i in tools]
+            fields.pop("tool_schema")
+            
+        if "actions" in fields:
+            a = ""
+            for _, v in fields["actions"].items():
+                a += f"\n- **{v["function"]}**({', '.join([f'{k}: {v}' for k, v in v["arguments"].items()])}), "
+            fields["actions"] = a[:-2]
+            
+        if "action_response" in fields:
+            a = ""
+            for _, v in fields["action_response"].items():
+                a += f"\n- **{v["function"]}**({', '.join([f'{k}: {v}' for k, v in v["arguments"].items()])}"
+                if len(str(v["output"])) > 30:
+                    a += f" \n \t{v["output"]}), "
+                else:
+                    a += f") = {v["output"]}, "
+                    
+            fields["action_response"] = a[:-2]    
+        
+        super().display(fields=fields)

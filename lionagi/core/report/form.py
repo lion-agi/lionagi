@@ -22,6 +22,7 @@ validating the readiness of forms for further processing.
 """
 
 from typing import Dict, Any
+from lionagi.libs.ln_convert import to_readable_dict
 from lionagi.core.collections.abc import SYSTEM_FIELDS
 from lionagi.core.report.util import get_input_output_fields
 from lionagi.core.report.base import BaseForm
@@ -73,15 +74,22 @@ class Form(BaseForm):
                     i, "validation_kwargs", {}
                 )
 
-    def append_to_input(self, field: str, field_obj=None):
-        if field not in self._all_fields:
-            self._add_field(field, field_obj=field_obj)
+    def append_to_input(self, field: str):
+        if "," in field:
+            field = field.split(",")
+        if not isinstance(field, list):
+            field = [field]
 
-        if field not in self.input_fields:
-            self.input_fields.append(field)
-            self.validation_kwargs[field] = self._get_field_attr(
-                field, "validation_kwargs", {}
-            )
+        for i in field:
+            i = i.strip()
+            if i not in self._all_fields:
+                self._add_field(i)
+
+            if i not in self.input_fields:
+                self.input_fields.append(i)
+                self.validation_kwargs[i] = self._get_field_attr(
+                    i, "validation_kwargs", {}
+                )
 
     @property
     def work_fields(self) -> Dict[str, Any]:
@@ -151,7 +159,7 @@ class Form(BaseForm):
         Returns:
             str: A detailed description of the input fields.
         """
-        a = "".join(
+        return "".join(
             f"""
         ## input: {i}:
         - description: {getattr(self._all_fields[i], "description", "N/A")}
@@ -159,11 +167,10 @@ class Form(BaseForm):
         """
             for idx, i in enumerate(self.input_fields)
         )
-        return a.replace("        ", "")
 
     @property
     def _instruction_prompt(self) -> str:
-        instruction = f"""
+        return f"""
         ## Task Instructions
         Please follow prompts to complete the task:
         1. Your task is: {self.task}
@@ -171,7 +178,6 @@ class Form(BaseForm):
         3. The requested output fields are: {', '.join(self.requested_fields)}
         4. Provide your response in the specified JSON format.
         """
-        return instruction.replace("        ", "")
 
     @property
     def _instruction_requested_fields(self) -> Dict[str, str]:
@@ -186,3 +192,20 @@ class Form(BaseForm):
             i: getattr(self._all_fields[i], "description", "N/A")
             for i in self.requested_fields
         }
+
+    def display(self, fields=None):
+        from IPython.display import display, Markdown
+
+        fields = fields or self.work_fields
+
+        if "answer" in fields:
+            answer = fields.pop("answer")
+            fields["answer"] = answer
+
+        for k, v in fields.items():
+            if isinstance(v, dict):
+                v = to_readable_dict(v)
+            if len(str(v)) > 50:
+                display(Markdown(f"**{k}**: \n {v}"))
+            else:
+                display(Markdown(f"**{k}**: {v}"))

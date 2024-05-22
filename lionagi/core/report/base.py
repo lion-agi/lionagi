@@ -170,3 +170,6 @@ class BaseForm(Component):
         )
         all_fields.update({**all_form_fields, **kwargs})
         return all_fields
+
+    def copy(self):
+        return self.model_copy()

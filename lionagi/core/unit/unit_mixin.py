@@ -30,6 +30,7 @@ from lionagi.core.message import Instruction, ActionRequest, ActionResponse
 from lionagi.core.message.util import _parse_action_request
 from lionagi.core.validator.validator import Validator
 from lionagi.core.unit.util import process_tools
+from lionagi.core.report.form import Form
 
 
 class DirectiveMixin(ABC):
@@ -45,7 +46,7 @@ class DirectiveMixin(ABC):
         sender: Optional[str] = None,
         recipient: Optional[str] = None,
         requested_fields: Optional[list] = None,
-        form: Optional[dict] = None,
+        form: Form = None,
         tools: bool = False,
         branch: Optional[Any] = None,
         **kwargs,
@@ -227,7 +228,7 @@ class DirectiveMixin(ABC):
         sender: str,
         invoke_tool: bool,
         requested_fields: dict,
-        form: Any = None,
+        form: Form = None,
         return_form: bool = True,
         strict: bool = False,
         rulebook: Any = None,
@@ -297,7 +298,7 @@ class DirectiveMixin(ABC):
         sender: Any = None,
         recipient: Any = None,
         requested_fields: dict = None,
-        form: Any = None,
+        form: Form = None,
         tools: Any = False,
         invoke_tool: bool = True,
         return_form: bool = True,
@@ -382,7 +383,7 @@ class DirectiveMixin(ABC):
         recipient=None,
         branch=None,
         requested_fields=None,
-        form=None,
+        form: Form = None,
         tools=False,
         invoke_tool=True,
         return_form=True,
@@ -454,7 +455,7 @@ class DirectiveMixin(ABC):
         self,
         instruction=None,
         context=None,
-        form=None,
+        form: Form = None,
         branch=None,
         tools=None,
         reason: bool = None,
@@ -541,7 +542,7 @@ class DirectiveMixin(ABC):
         instruction=None,
         *,
         context=None,
-        form=None,
+        form: Form = None,
         branch=None,
         tools=None,
         reason: bool = None,
@@ -601,35 +602,45 @@ class DirectiveMixin(ABC):
         if allow_extension and not max_extension:
             max_extension = 3  # Set a default limit for recursion
 
-        if not form:
-            form = self.form_template(
-                instruction=instruction,
-                context=context,
-                reason=reason,
-                predict=predict,
-                score=score,
-                select=select,
-                plan=plan,
-                allow_action=allow_action,
-                allow_extension=allow_extension,
-                max_extension=max_extension,
-                confidence=confidence,
-                score_num_digits=score_num_digits,
-                score_range=score_range,
-                select_choices=select_choices,
-                plan_num_step=plan_num_step,
-                predict_num_sentences=predict_num_sentences,
-            )
-
         # Process tools if provided
         if tools:
             process_tools(tools, branch)
+
+        if tools:
+            tool_schema = branch.tool_manager.get_tool_schema(tools)
+
+            if not form:
+                form = self.form_template(
+                    instruction=instruction,
+                    context=context,
+                    reason=reason,
+                    predict=predict,
+                    score=score,
+                    select=select,
+                    plan=plan,
+                    tool_schema=tool_schema,
+                    allow_action=allow_action,
+                    allow_extension=allow_extension,
+                    max_extension=max_extension,
+                    confidence=confidence,
+                    score_num_digits=score_num_digits,
+                    score_range=score_range,
+                    select_choices=select_choices,
+                    plan_num_step=plan_num_step,
+                    predict_num_sentences=predict_num_sentences,
+                )
+
+            elif form and "tool_schema" not in form._all_fields:
+                form.append_to_input("tool_schema")
+                form.tool_schema = tool_schema
+
+            else:
+                form.tool_schema = tool_schema
 
         # Call the base chat method
         form = await self._chat(
             form=form,
             branch=branch,
-            tools=tools,
             **kwargs,
         )
 
@@ -643,10 +654,7 @@ class DirectiveMixin(ABC):
 
         # Handle extensions if allowed and required
         extension_forms = []
-        while (
-            allow_extension
-            and getattr(last_form, "extension_required", None)
-        ):
+        while allow_extension and getattr(last_form, "extension_required", None):
             if max_extension <= 0:
                 break
             max_extension -= 1
@@ -1027,9 +1035,6 @@ class DirectiveMixin(ABC):
                 return StringMatch.force_validate_dict(out_, requested_fields)
 
         if isinstance(out_, str):
-            with contextlib.suppress(Exception):
-                return ParseUtil.fuzzy_parse_json(out_)
-            
             with contextlib.suppress(Exception):
                 match = re.search(r"```json\n({.*?})\n```", out_, re.DOTALL)
                 if match:
