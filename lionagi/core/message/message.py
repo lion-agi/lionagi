@@ -14,13 +14,14 @@ See the License for the specific language governing permissions and
 limitations under the License.
 """
 
-import typing
+import contextlib
 from enum import Enum
 from typing import Any
 
 # from pydantic._internal._utils import AbstractSetIntStr, MappingIntStrAny
 # from pydantic.main import Model
 
+from lionagi.libs import ParseUtil
 from lionagi.libs.ln_convert import to_str
 
 from lionagi.core.collections.abc import Sendable, Field
@@ -79,13 +80,15 @@ class RoledMessage(Node, Sendable):
         if role not in [i.value for i in MessageRole]:
             raise ValueError(f"Invalid message role: {role}")
 
-        try:
-            content_str = to_str(self.content)
-        except Exception as e:
-            raise ValueError(
-                f"Failed to convert {self.content} into a string value"
-            ) from e
+        content_str = str(self.content)
 
+        with contextlib.suppress(Exception):
+            content_str = ParseUtil.fuzzy_parse_json(content_str)
+
+        if isinstance(content_str, dict):
+            content_str = list(content_str.values())[0]
+            content_str = to_str(content_str)
+            
         return {"role": role, "content": content_str}
 
     def __str__(self):
