@@ -57,7 +57,7 @@ class Form(BaseForm):
             if i not in self._all_fields:
                 self._add_field(i, value=None)
 
-    def append_to_request(self, field: str):
+    def append_to_request(self, field: str, value=None):
         if "," in field:
             field = field.split(",")
         if not isinstance(field, list):
@@ -66,7 +66,7 @@ class Form(BaseForm):
         for i in field:
             i = i.strip()
             if i not in self._all_fields:
-                self._add_field(i)
+                self._add_field(i, value=value)
 
             if i not in self.requested_fields:
                 self.requested_fields.append(i)
@@ -74,7 +74,7 @@ class Form(BaseForm):
                     i, "validation_kwargs", {}
                 )
 
-    def append_to_input(self, field: str):
+    def append_to_input(self, field: str, value=None):
         if "," in field:
             field = field.split(",")
         if not isinstance(field, list):
@@ -83,7 +83,7 @@ class Form(BaseForm):
         for i in field:
             i = i.strip()
             if i not in self._all_fields:
-                self._add_field(i)
+                self._add_field(i, value=value)
 
             if i not in self.input_fields:
                 self.input_fields.append(i)
