@@ -1,6 +1,8 @@
 from typing import Union, Callable
 
 from lionagi.libs import func_call
+from lionagi.libs.ln_convert import to_list
+from lionagi.core.collections import pile
 from lionagi.core.generic import Node
 from ..bridge.langchain_.langchain_bridge import LangchainBridge
 from ..bridge.llamaindex_.llama_index_bridge import LlamaIndexBridge
@@ -24,15 +26,20 @@ def text_chunker(documents, args, kwargs):
 
     def chunk_node(node):
         chunks = file_to_chunks(node.to_dict(), *args, **kwargs)
-        func_call.lcall(chunks, lambda chunk: chunk.pop("node_id"))
+        func_call.lcall(chunks, lambda chunk: chunk.pop("ln_id"))
         return [Node.from_obj({**chunk}) for chunk in chunks]
 
-    return [chunk_node(doc) for doc in documents]
+    a = to_list([chunk_node(doc) for doc in documents], flatten=True, dropna=True)
+    return pile(a)
 
 
 def chunk(
-    documents,
-    chunker,
+    docs,
+    field: str = "content",
+    chunk_size: int = 1500,
+    overlap: float = 0.1,
+    threshold: int = 200,
+    chunker="text_chunker",
     chunker_type=ChunkerType.PLAIN,
     chunker_args=None,
     chunker_kwargs=None,
@@ -49,13 +56,17 @@ def chunk(
         chunking_kwargs = {}
 
     if chunker_type == ChunkerType.PLAIN:
+        chunker_kwargs["field"] = field
+        chunker_kwargs["chunk_size"] = chunk_size
+        chunker_kwargs["overlap"] = overlap
+        chunker_kwargs["threshold"] = threshold
         return chunk_funcs[ChunkerType.PLAIN](
-            documents, chunker, chunker_args, chunker_kwargs
+            docs, chunker, chunker_args, chunker_kwargs
         )
 
     elif chunker_type == ChunkerType.LANGCHAIN:
         return chunk_funcs[ChunkerType.LANGCHAIN](
-            documents,
+            docs,
             documents_convert_func,
             chunker,
             chunker_args,
@@ -65,7 +76,7 @@ def chunk(
 
     elif chunker_type == ChunkerType.LLAMAINDEX:
         return chunk_funcs[ChunkerType.LLAMAINDEX](
-            documents,
+            docs,
             documents_convert_func,
             chunker,
             chunker_args,
@@ -75,7 +86,7 @@ def chunk(
 
     elif chunker_type == ChunkerType.SELFDEFINED:
         return chunk_funcs[ChunkerType.SELFDEFINED](
-            documents,
+            docs,
             chunker,
             chunker_args,
             chunker_kwargs,
@@ -90,6 +101,8 @@ def chunk(
 
 
 def _self_defined_chunker(
+    
+    
     documents,
     chunker,
     chunker_args,

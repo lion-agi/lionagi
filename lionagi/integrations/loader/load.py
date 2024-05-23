@@ -1,6 +1,7 @@
 from typing import Callable
 
 from lionagi.core.generic import Node
+from lionagi.core.collections import pile
 from ..bridge.langchain_.langchain_bridge import LangchainBridge
 from ..bridge.llamaindex_.llama_index_bridge import LlamaIndexBridge
 
@@ -27,12 +28,12 @@ def text_reader(args, kwargs):
 
 
 def load(
-    reader: str | Callable = "SimpleDirectoryReader",
+    reader: str | Callable = "text_reader",
     input_dir=None,
     input_files=None,
     recursive: bool = False,
     required_exts: list[str] = None,
-    reader_type=ReaderType.LLAMAINDEX,
+    reader_type=ReaderType.PLAIN,
     reader_args=None,
     reader_kwargs=None,
     load_args=None,
@@ -50,6 +51,10 @@ def load(
         load_kwargs = {}
 
     if reader_type == ReaderType.PLAIN:
+        reader_kwargs['dir_'] = input_dir
+        reader_kwargs['ext'] = required_exts
+        reader_kwargs['recursive'] = recursive
+        
         return read_funcs[ReaderType.PLAIN](reader, reader_args, reader_kwargs)
 
     if reader_type == ReaderType.LANGCHAIN:
@@ -86,7 +91,8 @@ def _plain_reader(reader, reader_args, reader_kwargs):
     try:
         if reader == "text_reader":
             reader = text_reader
-        return reader(reader_args, reader_kwargs)
+        nodes = reader(reader_args, reader_kwargs)
+        return pile(nodes)
     except Exception as e:
         raise ValueError(
             f"Reader {reader} is currently not supported. Error: {e}"
@@ -96,7 +102,7 @@ def _plain_reader(reader, reader_args, reader_kwargs):
 def _langchain_reader(reader, reader_args, reader_kwargs, to_lion: bool | Callable):
     nodes = LangchainBridge.langchain_loader(reader, reader_args, reader_kwargs)
     if isinstance(to_lion, bool) and to_lion is True:
-        nodes = [Node.from_langchain(i) for i in nodes]
+        return pile([Node.from_langchain(i) for i in nodes])
 
     elif isinstance(to_lion, Callable):
         nodes = _datanode_parser(nodes, to_lion)
@@ -115,7 +121,8 @@ def _llama_index_reader(
         reader, reader_args, reader_kwargs, load_args, load_kwargs
     )
     if isinstance(to_lion, bool) and to_lion is True:
-        nodes = [Node.from_llama_index(i) for i in nodes]
+        return pile([Node.from_llama_index(i) for i in nodes])
+        
     elif isinstance(to_lion, Callable):
         nodes = _datanode_parser(nodes, to_lion)
     return nodes

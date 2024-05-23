@@ -63,6 +63,10 @@ class Pile(Element, Record, Generic[T]):
     item_type: set[Type[Element]] | None = Field(default=None)
     name: str | None = None
     order: list[str] = Field(default_factory=list)
+    index: Any = None
+    engines: dict[str, Any] = Field(default_factory=dict)
+    query_response: Any = []
+    index_nodes: Any = None
 
     def __init__(
         self,
@@ -556,6 +560,44 @@ class Pile(Element, Record, Generic[T]):
             _dict = i.to_dict()
             dicts_.append(_dict)
         return to_df(dicts_)
+
+    def to_index(self, index_type="llama_index", **kwargs):
+        if index_type == "llama_index":
+            from lionagi.integrations.bridge import LlamaIndexBridge
+            
+            try:
+                index_nodes = [i.to_llama_index_node() for i in self]
+            except AttributeError:
+                raise LionTypeError(
+                    "Invalid item type. Expected a subclass of Component."
+                )
+            
+            self.index = LlamaIndexBridge.index(index_nodes, **kwargs)
+            self.index_nodes = index_nodes
+            return self.index
+        
+        raise ValueError("Invalid index type")
+
+    def setup_query_engine(self, index_type="llama_index", engine_kwargs={}, **kwargs):
+        if self.engines.get("query", None):
+            return self.engines["query"]
+        
+        if index_type == "llama_index":
+            if "node_postprocessor" in kwargs:
+                engine_kwargs["node_postprocessor"] = kwargs.pop("node_postprocessor")
+            if not self.index:
+                self.to_index(index_type, **kwargs)
+            query_engine = self.index.as_query_engine(**engine_kwargs)
+            self.engines["query"] = query_engine
+        else:
+            raise ValueError("Invalid index type")
+
+    async def query_pile(self, query, query_kwargs={}, **kwargs):
+        if not self.engines.get("query", None):
+            self.setup_query_engine(**kwargs)
+        response = await self.engines["query"].aquery(query, **query_kwargs)
+        self.query_response.append(response)
+        return str(response)
 
     def __list__(self):
         return list(self.pile.values())
