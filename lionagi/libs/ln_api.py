@@ -854,6 +854,17 @@ class BaseService:
 class PayloadPackage:
 
     @classmethod
+    def embeddings(cls, embed_str, llmconfig, schema, **kwargs):
+        return APIUtil.create_payload(
+            input_=embed_str,
+            config=llmconfig,
+            required_=schema["required"],
+            optional_=schema["optional"],
+            input_key="input",
+            **kwargs,
+        )
+
+    @classmethod
     def chat_completion(cls, messages, llmconfig, schema, **kwargs):
         """
         Creates a payload for the chat completion operation.

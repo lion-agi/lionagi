@@ -68,7 +68,7 @@ class Neo4j:
             query,
             ln_id=node["ln_id"],
             timestamp=node["timestamp"],
-            content=node["content"]
+            content=node["content"],
         )
 
     @staticmethod
@@ -89,7 +89,7 @@ class Neo4j:
             query,
             ln_id=node["ln_id"],
             timestamp=node["timestamp"],
-            content=node["content"]
+            content=node["content"],
         )
 
     # TODO: tool.manual

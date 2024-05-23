@@ -26,6 +26,7 @@ from typing import TypeVar, Type, Any, Generic
 from pydantic import Field, field_validator
 
 from lionagi.libs.ln_convert import is_same_dtype, to_df
+from lionagi.libs.ln_func_call import bcall, alcall, CallDecorator as cd
 from .abc import (
     Element,
     Record,
@@ -36,6 +37,7 @@ from .abc import (
     LionValueError,
     LionTypeError,
     ItemNotFoundError,
+    ModelLimitExceededError,
 )
 from .model import iModel
 from .util import to_list_type, _validate_order
@@ -66,7 +68,6 @@ class Pile(Element, Record, Generic[T]):
     index: Any = None
     engines: dict[str, Any] = Field(default_factory=dict)
     query_response: Any = []
-    index_nodes: Any = None
     tools: dict = {}
 
     def __init__(
@@ -559,99 +560,161 @@ class Pile(Element, Record, Generic[T]):
         dicts_ = []
         for i in self.values():
             _dict = i.to_dict()
+            if _dict.get("embedding", None):
+                _dict["embedding"] = str(_dict.get("embedding"))
             dicts_.append(_dict)
         return to_df(dicts_)
 
-    def to_index(self, index_type="llama_index", **kwargs):
+    def create_index(self, index_type="llama_index", **kwargs):
         if index_type == "llama_index":
             from lionagi.integrations.bridge import LlamaIndexBridge
-            
+
+            index_nodes = None
+
             try:
                 index_nodes = [i.to_llama_index_node() for i in self]
             except AttributeError:
                 raise LionTypeError(
                     "Invalid item type. Expected a subclass of Component."
                 )
-            
+
             self.index = LlamaIndexBridge.index(index_nodes, **kwargs)
-            self.index_nodes = index_nodes
             return self.index
-        
+
         raise ValueError("Invalid index type")
 
-    def setup_query_engine(self, index_type="llama_index", engine_kwargs={}, **kwargs):
-        if self.engines.get("query", None):
-            return
-        
+    def create_query_engine(self, index_type="llama_index", engine_kwargs={}, **kwargs):
+
         if index_type == "llama_index":
             if "node_postprocessor" in kwargs:
                 engine_kwargs["node_postprocessor"] = kwargs.pop("node_postprocessor")
+            if "llm" in kwargs:
+                engine_kwargs["llm"] = kwargs.pop("llm")
             if not self.index:
-                self.to_index(index_type, **kwargs)
+                self.create_index(index_type, **kwargs)
             query_engine = self.index.as_query_engine(**engine_kwargs)
             self.engines["query"] = query_engine
         else:
             raise ValueError("Invalid index type")
 
-    def setup_chat_engine(self, index_type="llama_index", engine_kwargs={}, **kwargs):
-        if self.engines.get("chat", None):
-            return
-        
+    def create_chat_engine(self, index_type="llama_index", engine_kwargs={}, **kwargs):
         if index_type == "llama_index":
             if "node_postprocessor" in kwargs:
                 engine_kwargs["node_postprocessor"] = kwargs.pop("node_postprocessor")
+            if "llm" in kwargs:
+                engine_kwargs["llm"] = kwargs.pop("llm")
             if not self.index:
-                self.to_index(index_type, **kwargs)
+                self.create_index(index_type, **kwargs)
             query_engine = self.index.as_chat_engine(**engine_kwargs)
             self.engines["chat"] = query_engine
         else:
             raise ValueError("Invalid index type")
 
-    async def query_pile(self, query, query_kwargs={}, **kwargs):
+    async def query_pile(self, query, engine_kwargs={}, **kwargs):
         if not self.engines.get("query", None):
-            self.setup_query_engine(**kwargs)
-        response = await self.engines["query"].aquery(query, **query_kwargs)
-        self.query_response.append(response)
-        return str(response)
-    
-    async def chat_pile(self, query, chat_kwargs={}, **kwargs):
-        if not self.engines.get("chat", None):
-            self.setup_chat_engine(**kwargs)
-        response = await self.engines["chat"].achat(query, **chat_kwargs)
+            self.create_query_engine(**engine_kwargs)
+        response = await self.engines["query"].aquery(query, **kwargs)
         self.query_response.append(response)
         return str(response)
 
-    def to_query_tool(self, query_type="query", description=None, **kwargs):
-        if self.tools.get(query_type, None):
-            return self.tools[query_type]
-        
+    async def chat_pile(self, query, engine_kwargs={}, **kwargs):
+        if not self.engines.get("chat", None):
+            self.create_chat_engine(**engine_kwargs)
+        response = await self.engines["chat"].achat(query, **kwargs)
+        self.query_response.append(response)
+        return str(response)
+
+    async def embed_pile(
+        self, imodel=None, field="content", embed_kwargs={}, verbose=True, **kwargs
+    ):
+        from .model import iModel
+
+        imodel = imodel or iModel(endpoint="embeddings", **kwargs)
+
+        max_concurrency = kwargs.get("max_concurrency", None) or 100
+
+        @cd.max_concurrency(max_concurrency)
+        async def _embed_item(item):
+            try:
+                return await imodel.embed_node(item, field=field, **embed_kwargs)
+            except ModelLimitExceededError:
+                pass
+            return None
+
+        await alcall(list(self), _embed_item)
+
+        a = len([i for i in self if "embedding" in i._all_fields])
+        if len(self) > a and verbose:
+            print(
+                f"Successfully embedded {a}/{len(self)} items, Failed to embed {len(self) - a}/{len(self)} items"
+            )
+            return
+
+        print(f"Successfully embedded all {a}/{a} items")
+
+    def to_csv(self, file_name, **kwargs):
+        self.to_df().to_csv(file_name, index=False, **kwargs)
+
+    @classmethod
+    def from_csv(cls, file_name, **kwargs):
+        from pandas import read_csv
+
+        df = read_csv(file_name, **kwargs)
+        items = Component.from_obj(df)
+        return cls(items)
+
+    @classmethod
+    def from_df(cls, df):
+        items = Component.from_obj(df)
+        return cls(items)
+
+    def as_query_tool(
+        self,
+        index_type="llama_index",
+        query_type="query",
+        name=None,
+        guidance=None,
+        query_description=None,
+        **kwargs,
+    ):
+
         if not self.engines.get(query_type, None):
             if query_type == "query":
-                self.setup_query_engine(**kwargs)
+                self.create_query_engine(index_type=index_type, **kwargs)
             elif query_type == "chat":
-                self.setup_chat_engine(**kwargs)
-        
+                self.create_chat_engine(index_type=index_type, **kwargs)
+
         from lionagi.core.action.tool_manager import func_to_tool
-    
-        if not description:
+
+        if not guidance:
             if query_type == "query":
-                description = "Perform a query to a QA bot"
+                guidance = "Query a QA bot"
             elif query_type == "chat":
-                description = "Chat with a QA bot"
-    
-        params = {"query": "natural language query to the QA bot"}
-        
+                guidance = "Chat with a QA bot"
+
+        if not query_description:
+            if query_type == "query":
+                query_description = "The query to send"
+            elif query_type == "chat":
+                query_description = "The message to send"
+
         async def query(query: str):
             if query_type == "query":
                 return await self.query_pile(query, **kwargs)
-            
+
             elif query_type == "chat":
                 return await self.chat_pile(query, **kwargs)
-        
-        tool = func_to_tool(query, func_description=description, params_description=params)[0]
+
+        name = name or "query"
+        tool = func_to_tool(query)[0]
+        tool.schema_["function"]["name"] = name
+        tool.schema_["function"]["description"] = guidance
+        tool.schema_["function"]["parameters"]["properties"]["query"][
+            "description"
+        ] = query_description
         self.tools[query_type] = tool
         return self.tools[query_type]
-    
+
     def __list__(self):
         return list(self.pile.values())
 
@@ -662,35 +725,18 @@ class Pile(Element, Record, Generic[T]):
         return self.to_df().__repr__()
 
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 def pile(
     items: Iterable[T] | None = None,
     item_type: set[Type] | None = None,
     order=None,
     use_obj=None,
+    csv_file=None,
+    df=None,
+    **kwargs,
 ) -> Pile[T]:
+    if csv_file:
+        return Pile.from_csv(csv_file, **kwargs)
+    if df:
+        return Pile.from_df(df)
+
     return Pile(items, item_type, order, use_obj)

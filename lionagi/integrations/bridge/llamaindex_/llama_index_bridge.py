@@ -104,4 +104,5 @@ class LlamaIndexBridge:
     @staticmethod
     def index(nodes, **kwargs):
         from .index import LlamaIndex
+
         return LlamaIndex.index(nodes, **kwargs)

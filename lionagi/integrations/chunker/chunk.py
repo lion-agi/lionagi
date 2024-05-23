@@ -101,8 +101,6 @@ def chunk(
 
 
 def _self_defined_chunker(
-    
-    
     documents,
     chunker,
     chunker_args,

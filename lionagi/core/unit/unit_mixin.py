@@ -4,7 +4,6 @@ Copyright 2024 HaiyangLi
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
 You may obtain a copy of the License at
-
     http://www.apache.org/licenses/LICENSE-2.0
 
 Unless required by applicable law or agreed to in writing, software
@@ -19,23 +18,25 @@ The base directive module.
 """
 
 import asyncio
-import re
 import contextlib
-from typing import Any, Optional
+import re
 from abc import ABC
+
+from typing import Any, Optional
 
 from lionagi.libs.ln_parse import ParseUtil, StringMatch
 from lionagi.core.collections.abc import ActionError
-from lionagi.core.message import Instruction, ActionRequest, ActionResponse
+from lionagi.core.message import ActionRequest, ActionResponse, Instruction
 from lionagi.core.message.util import _parse_action_request
-from lionagi.core.validator.validator import Validator
-from lionagi.core.unit.util import process_tools
 from lionagi.core.report.form import Form
+from lionagi.core.unit.util import process_tools
+from lionagi.core.validator.validator import Validator
 
 
 class DirectiveMixin(ABC):
     """
-    DirectiveMixin is a class for handling chat operations and processing responses.
+    DirectiveMixin is a class for handling chat operations and
+    processing responses.
     """
 
     def _create_chat_config(
@@ -52,7 +53,7 @@ class DirectiveMixin(ABC):
         **kwargs,
     ) -> Any:
         """
-        Creates the chat configuration based on the provided parameters.
+        Create the chat configuration based on the provided parameters.
 
         Args:
             system: System message.
@@ -197,7 +198,7 @@ class DirectiveMixin(ABC):
 
         if action_request:
             for i in action_request:
-                if i.function in branch.tool_manager.registry:
+                if i.function in branch.tool_manager:
                     i.recipient = branch.tool_manager.registry[i.function].ln_id
                 else:
                     raise ActionError(f"Tool {i.function} not found in registry")
@@ -313,7 +314,8 @@ class DirectiveMixin(ABC):
         **kwargs,
     ) -> Any:
         """
-        Handles the base chat operation by configuring the chat and processing the response.
+        Handles the base chat operation by configuring the chat and
+        processing the response.
 
         Args:
             instruction: Instruction message.
@@ -691,7 +693,8 @@ class DirectiveMixin(ABC):
 
         if "PLEASE_ACTION" in form.answer:
             answer = await self._chat(
-                "please provide final answer basing on the above information, only provide answer field as a string",
+                "please provide final answer basing on the above"
+                " information, only provide answer field as a string",
             )
             form.answer = str(answer).replace('{"answer": "', "").replace('"}', "")
 
@@ -794,60 +797,59 @@ class DirectiveMixin(ABC):
         if getattr(form, "performed", None):
             return form
 
-        if actions:
+        keys = [f"action_{i+1}" for i in range(len(actions))]
+        actions = StringMatch.force_validate_dict(actions, keys)
 
-            keys = [f"action_{i+1}" for i in range(len(actions))]
-            actions = StringMatch.force_validate_dict(actions, keys)
+        try:
+            requests = []
+            for k in keys:
+                _func = actions[k]["function"]
+                _func = _func.replace("functions.", "")
+                msg = ActionRequest(
+                    function=_func,
+                    arguments=actions[k]["arguments"],
+                    sender=branch.ln_id,
+                    recipient=branch.tool_manager.registry[_func].ln_id,
+                )
+                requests.append(msg)
+                branch.add_message(action_request=msg)
 
-            try:
-                requests = []
-                for k in keys:
-                    _func = actions[k]["function"]
-                    _func = _func.replace("functions.", "")
-                    msg = ActionRequest(
-                        function=_func,
-                        arguments=actions[k]["arguments"],
-                        sender=branch.ln_id,
-                        recipient=branch.tool_manager.registry[_func].ln_id,
-                    )
-                    requests.append(msg)
-                    branch.add_message(action_request=msg)
+            if requests:
+                out = await self._process_action_request(
+                    branch=branch, invoke_tool=True, action_request=requests
+                )
 
-                if requests:
-                    out = await self._process_action_request(
-                        branch=branch, invoke_tool=True, action_request=requests
-                    )
+                if out is False:
+                    raise ValueError("No requests found.")
 
-                    if out is False:
-                        raise ValueError("No requests found.")
+                len_actions = len(actions)
+                action_responses = [
+                    i
+                    for i in branch.messages[-len_actions:]
+                    if isinstance(i, ActionResponse)
+                ]
 
-                    len_actions = len(actions)
-                    action_responses = [
-                        i
-                        for i in branch.messages[-len_actions:]
-                        if isinstance(i, ActionResponse)
-                    ]
+                _action_responses = {}
+                for idx, item in enumerate(action_responses):
+                    _action_responses[f"action_{idx+1}"] = item._to_dict()
 
-                    _action_responses = {}
-                    for idx, item in enumerate(action_responses):
-                        _action_responses[f"action_{idx+1}"] = item._to_dict()
+                form.append_to_request("action_response")
+                if not form.action_response:
+                    form.action_response = {}
 
-                    form.append_to_request("action_response")
-                    if not form.action_response:
-                        form.action_response = {}
+                len1 = len(form.action_response)
+                for k, v in _action_responses.items():
+                    while k in form.action_response:
+                        k = f"{k}_1"
+                    form.action_response[k] = v
 
-                    for k, v in _action_responses.items():
-                        while k in form.action_response:
-                            k = f"{k}_1"
-                        form.action_response[k] = v
-
+                if len(form.action_response) > len1:
                     form.append_to_request("action_performed")
                     form.action_performed = True
+                return form
 
-            except Exception as e:
-                raise ValueError(f"Error processing action request: {e}")
-
-        return form
+        except Exception as e:
+            raise ValueError(f"Error processing action request: {e}")
 
     async def _select(
         self,

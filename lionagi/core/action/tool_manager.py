@@ -51,15 +51,15 @@ class ToolManager(Actionable):
     def __contains__(self, tool) -> bool:
         if isinstance(tool, Tool):
             return tool.name in self.registry
-        
+
         elif isinstance(tool, str):
             return tool in self.registry
-        
+
         elif inspect.isfunction(tool):
             return tool.__name__ in self.registry
-        
+
         return False
-        
+
     def _register_tool(self, tool: Tool | Callable, update: bool = False) -> bool:
         """
         Registers a single tool or multiple tools based on the input type.

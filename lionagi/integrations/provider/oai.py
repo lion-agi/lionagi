@@ -46,6 +46,7 @@ class OpenAIService(BaseService):
         "audio_speech",
         "audio_transcriptions",
         "audio_translations",
+        "embeddings",
     ]
     schema = oai_schema
     key_scheme = "OPENAI_API_KEY"
@@ -123,10 +124,28 @@ class OpenAIService(BaseService):
             self.schema["chat/completions"],
             **kwargs,
         )
-
         try:
             completion = await self.call_api(payload, "chat/completions", "post")
             return payload, completion
+        except Exception as e:
+            self.status_tracker.num_tasks_failed += 1
+            raise e
+
+    async def serve_embedding(self, embed_str, **kwargs):
+        if "embeddings" not in self.active_endpoint:
+            await self.init_endpoint("embeddings")
+            self.active_endpoint.append("embeddings")
+
+        payload = PayloadPackage.embeddings(
+            embed_str,
+            self.endpoints["embeddings"].config,
+            self.schema["embeddings"],
+            **kwargs,
+        )
+
+        try:
+            embed = await self.call_api(payload, "embeddings", "post")
+            return payload, embed
         except Exception as e:
             self.status_tracker.num_tasks_failed += 1
             raise e

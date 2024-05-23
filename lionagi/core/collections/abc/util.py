@@ -5,6 +5,7 @@ base_lion_fields = [
     "extra_fields",
     "content",
     "created",
+    "embedding",
 ]
 
 lc_meta_fields = ["lc", "type", "id", "langchain", "lc_type", "lc_id"]

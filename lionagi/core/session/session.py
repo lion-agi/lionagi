@@ -37,7 +37,7 @@ class Session:
 
     def __init__(
         self,
-        system = None,  # the default system message for the session
+        system=None,  # the default system message for the session
         branches: Any | None = None,
         system_sender: str | None = None,
         user: str | None = None,
@@ -187,7 +187,7 @@ class Session:
         if branch not in self.branches:
             raise ValueError("Branch not found in session branches")
         return await self.branches[branch].chat(*args, **kwargs)
-    
+
     async def direct(self, *args, branch=None, **kwargs):
         if branch is None:
             branch = self.default_branch

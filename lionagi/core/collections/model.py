@@ -16,7 +16,8 @@ limitations under the License.
 
 import os
 from dotenv import load_dotenv
-from lionagi.libs import SysUtil, BaseService, StatusTracker
+from lionagi.libs import SysUtil, BaseService, StatusTracker, APIUtil
+from .abc import Component, ModelLimitExceededError
 
 load_dotenv()
 
@@ -48,12 +49,12 @@ class iModel:
         provider: str = None,
         provider_schema: dict = None,
         endpoint: str = "chat/completions",
-        token_encoding_name: str = "cl100k_base",
+        token_encoding_name: str = None,
         api_key: str = None,
         api_key_schema: str = None,
-        interval_tokens: int = 100_000,
-        interval_requests: int = 1_000,
-        interval: int = 60,
+        interval_tokens: int = None,
+        interval_requests: int = None,
+        interval: int = None,
         service: BaseService = None,
         **kwargs,  # additional parameters for the model
     ):
@@ -99,6 +100,7 @@ class iModel:
         )
         self.provider = SERVICE_PROVIDERS_MAPPING[provider]["service"]
         self.endpoint_schema = self.provider_schema[endpoint]
+        self.token_limit = self.endpoint_schema.get("token_limit", None)
 
         if api_key is not None:
             self.api_key = api_key
@@ -115,10 +117,11 @@ class iModel:
             provider=self.provider,
             api_key=self.api_key,
             schema=self.provider_schema,
-            token_encoding_name=token_encoding_name,
-            max_tokens=interval_tokens,
-            max_requests=interval_requests,
-            interval=interval,
+            token_encoding_name=token_encoding_name
+            or self.endpoint_schema["token_encoding_name"],
+            max_tokens=interval_tokens or self.endpoint_schema["interval_tokens"],
+            max_requests=interval_requests or self.endpoint_schema["interval_requests"],
+            interval=interval or self.endpoint_schema["interval"],
         )
 
         self.config = self._set_up_params(
@@ -214,7 +217,54 @@ class iModel:
         Returns:
             dict: Response from the chat completion service.
         """
+
+        num_tokens = APIUtil.calculate_num_token(
+            {"messages": messages},
+            "chat/completions",
+            self.endpoint_schema["token_encoding_name"],
+        )
+        if num_tokens > self.token_limit:
+            raise ModelLimitExceededError(
+                f"Number of tokens {num_tokens} exceeds the limit {self.token_limit}"
+            )
+
         return await self.service.serve_chat(messages, **kwargs)
+
+    async def call_embedding(self, embed_str, **kwargs):
+        """
+        Asynchronous method to call the embedding service.
+
+        Args:
+            input_file (str): Path to the input file.
+            **kwargs: Additional parameters for the service call.
+
+        Returns:
+            dict: Response from the embedding service.
+        """
+        return await self.service.serve_embedding(embed_str, **kwargs)
+
+    async def embed_node(self, node, field="content", **kwargs) -> bool:
+        """
+        if not specify field, we emebd node.content
+        """
+        if not isinstance(node, Component):
+            raise ValueError("Node must a lionagi item")
+        embed_str = getattr(node, field)
+        num_tokens = APIUtil.calculate_num_token(
+            {"input": embed_str},
+            "embeddings",
+            self.endpoint_schema["token_encoding_name"],
+        )
+
+        if self.token_limit and num_tokens > self.token_limit:
+            raise ModelLimitExceededError(
+                f"Number of tokens {num_tokens} exceeds the limit {self.token_limit}"
+            )
+
+        payload, embed = await self.call_embedding(embed_str, **kwargs)
+        payload.pop("input")
+        node.add_field("embedding", embed["data"][0]["embedding"])
+        node._meta_insert("embedding_meta", payload)
 
     def to_dict(self):
         """

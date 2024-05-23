@@ -41,6 +41,11 @@ oai_chat_schema = {
     ],
     "input_": "messages",
     "config": oai_chat_llmconfig,
+    "token_encoding_name": "cl100k_base",
+    "token_limit": 128_000,
+    "interval_tokens": 1_000_000,
+    "interval_requests": 1_000,
+    "interval": 60,
 }
 
 # Finetune
@@ -113,8 +118,26 @@ oai_audio_translations_schema = {
     "config": oai_audio_translations_llmconfig,
 }
 
-# images
+# embeddings
 
+oai_embeddings_llmconfig = {
+    "model": "text-embedding-ada-002",
+    "encoding_format": "float",
+    "user": None,
+    "dimensions": None,
+}
+
+oai_embeddings_schema = {
+    "required": ["model", "encoding_format"],
+    "optional": ["user", "dimensions"],
+    "input_": "input",
+    "config": oai_embeddings_llmconfig,
+    "token_encoding_name": "cl100k_base",
+    "token_limit": 8192,
+    "interval_tokens": 1_000_000,
+    "interval_requests": 1_000,
+    "interval": 60,
+}
 
 oai_schema = {
     "chat/completions": oai_chat_schema,
@@ -123,4 +146,5 @@ oai_schema = {
     "audio_transcriptions": oai_audio_transcriptions_schema,
     "audio_translations": oai_audio_translations_schema,
     "API_key_schema": API_key_schema,
+    "embeddings": oai_embeddings_schema,
 }

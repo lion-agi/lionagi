@@ -118,11 +118,13 @@ class ActionError(LionAGIError):
         super().__init__(message)
 
 
-class ResourceLimitExceededError(LionOperationError):
+class ModelLimitExceededError(LionOperationError):
     """Exception raised when a resource limit is exceeded."""
 
-    def __init__(self, resource, limit):
-        super().__init__(resource, f"Resource limit exceeded. Limit: {limit}")
+    def __init__(self, message=None):
+        if message is None:
+            message = "The model limit has been exceeded."
+        super().__init__("Model", message)
 
 
 class TimeoutError(LionOperationError):

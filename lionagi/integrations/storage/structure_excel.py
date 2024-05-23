@@ -169,7 +169,7 @@ class StructureExcel:
             executable=self.default_agent_executable,
             output_parser=output_parser,
             ln_id=info_dict["ln_id"],
-            timestamp=info_dict["timestamp"]
+            timestamp=info_dict["timestamp"],
         )
         return agent
 
@@ -229,7 +229,8 @@ class StructureExcel:
         if not parent_node:
             return
         row = self.edges[
-            (self.edges["head"] == parent_node.ln_id) & (self.edges["tail"] == node.ln_id)
+            (self.edges["head"] == parent_node.ln_id)
+            & (self.edges["tail"] == node.ln_id)
         ]
         if len(row) > 1:
             raise ValueError(

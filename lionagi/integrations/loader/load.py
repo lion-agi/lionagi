@@ -51,10 +51,10 @@ def load(
         load_kwargs = {}
 
     if reader_type == ReaderType.PLAIN:
-        reader_kwargs['dir_'] = input_dir
-        reader_kwargs['ext'] = required_exts
-        reader_kwargs['recursive'] = recursive
-        
+        reader_kwargs["dir_"] = input_dir
+        reader_kwargs["ext"] = required_exts
+        reader_kwargs["recursive"] = recursive
+
         return read_funcs[ReaderType.PLAIN](reader, reader_args, reader_kwargs)
 
     if reader_type == ReaderType.LANGCHAIN:
@@ -122,7 +122,7 @@ def _llama_index_reader(
     )
     if isinstance(to_lion, bool) and to_lion is True:
         return pile([Node.from_llama_index(i) for i in nodes])
-        
+
     elif isinstance(to_lion, Callable):
         nodes = _datanode_parser(nodes, to_lion)
     return nodes

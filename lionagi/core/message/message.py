@@ -88,7 +88,7 @@ class RoledMessage(Node, Sendable):
         if isinstance(content_str, dict):
             content_str = list(content_str.values())[0]
             content_str = to_str(content_str)
-            
+
         return {"role": role, "content": content_str}
 
     def __str__(self):
