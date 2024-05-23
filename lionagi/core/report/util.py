@@ -2,7 +2,12 @@ from lionagi.libs.ln_convert import strip_lower
 
 
 def get_input_output_fields(str_: str) -> list[list[str]]:
-
+    if str_ is None:
+        return [], []
+    
+    if "->" not in str_:
+        raise ValueError("Invalid assignment format. Expected 'inputs -> outputs'.")
+    
     inputs, outputs = str_.split("->")
 
     input_fields = [strip_lower(i) for i in inputs.split(",")]

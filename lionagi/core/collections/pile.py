@@ -67,6 +67,7 @@ class Pile(Element, Record, Generic[T]):
     engines: dict[str, Any] = Field(default_factory=dict)
     query_response: Any = []
     index_nodes: Any = None
+    tools: dict = {}
 
     def __init__(
         self,
@@ -580,7 +581,7 @@ class Pile(Element, Record, Generic[T]):
 
     def setup_query_engine(self, index_type="llama_index", engine_kwargs={}, **kwargs):
         if self.engines.get("query", None):
-            return self.engines["query"]
+            return
         
         if index_type == "llama_index":
             if "node_postprocessor" in kwargs:
@@ -592,13 +593,65 @@ class Pile(Element, Record, Generic[T]):
         else:
             raise ValueError("Invalid index type")
 
+    def setup_chat_engine(self, index_type="llama_index", engine_kwargs={}, **kwargs):
+        if self.engines.get("chat", None):
+            return
+        
+        if index_type == "llama_index":
+            if "node_postprocessor" in kwargs:
+                engine_kwargs["node_postprocessor"] = kwargs.pop("node_postprocessor")
+            if not self.index:
+                self.to_index(index_type, **kwargs)
+            query_engine = self.index.as_chat_engine(**engine_kwargs)
+            self.engines["chat"] = query_engine
+        else:
+            raise ValueError("Invalid index type")
+
     async def query_pile(self, query, query_kwargs={}, **kwargs):
         if not self.engines.get("query", None):
             self.setup_query_engine(**kwargs)
         response = await self.engines["query"].aquery(query, **query_kwargs)
         self.query_response.append(response)
         return str(response)
+    
+    async def chat_pile(self, query, chat_kwargs={}, **kwargs):
+        if not self.engines.get("chat", None):
+            self.setup_chat_engine(**kwargs)
+        response = await self.engines["chat"].achat(query, **chat_kwargs)
+        self.query_response.append(response)
+        return str(response)
 
+    def to_query_tool(self, query_type="query", description=None, **kwargs):
+        if self.tools.get(query_type, None):
+            return self.tools[query_type]
+        
+        if not self.engines.get(query_type, None):
+            if query_type == "query":
+                self.setup_query_engine(**kwargs)
+            elif query_type == "chat":
+                self.setup_chat_engine(**kwargs)
+        
+        from lionagi.core.action.tool_manager import func_to_tool
+    
+        if not description:
+            if query_type == "query":
+                description = "Perform a query to a QA bot"
+            elif query_type == "chat":
+                description = "Chat with a QA bot"
+    
+        params = {"query": "natural language query to the QA bot"}
+        
+        async def query(query: str):
+            if query_type == "query":
+                return await self.query_pile(query, **kwargs)
+            
+            elif query_type == "chat":
+                return await self.chat_pile(query, **kwargs)
+        
+        tool = func_to_tool(query, func_description=description, params_description=params)[0]
+        self.tools[query_type] = tool
+        return self.tools[query_type]
+    
     def __list__(self):
         return list(self.pile.values())
 
@@ -607,6 +660,31 @@ class Pile(Element, Record, Generic[T]):
 
     def __repr__(self):
         return self.to_df().__repr__()
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 def pile(

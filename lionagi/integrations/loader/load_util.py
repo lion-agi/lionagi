@@ -202,9 +202,9 @@ def read_text(filepath: str, clean: bool = True) -> Tuple[str, dict]:
             content = f.read()
             if clean:
                 # Define characters to replace and their replacements
-                replacements = {"\\": " ", "\n": " ", "\t": " ", "  ": " ", "'": " "}
+                replacements = {"\\": "", "\n\n":"\n","    ":"  ", "  ": " "}
                 for old, new in replacements.items():
-                    content = content.replace(old, new)
+                    content = content.replace(old, new).strip()
             metadata = _get_metadata()
             return content, metadata
     except Exception as e:
