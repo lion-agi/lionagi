@@ -291,7 +291,7 @@ class UnitForm(BaseUnitForm):
                 if len(str(v["output"])) > 30:
                     a += f" \n \n {v['output']}, "
                 else:
-                    a += f") = {v['output']}, "
+                    a += f" = {v['output']}, "
                 idx += 1
             fields["action_response"] = a[:-2]
 

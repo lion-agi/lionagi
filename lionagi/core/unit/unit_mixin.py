@@ -692,11 +692,11 @@ class DirectiveMixin(ABC):
             form.extension_forms.extend(extension_forms)
 
         if "PLEASE_ACTION" in form.answer:
-            answer = await self._chat(
+            form.answer = await self._chat(
                 "please provide final answer basing on the above"
-                " information, only provide answer field as a string",
+                " information, provide answer value as a string only"
+                " do not return as json, do not include other information",
             )
-            form.answer = str(answer).replace('{"answer": "', "").replace('"}', "")
 
         return form, branch if return_branch else form
 
@@ -1045,8 +1045,14 @@ class DirectiveMixin(ABC):
 
         if isinstance(out_, str):
             with contextlib.suppress(Exception):
+                return ParseUtil.extract_json_block(out_)
+
+            with contextlib.suppress(Exception):
+                return ParseUtil.fuzzy_parse_json(out_)
+
+            with contextlib.suppress(Exception):
                 match = re.search(r"```json\n({.*?})\n```", out_, re.DOTALL)
                 if match:
-                    out_ = ParseUtil.fuzzy_parse_json(match.group(1))
+                    return ParseUtil.fuzzy_parse_json(match.group(1))
 
-        return out_ or content_
+        return out_

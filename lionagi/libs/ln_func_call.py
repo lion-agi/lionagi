@@ -131,12 +131,12 @@ async def alcall(
     tasks = []
     if input_ is not None:
         lst = to_list(input_)
-        tasks = [AsyncUtil.handle_async_sync(func, i, **kwargs) for i in lst]
+        tasks = [call_handler(func, i, **kwargs) for i in lst]
 
     else:
-        tasks = [AsyncUtil.handle_async_sync(func, **kwargs)]
+        tasks = [call_handler(func, **kwargs)]
 
-    outs = await AsyncUtil.execute_tasks(*tasks)
+    outs = await asyncio.gather(*tasks)
     outs_ = []
     for i in outs:
         outs_.append(await i if isinstance(i, (Coroutine, asyncio.Future)) else i)

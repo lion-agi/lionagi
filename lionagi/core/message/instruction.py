@@ -146,12 +146,12 @@ class Instruction(RoledMessage):
             dict: The formatted requested fields.
         """
         format_ = f"""
-        MUST EXACTLY FOLLOW THE RESPONSE GUIDE BELOW RETURN IN JSON PARSEABLED FORMAT:
+        MUST RETURN JSON-PARSEABLE RESPONSE ENCLOSED BY JSON CODE BLOCKS. ----
         ```json
         {requested_fields}
-        ```
+        ```---
         """
-        return {"response_format": format_.replace("        ", "")}
+        return {"response_format": format_.strip()}
 
     @classmethod
     def from_form(

@@ -14,13 +14,13 @@ See the License for the specific language governing permissions and
 limitations under the License.
 """
 
-import logging
+# import logging
 
-# Configure logging
-logging.basicConfig(
-    level=logging.ERROR,
-    format="%(asctime)s:%(levelname)s:%(message)s",
-)
+# # Configure logging
+# logging.basicConfig(
+#     level=logging.ERROR,
+#     format="%(asctime)s:%(levelname)s:%(message)s",
+# )
 
 
 class LionAGIError(Exception):
