@@ -356,6 +356,18 @@ class Branch(Node, DirectiveMixin):
         tool: bool = True,
         imodel: bool = True,
     ) -> None:
+        """
+        Receives mail from a sender.
+
+        Args:
+            sender (str): The ID of the sender.
+            message (bool, optional): Whether to process message mails. Defaults to True.
+            tool (bool, optional): Whether to process tool mails. Defaults to True.
+            imodel (bool, optional): Whether to process imodel mails. Defaults to True.
+
+        Raises:
+            ValueError: If the sender does not exist or the mail category is invalid.
+        """
         skipped_requests = progression()
         if sender not in self.mailbox.pending_ins.keys():
             raise ValueError(f"No package from {sender}")
@@ -394,5 +406,8 @@ class Branch(Node, DirectiveMixin):
             self.mailbox.pending_ins.pop(sender)
 
     def receive_all(self) -> None:
+        """
+        Receives mail from all senders.
+        """
         for key in list(self.mailbox.pending_ins.keys()):
             self.receive(key)

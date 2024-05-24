@@ -108,6 +108,20 @@ class ActionResponse(RoledMessage):
         }
 
     def clone(self, **kwargs):
+        """
+        Creates a copy of the current object with optional additional arguments.
+
+        This method clones the current object, preserving its function and arguments.
+        It also retains the original `action_request`, `func_outputs`, and metadata,
+        while allowing for the addition of new attributes through keyword arguments.
+
+        Args:
+            **kwargs: Optional keyword arguments to be included in the cloned object.
+
+        Returns:
+            ActionResponse: A new instance of the object with the same function, arguments,
+            and additional keyword arguments.
+        """
         import json
 
         arguments = json.dumps(self.arguments)

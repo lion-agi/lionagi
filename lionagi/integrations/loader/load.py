@@ -40,6 +40,31 @@ def load(
     load_kwargs=None,
     to_lion: bool | Callable = True,
 ):
+    """
+    Loads data using the specified reader and converts it to Node instances.
+
+    Args:
+        reader (str | Callable): The reader function or its name. Defaults to "text_reader".
+        input_dir (str, optional): The directory to read files from. Defaults to None.
+        input_files (list[str], optional): Specific files to read. Defaults to None.
+        recursive (bool, optional): Whether to read files recursively. Defaults to False.
+        required_exts (list[str], optional): List of required file extensions. Defaults to None.
+        reader_type (ReaderType, optional): The type of reader to use. Defaults to ReaderType.PLAIN.
+        reader_args (list, optional): Positional arguments for the reader function. Defaults to None.
+        reader_kwargs (dict, optional): Keyword arguments for the reader function. Defaults to None.
+        load_args (list, optional): Positional arguments for loading. Defaults to None.
+        load_kwargs (dict, optional): Keyword arguments for loading. Defaults to None.
+        to_lion (bool | Callable, optional): Whether to convert the data to Node instances or a custom parser. Defaults to True.
+
+    Returns:
+        pile: A pile of Node instances.
+
+    Raises:
+        ValueError: If the reader_type is not supported.
+
+    Example usage:
+        >>> nodes = load(input_dir='path/to/text/files', required_exts=['txt'])
+    """
 
     if reader_args is None:
         reader_args = []
@@ -88,6 +113,23 @@ def load(
 
 
 def _plain_reader(reader, reader_args, reader_kwargs):
+    """
+    Reads data using a plain reader.
+
+    Args:
+        reader (str | Callable): The reader function or its name.
+        reader_args (list): Positional arguments for the reader function.
+        reader_kwargs (dict): Keyword arguments for the reader function.
+
+    Returns:
+        pile: A pile of Node instances.
+
+    Raises:
+        ValueError: If the reader is not supported.
+
+    Example usage:
+        >>> nodes = _plain_reader('text_reader', ['path/to/files'], {'ext': 'txt'})
+    """
     try:
         if reader == "text_reader":
             reader = text_reader
@@ -100,6 +142,21 @@ def _plain_reader(reader, reader_args, reader_kwargs):
 
 
 def _langchain_reader(reader, reader_args, reader_kwargs, to_lion: bool | Callable):
+    """
+    Reads data using a Langchain reader.
+
+    Args:
+        reader (str | Callable): The reader function or its name.
+        reader_args (list): Positional arguments for the reader function.
+        reader_kwargs (dict): Keyword arguments for the reader function.
+        to_lion (bool | Callable): Whether to convert the data to Node instances or a custom parser.
+
+    Returns:
+        pile: A pile of Node instances or custom parsed nodes.
+
+    Example usage:
+        >>> nodes = _langchain_reader('langchain_reader', ['arg1'], {'key': 'value'}, True)
+    """
     nodes = LangchainBridge.langchain_loader(reader, reader_args, reader_kwargs)
     if isinstance(to_lion, bool) and to_lion is True:
         return pile([Node.from_langchain(i) for i in nodes])
@@ -117,6 +174,23 @@ def _llama_index_reader(
     load_kwargs,
     to_lion: bool | Callable,
 ):
+    """
+    Reads data using a LlamaIndex reader.
+
+    Args:
+        reader (str | Callable): The reader function or its name.
+        reader_args (list): Positional arguments for the reader function.
+        reader_kwargs (dict): Keyword arguments for the reader function.
+        load_args (list): Positional arguments for loading.
+        load_kwargs (dict): Keyword arguments for loading.
+        to_lion (bool | Callable): Whether to convert the data to Node instances or a custom parser.
+
+    Returns:
+        pile: A pile of Node instances or custom parsed nodes.
+
+    Example usage:
+        >>> nodes = _llama_index_reader('llama_reader', ['arg1'], {'key': 'value'}, [], {}, True)
+    """
     nodes = LlamaIndexBridge.llama_index_read_data(
         reader, reader_args, reader_kwargs, load_args, load_kwargs
     )
@@ -136,6 +210,26 @@ def _self_defined_reader(
     load_kwargs,
     to_lion: bool | Callable,
 ):
+    """
+    Reads data using a self-defined reader.
+
+    Args:
+        reader (str | Callable): The reader function or its name.
+        reader_args (list): Positional arguments for the reader function.
+        reader_kwargs (dict): Keyword arguments for the reader function.
+        load_args (list): Positional arguments for loading.
+        load_kwargs (dict): Keyword arguments for loading.
+        to_lion (bool | Callable): Whether to convert the data to Node instances or a custom parser.
+
+    Returns:
+        pile: A pile of Node instances or custom parsed nodes.
+
+    Raises:
+        ValueError: If the self-defined reader is not valid.
+
+    Example usage:
+        >>> nodes = _self_defined_reader(custom_reader, ['arg1'], {'key': 'value'}, [], {}, custom_parser)
+    """
     try:
         loader = reader(*reader_args, **reader_kwargs)
         nodes = loader.load(*load_args, **load_kwargs)

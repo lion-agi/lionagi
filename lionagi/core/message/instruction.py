@@ -72,6 +72,7 @@ class Instruction(RoledMessage):
 
     @property
     def instruct(self):
+        """Returns the instruction content."""
         return self.content["instruction"]
 
     def _add_context(self, context: dict | str | None = None, **kwargs):
@@ -126,6 +127,19 @@ class Instruction(RoledMessage):
             )
 
     def clone(self, **kwargs):
+        """
+        Creates a copy of the current Instruction object with optional additional arguments.
+
+        This method clones the current object, preserving its content.
+        It also retains the original metadata, while allowing
+        for the addition of new attributes through keyword arguments.
+
+        Args:
+            **kwargs: Optional keyword arguments to be included in the cloned object.
+
+        Returns:
+            Instruction: A new instance of the object with the same content and additional keyword arguments.
+        """
         import json
 
         content = json.dumps(self.content)

@@ -18,6 +18,15 @@ from .base import BaseUnitForm, Field
 
 
 class ActionTemplate(BaseUnitForm):
+    """
+    A template for actions that includes instructions, context, and confidence scoring.
+
+    Attributes:
+        action_required (bool | None): Indicates if actions are required.
+        actions (list[dict] | None): A list of actions to take, formatted as dictionaries.
+        answer (str | None): The output answer to the questions asked.
+        assignment (str): The assignment structure for the task.
+    """
 
     action_required: bool | None = Field(
         None,
@@ -52,6 +61,15 @@ class ActionTemplate(BaseUnitForm):
         confidence_score=False,
         **kwargs,
     ):
+        """
+        Initializes an instance of the ActionTemplate class.
+
+        Args:
+            instruction (str, optional): Additional instruction for the task.
+            context (str, optional): Additional context for the task.
+            confidence_score (bool, optional): If True, includes confidence scoring.
+            **kwargs: Additional keyword arguments.
+        """
         super().__init__(**kwargs)
 
         self.task = f"""

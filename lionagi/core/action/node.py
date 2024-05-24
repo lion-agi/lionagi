@@ -1,3 +1,19 @@
+"""
+Copyright 2024 HaiyangLi
+
+Licensed under the Apache License, Version 2.0 (the "License");
+you may not use this file except in compliance with the License.
+You may obtain a copy of the License at
+
+    http://www.apache.org/licenses/LICENSE-2.0
+
+Unless required by applicable law or agreed to in writing, software
+distributed under the License is distributed on an "AS IS" BASIS,
+WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+See the License for the specific language governing permissions and
+limitations under the License.
+"""
+
 from pydantic import Field
 
 from lionagi.core.collections.abc import Actionable
@@ -6,6 +22,16 @@ from .tool import Tool
 
 
 class DirectiveSelection(Node, Actionable):
+    """
+    Represents a directive selection node which can be invoked to perform an action.
+
+    Attributes:
+        directive (str): The action to be performed, with a default value of "chat".
+        directive_kwargs (dict): The arguments for the action.
+
+    Methods:
+        invoke(): An asynchronous method to perform the action defined by the directive.
+    """
     directive: str = Field(
         "chat", description="The action to be performed", alias="action_type"
     )
@@ -16,10 +42,27 @@ class DirectiveSelection(Node, Actionable):
     )
 
     async def invoke(self):
+        """
+        Perform the action defined by the directive.
+
+        This method is intended to be overridden by subclasses to provide specific
+        implementation details for the action.
+        """
         pass
 
 
 class ActionNode(DirectiveSelection):
+    """
+    Represents an action node that can invoke actions within a branch using tools and instructions.
+
+    Attributes:
+        tools (list[Tool] | Tool | None): The tools to be used in the action.
+        instruction (Node): The instruction for the action.
+
+    Methods:
+        invoke(branch, context=None): An asynchronous method to invoke the action
+                                      within the given branch.
+    """
     tools: list[Tool] | Tool | None = Field(
         default_factory=list,
         description="The tools to be used in the action",
@@ -30,6 +73,19 @@ class ActionNode(DirectiveSelection):
     )
 
     async def invoke(self, branch, context=None):
+        """
+        Invoke the action within the given branch.
+
+        Args:
+            branch: The branch in which to perform the action.
+            context: Optional; Additional context for the action.
+
+        Returns:
+            The result of the action, depending on the directive.
+
+        Raises:
+            ValueError: If the directive is not "chat" or "direct".
+        """
         if self.directive == "chat":
             return await branch.chat(
                 instruction=self.instruction.instruct,

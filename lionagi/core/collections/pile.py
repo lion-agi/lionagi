@@ -491,6 +491,12 @@ class Pile(Element, Record, Generic[T]):
         yield from (self.pile.get(i) for i in self.order)
 
     def items(self):
+        """
+        Yield the items in the pile as (key, value) pairs.
+
+        Yields:
+            tuple: A tuple containing the key and value of each item in the pile.
+        """
         yield from ((i, self.pile.get(i)) for i in self.order)
 
     @field_validator("order", mode="before")
@@ -498,6 +504,22 @@ class Pile(Element, Record, Generic[T]):
         return _validate_order(value)
 
     def _validate_item_type(self, value):
+        """
+        Validate the item type for the pile.
+
+        Ensures that the provided item type is a subclass of Element or iModel.
+        Raises an error if the validation fails.
+
+        Args:
+            value: The item type to validate. Can be a single type or a list of types.
+
+        Returns:
+            set: A set of validated item types.
+
+        Raises:
+            LionTypeError: If an invalid item type is provided.
+            LionValueError: If duplicate item types are detected.
+        """
         if value is None:
             return None
 
@@ -566,6 +588,19 @@ class Pile(Element, Record, Generic[T]):
         return to_df(dicts_)
 
     def create_index(self, index_type="llama_index", **kwargs):
+        """
+        Create an index for the pile.
+
+        Args:
+            index_type (str): The type of index to use. Default is "llama_index".
+            **kwargs: Additional keyword arguments for the index creation.
+
+        Returns:
+            The created index.
+
+        Raises:
+            ValueError: If an invalid index type is provided.
+        """
         if index_type == "llama_index":
             from lionagi.integrations.bridge import LlamaIndexBridge
 
@@ -584,7 +619,17 @@ class Pile(Element, Record, Generic[T]):
         raise ValueError("Invalid index type")
 
     def create_query_engine(self, index_type="llama_index", engine_kwargs={}, **kwargs):
+        """
+        Create a query engine for the pile.
 
+        Args:
+            index_type (str): The type of index to use. Default is "llama_index".
+            engine_kwargs (dict): Additional keyword arguments for the engine.
+            **kwargs: Additional keyword arguments for the index creation.
+
+        Raises:
+            ValueError: If an invalid index type is provided.
+        """
         if index_type == "llama_index":
             if "node_postprocessor" in kwargs:
                 engine_kwargs["node_postprocessor"] = kwargs.pop("node_postprocessor")
@@ -598,6 +643,17 @@ class Pile(Element, Record, Generic[T]):
             raise ValueError("Invalid index type")
 
     def create_chat_engine(self, index_type="llama_index", engine_kwargs={}, **kwargs):
+        """
+        Create a chat engine for the pile.
+
+        Args:
+            index_type (str): The type of index to use. Default is "llama_index".
+            engine_kwargs (dict): Additional keyword arguments for the engine.
+            **kwargs: Additional keyword arguments for the index creation.
+
+        Raises:
+            ValueError: If an invalid index type is provided.
+        """
         if index_type == "llama_index":
             if "node_postprocessor" in kwargs:
                 engine_kwargs["node_postprocessor"] = kwargs.pop("node_postprocessor")
@@ -611,6 +667,17 @@ class Pile(Element, Record, Generic[T]):
             raise ValueError("Invalid index type")
 
     async def query_pile(self, query, engine_kwargs={}, **kwargs):
+        """
+        Query the pile using the created query engine.
+
+        Args:
+            query (str): The query to send.
+            engine_kwargs (dict): Additional keyword arguments for the engine.
+            **kwargs: Additional keyword arguments for the query.
+
+        Returns:
+            str: The response from the query engine.
+        """
         if not self.engines.get("query", None):
             self.create_query_engine(**engine_kwargs)
         response = await self.engines["query"].aquery(query, **kwargs)
@@ -618,6 +685,17 @@ class Pile(Element, Record, Generic[T]):
         return str(response)
 
     async def chat_pile(self, query, engine_kwargs={}, **kwargs):
+        """
+        Chat with the pile using the created chat engine.
+
+        Args:
+            query (str): The query to send.
+            engine_kwargs (dict): Additional keyword arguments for the engine.
+            **kwargs: Additional keyword arguments for the query.
+
+        Returns:
+            str: The response from the chat engine.
+        """
         if not self.engines.get("chat", None):
             self.create_chat_engine(**engine_kwargs)
         response = await self.engines["chat"].achat(query, **kwargs)
@@ -627,6 +705,19 @@ class Pile(Element, Record, Generic[T]):
     async def embed_pile(
         self, imodel=None, field="content", embed_kwargs={}, verbose=True, **kwargs
     ):
+        """
+        Embed the items in the pile.
+
+        Args:
+            imodel: The embedding model to use.
+            field (str): The field to embed. Default is "content".
+            embed_kwargs (dict): Additional keyword arguments for the embedding.
+            verbose (bool): Whether to print verbose messages. Default is True.
+            **kwargs: Additional keyword arguments for the embedding.
+
+        Raises:
+            ModelLimitExceededError: If the model limit is exceeded.
+        """
         from .model import iModel
 
         imodel = imodel or iModel(endpoint="embeddings", **kwargs)
@@ -653,10 +744,27 @@ class Pile(Element, Record, Generic[T]):
         print(f"Successfully embedded all {a}/{a} items")
 
     def to_csv(self, file_name, **kwargs):
+        """
+        Save the pile to a CSV file.
+
+        Args:
+            file_name (str): The name of the CSV file.
+            **kwargs: Additional keyword arguments for the CSV writer.
+        """
         self.to_df().to_csv(file_name, index=False, **kwargs)
 
     @classmethod
     def from_csv(cls, file_name, **kwargs):
+        """
+        Load a pile from a CSV file.
+
+        Args:
+            file_name (str): The name of the CSV file.
+            **kwargs: Additional keyword arguments for the CSV reader.
+
+        Returns:
+            Pile: The loaded pile.
+        """
         from pandas import read_csv
 
         df = read_csv(file_name, **kwargs)
@@ -665,6 +773,15 @@ class Pile(Element, Record, Generic[T]):
 
     @classmethod
     def from_df(cls, df):
+        """
+        Load a pile from a DataFrame.
+
+        Args:
+            df (DataFrame): The DataFrame to load.
+
+        Returns:
+            Pile: The loaded pile.
+        """
         items = Component.from_obj(df)
         return cls(items)
 
@@ -677,7 +794,20 @@ class Pile(Element, Record, Generic[T]):
         query_description=None,
         **kwargs,
     ):
+        """
+        Create a query tool for the pile.
 
+        Args:
+            index_type (str): The type of index to use. Default is "llama_index".
+            query_type (str): The type of query engine to use. Default is "query".
+            name (str): The name of the query tool. Default is "query".
+            guidance (str): The guidance for the query tool.
+            query_description (str): The description of the query parameter.
+            **kwargs: Additional keyword arguments for the query engine.
+
+        Returns:
+            Tool: The created query tool.
+        """
         if not self.engines.get(query_type, None):
             if query_type == "query":
                 self.create_query_engine(index_type=index_type, **kwargs)
@@ -716,12 +846,30 @@ class Pile(Element, Record, Generic[T]):
         return self.tools[query_type]
 
     def __list__(self):
+        """
+        Get a list of the items in the pile.
+
+        Returns:
+            list: The items in the pile.
+        """
         return list(self.pile.values())
 
     def __str__(self):
+        """
+        Get the string representation of the pile.
+
+        Returns:
+            str: The string representation of the pile.
+        """
         return self.to_df().__str__()
 
     def __repr__(self):
+        """
+        Get the representation of the pile.
+
+        Returns:
+            str: The representation of the pile.
+        """
         return self.to_df().__repr__()
 
 
@@ -734,6 +882,29 @@ def pile(
     df=None,
     **kwargs,
 ) -> Pile[T]:
+    """
+    Create a new Pile instance.
+
+    This function provides various ways to create a Pile instance:
+    - Directly from items
+    - From a CSV file
+    - From a DataFrame
+
+    Args:
+        items (Iterable[T] | None): The items to include in the pile.
+        item_type (set[Type] | None): The allowed types of items in the pile.
+        order (list[str] | None): The order of items.
+        use_obj (bool | None): Whether to treat Record and Ordering as objects.
+        csv_file (str | None): The path to a CSV file to load items from.
+        df (DataFrame | None): A DataFrame to load items from.
+        **kwargs: Additional keyword arguments for loading from CSV or DataFrame.
+
+    Returns:
+        Pile[T]: A new Pile instance.
+
+    Raises:
+        ValueError: If invalid arguments are provided.
+    """
     if csv_file:
         return Pile.from_csv(csv_file, **kwargs)
     if df:

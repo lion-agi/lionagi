@@ -259,6 +259,9 @@ class UnitForm(BaseUnitForm):
             self.append_to_request("reflection")
 
     def display(self):
+        """
+        Display the current form fields and values in a user-friendly format.
+        """
         fields = self.work_fields.copy()
 
         if "task" in fields and len(str(fields["task"])) > 2000:

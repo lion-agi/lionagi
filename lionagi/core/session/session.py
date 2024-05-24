@@ -34,6 +34,21 @@ from lionagi.core.mail.mail_manager import MailManager
 
 
 class Session:
+    """
+    A session for managing branches, mail transfer, and interactions with a model.
+
+    Attributes:
+        ln_id (str): The unique identifier for the session.
+        timestamp (str): The timestamp when the session was created.
+        system (System): The default system message for the session.
+        system_sender (str): The sender of the system message.
+        branches (Pile[Branch]): The pile of branches in the session.
+        mail_transfer (Exchange): The exchange for managing mail transfer.
+        mail_manager (MailManager): The manager for handling mail.
+        imodel (iModel): The model associated with the session.
+        user (str): The user associated with the session.
+        default_branch (Branch): The default branch of the session.
+    """
 
     def __init__(
         self,
@@ -60,6 +75,18 @@ class Session:
             self.default_branch = self.branches[0]
 
     def _validate_branches(self, value):
+        """
+        Validates and converts the branches input to a Pile of Branch objects.
+
+        Args:
+            value (Any): The input value to validate and convert.
+
+        Returns:
+            Pile[Branch]: A pile of validated branches.
+
+        Raises:
+            ValueError: If the input value contains non-Branch objects.
+        """
         if isinstance(value, Pile):
             for branch in value:
                 if not isinstance(branch, Branch):
@@ -84,6 +111,22 @@ class Session:
         tools: Any = None,
         imodel=None,
     ):
+        """
+        Creates a new branch and adds it to the session.
+
+        Args:
+            system (System, optional): The system message for the branch.
+            system_sender (str, optional): The sender of the system message.
+            user (str, optional): The user associated with the branch.
+            messages (Pile, optional): The pile of messages for the branch.
+            progress (Progression, optional): The progression of messages.
+            tool_manager (ToolManager, optional): The tool manager for the branch.
+            tools (Any, optional): The tools to register with the tool manager.
+            imodel (iModel, optional): The model associated with the branch.
+
+        Returns:
+            Branch: The created branch.
+        """
         if system is None:
             system = self.system.clone()
             system.sender = self.ln_id
@@ -105,6 +148,12 @@ class Session:
         return branch
 
     def delete_branch(self, branch):
+        """
+        Deletes a branch from the session.
+
+        Args:
+            branch (Branch | str): The branch or its ID to delete.
+        """
         branch_id = get_lion_id(branch)
         self.branches.pop(branch_id)
         self.mail_manager.delete_source(branch_id)
@@ -116,6 +165,15 @@ class Session:
                 self.default_branch = self.branches[0]
 
     def split_branch(self, branch):
+        """
+        Splits a branch, creating a new branch with the same messages and tools.
+
+        Args:
+            branch (Branch | str): The branch or its ID to split.
+
+        Returns:
+            Branch: The newly created branch.
+        """
         branch = self.branches[branch]
         system = branch.system.clone() if branch.system else None
         if system:
@@ -149,10 +207,23 @@ class Session:
         return branch_clone
 
     def change_default_branch(self, branch):
+        """
+        Changes the default branch of the session.
+
+        Args:
+            branch (Branch | str): The branch or its ID to set as the default.
+        """
         branch = self.branches[branch]
         self.default_branch = branch
 
     def collect(self, from_: Branch | str | Pile[Branch] | None = None):
+        """
+        Collects mail from specified branches.
+
+        Args:
+            from_ (Branch | str | Pile[Branch], optional): The branches to collect mail from.
+                If None, collects mail from all branches.
+        """
         if from_ is None:
             self.mail_manager.collect_all()
         else:
@@ -164,6 +235,13 @@ class Session:
                 raise ValueError(f"Failed to collect mail. Error: {e}")
 
     def send(self, to_: Branch | str | Pile[Branch] | None = None):
+        """
+        Sends mail to specified branches.
+
+        Args:
+            to_ (Branch | str | Pile[Branch], optional): The branches to send mail to.
+                If None, sends mail to all branches.
+        """
         if to_ is None:
             self.mail_manager.send_all()
         else:
@@ -175,6 +253,12 @@ class Session:
                 raise ValueError(f"Failed to send mail. Error: {e}")
 
     def collect_send_all(self, receive_all=False):
+        """
+        Collects and sends mail for all branches, optionally receiving all mail.
+
+        Args:
+            receive_all (bool, optional): Whether to receive all mail for all branches.
+        """
         self.collect()
         self.send()
         if receive_all:
@@ -182,6 +266,20 @@ class Session:
                 branch.receive_all()
 
     async def chat(self, *args, branch=None, **kwargs):
+        """
+        Initiates a chat interaction with a branch.
+
+        Args:
+            *args: Positional arguments to pass to the chat method.
+            branch (Branch, optional): The branch to chat with. Defaults to the default branch.
+            **kwargs: Keyword arguments to pass to the chat method.
+
+        Returns:
+            Any: The result of the chat interaction.
+
+        Raises:
+            ValueError: If the specified branch is not found in the session branches.
+        """
         if branch is None:
             branch = self.default_branch
         if branch not in self.branches:
@@ -189,6 +287,20 @@ class Session:
         return await self.branches[branch].chat(*args, **kwargs)
 
     async def direct(self, *args, branch=None, **kwargs):
+        """
+        Initiates a direct interaction with a branch.
+
+        Args:
+            *args: Positional arguments to pass to the direct method.
+            branch (Branch, optional): The branch to interact with. Defaults to the default branch.
+            **kwargs: Keyword arguments to pass to the direct method.
+
+        Returns:
+            Any: The result of the direct interaction.
+
+        Raises:
+            ValueError: If the specified branch is not found in the session branches.
+        """
         if branch is None:
             branch = self.default_branch
         if branch not in self.branches:

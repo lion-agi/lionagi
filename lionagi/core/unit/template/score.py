@@ -20,6 +20,18 @@ from lionagi.core.unit import UnitForm
 
 
 class ScoreTemplate(UnitForm):
+    """
+    A template for performing a scoring task based on given instructions and context.
+
+    Inherits from `UnitForm` and adds fields and methods specific to scoring tasks.
+
+    Attributes:
+        confidence_score (float | None): A numeric score between 0 to 1 formatted to 2 decimal places, indicating confidence in the score.
+        reason (str | None): A brief reason for the given output.
+        template_name (str): The name of the template.
+        score (float | None): A score for the given context and task.
+        assignment (str): A string representing the task assignment for the score.
+    """
 
     confidence_score: float | None = Field(
         None,
@@ -48,6 +60,12 @@ class ScoreTemplate(UnitForm):
 
     @property
     def answer(self):
+        """
+        Gets the score attribute.
+
+        Returns:
+            float | None: The score for the given context and task.
+        """
         return getattr(self, "score", None)
 
     def __init__(
@@ -62,6 +80,19 @@ class ScoreTemplate(UnitForm):
         reason=False,
         **kwargs,
     ):
+        """
+        Initializes a new instance of the ScoreTemplate class.
+
+        Args:
+            instruction (str, optional): Additional instructions for the scoring task.
+            context (str, optional): Additional context for the scoring task.
+            score_range (tuple, optional): The range of the score. Defaults to (0, 10).
+            include_endpoints (bool, optional): Whether to include the endpoints in the score range. Defaults to True.
+            num_digit (int, optional): The number of digits allowed after the decimal point. Defaults to 0.
+            confidence_score (bool, optional): Whether to include a confidence score. Defaults to False.
+            reason (bool, optional): Whether to include a reasoning field. Defaults to False.
+            **kwargs: Additional keyword arguments.
+        """
         super().__init__(**kwargs)
 
         return_precision = ""

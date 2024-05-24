@@ -165,6 +165,41 @@ class DirectiveMixin:
         directive=None,
         **kwargs,
     ):
+        """
+        Asynchronously directs the operation based on the provided parameters.
+
+        Args:
+            instruction (str, optional): Instruction message.
+            context (Any, optional): Context to perform the instruction on.
+            form (Form, optional): Form data.
+            tools (Any, optional): Tools to use.
+            reason (bool, optional): Flag indicating if reason should be included.
+            predict (bool, optional): Flag indicating if prediction should be included.
+            score (Any, optional): Score parameters.
+            select (Any, optional): Select parameters.
+            plan (Any, optional): Plan parameters.
+            allow_action (bool, optional): Flag indicating if action should be allowed.
+            allow_extension (bool, optional): Flag indicating if extension should be allowed.
+            max_extension (int, optional): Maximum extension value.
+            confidence (Any, optional): Confidence parameters.
+            score_num_digits (int, optional): Number of digits for score.
+            score_range (tuple, optional): Range for score.
+            select_choices (list, optional): Choices for selection.
+            plan_num_step (int, optional): Number of steps for plan.
+            predict_num_sentences (int, optional): Number of sentences for prediction.
+            imodel (iModel, optional): Optionally swappable iModel for the commands.
+            system (str, optional): Optionally swap the system message.
+            rulebook (Any, optional): The rulebook to use for validation.
+            directive (str, optional): Directive for the operation.
+            **kwargs: Additional keyword arguments.
+
+        Returns:
+            Any: The processed response.
+
+        Examples:
+            >>> result = await self.direct(instruction="Process data", context={"data": "example"})
+            >>> print(result)
+        """
         if system:
             self.add_message(system=system)
 

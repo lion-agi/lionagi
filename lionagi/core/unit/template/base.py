@@ -19,6 +19,14 @@ from lionagi.core.report.form import Form
 
 
 class BaseUnitForm(Form):
+    """
+    A base form class for units that includes fields for confidence scoring and reasoning.
+
+    Attributes:
+        template_name (str): The name of the template.
+        confidence_score (float): A numeric confidence score between 0 and 1 with precision to 2 decimal places.
+        reason (str | None): A field for providing concise reasoning for the process.
+    """
     template_name: str = "UnitDirective"
 
     confidence_score: float = Field(

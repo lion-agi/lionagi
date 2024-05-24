@@ -58,6 +58,13 @@ class Form(BaseForm):
                 self._add_field(i, value=None)
 
     def append_to_request(self, field: str, value=None):
+        """
+        Appends a field to the requested fields.
+
+        Args:
+            field (str): The name of the field to be requested.
+            value (optional): The value to be assigned to the field. Defaults to None.
+        """
         if "," in field:
             field = field.split(",")
         if not isinstance(field, list):
@@ -75,6 +82,13 @@ class Form(BaseForm):
                 )
 
     def append_to_input(self, field: str, value=None):
+        """
+        Appends a field to the input fields.
+
+        Args:
+            field (str): The name of the field to be added to input.
+            value (optional): The value to be assigned to the field. Defaults to None.
+        """
         if "," in field:
             field = field.split(",")
         if not isinstance(field, list):
@@ -194,6 +208,12 @@ class Form(BaseForm):
         }
 
     def display(self, fields=None):
+        """
+        Displays the form fields using IPython display.
+
+        Args:
+            fields (optional): Specific fields to display. Defaults to None.
+        """
         from IPython.display import display, Markdown
 
         fields = fields or self.work_fields
