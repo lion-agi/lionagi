@@ -405,7 +405,6 @@ class APIUtil:
                                     num_tokens += ImageUtil.calculate_image_token_usage_from_base64(
                                         a, item.get("detail", "low")
                                     )
-                                    print(num_tokens)
                                     num_tokens += (
                                         20  # for every image we add 20 tokens buffer
                                     )
