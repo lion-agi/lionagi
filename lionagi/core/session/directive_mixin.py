@@ -117,8 +117,8 @@ class DirectiveMixin:
         if system:
             self.add_message(system=system)
 
-        from lionagi.libs import ImageUtil
         if not images and image_path:
+            from lionagi.libs import ImageUtil
             images = ImageUtil.read_image_to_base64(image_path)
 
         return await directive.chat(
@@ -171,6 +171,7 @@ class DirectiveMixin:
         rulebook=None,
         directive=None,
         images=None,
+        image_path=None,
         **kwargs,
     ):
         """
@@ -211,6 +212,10 @@ class DirectiveMixin:
         if system:
             self.add_message(system=system)
 
+        if not images and image_path:
+            from lionagi.libs import ImageUtil
+            images = ImageUtil.read_image_to_base64(image_path)
+            
         _directive = Unit(self, imodel=imodel, rulebook=rulebook)
 
         if directive and isinstance(directive, str):

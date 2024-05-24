@@ -253,8 +253,12 @@ class iModel:
         if not isinstance(node, Component):
             raise ValueError("Node must a lionagi item")
         embed_str = getattr(node, field)
+        if isinstance(embed_str, dict) and "images" in embed_str:
+            embed_str.pop("images", None)
+            embed_str.pop("image_detail", None)
+            
         num_tokens = APIUtil.calculate_num_token(
-            {"input": embed_str},
+            {"input": str(embed_str) if isinstance(embed_str, dict) else embed_str},
             "embeddings",
             self.endpoint_schema["token_encoding_name"],
         )
