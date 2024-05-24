@@ -9,7 +9,7 @@ from lionagi.core.engine.branch_engine import BranchExecutor
 from lionagi.core.collections import progression, pile, Pile
 
 
-class InstructionMapExecutor(BaseExecutor):
+class InstructionMapEngine(BaseExecutor):
     """
     Manages the execution of a mapped set of instructions across multiple branches within an executable structure.
 

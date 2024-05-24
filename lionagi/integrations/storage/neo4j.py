@@ -266,7 +266,7 @@ class Neo4j:
         """
         for node in node_dict:
             node_list = node_dict[node]
-            if node == "StructureExecutor":
+            if node == "GraphExecutor":
                 [
                     await self.add_structure_node(tx, i, structure_name)
                     for i in node_list

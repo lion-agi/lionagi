@@ -6,7 +6,7 @@ from lionagi.core.executor.base_executor import BaseExecutor
 from lionagi.integrations.storage.neo4j import Neo4j
 from lionagi.integrations.storage.storage_util import ParseNode
 from lionagi.core.agent.base_agent import BaseAgent
-from lionagi.core.engine.instruction_map_engine import InstructionMapExecutor
+from lionagi.core.engine.instruction_map_engine import InstructionMapEngine
 
 from lionagi.core.mail import Mail
 from lionagi.core.action import Tool, DirectiveSelection, ActionNode
@@ -33,7 +33,7 @@ class Neo4jExecutor(BaseExecutor):
     structure_id: str = None
     structure_name: str = None
     middle_agents: list | None = None
-    default_agent_executable: BaseExecutor = InstructionMapExecutor()
+    default_agent_executable: BaseExecutor = InstructionMapEngine()
     condition_check_result: bool | None = None
 
     class Config:

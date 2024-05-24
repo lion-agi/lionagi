@@ -6,7 +6,7 @@ from lionagi.integrations.storage.storage_util import ParseNode
 from lionagi.core.executor.graph_executor import GraphExecutor
 from lionagi.core.agent.base_agent import BaseAgent
 from lionagi.core.executor.base_executor import BaseExecutor
-from lionagi.core.engine.instruction_map_engine import InstructionMapExecutor
+from lionagi.core.engine.instruction_map_engine import InstructionMapEngine
 
 
 def excel_reload(structure_name=None, structure_id=None, dir="structure_storage"):
@@ -54,7 +54,7 @@ class StructureExcel:
     """
 
     structure: GraphExecutor = GraphExecutor()
-    default_agent_executable: BaseExecutor = InstructionMapExecutor()
+    default_agent_executable: BaseExecutor = InstructionMapEngine()
 
     def __init__(
         self, structure_name=None, structure_id=None, file_path="structure_storage"
@@ -120,7 +120,7 @@ class StructureExcel:
         Returns:
             list: A list of identifiers for the head nodes in the structure.
         """
-        structure_df = self.file["StructureExecutor"]
+        structure_df = self.file["GraphExecutor"]
         head_list = json.loads(structure_df["head_nodes"].iloc[0])
         return head_list
 
