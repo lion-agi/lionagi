@@ -38,10 +38,12 @@ class Instruction(RoledMessage):
         self,
         instruction: str | None = None,
         context: dict | str | None = None,
+        images: list | None = None,
         sender: LionIDable | None = None,
         recipient: LionIDable | None = None,
         requested_fields: dict | None = None,  # {"field": "description"}
         additional_context: dict | None = None,
+        image_detail: str | None = None,
         **kwargs,
     ):
         """
@@ -50,6 +52,7 @@ class Instruction(RoledMessage):
         Args:
             instruction (str, optional): The instruction content.
             context (dict or str, optional): Additional context for the instruction.
+            image (str, optional): The image content in base64 encoding.
             sender (LionIDable, optional): The sender of the instruction.
             recipient (LionIDable, optional): The recipient of the instruction.
             requested_fields (dict, optional): Fields requested in the instruction.
@@ -68,12 +71,41 @@ class Instruction(RoledMessage):
         )
 
         additional_context = additional_context or {}
-        self._initiate_content(context, requested_fields, **additional_context)
+        self._initiate_content(
+            context=context,
+            requested_fields=requested_fields,
+            images=images,
+            image_detail=image_detail or "low",
+            **additional_context,
+        )
 
     @property
     def instruct(self):
         """Returns the instruction content."""
         return self.content["instruction"]
+
+    def _check_chat_msg(self):
+        text_msg = super()._check_chat_msg()
+        if "images" not in self.content:
+            return text_msg
+
+        text_msg["content"].pop("images", None)
+        text_msg["content"].pop("image_detail", None)
+        text_msg["content"] = [
+            {"type": "text", "text": text_msg["content"]},
+        ]
+
+        for i in self.content["images"]:
+            text_msg["content"].append(
+                {
+                    "type": "image_url",
+                    "image_url": {
+                        "url": f"data:image/jpeg;base64,{i}",
+                        "detail": self.content["image_detail"],
+                    },
+                }
+            )
+        return text_msg
 
     def _add_context(self, context: dict | str | None = None, **kwargs):
         """
@@ -102,7 +134,9 @@ class Instruction(RoledMessage):
             self.content["context"]["requested_fields"] = {}
         self.content["context"]["requested_fields"].update(requested_fields)
 
-    def _initiate_content(self, context, requested_fields, **kwargs):
+    def _initiate_content(
+        self, context, requested_fields, images, image_detail, **kwargs
+    ):
         """
         Processes context and requested fields to update the message content.
 
@@ -125,6 +159,10 @@ class Instruction(RoledMessage):
             self.content["requested_fields"] = self._format_requested_fields(
                 requested_fields
             )
+
+        if images:
+            self.content["images"] = images if isinstance(images, list) else [images]
+            self.content["image_detail"] = image_detail
 
     def clone(self, **kwargs):
         """
@@ -173,6 +211,7 @@ class Instruction(RoledMessage):
         form: Form,
         sender: str | None = None,
         recipient=None,
+        image=None,
     ):
         """
         Creates an Instruction instance from a form.
@@ -189,6 +228,7 @@ class Instruction(RoledMessage):
             instruction=form._instruction_prompt,
             context=form._instruction_context,
             requested_fields=form._instruction_requested_fields,
+            image=image,
             sender=sender,
             recipient=recipient,
         )

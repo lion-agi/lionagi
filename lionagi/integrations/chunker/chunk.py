@@ -51,6 +51,7 @@ def text_chunker(documents, args, kwargs):
         >>> documents = [Node(...), Node(...)]
         >>> chunked_docs = text_chunker(documents, args, kwargs)
     """
+
     def chunk_node(node):
         chunks = file_to_chunks(node.to_dict(), *args, **kwargs)
         func_call.lcall(chunks, lambda chunk: chunk.pop("ln_id"))

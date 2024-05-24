@@ -101,7 +101,7 @@ class OpenAIService(BaseService):
         else:
             return ValueError(f"{endpoint} is currently not supported")
 
-    async def serve_chat(self, messages, **kwargs):
+    async def serve_chat(self, messages, required_tokens=None, **kwargs):
         """
         Serves the chat completion request with the given messages.
 
@@ -118,20 +118,47 @@ class OpenAIService(BaseService):
         if "chat/completions" not in self.active_endpoint:
             await self.init_endpoint("chat/completions")
             self.active_endpoint.append("chat/completions")
+
+        msgs = []
+
+        for msg in messages:
+            if isinstance(msg, dict):
+                content = msg.get("content")
+                if isinstance(content, dict):
+                    msgs.append({"role": msg["role"], "content": content})
+                elif isinstance(content, list):
+                    _content = []
+                    for i in content:
+                        if "text" in i:
+                            _content.append({"type": "text", "text": str(i["text"])})
+                        elif "image_url" in i:
+                            _content.append(
+                                {
+                                    "type": "image_url",
+                                    "image_url": {
+                                        "url": f"{i['image_url'].get('url')}",
+                                        "detail": i["image_url"].get("detail", "low"),
+                                    },
+                                }
+                            )
+                    msgs.append({"role": msg["role"], "content": _content})
+
         payload = PayloadPackage.chat_completion(
-            messages,
+            msgs,
             self.endpoints["chat/completions"].config,
             self.schema["chat/completions"],
             **kwargs,
         )
         try:
-            completion = await self.call_api(payload, "chat/completions", "post")
+            completion = await self.call_api(
+                payload, "chat/completions", "post", required_tokens=required_tokens
+            )
             return payload, completion
         except Exception as e:
             self.status_tracker.num_tasks_failed += 1
             raise e
 
-    async def serve_embedding(self, embed_str, **kwargs):
+    async def serve_embedding(self, embed_str, required_tokens=None, **kwargs):
         if "embeddings" not in self.active_endpoint:
             await self.init_endpoint("embeddings")
             self.active_endpoint.append("embeddings")
@@ -144,7 +171,9 @@ class OpenAIService(BaseService):
         )
 
         try:
-            embed = await self.call_api(payload, "embeddings", "post")
+            embed = await self.call_api(
+                payload, "embeddings", "post", required_tokens=required_tokens
+            )
             return payload, embed
         except Exception as e:
             self.status_tracker.num_tasks_failed += 1

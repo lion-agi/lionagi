@@ -12,6 +12,7 @@ class StartMail(Node):
     Attributes:
         mailbox (Exchange): The exchange object that holds pending start mails.
     """
+
     mailbox: Exchange = Field(
         default_factory=Exchange[Mail], description="The pending start mail"
     )

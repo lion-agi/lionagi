@@ -32,6 +32,7 @@ class DirectiveSelection(Node, Actionable):
     Methods:
         invoke(): An asynchronous method to perform the action defined by the directive.
     """
+
     directive: str = Field(
         "chat", description="The action to be performed", alias="action_type"
     )
@@ -63,6 +64,7 @@ class ActionNode(DirectiveSelection):
         invoke(branch, context=None): An asynchronous method to invoke the action
                                       within the given branch.
     """
+
     tools: list[Tool] | Tool | None = Field(
         default_factory=list,
         description="The tools to be used in the action",

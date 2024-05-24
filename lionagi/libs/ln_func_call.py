@@ -145,7 +145,7 @@ async def alcall(
 
 
 async def pcall(funcs):
-    task = [asyncio.create_task(func) for func in funcs]
+    task = [call_handler(func) for func in funcs]
     return await asyncio.gather(*task)
 
 
@@ -179,17 +179,18 @@ async def mcall(
     funcs_ = to_list(func, dropna=True)
 
     if explode:
-        tasks = [_alcall(inputs_, f, flatten=True, **kwargs) for f in funcs_]
+        return await pcall(
+            [_alcall(inputs_, f, flatten=True, **kwargs) for f in funcs_]
+        )
     elif len(inputs_) == len(funcs_):
         tasks = [
-            AsyncUtil.handle_async_sync(func, inp, **kwargs)
-            for inp, func in zip(inputs_, funcs_)
+            call_handler(func, inp, **kwargs) for inp, func in zip(inputs_, funcs_)
         ]
     else:
         raise ValueError(
             "Inputs and functions must be the same length for map calling."
         )
-    return await AsyncUtil.execute_tasks(*tasks)
+    return await asyncio.gather(*tasks)
 
 
 async def bcall(
@@ -380,7 +381,7 @@ async def rcall(
             if attempt < retries:
                 if verbose:
                     print(f"Attempt {attempt + 1}/{retries} failed: {e}, retrying...")
-                await AsyncUtil.sleep(delay)
+                await asyncio.sleep(delay)
                 delay *= backoff_factor
             else:
                 break
@@ -432,8 +433,8 @@ async def _alcall(
             [1, 4, 9]
     """
     lst = to_list(input_)
-    tasks = [AsyncUtil.handle_async_sync(func, i, **kwargs) for i in lst]
-    outs = await AsyncUtil.execute_tasks(*tasks)
+    tasks = [call_handler(func, i, **kwargs) for i in lst]
+    outs = await asyncio.gather(*tasks)
     return to_list(outs, flatten=flatten)
 
 
@@ -472,11 +473,11 @@ async def _tcall(
     """
     start_time = SysUtil.get_now(datetime_=False)
     try:
-        await AsyncUtil.sleep(delay)
+        await asyncio.sleep(delay)
         # Apply timeout to the function call
         if timeout is not None:
             coro = ""
-            if AsyncUtil.is_coroutine_func(func):
+            if is_coroutine_func(func):
                 coro = func(*args, **kwargs)
             else:
 
@@ -488,7 +489,7 @@ async def _tcall(
             result = await asyncio.wait_for(coro, timeout)
 
         else:
-            if AsyncUtil.is_coroutine_func(func):
+            if is_coroutine_func(func):
                 return await func(*args, **kwargs)
             return func(*args, **kwargs)
         duration = SysUtil.get_now(datetime_=False) - start_time
@@ -572,7 +573,11 @@ class CallDecorator:
 
     @staticmethod
     def retry(
-        retries: int = 3, delay: float = 2.0, backoff_factor: float = 2.0
+        retries: int = 3,
+        delay: float = 2.0,
+        backoff_factor: float = 2.0,
+        default=...,
+        verbose=True,
     ) -> Callable:
         """
         Decorates an asynchronous function to automatically retry on failure,
@@ -616,6 +621,8 @@ class CallDecorator:
                     retries=retries,
                     delay=delay,
                     backoff_factor=backoff_factor,
+                    default=default,
+                    verbose=verbose,
                     **kwargs,
                 )
 
@@ -725,7 +732,7 @@ class CallDecorator:
         """
 
         def decorator(func: Callable[..., list[Any]]) -> Callable:
-            if AsyncUtil.is_coroutine_func(func):
+            if is_coroutine_func(func):
 
                 @functools.wraps(func)
                 async def async_wrapper(*args, **kwargs) -> list[Any]:
@@ -783,7 +790,7 @@ class CallDecorator:
         """
 
         def decorator(func: Callable) -> Callable:
-            if not any(AsyncUtil.is_coroutine_func(f) for f in functions):
+            if not any(is_coroutine_func(f) for f in functions):
 
                 @functools.wraps(func)
                 def sync_wrapper(*args, **kwargs):
@@ -798,7 +805,7 @@ class CallDecorator:
                     return value
 
                 return sync_wrapper
-            elif all(AsyncUtil.is_coroutine_func(f) for f in functions):
+            elif all(is_coroutine_func(f) for f in functions):
 
                 @functools.wraps(func)
                 async def async_wrapper(*args, **kwargs):
@@ -862,7 +869,7 @@ class CallDecorator:
         """
 
         def decorator(func: Callable[..., Any]) -> Callable[..., Any]:
-            if AsyncUtil.is_coroutine_func(func):
+            if is_coroutine_func(func):
 
                 @functools.wraps(func)
                 async def async_wrapper(*args, **kwargs) -> Any:
@@ -924,7 +931,7 @@ class CallDecorator:
                 ... # will return the cached result without re-executing the function body.
         """
 
-        if AsyncUtil.is_coroutine_func(func):
+        if is_coroutine_func(func):
             # Asynchronous function handling
             @AsyncUtil.cached(ttl=ttl)
             async def cached_async(*args, **kwargs) -> Any:
@@ -1028,7 +1035,7 @@ class CallDecorator:
         """
 
         def decorator(func: Callable[..., list[Any]]) -> Callable:
-            if AsyncUtil.is_coroutine_func(func):
+            if is_coroutine_func(func):
 
                 @functools.wraps(func)
                 async def async_wrapper(*args, **kwargs) -> Any:
@@ -1074,11 +1081,11 @@ class CallDecorator:
         """
 
         def decorator(func: Callable) -> Callable:
-            if not AsyncUtil.is_coroutine_func(func):
+            if not is_coroutine_func(func):
                 raise TypeError(
                     "max_concurrency decorator can only be used with async functions."
                 )
-            semaphore = AsyncUtil.semaphore(limit)
+            semaphore = asyncio.Semaphore(limit)
 
             @functools.wraps(func)
             async def wrapper(*args, **kwargs):
@@ -1124,7 +1131,7 @@ class CallDecorator:
         @functools.wraps(fn)
         def wrapper(*args, **kwargs):
             future = pool.submit(fn, *args, **kwargs)
-            return AsyncUtil.wrap_future(future)  # make it awaitable
+            return asyncio.wrap_future(future)  # make it awaitable
 
         return wrapper
 

@@ -44,6 +44,7 @@ class DirectiveMixin(ABC):
         system: Optional[str] = None,
         instruction: Optional[str] = None,
         context: Optional[str] = None,
+        images: Optional[str] = None,
         sender: Optional[str] = None,
         recipient: Optional[str] = None,
         requested_fields: Optional[list] = None,
@@ -85,6 +86,7 @@ class DirectiveMixin(ABC):
                 sender=sender,
                 recipient=recipient,
                 requested_fields=requested_fields,
+                images=images,
             )
         else:
             instruct_ = Instruction.from_form(form)
@@ -302,6 +304,7 @@ class DirectiveMixin(ABC):
         requested_fields: dict = None,
         form: Form = None,
         tools: Any = False,
+        images: Optional[str] = None,
         invoke_tool: bool = True,
         return_form: bool = True,
         strict: bool = False,
@@ -355,6 +358,7 @@ class DirectiveMixin(ABC):
             form=form,
             tools=tools,
             branch=branch,
+            images=images,
             **kwargs,
         )
 
@@ -393,6 +397,7 @@ class DirectiveMixin(ABC):
         strict=False,
         rulebook=None,
         imodel=None,
+        images: Optional[str] = None,
         clear_messages=False,
         use_annotation=True,
         timeout: float = None,
@@ -435,6 +440,7 @@ class DirectiveMixin(ABC):
             requested_fields=requested_fields,
             form=form,
             tools=tools,
+            images=images,
             invoke_tool=invoke_tool,
             return_form=return_form,
             strict=strict,
@@ -477,6 +483,7 @@ class DirectiveMixin(ABC):
         predict_num_sentences=None,
         clear_messages=False,
         return_branch=False,
+        images: Optional[str] = None,
         **kwargs,
     ):
         """
@@ -519,6 +526,7 @@ class DirectiveMixin(ABC):
             predict=predict,
             score=score,
             select=select,
+            images=images,
             plan=plan,
             allow_action=allow_action,
             allow_extension=allow_extension,
@@ -564,6 +572,7 @@ class DirectiveMixin(ABC):
         predict_num_sentences=None,
         clear_messages=False,
         return_branch=False,
+        images: Optional[str] = None,
         **kwargs,
     ):
         """
@@ -647,6 +656,7 @@ class DirectiveMixin(ABC):
         form = await self._chat(
             form=form,
             branch=branch,
+            images=images,
             **kwargs,
         )
 
@@ -708,6 +718,7 @@ class DirectiveMixin(ABC):
         score,
         select,
         plan,
+        # image,
         allow_action,
         confidence,
         score_num_digits,

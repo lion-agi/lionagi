@@ -131,6 +131,7 @@ class Branch(Node, DirectiveMixin):
         func_outputs=None,
         action_request=None,  # ActionRequest node
         action_response=None,  # ActionResponse node
+        images=None,
         sender=None,  # str
         recipient=None,  # str
         requested_fields=None,  # dict[str, str]
@@ -173,6 +174,7 @@ class Branch(Node, DirectiveMixin):
             action_request=action_request,
             action_response=action_response,
             sender=sender,
+            images=images,
             recipient=recipient,
             requested_fields=requested_fields,
             **kwargs,

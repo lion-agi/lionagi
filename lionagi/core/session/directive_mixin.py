@@ -48,6 +48,8 @@ class DirectiveMixin:
         timeout: float = None,
         timing: bool = False,
         return_branch=False,
+        images=None,
+        image_path=None,
         **kwargs,
     ):
         """
@@ -115,6 +117,10 @@ class DirectiveMixin:
         if system:
             self.add_message(system=system)
 
+        from lionagi.libs import ImageUtil
+        if not images and image_path:
+            images = ImageUtil.read_image_to_base64(image_path)
+
         return await directive.chat(
             instruction=instruction,
             context=context,
@@ -135,6 +141,7 @@ class DirectiveMixin:
             timing=timing,
             clear_messages=clear_messages,
             return_branch=return_branch,
+            images=images,
             **kwargs,
         )
 
@@ -163,6 +170,7 @@ class DirectiveMixin:
         system=None,
         rulebook=None,
         directive=None,
+        images=None,
         **kwargs,
     ):
         """
@@ -213,6 +221,7 @@ class DirectiveMixin:
                 tools=tools,
                 reason=reason,
                 confidence=confidence,
+                images=images,
                 **kwargs,
             )
 
@@ -235,5 +244,6 @@ class DirectiveMixin:
             select_choices=select_choices,
             plan_num_step=plan_num_step,
             predict_num_sentences=predict_num_sentences,
+            images=images,
             **kwargs,
         )

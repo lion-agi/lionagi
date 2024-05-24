@@ -27,6 +27,7 @@ class BaseUnitForm(Form):
         confidence_score (float): A numeric confidence score between 0 and 1 with precision to 2 decimal places.
         reason (str | None): A field for providing concise reasoning for the process.
     """
+
     template_name: str = "UnitDirective"
 
     confidence_score: float = Field(

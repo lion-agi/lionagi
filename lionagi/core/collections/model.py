@@ -223,12 +223,15 @@ class iModel:
             "chat/completions",
             self.endpoint_schema["token_encoding_name"],
         )
+
         if num_tokens > self.token_limit:
             raise ModelLimitExceededError(
                 f"Number of tokens {num_tokens} exceeds the limit {self.token_limit}"
             )
 
-        return await self.service.serve_chat(messages, **kwargs)
+        return await self.service.serve_chat(
+            messages, required_tokens=num_tokens, **kwargs
+        )
 
     async def call_embedding(self, embed_str, **kwargs):
         """

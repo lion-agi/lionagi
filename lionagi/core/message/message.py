@@ -22,7 +22,7 @@ from typing import Any
 # from pydantic.main import Model
 
 from lionagi.libs import ParseUtil
-from lionagi.libs.ln_convert import to_str
+from lionagi.libs.ln_convert import to_str, to_dict
 
 from lionagi.core.collections.abc import Sendable, Field
 from lionagi.core.generic.node import Node
@@ -65,6 +65,14 @@ class RoledMessage(Node, Sendable):
     )
 
     @property
+    def image_content(self):
+        msg_ = self.chat_msg
+        if isinstance(msg_, dict) and isinstance(msg_["content"], list):
+            return [i for i in msg_["content"] if i["type"] == "image_url"]
+
+        return None
+
+    @property
     def chat_msg(self) -> dict | None:
         """return message in chat representation"""
         try:
@@ -80,16 +88,12 @@ class RoledMessage(Node, Sendable):
         if role not in [i.value for i in MessageRole]:
             raise ValueError(f"Invalid message role: {role}")
 
-        content_str = str(self.content)
+        content_dict = self.content.copy()
 
-        with contextlib.suppress(Exception):
-            content_str = ParseUtil.fuzzy_parse_json(content_str)
+        if "images" not in content_dict:
+            content_dict = list(content_dict.values())[0]
 
-        if isinstance(content_str, dict):
-            content_str = list(content_str.values())[0]
-            content_str = to_str(content_str)
-
-        return {"role": role, "content": content_str}
+        return {"role": role, "content": content_dict}
 
     def __str__(self):
         """

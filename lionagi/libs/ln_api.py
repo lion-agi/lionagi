@@ -19,6 +19,7 @@ from collections.abc import Sequence, Mapping
 from abc import ABC
 from dataclasses import dataclass
 
+import contextlib
 import logging
 import re
 import asyncio
@@ -27,9 +28,9 @@ import aiohttp
 from typing import Any, NoReturn, Type, Callable
 
 from lionagi.libs.ln_async import AsyncUtil
-import lionagi.libs.ln_convert as convert
-import lionagi.libs.ln_nested as nested
+from lionagi.libs.ln_convert import to_dict, strip_lower, to_str
 import lionagi.libs.ln_func_call as func_call
+from lionagi.libs.ln_nested import nget
 
 
 class APIUtil:
@@ -191,7 +192,7 @@ class APIUtil:
         """
         import hashlib
 
-        param_str = convert.to_str(params, sort_keys=True) if params else ""
+        param_str = to_str(params, sort_keys=True) if params else ""
         return hashlib.md5((url + param_str).encode("utf-8")).hexdigest()
 
     @staticmethod
@@ -371,25 +372,48 @@ class APIUtil:
                 # Expected token calculation for the given payload and endpoint.
         """
         import tiktoken
+        from .ln_image import ImageUtil
 
         encoding = tiktoken.get_encoding(token_encoding_name)
         if api_endpoint.endswith("completions"):
             max_tokens = payload.get("max_tokens", 15)
             n = payload.get("n", 1)
             completion_tokens = n * max_tokens
-
-            # chat completions
             if api_endpoint.startswith("chat/"):
                 num_tokens = 0
+
                 for message in payload["messages"]:
                     num_tokens += 4  # every message follows <im_start>{role/name}\n{content}<im_end>\n
-                    for key, value in message.items():
-                        num_tokens += len(encoding.encode(value))
-                        if key == "name":  # if there's a name, the role is omitted
-                            num_tokens -= (
-                                1
-                                # role is always required and always 1 token
-                            )
+
+                    _content = message.get("content")
+                    if isinstance(_content, str):
+                        num_tokens += len(encoding.encode(_content))
+
+                    elif isinstance(_content, list):
+                        for item in _content:
+                            if isinstance(item, dict):
+                                if "text" in item:
+                                    num_tokens += len(
+                                        encoding.encode(to_str(item["text"]))
+                                    )
+                                elif "image_url" in item:
+                                    a: str = item["image_url"]["url"]
+                                    if "data:image/jpeg;base64," in a:
+                                        a = a.split("data:image/jpeg;base64,")[
+                                            1
+                                        ].strip()
+                                    num_tokens += ImageUtil.calculate_image_token_usage_from_base64(
+                                        a, item.get("detail", "low")
+                                    )
+                                    print(num_tokens)
+                                    num_tokens += (
+                                        20  # for every image we add 20 tokens buffer
+                                    )
+                            elif isinstance(item, str):
+                                num_tokens += len(encoding.encode(item))
+                            else:
+                                num_tokens += len(encoding.encode(str(item)))
+
                 num_tokens += 2  # every reply is primed with <im_start>assistant
                 return num_tokens + completion_tokens
             else:
@@ -428,7 +452,7 @@ class APIUtil:
             payload[key] = config[key]
 
         for key in optional_:
-            if bool(config[key]) and convert.strip_lower(config[key]) != "none":
+            if bool(config[key]) and strip_lower(config[key]) != "none":
                 payload[key] = config[key]
 
         return payload
@@ -543,6 +567,7 @@ class BaseRateLimiter(ABC):
         max_attempts: int = 3,
         method: str = "post",
         payload: Mapping[str, any] = None,
+        required_tokens: int = None,
         **kwargs,
     ) -> Mapping[str, any] | None:
         """
@@ -568,9 +593,12 @@ class BaseRateLimiter(ABC):
             ):  # Minimum token count
                 await AsyncUtil.sleep(1)  # Wait for capacity
                 continue
-            required_tokens = APIUtil.calculate_num_token(
-                payload, endpoint, self.token_encoding_name, **kwargs
-            )
+
+            if not required_tokens:
+                required_tokens = APIUtil.calculate_num_token(
+                    payload, endpoint, self.token_encoding_name, **kwargs
+                )
+
 
             if await self.request_permission(required_tokens):
                 request_headers = {"Authorization": f"Bearer {api_key}"}
@@ -764,7 +792,7 @@ class BaseService:
                     )
 
                 if ep not in self.endpoints:
-                    endpoint_config = nested.nget(self.schema, [ep, "config"])
+                    endpoint_config = nget(self.schema, [ep, "config"])
                     self.schema.get(ep, {})
                     if isinstance(ep, EndPoint):
                         self.endpoints[ep.endpoint] = ep
@@ -808,7 +836,7 @@ class BaseService:
 
         else:
             for ep in self.available_endpoints:
-                endpoint_config = nested.nget(self.schema, [ep, "config"])
+                endpoint_config = nget(self.schema, [ep, "config"])
                 self.schema.get(ep, {})
                 if ep not in self.endpoints:
                     self.endpoints[ep] = EndPoint(
@@ -822,7 +850,7 @@ class BaseService:
                 if not self.endpoints[ep]._has_initialized:
                     await self.endpoints[ep].init_rate_limiter()
 
-    async def call_api(self, payload, endpoint, method, **kwargs):
+    async def call_api(self, payload, endpoint, method, required_tokens=None, **kwargs):
         """
         Calls the specified API endpoint with the given payload and method.
 
@@ -847,6 +875,7 @@ class BaseService:
                 api_key=self.api_key,
                 method=method,
                 payload=payload,
+                required_tokens=required_tokens,
                 **kwargs,
             )
 
@@ -901,7 +930,7 @@ class PayloadPackage:
         Returns:
                 The constructed payload.
         """
-        return APIUtil._create_payload(
+        return APIUtil.create_payload(
             input_=training_file,
             config=llmconfig,
             required_=schema["required"],
