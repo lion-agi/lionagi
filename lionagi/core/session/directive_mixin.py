@@ -119,6 +119,7 @@ class DirectiveMixin:
 
         if not images and image_path:
             from lionagi.libs import ImageUtil
+
             images = ImageUtil.read_image_to_base64(image_path)
 
         return await directive.chat(
@@ -214,8 +215,9 @@ class DirectiveMixin:
 
         if not images and image_path:
             from lionagi.libs import ImageUtil
+
             images = ImageUtil.read_image_to_base64(image_path)
-            
+
         _directive = Unit(self, imodel=imodel, rulebook=rulebook)
 
         if directive and isinstance(directive, str):

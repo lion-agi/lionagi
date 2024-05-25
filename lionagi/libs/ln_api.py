@@ -598,7 +598,6 @@ class BaseRateLimiter(ABC):
                     payload, endpoint, self.token_encoding_name, **kwargs
                 )
 
-
             if await self.request_permission(required_tokens):
                 request_headers = {"Authorization": f"Bearer {api_key}"}
                 attempts_left = max_attempts

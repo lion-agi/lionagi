@@ -137,7 +137,7 @@ def create_message(
     else:
         if images:
             images = images if isinstance(images, list) else [images]
-            
+
         return Instruction(
             instruction=instruction,
             context=context,
