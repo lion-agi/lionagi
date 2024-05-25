@@ -1,3 +1,4 @@
+import contextlib
 from collections import deque
 from typing import Any
 
@@ -65,8 +66,13 @@ class Graph(Node):
 
     def remove_edge(self, edge: Any) -> bool:
         """Remove an edge from the graph."""
-        return all(self._remove_edge(i) for i in edge)
-
+        edge = edge if isinstance(edge, list) else [edge]
+        for i in edge:
+            if i not in self.internal_edges:
+                raise ItemNotFoundError(f"Edge {i} does not exist in structure.")
+            with contextlib.suppress(ItemNotFoundError):
+                self._remove_edge(i)
+        
     def add_node(self, node: Any) -> None:
         """Add a node to the graph."""
         self.internal_nodes.update(node)
