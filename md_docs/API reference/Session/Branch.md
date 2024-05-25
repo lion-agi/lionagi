@@ -1,185 +1,266 @@
----
-tags:
-  - Core
-  - LLM
-  - API
-  - Session
-created: 2024-02-26
-completed: true
----
 
+### Class: `Branch`
 
-# Branch Class API Reference
+**Description**:
+`Branch` represents a branch in a messaging system, capable of handling messages, tools, and models. It provides functionalities for adding messages, managing tools, sending and receiving mails, and converting messages to different formats.
 
-> Child class of [[BaseBranch]]
+#### Attributes:
+- `messages` (Pile): A pile of messages.
+- `progress` (Progression): A progression of messages.
+- `tool_manager` (ToolManager): A manager for handling tools.
+- `system` (System): The system associated with the branch.
+- `user` (str): The user associated with the branch.
+- `mailbox` (Exchange): An exchange for managing mail.
+- `imodel` (iModel): The model associated with the branch.
 
+### Method: `__init__`
 
-## Overview
-
-The `Branch` class extends the `BaseBranch` class within the `lionagi` system, incorporating additional functionalities for tool management, service integration, and advanced message handling specific to a conversation branch.
-
-## Class Definition
-
+**Signature**:
 ```python
-class Branch(BaseBranch):
+def __init__(
+    self,
+    system: System | None = None,
+    system_sender: str | None = None,
+    user: str | None = None,
+    messages: Pile = None,
+    progress: Progression = None,
+    tool_manager: ToolManager = None,
+    tools: Any = None,
+    imodel=None,
+)
 ```
 
-### Inherits From
-- `BaseBranch`: Inherits functionalities related to managing branches of conversation.
+**Parameters**:
+- `system` (System, optional): The system associated with the branch.
+- `system_sender` (str, optional): The sender of the system message.
+- `user` (str, optional): The user associated with the branch.
+- `messages` (Pile, optional): A pile of messages.
+- `progress` (Progression, optional): A progression of messages.
+- `tool_manager` (ToolManager, optional): A manager for handling tools.
+- `tools` (Any, optional): Tools to be registered with the tool manager.
+- `imodel` (iModel, optional): The model associated with the branch.
 
-## Constructor
+**Description**:
+Initializes a new instance of the `Branch` class.
 
+### Method: `set_system`
+
+**Signature**:
 ```python
-def __init__(self, branch_name=None, system=None, messages=None, service=None, sender=None, llmconfig=None, tools=None, datalogger=None, persist_path=None, instruction_sets=None, tool_manager=None, **kwargs):
+def set_system(self, system=None, sender=None) -> None
 ```
 
-Initializes a new instance of the `Branch` class with enhanced features for conversation management.
+**Parameters**:
+- `system` (System, optional): The system message to set.
+- `sender` (str, optional): The sender of the system message.
 
-### Parameters
+**Description**:
+Sets the system message for the branch.
 
-- `branch_name`: Optional name for the branch.
-- `system`: System message or configuration.
-- `messages`: Initial set of messages as a `pandas.DataFrame`.
-- [[API Utilities#^4350a9|service]]: External service integration, e.g., OpenAI.
-- `sender`: Default sender identifier for messages. ^fc105b
-- `llmconfig`: Configuration for language models or external APIs.
-- [[Base Component#^0c90e6|tools]]: Collection of tools to be registered with the branch.
-- `datalogger`: A `DataLogger` instance for logging branch operations.
-- `persist_path`: Filesystem path for data persistence.
-- `instruction_sets`: Sets of instructions for managing conversation flows.
-- [[Tool Manager]]: An instance of `ToolManager` for managing tools within the branch.
-- `**kwargs`: Additional keyword arguments passed to the base class constructor.
+### Method: `add_message`
 
-## Factory Methods
-
-### from_csv
-
+**Signature**:
 ```python
-@classmethod
-def from_csv(cls, filepath, branch_name=None, service=None, llmconfig=None, tools=None, datalogger=None, persist_path=None, instruction_sets=None, tool_manager=None, read_kwargs=None, **kwargs):
+def add_message(
+    self,
+    *,
+    system=None,
+    instruction=None,
+    context=None,
+    assistant_response=None,
+    function=None,
+    arguments=None,
+    func_outputs=None,
+    action_request=None,
+    action_response=None,
+    images=None,
+    sender=None,
+    recipient=None,
+    requested_fields=None,
+    metadata: dict | None = None,
+    **kwargs,
+) -> bool
 ```
 
-Creates an instance of `Branch` from a CSV file, loading messages and configurations.
+**Parameters**:
+- `system` (Any, optional): The system node (JSON serializable).
+- `instruction` (Any, optional): The instruction node (JSON serializable).
+- `context` (Any, optional): Additional context (JSON serializable).
+- `assistant_response` (Any, optional): The assistant's response (JSON serializable).
+- `function` (Any, optional): The function associated with the message.
+- `arguments` (Any, optional): The arguments for the function.
+- `func_outputs` (Any, optional): The outputs of the function.
+- `action_request` (Any, optional): The action request node.
+- `action_response` (Any, optional): The action response node.
+- `sender` (str, optional): The sender of the message.
+- `recipient` (str, optional): The recipient of the message.
+- `requested_fields` (dict[str, str], optional): Requested fields for the message.
+- `metadata` (dict, optional): Extra metadata for the message.
+- `kwargs`: Additional context fields.
 
-### from_json
+**Return Values**:
+- `bool`: True if the message was successfully added, else False.
 
+**Description**:
+Adds a message to the branch.
+
+### Method: `to_chat_messages`
+
+**Signature**:
 ```python
-@classmethod
-def from_json(cls, filepath, branch_name=None, service=None, llmconfig=None, tools=None, datalogger=None, persist_path=None, instruction_sets=None, tool_manager=None, read_kwargs=None, **kwargs):
+def to_chat_messages(self) -> list[dict[str, Any]]
 ```
 
-Creates an instance of `Branch` from a JSON file, loading messages and configurations.
+**Return Values**:
+- `list[dict[str, Any]]`: A list of chat messages.
 
-## Instance Methods
+**Description**:
+Converts the messages to chat message format.
 
-### messages_describe
+### Method: `_remove_system`
 
+**Signature**:
 ```python
-def messages_describe(self) -> Dict[str, Any]:
+def _remove_system(self) -> None
 ```
 
-Provides a detailed summary of the branch, including messages, tools, and instruction sets.
+**Description**:
+Removes the system message from the branch.
 
-### has_tools
+### Method: `clear`
 
+**Signature**:
+```python
+def clear(self) -> None
+```
+
+**Description**:
+Clears all messages and progression in the branch.
+
+### Method: `has_tools`
+
+**Signature**:
 ```python
 @property
-def has_tools(self) -> bool:
+def has_tools(self) -> bool
 ```
 
-Indicates whether the branch has any registered tools.
+**Return Values**:
+- `bool`: True if the branch has tools, else False.
 
+**Description**:
+Checks if the branch has tools.
 
-### merge_branch
+### Method: `register_tools`
 
+**Signature**:
 ```python
-def merge_branch(self, branch: "Branch", update: bool = True) -> None:
+def register_tools(self, tools) -> None
 ```
 
-Merges another branch into this one, combining messages, datalogger contents, and optionally instruction sets and tools.
+**Parameters**:
+- `tools` (Any): The tools to register.
 
-### register_tools
+**Description**:
+Registers tools with the tool manager.
 
+### Method: `delete_tools`
+
+**Signature**:
 ```python
-def register_tools(self, tools: Union[Tool, List[Tool]]) -> None:
+def delete_tools(self, tools, verbose: bool = True) -> bool
 ```
 
-Registers a tool or a list of tools with the branch.
+**Parameters**:
+- `tools` (Any): The tools to delete.
+- `verbose` (bool, optional): Whether to print deletion status.
 
-### delete_tools
+**Return Values**:
+- `bool`: True if tools were successfully deleted, else False.
 
+**Description**:
+Deletes tools from the tool manager.
+
+### Method: `update_last_instruction_meta`
+
+**Signature**:
 ```python
-def delete_tools(self, tools: Union[bool, T, List[T], str, List[str], List[Dict[str, Any]]], verbose: bool = True) -> bool:
+def update_last_instruction_meta(self, meta)
 ```
 
-Deletes specified tools from the branch's tool manager.
+**Parameters**:
+- `meta` (dict): The metadata to update.
 
-### send
+**Description**:
+Updates metadata of the last instruction.
 
+### Method: `to_df`
+
+**Signature**:
 ```python
-def send(self, recipient: str, category: str, package: Any) -> None:
+def to_df(self) -> Any
 ```
 
-Sends a package to a recipient within the branch, categorizing the package for specific handling.
+**Return Values**:
+- `Any`: A DataFrame representation of the messages.
 
-### receive
+**Description**:
+Converts the messages to a DataFrame.
 
+### Method: `_is_invoked`
+
+**Signature**:
 ```python
-def receive(self, sender: str, messages: bool = True, tools: bool = True, service: bool = True, llmconfig: bool = True) -> None:
+def _is_invoked(self) -> bool
 ```
 
-Receives and processes packages sent by a sender, integrating the content into the branch as specified.
+**Return Values**:
+- `bool`: True if the last message is an ActionResponse, else False.
 
-### receive_all
+**Description**:
+Checks if the last message is an ActionResponse.
 
+### Method: `send`
+
+**Signature**:
 ```python
-def receive_all(self) -> None:
+def send(self, recipient: str, category: str, package: Any, request_source: str = None) -> None
 ```
 
-Processes all pending packages sent to the branch.
+**Parameters**:
+- `recipient` (str): The ID of the recipient.
+- `category` (str): The category of the mail.
+- `package` (Any): The package to send in the mail.
+- `request_source` (str, optional): The source of the request.
 
-### add_message (Overridden)
+**Description**:
+Sends a mail to a recipient.
 
+### Method: `receive`
+
+**Signature**:
 ```python
-def add_message(self, system: Optional[Union[dict, list, System]] = None, instruction: Optional[Union[dict, list, Instruction]] = None, context: Optional[Union[str, Dict[str, Any]]] = None, response: Optional[Union[dict, list, Response]] = None, sender: Optional[str] = None) -> None:
+def receive(self, sender: str, message: bool = True, tool: bool = True, imodel: bool = True) -> None
 ```
 
-Adds a message to the branch, extending `BaseBranch`'s method with additional functionalities.
+**Parameters**:
+- `sender` (str): The ID of the sender.
+- `message` (bool, optional): Whether to process message mails. Defaults to True.
+- `tool` (bool, optional): Whether to process tool mails. Defaults to True.
+- `imodel` (bool, optional): Whether to process imodel mails. Defaults to True.
 
-## ChatFlow Methods
+**Description**:
+Receives mail from a sender.
 
-> Uses [[MonoFlow]], to conduct interactions with [LLM](https://en.wikipedia.org/wiki/Large_language_model)
+**Exceptions Raised**:
+- `ValueError`: If the sender does not exist or the mail category is invalid.
 
-#### call_chatcompletion
+### Method: `receive_all`
 
-^c7d696
-
+**Signature**:
 ```python
-async def call_chatcompletion(self, sender=None, with_sender=False, **kwargs):
+def receive_all(self) -> None
 ```
 
-Asynchronously invokes chat completion actions within the branch.
-
-#### chat
-
-```python
-async def chat(self, instruction: Union[Instruction, str], context: Optional[Any] = None, sender: Optional[str] = None, system: Optional[Union[System, str, Dict[str, Any]]] = None, tools: Union[bool, T, List[T], str, List[str]] = False, out: bool = True, invoke: bool = True, **kwargs) -> Any:
-```
-
-Conducts an asynchronous chat flow within the branch based on the given instruction and context.
-
-#### ReAct
-
-```python
-async def ReAct(self, instruction: Union[Instruction, str], context=None, sender=None, system=None, tools=None, num_rounds: int = 1, **kwargs):
-```
-
-Performs an asynchronous reaction to an instruction, potentially involving multiple rounds of conversation.
-
-#### auto_followup
-
-```python
-async def auto_followup(self, instruction: Union[Instruction, str], context=None, sender=None, system=None, tools: Union[bool, T, List[T], str, List[str], List[Dict]] = False, max_followup: int = 3, out=True, **kwargs) -> None:
-```
-
-Automatically follows up on a conversation flow asynchronously, respecting a maximum number of follow-ups.
+**Description**:
+Receives mail from all senders.

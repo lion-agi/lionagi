@@ -57,7 +57,7 @@ def dir_to_path(
 
 
 def dir_to_nodes(
-    dir: str,
+    dir_: str,
     ext: Union[List[str], str],
     recursive: bool = False,
     flatten: bool = True,
@@ -84,7 +84,7 @@ def dir_to_nodes(
         # converting them into Node objects.
     """
 
-    path_list = dir_to_path(dir, ext, recursive, flatten)
+    path_list = dir_to_path(dir=dir_, ext=ext, recursive=recursive, flatten=flatten)
     files_info = func_call.lcall(path_list, read_text, clean=clean_text)
     return func_call.lcall(files_info, lambda x: Node(content=x[0], metadata=x[1]))
 
@@ -202,9 +202,9 @@ def read_text(filepath: str, clean: bool = True) -> Tuple[str, dict]:
             content = f.read()
             if clean:
                 # Define characters to replace and their replacements
-                replacements = {"\\": " ", "\n": " ", "\t": " ", "  ": " ", "'": " "}
+                replacements = {"\\": "", "\n\n": "\n"}
                 for old, new in replacements.items():
-                    content = content.replace(old, new)
+                    content = content.replace(old, new).strip()
             metadata = _get_metadata()
             return content, metadata
     except Exception as e:

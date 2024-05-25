@@ -21,6 +21,7 @@ registered individually or in batches, and invoked using function names, JSON
 strings, or specialized objects.
 """
 
+import inspect
 from functools import singledispatchmethod
 from typing import Any, Callable, List, Union, Tuple
 from lionagi.libs import ParseUtil
@@ -47,7 +48,19 @@ class ToolManager(Actionable):
         """
         self.registry = registry or {}
 
-    def _register_tool(self, tool: Tool | Callable):
+    def __contains__(self, tool) -> bool:
+        if isinstance(tool, Tool):
+            return tool.name in self.registry
+
+        elif isinstance(tool, str):
+            return tool in self.registry
+
+        elif inspect.isfunction(tool):
+            return tool.__name__ in self.registry
+
+        return False
+
+    def _register_tool(self, tool: Tool | Callable, update: bool = False) -> bool:
         """
         Registers a single tool or multiple tools based on the input type.
 
@@ -57,14 +70,20 @@ class ToolManager(Actionable):
         Raises:
             TypeError: If the tools argument type is unsupported.
         """
+        if not update and tool in self:
+            raise ValueError(f"Function {tool.name} is already registered.")
         if isinstance(tool, Callable):
             tool = func_to_tool(tool)[0]
         if not isinstance(tool, Tool):
             raise TypeError("Please register a Tool object.")
-        if tool.name in self.registry:
-            raise ValueError(f"Function {tool.name} is already registered.")
         self.registry[tool.name] = tool
         return True
+
+    def update_tools(self, tools: list | Tool | Callable):
+        if isinstance(tools, Tool) or isinstance(tools, Callable):
+            return self._register_tool(tools, update=True)
+        else:
+            return all(lcall(tools, self._register_tool, update=True))
 
     def register_tools(self, tools: list | Tool | Callable):
         """
@@ -273,7 +292,7 @@ def func_to_tool(
     func_: Union[Callable, List[Callable]],
     parser: Union[Callable, List[Callable]] = None,
     docstring_style: str = "google",
-    **kwargs
+    **kwargs,
 ) -> List[Tool]:
     """
     Converts functions to Tool objects, optionally associating parsers with each function
@@ -318,7 +337,7 @@ def func_to_tool(
                 function=_f,
                 schema_=ParseUtil._func_to_schema(_f, style=docstring_style),
                 parser=parsers[idx] if len(parsers) > 1 else parsers[0],
-                **kwargs
+                **kwargs,
             )
 
             fs.append(f_)
@@ -329,7 +348,7 @@ def func_to_tool(
             lambda _f: Tool(
                 function=_f,
                 schema_=ParseUtil._func_to_schema(_f, style=docstring_style),
-                **kwargs
+                **kwargs,
             ),
         )
 

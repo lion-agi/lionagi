@@ -86,11 +86,11 @@ class MappingRule(ChoiceRule):
                     return StringMatch.force_validate_dict(value, keys=self.keys)
                 except Exception as e:
                     raise ValueError("Invalid dict keys.") from e
-                
+
         else:
             try:
                 return ParseUtil.fuzzy_parse_json(value)
             except Exception as e:
                 raise ValueError("Invalid dict keys.") from e
-            
+
         return value

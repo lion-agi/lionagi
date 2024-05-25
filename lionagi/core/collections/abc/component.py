@@ -22,7 +22,7 @@ from functools import singledispatchmethod
 from typing import Any, TypeVar, Type, TypeAlias, Union
 
 from pandas import DataFrame, Series
-from pydantic import BaseModel, Field, ValidationError, AliasChoices
+from pydantic import BaseModel, Field, ValidationError, AliasChoices, field_serializer
 
 from lionagi.libs import ParseUtil, SysUtil
 from lionagi.libs.ln_convert import strip_lower, to_dict, to_str
@@ -33,6 +33,8 @@ from .exceptions import FieldError, LionTypeError, LionValueError
 from .util import base_lion_fields, llama_meta_fields, lc_meta_fields
 
 T = TypeVar("T")
+
+_init_class = {}
 
 
 class Element(BaseModel, ABC):
@@ -59,6 +61,15 @@ class Element(BaseModel, ABC):
         alias="created",
         validation_alias=AliasChoices("created_on", "creation_date"),
     )
+
+    def __init_subclass__(cls, **kwargs):
+        super().__init_subclass__(**kwargs)
+        if cls.__name__ not in _init_class:
+            _init_class[cls.__name__] = cls
+
+    # element is always true
+    def __bool__(self):
+        return True
 
 
 class Component(Element, ABC):
@@ -96,6 +107,22 @@ class Component(Element, ABC):
         description="The optional content of the node.",
         validation_alias=AliasChoices("text", "page_content", "chunk_content", "data"),
     )
+
+    embedding: list[float] = Field(
+        default=[],
+        description="The optional embedding of the node.",
+    )
+
+    @staticmethod
+    def _validate_embedding(value: Any) -> list:
+        if not value:
+            return []
+        if isinstance(value, str):
+            string_elements = value.strip("[]").split(", ")
+
+            # Convert each string element to a float
+            return [float(element) for element in string_elements]
+        return value
 
     class Config:
         """Model configuration settings."""
@@ -202,6 +229,11 @@ class Component(Element, ABC):
         """Create a Component instance from a dictionary."""
         try:
             dict_ = {**obj, **kwargs}
+            if "embedding" in dict_:
+                dict_["embedding"] = cls._validate_embedding(dict_["embedding"])
+
+            if "lion_class" in dict_:
+                cls = _init_class.get(dict_.pop("lion_class"), cls)
 
             if "lc" in dict_:
                 dict_ = cls._process_langchain_dict(dict_)
@@ -369,6 +401,7 @@ class Component(Element, ABC):
                 dict_[field_name] = getattr(self, field_name, None)
 
         dict_.pop("extra_fields", None)
+        dict_["lion_class"] = self.class_name
         return dict_
 
     def to_xml(self, *args, **kwargs) -> str:
@@ -450,8 +483,10 @@ class Component(Element, ABC):
             self._meta_insert(indices, value)
         nset(self.metadata, indices, value)
 
-    def _meta_get(self, indices):
-        return nget(self.metadata, indices, None)
+    def _meta_get(self, indices, default=...):
+        if default != ...:
+            return nget(self.metadata, indices=indices, default=default)
+        return nget(self.metadata, indices)
 
     def __setattr__(self, name, value):
         if name == "metadata":
@@ -477,6 +512,9 @@ class Component(Element, ABC):
             value = a
 
         self.__setattr__(field, value)
+
+    def add_field(self, field, value, annotation=None, **kwargs):
+        self._add_field(field, annotation, value=value, **kwargs)
 
     @property
     def _all_fields(self):
@@ -547,12 +585,10 @@ class Component(Element, ABC):
 
     def __str__(self):
         dict_ = self.to_dict()
-        dict_["class_name"] = self.class_name
         return Series(dict_).__str__()
 
     def __repr__(self):
         dict_ = self.to_dict()
-        dict_["class_name"] = self.class_name
         return Series(dict_).__repr__()
 
     def __len__(self):

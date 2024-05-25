@@ -39,7 +39,6 @@ class Record(ABC):
         keys: Return an iterator over the ln_id of items in the record.
         values: Return an iterator over items in the record.
         get: Retrieve an item by identifier.
-        __bool__: Return True if the record is not empty.
         __getitem__: Return an item using a LionIDable identifier.
         __setitem__: Add or update an item in the record.
         __contains__: Check if an item is in the record.
@@ -70,10 +69,6 @@ class Record(ABC):
         Returns:
             T: The retrieved item or the default value.
         """
-
-    def __bool__(self) -> bool:
-        """Always True, as the record itself is an object"""
-        return True
 
     @abstractmethod
     def __getitem__(self, item: LionIDable) -> T:

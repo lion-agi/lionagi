@@ -18,6 +18,19 @@ from .base import BaseUnitForm, Field
 
 
 class PredictTemplate(BaseUnitForm):
+    """
+    A template for predicting the next sentence(s) based on given instructions and context.
+
+    Inherits from `BaseUnitForm` and adds fields and methods specific to prediction tasks.
+
+    Attributes:
+        confidence_score (float | None): A numeric score between 0 to 1 formatted to 2 decimal places, indicating confidence in the prediction.
+        reason (str | None): A brief reason for the given output.
+        template_name (str): The name of the template.
+        num_sentences (int): The number of sentences to predict.
+        prediction (None | str | list): The predicted sentence(s) or desired output.
+        assignment (str): A string representing the task assignment for the prediction.
+    """
 
     confidence_score: float | None = Field(
         None,
@@ -48,6 +61,12 @@ class PredictTemplate(BaseUnitForm):
 
     @property
     def answer(self):
+        """
+        Gets the prediction attribute.
+
+        Returns:
+            None | str | list: The predicted sentence(s) or desired output.
+        """
         return getattr(self, "prediction", None)
 
     def __init__(
@@ -60,6 +79,17 @@ class PredictTemplate(BaseUnitForm):
         reason=False,
         **kwargs,
     ):
+        """
+        Initializes a new instance of the PredictTemplate class.
+
+        Args:
+            instruction (str, optional): Additional instructions for the prediction.
+            context (str, optional): Additional context for the prediction.
+            num_sentences (int, optional): The number of sentences to predict. Defaults to 2.
+            confidence_score (bool, optional): Whether to include a confidence score. Defaults to False.
+            reason (bool, optional): Whether to include a reasoning field. Defaults to False.
+            **kwargs: Additional keyword arguments.
+        """
 
         super().__init__(**kwargs)
 

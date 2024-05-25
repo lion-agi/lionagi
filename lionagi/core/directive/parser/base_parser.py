@@ -92,10 +92,19 @@ class BaseDirectiveParser:
         self.next_token()
 
     def skip_semicolon(self):
+        """Skips a semicolon token if it is the current token."""
         if self.current_token and self.current_token.value == ";":
             self.next_token()
 
     def parse_expression(self):
+        """Parses an expression until a semicolon is encountered.
+
+        Returns:
+            str: The parsed expression as a string.
+
+        Raises:
+            SyntaxError: If a semicolon is not found at the end of the expression.
+        """
         expr = ""
         while self.current_token and self.current_token.value != ";":
             expr += self.current_token.value + " "
@@ -107,6 +116,11 @@ class BaseDirectiveParser:
         return expr.strip()
 
     def parse_if_block(self):
+        """Parses a block of statements for an IF condition.
+
+        Returns:
+            list: The parsed block of statements as a list of strings.
+        """
         block = []
         # Parse the block until 'ELSE', 'ENDIF', ensuring not to include semicolons as part of the block
         while self.current_token and self.current_token.value not in ("ENDIF", "ELSE"):
@@ -119,6 +133,14 @@ class BaseDirectiveParser:
         return block
 
     def parse_if_statement(self):
+        """Parses an IF statement.
+
+        Returns:
+            IfNode: The parsed IF statement as an IfNode object.
+
+        Raises:
+            SyntaxError: If the IF statement is not properly formed.
+        """
         if self.current_token.type != "KEYWORD" or self.current_token.value != "IF":
             raise SyntaxError("Expected IF statement")
         self.next_token()  # Skip 'IF'
@@ -141,6 +163,14 @@ class BaseDirectiveParser:
         return IfNode(condition, true_block, false_block)
 
     def parse_for_statement(self):
+        """Parses a FOR statement.
+
+        Returns:
+            ForNode: The parsed FOR statement as a ForNode object.
+
+        Raises:
+            SyntaxError: If the FOR statement is not properly formed.
+        """
         if self.current_token.type != "KEYWORD" or self.current_token.value != "FOR":
             raise SyntaxError("Expected FOR statement")
         self.next_token()  # Skip 'FOR'
@@ -169,6 +199,11 @@ class BaseDirectiveParser:
         return ForNode(iterator, collection, true_block)
 
     def parse_for_block(self):
+        """Parses a block of statements for a FOR loop.
+
+        Returns:
+            list: The parsed block of statements as a list of strings.
+        """
         block = []
         # Skip initial 'DO' if present
         if self.current_token and self.current_token.value == "DO":
@@ -189,6 +224,14 @@ class BaseDirectiveParser:
         return block
 
     def parse_try_statement(self):
+        """Parses a TRY statement.
+
+        Returns:
+            TryNode: The parsed TRY statement as a TryNode object.
+
+        Raises:
+            SyntaxError: If the TRY statement is not properly formed.
+        """
         if self.current_token.type != "KEYWORD" or self.current_token.value != "TRY":
             raise SyntaxError("Expected TRY statement")
         self.next_token()  # Skip 'TRY'
@@ -212,6 +255,14 @@ class BaseDirectiveParser:
         return TryNode(try_block, except_block)
 
     def parse_try_block(self, stop_keyword):
+        """Parses a block of statements for a TRY or EXCEPT clause.
+
+        Args:
+            stop_keyword (str): The keyword that indicates the end of the block.
+
+        Returns:
+            list: The parsed block of statements as a list of strings.
+        """
         block = []
         while self.current_token and self.current_token.value != stop_keyword:
             if self.current_token.value == "DO":

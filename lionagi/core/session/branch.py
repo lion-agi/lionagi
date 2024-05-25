@@ -14,9 +14,8 @@ See the License for the specific language governing permissions and
 limitations under the License.
 """
 
-from collections import deque
 from typing import Any
-from lionagi.libs.ln_convert import is_same_dtype, to_dict, to_df
+from lionagi.libs.ln_convert import is_same_dtype, to_df
 from lionagi.core.collections.abc import Field
 from lionagi.core.collections import (
     pile,
@@ -28,6 +27,7 @@ from lionagi.core.collections import (
 )
 from lionagi.core.generic.node import Node
 from lionagi.core.action import Tool, ToolManager
+from lionagi.core.mail import Mail, Package
 from lionagi.core.message import (
     create_message,
     System,
@@ -35,9 +35,11 @@ from lionagi.core.message import (
     AssistantResponse,
     ActionRequest,
     ActionResponse,
+    RoledMessage,
 )
 
 from lionagi.core.session.directive_mixin import DirectiveMixin
+
 
 class Branch(Node, DirectiveMixin):
     """
@@ -58,7 +60,7 @@ class Branch(Node, DirectiveMixin):
     tool_manager: ToolManager = Field(None)
     system: System = Field(None)
     user: str = Field(None)
-    mailbox: Exchange = Field(None)
+    mailbox: Exchange[Mail] = Field(None)
     imodel: iModel = Field(None)
 
     def __init__(
@@ -70,7 +72,6 @@ class Branch(Node, DirectiveMixin):
         progress: Progression = None,
         tool_manager: ToolManager = None,
         tools: Any = None,
-        mailbox=None,
         imodel=None,
     ):
         """
@@ -84,7 +85,6 @@ class Branch(Node, DirectiveMixin):
             progress (Progression, optional): A progression of messages.
             tool_manager (ToolManager, optional): A manager for handling tools.
             tools (Any, optional): Tools to be registered with the tool manager.
-            mailbox (Exchange, optional): An exchange for managing mail.
             imodel (iModel, optional): The model associated with the branch.
         """
         super().__init__()
@@ -94,23 +94,30 @@ class Branch(Node, DirectiveMixin):
         self.messages = messages or pile({})
         self.progress = progress or progression()
         self.tool_manager = tool_manager or ToolManager()
-        self.mailbox = mailbox or Exchange()
+        self.mailbox = Exchange()
         self.imodel = imodel or iModel()
         if tools:
             self.tool_manager.register_tools(tools)
+        self.set_system(system=system, sender=system_sender)
+        # system = system or "You are a helpful assistant, let's think step by step"
+        # self.add_message(system=system, sender=system_sender)
 
-        system = system or "You are a helpful assistant, let's think step by step"
-        self.add_message(system=system, sender=system_sender)
-
-    def set_system(self, system=None) -> None:
+    def set_system(self, system=None, sender=None) -> None:
         """
         Sets the system message.
 
         Args:
             system (System): The system message to set.
+            sender (str, optional): The sender of the system message.
         """
         system = system or "You are a helpful assistant, let's think step by step"
-        self.add_message(system=system)
+        if len(self.progress) == 0:
+            self.add_message(system=system, sender=sender)
+        else:
+            _msg = System(system=system, sender=sender)
+            _msg.recipient = self.ln_id
+            self._remove_system()
+            self.system = _msg
 
     def add_message(
         self,
@@ -124,6 +131,7 @@ class Branch(Node, DirectiveMixin):
         func_outputs=None,
         action_request=None,  # ActionRequest node
         action_response=None,  # ActionResponse node
+        images=None,
         sender=None,  # str
         recipient=None,  # str
         requested_fields=None,  # dict[str, str]
@@ -154,7 +162,7 @@ class Branch(Node, DirectiveMixin):
         """
         if assistant_response:
             sender = self.ln_id
-        
+
         _msg = create_message(
             system=system,
             instruction=instruction,
@@ -166,18 +174,19 @@ class Branch(Node, DirectiveMixin):
             action_request=action_request,
             action_response=action_response,
             sender=sender,
+            images=images,
             recipient=recipient,
             requested_fields=requested_fields,
             **kwargs,
         )
-    
+
         if isinstance(_msg, System):
             _msg.recipient = self.ln_id  # the branch itself, system is to the branch
             self._remove_system()
             self.system = _msg
 
         if isinstance(_msg, Instruction):
-            _msg.sender = sender or self.user or "user"
+            _msg.sender = sender or self.user
             _msg.recipient = recipient or self.ln_id
 
         if isinstance(_msg, AssistantResponse):
@@ -230,36 +239,6 @@ class Branch(Node, DirectiveMixin):
             bool: True if the branch has tools, else False.
         """
         return self.tool_manager.registry != {}
-
-    def merge_branch(
-        self, branch: "Branch", update_tool: bool = False, update_model=False
-    ) -> None:
-        """
-        Merges another branch into this branch.
-
-        Args:
-            branch (Branch): The branch to merge.
-            update_tool (bool, optional): Whether to update the tool manager.
-            update_model (bool, optional): Whether to update the model.
-
-        Raises:
-            ValueError: If the branch to be merged has no model and update_model is True.
-        """
-        if update_model and not branch.imodel:
-            raise ValueError(
-                "Cannot update model: The branch to be merged has no model"
-            )
-
-        if self.messages.include(branch.messages) and self.progress.include(
-            branch.messages
-        ):
-            self.datalogger.extend(branch.datalogger.log)
-
-            if update_tool:
-                self.tool_manager.registry.update(branch.tool_manager.registry)
-
-            if update_model:
-                self.imodel = branch.imodel
 
     def register_tools(self, tools) -> None:
         """
@@ -350,61 +329,87 @@ class Branch(Node, DirectiveMixin):
         """
         return isinstance(self.messages[-1], ActionResponse)
 
-    # def send(self, recipient: str, category: str, package: Any) -> None:
-    #     mail = Mail(
-    #         sender=self.ln_id,
-    #         recipient=recipient,
-    #         category=category,
-    #         package=package,
-    #     )
-    #     self.mailbox.include(mail, direction="out")
+    def send(
+        self, recipient: str, category: str, package: Any, request_source: str = None
+    ) -> None:
+        """
+        Sends a mail to a recipient.
 
-    # # TODO: need to modify this method to include the new message types
-    # def receive(
-    #     self,
-    #     sender: str,
-    #     messages: bool = True,
-    #     tools: bool = True,
-    #     service: bool = True,
-    #     llmconfig: bool = True,
-    # ) -> None:
-    #     skipped_requests = deque()
-    #     if sender not in self.pending_ins:
-    #         raise ValueError(f"No package from {sender}")
-    #     while self.pending_ins[sender]:
-    #         mail_ = self.pending_ins[sender].popleft()
+        Args:
+            recipient (str): The ID of the recipient.
+            category (str): The category of the mail.
+            package (Any): The package to send in the mail.
+            request_source (str): The source of the request.
+        """
+        pack = Package(
+            category=category, package=package, request_source=request_source
+        )
+        mail = Mail(
+            sender=self.ln_id,
+            recipient=recipient,
+            package=pack,
+        )
+        self.mailbox.include(mail, "out")
 
-    #         # if mail_.category == "messages" and messages:
-    #         #     if not isinstance(mail_.package, dataframe.ln_DataFrame):
-    #         #         raise ValueError("Invalid messages format")
-    #         #     MessageUtil.validate_messages(mail_.package)
-    #         #     self.messages = self.messages.merge(mail_.package, how="outer")
+    def receive(
+        self,
+        sender: str,
+        message: bool = True,
+        tool: bool = True,
+        imodel: bool = True,
+    ) -> None:
+        """
+        Receives mail from a sender.
 
-    #         if mail_.category == "tools" and tools:
-    #             if not isinstance(mail_.package, Tool):
-    #                 raise ValueError("Invalid tools format")
-    #             self.tool_manager.register_tools([mail_.package])
+        Args:
+            sender (str): The ID of the sender.
+            message (bool, optional): Whether to process message mails. Defaults to True.
+            tool (bool, optional): Whether to process tool mails. Defaults to True.
+            imodel (bool, optional): Whether to process imodel mails. Defaults to True.
 
-    #         elif mail_.category == "provider" and service:
-    #             from lionagi.libs.ln_api import BaseService
+        Raises:
+            ValueError: If the sender does not exist or the mail category is invalid.
+        """
+        skipped_requests = progression()
+        if sender not in self.mailbox.pending_ins.keys():
+            raise ValueError(f"No package from {sender}")
+        while self.mailbox.pending_ins[sender].size() > 0:
+            mail_id = self.mailbox.pending_ins[sender].popleft()
+            mail: Mail = self.mailbox.pile[mail_id]
 
-    #             if not isinstance(mail_.package, BaseService):
-    #                 raise ValueError("Invalid provider format")
-    #             self.service = mail_.package
+            if mail.category == "message" and message:
+                if not isinstance(mail.package.package, RoledMessage):
+                    raise ValueError("Invalid message format")
+                new_message = mail.package.package.clone()
+                new_message.sender = mail.sender
+                new_message.recipient = self.ln_id
+                self.messages.include(new_message)
+                self.progress.include(new_message)
+                self.mailbox.pile.pop(mail_id)
 
-    #         elif mail_.category == "llmconfig" and llmconfig:
-    #             if not isinstance(mail_.package, dict):
-    #                 raise ValueError("Invalid llmconfig format")
-    #             self.llmconfig.update(mail_.package)
+            elif mail.category == "tool" and tool:
+                if not isinstance(mail.package.package, Tool):
+                    raise ValueError("Invalid tools format")
+                self.tool_manager.register_tools(mail.package.package)
+                self.mailbox.pile.pop(mail_id)
 
-    #         else:
-    #             skipped_requests.append(mail_)
+            elif mail.category == "imodel" and imodel:
+                if not isinstance(mail.package.package, iModel):
+                    raise ValueError("Invalid iModel format")
+                self.imodel = mail.package.package
+                self.mailbox.pile.pop(mail_id)
 
-    #     self.mailbox.pending_ins[sender] = skipped_requests
+            else:
+                skipped_requests.append(mail)
 
-    #     if len(self.mailbox.pending_ins[sender]) == 0:
-    #         self.mailbox.pending_ins.pop(sender)
+        self.mailbox.pending_ins[sender] = skipped_requests
 
-    # def receive_all(self) -> None:
-    #     for key in list(self.mailbox.pending_ins.keys()):
-    #         self.receive(key)
+        if self.mailbox.pending_ins[sender].size() == 0:
+            self.mailbox.pending_ins.pop(sender)
+
+    def receive_all(self) -> None:
+        """
+        Receives mail from all senders.
+        """
+        for key in list(self.mailbox.pending_ins.keys()):
+            self.receive(key)

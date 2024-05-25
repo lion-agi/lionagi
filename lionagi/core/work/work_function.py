@@ -33,6 +33,18 @@ class WorkFunction:
     def __init__(
         self, assignment, function, retry_kwargs=None, guidance=None, capacity=10
     ):
+        """
+        Initializes a WorkFunction instance.
+
+        Args:
+            assignment (str): The assignment description of the work function.
+            function (Callable): The function to be performed.
+            retry_kwargs (dict, optional): The retry arguments for the function.
+                Defaults to None.
+            guidance (str, optional): The guidance or documentation for the function.
+                Defaults to None.
+            capacity (int, optional): The capacity of the work log. Defaults to 10.
+        """
         self.assignment = assignment
         self.function = function
         self.retry_kwargs = retry_kwargs or {}
@@ -41,15 +53,40 @@ class WorkFunction:
 
     @property
     def name(self):
+        """
+        Gets the name of the function.
+
+        Returns:
+            str: The name of the function.
+        """
         return self.function.__name__
 
     def is_progressable(self):
+        """
+        Checks if the work function is progressable.
+
+        Returns:
+            bool: True if the work function is progressable, otherwise False.
+        """
         return self.worklog.pending_work and not self.worklog.stopped
 
     async def perform(self, *args, **kwargs):
+        """
+        Performs the work function with retry logic.
+
+        Args:
+            *args: Positional arguments for the function.
+            **kwargs: Keyword arguments for the function.
+
+        Returns:
+            Any: The result of the function call.
+        """
         kwargs = {**self.retry_kwargs, **kwargs}
         return await rcall(self.function, *args, timing=True, **kwargs)
 
     async def forward(self):
+        """
+        Forwards the work log and processes the work queue.
+        """
         await self.worklog.forward()
         await self.worklog.queue.process()

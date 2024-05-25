@@ -1,25 +1,219 @@
----
-tags:
-  - Core
-  - Session
-  - LLM
-  - Tool
-  - Flow
-  - Branch
-  - Mail
-created: 2024-02-26
-completed: true
----
-The Session guide within the LionAGI API reference is an essential resource for developers working with conversational AI applications. It provides in-depth documentation on the structure and management of sessions, branches, and their interactions, serving as the foundation for creating dynamic and context-aware conversational experiences. This guide is divided into three main sections, each covering a critical aspect of session management in LionAGI: `BaseBranch`, `Branch`, and `Session`. Below is a brief overview of what each section entails and how they contribute to the overall functionality of LionAGI sessions.
 
-### Session Guide Overview
+### Class: `Session`
 
-- **[[BaseBranch]]**: At the core of LionAGI's session management is the `BaseBranch` class, which outlines the fundamental properties and methods shared across different types of branches within a session. This section delves into the base functionalities that enable branch operations, including message handling, tool registration, and configuration management. Understanding the `BaseBranch` is key to comprehending how branches operate and interact within the broader context of a session.
+**Description**:
+`Session` is a class for managing branches, mail transfer, and interactions with a model. It encapsulates the entire lifecycle of a session, including the creation and manipulation of branches, the collection and sending of mail, and handling chat and directive interactions.
 
-- **[[Branch]]**: Building on the `BaseBranch`, the `Branch` class introduces more specialized functionalities tailored to managing distinct conversational flows or computational tasks within a session. This section covers how to create, manipulate, and utilize branches to facilitate parallel processing, experimental setups, or divergent conversational paths. It includes detailed information on branch-specific operations, such as message filtering, information exchange between branches, and branch merging and deletion.
+### Attributes:
 
-- **[[Sessions]]**: The `Session` class encapsulates the entire session management system, orchestrating the interaction between multiple branches and providing a high-level interface for session initiation, management, and termination. This section explores the session's lifecycle, from creation and configuration through to conversational exchange and closure. It highlights how to leverage sessions to maintain context, manage conversational state, and integrate custom logic and AI model inferencing seamlessly.
+- `ln_id` (str): The unique identifier for the session.
+- `timestamp` (str): The timestamp when the session was created.
+- `system` (System): The default system message for the session.
+- `system_sender` (str): The sender of the system message.
+- `branches` (Pile[Branch]): The pile of branches in the session.
+- `mail_transfer` (Exchange): The exchange for managing mail transfer.
+- `mail_manager` (MailManager): The manager for handling mail.
+- `imodel` (iModel): The model associated with the session.
+- `user` (str): The user associated with the session.
+- `default_branch` (Branch): The default branch of the session.
 
-### Conclusion
+### Methods:
 
-The Session guide is a comprehensive resource designed to equip developers with the knowledge and tools necessary to effectively utilize LionAGI's session management capabilities. By familiarizing themselves with the [[BaseBranch]], [[Branch]], and [[Sessions]] sections, developers can master the art of creating rich, engaging, and contextually aware conversational AI applications. Whether you're managing complex conversational flows, incorporating custom functionalities, or aiming for scalable session handling, this guide provides the foundational knowledge and practical insights to achieve your development goals.
+#### `__init__`
+
+**Signature**:
+```python
+def __init__(
+    self,
+    system=None,  # the default system message for the session
+    branches: Any | None = None,
+    system_sender: str | None = None,
+    user: str | None = None,
+    imodel=None,
+):
+```
+
+**Parameters**:
+- `system` (System, optional): The default system message for the session.
+- `branches` (Any | None, optional): The initial branches for the session.
+- `system_sender` (str | None, optional): The sender of the system message.
+- `user` (str | None, optional): The user associated with the session.
+- `imodel` (iModel, optional): The model associated with the session.
+
+**Description**:
+Initializes a new session with the given parameters, setting up branches, mail transfer, mail manager, and the default branch.
+
+#### `_validate_branches`
+
+**Signature**:
+```python
+def _validate_branches(self, value):
+```
+
+**Parameters**:
+- `value` (Any): The input value to validate and convert.
+
+**Returns**:
+- `Pile[Branch]`: A pile of validated branches.
+
+**Raises**:
+- `ValueError`: If the input value contains non-Branch objects.
+
+**Description**:
+Validates and converts the branches input to a `Pile` of `Branch` objects.
+
+#### `new_branch`
+
+**Signature**:
+```python
+def new_branch(
+    self,
+    system: System | None = None,
+    system_sender: str | None = None,
+    user: str | None = None,
+    messages: Pile = None,
+    progress: Progression = None,
+    tool_manager: ToolManager = None,
+    tools: Any = None,
+    imodel=None,
+):
+```
+
+**Parameters**:
+- `system` (System, optional): The system message for the branch.
+- `system_sender` (str, optional): The sender of the system message.
+- `user` (str, optional): The user associated with the branch.
+- `messages` (Pile, optional): The pile of messages for the branch.
+- `progress` (Progression, optional): The progression of messages.
+- `tool_manager` (ToolManager, optional): The tool manager for the branch.
+- `tools` (Any, optional): The tools to register with the tool manager.
+- `imodel` (iModel, optional): The model associated with the branch.
+
+**Returns**:
+- `Branch`: The created branch.
+
+**Description**:
+Creates a new branch and adds it to the session.
+
+#### `delete_branch`
+
+**Signature**:
+```python
+def delete_branch(self, branch):
+```
+
+**Parameters**:
+- `branch` (Branch | str): The branch or its ID to delete.
+
+**Description**:
+Deletes a branch from the session.
+
+#### `split_branch`
+
+**Signature**:
+```python
+def split_branch(self, branch):
+```
+
+**Parameters**:
+- `branch` (Branch | str): The branch or its ID to split.
+
+**Returns**:
+- `Branch`: The newly created branch.
+
+**Description**:
+Splits a branch, creating a new branch with the same messages and tools.
+
+#### `change_default_branch`
+
+**Signature**:
+```python
+def change_default_branch(self, branch):
+```
+
+**Parameters**:
+- `branch` (Branch | str): The branch or its ID to set as the default.
+
+**Description**:
+Changes the default branch of the session.
+
+#### `collect`
+
+**Signature**:
+```python
+def collect(self, from_: Branch | str | Pile[Branch] | None = None):
+```
+
+**Parameters**:
+- `from_` (Branch | str | Pile[Branch], optional): The branches to collect mail from. If `None`, collects mail from all branches.
+
+**Description**:
+Collects mail from specified branches.
+
+#### `send`
+
+**Signature**:
+```python
+def send(self, to_: Branch | str | Pile[Branch] | None = None):
+```
+
+**Parameters**:
+- `to_` (Branch | str | Pile[Branch], optional): The branches to send mail to. If `None`, sends mail to all branches.
+
+**Description**:
+Sends mail to specified branches.
+
+#### `collect_send_all`
+
+**Signature**:
+```python
+def collect_send_all(self, receive_all=False):
+```
+
+**Parameters**:
+- `receive_all` (bool, optional): Whether to receive all mail for all branches.
+
+**Description**:
+Collects and sends mail for all branches, optionally receiving all mail.
+
+#### `chat`
+
+**Signature**:
+```python
+async def chat(self, *args, branch=None, **kwargs):
+```
+
+**Parameters**:
+- `branch` (Branch, optional): The branch to chat with. Defaults to the default branch.
+- `*args`: Positional arguments to pass to the chat method.
+- `**kwargs`: Keyword arguments to pass to the chat method.
+
+**Returns**:
+- `Any`: The result of the chat interaction.
+
+**Raises**:
+- `ValueError`: If the specified branch is not found in the session branches.
+
+**Description**:
+Initiates a chat interaction with a branch.
+
+#### `direct`
+
+**Signature**:
+```python
+async def direct(self, *args, branch=None, **kwargs):
+```
+
+**Parameters**:
+- `branch` (Branch, optional): The branch to interact with. Defaults to the default branch.
+- `*args`: Positional arguments to pass to the direct method.
+- `**kwargs`: Keyword arguments to pass to the direct method.
+
+**Returns**:
+- `Any`: The result of the direct interaction.
+
+**Raises**:
+- `ValueError`: If the specified branch is not found in the session branches.
+
+**Description**:
+Initiates a direct interaction with a branch.

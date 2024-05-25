@@ -9,6 +9,7 @@ from .litellm import LiteLLMService
 
 
 from lionagi.integrations.config.oai_configs import oai_schema
+from lionagi.integrations.config.openrouter_configs import openrouter_schema
 
 SERVICE_PROVIDERS_MAPPING = {
     "openai": {
@@ -17,7 +18,7 @@ SERVICE_PROVIDERS_MAPPING = {
     },
     "openrouter": {
         "service": OpenRouterService,
-        "schema": oai_schema,
+        "schema": openrouter_schema,
     },
     "litellm": {
         "service": LiteLLMService,

@@ -70,7 +70,7 @@ class ActionRequest(RoledMessage):
             sender=sender,
             recipient=recipient,
             content={"action_request": {"function": function, "arguments": arguments}},
-            **kwargs, 
+            **kwargs,
         )
         self.function = function
         self.arguments = arguments
@@ -83,6 +83,31 @@ class ActionRequest(RoledMessage):
             bool: True if the action request has a response, otherwise False.
         """
         return self.action_response is not None
+
+    def clone(self, **kwargs):
+        """
+        Creates a copy of the current ActionRequest object with optional additional arguments.
+
+        This method clones the current object, preserving its function and arguments.
+        It also retains the original `action_response` and metadata, while allowing
+        for the addition of new attributes through keyword arguments.
+
+        Args:
+            **kwargs: Optional keyword arguments to be included in the cloned object.
+
+        Returns:
+            ActionRequest: A new instance of the object with the same function, arguments,
+            and additional keyword arguments.
+        """
+        import json
+
+        arguments = json.dumps(self.arguments)
+        request_copy = ActionRequest(
+            function=self.function, arguments=json.loads(arguments), **kwargs
+        )
+        request_copy.action_response = self.action_response
+        request_copy.metadata["origin_ln_id"] = self.ln_id
+        return request_copy
 
 
 def _prepare_arguments(arguments):

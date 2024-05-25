@@ -23,7 +23,19 @@ from .unit_form import UnitForm
 from .unit_mixin import DirectiveMixin
 from .util import retry_kwargs
 
+
 class Unit(Directive, DirectiveMixin):
+    """
+    Unit is a class that extends Directive and DirectiveMixin to provide
+    advanced operations like chat, direct actions, and predictions using a
+    specific branch and model.
+
+    Attributes:
+        branch (Branch): The branch instance associated with the Unit.
+        imodel (iModel): The model instance used for the Unit.
+        form_template (Type[Form]): The form template to use for operations.
+        validator (Validator): The validator instance for response validation.
+    """
 
     default_template = UnitForm
 
@@ -59,8 +71,33 @@ class Unit(Directive, DirectiveMixin):
         use_annotation=True,
         return_branch=False,
         **kwargs,
-        
-):
+    ):
+        """
+        Asynchronously performs a chat operation.
+
+        Args:
+            instruction (str, optional): Instruction message.
+            context (str, optional): Context message.
+            system (str, optional): System message.
+            sender (str, optional): Sender identifier.
+            recipient (str, optional): Recipient identifier.
+            branch (Branch, optional): Branch instance.
+            requested_fields (list, optional): Fields requested in the response.
+            form (Form, optional): Form data.
+            tools (bool, optional): Flag indicating if tools should be used.
+            invoke_tool (bool, optional): Flag indicating if tools should be invoked.
+            return_form (bool, optional): Flag indicating if form should be returned.
+            strict (bool, optional): Flag indicating if strict validation should be applied.
+            rulebook (Rulebook, optional): Rulebook instance for validation.
+            imodel (iModel, optional): Model instance.
+            clear_messages (bool, optional): Flag indicating if messages should be cleared.
+            use_annotation (bool, optional): Flag indicating if annotations should be used.
+            return_branch (bool, optional): Flag indicating if branch should be returned.
+            kwargs: Additional keyword arguments.
+
+        Returns:
+            Any: The processed response.
+        """
         kwargs = {**retry_kwargs, **kwargs}
         return await rcall(
             self._chat,
@@ -107,13 +144,43 @@ class Unit(Directive, DirectiveMixin):
         select_choices=None,
         plan_num_step=None,
         predict_num_sentences=None,
-        directive: str=None,
-        **kwargs, 
+        directive: str = None,
+        **kwargs,
     ):
+        """
+        Asynchronously directs the operation based on the provided parameters.
+
+        Args:
+            instruction (str, optional): Instruction message.
+            context (str, optional): Context message.
+            form (Form, optional): Form data.
+            branch (Branch, optional): Branch instance.
+            tools (Any, optional): Tools to be used.
+            return_branch (bool, optional): Flag indicating if branch should be returned.
+            reason (bool, optional): Flag indicating if reason should be included.
+            predict (bool, optional): Flag indicating if prediction should be included.
+            score (Any, optional): Score parameters.
+            select (Any, optional): Select parameters.
+            plan (Any, optional): Plan parameters.
+            allow_action (bool, optional): Flag indicating if action should be allowed.
+            allow_extension (bool, optional): Flag indicating if extension should be allowed.
+            max_extension (int, optional): Maximum extension value.
+            confidence (Any, optional): Confidence parameters.
+            score_num_digits (int, optional): Number of digits for score.
+            score_range (tuple, optional): Range for score.
+            select_choices (list, optional): Choices for selection.
+            plan_num_step (int, optional): Number of steps for plan.
+            predict_num_sentences (int, optional): Number of sentences for prediction.
+            directive (str, optional): Directive for the operation.
+            kwargs: Additional keyword arguments.
+
+        Returns:
+            Any: The processed response.
+        """
         kwargs = {**retry_kwargs, **kwargs}
-        
+
         if not directive:
-        
+
             return await rcall(
                 self._direct,
                 instruction=instruction,
@@ -138,7 +205,7 @@ class Unit(Directive, DirectiveMixin):
                 predict_num_sentences=predict_num_sentences,
                 **kwargs,
             )
-            
+
         return await rcall(
             self._mono_direct,
             directive=directive,
@@ -148,15 +215,15 @@ class Unit(Directive, DirectiveMixin):
             tools=tools,
             **kwargs,
         )
-        
+
     async def select(self, *args, **kwargs):
         """
-        Asynchronously performs a select operation using the _select method with 
+        Asynchronously performs a select operation using the _select method with
         retry logic.
 
         Args:
             *args: Positional arguments to pass to the _select method.
-            **kwargs: Keyword arguments to pass to the _select method, including 
+            **kwargs: Keyword arguments to pass to the _select method, including
                 retry configurations.
 
         Returns:
@@ -170,12 +237,12 @@ class Unit(Directive, DirectiveMixin):
 
     async def predict(self, *args, **kwargs):
         """
-        Asynchronously performs a predict operation using the _predict method with 
+        Asynchronously performs a predict operation using the _predict method with
         retry logic.
 
         Args:
             *args: Positional arguments to pass to the _predict method.
-            **kwargs: Keyword arguments to pass to the _predict method, including 
+            **kwargs: Keyword arguments to pass to the _predict method, including
                 retry configurations.
 
         Returns:
@@ -188,13 +255,33 @@ class Unit(Directive, DirectiveMixin):
         return await rcall(self._predict, *args, **kwargs)
 
     async def score(self, *args, **kwargs):
-        from .template.score  import ScoreTemplate
+        """
+        Asynchronously performs a score operation using the _score method with retry logic.
+
+        Args:
+            *args: Positional arguments to pass to the _score method.
+            **kwargs: Keyword arguments to pass to the _score method, including retry configurations.
+
+        Returns:
+            Any: The result of the score operation.
+        """
+        from .template.score import ScoreTemplate
 
         kwargs = {**retry_kwargs, **kwargs}
         kwargs["template"] = kwargs.get("template", ScoreTemplate)
         return await rcall(self._score, *args, **kwargs)
 
     async def plan(self, *args, **kwargs):
+        """
+        Asynchronously performs a plan operation using the _plan method with retry logic.
+
+        Args:
+            *args: Positional arguments to pass to the _plan method.
+            **kwargs: Keyword arguments to pass to the _plan method, including retry configurations.
+
+        Returns:
+            Any: The result of the plan operation.
+        """
         from .template.plan import PlanTemplate
 
         kwargs = {**retry_kwargs, **kwargs}
@@ -212,16 +299,32 @@ class Unit(Directive, DirectiveMixin):
         template=None,
         **kwargs,
     ):
+        """
+        Asynchronously performs a single direct operation.
+
+        Args:
+            directive (str): The directive for the operation.
+            instruction (str, optional): Additional instruction.
+            context (str, optional): Context for the operation.
+            system (str, optional): System message.
+            branch (Branch, optional): Branch instance.
+            tools (Any, optional): Tools to be used.
+            template (Any, optional): Template for the operation.
+            kwargs: Additional keyword arguments.
+
+        Returns:
+            Any: The result of the direct operation.
+        """
 
         if template:
             kwargs["template"] = template
-            
+
         kwargs = {**retry_kwargs, **kwargs}
         branch = branch or self.branch
-        
+
         if system:
             branch.add_message(system=system)
-        
+
         if hasattr(self, strip_lower(directive)):
             directive = getattr(self, strip_lower(directive))
 
@@ -231,5 +334,5 @@ class Unit(Directive, DirectiveMixin):
                 tools=tools,
                 **kwargs,
             )
-            
+
         raise ValueError(f"invalid directive: {directive}")

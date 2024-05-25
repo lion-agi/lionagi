@@ -10,5 +10,5 @@ __all__ = [
     "ToolManager",
     "func_to_tool",
     "ActionNode",
-    "DirectiveSelection"
+    "DirectiveSelection",
 ]

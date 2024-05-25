@@ -35,4 +35,13 @@ class ChoiceRule(Rule):
         return value
 
     async def perform_fix(self, value):
+        """
+        Suggest a fix for a value that is not within the set of predefined choices.
+
+        Args:
+            value (str): The value to suggest a fix for.
+
+        Returns:
+            str: The most similar value from the set of predefined choices.
+        """
         return StringMatch.choose_most_similar(value, self.keys)

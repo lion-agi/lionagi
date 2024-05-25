@@ -9,6 +9,7 @@ from .exceptions import (
     LionOperationError,
     RelationError,
     ActionError,
+    ModelLimitExceededError,
 )
 from .component import Element, Component, LionIDable, get_lion_id
 from .concepts import (
@@ -48,4 +49,5 @@ __all__ = [
     "Executable",
     "SYSTEM_FIELDS",
     "Directive",
+    "ModelLimitExceededError",
 ]

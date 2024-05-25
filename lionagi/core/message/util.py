@@ -36,6 +36,7 @@ def create_message(
     func_outputs=None,
     action_request=None,  # ActionRequest node
     action_response=None,  # ActionResponse node
+    images=None,  # base64 encoded image
     sender=None,  # str
     recipient=None,  # str
     requested_fields=None,  # dict[str, str]
@@ -134,12 +135,16 @@ def create_message(
         )
 
     else:
+        if images:
+            images = images if isinstance(images, list) else [images]
+            
         return Instruction(
             instruction=instruction,
             context=context,
             sender=sender,
             recipient=recipient,
             requested_fields=requested_fields,
+            images=images,
             **kwargs,
         )
 

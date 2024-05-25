@@ -100,3 +100,9 @@ class LlamaIndexBridge:
         from .reader import get_llama_index_reader
 
         return get_llama_index_reader(*args, **kwargs)
+
+    @staticmethod
+    def index(nodes, **kwargs):
+        from .index import LlamaIndex
+
+        return LlamaIndex.index(nodes, **kwargs)

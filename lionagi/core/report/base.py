@@ -44,8 +44,8 @@ class BaseForm(Component):
 
     template_name: str = "default_directive"
 
-    assignment: str = Field(
-        ...,
+    assignment: str | None = Field(
+        None,
         description="The objective of the form specifying input/output fields.",
         examples=["input1, input2 -> output"],
     )
@@ -170,3 +170,6 @@ class BaseForm(Component):
         )
         all_fields.update({**all_form_fields, **kwargs})
         return all_fields
+
+    def copy(self):
+        return self.model_copy()

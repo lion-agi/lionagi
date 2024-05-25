@@ -14,14 +14,13 @@ See the License for the specific language governing permissions and
 limitations under the License.
 """
 
-import logging
+# import logging
 
-# Configure logging
-logging.basicConfig(
-    filename="lionagi_system.log",
-    level=logging.INFO,
-    format="%(asctime)s:%(levelname)s:%(message)s",
-)
+# # Configure logging
+# logging.basicConfig(
+#     level=logging.ERROR,
+#     format="%(asctime)s:%(levelname)s:%(message)s",
+# )
 
 
 class LionAGIError(Exception):
@@ -119,11 +118,13 @@ class ActionError(LionAGIError):
         super().__init__(message)
 
 
-class ResourceLimitExceededError(LionOperationError):
+class ModelLimitExceededError(LionOperationError):
     """Exception raised when a resource limit is exceeded."""
 
-    def __init__(self, resource, limit):
-        super().__init__(resource, f"Resource limit exceeded. Limit: {limit}")
+    def __init__(self, message=None):
+        if message is None:
+            message = "The model limit has been exceeded."
+        super().__init__("Model", message)
 
 
 class TimeoutError(LionOperationError):

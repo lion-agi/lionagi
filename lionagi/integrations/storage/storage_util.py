@@ -30,7 +30,9 @@ def output_node_list(structure):
         "type": structure.class_name,
     }
     summary_list.append(structure_output.copy())
-    structure_output["head_nodes"] = json.dumps([i.ln_id for i in structure.get_heads()])
+    structure_output["head_nodes"] = json.dumps(
+        [i.ln_id for i in structure.get_heads()]
+    )
     # structure_output['nodes'] = json.dumps([i for i in structure.internal_nodes.keys()])
     # structure_output['edges'] = json.dumps([i for i in structure.internal_edges.keys()])
     output[structure_output["type"]] = [structure_output]
@@ -56,7 +58,9 @@ def output_node_list(structure):
             node_output["directive_kwargs"] = json.dumps(node.directive_kwargs)
         elif isinstance(node, BaseAgent):
             node_output["structure_id"] = node.structure.ln_id
-            node_output["output_parser"] = inspect.getsource(node.output_parser) if node.output_parser else None
+            node_output["output_parser"] = (
+                inspect.getsource(node.output_parser) if node.output_parser else None
+            )
         else:
             raise ValueError("Not supported node type detected")
         if node_output["type"] not in output:
@@ -242,10 +246,17 @@ class ParseNode:
             )
 
         func = ParseNode.convert_to_def(func_code)
-        tool = func_to_tool(func, ln_id=info_dict["ln_id"], timestamp=info_dict["timestamp"])
+        tool = func_to_tool(
+            func, ln_id=info_dict["ln_id"], timestamp=info_dict["timestamp"]
+        )
         if func.__doc__:
             if re.search(r":param \w+:", func.__doc__):
-                tool = func_to_tool(func, docstring_style="reST", ln_id=info_dict["ln_id"], timestamp=info_dict["timestamp"])
+                tool = func_to_tool(
+                    func,
+                    docstring_style="reST",
+                    ln_id=info_dict["ln_id"],
+                    timestamp=info_dict["timestamp"],
+                )
 
         tool = tool[0]
         return tool

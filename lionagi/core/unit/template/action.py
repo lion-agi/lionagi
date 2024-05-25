@@ -1,4 +1,3 @@
-
 """
 Copyright 2024 HaiyangLi
 
@@ -14,14 +13,24 @@ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the License for the specific language governing permissions and
 limitations under the License.
 """
+
 from .base import BaseUnitForm, Field
 
 
 class ActionTemplate(BaseUnitForm):
+    """
+    A template for actions that includes instructions, context, and confidence scoring.
+
+    Attributes:
+        action_required (bool | None): Indicates if actions are required.
+        actions (list[dict] | None): A list of actions to take, formatted as dictionaries.
+        answer (str | None): The output answer to the questions asked.
+        assignment (str): The assignment structure for the task.
+    """
 
     action_required: bool | None = Field(
         None,
-        description="Set to True if actions are required. Provide actions if True."
+        description="Set to True if actions are required. Provide actions if True.",
     )
 
     actions: list[dict] | None = Field(
@@ -31,7 +40,7 @@ class ActionTemplate(BaseUnitForm):
             "{'param1':..., 'param2':...}}]. Leave blank if no actions are needed."
             "must use provided functions and parameters, DO NOT MAKE UP NAMES!!!"
             "Flag `action_required` as True if filled."
-        )
+        ),
     )
 
     answer: str | None = Field(
@@ -39,7 +48,8 @@ class ActionTemplate(BaseUnitForm):
         description=(
             "output answer to the questions asked if further actions are not needed,"
             " leave blank if an accurate answer cannot be provided from context"
-            " during this step"),
+            " during this step"
+        ),
     )
 
     assignment: str = "task -> reason, action_required, actions, answer"
@@ -51,6 +61,15 @@ class ActionTemplate(BaseUnitForm):
         confidence_score=False,
         **kwargs,
     ):
+        """
+        Initializes an instance of the ActionTemplate class.
+
+        Args:
+            instruction (str, optional): Additional instruction for the task.
+            context (str, optional): Additional context for the task.
+            confidence_score (bool, optional): If True, includes confidence scoring.
+            **kwargs: Additional keyword arguments.
+        """
         super().__init__(**kwargs)
 
         self.task = f"""
