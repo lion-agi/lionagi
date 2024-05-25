@@ -18,6 +18,7 @@ oai_chat_llmconfig = {
     "tools": None,
     "tool_choice": "none",
     "user": None,
+    "logprobs": False,
 }
 
 oai_chat_schema = {
@@ -38,6 +39,7 @@ oai_chat_schema = {
         "tool_choice",
         "user",
         "max_tokens",
+        "logprobs",
     ],
     "input_": "messages",
     "config": oai_chat_llmconfig,
