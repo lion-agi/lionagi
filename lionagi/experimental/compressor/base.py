@@ -1,5 +1,5 @@
 from abc import ABC, abstractmethod
-from ..collections import iModel
+from lionagi.core.collections import iModel
 
 
 class TokenCompressor(ABC):
