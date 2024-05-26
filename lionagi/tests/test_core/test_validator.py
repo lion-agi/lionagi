@@ -5,7 +5,12 @@ from lionagi.core.report.report import Report
 from lionagi.core.collections.abc import FieldError
 from lionagi.core.rule.base import Rule
 from lionagi.core.rule.rulebook import RuleBook
-from lionagi.core.validator.validator import Validator, _DEFAULT_RULEORDER, _DEFAULT_RULES
+from lionagi.core.validator.validator import (
+    Validator,
+    _DEFAULT_RULEORDER,
+    _DEFAULT_RULES,
+)
+
 
 class MockRule(Rule):
     def applies(self, *args, **kwargs):
@@ -15,17 +20,26 @@ class MockRule(Rule):
         if isinstance(value, int) and value < 0:
             raise ValueError(f"Field {field} cannot be negative.")
         return value
-    
+
     async def validate(self, value: Any) -> Any:
         return value
+
 
 class ValidatorTestCase(unittest.TestCase):
     def setUp(self):
         self.validator = Validator(
             rulebook=RuleBook(rules=_DEFAULT_RULES, ruleorder=_DEFAULT_RULEORDER)
         )
-        self.form = Form(assignment="input1, input2 -> output", input_fields=["input1", "input2"], requested_fields=["output"])
-        self.form2 = Form(assignment="total_amount, bike_price -> repair_price", input_fields=["total_amount", "bike_price"], requested_fields=["repair_price"])
+        self.form = Form(
+            assignment="input1, input2 -> output",
+            input_fields=["input1", "input2"],
+            requested_fields=["output"],
+        )
+        self.form2 = Form(
+            assignment="total_amount, bike_price -> repair_price",
+            input_fields=["total_amount", "bike_price"],
+            requested_fields=["repair_price"],
+        )
 
     def test_initiate_rules(self):
         self.assertTrue(isinstance(self.validator.active_rules, dict))
@@ -35,7 +49,7 @@ class ValidatorTestCase(unittest.TestCase):
         self.validator.add_rule("mock_rule", rule)
         valid_value = await self.validator.validate_field("input1", 10, self.form)
         self.assertEqual(valid_value, 10)
-        
+
         with self.assertRaises(FieldError):
             await self.validator.validate_field("input1", -5, self.form)
 
@@ -43,7 +57,7 @@ class ValidatorTestCase(unittest.TestCase):
         response = {"output": 20}
         validated_form = await self.validator.validate_response(self.form, response)
         self.assertEqual(validated_form.output, 20)
-        
+
         response_str = "20"
         self.form.requested_fields = ["output"]
         validated_form = await self.validator.validate_response(self.form, response_str)
@@ -99,6 +113,7 @@ class ValidatorTestCase(unittest.TestCase):
         self.assertEqual(summary["total_attempts"], 2)
         self.assertEqual(len(summary["errors"]), 1)
         self.assertEqual(len(summary["successful_attempts"]), 1)
+
 
 if __name__ == "__main__":
     unittest.main()

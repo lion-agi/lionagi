@@ -18,6 +18,7 @@ import os
 from dotenv import load_dotenv
 from lionagi.libs import SysUtil, BaseService, StatusTracker, APIUtil
 from .abc import Component, ModelLimitExceededError
+
 load_dotenv()
 
 
@@ -292,18 +293,8 @@ class iModel:
             **self.config,
         }
 
-
-
-
-
-
-
     # TODO: add more endpoints
     # async def call_embedding(self, input_file, **kwargs):
     #     return await self.service.serve(input_file, "embedding", **kwargs)
 
     # TODO: add from_dict method
-
-
-
-

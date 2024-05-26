@@ -8,6 +8,6 @@ from .util import tokenize, split_into_segments
 
 
 class LLMSummarizer(TokenCompressor):
-    
+
     def __init__(self, imodel: iModel, tokenizer=None, system_msg=None, splitter=None):
         super().__init__(imodel, tokenizer, splitter)

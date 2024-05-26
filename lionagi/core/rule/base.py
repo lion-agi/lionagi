@@ -23,6 +23,7 @@ from lionagi.core.collections.abc import FieldError, Condition, Actionable, Comp
 
 _rule_classes = {}
 
+
 class Rule(Component, Condition, Actionable):
     """
     Combines a condition and an action that can be applied based on it.
@@ -50,7 +51,7 @@ class Rule(Component, Condition, Actionable):
         super().__init_subclass__(**kwargs)
         if cls.__name__ not in _rule_classes:
             _rule_classes[cls.__name__] = cls
-            
+
     def add_log(self, field: str, form: Any, apply: bool = True, **kwargs) -> None:
         """
         Adds an entry to the applied or invoked log.

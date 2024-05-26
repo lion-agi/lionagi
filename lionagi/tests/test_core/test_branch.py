@@ -3,6 +3,7 @@ from unittest.mock import MagicMock, patch
 import lionagi as li
 from lionagi.core.message import System, Instruction, AssistantResponse, ActionResponse
 
+
 class TestBranch(unittest.TestCase):
 
     def setUp(self):
@@ -17,32 +18,50 @@ class TestBranch(unittest.TestCase):
         self.assertIsInstance(self.branch.imodel, li.iModel)
 
     def test_add_message_system(self):
-        self.branch.add_message(system="You are a helpful assistant, let's think step by step")
+        self.branch.add_message(
+            system="You are a helpful assistant, let's think step by step"
+        )
         self.assertEqual(len(self.branch.messages), 1)
-        self.assertEqual(self.branch.messages[0].content, {'system_info': 'You are a helpful assistant, let\'s think step by step'})
+        self.assertEqual(
+            self.branch.messages[0].content,
+            {"system_info": "You are a helpful assistant, let's think step by step"},
+        )
 
     def test_to_df(self):
-        self.branch.add_message(system="You are a helpful assistant, let's think step by step")
+        self.branch.add_message(
+            system="You are a helpful assistant, let's think step by step"
+        )
         df = self.branch.to_df()
-        self.assertEqual(df.iloc[0]['message_type'], 'System')
-        self.assertEqual(df.iloc[0]['role'], 'system')
+        self.assertEqual(df.iloc[0]["message_type"], "System")
+        self.assertEqual(df.iloc[0]["role"], "system")
 
     def test_to_chat_messages(self):
-        self.branch.add_message(system="You are a helpful assistant, let's think step by step")
+        self.branch.add_message(
+            system="You are a helpful assistant, let's think step by step"
+        )
         chat_msgs = self.branch.to_chat_messages()
-        self.assertEqual(chat_msgs[0]['role'], 'system')
-        self.assertEqual(chat_msgs[0]['content'], "You are a helpful assistant, let's think step by step")
+        self.assertEqual(chat_msgs[0]["role"], "system")
+        self.assertEqual(
+            chat_msgs[0]["content"],
+            "You are a helpful assistant, let's think step by step",
+        )
 
-    @patch('lionagi.Branch.chat')
+    @patch("lionagi.Branch.chat")
     async def test_chat(self, mock_chat):
-        mock_chat.return_value = "Rain poured, but their love shone brighter than any storm."
+        mock_chat.return_value = (
+            "Rain poured, but their love shone brighter than any storm."
+        )
         response = await self.branch.chat("tell me a 10 word story", logprobs=True)
-        self.assertEqual(response, "Rain poured, but their love shone brighter than any storm.")
+        self.assertEqual(
+            response, "Rain poured, but their love shone brighter than any storm."
+        )
         mock_chat.assert_called_once_with("tell me a 10 word story", logprobs=True)
 
     def test_metadata(self):
-        self.branch.add_message(system="You are a helpful assistant, let's think step by step")
-        self.assertIn('last_updated', self.branch.messages[0].metadata)
+        self.branch.add_message(
+            system="You are a helpful assistant, let's think step by step"
+        )
+        self.assertIn("last_updated", self.branch.messages[0].metadata)
 
     def test_register_tools(self):
         tool = MagicMock()
@@ -62,7 +81,9 @@ class TestBranch(unittest.TestCase):
         package = MagicMock()
         self.branch.send(recipient="recipient_id", category="message", package=package)
         self.branch.receive(sender="recipient_id")
-        self.branch.send.assert_called_once_with(recipient="recipient_id", category="message", package=package)
+        self.branch.send.assert_called_once_with(
+            recipient="recipient_id", category="message", package=package
+        )
         self.branch.receive.assert_called_once_with(sender="recipient_id")
 
     async def test_chat_with_tool(self):
@@ -78,10 +99,15 @@ class TestBranch(unittest.TestCase):
         brewery for 0.3 dollar per apple, what is my revenue?
         """
 
-        self.branch = li.Branch("act like a calculator, invoke tool uses", tools=[mock_multiply])
-        response = await self.branch.chat(instruction=instruction, context=context, tools=True)
+        self.branch = li.Branch(
+            "act like a calculator, invoke tool uses", tools=[mock_multiply]
+        )
+        response = await self.branch.chat(
+            instruction=instruction, context=context, tools=True
+        )
         self.assertIsNotNone(response)
-        self.assertIn('revenue', response.lower())
+        self.assertIn("revenue", response.lower())
 
-if __name__ == '__main__':
+
+if __name__ == "__main__":
     unittest.main()

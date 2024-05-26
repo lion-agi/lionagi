@@ -115,7 +115,7 @@ class OpenRouterService(BaseService):
         except Exception as e:
             self.status_tracker.num_tasks_failed += 1
             raise e
-    
+
     # async def serve_embedding(self, embed_str, required_tokens=None, **kwargs):
     #     if "embeddings" not in self.active_endpoint:
     #         await self.init_endpoint("embeddings")

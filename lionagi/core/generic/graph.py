@@ -72,7 +72,7 @@ class Graph(Node):
                 raise ItemNotFoundError(f"Edge {i} does not exist in structure.")
             with contextlib.suppress(ItemNotFoundError):
                 self._remove_edge(i)
-        
+
     def add_node(self, node: Any) -> None:
         """Add a node to the graph."""
         self.internal_nodes.update(node)

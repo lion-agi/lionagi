@@ -149,7 +149,7 @@ class DirectiveMixin(ABC):
         """
         branch = branch or self.branch
         _msg = None
-        
+
         if "choices" in completion:
             payload.pop("messages", None)
             branch.update_last_instruction_meta(payload)
@@ -166,7 +166,7 @@ class DirectiveMixin(ABC):
                         sender=sender,
                     )
                     return msg
-            
+
             if _choices and not isinstance(_choices, list):
                 _choices = [_choices]
             if _choices and isinstance(_choices, list):
