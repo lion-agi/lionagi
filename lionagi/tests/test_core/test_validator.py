@@ -45,8 +45,7 @@ class ValidatorTestCase(unittest.TestCase):
         self.assertTrue(isinstance(self.validator.active_rules, dict))
 
     async def test_validate_field(self):
-        rule = MockRule()
-        self.validator.add_rule("mock_rule", rule)
+        self.validator.add_rule("mock_rule", MockRule)
         valid_value = await self.validator.validate_field("input1", 10, self.form)
         self.assertEqual(valid_value, 10)
 
@@ -73,27 +72,20 @@ class ValidatorTestCase(unittest.TestCase):
         self.assertIsInstance(validated_report, Report)
 
     def test_add_rule(self):
-        rule = MockRule()
-        self.validator.add_rule("mock_rule", rule)
+        self.validator.add_rule("mock_rule", MockRule)
         self.assertIn("mock_rule", self.validator.active_rules)
 
     def test_remove_rule(self):
-        rule = MockRule()
-        self.validator.add_rule("mock_rule", rule)
         self.validator.remove_rule("mock_rule")
         self.assertNotIn("mock_rule", self.validator.active_rules)
 
     def test_enable_rule(self):
-        rule = MockRule()
-        self.validator.add_rule("mock_rule", rule)
         self.validator.enable_rule("mock_rule", enable=False)
         self.assertFalse(self.validator.active_rules["mock_rule"].enabled)
         self.validator.enable_rule("mock_rule", enable=True)
         self.assertTrue(self.validator.active_rules["mock_rule"].enabled)
 
     def test_disable_rule(self):
-        rule = MockRule()
-        self.validator.add_rule("mock_rule", rule)
         self.validator.disable_rule("mock_rule")
         self.assertFalse(self.validator.active_rules["mock_rule"].enabled)
 

@@ -14,16 +14,7 @@ See the License for the specific language governing permissions and
 limitations under the License.
 """
 
-import contextlib
 from enum import Enum
-from typing import Any
-
-# from pydantic._internal._utils import AbstractSetIntStr, MappingIntStrAny
-# from pydantic.main import Model
-
-from lionagi.libs import ParseUtil
-from lionagi.libs.ln_convert import to_str, to_dict
-
 from lionagi.core.collections.abc import Sendable, Field
 from lionagi.core.generic.node import Node
 
@@ -91,7 +82,10 @@ class RoledMessage(Node, Sendable):
         content_dict = self.content.copy()
 
         if "images" not in content_dict:
-            content_dict = str(list(content_dict.values())[0])
+            if len(content_dict) == 1:
+                content_dict = str(list(content_dict.values())[0])
+            else:
+                content_dict = str(content_dict)
 
         return {"role": role, "content": content_dict}
 
