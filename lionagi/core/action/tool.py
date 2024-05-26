@@ -97,7 +97,10 @@ class Tool(Node, Actionable):
                 raise ValueError("Pre-processor must return a dictionary.")
 
         func_call_ = FunctionCalling(function=self.function, arguments=kwargs)
-        result = await func_call_.invoke()
+        try:
+            result = await func_call_.invoke()
+        except Exception:
+            return None
 
         if self.post_processor:
             post_process_kwargs = self.post_processor_kwargs or {}

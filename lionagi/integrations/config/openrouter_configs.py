@@ -1,3 +1,5 @@
+API_key_schema = ("OPENROUTER_API_KEY",)
+
 openrouter_chat_llmconfig = {
     "model": "gpt-4o",
     "frequency_penalty": 0,
@@ -36,6 +38,11 @@ openrouter_chat_schema = {
     ],
     "input_": "messages",
     "config": openrouter_chat_llmconfig,
+    "token_encoding_name": "cl100k_base",
+    "token_limit": 128_000,
+    "interval_tokens": 10_000,
+    "interval_requests": 100,
+    "interval": 60,
 }
 
 openrouter_finetune_llmconfig = {
@@ -59,4 +66,5 @@ openrouter_finetune_schema = {
 openrouter_schema = {
     "chat/completions": openrouter_chat_schema,
     "finetune": openrouter_finetune_schema,
+    "API_key_schema": API_key_schema,
 }

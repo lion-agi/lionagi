@@ -5,9 +5,9 @@ from lionagi.core.collections.abc import Element, Field
 
 
 class PackageCategory(str, Enum):
+    MESSAGE = "message"
     TOOL = "tool"
-    SERVICE = "service"
-    MODEL = "model"
+    IMODEL = "imodel"
     NODE = "node"
     NODE_LIST = "node_list"
     NODE_ID = "node_id"
@@ -17,6 +17,8 @@ class PackageCategory(str, Enum):
 
 
 class Package(Element):
+
+    request_source: str | None = None
 
     category: PackageCategory = Field(
         None,

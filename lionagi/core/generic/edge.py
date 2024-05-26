@@ -85,9 +85,9 @@ class Edge(Component):
             # If parent module is __main__, lookup by methods (NEW)
             for name, member in inspect.getmembers(object):
                 if (
-                        inspect.isfunction(member)
-                        and object.__qualname__ + "." + member.__name__
-                        == member.__qualname__
+                    inspect.isfunction(member)
+                    and object.__qualname__ + "." + member.__name__
+                    == member.__qualname__
                 ):
                     return inspect.getfile(member)
             else:

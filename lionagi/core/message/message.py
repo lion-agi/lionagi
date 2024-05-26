@@ -14,8 +14,15 @@ See the License for the specific language governing permissions and
 limitations under the License.
 """
 
+import contextlib
 from enum import Enum
-from lionagi.libs.ln_convert import to_str
+from typing import Any
+
+# from pydantic._internal._utils import AbstractSetIntStr, MappingIntStrAny
+# from pydantic.main import Model
+
+from lionagi.libs import ParseUtil
+from lionagi.libs.ln_convert import to_str, to_dict
 
 from lionagi.core.collections.abc import Sendable, Field
 from lionagi.core.generic.node import Node
@@ -58,6 +65,14 @@ class RoledMessage(Node, Sendable):
     )
 
     @property
+    def image_content(self):
+        msg_ = self.chat_msg
+        if isinstance(msg_, dict) and isinstance(msg_["content"], list):
+            return [i for i in msg_["content"] if i["type"] == "image_url"]
+
+        return None
+
+    @property
     def chat_msg(self) -> dict | None:
         """return message in chat representation"""
         try:
@@ -73,14 +88,12 @@ class RoledMessage(Node, Sendable):
         if role not in [i.value for i in MessageRole]:
             raise ValueError(f"Invalid message role: {role}")
 
-        try:
-            content_str = to_str(self.content)
-        except Exception as e:
-            raise ValueError(
-                f"Failed to convert {self.content} into a string value"
-            ) from e
+        content_dict = self.content.copy()
 
-        return {"role": role, "content": content_str}
+        if "images" not in content_dict:
+            content_dict = list(content_dict.values())[0]
+
+        return {"role": role, "content": content_dict}
 
     def __str__(self):
         """

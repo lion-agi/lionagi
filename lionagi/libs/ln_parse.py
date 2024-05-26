@@ -422,7 +422,9 @@ class ParseUtil:
         return type_mapping.get(py_type, "object")
 
     @staticmethod
-    def _func_to_schema(func, style="google"):
+    def _func_to_schema(
+        func, style="google", func_description=None, params_description=None
+    ):
         """
         Generates a schema description for a given function, using typing hints and
         docstrings. The schema includes the function's name, description, and parameters.
@@ -449,9 +451,11 @@ class ParseUtil:
         """
         # Extracting function name and docstring details
         func_name = func.__name__
-        func_description, params_description = ParseUtil._extract_docstring_details(
-            func, style
-        )
+
+        if not func_description:
+            func_description, _ = ParseUtil._extract_docstring_details(func, style)
+        if not params_description:
+            _, params_description = ParseUtil._extract_docstring_details(func, style)
 
         # Extracting parameters with typing hints
         sig = inspect.signature(func)

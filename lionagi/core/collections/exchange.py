@@ -24,7 +24,12 @@ T = TypeVar("T")
 
 class Exchange(Element, Generic[T]):
     """
-    Item exchange system designed to handle incoming and outgoing flows of items
+    Item exchange system designed to handle incoming and outgoing flows of items.
+
+    Attributes:
+        pile (Pile[T]): The pile of items in the exchange.
+        pending_ins (dict[str, Progression]): The pending incoming items to the exchange.
+        pending_outs (Progression): The progression of pending outgoing items.
     """
 
     pile: Pile[T] = Field(
@@ -43,9 +48,37 @@ class Exchange(Element, Generic[T]):
     pending_outs: Progression = progression()
 
     def __contains__(self, item):
+        """
+        Check if an item is in the pile.
+
+        Args:
+            item: The item to check.
+
+        Returns:
+            bool: True if the item is in the pile, False otherwise.
+        """
         return item in self.pile
 
+    @property
+    def senders(self):
+        """
+        Get the list of senders for the pending incoming items.
+
+        Returns:
+            list[str]: The list of sender IDs.
+        """
+        return list(self.pending_ins.keys())
+
     def exclude(self, item):
+        """
+        Exclude an item from the exchange.
+
+        Args:
+            item: The item to exclude.
+
+        Returns:
+            bool: True if the item was successfully excluded, False otherwise.
+        """
         return (
             self.pile.exclude(item)
             and all([v.exclude(item) for v in self.pending_ins.values()])
@@ -53,6 +86,16 @@ class Exchange(Element, Generic[T]):
         )
 
     def include(self, item, direction):
+        """
+        Include an item in the exchange in a specified direction.
+
+        Args:
+            item: The item to include.
+            direction (str): The direction to include the item ('in' or 'out').
+
+        Returns:
+            bool: True if the item was successfully included, False otherwise.
+        """
         if self.pile.include(item):
             item = self.pile[item]
             item = [item] if not isinstance(item, list) else item
@@ -62,6 +105,16 @@ class Exchange(Element, Generic[T]):
             return True
 
     def _include(self, item: Sendable, direction):
+        """
+        Helper method to include an item in the exchange in a specified direction.
+
+        Args:
+            item (Sendable): The item to include.
+            direction (str): The direction to include the item ('in' or 'out').
+
+        Returns:
+            bool: True if the item was successfully included, False otherwise.
+        """
         if direction == "in":
             if item.sender not in self.pending_ins:
                 self.pending_ins[item.sender] = progression()
@@ -72,4 +125,13 @@ class Exchange(Element, Generic[T]):
         return self.pile.include(item) and self.pending_outs.include(item)
 
     def to_dict(self):
+        """
+        Convert the exchange to a dictionary.
+
+        Returns:
+            dict: The dictionary representation of the exchange.
+        """
         return self.model_dump(by_alias=True)
+
+    def __bool__(self):
+        return True

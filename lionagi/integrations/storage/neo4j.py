@@ -68,7 +68,7 @@ class Neo4j:
             query,
             ln_id=node["ln_id"],
             timestamp=node["timestamp"],
-            content=node["content"]
+            content=node["content"],
         )
 
     @staticmethod
@@ -89,7 +89,7 @@ class Neo4j:
             query,
             ln_id=node["ln_id"],
             timestamp=node["timestamp"],
-            content=node["content"]
+            content=node["content"],
         )
 
     # TODO: tool.manual
@@ -266,7 +266,7 @@ class Neo4j:
         """
         for node in node_dict:
             node_list = node_dict[node]
-            if node == "StructureExecutor":
+            if node == "GraphExecutor":
                 [
                     await self.add_structure_node(tx, i, structure_name)
                     for i in node_list

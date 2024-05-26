@@ -16,6 +16,7 @@ from lionagi.libs.ln_api import (
     PayloadPackage,
 )
 
+from lionagi.libs.ln_image import ImageUtil
 from lionagi.libs.ln_validate import validation_funcs
 
 
@@ -35,4 +36,5 @@ __all__ = [
     "SimpleRateLimiter",
     "CallDecorator",
     "validation_funcs",
+    "ImageUtil",
 ]

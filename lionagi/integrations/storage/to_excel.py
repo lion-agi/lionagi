@@ -42,10 +42,10 @@ def _output_excel(
     if edge_cls_list:
         tables["EdgesCondClass"] = pd.DataFrame(edge_cls_list)
     for i in node_dict:
-        if i == "StructureExecutor":
+        if i == "GraphExecutor":
             structure_node = node_dict[i][0]
             structure_node["name"] = structure_name
-            structure_id = structure_node["id"]
+            structure_id = structure_node["ln_id"]
         tables[i] = pd.DataFrame(node_dict[i])
 
     import os

@@ -124,7 +124,7 @@ async def predict(
     form=None,
     confidence_score=None,
     reason=False,
-    num_sentences=1, 
+    num_sentences=1,
     **kwargs,
 ):
     """
@@ -207,6 +207,7 @@ async def act(
         **kwargs,
     )
 
+
 async def score(
     instruction=None,
     context=None,
@@ -222,7 +223,28 @@ async def score(
     num_digit=None,
     **kwargs,
 ):
-    
+    """
+    Asynchronously performs a scoring task within a given context.
+
+    Args:
+        instruction (str, optional): Additional instruction for the scoring task.
+        context (Any, optional): Context to perform the scoring task on.
+        system (str, optional): System message to use for the scoring task.
+        sender (str, optional): Sender of the instruction. Defaults to None.
+        recipient (str, optional): Recipient of the instruction. Defaults to None.
+        branch (Branch, optional): Branch to perform the task within. Defaults to a new Branch.
+        form (Form, optional): Form to create the instruction from. Defaults to None.
+        confidence_score (bool, optional): Flag to include a confidence score. Defaults to None.
+        reason (bool, optional): Flag to include a reason for the scoring. Defaults to False.
+        score_range (tuple, optional): Range for the score. Defaults to None.
+        include_endpoints (bool, optional): Flag to include endpoints in the score range. Defaults to None.
+        num_digit (int, optional): Number of decimal places for the score. Defaults to None.
+        **kwargs: Additional keyword arguments for further customization.
+
+    Returns:
+        Any: The result of the scoring task.
+    """
+
     branch = branch or Branch()
     unit = Unit(branch)
 
@@ -240,8 +262,8 @@ async def score(
         num_digit=num_digit,
         **kwargs,
     )
-    
-    
+
+
 async def plan(
     instruction=None,
     context=None,
@@ -255,7 +277,27 @@ async def plan(
     num_step=3,
     **kwargs,
 ):
-    
+    """
+    Asynchronously generates a step-by-step plan within a given context.
+
+    Args:
+        instruction (str, optional): Additional instruction for the planning task.
+        context (Any, optional): Context to perform the planning task on.
+        system (str, optional): System message to use for the planning task.
+        sender (str, optional): Sender of the instruction. Defaults to None.
+        recipient (str, optional): Recipient of the instruction. Defaults to None.
+        branch (Branch, optional): Branch to perform the task within. Defaults to a new Branch.
+        form (Form, optional): Form to create the instruction from. Defaults to None.
+        confidence_score (bool, optional): Flag to include a confidence score. Defaults to None.
+        reason (bool, optional): Flag to include a reason for the plan. Defaults to False.
+        num_step (int, optional): Number of steps in the plan. Defaults to 3.
+        **kwargs: Additional keyword arguments for further customization.
+
+    Returns:
+        Any: The result of the planning task.
+    """
+
+
     branch = branch or Branch()
     unit = Unit(branch)
 
