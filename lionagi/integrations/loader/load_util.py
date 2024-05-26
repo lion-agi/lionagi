@@ -1,10 +1,10 @@
 # use utils and schema
-import math
 from enum import Enum
 from pathlib import Path
 from typing import List, Union, Dict, Any, Tuple
 
 from lionagi.libs import convert, func_call
+from lionagi.libs.ln_tokenize import TokenizeUtil
 from lionagi.core.generic import Node
 
 
@@ -89,77 +89,6 @@ def dir_to_nodes(
     return func_call.lcall(files_info, lambda x: Node(content=x[0], metadata=x[1]))
 
 
-def chunk_text(
-    input: str, chunk_size: int, overlap: float, threshold: int
-) -> List[Union[str, None]]:
-    """
-    Chunks the input text into smaller parts, with optional overlap and threshold for final chunk.
-
-    Parameters:
-        input (str): The input text to chunk.
-
-        chunk_size (int): The size of each chunk.
-
-        overlap (float): The amount of overlap between chunks.
-
-        threshold (int): The minimum size of the final chunk.
-
-    Returns:
-        List[Union[str, None]]: A list of text chunks.
-
-    Raises:
-        ValueError: If an error occurs during chunking.
-    """
-
-    def _chunk_n1():
-        return [input]
-
-    def _chunk_n2():
-        chunks = []
-        chunks.append(input[: chunk_size + overlap_size])
-
-        if len(input) - chunk_size > threshold:
-            chunks.append(input[chunk_size - overlap_size :])
-        else:
-            return _chunk_n1()
-
-        return chunks
-
-    def _chunk_n3():
-        chunks = []
-        chunks.append(input[: chunk_size + overlap_size])
-        for i in range(1, n_chunks - 1):
-            start_idx = chunk_size * i - overlap_size
-            end_idx = chunk_size * (i + 1) + overlap_size
-            chunks.append(input[start_idx:end_idx])
-
-        if len(input) - chunk_size * (n_chunks - 1) > threshold:
-            chunks.append(input[chunk_size * (n_chunks - 1) - overlap_size :])
-        else:
-            chunks[-1] += input[chunk_size * (n_chunks - 1) + overlap_size :]
-
-        return chunks
-
-    try:
-        if not isinstance(input, str):
-            input = convert.to_str(input)
-
-        n_chunks = math.ceil(len(input) / chunk_size)
-        overlap_size = int(overlap / 2)
-
-        if n_chunks == 1:
-            return _chunk_n1()
-
-        elif n_chunks == 2:
-            return _chunk_n2()
-
-        elif n_chunks > 2:
-            return _chunk_n3()
-
-    except Exception as e:
-        raise ValueError(f"An error occurred while chunking the text. {e}")
-
-
 def read_text(filepath: str, clean: bool = True) -> Tuple[str, dict]:
     """
     Reads text from a file and optionally cleans it, returning the content and metadata.
@@ -210,7 +139,6 @@ def read_text(filepath: str, clean: bool = True) -> Tuple[str, dict]:
     except Exception as e:
         raise e
 
-
 def _file_to_chunks(
     input: Dict[str, Any],
     field: str = "content",
@@ -223,7 +151,7 @@ def _file_to_chunks(
             "chunk_overlap": overlap,
             "chunk_threshold": threshold,
         }
-        chunks = chunk_text(
+        chunks = TokenizeUtil.chunk_by_chars(
             input[field], chunk_size=chunk_size, overlap=overlap, threshold=threshold
         )
         logs = []
