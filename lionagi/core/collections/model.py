@@ -43,6 +43,7 @@ class iModel:
         config (dict): Configuration dictionary for the model.
         iModel_name (str): Name of the model.
     """
+    default_model="gpt-4o"
 
     def __init__(
         self,
@@ -130,7 +131,10 @@ class iModel:
             config or self.endpoint_schema["config"], **kwargs
         )
 
-        if model and self.config["model"] != model:
+        if not model:
+            model = self.default_model
+
+        if self.config["model"] != model:
             self.iModel_name = model
             self.config["model"] = model
             self.endpoint_schema["config"]["model"] = model

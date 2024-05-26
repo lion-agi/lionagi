@@ -10,7 +10,6 @@ from lionagi.libs.ln_tokenize import TokenizeUtil
 # inspired by LLMLingua, MIT License, Copyright (c) Microsoft Corporation.
 # https://github.com/microsoft/LLMLingua
 
-
 class LLMCompressor(TokenCompressor):
 
     def __init__(
@@ -21,10 +20,11 @@ class LLMCompressor(TokenCompressor):
         splitter=None,              # must be a callable or object with a split/chunk/segment method
         target_ratio=0.2, 
         n_samples=5,                 # the cumulative samples to take in each perplexity calculation
+        chunk_size=128,
         max_tokens_per_sample=128,
         min_compression_score=0,                    # (0-1) the minimum score to consider for compression, 0 means all
     ):
-        imodel = imodel or iModel(model="gpt-4o", temperature=0.1)
+        imodel = imodel or iModel(model="gpt-3.5-turbo", temperature=0.1)
         super().__init__(imodel=imodel, tokenizer=tokenizer, splitter=splitter)
         self.system_msg = (
             system_msg
@@ -32,6 +32,7 @@ class LLMCompressor(TokenCompressor):
         )
         self.target_ratio=target_ratio
         self.n_samples = n_samples
+        self.chunk_size = chunk_size
         self.max_tokens_per_sample = max_tokens_per_sample
         self.min_compression_score = min_compression_score
 
@@ -47,7 +48,8 @@ class LLMCompressor(TokenCompressor):
                 text, 
                 encoding_model=self.imodel.iModel_name,
                 encoding_name=encoding_name, 
-                return_byte=return_byte
+                return_byte=return_byte,
+                
             )
         
         if hasattr(self.tokenizer, "tokenize"):
@@ -58,7 +60,7 @@ class LLMCompressor(TokenCompressor):
     def split(
         self, 
         text, 
-        chunk_size=128,
+        chunk_size=None,
         overlap=0,
         threshold=0, 
         by_chars=False,
@@ -69,7 +71,7 @@ class LLMCompressor(TokenCompressor):
         if not self.splitter:
             splitter = TokenizeUtil.chunk_by_chars if by_chars else TokenizeUtil.chunk_by_tokens
             return splitter(
-                text, chunk_size, overlap, threshold, 
+                text, chunk_size or self.chunk_size, overlap, threshold, 
                 return_tokens=return_tokens, return_byte=return_byte
             )
         
@@ -170,7 +172,7 @@ class LLMCompressor(TokenCompressor):
                 max_tokens_per_sample=max_tokens_per_sample or self.max_tokens_per_sample
             )
 
-            return " ".join(selected_items).strip()
+            return " ".join(selected_items).strip().replace("\n", "").replace("\t", "")
 
         raise ValueError(f"Ranking method {rank_by} is not supported")
     
@@ -184,15 +186,13 @@ class LLMCompressor(TokenCompressor):
         current_length = 0
 
         for item, pplex in ranked_items:
-            if current_length > desired_length:
+            if current_length + len(item) > desired_length:
                 break
             else:
                 if pplex > min_pplex:
                     item = item.split() if isinstance(item, str) else item
                     item = item if isinstance(item, list) else [item]
                     item = to_list(item, dropna=True, flatten=True)
-                    if current_length + len(item) > desired_length and len(item) > max_tokens_per_sample:
-                        break
                     current_length += len(item)
                     items.append(" ".join(item))
 

@@ -1,4 +1,4 @@
-from abc import ABC, abstractmethod
+from abc import ABC
 from lionagi.core.collections import iModel
 
 

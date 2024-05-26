@@ -3,10 +3,12 @@ import math
 from .ln_convert import to_str
 
 
+_special_tokens = ["\n", "\t", " ", "  ", "▁", "▄", "▅", "▆", "▇", "█", "▏", "▎", "▍", "▌", "▋", "▊", "▉", "▔", "▕", "▁▁", "▁▂", "▁▃", "▁▄", "▁▅", "▁▆", "▁▇", "▁█", "▁▏", "▁▎", "▁▍", "▁▌", "▁▋", "▁▊", "▁▉", "▁▔", "▁▕", "▄▄", "▄▅", "▄▆", "▄▇", "▄█", "▄▏", "▄▎", "▄▍", "▄▌", "▄▋", "▄▊", "▄▉", "▄▔", "▄▕", "▅▅", "▅▆", "▅▇", "▅█", "▅▏", "▅▎", "▅▍", "▅▌", "▅▋", "▅▊", "▅▉", "▅▔", "▅▕", "▆▆", "▆▇", "▆█", "▆▏", "▆▎", "▆▍", "▆▌", "▆▋", "▆▊", "▆▉", "▆▔", "▆▕", "▇▇", "▇█", "▇▏", "▇▎", "▇▍", "▇▌", "▇▋", "▇▊", "▇▉", "▇▔", "▇▕", "██", "█▏", "█▎", "█▍", "█▌", "█▋", "█▊", "█▉", "█", "█▔", "█▕", "▏▏", "▏▎", "▏▍", "▏▌", "▏▋", "▏▊", "▏▉", "▏", "▏▔", "▏▕", "▎▎", "▎▍", "▎▌", "▎▋", "▎▊", "▎▉", "▎", "▎▔", "▎▕", "▍▍", "▍▌", "▍▋", "▍▊", "▍▉", "▍", "▍▔", "▍▕", "▌▌", "▌▋", "▌▊", "▌▉", "▌", "▌▔", "▌▕", "▋▋", "▋▊", "▋▉", "▋", "▋▔", "▋▕", "▊▊", "▊▉", "▊", "▊▔", "▊▕", "▉▉", "▉", "▉▔", "▉▕", "▔▔", "▔▕", "▕▕", "▁▁▁", "▁▁▂", "▁▁▃", "▁▁▄", "▁▁▅", "▁▁▆", "▁▁▇", "▁▁█", "▁▁▏", "▁▁▎", "▁▁▍", "▁▁▌", "▁▁▋", "▁▁▊", "▁▁▉", "▁▁▔", "▁▁▕", "▁▂▂", "▁▂▃", "▁▂▄", "▁▂▅", "▁▂▆", "▁▂▇", "▁▂█"]
+
 class TokenizeUtil:
     
     @staticmethod
-    def tokenize(text, encoding_model=None, encoding_name=None, return_byte=False, special_tokens=None):
+    def tokenize(text, encoding_model=None, encoding_name=None, return_byte=False, special_tokens=_special_tokens):
         encoding = None
 
         if encoding_model:
@@ -129,7 +131,7 @@ class TokenizeUtil:
             chunks = [tokens[: chunk_size + overlap_size]]
             if residue > threshold:
                 chunks.append(tokens[chunk_size - overlap_size :])
-                return [" ".join(chunk) for chunk in chunks] if not return_tokens else chunks
+                return [" ".join(chunk).strip() for chunk in chunks] if not return_tokens else chunks
             else:
                 return text if not return_tokens else [tokens]
 
