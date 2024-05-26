@@ -5,7 +5,7 @@ import numpy as np
 from lionagi.core.collections import iModel
 from .base import TokenCompressor
 from lionagi.libs.ln_tokenize import TokenizeUtil
-
+from time import time
 
 # inspired by LLMLingua, MIT License, Copyright (c) Microsoft Corporation.
 # https://github.com/microsoft/LLMLingua
@@ -106,7 +106,7 @@ class LLMCompressor(TokenCompressor):
             )
 
         if not isinstance(items, list):
-            items = list(items)
+            items = self.tokenize(items)
         
         if len(items) == 1:
             return [items]      # no need to rank a single item
@@ -128,8 +128,8 @@ class LLMCompressor(TokenCompressor):
             _task.append(asyncio.create_task(_get_item_perplexity(i)))
         
         results = await asyncio.gather(*_task)
-        results = [(item, pplex[1]) for item, pplex in zip(items, results)]
-        return sorted(results, key=lambda x: x[1], reverse=True)
+        results = [(item, pplex) for item, pplex in zip(items, results)]
+        return sorted(results, key=lambda x: x[1]["logprobs"], reverse=True)
 
     async def compress(
         self,
@@ -142,10 +142,10 @@ class LLMCompressor(TokenCompressor):
         split_threshold=None,
         rank_by = "perplexity",
         min_compression_score=None,
-        max_tokens_per_sample=None,
+        verbose=True,
         **kwargs,
     ):
-        
+        start = time()
         if split_kwargs is None:
             split_kwargs = {}
             split_kwargs["chunk_size"] = self.max_tokens_per_sample
@@ -169,15 +169,32 @@ class LLMCompressor(TokenCompressor):
                 target_compression_ratio=target_ratio or self.target_ratio, 
                 original_length=len_tokens, 
                 min_pplex=min_compression_score or self.min_compression_score,
-                max_tokens_per_sample=max_tokens_per_sample or self.max_tokens_per_sample
             )
 
-            return " ".join(selected_items).strip().replace("\n", "").replace("\t", "")
+            if verbose:
+                msg = ""
+                msg += f"Original Token number: {len_tokens}\n"
+                
+                def _f(i):
+                    if isinstance(i, str):
+                        i = self.tokenize(i)
+                    
+                    if isinstance(i, list):
+                        return len(to_list(i, dropna=True, flatten=True))
+                
+                len_ = sum([_f(i) for i in selected_items])
+                msg += f"Selected Token number: {len_}\n"
+                msg += f"Token Compression Ratio: {len_ / len_tokens:.03f}\n"
+                msg += f"Compression Time: {time() - start:.03f} seconds"
+                print(msg)
+                
+            a = "".join([i.strip() for i in selected_items]).strip()
+            a = a.replace("\n\n", "").replace("  ", " ")
+            return a
 
         raise ValueError(f"Ranking method {rank_by} is not supported")
     
-    @staticmethod
-    def select_by_pplex(ranked_items, target_compression_ratio, original_length, min_pplex=None, max_tokens_per_sample=None):
+    def select_by_pplex(self, ranked_items, target_compression_ratio, original_length, min_pplex=None):
         min_pplex = min_pplex or 0
         
         desired_length = int(original_length * target_compression_ratio)
@@ -185,16 +202,16 @@ class LLMCompressor(TokenCompressor):
         items = []
         current_length = 0
 
-        for item, pplex in ranked_items:
-            if current_length + len(item) > desired_length:
-                break
-            else:
-                if pplex > min_pplex:
-                    item = item.split() if isinstance(item, str) else item
-                    item = item if isinstance(item, list) else [item]
-                    item = to_list(item, dropna=True, flatten=True)
+        for item, info in ranked_items:
+            if info["perplexity"] > min_pplex:
+                item = self.tokenize(item) if isinstance(item, str) else item
+                item = item if isinstance(item, list) else [item]
+                item = to_list(item, dropna=True, flatten=True)
+                if current_length + len(item) > desired_length:
+                    break
+                else:
                     current_length += len(item)
-                    items.append(" ".join(item))
+                    items.append("".join(item))
 
         return items
 

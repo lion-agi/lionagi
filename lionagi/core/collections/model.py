@@ -341,10 +341,15 @@ class iModel:
         
         results = await asyncio.gather(*tasks)   # result is (payload, response)
         results_ = []
+        num_prompt_tokens = 0
+        num_completion_tokens = 0
         
         for idx, result in enumerate(results):
             _dict = {}
             _dict["tokens"] = samples[idx]
+            
+            num_prompt_tokens += result[1]["usage"]["prompt_tokens"]
+            num_completion_tokens += result[1]["usage"]["completion_tokens"]
             
             logprobs = result[1]["choices"][0]["logprobs"]["content"]
             logprobs = to_list(logprobs, flatten=True, dropna=True)
@@ -352,5 +357,13 @@ class iModel:
             results_.append(_dict)
         
         logprobs = to_list([[i[1] for i in d["logprobs"]] for d in results_], flatten=True)
-        return tokens, np.exp(np.mean(logprobs))
+        
+        return {
+            "tokens": tokens,
+            "n_samples": n_samples,
+            "num_prompt_tokens": num_prompt_tokens,
+            "num_completion_tokens": num_completion_tokens,
+            "logprobs": logprobs,
+            "perplexity": np.exp(np.mean(logprobs)),
+        }
         
