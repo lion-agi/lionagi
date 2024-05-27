@@ -155,6 +155,20 @@ class DirectiveMixin(ABC):
             branch.update_last_instruction_meta(payload)
             _choices = completion.pop("choices", None)
 
+
+            """
+            price: 0.5/1M input tokens + 1.5/1M output tokens - gpt-3.5-turbo
+            price: 5/1M input tokens + 15/1M output tokens - gpt-4o
+            
+            """
+
+            price_map = {
+                "gpt-4o": (5, 15),
+                "gpt-4-turbo": (10, 30),
+                "gpt-3.5-turbo": (0.5, 1.5),
+            }
+
+
             def process_completion_choice(choice):
                 if isinstance(choice, dict):
                     msg = choice.pop("message", None)
@@ -165,7 +179,15 @@ class DirectiveMixin(ABC):
                         metadata=_completion,
                         sender=sender,
                     )
-                    return msg
+                
+                a = branch.messages[-1]._meta_get(["extra", "usage", "prompt_tokens"], 0)
+                b = branch.messages[-1]._meta_get(["extra", "usage", "completion_tokens"], 0)
+                m = completion.get("model", None)
+                if m:
+                    price = [v for k, v in price_map.items() if k in m][0]
+                    ttl = (a*price[0] + b*price[1]) / 1000000
+                branch.messages[-1]._meta_insert(["extra", "usage", "expense"], ttl)
+                return msg
 
             if _choices and not isinstance(_choices, list):
                 _choices = [_choices]

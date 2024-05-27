@@ -10,7 +10,7 @@ openrouter_chat_llmconfig = {
     "seed": None,
     "stop": None,
     "stream": False,
-    "temperature": 0.3,
+    "temperature": 1,
     "top_p": 1,
     "tools": None,
     "tool_choice": "none",
