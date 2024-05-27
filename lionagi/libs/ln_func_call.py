@@ -179,9 +179,11 @@ async def mcall(
     funcs_ = to_list(func, dropna=True)
 
     if explode:
-        return await pcall(
-            [_alcall(inputs_, f, flatten=True, **kwargs) for f in funcs_]
-        )
+        task = [
+            asyncio.create_task(_alcall(inputs_, f, flatten=True, **kwargs)) for f in funcs_
+        ]
+        return await asyncio.gather(*task)
+        
     elif len(inputs_) == len(funcs_):
         tasks = [
             call_handler(func, inp, **kwargs) for inp, func in zip(inputs_, funcs_)
@@ -312,8 +314,8 @@ async def rcall(
     func: Callable,
     *args,
     retries: int = 0,
-    delay: float = 1.0,
-    backoff_factor: float = 2.0,
+    delay: float = 0.1,
+    backoff_factor: float = 2,
     default: Any = None,
     timeout: float | None = None,
     timing: bool = False,
