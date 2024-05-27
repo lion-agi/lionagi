@@ -10,11 +10,13 @@ openrouter_chat_llmconfig = {
     "seed": None,
     "stop": None,
     "stream": False,
-    "temperature": 0.3,
+    "temperature": 1,
     "top_p": 1,
     "tools": None,
     "tool_choice": "none",
     "user": None,
+    "logprobs": False,
+    "top_logprobs": None,
 }
 
 openrouter_chat_schema = {
@@ -35,6 +37,8 @@ openrouter_chat_schema = {
         "tool_choice",
         "user",
         "max_tokens",
+        "logprobs",
+        "top_logprobs",
     ],
     "input_": "messages",
     "config": openrouter_chat_llmconfig,

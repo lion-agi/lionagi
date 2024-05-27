@@ -91,7 +91,13 @@ class Progression(Element, Ordering):
 
     def __getitem__(self, key):
         with contextlib.suppress(IndexError):
-            return self.order[key]
+            a = self.order[key]
+            if isinstance(a, list) and len(a) > 1:
+                return Progression(order=a)
+            elif isinstance(a, list) and len(a) == 1:
+                return a[0]
+            return a
+
         raise ItemNotFoundError(f"index {key}")
 
     def remove(self, item: LionIDable):
@@ -137,7 +143,6 @@ class Progression(Element, Ordering):
             for i in item:
                 while i in self:
                     self.remove(i)
-            return True
         for i in (a := self._validate_order(item)):
             while i in self:
                 self.remove(i)
@@ -216,6 +221,16 @@ class Progression(Element, Ordering):
     def __bool__(self):
         return True
 
+    def __eq__(self, other):
+        """Compare two Progression instances for equality."""
+        if not isinstance(other, Progression):
+            return NotImplemented
+        return self.order == other.order and self.name == other.name
 
-def progression(order=None, name=None, /) -> Progression:
+    def __hash__(self):
+        """Return a hash value for the Progression instance."""
+        return hash((tuple(self.order), self.name))
+
+
+def progression(order=None, name=None) -> Progression:
     return Progression(order=order, name=name)

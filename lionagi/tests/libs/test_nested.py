@@ -39,7 +39,7 @@ class TestNSet(unittest.TestCase):
         """Test flattening and then unflattening a nested dictionary."""
         original = {"a": {"b": {"c": 1}}}
         flattened = flatten(original)
-        self.assertEqual(flattened, {"a_b_c": 1})
+        self.assertEqual(flattened, {"a[^_^]b[^_^]c": 1})
         unflattened = unflatten(flattened)
         self.assertEqual(original, unflattened)
 
@@ -225,27 +225,27 @@ class TestFlatten(unittest.TestCase):
     def test_flatten_nested_dict(self):
         nested_dict = {"a": {"b": 1, "c": {"d": 2}}}
         result = flatten(nested_dict)
-        self.assertEqual(result, {"a_b": 1, "a_c_d": 2})
+        self.assertEqual(result, {"a[^_^]b": 1, "a[^_^]c[^_^]d": 2})
 
     def test_flatten_nested_list(self):
         nested_list = [[1, 2], [3, [4, 5]]]
         result = flatten(nested_list)
-        self.assertEqual(result, {"0_0": 1, "0_1": 2, "1_0": 3, "1_1_0": 4, "1_1_1": 5})
+        self.assertEqual(result, {"0[^_^]0": 1, "0[^_^]1": 2, "1[^_^]0": 3, "1[^_^]1[^_^]0": 4, "1[^_^]1[^_^]1": 5})
 
     def test_flatten_with_max_depth(self):
         nested_dict = {"a": {"b": {"c": 1}}}
         result = flatten(nested_dict, max_depth=1)
-        self.assertEqual(result, {"a_b": {"c": 1}})
+        self.assertEqual(result, {"a[^_^]b": {"c": 1}})
 
     def test_flatten_dict_only(self):
         nested_mix = {"a": [1, 2], "b": {"c": 3}}
         result = flatten(nested_mix, dict_only=True)
-        self.assertEqual(result, {"a": [1, 2], "b_c": 3})
+        self.assertEqual(result, {"a": [1, 2], "b[^_^]c": 3})
 
     def test_flatten_inplace(self):
         nested_dict = {"a": {"b": 1}}
         flatten(nested_dict, inplace=True)
-        self.assertEqual(nested_dict, {"a_b": 1})
+        self.assertEqual(nested_dict, {"a[^_^]b": 1})
 
     def test_flatten_empty_structure(self):
         self.assertEqual(flatten({}), {})
@@ -254,18 +254,18 @@ class TestFlatten(unittest.TestCase):
     def test_flatten_deeply_nested_structure(self):
         deeply_nested = {"a": {"b": {"c": {"d": 1}}}}
         result = flatten(deeply_nested)
-        self.assertEqual(result, {"a_b_c_d": 1})
+        self.assertEqual(result, {"a[^_^]b[^_^]c[^_^]d": 1})
 
 
 class TestUnflatten(unittest.TestCase):
 
     def test_unflatten_to_nested_dict(self):
-        flat_dict = {"a_b": 1, "a_c_d": 2}
+        flat_dict = {"a[^_^]b": 1, "a[^_^]c[^_^]d": 2}
         result = unflatten(flat_dict)
         self.assertEqual(result, {"a": {"b": 1, "c": {"d": 2}}})
 
     def test_unflatten_to_nested_list(self):
-        flat_dict = {"0_0": 1, "0_1": 2, "1": [3, 4]}
+        flat_dict = {"0[^_^]0": 1, "0[^_^]1": 2, "1": [3, 4]}
         result = unflatten(flat_dict)
         self.assertEqual(result, [[1, 2], [3, 4]])
 
@@ -275,26 +275,26 @@ class TestUnflatten(unittest.TestCase):
         self.assertEqual(result, {"a": {"b": 1, "c": {"d": 2}}})
 
     def test_unflatten_with_custom_logic(self):
-        flat_dict = {"a_1": "one", "a_2": "two"}
+        flat_dict = {"a[^_^]1": "one", "a[^_^]2": "two"}
         custom_logic = lambda key: int(key) if key.isdigit() else key
         result = unflatten(flat_dict, custom_logic=custom_logic)
         self.assertEqual(result, {"a": [None, "one", "two"]})
 
     def test_unflatten_with_max_depth(self):
-        flat_dict = {"a_b_c": 1, "a_b_d": 2}
+        flat_dict = {"a[^_^]b[^_^]c": 1, "a[^_^]b[^_^]d": 2}
         result = unflatten(flat_dict, max_depth=1)
-        self.assertEqual(result, {"a": {"b_c": 1, "b_d": 2}})
+        self.assertEqual(result, {"a": {"b[^_^]c": 1, "b[^_^]d": 2}})
 
     def test_unflatten_with_max_depth_int(self):
-        flat_dict = {"0_0_0": 1, "0_1_0": 2}
+        flat_dict = {"0[^_^]0[^_^]0": 1, "0[^_^]1[^_^]0": 2}
         result = unflatten(flat_dict, max_depth=1)
-        self.assertEqual(result, [[{"0_0": 1}, {"1_0": 2}]])
+        self.assertEqual(result, [[{"0[^_^]0": 1}, {"1[^_^]0": 2}]])
 
     def test_unflatten_empty_flat_dict(self):
         self.assertEqual(unflatten({}), [])
 
     def test_unflatten_to_mixed_structure(self):
-        flat_dict = {"0_0": 1, "1_key": 2}
+        flat_dict = {"0[^_^]0": 1, "1[^_^]key": 2}
         result = unflatten(flat_dict)
         self.assertEqual(result, [[1], {"key": 2}])
 
@@ -319,7 +319,7 @@ class TestNInsert(unittest.TestCase):
     def test_insert_with_max_depth(self):
         obj = {}
         ninsert(obj, ["a", "b", "c"], "value", max_depth=1)
-        self.assertEqual(obj, {"a": {"b_c": "value"}})
+        self.assertEqual(obj, {"a": {"b[^_^]c": "value"}})
 
     def test_insert_into_empty_structure(self):
         obj = {}
@@ -331,24 +331,24 @@ class TestGetFlattenedKeys(unittest.TestCase):
 
     def test_get_keys_from_nested_dict(self):
         nested_dict = {"a": {"b": 1, "c": {"d": 2}}}
-        expected_keys = ["a_b", "a_c_d"]
+        expected_keys = ["a[^_^]b", "a[^_^]c[^_^]d"]
         self.assertEqual(set(get_flattened_keys(nested_dict)), set(expected_keys))
 
     def test_get_keys_from_nested_list(self):
         nested_list = [[1, 2], [3, [4, 5]]]
-        expected_keys = ["0_0", "0_1", "1_0", "1_1_0", "1_1_1"]
+        expected_keys = ["0[^_^]0", "0[^_^]1", "1[^_^]0", "1[^_^]1[^_^]0", "1[^_^]1[^_^]1"]
         self.assertEqual(set(get_flattened_keys(nested_list)), set(expected_keys))
 
     def test_get_keys_with_max_depth(self):
         nested_dict = {"a": {"b": {"c": 1}}}
-        expected_keys = ["a_b"]
+        expected_keys = ["a[^_^]b"]
         self.assertEqual(
             set(get_flattened_keys(nested_dict, max_depth=1)), set(expected_keys)
         )
 
     def test_get_keys_dict_only(self):
         nested_mix = {"a": [1, 2], "b": {"c": 3}}
-        expected_keys = ["a", "b_c"]
+        expected_keys = ["a", "b[^_^]c"]
         self.assertEqual(
             set(get_flattened_keys(nested_mix, dict_only=True)), set(expected_keys)
         )
@@ -358,7 +358,7 @@ class TestGetFlattenedKeys(unittest.TestCase):
 
     def test_keys_from_deeply_nested_structure(self):
         deeply_nested = {"a": {"b": {"c": {"d": 1}}}}
-        expected_keys = ["a_b_c_d"]
+        expected_keys = ["a[^_^]b[^_^]c[^_^]d"]
         self.assertEqual(set(get_flattened_keys(deeply_nested)), set(expected_keys))
 
 

@@ -134,6 +134,7 @@ class DirectiveMixin(ABC):
     ) -> Any:
         """
         Processes the chat completion response.
+        Currently only support last message for function calling
 
         Args:
             payload: The payload data.
@@ -148,23 +149,53 @@ class DirectiveMixin(ABC):
         """
         branch = branch or self.branch
         _msg = None
+
         if "choices" in completion:
-            aa = payload.pop("messages", None)
+            payload.pop("messages", None)
             branch.update_last_instruction_meta(payload)
-            msg = completion.pop("choices", None)
-            if msg and isinstance(msg, list):
-                msg = msg[0]
+            _choices = completion.pop("choices", None)
 
-            if isinstance(msg, dict):
-                _msg = msg.pop("message", None)
-                completion.update(msg)
 
-                branch.add_message(
-                    assistant_response=_msg,
-                    metadata=completion,
-                    sender=sender,
-                )
-                branch.imodel.status_tracker.num_tasks_succeeded += 1
+            """
+            price: 0.5/1M input tokens + 1.5/1M output tokens - gpt-3.5-turbo
+            price: 5/1M input tokens + 15/1M output tokens - gpt-4o
+            
+            """
+
+            price_map = {
+                "gpt-4o": (5, 15),
+                "gpt-4-turbo": (10, 30),
+                "gpt-3.5-turbo": (0.5, 1.5),
+            }
+
+
+            def process_completion_choice(choice):
+                if isinstance(choice, dict):
+                    msg = choice.pop("message", None)
+                    _completion = completion.copy()
+                    _completion.update(choice)
+                    branch.add_message(
+                        assistant_response=msg,
+                        metadata=_completion,
+                        sender=sender,
+                    )
+                
+                a = branch.messages[-1]._meta_get(["extra", "usage", "prompt_tokens"], 0)
+                b = branch.messages[-1]._meta_get(["extra", "usage", "completion_tokens"], 0)
+                m = completion.get("model", None)
+                if m:
+                    price = [v for k, v in price_map.items() if k in m][0]
+                    ttl = (a*price[0] + b*price[1]) / 1000000
+                branch.messages[-1]._meta_insert(["extra", "usage", "expense"], ttl)
+                return msg
+
+            if _choices and not isinstance(_choices, list):
+                _choices = [_choices]
+            if _choices and isinstance(_choices, list):
+                for _choice in _choices:
+                    _msg = process_completion_choice(_choice)
+
+            branch.imodel.status_tracker.num_tasks_succeeded += 1
         else:
             branch.imodel.status_tracker.num_tasks_failed += 1
 

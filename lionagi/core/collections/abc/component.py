@@ -17,12 +17,13 @@ limitations under the License.
 """Component class, base building block in LionAGI."""
 
 from abc import ABC
+import contextlib
 from collections.abc import Sequence
 from functools import singledispatchmethod
 from typing import Any, TypeVar, Type, TypeAlias, Union
 
 from pandas import DataFrame, Series
-from pydantic import BaseModel, Field, ValidationError, AliasChoices, field_serializer
+from pydantic import BaseModel, Field, ValidationError, AliasChoices
 
 from lionagi.libs import ParseUtil, SysUtil
 from lionagi.libs.ln_convert import strip_lower, to_dict, to_str
@@ -118,11 +119,14 @@ class Component(Element, ABC):
         if not value:
             return []
         if isinstance(value, str):
-            string_elements = value.strip("[]").split(", ")
+            if len(value) < 10:
+                return []
 
+            string_elements = value.strip("[]").split(",")
             # Convert each string element to a float
-            return [float(element) for element in string_elements]
-        return value
+            with contextlib.suppress(ValueError):
+                return [float(element) for element in string_elements]
+        raise ValueError("Invalid embedding format.")
 
     class Config:
         """Model configuration settings."""
@@ -387,12 +391,12 @@ class Component(Element, ABC):
         """Get the class name."""
         return cls.__name__
 
-    def to_json_str(self, *args, **kwargs) -> str:
+    def to_json_str(self, *args, dropna=False, **kwargs) -> str:
         """Convert the component to a JSON string."""
-        dict_ = self.to_dict(*args, **kwargs)
+        dict_ = self.to_dict(*args, dropna=dropna, **kwargs)
         return to_str(dict_)
 
-    def to_dict(self, *args, **kwargs) -> dict[str, Any]:
+    def to_dict(self, *args, dropna=False, **kwargs) -> dict[str, Any]:
         """Convert the component to a dictionary."""
         dict_ = self.model_dump(*args, by_alias=True, **kwargs)
 
@@ -402,9 +406,11 @@ class Component(Element, ABC):
 
         dict_.pop("extra_fields", None)
         dict_["lion_class"] = self.class_name
+        if dropna:
+            dict_ = {k: v for k, v in dict_.items() if v is not None}
         return dict_
 
-    def to_xml(self, *args, **kwargs) -> str:
+    def to_xml(self, *args, dropna=False, **kwargs) -> str:
         """Convert the component to an XML string."""
         import xml.etree.ElementTree as ET
 
@@ -419,13 +425,13 @@ class Component(Element, ABC):
                     element = ET.SubElement(parent, key)
                     element.text = str(val)
 
-        convert(self.to_dict(*args, **kwargs), root)
+        convert(self.to_dict(*args, dropna=dropna, **kwargs), root)
         return ET.tostring(root, encoding="unicode")
 
-    def to_pd_series(self, *args, pd_kwargs=None, **kwargs) -> Series:
+    def to_pd_series(self, *args, pd_kwargs=None, dropna=False, **kwargs) -> Series:
         """Convert the node to a Pandas Series."""
         pd_kwargs = pd_kwargs or {}
-        dict_ = self.to_dict(*args, **kwargs)
+        dict_ = self.to_dict(*args, dropna=dropna, **kwargs)
         return Series(dict_, **pd_kwargs)
 
     def to_llama_index_node(self, node_type: Type | str | Any = None, **kwargs) -> Any:
@@ -490,7 +496,7 @@ class Component(Element, ABC):
 
     def __setattr__(self, name, value):
         if name == "metadata":
-            return
+            raise AttributeError("Cannot directly assign to metadata.")
         super().__setattr__(name, value)
         self._add_last_update(name)
 

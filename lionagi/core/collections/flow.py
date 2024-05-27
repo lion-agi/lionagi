@@ -106,7 +106,7 @@ class Flow(Element):
         yield from self.sequences.values()
 
     def items(self):
-        yield from self.sequences.pile()
+        yield from self.sequences.items()
 
     def get(self, seq=None, default=...):
         """
@@ -210,10 +210,11 @@ class Flow(Element):
         # if sequence is not None, we will not check the name
         if seq is not None:
 
-            with contextlib.suppress(ItemNotFoundError):
+            with contextlib.suppress(ItemNotFoundError, AttributeError):
                 if item:
                     # if there is item, we exclude it from the sequence
-                    return self.sequences[seq].exclude(item)
+                    self.sequences[self.registry[seq]].exclude(item)
+                    return item not in self.sequences[self.registry[seq]]
                 else:
                     # if there is no item, we exclude the sequence
                     a = self.registry.pop(seq.name or seq.ln_id, None)
@@ -304,7 +305,7 @@ class Flow(Element):
         return self.sequences[sequence].popleft()
 
     def shape(self):
-        return {sequence: len(seq) for sequence, seq in self.items()}
+        return {key: len(self.sequences[value]) for key, value in self.registry.items()}
 
     def get(self, sequence: str, /, default=...) -> deque[str] | None:
         sequence = getattr(sequence, "ln_id", None) or sequence
@@ -330,6 +331,7 @@ class Flow(Element):
         if sequence == "all":
             for seq in self.sequences:
                 seq.remove(item)
+            return
 
         sequence = self._find_sequence(sequence)
         self.sequences[sequence].remove(item)
@@ -370,6 +372,13 @@ class Flow(Element):
 
         if sequence in self.registry:
             return self.registry[sequence]
+
+    def to_dict(self):
+        return {
+            "sequences": self.sequences.to_dict(),
+            "registry": self.registry,
+            "default_name": self.default_name,
+        }
 
     def to_df(self):
         return self.sequences.to_df()

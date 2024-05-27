@@ -67,7 +67,7 @@ class Pile(Element, Record, Generic[T]):
     order: list[str] = Field(default_factory=list)
     index: Any = None
     engines: dict[str, Any] = Field(default_factory=dict)
-    query_response: Any = []
+    query_response: list = []
     tools: dict = {}
 
     def __init__(

@@ -60,7 +60,23 @@ class Exchange(Element, Generic[T]):
         return item in self.pile
 
     @property
-    def senders(self):
+    def unassigned(self) -> Pile[T]:
+        """
+        if the item is not in the pending_ins or pending_outs, it is unassigned.
+        """
+        return pile(
+            [
+                item
+                for item in self.pile
+                if (
+                    all(item not in j for j in self.pending_ins.values())
+                    and item not in self.pending_outs
+                )
+            ]
+        )
+
+    @property
+    def senders(self) -> list[str]:
         """
         Get the list of senders for the pending incoming items.
 
@@ -69,7 +85,7 @@ class Exchange(Element, Generic[T]):
         """
         return list(self.pending_ins.keys())
 
-    def exclude(self, item):
+    def exclude(self, item) -> bool:
         """
         Exclude an item from the exchange.
 
@@ -85,7 +101,7 @@ class Exchange(Element, Generic[T]):
             and self.pending_outs.exclude(item)
         )
 
-    def include(self, item, direction):
+    def include(self, item, direction=None) -> bool:
         """
         Include an item in the exchange in a specified direction.
 
@@ -100,11 +116,11 @@ class Exchange(Element, Generic[T]):
             item = self.pile[item]
             item = [item] if not isinstance(item, list) else item
             for i in item:
-                if not self._include(i, direction):
+                if not self._include(i, direction=direction):
                     return False
             return True
 
-    def _include(self, item: Sendable, direction):
+    def _include(self, item: Sendable, direction) -> bool:
         """
         Helper method to include an item in the exchange in a specified direction.
 
@@ -118,13 +134,14 @@ class Exchange(Element, Generic[T]):
         if direction == "in":
             if item.sender not in self.pending_ins:
                 self.pending_ins[item.sender] = progression()
-            return self.pile.include(item) and self.pending_ins[item.sender].include(
-                item
-            )
+            return self.pending_ins[item.sender].include(item)
 
-        return self.pile.include(item) and self.pending_outs.include(item)
+        if direction == "out":
+            return self.pending_outs.include(item)
 
-    def to_dict(self):
+        return True
+
+    def to_dict(self) -> dict:
         """
         Convert the exchange to a dictionary.
 
@@ -135,3 +152,6 @@ class Exchange(Element, Generic[T]):
 
     def __bool__(self):
         return True
+
+    def __len__(self):
+        return len(self.pile)

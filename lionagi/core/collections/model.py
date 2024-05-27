@@ -15,8 +15,10 @@ limitations under the License.
 """
 
 import os
+import asyncio
+import numpy as np
 from dotenv import load_dotenv
-from lionagi.libs import SysUtil, BaseService, StatusTracker, APIUtil
+from lionagi.libs import SysUtil, BaseService, StatusTracker, APIUtil, to_list, lcall
 from .abc import Component, ModelLimitExceededError
 
 load_dotenv()
@@ -41,6 +43,7 @@ class iModel:
         config (dict): Configuration dictionary for the model.
         iModel_name (str): Name of the model.
     """
+    default_model="gpt-4o"
 
     def __init__(
         self,
@@ -128,7 +131,10 @@ class iModel:
             config or self.endpoint_schema["config"], **kwargs
         )
 
-        if model and self.config["model"] != model:
+        if not model:
+            model = self.default_model
+
+        if self.config["model"] != model:
             self.iModel_name = model
             self.config["model"] = model
             self.endpoint_schema["config"]["model"] = model
@@ -248,15 +254,16 @@ class iModel:
 
     async def embed_node(self, node, field="content", **kwargs) -> bool:
         """
-        if not specify field, we emebd node.content
+        if not specify field, we embed node.content
         """
         if not isinstance(node, Component):
             raise ValueError("Node must a lionagi item")
         embed_str = getattr(node, field)
+
         if isinstance(embed_str, dict) and "images" in embed_str:
             embed_str.pop("images", None)
             embed_str.pop("image_detail", None)
-            
+
         num_tokens = APIUtil.calculate_num_token(
             {"input": str(embed_str) if isinstance(embed_str, dict) else embed_str},
             "embeddings",
@@ -292,8 +299,71 @@ class iModel:
             **self.config,
         }
 
-    # TODO: add more endpoints
-    # async def call_embedding(self, input_file, **kwargs):
-    #     return await self.service.serve(input_file, "embedding", **kwargs)
+    async def compute_perplexity(
+        self,
+        initial_context: str = None,
+        tokens: list[str] = None,
+        system_msg: str =None,
+        n_samples: int = 1,             # number of samples used for the computation
+        use_residue: bool = True,      # whether to use residue for the last sample
+        **kwargs                        # additional arguments for the model
+    ) -> tuple[list[str], float]:
+        tasks = []
+        context = initial_context or ""
+        
+        n_samples = n_samples or len(tokens)
+        sample_token_len, residue = divmod(len(tokens), n_samples)
+        samples = []
+        
+        if n_samples == 1:
+            samples = [tokens]
+        else:
+            samples = [
+                tokens[: (i + 1) * sample_token_len]
+                for i in range(n_samples)
+            ]
+            
+            if use_residue and residue != 0:
+                samples.append(tokens[-residue:])
+        
+        sampless = [context + " ".join(sample) for sample in samples]
 
-    # TODO: add from_dict method
+        for sample in sampless:
+            messages = [{"role": "system", "content": system_msg}] if system_msg else []
+            messages.append({"role": "user", "content": sample},)
+            
+            task = asyncio.create_task(
+                self.call_chat_completion(
+                    messages=messages, logprobs=True, max_tokens=sample_token_len, **kwargs
+                )
+            )
+            tasks.append(task)
+        
+        results = await asyncio.gather(*tasks)   # result is (payload, response)
+        results_ = []
+        num_prompt_tokens = 0
+        num_completion_tokens = 0
+        
+        for idx, result in enumerate(results):
+            _dict = {}
+            _dict["tokens"] = samples[idx]
+            
+            num_prompt_tokens += result[1]["usage"]["prompt_tokens"]
+            num_completion_tokens += result[1]["usage"]["completion_tokens"]
+            
+            logprobs = result[1]["choices"][0]["logprobs"]["content"]
+            logprobs = to_list(logprobs, flatten=True, dropna=True)
+            _dict["logprobs"] = [(i["token"], i["logprob"]) for i in logprobs]
+            results_.append(_dict)
+        
+        logprobs = to_list([[i[1] for i in d["logprobs"]] for d in results_], flatten=True)
+        
+        return {
+            "tokens": tokens,
+            "n_samples": n_samples,
+            "num_prompt_tokens": num_prompt_tokens,
+            "num_completion_tokens": num_completion_tokens,
+            "logprobs": logprobs,
+            "perplexity": np.exp(np.mean(logprobs)),
+        }
+        

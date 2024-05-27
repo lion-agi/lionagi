@@ -2,9 +2,10 @@ from lionagi.libs.sys_util import SysUtil
 from lionagi.libs.ln_async import AsyncUtil
 
 import lionagi.libs.ln_convert as convert
+from lionagi.libs.ln_convert import to_str, to_list, to_dict, to_df
 import lionagi.libs.ln_dataframe as dataframe
 import lionagi.libs.ln_func_call as func_call
-from lionagi.libs.ln_func_call import CallDecorator
+from lionagi.libs.ln_func_call import lcall, CallDecorator
 import lionagi.libs.ln_nested as nested
 from lionagi.libs.ln_parse import ParseUtil, StringMatch
 
@@ -37,4 +38,9 @@ __all__ = [
     "CallDecorator",
     "validation_funcs",
     "ImageUtil",
+    "to_str",
+    "to_list",
+    "to_dict",
+    "to_df",
+    "lcall"
 ]

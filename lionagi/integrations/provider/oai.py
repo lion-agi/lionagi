@@ -124,7 +124,7 @@ class OpenAIService(BaseService):
         for msg in messages:
             if isinstance(msg, dict):
                 content = msg.get("content")
-                if isinstance(content, dict):
+                if isinstance(content, (dict, str)):
                     msgs.append({"role": msg["role"], "content": content})
                 elif isinstance(content, list):
                     _content = []
