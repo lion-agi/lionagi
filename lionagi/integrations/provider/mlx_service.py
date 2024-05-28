@@ -10,10 +10,10 @@ class MLXService(BaseService):
 
         SysUtil.check_import("mlx_lm")
         SysUtil.check_import("ipywidgets")
-        
+
         if model is not None and "olmo" in str(model).lower():
             SysUtil.check_import("olmo", pip_name="ai2-olmo")
-        
+
         from mlx_lm import load, generate
 
         super().__init__()
@@ -24,16 +24,13 @@ class MLXService(BaseService):
         self.model = model_
         self.tokenizer = tokenizer
         self.generate = generate
+        self.allowed_kwargs = []
 
     async def serve_chat(self, messages, **kwargs):
         if "verbose" not in kwargs.keys():
             verbose = False
 
-        prompts = [
-            msg["content"]
-            for msg in messages
-            if msg["role"] == "user"
-        ]
+        prompts = [msg["content"] for msg in messages if msg["role"] == "user"]
 
         payload = {"messages": messages}
 
@@ -45,7 +42,7 @@ class MLXService(BaseService):
                 verbose=verbose,
             )
             if "```" in response:
-                regex = re.compile(r'```[\s\S]*?```')
+                regex = re.compile(r"```[\s\S]*?```")
                 matches = regex.findall(response)
                 msg = matches[0].strip("```")
                 completion = {"choices": [{"message": {"content": msg}}]}

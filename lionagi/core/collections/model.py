@@ -24,6 +24,13 @@ from .abc import Component, ModelLimitExceededError
 load_dotenv()
 
 
+_oai_price_map = {
+    "gpt-4o": (5, 15),
+    "gpt-4-turbo": (10, 30),
+    "gpt-3.5-turbo": (0.5, 1.5),
+}
+
+
 class iModel:
     """
     iModel is a class for managing AI model configurations and service
@@ -62,6 +69,7 @@ class iModel:
         service: BaseService = None,
         allowed_parameters=[],
         device: str = None,
+        costs=None,
         **kwargs,  # additional parameters for the model
     ):
         """
@@ -166,7 +174,11 @@ class iModel:
             provider=self.provider,
             **set_up_kwargs,
         )
-        
+        if self.iModel_name in _oai_price_map:
+            self.costs = _oai_price_map[self.iModel_name]
+        else:
+            self.costs = costs or (0, 0)
+
     def update_config(self, **kwargs):
         """
         Updates the configuration with additional parameters.
@@ -206,7 +218,7 @@ class iModel:
             a = provider.__name__.replace("Service", "").lower()
             if a in ["openai", "openrouter"]:
                 kwargs.pop("model", None)
-            
+
             return provider(**kwargs)
         return service
 
@@ -326,7 +338,12 @@ class iModel:
             + self.api_key[-4:],
             "endpoint": self.endpoint,
             "token_encoding_name": self.service.token_encoding_name,
-            **self.config,
+            **{
+                k: v
+                for k, v in self.config.items()
+                if k in getattr(self.service, "allowed_kwargs", []) and v is not None
+            },
+            "model_costs": None if self.costs == (0, 0) else self.costs,
         }
 
     async def compute_perplexity(

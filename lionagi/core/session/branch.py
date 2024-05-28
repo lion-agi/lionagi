@@ -299,6 +299,16 @@ class Branch(Node, DirectiveMixin):
             if isinstance(self.messages[i], AssistantResponse):
                 return self.messages[i]
 
+    @property
+    def assistant_responses(self):
+        return pile(
+            [
+                self.messages[i]
+                for i in self.progress
+                if isinstance(self.messages[i], AssistantResponse)
+            ]
+        )
+
     def to_df(self) -> Any:
         """
         Converts the messages to a DataFrame.

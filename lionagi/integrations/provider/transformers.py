@@ -18,7 +18,8 @@ allowed_kwargs = [
     "min_length_for_response",
     "minimum_tokens",
     "mask_token",
-    "max_length", "max_new_tokens",
+    "max_length",
+    "max_new_tokens",
 ]
 
 
@@ -54,6 +55,7 @@ class TransformersService(BaseService):
         self.task = task
         self.model = model
         self.config = config
+        self.allowed_kwargs = allowed_kwargs
         try:
             from transformers import pipeline
 
@@ -98,7 +100,7 @@ class TransformersService(BaseService):
             conversation = response[0]["generated_text"]
         except:
             conversation = response
-            
-        completion = {"choices": [{"message": {"content":conversation}}]}
+
+        completion = {"choices": [{"message": {"content": conversation}}]}
 
         return payload, completion

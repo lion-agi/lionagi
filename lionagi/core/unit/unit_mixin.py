@@ -131,6 +131,7 @@ class DirectiveMixin(ABC):
         invoke_tool: bool = True,
         branch: Optional[Any] = None,
         action_request: Optional[Any] = None,
+        costs=None,
     ) -> Any:
         """
         Processes the chat completion response.
@@ -155,18 +156,7 @@ class DirectiveMixin(ABC):
             branch.update_last_instruction_meta(payload)
             _choices = completion.pop("choices", None)
 
-            """
-            price: 0.5/1M input tokens + 1.5/1M output tokens - gpt-3.5-turbo
-            price: 5/1M input tokens + 15/1M output tokens - gpt-4o
-            """
-
-            price_map = {
-                "gpt-4o": (5, 15),
-                "gpt-4-turbo": (10, 30),
-                "gpt-3.5-turbo": (0.5, 1.5),
-            }
-
-            def process_completion_choice(choice):
+            def process_completion_choice(choice, price=None):
                 if isinstance(choice, dict):
                     msg = choice.pop("message", None)
                     _completion = completion.copy()
@@ -185,20 +175,16 @@ class DirectiveMixin(ABC):
                 )
                 m = completion.get("model", None)
                 if m:
-                    price = [v for k, v in price_map.items() if k in m]
-                    if len(price) == 1:
-                        price = price[0]
-                        ttl = (a * price[0] + b * price[1]) / 1000000
-                        branch.messages[-1]._meta_insert(
-                            ["extra", "usage", "expense"], ttl
-                        )
+                    ttl = (a * price[0] + b * price[1]) / 1000000
+                    branch.messages[-1]._meta_insert(["extra", "usage", "expense"], ttl)
                 return msg
 
             if _choices and not isinstance(_choices, list):
                 _choices = [_choices]
+
             if _choices and isinstance(_choices, list):
                 for _choice in _choices:
-                    _msg = process_completion_choice(_choice)
+                    _msg = process_completion_choice(_choice, price=costs)
 
             branch.imodel.status_tracker.num_tasks_succeeded += 1
         else:
@@ -275,6 +261,7 @@ class DirectiveMixin(ABC):
         rulebook: Any = None,
         use_annotation: bool = True,
         template_name: str = None,
+        costs=None,
     ) -> Any:
         """
         Outputs the final processed response.
@@ -300,6 +287,7 @@ class DirectiveMixin(ABC):
             completion=completion,
             sender=sender,
             invoke_tool=invoke_tool,
+            costs=costs,
         )
 
         if _msg is None:
@@ -403,6 +391,7 @@ class DirectiveMixin(ABC):
             imodel=imodel, branch=branch, **config
         )
 
+        imodel = imodel or self.imodel
         out_ = await self._output(
             payload=payload,
             completion=completion,
@@ -414,6 +403,7 @@ class DirectiveMixin(ABC):
             strict=strict,
             rulebook=rulebook,
             use_annotation=use_annotation,
+            costs=imodel.costs,
         )
 
         return out_, branch if return_branch else out_

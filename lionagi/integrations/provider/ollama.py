@@ -33,6 +33,7 @@ class OllamaService(BaseService):
         self.ollama = ollama
         self.model = model
         self.client = self.ollama.AsyncClient()
+        self.allowed_kwargs = allowed_kwargs
 
     async def serve_chat(self, messages, **kwargs):
         config = {}
