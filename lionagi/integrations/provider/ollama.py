@@ -4,7 +4,7 @@ from lionagi.integrations.config.ollama_configs import model
 allowed_kwargs = [
     "model",
     "frequency_penalty",
-    "max_tokens",
+    # "max_tokens",
     "n",
     "presence_penalty",
     "response_format",

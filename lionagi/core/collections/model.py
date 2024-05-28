@@ -61,6 +61,7 @@ class iModel:
         interval: int = None,
         service: BaseService = None,
         allowed_parameters=[],
+        device: str = None,
         **kwargs,  # additional parameters for the model
     ):
         """
@@ -141,18 +142,13 @@ class iModel:
             if v is not None and k in self.allowed_parameters
         }
 
-        self.service: BaseService = self._set_up_service(
-            service=service,
-            provider=self.provider,
-            **set_up_kwargs,
-        )
-
         self.config = self._set_up_params(
             config or self.endpoint_schema.get("config", {}), **kwargs
         )
 
-        if "model" not in self.config:
-            model = SERVICE_PROVIDERS_MAPPING[provider]["default_model"]
+        if not model:
+            if "model" not in self.config:
+                model = SERVICE_PROVIDERS_MAPPING[provider]["default_model"]
 
         if self.config.get("model", None) != model and model is not None:
             self.iModel_name = model
@@ -162,6 +158,15 @@ class iModel:
         else:
             self.iModel_name = self.config["model"]
 
+        if device:
+            set_up_kwargs["device"] = device
+        set_up_kwargs["model"] = self.iModel_name
+        self.service: BaseService = self._set_up_service(
+            service=service,
+            provider=self.provider,
+            **set_up_kwargs,
+        )
+        
     def update_config(self, **kwargs):
         """
         Updates the configuration with additional parameters.
@@ -198,6 +203,10 @@ class iModel:
         """
         if not service:
             provider = provider or self.provider
+            a = provider.__name__.replace("Service", "").lower()
+            if a in ["openai", "openrouter"]:
+                kwargs.pop("model", None)
+            
             return provider(**kwargs)
         return service
 
