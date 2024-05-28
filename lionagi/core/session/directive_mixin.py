@@ -17,6 +17,7 @@ limitations under the License.
 # lionagi/core/session/directive_mixin.py
 
 from lionagi.core.unit import Unit
+from ..message.action_response import ActionResponse
 
 
 class DirectiveMixin:
@@ -173,6 +174,7 @@ class DirectiveMixin:
         directive=None,
         images=None,
         image_path=None,
+        verbose=False,
         **kwargs,
     ):
         """
@@ -218,10 +220,11 @@ class DirectiveMixin:
 
             images = ImageUtil.read_image_to_base64(image_path)
 
-        _directive = Unit(self, imodel=imodel, rulebook=rulebook)
+        _directive = Unit(self, imodel=imodel, rulebook=rulebook, verbose=verbose)
 
+        idx = len(self.progress)
         if directive and isinstance(directive, str):
-            return await _directive.direct(
+            form = await _directive.direct(
                 directive=directive,
                 instruction=instruction,
                 context=context,
@@ -232,7 +235,21 @@ class DirectiveMixin:
                 **kwargs,
             )
 
-        return await _directive.direct(
+            action_responses = [
+                i for i in self.messages[idx:] if isinstance(i, ActionResponse)
+            ]
+            if len(action_responses) > 0:
+                _dict = {
+                    f"action_{idx}": i.content["action_response"]
+                    for idx, i in enumerate(action_responses)
+                }
+                if not hasattr(form, "action_response"):
+                    form.append_to_request("action_response", {})
+                form.action_response.update(_dict)
+
+            return form
+
+        form = await _directive.direct(
             instruction=instruction,
             context=context,
             form=form,
@@ -254,3 +271,17 @@ class DirectiveMixin:
             images=images,
             **kwargs,
         )
+
+        action_responses = [
+            i for i in self.messages[idx:] if isinstance(i, ActionResponse)
+        ]
+        if len(action_responses) > 0:
+            _dict = {
+                f"action_{idx}": i.content["action_response"]
+                for idx, i in enumerate(action_responses)
+            }
+            if not hasattr(form, "action_response"):
+                form.append_to_request("action_response", {})
+            form.action_response.update(_dict)
+
+        return form

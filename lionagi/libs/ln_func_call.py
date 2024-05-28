@@ -388,7 +388,7 @@ async def rcall(
         return default
     elif last_exception is not None:
         raise RuntimeError(
-            f"Operation failed after {retries} attempts: {last_exception}"
+            f"Operation failed after {retries+1} attempts: {last_exception}"
         ) from last_exception
     else:
         raise RuntimeError("rcall failed without catching an exception")

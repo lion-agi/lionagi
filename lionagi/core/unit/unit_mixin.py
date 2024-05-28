@@ -24,7 +24,8 @@ from abc import ABC
 
 from typing import Any, Optional
 
-from lionagi.libs.ln_parse import ParseUtil, StringMatch
+from lionagi.libs import ParseUtil, StringMatch, to_list
+from lionagi.libs.ln_nested import nmerge
 from lionagi.core.collections.abc import ActionError
 from lionagi.core.message import ActionRequest, ActionResponse, Instruction
 from lionagi.core.message.util import _parse_action_request
@@ -217,13 +218,12 @@ class DirectiveMixin(ABC):
             Any: The processed result.
         """
         action_request = action_request or _parse_action_request(_msg)
-        # print(_msg, action_request)
         if action_request is None:
             return _msg if _msg else False
 
         if action_request:
             for i in action_request:
-                if i.function in branch.tool_manager:
+                if i.function in branch.tool_manager.registry:
                     i.recipient = branch.tool_manager.registry[i.function].ln_id
                 else:
                     raise ActionError(f"Tool {i.function} not found in registry")
@@ -234,7 +234,6 @@ class DirectiveMixin(ABC):
             for i in action_request:
                 tool = branch.tool_manager.registry[i.function]
                 tasks.append(asyncio.create_task(tool.invoke(i.arguments)))
-
             results = await asyncio.gather(*tasks)
 
             for idx, item in enumerate(results):
@@ -519,6 +518,7 @@ class DirectiveMixin(ABC):
         clear_messages=False,
         return_branch=False,
         images: Optional[str] = None,
+        verbose=None,
         **kwargs,
     ):
         """
@@ -574,6 +574,7 @@ class DirectiveMixin(ABC):
             predict_num_sentences=predict_num_sentences,
             clear_messages=clear_messages,
             return_branch=return_branch,
+            verbose=verbose,
             **kwargs,
         )
 
@@ -608,6 +609,7 @@ class DirectiveMixin(ABC):
         clear_messages=False,
         return_branch=False,
         images: Optional[str] = None,
+        verbose=None,
         **kwargs,
     ):
         """
@@ -687,6 +689,14 @@ class DirectiveMixin(ABC):
             else:
                 form.tool_schema = tool_schema
 
+        verbose = (
+            verbose
+            if verbose is not None and isinstance(verbose, bool)
+            else self.verbose
+        )
+        if verbose:
+            print("Chatting with model...")
+
         # Call the base chat method
         form = await self._chat(
             form=form,
@@ -699,17 +709,37 @@ class DirectiveMixin(ABC):
         if allow_action and getattr(form, "action_required", None):
             actions = getattr(form, "actions", None)
             if actions:
+                if verbose:
+                    print(
+                        "Found action requests in model response. Processing actions..."
+                    )
                 form = await self._act(form, branch, actions=actions)
+                if verbose:
+                    print("Actions processed!")
 
         last_form = form
 
+        ctr = 1
+
         # Handle extensions if allowed and required
         extension_forms = []
-        while allow_extension and getattr(last_form, "extension_required", None):
-            if max_extension <= 0:
+        max_extension = max_extension if isinstance(max_extension, int) else 3
+        while (
+            allow_extension
+            and max_extension > 0
+            and getattr(last_form, "extension_required", None)
+        ):
+            if getattr(last_form, "is_extension", None):
                 break
+            if verbose:
+                print(f"\nFound extension requests in model response.")
+                print(
+                    f"------------------- Processing extension No.{ctr} -------------------"
+                )
+
             max_extension -= 1
 
+            # new form cannot be extended, otherwise it will be an infinite loop
             new_form = await self._extend(
                 tools=tools,
                 reason=reason,
@@ -723,25 +753,58 @@ class DirectiveMixin(ABC):
                 score_range=score_range,
                 select_choices=select_choices,
                 predict_num_sentences=predict_num_sentences,
-                allow_extension=isinstance(max_extension, int) and max_extension > 0,
-                max_extension=max_extension,
                 **kwargs,
             )
 
+            if verbose:
+                print(f"------------------- Extension completed -------------------\n")
+
             extension_forms.extend(new_form)
             last_form = new_form[-1] if isinstance(new_form, list) else new_form
+            ctr += len(form)
 
         if extension_forms:
             if not getattr(form, "extension_forms", None):
                 form._add_field("extension_forms", list, None, [])
             form.extension_forms.extend(extension_forms)
+            action_responses = [
+                i.action_response
+                for i in extension_forms
+                if getattr(i, "action_response", None) is not None
+            ]
+            if not hasattr(form, "action_response"):
+                form.add_field("action_response", {})
+
+            for action_response in action_responses:
+                nmerge([form.action_response, action_response])
 
         if "PLEASE_ACTION" in form.answer:
-            form.answer = await self._chat(
+            if verbose:
+                print("Analyzing action responses and generating answer...")
+
+            answer = await self._chat(
                 "please provide final answer basing on the above"
                 " information, provide answer value as a string only"
                 " do not return as json, do not include other information",
             )
+
+            if isinstance(answer, dict):
+                a = answer.get("answer", None)
+                if a is not None:
+                    answer = a
+
+            answer = str(answer).strip()
+            if answer.startswith("{") and answer.endswith("}"):
+                answer = answer[1:-1]
+                answer = answer.strip()
+            if '"answer":' in answer:
+                answer.replace('"answer":', "")
+                answer = answer.strip()
+            elif "'answer':" in answer:
+                answer.replace("'answer':", "")
+                answer = answer.strip()
+
+            form.answer = answer
 
         return form, branch if return_branch else form
 
@@ -760,8 +823,6 @@ class DirectiveMixin(ABC):
         score_range,
         select_choices,
         predict_num_sentences,
-        allow_extension,
-        max_extension,
         **kwargs,
     ):
         """
@@ -803,8 +864,6 @@ class DirectiveMixin(ABC):
             "score_range": score_range,
             "select_choices": select_choices,
             "predict_num_sentences": predict_num_sentences,
-            "allow_extension": allow_extension,
-            "max_extension": max_extension,
             **kwargs,
         }
 
@@ -816,6 +875,7 @@ class DirectiveMixin(ABC):
             for i in keys:
                 directive_kwargs["instruction"] = plan[i]
                 last_form = await self._direct(**directive_kwargs)
+                last_form.is_extension = True
                 extension_forms.append(last_form)
                 directive_kwargs["max_extension"] -= 1
                 if not getattr(last_form, "extension_required", None):
@@ -824,6 +884,7 @@ class DirectiveMixin(ABC):
         else:
             # Handle single step extension
             last_form = await self._direct(**directive_kwargs)
+            last_form.is_extension = True
             extension_forms.append(last_form)
 
         return extension_forms
@@ -840,7 +901,7 @@ class DirectiveMixin(ABC):
         Returns:
             dict: The updated form.
         """
-        if getattr(form, "performed", None):
+        if getattr(form, "action_performed", None) is True:
             return form
 
         keys = [f"action_{i+1}" for i in range(len(actions))]
@@ -880,8 +941,8 @@ class DirectiveMixin(ABC):
                     _action_responses[f"action_{idx+1}"] = item._to_dict()
 
                 form.append_to_request("action_response")
-                if not form.action_response:
-                    form.action_response = {}
+                if (a := getattr(form, "action_response", None)) is None:
+                    form.add_field("action_response", {})
 
                 len1 = len(form.action_response)
                 for k, v in _action_responses.items():
@@ -1084,6 +1145,8 @@ class DirectiveMixin(ABC):
             Any: The processed response.
         """
         out_ = content_.get("content", "")
+        if out_ == "":
+            out_ = content_
 
         if requested_fields:
             with contextlib.suppress(Exception):
@@ -1094,11 +1157,11 @@ class DirectiveMixin(ABC):
                 return ParseUtil.fuzzy_parse_json(out_)
 
             with contextlib.suppress(Exception):
+                return ParseUtil.extract_json_block(out_)
+
+            with contextlib.suppress(Exception):
                 match = re.search(r"```json\n({.*?})\n```", out_, re.DOTALL)
                 if match:
                     return ParseUtil.fuzzy_parse_json(match.group(1))
-
-            with contextlib.suppress(Exception):
-                return ParseUtil.extract_json_block(out_)
 
         return out_

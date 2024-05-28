@@ -184,7 +184,12 @@ def _parse_action_request(response):
         if match:
             json_block = match.group(1)
             parsed_json = json.loads(json_block)
-            content_ = parsed_json.get("tool_uses", [])
+            if "tool_uses" in parsed_json:
+                content_ = parsed_json["tool_uses"]
+            elif "actions" in parsed_json:
+                content_ = parsed_json["actions"]
+            else:
+                content_ = []
 
     if isinstance(content_, dict):
         content_ = [content_]
@@ -195,6 +200,12 @@ def _parse_action_request(response):
             if "recipient_name" in func_calling:
                 func_calling["action"] = func_calling["recipient_name"].split(".")[1]
                 func_calling["arguments"] = func_calling["parameters"]
+            elif "function" in func_calling:
+                func_calling["action"] = func_calling["function"]
+                if "parameters" in func_calling:
+                    func_calling["arguments"] = func_calling["parameters"]
+                elif "arguments" in func_calling:
+                    func_calling["arguments"] = func_calling["arguments"]
 
             msg = ActionRequest(
                 function=func_calling["action"]
@@ -217,6 +228,12 @@ def _parse_action_request(response):
             if isinstance(content_, list):
                 outs = []
                 for func_calling in content_:
+                    if "function" in func_calling:
+                        func_calling["action"] = func_calling["function"]
+                        if "parameters" in func_calling:
+                            func_calling["arguments"] = func_calling["parameters"]
+                        elif "arguments" in func_calling:
+                            func_calling["arguments"] = func_calling["arguments"]
                     msg = ActionRequest(
                         function=func_calling["action"]
                         .replace("action_", "")
