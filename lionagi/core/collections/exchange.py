@@ -45,7 +45,11 @@ class Exchange(Element, Generic[T]):
         examples=["{'sender_id': Progression}"],
     )
 
-    pending_outs: Progression = progression()
+    pending_outs: Progression = Field(
+        default_factory=lambda: progression(),
+        description="The pending outgoing items to the exchange.",
+        title="pending outgoing items",
+    )
 
     def __contains__(self, item):
         """
