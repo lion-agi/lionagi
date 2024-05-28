@@ -658,36 +658,37 @@ class DirectiveMixin(ABC):
         if allow_action and not tools:
             tools = True
 
+        tool_schema=None
         if tools:
             tool_schema = branch.tool_manager.get_tool_schema(tools)
 
-            if not form:
-                form = self.form_template(
-                    instruction=instruction,
-                    context=context,
-                    reason=reason,
-                    predict=predict,
-                    score=score,
-                    select=select,
-                    plan=plan,
-                    tool_schema=tool_schema,
-                    allow_action=allow_action,
-                    allow_extension=allow_extension,
-                    max_extension=max_extension,
-                    confidence=confidence,
-                    score_num_digits=score_num_digits,
-                    score_range=score_range,
-                    select_choices=select_choices,
-                    plan_num_step=plan_num_step,
-                    predict_num_sentences=predict_num_sentences,
-                )
+        if not form:
+            form = self.default_template(
+                instruction=instruction,
+                context=context,
+                reason=reason,
+                predict=predict,
+                score=score,
+                select=select,
+                plan=plan,
+                tool_schema=tool_schema,
+                allow_action=allow_action,
+                allow_extension=allow_extension,
+                max_extension=max_extension,
+                confidence=confidence,
+                score_num_digits=score_num_digits,
+                score_range=score_range,
+                select_choices=select_choices,
+                plan_num_step=plan_num_step,
+                predict_num_sentences=predict_num_sentences,
+            )
 
-            elif form and "tool_schema" not in form._all_fields:
-                form.append_to_input("tool_schema")
-                form.tool_schema = tool_schema
+        elif form and "tool_schema" not in form._all_fields:
+            form.append_to_input("tool_schema")
+            form.tool_schema = tool_schema
 
-            else:
-                form.tool_schema = tool_schema
+        else:
+            form.tool_schema = tool_schema
 
         verbose = (
             verbose

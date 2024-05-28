@@ -248,7 +248,7 @@ class DirectiveMixin:
                 form.action_response.update(_dict)
 
             return form
-
+        
         form = await _directive.direct(
             instruction=instruction,
             context=context,
@@ -283,5 +283,5 @@ class DirectiveMixin:
             if not hasattr(form, "action_response"):
                 form.append_to_request("action_response", {})
             form.action_response.update(_dict)
-
+        
         return form
