@@ -2,6 +2,27 @@ from os import getenv
 from lionagi.integrations.config.openrouter_configs import openrouter_schema
 from lionagi.libs.ln_api import BaseService, PayloadPackage
 
+allowed_kwargs = [
+    "model",
+    "frequency_penalty",
+    "n",
+    "presence_penalty",
+    "response_format",
+    "temperature",
+    "top_p",
+    "seed",
+    "stop",
+    "stream",
+    "stream_options",
+    "tools",
+    "tool_choice",
+    "user",
+    "max_tokens",
+    "logprobs",
+    "top_logprobs",
+    "logit_bias",
+]
+
 
 class OpenRouterService(BaseService):
     base_url = "https://openrouter.ai/api/v1/"
@@ -26,6 +47,7 @@ class OpenRouterService(BaseService):
             **kwargs,
         )
         self.active_endpoint = []
+        self.allowed_kwargs = allowed_kwargs
 
     async def serve(self, input_, endpoint="chat/completions", method="post", **kwargs):
         """

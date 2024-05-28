@@ -18,6 +18,9 @@ limitations under the License.
 This module defines the FunctionCalling class, which facilitates dynamic
 invocation of functions based on various input types. It supports initializing
 function calls from tuples, dictionaries, ActionRequest objects, or JSON strings.
+
+Note:
+    Function Calling object is the only way for AI system to call functions.
 """
 
 from functools import singledispatchmethod

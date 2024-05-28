@@ -14,6 +14,11 @@ See the License for the specific language governing permissions and
 limitations under the License.
 """
 
+import re
+import json
+import contextlib
+
+from lionagi.libs import ParseUtil
 from lionagi.libs.ln_convert import strip_lower, to_dict
 from lionagi.libs.ln_nested import nget
 
@@ -171,14 +176,41 @@ def _parse_action_request(response):
     elif nget(message, ["content", "tool_uses"], None):
         content_ = message["content"]["tool_uses"]
 
+    else:
+        json_block_pattern = re.compile(r"```json\n({.*?tool_uses.*?})\n```", re.DOTALL)
+
+        # Find the JSON block in the text
+        match = json_block_pattern.search(str(message["content"]))
+        if match:
+            json_block = match.group(1)
+            parsed_json = json.loads(json_block)
+            if "tool_uses" in parsed_json:
+                content_ = parsed_json["tool_uses"]
+            elif "actions" in parsed_json:
+                content_ = parsed_json["actions"]
+            else:
+                content_ = []
+
     if isinstance(content_, dict):
         content_ = [content_]
 
-    if isinstance(content_, list):
+    if isinstance(content_, list) and not content_ == []:
         outs = []
         for func_calling in content_:
+            if "recipient_name" in func_calling:
+                func_calling["action"] = func_calling["recipient_name"].split(".")[1]
+                func_calling["arguments"] = func_calling["parameters"]
+            elif "function" in func_calling:
+                func_calling["action"] = func_calling["function"]
+                if "parameters" in func_calling:
+                    func_calling["arguments"] = func_calling["parameters"]
+                elif "arguments" in func_calling:
+                    func_calling["arguments"] = func_calling["arguments"]
+
             msg = ActionRequest(
-                function=func_calling["action"].replace("action_", ""),
+                function=func_calling["action"]
+                .replace("action_", "")
+                .replace("recipient_", ""),
                 arguments=func_calling["arguments"],
             )
             outs.append(msg)
@@ -196,8 +228,16 @@ def _parse_action_request(response):
             if isinstance(content_, list):
                 outs = []
                 for func_calling in content_:
+                    if "function" in func_calling:
+                        func_calling["action"] = func_calling["function"]
+                        if "parameters" in func_calling:
+                            func_calling["arguments"] = func_calling["parameters"]
+                        elif "arguments" in func_calling:
+                            func_calling["arguments"] = func_calling["arguments"]
                     msg = ActionRequest(
-                        function=func_calling["action"].replace("action_", ""),
+                        function=func_calling["action"]
+                        .replace("action_", "")
+                        .replace("recipient_", ""),
                         arguments=func_calling["arguments"],
                     )
                     outs.append(msg)

@@ -5,7 +5,7 @@ from lionagi.libs.sys_util import SysUtil
 from lionagi.libs.ln_api import BaseService
 
 allowed_kwargs = [
-    "model",
+    # "model",
     "tokenizer",
     "modelcard",
     "framework",
@@ -17,6 +17,9 @@ allowed_kwargs = [
     "torch_dtype",
     "min_length_for_response",
     "minimum_tokens",
+    "mask_token",
+    "max_length",
+    "max_new_tokens",
 ]
 
 
@@ -52,6 +55,7 @@ class TransformersService(BaseService):
         self.task = task
         self.model = model
         self.config = config
+        self.allowed_kwargs = allowed_kwargs
         try:
             from transformers import pipeline
 
@@ -59,19 +63,11 @@ class TransformersService(BaseService):
         except ImportError:
             try:
                 if not SysUtil.is_package_installed("torch"):
-                    in_ = input(
-                        "PyTorch is required for transformers. Would you like to install it now? (y/n): "
-                    )
-                    if in_ == "y":
-                        install_pytorch()
+                    install_pytorch()
                 if not SysUtil.is_package_installed("transformers"):
-                    in_ = input(
-                        "transformers is required. Would you like to install it now? (y/n): "
+                    SysUtil.install_import(
+                        package_name="transformers", import_name="pipeline"
                     )
-                    if in_ == "y":
-                        SysUtil.install_import(
-                            package_name="transformers", import_name="pipeline"
-                        )
                     from transformers import pipeline
 
                     self.pipeline = pipeline
@@ -92,19 +88,19 @@ class TransformersService(BaseService):
         payload = {"messages": messages}
         config = {}
         for k, v in kwargs.items():
+            if k == "max_tokens":
+                config["max_new_tokens"] = v
             if k in allowed_kwargs:
                 config[k] = v
 
-        conversation = self.pipe(str(messages), **config)
+        msg = "".join([i["content"] for i in messages if i["role"] == "user"])
+        conversation = ""
+        response = self.pipe(msg, **config)
+        try:
+            conversation = response[0]["generated_text"]
+        except:
+            conversation = response
 
-        texts = conversation[-1]["generated_text"]
-        msgs = (
-            str(texts.split("]")[1:])
-            .replace("\\n", "")
-            .replace("['", "")
-            .replace("\\", "")
-        )
-
-        completion = {"model": self.pipe.model, "choices": [{"message": msgs}]}
+        completion = {"choices": [{"message": {"content": conversation}}]}
 
         return payload, completion

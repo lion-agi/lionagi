@@ -1,14 +1,19 @@
 import tiktoken
 import math
 from .ln_convert import to_str
+from .special_tokens import disallowed_tokens
 
-
-_special_tokens = ["\n", "\t", " ", "  ", "▁", "▄", "▅", "▆", "▇", "█", "▏", "▎", "▍", "▌", "▋", "▊", "▉", "▔", "▕", "▁▁", "▁▂", "▁▃", "▁▄", "▁▅", "▁▆", "▁▇", "▁█", "▁▏", "▁▎", "▁▍", "▁▌", "▁▋", "▁▊", "▁▉", "▁▔", "▁▕", "▄▄", "▄▅", "▄▆", "▄▇", "▄█", "▄▏", "▄▎", "▄▍", "▄▌", "▄▋", "▄▊", "▄▉", "▄▔", "▄▕", "▅▅", "▅▆", "▅▇", "▅█", "▅▏", "▅▎", "▅▍", "▅▌", "▅▋", "▅▊", "▅▉", "▅▔", "▅▕", "▆▆", "▆▇", "▆█", "▆▏", "▆▎", "▆▍", "▆▌", "▆▋", "▆▊", "▆▉", "▆▔", "▆▕", "▇▇", "▇█", "▇▏", "▇▎", "▇▍", "▇▌", "▇▋", "▇▊", "▇▉", "▇▔", "▇▕", "██", "█▏", "█▎", "█▍", "█▌", "█▋", "█▊", "█▉", "█", "█▔", "█▕", "▏▏", "▏▎", "▏▍", "▏▌", "▏▋", "▏▊", "▏▉", "▏", "▏▔", "▏▕", "▎▎", "▎▍", "▎▌", "▎▋", "▎▊", "▎▉", "▎", "▎▔", "▎▕", "▍▍", "▍▌", "▍▋", "▍▊", "▍▉", "▍", "▍▔", "▍▕", "▌▌", "▌▋", "▌▊", "▌▉", "▌", "▌▔", "▌▕", "▋▋", "▋▊", "▋▉", "▋", "▋▔", "▋▕", "▊▊", "▊▉", "▊", "▊▔", "▊▕", "▉▉", "▉", "▉▔", "▉▕", "▔▔", "▔▕", "▕▕", "▁▁▁", "▁▁▂", "▁▁▃", "▁▁▄", "▁▁▅", "▁▁▆", "▁▁▇", "▁▁█", "▁▁▏", "▁▁▎", "▁▁▍", "▁▁▌", "▁▁▋", "▁▁▊", "▁▁▉", "▁▁▔", "▁▁▕", "▁▂▂", "▁▂▃", "▁▂▄", "▁▂▅", "▁▂▆", "▁▂▇", "▁▂█"]
 
 class TokenizeUtil:
-    
+
     @staticmethod
-    def tokenize(text, encoding_model=None, encoding_name=None, return_byte=False, special_tokens=_special_tokens):
+    def tokenize(
+        text,
+        encoding_model=None,
+        encoding_name=None,
+        return_byte=False,
+        disallowed_tokens=disallowed_tokens,
+    ):
         encoding = None
 
         if encoding_model:
@@ -16,19 +21,20 @@ class TokenizeUtil:
                 encoding_name = tiktoken.encoding_name_for_model(encoding_model)
             except:
                 encoding_name = encoding_name or "cl100k_base"
-        
+
         if not encoding_name or encoding_name in tiktoken.list_encoding_names():
             encoding_name = encoding_name or "cl100k_base"
             encoding = tiktoken.get_encoding(encoding_name)
-        
+
         special_encodings = (
-            [encoding.encode(token) for token in special_tokens] 
-            if special_tokens else []
+            [encoding.encode(token) for token in disallowed_tokens]
+            if disallowed_tokens
+            else []
         )
         codes = encoding.encode(text)
         if special_encodings and len(special_encodings) > 0:
             codes = [code for code in codes if code not in special_encodings]
-        
+
         if return_byte:
             return codes
 
@@ -104,21 +110,22 @@ class TokenizeUtil:
 
         except Exception as e:
             raise ValueError(f"An error occurred while chunking the text. {e}")
-        
-        
+
     @staticmethod
     def chunk_by_tokens(
-        text: str, 
-        chunk_size: int, 
-        overlap: float, 
-        threshold: int,         # minimum size of the final chunk in number of tokens
-        encoding_model=None, 
-        encoding_name=None, 
-        return_tokens=False, 
-        return_byte=False
+        text: str,
+        chunk_size: int,
+        overlap: float,
+        threshold: int,  # minimum size of the final chunk in number of tokens
+        encoding_model=None,
+        encoding_name=None,
+        return_tokens=False,
+        return_byte=False,
     ) -> list[str | None]:
 
-        tokens = TokenizeUtil.tokenize(text, encoding_model, encoding_name, return_byte=return_byte)
+        tokens = TokenizeUtil.tokenize(
+            text, encoding_model, encoding_name, return_byte=return_byte
+        )
 
         n_chunks = math.ceil(len(tokens) / chunk_size)
         overlap_size = int(overlap * chunk_size / 2)
@@ -131,7 +138,11 @@ class TokenizeUtil:
             chunks = [tokens[: chunk_size + overlap_size]]
             if residue > threshold:
                 chunks.append(tokens[chunk_size - overlap_size :])
-                return [" ".join(chunk).strip() for chunk in chunks] if not return_tokens else chunks
+                return (
+                    [" ".join(chunk).strip() for chunk in chunks]
+                    if not return_tokens
+                    else chunks
+                )
             else:
                 return text if not return_tokens else [tokens]
 
@@ -148,4 +159,6 @@ class TokenizeUtil:
             else:
                 chunks[-1] += tokens[-residue:]
 
-            return [" ".join(chunk) for chunk in chunks] if not return_tokens else chunks
+            return (
+                [" ".join(chunk) for chunk in chunks] if not return_tokens else chunks
+            )

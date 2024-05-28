@@ -139,6 +139,7 @@ def read_text(filepath: str, clean: bool = True) -> Tuple[str, dict]:
     except Exception as e:
         raise e
 
+
 def _file_to_chunks(
     input: Dict[str, Any],
     field: str = "content",

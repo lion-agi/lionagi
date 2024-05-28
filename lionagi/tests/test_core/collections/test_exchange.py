@@ -17,7 +17,7 @@ class TestExchange(unittest.TestCase):
     def test_initialization(self):
         self.assertEqual(len(self.exchange.pile), 0)
         self.assertEqual(len(self.exchange.pending_ins), 0)
-        self.assertEqual(len(self.exchange.pending_outs), 11)
+        self.assertEqual(len(self.exchange.pending_outs), 0)
 
     def test_include_in(self):
         sender_id = "sender1"
@@ -34,7 +34,7 @@ class TestExchange(unittest.TestCase):
             self.exchange.include(node, "out")
 
         self.assertEqual(len(self.exchange.pile), 5)
-        self.assertEqual(len(self.exchange.pending_outs), 11)
+        self.assertEqual(len(self.exchange.pending_outs), 5)
 
     def test_exclude(self):
         for node in self.nodes[:5]:
@@ -103,7 +103,7 @@ class TestExchange(unittest.TestCase):
             self.exchange.include(new_node, "out")
 
         self.assertEqual(len(self.exchange.pile), 2)
-        self.assertEqual(len(self.exchange.pending_outs), 6)
+        self.assertEqual(len(self.exchange.pending_outs), 2)
 
     def test_exclude_from_empty_exchange(self):
         result = self.exchange.exclude(Node(content="nonexistent"))

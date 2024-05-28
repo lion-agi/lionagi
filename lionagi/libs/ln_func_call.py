@@ -179,20 +179,17 @@ async def mcall(
     funcs_ = to_list(func, dropna=True)
 
     if explode:
-        task = [
-            asyncio.create_task(_alcall(inputs_, f, flatten=True, **kwargs)) for f in funcs_
-        ]
-        return await asyncio.gather(*task)
-        
+        tasks = [_alcall(inputs_, f, flatten=True, **kwargs) for f in funcs_]
     elif len(inputs_) == len(funcs_):
         tasks = [
-            call_handler(func, inp, **kwargs) for inp, func in zip(inputs_, funcs_)
+            AsyncUtil.handle_async_sync(func, inp, **kwargs)
+            for inp, func in zip(inputs_, funcs_)
         ]
     else:
         raise ValueError(
             "Inputs and functions must be the same length for map calling."
         )
-    return await asyncio.gather(*tasks)
+    return await AsyncUtil.execute_tasks(*tasks)
 
 
 async def bcall(
@@ -391,7 +388,7 @@ async def rcall(
         return default
     elif last_exception is not None:
         raise RuntimeError(
-            f"Operation failed after {retries} attempts: {last_exception}"
+            f"Operation failed after {retries+1} attempts: {last_exception}"
         ) from last_exception
     else:
         raise RuntimeError("rcall failed without catching an exception")

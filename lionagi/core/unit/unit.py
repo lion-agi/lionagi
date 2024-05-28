@@ -40,7 +40,7 @@ class Unit(Directive, DirectiveMixin):
     default_template = UnitForm
 
     def __init__(
-        self, branch, imodel: iModel = None, template=None, rulebook=None
+        self, branch, imodel: iModel = None, template=None, rulebook=None, verbose=False
     ) -> None:
         self.branch = branch
         if imodel and isinstance(imodel, iModel):
@@ -50,6 +50,7 @@ class Unit(Directive, DirectiveMixin):
             self.imodel = branch.imodel
         self.form_template = template or self.default_template
         self.validator = Validator(rulebook=rulebook) if rulebook else Validator()
+        self.verbose = verbose
 
     async def chat(
         self,
@@ -145,6 +146,7 @@ class Unit(Directive, DirectiveMixin):
         plan_num_step=None,
         predict_num_sentences=None,
         directive: str = None,
+        verbose=None,
         **kwargs,
     ):
         """
@@ -178,10 +180,11 @@ class Unit(Directive, DirectiveMixin):
             Any: The processed response.
         """
         kwargs = {**retry_kwargs, **kwargs}
+        verbose = verbose if verbose is not None else self.verbose
 
         if not directive:
 
-            return await rcall(
+            out = await rcall(
                 self._direct,
                 instruction=instruction,
                 context=context,
@@ -203,18 +206,34 @@ class Unit(Directive, DirectiveMixin):
                 select_choices=select_choices,
                 plan_num_step=plan_num_step,
                 predict_num_sentences=predict_num_sentences,
+                verbose=verbose,
                 **kwargs,
             )
 
-        return await rcall(
+            if verbose:
+                print(
+                    "\n--------------------------------------------------------------"
+                )
+                print(f"Directive successfully completed!")
+
+            return out
+
+        out = await rcall(
             self._mono_direct,
             directive=directive,
             instruction=instruction,
             context=context,
             branch=branch,
             tools=tools,
+            verbose=verbose,
             **kwargs,
         )
+
+        if verbose:
+            print("--------------------------------------------------------------")
+            print(f"Directive successfully completed!")
+
+        return out
 
     async def select(self, *args, **kwargs):
         """
@@ -297,6 +316,7 @@ class Unit(Directive, DirectiveMixin):
         branch=None,
         tools=None,
         template=None,
+        verbose=None,
         **kwargs,
     ):
         """
@@ -327,6 +347,10 @@ class Unit(Directive, DirectiveMixin):
 
         if hasattr(self, strip_lower(directive)):
             directive = getattr(self, strip_lower(directive))
+
+            verbose = verbose if verbose is not None else self.verbose
+            if verbose:
+                print(f"Performing directive: {directive}...")
 
             return await directive(
                 context=context,

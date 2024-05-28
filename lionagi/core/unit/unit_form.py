@@ -63,10 +63,12 @@ class UnitForm(BaseUnitForm):
     answer: str | None = Field(
         None,
         description=(
-            "Provide the answer to the questions asked. If an accurate answer "
-            "cannot be provided at this step, set `extend_required` to True. "
-            "Additionally, if actions are required at this step, set "
-            "`action_required` to True and reply with `PLEASE_ACTION`."
+            "Adhere to the prompt and all user instructions. Provide the answer "
+            "for the task. if actions are required at this step, set "
+            "`action_required` to True and write only `PLEASE_ACTION` to the answer_field."
+            "Additionally, if extensions are allowed and needed at this step to provide a"
+            " high-quality, accurate answer, set extension_required to True and"
+            "you will have another chance to provide the answer after the actions are done.",
         ),
     )
 
@@ -134,7 +136,9 @@ class UnitForm(BaseUnitForm):
         None, description="The list of tools available for using."
     )
 
-    assignment: str = "task -> answer"
+    assignment: str = Field("task -> answer")
+
+    is_extension: bool = Field(False)
 
     def __init__(
         self,

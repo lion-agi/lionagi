@@ -81,7 +81,7 @@ class RoledMessage(Node, Sendable):
 
         content_dict = self.content.copy()
 
-        if "images" not in content_dict:
+        if not content_dict.get("images", None):
             if len(content_dict) == 1:
                 content_dict = str(list(content_dict.values())[0])
             else:

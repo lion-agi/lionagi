@@ -19,6 +19,28 @@ from lionagi.integrations.config.oai_configs import oai_schema
 from lionagi.libs.ln_api import BaseService, PayloadPackage
 
 
+allowed_kwargs = [
+    "model",
+    "frequency_penalty",
+    "n",
+    "presence_penalty",
+    "response_format",
+    "temperature",
+    "top_p",
+    "seed",
+    "stop",
+    "stream",
+    "stream_options",
+    "tools",
+    "tool_choice",
+    "user",
+    "max_tokens",
+    "logprobs",
+    "top_logprobs",
+    "logit_bias",
+]
+
+
 class OpenAIService(BaseService):
     """
     A service to interact with OpenAI's API endpoints.
@@ -68,6 +90,7 @@ class OpenAIService(BaseService):
             **kwargs,
         )
         self.active_endpoint = []
+        self.allowed_kwargs = allowed_kwargs
 
     async def serve(self, input_, endpoint="chat/completions", method="post", **kwargs):
         """

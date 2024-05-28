@@ -57,6 +57,7 @@ class Session:
         system_sender: str | None = None,
         user: str | None = None,
         imodel=None,
+        tools=None,
     ):
         self.ln_id = SysUtil.create_id()
         self.timestamp = SysUtil.get_timestamp(sep=None)[:-6]
@@ -73,6 +74,8 @@ class Session:
             self.new_branch(system=self.system.clone())
         else:
             self.default_branch = self.branches[0]
+        if tools:
+            self.default_branch.tool_manager.register_tools(tools)
 
     def _validate_branches(self, value):
         """
