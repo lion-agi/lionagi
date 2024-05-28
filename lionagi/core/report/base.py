@@ -51,13 +51,17 @@ class BaseForm(Component):
     REFERENCES:
         @article{khattab2023dspy,
         title={DSPy: Compiling Declarative Language Model Calls into Self-Improving Pipelines},
-        author={Khattab, Omar and Singhvi, Arnav and Maheshwari, Paridhi and Zhang, Zhiyuan and Santhanam, Keshav and Vardhamanan, Sri and Haq, Saiful and Sharma, Ashutosh and Joshi, Thomas T. and Moazam, Hanna and Miller, Heather and Zaharia, Matei and Potts, Christopher},
+        author={Khattab, Omar and Singhvi, Arnav and Maheshwari, Paridhi and Zhang, Zhiyuan and
+        Santhanam, Keshav and Vardhamanan, Sri and Haq, Saiful and Sharma, Ashutosh and Joshi,
+        Thomas T. and Moazam, Hanna and Miller, Heather and Zaharia, Matei and Potts, Christopher},
         journal={arXiv preprint arXiv:2310.03714},
         year={2023}
         }
         @article{khattab2022demonstrate,
-        title={Demonstrate-Search-Predict: Composing Retrieval and Language Models for Knowledge-Intensive {NLP}},
-        author={Khattab, Omar and Santhanam, Keshav and Li, Xiang Lisa and Hall, David and Liang, Percy and Potts, Christopher and Zaharia, Matei},
+        title={Demonstrate-Search-Predict: Composing Retrieval and Language Models for
+        Knowledge-Intensive {NLP}},
+        author={Khattab, Omar and Santhanam, Keshav and Li, Xiang Lisa and Hall, David and Liang,
+        Percy and Potts, Christopher and Zaharia, Matei},
         journal={arXiv preprint arXiv:2212.14024},
         year={2022}
         }
