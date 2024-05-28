@@ -154,7 +154,7 @@ class iModel:
         if "model" not in self.config:
             model = SERVICE_PROVIDERS_MAPPING[provider]["default_model"]
 
-        if self.config.get("model", None) != model:
+        if self.config.get("model", None) != model and model is not None:
             self.iModel_name = model
             self.config["model"] = model
             ninsert(self.endpoint_schema, ["config", "model"], model)
