@@ -694,33 +694,39 @@ class StringMatch:
 
         if isinstance(out_, str):
             # first try to parse it straight as a fuzzy json
+            
             try:
-                out_ = ParseUtil.md_to_json(out_)
+                out_ = ParseUtil.fuzzy_parse_json(out_)
                 return StringMatch.correct_dict_keys(keys, out_)
-
-            except Exception:
+            
+            except:
                 try:
-                    # if failed we try to extract the json block and parse it
                     out_ = ParseUtil.md_to_json(out_)
                     return StringMatch.correct_dict_keys(keys, out_)
 
                 except Exception:
-                    # if still failed we try to extract the json block using re and parse it again
-                    match = re.search(r"```json\n({.*?})\n```", out_, re.DOTALL)
-                    if match:
-                        out_ = match.group(1)
-                        try:
-                            out_ = ParseUtil.fuzzy_parse_json(out_)
-                            return StringMatch.correct_dict_keys(keys, out_)
+                    try:
+                        # if failed we try to extract the json block and parse it
+                        out_ = ParseUtil.md_to_json(out_)
+                        return StringMatch.correct_dict_keys(keys, out_)
 
-                        except:
+                    except Exception:
+                        # if still failed we try to extract the json block using re and parse it again
+                        match = re.search(r"```json\n({.*?})\n```", out_, re.DOTALL)
+                        if match:
+                            out_ = match.group(1)
                             try:
-                                out_ = ParseUtil.fuzzy_parse_json(
-                                    out_.replace("'", '"')
-                                )
+                                out_ = ParseUtil.fuzzy_parse_json(out_)
                                 return StringMatch.correct_dict_keys(keys, out_)
+
                             except:
-                                pass
+                                try:
+                                    out_ = ParseUtil.fuzzy_parse_json(
+                                        out_.replace("'", '"')
+                                    )
+                                    return StringMatch.correct_dict_keys(keys, out_)
+                                except:
+                                    pass
 
         if isinstance(out_, dict):
             try:
