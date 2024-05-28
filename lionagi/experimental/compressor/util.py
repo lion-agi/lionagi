@@ -39,16 +39,16 @@
 # async def rank_by_perplexity(
 #     text: str | list[str] = None,   # if list we assume they are already well split
 #     initial_text=None,
-    
-#     segments, 
-#     initial_text=None, 
-#     cumulative=False, 
+
+#     segments,
+#     initial_text=None,
+#     cumulative=False,
 #     **kwargs
 # ):
 #     _segments = []
 #     _context = initial_text or ""
 #     _task = []
-    
+
 #     if cumulative:
 #         for i in range(1, len(segments)):
 #             _context += " " + segments[i - 1]

@@ -32,7 +32,7 @@ class OllamaService(BaseService):
 
         self.ollama = ollama
         self.model = model
-        self.client = self.ollama.AsyncClient(**kwargs)
+        self.client = self.ollama.AsyncClient()
 
     async def serve_chat(self, messages, **kwargs):
         config = {}
@@ -42,11 +42,11 @@ class OllamaService(BaseService):
 
         self.ollama.pull(self.model)
         payload = {"messages": messages}
+        if "model" not in config:
+            config["model"] = self.model
 
         try:
-            completion = await self.client.chat(
-                model=self.model, messages=messages, **config
-            )
+            completion = await self.client.chat(messages=messages, **config)
             completion["choices"] = [{"message": completion.pop("message")}]
             return payload, completion
         except Exception as e:

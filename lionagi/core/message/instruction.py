@@ -155,7 +155,7 @@ class Instruction(RoledMessage):
                 context["additional_context"] = additional_context
             self.content.update(context)
 
-        if requested_fields:
+        if not requested_fields in [None, {}]:
             self.content["requested_fields"] = self._format_requested_fields(
                 requested_fields
             )

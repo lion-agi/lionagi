@@ -230,7 +230,16 @@ class TestFlatten(unittest.TestCase):
     def test_flatten_nested_list(self):
         nested_list = [[1, 2], [3, [4, 5]]]
         result = flatten(nested_list)
-        self.assertEqual(result, {"0[^_^]0": 1, "0[^_^]1": 2, "1[^_^]0": 3, "1[^_^]1[^_^]0": 4, "1[^_^]1[^_^]1": 5})
+        self.assertEqual(
+            result,
+            {
+                "0[^_^]0": 1,
+                "0[^_^]1": 2,
+                "1[^_^]0": 3,
+                "1[^_^]1[^_^]0": 4,
+                "1[^_^]1[^_^]1": 5,
+            },
+        )
 
     def test_flatten_with_max_depth(self):
         nested_dict = {"a": {"b": {"c": 1}}}
@@ -336,7 +345,13 @@ class TestGetFlattenedKeys(unittest.TestCase):
 
     def test_get_keys_from_nested_list(self):
         nested_list = [[1, 2], [3, [4, 5]]]
-        expected_keys = ["0[^_^]0", "0[^_^]1", "1[^_^]0", "1[^_^]1[^_^]0", "1[^_^]1[^_^]1"]
+        expected_keys = [
+            "0[^_^]0",
+            "0[^_^]1",
+            "1[^_^]0",
+            "1[^_^]1[^_^]0",
+            "1[^_^]1[^_^]1",
+        ]
         self.assertEqual(set(get_flattened_keys(nested_list)), set(expected_keys))
 
     def test_get_keys_with_max_depth(self):

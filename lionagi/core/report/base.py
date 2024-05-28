@@ -31,10 +31,10 @@ from ..collections.util import to_list_type
 class BaseForm(Component):
     """
     NOTICE:
-        The Form/Report system is inspired by DSPy. (especially in DSPy's usage 
+        The Form/Report system is inspired by DSPy. (especially in DSPy's usage
         of `Signature` and `Module`)
         https://github.com/stanfordnlp/dspy
-    
+
         MIT License
         Copyright (c) 2023 Stanford Future Data Systems
 
@@ -47,7 +47,7 @@ class BaseForm(Component):
 
         The above copyright notice and this permission notice shall be included in all
         copies or substantial portions of the Software.
-        
+
     REFERENCES:
         @article{khattab2023dspy,
         title={DSPy: Compiling Declarative Language Model Calls into Self-Improving Pipelines},
@@ -67,7 +67,7 @@ class BaseForm(Component):
         - fully integrated with LionAGI's existing collections and components
         - developed report system for multi-step task handling
         - created work system for task execution and management
-        
+
     Base class for handling form-like structures within an application.
     Manages form components and operations such as filling forms and
     checking their state (filled, workable).

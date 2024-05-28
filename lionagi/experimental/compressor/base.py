@@ -3,12 +3,11 @@ from lionagi.core.collections import iModel
 
 
 class TokenCompressor(ABC):
-
     """
     NOTICE:
         The token compressor system is inspired by LLMLingua.
         https://github.com/microsoft/LLMLingua
-        
+
         MIT License
         Copyright (c) Microsoft Corporation.
 
@@ -32,14 +31,15 @@ class TokenCompressor(ABC):
             doi = "10.18653/v1/2023.emnlp-main.825",
             pages = "13358--13376",
         }
-        
+
     LionAGI Modifications:
+        - Only borrowed the concept of token compression via perplexity
         - Removed the dependency on the LLMLingua library
         - use logprobs from GPT model to calculate perplexity
         - added async ability to the functions
         - used lionagi existing iModel class for API calls
     """
-    
+
     def __init__(self, imodel: iModel, tokenizer=None, splitter=None):
         self.imodel = imodel
         self.tokenizer = tokenizer

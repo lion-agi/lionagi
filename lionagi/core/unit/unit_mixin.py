@@ -155,11 +155,9 @@ class DirectiveMixin(ABC):
             branch.update_last_instruction_meta(payload)
             _choices = completion.pop("choices", None)
 
-
             """
             price: 0.5/1M input tokens + 1.5/1M output tokens - gpt-3.5-turbo
             price: 5/1M input tokens + 15/1M output tokens - gpt-4o
-            
             """
 
             price_map = {
@@ -167,7 +165,6 @@ class DirectiveMixin(ABC):
                 "gpt-4-turbo": (10, 30),
                 "gpt-3.5-turbo": (0.5, 1.5),
             }
-
 
             def process_completion_choice(choice):
                 if isinstance(choice, dict):
@@ -179,14 +176,22 @@ class DirectiveMixin(ABC):
                         metadata=_completion,
                         sender=sender,
                     )
-                
-                a = branch.messages[-1]._meta_get(["extra", "usage", "prompt_tokens"], 0)
-                b = branch.messages[-1]._meta_get(["extra", "usage", "completion_tokens"], 0)
+
+                a = branch.messages[-1]._meta_get(
+                    ["extra", "usage", "prompt_tokens"], 0
+                )
+                b = branch.messages[-1]._meta_get(
+                    ["extra", "usage", "completion_tokens"], 0
+                )
                 m = completion.get("model", None)
                 if m:
-                    price = [v for k, v in price_map.items() if k in m][0]
-                    ttl = (a*price[0] + b*price[1]) / 1000000
-                branch.messages[-1]._meta_insert(["extra", "usage", "expense"], ttl)
+                    price = [v for k, v in price_map.items() if k in m]
+                    if len(price) == 1:
+                        price = price[0]
+                        ttl = (a * price[0] + b * price[1]) / 1000000
+                        branch.messages[-1]._meta_insert(
+                            ["extra", "usage", "expense"], ttl
+                        )
                 return msg
 
             if _choices and not isinstance(_choices, list):
@@ -226,6 +231,7 @@ class DirectiveMixin(ABC):
             Any: The processed result.
         """
         action_request = action_request or _parse_action_request(_msg)
+        # print(_msg, action_request)
         if action_request is None:
             return _msg if _msg else False
 
@@ -485,11 +491,19 @@ class DirectiveMixin(ABC):
             **kwargs,
         )
 
+        if isinstance(a, str):
+            return a
+
         a = list(a)
+
         if len(a) == 2 and a[0] == a[1]:
             return a[0] if not isinstance(a[0], tuple) else a[0][0]
-
-        return a[0], a[1]
+        if len(a) == 2 and a[0] != a[1]:
+            return a[0], a[1]
+        if len(a) == 1 and isinstance(a[0], tuple):
+            return a[0][0]
+        if len(a) == 1 and not isinstance(a[0], tuple):
+            return a[0]
 
     async def _direct(
         self,
@@ -1087,14 +1101,14 @@ class DirectiveMixin(ABC):
 
         if isinstance(out_, str):
             with contextlib.suppress(Exception):
-                return ParseUtil.extract_json_block(out_)
-
-            with contextlib.suppress(Exception):
                 return ParseUtil.fuzzy_parse_json(out_)
 
             with contextlib.suppress(Exception):
                 match = re.search(r"```json\n({.*?})\n```", out_, re.DOTALL)
                 if match:
                     return ParseUtil.fuzzy_parse_json(match.group(1))
+
+            with contextlib.suppress(Exception):
+                return ParseUtil.extract_json_block(out_)
 
         return out_

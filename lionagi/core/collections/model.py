@@ -18,7 +18,7 @@ import os
 import asyncio
 import numpy as np
 from dotenv import load_dotenv
-from lionagi.libs import SysUtil, BaseService, StatusTracker, APIUtil, to_list, lcall
+from lionagi.libs import SysUtil, BaseService, StatusTracker, APIUtil, to_list, ninsert
 from .abc import Component, ModelLimitExceededError
 
 load_dotenv()
@@ -43,7 +43,8 @@ class iModel:
         config (dict): Configuration dictionary for the model.
         iModel_name (str): Name of the model.
     """
-    default_model="gpt-4o"
+
+    default_model = "gpt-4o"
 
     def __init__(
         self,
@@ -59,6 +60,7 @@ class iModel:
         interval_requests: int = None,
         interval: int = None,
         service: BaseService = None,
+        allowed_parameters=[],
         **kwargs,  # additional parameters for the model
     ):
         """
@@ -87,7 +89,7 @@ class iModel:
         self.ln_id: str = SysUtil.create_id()
         self.timestamp: str = SysUtil.get_timestamp(sep=None)[:-6]
         self.endpoint = endpoint
-
+        self.allowed_parameters = allowed_parameters
         if isinstance(provider, type):
             provider = provider.__name__.replace("Service", "").lower()
 
@@ -102,8 +104,8 @@ class iModel:
             provider_schema or SERVICE_PROVIDERS_MAPPING[provider]["schema"]
         )
         self.provider = SERVICE_PROVIDERS_MAPPING[provider]["service"]
-        self.endpoint_schema = self.provider_schema[endpoint]
-        self.token_limit = self.endpoint_schema.get("token_limit", None)
+        self.endpoint_schema = self.provider_schema.get(endpoint, {})
+        self.token_limit = self.endpoint_schema.get("token_limit", 100_000)
 
         if api_key is not None:
             self.api_key = api_key
@@ -111,33 +113,51 @@ class iModel:
         elif api_key_schema is not None:
             self.api_key = os.getenv(api_key_schema)
         else:
-            self.api_key = os.getenv(self.provider_schema["API_key_schema"][0])
+            api_schema = self.provider_schema.get("API_key_schema", None)
+            if api_schema:
+                self.api_key = os.getenv(
+                    self.provider_schema["API_key_schema"][0], None
+                )
 
         self.status_tracker = StatusTracker()
+
+        set_up_kwargs = {
+            "api_key": getattr(self, "api_key", None),
+            "schema": self.provider_schema or None,
+            "endpoint": self.endpoint,
+            "token_limit": self.token_limit,
+            "token_encoding_name": token_encoding_name
+            or self.endpoint_schema.get("token_encoding_name", None),
+            "max_tokens": interval_tokens
+            or self.endpoint_schema.get("interval_tokens", None),
+            "max_requests": interval_requests
+            or self.endpoint_schema.get("interval_requests", None),
+            "interval": interval or self.endpoint_schema.get("interval", None),
+        }
+
+        set_up_kwargs = {
+            k: v
+            for k, v in set_up_kwargs.items()
+            if v is not None and k in self.allowed_parameters
+        }
 
         self.service: BaseService = self._set_up_service(
             service=service,
             provider=self.provider,
-            api_key=self.api_key,
-            schema=self.provider_schema,
-            token_encoding_name=token_encoding_name
-            or self.endpoint_schema["token_encoding_name"],
-            max_tokens=interval_tokens or self.endpoint_schema["interval_tokens"],
-            max_requests=interval_requests or self.endpoint_schema["interval_requests"],
-            interval=interval or self.endpoint_schema["interval"],
+            **set_up_kwargs,
         )
 
         self.config = self._set_up_params(
-            config or self.endpoint_schema["config"], **kwargs
+            config or self.endpoint_schema.get("config", {}), **kwargs
         )
 
-        if not model:
-            model = self.default_model
+        if "model" not in self.config:
+            model = SERVICE_PROVIDERS_MAPPING[provider]["default_model"]
 
-        if self.config["model"] != model:
+        if self.config.get("model", None) != model:
             self.iModel_name = model
             self.config["model"] = model
-            self.endpoint_schema["config"]["model"] = model
+            ninsert(self.endpoint_schema, ["config", "model"], model)
 
         else:
             self.iModel_name = self.config["model"]
@@ -196,10 +216,11 @@ class iModel:
         Raises:
             ValueError: If any parameter is not allowed.
         """
+        kwargs = {k: v for k, v in kwargs.items() if v is not None}
         params = {**default_config, **kwargs}
-        allowed_params = (
-            self.endpoint_schema["required"] + self.endpoint_schema["optional"]
-        )
+        allowed_params = self.endpoint_schema.get(
+            "required", []
+        ) + self.endpoint_schema.get("optional", [])
 
         if allowed_params != []:
             if (
@@ -227,7 +248,7 @@ class iModel:
         num_tokens = APIUtil.calculate_num_token(
             {"messages": messages},
             "chat/completions",
-            self.endpoint_schema["token_encoding_name"],
+            self.endpoint_schema.get("token_encoding_name", None),
         )
 
         if num_tokens > self.token_limit:
@@ -303,61 +324,65 @@ class iModel:
         self,
         initial_context: str = None,
         tokens: list[str] = None,
-        system_msg: str =None,
-        n_samples: int = 1,             # number of samples used for the computation
-        use_residue: bool = True,      # whether to use residue for the last sample
-        **kwargs                        # additional arguments for the model
+        system_msg: str = None,
+        n_samples: int = 1,  # number of samples used for the computation
+        use_residue: bool = True,  # whether to use residue for the last sample
+        **kwargs,  # additional arguments for the model
     ) -> tuple[list[str], float]:
         tasks = []
         context = initial_context or ""
-        
+
         n_samples = n_samples or len(tokens)
         sample_token_len, residue = divmod(len(tokens), n_samples)
         samples = []
-        
+
         if n_samples == 1:
             samples = [tokens]
         else:
-            samples = [
-                tokens[: (i + 1) * sample_token_len]
-                for i in range(n_samples)
-            ]
-            
+            samples = [tokens[: (i + 1) * sample_token_len] for i in range(n_samples)]
+
             if use_residue and residue != 0:
                 samples.append(tokens[-residue:])
-        
+
         sampless = [context + " ".join(sample) for sample in samples]
 
         for sample in sampless:
             messages = [{"role": "system", "content": system_msg}] if system_msg else []
-            messages.append({"role": "user", "content": sample},)
-            
+            messages.append(
+                {"role": "user", "content": sample},
+            )
+
             task = asyncio.create_task(
                 self.call_chat_completion(
-                    messages=messages, logprobs=True, max_tokens=sample_token_len, **kwargs
+                    messages=messages,
+                    logprobs=True,
+                    max_tokens=sample_token_len,
+                    **kwargs,
                 )
             )
             tasks.append(task)
-        
-        results = await asyncio.gather(*tasks)   # result is (payload, response)
+
+        results = await asyncio.gather(*tasks)  # result is (payload, response)
         results_ = []
         num_prompt_tokens = 0
         num_completion_tokens = 0
-        
+
         for idx, result in enumerate(results):
             _dict = {}
             _dict["tokens"] = samples[idx]
-            
+
             num_prompt_tokens += result[1]["usage"]["prompt_tokens"]
             num_completion_tokens += result[1]["usage"]["completion_tokens"]
-            
+
             logprobs = result[1]["choices"][0]["logprobs"]["content"]
             logprobs = to_list(logprobs, flatten=True, dropna=True)
             _dict["logprobs"] = [(i["token"], i["logprob"]) for i in logprobs]
             results_.append(_dict)
-        
-        logprobs = to_list([[i[1] for i in d["logprobs"]] for d in results_], flatten=True)
-        
+
+        logprobs = to_list(
+            [[i[1] for i in d["logprobs"]] for d in results_], flatten=True
+        )
+
         return {
             "tokens": tokens,
             "n_samples": n_samples,
@@ -366,4 +391,3 @@ class iModel:
             "logprobs": logprobs,
             "perplexity": np.exp(np.mean(logprobs)),
         }
-        
