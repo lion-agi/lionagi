@@ -26,7 +26,7 @@ class LiteLLMService(BaseService):
 
         SysUtil.check_import("litellm")
 
-        from litellm import acompletion
+        from lionagi.integrations.LiteLLM.litellm import acompletion
 
         self.acompletion = acompletion
         self.model = model

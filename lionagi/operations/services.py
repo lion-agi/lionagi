@@ -117,7 +117,7 @@ class Services:
                 kwargs (Optional[Any]): additional kwargs for calling the model
         """
 
-        from .litellm import LiteLLMService
+        from ..integrations.LiteLLM.litellm import LiteLLMService
 
         return LiteLLMService(**kwargs)
 

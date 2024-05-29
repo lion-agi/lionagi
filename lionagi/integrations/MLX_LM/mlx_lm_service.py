@@ -2,7 +2,7 @@ import re
 from lionagi.libs.sys_util import SysUtil
 import lionagi.libs.ln_convert as convert
 from lionagi.libs.ln_api import BaseService
-from lionagi.integrations.config.mlx_configs import model
+from lionagi.integrations.MLX_LM.mlx_configs import model
 
 
 class MLXService(BaseService):
@@ -14,7 +14,7 @@ class MLXService(BaseService):
         if model is not None and "olmo" in str(model).lower():
             SysUtil.check_import("olmo", pip_name="ai2-olmo")
 
-        from mlx_lm import load, generate
+        from lionagi.integrations.MLX_LM.mlx_lm import load, generate
 
         super().__init__()
 

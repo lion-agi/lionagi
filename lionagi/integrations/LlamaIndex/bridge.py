@@ -21,7 +21,7 @@ class LlamaIndexBridge:
                 TypeError: If `node_type` is neither a string nor a subclass of `BaseNode`.
                 AttributeError: If an error occurs due to an invalid node type or during the creation of the node object.
         """
-        from .textnode import to_llama_index_node
+        from .schema.textnode import to_llama_index_node
 
         return to_llama_index_node(*args, **kwargs)
 
@@ -47,7 +47,7 @@ class LlamaIndexBridge:
         Raises:
                 ValueError: If there is an error initializing the reader or loading the data.
         """
-        from .reader import llama_index_read_data
+        from .data_loader.reader import llama_index_read_data
 
         return llama_index_read_data(*args, **kwargs)
 
@@ -71,7 +71,7 @@ class LlamaIndexBridge:
         Raises:
                 ValueError: If there is an error initializing the node parser or parsing the documents.
         """
-        from .node_parser import llama_index_parse_node
+        from .schema.node_parser import llama_index_parse_node
 
         return llama_index_parse_node(*args, **kwargs)
 
@@ -97,12 +97,12 @@ class LlamaIndexBridge:
           ValueError: If the specified reader string does not correspond to a known reader.
           AttributeError: If there is an issue importing the specified reader.
         """
-        from .reader import get_llama_index_reader
+        from .data_loader.reader import get_llama_index_reader
 
         return get_llama_index_reader(*args, **kwargs)
 
     @staticmethod
     def index(nodes, **kwargs):
-        from .index import LlamaIndex
+        from .data_index.index import LlamaIndex
 
         return LlamaIndex.index(nodes, **kwargs)

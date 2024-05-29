@@ -8,7 +8,7 @@ from ..bridge.langchain_.langchain_bridge import LangchainBridge
 from ..bridge.llamaindex_.llama_index_bridge import LlamaIndexBridge
 
 
-from ..loader.load_util import ChunkerType, file_to_chunks, _datanode_parser
+from .file.util import ChunkerType, file_to_chunks, _datanode_parser
 
 
 def datanodes_convert(documents, chunker_type):

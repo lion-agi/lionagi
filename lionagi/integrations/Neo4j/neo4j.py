@@ -1,4 +1,4 @@
-from neo4j import AsyncGraphDatabase
+from lionagi.integrations.Neo4j.neo4j import AsyncGraphDatabase
 
 from lionagi.integrations.storage.storage_util import output_node_list, output_edge_list
 
