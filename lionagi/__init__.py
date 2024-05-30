@@ -29,8 +29,8 @@ from lionagi.core.session.branch import Branch
 from lionagi.core.session.session import Session
 from lionagi.core.work.worker import work, Worker
 from lionagi.integrations.provider.services import Services
-from lionagi.integrations.file.chunk import chunk
-from lionagi.integrations.file.load import load
+from lionagi.integrations.files.chunk import chunk
+from lionagi.integrations.files.load import load
 import lionagi.core.director.direct as direct
 
 
