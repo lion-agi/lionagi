@@ -45,6 +45,8 @@ def create_message(
     sender=None,  # str
     recipient=None,  # str
     requested_fields=None,  # dict[str, str]
+    system_datetime: bool = None,  # bool
+    system_datetime_strftime: str = None,  # str
     **kwargs,  # additional context fields
 ):
     # order of handling
@@ -130,7 +132,13 @@ def create_message(
                 return v
 
     if system:
-        return System(system=system, sender=sender, recipient=recipient)
+        return System(
+            system=system, 
+            sender=sender, 
+            recipient=recipient, 
+            system_datetime=system_datetime,
+            system_datetime_strftime=system_datetime_strftime,
+        )
 
     elif assistant_response:
         return AssistantResponse(

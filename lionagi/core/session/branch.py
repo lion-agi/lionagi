@@ -136,6 +136,8 @@ class Branch(Node, DirectiveMixin):
         recipient=None,  # str
         requested_fields=None,  # dict[str, str]
         metadata: dict | None = None,  # extra metadata
+        system_datetime: bool = None,
+        system_datetime_strftime: str = None,
         **kwargs,  # additional context fields
     ) -> bool:
         """
@@ -177,6 +179,8 @@ class Branch(Node, DirectiveMixin):
             images=images,
             recipient=recipient,
             requested_fields=requested_fields,
+            system_datetime=system_datetime,
+            system_datetime_strftime=system_datetime_strftime,
             **kwargs,
         )
 

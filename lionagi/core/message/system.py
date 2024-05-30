@@ -15,6 +15,7 @@ limitations under the License.
 """
 
 from typing import Any
+from lionagi.libs import SysUtil
 from ..collections.abc import Field
 from .message import RoledMessage, MessageRole
 
@@ -31,7 +32,15 @@ class System(RoledMessage):
 
     system: str | Any | None = Field(None)
 
-    def __init__(self, system=None, sender=None, recipient=None, **kwargs):
+    def __init__(
+        self, 
+        system=None, 
+        sender=None, 
+        recipient=None, 
+        system_datetime: bool | str=None,
+        system_datetime_strftime: str=None,
+        **kwargs
+    ):
         """
         Initializes the System message.
 
@@ -39,16 +48,33 @@ class System(RoledMessage):
             system (str or Any, optional): The system information.
             sender (str, optional): The sender of the message.
             recipient (str, optional): The recipient of the message.
+            system_datetime (bool | str, optional): The system datetime, if True, it will be set to the current datetime. if str, it will be set to the given datetime.
+            system_datetime_strftime (str, optional): The system datetime strftime format.
             **kwargs: Additional fields to be added to the message content, must be JSON serializable.
         """
         if not system:
             if "metadata" in kwargs and "system" in kwargs["metadata"]:
                 system = kwargs["metadata"].pop("system")
 
+        if system_datetime is not None:
+            if isinstance(system_datetime, bool) and system_datetime:
+                system_datetime = SysUtil.get_now(datetime_=True)
+                system_datetime = (
+                    system_datetime.strftime("%Y-%m-%d %H:%M") 
+                    if not system_datetime_strftime 
+                    else system_datetime.strftime(system_datetime_strftime)
+                )
+            elif isinstance(system_datetime, str):
+                pass            
+                
         super().__init__(
             role=MessageRole.SYSTEM,
             sender=sender or "system",
-            content={"system_info": system},
+            content=(
+                {"system_info": f"{system}. System Date: {system_datetime}"} 
+                if system_datetime 
+                else {"system_info": system}
+            ),
             recipient=recipient or "N/A",
             system=system,
             **kwargs,

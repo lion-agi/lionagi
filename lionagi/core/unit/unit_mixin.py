@@ -75,7 +75,11 @@ class DirectiveMixin(ABC):
         branch = branch or self.branch
 
         if system:
-            branch.add_message(system=system)
+            branch.add_message(
+                system=system, 
+                system_datetime=kwargs.get("system_datetime", None),
+                system_datetime_strftime=kwargs.get("system_datetime_strftime", None),
+            )
 
         if not form:
             if recipient == "branch.ln_id":

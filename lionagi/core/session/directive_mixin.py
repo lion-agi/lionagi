@@ -51,6 +51,8 @@ class DirectiveMixin:
         return_branch=False,
         images=None,
         image_path=None,
+        system_datetime: bool = None,
+        system_datetime_strftime: str = None,
         **kwargs,
     ):
         """
@@ -144,6 +146,8 @@ class DirectiveMixin:
             clear_messages=clear_messages,
             return_branch=return_branch,
             images=images,
+            system_datetime= system_datetime,
+            system_datetime_strftime = system_datetime_strftime,
             **kwargs,
         )
 
