@@ -33,7 +33,6 @@ Before you begin, you'll need to set up a few things:
 - Start your chat with a LLM, check [[Quick Start]]
 
 
-
 ## Need Help?
 
 If you run into any issues or have questions:

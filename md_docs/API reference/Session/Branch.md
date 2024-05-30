@@ -1,19 +1,23 @@
 
 ### Class: `Branch`
 
+^958e6d
+
+**Parent Class:** [[Node#^006c2c|Node]], [[directive_mixin#^b1e040|DirectiveMixin]]
+
 **Description**:
 `Branch` represents a branch in a messaging system, capable of handling messages, tools, and models. It provides functionalities for adding messages, managing tools, sending and receiving mails, and converting messages to different formats.
 
 #### Attributes:
-- `messages` (Pile): A pile of messages.
-- `progress` (Progression): A progression of messages.
+- `messages` ([[Pile#^0206c8|Pile]]): A pile of messages.
+- `progress` ([[Progression#^166cef|Progression]]): A progression of messages.
 - `tool_manager` (ToolManager): A manager for handling tools.
-- `system` (System): The system associated with the branch.
+- `system` ([[System Message#^2711f6|System]]): The system associated with the branch.
 - `user` (str): The user associated with the branch.
-- `mailbox` (Exchange): An exchange for managing mail.
-- `imodel` (iModel): The model associated with the branch.
+- `mailbox` ([[Exchange#^2a685d|Exchange]]): An exchange for managing mail.
+- `imodel` ([[iModel#^86de48|iModel]]): The model associated with the branch.
 
-### Method: `__init__`
+### `__init__`
 
 **Signature**:
 ```python
@@ -43,7 +47,7 @@ def __init__(
 **Description**:
 Initializes a new instance of the `Branch` class.
 
-### Method: `set_system`
+### `set_system`
 
 **Signature**:
 ```python
@@ -51,13 +55,13 @@ def set_system(self, system=None, sender=None) -> None
 ```
 
 **Parameters**:
-- `system` (System, optional): The system message to set.
+- `system` ([[System Message#^2711f6|System]], optional): The system message to set.
 - `sender` (str, optional): The sender of the system message.
 
 **Description**:
 Sets the system message for the branch.
 
-### Method: `add_message`
+### `add_message`
 
 **Signature**:
 ```python
@@ -104,7 +108,7 @@ def add_message(
 **Description**:
 Adds a message to the branch.
 
-### Method: `to_chat_messages`
+### `to_chat_messages`
 
 **Signature**:
 ```python
@@ -117,7 +121,7 @@ def to_chat_messages(self) -> list[dict[str, Any]]
 **Description**:
 Converts the messages to chat message format.
 
-### Method: `_remove_system`
+### `_remove_system`
 
 **Signature**:
 ```python
@@ -127,7 +131,7 @@ def _remove_system(self) -> None
 **Description**:
 Removes the system message from the branch.
 
-### Method: `clear`
+### `clear`
 
 **Signature**:
 ```python
@@ -137,7 +141,7 @@ def clear(self) -> None
 **Description**:
 Clears all messages and progression in the branch.
 
-### Method: `has_tools`
+### `has_tools`
 
 **Signature**:
 ```python
@@ -151,7 +155,7 @@ def has_tools(self) -> bool
 **Description**:
 Checks if the branch has tools.
 
-### Method: `register_tools`
+### `register_tools`
 
 **Signature**:
 ```python
@@ -164,7 +168,7 @@ def register_tools(self, tools) -> None
 **Description**:
 Registers tools with the tool manager.
 
-### Method: `delete_tools`
+### `delete_tools`
 
 **Signature**:
 ```python
@@ -181,7 +185,7 @@ def delete_tools(self, tools, verbose: bool = True) -> bool
 **Description**:
 Deletes tools from the tool manager.
 
-### Method: `update_last_instruction_meta`
+### `update_last_instruction_meta`
 
 **Signature**:
 ```python
@@ -194,7 +198,7 @@ def update_last_instruction_meta(self, meta)
 **Description**:
 Updates metadata of the last instruction.
 
-### Method: `to_df`
+### `to_df`
 
 **Signature**:
 ```python
@@ -207,7 +211,7 @@ def to_df(self) -> Any
 **Description**:
 Converts the messages to a DataFrame.
 
-### Method: `_is_invoked`
+### `_is_invoked`
 
 **Signature**:
 ```python
@@ -220,7 +224,7 @@ def _is_invoked(self) -> bool
 **Description**:
 Checks if the last message is an ActionResponse.
 
-### Method: `send`
+### `send`
 
 **Signature**:
 ```python
@@ -236,7 +240,7 @@ def send(self, recipient: str, category: str, package: Any, request_source: str 
 **Description**:
 Sends a mail to a recipient.
 
-### Method: `receive`
+### `receive`
 
 **Signature**:
 ```python
@@ -255,7 +259,7 @@ Receives mail from a sender.
 **Exceptions Raised**:
 - `ValueError`: If the sender does not exist or the mail category is invalid.
 
-### Method: `receive_all`
+### `receive_all`
 
 **Signature**:
 ```python

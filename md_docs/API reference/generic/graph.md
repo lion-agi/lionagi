@@ -1,13 +1,17 @@
 
 ### Class: `Graph`
 
+^0ac258
+
+**Parent Class:** [[Node#^006c2c|Node]]
+
 **Description**:
 `Graph` represents a graph structure with nodes and edges. It extends the `Node` class and provides various methods to manipulate and query the graph, including adding and removing nodes and edges, checking if the graph is empty or acyclic, and converting the graph to a NetworkX graph for visualization.
 
 #### Attributes:
-- `internal_nodes` (Pile): The pile of nodes in the graph.
+- `internal_nodes` [[Pile#^0206c8|Pile]]: The pile of nodes in the graph.
 
-### Method: `internal_edges`
+### `internal_edges`
 
 **Signature**:
 ```python
@@ -16,7 +20,7 @@ def internal_edges(self) -> Pile[Edge]:
 ```
 
 **Return Values**:
-- `Pile[Edge]`: The pile of all edges in the graph.
+- `Pile`\[[[Edge#^a9ad22|Edge]]\]: The pile of all edges in the graph.
 
 **Description**:
 Returns a pile of all edges in the graph.
@@ -27,7 +31,7 @@ edges = graph.internal_edges
 print(edges)
 ```
 
-### Method: `is_empty`
+### `is_empty`
 
 **Signature**:
 ```python
@@ -46,7 +50,7 @@ if graph.is_empty():
     print("Graph is empty")
 ```
 
-### Method: `clear`
+### `clear`
 
 **Signature**:
 ```python
@@ -62,7 +66,7 @@ graph.clear()
 print("Graph cleared")
 ```
 
-### Method: `add_edge`
+### `add_edge`
 
 **Signature**:
 ```python
@@ -78,9 +82,9 @@ def add_edge(
 ```
 
 **Parameters**:
-- `head` (Node): The head node of the edge.
+- `head` ([[Node#^006c2c|Node]]): The head node of the edge.
 - `tail` (Node): The tail node of the edge.
-- `condition` (Condition, optional): The condition that must be met for the edge to be considered active. Default is `None`.
+- `condition` ([[API reference/collections/abc/Concepts#^d5e7b6|Condition]], optional): The condition that must be met for the edge to be considered active. Default is `None`.
 - `bundle` (bool, optional): Flag indicating if the edge is bundled. Default is `False`.
 - `label` (str, optional): An optional label for the edge. Default is `None`.
 
@@ -93,7 +97,7 @@ graph.add_edge(head_node, tail_node, condition=my_condition, bundle=True, label=
 print("Edge added")
 ```
 
-### Method: `remove_edge`
+### `remove_edge`
 
 **Signature**:
 ```python
@@ -115,7 +119,7 @@ success = graph.remove_edge(edge)
 print("Edge removed:", success)
 ```
 
-### Method: `add_node`
+### `add_node`
 
 **Signature**:
 ```python
@@ -134,7 +138,7 @@ graph.add_node(node)
 print("Node added")
 ```
 
-### Method: `get_node`
+### `get_node`
 
 **Signature**:
 ```python
@@ -157,7 +161,7 @@ node = graph.get_node(node_id)
 print(node)
 ```
 
-### Method: `get_node_edges`
+### `get_node_edges`
 
 **Signature**:
 ```python
@@ -186,7 +190,7 @@ edges = graph.get_node_edges(node, direction="out", label="my_label")
 print(edges)
 ```
 
-### Method: `pop_node`
+### `pop_node`
 
 **Signature**:
 ```python
@@ -209,7 +213,7 @@ node = graph.pop_node(node_id)
 print("Node removed:", node)
 ```
 
-### Method: `remove_node`
+### `remove_node`
 
 **Signature**:
 ```python
@@ -231,7 +235,7 @@ success = graph.remove_node(node_id)
 print("Node removed:", success)
 ```
 
-### Method: `get_heads`
+### `get_heads`
 
 **Signature**:
 ```python
@@ -239,7 +243,7 @@ def get_heads(self) -> Pile:
 ```
 
 **Return Values**:
-- `Pile`: A pile of all head nodes in the graph.
+- [[Pile#^0206c8|Pile]]: A pile of all head nodes in the graph.
 
 **Description**:
 Gets all head nodes in the graph.
@@ -250,7 +254,7 @@ heads = graph.get_heads()
 print(heads)
 ```
 
-### Method: `is_acyclic`
+### `is_acyclic`
 
 **Signature**:
 ```python
@@ -271,7 +275,7 @@ else:
     print("Graph contains cycles")
 ```
 
-### Method: `to_networkx`
+### `to_networkx`
 
 **Signature**:
 ```python
@@ -290,7 +294,7 @@ nx_graph = graph.to_networkx()
 print(nx_graph)
 ```
 
-### Method: `display`
+### `display`
 
 **Signature**:
 ```python
@@ -305,7 +309,7 @@ Displays the graph using NetworkX and Matplotlib.
 graph.display()
 ```
 
-### Method: `size`
+### `size`
 
 **Signature**:
 ```python

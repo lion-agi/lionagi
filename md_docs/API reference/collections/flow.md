@@ -1,15 +1,17 @@
 
-### Class: `Flow`
+## Class: `Flow`
+
+**Parent Class: [[#^bb802e|Element]]
 
 **Description**:
 `Flow` represents a flow of categorical sequences. It extends the `Element` class and provides methods to manage a collection of progression sequences.
 
-#### Attributes:
-- `sequences` (Pile[Progression]): A collection of progression sequences.
-- `registry` (dict[str, str]): A registry mapping sequence names to IDs.
+Attributes:
+- `sequences` ([[Pile#^0206c8|Pile]]): A collection of progression sequences.
+- `registry` `(dict[str, str])`: A registry mapping sequence names to IDs.
 - `default_name` (str): The default name for the flow.
 
-### Method: `__init__`
+### `__init__`
 
 **Signature**:
 ```python
@@ -29,29 +31,7 @@ flow_instance = Flow()
 flow_instance = Flow(sequences=my_sequences, default_name="custom_name")
 ```
 
-### Method: `_validate_sequences`
-
-**Signature**:
-```python
-def _validate_sequences(self, value) -> Pile[Progression]
-```
-
-**Parameters**:
-- `value`: Sequences to validate and initialize.
-
-**Return Values**:
-- `Pile[Progression]`: A pile of progression sequences.
-
-**Description**:
-Validates and initializes the sequences.
-
-**Usage Examples**:
-```python
-# Example: Validate sequences
-validated_sequences = flow_instance._validate_sequences(my_sequences)
-```
-
-### Method: `all_orders`
+### `all_orders`
 
 **Signature**:
 ```python
@@ -71,7 +51,7 @@ orders = flow_instance.all_orders()
 print(orders)
 ```
 
-### Method: `all_unique_items`
+### `all_unique_items`
 
 **Signature**:
 ```python
@@ -91,7 +71,7 @@ unique_items = flow_instance.all_unique_items()
 print(unique_items)
 ```
 
-### Method: `keys`
+### `keys`
 
 **Signature**:
 ```python
@@ -111,7 +91,7 @@ for key in flow_instance.keys():
     print(key)
 ```
 
-### Method: `values`
+### `values`
 
 **Signature**:
 ```python
@@ -131,7 +111,7 @@ for value in flow_instance.values():
     print(value)
 ```
 
-### Method: `items`
+### `items`
 
 **Signature**:
 ```python
@@ -151,7 +131,7 @@ for item in flow_instance.items():
     print(item)
 ```
 
-### Method: `get`
+### `get`
 
 **Signature**:
 ```python
@@ -181,7 +161,7 @@ sequence = flow_instance.get("sequence_name")
 default_sequence = flow_instance.get()
 ```
 
-### Method: `__getitem__`
+### `__getitem__`
 
 **Signature**:
 ```python
@@ -203,7 +183,7 @@ Returns the sequence specified by `seq`.
 sequence = flow_instance["sequence_name"]
 ```
 
-### Method: `__setitem__`
+### `__setitem__`
 
 **Signature**:
 ```python
@@ -230,7 +210,7 @@ Adds or updates an item in the specified sequence.
 flow_instance["sequence_name"] = new_value
 ```
 
-### Method: `__contains__`
+### `__contains__`
 
 **Signature**:
 ```python
@@ -253,7 +233,7 @@ if "item_name" in flow_instance:
     print("Item is in the flow")
 ```
 
-### Method: `shape`
+### `shape`
 
 **Signature**:
 ```python
@@ -273,7 +253,7 @@ shape = flow_instance.shape()
 print(shape)
 ```
 
-### Method: `size`
+### `size`
 
 **Signature**:
 ```python
@@ -293,7 +273,7 @@ size = flow_instance.size()
 print(size)
 ```
 
-### Method: `clear`
+### `clear`
 
 **Signature**:
 ```python
@@ -312,7 +292,7 @@ Clears all sequences and the registry.
 flow_instance.clear()
 ```
 
-### Method: `include`
+### `include`
 
 **Signature**:
 ```python
@@ -337,7 +317,7 @@ success = flow_instance.include(seq="sequence_name", item="item_name")
 print(success)
 ```
 
-### Method: `exclude`
+### `exclude`
 
 **Signature**:
 ```python
@@ -362,7 +342,7 @@ success = flow_instance.exclude(seq="sequence_name", item="item_name")
 print(success)
 ```
 
-### Method: `register`
+### `register`
 
 **Signature**:
 ```python
@@ -389,7 +369,7 @@ Registers a sequence with a name.
 flow_instance.register(my_sequence, "sequence_name")
 ```
 
-### Method: `append`
+### `append`
 
 **Signature**:
 ```python
@@ -400,10 +380,7 @@ def append(self, item, sequence=None) -> None
 - `item`: The item to append.
 - `sequence` (optional): The sequence to append to.
 
-**Return Values**:
--
-
- `None`
+**Return Values**: `None` 
 
 **Description**:
 Appends an item to a sequence.
@@ -414,7 +391,7 @@ Appends an item to a sequence.
 flow_instance.append("item_name", "sequence_name")
 ```
 
-### Method: `popleft`
+### `popleft`
 
 **Signature**:
 ```python
@@ -437,7 +414,7 @@ item = flow_instance.popleft("sequence_name")
 print(item)
 ```
 
-### Method: `remove`
+### `remove`
 
 **Signature**:
 ```python
@@ -463,7 +440,7 @@ flow_instance.remove("item_name", "sequence_name")
 flow_instance.remove("item_name")
 ```
 
-### Method: `__len__`
+### `__len__`
 
 **Signature**:
 ```python
@@ -483,7 +460,7 @@ length = len(flow_instance)
 print(length)
 ```
 
-### Method: `__iter__`
+### `__iter__`
 
 **Signature**:
 ```python
@@ -503,7 +480,7 @@ for sequence in flow_instance:
     print(sequence)
 ```
 
-### Method: `__next__`
+### `__next__`
 
 **Signature**:
 ```python
@@ -523,34 +500,7 @@ sequence = next(flow_instance)
 print(sequence)
 ```
 
-### Method: `_find_sequence`
-
-**Signature**:
-```python
-def _find_sequence(self, sequence=None, default=...) -> Union[str, Progression]
-```
-
-**Parameters**:
-- `sequence` (optional): The sequence to find.
-- `default` (optional): The default value if sequence is not found.
-
-**Return Values**:
-- `Union[str, Progression]`: The found sequence ID.
-
-**Exceptions Raised**:
-- `ItemNotFoundError`: If no sequence is found.
-
-**Description**:
-Finds the sequence ID in the registry or sequences.
-
-**Usage Examples**:
-```python
-# Example: Find a sequence
-sequence_id = flow_instance._find_sequence("sequence_name")
-print(sequence_id)
-```
-
-### Method: `to_df`
+### `to_df`
 
 **Signature**:
 ```python
@@ -570,7 +520,7 @@ df = flow_instance.to_df()
 print(df)
 ```
 
-### Function: `flow`
+## Function: `flow`
 
 **Signature**:
 ```python

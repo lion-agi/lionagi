@@ -1,21 +1,26 @@
 
-### Class: `Pile`
+## Class: `Pile`
+
+^0206c8
+
+**Parent Class:**  [[Component#^bb802e|Element]], [[API reference/collections/abc/Concepts#^14e4ff|Record]]
+
 
 **Description**:
 `Pile` is a collection class for managing `Element` objects. It facilitates ordered and type-validated storage and access, supporting both index-based and key-based retrieval.
 
-#### Attributes:
+Attributes:
 - `use_obj` (bool): If `True`, treat `Record` and `Ordering` as objects.
-- `pile` (dict[str, T]): Maps unique identifiers to items.
-- `item_type` (set[Type[Element]] | None): Allowed item types.
+- `pile` `(dict[str, T])`: Maps unique identifiers to items.
+- `item_type` `(set[Type[Element]] | None)`: Allowed item types.
 - `name` (str | None): Optional name for the pile.
-- `order` (list[str]): Order of item identifiers.
+- `order` `(list[str])`: Order of item identifiers.
 - `index` (Any): Index for the pile.
-- `engines` (dict[str, Any]): Engines for querying or other operations.
+- `engines` `(dict[str, Any])`: Engines for querying or other operations.
 - `query_response` (Any): Responses from queries.
 - `tools` (dict): Tools for pile operations.
 
-### Method: `__init__`
+###  `__init__`
 
 **Signature**:
 ```python
@@ -37,7 +42,7 @@ pile_instance = Pile()
 pile_instance = Pile(items=my_items, item_type={Element})
 ```
 
-### Method: `__getitem__`
+###  `__getitem__`
 
 **Signature**:
 ```python
@@ -51,8 +56,8 @@ def __getitem__(self, key) -> T | "Pile[T]"
 - `T | Pile[T]`: The requested item(s). Single items returned directly, multiple items returned in a new `Pile` instance.
 
 **Exceptions Raised**:
-- `ItemNotFoundError`: If requested item(s) not found.
-- `LionTypeError`: If provided key is invalid.
+- [[Exceptions#^ee9dbb|ItemNotFoundError]]: If requested item(s) not found.
+- [[Exceptions#^8519bb|LionTypeError]]: If provided key is invalid.
 
 **Description**:
 Retrieves items from the pile using a key. Supports multiple types of key access, including index, slice, and `LionID`.
@@ -69,7 +74,7 @@ items = pile_instance[0:5]
 item = pile_instance["item_id"]
 ```
 
-### Method: `__setitem__`
+###  `__setitem__`
 
 **Signature**:
 ```python
@@ -96,7 +101,7 @@ pile_instance[0] = new_item
 pile_instance[0:2] = [new_item1, new_item2]
 ```
 
-### Method: `__contains__`
+###  `__contains__`
 
 **Signature**:
 ```python
@@ -119,7 +124,7 @@ if "item_id" in pile_instance:
     print("Item is in the pile")
 ```
 
-### Method: `pop`
+###  `pop`
 
 **Signature**:
 ```python
@@ -148,7 +153,7 @@ item = pile_instance.pop(0)
 item = pile_instance.pop("item_id")
 ```
 
-### Method: `get`
+###  `get`
 
 **Signature**:
 ```python
@@ -177,7 +182,7 @@ item = pile_instance.get(0)
 item = pile_instance.get("item_id")
 ```
 
-### Method: `update`
+###  `update`
 
 **Signature**:
 ```python
@@ -199,7 +204,7 @@ Updates the pile with another collection of items.
 pile_instance.update(new_items)
 ```
 
-### Method: `clear`
+###  `clear`
 
 **Signature**:
 ```python
@@ -218,7 +223,7 @@ Clears all items, resetting the pile to an empty state.
 pile_instance.clear()
 ```
 
-### Method: `include`
+###  `include`
 
 **Signature**:
 ```python
@@ -241,7 +246,7 @@ included = pile_instance.include("item_id")
 print("Item included:", included)
 ```
 
-### Method: `exclude`
+###  `exclude`
 
 **Signature**:
 ```python
@@ -264,7 +269,9 @@ excluded = pile_instance.exclude("item_id")
 print("Item excluded:", excluded)
 ```
 
-### Method: `is_homogenous`
+###  `is_homogenous`
+
+*also check [[Type Conversion Lib#^6aef9f|here]]
 
 **Signature**:
 ```python
@@ -284,7 +291,7 @@ is_homogenous = pile_instance.is_homogenous()
 print("Pile is homogenous:", is_homogenous)
 ```
 
-### Method: `is_empty`
+###  `is_empty`
 
 **Signature**:
 ```python
@@ -304,165 +311,8 @@ is_empty = pile_instance.is_empty()
 print("Pile is empty:", is_empty)
 ```
 
-### Method: `__iter__`
 
-**Signature**:
-```python
-def __iter__() -> Iterator[T]
-```
-
-**Return Values**:
-- `Iterator[T]`: An iterator over the items in the pile.
-
-**Description**:
-Returns an iterator over the items in the pile.
-
-**Usage Examples**:
-```python
-# Example: Iterate over the items in the pile
-for item in pile_instance:
-    print(item)
-```
-
-### Method: `__len__`
-
-**Signature**:
-```python
-def __len__() -> int
-```
-
-**Return Values**:
-- `int`: The number of items in the
-
- pile.
-
-**Description**:
-Returns the number of items in the pile.
-
-**Usage Examples**:
-```python
-# Example: Get the number of items in the pile
-length = len(pile_instance)
-print("Number of items:", length)
-```
-
-### Method: `__add__`
-
-**Signature**:
-```python
-def __add__(self, other: T) -> "Pile"
-```
-
-**Parameters**:
-- `other`: Item(s) to include. Can be single item or collection.
-
-**Return Values**:
-- `Pile`: New `Pile` with all items from current pile plus item(s).
-
-**Exceptions Raised**:
-- `LionValueError`: If item(s) can't be included.
-
-**Description**:
-Creates a new pile by including item(s) using `+`.
-
-**Usage Examples**:
-```python
-# Example: Add items to the pile
-new_pile = pile_instance + new_item
-```
-
-### Method: `__sub__`
-
-**Signature**:
-```python
-def __sub__(self, other) -> "Pile"
-```
-
-**Parameters**:
-- `other`: Item(s) to exclude. Can be single item or collection.
-
-**Return Values**:
-- `Pile`: New `Pile` with all items from current pile except item(s).
-
-**Exceptions Raised**:
-- `ItemNotFoundError`: If item(s) not found in pile.
-
-**Description**:
-Creates a new pile by excluding item(s) using `-`.
-
-**Usage Examples**:
-```python
-# Example: Subtract items from the pile
-new_pile = pile_instance - item_to_remove
-```
-
-### Method: `__iadd__`
-
-**Signature**:
-```python
-def __iadd__(self, other: T) -> "Pile"
-```
-
-**Parameters**:
-- `other`: Item(s) to include. Can be single item or collection.
-
-**Return Values**:
-- `Pile`: Modified pile after including item(s).
-
-**Description**:
-Includes item(s) in the current pile in place using `+=`.
-
-**Usage Examples**:
-```python
-# Example: Add items to the pile in place
-pile_instance += new_item
-```
-
-### Method: `__isub__`
-
-**Signature**:
-```python
-def __isub__(self, other: LionIDable) -> "Pile"
-```
-
-**Parameters**:
-- `other`: Item(s) to exclude. Can be single item or collection.
-
-**Return Values**:
-- `Pile`: Modified pile after excluding item(s).
-
-**Description**:
-Excludes item(s) from the current pile in place using `-=`.
-
-**Usage Examples**:
-```python
-# Example: Subtract items from the pile in place
-pile_instance -= item_to_remove
-```
-
-### Method: `__radd__`
-
-**Signature**:
-```python
-def __radd__(self, other: T) -> "Pile"
-```
-
-**Parameters**:
-- `other`: Item(s) to include. Can be single item or collection.
-
-**Return Values**:
-- `Pile`: New `Pile` with all items from current pile plus item(s).
-
-**Description**:
-Supports right addition for items to the pile.
-
-**Usage Examples**:
-```python
-# Example: Right add items to the pile
-new_pile = new_item + pile_instance
-```
-
-### Method: `size`
+###  `size`
 
 **Signature**:
 ```python
@@ -482,7 +332,7 @@ total_size = pile_instance.size()
 print("Total size of the pile:", total_size)
 ```
 
-### Method: `insert`
+###  `insert`
 
 **Signature**:
 ```python
@@ -506,7 +356,7 @@ Inserts item(s) at specific position.
 pile_instance.insert(0, new_item)
 ```
 
-### Method: `append`
+###  `append`
 
 **Signature**:
 ```python
@@ -528,7 +378,7 @@ Appends item to the end of the pile.
 pile_instance.append(new_item)
 ```
 
-### Method: `keys`
+###  `keys`
 
 **Signature**:
 ```python
@@ -548,7 +398,7 @@ keys = pile_instance.keys()
 print("Keys:", keys)
 ```
 
-### Method: `values`
+###  `values`
 
 **Signature**:
 ```python
@@ -568,7 +418,7 @@ for value in pile_instance.values():
     print(value)
 ```
 
-### Method: `items`
+###  `items`
 
 **Signature**:
 ```python
@@ -588,7 +438,7 @@ for key, value in pile_instance.items():
     print(key, value)
 ```
 
-### Method: `to_df`
+###  `to_df`
 
 **Signature**:
 ```python
@@ -608,7 +458,7 @@ df = pile_instance.to_df()
 print(df)
 ```
 
-### Method: `create_index`
+###  `create_index`
 
 **Signature**:
 ```python
@@ -634,7 +484,7 @@ Creates an index for the pile.
 index = pile_instance.create_index()
 ```
 
-### Method: `create_query_engine`
+###  `create_query_engine`
 
 **Signature**:
 ```python
@@ -658,7 +508,7 @@ Creates a query engine for the pile.
 pile_instance.create_query_engine()
 ```
 
-### Method: `create_chat_engine`
+###  `create_chat_engine`
 
 **Signature**:
 ```python
@@ -682,7 +532,7 @@ Creates a chat engine for the pile.
 pile_instance.create_chat_engine()
 ```
 
-### Method: `query_pile`
+###  `query_pile`
 
 **Signature**:
 ```python
@@ -707,7 +557,7 @@ response = await pile_instance.query_pile("query")
 print(response)
 ```
 
-### Method: `chat_pile`
+###  `chat_pile`
 
 **Signature**:
 ```python
@@ -734,7 +584,7 @@ response = await pile_instance.chat_pile("query")
 print(response)
 ```
 
-### Method: `embed_pile`
+###  `embed_pile`
 
 **Signature**:
 ```python
@@ -760,7 +610,7 @@ Embeds the items in the pile.
 await pile_instance.embed_pile(imodel=my_model)
 ```
 
-### Method: `to_csv`
+###  `to_csv`
 
 **Signature**:
 ```python
@@ -783,7 +633,7 @@ Saves the pile to a CSV file.
 pile_instance.to_csv("pile.csv")
 ```
 
-### Method: `from_csv`
+###  `from_csv`
 
 **Signature**:
 ```python
@@ -807,7 +657,7 @@ Loads a pile from a CSV file.
 pile_instance = Pile.from_csv("pile.csv")
 ```
 
-### Method: `from_df`
+###  `from_df`
 
 **Signature**:
 ```python
@@ -830,7 +680,7 @@ Loads a pile from a DataFrame.
 pile_instance = Pile.from_df(df)
 ```
 
-### Method: `as_query_tool`
+###  `as_query_tool`
 
 **Signature**:
 ```python
@@ -857,7 +707,168 @@ Creates a query tool for the pile.
 query_tool = pile_instance.as_query_tool()
 ```
 
-### Method: `__list__`
+
+
+###  `__iter__`
+
+**Signature**:
+```python
+def __iter__() -> Iterator[T]
+```
+
+**Return Values**:
+- `Iterator[T]`: An iterator over the items in the pile.
+
+**Description**:
+Returns an iterator over the items in the pile.
+
+**Usage Examples**:
+```python
+# Example: Iterate over the items in the pile
+for item in pile_instance:
+    print(item)
+```
+
+###  `__len__`
+
+**Signature**:
+```python
+def __len__() -> int
+```
+
+**Return Values**:
+- `int`: The number of items in the
+
+ pile.
+
+**Description**:
+Returns the number of items in the pile.
+
+**Usage Examples**:
+```python
+# Example: Get the number of items in the pile
+length = len(pile_instance)
+print("Number of items:", length)
+```
+
+###  `__add__`
+
+**Signature**:
+```python
+def __add__(self, other: T) -> "Pile"
+```
+
+**Parameters**:
+- `other`: Item(s) to include. Can be single item or collection.
+
+**Return Values**:
+- `Pile`: New `Pile` with all items from current pile plus item(s).
+
+**Exceptions Raised**:
+- `LionValueError`: If item(s) can't be included.
+
+**Description**:
+Creates a new pile by including item(s) using `+`.
+
+**Usage Examples**:
+```python
+# Example: Add items to the pile
+new_pile = pile_instance + new_item
+```
+
+###  `__sub__`
+
+**Signature**:
+```python
+def __sub__(self, other) -> "Pile"
+```
+
+**Parameters**:
+- `other`: Item(s) to exclude. Can be single item or collection.
+
+**Return Values**:
+- `Pile`: New `Pile` with all items from current pile except item(s).
+
+**Exceptions Raised**:
+- `ItemNotFoundError`: If item(s) not found in pile.
+
+**Description**:
+Creates a new pile by excluding item(s) using `-`.
+
+**Usage Examples**:
+```python
+# Example: Subtract items from the pile
+new_pile = pile_instance - item_to_remove
+```
+
+###  `__iadd__`
+
+**Signature**:
+```python
+def __iadd__(self, other: T) -> "Pile"
+```
+
+**Parameters**:
+- `other`: Item(s) to include. Can be single item or collection.
+
+**Return Values**:
+- `Pile`: Modified pile after including item(s).
+
+**Description**:
+Includes item(s) in the current pile in place using `+=`.
+
+**Usage Examples**:
+```python
+# Example: Add items to the pile in place
+pile_instance += new_item
+```
+
+###  `__isub__`
+
+**Signature**:
+```python
+def __isub__(self, other: LionIDable) -> "Pile"
+```
+
+**Parameters**:
+- `other`: Item(s) to exclude. Can be single item or collection.
+
+**Return Values**:
+- `Pile`: Modified pile after excluding item(s).
+
+**Description**:
+Excludes item(s) from the current pile in place using `-=`.
+
+**Usage Examples**:
+```python
+# Example: Subtract items from the pile in place
+pile_instance -= item_to_remove
+```
+
+###  `__radd__`
+
+**Signature**:
+```python
+def __radd__(self, other: T) -> "Pile"
+```
+
+**Parameters**:
+- `other`: Item(s) to include. Can be single item or collection.
+
+**Return Values**:
+- `Pile`: New `Pile` with all items from current pile plus item(s).
+
+**Description**:
+Supports right addition for items to the pile.
+
+**Usage Examples**:
+```python
+# Example: Right add items to the pile
+new_pile = new_item + pile_instance
+```
+
+
+###  `__list__`
 
 **Signature**:
 ```python
@@ -877,7 +888,7 @@ items_list = pile_instance.__list__()
 print(items_list)
 ```
 
-### Method: `__str__`
+###  `__str__`
 
 **Signature**:
 ```python
@@ -896,7 +907,7 @@ Gets the string representation of the pile.
 print(str(pile_instance))
 ```
 
-### Method: `__repr__`
+###  `__repr__`
 
 **Signature**:
 ```python
@@ -915,7 +926,7 @@ Gets the representation of the pile.
 print(repr(pile_instance))
 ```
 
-### Function: `pile`
+## Function: `pile`
 
 **Signature**:
 ```python

@@ -1,7 +1,5 @@
 
-### Methods:
-
-#### Method: `chat`
+#### `chat`
 
 **Signature**:
 ```python
@@ -34,7 +32,7 @@ async def chat(
 **Returns**:
 - `Any`: The result of the chat operation.
 
-#### Method: `select`
+#### `select`
 
 **Signature**:
 ```python
@@ -69,7 +67,7 @@ async def select(
 **Returns**:
 - `Any`: The result of the selection operation.
 
-#### Method: `predict`
+#### `predict`
 
 **Signature**:
 ```python
@@ -104,7 +102,7 @@ async def predict(
 **Returns**:
 - `Any`: The result of the prediction operation.
 
-#### Method: `act`
+#### `act`
 
 **Signature**:
 ```python
@@ -137,7 +135,7 @@ async def act(
 **Returns**:
 - `Any`: The result of the act operation.
 
-#### Method: `score`
+#### `score`
 
 **Signature**:
 ```python
@@ -176,7 +174,7 @@ async def score(
 **Returns**:
 - `Any`: The result of the scoring task.
 
-#### Method: `plan`
+#### `plan`
 
 **Signature**:
 ```python

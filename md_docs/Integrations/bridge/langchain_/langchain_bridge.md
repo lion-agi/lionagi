@@ -1,6 +1,8 @@
 
 ### Class: `LangchainBridge`
 
+^2fd882
+
 **Description**:
 `LangchainBridge` is a utility class providing static methods to interact with the Langchain ecosystem. It includes methods for converting data nodes to Langchain Documents, loading data using various loaders, and splitting text using specified text splitters.
 

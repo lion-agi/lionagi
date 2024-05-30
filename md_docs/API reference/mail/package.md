@@ -1,6 +1,8 @@
 
 ### Class: `Package`
 
+**Parent Class: [[Component#^bb802e|Element]]
+
 **Description**:
 `Package` represents a package to be delivered, categorized by its type. It includes the source of the request, the category of the package, and the package content itself.
 
@@ -9,7 +11,7 @@
 - `category` (PackageCategory): The category of the package.
 - `package` (Any): The package content to be delivered.
 
-### Method: `validate_category`
+### `validate_category`
 
 **Signature**:
 ```python

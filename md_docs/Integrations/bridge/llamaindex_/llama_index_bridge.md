@@ -1,6 +1,8 @@
 
 ### Class: `LlamaIndexBridge`
 
+^6bd9d3
+
 **Description**:
 `LlamaIndexBridge` is a utility class that provides static methods for converting data nodes, reading data, parsing nodes, and retrieving readers within the Llama Index ecosystem. It facilitates interoperability between different data formats and the Llama Index framework.
 

@@ -1,6 +1,8 @@
 
 ### Class: `StringRule`
 
+**Parent Class:** [[Base Rule#^34c3a1|Rule]]
+
 **Description**:
 `StringRule` is a rule for validating and converting string values. It inherits from the `Rule` class and provides specific validation and fixing logic for string fields.
 
@@ -8,7 +10,7 @@
 - `fields` (list[str]): The list of fields to which the rule applies. Default fields are `["reason", "prediction", "answer"]`.
 - `apply_type` (str): The type of data to which the rule applies. Default is `"str"`.
 
-### Method: `__init__`
+### `__init__`
 
 **Signature**:
 ```python
@@ -22,7 +24,7 @@ def __init__(self, apply_type="str", **kwargs)
 **Description**:
 Initializes the `StringRule` with the specified `apply_type` and additional keyword arguments.
 
-### Method: `validate`
+### `validate`
 
 **Signature**:
 ```python
@@ -56,7 +58,7 @@ except ValueError as e:
     print(e)  # Output: "Invalid string field type."
 ```
 
-### Method: `perform_fix`
+### `perform_fix`
 
 **Signature**:
 ```python

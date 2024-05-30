@@ -1,6 +1,8 @@
 
 ### Class: `ActionRequest`
 
+**Parent Class:** [[Roled Message#^f41a31|RoledMessage]]
+
 **Description**:
 `ActionRequest` represents a request for an action with a function and its arguments. It inherits from `RoledMessage` and provides attributes specific to action requests.
 
@@ -9,7 +11,7 @@
 - `arguments` (dict): The keyword arguments to be passed to the function.
 - `action_response` (str): The ID of the action response that this request corresponds to.
 
-### Method: `__init__`
+### `__init__`
 
 **Signature**:
 ```python
@@ -44,7 +46,7 @@ print(action_request.function)  # Output: example_function
 print(action_request.arguments)  # Output: {'param1': 10, 'param2': 'value'}
 ```
 
-### Method: `is_responded`
+### `is_responded`
 
 **Signature**:
 ```python
@@ -65,7 +67,7 @@ else:
     print("The action request has not been responded to.")
 ```
 
-### Method: `clone`
+### `clone`
 
 **Signature**:
 ```python

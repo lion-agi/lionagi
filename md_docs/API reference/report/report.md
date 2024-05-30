@@ -1,6 +1,8 @@
 
 ### Class: `Report`
 
+**Parent Class:** [[Base Form#^f8937b|BaseForm]]
+
 **Description**:
 `Report` extends `BaseForm` to handle a collection of `Form` instances based on specific assignments, managing a pile of forms and ensuring synchronization and proper configuration.
 
@@ -9,7 +11,7 @@
 - `form_assignments` (list): Assignments for the report.
 - `form_template` (Type[Form]): The template for the forms in the report.
 
-### Method: `__init__`
+### `__init__`
 
 **Signature**:
 ```python
@@ -22,7 +24,7 @@ def __init__(self, **kwargs):
 **Description**:
 Initializes the `Report` with input and requested fields based on the report's assignment, creating forms dynamically from provided assignments.
 
-### Method: `work_fields`
+### `work_fields`
 
 **Signature**:
 ```python
@@ -36,7 +38,7 @@ def work_fields(self) -> dict[str, Any]:
 **Description**:
 Retrieves a dictionary of the fields relevant to the current task, combining the work fields from all forms in the report.
 
-### Method: `fill`
+### `fill`
 
 **Signature**:
 ```python
@@ -51,7 +53,7 @@ def fill(self, form: Form | list[Form] | dict[Form] = None, strict=True, **kwarg
 **Description**:
 Fills the report from another form instance, a list of forms, or provided keyword arguments. Raises an error if the report is already filled.
 
-### Method: `is_workable`
+### `is_workable`
 
 **Signature**:
 ```python
@@ -64,7 +66,7 @@ def is_workable(self) -> bool:
 **Description**:
 Checks if the report is ready for processing, ensuring all necessary fields are filled and output fields are unique across forms.
 
-### Method: `next_forms`
+### `next_forms`
 
 **Signature**:
 ```python

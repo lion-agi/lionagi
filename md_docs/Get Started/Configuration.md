@@ -17,7 +17,7 @@ The `llmconfig` allows you to set default model parameters for every API call wi
 
 ```python
 {
-    'model': 'gpt-4-turbo-preview',
+    'model': 'gpt-4-turbo',
     'frequency_penalty': 0,
     'max_tokens': None,
     'n': 1,
@@ -39,8 +39,10 @@ To change the default behavior for a session, you can either:
 - Pass a new `llmconfig` into the `Session`:
 
     ```python
+    from lionagi import Session
+    
     llmconfig_ = {...}
-    session = li.Session(system, llmconfig=llmconfig_)
+    session = Session(system, llmconfig=llmconfig_)
     ```
 
 - Or update the config directly in an existing session:

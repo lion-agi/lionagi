@@ -1,17 +1,22 @@
 
-### Class: `Edge`
+## Class: `Edge`
+
+**Parent Class:** [[Component#^ce462d|Component]]
+
+^a9ad22
 
 **Description**:
 `Edge` represents a directed edge between two nodes in a graph. It extends the `Component` class and includes attributes for the head and tail nodes, an optional condition, a label, and a bundle flag. The class also provides methods to check conditions and retrieve the source code of the condition class.
 
-#### Attributes:
+Attributes:
+
 - `head` (str): The identifier of the head node of the edge.
 - `tail` (str): The identifier of the tail node of the edge.
-- `condition` (Condition | EdgeCondition | None): Optional condition that must be met for the edge to be considered active.
+- `condition` ([[API reference/collections/abc/Concepts#^d5e7b6|Condition]] | [[Edge Condition#^c25416|EdgeCondition]] | None): Optional condition that must be met for the edge to be considered active.
 - `label` (str | None): An optional label for the edge.
 - `bundle` (bool): A flag indicating if the edge is bundled.
 
-### Method: `check_condition`
+### `check_condition`
 
 **Signature**:
 ```python
@@ -37,7 +42,7 @@ result = await edge.check_condition(some_object)
 print(result)  # Output: True or False based on the condition
 ```
 
-### Method: `string_condition`
+### `string_condition`
 
 **Signature**:
 ```python
@@ -59,7 +64,7 @@ source_code = edge.string_condition()
 print(source_code)
 ```
 
-### Method: `__len__`
+### `__len__`
 
 **Signature**:
 ```python
@@ -78,7 +83,7 @@ length = len(edge)
 print(length)  # Output: 1
 ```
 
-### Method: `__contains__`
+### `__contains__`
 
 **Signature**:
 ```python

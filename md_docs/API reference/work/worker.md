@@ -100,7 +100,7 @@ Internal wrapper to handle work function execution. Adds the work function to `w
 
 **Usage Example**:
 ```python
-await worker._wrapper(func=my_function, assignment="My Task", capacity=10)
+await worker._wrapper(func=my_function, assignment="a, b -> c", capacity=10)
 ```
 
 ### Decorator: `work`
@@ -115,39 +115,3 @@ A decorator to mark a method as a work function. It allows setting parameters su
 - `retry_kwargs` (dict): Retry arguments for the work function.
 - `refresh_time` (int): Time interval between each process cycle. Default is `1`.
 - `timeout` (int): Timeout for the work function. Default is `10`.
-
-**Usage Example**:
-```python
-@work(assignment="Example Task", capacity=5, guidance="Example guidance.")
-async def example_function(self):
-    # Function implementation
-    pass
-```
-
-### Example Usage
-
-```python
-class MyWorker(Worker):
-    def __init__(self):
-        super().__init__()
-        self.name = "MyWorker"
-
-    @work(assignment="Task A", capacity=5)
-    async def task_a(self):
-        # Task A implementation
-        print("Task A is being executed")
-
-    @work(assignment="Task B", capacity=10)
-    async def task_b(self):
-        # Task B implementation
-        print("Task B is being executed")
-
-# Example usage
-async def main():
-    worker = MyWorker()
-    await worker.task_a()
-    await worker.task_b()
-    await worker.process(refresh_time=2)
-
-asyncio.run(main())
-```

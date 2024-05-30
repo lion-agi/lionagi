@@ -1,13 +1,17 @@
 
 ### Class: `Mail`
 
+^c3b817
+
+**Parent Class: [[Component#^bb802e|Element]]
+
 **Description**:
 `Mail` represents a mail component with sender and recipient information. It extends the `Element` and `Sendable` classes, providing functionalities to handle mail packages within a system.
 
 #### Attributes:
 - `package` (Package | None): The package to be delivered.
 
-### Method: `category`
+### `category`
 
 **Signature**:
 ```python
@@ -28,7 +32,7 @@ category = mail.category
 print(category)
 ```
 
-### Method: `to_dict`
+### `to_dict`
 
 **Signature**:
 ```python
