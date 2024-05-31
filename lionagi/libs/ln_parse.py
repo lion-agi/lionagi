@@ -29,7 +29,7 @@ md_json_char_map = {"\n": "\\n", "\r": "\\r", "\t": "\\t", '"': '\\"'}
 class ParseUtil:
 
     @staticmethod
-    def fuzzy_parse_json(str_to_parse: str, *, strict: bool = False):
+    def fuzzy_parse_json(str_to_parse: str, *, strict: bool = False, return_str: bool = False):
         """
         Parses a potentially incomplete or malformed JSON string by adding missing closing brackets or braces.
 
@@ -50,21 +50,28 @@ class ParseUtil:
                 >>> fuzzy_parse_json('{"name": "John", "age": 30, "city": "New York"')
                 {'name': 'John', 'age': 30, 'city': 'New York'}
         """
+        def _return_str(x):
+            return x, str_to_parse
+        
         try:
-            return convert.to_dict(str_to_parse, strict=strict)
+            result = convert.to_dict(str_to_parse, strict=strict)
+            return _return_str(result) if return_str else result
+        
         except Exception:
             fixed_s = ParseUtil.fix_json_string(str_to_parse)
             try:
-                return convert.to_dict(fixed_s, strict=strict)
+                result = convert.to_dict(fixed_s, strict=strict)
+                return _return_str(result) if return_str else result
 
             except Exception:
                 try:
                     fixed_s = fixed_s.replace("'", '"')
-                    return convert.to_dict(fixed_s, strict=strict)
+                    result = convert.to_dict(fixed_s, strict=strict)
+                    return _return_str(result) if return_str else result
 
                 except Exception as e:
                     raise ValueError(
-                        f"Failed to parse JSON even after fixing attempts: {e}"
+                        f"Failed to parse JSON after fixing attempts: {e}"
                     ) from e
 
     @staticmethod
