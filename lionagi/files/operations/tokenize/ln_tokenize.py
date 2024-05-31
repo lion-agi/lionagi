@@ -1,6 +1,6 @@
 import tiktoken
 import math
-from .ln_convert import to_str
+from ..data_handlers.data_type.ln_convert import to_str
 from .special_tokens import disallowed_tokens
 
 

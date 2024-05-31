@@ -1,7 +1,7 @@
 import base64
 import numpy as np
 from typing import Optional
-from .sys_util import SysUtil
+from ...os.libs.sys_util import SysUtil
 
 
 class ImageUtil:

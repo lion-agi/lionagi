@@ -65,20 +65,6 @@ class AsyncUtil:
             raise
 
     @staticmethod
-    @lru_cache(maxsize=None)
-    def is_coroutine_func(func: Callable[..., Any]) -> bool:
-        """
-        Checks whether a function is an asyncio coroutine function.
-
-        Args:
-                func: The function to check.
-
-        Returns:
-                True if the function is a coroutine function, False otherwise.
-        """
-        return asyncio.iscoroutinefunction(func)
-
-    @staticmethod
     def _custom_error_handler(
         error: Exception, error_map: Mapping[type, Callable]
     ) -> None:
@@ -146,62 +132,3 @@ class AsyncUtil:
             return await asyncio.gather(*tasks)
         else:
             return tasks
-
-    @staticmethod
-    async def sleep(seconds):
-        await asyncio.sleep(seconds)
-
-    # @staticmethod
-    # async def execute_timeout(coro, timeout):
-    #     return
-
-    # @classmethod
-    # def TimeoutError(cls):
-    #     return asyncio.TimeoutError
-
-    # @classmethod
-    # def CancelledError(cls):
-    #     return asyncio.CancelledError
-
-    @classmethod
-    def Task(cls):
-        return asyncio.Task
-
-    @classmethod
-    def Event(cls):
-        return asyncio.Event
-
-    @classmethod
-    def Lock(cls):
-        return asyncio.Lock
-
-    @staticmethod
-    def wrap_future(future_):
-        return asyncio.wrap_future(future_)
-
-    @staticmethod
-    def semaphore(limit):
-        return asyncio.Semaphore(limit)
-
-    @staticmethod
-    def cached(*args, **kwargs):
-        return aiocache.cached(*args, **kwargs)
-
-    @staticmethod
-    def create_event(*args, **kwargs):
-        return asyncio.Event(*args, **kwargs)
-
-    @staticmethod
-    def create_task(*args, obj=True, **kwargs):
-        if obj:
-            return asyncio.Task(*args, **kwargs)
-        else:
-            return asyncio.create_task(*args, **kwargs)
-
-    @staticmethod
-    def create_lock(*args, **kwargs):
-        return asyncio.Lock(*args, **kwargs)
-
-    # @classmethod  # def HttpClientSession(cls):  #     return aiohttp.ClientSession
-
-    # @classmethod  # def HttpClientError(cls):  #     return aiohttp.ClientError
