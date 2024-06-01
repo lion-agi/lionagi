@@ -1,7 +1,7 @@
 from collections import defaultdict
 from itertools import chain
 from typing import Any, Callable
-from ..type_conversion import to_list
+from ._to_list import to_list
 from ._util import is_homogeneous
 
 

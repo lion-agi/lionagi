@@ -1,10 +1,8 @@
 import logging
 import asyncio
-from typing import Any
-from functools import lru_cache
-from typing import Callable
+from typing import Any, Callable, Dict
+from functools import lru_cache, wraps
 from concurrent.futures import ThreadPoolExecutor
-from functools import wraps
 
 
 def force_async(fn: Callable[..., Any]) -> Callable[..., Any]:
@@ -29,23 +27,31 @@ def force_async(fn: Callable[..., Any]) -> Callable[..., Any]:
 
 @lru_cache(maxsize=None)
 def is_coroutine_func(func: Callable) -> bool:
+    """
+    Check if a function is a coroutine function.
+
+    Args:
+        func (Callable): The function to check.
+
+    Returns:
+        bool: True if the function is a coroutine function, False otherwise.
+    """
     return asyncio.iscoroutinefunction(func)
 
 
-def custom_error_handler(error: Exception, error_map: dict[type, Callable]) -> None:
+def custom_error_handler(error: Exception, error_map: Dict[type, Callable]) -> None:
     """
-    handle errors based on a given error mapping.
+    Handle errors based on a given error mapping.
 
     Args:
-            error (Exception):
-                    The error to handle.
-            error_map (Dict[type, Callable]):
-                    A dictionary mapping error types to handler functions.
+        error (Exception): The error to handle.
+        error_map (Dict[type, Callable]): A dictionary mapping error types to
+            handler functions.
 
-    examples:
-            >>> def handle_value_error(e): print("ValueError occurred")
-            >>> custom_error_handler(ValueError(), {ValueError: handle_value_error})
-            ValueError occurred
+    Examples:
+        >>> def handle_value_error(e): print("ValueError occurred")
+        >>> custom_error_handler(ValueError(), {ValueError: handle_value_error})
+        ValueError occurred
     """
     if handler := error_map.get(type(error)):
         handler(error)

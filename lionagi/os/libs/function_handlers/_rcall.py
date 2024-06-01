@@ -8,6 +8,7 @@ async def rcall(
     func: Callable,
     *args,
     retries: int = 0,
+    initial_delay: float = 0,
     delay: float = 0.1,
     backoff_factor: float = 2,
     default: Any = None,
@@ -16,10 +17,52 @@ async def rcall(
     verbose: bool = True,
     **kwargs,
 ) -> Any:
+    """
+    Asynchronously call a function with retry logic and optional timing.
+
+    This function calls the given function asynchronously, with support for
+    retries, exponential backoff, and optional timing of the execution.
+
+    Args:
+        func (Callable): The function to call.
+        *args: Positional arguments to pass to the function.
+        retries (int, optional): The number of retries. Defaults to 0.
+        initial_delay (float, optional): Initial delay before the first attempt
+            in seconds. Defaults to 0.
+        delay (float, optional): The delay between retries in seconds.
+            Defaults to 0.1.
+        backoff_factor (float, optional): The factor by which the delay is
+            multiplied after each retry. Defaults to 2.
+        default (Any, optional): The default value to return if all retries
+            fail. Defaults to None.
+        timeout (float | None, optional): The timeout for the function call in
+            seconds. Defaults to None.
+        timing (bool, optional): If True, return the execution time along with
+            the result. Defaults to False.
+        verbose (bool, optional): If True, print retry attempts and exceptions.
+            Defaults to True.
+        **kwargs: Additional keyword arguments to pass to the function.
+
+    Returns:
+        Any: The result of the function call, or the default value if all
+            retries fail.
+
+    Raises:
+        RuntimeError: If all retries fail and no default value is provided,
+            or if an unexpected error occurs.
+
+    Examples:
+        >>> async def sample_func(x):
+        >>>     return x * 2
+        >>>
+        >>> result = await rcall(sample_func, 5, retries=3, delay=1)
+        >>> print(result)
+    """
     last_exception = None
     result = None
-
     start = get_now(datetime_=False)
+    await asyncio.sleep(initial_delay)
+
     for attempt in range(retries + 1) if retries == 0 else range(retries):
         try:
             err_msg = f"Attempt {attempt + 1}/{retries}: " if retries > 0 else None
@@ -41,11 +84,12 @@ async def rcall(
                 delay *= backoff_factor
             else:
                 break
+
     if result is None and default is not None:
         return default
     elif last_exception is not None:
         raise RuntimeError(
-            f"Operation failed after {retries+1} attempts: {last_exception}"
+            f"Operation failed after {retries + 1} attempts: {last_exception}"
         ) from last_exception
     else:
         raise RuntimeError("rcall failed without catching an exception")

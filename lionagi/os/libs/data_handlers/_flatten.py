@@ -1,6 +1,7 @@
 from typing import Any, Generator
-from ...sys_util import create_copy
-from ..type_conversion import to_dict, to_list
+from ..sys_util import create_copy
+from ._to_list import to_list
+from ._to_dict import to_dict
 
 
 def flatten(
