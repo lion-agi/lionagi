@@ -1,13 +1,14 @@
 from collections import defaultdict
 from collections.abc import Mapping
 import json
-from typing import Any
-from pandas import DataFrame
+from typing import Any, Union
+from pandas import DataFrame, isna
+import pandas as pd
 
 
 def to_dict(
     input_, /, as_list: bool = True, use_model_dump: bool = True, **kwargs
-) -> dict | list[dict]:
+) -> Union[dict, list[dict]]:
     """
     Convert various types of input into a dictionary.
 
@@ -26,12 +27,24 @@ def to_dict(
         json.JSONDecodeError: If the input string cannot be parsed as JSON.
         ValueError: If the input type is unsupported.
     """
+    out = None
     if isinstance(input_, list):
-        return [
+        out = [
             to_dict(i, as_list=as_list, use_model_dump=use_model_dump, **kwargs)
             for i in input_
         ]
-    return _to_dict(input_, df_as_list=as_list, use_model_dump=use_model_dump, **kwargs)
+    else:
+        out = _to_dict(
+            input_, df_as_list=as_list, use_model_dump=use_model_dump, **kwargs
+        )
+
+    if out in [[], {}]:
+        return {}
+
+    if isinstance(out, list) and len(out) == 1 and isinstance(out[0], dict):
+        return out[0]
+
+    return out
 
 
 def _to_dict(
@@ -62,11 +75,14 @@ def _to_dict(
         return dict(input_)
 
     if isinstance(input_, str):
-        return json.loads(input_, **kwargs)
+        a = json.loads(input_, **kwargs)
+        if isinstance(a, dict):
+            return a
+        raise ValueError("Input string cannot be converted into a dictionary.")
 
     if isinstance(input_, DataFrame):
         if df_as_list:
-            return [row.to_dict(**kwargs) for _, row in input_.iterrows()]
+            return [replace_nans(row.to_dict(**kwargs)) for _, row in input_.iterrows()]
 
     if use_model_dump and hasattr(input_, "model_dump"):
         return input_.model_dump(**kwargs)
@@ -80,7 +96,23 @@ def _to_dict(
     if hasattr(input_, "dict"):
         return input_.dict(**kwargs)
 
-    raise ValueError(f"Unsupported input type: {type(input_)}")
+    try:
+        return dict(input_)
+    except Exception as e:
+        raise e
+
+
+def replace_nans(d: dict) -> dict:
+    """
+    Replace NaN values in a dictionary with None.
+
+    Args:
+        d (dict): The dictionary to process.
+
+    Returns:
+        dict: The processed dictionary with NaN values replaced by None.
+    """
+    return {k: (None if isna(v) else v) for k, v in d.items()}
 
 
 def xml_to_dict(root: Any) -> dict[str, Any]:

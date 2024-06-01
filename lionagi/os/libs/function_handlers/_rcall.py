@@ -15,6 +15,8 @@ async def rcall(
     timeout: float | None = None,
     timing: bool = False,
     verbose: bool = True,
+    error_msg: str | None = None,
+    error_map: dict | None = None,
     **kwargs,
 ) -> Any:
     """
@@ -41,11 +43,16 @@ async def rcall(
             the result. Defaults to False.
         verbose (bool, optional): If True, print retry attempts and exceptions.
             Defaults to True.
+        error_msg (str | None, optional): Custom error message prefix. Defaults
+            to None.
+        error_map (dict | None, optional): Mapping of errors to handle custom
+            error responses. Defaults to None.
         **kwargs: Additional keyword arguments to pass to the function.
 
     Returns:
         Any: The result of the function call, or the default value if all
-            retries fail.
+            retries fail. If timing is True, returns a tuple of (result,
+            duration).
 
     Raises:
         RuntimeError: If all retries fail and no default value is provided,
@@ -63,23 +70,48 @@ async def rcall(
     start = get_now(datetime_=False)
     await asyncio.sleep(initial_delay)
 
-    for attempt in range(retries + 1) if retries == 0 else range(retries):
+    for attempt in range(retries + 1):
         try:
-            err_msg = f"Attempt {attempt + 1}/{retries}: " if retries > 0 else None
+            attempt_msg = (
+                f"Attempt {attempt + 1}/{retries + 1}: " if retries > 0 else None
+            )
+            full_error_msg = f"{attempt_msg}{error_msg}" if error_msg else attempt_msg
             if timing:
-                return (
-                    await tcall(
-                        func, *args, err_msg=err_msg, timeout=timeout, **kwargs
-                    ),
-                    get_now(datetime_=False) - start,
+                result, duration = await tcall(
+                    func,
+                    *args,
+                    initial_delay=0,
+                    error_msg=full_error_msg,
+                    suppress_err=False,
+                    timing=True,
+                    timeout=timeout,
+                    default=None,
+                    error_map=error_map,
+                    **kwargs,
                 )
+                return result, duration
 
-            return await tcall(func, *args, timeout=timeout, **kwargs)
+            result = await tcall(
+                func,
+                *args,
+                initial_delay=0,
+                error_msg=full_error_msg,
+                suppress_err=False,
+                timing=False,
+                timeout=timeout,
+                default=None,
+                error_map=error_map,
+                **kwargs,
+            )
+            return result
+
         except Exception as e:
             last_exception = e
             if attempt < retries:
                 if verbose:
-                    print(f"Attempt {attempt + 1}/{retries} failed: {e}, retrying...")
+                    print(
+                        f"Attempt {attempt + 1}/{retries + 1} failed: {e}, retrying..."
+                    )
                 await asyncio.sleep(delay)
                 delay *= backoff_factor
             else:

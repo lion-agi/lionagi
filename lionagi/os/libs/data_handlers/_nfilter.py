@@ -1,9 +1,10 @@
-from typing import Any, Callable
+from typing import Any, Callable, Union
+import unittest
 
 
 def nfilter(
-    nested_structure: dict | list, /, condition: Callable[[Any], bool]
-) -> dict | list:
+    nested_structure: Union[dict, list], /, condition: Callable[[Any], bool]
+) -> Union[dict, list]:
     """
     Filter elements in a nested structure (dict or list) based on a condition.
 

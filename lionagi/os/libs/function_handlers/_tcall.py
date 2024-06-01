@@ -8,11 +8,12 @@ async def tcall(
     func: Callable,
     *args,
     initial_delay: float = 0,
-    err_msg: str | None = None,
+    error_msg: str | None = None,
     suppress_err: bool = False,
     timing: bool = False,
     timeout: float | None = None,
     default: Any = None,
+    error_map: dict | None = None,
     **kwargs,
 ) -> Any:
     """
@@ -27,7 +28,7 @@ async def tcall(
         *args: Positional arguments to pass to the function.
         initial_delay (float, optional): Initial delay before the function call
             in seconds. Defaults to 0.
-        err_msg (str | None, optional): Custom error message prefix. Defaults
+        error_msg (str | None, optional): Custom error message prefix. Defaults
             to None.
         suppress_err (bool, optional): If True, suppresses errors and returns
             a default value. Defaults to False.
@@ -37,6 +38,8 @@ async def tcall(
             seconds. Defaults to None.
         default (Any, optional): The default value to return if an error occurs
             and suppress_err is True. Defaults to None.
+        error_map (dict | None, optional): Mapping of errors to handle
+            custom error responses. Defaults to None.
         **kwargs: Additional keyword arguments to pass to the function.
 
     Returns:
@@ -63,31 +66,31 @@ async def tcall(
         result = None
 
         if timeout is None:
-            result = await ucall(func, *args, **kwargs)
+            result = await ucall(func, *args, error_map=error_map, **kwargs)
         else:
             try:
                 result = await asyncio.wait_for(
-                    ucall(func, *args, **kwargs), timeout=timeout
+                    ucall(func, *args, error_map=error_map, **kwargs), timeout=timeout
                 )
-            except asyncio.TimeoutError as e:
-                err_msg = f"{err_msg or ''}Timeout {timeout} seconds exceeded"
+            except asyncio.TimeoutError:
+                error_msg = f"{error_msg or ''} Timeout {timeout} seconds exceeded"
                 if suppress_err:
                     duration = get_now(datetime_=False) - start
                     return (default, duration) if timing else default
                 else:
-                    raise asyncio.TimeoutError(err_msg)
+                    raise asyncio.TimeoutError(error_msg)
 
         duration = get_now(datetime_=False) - start
         return (result, duration) if timing else result
 
     except Exception as e:
-        err_msg = (
-            f"{err_msg} Error: {e}"
-            if err_msg
+        error_msg = (
+            f"{error_msg} Error: {e}"
+            if error_msg
             else f"An error occurred in async execution: {e}"
         )
         if suppress_err:
             duration = get_now(datetime_=False) - start
             return (default, duration) if timing else default
         else:
-            raise RuntimeError(err_msg)
+            raise RuntimeError(error_msg)

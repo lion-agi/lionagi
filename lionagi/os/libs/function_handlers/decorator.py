@@ -561,50 +561,6 @@ class CallDecorator:
         return decorator
 
     @staticmethod
-    def max_concurrency(limit: int = 5) -> Callable:
-        """
-        Limits the number of concurrent executions for an asynchronous function
-        to ensure that no more than a specified number of instances of the
-        function run simultaneously. This is particularly useful for controlling
-        resource usage and preventing overload when dealing with IO-bound
-        operations or external services that can only handle a limited amount of
-        concurrent requests.
-
-        Args:
-            limit (int): The maximum number of concurrent executions allowed for
-                the decorated function.
-
-        Returns:
-            Callable: An asynchronous function wrapper that enforces the
-                concurrency limit.
-
-        Examples:
-            >>> @CallDecorator.max_concurrency(3)
-            ... async def process_data(input_):
-            ...     # Asynchronous processing logic here
-            ...     pass
-            ... # No more than 3 instances of `process_data` will run
-            ... # concurrently.
-        """
-
-        def decorator(func: Callable) -> Callable:
-            if not is_coroutine_func(func):
-                raise TypeError(
-                    "max_concurrency decorator can only be used with async "
-                    "functions."
-                )
-            semaphore = asyncio.Semaphore(limit)
-
-            @functools.wraps(func)
-            async def wrapper(*args, **kwargs):
-                async with semaphore:
-                    return await func(*args, **kwargs)
-
-            return wrapper
-
-        return decorator
-
-    @staticmethod
     def throttle(period: int) -> Callable:
         """
         A static method to create a throttling decorator. This method utilizes

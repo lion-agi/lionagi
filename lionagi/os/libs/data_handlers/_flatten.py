@@ -1,7 +1,7 @@
 from typing import Any, Generator
-from ..sys_util import create_copy
-from ._to_list import to_list
-from ._to_dict import to_dict
+from lionagi.os.libs.sys_util import create_copy
+from lionagi.os.libs.data_handlers._to_list import to_list
+from lionagi.os.libs.data_handlers._to_dict import to_dict
 
 
 def flatten(

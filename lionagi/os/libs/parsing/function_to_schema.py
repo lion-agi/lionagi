@@ -3,7 +3,7 @@ from .extract_docstring import extract_docstring_details
 from .util import py_json_msp
 
 
-def func_to_schema(
+def function_to_schema(
     func, style="google", func_description=None, params_description=None
 ):
     """

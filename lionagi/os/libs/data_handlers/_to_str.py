@@ -1,6 +1,6 @@
 import json
-from ._to_list import to_list
-from ._to_dict import to_dict
+from lionagi.os.libs.data_handlers._to_list import to_list
+from lionagi.os.libs.data_handlers._to_dict import to_dict
 
 
 def to_str(
@@ -104,6 +104,6 @@ def strip_lower(input_: str, /, **kwargs) -> str:
         ValueError: If the input cannot be converted to a string.
     """
     try:
-        return to_str(input_, **kwargs).strip().lower()
+        return to_str(input_, strip_lower=True, **kwargs)
     except Exception as e:
         raise ValueError(f"Could not convert input_ to string: {input_}, Error: {e}")

@@ -2,7 +2,7 @@ from functools import singledispatch
 from pandas import DataFrame, Series, concat
 from pandas.core.generic import NDFrame
 from typing import Any, Dict
-from ._to_list import to_list
+from lionagi.os.libs.data_handlers._to_list import to_list
 
 
 @singledispatch
@@ -27,7 +27,7 @@ def to_df(
     Args:
         input_ (Any): The input data to convert into a DataFrame. Accepts a
             wide range of types thanks to overloads.
-        how (str): Specifies how missing values are dropped. Passed directly
+        drop_how (str): Specifies how missing values are dropped. Passed directly
             to DataFrame.dropna().
         drop_kwargs (Dict[str, Any] | None): Additional keyword arguments for
             DataFrame.dropna().
@@ -74,7 +74,7 @@ def _(
 
     Args:
         input_ (list): The input list to convert into a DataFrame.
-        how (str): Specifies how missing values are dropped. Passed directly
+        drop_how (str): Specifies how missing values are dropped. Passed directly
             to DataFrame.dropna().
         drop_kwargs (Dict | None): Additional keyword arguments for
             DataFrame.dropna().
@@ -93,6 +93,11 @@ def _(
         return DataFrame()
 
     if not isinstance(input_[0], (DataFrame, Series, NDFrame)):
+        if any(
+            isinstance(i, dict) and any(isinstance(v, (dict, list)) for v in i.values())
+            for i in input_
+        ):
+            raise ValueError("Nested dictionaries/lists are not supported")
         if drop_kwargs is None:
             drop_kwargs = {}
         try:
@@ -105,7 +110,11 @@ def _(
     if drop_kwargs is None:
         drop_kwargs = {}
     try:
-        df = concat(input_, **kwargs)
+        df = concat(
+            input_,
+            axis=1 if all(isinstance(i, Series) for i in input_) else 0,
+            **kwargs,
+        )
     except Exception as e1:
         try:
             input_ = to_list(input_)

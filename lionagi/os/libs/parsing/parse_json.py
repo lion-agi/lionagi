@@ -1,4 +1,5 @@
 import re
+import json
 from typing import Any, Callable
 from ..data_handlers import to_dict
 from .util import md_json_char_map
@@ -102,10 +103,10 @@ def escape_chars_in_json(value: str, char_map=None) -> str:
 
 # inspired by langchain_core.output_parsers.json (MIT License)
 # https://github.com/langchain-ai/langchain/blob/master/libs/core/langchain_core/output_parsers/json.py
-@staticmethod
+
+
 def extract_json_block(
     str_to_parse: str,
-    language: str | None = None,
     regex_pattern: str | None = None,
     *,
     parser: Callable[[str], Any] = None,
@@ -135,19 +136,13 @@ def extract_json_block(
             'print("Hello, world!")'
     """
 
-    if language:
-        regex_pattern = rf"```{language}\n?(.*?)\n?```"
-    else:
-        regex_pattern = r"```\n?(.*?)\n?```"
-
+    regex_pattern = r"```json\n({.*?})\n```"
     match = re.search(regex_pattern, str_to_parse, re.DOTALL)
     code_str = ""
     if match:
         code_str = match[1].strip()
     else:
-        raise ValueError(
-            f"No {language or 'specified'} code block found in the Markdown content."
-        )
+        raise ValueError(f"No json code block found in the Markdown content.")
     if not match:
         str_to_parse = str_to_parse.strip()
         if str_to_parse.startswith("```json\n") and str_to_parse.endswith("\n```"):
@@ -157,7 +152,6 @@ def extract_json_block(
     return parser(code_str)
 
 
-@staticmethod
 def md_to_json(
     str_to_parse: str,
     *,
@@ -198,3 +192,22 @@ def md_to_json(
             )
 
     return json_obj
+
+
+def as_readable_json(input_: Any, /) -> str:
+    """Converts a given input to a readable dictionary format.
+
+    Args:
+        input_ (Any): The input data to convert.
+
+    Returns:
+        str: A JSON string representation of the input dictionary.
+
+    Raises:
+        ValueError: If the input cannot be converted to a dictionary.
+    """
+    try:
+        dict_ = to_dict(input_)
+        return json.dumps(dict_, indent=4) if isinstance(dict_, dict) else str(dict_)
+    except Exception as e:
+        raise ValueError(f"Could not convert given input to readable dict: {e}") from e

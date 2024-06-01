@@ -1,5 +1,7 @@
 from collections.abc import Mapping
 from typing import Any, Generator, Iterable, List
+import unittest
+import numpy as np  # Added for numpy array testing
 
 
 def to_list(input_: Any, /, *, flatten: bool = True, dropna: bool = True) -> List[Any]:
@@ -16,6 +18,9 @@ def to_list(input_: Any, /, *, flatten: bool = True, dropna: bool = True) -> Lis
     Returns:
         List[Any]: The converted list.
     """
+    if input_ is None:
+        return []
+
     if not isinstance(input_, Iterable) or isinstance(
         input_, (str, bytes, bytearray, Mapping)
     ):
@@ -43,13 +48,13 @@ def flatten_list(lst_: List[Any], dropna: bool = True) -> List[Any]:
 
 
 def _flatten_list_generator(
-    lst_: List[Any], dropna: bool = True
+    lst_: Iterable[Any], dropna: bool = True
 ) -> Generator[Any, None, None]:
     """
     A generator to recursively flatten a nested list.
 
     Args:
-        lst_ (List[Any]): The list to flatten.
+        lst_ (Iterable[Any]): The list to flatten.
         dropna (bool, optional): If True, removes None values. Defaults to
             True.
 
@@ -57,7 +62,9 @@ def _flatten_list_generator(
         Any: The next flattened element from the list.
     """
     for i in lst_:
-        if isinstance(i, list):
+        if isinstance(i, Iterable) and not isinstance(
+            i, (str, bytes, bytearray, Mapping)
+        ):
             yield from _flatten_list_generator(i, dropna)
         else:
             yield i

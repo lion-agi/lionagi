@@ -3,6 +3,7 @@ import asyncio
 from typing import Any, Callable, Dict
 from functools import lru_cache, wraps
 from concurrent.futures import ThreadPoolExecutor
+from ._throttle import Throttle
 
 
 def force_async(fn: Callable[..., Any]) -> Callable[..., Any]:
@@ -57,3 +58,29 @@ def custom_error_handler(error: Exception, error_map: Dict[type, Callable]) -> N
         handler(error)
     else:
         logging.error(f"Unhandled error: {error}")
+
+
+def max_concurrency(func: Callable, limit) -> Callable:
+    if not is_coroutine_func(func):
+        func = force_async(func)
+    semaphore = asyncio.Semaphore(limit)
+
+    @wraps(func)
+    async def wrapper(*args, **kwargs):
+        async with semaphore:
+            return await func(*args, **kwargs)
+
+    return wrapper
+
+
+def throttle(func, period):
+    if not is_coroutine_func(func):
+        func = force_async(func)
+    throttle = Throttle(period)
+
+    @wraps(func)
+    async def wrapper(*args, **kwargs):
+        await throttle(func)
+        return await func(*args, **kwargs)
+
+    return wrapper

@@ -15,7 +15,12 @@ def is_homogeneous(iterables: list[Any] | dict[Any, Any], type_check: type) -> b
     """
     if isinstance(iterables, list):
         return all(isinstance(it, type_check) for it in iterables)
-    return isinstance(iterables, type_check)
+
+    elif isinstance(iterables, dict):
+        return all(isinstance(val, type_check) for val in iterables.values())
+
+    else:
+        return isinstance(iterables, type_check)
 
 
 def is_same_dtype(
@@ -100,7 +105,7 @@ def is_structure_homogeneous(
     return (is_homogeneous, structure_type) if return_structure_type else is_homogeneous
 
 
-def _deep_update(original: dict, update: dict) -> dict:
+def deep_update(original: dict, update: dict) -> dict:
     """
     Recursively merge two dictionaries, updating nested dictionaries instead of
     overwriting them.
@@ -150,14 +155,20 @@ def get_target_container(
     """
     current_element = nested_list
     for index in indices:
+
         if isinstance(current_element, list):
+            if isinstance(index, str) and index.isdigit():
+                index = int(index)
+
             if isinstance(index, int) and 0 <= index < len(current_element):
                 current_element = current_element[index]
+
             else:
                 raise IndexError("List index out of range")
+
         elif isinstance(current_element, dict):
             if index in current_element:
-                current_element = current_element[index]
+                current_element = current_element.get(index, None)
             else:
                 raise KeyError("Key not found in dictionary")
         else:

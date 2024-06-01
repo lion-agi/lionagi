@@ -1,20 +1,15 @@
-def check_bool_field(x, fix_=True):
-    if not isinstance(x, bool):
-        if fix_:
-            try:
-                return _fix_bool_field(x)
-            except Exception as e:
-                raise e
+from ..data_handlers import strip_lower
 
-        raise ValueError(
-            f"Default value for BOOLEAN must be a bool, got {type(x).__name__}"
-        )
+
+def force_validate_boolean(x):
+    if not isinstance(x, bool):
+        return _force_validate_boolean(x)
     return x
 
 
-def _fix_bool_field(x):
+def _force_validate_boolean(x):
     try:
-        x = strip_lower(to_str(x))
+        x = strip_lower(x)
         if x in ["true", "1", "correct", "yes"]:
             return True
 

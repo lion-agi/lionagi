@@ -1,10 +1,12 @@
-from ._util import get_target_container
+from lionagi.os.libs.data_handlers._util import get_target_container
+import unittest
+from typing import Any, Callable, Union
 
 
 def nget(
-    nested_structure: dict | list,
-    indices: list[int | str],
-    default=...,
+    nested_structure: Union[dict, list],
+    indices: list[Union[int, str]],
+    default: Any = ...,
 ):
     """
     Retrieve a value from a nested structure using a list of indices.
