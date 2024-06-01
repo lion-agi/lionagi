@@ -33,13 +33,13 @@ class System(RoledMessage):
     system: str | Any | None = Field(None)
 
     def __init__(
-        self, 
-        system=None, 
-        sender=None, 
-        recipient=None, 
-        system_datetime: bool | str=None,
-        system_datetime_strftime: str=None,
-        **kwargs
+        self,
+        system=None,
+        sender=None,
+        recipient=None,
+        system_datetime: bool | str = None,
+        system_datetime_strftime: str = None,
+        **kwargs,
     ):
         """
         Initializes the System message.
@@ -60,19 +60,19 @@ class System(RoledMessage):
             if isinstance(system_datetime, bool) and system_datetime:
                 system_datetime = SysUtil.get_now(datetime_=True)
                 system_datetime = (
-                    system_datetime.strftime("%Y-%m-%d %H:%M") 
-                    if not system_datetime_strftime 
+                    system_datetime.strftime("%Y-%m-%d %H:%M")
+                    if not system_datetime_strftime
                     else system_datetime.strftime(system_datetime_strftime)
                 )
             elif isinstance(system_datetime, str):
-                pass            
-                
+                pass
+
         super().__init__(
             role=MessageRole.SYSTEM,
             sender=sender or "system",
             content=(
-                {"system_info": f"{system}. System Date: {system_datetime}"} 
-                if system_datetime 
+                {"system_info": f"{system}. System Date: {system_datetime}"}
+                if system_datetime
                 else {"system_info": system}
             ),
             recipient=recipient or "N/A",

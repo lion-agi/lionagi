@@ -133,9 +133,9 @@ def create_message(
 
     if system:
         return System(
-            system=system, 
-            sender=sender, 
-            recipient=recipient, 
+            system=system,
+            sender=sender,
+            recipient=recipient,
             system_datetime=system_datetime,
             system_datetime_strftime=system_datetime_strftime,
         )

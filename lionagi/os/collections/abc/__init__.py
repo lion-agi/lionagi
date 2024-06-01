@@ -23,7 +23,7 @@ from .concepts import (
     Executable,
     Directive,
 )
-from .util import SYSTEM_FIELDS
+from ..._setting.meta_fields import SYSTEM_FIELDS
 
 
 __all__ = [

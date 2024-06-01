@@ -5,7 +5,9 @@ from .Transformers_.transformers import TransformersService
 from .LiteLLM_.litellm import LiteLLMService
 from .MLX_LM_.service import MLXService
 from lionagi.integrations.model_provider.OpenAI_.oai_configs import oai_schema
-from lionagi.integrations.model_provider.OpenRouter_.openrouter_configs import openrouter_schema
+from lionagi.integrations.model_provider.OpenRouter_.openrouter_configs import (
+    openrouter_schema,
+)
 
 SERVICE_PROVIDERS_MAPPING = {
     "openai": {

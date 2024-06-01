@@ -57,7 +57,9 @@ class TransformersService(BaseService):
         self.config = config
         self.allowed_kwargs = allowed_kwargs
         try:
-            from lionagi.integrations.model_provider.Transformers_.transformers import pipeline
+            from lionagi.integrations.model_provider.Transformers_.transformers import (
+                pipeline,
+            )
 
             self.pipeline = pipeline
         except ImportError:
@@ -68,7 +70,9 @@ class TransformersService(BaseService):
                     SysUtil.install_import(
                         package_name="transformers", import_name="pipeline"
                     )
-                    from lionagi.integrations.model_provider.Transformers_.transformers import pipeline
+                    from lionagi.integrations.model_provider.Transformers_.transformers import (
+                        pipeline,
+                    )
 
                     self.pipeline = pipeline
             except Exception as e:

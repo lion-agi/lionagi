@@ -31,46 +31,11 @@ from lionagi.libs.ln_func_call import lcall
 from lionagi.libs.ln_nested import nget, nset, ninsert, flatten, unflatten
 
 from .exceptions import FieldError, LionTypeError, LionValueError
-from .util import base_lion_fields, llama_meta_fields, lc_meta_fields
+from ..._setting.meta_fields import base_lion_fields, llama_meta_fields, lc_meta_fields
 
 T = TypeVar("T")
 
 _init_class = {}
-
-
-class Element(BaseModel, ABC):
-    """Base class for elements within the LionAGI system.
-
-    Attributes:
-        ln_id (str): A 32-char unique hash identifier.
-        timestamp (str): The UTC timestamp of creation.
-    """
-
-    ln_id: str = Field(
-        default_factory=SysUtil.create_id,
-        title="ID",
-        description="A 32-char unique hash identifier.",
-        frozen=True,
-        validation_alias=AliasChoices("node_id", "ID", "id"),
-    )
-
-    timestamp: str = Field(
-        default_factory=lambda: SysUtil.get_timestamp(sep=None)[:-6],
-        title="Creation Timestamp",
-        description="The UTC timestamp of creation",
-        frozen=True,
-        alias="created",
-        validation_alias=AliasChoices("created_on", "creation_date"),
-    )
-
-    def __init_subclass__(cls, **kwargs):
-        super().__init_subclass__(**kwargs)
-        if cls.__name__ not in _init_class:
-            _init_class[cls.__name__] = cls
-
-    # element is always true
-    def __bool__(self):
-        return True
 
 
 class Component(Element, ABC):

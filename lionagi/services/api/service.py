@@ -1,4 +1,3 @@
-
 class BaseService:
     """
     Base class for services that interact with API endpoints.
@@ -142,4 +141,3 @@ class BaseService:
                 required_tokens=required_tokens,
                 **kwargs,
             )
-

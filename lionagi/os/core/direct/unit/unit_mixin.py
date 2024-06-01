@@ -76,7 +76,7 @@ class DirectiveMixin(ABC):
 
         if system:
             branch.add_message(
-                system=system, 
+                system=system,
                 system_datetime=kwargs.get("system_datetime", None),
                 system_datetime_strftime=kwargs.get("system_datetime_strftime", None),
             )
@@ -662,7 +662,7 @@ class DirectiveMixin(ABC):
         if allow_action and not tools:
             tools = True
 
-        tool_schema=None
+        tool_schema = None
         if tools:
             tool_schema = branch.tool_manager.get_tool_schema(tools)
 

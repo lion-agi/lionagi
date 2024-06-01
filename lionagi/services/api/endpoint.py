@@ -1,4 +1,3 @@
-
 class EndPoint:
     """
     Represents an API endpoint with rate limiting capabilities.

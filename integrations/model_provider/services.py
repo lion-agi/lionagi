@@ -38,7 +38,9 @@ class Services:
                 token_encoding_name (str): The default token encoding scheme.
         """
 
-        from lionagi.integrations.model_provider.OpenRouter_.openrouter import OpenRouterService
+        from lionagi.integrations.model_provider.OpenRouter_.openrouter import (
+            OpenRouterService,
+        )
 
         return OpenRouterService(**kwargs)
 
@@ -68,7 +70,9 @@ class Services:
                 asynchronous operations.
         """
 
-        from lionagi.integrations.model_provider.Transformers_.transformers import TransformersService
+        from lionagi.integrations.model_provider.Transformers_.transformers import (
+            TransformersService,
+        )
 
         return TransformersService(**kwargs)
 

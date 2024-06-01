@@ -1,4 +1,3 @@
-
 class PayloadPackage:
 
     @classmethod
@@ -57,7 +56,6 @@ class PayloadPackage:
             input_key="training_file",
             **kwargs,
         )
-
 
 
 def create_payload(input_, config, required_, optional_, input_key, **kwargs):
