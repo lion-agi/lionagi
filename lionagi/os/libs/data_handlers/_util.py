@@ -127,7 +127,7 @@ def deep_update(original: dict, update: dict) -> dict:
     """
     for key, value in update.items():
         if isinstance(value, dict) and key in original:
-            original[key] = _deep_update(original.get(key, {}), value)
+            original[key] = deep_update(original.get(key, {}), value)
         else:
             original[key] = value
     return original

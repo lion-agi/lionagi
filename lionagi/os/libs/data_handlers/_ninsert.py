@@ -1,3 +1,15 @@
+"""
+Module for inserting values into nested structures.
+
+Provides functionality to insert values into nested dictionaries or lists at
+specified paths, with support for creating intermediate structures as needed.
+
+Functions:
+    ninsert: Inserts a value into a nested structure at a specified path.
+    handle_list_insert: Ensures a specified index in a list is occupied by a
+                        given value, extending the list if necessary.
+"""
+
 from lionagi.os.libs.data_handlers._to_list import to_list
 from typing import Any, Union
 

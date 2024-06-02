@@ -1,7 +1,17 @@
-import unittest
+"""
+Module for unflattening dictionaries.
+
+Provides a function to convert a single-level (flattened) dictionary
+into a nested dictionary or list.
+
+Functions:
+    unflatten: Unflatten a single-level dictionary into a nested dictionary or list.
+"""
+
+from typing import Union
 
 
-def unflatten(flat_dict: dict, sep: str = "/") -> dict:
+def unflatten(flat_dict: dict, sep: str = "/") -> Union[dict, list]:
     """
     Unflatten a single-level dictionary into a nested dictionary or list.
 
@@ -11,9 +21,20 @@ def unflatten(flat_dict: dict, sep: str = "/") -> dict:
 
     Returns:
         Union[dict, list]: The unflattened nested dictionary or list.
+
+    Examples:
+        >>> flat_dict = {'a/b': 1, 'a/c': 2, 'd': 3}
+        >>> unflattened = unflatten(flat_dict)
+        >>> unflattened == {'a': {'b': 1, 'c': 2}, 'd': 3}
+        True
+
+        >>> flat_dict = {'0/a': 1, '0/b': 2, '1/a': 3, '1/b': 4}
+        >>> unflattened = unflatten(flat_dict)
+        >>> unflattened == [{'a': 1, 'b': 2}, {'a': 3, 'b': 4}]
+        True
     """
 
-    def _unflatten(data: dict) -> dict | list:
+    def _unflatten(data: dict) -> Union[dict, list]:
         result = {}
         for key, value in data.items():
             parts = key.split(sep)
@@ -43,60 +64,3 @@ def unflatten(flat_dict: dict, sep: str = "/") -> dict:
         current[parts[-1]] = value
 
     return _unflatten(unflattened_dict)
-
-
-class TestUnflattenFunction(unittest.TestCase):
-
-    def test_simple_case(self):
-        flat_dict = {"a/b": 1, "a/c": 2}
-        expected = {"a": {"b": 1, "c": 2}}
-        self.assertEqual(unflatten(flat_dict), expected)
-
-    def test_multiple_levels(self):
-        flat_dict = {"a/b/c": 1, "a/b/d": 2}
-        expected = {"a": {"b": {"c": 1, "d": 2}}}
-        self.assertEqual(unflatten(flat_dict), expected)
-
-    def test_with_different_separator(self):
-        flat_dict = {"a.b": 1, "a.c": 2}
-        expected = {"a": {"b": 1, "c": 2}}
-        self.assertEqual(unflatten(flat_dict, sep="."), expected)
-
-    def test_list_conversion(self):
-        flat_dict = {"0/a": 1, "0/b": 2, "1/a": 3, "1/b": 4}
-        expected = [{"a": 1, "b": 2}, {"a": 3, "b": 4}]
-        self.assertEqual(unflatten(flat_dict), expected)
-
-    def test_nested_lists(self):
-        flat_dict = {"0/0": 1, "0/1": 2, "1/0": 3, "1/1": 4}
-        expected = [[1, 2], [3, 4]]
-        self.assertEqual(unflatten(flat_dict), expected)
-
-    def test_single_key(self):
-        flat_dict = {"a": 1}
-        expected = {"a": 1}
-        self.assertEqual(unflatten(flat_dict), expected)
-
-    def test_empty_dict(self):
-        flat_dict = {}
-        expected = {}
-        self.assertEqual(unflatten(flat_dict), expected)
-
-    def test_complex_case(self):
-        flat_dict = {"a/b/c": 1, "a/b/d": 2, "a/e": 3, "f": 4}
-        expected = {"a": {"b": {"c": 1, "d": 2}, "e": 3}, "f": 4}
-        self.assertEqual(unflatten(flat_dict), expected)
-
-    def test_with_dict_value(self):
-        flat_dict = {"a/b": {"c/d": 1}}
-        expected = {"a": {"b": {"c": {"d": 1}}}}
-        self.assertEqual(unflatten(flat_dict), expected)
-
-    def test_mixed_types(self):
-        flat_dict = {"a/b": 1, "a/c": "string", "a/d": [1, 2, 3]}
-        expected = {"a": {"b": 1, "c": "string", "d": [1, 2, 3]}}
-        self.assertEqual(unflatten(flat_dict), expected)
-
-
-if __name__ == "__main__":
-    unittest.main(argv=[""], verbosity=2, exit=False)

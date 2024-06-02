@@ -1,93 +1,153 @@
-from typing import Any, Callable
+"""
+This module provides a list call mechanism to apply a function over a list of
+inputs asynchronously with options such as retries, initial delay, backoff
+factor, timeout, error handling, and throttling.
+
+Functions:
+- lcall: Apply a function over a list of inputs asynchronously with
+  customizable options.
+"""
+
 import asyncio
-from ..data_handlers import to_list
-from ._rcall import rcall
-from ._util import max_concurrency, throttle
+from typing import Any, Callable, List, Union, Dict, Optional
+from lionagi.os.libs.data_handlers import to_list
+from lionagi.os.libs.function_handlers._ucall import ucall
 
 
 async def lcall(
-    func: Callable,  # Function to call
-    input_: list[Any],  # List of inputs
-    retries: int = 0,  # Number of retries
-    initial_delay: float = 0,  # Initial delay before the first call
-    delay: float = 0.1,  # Delay between retries
-    backoff_factor: float = 2,  # Backoff factor for delay
-    default: Any = None,  # Default value to return if an error occurs
-    timeout: float | None = None,  # Timeout for the function call in seconds
-    timing: bool = False,  # Return the execution time along with the result
-    verbose: bool = True,  # Print retry attempts and exceptions
-    error_msg: str | None = None,  # Custom error message prefix
-    error_map: dict | None = None,  # Error mapping
-    max_concurrent: int | None = None,  # Maximum number of concurrent calls
-    throttle_period: float | None = None,  # Throttle period
-    **kwargs,
-) -> list[Any]:
+    func: Callable[..., Any],
+    input_: List[Any],
+    retries: int = 0,
+    initial_delay: float = 0,
+    delay: float = 0,
+    backoff_factor: float = 1,
+    default: Any = ...,
+    timeout: Optional[float] = None,
+    timing: bool = False,
+    verbose: bool = True,
+    error_msg: Optional[str] = None,
+    error_map: Optional[Dict[type, Callable[[Exception], Any]]] = None,
+    max_concurrent: Optional[int] = None,
+    throttle_period: Optional[float] = None,
+    flatten: bool = False,
+    dropna: bool = False,
+    **kwargs: Any,
+) -> List[Any]:
     """
-    Asynchronously call a function for each input in the list with retry logic,
-    optional timing, concurrency, and throttling.
+    Apply a function over a list of inputs asynchronously with customizable
+    options.
+
+    This function allows executing a function over a list of inputs in parallel
+    with support for retries, initial delay, backoff factor, timeout, error
+    handling, concurrency control, and throttling.
 
     Args:
-        func (Callable): The function to call.
-        input_ (list[Any]): List of inputs to process.
-        retries (int, optional): The number of retries. Defaults to 0.
-        initial_delay (float, optional): Initial delay before the first attempt
-            in seconds. Defaults to 0.
-        delay (float, optional): The delay between retries in seconds.
-            Defaults to 0.1.
-        backoff_factor (float, optional): The factor by which the delay is
-            multiplied after each retry. Defaults to 2.
-        default (Any, optional): The default value to return if an error occurs
-            and suppress_err is True. Defaults to None.
-        timeout (float | None, optional): The timeout for the function call in
-            seconds. Defaults to None.
-        timing (bool, optional): If True, return the execution time along with
-            the result. Defaults to False.
-        verbose (bool, optional): If True, print retry attempts and exceptions.
-            Defaults to True.
-        error_msg (str | None, optional): Custom error message prefix. Defaults
-            to None.
-        error_map (dict | None, optional): Mapping of errors to handle custom
-            error responses. Defaults to None.
-        max_concurrent (int | None, optional): Maximum number of concurrent
-            calls. Defaults to None.
-        throttle_period (float | None, optional): Throttle period in seconds.
+        func (Callable[..., Any]): The function to be applied to each input.
+        input_ (List[Any]): List of inputs to be processed.
+        retries (int, optional): Number of retry attempts for each function.
+            Defaults to 0.
+        initial_delay (float, optional): Initial delay before starting the
+            execution. Defaults to 0.
+        delay (float, optional): Delay between retry attempts. Defaults to 0.
+        backoff_factor (float, optional): Factor by which the delay increases
+            after each attempt. Defaults to 1.
+        default (Any, optional): Default value to return if all attempts fail.
+            Defaults to ... (ellipsis).
+        timeout (Optional[float], optional): Timeout for each function
+            execution. Defaults to None.
+        timing (bool, optional): Whether to return the execution duration.
+            Defaults to False.
+        verbose (bool, optional): Whether to print retry messages. Defaults to
+            True.
+        error_msg (Optional[str], optional): Custom error message. Defaults to
+            None.
+        error_map (Optional[Dict[type, Callable[[Exception], Any]]], optional):
+            A dictionary mapping exception types to error handling functions.
             Defaults to None.
-        **kwargs: Additional keyword arguments to pass to the function.
+        max_concurrent (Optional[int], optional): Maximum number of concurrent
+            executions. Defaults to None.
+        throttle_period (Optional[float], optional): Minimum time period
+            between successive function executions. Defaults to None.
+        flatten (bool, optional): Whether to flatten the output list. Defaults
+            to False.
+        dropna (bool, optional): Whether to drop None values from the output
+            list. Defaults to False.
+        **kwargs (Any): Additional keyword arguments to pass to the function.
 
     Returns:
-        list[Any]: A list of results from the function calls.
-
-    Examples:
-        >>> async def sample_func(x):
-        >>>     return x * 2
-        >>>
-        >>> results = await lcall(sample_func, [1, 2, 3], retries=3, delay=1)
-        >>> print(results)
+        List[Any]: The results of the function calls, optionally including the
+            duration of execution if `timing` is True.
     """
+    if initial_delay:
+        await asyncio.sleep(initial_delay)
 
-    async def _task(i):
-        return await rcall(
-            func,
-            i,
-            retries=retries,
-            initial_delay=initial_delay,
-            delay=delay,
-            backoff_factor=backoff_factor,
-            default=default,
-            timeout=timeout,
-            timing=timing,
-            verbose=verbose,
-            error_msg=error_msg,
-            error_map=error_map,
-            **kwargs,
-        )
+    semaphore = asyncio.Semaphore(max_concurrent) if max_concurrent else None
+    throttle_delay = throttle_period if throttle_period else 0
 
-    if max_concurrent:
-        _task = max_concurrency(_task, max_concurrent)
+    async def _task(i: Any, index: int) -> Any:
+        if semaphore:
+            async with semaphore:
+                return await _execute_task(i, index)
+        else:
+            return await _execute_task(i, index)
 
-    if throttle_period:
-        _task = throttle(_task, throttle_period)
+    async def _execute_task(i: Any, index: int) -> Any:
+        attempts = 0
+        current_delay = delay
+        while True:
+            try:
+                if timing:
+                    start_time = asyncio.get_event_loop().time()
+                    result = await asyncio.wait_for(ucall(func, i, **kwargs), timeout)
+                    end_time = asyncio.get_event_loop().time()
+                    return index, result, end_time - start_time
+                else:
+                    result = await asyncio.wait_for(ucall(func, i, **kwargs), timeout)
+                    return index, result
+            except asyncio.TimeoutError as e:
+                raise asyncio.TimeoutError(
+                    f"{error_msg or ''} Timeout {timeout} seconds exceeded"
+                ) from e
+            except Exception as e:
+                if error_map and type(e) in error_map:
+                    handler = error_map[type(e)]
+                    if asyncio.iscoroutinefunction(handler):
+                        return index, await handler(e)
+                    else:
+                        return index, handler(e)
+                attempts += 1
+                if attempts <= retries:
+                    if verbose:
+                        print(
+                            f"Attempt {attempts}/{retries + 1} failed: {e}, retrying..."
+                        )
+                    await asyncio.sleep(current_delay)
+                    current_delay *= backoff_factor
+                else:
+                    if default is not ...:
+                        return index, default
+                    raise e
 
-    tasks = [_task(i) for i in to_list(input_)]
-    outs = await asyncio.gather(*tasks)
-    return to_list(outs)
+    tasks = [_task(i, index) for index, i in enumerate(input_)]
+    results = []
+    for coro in asyncio.as_completed(tasks):
+        result = await coro
+        results.append(result)
+        await asyncio.sleep(throttle_delay)
+
+    results.sort(key=lambda x: x[0])  # Sort results based on the original index
+
+    if timing:
+        if not flatten:
+            if dropna:
+                return [
+                    (result[1], result[2])
+                    for result in results
+                    if result[1] is not None
+                ]
+            else:
+                return [(result[1], result[2]) for result in results]
+        else:
+            return to_list([result[1] for result in results], dropna=dropna)
+    else:
+        return [result[1] for result in results]

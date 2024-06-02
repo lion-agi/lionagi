@@ -1,13 +1,32 @@
+"""
+Module for converting various input types into dictionaries.
+
+Provides functions to convert a variety of data structures, including
+DataFrames, JSON strings, and XML elements, into dictionaries or lists
+of dictionaries. Handles special cases such as replacing NaN values
+with None.
+
+Functions:
+    to_dict: Converts various types of input into a dictionary.
+    _to_dict: Helper function to convert the input into a dictionary.
+    replace_nans: Replaces NaN values in a dictionary with None.
+    xml_to_dict: Converts an XML element and its children to a dictionary.
+"""
+
 from collections import defaultdict
 from collections.abc import Mapping
 import json
 from typing import Any, Union
 from pandas import DataFrame, isna
-import pandas as pd
 
 
 def to_dict(
-    input_, /, as_list: bool = True, use_model_dump: bool = True, **kwargs
+    input_: Any,
+    /,
+    as_list: bool = True,
+    use_model_dump: bool = True,
+    str_type="json",
+    **kwargs: Any,
 ) -> Union[dict, list[dict]]:
     """
     Convert various types of input into a dictionary.
@@ -18,6 +37,7 @@ def to_dict(
             of dictionaries. Defaults to True.
         use_model_dump (bool, optional): If True, use model_dump method if
             available. Defaults to True.
+        str_type (str): The type of string to convert. Defaults to "json", can also be "xml".
         **kwargs: Additional arguments to pass to conversion methods.
 
     Returns:
@@ -30,12 +50,22 @@ def to_dict(
     out = None
     if isinstance(input_, list):
         out = [
-            to_dict(i, as_list=as_list, use_model_dump=use_model_dump, **kwargs)
+            to_dict(
+                i,
+                as_list=as_list,
+                use_model_dump=use_model_dump,
+                str_type=str_type,
+                **kwargs,
+            )
             for i in input_
         ]
     else:
         out = _to_dict(
-            input_, df_as_list=as_list, use_model_dump=use_model_dump, **kwargs
+            input_,
+            df_as_list=as_list,
+            use_model_dump=use_model_dump,
+            str_type=str_type,
+            **kwargs,
         )
 
     if out in [[], {}]:
@@ -48,7 +78,12 @@ def to_dict(
 
 
 def _to_dict(
-    input_, /, df_as_list: bool = True, use_model_dump: bool = True, **kwargs
+    input_: Any,
+    /,
+    df_as_list: bool = True,
+    use_model_dump: bool = True,
+    str_type="json",
+    **kwargs: Any,
 ) -> dict:
     """
     Helper function to convert the input into a dictionary.
@@ -75,7 +110,13 @@ def _to_dict(
         return dict(input_)
 
     if isinstance(input_, str):
-        a = json.loads(input_, **kwargs)
+        a = None
+        if str_type == "xml":
+            a = xml_to_dict(input_)
+
+        elif str_type == "json":
+            a = json.loads(input_, **kwargs)
+
         if isinstance(a, dict):
             return a
         raise ValueError("Input string cannot be converted into a dictionary.")

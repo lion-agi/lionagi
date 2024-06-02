@@ -1,3 +1,17 @@
+"""
+Module for converting various input types to pandas DataFrames.
+
+Provides functions to convert a variety of data structures into pandas
+DataFrames, with options for handling missing data, resetting the index,
+and custom behavior for specific input types.
+
+Functions:
+    to_df: Converts various input types to a pandas DataFrame, with options for
+           handling missing data and resetting the index.
+    _ (list overload): Specialized behavior for converting a list of data to
+                       a DataFrame.
+"""
+
 from functools import singledispatch
 from pandas import DataFrame, Series, concat
 from pandas.core.generic import NDFrame
@@ -27,8 +41,8 @@ def to_df(
     Args:
         input_ (Any): The input data to convert into a DataFrame. Accepts a
             wide range of types thanks to overloads.
-        drop_how (str): Specifies how missing values are dropped. Passed directly
-            to DataFrame.dropna().
+        drop_how (str): Specifies how missing values are dropped. Passed
+            directly to DataFrame.dropna().
         drop_kwargs (Dict[str, Any] | None): Additional keyword arguments for
             DataFrame.dropna().
         reset_index (bool): If True, the DataFrame index will be reset,
@@ -74,8 +88,8 @@ def _(
 
     Args:
         input_ (list): The input list to convert into a DataFrame.
-        drop_how (str): Specifies how missing values are dropped. Passed directly
-            to DataFrame.dropna().
+        drop_how (str): Specifies how missing values are dropped. Passed
+            directly to DataFrame.dropna().
         drop_kwargs (Dict | None): Additional keyword arguments for
             DataFrame.dropna().
         reset_index (bool): If True, the DataFrame index will be reset,

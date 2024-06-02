@@ -1,8 +1,23 @@
-from typing import Any
+"""
+Module for setting values in nested structures.
+
+Provides functionality to set values deep within nested dictionaries or lists
+using a specified path of indices. Ensures intermediate structures are created
+as needed.
+
+Functions:
+    nset: Sets a value within a nested structure at a specified path.
+    ensure_list_index: Extends a list to ensure it has a minimum length,
+                       appending a default value as needed.
+"""
+
+from typing import Any, Union
 from lionagi.os.libs.data_handlers._to_list import to_list
 
 
-def nset(nested_structure: dict | list, indices: list[int | str], value: Any) -> None:
+def nset(
+    nested_structure: Union[dict, list], indices: list[Union[int, str]], value: Any
+) -> None:
     """
     Sets a value within a nested structure at the specified path defined by indices.
 
@@ -60,7 +75,7 @@ def nset(nested_structure: dict | list, indices: list[int | str], value: Any) ->
         raise TypeError("Cannot set value on non-list/dict element")
 
 
-def ensure_list_index(lst_: list, index: int, default=None) -> None:
+def ensure_list_index(lst_: list, index: int, default: Any = None) -> None:
     """
     Extend a list to ensure it has a minimum length, appending a default value as needed.
 

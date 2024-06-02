@@ -1,5 +1,15 @@
+"""
+This module provides a function to filter elements in a nested structure
+(dictionary or list) based on a given condition.
+
+Functions:
+- nfilter: Filter elements in a nested structure (dict or list) based on a
+  condition.
+- _filter_dict: Filter elements in a dictionary based on a condition.
+- _filter_list: Filter elements in a list based on a condition.
+"""
+
 from typing import Any, Callable, Union
-import unittest
 
 
 def nfilter(

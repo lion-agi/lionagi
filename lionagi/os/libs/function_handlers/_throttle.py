@@ -1,8 +1,19 @@
+"""
+This module provides a throttling mechanism for function calls.
+
+The Throttle class can be used to ensure that a decorated function, either
+synchronous or asynchronous, is only called once per specified period. It
+delays subsequent calls within this period to enforce this constraint.
+
+Classes:
+- Throttle: Provides the throttling mechanism for function calls.
+"""
+
 import time
 import asyncio
 import functools
 from typing import Any, Callable
-from ..sys_util import get_now
+from lionagi.os.libs.sys_util import get_now
 
 
 class Throttle:
