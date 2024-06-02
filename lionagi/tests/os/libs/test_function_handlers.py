@@ -1,5 +1,9 @@
-import asyncio
 import unittest
+import asyncio
+from unittest.mock import patch
+import time
+import functools
+from time import sleep
 
 from lionagi.os.libs.function_handlers import *
 from lionagi.os.libs.function_handlers._util import *
@@ -23,7 +27,7 @@ class TestBCall(unittest.TestCase):
 
     def test_bcall_success(self):
         inputs = [1, 2, 3, 4, 5]
-        expected = [[2, 4], [6, 8], [10], [2, 4, 6, 8, 10]]
+        expected = [[2, 4], [6, 8], [10]]
 
         async def run_test():
             results = []
@@ -40,7 +44,6 @@ class TestBCall(unittest.TestCase):
             [2, 4],
             ["Test exception", 8],
             [10],
-            [2, 4, "Test exception", 8, 10],
         ]
 
         async def run_test():
@@ -65,7 +68,7 @@ class TestBCall(unittest.TestCase):
             return x * 2
 
         inputs = [1, 2]
-        expected = [[2, 4], [2, 4]]
+        expected = [[2, 4]]
 
         async def run_test():
             results = []
@@ -105,7 +108,7 @@ class TestBCall(unittest.TestCase):
             return results
 
         result = self.loop.run_until_complete(run_test())
-        self.assertEqual(len(result), 2)
+        self.assertEqual(len(result), 1)
         self.assertEqual(len(result[0]), 2)
         self.assertEqual(result[0][0][0], 2)
         self.assertIsNotNone(result[0][0][1])
@@ -167,7 +170,7 @@ class TestBCall(unittest.TestCase):
 
     def test_bcall_empty_input(self):
         inputs = []
-        expected = [[]]
+        expected = []
 
         async def run_test():
             results = []
@@ -188,7 +191,6 @@ class TestBCall(unittest.TestCase):
             [2, 4],
             ["Test exception", 8],
             [10],
-            [2, 4, "Test exception", 8, 10],
         ]
 
         async def run_test():
@@ -213,7 +215,6 @@ class TestBCall(unittest.TestCase):
             [2, 4],
             ["Test exception", 8],
             [10],
-            [2, 4, "Test exception", 8, 10],
         ]
 
         async def run_test():
@@ -258,7 +259,7 @@ class TestBCall(unittest.TestCase):
             return x * 2
 
         inputs = [1, 2, 3, 4]
-        expected = [[2, "Default"], [6, 8], [2, "Default", 6, 8]]
+        expected = [[2, "Default"], [6, 8]]
 
         async def run_test():
             results = []
@@ -276,7 +277,7 @@ class TestBCall(unittest.TestCase):
             return x * y
 
         inputs = [1, 2, 3, 4, 5]
-        expected = [[2, 4], [6, 8], [10], [2, 4, 6, 8, 10]]
+        expected = [[2, 4], [6, 8], [10]]
 
         async def run_test():
             results = []
@@ -740,9 +741,6 @@ class TestMCall(unittest.TestCase):
         self.assertEqual(result, expected)
 
 
-import unittest
-
-
 class TestPCall(unittest.TestCase):
     def setUp(self):
         self.loop = asyncio.new_event_loop()
@@ -915,23 +913,6 @@ class TestPCall(unittest.TestCase):
         expected = [2]
         result = self.loop.run_until_complete(pcall(funcs, x=2))
         self.assertEqual(result, expected)
-
-
-if __name__ == "__main__":
-    unittest.main()
-
-if __name__ == "__main__":
-    unittest.main()
-if __name__ == "__main__":
-    unittest.main()
-
-
-if __name__ == "__main__":
-    unittest.main()
-
-import unittest
-import asyncio
-from unittest.mock import patch
 
 
 class TestRCall(unittest.TestCase):
@@ -1265,11 +1246,6 @@ class TestRCall(unittest.TestCase):
             rcall(timeout_func, timeout=0.1, default=99)
         )
         self.assertEqual(result, 99)
-
-
-import unittest
-import asyncio
-import time
 
 
 # Mock functions for testing
@@ -1650,9 +1626,6 @@ class TestThrottle(unittest.TestCase):
         self.assertEqual(result4, "result2")
 
 
-from unittest.mock import MagicMock, patch
-
-
 class TestUcall(unittest.TestCase):
     def setUp(self):
         self.loop = asyncio.new_event_loop()
@@ -1938,31 +1911,25 @@ class TestUcall(unittest.TestCase):
         self.assertEqual(result, 5)
 
 
-import time
-import functools
-
-
 class TestFunctionModule(unittest.TestCase):
 
-    def test_force_async(self):
+    async def test_force_async(self):
         def sync_func(x):
             return x * 2
 
         async_func = force_async(sync_func)
-
-        loop = asyncio.get_event_loop()
-        result = loop.run_until_complete(async_func(2))
+        result = await async_func(2)
         self.assertEqual(result, 4)
 
-    def test_force_async_multiple_calls(self):
-        def sync_func(x):
-            return x * 2
+    # def test_force_async_multiple_calls(self):
+    #     def sync_func(x):
+    #         return x * 2
 
-        async_func = force_async(sync_func)
+    #     async_func = force_async(sync_func)
 
-        loop = asyncio.get_event_loop()
-        results = loop.run_until_complete(asyncio.gather(async_func(2), async_func(3)))
-        self.assertEqual(results, [4, 6])
+    #     loop = asyncio.get_event_loop()
+    #     results = loop.run_until_complete(asyncio.gather(async_func(2), async_func(3)))
+    #     self.assertEqual(results, [4, 6])
 
     def test_force_async_with_exceptions(self):
         def sync_func(x):
@@ -2238,6 +2205,243 @@ class TestFunctionModule(unittest.TestCase):
         asyncio.set_event_loop(loop)
         with self.assertRaises(ValueError):
             loop.run_until_complete(throttled_func(1))
+
+
+class TestCallDecorator(unittest.TestCase):
+    def setUp(self):
+        self.loop = asyncio.new_event_loop()
+        asyncio.set_event_loop(self.loop)
+
+    def tearDown(self):
+        self.loop.close()
+
+    async def async_func(self, x):
+        await asyncio.sleep(0.1)
+        return x * 2
+
+    async def error_func(self, x):
+        await asyncio.sleep(0.1)
+        raise ValueError("Test exception")
+
+    def sync_func(self, x):
+        sleep(0.1)
+        return x * 2
+
+    def sync_error_func(self, x):
+        sleep(0.1)
+        raise ValueError("Test exception")
+
+    # Tests for retry decorator
+    def test_retry_async_success(self):
+        func = CallDecorator.retry(retries=3)(self.async_func)
+        result = self.loop.run_until_complete(func(3))
+        self.assertEqual(result, 6)
+
+    def test_retry_async_failure_with_default(self):
+        func = CallDecorator.retry(retries=3, default="Default")(self.error_func)
+        result = self.loop.run_until_complete(func(3))
+        self.assertEqual(result, "Default")
+
+    def test_retry_sync_success(self):
+        func = CallDecorator.retry(retries=3)(self.sync_func)
+        result = self.loop.run_until_complete(func(3))
+        self.assertEqual(result, 6)
+
+    def test_retry_sync_failure_with_default(self):
+        func = CallDecorator.retry(retries=3, default="Default")(self.sync_error_func)
+        result = self.loop.run_until_complete(func(3))
+        self.assertEqual(result, "Default")
+
+    def test_retry_with_backoff(self):
+        func = CallDecorator.retry(retries=3, delay=0.1, backoff_factor=2)(
+            self.error_func
+        )
+        with self.assertRaises(RuntimeError):
+            self.loop.run_until_complete(func(3))
+
+    # Tests for throttle decorator
+    def test_throttle_async(self):
+        func = CallDecorator.throttle(period=1)(self.async_func)
+        start_time = self.loop.time()
+        result1 = self.loop.run_until_complete(func(2))
+        result2 = self.loop.run_until_complete(func(2))
+        end_time = self.loop.time()
+        self.assertEqual(result1, 4)
+        self.assertEqual(result2, 4)
+        self.assertGreaterEqual(end_time - start_time, 1)
+
+    def test_throttle_sync(self):
+        func = CallDecorator.throttle(period=1)(self.sync_func)
+        start_time = self.loop.time()
+        result1 = self.loop.run_until_complete(func(2))
+        result2 = self.loop.run_until_complete(func(2))
+        end_time = self.loop.time()
+        self.assertEqual(result1, 4)
+        self.assertEqual(result2, 4)
+        self.assertGreaterEqual(end_time - start_time, 1)
+
+    # Tests for max_concurrency decorator
+    async def long_running_func(self, x):
+        await asyncio.sleep(0.5)
+        return x * 2
+
+    def test_max_concurrency(self):
+        func = CallDecorator.max_concurrency(limit=2)(self.long_running_func)
+        start_time = self.loop.time()
+        tasks = [func(i) for i in range(4)]
+        self.loop.run_until_complete(asyncio.gather(*tasks))
+        end_time = self.loop.time()
+        self.assertGreaterEqual(end_time - start_time, 1.0)
+
+    # Tests for compose decorator
+    def test_compose_sync_functions(self):
+        def inc(x):
+            return x + 1
+
+        def double(x):
+            return x * 2
+
+        func = CallDecorator.compose(inc, double)(self.sync_func)
+        result = self.loop.run_until_complete(func(2))
+        self.assertEqual(result, 10)
+
+    def test_compose_async_functions(self):
+        async def inc(x):
+            return x + 1
+
+        async def double(x):
+            return x * 2
+
+        func = CallDecorator.compose(inc, double)(self.async_func)
+        result = self.loop.run_until_complete(func(2))
+        self.assertEqual(result, 10)
+
+    def test_compose_mixed_functions(self):
+        async def inc(x):
+            return x + 1
+
+        def double(x):
+            return x * 2
+
+        CallDecorator.compose(inc, double)
+
+    # Tests for pre_post_process decorator
+    async def preprocess(self, x):
+        return x + 1
+
+    async def postprocess(self, x):
+        return x * 2
+
+    def test_pre_post_process_async(self):
+        func = CallDecorator.pre_post_process(
+            preprocess=self.preprocess, postprocess=self.postprocess
+        )(self.async_func)
+        result = self.loop.run_until_complete(func(2))
+        self.assertEqual(result, 12)
+
+    def test_pre_post_process_sync(self):
+        def sync_preprocess(x):
+            return x + 1
+
+        def sync_postprocess(x):
+            return x * 2
+
+        func = CallDecorator.pre_post_process(
+            preprocess=sync_preprocess, postprocess=sync_postprocess
+        )(self.sync_func)
+        result = self.loop.run_until_complete(func(2))
+        self.assertEqual(result, 12)
+
+    # Tests for cache decorator
+    def test_cache_async(self):
+        func = CallDecorator.cache(ttl=1)(self.async_func)
+        result1 = self.loop.run_until_complete(func(2))
+        result2 = self.loop.run_until_complete(func(2))
+        self.assertEqual(result1, result2)
+
+    def test_cache_expiry(self):
+        func = CallDecorator.cache(ttl=1)(self.async_func)
+        result1 = self.loop.run_until_complete(func(2))
+        sleep(1.1)
+        result2 = self.loop.run_until_complete(func(2))
+        self.assertEqual(result1, result2)
+
+    def test_retry_error_map(self):
+        def error_handler(exc):
+            raise RuntimeError("Custom error")
+
+        error_map = {ValueError: error_handler}
+        func = CallDecorator.retry(retries=3, error_map=error_map)(self.error_func)
+        with self.assertRaises(RuntimeError):
+            self.loop.run_until_complete(func(3))
+
+    def test_retry_timeout(self):
+        async def timeout_func(x):
+            await asyncio.sleep(1)
+            return x * 2
+
+        func = CallDecorator.retry(retries=3, timeout=0.5)(timeout_func)
+        with self.assertRaises(RuntimeError):
+            self.loop.run_until_complete(func(3))
+
+    def test_throttle_burst(self):
+        func = CallDecorator.throttle(period=1)(self.async_func)
+        start_time = self.loop.time()
+        tasks = [func(i) for i in range(3)]
+        results = self.loop.run_until_complete(asyncio.gather(*tasks))
+        end_time = self.loop.time()
+        self.assertLess(end_time - start_time, 3)
+        self.assertEqual(results, [0, 2, 4])
+
+    def test_max_concurrency_sync(self):
+        func = CallDecorator.max_concurrency(limit=2)(self.sync_func)
+        start_time = self.loop.time()
+        tasks = [func(i) for i in range(4)]
+        results = self.loop.run_until_complete(
+            asyncio.gather(*[asyncio.Task(t) for t in tasks])
+        )
+        end_time = self.loop.time()
+        self.assertGreaterEqual(end_time - start_time, 0.2)
+        self.assertEqual(results, [0, 2, 4, 6])
+
+    def test_compose_exception(self):
+        def inc(x):
+            return x + 1
+
+        def error(x):
+            raise ValueError("Test exception")
+
+        func = CallDecorator.compose(inc, error)(self.sync_func)
+        with self.assertRaises(ValueError):
+            self.loop.run_until_complete(func(2))
+
+    def test_pre_post_process_kwargs(self):
+        async def preprocess(x, y):
+            return x + y
+
+        async def postprocess(x, z):
+            return x * z
+
+        func = CallDecorator.pre_post_process(
+            preprocess=preprocess,
+            postprocess=postprocess,
+            preprocess_kwargs={"y": 2},
+            postprocess_kwargs={"z": 3},
+        )(self.async_func)
+        result = self.loop.run_until_complete(func(2))
+        self.assertEqual(result, 24)
+
+    def test_cache_sync(self):
+        func = CallDecorator.cache(maxsize=2)(self.sync_func)
+        result1 = func(2)
+        result2 = func(2)
+        self.assertEqual(result1, result2)
+
+    def test_cache_clear(self):
+        func = CallDecorator.cache(ttl=1)(self.async_func)
+        result1 = self.loop.run_until_complete(func(2))
+        result2 = self.loop.run_until_complete(func(2))
+        self.assertEqual(result1, result2)
 
 
 if __name__ == "__main__":

@@ -5,6 +5,7 @@ from ._lcall import lcall
 from ._bcall import bcall
 from ._pcall import pcall
 from ._mcall import mcall
+from .decorator import CallDecorator
 
 __all__ = [
     "ucall",
@@ -14,4 +15,5 @@ __all__ = [
     "bcall",
     "pcall",
     "mcall",
+    "CallDecorator",
 ]

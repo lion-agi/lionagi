@@ -1,7 +1,7 @@
 import unittest
-from lionagi.core.collections.abc import ItemNotFoundError
-from lionagi.core.collections import Progression
-from lionagi import Node
+from lionagi.os.collections.abc import ItemNotFoundError
+from lionagi.os.collections.flow.progression import Progression
+from lionagi.os.collections.node.node import Node
 
 
 class TestProgression(unittest.TestCase):

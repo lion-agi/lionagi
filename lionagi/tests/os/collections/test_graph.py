@@ -1,7 +1,9 @@
 import unittest
-from lionagi.core.collections.abc import LionTypeError, ItemNotFoundError
-from lionagi.core.generic import Graph, Node, Edge
-from lionagi.libs.ln_convert import to_list
+from lionagi.os.collections.abc import LionTypeError, ItemNotFoundError
+from lionagi.os.collections.graph.graph import Graph
+from lionagi.os.collections.node.node import Node
+from lionagi.os.collections.edge.edge import Edge
+from lionagi.os.libs.data_handlers import to_list
 
 
 class TestGraph(unittest.TestCase):

@@ -1,3 +1,11 @@
+import asyncio
+from typing import Any, Type
+import logging
+import aiohttp
+from aiocache import cached
+from lionagi.os.libs.function_handlers import rcall
+
+
 """
 Copyright 2024 HaiyangLi
 
@@ -20,7 +28,7 @@ A class that manages asynchronous task processing with controlled concurrency.
 
 from typing import Any, Callable
 import asyncio
-from lionagi.libs import func_call
+
 
 
 class AsyncQueue:
@@ -109,7 +117,7 @@ class AsyncQueue:
                     await self.stop()
                     break
                 task = asyncio.create_task(
-                    func_call.rcall(func, input_, **retry_kwargs)
+                    rcall(func, input_, **retry_kwargs)
                 )
                 tasks.add(task)
 

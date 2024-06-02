@@ -1,8 +1,14 @@
+import asyncio
+from typing import Any, Type
+import logging
+import aiohttp
+from aiocache import cached
+
 class PayloadPackage:
 
     @classmethod
     def embeddings(cls, embed_str, llmconfig, schema, **kwargs):
-        return APIUtil.create_payload(
+        return create_payload(
             input_=embed_str,
             config=llmconfig,
             required_=schema["required"],
@@ -25,7 +31,7 @@ class PayloadPackage:
         Returns:
                 The constructed payload.
         """
-        return APIUtil.create_payload(
+        return create_payload(
             input_=messages,
             config=llmconfig,
             required_=schema["required"],
@@ -48,7 +54,7 @@ class PayloadPackage:
         Returns:
                 The constructed payload.
         """
-        return APIUtil.create_payload(
+        return create_payload(
             input_=training_file,
             config=llmconfig,
             required_=schema["required"],
@@ -66,7 +72,7 @@ def create_payload(input_, config, required_, optional_, input_key, **kwargs):
         payload[key] = config[key]
 
     for key in optional_:
-        if bool(config[key]) and strip_lower(config[key]) != "none":
+        if bool(config[key]) and str(config[key]).strip().lower() != "none":
             payload[key] = config[key]
 
     return payload

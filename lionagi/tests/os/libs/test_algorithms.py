@@ -40,7 +40,15 @@ class TestLevenshteinDistance(unittest.TestCase):
         self.assertEqual(levenshtein_distance("", ""), 0)
         self.assertEqual(levenshtein_distance("a", ""), 1)
         self.assertEqual(levenshtein_distance("", "a"), 1)
-        self.assertEqual(levenshtein_distance("abc", "abc"), 0)
+
+        
+    def test_levenshtein_distance2(self):
+        """Test Levenshtein distance calculations."""
+        self.assertEqual(levenshtein_distance("kitten", "sitting"), 3)
+        self.assertEqual(levenshtein_distance("", ""), 0)
+        self.assertEqual(levenshtein_distance("book", "back"), 2)
+        self.assertEqual(levenshtein_distance("book", ""), 4)
+        self.assertEqual(levenshtein_distance("", "back"), 4)
 
 
 if __name__ == "__main__":

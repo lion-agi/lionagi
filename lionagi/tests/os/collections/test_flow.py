@@ -1,6 +1,8 @@
 import unittest
-from lionagi import Node, pile, progression, flow
-
+from lionagi.os.collections.node.node import Node
+from lionagi.os.collections.pile.pile import pile
+from lionagi.os.collections.flow.progression import progression
+from lionagi.os.collections.flow.flow import flow
 
 class TestFlow(unittest.TestCase):
 

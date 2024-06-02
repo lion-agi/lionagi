@@ -1,7 +1,7 @@
 import unittest
 import asyncio
-from lionagi.OS.dmodels.pile import Pile
-from lionagi import Node
+from lionagi.os.collections.pile.pile import Pile
+from lionagi.os.collections.node.node import Node
 
 
 class TestPile(unittest.TestCase):

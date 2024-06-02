@@ -1,4 +1,4 @@
-md_json_char_map = {"\n": "\\n", "\r": "\\r", "\t": "\\t", '"': '\\"'}
+md_json_char_map = {"'": '\\"', "\n": "\\n", "\r": "\\r", "\t": "\\t"}
 
 py_json_msp = {
     "str": "string",

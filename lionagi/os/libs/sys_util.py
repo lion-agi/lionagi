@@ -10,33 +10,25 @@ import time
 from datetime import datetime, timezone
 from hashlib import sha256
 from pathlib import Path
-from typing import Any
+from typing import Any, List, Union, Optional
 
 _timestamp_syms = ["-", ":", "."]
 
-PATH_TYPE = str | Path
+PATH_TYPE = Union[str, Path]
 
 
-def sleep(delay: float) -> None:
-    """
-    Pauses execution for a specified duration.
-
-    Args:
-            delay (float): The amount of time, in seconds, to pause execution.
-    """
-    time.sleep(delay)
-
-
-def get_now(datetime_: bool = False, tz=None) -> float | datetime:
-    """Returns the current time either as a Unix timestamp or a datetime object.
+def get_now(datetime_: bool = False, tz=None) -> Union[float, datetime]:
+    """Returns the current time as a Unix timestamp or a datetime object.
 
     Args:
-            datetime_ (bool): If True, returns a datetime object; otherwise, returns a Unix timestamp.
+        datetime_ (bool): If True, returns a datetime object; otherwise,
+                          returns a Unix timestamp.
+        tz (timezone): The timezone for the datetime object, if applicable.
 
     Returns:
-            Union[float, datetime.datetime]: The current time as a Unix timestamp or a datetime object.
+        Union[float, datetime]: The current time as a Unix timestamp or
+                                a datetime object.
     """
-
     if not datetime_:
         return time.time()
     config_ = {}
@@ -49,12 +41,12 @@ def change_dict_key(dict_: dict[Any, Any], old_key: str, new_key: str) -> None:
     """Safely changes a key in a dictionary if the old key exists.
 
     Args:
-            dict_ (Dict[Any, Any]): The dictionary in which to change the key.
-            old_key (str): The old key to be changed.
-            new_key (str): The new key to replace the old key.
+        dict_ (dict[Any, Any]): The dictionary in which to change the key.
+        old_key (str): The old key to be changed.
+        new_key (str): The new key to replace the old key.
 
     Returns:
-            None
+        None
     """
     if old_key in dict_:
         dict_[new_key] = dict_.pop(old_key)
@@ -64,11 +56,12 @@ def get_timestamp(tz: timezone = timezone.utc, sep: str = "_") -> str:
     """Returns a timestamp string with optional custom separators and timezone.
 
     Args:
-            tz (timezone): The timezone for the timestamp.
-            sep (str): The separator to use in the timestamp string, replacing '-', ':', and '.'.
+        tz (timezone): The timezone for the timestamp.
+        sep (str): The separator to use in the timestamp string, replacing
+                   '-', ':', and '.'.
 
     Returns:
-            str: A string representation of the current timestamp.
+        str: A string representation of the current timestamp.
     """
     str_ = datetime.now(tz=tz).isoformat()
     if sep is not None:
@@ -78,22 +71,33 @@ def get_timestamp(tz: timezone = timezone.utc, sep: str = "_") -> str:
 
 
 def is_schema(dict_: dict[Any, Any], schema: dict[Any, type]) -> bool:
-    """Validates if the given dictionary matches the expected schema types."""
+    """Validates if the given dictionary matches the expected schema types.
+
+    Args:
+        dict_ (dict[Any, Any]): The dictionary to validate.
+        schema (dict[Any, type]): The expected schema with types.
+
+    Returns:
+        bool: True if the dictionary matches the schema, otherwise False.
+    """
     return all(
         isinstance(dict_.get(key), expected_type)
         for key, expected_type in schema.items()
     )
 
 
-def create_copy(input_: Any, num: int = 1) -> Any | list[Any]:
-    """Creates deep copies of the input, either as a single copy or a list of copies.
+def create_copy(input_: Any, num: int = 1) -> Union[Any, List[Any]]:
+    """Creates deep copies of the input, either as a single copy or a list.
 
     Args:
-            input_ (Any): The input to be copied.
-            num (int): The number of copies to create.
+        input_ (Any): The input to be copied.
+        num (int): The number of copies to create.
 
     Returns:
-            Union[Any, List[Any]]: A single copy of the input or a list of deep copies.
+        Union[Any, List[Any]]: A single copy of the input or a list of copies.
+
+    Raises:
+        ValueError: If `num` is less than 1.
     """
     if num < 1:
         raise ValueError(f"'num' must be a positive integer: {num}")
@@ -105,29 +109,29 @@ def create_copy(input_: Any, num: int = 1) -> Any | list[Any]:
 
 
 def create_id(n: int = 32) -> str:
-    """
-    Generates a unique identifier based on the current time and random bytes.
+    """Generates a unique identifier based on the current time and random bytes.
 
     Args:
-            n (int): The length of the generated identifier.
+        n (int): The length of the generated identifier.
 
     Returns:
-            str: A unique identifier string.
+        str: A unique identifier string.
     """
     current_time = datetime.now().isoformat().encode("utf-8")
     random_bytes = os.urandom(42)
     return sha256(current_time + random_bytes).hexdigest()[:n]
 
 
-def get_bins(input_: list[str], upper: int | None = 2000) -> list[list[int]]:
+def get_bins(input_: List[str], upper: int = 2000) -> List[List[int]]:
     """Organizes indices of strings into bins based on a cumulative upper limit.
 
     Args:
-            input_ (List[str]): The list of strings to be binned.
-            upper (int): The cumulative length upper limit for each bin.
+        input_ (List[str]): The list of strings to be binned.
+        upper (int): The cumulative length upper limit for each bin.
 
     Returns:
-            List[List[int]]: A list of bins, each bin is a list of indices from the input list.
+        List[List[int]]: A list of bins, each bin is a list of indices
+                         from the input list.
     """
     current = 0
     bins = []
@@ -151,7 +155,8 @@ def get_cpu_architecture() -> str:
     This method categorizes some architectures as 'apple_silicon'.
 
     Returns:
-            str: A string identifying the CPU architecture ('apple_silicon' or 'other_cpu').
+        str: A string identifying the CPU architecture ('apple_silicon'
+             or 'other_cpu').
     """
     arch: str = platform.machine().lower()
     return "apple_silicon" if "arm" in arch or "aarch64" in arch else "other_cpu"
@@ -159,27 +164,30 @@ def get_cpu_architecture() -> str:
 
 def install_import(
     package_name: str,
-    module_name: str = None,
-    import_name: str = None,
-    pip_name: str = None,
+    module_name: Optional[str] = None,
+    import_name: Optional[str] = None,
+    pip_name: Optional[str] = None,
 ) -> None:
     """Attempts to import a package, installing it with pip if not found.
 
-    This method tries to import a specified module or attribute. If the import fails, it attempts
-    to install the package using pip and then retries the import.
+    This method tries to import a specified module or attribute. If the import
+    fails, it attempts to install the package using pip and then retries the
+    import.
 
     Args:
-            package_name: The base name of the package to import.
-            module_name: The submodule name to import from the package, if applicable. Defaults to None.
-            import_name: The specific name to import from the module or package. Defaults to None.
-            pip_name: The pip package name if different from `package_name`. Defaults to None.
+        package_name: The base name of the package to import.
+        module_name: The submodule name to import from the package, if applicable.
+            Defaults to None.
+        import_name: The specific name to import from the module or package.
+            Defaults to None.
+        pip_name: The pip package name if different from `package_name`.
+            Defaults to None.
 
-    Prints a message indicating success or attempts installation if the import fails.
+    Prints a message indicating success or attempts installation if the import
+    fails.
     """
-    pip_name: str = pip_name or package_name
-    full_import_path: str = (
-        f"{package_name}.{module_name}" if module_name else package_name
-    )
+    pip_name = pip_name or package_name
+    full_import_path = f"{package_name}.{module_name}" if module_name else package_name
 
     try:
         if import_name:
@@ -190,7 +198,8 @@ def install_import(
         print(f"Successfully imported {import_name or full_import_path}.")
     except ImportError:
         print(
-            f"Module {full_import_path} or attribute {import_name} not found. Installing {pip_name}..."
+            f"Module {full_import_path} or attribute {import_name} not found. "
+            f"Installing {pip_name}..."
         )
         subprocess.check_call([sys.executable, "-m", "pip", "install", pip_name])
 
@@ -210,10 +219,10 @@ def is_package_installed(package_name: str) -> bool:
     """Checks if a package is currently installed.
 
     Args:
-            package_name: The name of the package to check.
+        package_name: The name of the package to check.
 
     Returns:
-            A boolean indicating whether the package is installed.
+        A boolean indicating whether the package is installed.
     """
     package_spec = importlib.util.find_spec(package_name)
     return package_spec is not None
@@ -221,33 +230,39 @@ def is_package_installed(package_name: str) -> bool:
 
 def check_import(
     package_name: str,
-    module_name: str | None = None,
-    import_name: str | None = None,
-    pip_name: str | None = None,
+    module_name: Optional[str] = None,
+    import_name: Optional[str] = None,
+    pip_name: Optional[str] = None,
     attempt_install: bool = True,
     error_message: str = "",
 ) -> None:
     """Checks if a package is installed; if not, attempts to install and import it.
 
-    This method first checks if a package is installed using `is_package_installed`. If not found,
-    it attempts to install the package using `install_import` and then retries the import.
+    This method first checks if a package is installed using `is_package_installed`.
+    If not found, it attempts to install the package using `install_import` and then
+    retries the import.
 
     Args:
-            package_name: The name of the package to check and potentially install.
-            module_name: The submodule name to import from the package, if applicable. Defaults to None.
-            import_name: The specific name to import from the module or package. Defaults to None.
-            pip_name: The pip package name if different from `package_name`. Defaults to None.
-            attempt_install: If attempt to install the package if uninstalled. Defaults to True.
-            error_message: Error message when the package is not installed and not attempt to install.
+        package_name: The name of the package to check and potentially install.
+        module_name: The submodule name to import from the package, if applicable.
+            Defaults to None.
+        import_name: The specific name to import from the module or package.
+            Defaults to None.
+        pip_name: The pip package name if different from `package_name`.
+            Defaults to None.
+        attempt_install: If attempt to install the package if uninstalled.
+            Defaults to True.
+        error_message: Error message when the package is not installed and not
+            attempt to install.
     """
     try:
-        if not SysUtil.is_package_installed(package_name):
+        if not is_package_installed(package_name):
             # print("check")
             if attempt_install:
                 logging.info(
                     f"Package {package_name} not found. Attempting to install."
                 )
-                SysUtil.install_import(package_name, module_name, import_name, pip_name)
+                install_import(package_name, module_name, import_name, pip_name)
             else:
                 logging.info(f"Package {package_name} not found. {error_message}")
                 raise ImportError(f"Package {package_name} not found. {error_message}")
@@ -291,12 +306,14 @@ def clear_dir(
     excluding files that match any pattern in the exclude list.
 
     Args:
-            dir_path (Union[Path, str]): The path to the directory to clear.
-            recursive (bool): If True, clears directories recursively. Defaults to False.
-            exclude (List[str]): A list of string patterns to exclude from deletion. Defaults to None.
+        dir_path (Union[Path, str]): The path to the directory to clear.
+        recursive (bool): If True, clears directories recursively.
+            Defaults to False.
+        exclude (List[str]): A list of string patterns to exclude from deletion.
+            Defaults to None.
 
     Raises:
-            FileNotFoundError: If the specified directory does not exist.
+        FileNotFoundError: If the specified directory does not exist.
     """
     dir_path = Path(dir_path)
     if not dir_path.exists():
@@ -311,7 +328,7 @@ def clear_dir(
             continue
 
         if recursive and file_path.is_dir():
-            SysUtil.clear_dir(file_path, recursive=True, exclude=exclude)
+            clear_dir(file_path, recursive=True, exclude=exclude)
         elif file_path.is_file() or file_path.is_symlink():
             try:
                 file_path.unlink()
@@ -326,10 +343,10 @@ def split_path(path: Path | str) -> tuple[Path, str]:
     Splits a path into its directory and filename components.
 
     Args:
-            path (Union[Path, str]): The path to split.
+        path (Union[Path, str]): The path to split.
 
     Returns:
-            Tuple[Path, str]: A tuple containing the directory and filename.
+        Tuple[Path, str]: A tuple containing the directory and filename.
     """
     path = Path(path)
     return path.parent, path.name
@@ -348,23 +365,29 @@ def create_path(
     Creates a path with an optional timestamp in the specified directory.
 
     Args:
-            directory (Union[Path, str]): The directory where the file will be located.
-            filename (str): The filename. Must include a valid extension.
-            timestamp (bool): If True, adds a timestamp to the filename. Defaults to True.
-            dir_exist_ok (bool): If True, does not raise an error if the directory exists. Defaults to True.
-            time_prefix (bool): If True, adds the timestamp as a prefix; otherwise, as a suffix. Defaults to False.
-            custom_timestamp_format (str): A custom format for the timestamp. Defaults to "%Y%m%d%H%M%S".
+        directory (Union[Path, str]): The directory where the file will be located.
+        filename (str): The filename. Must include a valid extension.
+        timestamp (bool): If True, adds a timestamp to the filename. Defaults to True.
+        dir_exist_ok (bool): If True, does not raise an error if the directory exists.
+            Defaults to True.
+        time_prefix (bool): If True, adds the timestamp as a prefix; otherwise, as a
+            suffix. Defaults to False.
+        custom_timestamp_format (str): A custom format for the timestamp. Defaults to
+            "%Y%m%d%H%M%S".
+        random_hash_digits (int): Number of random hash digits to append to the
+            filename. Defaults to 0.
 
     Returns:
-            Path: The full path to the file.
+        Path: The full path to the file.
 
     Raises:
-            ValueError: If the filename is invalid.
+        ValueError: If the filename is invalid.
     """
     directory = Path(directory)
     if not re.match(r"^[\w,\s-]+\.[A-Za-z]{1,5}$", filename):
         raise ValueError(
-            "Invalid filename. Ensure it doesn't contain illegal characters and has a valid extension."
+            "Invalid filename. Ensure it doesn't contain illegal characters and "
+            "has a valid extension."
         )
 
     name, ext = filename.rsplit(".", 1) if "." in filename else (filename, "")
@@ -380,9 +403,7 @@ def create_path(
     else:
         filename = name
 
-    random_hash = (
-        "-" + SysUtil.create_id(random_hash_digits) if random_hash_digits > 0 else ""
-    )
+    random_hash = "-" + create_id(random_hash_digits) if random_hash_digits > 0 else ""
 
     full_filename = f"{filename}{random_hash}{ext}"
     full_path = directory / full_filename
@@ -439,7 +460,7 @@ def get_size(path: Path | str) -> int:
     Gets the size of a file or total size of files in a directory.
 
     Args:
-        path (Path | str): The file or directory path.
+        path (Union[Path, str]): The file or directory path.
 
     Returns:
         int: The size in bytes.
@@ -468,23 +489,29 @@ def save_to_file(
     verbose=True,
 ):
     """
-    Saves text to a file within a specified directory, optionally adding a timestamp, hash, and verbose logging.
+    Saves text to a file within a specified directory, optionally adding a
+    timestamp, hash, and verbose logging.
 
     Args:
         text (str): The text to save.
-        directory (Path | str): The directory path to save the file.
+        directory (Union[Path, str]): The directory path to save the file.
         filename (str): The filename for the saved text.
-        timestamp (bool): If True, append a timestamp to the filename. Default is True.
-        dir_exist_ok (bool): If True, creates the directory if it does not exist. Default is True.
-        time_prefix (bool): If True, prepend the timestamp instead of appending. Default is False.
-        custom_timestamp_format (str | None): A custom format for the timestamp, if None uses default format. Default is None.
-        random_hash_digits (int): Number of random hash digits to append to filename. Default is 0.
+        timestamp (bool): If True, append a timestamp to the filename. Default is
+            True.
+        dir_exist_ok (bool): If True, creates the directory if it does not exist.
+            Default is True.
+        time_prefix (bool): If True, prepend the timestamp instead of appending.
+            Default is False.
+        custom_timestamp_format (str | None): A custom format for the timestamp, if
+            None uses default format. Default is None.
+        random_hash_digits (int): Number of random hash digits to append to
+            filename. Default is 0.
         verbose (bool): If True, prints the file path after saving. Default is True.
 
     Returns:
         bool: True if the text was successfully saved.
     """
-    file_path = SysUtil.create_path(
+    file_path = create_path(
         directory=directory,
         filename=filename,
         timestamp=timestamp,

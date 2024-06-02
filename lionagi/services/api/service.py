@@ -1,16 +1,10 @@
+import aiohttp
+from lionagi.os.libs.data_handlers import nget
+from lionagi.services.api.status_tracker import StatusTracker
+from lionagi.services.api.endpoint import EndPoint
+from typing import Any, Mapping, Sequence
+
 class BaseService:
-    """
-    Base class for services that interact with API endpoints.
-
-    This class provides a foundation for services that need to make API calls with rate limiting.
-
-    Attributes:
-            api_key (Optional[str]): The API key used for authentication.
-            schema (Mapping[str, Any]): The schema defining the service's endpoints.
-            status_tracker (StatusTracker): The object tracking the status of API calls.
-            endpoints (Mapping[str, EndPoint]): A dictionary of endpoint objects.
-    """
-
     base_url: str = ""
     available_endpoints: list = []
 
@@ -19,7 +13,7 @@ class BaseService:
         api_key: str | None = None,
         schema: Mapping[str, Any] = None,
         token_encoding_name: str = None,
-        max_tokens: int = 100_000,
+        max_tokens: int = 1_000_000,
         max_requests: int = 1_000,
         interval: int = 60,
     ) -> None:
@@ -38,13 +32,6 @@ class BaseService:
         self,
         endpoint_: Sequence | str | EndPoint | None = None,
     ) -> None:
-        """
-        Initializes the specified endpoint or all endpoints if none is specified.
-
-        Args:
-                endpoint_: The endpoint(s) to initialize. Can be a string, an EndPoint, a list of strings, or a list of EndPoints.
-        """
-
         if endpoint_:
             if not isinstance(endpoint_, list):
                 endpoint_ = [endpoint_]
@@ -114,20 +101,6 @@ class BaseService:
                     await self.endpoints[ep].init_rate_limiter()
 
     async def call_api(self, payload, endpoint, method, required_tokens=None, **kwargs):
-        """
-        Calls the specified API endpoint with the given payload and method.
-
-        Args:
-                payload: The payload to send with the API call.
-                endpoint: The endpoint to call.
-                method: The HTTP method to use for the call.
-
-        Returns:
-                The assistant_response from the API call.
-
-        Raises:
-                ValueError: If the endpoint has not been initialized.
-        """
         if endpoint not in self.endpoints.keys():
             raise ValueError(f"The endpoint {endpoint} has not initialized.")
         async with aiohttp.ClientSession() as http_session:

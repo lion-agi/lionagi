@@ -1,5 +1,5 @@
 import unittest
-from lionagi.core.collections.abc.component import (
+from lionagi.os.collections.abc.component import (
     Component,
     LionValueError,
     LionTypeError,

@@ -1,3 +1,13 @@
+from abc import ABC
+import asyncio
+from typing import Any, Type, Callable, Mapping
+import logging
+import aiohttp
+from aiocache import cached
+
+from .util import api_endpoint_from_url
+
+
 class BaseRateLimiter(ABC):
     """
     Abstract base class for implementing rate limiters.
@@ -26,16 +36,16 @@ class BaseRateLimiter(ABC):
         self.max_tokens: int = max_tokens
         self.available_request_capacity: int = max_requests
         self.available_token_capacity: int = max_tokens
-        self.rate_limit_replenisher_task: AsyncUtil.Task | None = None
-        self._stop_replenishing: AsyncUtil.Event = AsyncUtil.create_event()
-        self._lock: AsyncUtil.Lock = AsyncUtil.create_lock()
+        self.rate_limit_replenisher_task: asyncio.Task | None = None
+        self._stop_replenishing: asyncio.Event = asyncio.Event()
+        self._lock: asyncio.Lock = asyncio.Lock()
         self.token_encoding_name = token_encoding_name
 
-    async def start_replenishing(self) -> NoReturn:
+    async def start_replenishing(self):
         """Starts the replenishment of rate limit capacities at regular intervals."""
         try:
             while not self._stop_replenishing.is_set():
-                await AsyncUtil.sleep(self.interval)
+                await asyncio.sleep(self.interval)
                 async with self._lock:
                     self.available_request_capacity = self.max_requests
                     self.available_token_capacity = self.max_tokens
@@ -96,17 +106,17 @@ class BaseRateLimiter(ABC):
         Returns:
                 The JSON assistant_response from the API call if successful, otherwise None.
         """
-        endpoint = APIUtil.api_endpoint_from_url(base_url + endpoint)
+        endpoint = api_endpoint_from_url(base_url + endpoint)
         while True:
             if (
                 self.available_request_capacity < 1
                 or self.available_token_capacity < 10
             ):  # Minimum token count
-                await AsyncUtil.sleep(1)  # Wait for capacity
+                await asyncio.sleep(1)  # Wait for capacity
                 continue
 
             if not required_tokens:
-                required_tokens = APIUtil.calculate_num_token(
+                required_tokens = calculate_num_token(
                     payload, endpoint, self.token_encoding_name, **kwargs
                 )
 
@@ -116,7 +126,7 @@ class BaseRateLimiter(ABC):
 
                 while attempts_left > 0:
                     try:
-                        method = APIUtil.api_method(http_session, method)
+                        method = api_method(http_session, method)
                         async with method(
                             url=(base_url + endpoint),
                             headers=request_headers,
@@ -134,7 +144,7 @@ class BaseRateLimiter(ABC):
                             if "Rate limit" in response_json["error"].get(
                                 "message", ""
                             ):
-                                await AsyncUtil.sleep(15)
+                                await asyncio.sleep(15)
                     except Exception as e:
                         logging.warning(f"API call failed with exception: {e}")
                         attempts_left -= 1
@@ -142,7 +152,7 @@ class BaseRateLimiter(ABC):
                 logging.error("API call failed after all attempts.")
                 break
             else:
-                await AsyncUtil.sleep(1)
+                await asyncio.sleep(1)
 
     @classmethod
     async def create(
@@ -165,7 +175,7 @@ class BaseRateLimiter(ABC):
                 An instance of BaseRateLimiter with the replenisher task started.
         """
         instance = cls(max_requests, max_tokens, interval, token_encoding_name)
-        instance.rate_limit_replenisher_task = AsyncUtil.create_task(
+        instance.rate_limit_replenisher_task = asyncio.create_task(
             instance.start_replenishing(), obj=False
         )
         return instance

@@ -80,7 +80,6 @@ async def bcall(
         >>>     print(batch_results)
     """
     input_ = to_list(input_)
-    results = []
 
     for i in range(0, len(input_), batch_size):
         batch = input_[i : i + batch_size]
@@ -102,6 +101,3 @@ async def bcall(
             **kwargs,
         )
         yield batch_results
-        results.extend(batch_results)
-
-    yield results

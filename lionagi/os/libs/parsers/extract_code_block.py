@@ -1,4 +1,13 @@
 def extract_code_blocks(code):
+    """
+    Extract code blocks from a given string containing Markdown code blocks.
+
+    Args:
+        code (str): The input string containing Markdown code blocks.
+
+    Returns:
+        str: Extracted code blocks concatenated with two newlines.
+    """
     code_blocks = []
     lines = code.split("\n")
     inside_code_block = False
