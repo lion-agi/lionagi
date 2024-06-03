@@ -160,7 +160,7 @@ Decorates a function to filter its list result based on a given predicate.
 `(function: Callable[[Any, Any], Any], initial: Any) -> Callable`
 Decorates a function to apply a reduction to its list result, combining all items in the list into a single value using the specified reduction function.
 
-#`max_concurrency`
+#`max_concurrent`
 `(limit: int = 5) -> Callable`
 Limits the number of concurrent executions for an asynchronous function to ensure that no more than a specified number of instances of the function run simultaneously.
 
