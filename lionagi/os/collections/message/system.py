@@ -15,8 +15,8 @@ limitations under the License.
 """
 
 from typing import Any
-from lionagi.libs import SysUtil
-from ..collections.abc import Field
+from pydantic import Field
+from lionagi.os.libs.sys_util import get_now
 from .message import RoledMessage, MessageRole
 
 
@@ -58,7 +58,7 @@ class System(RoledMessage):
 
         if system_datetime is not None:
             if isinstance(system_datetime, bool) and system_datetime:
-                system_datetime = SysUtil.get_now(datetime_=True)
+                system_datetime = get_now(datetime_=True)
                 system_datetime = (
                     system_datetime.strftime("%Y-%m-%d %H:%M")
                     if not system_datetime_strftime

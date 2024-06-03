@@ -24,12 +24,10 @@ strings, or specialized objects.
 import inspect
 from functools import singledispatchmethod
 from typing import Any, Callable, List, Union, Tuple
-from lionagi.libs import ParseUtil
-from lionagi.libs.ln_convert import to_list, to_dict
-from lionagi.libs.ln_func_call import lcall
-from lionagi.core.collections.abc import Actionable
-from lionagi.core.action.function_calling import FunctionCalling
-from lionagi.core.action.tool import Tool, TOOL_TYPE
+from lionagi.os.libs import to_list, to_dict
+from lionagi.os.collections.abc import Actionable
+from .function_calling import FunctionCalling
+from .tool import Tool, TOOL_TYPE
 
 
 class ToolManager(Actionable):

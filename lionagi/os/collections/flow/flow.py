@@ -17,15 +17,8 @@ limitations under the License.
 from collections.abc import Mapping
 from collections import deque
 from typing import Tuple
-from pydantic import Field
 import contextlib
-from ...core.collections.abc import (
-    Record,
-    LionTypeError,
-    ItemNotFoundError,
-    LionIDable,
-    Element,
-)
+from ..abc import Record, LionTypeError, ItemNotFoundError, LionIDable, Element, Field
 from ..pile.pile import Pile, pile
 from .progression import Progression, progression
 

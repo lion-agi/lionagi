@@ -25,9 +25,10 @@ from typing import TypeVar, Type, Any, Generic
 
 from pydantic import Field, field_validator
 
-from lionagi.libs.ln_convert import is_same_dtype, to_df
-from lionagi.libs.ln_func_call import bcall, alcall, CallDecorator as cd
-from ...core.collections.abc import (
+from lionagi.os.libs import to_df, lcall, CallDecorator as cd
+from ..util import is_same_dtype, to_list_type, _validate_order
+
+from ..abc import (
     Element,
     Record,
     Component,
@@ -39,8 +40,8 @@ from ...core.collections.abc import (
     ItemNotFoundError,
     ModelLimitExceededError,
 )
-from ... import iModel
-from ...core.collections.util import to_list_type, _validate_order
+
+from lionagi.services.imodels.imodel import iModel
 
 T = TypeVar("T")
 
@@ -587,36 +588,36 @@ class Pile(Element, Record, Generic[T]):
             dicts_.append(_dict)
         return to_df(dicts_)
 
-    def create_index(self, index_type="llama_index", **kwargs):
-        """
-        Create an index for the pile.
+    # def create_index(self, index_type="llama_index", **kwargs):
+    #     """
+    #     Create an index for the pile.
 
-        Args:
-            index_type (str): The type of index to use. Default is "llama_index".
-            **kwargs: Additional keyword arguments for the index creation.
+    #     Args:
+    #         index_type (str): The type of index to use. Default is "llama_index".
+    #         **kwargs: Additional keyword arguments for the index creation.
 
-        Returns:
-            The created index.
+    #     Returns:
+    #         The created index.
 
-        Raises:
-            ValueError: If an invalid index type is provided.
-        """
-        if index_type == "llama_index":
-            from lionagi.integrations.bridge import LlamaIndexBridge
+    #     Raises:
+    #         ValueError: If an invalid index type is provided.
+    #     """
+    #     if index_type == "llama_index":
+    #         from lionagi.integrations.bridge import LlamaIndexBridge
 
-            index_nodes = None
+    #         index_nodes = None
 
-            try:
-                index_nodes = [i.to_llama_index_node() for i in self]
-            except AttributeError:
-                raise LionTypeError(
-                    "Invalid item type. Expected a subclass of Component."
-                )
+    #         try:
+    #             index_nodes = [i.to_llama_index_node() for i in self]
+    #         except AttributeError:
+    #             raise LionTypeError(
+    #                 "Invalid item type. Expected a subclass of Component."
+    #             )
 
-            self.index = LlamaIndexBridge.index(index_nodes, **kwargs)
-            return self.index
+    #         self.index = LlamaIndexBridge.index(index_nodes, **kwargs)
+    #         return self.index
 
-        raise ValueError("Invalid index type")
+    #     raise ValueError("Invalid index type")
 
     def create_query_engine(self, index_type="llama_index", engine_kwargs={}, **kwargs):
         """
@@ -722,9 +723,8 @@ class Pile(Element, Record, Generic[T]):
 
         imodel = imodel or iModel(endpoint="embeddings", **kwargs)
 
-        max_concurrency = kwargs.get("max_concurrency", None) or 100
+        max_concurrent = kwargs.get("max_concurrent", None) or 100
 
-        @cd.max_concurrency(max_concurrency)
         async def _embed_item(item):
             try:
                 return await imodel.embed_node(item, field=field, **embed_kwargs)
@@ -732,7 +732,15 @@ class Pile(Element, Record, Generic[T]):
                 pass
             return None
 
-        await alcall(list(self), _embed_item)
+        await lcall(
+            _embed_item,
+            list(self),
+            retries=3,
+            flatten=True,
+            dropna=True,
+            verbose=False,
+            max_concurrent=max_concurrent,
+        )
 
         a = len([i for i in self if "embedding" in i._all_fields])
         if len(self) > a and verbose:
@@ -814,7 +822,7 @@ class Pile(Element, Record, Generic[T]):
             elif query_type == "chat":
                 self.create_chat_engine(index_type=index_type, **kwargs)
 
-        from lionagi.core.action.tool_manager import func_to_tool
+        from lionagi.os.core.action.tool_manager import func_to_tool
 
         if not guidance:
             if query_type == "query":

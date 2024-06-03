@@ -15,10 +15,9 @@ limitations under the License.
 """
 
 from enum import Enum
-from lionagi.core.collections.abc import ActionError
-from lionagi.libs import ParseUtil
-from lionagi.libs.ln_convert import to_list, to_dict
-from lionagi.core.rule.mapping import MappingRule
+from lionagi.os.libs import to_list, to_dict, fuzzy_parse_json
+from ..abc import ActionError
+from .mapping import MappingRule
 
 
 class ActionRequestKeys(Enum):
@@ -83,7 +82,7 @@ class ActionRequestRule(MappingRule):
         """
         corrected = []
         if isinstance(value, str):
-            value = ParseUtil.fuzzy_parse_json(value)
+            value = fuzzy_parse_json(value)
 
         try:
             value = to_list(value)

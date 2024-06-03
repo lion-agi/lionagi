@@ -20,18 +20,32 @@ from abc import ABC
 import contextlib
 from collections.abc import Sequence
 from functools import singledispatchmethod
-from typing import Any, TypeVar, Type, TypeAlias, Union
+from typing import Any, TypeVar, TypeAlias, Union
 
 from pandas import DataFrame, Series
 from pydantic import BaseModel, Field, ValidationError, AliasChoices
 
-from lionagi.libs import ParseUtil, SysUtil
-from lionagi.libs.ln_convert import strip_lower, to_dict, to_str
-from lionagi.libs.ln_func_call import lcall
-from lionagi.libs.ln_nested import nget, nset, ninsert, flatten, unflatten
 
+from lionagi.os.libs import (
+    strip_lower,
+    to_dict,
+    to_str,
+    nget,
+    nset,
+    ninsert,
+    flatten,
+    unflatten,
+    fuzzy_parse_json,
+)
+from lionagi.os.libs.sys_util import change_dict_key, get_timestamp, create_id
+from lionagi.os._setting.meta_fields import (
+    base_lion_fields,
+    llama_meta_fields,
+    lc_meta_fields,
+)
+
+from .element import Element
 from .exceptions import FieldError, LionTypeError, LionValueError
-from ..._setting.meta_fields import base_lion_fields, llama_meta_fields, lc_meta_fields
 
 T = TypeVar("T")
 
@@ -174,15 +188,15 @@ class Component(Element, ABC):
         """Create a Component instance from a LlamaIndex object."""
         dict_ = obj.to_dict()
 
-        SysUtil.change_dict_key(dict_, "text", "content")
+        change_dict_key(dict_, "text", "content")
         metadata = dict_.pop("metadata", {})
 
         for field in llama_meta_fields:
             metadata[field] = dict_.pop(field, None)
 
-        SysUtil.change_dict_key(metadata, "class_name", "llama_index_class")
-        SysUtil.change_dict_key(metadata, "id_", "llama_index_id")
-        SysUtil.change_dict_key(metadata, "relationships", "llama_index_relationships")
+        change_dict_key(metadata, "class_name", "llama_index_class")
+        change_dict_key(metadata, "id_", "llama_index_id")
+        change_dict_key(metadata, "relationships", "llama_index_relationships")
 
         dict_["metadata"] = metadata
         return cls.from_obj(dict_)
@@ -217,7 +231,7 @@ class Component(Element, ABC):
     @classmethod
     def _process_langchain_dict(cls, dict_: dict) -> dict:
         """Process a dictionary containing Langchain-specific data."""
-        SysUtil.change_dict_key(dict_, "page_content", "content")
+        change_dict_key(dict_, "page_content", "content")
 
         metadata = dict_.pop("metadata", {})
         metadata.update(dict_.pop("kwargs", {}))
@@ -237,9 +251,9 @@ class Component(Element, ABC):
             if field in dict_:
                 metadata[field] = dict_.pop(field)
 
-        SysUtil.change_dict_key(metadata, "lc", "langchain")
-        SysUtil.change_dict_key(metadata, "type", "lc_type")
-        SysUtil.change_dict_key(metadata, "id", "lc_id")
+        change_dict_key(metadata, "lc", "langchain")
+        change_dict_key(metadata, "type", "lc_type")
+        change_dict_key(metadata, "id", "lc_id")
 
         extra_fields = {k: v for k, v in metadata.items() if k not in lc_meta_fields}
         metadata = {k: v for k, v in metadata.items() if k in lc_meta_fields}
@@ -269,9 +283,9 @@ class Component(Element, ABC):
         dict_["metadata"] = meta_
 
         if "ln_id" not in dict_:
-            dict_["ln_id"] = meta_.pop("ln_id", SysUtil.create_id())
+            dict_["ln_id"] = meta_.pop("ln_id", create_id())
         if "timestamp" not in dict_:
-            dict_["timestamp"] = SysUtil.get_timestamp(sep=None)[:-6]
+            dict_["timestamp"] = get_timestamp(sep=None)[:-6]
         if "metadata" not in dict_:
             dict_["metadata"] = {}
         if "extra_fields" not in dict_:
@@ -282,7 +296,7 @@ class Component(Element, ABC):
     @classmethod
     def _from_str(cls, obj: str, /, *args, fuzzy_parse: bool = False, **kwargs) -> T:
         """Create a Component instance from a JSON string."""
-        obj = ParseUtil.fuzzy_parse_json(obj) if fuzzy_parse else to_dict(obj)
+        obj = fuzzy_parse_json(obj) if fuzzy_parse else to_dict(obj)
         try:
             return cls.from_obj(obj, *args, **kwargs)
         except ValidationError as e:
@@ -399,30 +413,30 @@ class Component(Element, ABC):
         dict_ = self.to_dict(*args, dropna=dropna, **kwargs)
         return Series(dict_, **pd_kwargs)
 
-    def to_llama_index_node(self, node_type: Type | str | Any = None, **kwargs) -> Any:
-        """Serializes this node for LlamaIndex."""
-        from lionagi.integrations.bridge import LlamaIndexBridge
+    # def to_llama_index_node(self, node_type: Type | str | Any = None, **kwargs) -> Any:
+    #     """Serializes this node for LlamaIndex."""
+    #     from lionagi.integrations.bridge import LlamaIndexBridge
 
-        return LlamaIndexBridge.to_llama_index_node(self, node_type=node_type, **kwargs)
+    #     return LlamaIndexBridge.to_llama_index_node(self, node_type=node_type, **kwargs)
 
-    def to_langchain_doc(self, **kwargs) -> Any:
-        """Serializes this node for Langchain."""
-        from lionagi.integrations.bridge import LangchainBridge
+    # def to_langchain_doc(self, **kwargs) -> Any:
+    #     """Serializes this node for Langchain."""
+    #     from lionagi.integrations.bridge import LangchainBridge
 
-        return LangchainBridge.to_langchain_document(self, **kwargs)
+    #     return LangchainBridge.to_langchain_document(self, **kwargs)
 
     def _add_last_update(self, name):
         if (a := nget(self.metadata, ["last_updated", name], None)) is None:
             ninsert(
                 self.metadata,
                 ["last_updated", name],
-                SysUtil.get_timestamp(sep=None)[:-6],
+                get_timestamp(sep=None)[:-6],
             )
         elif isinstance(a, tuple) and isinstance(a[0], int):
             nset(
                 self.metadata,
                 ["last_updated", name],
-                SysUtil.get_timestamp(sep=None)[:-6],
+                get_timestamp(sep=None)[:-6],
             )
 
     def _meta_pop(self, indices, default=...):
@@ -525,7 +539,7 @@ class Component(Element, ABC):
             if "|" in str(v):
                 v = str(v)
                 v = v.split("|")
-                dict_[k] = lcall(v, strip_lower)
+                dict_[k] = [strip_lower(i) for i in v]
             else:
                 dict_[k] = [v.__name__] if v else None
         return dict_

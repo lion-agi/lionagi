@@ -18,7 +18,7 @@ from abc import ABC
 from functools import wraps
 import asyncio
 from lionagi import logging as _logging
-from lionagi.libs.ln_func_call import pcall
+from lionagi os.libs import pcall
 from lionagi.core.work.work_function import WorkFunction
 from lionagi.core.work.work import Work
 

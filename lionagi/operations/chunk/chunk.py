@@ -1,14 +1,9 @@
 from typing import Union, Callable
 
-from lionagi.libs import func_call
-from lionagi.libs.ln_convert import to_list
-from lionagi.core.collections import pile
-from lionagi.core.generic import Node
-from ...integrations.frameworks.LangChain_.langchain_bridge import LangchainBridge
-from ...integrations import LlamaIndexBridge
-
-
-from ..load.load_util import ChunkerType, file_to_chunks, _datanode_parser
+from lionagi.os.libs import to_list, to_dict
+from lionagi.os.collections.pile.pile import pile
+from lionagi.os.collections.node.node import Node
+from ..load.load_util import ChunkerType, file_to_chunks
 
 
 def datanodes_convert(documents, chunker_type):
@@ -35,7 +30,7 @@ def datanodes_convert(documents, chunker_type):
     return documents
 
 
-def text_chunker(documents, args, kwargs):
+def text_chunker(documents, field="content", **kwargs):
     """
     Chunks text documents into smaller pieces.
 
@@ -53,8 +48,10 @@ def text_chunker(documents, args, kwargs):
     """
 
     def chunk_node(node):
-        chunks = file_to_chunks(node.to_dict(), *args, **kwargs)
-        func_call.lcall(chunks, lambda chunk: chunk.pop("ln_id"))
+        text_ = to_dict(node).get(field, "")
+        chunks = file_to_chunks(text_, **kwargs)
+        for i in chunks:
+            i.pop("ln_id")
         return [Node.from_obj({**chunk}) for chunk in chunks]
 
     a = to_list([chunk_node(doc) for doc in documents], flatten=True, dropna=True)
@@ -71,9 +68,7 @@ def chunk(
     chunker_type=ChunkerType.PLAIN,
     chunker_args=None,
     chunker_kwargs=None,
-    chunking_kwargs=None,
-    documents_convert_func=None,
-    to_lion: bool | Callable = True,
+    **kwargs,
 ):
     """
     Chunks documents using the specified chunker.
@@ -88,7 +83,6 @@ def chunk(
         chunker_type (ChunkerType, optional): The type of chunker to use. Defaults to ChunkerType.PLAIN.
         chunker_args (list, optional): Positional arguments for the chunker function. Defaults to None.
         chunker_kwargs (dict, optional): Keyword arguments for the chunker function. Defaults to None.
-        chunking_kwargs (dict, optional): Additional keyword arguments for chunking. Defaults to None.
         documents_convert_func (Callable, optional): Function to convert documents. Defaults to None.
         to_lion (bool | Callable, optional): Whether to convert the data to Node instances or a custom parser. Defaults to True.
 
@@ -106,8 +100,6 @@ def chunk(
         chunker_args = []
     if chunker_kwargs is None:
         chunker_kwargs = {}
-    if chunking_kwargs is None:
-        chunking_kwargs = {}
 
     if chunker_type == ChunkerType.PLAIN:
         chunker_kwargs["field"] = field
@@ -118,50 +110,17 @@ def chunk(
             docs, chunker, chunker_args, chunker_kwargs
         )
 
-    elif chunker_type == ChunkerType.LANGCHAIN:
-        return chunk_funcs[ChunkerType.LANGCHAIN](
-            docs,
-            documents_convert_func,
-            chunker,
-            chunker_args,
-            chunker_kwargs,
-            to_lion,
-        )
-
-    elif chunker_type == ChunkerType.LLAMAINDEX:
-        return chunk_funcs[ChunkerType.LLAMAINDEX](
-            docs,
-            documents_convert_func,
-            chunker,
-            chunker_args,
-            chunker_kwargs,
-            to_lion,
-        )
-
     elif chunker_type == ChunkerType.SELFDEFINED:
         return chunk_funcs[ChunkerType.SELFDEFINED](
-            docs,
-            chunker,
-            chunker_args,
-            chunker_kwargs,
-            chunking_kwargs,
-            to_lion,
+            docs, chunker, chunker_args, chunker_kwargs, **kwargs
         )
-
     else:
         raise ValueError(
             f"{chunker_type} is not supported. Please choose from {list(ChunkerType)}"
         )
 
 
-def _self_defined_chunker(
-    documents,
-    chunker,
-    chunker_args,
-    chunker_kwargs,
-    chunking_kwargs,
-    to_lion: bool | Callable,
-):
+def self_defined_chunker(documents, chunker, chunker_args, chunker_kwargs, **kwargs):
     """
     Chunks documents using a self-defined chunker.
 
@@ -170,7 +129,6 @@ def _self_defined_chunker(
         chunker (str | Callable): The chunker function or its name.
         chunker_args (list): Positional arguments for the chunker function.
         chunker_kwargs (dict): Keyword arguments for the chunker function.
-        chunking_kwargs (dict): Additional keyword arguments for chunking.
         to_lion (bool | Callable): Whether to convert the data to Node instances or a custom parser.
 
     Returns:
@@ -184,95 +142,11 @@ def _self_defined_chunker(
     """
     try:
         splitter = chunker(*chunker_args, **chunker_kwargs)
-        nodes = splitter.split(documents, **chunking_kwargs)
+        return splitter.split(documents, **kwargs)
     except Exception as e:
         raise ValueError(
             f"Self defined chunker {chunker} is not valid. Error: {e}"
         ) from e
-
-    if isinstance(to_lion, bool) and to_lion is True:
-        raise ValueError("Please define a valid parser to Node.")
-    elif isinstance(to_lion, Callable):
-        nodes = _datanode_parser(nodes, to_lion)
-    return nodes
-
-
-def _llama_index_chunker(
-    documents,
-    documents_convert_func,
-    chunker,
-    chunker_args,
-    chunker_kwargs,
-    to_lion: bool | Callable,
-):
-    """
-    Chunks documents using a LlamaIndex chunker.
-
-    Args:
-        documents (list): List of documents to be chunked.
-        documents_convert_func (Callable): Function to convert documents.
-        chunker (str | Callable): The chunker function or its name.
-        chunker_args (list): Positional arguments for the chunker function.
-        chunker_kwargs (dict): Keyword arguments for the chunker function.
-        to_lion (bool | Callable): Whether to convert the data to Node instances or a custom parser.
-
-    Returns:
-        pile: A pile of chunked Node instances or custom parsed nodes.
-
-    Example usage:
-        >>> chunked_docs = _llama_index_chunker(docs, convert_func, llama_chunker, ['arg1'], {'key': 'value'}, True)
-    """
-    if documents_convert_func:
-        documents = documents_convert_func(documents, "llama_index")
-    nodes = LlamaIndexBridge.llama_index_parse_node(
-        documents, chunker, chunker_args, chunker_kwargs
-    )
-
-    if isinstance(to_lion, bool) and to_lion is True:
-        nodes = [Node.from_llama_index(i) for i in nodes]
-    elif isinstance(to_lion, Callable):
-        nodes = _datanode_parser(nodes, to_lion)
-    return nodes
-
-
-def _langchain_chunker(
-    documents,
-    documents_convert_func,
-    chunker,
-    chunker_args,
-    chunker_kwargs,
-    to_lion: bool | Callable,
-):
-    """
-    Chunks documents using a Langchain chunker.
-
-    Args:
-        documents (list): List of documents to be chunked.
-        documents_convert_func (Callable): Function to convert documents.
-        chunker (str | Callable): The chunker function or its name.
-        chunker_args (list): Positional arguments for the chunker function.
-        chunker_kwargs (dict): Keyword arguments for the chunker function.
-        to_lion (bool | Callable): Whether to convert the data to Node instances or a custom parser.
-
-    Returns:
-        pile: A pile of chunked Node instances or custom parsed nodes.
-
-    Example usage:
-        >>> chunked_docs = _langchain_chunker(docs, convert_func, langchain_chunker, ['arg1'], {'key': 'value'}, True)
-    """
-    if documents_convert_func:
-        documents = documents_convert_func(documents, "langchain")
-    nodes = LangchainBridge.langchain_text_splitter(
-        documents, chunker, chunker_args, chunker_kwargs
-    )
-    if isinstance(to_lion, bool) and to_lion is True:
-        if isinstance(documents, str):
-            nodes = [Node(content=i) for i in nodes]
-        else:
-            nodes = [Node.from_langchain(i) for i in nodes]
-    elif isinstance(to_lion, Callable):
-        nodes = _datanode_parser(nodes, to_lion)
-    return nodes
 
 
 def _plain_chunker(documents, chunker, chunker_args, chunker_kwargs):
@@ -306,7 +180,5 @@ def _plain_chunker(documents, chunker, chunker_args, chunker_kwargs):
 
 chunk_funcs = {
     ChunkerType.PLAIN: _plain_chunker,
-    ChunkerType.LANGCHAIN: _langchain_chunker,
-    ChunkerType.LLAMAINDEX: _llama_index_chunker,
-    ChunkerType.SELFDEFINED: _self_defined_chunker,
+    ChunkerType.SELFDEFINED: self_defined_chunker,
 }

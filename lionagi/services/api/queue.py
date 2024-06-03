@@ -30,7 +30,6 @@ from typing import Any, Callable
 import asyncio
 
 
-
 class AsyncQueue:
     """
     This class handles the enqueueing and processing of tasks with a limit on
@@ -116,9 +115,7 @@ class AsyncQueue:
                 if input_ is None:
                     await self.stop()
                     break
-                task = asyncio.create_task(
-                    rcall(func, input_, **retry_kwargs)
-                )
+                task = asyncio.create_task(rcall(func, input_, **retry_kwargs))
                 tasks.add(task)
 
         if tasks:

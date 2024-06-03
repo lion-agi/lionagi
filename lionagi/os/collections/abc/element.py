@@ -1,3 +1,11 @@
+from abc import ABC
+from pydantic import BaseModel, Field, AliasChoices
+from lionagi.os.libs.sys_util import create_id, get_timestamp
+
+
+_init_class = {}
+
+
 class Element(BaseModel, ABC):
     """Base class for elements within the LionAGI system.
 
@@ -7,7 +15,7 @@ class Element(BaseModel, ABC):
     """
 
     ln_id: str = Field(
-        default_factory=SysUtil.create_id,
+        default_factory=create_id,
         title="ID",
         description="A 32-char unique hash identifier.",
         frozen=True,
@@ -15,7 +23,7 @@ class Element(BaseModel, ABC):
     )
 
     timestamp: str = Field(
-        default_factory=lambda: SysUtil.get_timestamp(sep=None)[:-6],
+        default_factory=lambda: get_timestamp(sep=None)[:-6],
         title="Creation Timestamp",
         description="The UTC timestamp of creation",
         frozen=True,

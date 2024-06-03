@@ -16,8 +16,8 @@ limitations under the License.
 
 from typing import Any, Dict, List, Union
 from lionagi.libs import SysUtil
-from lionagi.libs.ln_func_call import lcall
-from lionagi.core.collections.abc import FieldError
+from lionagi os.libs import lcall
+from lionagi.os.collections.abc FieldError
 from ..rule.base import Rule
 from ..rule._default import DEFAULT_RULES
 from ..rule.rulebook import RuleBook

@@ -1,5 +1,6 @@
 from dataclasses import dataclass
 
+
 @dataclass
 class StatusTracker:
     num_tasks_started: int = 0

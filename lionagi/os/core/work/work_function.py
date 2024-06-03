@@ -14,7 +14,7 @@ See the License for the specific language governing permissions and
 limitations under the License.
 """
 
-from lionagi.libs.ln_func_call import rcall
+from lionagi os.libs import rcall
 from lionagi.core.work.worklog import WorkLog
 
 

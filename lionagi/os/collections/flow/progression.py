@@ -15,16 +15,10 @@ limitations under the License.
 """
 
 import contextlib
-from lionagi.libs import SysUtil
-from pydantic import Field, field_validator
-from ...core.collections.abc import (
-    Ordering,
-    get_lion_id,
-    ItemNotFoundError,
-    LionIDable,
-    Element,
-)
-from ...core.collections.util import _validate_order
+from lionagi.os.libs.sys_util import create_copy
+from pydantic import field_validator, Field
+from ..abc import Ordering, get_lion_id, ItemNotFoundError, LionIDable, Element
+from ..util import _validate_order
 
 
 class Progression(Element, Ordering):
@@ -110,7 +104,7 @@ class Progression(Element, Ordering):
         """Remove the next occurrence of an item from the progression."""
         if item in self:
             item = self._validate_order(item)
-            l_ = SysUtil.create_copy(self.order)
+            l_ = create_copy(self.order)
 
             with contextlib.suppress(Exception):
                 for i in item:
@@ -163,7 +157,7 @@ class Progression(Element, Ordering):
     def __radd__(self, other):
         if not isinstance(other, Progression):
             _copy = self.copy()
-            l_ = SysUtil.create_copy(_copy.order)
+            l_ = create_copy(_copy.order)
             l_.insert(0, get_lion_id(other))
             _copy.order = l_
             return _copy
@@ -210,7 +204,7 @@ class Progression(Element, Ordering):
 
     def __list__(self):
         """Return a list representation of the progression."""
-        return SysUtil.create_copy(self.order)
+        return create_copy(self.order)
 
     def __reversed__(self):
         """Return a reversed progression."""

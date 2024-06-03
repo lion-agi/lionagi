@@ -105,7 +105,7 @@ def force_validate_keys(
             return corrected_out
 
     if handle_unmatched in ["force", "fill"]:
-        for k in (fields_set - used_keys):
+        for k in fields_set - used_keys:
             if fill_mapping:
                 corrected_out[k] = fill_mapping.get(k, fill_value)
             else:

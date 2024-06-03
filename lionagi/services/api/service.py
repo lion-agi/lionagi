@@ -4,6 +4,7 @@ from lionagi.services.api.status_tracker import StatusTracker
 from lionagi.services.api.endpoint import EndPoint
 from typing import Any, Mapping, Sequence
 
+
 class BaseService:
     base_url: str = ""
     available_endpoints: list = []

@@ -7,7 +7,7 @@ The following functionalities are provided:
 - force_async: Convert a synchronous function to an asynchronous function.
 - is_coroutine_func: Check if a function is a coroutine function.
 - custom_error_handler: Handle errors based on a custom error map.
-- max_concurrency: Limit the concurrency of function execution.
+- max_concurrent: Limit the concurrency of function execution.
 - throttle: Throttle function execution to limit the rate of calls.
 """
 
@@ -70,7 +70,7 @@ def custom_error_handler(error: Exception, error_map: Dict[type, Callable]) -> N
     logging.error(f"Unhandled error: {error}")
 
 
-def max_concurrency(func: Callable, limit: int) -> Callable:
+def max_concurrent(func: Callable, limit: int) -> Callable:
     """
     Limit the concurrency of function execution using a semaphore.
 

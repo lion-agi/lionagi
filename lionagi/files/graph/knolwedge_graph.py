@@ -1,6 +1,7 @@
 import math
 from lionagi.libs import CallDecorator as cd
 
+
 class KnowledgeBase:
     def __init__(self):
         self.entities = {}
@@ -79,6 +80,7 @@ class KnowledgeBase:
         # process text to extract relations
         return relations
 
+
 class KGTripletExtractor:
     @staticmethod
     def text_to_kb(
@@ -146,6 +148,7 @@ class KGTripletExtractor:
                 kb.add_relation(relation, article_title, article_publish_date)
             i += 1
         return kb
+
 
 class KGraph:
     @staticmethod

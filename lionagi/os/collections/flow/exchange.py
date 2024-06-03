@@ -15,7 +15,7 @@ limitations under the License.
 """
 
 from typing import TypeVar, Generic
-from ...core import Element, Field, Sendable
+from ..abc import Element, Sendable, Field
 from ..pile.pile import Pile, pile
 from .progression import Progression, progression
 

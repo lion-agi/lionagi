@@ -50,4 +50,3 @@ class ImageUtil:
 
         file_extension = "." + image_path.split(".")[-1]
         return ImageUtil.encode_image_to_base64(image, file_extension)
-

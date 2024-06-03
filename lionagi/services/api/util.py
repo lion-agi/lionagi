@@ -7,7 +7,6 @@ from functools import lru_cache
 import re
 
 
-
 @lru_cache(maxsize=None)
 def api_endpoint_from_url(request_url: str) -> str:
     match = re.search(r"^https://[^/]+(/.+)?/v\d+/(.+)$", request_url)

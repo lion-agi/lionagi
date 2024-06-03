@@ -23,11 +23,11 @@ requirements.
 """
 
 from typing import Any, Type
-from lionagi.core.collections.abc import Field
-from lionagi.core.collections import Pile, pile
-from lionagi.core.report.util import get_input_output_fields
-from lionagi.core.report.base import BaseForm
-from lionagi.core.report.form import Form
+from ..abc import Field
+from ..pile.pile import Pile, pile
+from .util import get_input_output_fields
+from .base import BaseForm
+from .form import Form
 
 
 class Report(BaseForm):

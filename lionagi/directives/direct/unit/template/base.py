@@ -14,7 +14,7 @@ See the License for the specific language governing permissions and
 limitations under the License.
 """
 
-from lionagi.core.collections.abc import Field
+from lionagi.os.collections.abc Field
 from lionagi.core.report.form import Form
 
 

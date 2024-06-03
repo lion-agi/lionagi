@@ -22,10 +22,11 @@ validating the readiness of forms for further processing.
 """
 
 from typing import Dict, Any
-from lionagi.libs.ln_convert import to_readable_dict
-from lionagi.core.collections.abc import SYSTEM_FIELDS
-from lionagi.core.report.util import get_input_output_fields
-from lionagi.core.report.base import BaseForm
+from lionagi.os.libs import as_readable_json
+
+from ..abc import SYSTEM_FIELDS
+from .util import get_input_output_fields
+from .base import BaseForm
 
 
 class Form(BaseForm):
@@ -224,7 +225,7 @@ class Form(BaseForm):
 
         for k, v in fields.items():
             if isinstance(v, dict):
-                v = to_readable_dict(v)
+                v = as_readable_json(v)
             if len(str(v)) > 50:
                 display(Markdown(f"**{k}**: \n {v}"))
             else:

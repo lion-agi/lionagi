@@ -26,10 +26,10 @@ Note:
 from functools import singledispatchmethod
 from typing import Any, Callable, Dict
 
-from lionagi.libs import ParseUtil
-from lionagi.libs.ln_func_call import call_handler
-from lionagi.core.collections.abc import Actionable
-from lionagi.core.message.action_request import ActionRequest
+
+from lionagi.os.libs import ucall, fuzzy_parse_json
+from lionagi.os.collections.abc import Actionable
+from lionagi.os.collections.message import ActionRequest
 
 
 class FunctionCalling(Actionable):
@@ -106,7 +106,7 @@ class FunctionCalling(Actionable):
     def _(cls, function_calling: str) -> "FunctionCalling":
         _call = None
         try:
-            _call = ParseUtil.fuzzy_parse_json(function_calling)
+            _call = fuzzy_parse_json(function_calling)
         except Exception as e:
             raise ValueError(f"Invalid function call {function_calling}") from e
 
@@ -121,7 +121,7 @@ class FunctionCalling(Actionable):
         Returns:
             Any: The result of the function call.
         """
-        return await call_handler(self.function, **self.arguments)
+        return await ucall(self.function, **self.arguments)
 
     def __str__(self) -> str:
         """

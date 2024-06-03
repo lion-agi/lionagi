@@ -18,8 +18,13 @@ import os
 import asyncio
 import numpy as np
 from dotenv import load_dotenv
-from lionagi.libs import SysUtil, BaseService, StatusTracker, APIUtil, to_list, ninsert
-from ...core.collections.abc import Component, ModelLimitExceededError
+from lionagi.os.libs import to_list, ninsert
+from lionagi.os.libs.sys_util import create_id, get_timestamp
+from lionagi.os.collections.abc import Component, ModelLimitExceededError
+from lionagi.operations.tokenize.token_calculator import calculate_num_token
+
+from ..api.service import BaseService
+from ..api.status_tracker import StatusTracker
 
 load_dotenv()
 
@@ -95,8 +100,8 @@ class iModel:
             service (BaseService, optional): An instance of BaseService.
             **kwargs: Additional parameters for the model.
         """
-        self.ln_id: str = SysUtil.create_id()
-        self.timestamp: str = SysUtil.get_timestamp(sep=None)[:-6]
+        self.ln_id: str = create_id()
+        self.timestamp: str = get_timestamp(sep=None)[:-6]
         self.endpoint = endpoint
         self.allowed_parameters = allowed_parameters
         if isinstance(provider, type):
@@ -266,7 +271,7 @@ class iModel:
             dict: Response from the chat completion service.
         """
 
-        num_tokens = APIUtil.calculate_num_token(
+        num_tokens = calculate_num_token(
             {"messages": messages},
             "chat/completions",
             self.endpoint_schema.get("token_encoding_name", None),
@@ -306,7 +311,7 @@ class iModel:
             embed_str.pop("images", None)
             embed_str.pop("image_detail", None)
 
-        num_tokens = APIUtil.calculate_num_token(
+        num_tokens = calculate_num_token(
             {"input": str(embed_str) if isinstance(embed_str, dict) else embed_str},
             "embeddings",
             self.endpoint_schema["token_encoding_name"],

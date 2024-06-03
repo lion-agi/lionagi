@@ -96,7 +96,7 @@ class CallDecorator:
         return decorator
 
     @staticmethod
-    def max_concurrency(limit: int) -> Callable:
+    def max_concurrent(limit: int) -> Callable:
         """Decorator to limit the maximum number of concurrent executions.
 
         Args:

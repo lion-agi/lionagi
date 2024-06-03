@@ -15,8 +15,8 @@ limitations under the License.
 """
 
 from lionagi.libs.ln_convert import strip_lower
-from lionagi.libs.ln_func_call import rcall
-from lionagi.core.collections.abc import Directive
+from lionagi os.libs import rcall
+from lionagi.os.collections.abc Directive
 from lionagi.core.validator.validator import Validator
 from lionagi.core.collections import iModel
 from .unit_form import UnitForm

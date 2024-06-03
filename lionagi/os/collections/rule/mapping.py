@@ -16,10 +16,9 @@ limitations under the License.
 
 from typing import Any
 from collections.abc import Mapping
-from lionagi.libs.ln_convert import to_dict
-from lionagi.libs import StringMatch, ParseUtil
+from lionagi.os.libs import to_dict, force_validate_mapping, fuzzy_parse_json
 
-from lionagi.core.rule.choice import ChoiceRule
+from .choice import ChoiceRule
 
 
 class MappingRule(ChoiceRule):
@@ -83,13 +82,13 @@ class MappingRule(ChoiceRule):
             check_keys = set(value.keys())
             if check_keys != set(self.keys):
                 try:
-                    return StringMatch.force_validate_dict(value, keys=self.keys)
+                    return force_validate_mapping(value, keys=self.keys)
                 except Exception as e:
                     raise ValueError("Invalid dict keys.") from e
 
         else:
             try:
-                return ParseUtil.fuzzy_parse_json(value)
+                return fuzzy_parse_json(value)
             except Exception as e:
                 raise ValueError("Invalid dict keys.") from e
 

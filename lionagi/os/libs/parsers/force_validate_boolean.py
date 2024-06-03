@@ -40,4 +40,3 @@ def force_validate_boolean(x):
         return False
 
     raise ValueError(f"Failed to convert {x} into a boolean value")
-

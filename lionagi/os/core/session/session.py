@@ -28,7 +28,7 @@ from lionagi.core.action.tool_manager import ToolManager
 from lionagi.libs import SysUtil
 from lionagi.core.session.branch import Branch
 from lionagi.core.collections import pile, Pile, Exchange
-from lionagi.core.collections.abc import get_lion_id
+from lionagi.os.collections.abc get_lion_id
 from lionagi.core.collections.util import to_list_type
 from lionagi.core.mail.mail_manager import MailManager
 

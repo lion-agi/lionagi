@@ -16,7 +16,7 @@ limitations under the License.
 
 import inspect
 from pydantic import Field
-from lionagi.libs import convert, ParseUtil
+from lionagi.os.libs import fuzzy_parse_json, to_str
 from .message import RoledMessage, MessageRole
 
 
@@ -125,7 +125,7 @@ def _prepare_arguments(arguments):
     """
     if not isinstance(arguments, dict):
         try:
-            arguments = ParseUtil.fuzzy_parse_json(convert.to_str(arguments))
+            arguments = fuzzy_parse_json(to_str(arguments))
         except Exception as e:
             raise ValueError(f"Invalid arguments: {e}") from e
     if isinstance(arguments, dict):

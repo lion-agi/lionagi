@@ -42,7 +42,7 @@ async def get_oauth_token_with_cache(
     ) as auth_response:
         auth_response.raise_for_status()
         return (await auth_response.json()).get("access_token")
-    
+
 
 def get_cache_key(url: str, params: Mapping[str, Any] | None) -> str:
     """

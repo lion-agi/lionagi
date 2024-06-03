@@ -1,6 +1,6 @@
 from collections.abc import Mapping, Generator
 from collections import deque
-
+from typing import Type
 from .abc import LionTypeError, Record, Ordering, Component, get_lion_id, Element
 
 
@@ -62,3 +62,28 @@ def _validate_order(value) -> list[str]:
         return [i for item in to_list_type(value) if (i := get_lion_id(item))]
     except Exception as e:
         raise LionTypeError("Progression must only contain lion ids.") from e
+
+
+def is_same_dtype(
+    input_: list | dict, dtype: Type | None = None, return_dtype=False
+) -> bool:
+    """
+    Checks if all elements in a list or dictionary values are of the same data type.
+
+    Args:
+            input_ (list | dict): The input list or dictionary to check.
+            dtype (Type | None): The data type to check against. If None, uses the type of the first element.
+
+    Returns:
+            bool: True if all elements are of the same type (or if the input is empty), False otherwise.
+    """
+    if not input_:
+        return True
+
+    iterable = input_.values() if isinstance(input_, dict) else input_
+    first_element_type = type(next(iter(iterable), None))
+
+    dtype = dtype or first_element_type
+
+    a = all(isinstance(element, dtype) for element in iterable)
+    return a, dtype if return_dtype else a

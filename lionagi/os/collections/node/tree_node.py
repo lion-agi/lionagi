@@ -1,8 +1,8 @@
 from enum import Enum
 from pydantic import Field
-from lionagi.core.collections.abc import Condition
-from lionagi.core.collections.util import to_list_type
-from lionagi.core.generic.node import Node
+from ..abc import Condition
+from ..util import to_list_type
+from ..node.node import Node
 
 
 class TreeLabel(str, Enum):

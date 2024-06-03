@@ -156,6 +156,4 @@ def chunk_by_tokens(
         else:
             chunks[-1] += tokens[-residue:]
 
-        return (
-            [" ".join(chunk) for chunk in chunks] if not return_tokens else chunks
-        )
+        return [" ".join(chunk) for chunk in chunks] if not return_tokens else chunks

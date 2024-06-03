@@ -1,6 +1,6 @@
 from typing import Any
-from lionagi.libs.ln_convert import to_num
-from lionagi.core.rule.base import Rule
+from lionagi.os.libs import to_num
+from .base import Rule
 
 
 class NumberRule(Rule):

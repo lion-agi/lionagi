@@ -4,6 +4,7 @@ import logging
 import aiohttp
 from aiocache import cached
 
+
 class PayloadPackage:
 
     @classmethod

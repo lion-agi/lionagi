@@ -19,7 +19,7 @@ import asyncio
 from typing import Any
 
 from lionagi.libs import SysUtil
-from lionagi.core.collections.abc import Component
+from lionagi.os.collections.abc Component
 
 
 class WorkStatus(str, Enum):

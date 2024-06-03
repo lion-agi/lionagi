@@ -1,5 +1,5 @@
 import threading
-from lionagi.os.collections.index.container import Container
+from .container import Container
 
 
 class Index:

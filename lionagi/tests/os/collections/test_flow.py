@@ -4,6 +4,7 @@ from lionagi.os.collections.pile.pile import pile
 from lionagi.os.collections.flow.progression import progression
 from lionagi.os.collections.flow.flow import flow
 
+
 class TestFlow(unittest.TestCase):
 
     def setUp(self):

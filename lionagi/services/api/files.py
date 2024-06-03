@@ -4,6 +4,7 @@ import logging
 import aiohttp
 from aiocache import cached
 
+
 async def upload_file_with_retry(
     http_session: aiohttp.ClientSession,
     url: str,

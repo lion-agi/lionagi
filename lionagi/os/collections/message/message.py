@@ -15,8 +15,8 @@ limitations under the License.
 """
 
 from enum import Enum
-from lionagi.core.collections.abc import Sendable, Field
-from lionagi.core.generic.node import Node
+from ..abc import Sendable, Field
+from ..node.node import Node
 
 
 # Enums for defining message fields and roles

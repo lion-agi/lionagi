@@ -15,7 +15,7 @@ limitations under the License.
 """
 
 from lionagi.libs.ln_convert import to_str
-from lionagi.core.collections.abc import Field
+from lionagi.os.collections.abc Field
 from lionagi.core.unit import UnitForm
 
 

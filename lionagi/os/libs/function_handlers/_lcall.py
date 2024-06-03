@@ -9,7 +9,7 @@ Functions:
 """
 
 import asyncio
-from typing import Any, Callable, List, Union, Dict, Optional
+from typing import Any, Callable, List, Dict, Optional
 from lionagi.os.libs.data_handlers import to_list
 from lionagi.os.libs.function_handlers._ucall import ucall
 

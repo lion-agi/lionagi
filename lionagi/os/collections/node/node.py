@@ -11,17 +11,16 @@ modifying, and removing edges, and querying related nodes and connections.
 from pydantic import Field
 from pandas import Series
 
-from lionagi.libs.ln_convert import to_list
-
-from lionagi.core.collections.abc import (
+from lionagi.os.libs import to_list
+from ..abc import (
     Component,
     Condition,
     Relatable,
     RelationError,
     get_lion_id,
 )
-from lionagi.core.collections import pile, Pile
-from lionagi.core.generic.edge import Edge
+from ..pile.pile import pile, Pile
+from ..edge.edge import Edge
 
 
 class Node(Component, Relatable):
@@ -60,9 +59,7 @@ class Node(Component, Relatable):
         Returns:
             List of node IDs related to this node.
         """
-        all_nodes = set(
-            to_list([[i.head, i.tail] for i in self.edges], flatten=True, dropna=True)
-        )
+        all_nodes = set(to_list([[i.head, i.tail] for i in self.edges]))
         all_nodes.discard(self.ln_id)
         return list(all_nodes)
 

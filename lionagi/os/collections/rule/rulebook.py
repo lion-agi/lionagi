@@ -1,5 +1,4 @@
-from lionagi.libs.ln_func_call import lcall
-from lionagi.core.rule.base import Rule
+from .base import Rule
 
 
 """
@@ -30,12 +29,18 @@ class RuleBook:
     @property
     def _all_applied_log(self):
         """return all applied logs from all rules in the rulebook"""
-        return lcall(self.rules.values(), lambda x: x.applied_log, flatten=True)
+        _out = []
+        for i in self.rules.values():
+            _out.extend([j for j in i.applied_log if j is not None])
+        return _out
 
     @property
     def _all_invoked_log(self):
         """return all invoked logs from all rules in the rulebook"""
-        return lcall(self.rules.values(), lambda x: x.invoked_log, flatten=True)
+        _out = []
+        for i in self.rules.values():
+            _out.extend([j for j in i.invoked_log if j is not None])
+        return _out
 
     def __getitem__(self, key: str) -> Rule:
         return self.rules[key]

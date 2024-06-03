@@ -1989,36 +1989,36 @@ class TestFunctionModule(unittest.TestCase):
         self.assertTrue(self.value_error_handled)
         self.assertFalse(self.type_error_handled)
 
-    def test_max_concurrency(self):
+    def test_max_concurrent(self):
         async def async_func(x):
             await asyncio.sleep(0.1)
             return x
 
-        limited_func = max_concurrency(async_func, 2)
+        limited_func = max_concurrent(async_func, 2)
 
         loop = asyncio.get_event_loop()
         tasks = [limited_func(i) for i in range(4)]
         results = loop.run_until_complete(asyncio.gather(*tasks))
         self.assertEqual(results, [0, 1, 2, 3])
 
-    def test_max_concurrency_limit(self):
+    def test_max_concurrent_limit(self):
         async def async_func(x):
             await asyncio.sleep(0.1)
             return x
 
-        limited_func = max_concurrency(async_func, 1)
+        limited_func = max_concurrent(async_func, 1)
 
         loop = asyncio.get_event_loop()
         tasks = [limited_func(i) for i in range(2)]
         results = loop.run_until_complete(asyncio.gather(*tasks))
         self.assertEqual(results, [0, 1])
 
-    def test_max_concurrency_with_sync_func(self):
+    def test_max_concurrent_with_sync_func(self):
         def sync_func(x):
             time.sleep(0.1)
             return x
 
-        limited_func = max_concurrency(sync_func, 2)
+        limited_func = max_concurrent(sync_func, 2)
 
         loop = asyncio.get_event_loop()
         tasks = [limited_func(i) for i in range(4)]
@@ -2133,14 +2133,14 @@ class TestFunctionModule(unittest.TestCase):
         self.assertTrue(self.value_error_handled_1)
         self.assertTrue(self.value_error_handled_2)
 
-    def test_max_concurrency_with_exception(self):
+    def test_max_concurrent_with_exception(self):
         async def async_func(x):
             if x == 1:
                 raise ValueError("Test exception")
             await asyncio.sleep(0.1)
             return x
 
-        limited_func = max_concurrency(async_func, 2)
+        limited_func = max_concurrent(async_func, 2)
 
         loop = asyncio.new_event_loop()
         asyncio.set_event_loop(loop)
@@ -2148,13 +2148,13 @@ class TestFunctionModule(unittest.TestCase):
         with self.assertRaises(ValueError):
             loop.run_until_complete(asyncio.gather(*tasks))
 
-    def test_max_concurrency_with_different_limits(self):
+    def test_max_concurrent_with_different_limits(self):
         async def async_func(x):
             await asyncio.sleep(0.3)
             return x
 
-        limited_func_1 = max_concurrency(async_func, 1)
-        limited_func_2 = max_concurrency(async_func, 2)
+        limited_func_1 = max_concurrent(async_func, 1)
+        limited_func_2 = max_concurrent(async_func, 2)
 
         loop = asyncio.new_event_loop()
         asyncio.set_event_loop(loop)
@@ -2280,13 +2280,13 @@ class TestCallDecorator(unittest.TestCase):
         self.assertEqual(result2, 4)
         self.assertGreaterEqual(end_time - start_time, 1)
 
-    # Tests for max_concurrency decorator
+    # Tests for max_concurrent decorator
     async def long_running_func(self, x):
         await asyncio.sleep(0.5)
         return x * 2
 
-    def test_max_concurrency(self):
-        func = CallDecorator.max_concurrency(limit=2)(self.long_running_func)
+    def test_max_concurrent(self):
+        func = CallDecorator.max_concurrent(limit=2)(self.long_running_func)
         start_time = self.loop.time()
         tasks = [func(i) for i in range(4)]
         self.loop.run_until_complete(asyncio.gather(*tasks))
@@ -2393,8 +2393,8 @@ class TestCallDecorator(unittest.TestCase):
         self.assertLess(end_time - start_time, 3)
         self.assertEqual(results, [0, 2, 4])
 
-    def test_max_concurrency_sync(self):
-        func = CallDecorator.max_concurrency(limit=2)(self.sync_func)
+    def test_max_concurrent_sync(self):
+        func = CallDecorator.max_concurrent(limit=2)(self.sync_func)
         start_time = self.loop.time()
         tasks = [func(i) for i in range(4)]
         results = self.loop.run_until_complete(

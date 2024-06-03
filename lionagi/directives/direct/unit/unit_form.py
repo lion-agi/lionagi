@@ -16,7 +16,7 @@ limitations under the License.
 
 from enum import Enum
 from lionagi.libs.ln_convert import to_str, to_dict
-from lionagi.core.collections.abc import Field
+from lionagi.os.collections.abc Field
 from .template.base import BaseUnitForm
 
 

@@ -7,7 +7,7 @@ Functions:
 """
 
 import asyncio
-from typing import Any, Callable, Optional, Dict, Union
+from typing import Any, Callable, Optional, Dict
 
 
 async def tcall(

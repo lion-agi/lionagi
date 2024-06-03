@@ -17,9 +17,9 @@ limitations under the License.
 from abc import abstractmethod
 from typing import Any, List, Dict
 from pandas import Series
-from lionagi.libs import SysUtil
+from lionagi.os.libs.sys_util import get_timestamp
 
-from lionagi.core.collections.abc import FieldError, Condition, Actionable, Component
+from ..abc import FieldError, Condition, Actionable, Component
 
 _rule_classes = {}
 
@@ -66,7 +66,7 @@ class Rule(Component, Condition, Actionable):
             "type": "rule",
             "class": self.class_name,
             "ln_id": self.ln_id,
-            "timestamp": SysUtil.get_timestamp(sep=None)[:-6],
+            "timestamp": get_timestamp(sep=None)[:-6],
             "field": field,
             "form": form.ln_id,
             "config": kwargs,

@@ -16,7 +16,7 @@ limitations under the License.
 
 from typing import Any
 from lionagi.libs.ln_convert import is_same_dtype, to_df
-from lionagi.core.collections.abc import Field
+from lionagi.os.collections.abc Field
 from lionagi.core.collections import (
     pile,
     progression,

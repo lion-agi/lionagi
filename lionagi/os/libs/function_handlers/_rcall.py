@@ -8,7 +8,7 @@ Functions:
 """
 
 import asyncio
-from typing import Any, Callable, Optional, Dict, Union
+from typing import Any, Callable, Optional, Dict
 from lionagi.os.libs.sys_util import get_now
 from lionagi.os.libs.function_handlers._ucall import ucall
 
