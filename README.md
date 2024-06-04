@@ -7,7 +7,7 @@
 # Language InterOperable Network - LION
 
 ```
-lionagi version 0.2.0
+lionagi version 0.2.1
 ```
 
 **Powerful Intelligent Workflow Automation**
