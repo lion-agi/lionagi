@@ -16,11 +16,15 @@ limitations under the License.
 
 from abc import ABC
 from functools import wraps
+from typing import Callable
 import asyncio
+import inspect
 from lionagi import logging as _logging
 from lionagi.libs.ln_func_call import pcall
 from lionagi.core.work.work_function import WorkFunction
 from lionagi.core.work.work import Work
+from lionagi.core.report.form import Form
+from lionagi.core.collections.abc import get_lion_id
 
 
 class Worker(ABC):
@@ -30,19 +34,23 @@ class Worker(ABC):
     Attributes:
         name (str): The name of the worker.
         work_functions (dict[str, WorkFunction]): Dictionary mapping assignments to WorkFunction objects.
+        forms (dict[str, Form]): Dictionary mapping form identifier to Form objects.
+        default_form (str|None): The default form to be used by the worker.
     """
 
     name: str = "Worker"
     work_functions: dict[str, WorkFunction] = {}
 
-    def __init__(self) -> None:
-        self.stopped = False
+    def __init__(self, forms=None, default_form=None) -> None:
+        # self.stopped = False
+        self.forms: dict[str, Form] = forms or {}
+        self.default_form = default_form
 
     async def stop(self):
         """
         Stops the worker and all associated work functions.
         """
-        self.stopped = True
+        # self.stopped = True
         _logging.info(f"Stopping worker {self.name}")
         non_stopped_ = []
 
@@ -69,16 +77,31 @@ class Worker(ABC):
             and not self.stopped
         )
 
-    async def process(self, refresh_time=1):
+    async def change_default_form(self, form_key):
         """
-        Processes all work functions periodically.
+        Changes the default form to the specified form key.
 
         Args:
-            refresh_time (int): Time interval between each process cycle.
+            form_key (str): The key of the form to set as the default.
+
+        Raises:
+            ValueError: If the form key does not exist in the forms dictionary.
+
         """
-        while await self.is_progressable():
-            await pcall([i.process(refresh_time) for i in self.work_functions.values()])
-            await asyncio.sleep(refresh_time)
+        if form_key not in self.forms.keys():
+            raise ValueError(f"Unable to change default form. Key {form_key} does not exist.")
+        self.default_form = self.forms[form_key]
+
+    # async def process(self, refresh_time=1):
+    #     """
+    #     Processes all work functions periodically.
+    #
+    #     Args:
+    #         refresh_time (int): Time interval between each process cycle.
+    #     """
+    #     while await self.is_progressable():
+    #         await pcall([i.process(refresh_time) for i in self.work_functions.values()])
+    #         await asyncio.sleep(refresh_time)
 
     # TODO: Implement process method
 
@@ -96,6 +119,7 @@ class Worker(ABC):
         *args,
         func=None,
         assignment=None,
+        form_param_key=None,
         capacity=None,
         retry_kwargs=None,
         guidance=None,
@@ -107,6 +131,10 @@ class Worker(ABC):
         Args:
             func (Callable): The function to be executed.
             assignment (str): The assignment description.
+            form_param_key (str): The key to identify the form parameter in
+                the function's signature. This parameter is used to locate and fill
+                the appropriate form according to the assignment. Raises an error
+                if the form parameter key is not found in the function's signature.
             capacity (int): Capacity for the work log.
             retry_kwargs (dict): Retry arguments for the function.
             guidance (str): Guidance or documentation for the function.
@@ -119,23 +147,53 @@ class Worker(ABC):
                 assignment=assignment,
                 function=func,
                 retry_kwargs=retry_kwargs or {},
-                guidance=guidance or func.__doc__,
+                guidance=guidance,
                 capacity=capacity,
             )
 
         work_func: WorkFunction = self.work_functions[func.__name__]
-        task = asyncio.create_task(work_func.perform(self, *args, **kwargs))
-        work = Work(async_task=task)
+
+        # locate form that should be filled according to the assignment
+        if form_param_key:
+            func_signature = inspect.signature(func)
+            if form_param_key not in func_signature.parameters:
+                raise KeyError(f"Failed to locate form. \"{form_param_key}\" is not defined in the function.")
+            if "self" in func_signature.parameters:
+                bound_args = func_signature.bind(None, *args, **kwargs)
+            else:
+                bound_args = func_signature.bind(*args, **kwargs)
+            bound_args.apply_defaults()
+            arguments = bound_args.arguments
+
+            form_key = arguments.get(form_param_key)
+            try:
+                form_key = get_lion_id(form_key)
+            except:
+                pass
+            form = self.forms.get(form_key) or self.default_form
+
+            if form:
+                subform = form.__class__(assignment=work_func.assignment, task=work_func.guidance)
+                for k in subform.input_fields:
+                    v = getattr(form, k, None)
+                    setattr(subform, k, v)
+                subform.origin = form
+                kwargs = {"form": subform} | kwargs
+            else:
+                raise ValueError(f"Cannot locate form in Worker's forms and default_form is not available.")
+
+        task = work_func.perform(self, *args, **kwargs)
+        work = Work(async_task=task, async_task_name=work_func.name)
         await work_func.worklog.append(work)
-        return True
+        return work
 
 
 def work(
     assignment=None,
+    form_param_key=None,
     capacity=10,
     guidance=None,
     retry_kwargs=None,
-    refresh_time=1,
     timeout=10,
 ):
     """
@@ -143,10 +201,13 @@ def work(
 
     Args:
         assignment (str): The assignment description of the work function.
+        form_param_key (str): The key to identify the form parameter in
+                the function's signature. This parameter is used to locate and fill
+                the appropriate form according to the assignment. Raises an error
+                if the form parameter key is not found in the function's signature.
         capacity (int): Capacity for the work log.
         guidance (str): Guidance or documentation for the work function.
         retry_kwargs (dict): Retry arguments for the work function.
-        refresh_time (int): Time interval between each process cycle.
         timeout (int): Timeout for the work function.
     """
 
@@ -157,6 +218,7 @@ def work(
             *args,
             func=func,
             assignment=assignment,
+            form_param_key=form_param_key,
             capacity=capacity,
             retry_kwargs=retry_kwargs,
             guidance=guidance,
@@ -168,6 +230,7 @@ def work(
                 *args,
                 func=func,
                 assignment=assignment,
+                form_param_key=form_param_key,
                 capacity=capacity,
                 retry_kwargs=retry_kwargs,
                 guidance=guidance,

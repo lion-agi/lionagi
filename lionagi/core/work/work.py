@@ -17,6 +17,7 @@ limitations under the License.
 from enum import Enum
 import asyncio
 from typing import Any
+from collections.abc import Coroutine
 
 from lionagi.libs import SysUtil
 from lionagi.core.collections.abc import Component
@@ -39,7 +40,7 @@ class Work(Component):
         status (WorkStatus): The current status of the work.
         result (Any): The result of the work, if completed.
         error (Any): Any error encountered during the work.
-        async_task (asyncio.Task | None): The asynchronous task associated with the work.
+        async_task (Coroutine | None): The asynchronous task associated with the work.
         completion_timestamp (str | None): The timestamp when the work was completed.
         duration (float | None): The duration of the work.
     """
@@ -47,7 +48,8 @@ class Work(Component):
     status: WorkStatus = WorkStatus.PENDING
     result: Any = None
     error: Any = None
-    async_task: asyncio.Task | None = None
+    async_task: Coroutine | None = None
+    async_task_name: str | None = None
     completion_timestamp: str | None = None
     duration: float | None = None
 

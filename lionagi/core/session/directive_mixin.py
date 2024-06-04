@@ -27,7 +27,7 @@ class DirectiveMixin:
 
     async def chat(
         self,
-        instruction,  # additional instruction
+        instruction=None,  # additional instruction
         context=None,  # context to perform the instruction on
         system=None,  # optionally swap system message
         sender=None,  # sender of the instruction, default "user"
