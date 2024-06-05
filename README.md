@@ -1,7 +1,7 @@
 ![PyPI - Version](https://img.shields.io/pypi/v/lionagi?labelColor=233476aa&color=231fc935) ![PyPI - Downloads](https://img.shields.io/pypi/dm/lionagi?color=blue)
 
 
-[PyPI](https://pypi.org/project/lionagi/) | [Documentation](https://ocean-lion.com/Welcome) | [Discord](https://discord.gg/aqSJ2v46vu)
+[PyPI](https://pypi.org/project/lionagi/) | [Documentation](https://ocean-lion.com/Welcome) | [Discord](https://discord.gg/aqSJ2v46vu) | [Roadmap](https://trello.com/b/3seomsrI/lionagi)
 
 
 # Language InterOperable Network - LION
@@ -9,7 +9,6 @@
 ```
 pip install lionagi==0.2.1
 ```
-check roadmap here: https://trello.com/b/3seomsrI/lionagi
 
 **Powerful Intelligent Workflow Automation**
 
