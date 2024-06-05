@@ -1,3 +1,4 @@
+from ._util import is_coroutine_func
 from ._ucall import ucall
 from ._tcall import tcall
 from ._rcall import rcall
@@ -16,4 +17,5 @@ __all__ = [
     "pcall",
     "mcall",
     "CallDecorator",
+    "is_coroutine_func",
 ]

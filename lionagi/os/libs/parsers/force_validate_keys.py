@@ -66,6 +66,7 @@ def force_validate_keys(
     used_keys = set()
     old_used_keys = set()
 
+    # TODO: need fixing, this logic is wrong
     if fuzzy_match:
         for k, v in dict_.items():
             if k in fields_set:

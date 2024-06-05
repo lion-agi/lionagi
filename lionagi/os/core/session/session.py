@@ -13,24 +13,16 @@ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the License for the specific language governing permissions and
 limitations under the License.
 """
-
-from lionagi.core.collections import (
-    Pile,
-    Progression,
-    progression,
-    pile,
-    iModel,
-)
-from lionagi.core.message import System
 from typing import Any
-from lionagi.core.action.tool_manager import ToolManager
-
-from lionagi.libs import SysUtil
-from lionagi.core.session.branch import Branch
-from lionagi.core.collections import pile, Pile, Exchange
-from lionagi.os.collections.abc get_lion_id
-from lionagi.core.collections.util import to_list_type
-from lionagi.core.mail.mail_manager import MailManager
+from lionagi.os.libs.sys_util import create_id, get_timestamp
+from lionagi.os.collections import pile, Pile, Exchange, Progression, progression
+from lionagi.os.collections.abc import get_lion_id
+from lionagi.os.collections.util import to_list_type
+from lionagi.os.collections.mail.mail_manager import MailManager
+from lionagi.os.collections.message import System
+from lionagi.os.operations.model.imodel import iModel
+from lionagi.os.core.action.tool_manager import ToolManager
+from lionagi.os.core.session.branch import Branch
 
 
 class Session:
@@ -59,8 +51,8 @@ class Session:
         imodel=None,
         tools=None,
     ):
-        self.ln_id = SysUtil.create_id()
-        self.timestamp = SysUtil.get_timestamp(sep=None)[:-6]
+        self.ln_id = create_id()
+        self.timestamp = get_timestamp(sep=None)[:-6]
         system = system or "You are a helpful assistant, let's think step by step"
         self.system = System(system=system, sender=system_sender)
         self.system_sender = system_sender

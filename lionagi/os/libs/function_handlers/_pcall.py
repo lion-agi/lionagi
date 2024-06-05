@@ -10,6 +10,7 @@ Functions:
 import asyncio
 from typing import Callable, Any, List, Dict, Optional
 from lionagi.os.libs.function_handlers._ucall import ucall
+from lionagi.os.libs.function_handlers._util import is_coroutine_func
 
 
 async def pcall(
@@ -100,7 +101,7 @@ async def pcall(
             except Exception as e:
                 if error_map and type(e) in error_map:
                     handler = error_map[type(e)]
-                    if asyncio.iscoroutinefunction(handler):
+                    if is_coroutine_func(handler):
                         return index, await handler(e)
                     else:
                         return index, handler(e)

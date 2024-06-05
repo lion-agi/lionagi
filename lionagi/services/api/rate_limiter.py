@@ -6,6 +6,7 @@ import aiohttp
 from aiocache import cached
 
 from .util import api_endpoint_from_url
+from lionagi.files.operations.tokenize.token_calculator import calculate_num_token
 
 
 class BaseRateLimiter(ABC):
@@ -69,19 +70,15 @@ class BaseRateLimiter(ABC):
         async with self._lock:
             if (
                 self.available_request_capacity > 0
-                and self.available_token_capacity > 0
+                and self.available_token_capacity > 10
             ):
                 self.available_request_capacity -= 1
-                self.available_token_capacity -= (
-                    required_tokens
-                    # Assuming 1 token per request for simplicity
-                )
+                self.available_token_capacity -= required_tokens
                 return True
             return False
 
     async def _call_api(
         self,
-        http_session,
         endpoint: str,
         base_url: str,
         api_key: str,
@@ -89,19 +86,22 @@ class BaseRateLimiter(ABC):
         method: str = "post",
         payload: Mapping[str, any] = None,
         required_tokens: int = None,
+        timeout: float = 0,
+        token_refresh_interval=0.5,
         **kwargs,
     ) -> Mapping[str, any] | None:
         """
         Makes an API call to the specified endpoint using the provided HTTP session.
+        with three attempts and a 15-second delay for rate limit errors.
 
         Args:
-                http_session: The aiohttp client session to use for the API call.
-                endpoint: The API endpoint to call.
-                base_url: The base URL of the API.
-                api_key: The API key for authentication.
-                max_attempts: The maximum number of attempts for the API call.
-                method: The HTTP method to use for the API call.
-                payload: The payload to send with the API call.
+            http_session: The aiohttp client session to use for the API call.
+            endpoint: The API endpoint to call.
+            base_url: The base URL of the API.
+            api_key: The API key for authentication.
+            max_attempts: The maximum number of attempts for the API call.
+            method: The HTTP method to use for the API call.
+            payload: The payload to send with the API call.
 
         Returns:
                 The JSON assistant_response from the API call if successful, otherwise None.
@@ -112,7 +112,7 @@ class BaseRateLimiter(ABC):
                 self.available_request_capacity < 1
                 or self.available_token_capacity < 10
             ):  # Minimum token count
-                await asyncio.sleep(1)  # Wait for capacity
+                await asyncio.sleep(token_refresh_interval)  # Wait for capacity
                 continue
 
             if not required_tokens:
@@ -126,12 +126,17 @@ class BaseRateLimiter(ABC):
 
                 while attempts_left > 0:
                     try:
-                        method = api_method(http_session, method)
-                        async with method(
-                            url=(base_url + endpoint),
-                            headers=request_headers,
-                            json=payload,
-                        ) as response:
+                        client = aiohttp.ClientSession()
+                        method = getattr(client, method)
+
+                        _configs = {
+                            "url": (base_url + endpoint),
+                            "headers": request_headers,
+                            "json": payload,
+                            "timeout": timeout,
+                        }
+
+                        async with method(**_configs) as response:
                             response_json = await response.json()
 
                             if "error" not in response_json:
@@ -152,7 +157,7 @@ class BaseRateLimiter(ABC):
                 logging.error("API call failed after all attempts.")
                 break
             else:
-                await asyncio.sleep(1)
+                await asyncio.sleep(token_refresh_interval)
 
     @classmethod
     async def create(

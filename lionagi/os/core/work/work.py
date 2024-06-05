@@ -18,8 +18,8 @@ from enum import Enum
 import asyncio
 from typing import Any
 
-from lionagi.libs import SysUtil
-from lionagi.os.collections.abc Component
+from lionagi.os.libs.sys_util import get_timestamp
+from lionagi.os.collections.abc import Component
 
 
 class WorkStatus(str, Enum):
@@ -63,7 +63,7 @@ class Work(Component):
             self.error = e
             self.status = WorkStatus.FAILED
         finally:
-            self.completion_timestamp = SysUtil.get_timestamp(sep=None)[:-6]
+            self.completion_timestamp = get_timestamp(sep=None)[:-6]
 
     def __str__(self):
         return (

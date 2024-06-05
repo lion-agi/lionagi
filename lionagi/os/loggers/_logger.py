@@ -21,8 +21,8 @@ from collections import deque
 from dataclasses import dataclass
 from pathlib import Path
 from typing import Any, Dict, List
-
-from lionagi.libs import SysUtil, convert, nested
+from lionagi.os.libs.sys_util import create_path, get_timestamp
+from lionagi.os.libs import to_list, to_str, to_dict, to_df, flatten, unflatten
 
 
 # TODO: there should be a global data logger, under setting
@@ -60,17 +60,17 @@ class DLog:
 
         def _process_data(data, field):
             try:
-                data = convert.to_str(data)
+                data = to_str(data)
                 if "{" not in data:
-                    log_dict[field] = convert.to_str(data)
+                    log_dict[field] = to_str(data)
                 else:
                     with contextlib.suppress(Exception):
-                        data = convert.to_dict(data)
+                        data = to_dict(data)
 
                     if isinstance(self.input_data, dict) and flatten_:
-                        log_dict[field] = convert.to_str(nested.flatten(data, sep=sep))
+                        log_dict[field] = to_str(flatten(data, sep=sep))
                     else:
-                        log_dict[field] = convert.to_str(data)
+                        log_dict[field] = to_str(data)
 
             except Exception as e:
                 log_dict[field] = data
@@ -79,7 +79,7 @@ class DLog:
         _process_data(self.input_data, "input_data")
         _process_data(self.output_data, "output_data")
 
-        log_dict["timestamp"] = SysUtil.get_timestamp()
+        log_dict["timestamp"] = get_timestamp()
 
         return log_dict
 
@@ -123,7 +123,7 @@ class DLog:
         def _process_data(data):
             if unflatten_:
                 try:
-                    return nested.unflatten(convert.to_dict(data), sep=sep)
+                    return unflatten(to_dict(data), sep=sep)
                 except Exception:
                     return data
             else:
@@ -179,8 +179,8 @@ class DataLogger:
                   structure (e.g., containing 'input_data', 'output_data', etc.).
         """
         if len(logs) > 0:
-            log1 = convert.to_list(self.log)
-            log1.extend(convert.to_list(logs))
+            log1 = to_list(self.log)
+            log1.extend(to_list(logs))
             self.log = deque(log1)
 
     def append(self, *, input_data: Any, output_data: Any) -> None:
@@ -226,7 +226,7 @@ class DataLogger:
         if not filename.endswith(".csv"):
             filename += ".csv"
 
-        filepath = SysUtil.create_path(
+        filepath = create_path(
             self.persist_path,
             filename,
             timestamp=timestamp,
@@ -236,7 +236,7 @@ class DataLogger:
         )
         try:
             logs = [log.serialize(flatten_=flatten_, sep=sep) for log in self.log]
-            df = convert.to_df(convert.to_list(logs, flatten=True))
+            df = to_df(to_list(logs, flatten=True))
             df.to_csv(filepath, index=index, **kwargs)
             if verbose:
                 print(f"{len(self.log)} logs saved to {filepath}")
@@ -278,7 +278,7 @@ class DataLogger:
         if not filename.endswith(".json"):
             filename += ".json"
 
-        filepath = SysUtil.create_path(
+        filepath = create_path(
             self.persist_path,
             filename,
             timestamp=timestamp,
@@ -289,7 +289,7 @@ class DataLogger:
 
         try:
             logs = [log.serialize(flatten_=flatten_, sep=sep) for log in self.log]
-            df = convert.to_df(convert.to_list(logs, flatten=True))
+            df = to_df(to_list(logs, flatten=True))
             df.to_json(filepath, index=index, **kwargs)
             if verbose:
                 print(f"{len(self.log)} logs saved to {filepath}")

@@ -14,8 +14,8 @@ See the License for the specific language governing permissions and
 limitations under the License.
 """
 
-from lionagi os.libs import rcall
-from lionagi.core.work.worklog import WorkLog
+from lionagi.os.libs import rcall
+from lionagi.os.core.work.worklog import WorkLog
 
 
 class WorkFunction:

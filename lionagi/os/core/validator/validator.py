@@ -15,14 +15,13 @@ limitations under the License.
 """
 
 from typing import Any, Dict, List, Union
-from lionagi.libs import SysUtil
-from lionagi os.libs import lcall
-from lionagi.os.collections.abc FieldError
-from ..rule.base import Rule
-from ..rule._default import DEFAULT_RULES
-from ..rule.rulebook import RuleBook
-from ..report.form import Form
-from ..report.report import Report
+from lionagi.os.libs.sys_util import create_id, get_timestamp
+from lionagi.os.collections.abc import FieldError
+from lionagi.os.collections import Rule
+from lionagi.os.collections.rule._default import DEFAULT_RULES
+from lionagi.os.collections.rule.rulebook import RuleBook
+from lionagi.os.collections.report.form import Form
+from lionagi.os.collections.report.report import Report
 
 _DEFAULT_RULEORDER = [
     "choice",
@@ -68,8 +67,8 @@ class Validator:
             active_rules (Dict[str, Rule], optional): Dictionary of currently active rules.
         """
 
-        self.ln_id: str = SysUtil.create_id()
-        self.timestamp: str = SysUtil.get_timestamp(sep=None)[:-6]
+        self.ln_id: str = create_id()
+        self.timestamp: str = get_timestamp(sep=None)[:-6]
         self.rulebook = rulebook or RuleBook(
             rules or _DEFAULT_RULES, order or _DEFAULT_RULEORDER, init_config
         )
@@ -102,7 +101,8 @@ class Validator:
             _rule._is_init = True
             return _rule
 
-        _rules = lcall(self.rulebook.ruleorder, _init_rule)
+        _rules = [_init_rule(rule_name) for rule_name in self.rulebook.ruleorder]
+
 
         return {
             rule_name: _rules[idx]
@@ -325,7 +325,7 @@ class Validator:
         """
         log_entry = {
             "form_id": form.ln_id,
-            "timestamp": SysUtil.get_timestamp(),
+            "timestamp": get_timestamp(),
             "result": result,
         }
         self.validation_log.append(log_entry)
@@ -343,7 +343,7 @@ class Validator:
             "field": field,
             "value": value,
             "error": error,
-            "timestamp": SysUtil.get_timestamp(),
+            "timestamp": get_timestamp(),
         }
         self.validation_log.append(log_entry)
 

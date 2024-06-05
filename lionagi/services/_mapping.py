@@ -1,0 +1,48 @@
+from .OpenAI.oai import OpenAIService
+from .OpenRouter.openrouter import OpenRouterService
+from .Ollama.service import OllamaService
+from .Transformers_.transformers import TransformersService
+from .LiteLLM.litellm import LiteLLMService
+from .MLX_LM_.service import MLXService
+from lionagi.integrations.model_provider.OpenAI_.oai_configs import oai_schema
+from lionagi.integrations.model_provider.OpenRouter_.openrouter_configs import (
+    openrouter_schema,
+)
+
+SERVICE_PROVIDERS_MAPPING = {
+    "openai": {
+        "service": OpenAIService,
+        "schema": oai_schema,
+        "default_model": "gpt-3.5-turbo",
+    },
+    "openrouter": {
+        "service": OpenRouterService,
+        "schema": openrouter_schema,
+        "default_model": "gpt-3.5-turbo",
+    },
+    "litellm": {
+        "service": LiteLLMService,
+        "schema": oai_schema,
+        "default_model": "gpt-3.5-turbo",
+    },
+    "ollama": {
+        "service": OllamaService,
+        "schema": {"model": "llama3"},
+        "default_model": "llama3",
+    },
+    "transformers": {
+        "service": TransformersService,
+        "schema": {"model": "gpt2"},
+        "default_model": "gpt2",
+    },
+    "mlx": {
+        "service": MLXService,
+        "schema": {"model": "mlx-community/OLMo-7B-hf-4bit-mlx"},
+        "default_model": "mlx-community/OLMo-7B-hf-4bit-mlx",
+    },
+}
+
+# TODO
+# "Ollama": OllamaService,
+# "Transformers": TransformersService,
+# "MLX": MLXService,

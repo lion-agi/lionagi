@@ -15,20 +15,20 @@ limitations under the License.
 """
 
 from typing import Any
-from lionagi.libs.ln_convert import is_same_dtype, to_df
-from lionagi.os.collections.abc Field
-from lionagi.core.collections import (
+from lionagi.os.libs import to_df
+from lionagi.os.collections.abc import Field
+from lionagi.os.collections import (
     pile,
     progression,
     Pile,
     Progression,
-    iModel,
     Exchange,
+    Node,
+    Mail, 
+    Package
 )
-from lionagi.core.generic.node import Node
-from lionagi.core.action import Tool, ToolManager
-from lionagi.core.mail import Mail, Package
-from lionagi.core.message import (
+from lionagi.os.core.action import Tool, ToolManager
+from lionagi.os.collections.message import (
     create_message,
     System,
     Instruction,
@@ -38,7 +38,9 @@ from lionagi.core.message import (
     RoledMessage,
 )
 
-from lionagi.core.session.directive_mixin import DirectiveMixin
+from lionagi.os.operations.model.imodel import iModel
+from lionagi.os.core.session.directive_mixin import DirectiveMixin
+
 
 
 class Branch(Node, DirectiveMixin):
@@ -266,23 +268,19 @@ class Branch(Node, DirectiveMixin):
         """
         if not isinstance(tools, list):
             tools = [tools]
-        if is_same_dtype(tools, str):
-            for act_ in tools:
-                if act_ in self.tool_manager.registry:
-                    self.tool_manager.registry.pop(act_)
-            if verbose:
-                print("tools successfully deleted")
-            return True
-        elif is_same_dtype(tools, Tool):
-            for act_ in tools:
-                if act_.schema_["function"]["name"] in self.tool_manager.registry:
-                    self.tool_manager.registry.pop(act_.schema_["function"]["name"])
-            if verbose:
-                print("tools successfully deleted")
-            return True
+            
+        for act_ in tools:
+            if act_ in self.tool_manager.registry:
+                self.tool_manager.registry.pop(act_)
+            elif act_.schema_["function"]["name"] in self.tool_manager.registry:
+                self.tool_manager.registry.pop(act_.schema_["function"]["name"])
+            else:
+                if verbose:
+                    print("tools deletion failed")
+                return False
         if verbose:
-            print("tools deletion failed")
-        return False
+            print("tools successfully deleted")
+        return True
 
     def update_last_instruction_meta(self, meta):
         """

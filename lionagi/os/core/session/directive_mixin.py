@@ -16,8 +16,8 @@ limitations under the License.
 
 # lionagi/core/session/directive_mixin.py
 
-from lionagi.core.unit import Unit
-from ..message.action_response import ActionResponse
+from lionagi.os.operations.agent.direct.unit import Unit
+from lionagi.os.collections.message.action_response import ActionResponse
 
 
 class DirectiveMixin:
@@ -121,7 +121,7 @@ class DirectiveMixin:
             self.add_message(system=system)
 
         if not images and image_path:
-            from lionagi.libs import ImageUtil
+            from lionagi.files.images.util import ImageUtil
 
             images = ImageUtil.read_image_to_base64(image_path)
 
@@ -220,7 +220,7 @@ class DirectiveMixin:
             self.add_message(system=system)
 
         if not images and image_path:
-            from lionagi.libs import ImageUtil
+            from lionagi.files.images.util import ImageUtil
 
             images = ImageUtil.read_image_to_base64(image_path)
 

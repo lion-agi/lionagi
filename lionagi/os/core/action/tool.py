@@ -18,7 +18,7 @@ from typing import Callable, Union, List, Dict, Any
 from pydantic import Field, field_serializer
 from lionagi.os.libs import ucall
 from lionagi.os.collections.abc import Actionable
-from lionagi.os.collections.node.node import Node
+from lionagi.os.collections import Node
 from .function_calling import FunctionCalling
 
 
@@ -90,9 +90,7 @@ class Tool(Node, Actionable):
         """
         if self.pre_processor:
             pre_process_kwargs = self.pre_processor_kwargs or {}
-            kwargs = await call_handler(
-                self.pre_processor(kwargs, **pre_process_kwargs)
-            )
+            kwargs = await ucall(self.pre_processor(kwargs, **pre_process_kwargs))
             if not isinstance(kwargs, dict):
                 raise ValueError("Pre-processor must return a dictionary.")
 
@@ -104,9 +102,7 @@ class Tool(Node, Actionable):
 
         if self.post_processor:
             post_process_kwargs = self.post_processor_kwargs or {}
-            result = await call_handler(
-                self.post_processor(result, **post_process_kwargs)
-            )
+            result = await ucall(self.post_processor(result, **post_process_kwargs))
 
         return result if not self.parser else self.parser(result)
 
