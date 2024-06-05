@@ -1,5 +1,6 @@
 from typing import Any, Dict, List, Optional, Sequence
 
+
 class HTMLNodeParser:
     """HTML node parser.
 

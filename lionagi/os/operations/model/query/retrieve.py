@@ -1,4 +1,3 @@
-
 DEFAULT_TOOL_NAME = "document_retrieval_tool"
 DEFAULT_TOOL_DESCRIPTION = """A tool to execute natural language queries
 against a knowledge base to fetch relevant documents.
@@ -58,9 +57,7 @@ class DocumentRetrievalTool(AsyncToolBase):
         if args is not None:
             query += ", ".join([str(arg) for arg in args]) + "\n"
         if kwargs is not None:
-            query += (
-                ", ".join([f"{k!s} is {v!s}" for k, v in kwargs.items()]) + "\n"
-            )
+            query += ", ".join([f"{k!s} is {v!s}" for k, v in kwargs.items()]) + "\n"
         if query == "":
             raise ValueError("Cannot execute query without inputs")
 
@@ -84,9 +81,7 @@ class DocumentRetrievalTool(AsyncToolBase):
         if args is not None:
             query += ", ".join([str(arg) for arg in args]) + "\n"
         if kwargs is not None:
-            query += (
-                ", ".join([f"{k!s} is {v!s}" for k, v in kwargs.items()]) + "\n"
-            )
+            query += ", ".join([f"{k!s} is {v!s}" for k, v in kwargs.items()]) + "\n"
         if query == "":
             raise ValueError("Cannot execute query without inputs")
         documents = await self._retriever.aretrieve(query)
@@ -128,9 +123,7 @@ from core.schema import DocumentWithScore
 class BaseImageRetriever(PromptHandler):
     """Base class for image retrieval."""
 
-    def text_to_image_retrieve(
-        self, query: QueryType
-    ) -> List[DocumentWithScore]:
+    def text_to_image_retrieve(self, query: QueryType) -> List[DocumentWithScore]:
         """Retrieve image documents based on a text query.
 
         Args:
@@ -151,9 +144,7 @@ class BaseImageRetriever(PromptHandler):
 
         """
 
-    def image_to_image_retrieve(
-        self, query: QueryType
-    ) -> List[DocumentWithScore]:
+    def image_to_image_retrieve(self, query: QueryType) -> List[DocumentWithScore]:
         """Retrieve image documents based on an image.
 
         Args:

@@ -5,7 +5,9 @@ nltk.download("punkt")
 
 
 class SentenceSplitter:
-    def __init__(self, chunk_size: int = 100, chunk_overlap: int = 10, language: str = "english"):
+    def __init__(
+        self, chunk_size: int = 100, chunk_overlap: int = 10, language: str = "english"
+    ):
         self.chunk_size = chunk_size
         self.chunk_overlap = chunk_overlap
         self.language = language
@@ -40,8 +42,14 @@ class SentenceSplitter:
 
 
 class SBDSplitter:
-    def __init__(self, chunk_size: int = 100, chunk_overlap: int = 10, language_model: str = "en_core_web_sm"):
+    def __init__(
+        self,
+        chunk_size: int = 100,
+        chunk_overlap: int = 10,
+        language_model: str = "en_core_web_sm",
+    ):
         import spacy
+
         self.chunk_size = chunk_size
         self.chunk_overlap = chunk_overlap
         self.nlp = spacy.load(language_model)
@@ -77,7 +85,13 @@ class SBDSplitter:
 
 
 class SentenceWindowNodeParser:
-    def __init__(self, window_size: int = 3, chunk_size: int = 100, chunk_overlap: int = 10, language: str = "english"):
+    def __init__(
+        self,
+        window_size: int = 3,
+        chunk_size: int = 100,
+        chunk_overlap: int = 10,
+        language: str = "english",
+    ):
         self.window_size = window_size
         self.chunk_size = chunk_size
         self.chunk_overlap = chunk_overlap
@@ -100,8 +114,8 @@ class SentenceWindowNodeParser:
                 "window": window,
                 "metadata": {
                     "original_text": sentence,
-                    "window_text": " ".join(window)
-                }
+                    "window_text": " ".join(window),
+                },
             }
             nodes.append(node)
 

@@ -1,6 +1,7 @@
 import logging
 from typing import Callable, List, Optional
 
+
 # Placeholder for the base splitter class (to be defined according to your specific base class requirements)
 class BaseSplitter:
     def __init__(self, chunk_size: int = 100, chunk_overlap: int = 10, **kwargs):
@@ -10,6 +11,7 @@ class BaseSplitter:
     def create_documents(self, texts: List[str]) -> List[List[str]]:
         documents = [self.split_text(text) for text in texts]
         return documents
+
 
 # Simple Token Splitter class
 class TokenSplitter(BaseSplitter):
@@ -38,9 +40,11 @@ class TokenSplitter(BaseSplitter):
 
         return chunks
 
+
 # Example usage with a simple whitespace tokenizer
 def whitespace_tokenizer(text: str) -> List[str]:
     return text.split()
+
 
 # Metadata-aware Token Text Splitter
 class TokenTextSplitter(BaseSplitter):
@@ -51,13 +55,16 @@ class TokenTextSplitter(BaseSplitter):
         tokenizer: Optional[Callable] = None,
         separator: str = " ",
         backup_separators: Optional[List[str]] = ["\n"],
-        **kwargs
+        **kwargs,
     ):
         super().__init__(chunk_size=chunk_size, chunk_overlap=chunk_overlap, **kwargs)
         self.separator = separator
         self.backup_separators = backup_separators
         self.tokenizer = tokenizer or whitespace_tokenizer
-        self._split_fns = [self._create_split_fn(sep) for sep in [separator] + (backup_separators or [])]
+        self._split_fns = [
+            self._create_split_fn(sep)
+            for sep in [separator] + (backup_separators or [])
+        ]
 
     def _create_split_fn(self, sep: str) -> Callable[[str], List[str]]:
         return lambda text: text.split(sep)

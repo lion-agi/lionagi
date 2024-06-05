@@ -6,6 +6,7 @@ Here is the content of the section:
 
 Summarize the key topics and entities of the section. Summary: """
 
+
 class SummaryExtractor(BaseExtractor):
     def __init__(
         self,
@@ -30,7 +31,9 @@ class SummaryExtractor(BaseExtractor):
             raise ValueError("Only `TextNode` is allowed for `Summary` extractor")
 
         node_summaries_jobs = [self._agenerate_node_summary(node) for node in nodes]
-        node_summaries = await run_jobs(node_summaries_jobs, show_progress=False, workers=self.num_workers)
+        node_summaries = await run_jobs(
+            node_summaries_jobs, show_progress=False, workers=self.num_workers
+        )
 
         metadata_list: List[Dict] = [{} for _ in nodes]
         for i, metadata in enumerate(metadata_list):

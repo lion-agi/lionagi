@@ -24,8 +24,8 @@ from lionagi.os.collections import (
     Progression,
     Exchange,
     Node,
-    Mail, 
-    Package
+    Mail,
+    Package,
 )
 from lionagi.os.core.action import Tool, ToolManager
 from lionagi.os.collections.message import (
@@ -40,7 +40,6 @@ from lionagi.os.collections.message import (
 
 from lionagi.os.operations.model.imodel import iModel
 from lionagi.os.core.session.directive_mixin import DirectiveMixin
-
 
 
 class Branch(Node, DirectiveMixin):
@@ -268,7 +267,7 @@ class Branch(Node, DirectiveMixin):
         """
         if not isinstance(tools, list):
             tools = [tools]
-            
+
         for act_ in tools:
             if act_ in self.tool_manager.registry:
                 self.tool_manager.registry.pop(act_)

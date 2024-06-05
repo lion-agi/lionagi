@@ -3,6 +3,7 @@ from typing import Any, Dict, List, Optional, Sequence
 DEFAULT_TITLE_NODE_TEMPLATE = "Context: {context_str}. Give a title that summarizes all of the unique entities, titles or themes found in the context. Title: "
 DEFAULT_TITLE_COMBINE_TEMPLATE = "{context_str}. Based on the above candidate titles and content, what is the comprehensive title for this document? Title: "
 
+
 class TitleExtractor(BaseExtractor):
     def __init__(
         self,

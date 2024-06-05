@@ -103,7 +103,6 @@ class Validator:
 
         _rules = [_init_rule(rule_name) for rule_name in self.rulebook.ruleorder]
 
-
         return {
             rule_name: _rules[idx]
             for idx, rule_name in enumerate(self.rulebook.ruleorder)

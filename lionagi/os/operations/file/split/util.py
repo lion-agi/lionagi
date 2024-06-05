@@ -3,26 +3,35 @@ from typing import Callable, List
 
 log = logging.getLogger(__name__)
 
+
 def trim_text(input_text: str, max_length: int) -> str:
     """Trim text to fit within the specified maximum length."""
     return input_text[:max_length]
 
+
 def split_text_with_delimiter(input_text: str, delimiter: str) -> List[str]:
     """Split text with delimiter and keep the delimiter at the end of each split."""
     parts = input_text.split(delimiter)
-    split_result = [delimiter + part if idx > 0 else part for idx, part in enumerate(parts)]
+    split_result = [
+        delimiter + part if idx > 0 else part for idx, part in enumerate(parts)
+    ]
     return [segment for segment in split_result if segment]
 
-def create_splitter(delimiter: str, retain_delimiter: bool = True) -> Callable[[str], List[str]]:
+
+def create_splitter(
+    delimiter: str, retain_delimiter: bool = True
+) -> Callable[[str], List[str]]:
     """Create a function to split text by the specified delimiter."""
     if retain_delimiter:
         return lambda text: split_text_with_delimiter(text, delimiter)
     else:
         return lambda text: text.split(delimiter)
 
+
 def character_splitter() -> Callable[[str], List[str]]:
     """Create a function to split text by each character."""
     return lambda text: list(text)
+
 
 def sentence_splitter() -> Callable[[str], List[str]]:
     import nltk
@@ -40,10 +49,13 @@ def sentence_splitter() -> Callable[[str], List[str]]:
 
     return split
 
+
 def regex_splitter(pattern: str) -> Callable[[str], List[str]]:
     """Create a function to split text by the specified regex pattern."""
     import re
+
     return lambda text: re.findall(pattern, text)
+
 
 def phrase_splitter() -> Callable[[str], List[str]]:
     """Create a function to split text into phrases using a regex pattern.

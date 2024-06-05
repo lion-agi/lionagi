@@ -9,6 +9,7 @@ Given the contextual information, generate {num_questions} questions this contex
 Higher-level summaries of surrounding context may be provided as well. Try using these summaries to generate better questions that this context can answer.
 """
 
+
 class QuestionsAnsweredExtractor(BaseExtractor):
     def __init__(
         self,
@@ -29,7 +30,9 @@ class QuestionsAnsweredExtractor(BaseExtractor):
 
     async def aextract(self, nodes: Sequence[BaseNode]) -> List[Dict]:
         question_jobs = [self._aextract_questions_from_node(node) for node in nodes]
-        return await run_jobs(question_jobs, show_progress=False, workers=self.num_workers)
+        return await run_jobs(
+            question_jobs, show_progress=False, workers=self.num_workers
+        )
 
     async def _aextract_questions_from_node(self, node: BaseNode) -> Dict[str, str]:
         if not isinstance(node, TextNode):

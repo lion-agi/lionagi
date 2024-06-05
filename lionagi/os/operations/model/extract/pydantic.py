@@ -8,6 +8,7 @@ Here is the content of the section:
 Given the contextual information, extract out a {class_name} object.\
 """
 
+
 class PydanticProgramExtractor(BaseExtractor):
     def __init__(
         self,
@@ -24,7 +25,9 @@ class PydanticProgramExtractor(BaseExtractor):
 
     async def aextract(self, nodes: Sequence[BaseNode]) -> List[Dict]:
         program_jobs = [self._acall_program(node) for node in nodes]
-        return await run_jobs(program_jobs, show_progress=False, workers=self.num_workers)
+        return await run_jobs(
+            program_jobs, show_progress=False, workers=self.num_workers
+        )
 
     async def _acall_program(self, node: BaseNode) -> Dict[str, Any]:
         if not isinstance(node, TextNode):

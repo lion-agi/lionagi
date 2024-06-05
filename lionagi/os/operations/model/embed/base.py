@@ -38,7 +38,12 @@ def similarity(
 class BaseEmbedding:
     """Base class for embeddings."""
 
-    def __init__(self, model_name: str = "unknown", embed_batch_size: int = 32, num_workers: Optional[int] = None):
+    def __init__(
+        self,
+        model_name: str = "unknown",
+        embed_batch_size: int = 32,
+        num_workers: Optional[int] = None,
+    ):
         self.model_name = model_name
         self.embed_batch_size = embed_batch_size
         self.num_workers = num_workers
@@ -59,13 +64,17 @@ class BaseEmbedding:
         """Async get query embedding."""
         return await self._aget_query_embedding(query)
 
-    def get_agg_embedding_from_queries(self, queries: List[str], agg_fn: Optional[Callable[..., List[float]]] = None) -> List[float]:
+    def get_agg_embedding_from_queries(
+        self, queries: List[str], agg_fn: Optional[Callable[..., List[float]]] = None
+    ) -> List[float]:
         """Get aggregated embedding from multiple queries."""
         query_embeddings = [self.get_query_embedding(query) for query in queries]
         agg_fn = agg_fn or mean_agg
         return agg_fn(query_embeddings)
 
-    async def aget_agg_embedding_from_queries(self, queries: List[str], agg_fn: Optional[Callable[..., List[float]]] = None) -> List[float]:
+    async def aget_agg_embedding_from_queries(
+        self, queries: List[str], agg_fn: Optional[Callable[..., List[float]]] = None
+    ) -> List[float]:
         """Async get aggregated embedding from multiple queries."""
         query_embeddings = [await self.aget_query_embedding(query) for query in queries]
         agg_fn = agg_fn or mean_agg
@@ -85,7 +94,9 @@ class BaseEmbedding:
 
     async def _aget_text_embeddings(self, texts: List[str]) -> List[List[float]]:
         """Embed the input sequence of text asynchronously."""
-        return await asyncio.gather(*[self._aget_text_embedding(text) for text in texts])
+        return await asyncio.gather(
+            *[self._aget_text_embedding(text) for text in texts]
+        )
 
     def get_text_embedding(self, text: str) -> List[float]:
         """Embed the input text."""
@@ -95,7 +106,9 @@ class BaseEmbedding:
         """Async get text embedding."""
         return await self._aget_text_embedding(text)
 
-    def get_text_embedding_batch(self, texts: List[str], show_progress: bool = False) -> List[List[float]]:
+    def get_text_embedding_batch(
+        self, texts: List[str], show_progress: bool = False
+    ) -> List[List[float]]:
         """Get a list of text embeddings, with batching."""
         cur_batch: List[str] = []
         result_embeddings: List[List[float]] = []
@@ -109,7 +122,9 @@ class BaseEmbedding:
 
         return result_embeddings
 
-    async def aget_text_embedding_batch(self, texts: List[str], show_progress: bool = False) -> List[List[float]]:
+    async def aget_text_embedding_batch(
+        self, texts: List[str], show_progress: bool = False
+    ) -> List[List[float]]:
         """Asynchronously get a list of text embeddings, with batching."""
         cur_batch: List[str] = []
         result_embeddings: List[List[float]] = []
@@ -122,7 +137,9 @@ class BaseEmbedding:
                 cur_batch = []
 
         nested_embeddings = await asyncio.gather(*embeddings_coroutines)
-        result_embeddings = [embedding for embeddings in nested_embeddings for embedding in embeddings]
+        result_embeddings = [
+            embedding for embeddings in nested_embeddings for embedding in embeddings
+        ]
 
         return result_embeddings
 

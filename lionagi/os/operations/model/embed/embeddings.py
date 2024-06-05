@@ -109,7 +109,9 @@ def get_top_k_embeddings_learner(
     y[0] = 1
 
     if query_mode == "SVM":
-        clf = svm.LinearSVC(class_weight="balanced", verbose=False, max_iter=10000, tol=1e-6, C=0.1)
+        clf = svm.LinearSVC(
+            class_weight="balanced", verbose=False, max_iter=10000, tol=1e-6, C=0.1
+        )
     elif query_mode == "LINEAR_REGRESSION":
         clf = linear_model.LinearRegression()
     elif query_mode == "LOGISTIC_REGRESSION":

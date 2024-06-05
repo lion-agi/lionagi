@@ -1,4 +1,4 @@
-DEFAULT_CYPHER_PROMPT= """\
+DEFAULT_CYPHER_PROMPT = """\
 Task: Generate a Cypher query for the provided graph database schema.
 Instructions:
 1. Use only the relationship types and properties listed in the schema.

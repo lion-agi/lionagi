@@ -3,10 +3,22 @@ from typing import List, Optional
 
 
 class CodeChunker:
-    def __init__(self, chunk_size: int, chunk_overlap: float, separators: Optional[List[str]] = None):
+    def __init__(
+        self,
+        chunk_size: int,
+        chunk_overlap: float,
+        separators: Optional[List[str]] = None,
+    ):
         self.chunk_size = chunk_size
         self.chunk_overlap = chunk_overlap
-        self.separators = separators or ["\nclass ", "\ndef ", "\nif ", "\nfor ", "\nwhile ", "\n"]
+        self.separators = separators or [
+            "\nclass ",
+            "\ndef ",
+            "\nif ",
+            "\nfor ",
+            "\nwhile ",
+            "\n",
+        ]
 
     def split_text(self, text: str) -> List[str]:
         chunks = [text]
@@ -40,14 +52,29 @@ class CodeChunker:
 
 # Example usage
 splitter = CodeChunker(chunk_size=1500, chunk_overlap=0.1)
-documents = splitter.split_text("def foo():\n    pass\nclass Bar:\n    def baz():\n        pass\n")
+documents = splitter.split_text(
+    "def foo():\n    pass\nclass Bar:\n    def baz():\n        pass\n"
+)
+
 
 class RecursiveCodeChunker(CodeChunker):
-    def __init__(self, chunk_size: int, chunk_overlap: float, separators: Optional[List[str]] = None):
+    def __init__(
+        self,
+        chunk_size: int,
+        chunk_overlap: float,
+        separators: Optional[List[str]] = None,
+    ):
         super().__init__(chunk_size, chunk_overlap, separators)
         self.separators = separators or [
-            r"\nclass ", r"\ndef ", r"\nif ", r"\nfor ", r"\nwhile ", r"\ntry ",
-            r"\nexcept ", r"\nwith ", r"\n"
+            r"\nclass ",
+            r"\ndef ",
+            r"\nif ",
+            r"\nfor ",
+            r"\nwhile ",
+            r"\ntry ",
+            r"\nexcept ",
+            r"\nwith ",
+            r"\n",
         ]
 
     def _split_text_recursive(self, text: str, separators: List[str]) -> List[str]:
@@ -58,7 +85,7 @@ class RecursiveCodeChunker(CodeChunker):
         for sep in separators:
             if re.search(sep, text):
                 separator = sep
-                new_separators = separators[separators.index(sep) + 1:]
+                new_separators = separators[separators.index(sep) + 1 :]
                 break
 
         splits = re.split(separator, text)
@@ -83,6 +110,7 @@ class RecursiveCodeChunker(CodeChunker):
 
     def split_text(self, text: str) -> List[str]:
         return self._split_text_recursive(text, self.separators)
+
 
 # Example usage
 code_content = """

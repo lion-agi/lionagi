@@ -1,6 +1,7 @@
 import re
 from typing import List
 
+
 # Placeholder for the base splitter class (to be defined according to your specific base class requirements)
 class BaseSplitter:
     def __init__(self, chunk_size: int = 100, chunk_overlap: float = 0.1):
@@ -10,6 +11,7 @@ class BaseSplitter:
     def create_documents(self, texts: List[str]) -> List[List[str]]:
         documents = [self.split_text(text) for text in texts]
         return documents
+
 
 class RecursiveMarkdownSplitter(BaseSplitter):
     def __init__(self, separators: List[str] = None, **kwargs):
@@ -73,8 +75,10 @@ class RecursiveMarkdownSplitter(BaseSplitter):
 
         return merged_splits
 
+
 import re
 from typing import Any, Dict, List, Optional, Sequence
+
 
 class MarkdownNodeParser:
     """Markdown node parser.
@@ -86,8 +90,10 @@ class MarkdownNodeParser:
         include_prev_next_rel (bool): whether to include prev/next relationships
 
     """
-    
-    def __init__(self, include_metadata: bool = True, include_prev_next_rel: bool = True):
+
+    def __init__(
+        self, include_metadata: bool = True, include_prev_next_rel: bool = True
+    ):
         self.include_metadata = include_metadata
         self.include_prev_next_rel = include_prev_next_rel
 
@@ -166,6 +172,6 @@ class MarkdownNodeParser:
         new_node = {
             "content": text_split,
             "metadata": {**node.get("metadata", {}), **metadata},
-            "id": node["id"]
+            "id": node["id"],
         }
         return new_node

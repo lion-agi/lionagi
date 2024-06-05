@@ -60,7 +60,9 @@ class SemanticSplitterNodeParser:
         chunks = self._build_node_chunks(sentences, distances)
         return chunks
 
-    def _build_sentence_groups(self, text_splits: List[str]) -> List[SentenceCombination]:
+    def _build_sentence_groups(
+        self, text_splits: List[str]
+    ) -> List[SentenceCombination]:
         sentences: List[SentenceCombination] = [
             {
                 "sentence": x,
@@ -88,7 +90,9 @@ class SemanticSplitterNodeParser:
 
         return sentences
 
-    def _calculate_distances_between_sentence_groups(self, sentences: List[SentenceCombination]) -> List[float]:
+    def _calculate_distances_between_sentence_groups(
+        self, sentences: List[SentenceCombination]
+    ) -> List[float]:
         distances = []
         for i in range(len(sentences) - 1):
             embedding_current = sentences[i]["combined_sentence_embedding"]
@@ -100,7 +104,9 @@ class SemanticSplitterNodeParser:
 
         return distances
 
-    def _build_node_chunks(self, sentences: List[SentenceCombination], distances: List[float]) -> List[str]:
+    def _build_node_chunks(
+        self, sentences: List[SentenceCombination], distances: List[float]
+    ) -> List[str]:
         chunks = []
         if distances:
             breakpoint_distance_threshold = np.percentile(

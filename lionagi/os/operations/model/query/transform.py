@@ -302,7 +302,9 @@ class FeedbackQueryTransformation(BaseQueryTransform):
                 )
             return QueryBundle(new_query, custom_embedding_strs=[orig_query_str])
         else:
-            raise ValueError("Evaluation is not properly set or is missing required fields.")
+            raise ValueError(
+                "Evaluation is not properly set or is missing required fields."
+            )
 
     @staticmethod
     def _construct_feedback(response: Optional[str]) -> str:
