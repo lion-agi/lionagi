@@ -1,7 +1,7 @@
 ![PyPI - Version](https://img.shields.io/pypi/v/lionagi?labelColor=233476aa&color=231fc935) ![PyPI - Downloads](https://img.shields.io/pypi/dm/lionagi?color=blue)
 
 
-[PyPI](https://pypi.org/project/lionagi/) | [Documentation](https://ocean-lion.com/Welcome) | [Discord](https://discord.gg/xCkA5ErGmV)
+[PyPI](https://pypi.org/project/lionagi/) | [Documentation](https://ocean-lion.com/Welcome) | [Discord](https://discord.gg/aqSJ2v46vu)
 
 
 # Language InterOperable Network - LION
