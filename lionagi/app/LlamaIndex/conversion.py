@@ -93,12 +93,14 @@ def to_llama_index_node(lion_node, node_type: Any = None, **kwargs: Any) -> Any:
     """
 
     check_import("llama_index", pip_name="llama-index")
-    from llama_index.core.schema import BaseNode
+    from llama_index.core.schema import BaseNode, TextNode
     import llama_index.core.schema
 
-    node_type = node_type or "TextNode"
+    node_type = node_type or TextNode
 
     _dict = lion_node.to_dict()
+    if _dict["content"] is None:
+        _dict["content"] = ""
     formatted_meta = format_lion_meta_to_llama_index(_dict)
     _dict = {**formatted_meta, **kwargs}
 
@@ -108,9 +110,12 @@ def to_llama_index_node(lion_node, node_type: Any = None, **kwargs: Any) -> Any:
     try:
         if isinstance(node_type, str) and hasattr(llama_index.core.schema, node_type):
             return getattr(llama_index.core.schema, node_type).from_dict(_dict)
-        elif issubclass(node_type, BaseNode):
+
+        elif issubclass(node_type, (BaseNode, TextNode)):
             return node_type.from_dict(_dict)
+
         else:
             raise AttributeError(f"Invalid llama-index node type: {node_type}")
+
     except Exception as e:
         raise AttributeError(f"Error: {e}")

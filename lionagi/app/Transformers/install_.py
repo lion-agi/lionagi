@@ -1,9 +1,13 @@
 import subprocess
-from lionagi.libs import SysUtil
+from lionagi.os.libs.sys_util import (
+    install_import,
+    get_cpu_architecture,
+    is_package_installed,
+)
 
 
 def get_pytorch_install_command():
-    cpu_arch = SysUtil.get_cpu_architecture()
+    cpu_arch = get_cpu_architecture()
 
     if cpu_arch == "apple_silicon":
         return "pip install --pre torch torchvision torchaudio --extra-index-url https://download.pytorch.org/whl/nightly/cpu"
@@ -22,15 +26,15 @@ def install_pytorch():
 
 
 def install_transformers():
-    if not SysUtil.is_package_installed("torch"):
+    if not is_package_installed("torch"):
         in_ = input(
             "PyTorch is required for transformers. Would you like to install it now? (y/n): "
         )
         if in_ == "y":
             install_pytorch()
-    if not SysUtil.is_package_installed("transformers"):
+    if not is_package_installed("transformers"):
         in_ = input(
             "transformers is required. Would you like to install it now? (y/n): "
         )
         if in_ == "y":
-            SysUtil.install_import(package_name="transformers", import_name="pipeline")
+            install_import(package_name="transformers", import_name="pipeline")

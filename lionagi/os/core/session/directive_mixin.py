@@ -15,9 +15,8 @@ limitations under the License.
 """
 
 # lionagi/core/session/directive_mixin.py
-
-from lionagi.os.operations.agent.direct.unit import Unit
 from lionagi.os.collections.message.action_response import ActionResponse
+from lionagi.os.operations.agents.unit import Unit
 
 
 class DirectiveMixin:

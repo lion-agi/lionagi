@@ -1,140 +1,75 @@
+default_interval_token_limit = 1_000_000
+default_oai_model = "gpt-3.5-turbo"
+default_open_source_model = "llama3"
+default_mlx_model = "mlx-community/OLMo-7B-hf-4bit-mlx"
+
+
 class Services:
 
     @staticmethod
-    def OpenAI(**kwargs):
-        """
-        A provider to interact with OpenAI's API endpoints.
+    def openai():
+        from lionagi.app.OpenAI.oai import OpenAIService
+        from lionagi.app.OpenAI.oai_configs import oai_schema
 
-        Attributes:
-                api_key (Optional[str]): The API key used for authentication.
-                schema (Dict[str, Any]): The schema defining the provider's endpoints.
-                status_tracker (StatusTracker): The object tracking the status of API calls.
-                endpoints (Dict[str, EndPoint]): A dictionary of endpoint objects.
-                base_url (str): The base URL for the OpenAI API.
-                available_endpoints (list): A list of available API endpoints, including
-                        'chat/completions'
-                key_scheme (str): The environment variable name for API key.
-                token_encoding_name (str): The default token encoding scheme.
-        """
-
-        from lionagi.integrations.model_provider.OpenAI_.oai import OpenAIService
-
-        return OpenAIService(**kwargs)
+        return {
+            "service": OpenAIService,
+            "schema": oai_schema,
+            "default_model": default_oai_model,
+            "default_interval_token_limit": default_interval_token_limit,
+        }
 
     @staticmethod
-    def OpenRouter(**kwargs):
-        """
-        A provider to interact with OpenRouter's API endpoints.
+    def openrouter():
+        from lionagi.app.OpenRouter.openrouter import OpenRouterService
+        from lionagi.app.OpenRouter.openrouter_configs import openrouter_schema
 
-        Attributes:
-                api_key (Optional[str]): The API key used for authentication.
-                schema (Dict[str, Any]): The schema defining the provider's endpoints.
-                status_tracker (StatusTracker): The object tracking the status of API calls.
-                endpoints (Dict[str, EndPoint]): A dictionary of endpoint objects.
-                base_url (str): The base URL for the OpenAI API.
-                available_endpoints (list): A list of available API endpoints, including
-                        'chat/completions'
-                key_scheme (str): The environment variable name for API key.
-                token_encoding_name (str): The default token encoding scheme.
-        """
-
-        from lionagi.integrations.model_provider.OpenRouter_.openrouter import (
-            OpenRouterService,
-        )
-
-        return OpenRouterService(**kwargs)
+        return {
+            "service": OpenRouterService,
+            "schema": openrouter_schema,
+            "default_model": default_open_source_model,
+            "default_interval_token_limit": default_interval_token_limit,
+        }
 
     @staticmethod
-    def Transformers(**kwargs):
-        """
-        A provider to interact with Transformers' pipeline
+    def transformers():
+        from lionagi.app.Transformers._transformers import TransformersService
 
-        Attributes:
-                task (str): The specific task to be performed by the transformer model.
-                        Currently, only 'conversational' tasks are supported.
-                model (Union[str, Any]): Identifier for the transformer model to be used. This
-                        can be a model name or a path to a model.
-                config (Union[str, Dict, Any]): Configuration for the transformer model. Can
-                        include tokenizer information among others.
-                pipe (pipeline): The loaded transformer pipeline for the specified task, model,
-                        and configuration.
-
-        Warnings:
-                - Ensure the selected model is suitable for conversational tasks to avoid
-                unexpected behavior.
-                - As this provider heavily relies on external libraries (Hugging Face's
-                Transformers), ensure they are installed and updated to compatible versions.
-
-        Dependencies:
-                - Requires the `transformers` library by Hugging Face and `asyncio` for
-                asynchronous operations.
-        """
-
-        from lionagi.integrations.model_provider.Transformers_.transformers import (
-            TransformersService,
-        )
-
-        return TransformersService(**kwargs)
-
-    #
-    # @staticmethod
-    # def Anthropic(**kwargs):
-    #     """
-    #     A provider to interact with Anthropic's API endpoints.
-    #
-    #     Attributes:
-    #         api_key (Optional[str]): The API key used for authentication.
-    #         schema (Dict[str, Any]): The schema defining the provider's endpoints.
-    #         status_tracker (StatusTracker): The object tracking the status of API calls.
-    #         endpoints (Dict[str, EndPoint]): A dictionary of endpoint objects.
-    #         base_url (str): The base URL for the Anthropic API.
-    #         available_endpoints (list): A list of available API endpoints, including
-    #             'chat/completions'
-    #         key_scheme (str): The environment variable name for API key.
-    #         token_encoding_name (str): The default token encoding scheme.
-    #     """
-    #
-    #     from .api. import AnthropicService
-    #     return AnthropicService(**kwargs)
+        return {
+            "service": TransformersService,
+            "schema": {"model": default_open_source_model},
+            "default_model": default_open_source_model,
+            "default_interval_token_limit": None,
+        }
 
     @staticmethod
-    def Ollama(**kwargs):
-        """
-        A provider to interact with Ollama
+    def ollama():
+        from lionagi.app.Ollama.service import OllamaService
 
-        Attributes:
-                model (str): name of the model to use
-                kwargs (Optional[Any]): additional kwargs for calling the model
-        """
-
-        from lionagi.integrations.model_provider.Ollama_.service import OllamaService
-
-        return OllamaService(**kwargs)
+        return {
+            "service": OllamaService,
+            "schema": {"model": default_open_source_model},
+            "default_model": default_open_source_model,
+            "default_interval_token_limit": None,
+        }
 
     @staticmethod
-    def LiteLLM(**kwargs):
-        """
-        A provider to interact with Litellm
+    def litellm():
+        from lionagi.app.LiteLLM.litellm import LiteLLMService
 
-        Attributes:
-                model (str): name of the model to use
-                kwargs (Optional[Any]): additional kwargs for calling the model
-        """
-
-        from .LiteLLM.litellm import LiteLLMService
-
-        return LiteLLMService(**kwargs)
+        return {
+            "service": LiteLLMService,
+            "schema": {"model": default_oai_model},
+            "default_model": default_oai_model,
+            "default_interval_token_limit": default_interval_token_limit,
+        }
 
     @staticmethod
-    def MLX(**kwargs):
-        """
-        A provider to interact with MlX
+    def mlx():
+        from lionagi.app.MLX.service import MLXService
 
-        Attributes:
-                model (str): name of the model to use
-                kwargs (Optional[Any]): additional kwargs for calling the model
-        """
-
-        from lionagi.integrations.model_provider.MLX_LM_.service import MLXService
-
-        return MLXService(**kwargs)
+        return {
+            "service": MLXService,
+            "schema": {"model": default_mlx_model},
+            "default_model": default_mlx_model,
+            "default_interval_token_limit": None,
+        }

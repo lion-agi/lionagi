@@ -7,7 +7,7 @@ from lionagi.os.core.action import Tool, DirectiveSelection, ActionNode
 from lionagi.os.core.executor.base_executor import BaseExecutor
 from lionagi.os.core.executor.agent.base_agent import BaseAgent
 from lionagi.os.core.executor.engine.instruction_map_engine import InstructionMapEngine
-from lionagi.os.operations.file.parse.node import ParseNode
+from lionagi.os.operations.files.parse.node import ParseNode
 from lionagi.app.Neo4j.neo4j import Neo4j
 
 

@@ -21,7 +21,7 @@ The first step is to create instances of the `Node` class. Nodes are the fundame
 The following code demonstrates how to create multiple `Node` instances.
 
 ```python
-from lionagi.core.generic import Node
+from lionagi.os.collections.node.node import Node
 
 # Create three Node instances
 a, b, c = Node(), Node(), Node()

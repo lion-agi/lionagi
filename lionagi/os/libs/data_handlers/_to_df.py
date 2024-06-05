@@ -108,11 +108,6 @@ def _(
         return DataFrame()
 
     if not isinstance(input_[0], (DataFrame, Series, NDFrame)):
-        if any(
-            isinstance(i, dict) and any(isinstance(v, (dict, list)) for v in i.values())
-            for i in input_
-        ):
-            raise ValueError("Nested dictionaries/lists are not supported")
         if drop_kwargs is None:
             drop_kwargs = {}
         try:

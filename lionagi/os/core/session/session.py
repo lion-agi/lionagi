@@ -21,7 +21,7 @@ from lionagi.os.collections.abc import get_lion_id
 from lionagi.os.collections.util import to_list_type
 from lionagi.os.collections.mail.mail_manager import MailManager
 from lionagi.os.collections.message import System
-from lionagi.os.operations.model.imodel import iModel
+from lionagi.os.collections.model.imodel import iModel
 from lionagi.os.core.action.tool_manager import ToolManager
 from lionagi.os.core.session.branch import Branch
 

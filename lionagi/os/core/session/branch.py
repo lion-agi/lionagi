@@ -38,7 +38,7 @@ from lionagi.os.collections.message import (
     RoledMessage,
 )
 
-from lionagi.os.operations.model.imodel import iModel
+from lionagi.os.collections.model.imodel import iModel
 from lionagi.os.core.session.directive_mixin import DirectiveMixin
 
 

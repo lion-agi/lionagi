@@ -1,12 +1,13 @@
 from .edge import Edge, EdgeCondition, HyperEdge
 from .pile import Pile, pile
 from .flow import Flow, flow, Progression, progression, Exchange
-from .graph import Graph, KnowledgeGraph, Tree, HyperGraph
-from .index import Index, GraphIndex
+from .graph import Graph, Tree
+from .index import Index
 from .node import Node, TreeNode
 from .rule import Rule
 from .mail import Mail, Package
-
+from .report import Report, Form
+from .model.imodel import iModel
 
 __all__ = [
     "Edge",
@@ -19,15 +20,15 @@ __all__ = [
     "Progression",
     "progression",
     "Graph",
-    "KnowledgeGraph",
     "Tree",
-    "HyperGraph",
     "Index",
-    "GraphIndex",
     "Node",
     "TreeNode",
     "Rule",
     "Exchange",
     "Mail",
     "Package",
+    "Report",
+    "Form",
+    "iModel"
 ]

@@ -9,11 +9,11 @@ import json
 import inspect
 import re
 
-from lionagi.core.message import System, Instruction, RoledMessage
-from lionagi.core.action import Tool, DirectiveSelection, func_to_tool
-from lionagi.core.action import DirectiveSelection
-from lionagi.core.agent.base_agent import BaseAgent
-from lionagi.core.generic.edge_condition import EdgeCondition
+from lionagi.os.collections.message import System, Instruction, RoledMessage
+from lionagi.os.core.action import Tool, DirectiveSelection, func_to_tool
+from lionagi.os.core.action import DirectiveSelection
+from lionagi.os.core.executor.agent.base_agent import BaseAgent
+from lionagi.os.collections.edge.edge_condition import EdgeCondition
 
 
 def output_node_list(structure):

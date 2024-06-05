@@ -1,18 +1,17 @@
 import re
-from lionagi.libs.sys_util import SysUtil
-import lionagi.libs.ln_convert as convert
-from lionagi.libs.ln_api import BaseService
-from lionagi.integrations.model_provider.MLX_LM_.configs import model
+from lionagi.os.libs.sys_util import check_import
+from lionagi.services.api.ln_api import BaseService
+from .configs import model
 
 
 class MLXService(BaseService):
     def __init__(self, model=model, **kwargs):
 
-        SysUtil.check_import("mlx_lm")
-        SysUtil.check_import("ipywidgets")
+        check_import("mlx_lm")
+        check_import("ipywidgets")
 
         if model is not None and "olmo" in str(model).lower():
-            SysUtil.check_import("olmo", pip_name="ai2-olmo")
+            check_import("olmo", pip_name="ai2-olmo")
 
         from mlx_lm import load, generate
 

@@ -16,8 +16,7 @@ limitations under the License.
 
 """Component class, base building block in LionAGI."""
 
-from abc import ABC
-import contextlib
+
 from collections.abc import Sequence
 from functools import singledispatchmethod
 from typing import Any, TypeVar, TypeAlias, Union
@@ -30,29 +29,21 @@ from lionagi.os.libs import (
     strip_lower,
     to_dict,
     to_str,
-    nget,
-    nset,
-    ninsert,
-    flatten,
-    unflatten,
     fuzzy_parse_json,
 )
-from lionagi.os.libs.sys_util import change_dict_key, get_timestamp, create_id
-from lionagi.os._setting.meta_fields import (
-    base_lion_fields,
-    llama_meta_fields,
-    lc_meta_fields,
-)
-
+from lionagi.os.libs.sys_util import get_timestamp, create_id
+from lionagi.os._setting.meta_fields import base_lion_fields
 from .element import Element
-from .exceptions import FieldError, LionTypeError, LionValueError
+from .exceptions import LionTypeError, LionValueError
+from .mixins import ComponentMixin
+
 
 T = TypeVar("T")
 
 _init_class = {}
 
 
-class Component(Element, ABC):
+class Component(Element, ComponentMixin):
     """
     Represents a distinguishable, temporal entity in LionAGI.
 
@@ -93,19 +84,15 @@ class Component(Element, ABC):
         description="The optional embedding of the node.",
     )
 
-    @staticmethod
-    def _validate_embedding(value: Any) -> list:
-        if not value:
-            return []
-        if isinstance(value, str):
-            if len(value) < 10:
-                return []
+    @property
+    def class_name(self) -> str:
+        """Get the class name."""
+        return self._class_name()
 
-            string_elements = value.strip("[]").split(",")
-            # Convert each string element to a float
-            with contextlib.suppress(ValueError):
-                return [float(element) for element in string_elements]
-        raise ValueError("Invalid embedding format.")
+    @classmethod
+    def _class_name(cls) -> str:
+        """Get the class name."""
+        return cls.__name__
 
     class Config:
         """Model configuration settings."""
@@ -184,30 +171,6 @@ class Component(Element, ABC):
             return cls._from_base_model(obj, **kwargs)
 
     @classmethod
-    def _from_llama_index(cls, obj: Any) -> T:
-        """Create a Component instance from a LlamaIndex object."""
-        dict_ = obj.to_dict()
-
-        change_dict_key(dict_, "text", "content")
-        metadata = dict_.pop("metadata", {})
-
-        for field in llama_meta_fields:
-            metadata[field] = dict_.pop(field, None)
-
-        change_dict_key(metadata, "class_name", "llama_index_class")
-        change_dict_key(metadata, "id_", "llama_index_id")
-        change_dict_key(metadata, "relationships", "llama_index_relationships")
-
-        dict_["metadata"] = metadata
-        return cls.from_obj(dict_)
-
-    @classmethod
-    def _from_langchain(cls, obj: Any) -> T:
-        """Create a Component instance from a Langchain object."""
-        dict_ = obj.to_json()
-        return cls.from_obj(dict_)
-
-    @classmethod
     def _from_dict(cls, obj: dict, /, *args, **kwargs) -> T:
         """Create a Component instance from a dictionary."""
         try:
@@ -227,40 +190,6 @@ class Component(Element, ABC):
 
         except ValidationError as e:
             raise LionValueError("Invalid dictionary for deserialization.") from e
-
-    @classmethod
-    def _process_langchain_dict(cls, dict_: dict) -> dict:
-        """Process a dictionary containing Langchain-specific data."""
-        change_dict_key(dict_, "page_content", "content")
-
-        metadata = dict_.pop("metadata", {})
-        metadata.update(dict_.pop("kwargs", {}))
-
-        if not isinstance(metadata, dict):
-            metadata = {"extra_meta": metadata}
-
-        for field in base_lion_fields:
-            if field in metadata:
-                dict_[field] = metadata.pop(field)
-
-        for key in list(metadata.keys()):
-            if key not in lc_meta_fields:
-                dict_[key] = metadata.pop(key)
-
-        for field in lc_meta_fields:
-            if field in dict_:
-                metadata[field] = dict_.pop(field)
-
-        change_dict_key(metadata, "lc", "langchain")
-        change_dict_key(metadata, "type", "lc_type")
-        change_dict_key(metadata, "id", "lc_id")
-
-        extra_fields = {k: v for k, v in metadata.items() if k not in lc_meta_fields}
-        metadata = {k: v for k, v in metadata.items() if k in lc_meta_fields}
-        dict_["metadata"] = metadata
-        dict_.update(extra_fields)
-
-        return dict_
 
     @classmethod
     def _process_generic_dict(cls, dict_: dict) -> dict:
@@ -290,7 +219,6 @@ class Component(Element, ABC):
             dict_["metadata"] = {}
         if "extra_fields" not in dict_:
             dict_["extra_fields"] = {}
-
         return dict_
 
     @classmethod
@@ -307,68 +235,26 @@ class Component(Element, ABC):
         """Create a list of node instances from a list of objects."""
         return [cls.from_obj(item, *args, **kwargs) for item in obj]
 
-    @classmethod
-    def _from_pd_series(
-        cls, obj: Series, /, *args, pd_kwargs: dict | None = None, **kwargs
-    ) -> T:
-        """Create a node instance from a Pandas Series."""
-        pd_kwargs = pd_kwargs or {}
-        return cls.from_obj(obj.to_dict(**pd_kwargs), *args, **kwargs)
-
-    @classmethod
-    def _from_pd_dataframe(
-        cls,
-        obj: DataFrame,
-        /,
-        *args,
-        pd_kwargs: dict | None = None,
-        include_index=False,
-        **kwargs,
-    ) -> list[T]:
-        """Create a list of node instances from a Pandas DataFrame."""
-        pd_kwargs = pd_kwargs or {}
-
-        _objs = []
-        for index, row in obj.iterrows():
-            _obj = cls.from_obj(row, *args, **pd_kwargs, **kwargs)
-            if include_index:
-                _obj.metadata["df_index"] = index
-            _objs.append(_obj)
-
-        return _objs
-
-    @classmethod
-    def _from_base_model(cls, obj, /, pydantic_kwargs=None, **kwargs) -> T:
-        """Create a node instance from a Pydantic BaseModel."""
-        pydantic_kwargs = pydantic_kwargs or {"by_alias": True}
-        try:
-            config_ = obj.model_dump(**pydantic_kwargs)
-        except:
-            try:
-                if hasattr(obj, "to_dict"):
-                    config_ = obj.to_dict(**pydantic_kwargs)
-                elif hasattr(obj, "dict"):
-                    config_ = obj.dict(**pydantic_kwargs)
-                else:
-                    raise LionValueError(
-                        "Invalid Pydantic model for deserialization: "
-                        "missing 'to_dict'(V2) or 'dict'(V1) method."
-                    )
-            except Exception as e:
-                raise LionValueError(
-                    f"Invalid Pydantic model for deserialization: {e}"
-                ) from e
-        return cls.from_obj(config_ | kwargs)
-
-    @property
-    def class_name(self) -> str:
-        """Get the class name."""
-        return self._class_name()
-
-    @classmethod
-    def _class_name(cls) -> str:
-        """Get the class name."""
-        return cls.__name__
+    def as_type(self, type_name: str, **kwargs) -> T:
+        match strip_lower(type_name):
+            case "json_str", "str":
+                return self.to_json_str(**kwargs)
+            case "json", "dict":
+                return self.to_dict(**kwargs)
+            case "xml", "xml_str":
+                return self.to_xml(**kwargs)
+            case "pd_series":
+                return self.to_pd_series(**kwargs)
+            case "llama_index", "llama":
+                return self.to_llama_index_node(**kwargs)
+            case "langchain", "lc":
+                return self.to_langchain_doc(**kwargs)
+            case "pydantic", "pydanticmodel":
+                return BaseModel(**self.to_dict(**kwargs))
+            case "list":
+                return [self]
+            case _:
+                raise LionTypeError(f"Unsupported type: {type_name}")
 
     def to_json_str(self, *args, dropna=False, **kwargs) -> str:
         """Convert the component to a JSON string."""
@@ -407,166 +293,11 @@ class Component(Element, ABC):
         convert(self.to_dict(*args, dropna=dropna, **kwargs), root)
         return ET.tostring(root, encoding="unicode")
 
-    def to_pd_series(self, *args, pd_kwargs=None, dropna=False, **kwargs) -> Series:
-        """Convert the node to a Pandas Series."""
-        pd_kwargs = pd_kwargs or {}
-        dict_ = self.to_dict(*args, dropna=dropna, **kwargs)
-        return Series(dict_, **pd_kwargs)
-
-    # def to_llama_index_node(self, node_type: Type | str | Any = None, **kwargs) -> Any:
-    #     """Serializes this node for LlamaIndex."""
-    #     from lionagi.integrations.bridge import LlamaIndexBridge
-
-    #     return LlamaIndexBridge.to_llama_index_node(self, node_type=node_type, **kwargs)
-
-    # def to_langchain_doc(self, **kwargs) -> Any:
-    #     """Serializes this node for Langchain."""
-    #     from lionagi.integrations.bridge import LangchainBridge
-
-    #     return LangchainBridge.to_langchain_document(self, **kwargs)
-
-    def _add_last_update(self, name):
-        if (a := nget(self.metadata, ["last_updated", name], None)) is None:
-            ninsert(
-                self.metadata,
-                ["last_updated", name],
-                get_timestamp(sep=None)[:-6],
-            )
-        elif isinstance(a, tuple) and isinstance(a[0], int):
-            nset(
-                self.metadata,
-                ["last_updated", name],
-                get_timestamp(sep=None)[:-6],
-            )
-
-    def _meta_pop(self, indices, default=...):
-        indices = (
-            indices
-            if not isinstance(indices, list)
-            else "[^_^]".join([str(i) for i in indices])
-        )
-        dict_ = self.metadata.copy()
-        dict_ = flatten(dict_)
-
-        try:
-            out_ = dict_.pop(indices, default) if default != ... else dict_.pop(indices)
-        except KeyError as e:
-            if default == ...:
-                raise KeyError(f"Key {indices} not found in metadata.") from e
-            return default
-
-        a = unflatten(dict_)
-        self.metadata.clear()
-        self.metadata.update(a)
-        return out_
-
-    def _meta_insert(self, indices, value):
-        ninsert(self.metadata, indices, value)
-
-    def _meta_set(self, indices, value):
-        if not self._meta_get(indices):
-            self._meta_insert(indices, value)
-        nset(self.metadata, indices, value)
-
-    def _meta_get(self, indices, default=...):
-        if default != ...:
-            return nget(self.metadata, indices=indices, default=default)
-        return nget(self.metadata, indices)
-
     def __setattr__(self, name, value):
         if name == "metadata":
             raise AttributeError("Cannot directly assign to metadata.")
         super().__setattr__(name, value)
         self._add_last_update(name)
-
-    def _add_field(
-        self,
-        field: str,
-        annotation: Any = None,
-        default: Any = None,
-        value: Any = None,
-        field_obj: Any = None,
-        **kwargs,
-    ) -> None:
-        """Add a field to the model after initialization."""
-        self.extra_fields[field] = field_obj or Field(default=default, **kwargs)
-        if annotation:
-            self.extra_fields[field].annotation = annotation
-
-        if not value and (a := self._get_field_attr(field, "default", None)):
-            value = a
-
-        self.__setattr__(field, value)
-
-    def add_field(self, field, value, annotation=None, **kwargs):
-        self._add_field(field, annotation, value=value, **kwargs)
-
-    @property
-    def _all_fields(self):
-        return {**self.model_fields, **self.extra_fields}
-
-    @property
-    def _field_annotations(self) -> dict:
-        """Return the annotations for each field in the model."""
-        return self._get_field_annotation(list(self._all_fields.keys()))
-
-    def _get_field_attr(self, k: str, attr: str, default: Any = False) -> Any:
-        """Get the value of a field attribute."""
-        try:
-            if not self._field_has_attr(k, attr):
-                raise FieldError(f"field {k} has no attribute {attr}")
-
-            field = self._all_fields[k]
-            if not (a := getattr(field, attr, None)):
-                try:
-                    return field.json_schema_extra[attr]
-                except Exception:
-                    return None
-            return a
-        except Exception as e:
-            if default is not False:
-                return default
-            raise e
-
-    @singledispatchmethod
-    def _get_field_annotation(self, field_name: Any) -> Any:
-        raise LionTypeError
-
-    @_get_field_annotation.register(str)
-    def _(self, field_name: str) -> dict[str, Any]:
-        dict_ = {field_name: self._all_fields[field_name].annotation}
-        for k, v in dict_.items():
-            if "|" in str(v):
-                v = str(v)
-                v = v.split("|")
-                dict_[k] = [strip_lower(i) for i in v]
-            else:
-                dict_[k] = [v.__name__] if v else None
-        return dict_
-
-    @_get_field_annotation.register(list)
-    @_get_field_annotation.register(tuple)
-    def _(self, field_names: list | tuple) -> dict[str, Any]:
-        dict_ = {}
-        for field_name in field_names:
-            dict_.update(self._get_field_annotation(field_name))
-        return dict_
-
-    def _field_has_attr(self, k: str, attr: str) -> bool:
-        """Check if a field has a specific attribute."""
-        if not (field := self._all_fields.get(k, None)):
-            raise KeyError(f"Field {k} not found in model fields.")
-
-        if attr not in str(field):
-            try:
-                a = (
-                    attr in self._all_fields[k].json_schema_extra
-                    and self._all_fields[k].json_schema_extra[attr] is not None
-                )
-                return a if isinstance(a, bool) else False
-            except Exception:
-                return False
-        return True
 
     def __str__(self):
         dict_ = self.to_dict()

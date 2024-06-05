@@ -1,4 +1,4 @@
-from lionagi.libs.ln_api import BaseService
+from lionagi.services.api.ln_api import BaseService
 
 allowed_kwargs = [
     "model",

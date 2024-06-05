@@ -24,7 +24,7 @@ from collections.abc import Iterable
 from typing import TypeVar, Type, Any, Generic
 from pydantic import Field, field_validator
 from lionagi.os.libs import to_df
-from lionagi.os.operations.model.imodel import iModel
+from ..model.imodel import iModel
 from ..util import is_same_dtype, to_list_type, _validate_order
 
 from ..abc import (

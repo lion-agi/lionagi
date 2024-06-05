@@ -47,8 +47,8 @@ def get_llama_index_node_parser(node_parser: Any) -> Any:
 
     if issubclass(node_parser, NodeParser):
         return node_parser
-
-    raise TypeError("Invalid node_parser type. Must be a string or NodeParser.")
+    else:
+        raise TypeError("Invalid node_parser type. Must be a string or NodeParser.")
 
 
 def llama_index_parse_node(

@@ -24,7 +24,7 @@ strings, or specialized objects.
 import inspect
 from functools import singledispatchmethod
 from typing import Any, Callable, List, Union, Tuple
-from lionagi.os.libs import to_list, to_dict
+from lionagi.os.libs import to_list, to_dict, function_to_schema
 from lionagi.os.collections.abc import Actionable
 from .function_calling import FunctionCalling
 from .tool import Tool, TOOL_TYPE
@@ -82,7 +82,7 @@ class ToolManager(Actionable):
         if isinstance(tools, Tool) or isinstance(tools, Callable):
             return self._register_tool(tools, update=True)
         else:
-            return all(lcall(tools, self._register_tool, update=True))
+            return all([self._register_tool(tool, update=True) for tool in tools])
 
     def register_tools(self, tools: list | Tool | Callable):
         """
@@ -97,7 +97,7 @@ class ToolManager(Actionable):
         if isinstance(tools, Tool) or isinstance(tools, Callable):
             return self._register_tool(tools)
         else:
-            return all(lcall(tools, self._register_tool))
+            return all([self._register_tool(tool) for tool in tools])
 
     async def invoke(self, func_calling=None):
         """
@@ -236,7 +236,7 @@ class ToolManager(Actionable):
         Returns:
             list: A list of tool schemas.
         """
-        return lcall(tools, self._get_tool_schema)
+        return [self._get_tool_schema(tool) for tool in tools]
 
     def parse_tool(self, tools: TOOL_TYPE, **kwargs) -> dict:
         """
@@ -254,8 +254,8 @@ class ToolManager(Actionable):
                 tool_kwarg = {"tools": self._schema_list}
                 kwargs = tool_kwarg | kwargs
             else:
-                tools = to_list(tools) if not isinstance(tools, list) else [tools]
-                tool_kwarg = {"tools": lcall(tools, self._get_tool_schema)}
+                tools = tools if isinstance(tools, list) else [tools]
+                tool_kwarg = {"tools": [self._get_tool_schema(i) for i in tools]}
                 kwargs = tool_kwarg | kwargs
 
         return kwargs
@@ -334,7 +334,7 @@ def func_to_tool(
         for idx in range(len(funcs)):
             f_ = lambda _f: Tool(
                 function=_f,
-                schema_=ParseUtil._func_to_schema(_f, style=docstring_style),
+                schema_=function_to_schema(_f, style=docstring_style),
                 parser=parsers[idx] if len(parsers) > 1 else parsers[0],
                 **kwargs,
             )
@@ -342,13 +342,12 @@ def func_to_tool(
             fs.append(f_)
 
     else:
-        fs = lcall(
-            funcs,
-            lambda _f: Tool(
-                function=_f,
-                schema_=ParseUtil._func_to_schema(_f, style=docstring_style),
+        fs = []
+        for func in funcs:
+            tool = Tool(
+                function=func,
+                schema_=function_to_schema(func, style=docstring_style),
                 **kwargs,
-            ),
-        )
-
+            )
+            fs.append(tool)
     return fs
