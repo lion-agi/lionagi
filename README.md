@@ -7,8 +7,9 @@
 # Language InterOperable Network - LION
 
 ```
-lionagi version 0.2.1
+pip install lionagi==0.2.1
 ```
+check roadmap here: https://trello.com/b/3seomsrI/lionagi
 
 **Powerful Intelligent Workflow Automation**
 
