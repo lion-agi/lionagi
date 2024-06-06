@@ -25,7 +25,7 @@ What goes inside of a LLM is more akin to a [black-box](https://pauldeepakraj-r.
 
 ### Community
 
-We encourage contributions to LionAGI and invite you to enrich its features and capabilities. Engage with us and other community members [Join Our Discord](https://discord.gg/7RGWqpSxze)
+We encourage contributions to LionAGI and invite you to enrich its features and capabilities. Engage with us and other community members [Join Our Discord](https://discord.gg/aqSJ2v46vu)
 
 ### Citation
 
