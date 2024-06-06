@@ -28,7 +28,7 @@ from lionagi.os.libs import (
     nmerge,
     force_validate_mapping,
     fuzzy_parse_json,
-    extract_json_block,
+    md_to_json,
 )
 from lionagi.os.collections.abc import ActionError
 from lionagi.os.collections.message import ActionRequest, ActionResponse, Instruction
@@ -1166,7 +1166,7 @@ class DirectiveMixin(ABC):
                 return fuzzy_parse_json(out_)
 
             with contextlib.suppress(Exception):
-                return extract_json_block(out_)
+                return md_to_json(out_)
 
             with contextlib.suppress(Exception):
                 match = re.search(r"```json\n({.*?})\n```", out_, re.DOTALL)
