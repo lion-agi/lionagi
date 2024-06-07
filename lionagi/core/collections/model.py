@@ -117,14 +117,14 @@ class iModel:
         self.token_limit = self.endpoint_schema.get("token_limit", 100_000)
 
         if api_key is not None:
-            self.api_key = api_key
+            self._api_key = api_key
 
         elif api_key_schema is not None:
-            self.api_key = os.getenv(api_key_schema)
+            self._api_key = os.getenv(api_key_schema)
         else:
             api_schema = self.provider_schema.get("API_key_schema", None)
             if api_schema:
-                self.api_key = os.getenv(
+                self._api_key = os.getenv(
                     self.provider_schema["API_key_schema"][0], None
                 )
 
@@ -333,9 +333,9 @@ class iModel:
             "ln_id": self.ln_id,
             "timestamp": self.timestamp,
             "provider": self.provider.__name__.replace("Service", ""),
-            "api_key": self.api_key[:4]
-            + "*" * (len(self.api_key) - 8)
-            + self.api_key[-4:],
+            "api_key": self._api_key[:4]
+            + "*" * (len(self._api_key) - 8)
+            + self._api_key[-4:],
             "endpoint": self.endpoint,
             "token_encoding_name": self.service.token_encoding_name,
             **{

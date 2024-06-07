@@ -1,8 +1,9 @@
 from collections.abc import Mapping, Generator
 from collections import deque
-
+import random
 from .abc import LionTypeError, Record, Ordering, Component, get_lion_id, Element
 
+DEFAULT_EXPERT_MODEL_LIST = ["gpt-3.5-turbo", "gpt-4o", "gpt-4-turbo"]
 
 def to_list_type(value):
     """
@@ -62,3 +63,20 @@ def _validate_order(value) -> list[str]:
         return [i for item in to_list_type(value) if (i := get_lion_id(item))]
     except Exception as e:
         raise LionTypeError("Progression must only contain lion ids.") from e
+
+def get_random_config(
+    model_list=DEFAULT_EXPERT_MODEL_LIST,
+    temperature_range = (0.7, 1.2),
+    top_p_range = (0.8, 1.0),
+    frequency_penalty_range = (0.0, 0.5),
+    presence_penalty_range = (0.0, 0.5),
+    max_tokens = 100,  
+):
+    return {
+        "model": random.choice(model_list),
+        "temperature": random.uniform(*temperature_range),
+        "top_p": random.uniform(*top_p_range),
+        "frequency_penalty": random.uniform(*frequency_penalty_range),
+        "presence_penalty": random.uniform(*presence_penalty_range),
+        "max_tokens": max_tokens,
+    }
