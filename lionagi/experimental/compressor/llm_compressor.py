@@ -186,9 +186,16 @@ class LLMCompressor(TokenCompressor):
                 [i[1]["num_completion_tokens"] for i in ranked_items]
             )
 
-            price = (
-                prompt_tokens * 0.5 / 1000000 + num_completion_tokens * 1.5 / 1000000
-            )
+            price = 0
+            if (
+                self.imodel.costs is not None 
+                and isinstance(self.imodel.costs, (tuple, list))
+                and len(self.imodel.costs) == 2
+            ):
+                price = (
+                    prompt_tokens * self.imodel.costs[0] / 1_000_000 +
+                    num_completion_tokens * self.imodel.costs[1] / 1_000_000
+                )
 
             selected_items = self.select_by_pplex(
                 ranked_items=ranked_items,
