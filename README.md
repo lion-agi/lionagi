@@ -7,7 +7,7 @@
 # Language InterOperable Network - LION
 
 ```
-lionagi version 0.2.0
+lionagi version 0.3.0, under dev, planned on releasing around 7/15 - 8/1
 ```
 
 **Powerful Intelligent Workflow Automation**
