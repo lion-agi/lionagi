@@ -19,7 +19,7 @@ def ninsert(
     indices: list[Union[str, int]],
     value: Any,
     *,
-    sep: str = "[^_^]",
+    sep: str = "|",
     max_depth: Union[int, None] = None,
     current_depth: int = 0,
 ) -> None:
@@ -37,7 +37,7 @@ def ninsert(
         value (Any): The value to insert at the specified location within
             `nested_structure`.
         sep (str): A separator used when concatenating indices to form
-            composite keys in case of ambiguity. Defaults to "[^_^]".
+            composite keys in case of ambiguity. Defaults to "|".
         max_depth (int | None): Limits the depth of insertion. If `None`,
             no limit is applied.
         current_depth (int): Internal use only; tracks the current depth

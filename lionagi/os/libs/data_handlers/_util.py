@@ -134,7 +134,7 @@ def deep_update(original: dict, update: dict) -> dict:
 
 
 def get_target_container(
-    nested_list: list | dict, indices: list[int | str]
+    nested: list | dict, indices: list[int | str]
 ) -> list | dict:
     """
     Retrieve the target container (sub-list or sub-dictionary) in a nested
@@ -153,7 +153,7 @@ def get_target_container(
         KeyError: If a dictionary key is not found.
         TypeError: If the current element is neither a list nor a dictionary.
     """
-    current_element = nested_list
+    current_element = nested
     for index in indices:
 
         if isinstance(current_element, list):

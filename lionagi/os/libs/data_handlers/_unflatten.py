@@ -1,37 +1,16 @@
-"""
-Module for unflattening dictionaries.
-
-Provides a function to convert a single-level (flattened) dictionary
-into a nested dictionary or list.
-
-Functions:
-    unflatten: Unflatten a single-level dictionary into a nested dictionary or list.
-"""
-
 from typing import Union
 
-
-def unflatten(flat_dict: dict, sep: str = "/") -> Union[dict, list]:
+def unflatten(flat_dict: dict, sep: str = "|", inplace: bool = False) -> Union[dict, list]:
     """
     Unflatten a single-level dictionary into a nested dictionary or list.
 
     Args:
         flat_dict (dict): The flattened dictionary to unflatten.
         sep (str): The separator used for joining keys. Default: '/'.
+        inplace (bool): Whether to modify the input dictionary in place. Default: False.
 
     Returns:
         Union[dict, list]: The unflattened nested dictionary or list.
-
-    Examples:
-        >>> flat_dict = {'a/b': 1, 'a/c': 2, 'd': 3}
-        >>> unflattened = unflatten(flat_dict)
-        >>> unflattened == {'a': {'b': 1, 'c': 2}, 'd': 3}
-        True
-
-        >>> flat_dict = {'0/a': 1, '0/b': 2, '1/a': 3, '1/b': 4}
-        >>> unflattened = unflatten(flat_dict)
-        >>> unflattened == [{'a': 1, 'b': 2}, {'a': 3, 'b': 4}]
-        True
     """
 
     def _unflatten(data: dict) -> Union[dict, list]:
@@ -50,17 +29,37 @@ def unflatten(flat_dict: dict, sep: str = "/") -> Union[dict, list]:
 
         # Convert dictionary to list if keys are consecutive integers
         if all(isinstance(key, str) and key.isdigit() for key in result):
-            return [result[str(i)] for i in range(len(result))] or {}
+            return [result[str(i)] for i in range(len(result))]
         return result
 
-    unflattened_dict = {}
-    for key, value in flat_dict.items():
-        parts = key.split(sep)
-        current = unflattened_dict
-        for part in parts[:-1]:
-            if part not in current:
-                current[part] = {}
-            current = current[part]
-        current[parts[-1]] = value
+    if inplace:
+        unflattened_dict = {}
+        for key, value in flat_dict.items():
+            parts = key.split(sep)
+            current = unflattened_dict
+            for part in parts[:-1]:
+                if part not in current:
+                    current[part] = {}
+                current = current[part]
+            current[parts[-1]] = value
 
-    return _unflatten(unflattened_dict)
+        unflattened_result = _unflatten(unflattened_dict)
+        flat_dict.clear()
+        if isinstance(unflattened_result, list):
+            flat_dict.update({str(i): v for i, v in enumerate(unflattened_result)})
+        else:
+            flat_dict.update(unflattened_result)
+        return flat_dict
+
+    else:
+        unflattened_dict = {}
+        for key, value in flat_dict.items():
+            parts = key.split(sep)
+            current = unflattened_dict
+            for part in parts[:-1]:
+                if part not in current:
+                    current[part] = {}
+                current = current[part]
+            current[parts[-1]] = value
+
+        return _unflatten(unflattened_dict)

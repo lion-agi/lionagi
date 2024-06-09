@@ -1,5 +1,5 @@
 import threading
-from .container import Container
+from ..container.container import Container
 
 
 class Index:

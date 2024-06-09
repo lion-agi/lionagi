@@ -422,7 +422,7 @@ class TestNMergeFunction(unittest.TestCase):
                 iterables,
                 dict_update=True,
                 dict_sequence=False,
-                sequence_separator="[^_^]",
+                sequence_separator="|",
             ),
             expected_output,
         )
@@ -435,7 +435,7 @@ class TestNMergeFunction(unittest.TestCase):
                 iterables,
                 dict_update=False,
                 dict_sequence=True,
-                sequence_separator="[^_^]",
+                sequence_separator="|",
             ),
             expected_output,
         )

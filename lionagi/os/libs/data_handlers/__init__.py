@@ -5,6 +5,7 @@ from ._ninsert import ninsert
 from ._nmerge import nmerge
 from ._nset import nset
 from ._unflatten import unflatten
+from ._npop import npop
 from ._to_list import to_list
 from ._to_dict import to_dict
 from ._to_df import to_df
@@ -27,4 +28,5 @@ __all__ = [
     "to_num",
     "get_flattened_keys",
     "strip_lower",
+    "npop"
 ]

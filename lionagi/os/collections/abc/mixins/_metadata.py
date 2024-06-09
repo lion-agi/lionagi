@@ -25,7 +25,7 @@ class ComponentMetaManageMixin:
         indices = (
             indices
             if not isinstance(indices, list)
-            else "[^_^]".join([str(i) for i in indices])
+            else "|".join([str(i) for i in indices])
         )
         dict_ = self.metadata.copy()
         dict_ = flatten(dict_)

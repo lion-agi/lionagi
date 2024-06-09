@@ -1,4 +1,4 @@
-from .container import Container
+from ..container.container import Container
 from .index import Index
 
 # from .graph_index import GraphIndex

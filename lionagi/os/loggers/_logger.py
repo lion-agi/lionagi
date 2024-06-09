@@ -45,7 +45,7 @@ class DLog:
     input_data: Any
     output_data: Any
 
-    def serialize(self, *, flatten_: bool = True, sep: str = "[^_^]") -> dict[str, Any]:
+    def serialize(self, *, flatten_: bool = True, sep: str = "|") -> dict[str, Any]:
         """Serialize the DLog instance into a dictionary with an added timestamp.
 
         Args:
@@ -90,7 +90,7 @@ class DLog:
         input_str: str,
         output_str: str,
         unflatten_: bool = True,
-        sep: str = "[^_^]",
+        sep: str = "|",
     ) -> "DLog":
         """Deserialize log entries from string representations.
 
@@ -203,7 +203,7 @@ class DataLogger:
         verbose: bool = True,
         clear: bool = True,
         flatten_: bool = True,
-        sep: str = "[^_^]",
+        sep: str = "|",
         index: bool = False,
         random_hash_digits: int = 3,
         **kwargs,
@@ -255,7 +255,7 @@ class DataLogger:
         verbose: bool = True,
         clear: bool = True,
         flatten_: bool = True,
-        sep: str = "[^_^]",
+        sep: str = "|",
         index: bool = False,
         random_hash_digits: int = 3,
         **kwargs,

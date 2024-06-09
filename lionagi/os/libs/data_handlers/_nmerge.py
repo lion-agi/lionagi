@@ -31,7 +31,7 @@ def nmerge(
     *,
     overwrite: bool = False,
     dict_sequence: bool = False,
-    sep: str = "[^_^]",
+    sep: str = "|",
     sort_list: bool = False,
     custom_sort: Callable[[Any], Any] | None = None,
 ) -> Union[dict, list]:
@@ -48,7 +48,7 @@ def nmerge(
             duplicate keys by appending a sequence number, using `sequence_separator`
             as the delimiter. Applicable only if `overwrite` is False.
         sequence_separator (str, optional): The separator used when generating
-            unique keys for duplicate dictionary keys. Defaults to "[^_^]".
+            unique keys for duplicate dictionary keys. Defaults to "|".
         sort_list (bool, optional): When True, sort the resulting list after
             merging. It does not affect dictionaries. Defaults to False.
         custom_sort (Callable[[Any], Any] | None, optional): An optional callable

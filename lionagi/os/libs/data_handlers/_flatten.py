@@ -24,7 +24,7 @@ def flatten(
     /,
     *,
     parent_key: str = "",
-    sep: str = "[^_^]",
+    sep: str = "|",
     max_depth: Optional[int] = None,
     inplace: bool = False,
     dict_only: bool = False,
@@ -37,7 +37,7 @@ def flatten(
         parent_key (str, optional): The base key to use for flattened keys.
             Defaults to "".
         sep (str, optional): The separator to use for joining keys. Defaults
-            to "[^_^]".
+            to "|".
         max_depth (Optional[int], optional): The maximum depth to flatten.
             Defaults to None.
         inplace (bool, optional): If True, modifies the original structure.
@@ -80,7 +80,7 @@ def get_flattened_keys(
     nested_structure: Any,
     /,
     *,
-    sep: str = "[^_^]",
+    sep: str = "|",
     max_depth: Optional[int] = None,
     dict_only: bool = False,
     inplace: bool = False,
@@ -91,7 +91,7 @@ def get_flattened_keys(
     Args:
         nested_structure (Any): The nested structure to process.
         sep (str, optional): The separator to use for joining keys. Defaults
-            to "[^_^]".
+            to "|".
         max_depth (Optional[int], optional): The maximum depth to flatten.
             Defaults to None.
         dict_only (bool, optional): If True, only flattens dictionaries.
@@ -118,7 +118,7 @@ def _dynamic_flatten_in_place(
     /,
     *,
     parent_key: str = "",
-    sep: str = "[^_^]",
+    sep: str = "|",
     max_depth: Optional[int] = None,
     current_depth: int = 0,
     dict_only: bool = False,
@@ -131,7 +131,7 @@ def _dynamic_flatten_in_place(
         parent_key (str, optional): The base key to use for flattened keys.
             Defaults to "".
         sep (str, optional): The separator to use for joining keys. Defaults
-            to "[^_^]".
+            to "|".
         max_depth (Optional[int], optional): The maximum depth to flatten.
             Defaults to None.
         current_depth (int, optional): The current depth of recursion.
@@ -174,7 +174,7 @@ def _dynamic_flatten_in_place(
 def _dynamic_flatten_generator(
     nested_structure: Any,
     parent_key: Tuple[str, ...],
-    sep: str = "[^_^]",
+    sep: str = "|",
     max_depth: Optional[int] = None,
     current_depth: int = 0,
     dict_only: bool = False,
@@ -186,7 +186,7 @@ def _dynamic_flatten_generator(
         nested_structure (Any): The nested structure to flatten.
         parent_key (Tuple[str, ...]): The base key to use for flattened keys.
         sep (str, optional): The separator to use for joining keys. Defaults
-            to "[^_^]".
+            to "|".
         max_depth (Optional[int], optional): The maximum depth to flatten.
             Defaults to None.
         current_depth (int, optional): The current depth of recursion.
