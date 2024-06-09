@@ -1,0 +1,6 @@
+aiohttp>=3.9.3
+python-dotenv==1.0.0
+tiktoken>=0.5.1
+pydantic>=2.6.0
+aiocache>=0.12.2
+pandas>=2.1.0
