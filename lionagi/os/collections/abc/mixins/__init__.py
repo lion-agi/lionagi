@@ -1,5 +1,5 @@
 from ._field import ComponentFieldMixin
-from ._meta import ComponentMetaManageMixin
+from ._metadata import ComponentMetaManageMixin
 from ._validation import ComponentValidationMixin
 from ._pandas import PandasComponentMixin
 from ._pydantic import PydanticComponentMixin

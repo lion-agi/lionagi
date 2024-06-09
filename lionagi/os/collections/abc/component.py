@@ -84,16 +84,6 @@ class Component(Element, ComponentMixin):
         description="The optional embedding of the node.",
     )
 
-    @property
-    def class_name(self) -> str:
-        """Get the class name."""
-        return self._class_name()
-
-    @classmethod
-    def _class_name(cls) -> str:
-        """Get the class name."""
-        return cls.__name__
-
     class Config:
         """Model configuration settings."""
 

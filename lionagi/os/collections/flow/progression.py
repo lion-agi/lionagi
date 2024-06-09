@@ -215,8 +215,12 @@ class Progression(Element, Ordering):
         self.order = []
 
     def to_dict(self):
-        """Return a dictionary representation of the progression."""
-        return {"order": self.order, "name": self.name}
+        return {
+            "ln_id": self.ln_id,
+            "created": self.timestamp,
+            "order": self.order,
+            "name": self.name,
+        }
 
     def __bool__(self):
         return True

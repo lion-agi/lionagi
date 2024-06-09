@@ -15,7 +15,7 @@ limitations under the License.
 """
 
 from enum import Enum
-from ..abc import Sendable, Field
+from ..mail.mail import Field, BaseMail
 from ..node.node import Node
 
 
@@ -44,7 +44,7 @@ class MessageRole(str, Enum):
 
 
 # Base class for messages
-class RoledMessage(Node, Sendable):
+class RoledMessage(BaseMail, Node):
     """
     A base class representing a message with validators and properties.
     """

@@ -14,6 +14,8 @@ class PackageCategory(str, Enum):
     START = "start"
     END = "end"
     CONDITION = "condition"
+    SIGNAL = "signal"
+
 
 
 class Package(Element):

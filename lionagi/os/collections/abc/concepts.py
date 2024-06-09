@@ -206,48 +206,7 @@ class Relatable(ABC):
 
 class Sendable(BaseModel, ABC):
     """Represents an object that can be sent with a sender and recipient."""
-
-    sender: str = Field(
-        "N/A",
-        title="Sender",
-        description=("The id of the sender node, or 'system', 'user', or 'assistant'."),
-    )
-
-    recipient: str = Field(
-        "N/A",
-        title="Recipient",
-        description=(
-            "The id of the recipient node, or 'system', 'user', or 'assistant'."
-        ),
-    )
-
-    @field_validator("sender", "recipient", mode="before")
-    def _validate_sender_recipient(cls, value):
-        """Validate the sender and recipient fields.
-
-        Args:
-            value (Any): The value to validate.
-
-        Returns:
-            str: The validated value.
-
-        Raises:
-            LionTypeError: If the value is invalid.
-        """
-        if value is None:
-            return "N/A"
-
-        if value in ["system", "user", "N/A", "assistant"]:
-            return value
-
-        a = get_lion_id(value)
-        if not isinstance(a, str) or len(a) != 32:
-            raise LionTypeError(
-                "Invalid sender or recipient value. "
-                "Expected a valid node id or one of "
-                "'system' or 'user'."
-            )
-        return a
+    ...
 
 
 class Executable(ABC):

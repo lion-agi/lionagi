@@ -31,10 +31,11 @@ class Container:
             structure (dict or list): The initial structure to be managed by
             the container.
         """
-        self.structure = self._convert_to_list(structure)
+        self.current_key = None
+        self.structure = self._convert_dict_to_list(structure)
         self.keys = get_keys(self.structure)
         self.current = self.structure
-        self.current_key = None
+        
 
     def next(self):
         """
@@ -82,7 +83,7 @@ class Container:
             value (dict or list): The new structure to be managed by the
             container.
         """
-        self.structure = self._convert_to_list(value)
+        self.structure = self._convert_dict_to_list(value)
         self.keys = get_keys(self.structure)
         self.current = self.structure
         self.current_key = None
@@ -127,22 +128,23 @@ class Container:
         """
         return self.structure
 
-    def _convert_to_list(self, structure):
+    def _convert_dict_to_list(self, structure):
         """
         Convert a dictionary with integer keys to a list, preserving the
         original structure otherwise.
 
         Args:
-            structure (dict or list): The structure to be converted.
+            structure (dict): The structure to be converted.
 
         Returns:
             The converted structure.
         """
         if isinstance(structure, dict):
             keys = list(structure.keys())
-            if all(k.isdigit() for k in keys):
-                return [structure[str(i)] for i in range(len(keys))]
+            if all(isinstance(key, int) or key.isdigit() for key in keys):
+                return [structure[key] for key in sorted(structure.keys(), key=int)]
             return {
-                key: self._convert_to_list(value) for key, value in structure.items()
+                key: self._convert_dict_to_list(value)
+                for key, value in structure.items()
             }
         return structure

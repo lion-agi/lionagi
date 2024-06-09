@@ -36,6 +36,16 @@ class Element(BaseModel, ABC):
         if cls.__name__ not in _init_class:
             _init_class[cls.__name__] = cls
 
+    @property
+    def class_name(self) -> str:
+        """Get the class name."""
+        return self._class_name()
+
+    @classmethod
+    def _class_name(cls) -> str:
+        """Get the class name."""
+        return cls.__name__
+    
     # element is always true
     def __bool__(self):
         return True
