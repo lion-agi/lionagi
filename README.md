@@ -5,6 +5,7 @@
 
 
 # Language InterOperable Network - LION
+### An AGentic Intelligence Operating System
 
 ```
 pip install lionagi==0.2.1
