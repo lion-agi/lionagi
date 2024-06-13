@@ -1,15 +1,19 @@
 
 ### Class: `Exchange`
 
+^2a685d
+
+**Parent Class:** [[#^bb802e|Element]]
+
 **Description**:
 `Exchange` is an item exchange system designed to handle incoming and outgoing flows of items. It extends the `Element` class and uses generics to allow for type-specific item management.
 
 #### Attributes:
-- `pile` (Pile[T]): The pile of items in the exchange.
-- `pending_ins` (dict[str, Progression]): The pending incoming items to the exchange.
-- `pending_outs` (Progression): The progression of pending outgoing items.
+- `pile` ([[Pile#^0206c8|Pile]]): The pile of items in the exchange.
+- `pending_ins` (dict\[str, [[Progression#^166cef|Progression]]\]): The pending incoming items to the exchange.
+- `pending_outs` [[Progression#^166cef|Progression]]\: The progression of pending outgoing items.
 
-### Method: `__contains__`
+### `__contains__`
 
 **Signature**:
 ```python
@@ -31,7 +35,7 @@ if item in exchange:
     print("Item is in the exchange")
 ```
 
-### Method: `senders`
+### `senders`
 
 **Signature**:
 ```python
@@ -51,7 +55,7 @@ senders = exchange.senders
 print(senders)
 ```
 
-### Method: `exclude`
+### `exclude`
 
 **Signature**:
 ```python
@@ -73,7 +77,7 @@ success = exchange.exclude(item)
 print("Item excluded:", success)
 ```
 
-### Method: `include`
+### `include`
 
 **Signature**:
 ```python
@@ -99,7 +103,7 @@ success = exchange.include(item, "out")
 print("Item included out:", success)
 ```
 
-### Method: `_include`
+### `_include`
 
 **Signature**:
 ```python
@@ -125,7 +129,7 @@ success = exchange._include(item, "out")
 print("Item included out:", success)
 ```
 
-### Method: `to_dict`
+### `to_dict`
 
 **Signature**:
 ```python
@@ -144,7 +148,7 @@ exchange_dict = exchange.to_dict()
 print(exchange_dict)
 ```
 
-### Method: `__bool__`
+### `__bool__`
 
 **Signature**:
 ```python

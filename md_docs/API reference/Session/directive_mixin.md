@@ -1,10 +1,12 @@
 
 ### Class: `DirectiveMixin`
 
-**Description**:
-`DirectiveMixin` is a mixin class that provides functionalities for handling chat interactions within a directive framework. It includes methods for processing instructions, interacting with tools, models, and validation rules, managing retries, timeouts, and concurrency.
+^b1e040
 
-### Method: `chat`
+**Description**:
+`DirectiveMixin` is a `mixin` class that provides functionalities for handling chat interactions within a [[API reference/collections/abc/Concepts#^759d9f|Directive]] framework. It includes methods for processing instructions, interacting with tools, models, and validation rules, managing retries, timeouts, and concurrency.
+
+### `chat`
 
 **Signature**:
 ```python
@@ -51,14 +53,14 @@ async def chat(
 - `return_form` (bool, optional): Whether to return the form if a form is passed in, otherwise return a dict/str.
 - `strict` (bool, optional): Whether to strictly enforce rule validation, default is False.
 - `rulebook` (Any, optional): The rulebook to use for validation, default is None (uses default rulebook).
-- `imodel` (iModel, optional): Optionally swappable iModel for the commands, otherwise self.branch.imodel.
+- `imodel` ([[iModel#^86de48|iModel]], optional): Optionally swappable iModel for the commands, otherwise `self.branch.imodel`.
 - `clear_messages` (bool, optional): Whether to clear previous messages, default is False.
 - `use_annotation` (bool, optional): Whether to use annotation as rule qualifier, default is True (needs rulebook if False).
 - `retries` (int, optional): Number of retries if failed, default is 3.
 - `delay` (float, optional): Number of seconds to delay before retrying, default is 0.
 - `backoff_factor` (float, optional): Exponential backoff factor, default is 1 (no backoff).
 - `default` (Any, optional): Default value to return if all retries failed.
-- `timeout` (float, optional): Timeout for the rcall, default is None (no timeout).
+- `timeout` (float, optional): Timeout for the [[Function Call Lib#^d5f3ae|rcall]], default is None (no timeout).
 - `timing` (bool, optional): If True, will return a tuple (output, duration), default is False.
 - `return_branch` (bool, optional): Whether to return the branch after processing, default is False.
 - `images` (Any, optional): Base64 encoded image content.
@@ -71,7 +73,7 @@ async def chat(
 **Description**:
 Asynchronously handles a chat interaction within the directive framework. This method processes an instruction with the given context and optional parameters, interacting with tools, models, and validation rules as needed. It manages retries, timeouts, concurrency, and can optionally clear previous messages, swap system messages, and control the use of annotations and rulebooks.
 
-### Method: `direct`
+### `direct`
 
 **Signature**:
 ```python

@@ -297,7 +297,6 @@ async def plan(
         Any: The result of the planning task.
     """
 
-
     branch = branch or Branch()
     unit = Unit(branch)
 

@@ -1,6 +1,10 @@
 
 ### Class: `MappingRule`
 
+^ec2bae
+
+**Parent Class:** [[Choice Rule#^15d16d|ChoiceRule]]
+
 **Description**:
 `MappingRule` is a specific implementation of the `Rule` class that validates if a given value is a dictionary (mapping) with specific keys. It also provides a method to attempt to fix the value if it does not initially meet the validation criteria.
 
@@ -8,7 +12,7 @@
 - `apply_type` (str): The type of data to which the rule applies. Default is `"dict"`.
 - `keys` (list): The list of specific keys that the mapping must contain.
 
-### Method: `__init__`
+### `__init__`
 
 **Signature**:
 ```python
@@ -22,7 +26,7 @@ def __init__(self, apply_type="dict", **kwargs):
 **Description**:
 Initializes the `MappingRule` with the specified type and additional keyword arguments, including the list of specific keys that the mapping must contain.
 
-### Method: `validate`
+### `validate`
 
 **Signature**:
 ```python
@@ -43,7 +47,7 @@ async def validate(self, value: Any, *args, **kwargs) -> Any:
 **Description**:
 Validates that the given value is a dictionary with the specified keys.
 
-### Method: `perform_fix`
+### `perform_fix`
 
 **Signature**:
 ```python

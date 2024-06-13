@@ -1,14 +1,15 @@
 
 # LionAGI: **Powerful Intelligent Workflow Automation**
 
+**Github:** https://github.com/lion-agi/lionagi
 
+**Discord**: [https://discord.gg/xYUnQgFaXh](https://discord.gg/xYUnQgFaXh "https://discord.gg/xYUnQgFaXh")
 
-LionAGI is an **intelligent agent framework**, which is a type of [expert systems](http://www.sci.brooklyn.cuny.edu/~kopec/cis718/fall_2005/sdarticle5.pdf) [^1]
+**Notebooks:** https://github.com/lion-agi/lionagi/tree/main/notebooks
 
-Tailored for **big data analysis** in conjunction with advanced **machine learning** tools, designed for data-centric, production-level projects. Lionagi provides a set of robust tools, enabling flexible and rapid design of agentic workflow, for your own data.  
+---
 
-
-## Why Automating Workflows?
+## Why Automating Workflows?    
 
 Intelligent AI models such as [Large Language Model (LLM)](https://en.wikipedia.org/wiki/Large_language_model), introduced new possibilities of human-computer interaction. LLMs is drawing a lot of attention worldwide due to its “one model fits all”, and incredible performance. One way of using LLM is to use as search engine, however, this usage is complicated by the fact that LLMs [hallucinate](https://arxiv.org/abs/2311.05232). [^2] [^3]
 
@@ -31,22 +32,10 @@ it includes the following
 - Parsers, Evaluators, Engines, Templates and other supportive components.
 
 ![[Picture1.png]]
-### Why Another Language?
-
- [[Function Calling]] in LLM is a powerful feature. In essence, the LLM acts as a configuration provider that can interact with any callable objects, in other words, ability to make decision that can have real impact in our lives. 
-
-Currently, the [[Base Component#^0c90e6|tool]] usages are still relatively simple, it requires plenty prompt engineering and with relatively pretty “static” usages. LLM can decide what to call, whether to call, and what to call on, but that’s about it. 
-
-With directive, we hope to add more flexibility and dynamics in tool usages, and enable context aware auto workflow composition. We believe this will have positive effects on agents’
-
-- quality of “planning” in a resource constrained environment 
-- ability in mastering domain specific tasks with general purpose models 
-- “creativity” in problem solving
-
 
 > Haiyang Li, ocean@lionagi.ai, Feb 2024
 
-### Next Steps
+## Next Steps
 
 - [[Installation and Setup]]
 - [[Quick Start]]

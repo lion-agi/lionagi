@@ -76,3 +76,20 @@ class AssistantResponse(RoledMessage):
         response_copy = AssistantResponse(assistant_response=content, **kwargs)
         response_copy.metadata["origin_ln_id"] = self.ln_id
         return response_copy
+
+    @property
+    def chat_msg(self) -> dict | None:
+        """Return message in chat representation."""
+        try:
+            return self._check_chat_msg()
+        except:
+            return None
+
+    def _check_chat_msg(self):
+        text_msg = super()._check_chat_msg()
+        return text_msg
+
+    @property
+    def response(self):
+        """Return the assistant response content."""
+        return self.content["assistant_response"]

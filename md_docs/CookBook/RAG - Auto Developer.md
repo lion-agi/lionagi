@@ -1,4 +1,10 @@
 
+```
+						-----
+					NEEDS UPDATING
+						-----
+```
+
 Let us develop a dev bot that can
 
 -   read and understand lionagi's existing codebase

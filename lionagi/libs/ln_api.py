@@ -374,6 +374,7 @@ class APIUtil:
         import tiktoken
         from .ln_image import ImageUtil
 
+        token_encoding_name = token_encoding_name or "cl100k_base"
         encoding = tiktoken.get_encoding(token_encoding_name)
         if api_endpoint.endswith("completions"):
             max_tokens = payload.get("max_tokens", 15)
@@ -597,7 +598,6 @@ class BaseRateLimiter(ABC):
                 required_tokens = APIUtil.calculate_num_token(
                     payload, endpoint, self.token_encoding_name, **kwargs
                 )
-
 
             if await self.request_permission(required_tokens):
                 request_headers = {"Authorization": f"Bearer {api_key}"}

@@ -2,12 +2,12 @@
 ### Class: `Validator`
 
 **Description**:
-`Validator` is a class to manage the validation of forms using a `RuleBook`. It provides functionalities for initializing rules, validating fields, validating forms and reports, managing rules, and logging validation attempts and errors.
+`Validator` is a class to manage the validation of forms using a [[RuleBook#^fbf6db|RuleBook]]. It provides functionalities for initializing rules, validating fields, validating forms and reports, managing rules, and logging validation attempts and errors.
 
 ### Attributes:
 
 - `_DEFAULT_RULEORDER` (List[str]): Default order of rule application.
-- `_DEFAULT_RULES` (Dict[str, Rule]): Default set of rules.
+- `_DEFAULT_RULES` (Dict\[str, [[Base Rule#^34c3a1|Rule]]\]): Default set of rules.
 
 ### Methods:
 

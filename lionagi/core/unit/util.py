@@ -1,5 +1,5 @@
 retry_kwargs = {
-    "retries": 3,  # kwargs for rcall, number of retries if failed
+    "retries": 0,  # kwargs for rcall, number of retries if failed
     "delay": 0,  # number of seconds to delay before retrying
     "backoff_factor": 1,  # exponential backoff factor, default 1 (no backoff)
     "default": None,  # default value to return if all retries failed

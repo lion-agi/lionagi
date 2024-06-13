@@ -1,6 +1,8 @@
 
 ### Class: `RuleBook`
 
+^fbf6db
+
 **Description**:
 `RuleBook` manages a collection of rules, providing methods to access and apply rules. It maintains logs of applied and invoked rules, and allows configuration of rules through a dictionary.
 
@@ -9,7 +11,7 @@
 - `ruleorder` (list[str] | None): A list specifying the order in which rules should be applied.
 - `rule_config` (dict[str, dict] | None): A dictionary containing configuration for each rule.
 
-### Method: `__init__`
+### `__init__`
 
 **Signature**:
 ```python
@@ -57,7 +59,7 @@ def _all_invoked_log(self):
 **Description**:
 Returns all invoked logs from all rules in the rulebook.
 
-### Method: `__getitem__`
+### `__getitem__`
 
 **Signature**:
 ```python

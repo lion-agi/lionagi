@@ -3,7 +3,7 @@
 
 ## Overview
 
-The ReAct method is a transformative approach that enables Large Language Models (LLMs) to tackle complex, multi-step tasks requiring detailed planning and execution. This tutorial illustrates how, with simple computational tools, LLMs can navigate through intricate problems, showcasing their potential beyond text processing.
+The [[react]] method is a transformative approach that enables Large Language Models (LLMs) to tackle complex, multi-step tasks requiring detailed planning and execution. This tutorial illustrates how, with simple computational tools, LLMs can navigate through intricate problems, showcasing their potential beyond text processing.
 
 ## The Essence of Simplified Tools
 
@@ -29,7 +29,7 @@ async def multiply(number1:float, number2:float):
 tool_multiply = li.func_to_tool(multiply)
 
 
-async def sum(number1:float, number2:float):
+async def add(number1:float, number2:float):
     '''
     add two numbers.
 
@@ -92,14 +92,9 @@ context = 'I have...' #copy from above
 **Set up session**
 
 ```python
-import lionagi as li
+from lionagi import Session
 
-# turn the functions into lionagi Tool objects
-funcs = [multiply, sum, minus, division]
-tools = li.lcall(funcs, li.func_to_tool)
-
-# start a session and provide tools
-session = Session(system, tools=tools) 
+session = Session(system, tools=[multiply, add, minus, division]) 
 ```
 
 **Run ReAct Workflow**

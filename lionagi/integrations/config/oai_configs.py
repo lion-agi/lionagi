@@ -13,11 +13,13 @@ oai_chat_llmconfig = {
     "seed": None,
     "stop": None,
     "stream": False,
-    "temperature": 0.3,
+    "temperature": 0.1,
     "top_p": 1,
     "tools": None,
     "tool_choice": "none",
     "user": None,
+    "logprobs": False,
+    "top_logprobs": None,
 }
 
 oai_chat_schema = {
@@ -38,6 +40,8 @@ oai_chat_schema = {
         "tool_choice",
         "user",
         "max_tokens",
+        "logprobs",
+        "top_logprobs",
     ],
     "input_": "messages",
     "config": oai_chat_llmconfig,

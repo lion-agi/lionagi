@@ -73,7 +73,8 @@ class ToolManager(Actionable):
         if not update and tool in self:
             raise ValueError(f"Function {tool.name} is already registered.")
         if isinstance(tool, Callable):
-            tool = func_to_tool(tool)[0]
+            tool = func_to_tool(tool)
+            tool = tool[0] if isinstance(tool, list) and len(tool) == 1 else tool
         if not isinstance(tool, Tool):
             raise TypeError("Please register a Tool object.")
         self.registry[tool.name] = tool

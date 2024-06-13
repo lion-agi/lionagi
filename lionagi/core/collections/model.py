@@ -15,11 +15,20 @@ limitations under the License.
 """
 
 import os
+import asyncio
+import numpy as np
 from dotenv import load_dotenv
-from lionagi.libs import SysUtil, BaseService, StatusTracker, APIUtil
+from lionagi.libs import SysUtil, BaseService, StatusTracker, APIUtil, to_list, ninsert
 from .abc import Component, ModelLimitExceededError
 
 load_dotenv()
+
+
+_oai_price_map = {
+    "gpt-4o": (5, 15),
+    "gpt-4-turbo": (10, 30),
+    "gpt-3.5-turbo": (0.5, 1.5),
+}
 
 
 class iModel:
@@ -42,6 +51,8 @@ class iModel:
         iModel_name (str): Name of the model.
     """
 
+    default_model = "gpt-4o"
+
     def __init__(
         self,
         model: str = None,
@@ -56,6 +67,9 @@ class iModel:
         interval_requests: int = None,
         interval: int = None,
         service: BaseService = None,
+        allowed_parameters=[],
+        device: str = None,
+        costs=None,
         **kwargs,  # additional parameters for the model
     ):
         """
@@ -84,7 +98,7 @@ class iModel:
         self.ln_id: str = SysUtil.create_id()
         self.timestamp: str = SysUtil.get_timestamp(sep=None)[:-6]
         self.endpoint = endpoint
-
+        self.allowed_parameters = allowed_parameters
         if isinstance(provider, type):
             provider = provider.__name__.replace("Service", "").lower()
 
@@ -99,8 +113,8 @@ class iModel:
             provider_schema or SERVICE_PROVIDERS_MAPPING[provider]["schema"]
         )
         self.provider = SERVICE_PROVIDERS_MAPPING[provider]["service"]
-        self.endpoint_schema = self.provider_schema[endpoint]
-        self.token_limit = self.endpoint_schema.get("token_limit", None)
+        self.endpoint_schema = self.provider_schema.get(endpoint, {})
+        self.token_limit = self.endpoint_schema.get("token_limit", 100_000)
 
         if api_key is not None:
             self.api_key = api_key
@@ -108,33 +122,62 @@ class iModel:
         elif api_key_schema is not None:
             self.api_key = os.getenv(api_key_schema)
         else:
-            self.api_key = os.getenv(self.provider_schema["API_key_schema"][0])
+            api_schema = self.provider_schema.get("API_key_schema", None)
+            if api_schema:
+                self.api_key = os.getenv(
+                    self.provider_schema["API_key_schema"][0], None
+                )
 
         self.status_tracker = StatusTracker()
 
-        self.service: BaseService = self._set_up_service(
-            service=service,
-            provider=self.provider,
-            api_key=self.api_key,
-            schema=self.provider_schema,
-            token_encoding_name=token_encoding_name
-            or self.endpoint_schema["token_encoding_name"],
-            max_tokens=interval_tokens or self.endpoint_schema["interval_tokens"],
-            max_requests=interval_requests or self.endpoint_schema["interval_requests"],
-            interval=interval or self.endpoint_schema["interval"],
-        )
+        set_up_kwargs = {
+            "api_key": getattr(self, "api_key", None),
+            "schema": self.provider_schema or None,
+            "endpoint": self.endpoint,
+            "token_limit": self.token_limit,
+            "token_encoding_name": token_encoding_name
+            or self.endpoint_schema.get("token_encoding_name", None),
+            "max_tokens": interval_tokens
+            or self.endpoint_schema.get("interval_tokens", None),
+            "max_requests": interval_requests
+            or self.endpoint_schema.get("interval_requests", None),
+            "interval": interval or self.endpoint_schema.get("interval", None),
+        }
+
+        set_up_kwargs = {
+            k: v
+            for k, v in set_up_kwargs.items()
+            if v is not None and k in self.allowed_parameters
+        }
 
         self.config = self._set_up_params(
-            config or self.endpoint_schema["config"], **kwargs
+            config or self.endpoint_schema.get("config", {}), **kwargs
         )
 
-        if model and self.config["model"] != model:
+        if not model:
+            if "model" not in self.config:
+                model = SERVICE_PROVIDERS_MAPPING[provider]["default_model"]
+
+        if self.config.get("model", None) != model and model is not None:
             self.iModel_name = model
             self.config["model"] = model
-            self.endpoint_schema["config"]["model"] = model
+            ninsert(self.endpoint_schema, ["config", "model"], model)
 
         else:
             self.iModel_name = self.config["model"]
+
+        if device:
+            set_up_kwargs["device"] = device
+        set_up_kwargs["model"] = self.iModel_name
+        self.service: BaseService = self._set_up_service(
+            service=service,
+            provider=self.provider,
+            **set_up_kwargs,
+        )
+        if self.iModel_name in _oai_price_map:
+            self.costs = _oai_price_map[self.iModel_name]
+        else:
+            self.costs = costs or (0, 0)
 
     def update_config(self, **kwargs):
         """
@@ -172,6 +215,10 @@ class iModel:
         """
         if not service:
             provider = provider or self.provider
+            a = provider.__name__.replace("Service", "").lower()
+            if a in ["openai", "openrouter"]:
+                kwargs.pop("model", None)
+
             return provider(**kwargs)
         return service
 
@@ -190,10 +237,11 @@ class iModel:
         Raises:
             ValueError: If any parameter is not allowed.
         """
+        kwargs = {k: v for k, v in kwargs.items() if v is not None}
         params = {**default_config, **kwargs}
-        allowed_params = (
-            self.endpoint_schema["required"] + self.endpoint_schema["optional"]
-        )
+        allowed_params = self.endpoint_schema.get(
+            "required", []
+        ) + self.endpoint_schema.get("optional", [])
 
         if allowed_params != []:
             if (
@@ -221,7 +269,7 @@ class iModel:
         num_tokens = APIUtil.calculate_num_token(
             {"messages": messages},
             "chat/completions",
-            self.endpoint_schema["token_encoding_name"],
+            self.endpoint_schema.get("token_encoding_name", None),
         )
 
         if num_tokens > self.token_limit:
@@ -248,15 +296,16 @@ class iModel:
 
     async def embed_node(self, node, field="content", **kwargs) -> bool:
         """
-        if not specify field, we emebd node.content
+        if not specify field, we embed node.content
         """
         if not isinstance(node, Component):
             raise ValueError("Node must a lionagi item")
         embed_str = getattr(node, field)
+
         if isinstance(embed_str, dict) and "images" in embed_str:
             embed_str.pop("images", None)
             embed_str.pop("image_detail", None)
-            
+
         num_tokens = APIUtil.calculate_num_token(
             {"input": str(embed_str) if isinstance(embed_str, dict) else embed_str},
             "embeddings",
@@ -289,11 +338,82 @@ class iModel:
             + self.api_key[-4:],
             "endpoint": self.endpoint,
             "token_encoding_name": self.service.token_encoding_name,
-            **self.config,
+            **{
+                k: v
+                for k, v in self.config.items()
+                if k in getattr(self.service, "allowed_kwargs", []) and v is not None
+            },
+            "model_costs": None if self.costs == (0, 0) else self.costs,
         }
 
-    # TODO: add more endpoints
-    # async def call_embedding(self, input_file, **kwargs):
-    #     return await self.service.serve(input_file, "embedding", **kwargs)
+    async def compute_perplexity(
+        self,
+        initial_context: str = None,
+        tokens: list[str] = None,
+        system_msg: str = None,
+        n_samples: int = 1,  # number of samples used for the computation
+        use_residue: bool = True,  # whether to use residue for the last sample
+        **kwargs,  # additional arguments for the model
+    ) -> tuple[list[str], float]:
+        tasks = []
+        context = initial_context or ""
 
-    # TODO: add from_dict method
+        n_samples = n_samples or len(tokens)
+        sample_token_len, residue = divmod(len(tokens), n_samples)
+        samples = []
+
+        if n_samples == 1:
+            samples = [tokens]
+        else:
+            samples = [tokens[: (i + 1) * sample_token_len] for i in range(n_samples)]
+
+            if use_residue and residue != 0:
+                samples.append(tokens[-residue:])
+
+        sampless = [context + " ".join(sample) for sample in samples]
+
+        for sample in sampless:
+            messages = [{"role": "system", "content": system_msg}] if system_msg else []
+            messages.append(
+                {"role": "user", "content": sample},
+            )
+
+            task = asyncio.create_task(
+                self.call_chat_completion(
+                    messages=messages,
+                    logprobs=True,
+                    max_tokens=sample_token_len,
+                    **kwargs,
+                )
+            )
+            tasks.append(task)
+
+        results = await asyncio.gather(*tasks)  # result is (payload, response)
+        results_ = []
+        num_prompt_tokens = 0
+        num_completion_tokens = 0
+
+        for idx, result in enumerate(results):
+            _dict = {}
+            _dict["tokens"] = samples[idx]
+
+            num_prompt_tokens += result[1]["usage"]["prompt_tokens"]
+            num_completion_tokens += result[1]["usage"]["completion_tokens"]
+
+            logprobs = result[1]["choices"][0]["logprobs"]["content"]
+            logprobs = to_list(logprobs, flatten=True, dropna=True)
+            _dict["logprobs"] = [(i["token"], i["logprob"]) for i in logprobs]
+            results_.append(_dict)
+
+        logprobs = to_list(
+            [[i[1] for i in d["logprobs"]] for d in results_], flatten=True
+        )
+
+        return {
+            "tokens": tokens,
+            "n_samples": n_samples,
+            "num_prompt_tokens": num_prompt_tokens,
+            "num_completion_tokens": num_completion_tokens,
+            "logprobs": logprobs,
+            "perplexity": np.exp(np.mean(logprobs)),
+        }

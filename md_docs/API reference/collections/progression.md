@@ -1,6 +1,10 @@
 
 ### Class: `Progression`
 
+^166cef
+
+**Parent Class: [[#^bb802e|Element]]
+
 **Description**:
 `Progression` is a class representing an ordered sequence of elements. It extends the `Element` and `Ordering` classes and provides functionalities for managing, manipulating, and querying sequences.
 
@@ -8,7 +12,7 @@
 - `name` (str | None): The name of the progression.
 - `order` (list): The order of the progression.
 
-### Method: `__contains__`
+### `__contains__`
 
 **Signature**:
 ```python
@@ -31,7 +35,7 @@ is_in = item in progression_instance
 print("Item in progression:", is_in)
 ```
 
-### Method: `__len__`
+### `__len__`
 
 **Signature**:
 ```python
@@ -51,7 +55,7 @@ length = len(progression_instance)
 print("Number of items:", length)
 ```
 
-### Method: `keys`
+### `keys`
 
 **Signature**:
 ```python
@@ -71,7 +75,7 @@ keys = list(progression_instance.keys())
 print("Keys:", keys)
 ```
 
-### Method: `values`
+### `values`
 
 **Signature**:
 ```python
@@ -91,7 +95,7 @@ for value in progression_instance.values():
     print(value)
 ```
 
-### Method: `items`
+### `items`
 
 **Signature**:
 ```python
@@ -111,7 +115,7 @@ for index, value in progression_instance.items():
     print(index, value)
 ```
 
-### Method: `size`
+### `size`
 
 **Signature**:
 ```python
@@ -131,7 +135,7 @@ size = progression_instance.size()
 print("Size of progression:", size)
 ```
 
-### Method: `copy`
+### `copy`
 
 **Signature**:
 ```python
@@ -151,7 +155,7 @@ progression_copy = progression_instance.copy()
 print("Copy of progression:", progression_copy)
 ```
 
-### Method: `append`
+### `append`
 
 **Signature**:
 ```python
@@ -173,7 +177,7 @@ Appends an item to the end of the progression.
 progression_instance.append(new_item)
 ```
 
-### Method: `extend`
+### `extend`
 
 **Signature**:
 ```python
@@ -195,7 +199,7 @@ Extends the progression from the right with item(s).
 progression_instance.extend([item1, item2])
 ```
 
-### Method: `include`
+### `include`
 
 **Signature**:
 ```python
@@ -218,7 +222,7 @@ included = progression_instance.include(new_item)
 print("Item included:", included)
 ```
 
-### Method: `__getitem__`
+### `__getitem__`
 
 **Signature**:
 ```python
@@ -232,7 +236,7 @@ def __getitem__(self, key)
 - The item(s) at the specified key.
 
 **Exceptions Raised**:
-- `ItemNotFoundError`: If the key is not found.
+- [[Exceptions#^ee9dbb|ItemNotFoundError]]: If the key is not found.
 
 **Description**:
 Retrieves items from the progression using a key.
@@ -244,7 +248,7 @@ item = progression_instance[0]
 print("First item:", item)
 ```
 
-### Method: `remove`
+### `remove`
 
 **Signature**:
 ```python
@@ -255,7 +259,7 @@ def remove(self, item: LionIDable) -> None
 - `item` (LionIDable): The item to remove from the progression.
 
 **Exceptions Raised**:
-- `ItemNotFoundError`: If the item is not found.
+- [[Exceptions#^ee9dbb|ItemNotFoundError]]: If the item is not found.
 
 **Description**:
 Removes the next occurrence of an item from the progression.
@@ -266,7 +270,7 @@ Removes the next occurrence of an item from the progression.
 progression_instance.remove(item_to_remove)
 ```
 
-### Method: `__list__`
+### `__list__`
 
 **Signature**:
 ```python
@@ -286,7 +290,7 @@ items_list = progression_instance.__list__()
 print(items_list)
 ```
 
-### Method: `popleft`
+### `popleft`
 
 **Signature**:
 ```python
@@ -297,7 +301,7 @@ def popleft() -> Any
 - The leftmost item from the progression.
 
 **Exceptions Raised**:
-- `ItemNotFoundError`: If the progression is empty.
+- [[Exceptions#^ee9dbb|ItemNotFoundError]]: If the progression is empty.
 
 **Description**:
 Removes and returns the leftmost item from the progression.
@@ -309,7 +313,7 @@ leftmost_item = progression_instance.popleft()
 print("Leftmost item:", leftmost_item)
 ```
 
-### Method: `pop`
+### `pop`
 
 **Signature**:
 ```python
@@ -323,7 +327,7 @@ def pop(self, index=None) -> Any
 - The item at the specified index, or the last item if index is not specified.
 
 **Exceptions Raised**:
-- `ItemNotFoundError`: If the index is out of range.
+- [[Exceptions#^ee9dbb|ItemNotFoundError]]: If the index is out of range.
 
 **Description**:
 Removes and returns an item from the progression.
@@ -335,7 +339,7 @@ popped_item = progression_instance.pop()
 print("Popped item:", popped_item)
 ```
 
-### Method: `exclude`
+### `exclude`
 
 **Signature**:
 ```python
@@ -361,7 +365,7 @@ excluded = progression_instance.exclude(item_to_exclude)
 print("Item excluded:", excluded)
 ```
 
-### Method: `__add__`
+### `__add__`
 
 **Signature**:
 ```python
@@ -383,7 +387,7 @@ Adds an item or items to the end of the progression.
 new_progression = progression_instance + new_item
 ```
 
-### Method: `__radd__`
+### `__radd__`
 
 **Signature**:
 ```python
@@ -407,7 +411,7 @@ Adds an item or items to the beginning of the progression.
 new_progression = new_item + progression_instance
 ```
 
-### Method: `__setitem__`
+### `__setitem__`
 
 **Signature**:
 ```python
@@ -427,7 +431,7 @@ Sets new values in the progression using various key types.
 progression_instance[0] = new_value
 ```
 
-### Method: `__iadd__`
+### `__iadd__`
 
 **Signature**:
 ```python
@@ -449,7 +453,7 @@ Adds an item or items to the end of the progression in place.
 progression_instance += new_item
 ```
 
-### Method: `__isub__`
+### `__isub__`
 
 **Signature**:
 ```python
@@ -471,7 +475,7 @@ Removes an item or items from the progression in place.
 progression_instance -= item_to_remove
 ```
 
-### Method: `__sub__`
+### `__sub__`
 
 **Signature**:
 ```python
@@ -493,7 +497,7 @@ Removes an item or items from the progression.
 new_progression = progression_instance - item_to_remove
 ```
 
-### Method: `__iter__`
+### `__iter__`
 
 **Signature**:
 ```python
@@ -513,7 +517,7 @@ for item in progression_instance:
     print(item)
 ```
 
-### Method: `__next__`
+### `__next__`
 
 **Signature**:
 ```python
@@ -536,7 +540,7 @@ next_item = next(progression_instance)
 print("Next item:", next_item)
 ```
 
-### Method: `__repr__`
+### `__repr__`
 
 **Signature**:
 ```python
@@ -555,7 +559,7 @@ Returns a string representation of the progression.
 print(repr(progression_instance))
 ```
 
-### Method: `__str__`
+### `__str__`
 
 **Signature**:
 ```python
@@ -574,7 +578,7 @@ Returns a string representation of the progression.
 print(str(progression_instance))
 ```
 
-### Method: `__reversed__`
+### `__reversed__`
 
 **Signature**:
 ```python
@@ -594,7 +598,7 @@ for item in reversed(progression_instance):
     print(item)
 ```
 
-### Method: `clear`
+### `clear`
 
 **Signature**:
 ```python
@@ -613,7 +617,7 @@ Clears the progression.
 progression_instance.clear()
 ```
 
-### Method: `to_dict`
+### `to_dict`
 
 **Signature**:
 ```python
@@ -633,7 +637,7 @@ progression_dict = progression_instance.to_dict()
 print(progression_dict)
 ```
 
-### Method: `__bool__`
+### `__bool__`
 
 **Signature**:
 ```python

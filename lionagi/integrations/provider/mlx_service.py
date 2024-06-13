@@ -1,3 +1,4 @@
+import re
 from lionagi.libs.sys_util import SysUtil
 import lionagi.libs.ln_convert as convert
 from lionagi.libs.ln_api import BaseService
@@ -8,6 +9,10 @@ class MLXService(BaseService):
     def __init__(self, model=model, **kwargs):
 
         SysUtil.check_import("mlx_lm")
+        SysUtil.check_import("ipywidgets")
+
+        if model is not None and "olmo" in str(model).lower():
+            SysUtil.check_import("olmo", pip_name="ai2-olmo")
 
         from mlx_lm import load, generate
 
@@ -19,16 +24,13 @@ class MLXService(BaseService):
         self.model = model_
         self.tokenizer = tokenizer
         self.generate = generate
+        self.allowed_kwargs = []
 
     async def serve_chat(self, messages, **kwargs):
         if "verbose" not in kwargs.keys():
-            verbose = True
+            verbose = False
 
-        prompts = [
-            convert.to_dict(msg["content"])["instruction"]
-            for msg in messages
-            if msg["role"] == "user"
-        ]
+        prompts = [msg["content"] for msg in messages if msg["role"] == "user"]
 
         payload = {"messages": messages}
 
@@ -39,8 +41,13 @@ class MLXService(BaseService):
                 prompt=f"{prompts[-1]} \nOutput: ",
                 verbose=verbose,
             )
-            completion = {"model": self.model_name, "choices": [{"message": response}]}
-
+            if "```" in response:
+                regex = re.compile(r"```[\s\S]*?```")
+                matches = regex.findall(response)
+                msg = matches[0].strip("```")
+                completion = {"choices": [{"message": {"content": msg}}]}
+            else:
+                completion = {"choices": [{"message": {"content": response}}]}
             return payload, completion
         except Exception as e:
             self.status_tracker.num_tasks_failed += 1

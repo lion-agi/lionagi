@@ -1,13 +1,19 @@
 
 ### Class: `Node`
 
+^c394ef
+
+**Parent Class:** [[Component#^ce462d|Component]], [[API reference/collections/abc/Concepts#^4af61d|Relatable]]
+
+^006c2c
+
 **Description**:
 `Node` represents a node in a graph structure, allowing connections to other nodes via edges. It extends `Component` by incorporating relational capabilities, enabling nodes to connect through directed edges representing incoming and outgoing relationships.
 
 #### Attributes:
-- `relations` (dict[str, Pile]): A dictionary holding `Pile` instances for incoming ('in') and outgoing ('out') edges.
+- `relations` `(dict[str, Pile])`: A dictionary holding [[Pile#^0206c8|Pile]] instances for incoming (`in`) and outgoing (`out`) edges.
 
-### Method: `edges`
+### `edges`
 
 **Signature**:
 ```python
@@ -27,7 +33,7 @@ edges = node.edges
 print(edges)
 ```
 
-### Method: `related_nodes`
+### `related_nodes`
 
 **Signature**:
 ```python
@@ -47,7 +53,7 @@ related_nodes = node.related_nodes
 print(related_nodes)
 ```
 
-### Method: `node_relations`
+### `node_relations`
 
 **Signature**:
 ```python
@@ -67,7 +73,7 @@ relations = node.node_relations
 print(relations)
 ```
 
-### Method: `predecessors`
+### `predecessors`
 
 **Signature**:
 ```python
@@ -87,7 +93,7 @@ predecessors = node.predecessors
 print(predecessors)
 ```
 
-### Method: `successors`
+### `successors`
 
 **Signature**:
 ```python
@@ -107,7 +113,7 @@ successors = node.successors
 print(successors)
 ```
 
-### Method: `relate`
+### `relate`
 
 **Signature**:
 ```python
@@ -137,7 +143,7 @@ node.relate(other_node, direction="out", condition=my_condition, label="my_label
 print("Nodes related")
 ```
 
-### Method: `remove_edge`
+### `remove_edge`
 
 **Signature**:
 ```python
@@ -160,7 +166,7 @@ success = node.remove_edge(other_node, edge)
 print("Edge removed:", success)
 ```
 
-### Method: `unrelate`
+### `unrelate`
 
 **Signature**:
 ```python
@@ -183,7 +189,7 @@ success = node.unrelate(other_node, edge="all")
 print("Nodes unrelated:", success)
 ```
 
-### Method: `__str__`
+### `__str__`
 
 **Signature**:
 ```python
@@ -201,7 +207,7 @@ Returns a string representation of the node, including the number of incoming an
 print(node)
 ```
 
-### Method: `__repr__`
+### `__repr__`
 
 **Signature**:
 ```python

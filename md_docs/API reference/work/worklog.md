@@ -6,7 +6,7 @@
 
 ### Attributes:
 
-- `pile` (Pile): A pile containing work items.
+- `pile` [[Pile#^0206c8|Pile]]: A pile containing work items.
 - `pending` (Progression): A progression of pending work items.
 - `queue` (WorkQueue): A queue to manage the execution of work items.
 
@@ -88,7 +88,7 @@ def pending_work(self) -> Pile
 ```
 
 **Returns**:
-- `Pile`: A pile of pending work items.
+- [[Pile#^0206c8|Pile]]: A pile of pending work items.
 
 **Description**:
 Retrieves the pile of pending work items.
@@ -126,7 +126,7 @@ def completed_work(self) -> Pile
 ```
 
 **Returns**:
-- `Pile`: A pile of completed work items.
+- [[Pile#^0206c8|Pile]]: A pile of completed work items.
 
 **Description**:
 Retrieves the pile of completed work items.

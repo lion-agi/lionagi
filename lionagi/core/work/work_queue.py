@@ -15,6 +15,7 @@ limitations under the License.
 """
 
 import asyncio
+from lionagi.core.work.work import WorkStatus
 
 
 class WorkQueue:
@@ -24,16 +25,19 @@ class WorkQueue:
     Attributes:
         capacity (int): The maximum number of tasks the queue can handle.
         queue (asyncio.Queue): The queue holding the tasks.
-        _stop_event (asyncio.Event): Event to signal stopping of the queue.
-        semaphore (asyncio.Semaphore): Semaphore to control access based on capacity.
+        _stop_event (asyncio.Event): Event to signal stopping `execute` of the queue.
+        available_capacity (int): The remaining number of tasks the queue can handle.
+        execution_mode (bool): If `execute` is running.
     """
 
     def __init__(self, capacity=5):
-
+        if capacity < 0:
+            raise ValueError("initial capacity must be >= 0")
+        self.capacity = capacity
         self.queue = asyncio.Queue()
         self._stop_event = asyncio.Event()
-        self.capacity = capacity
-        self.semaphore = asyncio.Semaphore(capacity)
+        self.available_capacity = capacity
+        self.execution_mode = False
 
     async def enqueue(self, work) -> None:
         """Enqueue a work item."""
@@ -52,30 +56,48 @@ class WorkQueue:
         self._stop_event.set()
 
     @property
-    def available_capacity(self):
-        """Return the available capacity of the queue."""
-        available = self.capacity - self.queue.qsize()
-        return available if available > 0 else None
-
-    @property
     def stopped(self) -> bool:
         """Return whether the queue has been stopped."""
         return self._stop_event.is_set()
 
+    # async def process(self):
+        # async def _parse_work(work):
+        #     async with self.semaphore:
+        #         await work.perform()
+        #
+        # tasks = set()
+        # while self.queue.qsize() > 0:
+        #     next = await self.dequeue()
+        #     next.status = WorkStatus.IN_PROGRESS
+        #     task = asyncio.create_task(_parse_work(next))
+        #     tasks.add(task)
+        #
+        # await asyncio.wait(tasks)
+
     async def process(self) -> None:
         """Process the work items in the queue."""
         tasks = set()
-        while self.queue.qsize() > 0 and not self.stopped:
-            if not self.available_capacity and tasks:
-                _, done = await asyncio.wait(tasks, return_when=asyncio.FIRST_COMPLETED)
-                tasks.difference_update(done)
+        while self.available_capacity > 0 and self.queue.qsize() > 0:
+            next = await self.dequeue()
+            next.status = WorkStatus.IN_PROGRESS
+            task = asyncio.create_task(next.perform())
+            tasks.add(task)
+            self.available_capacity -= 1
 
-            async with self.semaphore:
-                next = await self.dequeue()
-                if next is None:
-                    break
-                task = asyncio.create_task(next.perform())
-                tasks.add(task)
+        if tasks:
+            await asyncio.wait(tasks)
+            self.available_capacity = self.capacity
 
-            if tasks:
-                await asyncio.wait(tasks)
+    async def execute(self, refresh_time=1):
+        """
+            Continuously executes the process method at a specified refresh interval.
+
+            Args:
+                refresh_time (int, optional): The time in seconds to wait between
+                    successive calls to `process`. Defaults to 1.
+        """
+        self.execution_mode = True
+        while not self.stopped:
+            await self.process()
+            await asyncio.sleep(refresh_time)
+        self.execution_mode = False

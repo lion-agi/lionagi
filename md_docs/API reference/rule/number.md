@@ -1,6 +1,8 @@
 
 ### Class: `NumberRule`
 
+**Parent Class:** [[Base Rule#^34c3a1|Rule]]
+
 **Description**:
 `NumberRule` is a rule for validating that a value is a number (either integer or float) within specified bounds. It inherits from the `Rule` class and provides methods for validation and fixing of numeric values.
 
@@ -12,7 +14,7 @@
 - `precision` (int | None): The precision for floating point numbers.
 - `fields` (list[str]): The fields to which the rule applies. Default is `["confidence_score", "score"]`.
 
-### Method: `__init__`
+### `__init__`
 
 **Signature**:
 ```python
@@ -26,7 +28,7 @@ def __init__(self, apply_type="int, float", **kwargs):
 **Description**:
 Initializes the `NumberRule` with the specified type and additional keyword arguments, including upper and lower bounds, number type, and precision.
 
-### Method: `validate`
+### `validate`
 
 **Signature**:
 ```python
@@ -45,7 +47,7 @@ async def validate(self, value: Any) -> Any:
 **Description**:
 Validates that the given value is a number (either integer or float).
 
-### Method: `perform_fix`
+### `perform_fix`
 
 **Signature**:
 ```python

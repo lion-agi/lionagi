@@ -2,16 +2,16 @@
 ### Class: `Session`
 
 **Description**:
-`Session` is a class for managing branches, mail transfer, and interactions with a model. It encapsulates the entire lifecycle of a session, including the creation and manipulation of branches, the collection and sending of mail, and handling chat and directive interactions.
+`Session` is a class for managing branches, [[Mail#^c3b817|Mail]] transfer, and interactions with a model. It encapsulates the entire lifecycle of a session, including the creation and manipulation of branches, the collection and sending of mail, and handling chat and [[API reference/collections/abc/Concepts#^759d9f|Directive]] interactions.
 
 ### Attributes:
 
 - `ln_id` (str): The unique identifier for the session.
 - `timestamp` (str): The timestamp when the session was created.
-- `system` (System): The default system message for the session.
+- `system` ([[System Message#^2711f6|System]]): The default system message for the session.
 - `system_sender` (str): The sender of the system message.
-- `branches` (Pile[Branch]): The pile of branches in the session.
-- `mail_transfer` (Exchange): The exchange for managing mail transfer.
+- `branches` ([[Pile#^0206c8|Pile]]): The pile of branches in the session.
+- `mail_transfer` ([[Exchange#^2a685d|Exchange]]): The exchange for managing mail transfer.
 - `mail_manager` (MailManager): The manager for handling mail.
 - `imodel` (iModel): The model associated with the session.
 - `user` (str): The user associated with the session.
@@ -35,7 +35,7 @@ def __init__(
 
 **Parameters**:
 - `system` (System, optional): The default system message for the session.
-- `branches` (Any | None, optional): The initial branches for the session.
+- `branches` (Any | None, optional): The initial [[branch#^958e6d|branches]] for the session.
 - `system_sender` (str | None, optional): The sender of the system message.
 - `user` (str | None, optional): The user associated with the session.
 - `imodel` (iModel, optional): The model associated with the session.
@@ -43,24 +43,6 @@ def __init__(
 **Description**:
 Initializes a new session with the given parameters, setting up branches, mail transfer, mail manager, and the default branch.
 
-#### `_validate_branches`
-
-**Signature**:
-```python
-def _validate_branches(self, value):
-```
-
-**Parameters**:
-- `value` (Any): The input value to validate and convert.
-
-**Returns**:
-- `Pile[Branch]`: A pile of validated branches.
-
-**Raises**:
-- `ValueError`: If the input value contains non-Branch objects.
-
-**Description**:
-Validates and converts the branches input to a `Pile` of `Branch` objects.
 
 #### `new_branch`
 

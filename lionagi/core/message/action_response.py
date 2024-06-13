@@ -74,7 +74,7 @@ class ActionResponse(RoledMessage):
                 "action_response": {
                     "function": action_request.function,
                     "arguments": action_request.arguments,
-                    "func_outputs": func_outputs,
+                    "output": func_outputs,
                 }
             },
             **kwargs,

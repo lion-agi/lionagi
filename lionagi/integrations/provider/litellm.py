@@ -31,12 +31,13 @@ class LiteLLMService(BaseService):
         self.acompletion = acompletion
         self.model = model
         self.kwargs = kwargs
+        self.allowed_kwargs = allowed_kwargs
 
     async def serve_chat(self, messages, **kwargs):
         payload = {"messages": messages}
         config = {}
         for k, v in kwargs.items():
-            if k in allowed_kwargs:
+            if k in self.allowed_kwargs:
                 config[k] = v
 
         kwargs = {**self.kwargs, **config}

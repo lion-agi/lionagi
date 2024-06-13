@@ -177,7 +177,7 @@ class Form(BaseForm):
             f"""
         ## input: {i}:
         - description: {getattr(self._all_fields[i], "description", "N/A")}
-        - value: {str(self.__getattribute__(self.input_fields[idx]))}
+        - value: {str(getattr(self, self.input_fields[idx]))}
         """
             for idx, i in enumerate(self.input_fields)
         )

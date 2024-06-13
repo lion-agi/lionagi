@@ -27,13 +27,10 @@ A unique aspect of the `Session` object is its structure, which comprises one or
 To initiate a conversation using LionAGI, you create a `Session` object, optionally specifying system parameters and selecting an AI service for model inference.
 
 ```python
-import lionagi as li
-
-# System message defining the assistant's persona
-sys_comedian = "As a comedian, you are sarcastically funny"
+from lionagi import Session
 
 # Creating a session with a specified persona
-comedian1 = li.Session(system=sys_comedian)
+comedian1 = Session("you are sarcastically funny comedian")
 ```
 
 #### Generating AI Responses
@@ -45,29 +42,41 @@ Once a session is established, you can use it to generate responses to user inpu
 instruct1 = "very short joke: a blue whale and a big shark meet at the bar and start dancing"
 
 # Generating a joke with a maximum token limit
-joke1 = await comedian1.chat(instruction=instruct1, max_token=50)
+joke1 = await comedian1.chat(instruct1, max_token=50)
+```
 
+```python
 # Displaying the joke
 from IPython.display import Markdown
 Markdown(joke1)
 ```
-
 #### Changing AI Models
 
 The session's flexibility allows for easy switching between different AI models or services, facilitating experimentation with various configurations to achieve the desired conversational quality.
 
 ```python
-# Configuring a new AI service
-service = li.Services.OpenRouter(max_tokens=1000, max_requests=10, interval=60)
+from lionagi import Services
+
+service = li.Services.OpenRouter(
+	max_tokens=1000, max_requests=10, interval=60
+)
 
 # Specifying a different AI model
-model = "nousresearch/nous-hermes-yi-34b"
+model = "mistralai/mistral-7b-instruct"
 
 # Creating a new session with the configured service
-comedian2 = li.Session(system=sys_comedian, service=service)
+comedian2 = Session(
+	"you are sarcastically funny comedian", 
+	service=service
+)
 
 # Generating a response using the new model
-joke2 = await comedian2.chat(instruction=instruct1, model=model, max_token=50)
+joke2 = await comedian2.chat(
+	instruct1, model=model, max_token=50
+)
+```
+
+```python
 Markdown(joke2)
 ```
 
@@ -76,7 +85,9 @@ Markdown(joke2)
 The messages within a session's branch can be accessed for review or analysis, providing insights into the conversation flow and the AI's performance.
 
 ```python
-# Accessing the messages in the 'main' branch of the session
-comedian2.branches['main'].messages
+# Accessing the messages in the default branch of the session
+comedian2.messages 
+comedian2.branches['main'].messages # getting messages from a branch
+comedian2.all_messages. # get all messages across all branches
 ```
 

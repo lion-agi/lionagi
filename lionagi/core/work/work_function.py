@@ -13,9 +13,13 @@ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the License for the specific language governing permissions and
 limitations under the License.
 """
+import logging
 
 from lionagi.libs.ln_func_call import rcall
+from lionagi.libs.ln_parse import ParseUtil
 from lionagi.core.work.worklog import WorkLog
+
+from lionagi.core.report.form import Form
 
 
 class WorkFunction:
@@ -86,7 +90,12 @@ class WorkFunction:
 
     async def forward(self):
         """
-        Forwards the work log and processes the work queue.
+        Forward the work log to work queue.
         """
         await self.worklog.forward()
+
+    async def process(self):
+        """
+        Process the first capacity_size works in the work queue.
+        """
         await self.worklog.queue.process()

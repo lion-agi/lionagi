@@ -40,7 +40,7 @@ class TreeNode(Node):
             self.relate(
                 _child,
                 direction="out",
-                label=TreeLabel.PARENT,
+                # label=TreeLabel.PARENT,
                 condition=condition,
                 bundle=bundle,
             )
@@ -59,7 +59,7 @@ class TreeNode(Node):
         self.relate(
             node,
             direction="in",
-            label=TreeLabel.PARENT,
+            # label=TreeLabel.PARENT,
             condition=condition,
             bundle=bundle,
         )

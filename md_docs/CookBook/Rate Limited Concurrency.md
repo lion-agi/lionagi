@@ -40,9 +40,9 @@ instruct = instruct1 if case == 0 else instruct2
 Now, we are ready to create our first session:
 
 ``` python
-import lionagi as li
+from lionagi import Session
 
-calculator = li.Session(system)
+calculator = Session([[system#^2711f6|System]])
 step1 = await calculator.chat(instruct, context=context)
 step2 = await calculator.chat(instruct3, temperature=0.5)
 ```
@@ -90,8 +90,10 @@ execution of element-wise functions. Rather than explicitly executing
 each function on every element, you can achieve it in a single call.
 
 ``` python
+import lionagi.libs.ln_func_call as func_call
+
 f = [f1,f2,f3,f4,f5]
-ys = await li.mcall(xs, f)
+ys = await func_call.mcall(xs, f)
 ```
 
 Suppose the cases for each pair of x and y are:
@@ -106,8 +108,13 @@ streamline the application of a single function across an entire input
 list.
 
 ``` python
-f = lambda i: {"x": str(xs[i]), "y": str(ys[i]), "case": str(cases[i])}
-contexts = li.lcall(range(5), f)
+f = lambda i: {
+	"x": str(xs[i]), 
+	"y": str(ys[i]), 
+	"case": str(cases[i])
+}
+
+contexts = func_call.lcall(range(5), f)
 ```
 
 If you print out the `contexts`, it would be like this:
@@ -127,18 +134,18 @@ execution, running five scenarios in parallel.
 ``` python
 async def calculator_workflow(context):
 
-     calculator = li.Session(system)       # construct a session instance
+     calculator = Session([[system#^2711f6|System]])       # construct a session instance
      context = context.copy()
      case = int(context.pop("case"))
      instruct = instruct1 if case == 0 else instruct2
 
-     step1 = await calculator.chat(instruct, context=context)    # run the steps
+     step1 = await calculator.chat(instruct, context=context)    
      step2 = await calculator.chat(instruct3, temperature=0.5)
 
      return (step1, step2)
 
 # al_call (async list call): async version of l_call
-outs = await li.alcall(contexts, calculator_workflow)
+outs = await func_call.alcall(contexts, calculator_workflow)
 ```
 
 Let's check our results:

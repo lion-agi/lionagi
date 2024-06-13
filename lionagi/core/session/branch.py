@@ -110,7 +110,7 @@ class Branch(Node, DirectiveMixin):
             system (System): The system message to set.
             sender (str, optional): The sender of the system message.
         """
-        system = system or "You are a helpful assistant, let's think step by step"
+        system = system or "You are a helpful assistant."
         if len(self.progress) == 0:
             self.add_message(system=system, sender=sender)
         else:
@@ -292,6 +292,22 @@ class Branch(Node, DirectiveMixin):
             if isinstance(self.messages[i], Instruction):
                 self.messages[i]._meta_insert(["extra"], meta)
                 return
+
+    @property
+    def last_response(self):
+        for i in reversed(self.progress):
+            if isinstance(self.messages[i], AssistantResponse):
+                return self.messages[i]
+
+    @property
+    def assistant_responses(self):
+        return pile(
+            [
+                self.messages[i]
+                for i in self.progress
+                if isinstance(self.messages[i], AssistantResponse)
+            ]
+        )
 
     def to_df(self) -> Any:
         """

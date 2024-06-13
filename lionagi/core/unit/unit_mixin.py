@@ -24,7 +24,8 @@ from abc import ABC
 
 from typing import Any, Optional
 
-from lionagi.libs.ln_parse import ParseUtil, StringMatch
+from lionagi.libs import ParseUtil, StringMatch, to_list
+from lionagi.libs.ln_nested import nmerge
 from lionagi.core.collections.abc import ActionError
 from lionagi.core.message import ActionRequest, ActionResponse, Instruction
 from lionagi.core.message.util import _parse_action_request
@@ -131,9 +132,11 @@ class DirectiveMixin(ABC):
         invoke_tool: bool = True,
         branch: Optional[Any] = None,
         action_request: Optional[Any] = None,
+        costs=None,
     ) -> Any:
         """
         Processes the chat completion response.
+        Currently only support last message for function calling
 
         Args:
             payload: The payload data.
@@ -148,23 +151,43 @@ class DirectiveMixin(ABC):
         """
         branch = branch or self.branch
         _msg = None
+
         if "choices" in completion:
-            aa = payload.pop("messages", None)
+            payload.pop("messages", None)
             branch.update_last_instruction_meta(payload)
-            msg = completion.pop("choices", None)
-            if msg and isinstance(msg, list):
-                msg = msg[0]
+            _choices = completion.pop("choices", None)
 
-            if isinstance(msg, dict):
-                _msg = msg.pop("message", None)
-                completion.update(msg)
+            def process_completion_choice(choice, price=None):
+                if isinstance(choice, dict):
+                    msg = choice.pop("message", None)
+                    _completion = completion.copy()
+                    _completion.update(choice)
+                    branch.add_message(
+                        assistant_response=msg,
+                        metadata=_completion,
+                        sender=sender,
+                    )
 
-                branch.add_message(
-                    assistant_response=_msg,
-                    metadata=completion,
-                    sender=sender,
+                a = branch.messages[-1]._meta_get(
+                    ["extra", "usage", "prompt_tokens"], 0
                 )
-                branch.imodel.status_tracker.num_tasks_succeeded += 1
+                b = branch.messages[-1]._meta_get(
+                    ["extra", "usage", "completion_tokens"], 0
+                )
+                m = completion.get("model", None)
+                if m:
+                    ttl = (a * price[0] + b * price[1]) / 1000000
+                    branch.messages[-1]._meta_insert(["extra", "usage", "expense"], ttl)
+                return msg
+
+            if _choices and not isinstance(_choices, list):
+                _choices = [_choices]
+
+            if _choices and isinstance(_choices, list):
+                for _choice in _choices:
+                    _msg = process_completion_choice(_choice, price=costs)
+
+            branch.imodel.status_tracker.num_tasks_succeeded += 1
         else:
             branch.imodel.status_tracker.num_tasks_failed += 1
 
@@ -200,7 +223,7 @@ class DirectiveMixin(ABC):
 
         if action_request:
             for i in action_request:
-                if i.function in branch.tool_manager:
+                if i.function in branch.tool_manager.registry:
                     i.recipient = branch.tool_manager.registry[i.function].ln_id
                 else:
                     raise ActionError(f"Tool {i.function} not found in registry")
@@ -211,7 +234,6 @@ class DirectiveMixin(ABC):
             for i in action_request:
                 tool = branch.tool_manager.registry[i.function]
                 tasks.append(asyncio.create_task(tool.invoke(i.arguments)))
-
             results = await asyncio.gather(*tasks)
 
             for idx, item in enumerate(results):
@@ -238,6 +260,7 @@ class DirectiveMixin(ABC):
         rulebook: Any = None,
         use_annotation: bool = True,
         template_name: str = None,
+        costs=None,
     ) -> Any:
         """
         Outputs the final processed response.
@@ -263,6 +286,7 @@ class DirectiveMixin(ABC):
             completion=completion,
             sender=sender,
             invoke_tool=invoke_tool,
+            costs=costs,
         )
 
         if _msg is None:
@@ -366,6 +390,7 @@ class DirectiveMixin(ABC):
             imodel=imodel, branch=branch, **config
         )
 
+        imodel = imodel or self.imodel
         out_ = await self._output(
             payload=payload,
             completion=completion,
@@ -377,6 +402,7 @@ class DirectiveMixin(ABC):
             strict=strict,
             rulebook=rulebook,
             use_annotation=use_annotation,
+            costs=imodel.costs,
         )
 
         return out_, branch if return_branch else out_
@@ -454,11 +480,19 @@ class DirectiveMixin(ABC):
             **kwargs,
         )
 
+        if isinstance(a, str):
+            return a
+
         a = list(a)
+
         if len(a) == 2 and a[0] == a[1]:
             return a[0] if not isinstance(a[0], tuple) else a[0][0]
-
-        return a[0], a[1]
+        if len(a) == 2 and a[0] != a[1]:
+            return a[0], a[1]
+        if len(a) == 1 and isinstance(a[0], tuple):
+            return a[0][0]
+        if len(a) == 1 and not isinstance(a[0], tuple):
+            return a[0]
 
     async def _direct(
         self,
@@ -484,6 +518,7 @@ class DirectiveMixin(ABC):
         clear_messages=False,
         return_branch=False,
         images: Optional[str] = None,
+        verbose=None,
         **kwargs,
     ):
         """
@@ -539,6 +574,7 @@ class DirectiveMixin(ABC):
             predict_num_sentences=predict_num_sentences,
             clear_messages=clear_messages,
             return_branch=return_branch,
+            verbose=verbose,
             **kwargs,
         )
 
@@ -573,6 +609,7 @@ class DirectiveMixin(ABC):
         clear_messages=False,
         return_branch=False,
         images: Optional[str] = None,
+        verbose=None,
         **kwargs,
     ):
         """
@@ -621,36 +658,45 @@ class DirectiveMixin(ABC):
         if allow_action and not tools:
             tools = True
 
+        tool_schema=None
         if tools:
             tool_schema = branch.tool_manager.get_tool_schema(tools)
 
-            if not form:
-                form = self.form_template(
-                    instruction=instruction,
-                    context=context,
-                    reason=reason,
-                    predict=predict,
-                    score=score,
-                    select=select,
-                    plan=plan,
-                    tool_schema=tool_schema,
-                    allow_action=allow_action,
-                    allow_extension=allow_extension,
-                    max_extension=max_extension,
-                    confidence=confidence,
-                    score_num_digits=score_num_digits,
-                    score_range=score_range,
-                    select_choices=select_choices,
-                    plan_num_step=plan_num_step,
-                    predict_num_sentences=predict_num_sentences,
-                )
+        if not form:
+            form = self.default_template(
+                instruction=instruction,
+                context=context,
+                reason=reason,
+                predict=predict,
+                score=score,
+                select=select,
+                plan=plan,
+                tool_schema=tool_schema,
+                allow_action=allow_action,
+                allow_extension=allow_extension,
+                max_extension=max_extension,
+                confidence=confidence,
+                score_num_digits=score_num_digits,
+                score_range=score_range,
+                select_choices=select_choices,
+                plan_num_step=plan_num_step,
+                predict_num_sentences=predict_num_sentences,
+            )
 
-            elif form and "tool_schema" not in form._all_fields:
-                form.append_to_input("tool_schema")
-                form.tool_schema = tool_schema
+        elif form and "tool_schema" not in form._all_fields:
+            form.append_to_input("tool_schema")
+            form.tool_schema = tool_schema
 
-            else:
-                form.tool_schema = tool_schema
+        else:
+            form.tool_schema = tool_schema
+
+        verbose = (
+            verbose
+            if verbose is not None and isinstance(verbose, bool)
+            else self.verbose
+        )
+        if verbose:
+            print("Chatting with model...")
 
         # Call the base chat method
         form = await self._chat(
@@ -664,17 +710,37 @@ class DirectiveMixin(ABC):
         if allow_action and getattr(form, "action_required", None):
             actions = getattr(form, "actions", None)
             if actions:
+                if verbose:
+                    print(
+                        "Found action requests in model response. Processing actions..."
+                    )
                 form = await self._act(form, branch, actions=actions)
+                if verbose:
+                    print("Actions processed!")
 
         last_form = form
 
+        ctr = 1
+
         # Handle extensions if allowed and required
         extension_forms = []
-        while allow_extension and getattr(last_form, "extension_required", None):
-            if max_extension <= 0:
+        max_extension = max_extension if isinstance(max_extension, int) else 3
+        while (
+            allow_extension
+            and max_extension > 0
+            and getattr(last_form, "extension_required", None)
+        ):
+            if getattr(last_form, "is_extension", None):
                 break
+            if verbose:
+                print(f"\nFound extension requests in model response.")
+                print(
+                    f"------------------- Processing extension No.{ctr} -------------------"
+                )
+
             max_extension -= 1
 
+            # new form cannot be extended, otherwise it will be an infinite loop
             new_form = await self._extend(
                 tools=tools,
                 reason=reason,
@@ -688,25 +754,58 @@ class DirectiveMixin(ABC):
                 score_range=score_range,
                 select_choices=select_choices,
                 predict_num_sentences=predict_num_sentences,
-                allow_extension=isinstance(max_extension, int) and max_extension > 0,
-                max_extension=max_extension,
                 **kwargs,
             )
 
+            if verbose:
+                print(f"------------------- Extension completed -------------------\n")
+
             extension_forms.extend(new_form)
             last_form = new_form[-1] if isinstance(new_form, list) else new_form
+            ctr += len(form)
 
         if extension_forms:
             if not getattr(form, "extension_forms", None):
                 form._add_field("extension_forms", list, None, [])
             form.extension_forms.extend(extension_forms)
+            action_responses = [
+                i.action_response
+                for i in extension_forms
+                if getattr(i, "action_response", None) is not None
+            ]
+            if not hasattr(form, "action_response"):
+                form.add_field("action_response", {})
+
+            for action_response in action_responses:
+                nmerge([form.action_response, action_response])
 
         if "PLEASE_ACTION" in form.answer:
-            form.answer = await self._chat(
+            if verbose:
+                print("Analyzing action responses and generating answer...")
+
+            answer = await self._chat(
                 "please provide final answer basing on the above"
                 " information, provide answer value as a string only"
                 " do not return as json, do not include other information",
             )
+
+            if isinstance(answer, dict):
+                a = answer.get("answer", None)
+                if a is not None:
+                    answer = a
+
+            answer = str(answer).strip()
+            if answer.startswith("{") and answer.endswith("}"):
+                answer = answer[1:-1]
+                answer = answer.strip()
+            if '"answer":' in answer:
+                answer.replace('"answer":', "")
+                answer = answer.strip()
+            elif "'answer':" in answer:
+                answer.replace("'answer':", "")
+                answer = answer.strip()
+
+            form.answer = answer
 
         return form, branch if return_branch else form
 
@@ -725,8 +824,6 @@ class DirectiveMixin(ABC):
         score_range,
         select_choices,
         predict_num_sentences,
-        allow_extension,
-        max_extension,
         **kwargs,
     ):
         """
@@ -768,8 +865,6 @@ class DirectiveMixin(ABC):
             "score_range": score_range,
             "select_choices": select_choices,
             "predict_num_sentences": predict_num_sentences,
-            "allow_extension": allow_extension,
-            "max_extension": max_extension,
             **kwargs,
         }
 
@@ -781,6 +876,7 @@ class DirectiveMixin(ABC):
             for i in keys:
                 directive_kwargs["instruction"] = plan[i]
                 last_form = await self._direct(**directive_kwargs)
+                last_form.is_extension = True
                 extension_forms.append(last_form)
                 directive_kwargs["max_extension"] -= 1
                 if not getattr(last_form, "extension_required", None):
@@ -789,6 +885,7 @@ class DirectiveMixin(ABC):
         else:
             # Handle single step extension
             last_form = await self._direct(**directive_kwargs)
+            last_form.is_extension = True
             extension_forms.append(last_form)
 
         return extension_forms
@@ -805,7 +902,7 @@ class DirectiveMixin(ABC):
         Returns:
             dict: The updated form.
         """
-        if getattr(form, "performed", None):
+        if getattr(form, "action_performed", None) is True:
             return form
 
         keys = [f"action_{i+1}" for i in range(len(actions))]
@@ -845,8 +942,8 @@ class DirectiveMixin(ABC):
                     _action_responses[f"action_{idx+1}"] = item._to_dict()
 
                 form.append_to_request("action_response")
-                if not form.action_response:
-                    form.action_response = {}
+                if (a := getattr(form, "action_response", None)) is None:
+                    form.add_field("action_response", {})
 
                 len1 = len(form.action_response)
                 for k, v in _action_responses.items():
@@ -1049,6 +1146,8 @@ class DirectiveMixin(ABC):
             Any: The processed response.
         """
         out_ = content_.get("content", "")
+        if out_ == "":
+            out_ = content_
 
         if requested_fields:
             with contextlib.suppress(Exception):
@@ -1056,10 +1155,10 @@ class DirectiveMixin(ABC):
 
         if isinstance(out_, str):
             with contextlib.suppress(Exception):
-                return ParseUtil.extract_json_block(out_)
+                return ParseUtil.fuzzy_parse_json(out_)
 
             with contextlib.suppress(Exception):
-                return ParseUtil.fuzzy_parse_json(out_)
+                return ParseUtil.extract_json_block(out_)
 
             with contextlib.suppress(Exception):
                 match = re.search(r"```json\n({.*?})\n```", out_, re.DOTALL)

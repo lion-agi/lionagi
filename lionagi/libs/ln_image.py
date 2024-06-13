@@ -42,7 +42,8 @@ class ImageUtil:
 
     @staticmethod
     def read_image_to_base64(
-        image_path: str, color_flag: Optional[int] = None,
+        image_path: str,
+        color_flag: Optional[int] = None,
     ) -> str:
         image_path = str(image_path)
         image = ImageUtil.read_image_to_array(image_path, color_flag)

@@ -1,12 +1,14 @@
 
-### Class: `Record`
+## Class: `Record`
+
+^14e4ff
+
+**Parent Class:** [`ABC`](https://docs.python.org/3/library/abc.html)
 
 **Description**:
 `Record` is an abstract base class for managing a collection of unique LionAGI items. It accepts `LionIDable` for retrieval and requires `Component` instances for addition.
 
-#### Methods:
-
-### Method: `keys`
+### `keys`
 
 **Signature**:
 ```python
@@ -26,7 +28,7 @@ for key in record.keys():
     print(key)
 ```
 
-### Method: `values`
+### `values`
 
 **Signature**:
 ```python
@@ -46,7 +48,7 @@ for value in record.values():
     print(value)
 ```
 
-### Method: `get`
+### `get`
 
 **Signature**:
 ```python
@@ -55,7 +57,7 @@ def get(item: LionIDable, /, default: Any = None) -> T:
 ```
 
 **Parameters**:
-- `item` (LionIDable): The identifier of the item to retrieve.
+- `item` (`LionIDable`): The identifier of the item to retrieve.
 - `default` (Any, optional): The default value to return if the item is not found. Defaults to `None`.
 
 **Return Values**:
@@ -69,7 +71,7 @@ Retrieves an item by identifier. Accepts a `LionIDable` object. Returns the defa
 item = record.get(item_id, default=None)
 ```
 
-### Method: `__getitem__`
+### `__getitem__`
 
 **Signature**:
 ```python
@@ -94,7 +96,7 @@ Returns an item using a `LionIDable` identifier.
 item = record[item_id]
 ```
 
-### Method: `__setitem__`
+### `__setitem__`
 
 **Signature**:
 ```python
@@ -103,7 +105,7 @@ def __setitem__(item: LionIDable, value: T) -> None:
 ```
 
 **Parameters**:
-- `item` (LionIDable): The identifier of the item to add or update.
+- `item` (`LionIDable`): The identifier of the item to add or update.
 - `value` (T): The `Component` instance to add or update.
 
 **Return Values**:
@@ -117,7 +119,7 @@ Adds or updates an item in the record. The value must be a `Component` instance.
 record[item_id] = component_instance
 ```
 
-### Method: `__contains__`
+### `__contains__`
 
 **Signature**:
 ```python
@@ -126,7 +128,7 @@ def __contains__(item: LionIDable) -> bool:
 ```
 
 **Parameters**:
-- `item` (LionIDable): The identifier or object to check.
+- `item` (`LionIDable`): The identifier or object to check.
 
 **Return Values**:
 - `bool`: True if the item is in the record, False otherwise.
@@ -140,7 +142,7 @@ if item_id in record:
     print("Item is in the record")
 ```
 
-### Method: `__len__`
+### `__len__`
 
 **Signature**:
 ```python
@@ -159,7 +161,7 @@ Returns the number of items in the record.
 print(len(record))
 ```
 
-### Method: `__iter__`
+### `__iter__`
 
 **Signature**:
 ```python
@@ -181,14 +183,14 @@ for item in record:
 
 ---
 
-### Class: `Ordering`
+## Class: `Ordering`
+
+**Parent Class:** [`ABC`](https://docs.python.org/3/library/abc.html)
 
 **Description**:
 `Ordering` represents the sequencing of certain orders.
 
-#### Methods:
-
-### Method: `__len__`
+### `__len__`
 
 **Signature**:
 ```python
@@ -207,7 +209,7 @@ Returns the number of item ids in the ordering or the number of orderings in ano
 print(len(ordering))
 ```
 
-### Method: `__contains__`
+### `__contains__`
 
 **Signature**:
 ```python
@@ -232,14 +234,17 @@ if item_id in ordering:
 
 ---
 
-### Class: `Condition`
+## Class: `Condition`
+
+^d5e7b6
+
+**Parent Class:** [`ABC`](https://docs.python.org/3/library/abc.html)
+
 
 **Description**:
 `Condition` represents a condition in a given context.
 
-#### Methods:
-
-### Method: `applies`
+### `applies`
 
 **Signature**:
 ```python
@@ -265,14 +270,16 @@ result = await condition.applies(value)
 
 ---
 
-### Class: `Actionable`
+## Class: `Actionable`
+
+^007122
+
+**Parent Class:** [`ABC`](https://docs.python.org/3/library/abc.html)
 
 **Description**:
 `Actionable` represents an action that can be invoked with arguments.
 
-#### Methods:
-
-### Method: `invoke`
+### `invoke`
 
 **Signature**:
 ```python
@@ -297,14 +304,14 @@ result = await actionable.invoke(arg1, arg2, key=value)
 
 ---
 
-### Class: `Progressable`
+## Class: `Progressable`
+
+**Parent Class:** [`ABC`](https://docs.python.org/3/library/abc.html)
 
 **Description**:
 `Progressable` represents a process that can progress forward asynchronously.
 
-#### Methods:
-
-### Method: `forward`
+### `forward`
 
 **Signature**:
 ```python
@@ -329,14 +336,17 @@ await progressable.forward()
 
 ---
 
-### Class: `Relatable`
+## Class: `Relatable`
+
+^4af61d
+
+**Parent Class:** [`ABC`](https://docs.python.org/3/library/abc.html)
 
 **Description**:
 `Relatable` defines a relationship that can be established with arguments.
 
-#### Methods:
 
-### Method: `relate`
+### `relate`
 
 **Signature**:
 ```python
@@ -361,16 +371,20 @@ relatable.relate(arg1, arg2, key=value)
 
 ---
 
-### Class: `Sendable`
+## Class: `Sendable`
+
+^ef363b
+
+**Parent Class:** [`ABC`](https://docs.python.org/3/library/abc.html), [`pydantic.BaseModel`](https://docs.pydantic.dev/latest/),
 
 **Description**:
 `Sendable` represents an object that can be sent with a sender and recipient.
 
-#### Attributes:
+Attributes:
 - `sender` (str): The ID of the sender node, or 'system', 'user', or 'assistant'.
 - `recipient` (str): The ID of the recipient node, or 'system', 'user', or 'assistant'.
 
-### Method: `_validate_sender_recipient`
+### `_validate_sender_recipient`
 
 **Signature**:
 ```python
@@ -398,14 +412,15 @@ sendable_instance = Sendable(sender="user", recipient="assistant")
 
 ---
 
-### Class: `Executable`
+## Class: `Executable`
+
+**Parent Class:** [`ABC`](https://docs.python.org/3/library/abc.html)
 
 **Description**:
 `Executable` represents an object that can be executed with arguments.
 
-#### Methods:
 
-### Method: `execute`
+### `execute`
 
 **Signature**:
 ```python
@@ -432,14 +447,17 @@ result = await executable.execute(arg1, arg2, key=value)
 
 ---
 
-### Class: `Directive`
+## Class: `Directive`
+
+^759d9f
+
+**Parent Class:** [`ABC`](https://docs.python.org/3/library/abc.html)
 
 **Description**:
 `Directive` represents a directive that can be directed with arguments.
 
-#### Methods:
 
-### Method: `class_name`
+### `class_name`
 
 **Signature**:
 ```python
@@ -456,23 +474,4 @@ Gets the class name of the directive.
 **Usage Examples**:
 ```python
 directive_class_name = directive.class_name
-```
-
-### Method: `_class_name`
-
-**Signature**:
-```python
-@classmethod
-def _class_name(cls) -> str
-```
-
-**Return Values**:
-- `str`: The class name of the directive.
-
-**Description**:
-Gets the class name of the directive.
-
-**Usage Examples**:
-```python
-class_name = Directive._class_name()
 ```

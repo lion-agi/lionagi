@@ -1,4 +1,11 @@
 
+
+```
+						-----
+					NEEDS UPDATING
+						-----
+```
+
 # Auto Explorative Research with LionAGI & LlamaIndex
 
 This guide introduces a workflow using LionAGI and LlamaIndex for automated explorative research, particularly focusing on indexing and querying a dataset of academic papers. Here’s how you can set up, query, and automate research tasks with these tools.
@@ -34,12 +41,12 @@ Load your documents and split them into manageable chunks:
 ```python
 text_nodes = li.load(
     'SimpleDirectoryReader', reader_type='llama_index', reader_args=['papers/'],
-    to_lion=False,
+    to_datanode=False,
 )
 
 chunks = li.chunk(
     documents=text_nodes, chunker_type='llama_index', chunker='SentenceSplitter',
-    chunker_kwargs={'chunk_size': 512, 'chunk_overlap':20}, to_lion=False,
+    chunker_kwargs={'chunk_size': 512, 'chunk_overlap':20}, to_datanode=False,
 )
 ```
 

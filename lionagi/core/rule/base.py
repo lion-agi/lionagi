@@ -21,6 +21,8 @@ from lionagi.libs import SysUtil
 
 from lionagi.core.collections.abc import FieldError, Condition, Actionable, Component
 
+_rule_classes = {}
+
 
 class Rule(Component, Condition, Actionable):
     """
@@ -44,6 +46,11 @@ class Rule(Component, Condition, Actionable):
     applied_log: list = []
     invoked_log: list = []
     _is_init: bool = False
+
+    def __init_subclass__(cls, **kwargs):
+        super().__init_subclass__(**kwargs)
+        if cls.__name__ not in _rule_classes:
+            _rule_classes[cls.__name__] = cls
 
     def add_log(self, field: str, form: Any, apply: bool = True, **kwargs) -> None:
         """

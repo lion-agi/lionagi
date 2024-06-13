@@ -37,7 +37,7 @@ class PlanTemplate(BaseUnitForm):
         description="the generated step by step plan, return as a dictionary following {step_n: {plan: ..., reason: ...}} format",
     )
 
-    signature: str = "task -> plan"
+    assignment: str = "task -> plan"
 
     @property
     def answer(self):

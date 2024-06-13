@@ -1,13 +1,13 @@
 ![PyPI - Version](https://img.shields.io/pypi/v/lionagi?labelColor=233476aa&color=231fc935) ![PyPI - Downloads](https://img.shields.io/pypi/dm/lionagi?color=blue)
 
 
-[PyPI](https://pypi.org/project/lionagi/) | [Documentation](https://ocean-lion.com/Welcome) | [Discord](https://discord.gg/xCkA5ErGmV)
+[PyPI](https://pypi.org/project/lionagi/) | [Documentation](https://ocean-lion.com/Welcome) | [Discord](https://discord.gg/aqSJ2v46vu) | [Roadmap](https://trello.com/b/3seomsrI/lionagi)
 
 
 # Language InterOperable Network - LION
 
 ```
-lionagi version 0.2.0
+pip install lionagi==0.2.1
 ```
 
 **Powerful Intelligent Workflow Automation**
@@ -25,7 +25,7 @@ What goes inside of a LLM is more akin to a [black-box](https://pauldeepakraj-r.
 
 ### Community
 
-We encourage contributions to LionAGI and invite you to enrich its features and capabilities. Engage with us and other community members [Join Our Discord](https://discord.gg/7RGWqpSxze)
+We encourage contributions to LionAGI and invite you to enrich its features and capabilities. Engage with us and other community members [Join Our Discord](https://discord.gg/aqSJ2v46vu)
 
 ### Citation
 

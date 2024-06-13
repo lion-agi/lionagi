@@ -56,15 +56,11 @@ class WorkLog(Progressable):
 
     async def forward(self):
         """
-        Forwards pending work items to the queue if capacity allows.
+        Forwards pending work items to the queue.
         """
-        if not self.queue.available_capacity:
-            return
-        else:
-            while len(self.pending) > 0 and self.queue.available_capacity:
-                work: Work = self.pile[self.pending.popleft()]
-                work.status = WorkStatus.IN_PROGRESS
-                await self.queue.enqueue(work)
+        while len(self.pending) > 0:
+            work: Work = self.pile[self.pending.popleft()]
+            await self.queue.enqueue(work)
 
     async def stop(self):
         """

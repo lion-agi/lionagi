@@ -206,7 +206,7 @@ class Node(Component, Relatable):
                 self.remove_edge(node, edge_id)
             return True
         except RelationError as e:
-            raise RelationError("Failed to unrelate nodes.") from e
+            raise e
 
     def __str__(self):
         _dict = self.to_dict()
