@@ -17,18 +17,30 @@ allowed_kwargs = [
     "user",
 ]
 
+# TODO: add support for other litellm features in cost management and UI
 
 class LiteLLMService(BaseService):
-    def __init__(self, model: str = None, **kwargs):
+    def __init__(self, model: str = None, use_proxy=False, **kwargs):
         super().__init__()
 
         from lionagi.libs.sys_util import SysUtil
-
-        SysUtil.check_import("litellm")
-
-        from litellm import acompletion
-
-        self.acompletion = acompletion
+        
+        if use_proxy:
+            SysUtil.check_import("litellm['proxy']")
+            import subprocess
+            command = ['litellm', '--model', 'huggingface/bigcode/starcoder']
+            subprocess.run(command)
+            
+            SysUtil.check_import("openai")
+            import openai
+            
+            client = openai.OpenAI(api_key="anything",base_url="http://0.0.0.0:4000") # set proxy to base_url
+            # request sent to model set on litellm proxy, `litellm --model`
+            self.acompletion = client.chat.completions.create
+        else:
+            from litellm import acompletion
+            self.acompletion= acompletion
+            
         self.model = model
         self.kwargs = kwargs
         self.allowed_kwargs = allowed_kwargs
