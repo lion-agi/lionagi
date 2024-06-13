@@ -24,6 +24,7 @@ class LiteLLMService(BaseService):
         super().__init__()
 
         from lionagi.libs.sys_util import SysUtil
+        SysUtil.check_import("litellm")
         
         if use_proxy:
             SysUtil.check_import("litellm['proxy']")
