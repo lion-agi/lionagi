@@ -25,19 +25,33 @@ class WorkQueue:
     Attributes:
         capacity (int): The maximum number of tasks the queue can handle.
         queue (asyncio.Queue): The queue holding the tasks.
-        _stop_event (asyncio.Event): Event to signal stopping `execute` of the queue.
+        _stop_event (asyncio.Event): Event to signal stopping the execution of the queue.
         available_capacity (int): The remaining number of tasks the queue can handle.
         execution_mode (bool): If `execute` is running.
+        refresh_time (int): The time interval between task processing.
     """
 
-    def __init__(self, capacity=5):
+    def __init__(self, capacity=5, refresh_time=1):
+        """
+        Initializes a new instance of WorkQueue.
+
+        Args:
+            capacity (int): The maximum number of tasks the queue can handle.
+            refresh_time (int): The time interval between task processing.
+
+        Raises:
+            ValueError: If capacity is less than 0 or refresh_time is negative.
+        """
         if capacity < 0:
             raise ValueError("initial capacity must be >= 0")
+        if refresh_time < 0:
+            raise ValueError("refresh time for execution can not be negative")
         self.capacity = capacity
         self.queue = asyncio.Queue()
         self._stop_event = asyncio.Event()
         self.available_capacity = capacity
         self.execution_mode = False
+        self.refresh_time = refresh_time
 
     async def enqueue(self, work) -> None:
         """Enqueue a work item."""
@@ -60,20 +74,6 @@ class WorkQueue:
         """Return whether the queue has been stopped."""
         return self._stop_event.is_set()
 
-    # async def process(self):
-        # async def _parse_work(work):
-        #     async with self.semaphore:
-        #         await work.perform()
-        #
-        # tasks = set()
-        # while self.queue.qsize() > 0:
-        #     next = await self.dequeue()
-        #     next.status = WorkStatus.IN_PROGRESS
-        #     task = asyncio.create_task(_parse_work(next))
-        #     tasks.add(task)
-        #
-        # await asyncio.wait(tasks)
-
     async def process(self) -> None:
         """Process the work items in the queue."""
         tasks = set()
@@ -88,7 +88,7 @@ class WorkQueue:
             await asyncio.wait(tasks)
             self.available_capacity = self.capacity
 
-    async def execute(self, refresh_time=1):
+    async def execute(self):
         """
             Continuously executes the process method at a specified refresh interval.
 
@@ -97,7 +97,9 @@ class WorkQueue:
                     successive calls to `process`. Defaults to 1.
         """
         self.execution_mode = True
+        self._stop_event.clear()
+
         while not self.stopped:
             await self.process()
-            await asyncio.sleep(refresh_time)
+            await asyncio.sleep(self.refresh_time)
         self.execution_mode = False
