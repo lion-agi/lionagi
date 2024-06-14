@@ -10,6 +10,7 @@ modifying, and removing edges, and querying related nodes and connections.
 
 from pydantic import Field
 from pandas import Series
+from typing import Callable
 
 from lionagi.libs.ln_convert import to_list
 
@@ -122,6 +123,8 @@ class Node(Component, Relatable):
         condition: Condition | None = None,
         label: str | None = None,
         bundle: bool = False,
+        edge_class: Callable = Edge,
+        **kwargs
     ) -> None:
         """
         Establish directed relationship from this node to another.
@@ -141,12 +144,13 @@ class Node(Component, Relatable):
                 f"Invalid value for direction: {direction}, " "must be 'in' or 'out'"
             )
 
-        edge = Edge(
+        edge = edge_class(
             head=self if direction == "out" else node,
             tail=node if direction == "out" else self,
             condition=condition,
             bundle=bundle,
             label=label,
+            **kwargs
         )
 
         self.relations[direction].include(edge)

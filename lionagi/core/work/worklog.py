@@ -30,19 +30,21 @@ class WorkLog(Progressable):
         queue (WorkQueue): A queue to manage the execution of work items.
     """
 
-    def __init__(self, capacity=10, workpile=None):
+    def __init__(self, capacity=10, workpile=None, refresh_time=1):
         """
         Initializes a new instance of WorkLog.
 
         Args:
-            capacity (int): The capacity of the work queue.
+            capacity (int): The capacity of the work queue batch processing.
             workpile (Pile, optional): An optional pile of initial work items.
+            refresh_time (int, optional): The time interval to refresh the work log queue.
+                Defaults to 1.
         """
         self.pile = (
             workpile if workpile and isinstance(workpile, Pile) else pile({}, Work)
         )
         self.pending = progression(workpile) if workpile else progression()
-        self.queue = WorkQueue(capacity=capacity)
+        self.queue = WorkQueue(capacity=capacity, refresh_time=refresh_time)
 
     async def append(self, work: Work):
         """
