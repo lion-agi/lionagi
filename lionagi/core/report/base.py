@@ -26,6 +26,7 @@ from typing import Any, List, Dict
 import contextlib
 from lionagi.core.collections.abc import Component, Field
 from ..collections.util import to_list_type
+from lionagi.libs.ln_convert import to_str
 
 
 class BaseForm(Component):

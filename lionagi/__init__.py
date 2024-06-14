@@ -27,7 +27,7 @@ from lionagi.core.action import func_to_tool
 from lionagi.core.report import Form, Report
 from lionagi.core.session.branch import Branch
 from lionagi.core.session.session import Session
-from lionagi.core.work.worker import work, Worker
+from lionagi.core.work.worker import work, Worker, worklink
 from lionagi.integrations.provider.services import Services
 from lionagi.integrations.chunker.chunk import chunk
 from lionagi.integrations.loader.load import load
@@ -41,6 +41,7 @@ __all__ = [
     "pile",
     "iModel",
     "work",
+    "worklink",
     "Worker",
     "Branch",
     "Session",

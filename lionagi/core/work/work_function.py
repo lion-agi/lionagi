@@ -13,13 +13,11 @@ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the License for the specific language governing permissions and
 limitations under the License.
 """
+import asyncio
 import logging
 
 from lionagi.libs.ln_func_call import rcall
-from lionagi.libs.ln_parse import ParseUtil
 from lionagi.core.work.worklog import WorkLog
-
-from lionagi.core.report.form import Form
 
 
 class WorkFunction:
@@ -35,7 +33,7 @@ class WorkFunction:
     """
 
     def __init__(
-        self, assignment, function, retry_kwargs=None, guidance=None, capacity=10
+        self, assignment, function, retry_kwargs=None, guidance=None, capacity=10, refresh_time=1
     ):
         """
         Initializes a WorkFunction instance.
@@ -47,12 +45,15 @@ class WorkFunction:
                 Defaults to None.
             guidance (str, optional): The guidance or documentation for the function.
                 Defaults to None.
-            capacity (int, optional): The capacity of the work log. Defaults to 10.
+            capacity (int, optional): The capacity of the work queue batch processing.
+                Defaults to 10.
+            refresh_time (int, optional): The time interval to refresh the work log queue.
+                Defaults to 1.
         """
         self.assignment = assignment
         self.function = function
         self.retry_kwargs = retry_kwargs or {}
-        self.worklog = WorkLog(capacity)
+        self.worklog = WorkLog(capacity, refresh_time=refresh_time)
         self.guidance = guidance or self.function.__doc__
 
     @property
@@ -64,6 +65,16 @@ class WorkFunction:
             str: The name of the function.
         """
         return self.function.__name__
+
+    @property
+    def execution_mode(self):
+        """
+         Gets the execution mode of the work function's queue.
+
+         Returns:
+             bool: The execution mode of the work function's queue.
+         """
+        return self.worklog.queue.execution_mode
 
     def is_progressable(self):
         """
@@ -99,3 +110,15 @@ class WorkFunction:
         Process the first capacity_size works in the work queue.
         """
         await self.worklog.queue.process()
+
+    async def execute(self):
+        """
+        Starts the execution of the work function's queue.
+        """
+        asyncio.create_task(self.worklog.queue.execute())
+
+    async def stop(self):
+        """
+        Stops the execution of the work function's queue.
+        """
+        await self.worklog.stop()
