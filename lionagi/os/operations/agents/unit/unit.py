@@ -14,8 +14,8 @@ See the License for the specific language governing permissions and
 limitations under the License.
 """
 
-from lionagi.os.libs import strip_lower
-from lionagi.os.libs import rcall
+from lionagi.os.lib import strip_lower
+from lionagi.os.lib import rcall
 from lionagi.os.collections.abc import Directive
 from lionagi.os.core.validator.validator import Validator
 from lionagi.os.collections.model.imodel import iModel

@@ -24,7 +24,7 @@ from abc import ABC
 
 from typing import Any, Optional
 
-from lionagi.os.libs import (
+from lionagi.os.lib import (
     nmerge,
     force_validate_mapping,
     fuzzy_parse_json,

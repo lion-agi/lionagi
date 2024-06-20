@@ -1,7 +1,7 @@
 from abc import ABC, abstractmethod
 import asyncio
 import numpy as np
-from lionagi.os.libs import to_list, ninsert
+from lionagi.os.lib import to_list, ninsert
 
 
 class PerplexityMixin(ABC):

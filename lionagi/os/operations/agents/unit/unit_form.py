@@ -15,7 +15,7 @@ limitations under the License.
 """
 
 from enum import Enum
-from lionagi.os.libs import to_str, to_dict
+from lionagi.os.lib import to_str, to_dict
 from lionagi.os.collections.abc import Field
 from .template.base import BaseUnitForm
 

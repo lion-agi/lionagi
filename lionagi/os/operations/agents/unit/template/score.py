@@ -14,7 +14,7 @@ See the License for the specific language governing permissions and
 limitations under the License.
 """
 
-from lionagi.os.libs import to_str
+from lionagi.os.lib import to_str
 from lionagi.os.collections.abc import Field
 from ...unit.unit_form import UnitForm
 

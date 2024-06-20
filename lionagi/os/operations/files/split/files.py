@@ -1,5 +1,5 @@
 import os
-from lionagi.os.libs.sys_util import check_import
+from lionagi.os.lib.sys_util import check_import
 
 
 class DocumentParser:

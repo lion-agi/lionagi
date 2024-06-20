@@ -1,5 +1,5 @@
 from typing import Any, Mapping
-from lionagi.os.libs import to_str
+from lionagi.os.lib import to_str
 
 
 def calculate_num_token(

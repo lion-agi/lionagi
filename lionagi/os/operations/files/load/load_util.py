@@ -3,7 +3,7 @@ from enum import Enum
 from pathlib import Path
 from typing import List, Union, Dict, Any, Tuple
 
-from lionagi.os.libs import to_list, to_str
+from lionagi.os.lib import to_list, to_str
 from lionagi.os.operations.files.split.text import chunk_by_chars
 from lionagi.os.collections.node.node import Node
 
