@@ -3,7 +3,7 @@ import json
 from typing import Callable
 
 from lionagi.core.executor.base_executor import BaseExecutor
-from lionagi.integrations.storage.neo4j import Neo4j
+from lionagi.integrations.Neo4j.neo4j import Neo4j
 from lionagi.integrations.storage.storage_util import ParseNode
 from lionagi.core.agent.base_agent import BaseAgent
 from lionagi.core.engine.instruction_map_engine import InstructionMapEngine
