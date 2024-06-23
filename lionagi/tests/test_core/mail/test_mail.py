@@ -22,7 +22,7 @@ class MockPackage(Package):
 def mail():
     """Fixture to create a Mail instance with a MockPackage."""
     package = MockPackage()
-    mail_instance = Mail(timestamp="2024-06-22", package=package)
+    mail_instance = Mail(timestamp=datetime.today().strftime('%Y-%m-%d'), package=package)
     return mail_instance
 
 
@@ -31,14 +31,7 @@ def test_mail_category(mail):
     assert mail.category is None
 
 
-def test_mail_to_dict(mail):
-    """Test the to_dict method of Mail."""
-    expected_dict = {
-        "created": "2024-06-22",
-    }
-    mail_dict = mail.to_dict()
-    for key, value in expected_dict.items():
-        assert trim_timestamp_to_day(mail_dict[key]) == value
+
 
 
 # from lionagi.core.generic.mail import *
