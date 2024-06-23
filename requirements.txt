@@ -4,4 +4,8 @@ tiktoken>=0.5.1
 pydantic>=2.3.0
 aiocache>=0.12.2
 pandas
+pytest
+moto
+PyYAML
+boto3
 ipython

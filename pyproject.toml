@@ -6,7 +6,12 @@ requires = [
     "tiktoken>=0.5.1",
     "pydantic>=2.6.0",
     "aiocache>=0.12.2",
-    "pandas>=2.1.0"
+    "pandas>=2.1.0",
+    "pytest>=8.2.2",
+    "moto>=5.0.9",
+    "PyYAML>=6.0.1",
+    "boto3>=1.34.131"
+
 ]
 build-backend = "setuptools.build_meta"
 
@@ -23,7 +28,11 @@ dependencies = [
     "tiktoken>=0.5.1",
     "pydantic>=2.6.0",
     "aiocache>=0.12.2",
-    "pandas>=2.1.0"
+    "pandas>=2.1.0",
+    "pytest>=8.2.2",
+    "moto>=5.0.9",
+    "PyYAML>=6.0.1",
+    "boto3>=1.34.131"
 ]
 license = {file = "LICENSE"}
 classifiers=[

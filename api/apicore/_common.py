@@ -130,3 +130,15 @@ def exception_handlers(logger: Log | None = None):
         return wrapper
 
     return decorator
+
+
+class mockawsclient:
+    def __call__(self, *args, **kwargs):
+        return {"ResponseMetadata":
+            {
+                "HTTPStatusCode": 200
+            }
+        }
+
+    def __getattr__(self, name):
+        return self
