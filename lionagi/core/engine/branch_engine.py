@@ -44,7 +44,7 @@ class BranchExecutor(Branch, BaseExecutor):
         it processes starts, nodes, node lists, conditions, or ends, accordingly executing different functions.
         """
         for key in list(self.mailbox.pending_ins.keys()):
-            while self.mailbox.pending_ins[key].size() > 0:
+            while self.mailbox.pending_ins.get(key, Pile()).size() > 0:
                 mail_id = self.mailbox.pending_ins[key].popleft()
                 mail = self.mailbox.pile.pop(mail_id)
                 if mail.category == "start":
@@ -57,7 +57,7 @@ class BranchExecutor(Branch, BaseExecutor):
                     await self._process_condition(mail)
                 elif mail.category == "end":
                     self._process_end(mail)
-            if self.mailbox.pending_ins[key].size() == 0:
+            if key in self.mailbox.pending_ins and self.mailbox.pending_ins.get(key, Pile()).size() == 0:
                 self.mailbox.pending_ins.pop(key)
 
     async def execute(self, refresh_time=1) -> None:
@@ -118,8 +118,8 @@ class BranchExecutor(Branch, BaseExecutor):
                     package=node.ln_id,
                     request_source=self.ln_id,
                 )
-            except:
-                raise ValueError(f"Invalid mail to process. Mail:{mail}")
+            except Exception as e:
+                raise ValueError(f"Invalid mail to process. Mail:{mail}, Error: {e}")
 
     def _process_node_list(self, mail: Mail):
         """
