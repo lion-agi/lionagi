@@ -162,3 +162,30 @@ class TokenizeUtil:
             return (
                 [" ".join(chunk) for chunk in chunks] if not return_tokens else chunks
             )
+
+    @staticmethod
+    def get_bins(input_: list[str], upper: int | None = 2000) -> list[list[int]]:
+        """
+        Organizes indices of strings into bins based on a cumulative upper limit.
+        
+        Args:
+            input_ (List[str]): The list of strings to be binned.
+            upper (int): The cumulative length upper limit for each bin.
+
+        Returns:
+            List[List[int]]: A list of bins, each bin is a list of indices from the input list.
+        """
+        current = 0
+        bins = []
+        current_bin = []
+        for idx, item in enumerate(input_):
+            if current + len(item) < upper:
+                current_bin.append(idx)
+                current += len(item)
+            else:
+                bins.append(current_bin)
+                current_bin = [idx]
+                current = len(item)
+        if current_bin:
+            bins.append(current_bin)
+        return bins

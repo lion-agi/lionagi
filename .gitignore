@@ -4,3 +4,4 @@ dev/
 .env
 build/
 .venv/
+*.DS_Store
