@@ -51,7 +51,7 @@ class SysUtil:
             Current time in the specified format.
 
         Raises:
-            ValueError: If an invalid type_ is provided or if custom_format
+            `ValueError`: If an invalid type_ is provided or if custom_format
                 is not provided when type_="custom".
         """
         return CoreUtil.time(
@@ -79,7 +79,7 @@ class SysUtil:
             A single copy if num is 1, otherwise a list of copies.
 
         Raises:
-            ValueError: If num is less than 1.
+            `ValueError`: If num is less than 1.
         """
         return CoreUtil.copy(obj, deep=deep, num=num)
 
@@ -132,7 +132,7 @@ class SysUtil:
             The Lion ID of the item.
 
         Raises:
-            LionIDError: If the item does not contain a valid Lion ID.
+            `LionIDError`: If the item does not contain a valid Lion ID.
         """
         return CoreUtil.get_id(item, config=config)
 
@@ -203,7 +203,7 @@ class SysUtil:
             The imported module.
 
         Raises:
-            ImportError: If the module cannot be imported.
+            `ImportError`: If the module cannot be imported.
         """
         from .ln_import import ImportUtil
 
@@ -245,8 +245,8 @@ class SysUtil:
             error_message: Custom error message to use if package not found.
 
         Raises:
-            ImportError: If the package is not found and not installed.
-            ValueError: If the import fails after installation attempt.
+            `ImportError`: If the package is not found and not installed.
+            `ValueError`: If the import fails after installation attempt.
         """
         from .ln_import import ImportUtil
 
@@ -280,7 +280,7 @@ class SysUtil:
             package_name: The name of the package to uninstall.
 
         Raises:
-            subprocess.CalledProcessError: If the uninstallation fails.
+            `subprocess.CalledProcessError`: If the uninstallation fails.
         """
         from .ln_import import ImportUtil
 
@@ -500,12 +500,11 @@ class SysUtil:
 
         FilePathUtil.copy_file(src, dest)
 
-    
     @staticmethod
     def get_bins(input_: list[str], upper: int | None = 2000) -> list[list[int]]:
         """
         Organizes indices of strings into bins based on a cumulative upper limit.
-        
+
         Args:
             input_ (List[str]): The list of strings to be binned.
             upper (int): The cumulative length upper limit for each bin.
@@ -514,19 +513,18 @@ class SysUtil:
             List[List[int]]: A list of bins, each bin is a list of indices from the input list.
         """
         from .ln_tokenize import TokenizeUtil
+
         return TokenizeUtil.get_bins(input_, upper=upper)
 
+    ## Deprecated methods
 
-
-## Deprecated methods
-  
     @deprecated
     @staticmethod
     def get_size(path: Path | str) -> int:
         """
         Gets the size of a file or total size of files in a directory.
 
-        .. deprecated:: 0.2.2
+        .. deprecated:: 0.2.3
            Use :func:`SysUtil.get_file_size` instead. Will be removed in v1.0.0.
 
         Args:
@@ -539,7 +537,7 @@ class SysUtil:
             FileNotFoundError: If the path does not exist.
         """
         warnings.warn(
-            "get_size is deprecated since v0.2.2 and will be removed in v1.0.0. Use SysUtil.get_file_size() instead.",
+            "get_size is deprecated since v0.2.3 and will be removed in v1.0.0. Use SysUtil.get_file_size() instead.",
             DeprecationWarning,
             stacklevel=2,
         )
@@ -557,14 +555,14 @@ class SysUtil:
         """
         Pauses execution for a specified duration.
 
-        .. deprecated:: 0.2.2
+        .. deprecated:: 0.2.3
            Use `time.sleep()` from the standard library instead. Will be removed in v1.0.0.
 
         Args:
             delay (float): The amount of time, in seconds, to pause execution.
         """
         warnings.warn(
-            "sleep is deprecated since v0.2.2 and will be removed in v1.0.0. Use time.sleep() instead.",
+            "sleep is deprecated since v0.2.3 and will be removed in v1.0.0. Use time.sleep() instead.",
             DeprecationWarning,
             stacklevel=2,
         )
@@ -576,7 +574,7 @@ class SysUtil:
         """
         Returns the current time either as a Unix timestamp or a datetime object.
 
-        .. deprecated:: 0.2.2
+        .. deprecated:: 0.2.3
            Use :func:`SysUtil.time` instead. Will be removed in v1.0.0.
 
         Args:
@@ -586,7 +584,7 @@ class SysUtil:
             Union[float, datetime.datetime]: The current time as a Unix timestamp or a datetime object.
         """
         warnings.warn(
-            "get_now is deprecated since v0.2.2 and will be removed in v1.0.0. Use SysUtil.time() instead.",
+            "get_now is deprecated since v0.2.3 and will be removed in v1.0.0. Use SysUtil.time() instead.",
             DeprecationWarning,
             stacklevel=2,
         )
@@ -604,7 +602,7 @@ class SysUtil:
         """
         Safely changes a key in a dictionary if the old key exists.
 
-        .. deprecated:: 0.2.2
+        .. deprecated:: 0.2.3
            Use `dict[new_key] = dict.pop(old_key)` instead. Will be removed in v1.0.0.
 
         Args:
@@ -616,7 +614,7 @@ class SysUtil:
             None
         """
         warnings.warn(
-            "change_dict_key is deprecated since v0.2.2 and will be removed in v1.0.0. Use dict[new_key] = dict.pop(old_key) instead.",
+            "change_dict_key is deprecated since v0.2.3 and will be removed in v1.0.0. Use dict[new_key] = dict.pop(old_key) instead.",
             DeprecationWarning,
             stacklevel=2,
         )
@@ -629,7 +627,7 @@ class SysUtil:
         """
         Returns a timestamp string with optional custom separators and timezone.
 
-        .. deprecated:: 0.2.2
+        .. deprecated:: 0.2.3
            Use :func:`SysUtil.time` instead. Will be removed in v1.0.0.
 
         Args:
@@ -640,7 +638,7 @@ class SysUtil:
             str: A string representation of the current timestamp.
         """
         warnings.warn(
-            "get_timestamp is deprecated since v0.2.2 and will be removed in v1.0.0. Use SysUtil.time() instead.",
+            "get_timestamp is deprecated since v0.2.3 and will be removed in v1.0.0. Use SysUtil.time() instead.",
             DeprecationWarning,
             stacklevel=2,
         )
@@ -656,7 +654,7 @@ class SysUtil:
         """
         Validates if the given dictionary matches the expected schema types.
 
-        .. deprecated:: 0.2.2
+        .. deprecated:: 0.2.3
            This method will be removed without replacement in v1.0.0.
 
         Args:
@@ -667,7 +665,7 @@ class SysUtil:
             bool: True if the dictionary matches the schema, False otherwise.
         """
         warnings.warn(
-            "is_schema is deprecated since v0.2.2 and will be removed in v1.0.0 without replacement.",
+            "is_schema is deprecated since v0.2.3 and will be removed in v1.0.0 without replacement.",
             DeprecationWarning,
             stacklevel=2,
         )
@@ -682,7 +680,7 @@ class SysUtil:
         """
         Creates deep copies of the input, either as a single copy or a list of copies.
 
-        .. deprecated:: 0.2.2
+        .. deprecated:: 0.2.3
            Use :func:`SysUtil.copy` instead. Will be removed in v1.0.0.
 
         Args:
@@ -709,7 +707,7 @@ class SysUtil:
         """
         Generates a unique identifier based on the current time and random bytes.
 
-        .. deprecated:: 0.2.2
+        .. deprecated:: 0.2.3
            Use :func:`SysUtil.id` instead. Will be removed in v1.0.0.
 
         Args:
@@ -731,7 +729,7 @@ class SysUtil:
         Clears all files (and, if recursive, directories) in the specified directory,
         excluding files that match any pattern in the exclude list.
 
-        .. deprecated:: 0.2.2
+        .. deprecated:: 0.2.3
            Use :func:`SysUtil.clear_path` instead. Will be removed in v1.0.0.
 
         Args:
@@ -743,7 +741,7 @@ class SysUtil:
             FileNotFoundError: If the specified directory does not exist.
         """
         warnings.warn(
-            "clear_dir is deprecated since v0.2.2 and will be removed in v1.0.0. Use SysUtil.clear_path() instead.",
+            "clear_dir is deprecated since v0.2.3 and will be removed in v1.0.0. Use SysUtil.clear_path() instead.",
             DeprecationWarning,
             stacklevel=2,
         )
