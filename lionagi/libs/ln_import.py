@@ -12,7 +12,7 @@ from typing import Any, List, Sequence
 
 
 class ImportUtil:
-    
+
     @staticmethod
     def get_cpu_architecture() -> str:
         """
@@ -68,7 +68,9 @@ class ImportUtil:
             except subprocess.CalledProcessError as e:
                 raise ImportError(f"Failed to install {pip_name}: {e}") from e
             except ImportError as e:
-                raise ImportError(f"Failed to import {pip_name} after installation: {e}") from e
+                raise ImportError(
+                    f"Failed to import {pip_name} after installation: {e}"
+                ) from e
 
     @staticmethod
     def import_module(module_path: str) -> Any:
@@ -140,9 +142,7 @@ class ImportUtil:
                     raise ValueError(f"Failed to install {package_name}: {e}") from e
             else:
                 logging.info(f"Package {package_name} not found. {error_message}")
-                raise ImportError(
-                    f"Package {package_name} not found. {error_message}"
-                )
+                raise ImportError(f"Package {package_name} not found. {error_message}")
 
     @staticmethod
     def list_installed_packages() -> List[str]:
@@ -153,7 +153,9 @@ class ImportUtil:
             List[str]: A list of names of installed packages.
         """
         try:
-            return [dist.metadata["Name"] for dist in importlib.metadata.distributions()]
+            return [
+                dist.metadata["Name"] for dist in importlib.metadata.distributions()
+            ]
         except Exception as e:
             logging.error(f"Failed to list installed packages: {e}")
             return []
@@ -209,9 +211,8 @@ class ImportUtil:
             subprocess.CalledProcessError: If the pip command fails.
         """
         return subprocess.run(
-            [sys.executable, "-m", "pip"] + list(args),
-            check=True,
-            capture_output=True
+            [sys.executable, "-m", "pip"] + list(args), check=True, capture_output=True
         )
+
 
 # File: lion_core/utils/package_util.py

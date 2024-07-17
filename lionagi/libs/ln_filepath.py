@@ -11,13 +11,10 @@ from lion_core.libs import unique_hash
 
 
 class FilePathUtil:
-    
+
     @staticmethod
     def clear_path(
-        path: Path | str,
-        /,
-        recursive: bool = False,
-        exclude: list[str] | None = None
+        path: Path | str, /, recursive: bool = False, exclude: list[str] | None = None
     ) -> None:
         """
         Clear all files (and, if recursive, directories) in the specified directory,
@@ -176,7 +173,7 @@ class FilePathUtil:
         src_path, dest_path = Path(src), Path(dest)
         if not src_path.is_file():
             raise FileNotFoundError(f"{src_path} does not exist or is not a file.")
-        
+
         try:
             dest_path.parent.mkdir(parents=True, exist_ok=True)
             copy2(src_path, dest_path)
@@ -267,5 +264,6 @@ class FilePathUtil:
         except OSError as e:
             logging.error(f"Failed to save file {filename}: {e}")
             raise
+
 
 # File: lionagi/libs/ln_filepath.py
