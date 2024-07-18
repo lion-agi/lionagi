@@ -420,7 +420,7 @@ class ParseUtil:
             params_description=params_description,
         )
 
-    #new
+    # new
     @staticmethod
     def validate_mapping(
         d_: dict[str, Any] | str,
@@ -429,7 +429,9 @@ class ParseUtil:
         *,
         score_func: Callable[[str, str], float] | None = None,
         fuzzy_match: bool = True,
-        handle_unmatched: Literal["ignore", "raise", "remove", "fill", "force"] = "ignore",
+        handle_unmatched: Literal[
+            "ignore", "raise", "remove", "fill", "force"
+        ] = "ignore",
         fill_value: Any = None,
         fill_mapping: dict[str, Any] | None = None,
         strict: bool = False,
@@ -533,7 +535,7 @@ class ParseUtil:
             f_, style, f_description=f_description, p_description=p_description
         )
 
-    @deprecated # use validate_keys instead, will be removed in 1.0.0
+    @deprecated  # use validate_keys instead, will be removed in 1.0.0
     @staticmethod
     def force_validate_keys(*args, **kwargs):
         return CoreLib.validate_keys(*args, **kwargs)

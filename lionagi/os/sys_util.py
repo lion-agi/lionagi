@@ -408,7 +408,6 @@ class SysUtil:
             logging.error(f"Failed to save file {filename}: {e}")
             raise
 
-
     @staticmethod
     def get_cpu_architecture() -> str:
         """
@@ -501,7 +500,6 @@ class SysUtil:
         return importlib.util.find_spec(package_name) is not None
 
     @staticmethod
-    @lru_cache
     def check_import(
         package_name: str,
         module_name: str | None = None,
@@ -509,7 +507,7 @@ class SysUtil:
         pip_name: str | None = None,
         attempt_install: bool = True,
         error_message: str = "",
-    ) -> None:
+    ):
         """
         Check if a package is installed, attempt to install if not.
 

@@ -4,7 +4,7 @@ from .convert import to_df
 
 
 class PandasUtil:
-    
+
     @staticmethod
     def to_df(
         input_: Any,
@@ -47,7 +47,9 @@ class PandasUtil:
         try:
             if len(df2.dropna(how="all")) > 0 and len(df1.dropna(how="all")) > 0:
                 df = to_df([df1, df2])
-                df.drop_duplicates(inplace=True, subset=[unique_col], keep=keep, **kwargs)
+                df.drop_duplicates(
+                    inplace=True, subset=[unique_col], keep=keep, **kwargs
+                )
                 df_ = to_df(df)
                 if len(df_) > 1:
                     return df_
@@ -56,7 +58,6 @@ class PandasUtil:
 
         except Exception as e:
             raise ValueError(f"Error in extending messages: {e}") from e
-
 
     @staticmethod
     def search_keywords(
@@ -129,7 +130,9 @@ class PandasUtil:
                 keyword, replacement, case=False, regex=False
             )
         else:
-            df_.loc[:, column] = df_[column].str.replace(keyword, replacement, regex=False)
+            df_.loc[:, column] = df_[column].str.replace(
+                keyword, replacement, regex=False
+            )
 
         return df_ if inplace else True
 
@@ -148,12 +151,10 @@ class PandasUtil:
         df = pd.read_csv(filepath, **kwargs)
         return to_df(df)
 
-
     @staticmethod
     def read_json(filepath, **kwargs):
         df = pd.read_json(filepath, **kwargs)
         return to_df(df)
-
 
     @staticmethod
     def remove_last_n_rows(df: pd.DataFrame, steps: int) -> pd.DataFrame:
@@ -179,7 +180,9 @@ class PandasUtil:
         return to_df(df[:-steps])
 
     @staticmethod
-    def update_row(df: pd.DataFrame, row: str | int, column: str | int, value: Any) -> bool:
+    def update_row(
+        df: pd.DataFrame, row: str | int, column: str | int, value: Any
+    ) -> bool:
         """
         Updates a row's value for a specified column in a DataFrame.
 
@@ -205,6 +208,7 @@ class PandasUtil:
     @staticmethod
     def md_to_df(md_str: str) -> pd.DataFrame:
         from io import StringIO
+
         """Convert Markdown to dataframe."""
         # Replace " by "" in md_str
         md_str = md_str.replace('"', '""')
@@ -233,9 +237,10 @@ class PandasUtil:
         try:
             from lionagi.libs.sys_util import SysUtil
 
-            SysUtil.check_import("lxml")
-
-            from lxml import html
+            html = SysUtil.check_import(
+                package_name="lxml",
+                import_name="html",
+            )
         except ImportError:
             raise ImportError(
                 "You must install the `lxml` package to use this node parser."
@@ -275,7 +280,6 @@ class PandasUtil:
         """
         df = pd.read_csv(filepath, **kwargs)
         return to_df(df)
-
 
     @staticmethod
     def read_json(filepath, **kwargs):

@@ -12,9 +12,7 @@ class KeysDict(TypedDict, total=False):
 class ParseUtil:
 
     @staticmethod
-    def fuzzy_parse_json(
-        str_to_parse: str, suppress: bool = False
-    ) -> dict[str, Any]:
+    def fuzzy_parse_json(str_to_parse: str, suppress: bool = False) -> dict[str, Any]:
         """
         Attempt to parse a JSON string, applying fixes for common issues.
 
@@ -177,7 +175,7 @@ class ParseUtil:
         """
         return CoreLib.extract_docstring_details(func, style)
 
-    #new
+    # new
     @staticmethod
     def validate_mapping(
         d_: dict[str, Any] | str,
@@ -186,7 +184,9 @@ class ParseUtil:
         *,
         score_func: Callable[[str, str], float] | None = None,
         fuzzy_match: bool = True,
-        handle_unmatched: Literal["ignore", "raise", "remove", "fill", "force"] = "ignore",
+        handle_unmatched: Literal[
+            "ignore", "raise", "remove", "fill", "force"
+        ] = "ignore",
         fill_value: Any = None,
         fill_mapping: dict[str, Any] | None = None,
         strict: bool = False,

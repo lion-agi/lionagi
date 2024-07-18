@@ -142,5 +142,3 @@ def _(
     drop_kwargs["how"] = drop_how
     df.dropna(**drop_kwargs, inplace=True)
     return df.reset_index(drop=True) if reset_index else df
-
-

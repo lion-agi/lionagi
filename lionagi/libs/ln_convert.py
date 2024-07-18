@@ -145,6 +145,7 @@ def to_str(
         **kwargs,
     )
 
+
 def to_df(
     input_: Any,
     /,
@@ -267,6 +268,7 @@ def as_readable_json(input_: Any, /, **kwargs) -> str:
     """
     return CoreLib.as_readable_json(input_, **kwargs)
 
+
 @deprecated  # use as_readable_json instead, will be removed in v1.0.0
 def to_readable_dict(input_: Any) -> str:
     """
@@ -279,11 +281,13 @@ def to_readable_dict(input_: Any) -> str:
     except Exception as e:
         raise ValueError(f"Could not convert given input to readable dict: {e}") from e
 
+
 def is_same_dtype(
     input_: list | dict, dtype: Type | None = None, return_dtype: bool = False
 ) -> bool | tuple[bool, Type]:
     """Check if all elements in input have the same data type."""
     return CoreLib.is_same_dtype(input_, dtype=dtype, return_dtype=return_dtype)
+
 
 # renamed parameter root to xml_string
 def xml_to_dict(xml_string: str) -> dict[str, Any]:
@@ -306,6 +310,7 @@ def xml_to_dict(xml_string: str) -> dict[str, Any]:
         ValueError: If the XML is malformed or parsing fails.
     """
     return CoreLib.xml_to_dict(xml_string)
+
 
 def strip_lower(
     input_: Any,
@@ -340,6 +345,7 @@ def strip_lower(
     return CoreLib.strip_lower(
         input_, use_model_dump=use_model_dump, chars=chars, **kwargs
     )
+
 
 def is_structure_homogeneous(
     structure: Any, return_structure_type: bool = False
@@ -424,6 +430,7 @@ def to_df(
         different input types, enhancing its flexibility.
     """
     from lionagi.app.Pandas.utils import PandasUtil
+
     return PandasUtil.to_df(
         input_,
         drop_how=drop_how,

@@ -10,6 +10,7 @@ def extend_dataframe(
     **kwargs,
 ):
     from lionagi.app.Pandas.utils import PandasUtil
+
     return PandasUtil.extend_dataframe(
         df1,
         df2,
@@ -30,6 +31,7 @@ def search_keywords(
     dropna: bool = False,
 ):
     from lionagi.app.Pandas.utils import PandasUtil
+
     return PandasUtil.search_keywords(
         df,
         keywords=keywords,
@@ -38,6 +40,7 @@ def search_keywords(
         reset_index=reset_index,
         dropna=dropna,
     )
+
 
 def replace_keyword(
     df,
@@ -50,6 +53,7 @@ def replace_keyword(
     case_sensitive: bool = False,
 ):
     from lionagi.app.Pandas.utils import PandasUtil
+
     return PandasUtil.replace_keyword(
         df,
         keyword=keyword,
@@ -62,18 +66,23 @@ def replace_keyword(
 
 def read_csv(filepath: str, **kwargs):
     from lionagi.app.Pandas.utils import PandasUtil
+
     return PandasUtil.read_csv(filepath, **kwargs)
 
 
 def read_json(filepath, **kwargs):
     from lionagi.app.Pandas.utils import PandasUtil
+
     return PandasUtil.read_json(filepath, **kwargs)
 
 
 def remove_last_n_rows(df, steps: int):
     from lionagi.app.Pandas.utils import PandasUtil
+
     return PandasUtil.remove_last_n_rows(df, steps)
+
 
 def update_row(df, row: str | int, column: str | int, value: Any) -> bool:
     from lionagi.app.Pandas.utils import PandasUtil
+
     return PandasUtil.update_row(df, row, column, value)
