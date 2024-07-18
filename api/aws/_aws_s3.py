@@ -11,14 +11,18 @@ from api.aws import _awsclient_config as _aws_config_
 class APIObjectAWSS3(metaclass=_meta_.APIObjectMeta):
     def __init__(self, config: _config_.ConfigSingleton = None, logger: Log = None):
         self.config = config if config else _config_.ConfigSingleton()
-        self.session = (
-            _aws_config_.setup_session_by_profile(
-                self.config.config.get("aws_profile_name")
+
+        def get_client(client_type="s3"):
+            session = (
+                _aws_config_.setup_session_by_profile(
+                    self.config.config.get("aws_profile_name")
+                )
+                if self.config.config.get("aws_profile_name")
+                else _aws_config_.setup_session(self.config)
             )
-            if self.config.config.get("aws_profile_name")
-            else _aws_config_.setup_session(self.config)
-        )
-        self.client = self.session.client("s3")
+            return session.client(client_type)
+
+        self.client = _common_.mockawsclient() if self.config.config.get("MOCK") else get_client("s3")
 
     @_common_.exception_handlers()
     def list_bucket_names(self, logger: Log = None) -> List:
