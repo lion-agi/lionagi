@@ -1,47 +1,25 @@
-"""
-Copyright 2024 HaiyangLi
-
-Licensed under the Apache License, Version 2.0 (the "License");
-you may not use this file except in compliance with the License.
-You may obtain a copy of the License at
-
-    http://www.apache.org/licenses/LICENSE-2.0
-
-Unless required by applicable law or agreed to in writing, software
-distributed under the License is distributed on an "AS IS" BASIS,
-WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-See the License for the specific language governing permissions and
-limitations under the License.
-"""
-
-"""
-This module provides functions for validating and fixing field values based on their data types.
-
-The module defines several functions for checking and fixing field values of different data types,
-including numeric, boolean, string, and enum. It also provides a dictionary `validation_funcs` that
-maps data types to their corresponding validation functions.
-"""
-
-from .ln_convert import to_str, is_same_dtype, to_list, to_dict, to_num, strip_lower
-from .ln_parse import StringMatch, ParseUtil
+from lion_core import CoreLib
+from typing_extensions import deprecated
 
 
+@deprecated  # internal methods, will be removed in v1.0.0
 def check_dict_field(x, keys: list[str] | dict, fix_=True, **kwargs):
     if isinstance(x, dict):
         return x
     if fix_:
         try:
-            x = to_str(x)
-            return StringMatch.force_validate_dict(x, keys=keys, **kwargs)
+            x = CoreLib.to_str(x)
+            return CoreLib.validate_mapping(x, keys=keys, **kwargs)
         except Exception as e:
             raise ValueError("Invalid dict field type.") from e
     raise ValueError(f"Default value for DICT must be a dict, got {type(x).__name__}")
 
 
+@deprecated  # internal methods, will be removed in v1.0.0
 def check_action_field(x, fix_=True, **kwargs):
     if (
         isinstance(x, list)
-        and is_same_dtype(x, dict)
+        and CoreLib.is_same_dtype(x, dict)
         and all(_has_action_keys(y) for y in x)
     ):
         return x
@@ -52,6 +30,7 @@ def check_action_field(x, fix_=True, **kwargs):
         raise ValueError("Invalid action field type.") from e
 
 
+@deprecated  # internal methods, will be removed in v1.0.0
 def check_number_field(x, fix_=True, **kwargs):
     """
     Checks if the given value is a valid numeric field.
@@ -80,6 +59,7 @@ def check_number_field(x, fix_=True, **kwargs):
     return x
 
 
+@deprecated  # internal methods, will be removed in v1.0.0
 def check_bool_field(x, fix_=True):
     """
     Checks if the given value is a valid boolean field.
@@ -107,6 +87,7 @@ def check_bool_field(x, fix_=True):
     return x
 
 
+@deprecated  # internal methods, will be removed in v1.0.0
 def check_str_field(x, *args, fix_=True, **kwargs):
     """
     Checks if the given value is a valid string field.
@@ -136,6 +117,7 @@ def check_str_field(x, *args, fix_=True, **kwargs):
     return x
 
 
+@deprecated  # internal methods, will be removed in v1.0.0
 def check_enum_field(x, choices, fix_=True, **kwargs):
     """
     Checks if the given value is a valid enum field.
@@ -152,7 +134,7 @@ def check_enum_field(x, choices, fix_=True, **kwargs):
     Raises:
         ValueError: If the value is not a valid enum field and cannot be fixed.
     """
-    same_dtype, dtype_ = is_same_dtype(choices, return_dtype=True)
+    same_dtype, dtype_ = CoreLib.is_same_dtype(choices, return_dtype=True)
     if not same_dtype:
         raise ValueError(
             f"Field type ENUM requires all choices to be of the same type, got {choices}"
@@ -176,20 +158,22 @@ def check_enum_field(x, choices, fix_=True, **kwargs):
     return x
 
 
+@deprecated  # internal methods, will be removed in v1.0.0
 def _has_action_keys(dict_):
     return list(dict_.keys()) >= ["function", "arguments"]
 
 
+@deprecated  # internal methods, will be removed in v1.0.0
 def _fix_action_field(x, discard_=True):
     corrected = []
     if isinstance(x, str):
-        x = ParseUtil.fuzzy_parse_json(x)
+        x = CoreLib.fuzzy_parse_json(x)
 
     try:
-        x = to_list(x)
+        x = CoreLib.to_list(x)
 
         for i in x:
-            i = to_dict(i)
+            i = CoreLib.to_dict(i)
             if _has_action_keys(i):
                 corrected.append(i)
             elif not discard_:
@@ -200,6 +184,7 @@ def _fix_action_field(x, discard_=True):
     return corrected
 
 
+@deprecated  # internal methods, will be removed in v1.0.0
 def _fix_number_field(x, *args, **kwargs):
     """
     Attempts to fix an invalid numeric field value.
@@ -216,7 +201,7 @@ def _fix_number_field(x, *args, **kwargs):
         ValueError: If the value cannot be converted into a valid numeric value.
     """
     try:
-        x = to_num(x, *args, **kwargs)
+        x = CoreLib.to_num(x, *args, **kwargs)
         if isinstance(x, (int, float)):
             return x
         raise ValueError(f"Failed to convert {x} into a numeric value")
@@ -224,6 +209,7 @@ def _fix_number_field(x, *args, **kwargs):
         raise ValueError(f"Failed to convert {x} into a numeric value") from e
 
 
+@deprecated  # internal methods, will be removed in v1.0.0
 def _fix_bool_field(x):
     """
     Attempts to fix an invalid boolean field value.
@@ -238,7 +224,7 @@ def _fix_bool_field(x):
         ValueError: If the value cannot be converted into a valid boolean value.
     """
     try:
-        x = strip_lower(to_str(x))
+        x = CoreLib.strip_lower(x)
         if x in ["true", "1", "correct", "yes"]:
             return True
 
@@ -250,6 +236,7 @@ def _fix_bool_field(x):
         raise ValueError(f"Failed to convert {x} into a boolean value") from e
 
 
+@deprecated  # internal methods, will be removed in v1.0.0
 def _fix_str_field(x):
     """
     Attempts to fix an invalid string field value.
@@ -264,7 +251,7 @@ def _fix_str_field(x):
         ValueError: If the value cannot be converted into a valid string value.
     """
     try:
-        x = to_str(x)
+        x = CoreLib.to_str(x)
         if isinstance(x, str):
             return x
         raise ValueError(f"Failed to convert {x} into a string value")
@@ -272,6 +259,7 @@ def _fix_str_field(x):
         raise ValueError(f"Failed to convert {x} into a string value") from e
 
 
+@deprecated  # internal methods, will be removed in v1.0.0
 def _fix_enum_field(x, choices, **kwargs):
     """
     Attempts to fix an invalid enum field value.
@@ -288,8 +276,8 @@ def _fix_enum_field(x, choices, **kwargs):
         ValueError: If the value cannot be converted into a valid enum value.
     """
     try:
-        x = to_str(x)
-        return StringMatch.choose_most_similar(x, choices, **kwargs)
+        x = CoreLib.to_str(x)
+        return CoreLib.choose_most_similar(x, choices, **kwargs)
     except Exception as e:
         raise ValueError(f"Failed to convert {x} into one of the choices") from e
 

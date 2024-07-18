@@ -6,11 +6,13 @@ from functools import lru_cache
 from typing import Any
 import logging
 import aiocache
-import aiohttp
+from typing_extensions import deprecated
 
 
+@deprecated
 class AsyncUtil:
 
+    @deprecated  # internal testing methods, will be removed in v1.0.0
     @staticmethod
     async def _call_handler(
         func: Callable, *args, error_map: dict[type, Callable] = None, **kwargs
@@ -64,6 +66,7 @@ class AsyncUtil:
                 logging.error(f"Error in call_handler: {e}")
             raise
 
+    @deprecated  # internal testing methods, will be removed in v1.0.0, use functools.lru_cache instead
     @staticmethod
     @lru_cache(maxsize=None)
     def is_coroutine_func(func: Callable[..., Any]) -> bool:
@@ -78,6 +81,7 @@ class AsyncUtil:
         """
         return asyncio.iscoroutinefunction(func)
 
+    @deprecated  # internal methods, will be removed in v1.0.0 with no replacement
     @staticmethod
     def _custom_error_handler(
         error: Exception, error_map: Mapping[type, Callable]
@@ -102,6 +106,7 @@ class AsyncUtil:
         else:
             logging.error(f"Unhandled error: {error}")
 
+    @deprecated  # internal methods, will be removed in v1.0.0, use ln_func_call.ucall instead
     @staticmethod
     async def handle_async_sync(
         func: Callable[..., Any], *args, error_map=None, **kwargs
@@ -140,6 +145,7 @@ class AsyncUtil:
                 logging.error(f"Error in call_handler: {e}")
             raise
 
+    @deprecated  # internal methods, will be removed in v1.0.0, use asyncio.gather instead
     @staticmethod
     async def execute_tasks(*tasks):
         if isinstance(tasks[0], (asyncio.Future, Coroutine)):
@@ -147,50 +153,47 @@ class AsyncUtil:
         else:
             return tasks
 
+    @deprecated  # internal methods, will be removed in v1.0.0, use asyncio.sleep instead
     @staticmethod
     async def sleep(seconds):
         await asyncio.sleep(seconds)
 
-    # @staticmethod
-    # async def execute_timeout(coro, timeout):
-    #     return
-
-    # @classmethod
-    # def TimeoutError(cls):
-    #     return asyncio.TimeoutError
-
-    # @classmethod
-    # def CancelledError(cls):
-    #     return asyncio.CancelledError
-
+    @deprecated  # internal methods, will be removed in v1.0.0, use asyncio.Task instead
     @classmethod
     def Task(cls):
         return asyncio.Task
 
+    @deprecated  # internal methods, will be removed in v1.0.0, use asyncio.Event instead
     @classmethod
     def Event(cls):
         return asyncio.Event
 
+    @deprecated  # internal methods, will be removed in v1.0.0, use asyncio.Lock instead
     @classmethod
     def Lock(cls):
         return asyncio.Lock
 
+    @deprecated  # internal methods, will be removed in v1.0.0, use asyncio.wrap_future instead
     @staticmethod
     def wrap_future(future_):
         return asyncio.wrap_future(future_)
 
+    @deprecated  # internal methods, will be removed in v1.0.0, use asyncio.Semaphore instead
     @staticmethod
     def semaphore(limit):
         return asyncio.Semaphore(limit)
 
+    @deprecated  # moved into funcall.CallDecorator.cache, will be removed in v1.0.0
     @staticmethod
     def cached(*args, **kwargs):
         return aiocache.cached(*args, **kwargs)
 
+    @deprecated  # use asyncio.Task instead, will be removed in v1.0.0
     @staticmethod
     def create_event(*args, **kwargs):
         return asyncio.Event(*args, **kwargs)
 
+    @deprecated  # use asyncio.create_task instead, will be removed in v1.0.0
     @staticmethod
     def create_task(*args, obj=True, **kwargs):
         if obj:
@@ -198,10 +201,7 @@ class AsyncUtil:
         else:
             return asyncio.create_task(*args, **kwargs)
 
+    @deprecated  # use asyncio.Lock instead, will be removed in v1.0.0
     @staticmethod
     def create_lock(*args, **kwargs):
         return asyncio.Lock(*args, **kwargs)
-
-    # @classmethod  # def HttpClientSession(cls):  #     return aiohttp.ClientSession
-
-    # @classmethod  # def HttpClientError(cls):  #     return aiohttp.ClientError
