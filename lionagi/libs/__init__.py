@@ -1,3 +1,8 @@
+# the entire libs other than func_call, nested, sys_util, convert, import
+# will be deprecated in v1.0.0, the functions will be moved into
+# new folders in lionagi.os
+
+
 from lionagi.libs.sys_util import SysUtil
 from lionagi.libs.ln_async import AsyncUtil
 

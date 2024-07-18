@@ -1,9 +1,6 @@
-import lion_core.libs as core_lib
-from lion_core import LN_UNDEFINED
+from lion_core import LN_UNDEFINED, CoreLib
 from collections.abc import Callable
 import re
-import inspect
-import itertools
 from typing import Any, Literal, TypedDict, Sequence
 import numpy as np
 from typing_extensions import deprecated
@@ -50,7 +47,7 @@ class ParseUtil:
             >>> fuzzy_parse_json('{"key": "value"}')
             {'key': 'value'}
         """
-        return core_lib.fuzzy_parse_json(str_to_parse)
+        return CoreLib.fuzzy_parse_json(str_to_parse)
 
     # moved implementation to lion_core.libs.parsers._fuzzy_parse_json
     # no change in implementation, will be deprecated in v1.0.0, with no replacement
@@ -81,7 +78,7 @@ class ParseUtil:
             >>> fix_json_string('{"key": "value"')
             '{"key": "value"}'
         """
-        return core_lib.fix_json_string(str_to_parse)
+        return CoreLib.fix_json_string(str_to_parse)
 
     @deprecated  # internal methods, moved into lion_core, will remove in lionagi in 1.0.0
     @staticmethod  # with no replacement
@@ -106,7 +103,7 @@ class ParseUtil:
                 >>> escape_chars_in_json('Line 1\nLine 2')
                 'Line 1\\nLine 2'
         """
-        return core_lib.escape_chars_in_json(value, char_map)
+        return CoreLib.escape_chars_in_json(value, char_map)
 
     @staticmethod
     def extract_json_block(
@@ -143,7 +140,7 @@ class ParseUtil:
             >>> extract_json_block('```json\\n{"key": "value"}\\n```')
             {'key': 'value'}
         """
-        return core_lib.extract_json_block(
+        return CoreLib.extract_json_block(
             str_to_parse=str_to_parse,
             language=language,
             regex_pattern=regex_pattern,
@@ -171,7 +168,7 @@ class ParseUtil:
             >>> extract_code_blocks(text)
             "print('Hello')"
         """
-        return core_lib.extract_code_block(str_to_parse=str_to_parse)
+        return CoreLib.extract_code_block(str_to_parse=str_to_parse)
 
     # moved implementation to lion_core.libs.parsers._extract_code_blocks
     @deprecated  # use extract_code_block instead, will be removed in 1.0.0
@@ -196,7 +193,7 @@ class ParseUtil:
             >>> extract_code_blocks(text)
             "print('Hello')"
         """
-        return core_lib.extract_code_block(code)
+        return CoreLib.extract_code_block(code)
 
     @staticmethod
     def md_to_json(
@@ -227,7 +224,7 @@ class ParseUtil:
             ValueError: If the expected keys are not present in the JSON
                 object or if no JSON block is found.
         """
-        return core_lib.md_to_json(
+        return CoreLib.md_to_json(
             str_to_parse=str_to_parse,
             expected_keys=expected_keys,
             parser=parser,
@@ -344,7 +341,7 @@ class ParseUtil:
             ...            'param2': 'The second parameter.'}
             True
         """
-        return core_lib.extract_docstring_details(func, style)
+        return CoreLib.extract_docstring_details(func, style)
 
     @deprecated  # internal methods, moved into lion_core, will remove in lionagi in 1.0.0
     @staticmethod  # with no replacement
@@ -416,11 +413,74 @@ class ParseUtil:
             >>> schema['function']['name']
             'example_func'
         """
-        return core_lib.function_to_schema(
+        return CoreLib.function_to_schema(
             func=func,
             style=style,
             func_description=func_description,
             params_description=params_description,
+        )
+
+    #new
+    @staticmethod
+    def validate_mapping(
+        d_: dict[str, Any] | str,
+        keys: Sequence[str] | KeysDict,
+        /,
+        *,
+        score_func: Callable[[str, str], float] | None = None,
+        fuzzy_match: bool = True,
+        handle_unmatched: Literal["ignore", "raise", "remove", "fill", "force"] = "ignore",
+        fill_value: Any = None,
+        fill_mapping: dict[str, Any] | None = None,
+        strict: bool = False,
+    ) -> dict[str, Any]:
+        """
+        Force-validate a mapping against a set of expected keys.
+
+        Takes an input `dict_` and attempts to convert it into a dictionary if
+        it's a string. Then validates the dictionary against expected keys
+        using the `force_validate_keys` function.
+
+        Args:
+            dict_: Input to be validated. Can be a dictionary or a string
+                representing a dictionary.
+            keys: List of expected keys or dictionary mapping keys to types.
+            score_func: Function returning similarity score (0-1) for two
+                strings. Defaults to None.
+            fuzzy_match: If True, use fuzzy matching for key correction.
+            handle_unmatched: Specifies how to handle unmatched keys:
+                - "ignore": Keep unmatched keys in output.
+                - "raise": Raise ValueError if unmatched keys exist.
+                - "remove": Remove unmatched keys from output.
+                - "fill": Fill unmatched keys with default value/mapping.
+                - "force": Combine "fill" and "remove" behaviors.
+            fill_value: Default value for filling unmatched keys.
+            fill_mapping: Dictionary mapping unmatched keys to default values.
+            strict: If True, raise ValueError if any expected key is missing.
+
+        Returns:
+            The validated dictionary.
+
+        Raises:
+            ValueError: If the input cannot be converted to a valid dictionary
+                or if the validation fails.
+
+        Example:
+            >>> input_str = "{'name': 'John', 'age': 30}"
+            >>> keys = ['name', 'age', 'city']
+            >>> validated_dict = force_validate_mapping(input_str, keys)
+            >>> validated_dict
+            {'name': 'John', 'age': 30, 'city': None}
+        """
+        return CoreLib.validate_mapping(
+            d_,
+            keys,
+            score_func=score_func,
+            fuzzy_match=fuzzy_match,
+            handle_unmatched=handle_unmatched,
+            fill_value=fill_value,
+            fill_mapping=fill_mapping,
+            strict=strict,
         )
 
     # new
@@ -469,12 +529,18 @@ class ParseUtil:
             >>> schema['function']['name']
             'example_func'
         """
-        return core_lib.function_to_schema(
+        return CoreLib.function_to_schema(
             f_, style, f_description=f_description, p_description=p_description
         )
 
+    @deprecated # use validate_keys instead, will be removed in 1.0.0
     @staticmethod
-    def force_validate_keys(
+    def force_validate_keys(*args, **kwargs):
+        return CoreLib.validate_keys(*args, **kwargs)
+
+    # new
+    @staticmethod
+    def validate_keys(
         d_: dict[str, Any],
         keys: Sequence[str] | KeysDict,
         /,
@@ -518,7 +584,7 @@ class ParseUtil:
             ValueError: If handle_unmatched is "raise" and unmatched keys
                 exist, or if strict is True and expected keys are missing.
         """
-        return core_lib.force_validate_keys(
+        return CoreLib.validate_keys(
             d_,
             keys,
             score_func=score_func,
@@ -553,7 +619,7 @@ class ParseUtil:
             word based on the highest similarity score, or None if the list is
             empty.
         """
-        return core_lib.choose_most_similar(
+        return CoreLib.choose_most_similar(
             word=word, correct_words_list=correct_words_list, score_func=score_func
         )
 
@@ -583,7 +649,7 @@ class StringMatch:
                 >>> jaro_distance("martha", "marhta")
                 0.9444444444444445
         """
-        return core_lib.jaro_distance(s, t)
+        return CoreLib.jaro_distance(s, t)
 
     @deprecated  # internal method moved into lion_core, will be removed in lionagi in 1.0.0, with no replacement
     @staticmethod
@@ -609,7 +675,7 @@ class StringMatch:
                 >>> jaro_winkler_similarity("dixon", "dicksonx")
                 0.8133333333333332
         """
-        return core_lib.jaro_winkler_similarity(s, t, scaling)
+        return CoreLib.jaro_winkler_similarity(s, t, scaling)
 
     @deprecated  # internal method moved into lion_core, will be removed in lionagi in 1.0.0, with no replacement
     @staticmethod
@@ -632,9 +698,9 @@ class StringMatch:
                 >>> levenshtein_distance("kitten", "sitting")
                 3
         """
-        return core_lib.levenshtein_distance(a, b)
+        return CoreLib.levenshtein_distance(a, b)
 
-    @deprecated  # moved in ParseUtil, these paremter set are all deprecated, use the new method in ParseUtil.force_validate_keys
+    @deprecated  # moved in ParseUtil, these paremter set are all deprecated, use the new method in ParseUtil.validate_keys
     @staticmethod
     def correct_dict_keys(keys: dict | list[str], dict_, score_func=None):
         if score_func is None:
@@ -686,6 +752,7 @@ class StringMatch:
         max_score_index = np.argmax(scores)
         return correct_words_list[max_score_index]
 
+    @deprecated  # moved in ParseUtil, renamed to validate_mapping
     @staticmethod
     def force_validate_dict(x, keys: dict | list[str]) -> dict:
         out_ = x

@@ -1,6 +1,7 @@
 from lion_core import CoreLib
+from typing_extensions import deprecated
 
-
+@deprecated # internal methods, will be removed in v1.0.0
 def check_dict_field(x, keys: list[str] | dict, fix_=True, **kwargs):
     if isinstance(x, dict):
         return x
@@ -13,6 +14,7 @@ def check_dict_field(x, keys: list[str] | dict, fix_=True, **kwargs):
     raise ValueError(f"Default value for DICT must be a dict, got {type(x).__name__}")
 
 
+@deprecated # internal methods, will be removed in v1.0.0
 def check_action_field(x, fix_=True, **kwargs):
     if (
         isinstance(x, list)
@@ -27,6 +29,7 @@ def check_action_field(x, fix_=True, **kwargs):
         raise ValueError("Invalid action field type.") from e
 
 
+@deprecated # internal methods, will be removed in v1.0.0
 def check_number_field(x, fix_=True, **kwargs):
     """
     Checks if the given value is a valid numeric field.
@@ -55,6 +58,7 @@ def check_number_field(x, fix_=True, **kwargs):
     return x
 
 
+@deprecated # internal methods, will be removed in v1.0.0
 def check_bool_field(x, fix_=True):
     """
     Checks if the given value is a valid boolean field.
@@ -82,6 +86,7 @@ def check_bool_field(x, fix_=True):
     return x
 
 
+@deprecated # internal methods, will be removed in v1.0.0
 def check_str_field(x, *args, fix_=True, **kwargs):
     """
     Checks if the given value is a valid string field.
@@ -111,6 +116,7 @@ def check_str_field(x, *args, fix_=True, **kwargs):
     return x
 
 
+@deprecated # internal methods, will be removed in v1.0.0
 def check_enum_field(x, choices, fix_=True, **kwargs):
     """
     Checks if the given value is a valid enum field.
@@ -151,10 +157,12 @@ def check_enum_field(x, choices, fix_=True, **kwargs):
     return x
 
 
+@deprecated # internal methods, will be removed in v1.0.0
 def _has_action_keys(dict_):
     return list(dict_.keys()) >= ["function", "arguments"]
 
 
+@deprecated # internal methods, will be removed in v1.0.0
 def _fix_action_field(x, discard_=True):
     corrected = []
     if isinstance(x, str):
@@ -175,6 +183,7 @@ def _fix_action_field(x, discard_=True):
     return corrected
 
 
+@deprecated # internal methods, will be removed in v1.0.0
 def _fix_number_field(x, *args, **kwargs):
     """
     Attempts to fix an invalid numeric field value.
@@ -199,6 +208,7 @@ def _fix_number_field(x, *args, **kwargs):
         raise ValueError(f"Failed to convert {x} into a numeric value") from e
 
 
+@deprecated # internal methods, will be removed in v1.0.0
 def _fix_bool_field(x):
     """
     Attempts to fix an invalid boolean field value.
@@ -225,6 +235,7 @@ def _fix_bool_field(x):
         raise ValueError(f"Failed to convert {x} into a boolean value") from e
 
 
+@deprecated # internal methods, will be removed in v1.0.0
 def _fix_str_field(x):
     """
     Attempts to fix an invalid string field value.
@@ -247,6 +258,7 @@ def _fix_str_field(x):
         raise ValueError(f"Failed to convert {x} into a string value") from e
 
 
+@deprecated # internal methods, will be removed in v1.0.0
 def _fix_enum_field(x, choices, **kwargs):
     """
     Attempts to fix an invalid enum field value.
