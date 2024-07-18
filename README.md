@@ -1,48 +1,58 @@
-![PyPI - Version](https://img.shields.io/pypi/v/lionagi?labelColor=233476aa&color=231fc935) ![PyPI - Downloads](https://img.shields.io/pypi/dm/lionagi?color=blue)
+# LionAGI v0.3.0 (Development) - Language InterOperable Network
+### An Emerging Agentic Intelligence Operating System
 
+**IMPORTANT: This version is in active development and is NOT ready for use or installation.**
 
-[PyPI](https://pypi.org/project/lionagi/) | [Documentation](https://ocean-lion.com/Welcome) | [Discord](https://discord.gg/aqSJ2v46vu) | [Roadmap](https://trello.com/b/3seomsrI/lionagi)
+## Current Development Status
 
+LionAGI v0.3.0 is our most ambitious update yet, aiming to create a comprehensive agentic OS. However, it's crucial to understand:
 
-# Language InterOperable Network - LION
-### an AGentic Intelligence Operating System
+- This version is not available on PyPI
+- It's not suitable for any production or practical use
+- Features are under heavy development and may change significantly
 
-```
-pip install lionagi==0.2.2
-```
+## What We're Working On
 
-**Powerful Intelligent Workflow Automation**
+1. **Completing lion-core**: Building the foundational framework
+2. **Redesigning Workflow Automation**: Integrating advanced ML models
+3. **Reimagining Agent Architecture**: Creating more flexible intelligent agents
+4. **Expanding Tool Integration**: Developing a broader range of tools
+5. **Cloud Integration**: Implementing AWS EC2 and S3 modules
+6. **Visualization**: Developing a ReactFlow interface for AI workflows
+7. **Testing Infrastructure**: Ensuring reliability as we develop
 
-lionagi is an intelligent agentic workflow automation framework. It introduces advanced ML models into any existing workflows and data infrastructure.
+## Contribute to LionAGI
 
+We're excited about the potential of LionAGI and warmly welcome contributions from the community. Here's how you can get involved:
 
-### Why Automating Workflows?
+1. **Code Contributions**: Check out our [GitHub repository](https://github.com/lion-agi/lionagi) and look for issues labeled 'good first issue' or 'help wanted'.
 
-Intelligent AI models such as [Large Language Model (LLM)](https://en.wikipedia.org/wiki/Large_language_model), introduced new possibilities of human-computer interaction. LLMs is drawing a lot of attention worldwide due to its “one model fits all”, and incredible performance. One way of using LLM is to use as search engine, however, this usage is complicated by the fact that LLMs [hallucinate](https://arxiv.org/abs/2311.05232).
+2. **Documentation**: Help us improve our docs, write tutorials, or create examples.
 
-What goes inside of a LLM is more akin to a [black-box](https://pauldeepakraj-r.medium.com/demystifying-the-black-box-a-deep-dive-into-llm-interpretability-971524966fdf), lacking interpretability, meaning we don’t know how it reaches certain answer or conclusion, thus we cannot fully trust/rely the output from such a system. Another approach of using LLM is to treat them as [intelligent agent](https://arxiv.org/html/2401.03428v1), that are equipped with various tools and data sources. A workflow conducted by such an intelligent agent have clear steps, and we can specify, observe, evaluate and optimize the logic for each decision that the `agent` made to perform actions. This approach, though we still cannot pinpoint how LLM output what it outputs, but the flow itself is **explainable**.
+3. **Testing**: Try out new features and report bugs or suggest improvements.
 
+4. **Ideas and Feedback**: Share your thoughts on features or design in our [Discord](https://discord.gg/aqSJ2v46vu).
 
+5. **Spread the Word**: Star our repository, share about LionAGI, or write about it.
 
-### Community
+To contribute:
+1. Fork the repository
+2. Create your feature branch (`git checkout -b feature/AmazingFeature`)
+3. Commit your changes (`git commit -m 'Add some AmazingFeature'`)
+4. Push to the branch (`git push origin feature/AmazingFeature`)
+5. Open a Pull Request
 
-We encourage contributions to LionAGI and invite you to enrich its features and capabilities. Engage with us and other community members [Join Our Discord](https://discord.gg/aqSJ2v46vu)
+Check out our [Contribution Guidelines](CONTRIBUTING.md) for more details.
 
-### Citation
+## Get Involved
 
-When referencing LionAGI in your projects or research, please cite:
+- Join our [Discord](https://discord.gg/aqSJ2v46vu) to discuss development and ideas
+- Follow our [Roadmap](https://trello.com/b/3seomsrI/lionagi) for upcoming features
 
-```bibtex
-@software{Li_LionAGI_2023,
-  author = {Haiyang Li},
-  month = {12},
-  year = {2023},
-  title = {LionAGI: Towards Automated General Intelligence},
-  url = {https://github.com/lion-agi/lionagi},
-}
-```
+## Requirements
 
+Python 3.10 or higher (for development and testing only)
 
-### Requirements
-Python 3.10 or higher. 
+---
 
+We appreciate your interest and patience as we develop LionAGI v0.3.0. Your contributions can help shape the future of agentic AI systems!
