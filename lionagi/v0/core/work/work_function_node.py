@@ -21,7 +21,16 @@ class WorkFunctionNode(WorkFunction, Node):
         refresh_time (int): The time interval to refresh the work log queue.
     """
 
-    def __init__(self, assignment, function, retry_kwargs=None, guidance=None, capacity=10, refresh_time=1, **kwargs):
+    def __init__(
+        self,
+        assignment,
+        function,
+        retry_kwargs=None,
+        guidance=None,
+        capacity=10,
+        refresh_time=1,
+        **kwargs,
+    ):
         """
         Initializes a WorkFunctionNode instance.
 
@@ -35,10 +44,12 @@ class WorkFunctionNode(WorkFunction, Node):
             **kwargs: Additional keyword arguments for the Node initialization.
         """
         Node.__init__(self, **kwargs)
-        WorkFunction.__init__(self,
-                              assignment=assignment,
-                              function=function,
-                              retry_kwargs=retry_kwargs,
-                              guidance=guidance,
-                              capacity=capacity,
-                              refresh_time=refresh_time)
+        WorkFunction.__init__(
+            self,
+            assignment=assignment,
+            function=function,
+            retry_kwargs=retry_kwargs,
+            guidance=guidance,
+            capacity=capacity,
+            refresh_time=refresh_time,
+        )

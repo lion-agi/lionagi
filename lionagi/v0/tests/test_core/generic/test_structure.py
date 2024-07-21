@@ -1,9 +1,11 @@
 import unittest
 from lionagi.core.generic.structure import *
 
+
 class TestCondition(Condition):
     def check(self, node: Node) -> bool:
         return True
+
 
 class TestBaseStructure(unittest.TestCase):
     def setUp(self):
@@ -32,7 +34,9 @@ class TestBaseStructure(unittest.TestCase):
         self.assertIn(self.node2.id_, self.structure.internal_nodes)
 
     def test_add_node_dict(self):
-        self.structure.add_node({self.node1.id_: self.node1, self.node2.id_: self.node2})
+        self.structure.add_node(
+            {self.node1.id_: self.node1, self.node2.id_: self.node2}
+        )
         self.assertIn(self.node1.id_, self.structure.internal_nodes)
         self.assertIn(self.node2.id_, self.structure.internal_nodes)
 
@@ -51,11 +55,19 @@ class TestBaseStructure(unittest.TestCase):
 
     def test_get_node_list(self):
         self.structure.add_node([self.node1, self.node2])
-        self.assertEqual(self.structure.get_node([self.node1.id_, self.node2.id_]), [self.node1, self.node2])
+        self.assertEqual(
+            self.structure.get_node([self.node1.id_, self.node2.id_]),
+            [self.node1, self.node2],
+        )
 
     def test_get_node_dict(self):
         self.structure.add_node([self.node1, self.node2])
-        self.assertEqual(self.structure.get_node({self.node1.id_: self.node1, self.node2.id_: self.node2}), [self.node1, self.node2])
+        self.assertEqual(
+            self.structure.get_node(
+                {self.node1.id_: self.node1, self.node2.id_: self.node2}
+            ),
+            [self.node1, self.node2],
+        )
 
     def test_get_node_not_found(self):
         with self.assertRaises(KeyError):
@@ -82,7 +94,9 @@ class TestBaseStructure(unittest.TestCase):
 
     def test_remove_node_dict(self):
         self.structure.add_node([self.node1, self.node2])
-        self.structure.remove_node({self.node1.id_: self.node1, self.node2.id_: self.node2})
+        self.structure.remove_node(
+            {self.node1.id_: self.node1, self.node2.id_: self.node2}
+        )
         self.assertNotIn(self.node1.id_, self.structure.internal_nodes)
         self.assertNotIn(self.node2.id_, self.structure.internal_nodes)
 
@@ -107,7 +121,9 @@ class TestBaseStructure(unittest.TestCase):
 
     def test_pop_node_dict(self):
         self.structure.add_node([self.node1, self.node2])
-        popped_nodes = self.structure.pop_node({self.node1.id_: self.node1, self.node2.id_: self.node2})
+        popped_nodes = self.structure.pop_node(
+            {self.node1.id_: self.node1, self.node2.id_: self.node2}
+        )
         self.assertEqual(popped_nodes, [self.node1, self.node2])
         self.assertNotIn(self.node1.id_, self.structure.internal_nodes)
         self.assertNotIn(self.node2.id_, self.structure.internal_nodes)
@@ -134,7 +150,7 @@ class TestBaseStructure(unittest.TestCase):
         self.structure.relate_nodes(self.node1, self.node2)
         self.structure.relate_nodes(self.node2, self.node3)
         edges = list(self.node2.edges.values())
-        
+
         self.structure.remove_edge(edges)
         self.assertNotIn(edges[0].id_, self.structure.internal_edges)
         self.assertNotIn(edges[1].id_, self.structure.internal_edges)
@@ -143,10 +159,10 @@ class TestBaseStructure(unittest.TestCase):
         self.structure.add_node([self.node1, self.node2, self.node3])
         self.structure.relate_nodes(self.node1, self.node2)
         self.structure.relate_nodes(self.node2, self.node3)
-        
+
         edge_dict = self.node2.edges
         edge_list = list(edge_dict.values())
-        
+
         self.structure.remove_edge(edge_dict)
         self.assertNotIn(edge_list[0].id_, self.structure.internal_edges)
         self.assertNotIn(edge_list[1].id_, self.structure.internal_edges)
@@ -175,7 +191,9 @@ class TestBaseStructure(unittest.TestCase):
     def test_get_node_edges_label(self):
         self.structure.add_node([self.node1, self.node2])
         self.structure.relate_nodes(self.node1, self.node2, label="test_label")
-        edges = self.structure.get_node_edges(self.node1, node_as="head", label="test_label")
+        edges = self.structure.get_node_edges(
+            self.node1, node_as="head", label="test_label"
+        )
         self.assertEqual(len(edges), 1)
 
     def test_add_edge(self):
@@ -188,6 +206,7 @@ class TestBaseStructure(unittest.TestCase):
         self.structure.relate_nodes(self.node1, self.node2, label="test_label")
         edge = list(self.structure.internal_edges.values())[0]
         self.assertEqual(edge.label, "test_label")
+
 
 if __name__ == "__main__":
     unittest.main()

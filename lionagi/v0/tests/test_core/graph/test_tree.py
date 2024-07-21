@@ -1,6 +1,7 @@
 import unittest
 from lionagi.core.graph.tree import TreeNode, Tree
 
+
 class TestTreeNode(unittest.TestCase):
     def setUp(self):
         self.parent_node = TreeNode(id_="parent", content="Parent Node")
@@ -36,6 +37,7 @@ class TestTreeNode(unittest.TestCase):
         self.assertNotIn("child1", self.parent_node.children)
         self.assertIsNone(self.child_node1.parent)
 
+
 class TestTree(unittest.TestCase):
     def setUp(self):
         self.tree = Tree()
@@ -70,6 +72,7 @@ class TestTree(unittest.TestCase):
         self.tree.relate_parent_child(self.child_node1, self.child_node2)
         # Trees should always be acyclic
         self.assertTrue(self.tree.acyclic)
+
 
 if __name__ == "__main__":
     unittest.main()

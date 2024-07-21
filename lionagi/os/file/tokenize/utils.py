@@ -1,4 +1,3 @@
-import lion_core.libs as core_lib
 from typing import Any
 import tiktoken
 import math
@@ -95,7 +94,7 @@ class TokenizeUtil:
 
         try:
             if not isinstance(text, str):
-                text = core_lib.to_str(text)
+                text = str(text)
 
             n_chunks = math.ceil(len(text) / chunk_size)
             overlap_size = int(overlap / 2)

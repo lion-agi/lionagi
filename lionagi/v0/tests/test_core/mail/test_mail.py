@@ -9,7 +9,7 @@ class TestMail(unittest.TestCase):
             sender="node1",
             recipient="node2",
             category=MailPackageCategory.MESSAGES,
-            package="Hello, World!"
+            package="Hello, World!",
         )
 
     def test_mail_initialization(self):
@@ -22,8 +22,11 @@ class TestMail(unittest.TestCase):
 
     def test_mail_str(self):
         """Test the string representation of Mail."""
-        expected_str = "Mail from node1 to node2 with category messages and package Hello, World!"
+        expected_str = (
+            "Mail from node1 to node2 with category messages and package Hello, World!"
+        )
         self.assertEqual(str(self.mail), expected_str)
+
 
 class TestMailBox(unittest.TestCase):
     def setUp(self):
@@ -32,13 +35,13 @@ class TestMailBox(unittest.TestCase):
             sender="node1",
             recipient="node3",
             category="model",
-            package={"model": "Random Forest"}
+            package={"model": "Random Forest"},
         )
         self.mail2 = Mail(
             sender="node2",
             recipient="node3",
             category=MailPackageCategory.SERVICE,
-            package={"service": "Prediction"}
+            package={"service": "Prediction"},
         )
 
     def test_adding_mails(self):
@@ -55,8 +58,11 @@ class TestMailBox(unittest.TestCase):
         """Test the string representation of MailBox."""
         self.mailbox.pending_ins["node1"] = self.mail1
         self.mailbox.pending_outs["node3"] = self.mail2
-        expected_str = "MailBox with 1 pending incoming mails and 1 pending outgoing mails."
+        expected_str = (
+            "MailBox with 1 pending incoming mails and 1 pending outgoing mails."
+        )
         self.assertEqual(str(self.mailbox), expected_str)
+
 
 if __name__ == "__main__":
     unittest.main()

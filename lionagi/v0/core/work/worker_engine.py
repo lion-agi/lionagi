@@ -41,7 +41,15 @@ class WorkerEngine:
         self.refresh_time = refresh_time
         self._stop_event = asyncio.Event()
 
-    async def add_task(self, *args, task_function: str, task_name=None, task_max_steps=10, task_post_processing=None, **kwargs):
+    async def add_task(
+        self,
+        *args,
+        task_function: str,
+        task_name=None,
+        task_max_steps=10,
+        task_post_processing=None,
+        **kwargs,
+    ):
         """
         Adds a new task to the task queue.
 
@@ -56,7 +64,11 @@ class WorkerEngine:
         Returns:
             WorkTask: The newly created task.
         """
-        task = WorkTask(name=task_name, max_steps=task_max_steps, post_processing=task_post_processing)
+        task = WorkTask(
+            name=task_name,
+            max_steps=task_max_steps,
+            post_processing=task_post_processing,
+        )
         self.tasks.append(task)
         function = getattr(self.worker, task_function)
         work = await function(*args, **kwargs)
@@ -66,7 +78,7 @@ class WorkerEngine:
 
     async def activate_work_queues(self):
         """
-                Activates the work queues for all work functions.
+        Activates the work queues for all work functions.
         """
         for work_function in self.worker.work_functions.values():
             if not work_function.worklog.queue.execution_mode:
@@ -141,11 +153,12 @@ class WorkerEngine:
         Executes tasks continuously until stopped.
         """
         self._stop_event.clear()
-        
+
         async def execute_lasting_inner():
             while not self.stopped:
                 await self.execute(stop_queue=False)
                 await asyncio.sleep(self.refresh_time)
+
         asyncio.create_task(execute_lasting_inner())
 
     def _construct_work_functions(self):
@@ -154,26 +167,38 @@ class WorkerEngine:
         """
         if getattr(self.worker, "work_functions", None) is None:
             self.worker.work_functions = {}
-        work_decorated_function = self.worker._get_decorated_functions(decorator_attr="_work_decorator_params",
-                                                                       name_only=False)
+        work_decorated_function = self.worker._get_decorated_functions(
+            decorator_attr="_work_decorator_params", name_only=False
+        )
         for func_name, func, dec_params in work_decorated_function:
             if func_name not in self.worker.work_functions:
                 self.worker.work_functions[func_name] = WorkFunctionNode(**dec_params)
                 self.worker_graph.add_node(self.worker.work_functions[func_name])
             else:
-                if not isinstance(self.worker.work_functions[func_name], WorkFunctionNode):
-                    raise TypeError(f"WorkFunction {func_name} already exists but is not a WorkFunctionNode. "
-                                    f"If you would like to use it in WorkerEngine, please convert it to a "
-                                    f"WorkFunctionNode, or initiate a new worker, or pop it from work_function dict")
+                if not isinstance(
+                    self.worker.work_functions[func_name], WorkFunctionNode
+                ):
+                    raise TypeError(
+                        f"WorkFunction {func_name} already exists but is not a WorkFunctionNode. "
+                        f"If you would like to use it in WorkerEngine, please convert it to a "
+                        f"WorkFunctionNode, or initiate a new worker, or pop it from work_function dict"
+                    )
 
     def _construct_workedges(self):
         """
         Constructs work edges for the worker graph.
         """
-        worklink_decorated_function = self.worker._get_decorated_functions(decorator_attr="_worklink_decorator_params",
-                                                                           name_only=False)
+        worklink_decorated_function = self.worker._get_decorated_functions(
+            decorator_attr="_worklink_decorator_params", name_only=False
+        )
 
         for func_name, func, dec_params in worklink_decorated_function:
             head = self.worker.work_functions[dec_params["from_"]]
             tail = self.worker.work_functions[dec_params["to_"]]
-            self.worker_graph.add_edge(head=head, tail=tail, convert_function=func, associated_worker=self.worker, edge_class=WorkEdge)
+            self.worker_graph.add_edge(
+                head=head,
+                tail=tail,
+                convert_function=func,
+                associated_worker=self.worker,
+                edge_class=WorkEdge,
+            )

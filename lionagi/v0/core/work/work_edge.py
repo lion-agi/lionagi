@@ -21,19 +21,19 @@ class WorkEdge(Edge, Progressable):
             other than "from_work" and "from_result".
         associated_worker (Worker): The worker to which this WorkEdge belongs.
     """
+
     convert_function: Callable = Field(
         ...,
-        description="Function to transform the result of the previous work into parameters for the next work."
+        description="Function to transform the result of the previous work into parameters for the next work.",
     )
 
     convert_function_kwargs: dict = Field(
         {},
-        description="parameters for the worklink function other than \"from_work\" and \"from_result\""
+        description='parameters for the worklink function other than "from_work" and "from_result"',
     )
 
     associated_worker: Worker = Field(
-        ...,
-        description="The worker to which this WorkEdge belongs."
+        ..., description="The worker to which this WorkEdge belongs."
     )
 
     @field_validator("convert_function", mode="before")
@@ -81,8 +81,10 @@ class WorkEdge(Edge, Progressable):
             StopIteration: If the task has no available steps left to proceed.
         """
         if task.available_steps == 0:
-            task.status_note = ("Task stopped proceeding further as all available steps have been used up, "
-                                "but the task has not yet reached completion.")
+            task.status_note = (
+                "Task stopped proceeding further as all available steps have been used up, "
+                "but the task has not yet reached completion."
+            )
             return
         func_signature = inspect.signature(self.convert_function)
         kwargs = self.convert_function_kwargs.copy()

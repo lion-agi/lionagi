@@ -45,6 +45,21 @@ from .util import to_list_type, _validate_order
 T = TypeVar("T")
 
 
+from lion_core import Pile as CorePile
+
+
+p = li.load(file)
+p = li.chunk(p)
+await p.embed_pile()
+tool = p.as_query_tool()
+tool2 = p.as_chat_tool()
+
+await branch.chat(tools=[tool, tool2])
+
+
+class Pile(CorePile, quey_mixin, chat_mixin, embed_mixin): ...
+
+
 class Pile(Element, Record, Generic[T]):
     """
     Collection class for managing Element objects.
