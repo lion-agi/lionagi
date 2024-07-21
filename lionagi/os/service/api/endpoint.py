@@ -1,3 +1,7 @@
+from typing import Mapping, Type
+from .rate_limiter import BaseRateLimiter, SimpleRateLimiter
+
+
 class EndPoint:
     """
     Represents an API endpoint with rate limiting capabilities.
@@ -5,25 +9,25 @@ class EndPoint:
     This class encapsulates the details of an API endpoint, including its rate limiter.
 
     Attributes:
-            endpoint (str): The API endpoint path.
-            rate_limiter_class (Type[li.BaseRateLimiter]): The class used for rate limiting requests to the endpoint.
-            max_requests (int): The maximum number of requests allowed per interval.
-            max_tokens (int): The maximum number of tokens allowed per interval.
-            interval (int): The time interval in seconds for replenishing rate limit capacities.
-            config (Mapping): Configuration parameters for the endpoint.
-            rate_limiter (Optional[li.BaseRateLimiter]): The rate limiter instance for this endpoint.
+        endpoint (str): The API endpoint path.
+        rate_limiter_class (Type[li.BaseRateLimiter]): The class used for rate limiting requests to the endpoint.
+        max_requests (int): The maximum number of requests allowed per interval.
+        max_tokens (int): The maximum number of tokens allowed per interval.
+        interval (int): The time interval in seconds for replenishing rate limit capacities.
+        config (Mapping): Configuration parameters for the endpoint.
+        rate_limiter (Optional[li.BaseRateLimiter]): The rate limiter instance for this endpoint.
 
     Examples:
-            # Example usage of EndPoint with SimpleRateLimiter
-            endpoint = EndPoint(
-                    max_requests=100,
-                    max_tokens=1000,
-                    interval=60,
-                    endpoint_='chat/completions',
-                    rate_limiter_class=li.SimpleRateLimiter,
-                    config={'param1': 'value1'}
-            )
-            asyncio.run(endpoint.init_rate_limiter())
+        # Example usage of EndPoint with SimpleRateLimiter
+        endpoint = EndPoint(
+            max_requests=100,
+            max_tokens=1000,
+            interval=60,
+            endpoint_='chat/completions',
+            rate_limiter_class=li.SimpleRateLimiter,
+            config={'param1': 'value1'}
+        )
+        asyncio.run(endpoint.init_rate_limiter())
     """
 
     def __init__(

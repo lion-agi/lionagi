@@ -19,7 +19,7 @@ class PayloadPackage:
 
     @classmethod
     def embeddings(cls, embed_str, llmconfig, schema, **kwargs):
-        return APIUtil.create_payload(
+        return create_payload(
             input_=embed_str,
             config=llmconfig,
             required_=schema["required"],
@@ -42,7 +42,7 @@ class PayloadPackage:
         Returns:
                 The constructed payload.
         """
-        return APIUtil.create_payload(
+        return create_payload(
             input_=messages,
             config=llmconfig,
             required_=schema["required"],
@@ -65,7 +65,7 @@ class PayloadPackage:
         Returns:
                 The constructed payload.
         """
-        return APIUtil.create_payload(
+        return create_payload(
             input_=training_file,
             config=llmconfig,
             required_=schema["required"],
