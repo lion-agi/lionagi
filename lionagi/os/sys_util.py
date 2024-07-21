@@ -17,9 +17,12 @@ from pathlib import Path
 from shutil import copy2
 from typing import Any, List, Literal, Sequence, TypeVar, Union
 
-from lion_core import CoreUtil
+
+from lion_core import CoreUtil as cu
 from lion_core.libs import unique_hash
+
 from lion_core.setting import LION_ID_CONFIG, TIME_CONFIG
+
 
 T = TypeVar("T")
 PATH_TYPE = Union[str, Path]
@@ -27,7 +30,6 @@ PATH_TYPE = Union[str, Path]
 
 class SysUtil:
 
-    # new
     @staticmethod
     def time(
         *,
@@ -59,7 +61,7 @@ class SysUtil:
             `ValueError`: If an invalid type_ is provided or if custom_format
                 is not provided when type_="custom".
         """
-        return CoreUtil.time(
+        return cu.time(
             tz=tz,
             type_=type_,
             iso=iso,
@@ -69,7 +71,6 @@ class SysUtil:
             custom_sep=custom_sep,
         )
 
-    # new
     @staticmethod
     def copy(obj: T, /, *, deep: bool = True, num: int = 1) -> T | list[T]:
         """
@@ -86,9 +87,8 @@ class SysUtil:
         Raises:
             `ValueError`: If num is less than 1.
         """
-        return CoreUtil.copy(obj, deep=deep, num=num)
+        return cu.copy(obj, deep=deep, num=num)
 
-    # new
     @staticmethod
     def id(
         n: int = LION_ID_CONFIG["n"],
@@ -114,7 +114,7 @@ class SysUtil:
         Returns:
             A unique identifier string.
         """
-        return CoreUtil.id(
+        return cu.id(
             n=n,
             prefix=prefix,
             postfix=postfix,
@@ -139,7 +139,7 @@ class SysUtil:
         Raises:
             `LionIDError`: If the item does not contain a valid Lion ID.
         """
-        return CoreUtil.get_id(item, config=config)
+        return cu.get_id(item, config=config)
 
     @staticmethod
     def is_id(item: Any, /, *, config: dict = LION_ID_CONFIG) -> bool:
@@ -153,7 +153,7 @@ class SysUtil:
         Returns:
             True if the item is a valid Lion ID, False otherwise.
         """
-        return CoreUtil.is_id(item, config=config)
+        return cu.is_id(item, config=config)
 
     @staticmethod
     def clear_path(
@@ -454,7 +454,7 @@ class SysUtil:
         except ImportError:
             logging.info(f"Installing {pip_name}...")
             try:
-                SysUtil._run_pip_command(["install", pip_name])
+                _run_pip_command(["install", pip_name])
                 if import_name:
                     module = __import__(full_import_path, fromlist=[import_name])
                     return getattr(module, import_name)
@@ -500,6 +500,7 @@ class SysUtil:
         return importlib.util.find_spec(package_name) is not None
 
     @staticmethod
+    @lru_cache(maxsize=None)
     def check_import(
         package_name: str,
         module_name: str | None = None,
@@ -566,7 +567,7 @@ class SysUtil:
             subprocess.CalledProcessError: If the uninstallation fails.
         """
         try:
-            SysUtil._run_pip_command(["uninstall", package_name, "-y"])
+            _run_pip_command(["uninstall", package_name, "-y"])
             logging.info(f"Successfully uninstalled {package_name}.")
         except subprocess.CalledProcessError as e:
             logging.error(f"Failed to uninstall {package_name}. Error: {e}")
@@ -584,26 +585,26 @@ class SysUtil:
             subprocess.CalledProcessError: If the update fails.
         """
         try:
-            SysUtil._run_pip_command(["install", "--upgrade", package_name])
+            _run_pip_command(["install", "--upgrade", package_name])
             logging.info(f"Successfully updated {package_name}.")
         except subprocess.CalledProcessError as e:
             logging.error(f"Failed to update {package_name}. Error: {e}")
             raise
 
-    @staticmethod
-    def _run_pip_command(args: Sequence[str]) -> subprocess.CompletedProcess[bytes]:
-        """
-        Run a pip command.
 
-        Args:
-            args: The arguments to pass to pip.
+def _run_pip_command(args: Sequence[str]) -> subprocess.CompletedProcess[bytes]:
+    """
+    Run a pip command.
 
-        Returns:
-            A CompletedProcess instance.
+    Args:
+        args: The arguments to pass to pip.
 
-        Raises:
-            subprocess.CalledProcessError: If the pip command fails.
-        """
-        return subprocess.run(
-            [sys.executable, "-m", "pip"] + list(args), check=True, capture_output=True
-        )
+    Returns:
+        A CompletedProcess instance.
+
+    Raises:
+        subprocess.CalledProcessError: If the pip command fails.
+    """
+    return subprocess.run(
+        [sys.executable, "-m", "pip"] + list(args), check=True, capture_output=True
+    )

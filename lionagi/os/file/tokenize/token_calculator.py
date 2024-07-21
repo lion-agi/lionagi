@@ -7,6 +7,7 @@ def calculate_num_token(
     payload: Mapping[str, Any] = None,
     api_endpoint: str = None,
     token_encoding_name: str = None,
+    image_token_calculator: Any = None,
 ) -> int:  # sourcery skip: avoid-builtin-shadow
     """
     Calculates the number of tokens required for a request based on the payload and API endpoint.
@@ -32,7 +33,10 @@ def calculate_num_token(
             # Expected token calculation for the given payload and endpoint.
     """
     import tiktoken
-    from .ln_image import ImageUtil
+    if image_token_calculator is None:
+        from lionagi.app.OpenAI.token_calculator import calculate_image_token_usage_from_base64
+        
+        image_token_calculator = calculate_image_token_usage_from_base64
 
     token_encoding_name = token_encoding_name or "cl100k_base"
     encoding = tiktoken.get_encoding(token_encoding_name)
@@ -62,7 +66,7 @@ def calculate_num_token(
                                 if "data:image/jpeg;base64," in a:
                                     a = a.split("data:image/jpeg;base64,")[1].strip()
                                 num_tokens += (
-                                    ImageUtil.calculate_image_token_usage_from_base64(
+                                    image_token_calculator(
                                         a, item.get("detail", "low")
                                     )
                                 )

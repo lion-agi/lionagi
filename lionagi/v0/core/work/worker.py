@@ -93,7 +93,9 @@ class Worker(ABC):
 
         """
         if form_key not in self.forms.keys():
-            raise ValueError(f"Unable to change default form. Key {form_key} does not exist.")
+            raise ValueError(
+                f"Unable to change default form. Key {form_key} does not exist."
+            )
         self.default_form = self.forms[form_key]
 
     def _get_decorated_functions(self, decorator_attr, name_only=True):
@@ -108,7 +110,9 @@ class Worker(ABC):
             list: List of decorated function names or tuples containing function details.
         """
         decorated_functions = []
-        for name, func in inspect.getmembers(self.__class__, predicate=inspect.isfunction):
+        for name, func in inspect.getmembers(
+            self.__class__, predicate=inspect.isfunction
+        ):
             if hasattr(func, decorator_attr):
                 if name_only:
                     decorated_functions.append(name)
@@ -121,11 +125,18 @@ class Worker(ABC):
         """
         Validates worklink functions to ensure they have the required parameters.
         """
-        worklink_decorated_function = self._get_decorated_functions(decorator_attr="_worklink_decorator_params", name_only=False)
+        worklink_decorated_function = self._get_decorated_functions(
+            decorator_attr="_worklink_decorator_params", name_only=False
+        )
         for func_name, func, _ in worklink_decorated_function:
             func_signature = inspect.signature(func)
-            if "from_work" not in func_signature.parameters and "from_result" not in func_signature.parameters:
-                raise ValueError(f"Either \"from_work\" or \"from_result\" must be a parameter in function {func_name}")
+            if (
+                "from_work" not in func_signature.parameters
+                and "from_result" not in func_signature.parameters
+            ):
+                raise ValueError(
+                    f'Either "from_work" or "from_result" must be a parameter in function {func_name}'
+                )
 
     def construct_all_work_functions(self):
         """
@@ -133,7 +144,9 @@ class Worker(ABC):
         """
         if getattr(self, "work_functions", None) is None:
             self.work_functions = {}
-        work_decorated_function = self._get_decorated_functions(decorator_attr="_work_decorator_params", name_only=False)
+        work_decorated_function = self._get_decorated_functions(
+            decorator_attr="_work_decorator_params", name_only=False
+        )
         for func_name, func, dec_params in work_decorated_function:
             if func_name not in self.work_functions:
                 self.work_functions[func_name] = WorkFunction(**dec_params)
@@ -174,7 +187,7 @@ class Worker(ABC):
                 retry_kwargs=retry_kwargs or {},
                 guidance=guidance or function.__doc__,
                 capacity=capacity,
-                refresh_time=refresh_time
+                refresh_time=refresh_time,
             )
 
         work_func: WorkFunction = self.work_functions[function.__name__]
@@ -183,7 +196,9 @@ class Worker(ABC):
         if form_param_key:
             func_signature = inspect.signature(function)
             if form_param_key not in func_signature.parameters:
-                raise KeyError(f"Failed to locate form. \"{form_param_key}\" is not defined in the function.")
+                raise KeyError(
+                    f'Failed to locate form. "{form_param_key}" is not defined in the function.'
+                )
             if "self" in func_signature.parameters:
                 bound_args = func_signature.bind(None, *args, **kwargs)
             else:
@@ -199,14 +214,18 @@ class Worker(ABC):
             form = self.forms.get(form_key) or self.default_form
 
             if form:
-                subform = form.__class__(assignment=work_func.assignment, task=work_func.guidance)
+                subform = form.__class__(
+                    assignment=work_func.assignment, task=work_func.guidance
+                )
                 for k in subform.input_fields:
                     v = getattr(form, k, None)
                     setattr(subform, k, v)
                 subform.origin = form
                 kwargs = {"form": subform} | kwargs
             else:
-                raise ValueError(f"Cannot locate form in Worker's forms and default_form is not available.")
+                raise ValueError(
+                    f"Cannot locate form in Worker's forms and default_form is not available."
+                )
 
         task = work_func.perform(self, *args, **kwargs)
         work = Work(async_task=task, async_task_name=work_func.name)
@@ -221,7 +240,7 @@ def work(
     guidance=None,
     retry_kwargs=None,
     timeout=10,
-    refresh_time=1
+    refresh_time=1,
 ):
     """
     Decorator to mark a method as a work function.
@@ -271,23 +290,22 @@ def work(
                 refresh_time=refresh_time,
                 **kwargs,
             )
-        wrapper._work_decorator_params = {"assignment": assignment,
-                                          "function": func,
-                                          "retry_kwargs": retry_kwargs,
-                                          "guidance": guidance,
-                                          "capacity": capacity,
-                                          "refresh_time": refresh_time}
+
+        wrapper._work_decorator_params = {
+            "assignment": assignment,
+            "function": func,
+            "retry_kwargs": retry_kwargs,
+            "guidance": guidance,
+            "capacity": capacity,
+            "refresh_time": refresh_time,
+        }
 
         return wrapper
 
     return decorator
 
 
-def worklink(
-        from_: str,
-        to_: str,
-        auto_schedule: bool = True
-):
+def worklink(from_: str, to_: str, auto_schedule: bool = True):
     """
     Decorator to create a link between two work functions.
 
@@ -299,26 +317,31 @@ def worklink(
     Returns:
         Callable: The decorated function.
     """
+
     def decorator(func):
         @wraps(func)
         async def wrapper(
-            self: Worker,
-            *args,
-            func=func,
-            from_=from_,
-            to_=to_,
-            **kwargs
+            self: Worker, *args, func=func, from_=from_, to_=to_, **kwargs
         ):
             if not inspect.iscoroutinefunction(func):
                 raise TypeError(f"{func.__name__} must be an asynchronous function")
 
-            work_funcs = self._get_decorated_functions(decorator_attr="_work_decorator_params")
+            work_funcs = self._get_decorated_functions(
+                decorator_attr="_work_decorator_params"
+            )
             if from_ not in work_funcs or to_ not in work_funcs:
-                raise ValueError("Invalid link. 'from_' and 'to_' must be the name of work decorated functions.")
+                raise ValueError(
+                    "Invalid link. 'from_' and 'to_' must be the name of work decorated functions."
+                )
 
             func_signature = inspect.signature(func)
-            if "from_work" not in func_signature.parameters and "from_result" not in func_signature.parameters:
-                raise ValueError(f"Either \"from_work\" or \"from_result\" must be a parameter in function {func.__name__}")
+            if (
+                "from_work" not in func_signature.parameters
+                and "from_result" not in func_signature.parameters
+            ):
+                raise ValueError(
+                    f'Either "from_work" or "from_result" must be a parameter in function {func.__name__}'
+                )
 
             if "self" in func_signature.parameters:
                 bound_args = func_signature.bind(None, *args, **kwargs)
@@ -331,10 +354,14 @@ def worklink(
 
             if from_work := arguments.get("from_work"):
                 if not isinstance(from_work, Work):
-                    raise ValueError("Invalid type for from_work. Only work objects are accepted.")
+                    raise ValueError(
+                        "Invalid type for from_work. Only work objects are accepted."
+                    )
                 if from_work.async_task_name != from_:
-                    raise ValueError(f"Invalid work object in from_work. "
-                                     f"async_task_name \"{from_work.async_task_name}\" does not match from_ \"{from_}\"")
+                    raise ValueError(
+                        f"Invalid work object in from_work. "
+                        f'async_task_name "{from_work.async_task_name}" does not match from_ "{from_}"'
+                    )
 
             next_params = await func(self, *args, **kwargs)
             to_work_func = getattr(self, to_)
@@ -347,7 +374,9 @@ def worklink(
                 if wrapper.auto_schedule:
                     return await to_work_func(**next_params)
             elif isinstance(next_params, tuple) and len(next_params) == 2:
-                if isinstance(next_params[0], list) and isinstance(next_params[1], dict):
+                if isinstance(next_params[0], list) and isinstance(
+                    next_params[1], dict
+                ):
                     if wrapper.auto_schedule:
                         return await to_work_func(*next_params[0], **next_params[1])
                 else:
@@ -358,9 +387,7 @@ def worklink(
             return next_params
 
         wrapper.auto_schedule = auto_schedule
-        wrapper._worklink_decorator_params = {"func": func,
-                                              "from_": from_,
-                                              "to_": to_}
+        wrapper._worklink_decorator_params = {"func": func, "from_": from_, "to_": to_}
 
         return wrapper
 

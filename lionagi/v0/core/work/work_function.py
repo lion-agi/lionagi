@@ -13,6 +13,7 @@ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the License for the specific language governing permissions and
 limitations under the License.
 """
+
 import asyncio
 import logging
 
@@ -33,7 +34,13 @@ class WorkFunction:
     """
 
     def __init__(
-        self, assignment, function, retry_kwargs=None, guidance=None, capacity=10, refresh_time=1
+        self,
+        assignment,
+        function,
+        retry_kwargs=None,
+        guidance=None,
+        capacity=10,
+        refresh_time=1,
     ):
         """
         Initializes a WorkFunction instance.
@@ -69,11 +76,11 @@ class WorkFunction:
     @property
     def execution_mode(self):
         """
-         Gets the execution mode of the work function's queue.
+        Gets the execution mode of the work function's queue.
 
-         Returns:
-             bool: The execution mode of the work function's queue.
-         """
+        Returns:
+            bool: The execution mode of the work function's queue.
+        """
         return self.worklog.queue.execution_mode
 
     def is_progressable(self):

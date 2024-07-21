@@ -4,6 +4,7 @@ from lionagi.core.graph.graph import Graph
 from lionagi.core.generic.node import Node
 from lionagi.core.generic.edge import Edge
 
+
 class TestGraph(unittest.TestCase):
 
     def setUp(self):
@@ -14,11 +15,10 @@ class TestGraph(unittest.TestCase):
         self.graph.add_node(self.node1)
         self.graph.add_node(self.node2)
         self.graph.add_node(self.node3)
-        
+
     def test_graph_heads(self):
         self.graph.relate_nodes(self.node1, self.node2)
         self.assertEqual(["node1"], self.graph.graph_heads)
-
 
     def test_acyclic(self):
         self.graph.relate_nodes(self.node1, self.node2)
@@ -65,6 +65,7 @@ class TestGraph(unittest.TestCase):
         self.graph.clear()
         self.assertEqual(len(self.graph.internal_nodes), 0)
         self.assertTrue(self.graph.is_empty)
+
 
 if __name__ == "__main__":
     unittest.main()

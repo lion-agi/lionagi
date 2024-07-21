@@ -90,11 +90,11 @@ class WorkQueue:
 
     async def execute(self):
         """
-            Continuously executes the process method at a specified refresh interval.
+        Continuously executes the process method at a specified refresh interval.
 
-            Args:
-                refresh_time (int, optional): The time in seconds to wait between
-                    successive calls to `process`. Defaults to 1.
+        Args:
+            refresh_time (int, optional): The time in seconds to wait between
+                successive calls to `process`. Defaults to 1.
         """
         self.execution_mode = True
         self._stop_event.clear()

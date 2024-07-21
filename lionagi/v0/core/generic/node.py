@@ -124,7 +124,7 @@ class Node(Component, Relatable):
         label: str | None = None,
         bundle: bool = False,
         edge_class: Callable = Edge,
-        **kwargs
+        **kwargs,
     ) -> None:
         """
         Establish directed relationship from this node to another.
@@ -150,7 +150,7 @@ class Node(Component, Relatable):
             condition=condition,
             bundle=bundle,
             label=label,
-            **kwargs
+            **kwargs,
         )
 
         self.relations[direction].include(edge)
