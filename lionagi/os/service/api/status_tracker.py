@@ -1,6 +1,8 @@
 from dataclasses import dataclass
 
 
+# note: the following is borrowed from OpenAI cookbook, MIT License
+# https://github.com/openai/openai-cookbook/blob/main/examples/api_request_parallel_processor.py
 @dataclass
 class StatusTracker:
     """

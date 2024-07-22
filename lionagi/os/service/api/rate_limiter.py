@@ -13,6 +13,8 @@ from .api_call import call_api
 from .config import DEFAULT_RATE_LIMIT_CONFIG, CACHED_CONFIG, RETRY_CONFIG
 
 
+# Note the following was inspired by the OpenAI cookbook, MIT License:
+# https://github.com/openai/openai-cookbook/blob/main/examples/api_request_parallel_processor.py
 class RateLimiter(ABC):
     """Rate limiter for API calls with token-based and request-based limiting.
 

@@ -15,7 +15,7 @@ CACHED_CONFIG = {
     "serializer": None,
     "plugins": None,
     "alias": None,
-    "noself": False,
+    "noself": lambda x: False,
 }
 
 RETRY_CONFIG = {
