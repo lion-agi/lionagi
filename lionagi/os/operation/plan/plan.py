@@ -15,7 +15,7 @@ limitations under the License.
 """
 
 from lionagi.libs.ln_convert import to_str
-from .base import BaseUnitForm, Field
+from ...operator.processor._unit.base import BaseUnitForm, Field
 
 
 class PlanTemplate(BaseUnitForm):

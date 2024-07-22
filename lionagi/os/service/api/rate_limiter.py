@@ -2,8 +2,8 @@ from abc import ABC
 import asyncio
 from lionagi import logging
 from typing import NoReturn, Mapping
-from .utils import api_endpoint_from_url
 from lionagi.os.file.tokenize.token_calculator import calculate_num_token
+from .utils import api_endpoint_from_url
 
 
 class BaseRateLimiter(ABC):

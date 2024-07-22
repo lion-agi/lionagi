@@ -1,6 +1,3 @@
-from lion_core import CoreLib
-
-
 def create_payload(input_, config, required_, optional_, input_key, **kwargs):
     config = {**config, **kwargs}
     payload = {input_key: input_}
@@ -9,7 +6,7 @@ def create_payload(input_, config, required_, optional_, input_key, **kwargs):
         payload[key] = config[key]
 
     for key in optional_:
-        if bool(config[key]) and CoreLib.strip_lower(config[key]) != "none":
+        if bool(config[key]) and str(config[key]).strip().lower() != "none":
             payload[key] = config[key]
 
     return payload

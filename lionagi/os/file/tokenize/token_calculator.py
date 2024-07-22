@@ -1,4 +1,4 @@
-from lion_core import CoreLib
+import tiktoken
 from typing import Any, Mapping
 
 
@@ -8,34 +8,12 @@ def calculate_num_token(
     api_endpoint: str = None,
     token_encoding_name: str = None,
     image_token_calculator: Any = None,
-) -> int:  # sourcery skip: avoid-builtin-shadow
-    """
-    Calculates the number of tokens required for a request based on the payload and API endpoint.
-
-    The token calculation logic might vary based on different API endpoints and payload content.
-    This method should be implemented in a subclass to provide the specific calculation logic
-    for the OpenAI API.
-
-    Parameters:
-            payload (Mapping[str, Any]): The payload of the request.
-
-            api_endpoint (str): The specific API endpoint for the request.
-
-            token_encoding_name (str): The name of the token encoding method.
-
-    Returns:
-            int: The estimated number of tokens required for the request.
-
-    Example:
-            >>> rate_limiter = OpenAIRateLimiter(100, 200)
-            >>> payload = {'prompt': 'Translate the following text:', 'max_tokens': 50}
-            >>> rate_limiter.calculate_num_token(payload, 'completions')
-            # Expected token calculation for the given payload and endpoint.
-    """
-    import tiktoken
+) -> int:
     if image_token_calculator is None:
-        from lionagi.app.OpenAI.token_calculator import calculate_image_token_usage_from_base64
-        
+        from lionagi.app.OpenAI.token_calculator import (
+            calculate_image_token_usage_from_base64,
+        )
+
         image_token_calculator = calculate_image_token_usage_from_base64
 
     token_encoding_name = token_encoding_name or "cl100k_base"
@@ -58,17 +36,13 @@ def calculate_num_token(
                     for item in _content:
                         if isinstance(item, dict):
                             if "text" in item:
-                                num_tokens += len(
-                                    encoding.encode(CoreLib.to_str(item["text"]))
-                                )
+                                num_tokens += len(encoding.encode(str(item["text"])))
                             elif "image_url" in item:
                                 a: str = item["image_url"]["url"]
                                 if "data:image/jpeg;base64," in a:
                                     a = a.split("data:image/jpeg;base64,")[1].strip()
-                                num_tokens += (
-                                    image_token_calculator(
-                                        a, item.get("detail", "low")
-                                    )
+                                num_tokens += image_token_calculator(
+                                    a, item.get("detail", "low")
                                 )
                                 num_tokens += (
                                     20  # for every image we add 20 tokens buffer
