@@ -1,58 +1,62 @@
-from typing import Mapping, Type
-from .rate_limiter import BaseRateLimiter, SimpleRateLimiter
+from typing import Callable, Mapping, Type
+
+from lionagi.os.file.tokenize.token_calculator import BaseTokenCalculator
+from .rate_limiter import RateLimiter
 
 
 class EndPoint:
-    """
-    Represents an API endpoint with rate limiting capabilities.
+    """Represents an API endpoint with rate limiting capabilities.
 
-    This class encapsulates the details of an API endpoint, including its rate limiter.
+    This class encapsulates the configuration and rate limiting logic
+    for a specific API endpoint.
 
     Attributes:
         endpoint (str): The API endpoint path.
-        rate_limiter_class (Type[li.BaseRateLimiter]): The class used for rate limiting requests to the endpoint.
-        max_requests (int): The maximum number of requests allowed per interval.
-        max_tokens (int): The maximum number of tokens allowed per interval.
-        interval (int): The time interval in seconds for replenishing rate limit capacities.
-        config (Mapping): Configuration parameters for the endpoint.
-        rate_limiter (Optional[li.BaseRateLimiter]): The rate limiter instance for this endpoint.
-
-    Examples:
-        # Example usage of EndPoint with SimpleRateLimiter
-        endpoint = EndPoint(
-            max_requests=100,
-            max_tokens=1000,
-            interval=60,
-            endpoint_='chat/completions',
-            rate_limiter_class=li.SimpleRateLimiter,
-            config={'param1': 'value1'}
-        )
-        asyncio.run(endpoint.init_rate_limiter())
+        endpoint_config (Mapping): Configuration for the endpoint.
+        rate_limit_kwargs (dict): Arguments for rate limiter initialization.
+        _has_initialized (bool): Flag indicating if rate limiter is initialized.
+        rate_limiter (RateLimiter): The rate limiter instance for this endpoint.
     """
 
     def __init__(
         self,
-        max_requests: int = 1000,
-        max_tokens: int = 100000,
-        interval: int = 60,
-        endpoint_: str | None = None,
-        rate_limiter_class: Type[BaseRateLimiter] = SimpleRateLimiter,
-        token_encoding_name=None,
-        config: Mapping = None,
-    ) -> None:
-        self.endpoint = endpoint_ or "chat/completions"
-        self.rate_limiter_class = rate_limiter_class
-        self.max_requests = max_requests
-        self.max_tokens = max_tokens
-        self.interval = interval
-        self.token_encoding_name = token_encoding_name
-        self.config = config or {}
-        self.rate_limiter: BaseRateLimiter | None = None
+        endpoint: str | None = None,
+        endpoint_config: Mapping | None = None,
+        interval: int | None = None,
+        interval_request: int | None = None,
+        interval_token: int | None = None,
+        token_calculator: BaseTokenCalculator | Type | None = None,
+        tokenizer: Callable | Type | None = None,
+        **kwargs,
+    ):
+        """Initialize the EndPoint instance.
+
+        Args:
+            endpoint: The API endpoint path.
+            endpoint_config: Configuration for the endpoint.
+            interval: Time interval for rate limiting.
+            interval_request: Maximum requests per interval.
+            interval_token: Maximum tokens per interval.
+            token_calculator: Calculator for token usage.
+            tokenizer: Tokenizer function or type.
+            **kwargs: Additional arguments for rate limiter initialization.
+        """
+        self.endpoint = endpoint or "chat/completions"
+        self.endpoint_config = endpoint_config or {}
+        self.rate_limit_kwargs = {
+            "interval": interval,
+            "interval_request": interval_request,
+            "interval_token": interval_token,
+            "token_calculator": token_calculator,
+            "tokenizer": tokenizer,
+            **kwargs,
+        }
         self._has_initialized = False
 
     async def init_rate_limiter(self) -> None:
-        """Initializes the rate limiter for the endpoint."""
-        self.rate_limiter = await self.rate_limiter_class.create(
-            self.max_requests, self.max_tokens, self.interval, self.token_encoding_name
-        )
+        """Initialize the rate limiter for the endpoint."""
+        self.rate_limiter = await RateLimiter.create(**self.rate_limit_kwargs)
         self._has_initialized = True
+
+
+# File: lionagi/os/service/api/endpoint.py

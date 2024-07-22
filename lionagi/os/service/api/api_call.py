@@ -1,16 +1,20 @@
+import asyncio
+from typing import Any, Callable
+
 import aiohttp
 from aiocache import cached
-from typing import Any, Callable
+
 from lionagi import logging
 from lion_core import LN_UNDEFINED
 from lion_core.libs import rcall
-from .utils import CACHED_CONFIG
+from lion_core.exceptions import LionOperationError
+from .config import CACHED_CONFIG
 
 
-async def api_call(
+async def call_api(
     http_session: aiohttp.ClientSession,
     url: str,
-    method="post",
+    method: str = "post",
     *,
     retries: int = 0,
     initial_delay: float = 0,
@@ -23,13 +27,42 @@ async def api_call(
     error_msg: str | None = None,
     error_map: dict[type, Callable[[Exception], Any]] | None = None,
     **kwargs,
-) -> Any:
+) -> dict:
+    """Make an API call with retry and error handling capabilities.
+
+    Args:
+        http_session: The aiohttp client session.
+        url: The URL for the API call.
+        method: The HTTP method to use (default: "post").
+        retries: Number of retries for failed calls.
+        initial_delay: Initial delay before first retry.
+        delay: Delay between retries.
+        backoff_factor: Factor to increase delay between retries.
+        default: Default value to return on failure.
+        timeout: Timeout for the API call.
+        timing: Whether to time the API call.
+        verbose: Whether to log verbose output.
+        error_msg: Custom error message for failures.
+        error_map: Mapping of exception types to handler functions.
+        **kwargs: Additional keyword arguments for the API call.
+
+    Returns:
+        The API response or the default value on failure.
+    """
+
     async def _api_call():
         try:
             if (_m := getattr(http_session, method, None)) is not None:
                 async with _m(url, **kwargs) as response:
                     response.raise_for_status()
-                    return await response.json()
+                    response_json = await response.json()
+                    if "error" not in response_json:
+                        return response_json
+                    if "Rate limit" in response_json["error"].get("message", ""):
+                        await asyncio.sleep(15)
+                    raise LionOperationError(
+                        "API call failed with error: ", response_json["error"]
+                    )
         except aiohttp.ClientError as e:
             logging.error(f"API call to {url} failed: {e}")
             return None
@@ -50,10 +83,10 @@ async def api_call(
 
 
 @cached(**CACHED_CONFIG)
-async def cached_api_call(
+async def cached_call_api(
     http_session: aiohttp.ClientSession,
     url: str,
-    method="post",
+    method: str = "post",
     *,
     retries: int = 0,
     initial_delay: float = 0,
@@ -66,8 +99,15 @@ async def cached_api_call(
     error_msg: str | None = None,
     error_map: dict[type, Callable[[Exception], Any]] | None = None,
     **kwargs,
-) -> Any:
-    return await api_call(
+) -> dict:
+    """Make a cached API call with retry and error handling capabilities.
+
+    This function wraps call_api with caching functionality.
+
+    Args and Returns:
+        See call_api function for details.
+    """
+    return await call_api(
         http_session=http_session,
         url=url,
         method=method,
@@ -83,3 +123,6 @@ async def cached_api_call(
         error_map=error_map,
         **kwargs,
     )
+
+
+# filepath: /path/to/your/project/api_call.py

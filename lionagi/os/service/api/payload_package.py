@@ -1,4 +1,14 @@
-def create_payload(input_, config, required_, optional_, input_key, **kwargs):
+from typing import Any
+
+
+def create_payload(
+    input_: Any,
+    config: dict,
+    required_: list | tuple,
+    optional_: list | tuple,
+    input_key: str,
+    **kwargs,
+):
     config = {**config, **kwargs}
     payload = {input_key: input_}
 
