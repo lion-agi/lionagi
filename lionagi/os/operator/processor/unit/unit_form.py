@@ -1,43 +1,40 @@
-"""
-Copyright 2024 HaiyangLi
-
-Licensed under the Apache License, Version 2.0 (the "License");
-you may not use this file except in compliance with the License.
-You may obtain a copy of the License at
-
-    http://www.apache.org/licenses/LICENSE-2.0
-
-Unless required by applicable law or agreed to in writing, software
-distributed under the License is distributed on an "AS IS" BASIS,
-WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-See the License for the specific language governing permissions and
-limitations under the License.
-"""
-
 from enum import Enum
-from lionagi.libs.ln_convert import to_str, to_dict
-from lionagi.core.collections.abc import Field
-from .template.base import BaseUnitForm
+from pydantic import Field
+from lion_core.libs import to_dict
+from lion_core.record.form import Form
 
 
-class UnitForm(BaseUnitForm):
+class UnitForm(Form):
     """
-    Form for managing unit directives and outputs.
+    A base form class for units that includes fields for confidence scoring and reasoning.
 
     Attributes:
-        actions (dict|None): Actions to take based on the context and instruction.
-        action_required (bool|None): Set to True if actions are provided, else False.
-        answer (str|None): Answer to the questions asked.
-        extension_required (bool|None): Set to True if more steps are needed.
-        prediction (str|None): Likely prediction based on context and instruction.
-        plan (dict|str|None): Step-by-step plan.
-        next_steps (dict|str|None): Ideas on next actions to take.
-        score (float|None): Numeric performance score.
-        reflection (str|None): Self-reflection on reasoning and performance.
-        selection (Enum|str|list|None): A single item from the choices.
-        tool_schema (list|dict|None): The list of tools available for use.
-        assignment (str): Default assignment task description.
+        template_name (str): The name of the template.
+        confidence_score (float): A numeric confidence score between 0 and 1 with precision to 2 decimal places.
+        reason (str | None): A field for providing concise reasoning for the process.
     """
+
+    template_name: str = "UnitDirective"
+
+    confidence_score: float = Field(
+        None,
+        description=(
+            "Provide a numeric confidence score on how likely you successfully achieved the task  between 0 and 1, with precision in 2 decimal places. 1 being very confident in a good job, 0 is not confident at all."
+        ),
+        validation_kwargs={
+            "upper_bound": 1,
+            "lower_bound": 0,
+            "num_type": float,
+            "precision": 2,
+        },
+    )
+
+    reason: str | None = Field(
+        None,
+        description=(
+            "Explain yourself, provide concise reasoning for the process. Must start with: Let's think step by step, "
+        ),
+    )
 
     actions: dict | None = Field(
         None,
@@ -192,8 +189,8 @@ class UnitForm(BaseUnitForm):
 
         self.task = (
             f"Follow the prompt and provide the necessary output.\n"
-            f"- Additional instruction: {to_str(instruction or 'N/A')}\n"
-            f"- Additional context: {to_str(context or 'N/A')}\n"
+            f"- Additional instruction: {str(instruction or 'N/A')}\n"
+            f"- Additional context: {str(context or 'N/A')}\n"
         )
 
         if reason:

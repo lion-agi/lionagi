@@ -1,20 +1,3 @@
-from lion_core import CoreLib
-
-
-def create_payload(input_, config, required_, optional_, input_key, **kwargs):
-    config = {**config, **kwargs}
-    payload = {input_key: input_}
-
-    for key in required_:
-        payload[key] = config[key]
-
-    for key in optional_:
-        if bool(config[key]) and CoreLib.strip_lower(config[key]) != "none":
-            payload[key] = config[key]
-
-    return payload
-
-
 class PayloadPackage:
 
     @classmethod
