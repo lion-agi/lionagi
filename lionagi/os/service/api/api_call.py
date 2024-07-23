@@ -1,10 +1,10 @@
+import logging
 import asyncio
 from typing import Any, Callable
 
 import aiohttp
 from aiocache import cached
 
-from lionagi import logging
 from lion_core import LN_UNDEFINED
 from lion_core.libs import rcall
 from lion_core.exceptions import LionOperationError
@@ -63,6 +63,8 @@ async def call_api(
                     raise LionOperationError(
                         "API call failed with error: ", response_json["error"]
                     )
+            else:
+                raise ValueError(f"Invalid HTTP method: {method}")
         except aiohttp.ClientError as e:
             logging.error(f"API call to {url} failed: {e}")
             return None

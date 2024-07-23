@@ -3,6 +3,7 @@ from functools import singledispatchmethod
 from typing import Any, Callable, Mapping, Type
 
 import aiohttp
+import logging
 
 from lion_core import LN_UNDEFINED
 from lion_core.libs import nget
@@ -24,6 +25,10 @@ class BaseService:
 
     base_url: str = ""
     available_endpoints: list = []
+    default_endpoint: str = "chat/completions"
+    default_provider_config: dict = {}
+    default_provider_pricing: dict = {}
+    token_calculator: BaseTokenCalculator | Type = BaseTokenCalculator
 
     def __init__(
         self,
@@ -53,14 +58,14 @@ class BaseService:
             tokenizer_config: Additional configuration for the tokenizer.
         """
         self._api_key = api_key or getenv(api_key_scheme, None)
-        self.provider_config = provider_config or {}
-        self.provider_pricing = provider_pricing or {}
+        self.provider_config = provider_config or self.default_provider_config
+        self.provider_pricing = provider_pricing or self.default_provider_pricing
         self.endpoints: dict[str, EndPoint] = {}
         self.rate_limit_config = {
             "interval": interval,
             "interval_request": interval_request,
             "interval_token": interval_token,
-            "token_calculator": token_calculator,
+            "token_calculator": token_calculator or self.token_calculator,
             "tokenizer": tokenizer,
             **tokenizer_config,
         }
@@ -120,6 +125,7 @@ class BaseService:
         payload: Mapping[str, Any] | None = None,
         required_tokens: int | None = None,
         cached: bool = False,
+        base_url: str | None = None,
         **kwargs,
     ) -> Any:
         """Make an API call to the specified endpoint.
@@ -160,13 +166,16 @@ class BaseService:
             if cached
             else self.endpoints[endpoint].rate_limiter.call_api
         )
+        base_url = base_url or self.base_url
+        if not base_url:
+            base_url = self.provider_config.get("base_url")
 
         async with aiohttp.ClientSession() as http_session:
             return await call_api(
                 http_session=http_session,
                 api_key=self._api_key,
                 endpoint=endpoint,
-                base_url=self.base_url,
+                base_url=base_url,
                 method=method,
                 retries=retries,
                 initial_delay=initial_delay,
@@ -181,6 +190,106 @@ class BaseService:
                 required_tokens=required_tokens,
                 **kwargs,
             )
+
+    async def serve(
+        self,
+        input_: Any,
+        endpoint: str | EndPoint = None,
+        *,
+        endpoint_config: dict | None = None,
+        method: str = "post",
+        retries: int | None = None,
+        initial_delay: float | None = None,
+        delay: float | None = None,
+        backoff_factor: float | None = None,
+        default: Any = LN_UNDEFINED,
+        timeout: float | None = None,
+        verbose: bool = True,
+        error_msg: str | None = None,
+        error_map: dict[type, Callable[[Exception], Any]] | None = None,
+        required_tokens: int | None = None,
+        cached: bool = False,
+        **kwargs,
+    ):
+        """kwargs are for additional model arguments"""
+        endpoint = endpoint or self.default_endpoint
+        ep_ = endpoint.endpoint if isinstance(endpoint, EndPoint) else endpoint
+        if not ep_ in self.endpoints:
+            try:
+                await self._init_endpoint(endpoint)
+            except NotImplementedError as e:
+                raise LionOperationError(
+                    f"The endpoint {endpoint} has not been initialized."
+                ) from e
+
+        payload = self.endpoints[ep_].create_payload(
+            input_=input_, config=endpoint_config, **kwargs
+        )
+        try:
+            completion = await self.call_api(
+                endpoint=ep_,
+                method=method,
+                retries=retries,
+                initial_delay=initial_delay,
+                delay=delay,
+                backoff_factor=backoff_factor,
+                default=default,
+                timeout=timeout,
+                verbose=verbose,
+                error_msg=error_msg,
+                error_map=error_map,
+                payload=payload,
+                required_tokens=required_tokens,
+                cached=cached,
+                **kwargs,
+            )
+            return payload, completion
+        except LionOperationError as e:
+            logging.error(f"API call to {ep_} failed: {e}")
+            self.endpoints["chat/completions"].status_tracker.num_tasks_failed += 1
+            return payload, None
+
+    async def chat_completion(
+        self, messages, required_tokens=None, **kwargs
+    ) -> tuple[dict, dict | None]:
+        """kwargs are for BaseService.serve function"""
+        return await self.serve(
+            input_=self.prepare_chat_input(messages),
+            endpoint="chat/completions",
+            method="post",
+            required_tokens=required_tokens,
+            **kwargs,
+        )
+
+    # override this method in the child class if need to prepare the input differently
+    @staticmethod
+    def prepare_chat_input(messages):
+        """openai standard with optional image processing"""
+        msgs = []
+
+        for msg in messages:
+            if isinstance(msg, dict):
+                content = msg.get("content")
+                if isinstance(content, (dict, str)):
+                    msgs.append({"role": msg["role"], "content": content})
+                elif isinstance(content, list):
+                    _content = []
+                    for i in content:
+                        if "text" in i:
+                            _content.append({"type": "text", "text": str(i["text"])})
+                        elif "image_url" in i:
+                            _content.append(
+                                {
+                                    "type": "image_url",
+                                    "image_url": {
+                                        "url": f"{i['image_url'].get('url')}",
+                                        "detail": i["image_url"].get("detail", "low"),
+                                    },
+                                }
+                            )
+                    msgs.append({"role": msg["role"], "content": _content})
+
+        return msgs
 
 
 # File: lionagi/os/service/api/base_service.py
