@@ -1,10 +1,6 @@
-# Default configs for the OpenAI API
 
-API_key_schema = ("OPENAI_API_KEY",)
-
-# ChatCompletion
+## Chat Completion
 oai_chat_llmconfig = {
-    "model": "gpt-4o",
     "frequency_penalty": 0,
     "max_tokens": None,
     "n": 1,
@@ -20,10 +16,14 @@ oai_chat_llmconfig = {
     "user": None,
     "logprobs": False,
     "top_logprobs": None,
+    "logit_bias": None,
+    "service_tier": None,
+    "stream_options": None,
+    "parallel_tool_calls": True,
 }
 
 oai_chat_schema = {
-    "required": [
+    "required_params": [
         "model",
         "frequency_penalty",
         "n",
@@ -32,7 +32,7 @@ oai_chat_schema = {
         "temperature",
         "top_p",
     ],
-    "optional": [
+    "optional_params": [
         "seed",
         "stop",
         "stream",
@@ -42,15 +42,17 @@ oai_chat_schema = {
         "max_tokens",
         "logprobs",
         "top_logprobs",
+        "logit_bias",
+        "service_tier",
+        "stream_options",
+        "parallel_tool_calls",
     ],
-    "input_": "messages",
+    "input_key": "messages",
     "config": oai_chat_llmconfig,
-    "token_encoding_name": "cl100k_base",
-    "token_limit": 128_000,
-    "interval_tokens": 1_000_000,
-    "interval_requests": 1_000,
-    "interval": 60,
 }
+
+
+## fine-tuning
 
 # Finetune
 oai_finetune_llmconfig = {
@@ -65,13 +67,14 @@ oai_finetune_llmconfig = {
 }
 
 oai_finetune_schema = {
-    "required": ["model", "training_file"],
-    "optional": ["hyperparameters", "suffix", "validate_file"],
-    "input_": ["training_file"],
+    "required_params": ["model", "training_file"],
+    "optional_params": ["hyperparameters", "suffix", "validate_file"],
+    "input_key": ["training_file"],
     "config": oai_finetune_llmconfig,
 }
 
-# Audio ---- create  speech
+
+## Audio ---- create  speech
 
 oai_audio_speech_llmconfig = {
     "model": "tts-1",
@@ -122,7 +125,7 @@ oai_audio_translations_schema = {
     "config": oai_audio_translations_llmconfig,
 }
 
-# embeddings
+## embeddings
 
 oai_embeddings_llmconfig = {
     "model": "text-embedding-ada-002",
@@ -132,16 +135,13 @@ oai_embeddings_llmconfig = {
 }
 
 oai_embeddings_schema = {
-    "required": ["model", "encoding_format"],
-    "optional": ["user", "dimensions"],
-    "input_": "input",
+    "required_params": ["model", "encoding_format"],
+    "optional_params": ["user", "dimensions"],
+    "input_key": "input",
     "config": oai_embeddings_llmconfig,
-    "token_encoding_name": "cl100k_base",
-    "token_limit": 8192,
-    "interval_tokens": 1_000_000,
-    "interval_requests": 1_000,
-    "interval": 60,
 }
+
+
 
 OAI_CONFIG = {
     "chat/completions": oai_chat_schema,
