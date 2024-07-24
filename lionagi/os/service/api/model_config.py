@@ -15,8 +15,8 @@ class ENDPOINT_CONFIG(BaseModel):
 
 class MODEL_CONFIG(BaseModel):
     model: str
-    alias: list[str]                        # list of aliases for pricing and token limit
-    endpoint_schema: dict[ENDPOINT_CONFIG]  # list of supported endpoints    
+    alias: list[str]  # list of aliases for pricing and token limit
+    endpoint_schema: dict[ENDPOINT_CONFIG]  # list of supported endpoints
 
 
 class PROVIDER_CONFIG(BaseModel):

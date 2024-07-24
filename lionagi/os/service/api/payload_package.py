@@ -1,3 +1,6 @@
+from lionagi.os.service.api.utils import create_payload
+
+
 class PayloadPackage:
 
     @classmethod
@@ -17,13 +20,13 @@ class PayloadPackage:
         Creates a payload for the chat completion operation.
 
         Args:
-                messages: The messages to include in the chat completion.
-                llmconfig: Configuration for the language model.
-                schema: The schema describing required and optional fields.
-                **kwargs: Additional keyword arguments.
+            messages: The messages to include in the chat completion.
+            llmconfig: Configuration for the language model.
+            schema: The schema describing required and optional fields.
+            **kwargs: Additional keyword arguments.
 
         Returns:
-                The constructed payload.
+            The constructed payload.
         """
         return create_payload(
             input_=messages,
@@ -40,13 +43,13 @@ class PayloadPackage:
         Creates a payload for the fine-tuning operation.
 
         Args:
-                training_file: The file containing training data.
-                llmconfig: Configuration for the language model.
-                schema: The schema describing required and optional fields.
-                **kwargs: Additional keyword arguments.
+            training_file: The file containing training data.
+            llmconfig: Configuration for the language model.
+            schema: The schema describing required and optional fields.
+            **kwargs: Additional keyword arguments.
 
         Returns:
-                The constructed payload.
+            The constructed payload.
         """
         return create_payload(
             input_=training_file,

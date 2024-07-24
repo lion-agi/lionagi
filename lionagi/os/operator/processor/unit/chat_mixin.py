@@ -1,82 +1,22 @@
 from abc import ABC
-from typing import Any, Optional
+from typing import Any, Optional, Callable
 
+from lionagi.os.sys_util import SysUtil
 from lion_core.record.form import Form
-from lion_core.communication.instruction import Instruction
+from lion_core.communication import (
+    Instruction,
+    AssistantResponse,
+    ActionRequest,
+    System,
+)
 from lion_core.validator.validator import Validator
+from lion_core.session.branch import Branch
 
 
-class UnitChatMixin(ABC):
-    """
-    DirectiveMixin is a class for handling chat operations and
-    processing responses.
-    """
+def to_chat_messages(branch: Branch, imodel=None):
+    chat_messages = imodel.service.to_chat_messages(branch.messages)
 
-    def _create_chat_config(
-        self,
-        system: Optional[str] = None,
-        instruction: Optional[str] = None,
-        context: Optional[str] = None,
-        images: Optional[str] = None,
-        sender: Optional[str] = None,
-        recipient: Optional[str] = None,
-        requested_fields: Optional[list] = None,
-        form: Form = None,
-        tools: bool = False,
-        branch: Optional[Any] = None,
-        **kwargs,
-    ) -> Any:
-        """
-        Create the chat configuration based on the provided parameters.
-
-        Args:
-            system: System message.
-            instruction: Instruction message.
-            context: Context message.
-            sender: Sender identifier.
-            recipient: Recipient identifier.
-            requested_fields: Fields requested in the response.
-            form: Form data.
-            tools: Flag indicating if tools should be used.
-            branch: Branch instance.
-            kwargs: Additional keyword arguments.
-
-        Returns:
-            dict: The chat configuration.
-        """
-        branch = branch or self.branch
-
-        if system:
-            branch.add_message(system=system)
-
-        if not form:
-            if recipient == "branch.ln_id":
-                recipient = branch.ln_id
-
-            branch.add_message(
-                instruction=instruction,
-                context=context,
-                sender=sender,
-                recipient=recipient,
-                requested_fields=requested_fields,
-                images=images,
-            )
-        else:
-            instruct_ = Instruction.from_form(form)
-            branch.add_message(instruction=instruct_)
-
-        if "tool_parsed" in kwargs:
-            kwargs.pop("tool_parsed")
-            tool_kwarg = {"tools": tools}
-            kwargs = tool_kwarg | kwargs
-        elif tools and branch.has_tools:
-            kwargs = branch.tool_manager.parse_tool(tools=tools, **kwargs)
-
-        config = {**self.imodel.config, **kwargs}
-        if sender is not None:
-            config["sender"] = sender
-
-        return config
+    ...
 
     async def _call_chatcompletion(
         self, imodel: Optional[Any] = None, branch: Optional[Any] = None, **kwargs
@@ -251,7 +191,7 @@ class UnitChatMixin(ABC):
         requested_fields: dict = None,
         form: Form = None,
         tools: Any = False,
-        images: Optional[str] = None,
+        image: Optional[str] = None,
         invoke_tool: bool = True,
         return_form: bool = True,
         strict: bool = False,
@@ -305,7 +245,7 @@ class UnitChatMixin(ABC):
             form=form,
             tools=tools,
             branch=branch,
-            images=images,
+            images=image,
             **kwargs,
         )
 
@@ -346,7 +286,7 @@ class UnitChatMixin(ABC):
         strict=False,
         rulebook=None,
         imodel=None,
-        images: Optional[str] = None,
+        image: Optional[str] = None,
         clear_messages=False,
         use_annotation=True,
         timeout: float = None,
@@ -389,7 +329,7 @@ class UnitChatMixin(ABC):
             requested_fields=requested_fields,
             form=form,
             tools=tools,
-            images=images,
+            images=image,
             invoke_tool=invoke_tool,
             return_form=return_form,
             strict=strict,
@@ -416,3 +356,69 @@ class UnitChatMixin(ABC):
             return a[0][0]
         if len(a) == 1 and not isinstance(a[0], tuple):
             return a[0]
+
+
+def create_chat_config(
+    branch: Branch,
+    form: Form,
+    *,
+    system: dict | str | System | None = None,
+    instruction: dict | str | Instruction | None = None,
+    context: dict | str | None = None,
+    action_request: ActionRequest = None,
+    image: str | list[str] | None = None,
+    sender: Any = None,
+    recipient: Any = None,
+    requested_fields: dict[str, str] = None,
+    system_datetime: bool | str | None = None,
+    system_datetime_strftime: str | None = None,
+    metadata: Any = None,  # extra metadata
+    system_metadata: Any = None,  # system metadata
+    tools: bool = None,
+    imodel_config: dict = None,
+    **kwargs,  # additional keyword arguments for model
+):
+
+    if system:
+        branch.include_message(
+            system=system,
+            system_datetime=system_datetime,
+            system_datetime_strftime=system_datetime_strftime,
+            metadata=system_metadata,
+        )
+
+    if not form:
+        if recipient == "branch.ln_id":
+            recipient = branch.ln_id
+
+        branch.include_message(
+            instruction=instruction,
+            context=context,
+            sender=sender,
+            recipient=recipient,
+            requested_fields=requested_fields,
+            image=image,
+            metadata=metadata,
+        )
+    else:
+        branch.include_message(
+            instruction=Instruction.from_form(form),
+            context=context,
+            sender=sender,
+            recipient=recipient,
+            images=image,
+            metadata=metadata,
+        )
+
+    if "tool_parsed" in kwargs:
+        kwargs.pop("tool_parsed")
+        tool_kwarg = {"tools": tools}
+        kwargs = tool_kwarg | kwargs
+    elif tools and branch.has_tools:
+        kwargs = branch.tool_manager.parse_tool(tools=tools, **kwargs)
+
+    config = {**imodel_config, **kwargs}
+    if sender is not None:
+        config["sender"] = sender
+
+    return config

@@ -8,8 +8,8 @@ import logging
 from lion_core import LN_UNDEFINED
 from lion_core.libs import nget
 from lion_core.exceptions import LionOperationError
-from lionagi.os.file.tokenize.token_calculator import BaseTokenCalculator
-from .endpoint import EndPoint
+from lionagi.os.file.tokenize.token_calculator import TokenCalculator
+from lionagi.os.service.api.endpoint import EndPoint
 
 
 class BaseService:
@@ -28,7 +28,7 @@ class BaseService:
     default_endpoint: str = "chat/completions"
     default_provider_config: dict = {}
     default_provider_pricing: dict = {}
-    token_calculator: BaseTokenCalculator | Type = BaseTokenCalculator
+    token_calculator: TokenCalculator | Type = TokenCalculator
 
     def __init__(
         self,
@@ -39,7 +39,7 @@ class BaseService:
         interval: int | None = None,
         interval_request: int | None = None,
         interval_token: int | None = None,
-        token_calculator: BaseTokenCalculator | Type | None = None,
+        token_calculator: TokenCalculator | Type | None = None,
         tokenizer: Callable | None = None,
         tokenizer_config: dict = {},
     ):
