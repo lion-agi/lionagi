@@ -1,10 +1,10 @@
 from typing import Callable, Type, Any
 
-from lionagi.os.file.tokenize.token_calculator import BaseTokenCalculator
-from .model_config import ENDPOINT_CONFIG
-from .status_tracker import StatusTracker
-from .rate_limiter import RateLimiter
-from .utils import create_payload
+from lionagi.os.file.tokenize.token_calculator import TokenCalculator
+from lionagi.os.service.api.model_config import ENDPOINT_CONFIG
+from lionagi.os.service.api.status_tracker import StatusTracker
+from lionagi.os.service.api.rate_limiter import RateLimiter
+from lionagi.os.service.api.utils import create_payload
 
 
 class EndPoint:
@@ -28,7 +28,7 @@ class EndPoint:
         interval: int | None = None,
         interval_request: int | None = None,
         interval_token: int | None = None,
-        token_calculator: BaseTokenCalculator | Type | None = None,
+        token_calculator: TokenCalculator | Type | None = None,
         tokenizer: Callable | Type | None = None,
         **kwargs,
     ):

@@ -8,10 +8,10 @@ GPT4OMINI_CHAT_COMPLETIONS = ENDPOINT_CONFIG(
     batch_pricing=(0.075, 0.3),
     token_limit=128_000,
     default_rate_limit=(60, 1_000, 5_000_000),
-    default_config={'model': "gpt-4o-mini", **oai_chat_schema['config']},
-    required_params=oai_chat_schema['required_params'],
-    optional_params=oai_chat_schema['optional_params'],
-    input_key=oai_chat_schema['input_key']
+    default_config={"model": "gpt-4o-mini", **oai_chat_schema["config"]},
+    required_params=oai_chat_schema["required_params"],
+    optional_params=oai_chat_schema["optional_params"],
+    input_key=oai_chat_schema["input_key"],
 )
 
 
@@ -20,5 +20,5 @@ GPT4OMINI = MODEL_CONFIG(
     alias=["gpt-4o-mini", "gpt-4o-mini-2024-07-18"],
     endpoint_schema={
         "chat/completions": GPT4OMINI_CHAT_COMPLETIONS,
-    }
+    },
 )

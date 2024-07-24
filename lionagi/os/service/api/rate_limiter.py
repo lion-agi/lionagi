@@ -7,7 +7,7 @@ from aiocache import cached
 
 from lionagi import logging
 from lion_core import LN_UNDEFINED
-from lionagi.os.file.tokenize.token_calculator import BaseTokenCalculator
+from lionagi.os.file.tokenize.token_calculator import TokenCalculator
 from .utils import api_endpoint_from_url
 from .api_call import call_api
 from .config import DEFAULT_RATE_LIMIT_CONFIG, CACHED_CONFIG, RETRY_CONFIG
@@ -37,7 +37,7 @@ class RateLimiter(ABC):
         interval: int,
         interval_request: int,
         interval_token: int,
-        token_calculator: BaseTokenCalculator | Type,
+        token_calculator: TokenCalculator | Type,
         tokenizer: Callable | Type,
         **kwargs,
     ):
@@ -67,10 +67,10 @@ class RateLimiter(ABC):
 
     def _init_token_calculator(
         self,
-        token_calculator: BaseTokenCalculator | Type,
+        token_calculator: TokenCalculator | Type,
         tokenizer: Callable | Type,
         **kwargs,
-    ) -> BaseTokenCalculator:
+    ) -> TokenCalculator:
         """Initialize the token calculator.
 
         Args:
@@ -263,7 +263,7 @@ class RateLimiter(ABC):
         interval: int,
         interval_request: int,
         interval_token: int,
-        token_calculator: BaseTokenCalculator | Type,
+        token_calculator: TokenCalculator | Type,
         tokenizer: Callable | Type,
         **kwargs,
     ) -> "RateLimiter":

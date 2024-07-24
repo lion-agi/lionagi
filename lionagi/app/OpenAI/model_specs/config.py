@@ -1,4 +1,3 @@
-
 ## Chat Completion
 oai_chat_llmconfig = {
     "frequency_penalty": 0,
@@ -140,7 +139,6 @@ oai_embeddings_schema = {
     "input_key": "input",
     "config": oai_embeddings_llmconfig,
 }
-
 
 
 OAI_CONFIG = {

@@ -1,5 +1,5 @@
 from lionagi.os.service.api.base_service import BaseService
-from .token_calculator import OpenAITokenCalculator
+from .tokenize.token_calculator import OpenAITokenCalculator
 from .model_specs.config import OAI_CONFIG
 
 _AVAILABLE_ENDPOINTS = [
