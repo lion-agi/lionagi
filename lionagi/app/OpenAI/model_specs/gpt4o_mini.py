@@ -1,5 +1,5 @@
-from lionagi.os.service.api.model_config import MODEL_CONFIG, ENDPOINT_CONFIG
-from .config import oai_chat_schema
+from lionagi.os.service.api.specification import MODEL_CONFIG, ENDPOINT_CONFIG
+from ._config import oai_chat_schema
 
 
 GPT4OMINI_CHAT_COMPLETIONS = ENDPOINT_CONFIG(
@@ -15,7 +15,7 @@ GPT4OMINI_CHAT_COMPLETIONS = ENDPOINT_CONFIG(
 )
 
 
-GPT4OMINI = MODEL_CONFIG(
+GPT4O_MINI = MODEL_CONFIG(
     model="gpt-4o-mini",
     alias=["gpt-4o-mini", "gpt-4o-mini-2024-07-18"],
     endpoint_schema={

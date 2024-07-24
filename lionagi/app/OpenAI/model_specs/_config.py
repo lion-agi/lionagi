@@ -1,3 +1,5 @@
+API_key_schema = "OPENAI_API_KEY"
+
 ## Chat Completion
 oai_chat_llmconfig = {
     "frequency_penalty": 0,
