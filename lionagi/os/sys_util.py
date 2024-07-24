@@ -447,10 +447,9 @@ class SysUtil:
         try:
             if import_name:
                 module = __import__(full_import_path, fromlist=[import_name])
-                getattr(module, import_name)
+                return getattr(module, import_name)
             else:
-                __import__(full_import_path)
-            logging.info(f"Successfully imported {import_name or full_import_path}.")
+                return __import__(full_import_path)
         except ImportError:
             logging.info(f"Installing {pip_name}...")
             try:

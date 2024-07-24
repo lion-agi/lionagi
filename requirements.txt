@@ -1,7 +1,7 @@
 aiohttp>=3.9.3
-python-dotenv==1.0.0
-tiktoken>=0.5.1
+python-dotenv>=1.0.0
 pydantic>=2.3.0
-aiocache>=0.12.2
-pandas
+numpy
 ipython
+pandas
+tiktoken

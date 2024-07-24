@@ -1,5 +1,5 @@
-from lionagi.os.service.api.model_config import MODEL_CONFIG, ENDPOINT_CONFIG
-from .config import oai_embeddings_schema
+from lionagi.os.service.api.specification import MODEL_CONFIG, ENDPOINT_CONFIG
+from ._config import oai_embeddings_schema
 
 
 TEXT_EMBEDDINGS3_LARGE_EMBED = ENDPOINT_CONFIG(

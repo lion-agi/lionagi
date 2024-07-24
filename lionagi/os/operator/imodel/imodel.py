@@ -1,14 +1,22 @@
-from typing import List, Dict, Any, Tuple, Union, Callable, Type
+from typing import Any, Callable
+
 from lion_core import LN_UNDEFINED
-from lion_core.imodel.imodel import iModel as CoreModel
+
+from lion_core.abc import BaseiModel, Observable, Temporal
+
+
+from lionagi.os.sys_util import SysUtil
 from lionagi.os.service.api.endpoint import EndPoint
 from lionagi.os.service.api.base_service import BaseService
 
+from .extension import iModelExtension
 
-class iModel(CoreModel):
+
+class iModel(BaseiModel, Observable, Temporal):
 
     def __init__(self, service: BaseService):
-        super().__init__()
+        self.ln_id = SysUtil.id()
+        self.timestamp = SysUtil.time(type_="timestamp")
         self.service = service
 
     async def call(
@@ -50,4 +58,30 @@ class iModel(CoreModel):
             **kwargs,
         )
 
-    async def chat_completion(self, messages, message_parser=None, **kwargs): ...
+    async def chat(self, messages, **kwargs):
+        return await self.call(messages, endpoint="chat/completions", **kwargs)
+
+    async def embed(self, input, **kwargs):
+        return await self.call(input, endpoint="embeddings", **kwargs)
+
+    async def compute_perplexity(
+        self,
+        initial_context: str = None,
+        tokens: list[str] = None,
+        system_msg: str = None,
+        n_samples: int = 1,  # number of samples used for the computation per chunk
+        use_residual: bool = True,  # whether to use residual for the last sample
+        **kwargs,  # additional arguments for the model
+    ):
+        return await iModelExtension.compute_perplexity(
+            self,
+            initial_context=initial_context,
+            tokens=tokens,
+            system_msg=system_msg,
+            n_samples=n_samples,
+            use_residual=use_residual,
+            **kwargs,
+        )
+
+    async def embed_nodes(imodel, nodes, field, **kwargs):
+        return pile

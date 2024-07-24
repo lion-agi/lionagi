@@ -1,7 +1,7 @@
 from typing import Callable, Type, Any
 
 from lionagi.os.file.tokenize.token_calculator import TokenCalculator
-from lionagi.os.service.api.model_config import ENDPOINT_CONFIG
+from lionagi.os.service.api.specification import ENDPOINT_CONFIG
 from lionagi.os.service.api.status_tracker import StatusTracker
 from lionagi.os.service.api.rate_limiter import RateLimiter
 from lionagi.os.service.api.utils import create_payload
@@ -81,6 +81,16 @@ class EndPoint:
             required_=required_params or self.endpoint_config.required_params,
             optional_=optional_params or self.endpoint_config.required_params,
             **kwargs,
+        )
+
+    def calculate_token(
+        self,
+        payload: dict = None,
+        image_base64: str = None,
+    ):
+        ep = self.endpoint
+        return self.rate_limiter.token_calculator.calculate(
+            ep, payload=payload, image_base64=image_base64
         )
 
 

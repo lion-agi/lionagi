@@ -28,7 +28,7 @@ class OpenAITokenCalculator(ProviderTokenCalculator):
         return cls.chat_calculator.calculate(messages)
 
     @classmethod
-    def calculate_embedding(cls, e_: Any):
+    def calculate_embeddings(cls, e_: Any):
         return cls.embedding_calculator.calculate(e_)
 
     @classmethod

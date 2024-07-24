@@ -10,6 +10,7 @@ from lion_core.libs import nget
 from lion_core.exceptions import LionOperationError
 from lionagi.os.file.tokenize.token_calculator import TokenCalculator
 from lionagi.os.service.api.endpoint import EndPoint
+from .provider import Provider
 
 
 class BaseService:
@@ -29,6 +30,7 @@ class BaseService:
     default_provider_config: dict = {}
     default_provider_pricing: dict = {}
     token_calculator: TokenCalculator | Type = TokenCalculator
+    provider: Provider = None
 
     def __init__(
         self,
