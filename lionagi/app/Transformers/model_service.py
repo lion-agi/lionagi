@@ -1,8 +1,8 @@
 from typing import Union, Dict, Any
 import subprocess
 
-from lionagi.libs.sys_util import SysUtil
-from lionagi.libs.ln_api import BaseService
+from lionagi.os.sys_util import SysUtil
+from lionagi.os.service.api.base_service import BaseService
 
 allowed_kwargs = [
     # "model",

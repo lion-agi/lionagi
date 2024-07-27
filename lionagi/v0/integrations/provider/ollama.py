@@ -1,5 +1,5 @@
-from lionagi.libs.ln_api import BaseService
-from lionagi.integrations.config.ollama_configs import model
+from v0.libs.ln_api import BaseService
+from v0.integrations.config.ollama_configs import model
 
 allowed_kwargs = [
     "model",
@@ -24,7 +24,7 @@ class OllamaService(BaseService):
     def __init__(self, model: str = model, **kwargs):
         super().__init__()
 
-        from lionagi.libs.sys_util import SysUtil
+        from v0.libs.sys_util import SysUtil
 
         SysUtil.check_import("ollama")
 

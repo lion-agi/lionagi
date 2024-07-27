@@ -49,7 +49,7 @@ class GoogleSearch:
             ImportError: If there is an issue during the agent creation.
         """
         try:
-            from lionagi.libs import SysUtil
+            from v0.libs import SysUtil
 
             SysUtil.check_import(package_name="llama_index", pip_name="llama-index")
 

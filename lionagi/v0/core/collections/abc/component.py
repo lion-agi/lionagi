@@ -25,10 +25,10 @@ from typing import Any, TypeVar, Type, TypeAlias, Union
 from pandas import DataFrame, Series
 from pydantic import BaseModel, Field, ValidationError, AliasChoices
 
-from lionagi.libs import ParseUtil, SysUtil
-from lionagi.libs.ln_convert import strip_lower, to_dict, to_str
-from lionagi.libs.ln_func_call import lcall
-from lionagi.libs.ln_nested import nget, nset, ninsert, flatten, unflatten
+from v0.libs import ParseUtil, SysUtil
+from v0.libs.ln_convert import strip_lower, to_dict, to_str
+from v0.libs.ln_func_call import lcall
+from v0.libs.ln_nested import nget, nset, ninsert, flatten, unflatten
 
 from .exceptions import FieldError, LionTypeError, LionValueError
 from .util import base_lion_fields, llama_meta_fields, lc_meta_fields
@@ -436,13 +436,13 @@ class Component(Element, ABC):
 
     def to_llama_index_node(self, node_type: Type | str | Any = None, **kwargs) -> Any:
         """Serializes this node for LlamaIndex."""
-        from lionagi.integrations.bridge import LlamaIndexBridge
+        from v0.integrations.bridge import LlamaIndexBridge
 
         return LlamaIndexBridge.to_llama_index_node(self, node_type=node_type, **kwargs)
 
     def to_langchain_doc(self, **kwargs) -> Any:
         """Serializes this node for Langchain."""
-        from lionagi.integrations.bridge import LangchainBridge
+        from v0.integrations.bridge import LangchainBridge
 
         return LangchainBridge.to_langchain_document(self, **kwargs)
 

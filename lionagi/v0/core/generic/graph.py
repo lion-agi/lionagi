@@ -2,18 +2,18 @@ import contextlib
 from collections import deque
 from typing import Any
 
-from lionagi.libs.ln_convert import to_list
-from lionagi.core.collections.abc import (
+from v0.libs.ln_convert import to_list
+from v0.core.collections.abc import (
     Condition,
     Actionable,
     LionTypeError,
     ItemNotFoundError,
     LionIDable,
 )
-from lionagi.core.collections import pile, Pile
+from v0.core.collections import pile, Pile
 
-from lionagi.core.generic.edge import Edge
-from lionagi.core.generic.node import Node
+from v0.core.generic.edge import Edge
+from v0.core.generic.node import Node
 
 
 class Graph(Node):
@@ -175,7 +175,7 @@ class Graph(Node):
 
     def to_networkx(self, **kwargs) -> Any:
         """Convert the graph to a NetworkX graph object."""
-        from lionagi.libs import SysUtil
+        from v0.libs import SysUtil
 
         SysUtil.check_import("networkx")
 
@@ -206,7 +206,7 @@ class Graph(Node):
         self, node_label="class_name", edge_label="label", draw_kwargs={}, **kwargs
     ):
         """Display the graph using NetworkX and Matplotlib."""
-        from lionagi.libs import SysUtil
+        from v0.libs import SysUtil
 
         SysUtil.check_import("networkx")
         SysUtil.check_import("matplotlib", "pyplot")

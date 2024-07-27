@@ -15,8 +15,8 @@ limitations under the License.
 """
 
 from os import getenv
-from lionagi.integrations.config.oai_configs import oai_schema
-from lionagi.libs.ln_api import BaseService, PayloadPackage
+from v0.integrations.config.oai_configs import oai_schema
+from v0.libs.ln_api import BaseService, PayloadPackage
 
 
 allowed_kwargs = [

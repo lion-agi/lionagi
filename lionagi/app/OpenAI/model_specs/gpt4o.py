@@ -1,5 +1,5 @@
-from lionagi.os.service.api.model_config import MODEL_CONFIG, ENDPOINT_CONFIG
-from .config import oai_chat_schema
+from lionagi.os.service.api.specification import MODEL_CONFIG, ENDPOINT_CONFIG
+from ._config import oai_chat_schema
 
 
 GPT4O_CHAT_COMPLETIONS = ENDPOINT_CONFIG(

@@ -18,7 +18,7 @@ import os
 import asyncio
 import numpy as np
 from dotenv import load_dotenv
-from lionagi.libs import SysUtil, BaseService, StatusTracker, APIUtil, to_list, ninsert
+from v0.libs import SysUtil, BaseService, StatusTracker, APIUtil, to_list, ninsert
 from .abc import Component, ModelLimitExceededError
 
 load_dotenv()
@@ -72,6 +72,29 @@ class iModel:
         costs=None,
         **kwargs,  # additional parameters for the model
     ):
+        """
+        Initializes an instance of the iModel class.
+
+        Args:
+            model (str, optional): Name of the model.
+            config (dict, optional): Configuration dictionary.
+            provider (str, optional): Name or class of the provider.
+            provider_schema (dict, optional): Schema dictionary for the
+                provider.
+            endpoint (str, optional): Endpoint string, default is
+                "chat/completions".
+            token_encoding_name (str, optional): Name of the token encoding,
+                default is "cl100k_base".
+            api_key (str, optional): API key for the provider.
+            api_key_schema (str, optional): Schema for the API key.
+            interval_tokens (int, optional): Token interval limit, default is
+                100,000.
+            interval_requests (int, optional): Request interval limit, default
+                is 1,000.
+            interval (int, optional): Time interval in seconds, default is 60.
+            service (BaseService, optional): An instance of BaseService.
+            **kwargs: Additional parameters for the model.
+        """
         self.ln_id: str = SysUtil.create_id()
         self.timestamp: str = SysUtil.get_timestamp(sep=None)[:-6]
         self.endpoint = endpoint
@@ -82,7 +105,7 @@ class iModel:
         else:
             provider = str(provider).lower() if provider else "openai"
 
-        from lionagi.integrations.provider._mapping import (
+        from v0.integrations.provider._mapping import (
             SERVICE_PROVIDERS_MAPPING,
         )
 

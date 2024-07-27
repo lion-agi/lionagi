@@ -1,3 +1,7 @@
+import base64
+from io import BytesIO
+
+from lionagi.os.sys_util import SysUtil
 from lionagi.os.file.tokenize.token_calculator import ImageTokenCalculator
 from .config import OPENAI_IMAGE_PRICING
 
@@ -13,9 +17,7 @@ class OpenAIImageTokenCalculator(ImageTokenCalculator):
         return calculate_image_token_usage_from_base64(image_base64, detail, cls.config)
 
 
-def calculate_image_token_usage_from_base64(
-    image_base64: str, detail, image_pricing=None
-):
+def calculate_image_token_usage_from_base64(image_base64: str, detail, image_pricing):
     """
     Calculate the token usage for processing OpenAI images from a
     base64-encoded string.
@@ -27,10 +29,6 @@ def calculate_image_token_usage_from_base64(
     Returns:
     int: The total token cost for processing the image.
     """
-    import base64
-    from io import BytesIO
-
-    from lionagi.os.sys_util import SysUtil
 
     Image = SysUtil.check_import(
         package_name="PIL", import_name="Image", pip_name="Pillow"

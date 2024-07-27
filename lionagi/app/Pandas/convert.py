@@ -1,17 +1,3 @@
-"""
-Module for converting various input types to pandas DataFrames.
-
-Provides functions to convert a variety of data structures into pandas
-DataFrames, with options for handling missing data, resetting the index,
-and custom behavior for specific input types.
-
-Functions:
-    to_df: Converts various input types to a pandas DataFrame, with options for
-           handling missing data and resetting the index.
-    _ (list overload): Specialized behavior for converting a list of data to
-                       a DataFrame.
-"""
-
 from functools import singledispatch
 from pandas import DataFrame, Series, concat
 from pandas.core.generic import NDFrame

@@ -1,5 +1,5 @@
 import tiktoken
-from .special_tokens import disallowed_tokens
+from .disallowed_tokens import disallowed_tokens
 
 
 def tokenize(

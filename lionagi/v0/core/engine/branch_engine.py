@@ -1,13 +1,13 @@
 import contextlib
-from lionagi.libs import convert, AsyncUtil, ParseUtil
-from lionagi.core.generic.edge import Edge
-from lionagi.core.action import ActionNode
-from lionagi.core.mail.mail import Mail
-from lionagi.core.message import System, Instruction
-from lionagi.core.collections import Pile, Progression
+from v0.libs import convert, AsyncUtil, ParseUtil
+from v0.core.generic.edge import Edge
+from v0.core.action import ActionNode
+from v0.core.mail.mail import Mail
+from v0.core.message import System, Instruction
+from v0.core.collections import Pile, Progression
 
-from lionagi.core.session.branch import Branch
-from lionagi.core.executor.base_executor import BaseExecutor
+from v0.core.session.branch import Branch
+from v0.core.executor.base_executor import BaseExecutor
 
 
 class BranchExecutor(Branch, BaseExecutor):
@@ -44,7 +44,7 @@ class BranchExecutor(Branch, BaseExecutor):
         it processes starts, nodes, node lists, conditions, or ends, accordingly executing different functions.
         """
         for key in list(self.mailbox.pending_ins.keys()):
-            while self.mailbox.pending_ins[key].size() > 0:
+            while self.mailbox.pending_ins.get(key, Pile()).size() > 0:
                 mail_id = self.mailbox.pending_ins[key].popleft()
                 mail = self.mailbox.pile.pop(mail_id)
                 if mail.category == "start":
@@ -57,7 +57,10 @@ class BranchExecutor(Branch, BaseExecutor):
                     await self._process_condition(mail)
                 elif mail.category == "end":
                     self._process_end(mail)
-            if self.mailbox.pending_ins[key].size() == 0:
+            if (
+                key in self.mailbox.pending_ins
+                and self.mailbox.pending_ins.get(key, Pile()).size() == 0
+            ):
                 self.mailbox.pending_ins.pop(key)
 
     async def execute(self, refresh_time=1) -> None:
@@ -118,8 +121,8 @@ class BranchExecutor(Branch, BaseExecutor):
                     package=node.ln_id,
                     request_source=self.ln_id,
                 )
-            except:
-                raise ValueError(f"Invalid mail to process. Mail:{mail}")
+            except Exception as e:
+                raise ValueError(f"Invalid mail to process. Mail:{mail}, Error: {e}")
 
     def _process_node_list(self, mail: Mail):
         """
@@ -165,7 +168,7 @@ class BranchExecutor(Branch, BaseExecutor):
             verbose (bool): Flag to enable verbose output.
             context_verbose (bool): Flag to enable verbose output specifically for context.
         """
-        from lionagi.libs import SysUtil
+        from v0.libs import SysUtil
 
         SysUtil.check_import("IPython")
         from IPython.display import Markdown, display
@@ -191,7 +194,7 @@ class BranchExecutor(Branch, BaseExecutor):
             verbose (bool): Flag to enable verbose output.
             **kwargs: Additional keyword arguments that might affect how instructions are processed.
         """
-        from lionagi.libs import SysUtil
+        from v0.libs import SysUtil
 
         SysUtil.check_import("IPython")
         from IPython.display import Markdown, display
@@ -234,7 +237,7 @@ class BranchExecutor(Branch, BaseExecutor):
             action (ActionNode): The action node to process.
             verbose (bool): Flag to enable verbose output of the action results.
         """
-        from lionagi.libs import SysUtil
+        from v0.libs import SysUtil
 
         SysUtil.check_import("IPython")
         from IPython.display import Markdown, display

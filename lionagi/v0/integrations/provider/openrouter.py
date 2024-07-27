@@ -1,6 +1,6 @@
 from os import getenv
-from lionagi.integrations.config.openrouter_configs import openrouter_schema
-from lionagi.libs.ln_api import BaseService, PayloadPackage
+from v0.integrations.config.openrouter_configs import openrouter_schema
+from v0.libs.ln_api import BaseService, PayloadPackage
 
 allowed_kwargs = [
     "model",

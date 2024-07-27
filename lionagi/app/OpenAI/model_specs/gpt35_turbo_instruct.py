@@ -1,5 +1,5 @@
-from lionagi.os.service.api.model_config import MODEL_CONFIG, ENDPOINT_CONFIG
-from .config import oai_chat_schema
+from lionagi.os.service.api.specification import MODEL_CONFIG, ENDPOINT_CONFIG
+from ._config import oai_chat_schema
 
 
 GPT35TURBO_INSTRUCT_CHAT_COMPLETIONS = ENDPOINT_CONFIG(
@@ -14,7 +14,7 @@ GPT35TURBO_INSTRUCT_CHAT_COMPLETIONS = ENDPOINT_CONFIG(
     input_key=oai_chat_schema["input_key"],
 )
 
-GPT35TURBO_INSTRUCT = MODEL_CONFIG(
+GPT35_TURBO_INSTRUCT = MODEL_CONFIG(
     model="gpt-3.5-turbo-instruct",
     alias="gpt-3.5-turbo-instruct-0914",
     endpoint_schema={

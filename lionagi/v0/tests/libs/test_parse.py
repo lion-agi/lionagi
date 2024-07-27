@@ -1,7 +1,7 @@
 import unittest
 from unittest.mock import patch
 
-from lionagi.libs.ln_parse import *
+from v0.libs.ln_parse import *
 
 
 class TestFuzzyParseJson(unittest.TestCase):

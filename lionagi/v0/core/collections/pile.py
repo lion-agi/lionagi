@@ -25,8 +25,8 @@ from typing import TypeVar, Type, Any, Generic
 
 from pydantic import Field, field_validator
 
-from lionagi.libs.ln_convert import is_same_dtype, to_df
-from lionagi.libs.ln_func_call import bcall, alcall, CallDecorator as cd
+from v0.libs.ln_convert import is_same_dtype, to_df
+from v0.libs.ln_func_call import bcall, alcall, CallDecorator as cd
 from .abc import (
     Element,
     Record,
@@ -43,21 +43,6 @@ from .model import iModel
 from .util import to_list_type, _validate_order
 
 T = TypeVar("T")
-
-
-from lion_core import Pile as CorePile
-
-
-p = li.load(file)
-p = li.chunk(p)
-await p.embed_pile()
-tool = p.as_query_tool()
-tool2 = p.as_chat_tool()
-
-await branch.chat(tools=[tool, tool2])
-
-
-class Pile(CorePile, quey_mixin, chat_mixin, embed_mixin): ...
 
 
 class Pile(Element, Record, Generic[T]):
@@ -617,7 +602,7 @@ class Pile(Element, Record, Generic[T]):
             ValueError: If an invalid index type is provided.
         """
         if index_type == "llama_index":
-            from lionagi.integrations.bridge import LlamaIndexBridge
+            from v0.integrations.bridge import LlamaIndexBridge
 
             index_nodes = None
 
@@ -829,7 +814,7 @@ class Pile(Element, Record, Generic[T]):
             elif query_type == "chat":
                 self.create_chat_engine(index_type=index_type, **kwargs)
 
-        from lionagi.core.action.tool_manager import func_to_tool
+        from v0.core.action.tool_manager import func_to_tool
 
         if not guidance:
             if query_type == "query":

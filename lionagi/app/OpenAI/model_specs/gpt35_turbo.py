@@ -1,5 +1,5 @@
-from lionagi.os.service.api.model_config import MODEL_CONFIG, ENDPOINT_CONFIG
-from .config import oai_chat_schema, oai_finetune_schema
+from lionagi.os.service.api.specification import MODEL_CONFIG, ENDPOINT_CONFIG
+from ._config import oai_chat_schema, oai_finetune_schema
 
 
 GPT35_TURBO_CHAT_COMPLETIONS = ENDPOINT_CONFIG(

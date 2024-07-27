@@ -22,8 +22,8 @@ choices_fields = ["index", "message", "logprobs", "finish_reason"]
 usage_fields = ["prompt_tokens", "completion_tokens", "total_tokens"]
 
 from typing import Callable
-from lionagi.core.action.tool import Tool
-from lionagi.core.action.tool_manager import func_to_tool
+from v0.core.action.tool import Tool
+from v0.core.action.tool_manager import func_to_tool
 
 
 def process_tools(tool_obj, branch):

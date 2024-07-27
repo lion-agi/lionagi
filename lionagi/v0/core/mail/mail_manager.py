@@ -1,11 +1,11 @@
 from collections import deque
 from pydantic import Field
-from lionagi.libs import AsyncUtil
-from lionagi.core.collections.abc import Executable, Element
-from lionagi.core.collections import Exchange
-from lionagi.core.collections.util import to_list_type, get_lion_id
+from v0.libs import AsyncUtil
+from v0.core.collections.abc import Executable, Element
+from v0.core.collections import Exchange
+from v0.core.collections.util import to_list_type, get_lion_id
 from .mail import Mail, Package
-from lionagi.core.collections import Pile, pile
+from v0.core.collections import Pile, pile
 
 
 class MailManager(Element, Executable):

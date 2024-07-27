@@ -1,10 +1,10 @@
 """This module provides tree structure."""
 
 from pydantic import Field
-from lionagi.core.collections.abc import Condition
-from lionagi.core.collections.util import to_list_type
-from lionagi.core.generic.tree_node import TreeNode
-from lionagi.core.generic.graph import Graph
+from v0.core.collections.abc import Condition
+from v0.core.collections.util import to_list_type
+from v0.core.generic.tree_node import TreeNode
+from v0.core.generic.graph import Graph
 
 
 class Tree(Graph):

@@ -2,7 +2,7 @@ import aiohttp
 import unittest
 from unittest.mock import AsyncMock
 
-from lionagi.libs.ln_api import *
+from v0.libs.ln_api import *
 
 
 class TestAPIUtil(unittest.TestCase):

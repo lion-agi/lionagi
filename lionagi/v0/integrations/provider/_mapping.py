@@ -4,8 +4,8 @@ from .ollama import OllamaService
 from .transformers import TransformersService
 from .litellm import LiteLLMService
 from .mlx_service import MLXService
-from lionagi.integrations.config.oai_configs import oai_schema
-from lionagi.integrations.config.openrouter_configs import openrouter_schema
+from v0.integrations.config.oai_configs import oai_schema
+from v0.integrations.config.openrouter_configs import openrouter_schema
 
 SERVICE_PROVIDERS_MAPPING = {
     "openai": {

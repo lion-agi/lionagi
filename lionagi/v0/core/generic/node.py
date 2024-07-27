@@ -12,17 +12,17 @@ from pydantic import Field
 from pandas import Series
 from typing import Callable
 
-from lionagi.libs.ln_convert import to_list
+from v0.libs.ln_convert import to_list
 
-from lionagi.core.collections.abc import (
+from v0.core.collections.abc import (
     Component,
     Condition,
     Relatable,
     RelationError,
     get_lion_id,
 )
-from lionagi.core.collections import pile, Pile
-from lionagi.core.generic.edge import Edge
+from v0.core.collections import pile, Pile
+from v0.core.generic.edge import Edge
 
 
 class Node(Component, Relatable):

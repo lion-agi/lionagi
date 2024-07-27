@@ -16,7 +16,7 @@ limitations under the License.
 
 # lionagi/core/session/directive_mixin.py
 
-from lionagi.core.unit import Unit
+from v0.core.unit import Unit
 from ..message.action_response import ActionResponse
 
 
@@ -51,7 +51,7 @@ class DirectiveMixin:
         return_branch=False,
         images=None,
         image_path=None,
-        **kwargs,  # model kwargs
+        **kwargs,
     ):
         """
         Asynchronously handles a chat interaction within the directive framework.
@@ -119,7 +119,7 @@ class DirectiveMixin:
             self.add_message(system=system)
 
         if not images and image_path:
-            from lionagi.libs import ImageUtil
+            from v0.libs import ImageUtil
 
             images = ImageUtil.read_image_to_base64(image_path)
 
@@ -216,7 +216,7 @@ class DirectiveMixin:
             self.add_message(system=system)
 
         if not images and image_path:
-            from lionagi.libs import ImageUtil
+            from v0.libs import ImageUtil
 
             images = ImageUtil.read_image_to_base64(image_path)
 

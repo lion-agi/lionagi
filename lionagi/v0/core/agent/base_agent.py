@@ -21,14 +21,14 @@ This module contains the BaseAgent class, which serves as a base class for agent
 from pydantic import Field
 from typing import Any, Callable
 
-from lionagi.libs import func_call, AsyncUtil
+from v0.libs import func_call, AsyncUtil
 
 
-from lionagi.core.mail.start_mail import StartMail
-from lionagi.core.generic.node import Node
-from lionagi.core.mail.mail_manager import MailManager
-from lionagi.core.executor.base_executor import BaseExecutor
-from lionagi.core.executor.graph_executor import GraphExecutor
+from v0.core.mail.start_mail import StartMail
+from v0.core.generic.node import Node
+from v0.core.mail.mail_manager import MailManager
+from v0.core.executor.base_executor import BaseExecutor
+from v0.core.executor.graph_executor import GraphExecutor
 
 
 class BaseAgent(Node):

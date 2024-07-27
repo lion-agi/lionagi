@@ -1,21 +1,38 @@
-from lion_core import CoreLib
+"""
+Copyright 2024 HaiyangLi
+
+Licensed under the Apache License, Version 2.0 (the "License");
+you may not use this file except in compliance with the License.
+You may obtain a copy of the License at
+
+    http://www.apache.org/licenses/LICENSE-2.0
+
+Unless required by applicable law or agreed to in writing, software
+distributed under the License is distributed on an "AS IS" BASIS,
+WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+See the License for the specific language governing permissions and
+limitations under the License.
+"""
 
 from collections.abc import Sequence, Mapping
-from functools import lru_cache
 
 from abc import ABC
 from dataclasses import dataclass
 
+import contextlib
 import logging
 import re
 import asyncio
 import aiohttp
 
 from typing import Any, NoReturn, Type, Callable
-from typing_extensions import deprecated
+
+from v0.libs.ln_async import AsyncUtil
+from v0.libs.ln_convert import to_dict, strip_lower, to_str
+import v0.libs.ln_func_call as func_call
+from v0.libs.ln_nested import nget
 
 
-@deprecated
 class APIUtil:
     """
     A utility class for assisting with common API usage patterns.
@@ -97,7 +114,7 @@ class APIUtil:
         return "Rate limit" in response_json.get("error", {}).get("message", "")
 
     @staticmethod
-    @lru_cache(maxsize=128)
+    @func_call.lru_cache(maxsize=128)
     def api_endpoint_from_url(request_url: str) -> str:
         """
         Extracts the API endpoint from a given URL using a regular expression.
@@ -162,7 +179,7 @@ class APIUtil:
                     logging.warning(
                         f"Rate limit error detected. Retrying in {retry_delay} seconds..."
                     )
-                    await asyncio.sleep(retry_delay)
+                    await AsyncUtil.sleep(retry_delay)
                 else:
                     break
 
@@ -175,7 +192,7 @@ class APIUtil:
         """
         import hashlib
 
-        param_str = CoreLib.to_str(params, sort_keys=True) if params else ""
+        param_str = to_str(params, sort_keys=True) if params else ""
         return hashlib.md5((url + param_str).encode("utf-8")).hexdigest()
 
     @staticmethod
@@ -208,7 +225,7 @@ class APIUtil:
                 if attempt < retries - 1:
                     delay = backoff_factor * (2**attempt)
                     logging.info(f"Retrying {url} in {delay} seconds...")
-                    await asyncio.sleep(delay)
+                    await AsyncUtil.sleep(delay)
                 else:
                     logging.error(
                         f"Failed to retrieve data from {url} after {retries} attempts."
@@ -259,9 +276,10 @@ class APIUtil:
                     raise e
                 backoff = 2**attempt
                 logging.info(f"Retrying {url} in {backoff} seconds...")
-                await asyncio.sleep(backoff)
+                await AsyncUtil.sleep(backoff)
 
     @staticmethod
+    @AsyncUtil.cached(ttl=10 * 60)  # Cache the result for 10 minutes
     async def get_oauth_token_with_cache(
         http_session: aiohttp.ClientSession,
         auth_url: str,
@@ -300,6 +318,8 @@ class APIUtil:
             auth_response.raise_for_status()
             return (await auth_response.json()).get("access_token")
 
+    @staticmethod
+    @AsyncUtil.cached(ttl=10 * 60)
     async def cached_api_call(
         http_session: aiohttp.ClientSession, url: str, **kwargs
     ) -> Any:
@@ -375,7 +395,7 @@ class APIUtil:
                             if isinstance(item, dict):
                                 if "text" in item:
                                     num_tokens += len(
-                                        encoding.encode(CoreLib.to_str(item["text"]))
+                                        encoding.encode(to_str(item["text"]))
                                     )
                                 elif "image_url" in item:
                                     a: str = item["image_url"]["url"]
@@ -432,7 +452,7 @@ class APIUtil:
             payload[key] = config[key]
 
         for key in optional_:
-            if bool(config[key]) and CoreLib.strip_lower(config[key]) != "none":
+            if bool(config[key]) and strip_lower(config[key]) != "none":
                 payload[key] = config[key]
 
         return payload
@@ -495,16 +515,16 @@ class BaseRateLimiter(ABC):
         self.max_tokens: int = max_tokens
         self.available_request_capacity: int = max_requests
         self.available_token_capacity: int = max_tokens
-        self.rate_limit_replenisher_task: asyncio.Task | None = None
-        self._stop_replenishing: asyncio.Event = asyncio.Event()
-        self._lock: asyncio.Lock = asyncio.Lock()
+        self.rate_limit_replenisher_task: AsyncUtil.Task | None = None
+        self._stop_replenishing: AsyncUtil.Event = AsyncUtil.create_event()
+        self._lock: AsyncUtil.Lock = AsyncUtil.create_lock()
         self.token_encoding_name = token_encoding_name
 
     async def start_replenishing(self) -> NoReturn:
         """Starts the replenishment of rate limit capacities at regular intervals."""
         try:
             while not self._stop_replenishing.is_set():
-                await asyncio.sleep(self.interval)
+                await AsyncUtil.sleep(self.interval)
                 async with self._lock:
                     self.available_request_capacity = self.max_requests
                     self.available_token_capacity = self.max_tokens
@@ -571,7 +591,7 @@ class BaseRateLimiter(ABC):
                 self.available_request_capacity < 1
                 or self.available_token_capacity < 10
             ):  # Minimum token count
-                await asyncio.sleep(1)  # Wait for capacity
+                await AsyncUtil.sleep(1)  # Wait for capacity
                 continue
 
             if not required_tokens:
@@ -603,7 +623,7 @@ class BaseRateLimiter(ABC):
                             if "Rate limit" in response_json["error"].get(
                                 "message", ""
                             ):
-                                await asyncio.sleep(15)
+                                await AsyncUtil.sleep(15)
                     except Exception as e:
                         logging.warning(f"API call failed with exception: {e}")
                         attempts_left -= 1
@@ -611,7 +631,7 @@ class BaseRateLimiter(ABC):
                 logging.error("API call failed after all attempts.")
                 break
             else:
-                await asyncio.sleep(1)
+                await AsyncUtil.sleep(1)
 
     @classmethod
     async def create(
@@ -634,7 +654,7 @@ class BaseRateLimiter(ABC):
                 An instance of BaseRateLimiter with the replenisher task started.
         """
         instance = cls(max_requests, max_tokens, interval, token_encoding_name)
-        instance.rate_limit_replenisher_task = asyncio.create_task(
+        instance.rate_limit_replenisher_task = AsyncUtil.create_task(
             instance.start_replenishing(), obj=False
         )
         return instance
@@ -771,7 +791,7 @@ class BaseService:
                     )
 
                 if ep not in self.endpoints:
-                    endpoint_config = CoreLib.nget(self.schema, [ep, "config"])
+                    endpoint_config = nget(self.schema, [ep, "config"])
                     self.schema.get(ep, {})
                     if isinstance(ep, EndPoint):
                         self.endpoints[ep.endpoint] = ep
@@ -815,7 +835,7 @@ class BaseService:
 
         else:
             for ep in self.available_endpoints:
-                endpoint_config = CoreLib.nget(self.schema, [ep, "config"])
+                endpoint_config = nget(self.schema, [ep, "config"])
                 self.schema.get(ep, {})
                 if ep not in self.endpoints:
                     self.endpoints[ep] = EndPoint(

@@ -1,5 +1,5 @@
-from lionagi.os.service.api.model_config import MODEL_CONFIG, ENDPOINT_CONFIG
-from .config import oai_chat_schema
+from lionagi.os.service.api.specification import MODEL_CONFIG, ENDPOINT_CONFIG
+from ._config import oai_chat_schema
 
 
 GPT4_TURBO_CHAT_COMPLETIONS = ENDPOINT_CONFIG(
@@ -26,6 +26,6 @@ GPT4_TURBO = MODEL_CONFIG(
         "gpt-4-1106-preview",
     ],
     endpoint_schema={
-        "chat/completions": GPT4OMINI_CHAT_COMPLETIONS,
+        "chat/completions": GPT4_TURBO_CHAT_COMPLETIONS,
     },
 )
