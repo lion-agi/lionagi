@@ -16,7 +16,7 @@ limitations under the License.
 
 import inspect
 from pydantic import Field
-from lionagi.libs import convert, ParseUtil
+from v0.libs import convert, ParseUtil
 from .message import RoledMessage, MessageRole
 
 

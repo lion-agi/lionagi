@@ -201,31 +201,31 @@ class ParseUtil:
         Args:
             dict_: Input to be validated. Can be a dictionary or a string
                 representing a dictionary.
-            keys: List of expected keys or dictionary mapping keys to types.
-            score_func: Function returning similarity score (0-1) for two
+            `keys`: List of expected keys or dictionary mapping keys to types.
+            `score_func`: Function returning similarity score (0-1) for two
                 strings. Defaults to None.
-            fuzzy_match: If True, use fuzzy matching for key correction.
-            handle_unmatched: Specifies how to handle unmatched keys:
-                - "ignore": Keep unmatched keys in output.
-                - "raise": Raise ValueError if unmatched keys exist.
-                - "remove": Remove unmatched keys from output.
-                - "fill": Fill unmatched keys with default value/mapping.
-                - "force": Combine "fill" and "remove" behaviors.
-            fill_value: Default value for filling unmatched keys.
-            fill_mapping: Dictionary mapping unmatched keys to default values.
-            strict: If True, raise ValueError if any expected key is missing.
+            `fuzzy_match`: If True, use fuzzy matching for key correction.
+            `handle_unmatched`: Specifies how to handle unmatched keys:
+                - `"ignore"`: Keep unmatched keys in output.
+                - `"raise"`: Raise ValueError if unmatched keys exist.
+                - `"remove"`: Remove unmatched keys from output.
+                - `"fill"`: Fill unmatched keys with default value/mapping.
+                - `"force"`: Combine "fill" and "remove" behaviors.
+            `fill_value`: Default value for filling unmatched keys.
+            `fill_mapping`: Dictionary mapping unmatched keys to default values.
+            `strict`: If True, raise ValueError if any expected key is missing.
 
         Returns:
             The validated dictionary.
 
         Raises:
-            ValueError: If the input cannot be converted to a valid dictionary
+            `ValueError`: If the input cannot be converted to a valid dictionary
                 or if the validation fails.
 
         Example:
             >>> input_str = "{'name': 'John', 'age': 30}"
             >>> keys = ['name', 'age', 'city']
-            >>> validated_dict = force_validate_mapping(input_str, keys)
+            >>> validated_dict = validate_mapping(input_str, keys)
             >>> validated_dict
             {'name': 'John', 'age': 30, 'city': None}
         """

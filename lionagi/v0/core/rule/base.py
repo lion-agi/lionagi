@@ -17,9 +17,9 @@ limitations under the License.
 from abc import abstractmethod
 from typing import Any, List, Dict
 from pandas import Series
-from lionagi.libs import SysUtil
+from v0.libs import SysUtil
 
-from lionagi.core.collections.abc import FieldError, Condition, Actionable, Component
+from v0.core.collections.abc import FieldError, Condition, Actionable, Component
 
 _rule_classes = {}
 

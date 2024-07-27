@@ -1,10 +1,10 @@
 from pydantic import Field
 import asyncio
 
-from lionagi.core.generic.node import Node
-from lionagi.core.work.work_function import WorkFunction
-from lionagi.core.collections import Exchange
-from lionagi.core.mail.mail import Mail
+from v0.core.generic.node import Node
+from v0.core.work.work_function import WorkFunction
+from v0.core.collections import Exchange
+from v0.core.mail.mail import Mail
 
 
 class WorkFunctionNode(WorkFunction, Node):

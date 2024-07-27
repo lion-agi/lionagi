@@ -3,7 +3,7 @@ from ._config import oai_embeddings_schema
 
 
 TEXT_EMBEDDINGS3_SMALL_EMBED = ENDPOINT_CONFIG(
-    endpoint="embed",
+    endpoint="embeddings",
     pricing=0.02,
     batch_pricing=0.01,
     token_limit=8_192,

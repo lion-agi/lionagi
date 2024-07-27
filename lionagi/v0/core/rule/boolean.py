@@ -1,6 +1,6 @@
 from typing import Any
-from lionagi.libs.ln_convert import to_str, strip_lower
-from lionagi.core.rule.base import Rule
+from v0.libs.ln_convert import to_str, strip_lower
+from v0.core.rule.base import Rule
 
 
 class BooleanRule(Rule):

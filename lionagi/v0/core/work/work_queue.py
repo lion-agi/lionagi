@@ -15,7 +15,7 @@ limitations under the License.
 """
 
 import asyncio
-from lionagi.core.work.work import WorkStatus
+from v0.core.work.work import WorkStatus
 
 
 class WorkQueue:

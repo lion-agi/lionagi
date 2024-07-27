@@ -20,6 +20,7 @@ from typing import Any, List, Literal, Sequence, TypeVar, Union
 
 from lion_core import CoreUtil as cu
 from lion_core.libs import unique_hash
+from lion_core.generic.util import to_list_type
 
 from lion_core.setting import LION_ID_CONFIG, TIME_CONFIG
 
@@ -589,6 +590,19 @@ class SysUtil:
         except subprocess.CalledProcessError as e:
             logging.error(f"Failed to update {package_name}. Error: {e}")
             raise
+
+    @staticmethod
+    def to_list_type(item: T | list[T]) -> List[T]:
+        """
+        Convert an item to a list if it is not already a list.
+
+        Args:
+            item: The item to convert.
+
+        Returns:
+            A list containing the item.
+        """
+        return to_list_type(item)
 
 
 def _run_pip_command(args: Sequence[str]) -> subprocess.CompletedProcess[bytes]:

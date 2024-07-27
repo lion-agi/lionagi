@@ -17,9 +17,7 @@ class OpenAIImageTokenCalculator(ImageTokenCalculator):
         return calculate_image_token_usage_from_base64(image_base64, detail, cls.config)
 
 
-def calculate_image_token_usage_from_base64(
-    image_base64: str, detail, image_pricing=None
-):
+def calculate_image_token_usage_from_base64(image_base64: str, detail, image_pricing):
     """
     Calculate the token usage for processing OpenAI images from a
     base64-encoded string.

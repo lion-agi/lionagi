@@ -16,7 +16,7 @@ limitations under the License.
 
 from typing import List, Optional
 
-from lionagi.experimental.directive.tokenizer import BaseToken
+from v0.experimental.directive.tokenizer import BaseToken
 from ..template.schema import IfNode, TryNode, ForNode
 
 

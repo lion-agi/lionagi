@@ -26,7 +26,7 @@ class OpenAIProvider(Provider):
         base_url=OAI_CONFIG["base_url"],
     )
     model_specification: PROVIDER_MODEL_SPECIFICATION = PROVIDER_MODEL_SPECIFICATION(
-        models=OPENAI_MODEL_MAPPING
+        model=OPENAI_MODEL_MAPPING
     )
 
     service: OpenAIService = OpenAIService()

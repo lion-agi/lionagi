@@ -1,5 +1,5 @@
 import os
-from lionagi.libs import convert
+from v0.libs import convert
 
 finnhub_key_scheme = "FINNHUB_API_KEY"
 
@@ -37,7 +37,7 @@ class FinnHub:
             ImportError: If there is an error while importing the 'finnhub' library.
         """
         try:
-            from lionagi.libs import SysUtil
+            from v0.libs import SysUtil
 
             SysUtil.check_import("finnhub")
 

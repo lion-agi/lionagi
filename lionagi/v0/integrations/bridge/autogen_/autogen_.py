@@ -4,7 +4,7 @@ from typing import Dict, Union
 def get_ipython_user_proxy():
 
     try:
-        from lionagi.libs import SysUtil
+        from v0.libs import SysUtil
 
         SysUtil.check_import("autogen", pip_name="pyautogen")
 
@@ -56,7 +56,7 @@ def get_autogen_coder(
 ):
     assistant = ""
     try:
-        from lionagi.libs import SysUtil
+        from v0.libs import SysUtil
 
         SysUtil.check_import("autogen", pip_name="pyautogen")
 

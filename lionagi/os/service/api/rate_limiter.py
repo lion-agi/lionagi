@@ -8,9 +8,13 @@ from aiocache import cached
 from lionagi import logging
 from lion_core import LN_UNDEFINED
 from lionagi.os.file.tokenize.token_calculator import TokenCalculator
-from .utils import api_endpoint_from_url
-from .api_call import call_api
-from .config import DEFAULT_RATE_LIMIT_CONFIG, CACHED_CONFIG, RETRY_CONFIG
+from lionagi.os.service.api.utils import api_endpoint_from_url
+from lionagi.os.service.api.utils import call_api
+from lionagi.os.service.api.config import (
+    DEFAULT_RATE_LIMIT_CONFIG,
+    CACHED_CONFIG,
+    RETRY_CONFIG,
+)
 
 
 # Note the following was inspired by the OpenAI cookbook, MIT License:
@@ -37,9 +41,6 @@ class RateLimiter(ABC):
         interval: int,
         interval_request: int,
         interval_token: int,
-        token_calculator: TokenCalculator | Type,
-        tokenizer: Callable | Type,
-        **kwargs,
     ):
         """Initialize the RateLimiter.
 
@@ -58,34 +59,9 @@ class RateLimiter(ABC):
         self.interval_token = (
             interval_token or DEFAULT_RATE_LIMIT_CONFIG["interval_token"]
         )
-        self.token_calculator = self._init_token_calculator(
-            token_calculator, tokenizer, **kwargs
-        )
         self._rate_limit_replenisher_task: asyncio.Task | None = None
         self._stop_replenishing: asyncio.Event = asyncio.Event()
         self._lock: asyncio.Lock = asyncio.Lock()
-
-    def _init_token_calculator(
-        self,
-        token_calculator: TokenCalculator | Type,
-        tokenizer: Callable | Type,
-        **kwargs,
-    ) -> TokenCalculator:
-        """Initialize the token calculator.
-
-        Args:
-            token_calculator: Calculator or type for token usage.
-            tokenizer: Tokenizer function or type.
-            **kwargs: Additional arguments for tokenizer initialization.
-
-        Returns:
-            Initialized BaseTokenCalculator instance.
-        """
-        if isinstance(token_calculator, type):
-            return token_calculator(tokenizer, **kwargs)
-        if tokenizer:
-            token_calculator.update_tokenizer(tokenizer, **kwargs)
-        return token_calculator
 
     async def start_replenishing(self) -> NoReturn:
         """Start replenishing rate limit capacities at regular intervals."""

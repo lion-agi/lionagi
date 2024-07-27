@@ -1,4 +1,4 @@
-from lionagi.libs.ln_convert import strip_lower
+from v0.libs.ln_convert import strip_lower
 
 
 def get_input_output_fields(str_: str) -> list[list[str]]:

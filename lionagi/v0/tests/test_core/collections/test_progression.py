@@ -1,6 +1,6 @@
 import unittest
-from lionagi.core.collections.abc import ItemNotFoundError
-from lionagi.core.collections import Progression
+from v0.core.collections.abc import ItemNotFoundError
+from v0.core.collections import Progression
 from lionagi import Node
 
 

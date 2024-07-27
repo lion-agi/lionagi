@@ -1,14 +1,14 @@
 from __future__ import annotations
 from abc import ABC
-from lion_core.abc import BaseiModel
-from lion_core.libs import nget, to_str
+import asyncio
+from typing import Any
+
+import numpy as np
+from lion_core.libs import nget, to_str, to_list
 from lion_core.exceptions import LionResourceError, LionTypeError
 from lion_core.generic.note import Note
 from lion_core.generic.component import Component
 from .imodel import iModel
-import asyncio
-import numpy as np
-from lion_core.libs import to_list, nget
 
 
 class iModelExtension(ABC):
@@ -16,7 +16,6 @@ class iModelExtension(ABC):
     @staticmethod
     async def compute_perplexity(
         imodel: iModel,
-        /,
         initial_context: str = None,
         tokens: list[str] = None,
         system_msg: str = None,
@@ -28,7 +27,7 @@ class iModelExtension(ABC):
         context = initial_context or ""
 
         n_samples = n_samples or len(tokens)
-        sample_token_len, residue = divmod(len(tokens), n_samples)
+        sample_token_len, residual = divmod(len(tokens), n_samples)
         samples = []
 
         if n_samples == 1:
@@ -36,8 +35,8 @@ class iModelExtension(ABC):
         else:
             samples = [tokens[: (i + 1) * sample_token_len] for i in range(n_samples)]
 
-            if use_residual and residue != 0:
-                samples.append(tokens[-residue:])
+            if use_residual and residual != 0:
+                samples.append(tokens[-residual:])
 
         sampless = [context + " ".join(sample) for sample in samples]
 
@@ -89,8 +88,8 @@ class iModelExtension(ABC):
 
     @staticmethod
     async def embed_node(
-        imodel: iModel, /, node: Component, field="content", **kwargs
-    ) -> bool:
+        node: Any, imodel: iModel, field="content", **kwargs
+    ) -> Component:
         """
         if not specify field, we embed node.content
         """
@@ -105,21 +104,24 @@ class iModelExtension(ABC):
             embed_str.pop("images", None)
             embed_str.pop("image_detail", None)
 
-        embed_str = to_str(embed_str)
         num_tokens = imodel.service.provider.token_calculator.calculate(
-            "embeddings", embed_str
+            "embeddings", to_str(embed_str)
         )
         model = imodel.service.endpoints["embeddings"].endpoint_config["model"]
 
-        # model specs should be a note object
-        token_limit = imodel.service.provider.model_specs[model].token_limit
+        token_limit = (
+            imodel.service.provider.model_specification.models[model]
+            .endpoint_schema["embeddings"]
+            .token_limit
+        )
 
         if token_limit and num_tokens > token_limit:
             raise LionResourceError(
                 f"Number of tokens {num_tokens} exceeds the limit {token_limit}"
             )
 
-        payload, embed = await imodel.embed(embed_str, **kwargs)
+        payload, embed = await imodel.embed(to_str(embed_str), **kwargs)
         payload.pop("input")
         node.embedding = nget(["data", 0, "embedding"], embed, None)
         node.metadata.set("embedding_meta", payload)
+        return node

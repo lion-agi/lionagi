@@ -1,7 +1,7 @@
 import unittest
 from lionagi import Node, pile, progression
-from lionagi.core.collections.abc import Element
-from lionagi.core.collections import Exchange
+from v0.core.collections.abc import Element
+from v0.core.collections import Exchange
 
 
 class TestExchange(unittest.TestCase):

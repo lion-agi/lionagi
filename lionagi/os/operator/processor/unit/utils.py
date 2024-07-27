@@ -6,7 +6,7 @@ from lion_core.action.tool import Tool
 from lion_core.action.tool_manager import func_to_tool
 from lion_core.exceptions import ItemNotFoundError
 from lion_core.libs import validate_mapping, fuzzy_parse_json, extract_json_block
-from lion_core.communication.util import parse_action_request
+from lion_core.communication.utils import parse_action_request
 
 
 retry_kwargs = {

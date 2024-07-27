@@ -1,6 +1,6 @@
 from typing import Any
 from pydantic import Field
-from lionagi.core.collections.abc import Condition
+from v0.core.collections.abc import Condition
 from pydantic import BaseModel
 
 

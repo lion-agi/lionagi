@@ -24,9 +24,9 @@ implement specific form behaviors and configurations.
 from abc import abstractmethod
 from typing import Any, List, Dict
 import contextlib
-from lionagi.core.collections.abc import Component, Field
+from v0.core.collections.abc import Component, Field
 from ..collections.util import to_list_type
-from lionagi.libs.ln_convert import to_str
+from v0.libs.ln_convert import to_str
 
 
 class BaseForm(Component):

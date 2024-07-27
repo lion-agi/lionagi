@@ -18,10 +18,10 @@ from abc import ABC
 from functools import wraps
 import inspect
 from lionagi import logging as _logging
-from lionagi.core.work.work_function import WorkFunction
-from lionagi.core.work.work import Work
-from lionagi.core.report.form import Form
-from lionagi.core.collections.abc import get_lion_id
+from v0.core.work.work_function import WorkFunction
+from v0.core.work.work import Work
+from v0.core.report.form import Form
+from v0.core.collections.abc import get_lion_id
 
 
 class Worker(ABC):

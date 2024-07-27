@@ -1,4 +1,3 @@
-from typing import Any
 from functools import singledispatchmethod
 from lion_core.libs import nget
 

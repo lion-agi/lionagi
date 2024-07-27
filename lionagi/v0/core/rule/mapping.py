@@ -16,10 +16,10 @@ limitations under the License.
 
 from typing import Any
 from collections.abc import Mapping
-from lionagi.libs.ln_convert import to_dict
-from lionagi.libs import StringMatch, ParseUtil
+from v0.libs.ln_convert import to_dict
+from v0.libs import StringMatch, ParseUtil
 
-from lionagi.core.rule.choice import ChoiceRule
+from v0.core.rule.choice import ChoiceRule
 
 
 class MappingRule(ChoiceRule):

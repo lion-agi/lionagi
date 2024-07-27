@@ -3,13 +3,17 @@ from typing import Any, Callable
 from lion_core import LN_UNDEFINED
 
 from lion_core.abc import BaseiModel, Observable, Temporal
-
+from lion_core.exceptions import LionResourceError, LionTypeError
+from lion_core.libs import bcall, to_list
+from lion_core.communication.message import RoledMessage
+from lion_core.generic.util import to_list_type
 
 from lionagi.os.sys_util import SysUtil
+from lionagi.os.space.pile import pile
 from lionagi.os.service.api.endpoint import EndPoint
 from lionagi.os.service.api.base_service import BaseService
 
-from .extension import iModelExtension
+err_map = {LionResourceError: lambda e: None, LionTypeError: lambda e: None}
 
 
 class iModel(BaseiModel, Observable, Temporal):
@@ -58,11 +62,11 @@ class iModel(BaseiModel, Observable, Temporal):
             **kwargs,
         )
 
-    async def chat(self, messages, **kwargs):
+    async def chat(self, messages: list[RoledMessage], **kwargs):
         return await self.call(messages, endpoint="chat/completions", **kwargs)
 
-    async def embed(self, input, **kwargs):
-        return await self.call(input, endpoint="embeddings", **kwargs)
+    async def embed(self, input_: list[str], **kwargs):
+        return await self.call(input_, endpoint="embeddings", **kwargs)
 
     async def compute_perplexity(
         self,
@@ -73,8 +77,10 @@ class iModel(BaseiModel, Observable, Temporal):
         use_residual: bool = True,  # whether to use residual for the last sample
         **kwargs,  # additional arguments for the model
     ):
+        from .extension import iModelExtension
+
         return await iModelExtension.compute_perplexity(
-            self,
+            imodel=self,
             initial_context=initial_context,
             tokens=tokens,
             system_msg=system_msg,
@@ -83,5 +89,20 @@ class iModel(BaseiModel, Observable, Temporal):
             **kwargs,
         )
 
-    async def embed_nodes(imodel, nodes, field, **kwargs):
-        return pile
+    async def embed_nodes(self, nodes: Any, field="content", batch_size=100, **kwargs):
+        from .extension import iModelExtension
+
+        p = pile()
+
+        async for batch in bcall(
+            input_=nodes,
+            func=iModelExtension.embed_node,
+            batch_size=batch_size,
+            imodel=self,
+            field=field,
+            error_map=err_map,
+            **kwargs,
+        ):
+            p.include(to_list(batch, flatten=True, dropna=True))
+
+        return p

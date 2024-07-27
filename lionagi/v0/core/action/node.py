@@ -16,8 +16,8 @@ limitations under the License.
 
 from pydantic import Field
 
-from lionagi.core.collections.abc import Actionable
-from lionagi.core.generic.node import Node
+from v0.core.collections.abc import Actionable
+from v0.core.generic.node import Node
 from .tool import Tool
 
 

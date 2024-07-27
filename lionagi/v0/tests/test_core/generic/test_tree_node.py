@@ -1,6 +1,6 @@
 import unittest
-from lionagi.core.generic.tree_node import TreeNode
-from lionagi.core.generic.tree import Tree
+from v0.core.generic.tree_node import TreeNode
+from v0.core.generic.tree import Tree
 
 
 class TestTreeNode(unittest.TestCase):

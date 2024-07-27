@@ -26,10 +26,10 @@ Note:
 from functools import singledispatchmethod
 from typing import Any, Callable, Dict
 
-from lionagi.libs import ParseUtil
-from lionagi.libs.ln_func_call import call_handler
-from lionagi.core.collections.abc import Actionable
-from lionagi.core.message.action_request import ActionRequest
+from v0.libs import ParseUtil
+from v0.libs.ln_func_call import call_handler
+from v0.core.collections.abc import Actionable
+from v0.core.message.action_request import ActionRequest
 
 
 class FunctionCalling(Actionable):

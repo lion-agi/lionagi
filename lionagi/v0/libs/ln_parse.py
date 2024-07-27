@@ -1,87 +1,89 @@
-from lion_core import LN_UNDEFINED, CoreLib
+"""
+Copyright 2024 HaiyangLi
+
+Licensed under the Apache License, Version 2.0 (the "License");
+you may not use this file except in compliance with the License.
+You may obtain a copy of the License at
+
+    http://www.apache.org/licenses/LICENSE-2.0
+
+Unless required by applicable law or agreed to in writing, software
+distributed under the License is distributed on an "AS IS" BASIS,
+WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+See the License for the specific language governing permissions and
+limitations under the License.
+"""
+
 from collections.abc import Callable
 import re
-from typing import Any, Literal, TypedDict, Sequence
+import inspect
+import itertools
+from typing import Any
 import numpy as np
-from typing_extensions import deprecated
+import v0.libs.ln_convert as convert
 
 
-class KeysDict(TypedDict, total=False):
-    """TypedDict for keys dictionary."""
-
-    key: Any  # Represents any key-type pair
+md_json_char_map = {"\n": "\\n", "\r": "\\r", "\t": "\\t", '"': '\\"'}
 
 
 class ParseUtil:
 
-    # removed `strict` parameter in 0.2.3 as it was not used
-    # reimplemented with lion_core.libs.parsers.fuzzy_parse_json
-    # strict parameter already doesn't do anything, kept for backwards compatibility will be removed in 1.0.0
-    # made str_tp_parse a positional-only parameter
-    # made strict a keyword-only parameter
     @staticmethod
-    def fuzzy_parse_json(
-        str_to_parse: str, /, *, strict=LN_UNDEFINED
-    ) -> dict[str, Any]:
+    def fuzzy_parse_json(str_to_parse: str, *, strict: bool = False):
         """
-        Attempt to parse a JSON string, applying fixes for common issues.
+        Parses a potentially incomplete or malformed JSON string by adding missing closing brackets or braces.
 
-        This function tries to parse the given JSON string using the `loads`
-        function from the `json` module. If the initial parsing fails, it
-        attempts to fix common formatting issues in the JSON string using the
-        `fix_json_string` function and then tries parsing again. If the JSON
-        string contains single quotes, they are replaced with double quotes
-        before making a final attempt to parse the string.
+        Tries to parse the input string as JSON and, on failure due to formatting errors, attempts to correct
+        the string by appending necessary closing characters before retrying.
 
         Args:
-            str_to_parse: The JSON string to parse.
+                s (str): The JSON string to parse.
+                strict (bool, optional): If True, enforces strict JSON syntax. Defaults to False.
 
         Returns:
-            The parsed JSON object as a dictionary.
+                The parsed JSON object, typically a dictionary or list.
 
         Raises:
-            ValueError: If the JSON string cannot be parsed even after
-                attempts to fix it.
+                ValueError: If parsing fails even after attempting to correct the string.
 
         Example:
-            >>> fuzzy_parse_json('{"key": "value"}')
-            {'key': 'value'}
+                >>> fuzzy_parse_json('{"name": "John", "age": 30, "city": "New York"')
+                {'name': 'John', 'age': 30, 'city': 'New York'}
         """
-        return CoreLib.fuzzy_parse_json(str_to_parse)
+        try:
+            return convert.to_dict(str_to_parse, strict=strict)
+        except Exception:
+            fixed_s = ParseUtil.fix_json_string(str_to_parse)
+            try:
+                return convert.to_dict(fixed_s, strict=strict)
 
-    # moved implementation to lion_core.libs.parsers._fuzzy_parse_json
-    # no change in implementation, will be deprecated in v1.0.0, with no replacement
-    # use fuzzy_parse_json then json_dump instead
-    @deprecated
+            except Exception:
+                try:
+                    fixed_s = fixed_s.replace("'", '"')
+                    return convert.to_dict(fixed_s, strict=strict)
+
+                except Exception as e:
+                    raise ValueError(
+                        f"Failed to parse JSON even after fixing attempts: {e}"
+                    ) from e
+
     @staticmethod
     def fix_json_string(str_to_parse: str) -> str:
-        """
-        Fix a JSON string by ensuring all brackets are properly closed.
 
-        This function iterates through the characters of the JSON string and
-        keeps track of the opening brackets encountered. If a closing bracket
-        is found without a matching opening bracket or if there are extra
-        closing brackets, a ValueError is raised. Any remaining opening
-        brackets at the end of the string are closed with their corresponding
-        closing brackets.
+        brackets = {"{": "}", "[": "]"}
+        open_brackets = []
 
-        Args:
-            str_to_parse: The JSON string to fix.
+        for char in str_to_parse:
+            if char in brackets:
+                open_brackets.append(brackets[char])
+            elif char in brackets.values():
+                if not open_brackets or open_brackets[-1] != char:
+                    raise ValueError("Mismatched or extra closing bracket found.")
+                open_brackets.pop()
 
-        Returns:
-            The fixed JSON string with properly closed brackets.
+        return str_to_parse + "".join(reversed(open_brackets))
 
-        Raises:
-            ValueError: If mismatched or extra closing brackets are found.
-
-        Example:
-            >>> fix_json_string('{"key": "value"')
-            '{"key": "value"}'
-        """
-        return CoreLib.fix_json_string(str_to_parse)
-
-    @deprecated  # internal methods, moved into lion_core, will remove in lionagi in 1.0.0
-    @staticmethod  # with no replacement
+    @staticmethod
     def escape_chars_in_json(value: str, char_map=None) -> str:
         """
         Escapes special characters in a JSON string using a specified character map.
@@ -103,97 +105,93 @@ class ParseUtil:
                 >>> escape_chars_in_json('Line 1\nLine 2')
                 'Line 1\\nLine 2'
         """
-        return CoreLib.escape_chars_in_json(value, char_map)
 
+        def replacement(match):
+            char = match.group(0)
+            _char_map = char_map or md_json_char_map
+            return _char_map.get(char, char)  # Default to the char itself if not in map
+
+        # Match any of the special characters to be escaped.
+        return re.sub(r'[\n\r\t"]', replacement, value)
+
+    # inspired by langchain_core.output_parsers.json (MIT License)
+    # https://github.com/langchain-ai/langchain/blob/master/libs/core/langchain_core/output_parsers/json.py
     @staticmethod
     def extract_json_block(
         str_to_parse: str,
-        language: str = "json",  # the language parameter will be removed in 1.0.0, use extract_code_block or custom regex_pattern
-        regex_pattern: str | None = None,  # take priority over language parameter
+        language: str | None = None,
+        regex_pattern: str | None = None,
         *,
         parser: Callable[[str], Any] = None,
     ) -> Any:
         """
-        Extract and parse a JSON block from Markdown content.
+        Extracts and parses a code block from Markdown content.
 
-        This function searches for a JSON block in the given Markdown string
-        using a regular expression pattern. If a JSON block is found, it is
-        parsed using the provided parser function.
+        This method searches for a code block in the given Markdown string, optionally
+        filtered by language. If a code block is found, it is parsed using the provided parser function.
 
         Args:
-            str_to_parse: The Markdown content to search.
-            regex_pattern: An optional regular expression pattern to use for
-                finding the JSON block. If not provided, a default pattern
-                that matches a JSON block enclosed in triple backticks is
-                used.
-            parser: A function to parse the extracted JSON string. If not
-                provided, the `fuzzy_parse_json` function will be used.
+                str_to_parse: The Markdown content to search.
+                language: An optional language specifier for the code block. If provided,
+                        only code blocks of this language are considered.
+                regex_pattern: An optional regular expression pattern to use for finding the code block.
+                        If provided, it overrides the language parameter.
+                parser: A function to parse the extracted code block string.
 
         Returns:
-            The result of parsing the JSON block with the provided parser
-            function.
+                The result of parsing the code block with the provided parser function.
 
         Raises:
-            ValueError: If no JSON block is found in the Markdown content.
+                ValueError: If no code block is found in the Markdown content.
 
-        Example:
-            >>> extract_json_block('```json\\n{"key": "value"}\\n```')
-            {'key': 'value'}
+        Examples:
+                >>> extract_code_block('```python\\nprint("Hello, world!")\\n```', language='python', parser=lambda x: x)
+                'print("Hello, world!")'
         """
-        return CoreLib.extract_json_block(
-            str_to_parse=str_to_parse,
-            language=language,
-            regex_pattern=regex_pattern,
-            parser=parser,
-        )
+
+        if language:
+            regex_pattern = rf"```{language}\n?(.*?)\n?```"
+        else:
+            regex_pattern = r"```\n?(.*?)\n?```"
+
+        match = re.search(regex_pattern, str_to_parse, re.DOTALL)
+        code_str = ""
+        if match:
+            code_str = match[1].strip()
+        else:
+            raise ValueError(
+                f"No {language or 'specified'} code block found in the Markdown content."
+            )
+        if not match:
+            str_to_parse = str_to_parse.strip()
+            if str_to_parse.startswith("```json\n") and str_to_parse.endswith("\n```"):
+                str_to_parse = str_to_parse[8:-4].strip()
+
+        parser = parser or ParseUtil.fuzzy_parse_json
+        return parser(code_str)
 
     @staticmethod
-    def extract_code_block(str_to_parse: str) -> str:
-        """
-        Extract code blocks from a given string containing Markdown code blocks.
+    def extract_code_blocks(code):
+        code_blocks = []
+        lines = code.split("\n")
+        inside_code_block = False
+        current_block = []
 
-        This function identifies code blocks enclosed by triple backticks (```)
-        and extracts their content. It handles multiple code blocks and
-        concatenates them with two newlines between each block.
+        for line in lines:
+            if line.startswith("```"):
+                if inside_code_block:
+                    code_blocks.append("\n".join(current_block))
+                    current_block = []
+                    inside_code_block = False
+                else:
+                    inside_code_block = True
+            elif inside_code_block:
+                current_block.append(line)
 
-        Args:
-            code: The input string containing Markdown code blocks.
+        if current_block:
+            code_blocks.append("\n".join(current_block))
 
-        Returns:
-            Extracted code blocks concatenated with two newlines. If no code
-            blocks are found, returns an empty string.
-
-        Example:
-            >>> text = "Some text\\n```python\\nprint('Hello')\\n```\\nMore text"
-            >>> extract_code_blocks(text)
-            "print('Hello')"
-        """
-        return CoreLib.extract_code_block(str_to_parse=str_to_parse)
-
-    # moved implementation to lion_core.libs.parsers._extract_code_blocks
-    @deprecated  # use extract_code_block instead, will be removed in 1.0.0
-    @staticmethod  # renamed to extract_code_block, and renamed the code parameter to str_to_parse
-    def extract_code_blocks(code: str) -> str:
-        """
-        Extract code blocks from a given string containing Markdown code blocks.
-
-        This function identifies code blocks enclosed by triple backticks (```)
-        and extracts their content. It handles multiple code blocks and
-        concatenates them with two newlines between each block.
-
-        Args:
-            code: The input string containing Markdown code blocks.
-
-        Returns:
-            Extracted code blocks concatenated with two newlines. If no code
-            blocks are found, returns an empty string.
-
-        Example:
-            >>> text = "Some text\\n```python\\nprint('Hello')\\n```\\nMore text"
-            >>> extract_code_blocks(text)
-            "print('Hello')"
-        """
-        return CoreLib.extract_code_block(code)
+        return "\n\n".join(code_blocks)
 
     @staticmethod
     def md_to_json(
@@ -201,150 +199,206 @@ class ParseUtil:
         *,
         expected_keys: list[str] | None = None,
         parser: Callable[[str], Any] | None = None,
-    ) -> dict[str, Any]:
+    ) -> Any:
         """
-        Parse a JSON block from a Markdown string and validate its keys.
+        Extracts a JSON code block from Markdown content, parses it, and verifies required keys.
 
-        This function extracts a JSON block from a Markdown string using the
-        `extract_json_block` function and validates the presence of expected
-        keys in the parsed JSON object.
+        This method uses `extract_code_block` to find and parse a JSON code block within the given
+        Markdown string. It then optionally verifies that the parsed JSON object contains all expected keys.
 
         Args:
-            str_to_parse: The Markdown string to parse.
-            expected_keys: A list of keys expected to be present in the JSON
-                object. If provided, the function will raise a ValueError if
-                any of the expected keys are missing.
-            parser: A custom parser function to parse the JSON string. If not
-                provided, the `fuzzy_parse_json` function will be used.
+                str_to_parse: The Markdown content to parse.
+                expected_keys: An optional list of keys expected to be present in the parsed JSON object.
+                parser: An optional function to parse the extracted code block. If not provided,
+                        `fuzzy_parse_json` is used with default settings.
 
         Returns:
-            The parsed JSON object.
+                The parsed JSON object from the Markdown content.
 
         Raises:
-            ValueError: If the expected keys are not present in the JSON
-                object or if no JSON block is found.
-        """
-        return CoreLib.md_to_json(
-            str_to_parse=str_to_parse,
-            expected_keys=expected_keys,
-            parser=parser,
-        )
-
-    @deprecated  # internal methods, moved into lion_core, will remove in lionagi in 1.0.0
-    @staticmethod  # with no replacement, implementation moved to lion_core
-    def _extract_docstring_details_google(
-        func: Callable,
-    ) -> tuple[str | None, dict[str, str]]:
-        """
-        Extract details from Google-style docstring.
-
-        Args:
-            func: The function from which to extract docstring details.
-
-        Returns:
-            A tuple containing the function description and a dictionary with
-            parameter names as keys and their descriptions as values.
+                ValueError: If the JSON code block is missing, or if any of the expected keys are missing
+                        from the parsed JSON object.
 
         Examples:
-            >>> def example_function(param1: int, param2: str):
-            ...     '''Example function.
-            ...
-            ...     Args:
-            ...         param1 (int): The first parameter.
-            ...         param2 (str): The second parameter.
-            ...     '''
-            ...     pass
-            >>> description, params = _extract_docstring_details_google(
-            ...     example_function)
-            >>> description
-            'Example function.'
-            >>> params == {'param1': 'The first parameter.',
-            ...            'param2': 'The second parameter.'}
-            True
+                >>> md_to_json('```json\\n{"key": "value"}\\n```', expected_keys=['key'])
+                {'key': 'value'}
         """
-        from lion_core.libs.parsers._extract_docstring import (
-            _extract_docstring_details_google,
+        json_obj = ParseUtil.extract_json_block(
+            str_to_parse, language="json", parser=parser or ParseUtil.fuzzy_parse_json
         )
 
-        return _extract_docstring_details_google(func)
+        if expected_keys:
+            if missing_keys := [key for key in expected_keys if key not in json_obj]:
+                raise ValueError(
+                    f"Missing expected keys in JSON object: {', '.join(missing_keys)}"
+                )
 
-    @deprecated  # internal methods, moved into lion_core, will remove in lionagi in 1.0.0
-    @staticmethod  # with no replacement, implementation moved to lion_core
-    def _extract_docstring_details_rest(
-        func: Callable,
-    ) -> tuple[str | None, dict[str, str]]:
-        """
-        Extract details from reStructuredText-style docstring.
-
-        Args:
-            func: The function from which to extract docstring details.
-
-        Returns:
-            A tuple containing the function description and a dictionary with
-            parameter names as keys and their descriptions as values.
-
-        Examples:
-            >>> def example_function(param1: int, param2: str):
-            ...     '''Example function.
-            ...
-            ...     :param param1: The first parameter.
-            ...     :type param1: int
-            ...     :param param2: The second parameter.
-            ...     :type param2: str
-            ...     '''
-            ...     pass
-            >>> description, params = _extract_docstring_details_rest(
-            ...     example_function)
-            >>> description
-            'Example function.'
-            >>> params == {'param1': 'The first parameter.',
-            ...            'param2': 'The second parameter.'}
-            True
-        """
-        from lion_core.libs.parsers._extract_docstring import (
-            _extract_docstring_details_rest,
-        )
-
-        return _extract_docstring_details_rest(func)
+        return json_obj
 
     @staticmethod
-    def extract_docstring_details(
-        func: Callable, style: Literal["google", "rest"] = "google"
-    ) -> tuple[str | None, dict[str, str]]:
+    def _extract_docstring_details_google(func):
         """
-        Extract function description and parameter descriptions from docstring.
+        Extracts the function description and parameter descriptions from the
+        docstring following the Google style format.
 
         Args:
-            func: The function from which to extract docstring details.
-            style: The style of docstring to parse ('google' or 'rest').
+                func (Callable): The function from which to extract docstring details.
 
         Returns:
-            A tuple containing the function description and a dictionary with
-            parameter names as keys and their descriptions as values.
-
-        Raises:
-            ValueError: If an unsupported style is provided.
+                Tuple[str, Dict[str, str]]: A tuple containing the function description
+                and a dictionary with parameter names as keys and their descriptions as values.
 
         Examples:
-            >>> def example_function(param1: int, param2: str):
-            ...     '''Example function.
-            ...
-            ...     Args:
-            ...         param1 (int): The first parameter.
-            ...         param2 (str): The second parameter.
-            ...     '''
-            ...     pass
-            >>> description, params = extract_docstring_details(example_function)
-            >>> description
-            'Example function.'
-            >>> params == {'param1': 'The first parameter.',
-            ...            'param2': 'The second parameter.'}
-            True
+                >>> def example_function(param1: int, param2: str):
+                ...     '''Example function.
+                ...
+                ...     Args:
+                ...         param1 (int): The first parameter.
+                ...         param2 (str): The second parameter.
+                ...     '''
+                ...     pass
+                >>> description, params = _extract_docstring_details_google(example_function)
+                >>> description
+                'Example function.'
+                >>> params == {'param1': 'The first parameter.', 'param2': 'The second parameter.'}
+                True
         """
-        return CoreLib.extract_docstring_details(func, style)
+        docstring = inspect.getdoc(func)
+        if not docstring:
+            return "No description available.", {}
+        lines = docstring.split("\n")
+        func_description = lines[0].strip()
 
-    @deprecated  # internal methods, moved into lion_core, will remove in lionagi in 1.0.0
-    @staticmethod  # with no replacement
+        lines_len = len(lines)
+
+        params_description = {}
+        param_start_pos = next(
+            (
+                i + 1
+                for i in range(1, lines_len)
+                if (
+                    lines[i].startswith("Args")
+                    or lines[i].startswith("Arguments")
+                    or lines[i].startswith("Parameters")
+                )
+            ),
+            0,
+        )
+        current_param = None
+        for i in range(param_start_pos, lines_len):
+            if lines[i] == "":
+                continue
+            elif lines[i].startswith(" "):
+                param_desc = lines[i].split(":", 1)
+                if len(param_desc) == 1:
+                    params_description[current_param] += f" {param_desc[0].strip()}"
+                    continue
+                param, desc = param_desc
+                param = param.split("(")[0].strip()
+                params_description[param] = desc.strip()
+                current_param = param
+            else:
+                break
+        return func_description, params_description
+
+    @staticmethod
+    def _extract_docstring_details_rest(func):
+        """
+        Extracts the function description and parameter descriptions from the
+        docstring following the reStructuredText (reST) style format.
+
+        Args:
+                func (Callable): The function from which to extract docstring details.
+
+        Returns:
+                Tuple[str, Dict[str, str]]: A tuple containing the function description
+                and a dictionary with parameter names as keys and their descriptions as values.
+
+        Examples:
+                >>> def example_function(param1: int, param2: str):
+                ...     '''Example function.
+                ...
+                ...     :param param1: The first parameter.
+                ...     :type param1: int
+                ...     :param param2: The second parameter.
+                ...     :type param2: str
+                ...     '''
+                ...     pass
+                >>> description, params = _extract_docstring_details_rest(example_function)
+                >>> description
+                'Example function.'
+                >>> params == {'param1': 'The first parameter.', 'param2': 'The second parameter.'}
+                True
+        """
+        docstring = inspect.getdoc(func)
+        if not docstring:
+            return "No description available.", {}
+        lines = docstring.split("\n")
+        func_description = lines[0].strip()
+
+        params_description = {}
+        current_param = None
+        for line in lines[1:]:
+            line = line.strip()
+            if line.startswith(":param"):
+                param_desc = line.split(":", 2)
+                _, param, desc = param_desc
+                param = param.split()[-1].strip()
+                params_description[param] = desc.strip()
+                current_param = param
+            elif line.startswith(" "):
+                params_description[current_param] += f" {line}"
+
+        return func_description, params_description
+
+    @staticmethod
+    def _extract_docstring_details(func, style="google"):
+        """
+        Extracts the function description and parameter descriptions from the
+        docstring of the given function using either Google style or reStructuredText
+        (reST) style format.
+
+        Args:
+                func (Callable): The function from which to extract docstring details.
+                style (str): The style of docstring to parse ('google' or 'reST').
+
+        Returns:
+                Tuple[str, Dict[str, str]]: A tuple containing the function description
+                and a dictionary with parameter names as keys and their descriptions as values.
+
+        Raises:
+                ValueError: If an unsupported style is provided.
+
+        Examples:
+                >>> def example_function(param1: int, param2: str):
+                ...     '''Example function.
+                ...
+                ...     Args:
+                ...         param1 (int): The first parameter.
+                ...         param2 (str): The second parameter.
+                ...     '''
+                ...     pass
+                >>> description, params = _extract_docstring_details(example_function, style='google')
+                >>> description
+                'Example function.'
+                >>> params == {'param1': 'The first parameter.', 'param2': 'The second parameter.'}
+                True
+        """
+        if style == "google":
+            func_description, params_description = (
+                ParseUtil._extract_docstring_details_google(func)
+            )
+        elif style == "reST":
+            func_description, params_description = (
+                ParseUtil._extract_docstring_details_rest(func)
+            )
+        else:
+            raise ValueError(
+                f'{style} is not supported. Please choose either "google" or "reST".'
+            )
+        return func_description, params_description
+
+    @staticmethod
     def _python_to_json_type(py_type):
         """
         Converts a Python type to its JSON type equivalent.
@@ -372,264 +426,80 @@ class ParseUtil:
         }
         return type_mapping.get(py_type, "object")
 
-    @deprecated  # moved into lion_core, will be removed in 1.0.0
-    @staticmethod  # kept for backwards compatibility, use function_to_schema instead
+    @staticmethod
     def _func_to_schema(
         func, style="google", func_description=None, params_description=None
-    ) -> dict:
+    ):
         """
-        Generate a schema description for a given function.
-
-        This function generates a schema description for the given function
-        using typing hints and docstrings. The schema includes the function's
-        name, description, and parameter details.
+        Generates a schema description for a given function, using typing hints and
+        docstrings. The schema includes the function's name, description, and parameters.
 
         Args:
-            func (Callable): The function to generate a schema for.
-            style (str): The docstring format. Can be 'google' (default) or
-                'reST'.
-            func_description (str, optional): A custom description for the
-                function. If not provided, the description will be extracted
-                from the function's docstring.
-            params_description (dict, optional): A dictionary mapping
-                parameter names to their descriptions. If not provided, the
-                parameter descriptions will be extracted from the function's
-                docstring.
+                func (Callable): The function to generate a schema for.
+                style (str): The docstring format ('google' or 'reST').
 
         Returns:
-            dict: A schema describing the function, including its name,
-            description, and parameter details.
+                Dict[str, Any]: A schema describing the function.
 
-        Example:
-            >>> def example_func(param1: int, param2: str) -> bool:
-            ...     '''Example function.
-            ...
-            ...     Args:
-            ...         param1 (int): The first parameter.
-            ...         param2 (str): The second parameter.
-            ...     '''
-            ...     return True
-            >>> schema = function_to_schema(example_func)
-            >>> schema['function']['name']
-            'example_func'
+        Examples:
+                >>> def example_function(param1: int, param2: str) -> bool:
+                ...     '''Example function.
+                ...
+                ...     Args:
+                ...         param1 (int): The first parameter.
+                ...         param2 (str): The second parameter.
+                ...     '''
+                ...     return True
+                >>> schema = _func_to_schema(example_function)
+                >>> schema['function']['name']
+                'example_function'
         """
-        return CoreLib.function_to_schema(
-            func=func,
-            style=style,
-            func_description=func_description,
-            params_description=params_description,
-        )
+        # Extracting function name and docstring details
+        func_name = func.__name__
 
-    # new
-    @staticmethod
-    def validate_mapping(
-        d_: dict[str, Any] | str,
-        keys: Sequence[str] | KeysDict,
-        /,
-        *,
-        score_func: Callable[[str, str], float] | None = None,
-        fuzzy_match: bool = True,
-        handle_unmatched: Literal[
-            "ignore", "raise", "remove", "fill", "force"
-        ] = "ignore",
-        fill_value: Any = None,
-        fill_mapping: dict[str, Any] | None = None,
-        strict: bool = False,
-    ) -> dict[str, Any]:
-        """
-        Force-validate a mapping against a set of expected keys.
+        if not func_description:
+            func_description, _ = ParseUtil._extract_docstring_details(func, style)
+        if not params_description:
+            _, params_description = ParseUtil._extract_docstring_details(func, style)
 
-        Takes an input `dict_` and attempts to convert it into a dictionary if
-        it's a string. Then validates the dictionary against expected keys
-        using the `force_validate_keys` function.
+        # Extracting parameters with typing hints
+        sig = inspect.signature(func)
+        parameters = {
+            "type": "object",
+            "properties": {},
+            "required": [],
+        }
 
-        Args:
-            dict_: Input to be validated. Can be a dictionary or a string
-                representing a dictionary.
-            keys: List of expected keys or dictionary mapping keys to types.
-            score_func: Function returning similarity score (0-1) for two
-                strings. Defaults to None.
-            fuzzy_match: If True, use fuzzy matching for key correction.
-            handle_unmatched: Specifies how to handle unmatched keys:
-                - "ignore": Keep unmatched keys in output.
-                - "raise": Raise ValueError if unmatched keys exist.
-                - "remove": Remove unmatched keys from output.
-                - "fill": Fill unmatched keys with default value/mapping.
-                - "force": Combine "fill" and "remove" behaviors.
-            fill_value: Default value for filling unmatched keys.
-            fill_mapping: Dictionary mapping unmatched keys to default values.
-            strict: If True, raise ValueError if any expected key is missing.
+        for name, param in sig.parameters.items():
+            # Default type to string and update if type hint is available
+            param_type = "string"
+            if param.annotation is not inspect.Parameter.empty:
+                param_type = ParseUtil._python_to_json_type(param.annotation.__name__)
 
-        Returns:
-            The validated dictionary.
+            # Extract parameter description from docstring, if available
+            param_description = params_description.get(
+                name, "No description available."
+            )
 
-        Raises:
-            ValueError: If the input cannot be converted to a valid dictionary
-                or if the validation fails.
+            # Assuming all parameters are required for simplicity
+            parameters["required"].append(name)
+            parameters["properties"][name] = {
+                "type": param_type,
+                "description": param_description,
+            }
 
-        Example:
-            >>> input_str = "{'name': 'John', 'age': 30}"
-            >>> keys = ['name', 'age', 'city']
-            >>> validated_dict = force_validate_mapping(input_str, keys)
-            >>> validated_dict
-            {'name': 'John', 'age': 30, 'city': None}
-        """
-        return CoreLib.validate_mapping(
-            d_,
-            keys,
-            score_func=score_func,
-            fuzzy_match=fuzzy_match,
-            handle_unmatched=handle_unmatched,
-            fill_value=fill_value,
-            fill_mapping=fill_mapping,
-            strict=strict,
-        )
-
-    # new
-    @staticmethod
-    def function_to_schema(
-        f_,  # renamed func to f_, made function and style positional-only
-        style: Literal["google", "rest"] = "google",  # used Literal type
-        /,
-        *,  # made description and params_description keyword-only
-        f_description=None,
-        p_description=None,
-    ) -> dict:
-        """
-        Generate a schema description for a given function.
-
-        This function generates a schema description for the given function
-        using typing hints and docstrings. The schema includes the function's
-        name, description, and parameter details.
-
-        Args:
-            func (Callable): The function to generate a schema for.
-            style (str): The docstring format. Can be 'google' (default) or
-                'reST'.
-            func_description (str, optional): A custom description for the
-                function. If not provided, the description will be extracted
-                from the function's docstring.
-            params_description (dict, optional): A dictionary mapping
-                parameter names to their descriptions. If not provided, the
-                parameter descriptions will be extracted from the function's
-                docstring.
-
-        Returns:
-            dict: A schema describing the function, including its name,
-            description, and parameter details.
-
-        Example:
-            >>> def example_func(param1: int, param2: str) -> bool:
-            ...     '''Example function.
-            ...
-            ...     Args:
-            ...         param1 (int): The first parameter.
-            ...         param2 (str): The second parameter.
-            ...     '''
-            ...     return True
-            >>> schema = function_to_schema(example_func)
-            >>> schema['function']['name']
-            'example_func'
-        """
-        return CoreLib.function_to_schema(
-            f_, style, f_description=f_description, p_description=p_description
-        )
-
-    @deprecated  # use validate_keys instead, will be removed in 1.0.0
-    @staticmethod
-    def force_validate_keys(*args, **kwargs):
-        return CoreLib.validate_keys(*args, **kwargs)
-
-    # new
-    @staticmethod
-    def validate_keys(
-        d_: dict[str, Any],
-        keys: Sequence[str] | KeysDict,
-        /,
-        *,
-        score_func: Callable[[str, str], float] | None = None,
-        fuzzy_match: bool = True,
-        handle_unmatched: Literal[
-            "ignore", "raise", "remove", "fill", "force"
-        ] = "ignore",
-        fill_value: Any = None,
-        fill_mapping: dict[str, Any] | None = None,
-        strict: bool = False,
-    ) -> dict[str, Any]:
-        """
-        Force-validate keys in a dictionary based on expected keys.
-
-        Matches keys in the provided dictionary with expected keys, correcting
-        mismatches using a similarity score function. Supports various modes
-        for handling unmatched keys.
-
-        Args:
-            dict_: The dictionary to validate and correct keys for.
-            keys: List of expected keys or dictionary mapping keys to types.
-            score_func: Function returning similarity score (0-1) for two
-                strings. Defaults to Jaro-Winkler similarity.
-            fuzzy_match: If True, use fuzzy matching for key correction.
-            handle_unmatched: Specifies how to handle unmatched keys:
-                - "ignore": Keep unmatched keys in output.
-                - "raise": Raise ValueError if unmatched keys exist.
-                - "remove": Remove unmatched keys from output.
-                - "fill": Fill unmatched keys with default value/mapping.
-                - "force": Combine "fill" and "remove" behaviors.
-            fill_value: Default value for filling unmatched keys.
-            fill_mapping: Dictionary mapping unmatched keys to default values.
-            strict: If True, raise ValueError if any expected key is missing.
-
-        Returns:
-            A new dictionary with validated and corrected keys.
-
-        Raises:
-            ValueError: If handle_unmatched is "raise" and unmatched keys
-                exist, or if strict is True and expected keys are missing.
-        """
-        return CoreLib.validate_keys(
-            d_,
-            keys,
-            score_func=score_func,
-            fuzzy_match=fuzzy_match,
-            handle_unmatched=handle_unmatched,
-            fill_value=fill_value,
-            fill_mapping=fill_mapping,
-            strict=strict,
-        )
-
-    @staticmethod
-    def choose_most_similar(
-        word: str,
-        correct_words_list: Sequence[str],
-        *,
-        score_func: Callable[[str, str], float] | None = None,
-    ) -> str | None:
-        """
-        Choose the most similar word from a list of correct words.
-
-        This function compares the input word against a list of correct words
-        using a similarity scoring function, and returns the most similar word.
-
-        Args:
-            word: The word to compare.
-            correct_words_list: The list of correct words to compare against.
-            score_func: A function to compute the similarity score between two
-                words. Defaults to jaro_winkler_similarity.
-
-        Returns:
-            The word from correct_words_list that is most similar to the input
-            word based on the highest similarity score, or None if the list is
-            empty.
-        """
-        return CoreLib.choose_most_similar(
-            word=word, correct_words_list=correct_words_list, score_func=score_func
-        )
+        return {
+            "type": "function",
+            "function": {
+                "name": func_name,
+                "description": func_description,
+                "parameters": parameters,
+            },
+        }
 
 
-@deprecated  # will be removeed in 1.0.0,
 class StringMatch:
 
-    @deprecated  # internal method moved into lion_core, will be removed in lionagi in 1.0.0, with no replacement
     @staticmethod
     def jaro_distance(s, t):
         """
@@ -651,9 +521,49 @@ class StringMatch:
                 >>> jaro_distance("martha", "marhta")
                 0.9444444444444445
         """
-        return CoreLib.jaro_distance(s, t)
+        s_len = len(s)
+        t_len = len(t)
+        if s_len == 0 and t_len == 0:
+            return 1.0
 
-    @deprecated  # internal method moved into lion_core, will be removed in lionagi in 1.0.0, with no replacement
+        match_distance = (max(s_len, t_len) // 2) - 1
+        s_matches = [False] * s_len
+        t_matches = [False] * t_len
+
+        matches = 0
+        transpositions = 0
+
+        for i in range(s_len):
+            start = max(0, i - match_distance)
+            end = min(i + match_distance + 1, t_len)
+
+            for j in range(start, end):
+                if t_matches[j]:
+                    continue
+                if s[i] != t[j]:
+                    continue
+                s_matches[i] = t_matches[j] = True
+                matches += 1
+                break
+
+        if matches == 0:
+            return 0.0
+
+        k = 0
+        for i in range(s_len):
+            if not s_matches[i]:
+                continue
+            while not t_matches[k]:
+                k += 1
+            if s[i] != t[k]:
+                transpositions += 1
+            k += 1
+
+        transpositions //= 2
+        return (
+            matches / s_len + matches / t_len + (matches - transpositions) / matches
+        ) / 3.0
+
     @staticmethod
     def jaro_winkler_similarity(s, t, scaling=0.1):
         """
@@ -677,9 +587,17 @@ class StringMatch:
                 >>> jaro_winkler_similarity("dixon", "dicksonx")
                 0.8133333333333332
         """
-        return CoreLib.jaro_winkler_similarity(s, t, scaling)
+        jaro_sim = StringMatch.jaro_distance(s, t)
+        prefix_len = 0
+        for s_char, t_char in zip(s, t):
+            if s_char == t_char:
+                prefix_len += 1
+            else:
+                break
+            if prefix_len == 4:
+                break
+        return jaro_sim + (prefix_len * scaling * (1 - jaro_sim))
 
-    @deprecated  # internal method moved into lion_core, will be removed in lionagi in 1.0.0, with no replacement
     @staticmethod
     def levenshtein_distance(a, b):
         """
@@ -700,9 +618,26 @@ class StringMatch:
                 >>> levenshtein_distance("kitten", "sitting")
                 3
         """
-        return CoreLib.levenshtein_distance(a, b)
+        m, n = len(a), len(b)
+        # Initialize 2D array (m+1) x (n+1)
+        d = [[0] * (n + 1) for _ in range(m + 1)]
 
-    @deprecated  # moved in ParseUtil, these paremter set are all deprecated, use the new method in ParseUtil.validate_keys
+        # Populate the base case values
+        for i in range(m + 1):
+            d[i][0] = i
+        for j in range(n + 1):
+            d[0][j] = j
+
+        # Compute the distance
+        for i, j in itertools.product(range(1, m + 1), range(1, n + 1)):
+            cost = 0 if a[i - 1] == b[j - 1] else 1
+            d[i][j] = min(
+                d[i - 1][j] + 1,  # deletion
+                d[i][j - 1] + 1,  # insertion
+                d[i - 1][j - 1] + cost,
+            )  # substitution
+        return d[m][n]
+
     @staticmethod
     def correct_dict_keys(keys: dict | list[str], dict_, score_func=None):
         if score_func is None:
@@ -736,7 +671,6 @@ class StringMatch:
 
         return corrected_out
 
-    @deprecated  # moved in ParseUtil
     @staticmethod
     def choose_most_similar(word, correct_words_list, score_func=None):
 
@@ -754,7 +688,6 @@ class StringMatch:
         max_score_index = np.argmax(scores)
         return correct_words_list[max_score_index]
 
-    @deprecated  # moved in ParseUtil, renamed to validate_mapping
     @staticmethod
     def force_validate_dict(x, keys: dict | list[str]) -> dict:
         out_ = x

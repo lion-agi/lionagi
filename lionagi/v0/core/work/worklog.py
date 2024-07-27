@@ -14,10 +14,10 @@ See the License for the specific language governing permissions and
 limitations under the License.
 """
 
-from lionagi.core.collections.abc import Progressable
-from lionagi.core.collections import pile, progression, Pile
-from lionagi.core.work.work import Work, WorkStatus
-from lionagi.core.work.work_queue import WorkQueue
+from v0.core.collections.abc import Progressable
+from v0.core.collections import pile, progression, Pile
+from v0.core.work.work import Work, WorkStatus
+from v0.core.work.work_queue import WorkQueue
 
 
 class WorkLog(Progressable):

@@ -1,7 +1,7 @@
 import asyncio
 import unittest
 from unittest.mock import patch
-from lionagi.libs.ln_queue import AsyncQueue
+from v0.libs.ln_queue import AsyncQueue
 
 
 class TestAsyncQueue(unittest.TestCase):

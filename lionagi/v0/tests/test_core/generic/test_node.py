@@ -1,7 +1,7 @@
 import unittest
-from lionagi.core.generic import Node
-from lionagi.core.collections.abc import RelationError, Condition
-from lionagi.core.generic.edge import Edge
+from v0.core.generic import Node
+from v0.core.collections.abc import RelationError, Condition
+from v0.core.generic.edge import Edge
 
 
 class TestNode(unittest.TestCase):
