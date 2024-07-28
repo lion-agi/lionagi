@@ -9,9 +9,11 @@ from lionagi.os.sys_util import SysUtil
 class ImageUtil:
     """Utility class for image processing operations."""
 
-    @staticmethod
+    cv2 = SysUtil.check_import("cv2", pip_name="opencv-python")
+
+    @classmethod
     def preprocess_image(
-        image: np.ndarray, color_conversion_code: Optional[int] = None
+        cls, image: np.ndarray, color_conversion_code: Optional[int] = None
     ) -> np.ndarray:
         """
         Preprocess an image by applying color conversion.
@@ -23,12 +25,13 @@ class ImageUtil:
         Returns:
             Preprocessed image as a numpy array.
         """
-        cv2 = SysUtil.check_import("cv2", pip_name="opencv-python")
-        color_conversion_code = color_conversion_code or cv2.COLOR_BGR2RGB
-        return cv2.cvtColor(image, color_conversion_code)
+        color_conversion_code = color_conversion_code or cls.cv2.COLOR_BGR2RGB
+        return cls.cv2.cvtColor(image, color_conversion_code)
 
-    @staticmethod
-    def encode_image_to_base64(image: np.ndarray, file_extension: str = ".jpg") -> str:
+    @classmethod
+    def encode_image_to_base64(
+        cls, image: np.ndarray, file_extension: str = ".jpg"
+    ) -> str:
         """
         Encode an image to base64 string.
 
@@ -42,15 +45,14 @@ class ImageUtil:
         Raises:
             ValueError: If encoding fails.
         """
-        cv2 = SysUtil.check_import("cv2", pip_name="opencv-python")
-        success, buffer = cv2.imencode(file_extension, image)
+        success, buffer = cls.cv2.imencode(file_extension, image)
         if not success:
             raise ValueError(f"Could not encode image to {file_extension} format.")
         return base64.b64encode(buffer).decode("utf-8")
 
-    @staticmethod
+    @classmethod
     def read_image_to_array(
-        image_path: str, color_flag: Optional[int] = None
+        cls, image_path: str, color_flag: Optional[int] = None
     ) -> np.ndarray:
         """
         Read an image file into a numpy array.
@@ -65,15 +67,15 @@ class ImageUtil:
         Raises:
             ValueError: If the image cannot be read.
         """
-        cv2 = SysUtil.check_import("cv2", pip_name="opencv-python")
-        color_flag = color_flag or cv2.IMREAD_COLOR
-        image = cv2.imread(image_path, color_flag)
+        color_flag = color_flag or cls.cv2.IMREAD_COLOR
+        image = cls.cv2.imread(image_path, color_flag)
         if image is None:
             raise ValueError(f"Could not read image from path: {image_path}")
         return image
 
-    @staticmethod
+    @classmethod
     def read_image_to_base64(
+        cls,
         image_path: str,
         color_flag: Optional[int] = None,
     ) -> str:
@@ -87,9 +89,9 @@ class ImageUtil:
         Returns:
             Base64 encoded string of the image.
         """
-        image = ImageUtil.read_image_to_array(image_path, color_flag)
+        image = cls.read_image_to_array(image_path, color_flag)
         file_extension = "." + image_path.split(".")[-1]
-        return ImageUtil.encode_image_to_base64(image, file_extension)
+        return cls.encode_image_to_base64(image, file_extension)
 
 
 # File: lion_core/util/image_util.py

@@ -278,4 +278,5 @@ class APICalling(Component, Action):
         dict_["content"] = Note(**to_dict(dict_.get("content", {})))
         return cls.from_dict(dict_)
 
+
 # File: lionagi/os/service/api/utils.py

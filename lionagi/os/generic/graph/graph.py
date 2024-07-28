@@ -1,8 +1,7 @@
-from lion_core.abc import Structure
-from lionagi.os.record.node import Node
+from lion_core.graph.graph import Graph as CoreGraph
 
 
-class Graph(Node, Structure): ...
+class Graph(CoreGraph): ...
 
 
 __all__ = ["Graph"]
