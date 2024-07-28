@@ -1,4 +1,4 @@
-from lionagi.os.service.api.base_service import BaseService
+from lionagi.os.service.service.base_service import BaseService
 
 
 class OpenAIService(BaseService):

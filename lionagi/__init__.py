@@ -1,11 +1,13 @@
 import logging
+
+from lionagi.os.generic.pile import pile
 from .version import __version__
 from dotenv import load_dotenv
 
-from lionagi.os.primitives import pile, progression
+from lionagi.os.record import progression
 from lionagi.os.operator.imodel.imodel import iModel
-from lionagi.os.space.branch import Branch
-from lionagi.os.space.session import Session
+from lionagi.os.generic.session.branch import Branch
+from lionagi.os.generic.session.session import Session
 
 
 logger = logging.getLogger(__name__)

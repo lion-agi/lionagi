@@ -1,5 +1,5 @@
 from typing import Type
-from lionagi.os.service.api.provider import (
+from lionagi.os.service.provider.provider import (
     Provider,
     PROVIDER_CONFIG,
     PROVIDER_MODEL_SPECIFICATION,
