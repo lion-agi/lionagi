@@ -5,13 +5,14 @@ from typing import Any
 import pandas as pd
 
 from lion_core.action.tool_manager import ToolManager
+from lion_core.communication import RoledMessage
 from lion_core.session.branch import Branch as CoreBranch
 
-
-from lionagi.os.primitives import Pile, Progression, Exchange
-from lionagi.app.Pandas.convert import to_df
+from lionagi.os.primitives import Pile, Progression, Exchange, pile, progression
 from lionagi.os.operator.imodel.imodel import iModel
 from lionagi.os.space.branch_converter import BranchConverterRegistry
+
+from lionagi.app.Pandas.convert import to_df
 
 
 class Branch(CoreBranch):
@@ -39,11 +40,15 @@ class Branch(CoreBranch):
             imodel=imodel or iModel(),
             messages=messages,
             tool_manager=tool_manager,
-            mailbox=mailbox,
+            mailbox=mailbox or Exchange(),
             progress=progress,
             tools=tools,
         )
 
+        # switch core pile/progression class to use lionagi primitives
+        self.messages = pile(list(self.messages), RoledMessage, strict=False)
+        self.progress = progression(list(self.progress))
+            
     def to_df(self) -> pd.DataFrame:
         fields = [
             "ln_id",

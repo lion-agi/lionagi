@@ -31,38 +31,58 @@ class Session(CoreSession):
 
     def __init__(
         self,
-        system: System | dict | str | list = None,
+        system: Any = None,
         *,
         system_sender: Any = None,
-        system_datetime: bool | str | None = None,
-        default_branch: Branch | str | None = None,
-        default_branch_name: str | None = None,
-        branches: Pile[Branch] | None = None,
-        mail_transfer: Exchange | None = None,
-        branch_user: str | None = None,
-        session_user: str | None = None,
-        session_name: str | None = None,
-        tools: Any = None,
-        tool_manager: ToolManager | None = None,
+        system_datetime: Any = None,
+        name: str | None = None,
+        user: str | None = None,
         imodel: iModel | None = None,
+        mail_transfer: Exchange | None = None,
+        branches: Pile[Branch] | None = None,
+        default_branch: Branch | None = None,
+        default_branch_config: (
+            dict | None
+        ) = None,  # if a default branch is provided, will ignore this config
+        conversations: Flow | None = None,
+        tool_manager: ToolManager | None = None,
+        tools: Any = None,
     ):
+        default_branch_config = default_branch_config or {}
+
         super().__init__(
-            system=system,
-            system_sender=system_sender,
-            system_datetime=system_datetime,
+            branch_type=Branch,
+            session=system,
+            session_system_sender=system_sender,
+            session_system_datetime=system_datetime,
+            session_name=name,
+            session_user=user,
+            session_imodel=imodel,
+            mail_transfer=mail_transfer or Exchange(),
+            branches=branches or pile({}, Branch, strict=False),
             default_branch=default_branch,
-            default_branch_name=default_branch_name,
-            branches=branches,
-            mail_transfer=mail_transfer,
-            branch_user=branch_user,
-            session_user=session_user,
-            session_name=session_name,
-            tools=tools,
+            conversations=conversations,
+            branch_system=default_branch_config.get("system", None),
+            branch_system_sender=default_branch_config.get("system_sender", None),
+            branch_system_datetime=default_branch_config.get("system_datetime", None),
+            branch_name=default_branch_config.get("name", None),
+            branch_user=default_branch_config.get("user", None),
+            branch_imodel=default_branch_config.get("imodel", None),
+            branch_messages=default_branch_config.get("messages", None),
+            branch_mailbox=default_branch_config.get("mailbox", None),
+            branch_progress=default_branch_config.get("progress", None),
             tool_manager=tool_manager,
-            imodel=imodel,
+            tools=tools,
         )
 
+        # switch branches pile class to use lionagi
         self.branches = pile(list(self.branches))
+
+        p = pile()
+        for prog in self.conversations:
+            p += progression(list(prog), default_branch_name=self.default_branch.name) # change the progression class
+
+        self.conversations = flow(p)    # change the flow class
 
     async def assess(self, *args, branch: FindableBranch = None, **kwargs): ...
 
