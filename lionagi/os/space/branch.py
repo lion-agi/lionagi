@@ -1,17 +1,48 @@
 from __future__ import annotations
 
+from typing import Any
 
 import pandas as pd
 
+from lion_core.action.tool_manager import ToolManager
 from lion_core.session.branch import Branch as CoreBranch
 
-from lionagi.os.primitives import Node
+
+from lionagi.os.primitives import Pile, Progression, Exchange
 from lionagi.app.Pandas.convert import to_df
+from lionagi.os.operator.imodel.imodel import iModel
+from lionagi.os.space.branch_converter import BranchConverterRegistry
 
 
-class Branch(Node, CoreBranch):
+class Branch(CoreBranch):
 
-    def __init__(self, *args, **kwargs): ...
+    def __init__(
+        self,
+        system: Any = None,
+        system_sender: str | None = None,
+        system_datetime: Any = None,
+        name: str | None = None,
+        user: str | None = None,
+        imodel: iModel | None = None,
+        messages: Pile | None = None,
+        tool_manager: ToolManager | None = None,
+        mailbox: Exchange | None = None,
+        progress: Progression | None = None,
+        tools: Any = None,
+    ):
+        super().__init__(
+            system=system,
+            system_sender=system_sender,
+            system_datetime=system_datetime,
+            name=name,
+            user=user,
+            imodel=imodel or iModel(),
+            messages=messages,
+            tool_manager=tool_manager,
+            mailbox=mailbox,
+            progress=progress,
+            tools=tools,
+        )
 
     def to_df(self) -> pd.DataFrame:
         fields = [
@@ -58,6 +89,59 @@ class Branch(Node, CoreBranch):
 
     async def strategize(self, *args, **kwargs): ...
 
+    __slots__ = [
+        "ln_id",
+        "timestamp",
+        "from_dict",
+        "to_dict",
+        "class_name",
+        "metadata",
+        "content",
+        "extra_fields",
+        "all_fields",
+        "add_field",
+        "update_field",
+        "system",
+        "user",
+        "imodel",
+        "name",
+        "messages",
+        "tool_manager",
+        "mailbox",
+        "progress",
+        "set_system",
+        "add_message",
+        "clear_messages",
+        "send",
+        "receive",
+        "receive_all",
+        "convert_from",
+        "convert_to",
+        "last_response",
+        "assistant_responses",
+        "update_last_instruction_meta",
+        "has_tools",
+        "register_tools",
+        "delete_tools",
+        "to_chat_messages",
+        "to_df",
+        "assess",
+        "chat",
+        "direct",
+        "learn",
+        "memorize",
+        "plan",
+        "query",
+        "rank",
+        "regurgitate",
+        "respond",
+        "route",
+        "score",
+        "strategize",
+    ]
+
+
+Branch._converter_registry = BranchConverterRegistry
 
 __all__ = ["Branch"]
 

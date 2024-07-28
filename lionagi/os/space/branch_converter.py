@@ -2,11 +2,10 @@ from __future__ import annotations
 
 import pandas as pd
 
-from lion_core.converter import (
-    ConverterRegistry,
-    Converter,
+from lion_core.converter import Converter
+from lion_core.session.branch import (
+    BranchConverterRegistry as CoreBranchConverterRegistry,
 )
-
 from lion_core.generic.component import Component
 
 from lionagi.os.primitives import pile, Pile
@@ -39,7 +38,7 @@ class LlamaIndexConverter(Converter): ...
 class Neo4jConverter(Converter): ...
 
 
-class BranchConverterRegistry(ConverterRegistry):
+class BranchConverterRegistry(CoreBranchConverterRegistry):
     pass
 
 
