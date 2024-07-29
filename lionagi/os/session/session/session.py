@@ -1,18 +1,14 @@
 from typing import Any
-
 from lion_core.session.session import Session as CoreSession
+from lion_core.action.tool_manager import ToolManager
 
-from lionagi.os.generic.node import Node
-from lionagi.os.generic.container.progression import progression
-from lionagi.os.generic.container.pile import pile, Pile
-from lionagi.os.generic.container.exchange import Exchange
-from lionagi.os.generic.container.flow import Flow
-
-
+from lionagi.os.primitives.node import Node
+from lionagi.os.primitives.container.pile import Pile
+from lionagi.os.primitives.container.exchange import Exchange
+from lionagi.os.primitives.container.flow import Flow
+from lionagi.os.primitives._funcs import prog, pile, flow
+from lionagi.os.primitives.session.branch.branch import Branch
 from lionagi.os.operator.imodel.imodel import iModel
-
-
-from lionagi.os.generic.session.branch.branch import Branch
 
 
 FindableBranch = list[Branch | str] | Pile | Branch | str | None
@@ -69,13 +65,13 @@ class Session(CoreSession, Node):
         # switch branches pile class to use lionagi
         self.branches = pile(list(self.branches))
 
-        p = pile()
-        for prog in self.conversations:
-            p += progression(
-                list(prog), default_branch_name=self.default_branch.name
+        pi = pile()
+        for po in self.conversations:
+            pi += prog(
+                list(po), default_branch_name=self.default_branch.name
             )  # change the progression class
 
-        self.conversations = flow(p)  # change the flow class
+        self.conversations = flow(pi)  # change the flow class
 
     async def assess(self, *args, branch: FindableBranch = None, **kwargs): ...
 

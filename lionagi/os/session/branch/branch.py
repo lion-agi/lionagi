@@ -4,24 +4,26 @@ from typing import Any
 
 import pandas as pd
 
-from lion_core.generic import Progression, Exchange, progression
 from lion_core.action.tool_manager import ToolManager
 from lion_core.communication import RoledMessage
 from lion_core.session.branch import Branch as CoreBranch
 
-from lionagi.os.generic.container.pile import pile, Pile
-
+from lionagi.os.primitives import (
+    Node,
+    pile,
+    Pile,
+    Progression,
+    prog,
+    Exchange,
+)
 
 from lionagi.os.operator.imodel.imodel import iModel
-
-
-from lionagi.os.generic.branch_converter import BranchConverterRegistry
-
 from lionagi.app.Pandas.convert import to_df
-from lionagi.os.generic.container import pile
+
+from .branch_converter import BranchConverterRegistry
 
 
-class Branch(CoreBranch):
+class Branch(CoreBranch, Node):
 
     def __init__(
         self,
@@ -53,7 +55,7 @@ class Branch(CoreBranch):
 
         # switch core pile/progression class to use lionagi primitives
         self.messages = pile(list(self.messages), RoledMessage, strict=False)
-        self.progress = progression(list(self.progress))
+        self.progress = prog(list(self.progress))
 
     def to_df(self) -> pd.DataFrame:
         fields = [

@@ -3,13 +3,13 @@ from __future__ import annotations
 import pandas as pd
 
 from lion_core.converter import Converter
-from lion_core.session.branch import (
-    BranchConverterRegistry as CoreBranchConverterRegistry,
-)
+from lion_core.session.branch import BranchConverterRegistry as BCR
 
-from lionagi.os.generic.node import Node
-from lionagi.os.generic.container.pile import Pile, pile
-from lionagi.os.generic.session.branch.branch import Branch
+
+from lionagi.os.primitives import Node, pile, Pile
+from .branch import Branch
+
+
 from lionagi.app.Pandas.convert import to_df
 
 
@@ -41,7 +41,7 @@ class LlamaIndexConverter(Converter): ...
 class Neo4jConverter(Converter): ...
 
 
-class BranchConverterRegistry(CoreBranchConverterRegistry):
+class BranchConverterRegistry(BCR):
     pass
 
 

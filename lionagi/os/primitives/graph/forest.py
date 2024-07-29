@@ -1,4 +1,4 @@
-from lionagi.os.generic.graph.graph import Graph
+from .graph import Graph
 
 
 class Forest(Graph): ...

@@ -1,7 +1,7 @@
 from pydantic import Field
 
-from lionagi.os.generic.node import Node
-from lionagi.os.generic.graph.graph import Graph
+from ..node import Node
+from .graph import Graph
 
 
 class Tree(Graph):
