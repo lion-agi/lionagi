@@ -11,9 +11,10 @@ async def predict(
     num_sentences=1,
     image: str | list[str] | None = None,
     verbose=True,
-    reflect: Any = None,
+    reflect = None,
     **kwargs,
 ):
+    from lionagi.os.operator.processor.unit.unit import UnitProcessor
     unit = UnitProcessor(branch)
     return await unit.direct(
         instruction=instruction,

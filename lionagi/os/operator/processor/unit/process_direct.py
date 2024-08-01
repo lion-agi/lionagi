@@ -85,8 +85,7 @@ def create_unit_form(
             allow_action=allow_action,
             allow_extension=allow_extension,
             max_extension=(
-                max_extension or 1
-                if (allow_extension and not max_extension)
+                1 if (allow_extension and max_extension is None)
                 else max_extension
             ),
             confidence=confidence,

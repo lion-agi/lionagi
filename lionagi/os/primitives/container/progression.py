@@ -3,33 +3,6 @@ from lion_core.generic.progression import Progression as CoreProgression
 
 class Progression(CoreProgression):
     """
-    A flexible, ordered sequence container for managing Lion IDs.
-
-    The Progression class maintains an ordered list of item identifiers (Lion IDs)
-    and provides operations for manipulation and access. It combines list-like
-    functionality with Lion framework-specific features.
-
-    Args:
-        order (list, optional): Initial order of items. Defaults to None.
-        name (str, optional): Name for the progression. Defaults to None.
-
-    Attributes:
-        name (str | None): Optional name for the progression.
-        order (list[str]): The ordered list of item identifiers (Lion IDs).
-
-    Example:
-        >>> from lion_core.generic import Progression
-        >>> prog = Progression([MyElement(value=1), MyElement(value=2)], name="Test")
-        >>> str(prog)
-        'Progression(name=Test, size=2, items=['ln_...', 'ln_...'])'
-        >>> len(prog)
-        2
-        >>> prog.append(MyElement(value=3))
-        >>> len(prog)
-        3
-    """
-
-    """
     A sophisticated, ordered sequence container for managing and manipulating lists of items in the Lion framework.
 
     The Progression class is a fundamental component designed to maintain an ordered list

@@ -10,7 +10,6 @@ from lion_core.libs import (
     md_to_json,
     to_dict,
 )
-from lion_core.session.utils import parse_action_request
 
 
 retry_kwargs = {
@@ -107,10 +106,7 @@ def parse_model_response(
             if match:
                 a_ = match.group(1)
                 try:
-                    a_ = to_dict(
-                        out_,
-                        str_type="xml",
-                    )
+                    a_ = to_dict(out_, str_type="xml")
                 except ValueError:
                     a_ = None
 

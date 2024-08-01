@@ -20,6 +20,7 @@ from lionagi.os.primitives import (
 from lionagi.os.operator.imodel.imodel import iModel
 from lionagi.app.Pandas.convert import to_df
 
+from lionagi.os.primitives import Form
 from .branch_converter import BranchConverterRegistry
 
 
@@ -69,7 +70,7 @@ class Branch(CoreBranch, Node):
             "recipient",
         ]
         dicts_ = []
-        for i in self.order:
+        for i in self.progress:
             _d = {j: getattr(self.messages[i], j, None) for j in fields}
             _d["message_type"] = self.messages[i].class_name()
             dicts_.append(_d)
@@ -86,11 +87,12 @@ class Branch(CoreBranch, Node):
         form=None,
         tools=None,
         image: str | list[str] | None = None,
+        return_branch=False,
         **kwargs,
     ):
         from lionagi.os.operation.chat.chat import chat
 
-        await chat(
+        return await chat(
             instruction=instruction,
             context=context,
             system=system,
@@ -100,6 +102,7 @@ class Branch(CoreBranch, Node):
             form=form,
             image=image,
             tools=tools,
+            return_branch=return_branch,
             **kwargs,
         )
 
@@ -187,7 +190,7 @@ class Branch(CoreBranch, Node):
         reflect: Any = None,
         **kwargs,
     ):
-        from lionagi.os.operation.respond.react import react
+        from lionagi.os.operation.react.react import react
 
         return await react(
             instruction=instruction,
