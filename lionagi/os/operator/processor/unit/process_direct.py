@@ -108,7 +108,7 @@ def create_unit_form(
     return branch, form if return_branch else form
 
 
-async def prepare_output(form: CoreForm, verbose: bool) -> CoreForm:
+async def prepare_output(form: CoreForm, verbose_direct: bool) -> CoreForm:
     """
     Prepare the output form based on the action responses.
 
@@ -121,7 +121,7 @@ async def prepare_output(form: CoreForm, verbose: bool) -> CoreForm:
     """
 
     if "PLEASE_ACTION" in form.answer:
-        if verbose:
+        if verbose_direct:
             print("Analyzing action responses and generating answer...")
 
         answer = await process_chat(
@@ -175,7 +175,7 @@ async def process_direct(
     plan_num_step: int | None = None,
     predict_num_sentences: int | None = None,
     clear_messages: bool = False,
-    verbose: bool = True,
+    verbose_direct: bool = True,
     image: str | list[str] | None = None,
     image_path: str | None = None,
     return_branch: bool = False,
@@ -244,7 +244,7 @@ async def process_direct(
         return_branch=True,
     )
 
-    if verbose:
+    if verbose_direct:
         print("Chatting with model...")
 
     form = await process_chat(
@@ -253,7 +253,7 @@ async def process_direct(
 
     if allow_action and getattr(form, "action_required", None):
         if actions := getattr(form, "actions", None):
-            if verbose:
+            if verbose_direct:
                 print(
                     "Found action requests in model response. " "Processing actions..."
                 )
@@ -266,7 +266,7 @@ async def process_direct(
                 return_branch=True,
             )
 
-            if verbose:
+            if verbose_direct:
                 print("Actions processed!")
 
     last_form = form
@@ -282,7 +282,7 @@ async def process_direct(
         and max_extension - ctr > 0
         and getattr(last_form, "extension_required", None)
     ):
-        if verbose:
+        if verbose_direct:
             print(f"\nFound extension requests in model response.")
             print(f"------------------- Processing extension -------------------")
 
@@ -347,6 +347,6 @@ async def process_direct(
         for action_response in action_responses:
             nmerge([form.action_response, action_response])
 
-    form = await prepare_output(form, verbose)
+    form = await prepare_output(form, verbose_direct)
 
     return form, branch if return_branch else form

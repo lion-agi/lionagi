@@ -133,7 +133,7 @@ class UnitProcessor(BaseProcessor):
         kwargs = {**self.retry_kwargs, **kwargs}
         return await rcall(
             process_chat,
-            branch=branch,
+            branch=branch or self.branch,
             form=form,
             clear_messages=clear_messages,
             system=system,
@@ -156,7 +156,7 @@ class UnitProcessor(BaseProcessor):
             handle_unmatched=handle_unmatched,
             fill_value=fill_value,
             fill_mapping=fill_mapping,
-            validator=validator,
+            validator=validator or self.validator,
             rulebook=rulebook,
             strict_validation=strict_validation,
             use_annotation=use_annotation,
@@ -166,14 +166,14 @@ class UnitProcessor(BaseProcessor):
 
     async def direct(
         self,
-        branch: Branch,
-        form: Form,
+        branch: Branch = None,
+        form: Form = None,
         instruction: str | None = None,
         context: dict[str, Any] | None = None,
         tools: Any = None,
-        reason: bool = True,
+        reason: bool = False,
         predict: bool = False,
-        score: bool = True,
+        score: bool = False,
         select: Any = None,
         plan: Any = None,
         brainstorm: Any = None,
@@ -189,7 +189,7 @@ class UnitProcessor(BaseProcessor):
         plan_num_step: int | None = None,
         predict_num_sentences: int | None = None,
         clear_messages: bool = False,
-        verbose: bool = True,
+        verbose_direct: bool = True,
         image: str | list[str] | None = None,
         image_path: str | None = None,
         return_branch: bool = False,
@@ -199,6 +199,7 @@ class UnitProcessor(BaseProcessor):
         default: Any = LN_UNDEFINED,
         timeout: float | None = None,
         timing: bool = False,
+        verbose=True,
         **kwargs: Any,
     ) -> Any:
         """
@@ -258,7 +259,7 @@ class UnitProcessor(BaseProcessor):
         kwargs = {**self.retry_kwargs, **kwargs}
         return await rcall(
             process_direct,
-            branch=branch,
+            branch=branch or self.branch,
             form=form,
             instruction=instruction,
             context=context,
@@ -281,9 +282,10 @@ class UnitProcessor(BaseProcessor):
             plan_num_step=plan_num_step,
             predict_num_sentences=predict_num_sentences,
             clear_messages=clear_messages,
-            verbose=verbose,
+            verbose_direct=verbose_direct,
             image=image,
             image_path=image_path,
             return_branch=return_branch,
+            verbose=verbose,
             **kwargs,
         )

@@ -76,82 +76,204 @@ class Branch(CoreBranch, Node):
 
         return to_df(dicts_)
 
-    async def assess(self, *args, **kwargs): ...
+    async def chat(
+        self,
+        instruction: Any = None,
+        context: Any = None,
+        system: Any = None,
+        sender: Any = None,
+        recipient: Any = None,
+        form=None,
+        tools=None,
+        image: str | list[str] | None = None,
+        **kwargs,
+    ):
+        from lionagi.os.operation.chat.chat import chat
 
-    async def chat(self, *args, **kwargs): ...
+        await chat(
+            instruction=instruction,
+            context=context,
+            system=system,
+            sender=sender,
+            recipient=recipient,
+            branch=self,
+            form=form,
+            image=image,
+            tools=tools,
+            **kwargs,
+        )
 
-    async def direct(self, *args, **kwargs): ...
+    async def plan(
+        self,
+        instruction=None,
+        context=None,
+        system=None,
+        sender=None,
+        recipient=None,
+        form=None,
+        image: str | list[str] | None = None,
+        allow_extension=False,
+        num_step=3,
+        verbose=True,
+        reflect: Any = None,
+        **kwargs,
+    ):
+        from lionagi.os.operation.plan.plan import plan
 
-    async def learn(self, *args, **kwargs): ...
+        return await plan(
+            instruction=instruction,
+            context=context,
+            system=system,
+            sender=sender,
+            recipient=recipient,
+            branch=self,
+            form=form,
+            image=image,
+            allow_extension=allow_extension,
+            num_step=num_step,
+            verbose=verbose,
+            reflect=reflect,
+            **kwargs,
+        )
 
-    async def memorize(self, *args, **kwargs): ...
+    async def score(
+        self,
+        instruction=None,
+        context=None,
+        system=None,
+        sender=None,
+        recipient=None,
+        form=None,
+        confidence=None,
+        num_digits=None,
+        score_range=None,
+        image: str | list[str] | None = None,
+        verbose=True,
+        reason=False,
+        reflect=None,
+        **kwargs,
+    ):
+        from lionagi.os.operation.score.score import score
 
-    async def plan(self, *args, **kwargs): ...
+        return await score(
+            instruction=instruction,
+            context=context,
+            system=system,
+            sender=sender,
+            recipient=recipient,
+            branch=self,
+            form=form,
+            confidence=confidence,
+            reason=reason,
+            score_range=score_range,
+            num_digits=num_digits,
+            image=image,
+            verbose=verbose,
+            reflect=reflect,
+            **kwargs,
+        )
 
-    async def query(self, *args, **kwargs): ...
+    async def react(
+        self,
+        instruction=None,
+        context=None,
+        system=None,
+        sender=None,
+        recipient=None,
+        form=None,
+        tools=None,
+        image: str | list[str] | None = None,
+        verbose=True,
+        reflect: Any = None,
+        **kwargs,
+    ):
+        from lionagi.os.operation.respond.react import react
 
-    async def rank(self, *args, **kwargs): ...
+        return await react(
+            instruction=instruction,
+            context=context,
+            system=system,
+            sender=sender,
+            recipient=recipient,
+            branch=self,
+            form=form,
+            tools=tools,
+            image=image,
+            verbose=verbose,
+            reflect=reflect,
+            **kwargs,
+        )
 
-    async def regurgitate(self, *args, **kwargs): ...
+    # async def learn(self, *args, **kwargs): ...
 
-    async def respond(self, *args, **kwargs): ...
+    # async def memorize(self, *args, **kwargs): ...
 
-    async def route(self, *args, **kwargs): ...
+    # async def query(self, *args, **kwargs): ...
 
-    async def score(self, *args, **kwargs): ...
+    # async def rank(self, *args, **kwargs): ...
 
-    async def strategize(self, *args, **kwargs): ...
+    # async def regurgitate(self, *args, **kwargs): ...
 
-    __slots__ = [
-        "ln_id",
-        "timestamp",
-        "from_dict",
-        "to_dict",
-        "class_name",
-        "metadata",
-        "content",
-        "extra_fields",
-        "all_fields",
-        "add_field",
-        "update_field",
-        "system",
-        "user",
-        "imodel",
-        "name",
-        "messages",
-        "tool_manager",
-        "mailbox",
-        "progress",
-        "set_system",
-        "add_message",
-        "clear_messages",
-        "send",
-        "receive",
-        "receive_all",
-        "convert_from",
-        "convert_to",
-        "last_response",
-        "assistant_responses",
-        "update_last_instruction_meta",
-        "has_tools",
-        "register_tools",
-        "delete_tools",
-        "to_chat_messages",
-        "to_df",
-        "assess",
-        "chat",
-        "direct",
-        "learn",
-        "memorize",
-        "plan",
-        "query",
-        "rank",
-        "regurgitate",
-        "respond",
-        "route",
-        "score",
-        "strategize",
-    ]
+    # async def respond(self, *args, **kwargs): ...
+
+    # async def route(self, *args, **kwargs): ...
+
+    # async def score(self, *args, **kwargs): ...
+
+    # async def strategize(self, *args, **kwargs): ...
+
+    # async def assess(self, *args, **kwargs): ...
+
+    # __slots__ = [
+    #     "ln_id",
+    #     "timestamp",
+    #     "from_dict",
+    #     "to_dict",
+    #     "class_name",
+    #     "metadata",
+    #     "content",
+    #     "extra_fields",
+    #     "all_fields",
+    #     "add_field",
+    #     "update_field",
+    #     "system",
+    #     "user",
+    #     "imodel",
+    #     "name",
+    #     "messages",
+    #     "tool_manager",
+    #     "mailbox",
+    #     "progress",
+    #     "set_system",
+    #     "add_message",
+    #     "clear_messages",
+    #     "send",
+    #     "receive",
+    #     "receive_all",
+    #     "convert_from",
+    #     "convert_to",
+    #     "last_response",
+    #     "assistant_responses",
+    #     "update_last_instruction_meta",
+    #     "has_tools",
+    #     "register_tools",
+    #     "delete_tools",
+    #     "to_chat_messages",
+    #     "to_df",
+    #     "assess",
+    #     "chat",
+    #     "direct",
+    #     "learn",
+    #     "memorize",
+    #     "plan",
+    #     "query",
+    #     "rank",
+    #     "regurgitate",
+    #     "respond",
+    #     "route",
+    #     "score",
+    #     "strategize",
+    # ]
 
 
 Branch._converter_registry = BranchConverterRegistry
