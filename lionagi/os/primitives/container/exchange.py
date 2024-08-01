@@ -19,7 +19,7 @@ class Exchange(CoreExchange):
 
     Attributes:
         pile (Pile[Mail]): A collection of all items currently in the exchange.
-        pending_ins (dict[str, Progression]): A dictionary mapping sender IDs to 
+        pending_ins (dict[str, Progression]): A dictionary mapping sender IDs to
             Progression objects containing pending incoming items.
         pending_outs (Progression): A Progression object containing pending outgoing items.
 
@@ -37,15 +37,15 @@ class Exchange(CoreExchange):
     - Efficient inclusion and exclusion of items in a managed exchange
 
     Methods:
-        include(item: Mail, direction: Literal["in", "out"]): 
+        include(item: Mail, direction: Literal["in", "out"]):
             Add a Mail item to the exchange in the specified direction.
-        exclude(item: Mail): 
+        exclude(item: Mail):
             Remove a Mail item from all collections in the exchange.
-        __contains__(item: Mail) -> bool: 
+        __contains__(item: Mail) -> bool:
             Check if a Mail item is present in the exchange.
-        __bool__() -> bool: 
+        __bool__() -> bool:
             Return True if the exchange contains any items, False otherwise.
-        __len__() -> int: 
+        __len__() -> int:
             Return the total number of items in the exchange.
 
     Properties:
@@ -75,6 +75,7 @@ class Exchange(CoreExchange):
         Element: Base class providing core Lion framework functionality.
         Container: Interface defining container operations.
     """
+
     pass
 
 

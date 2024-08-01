@@ -1,18 +1,7 @@
-from typing import Any, Type, TypeVar, TypeAliasType, TypeGuard
-from lion_core.setting import LN_UNDEFINED
+from typing import Any, Type
+
 from lion_core.abc import Observable
-from lion_core.exceptions import ItemNotFoundError
-from lion_core.generic import (
-    to_list_type,
-    validate_order,
-    Pile as CorePile,
-    Progression as CoreProgression,
-)
-
-from lionagi.os.sys_util import SysUtil
-
-
-T = TypeVar("T", bound=Observable)
+from lion_core.generic import Pile as CorePile
 
 
 class Pile(CorePile):
@@ -45,14 +34,14 @@ class Pile(CorePile):
     Usage:
         # Create a Pile with specific item type
         my_pile = Pile(item_type={CustomElement})
-        
+
         # Add items
         my_pile.include(CustomElement())
-        
+
         # Access items
         item = my_pile[0]  # By index
         item = my_pile['item_id']  # By ID
-        
+
         # Iterate over items
         for item in my_pile:
             print(item)
@@ -120,249 +109,15 @@ class Pile(CorePile):
         Observable: Base class for items that can be stored in a Pile.
         Progression: Class used for maintaining item order.
     """
-    
-    def __init__(
-        self,
-        items: Any = None,
-        item_type: set[Type[Observable]] | None = None,
-        order: CoreProgression | list | None = None,
-        strict: bool = False,
-    ):
-        super().__init__(
-            items=items, 
-            item_type=item_type,
-            order=order,
-            strict=strict
-        )
-
-    def __getitem__(self, key) -> T | "Pile":
-        """
-        Retrieve items from the pile using a key.
-
-        Supports multiple types of key access:
-        - By index or slice (list-like access)
-        - By LionID (dictionary-like access)
-        - By other complex types if item is of LionIDable
-
-        Args:
-            key: Key to retrieve items.
-
-        Returns:
-            The requested item(s). Single items returned directly,
-            multiple items returned in a new `Pile` instance.
-
-        Raises:
-            ItemNotFoundError: If requested item(s) not found.
-            LionTypeError: If provided key is invalid.
-        """
-        if key is None:
-            raise ValueError("getitem key not provided.")
-        if isinstance(key, int):
-            try:
-                result_id = self.order[key]
-                return self.pile_[result_id]
-            except Exception as e:
-                raise ItemNotFoundError(f"index {key}. Error: {e}")
-
-        elif isinstance(key, slice):
-            try:
-                result_ids = self.order[key]
-                result = []
-                for i in result_ids:
-                    result.append(self.pile_[i])
-                return Pile(items=result, item_type=self.item_type)
-            except Exception as e:
-                raise ItemNotFoundError(f"index {key}. Error: {e}")
-
-        elif isinstance(key, str):
-            try:
-                return self.pile_[key]
-            except Exception as e:
-                raise ItemNotFoundError(f"key {key}. Error: {e}")
-
-        else:
-            key = to_list_type(key)
-            result = []
-            try:
-                for k in key:
-                    result_id = SysUtil.get_id(k)
-                    result.append(self.pile_[result_id])
-
-                if len(result) == 0:
-                    raise ItemNotFoundError(f"key {key} item not found")
-                if len(result) == 1:
-                    return result[0]
-                else:
-                    return Pile(items=result, item_type=self.item_type)
-            except Exception as e:
-                raise ItemNotFoundError(f"Key {key}. Error:{e}")
-
-    def get(self, key: Any, default=LN_UNDEFINED) -> T | "Pile" | None:
-        """
-        Retrieve item(s) associated with given key.
-
-        Args:
-            key: Key of item(s) to retrieve. Can be single or collection.
-            default: Default value if key not found.
-
-        Returns:
-            Retrieved item(s) or default if key not found.
-
-        Raises:
-            ItemNotFoundError: If key not found and no default specified.
-        """
-        if isinstance(key, int | slice):
-            try:
-                return self[key]
-            except Exception as e:
-                if default is LN_UNDEFINED:
-                    raise ItemNotFoundError(f"Item not found. Error: {e}")
-                return default
-        else:
-            check = None
-            if isinstance(key, list):
-                check = True
-                for i in key:
-                    if type(i) is not int:
-                        check = False
-                        break
-            try:
-                if not check:
-                    key = validate_order(key)
-                result = []
-                for k in key:
-                    result.append(self[k])
-                if len(result) == 0:
-                    raise ItemNotFoundError(f"key {key} item not found")
-                if len(result) == 1:
-                    return result[0]
-                else:
-                    return Pile(items=result, item_type=self.item_type)
-            except Exception as e:
-                if default is LN_UNDEFINED:
-                    raise ItemNotFoundError(f"Item not found. Error: {e}")
-                return default
-
-    def pop(self, key: Any, default=LN_UNDEFINED) -> T | "Pile" | None:
-        """
-        Remove and return item(s) associated with given key.
-
-        Args:
-            key: Key of item(s) to remove. Can be single or collection.
-            default: Default value if key not found.
-
-        Returns:
-            Removed item(s) or default if key not found.
-
-        Raises:
-            ItemNotFoundError: If key not found and no default specified.
-        """
-        if isinstance(key, int | slice):
-            try:
-                pop_items = self.order[key]
-                pop_items = [pop_items] if isinstance(pop_items, str) else pop_items
-                result = []
-                for i in pop_items:
-                    self.order.remove(i)
-                    result.append(self.pile_.pop(i))
-                result = (
-                    Pile(items=result, item_type=self.item_type)
-                    if len(result) > 1
-                    else result[0]
-                )
-                return result
-            except Exception as e:
-                if default is LN_UNDEFINED:
-                    raise ItemNotFoundError(f"Item not found. Error: {e}")
-                return default
-        else:
-            try:
-                key = validate_order(key)
-                result = []
-                for k in key:
-                    self.order.remove(k)
-                    result.append(self.pile_.pop(k))
-                if len(result) == 0:
-                    raise ItemNotFoundError(f"key {key} item not found")
-                elif len(result) == 1:
-                    return result[0]
-                else:
-                    return Pile(items=result, item_type=self.item_type, order=key)
-            except Exception as e:
-                if default is LN_UNDEFINED:
-                    raise ItemNotFoundError(f"Item not found. Error: {e}")
-                return default
-
-    def __add__(self, other: T) -> "Pile":
-        """
-        Create a new pile by including item(s) using `+`.
-
-        Args:
-            other: Item(s) to include. Can be single item or collection.
-
-        Returns:
-            Pile: New Pile with all items from current pile plus item(s).
-
-        Raises:
-            LionItemError: If item(s) can't be included.
-        """
-        result = Pile(items=self.values(), item_type=self.item_type, order=self.order)
-        result.include(other)
-        return result
-
-    def __sub__(self, other) -> "Pile":
-        """
-        Create a new pile by excluding item(s) using `-`.
-
-        Args:
-            other: Item(s) to exclude. Can be single item or collection.
-
-        Returns:
-            Pile: New Pile with all items from current pile except item(s).
-
-        Raises:
-            ItemNotFoundError: If item(s) not found in pile.
-        """
-        result = Pile(items=self.values(), item_type=self.item_type, order=self.order)
-        result.pop(other)
-        return result
-
-    def __isub__(self, other) -> "Pile":
-        """
-        Exclude item(s) from the current pile in place using `-=`.
-
-        Args:
-            other: Item(s) to exclude. Can be single item or collection.
-
-        Returns:
-            Pile: The modified pile.
-        """
-        result = Pile(items=self.values(), item_type=self.item_type, order=self.order)
-        result.pop(other)
-        self.remove(other)
-        return self
 
 
-
-def pile_call(
-    cls, 
+def pile(
     items: Any = None,
-    item_type: set[Type[Observable]] | None = None,
-    order: CoreProgression | list | None = None,
+    item_type: Type[Observable] | set[Type[Observable]] | None = None,
+    order: list[str] | None = None,
     strict: bool = False,
-) -> TypeGuard[Pile]:
-    if isinstance(items, Pile):
-        return items
-    if isinstance(items, CorePile):
-        return Pile(list(items), item_type or items.item_type, order, strict)
-    try:
-        return Pile(items, item_type, order, strict)
-    except Exception as e:
-        raise ValueError(f"Invalid pile value. Error: {e}")    
-
-
-pile = TypeAliasType("pile", Pile)
-pile.__call__ = pile_call
+) -> Pile:
+    return Pile(items=items, item_type=item_type, order=order, strict=strict)
 
 
 __all__ = ["Pile", "pile"]

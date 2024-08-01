@@ -1,13 +1,34 @@
-from __future__ import annotations
-
-from typing import Iterator, Any, override, TypeAliasType, TypeGuard
-
-from lion_core.exceptions import ItemNotFoundError
 from lion_core.generic.progression import Progression as CoreProgression
-from lion_core.generic.util import validate_order
 
 
 class Progression(CoreProgression):
+    """
+    A flexible, ordered sequence container for managing Lion IDs.
+
+    The Progression class maintains an ordered list of item identifiers (Lion IDs)
+    and provides operations for manipulation and access. It combines list-like
+    functionality with Lion framework-specific features.
+
+    Args:
+        order (list, optional): Initial order of items. Defaults to None.
+        name (str, optional): Name for the progression. Defaults to None.
+
+    Attributes:
+        name (str | None): Optional name for the progression.
+        order (list[str]): The ordered list of item identifiers (Lion IDs).
+
+    Example:
+        >>> from lion_core.generic import Progression
+        >>> prog = Progression([MyElement(value=1), MyElement(value=2)], name="Test")
+        >>> str(prog)
+        'Progression(name=Test, size=2, items=['ln_...', 'ln_...'])'
+        >>> len(prog)
+        2
+        >>> prog.append(MyElement(value=3))
+        >>> len(prog)
+        3
+    """
+
     """
     A sophisticated, ordered sequence container for managing and manipulating lists of items in the Lion framework.
 
@@ -30,28 +51,64 @@ class Progression(CoreProgression):
         order (list[str]): The core ordered list of item identifiers (Lion IDs).
 
     Usage:
+        import lionagi as li
+    
         # Create a new Progression
-        prog = Progression(order=['id1', 'id2', 'id3'], name='MyProgression')
-
-        # Add items
-        prog.append('id4')
-        prog.include(['id5', 'id6'])
+        nodes = [Node() for _ in range(10)]
+        p = li.prog(order=nodes[5], name='MyProgression')
+        p1 = li.prog()
+        p2 = p + p1
+        
+        # manipulate object items
+        
+        # add items in place
+        p += nodes[3]           # Add a single item
+        p += nodes[3].ln_id     # Add a single item by Lion ID
+        p += nodes[4:7]         # Add a sequence of items
+        
+        p.append(item)       # treat input progression as its own object
+        p.include(item)      # if not present, include, if present do nothing
+        p.extend(item)       # treat input progression as its items
+        p.insert(index, item)
 
         # Access items
-        first_id = prog[0]
-        slice_prog = prog[1:3]
+        p[0]                    # use int
+        p[1:3]                  # use slice
+        p[-1:-5:-1]             # Negative indices are supported
+        p.index(nodes[2])        # Get index of a specific item
+        p.count(nodes[2])        # Count occurrences of a specific item
+        
+        # Remove items in place
+        p.pop(index=None)           # Remove right end item if index is None
+        p.popleft()                 # Remove left end item
+        p.remove(nodes[2])          # Remove a specific item by object, remove first ocurrence
+        p.exlcude(nodes[2])         # Remove a specific item by object, remove all ocurrences
+        p -= nodes[2]               # Remove a specific item by object
+        
+        # others
+        list(p)
+        len(p)
+        reversed(p) 
+        p.size()       
+        p.is_empty()
+        
+        # check is empty
+        is p
+        
+        # iteration
+        for i in p
+        
+        # check containment
+        i in p
+        
 
-        # Remove items
-        removed_id = prog.pop()
-        prog.exclude('id2')
-
-        # Combine progressions
-        combined_prog = prog + Progression(['id7', 'id8'])
-
-    The Progression class excels in scenarios requiring:
-    - Strict maintenance of item order with flexible manipulation
-    - Efficient bidirectional mapping between indices and Lion IDs
-    - Complex order-based operations in Lion framework applications
+    Note:
+        - The Progression class is designed to work seamlessly with other components
+          of the Lion framework, particularly those that use Lion IDs for identification.
+        - When working with Progression instances, it's important to understand that
+          operations are performed on Lion IDs, not on the actual objects they represent.
+        - The class provides both mutable (in-place) and immutable operations, allowing
+          for flexible usage in different scenarios.
 
     Methods:
         __init__(order: list[str] | None = None, name: str | None = None)
@@ -87,13 +144,6 @@ class Progression(CoreProgression):
         count(item: Any) -> int
         insert(index: int, item: Any) -> None
 
-    Note:
-        - All methods that accept or return items work with Lion IDs (strings).
-        - Operations that modify the progression (e.g., append, exclude) automatically
-          validate and convert inputs to ensure only valid Lion IDs are stored.
-        - The class provides both mutable (e.g., append) and immutable (e.g., __add__) operations.
-          Use immutable operations when you need to preserve the original progression.
-
     Performance Characteristics:
         - Accessing by index: O(1)
         - Searching by Lion ID: O(n)
@@ -125,95 +175,8 @@ class Progression(CoreProgression):
         Always use the provided methods to manipulate the progression's contents.
     """
 
-    def __init__(self, order: list[str], name: str | None):
-        super().__init__(order=order, name=name)
 
-    @override
-    def __getitem__(self, key: int | slice) -> str | Progression:
-        """
-        Get an item or slice of items from the progression.
-
-        Args:
-            key: An integer index or slice object.
-
-        Returns:
-            str | Progression: The item at the given index or a new Progression with the sliced items.
-
-        Raises:
-            ItemNotFoundError: If the requested index or slice is out of range.
-        """
-        if not isinstance(key, int | slice):
-            raise TypeError(
-                f"indices must be integers or slices, not {key.__class__.__name__}"
-            )
-
-        try:
-            a = self.order[key]
-            if not a:
-                raise ItemNotFoundError(f"index {key} item not found")
-            if isinstance(key, slice):
-                return Progression(order=a)
-            else:
-                return a
-        except IndexError:
-            raise ItemNotFoundError(f"index {key} item not found")
-
-    @override
-    def __sub__(self, other: Any) -> Progression:
-        """
-        Remove an item or items from the progression.
-
-        Args:
-            other: The item(s) to remove.
-
-        Returns:
-            Progression: A new Progression without the specified item(s).
-        """
-        other = validate_order(other)
-        new_order = list(self)
-        for i in other:
-            new_order.remove(i)
-        return Progression(order=new_order)
-
-    @override
-    def __add__(self, other: Any) -> Progression:
-        """
-        Add an item or items to the end of the progression.
-
-        Args:
-            other: The item(s) to add.
-
-        Returns:
-            Progression: A new Progression with the added item(s).
-        """
-        other = validate_order(other)
-        new_order = list(self)
-        new_order.extend(other)
-        return Progression(order=new_order)
-
-    @override
-    def __reverse__(self) -> "Progression":
-        """
-        Return a reversed progression.
-
-        Returns:
-            Iterator[str]: An iterator over the reversed Lion IDs in the progression.
-        """
-        return Progression(reversed(self.order), name=self.name)
-
-
-def prog_call(cls: Any, order: Any, name: str | None = None) -> TypeGuard[Progression]:
-    if isinstance(order, Progression):
-        return order
-    if isinstance(order, CoreProgression):
-        return Progression(list(order), name)
-    try:
-        return Progression(order, name)
-    except ValueError as e:
-        raise ValueError(f"Invalid Progression input: {e}")
-
-prog = TypeAliasType("prog", Progression)
-prog.__call__ = prog_call
+prog = Progression
 
 
 __all__ = ["Progression", "prog"]

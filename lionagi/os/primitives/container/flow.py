@@ -1,16 +1,7 @@
-from functools import partial
-
 from typing import Any
-
-from lion_core.abc import Ordering
-from lion_core.exceptions import LionTypeError
-
 from lion_core.generic.flow import Flow as CoreFlow
 
-from .progression import prog
-from .pile import pile
-
-
+from lionagi.os.primitives.utils import core_to_lionagi_container
 
 
 class Flow(CoreFlow):
@@ -67,39 +58,11 @@ class Flow(CoreFlow):
         Component: Base class providing core functionality.
         Container: Interface defining container operations.
     """
-    
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
+
+    def _validate_sequences(self, value: Any):
+        return core_to_lionagi_container(super()._validate_sequences(value))
 
 
-    def _validate_sequences(self, value: Any) -> pile:
-        """
-        Validate and convert input to a Pile of Progressions.
-
-        Args:
-            value: Input to be validated and converted.
-
-        Returns:
-            A Pile of Progression instances.
-
-        Raises:
-            LionTypeError: If the input is invalid.
-        """
-        try:
-            return pile(value, Ordering, strict=False)
-        except Exception as e:
-            raise LionTypeError(f"Invalid sequences value. Error: {e}")
-
-
-
-
-class flow(Flow):
-
-    @classmethod
-    def __call__(cls, *args, **Kwargs) -> "Flow":
-        return Flow(*args, **Kwargs)
-
-    __slots__ = ["__call__"]
-
+flow = Flow
 
 __all__ = ["Flow", "flow"]

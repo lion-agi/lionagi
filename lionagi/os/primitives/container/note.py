@@ -1,4 +1,3 @@
-from typing import TypeAliasType, TypeGuard
 from lion_core.generic.note import Note as CoreNote
 
 
@@ -56,12 +55,7 @@ class Note(CoreNote):
         BaseMail: Special handling for cloned BaseMail objects in serialization.
     """
 
-def note_call(cls, **kwargs) -> TypeGuard[Note]:
-    return Note(**kwargs)
 
-note = TypeAliasType("note", Note)
-note.__doc__ = Note.__doc__
-note.__call__ = note_call
-
+note = Note
 
 __all__ = ["Note", "note"]
