@@ -1,7 +1,7 @@
 from enum import Enum
 from pydantic import Field
 from lion_core.libs import to_dict
-from lion_core.record.form import Form
+from lionagi.os.primitives import Form
 
 
 class UnitForm(Form):
