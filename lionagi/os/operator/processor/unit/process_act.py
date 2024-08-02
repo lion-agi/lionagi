@@ -28,7 +28,7 @@ async def process_act(
     Raises:
         ValueError: If no requests are found when processing actions.
     """
-    if "actioin_performed" in form.requested_fields and form.action_performed:
+    if "actioin_performed" in form.all_fields and form.action_performed:
         return form
 
     action_keys = [f"action_{i+1}" for i in range(len(actions))]

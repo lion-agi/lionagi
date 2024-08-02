@@ -25,20 +25,20 @@ class Progression(CoreProgression):
 
     Usage:
         import lionagi as li
-    
+
         # Create a new Progression
         nodes = [Node() for _ in range(10)]
         p = li.prog(order=nodes[5], name='MyProgression')
         p1 = li.prog()
         p2 = p + p1
-        
+
         # manipulate object items
-        
+
         # add items in place
         p += nodes[3]           # Add a single item
         p += nodes[3].ln_id     # Add a single item by Lion ID
         p += nodes[4:7]         # Add a sequence of items
-        
+
         p.append(item)       # treat input progression as its own object
         p.include(item)      # if not present, include, if present do nothing
         p.extend(item)       # treat input progression as its items
@@ -50,30 +50,30 @@ class Progression(CoreProgression):
         p[-1:-5:-1]             # Negative indices are supported
         p.index(nodes[2])        # Get index of a specific item
         p.count(nodes[2])        # Count occurrences of a specific item
-        
+
         # Remove items in place
         p.pop(index=None)           # Remove right end item if index is None
         p.popleft()                 # Remove left end item
         p.remove(nodes[2])          # Remove a specific item by object, remove first ocurrence
         p.exlcude(nodes[2])         # Remove a specific item by object, remove all ocurrences
         p -= nodes[2]               # Remove a specific item by object
-        
+
         # others
         list(p)
         len(p)
-        reversed(p) 
-        p.size()       
+        reversed(p)
+        p.size()
         p.is_empty()
-        
+
         # check is empty
         is p
-        
+
         # iteration
         for i in p
-        
+
         # check containment
         i in p
-        
+
 
     Note:
         - The Progression class is designed to work seamlessly with other components

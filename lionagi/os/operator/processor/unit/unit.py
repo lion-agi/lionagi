@@ -4,12 +4,11 @@ from lion_core.setting import LN_UNDEFINED
 from lion_core.abc import BaseProcessor
 from lion_core.libs import rcall
 
-from lionagi.os.primitives.form.form import Form
+from lionagi.os.primitives import Instruction, ActionRequest, System, Form
 from lionagi.os.session.branch.branch import Branch
 from lionagi.os.operator.imodel.imodel import iModel
 from lionagi.os.operator.validator.validator import Validator
 from lionagi.os.operator.validator.rulebook import RuleBook
-from lionagi.os.primitives.messages import Instruction, ActionRequest, System
 from lionagi.os.operator.processor.unit.utils import retry_kwargs
 from lionagi.os.operator.processor.unit.process_chat import process_chat
 from lionagi.os.operator.processor.unit.process_direct import process_direct

@@ -11,7 +11,7 @@ async def react(
     tool_schema=None,
     image: str | list[str] | None = None,
     verbose=True,
-    reflect= None,
+    reflect=None,
     **kwargs,
 ):
     from lionagi.os.operator.processor.unit.unit import UnitProcessor
