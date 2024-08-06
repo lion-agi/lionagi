@@ -26,9 +26,10 @@ class LiteLLMService(BaseService):
 
         SysUtil.check_import("litellm")
 
-        from litellm import acompletion
-
-        self.acompletion = acompletion
+        import litellm
+        litellm.drop_params = True
+        
+        self.acompletion = litellm.acompletion
         self.model = model
         self.kwargs = kwargs
         self.allowed_kwargs = allowed_kwargs
@@ -41,12 +42,13 @@ class LiteLLMService(BaseService):
                 config[k] = v
 
         kwargs = {**self.kwargs, **config}
+        kwargs["model"] = self.model or kwargs.get("model")
 
         try:
             completion = await self.acompletion(
-                model=self.model, messages=messages, **kwargs
+                messages=messages, **kwargs
             )
-            return payload, completion
+            return payload, completion.model_dump()
         except Exception as e:
             self.status_tracker.num_tasks_failed += 1
             raise e
