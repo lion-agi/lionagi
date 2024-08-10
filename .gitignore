@@ -5,3 +5,6 @@ dev/
 build/
 .venv/
 *.DS_Store
+.idea/
+*.pyc
+.conda/
