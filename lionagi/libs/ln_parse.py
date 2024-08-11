@@ -694,11 +694,11 @@ class StringMatch:
 
         if isinstance(out_, str):
             # first try to parse it straight as a fuzzy json
-            
+
             try:
                 out_ = ParseUtil.fuzzy_parse_json(out_)
                 return StringMatch.correct_dict_keys(keys, out_)
-            
+
             except:
                 try:
                     out_ = ParseUtil.md_to_json(out_)

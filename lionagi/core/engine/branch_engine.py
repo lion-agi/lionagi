@@ -57,7 +57,10 @@ class BranchExecutor(Branch, BaseExecutor):
                     await self._process_condition(mail)
                 elif mail.category == "end":
                     self._process_end(mail)
-            if key in self.mailbox.pending_ins and self.mailbox.pending_ins.get(key, Pile()).size() == 0:
+            if (
+                key in self.mailbox.pending_ins
+                and self.mailbox.pending_ins.get(key, Pile()).size() == 0
+            ):
                 self.mailbox.pending_ins.pop(key)
 
     async def execute(self, refresh_time=1) -> None:

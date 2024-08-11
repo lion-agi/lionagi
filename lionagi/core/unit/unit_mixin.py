@@ -658,7 +658,7 @@ class DirectiveMixin(ABC):
         if allow_action and not tools:
             tools = True
 
-        tool_schema=None
+        tool_schema = None
         if tools:
             tool_schema = branch.tool_manager.get_tool_schema(tools)
 

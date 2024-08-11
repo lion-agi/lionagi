@@ -202,7 +202,9 @@ class Graph(Node):
 
         return g
 
-    def display(self, node_label="class_name", edge_label="label", draw_kwargs={}, **kwargs):
+    def display(
+        self, node_label="class_name", edge_label="label", draw_kwargs={}, **kwargs
+    ):
         """Display the graph using NetworkX and Matplotlib."""
         from lionagi.libs import SysUtil
 
@@ -224,7 +226,7 @@ class Graph(Node):
             node_color="orange",
             alpha=0.9,
             labels=nx.get_node_attributes(g, node_label),
-            **draw_kwargs
+            **draw_kwargs,
         )
 
         labels = nx.get_edge_attributes(g, edge_label)

@@ -11,7 +11,7 @@ More to be added
 
 def trim_timestamp_to_day(timestamp_str):
     dt = datetime.fromisoformat(timestamp_str)
-    return dt.strftime('%Y-%m-%d')
+    return dt.strftime("%Y-%m-%d")
 
 
 class MockPackage(Package):
@@ -22,16 +22,15 @@ class MockPackage(Package):
 def mail():
     """Fixture to create a Mail instance with a MockPackage."""
     package = MockPackage()
-    mail_instance = Mail(timestamp=datetime.today().strftime('%Y-%m-%d'), package=package)
+    mail_instance = Mail(
+        timestamp=datetime.today().strftime("%Y-%m-%d"), package=package
+    )
     return mail_instance
 
 
 def test_mail_category(mail):
     """Test the category property of Mail."""
     assert mail.category is None
-
-
-
 
 
 # from lionagi.core.generic.mail import *

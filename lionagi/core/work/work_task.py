@@ -20,39 +20,24 @@ class WorkTask(Component):
         current_work (Work | None): The current work in progress.
         post_processing (Callable | None): The post-processing function to be executed after the entire task is successfully completed.
     """
-    name: str | None = Field(
-        None,
-        description="Name of the task"
-    )
+
+    name: str | None = Field(None, description="Name of the task")
 
     status: WorkStatus = Field(
-        WorkStatus.PENDING,
-        description="The current status of the task"
+        WorkStatus.PENDING, description="The current status of the task"
     )
 
-    status_note: str = Field(
-        None,
-        description="Note for tasks current status"
-    )
+    status_note: str = Field(None, description="Note for tasks current status")
 
-    work_history: list[Work] = Field(
-        [],
-        description="List of works processed"
-    )
+    work_history: list[Work] = Field([], description="List of works processed")
 
-    max_steps: int | None = Field(
-        10,
-        description="Maximum number of works allowed"
-    )
+    max_steps: int | None = Field(10, description="Maximum number of works allowed")
 
-    current_work: Work | None = Field(
-        None,
-        description="The current work in progress"
-    )
+    current_work: Work | None = Field(None, description="The current work in progress")
 
     post_processing: Callable | None = Field(
         None,
-        description="The post-processing function to be executed after the entire task has been successfully completed."
+        description="The post-processing function to be executed after the entire task has been successfully completed.",
     )
 
     @field_validator("max_steps", mode="before")
@@ -108,7 +93,12 @@ class WorkTask(Component):
         Returns:
             WorkTask: A new instance of WorkTask with the same attributes.
         """
-        new_worktask = WorkTask(name=self.name, status=self.status, max_steps=self.max_steps, current_work=self.current_work)
+        new_worktask = WorkTask(
+            name=self.name,
+            status=self.status,
+            max_steps=self.max_steps,
+            current_work=self.current_work,
+        )
         for work in self.work_history:
             new_worktask.work_history.append(work)
         return new_worktask
