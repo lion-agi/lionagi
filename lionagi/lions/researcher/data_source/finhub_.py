@@ -45,7 +45,7 @@ class FinnHub:
 
             return finnhub.Client(api_key=api_key or cls.api_key)
         except Exception as e:
-            raise ImportError(f"Error occured during importing finnhub: {e}")
+            raise ImportError(f"Error occurred during importing finnhub: {e}")
 
     @classmethod
     def get_info_df(cls, info_kind="company_news", api_key=None, **kwargs):
@@ -73,11 +73,11 @@ class FinnHub:
                 return df
             except Exception as e:
                 raise ValueError(
-                    f"Error occured during converting {info_kind} to DataFrame: {e}"
+                    f"Error occurred during converting {info_kind} to DataFrame: {e}"
                 )
         except Exception as e:
             raise ValueError(
-                f"Error occured during getting {info_kind} from FinnHub: {e}"
+                f"Error occurred during getting {info_kind} from FinnHub: {e}"
             )
 
     @staticmethod
