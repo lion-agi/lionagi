@@ -32,7 +32,16 @@ jobs:
     - name: Install dependencies
       run: |
         python -m pip install --upgrade pip
-        pip install build twine
+        pip install build twine coverage pytest flake8
+    - name: Lint code with flake8
+      run: flake8 .
+    - name: Run tests with pytest
+      run: coverage run -m pytest
+    - name: Upload coverage report
+      uses: actions/upload-artifact@v2
+      with:
+        name: coverage-report
+        path: coverage.xml
     - name: Build package
       run: python -m build
     - name: Publish package to PyPI
@@ -41,3 +50,8 @@ jobs:
       env:
         TWINE_USERNAME: __token__
         TWINE_PASSWORD: ${{ secrets.PYPI_API_KEY }}  # Make sure to use the secret for PyPI
+    - name: Send notifications for build failures
+      if: failure()
+      run: |
+        echo "Build failed. Sending notification..."
+        # Add your notification logic here
