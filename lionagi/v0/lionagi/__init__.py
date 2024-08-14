@@ -15,7 +15,7 @@ limitations under the License.
 """
 
 import logging
-from .version import __version__
+from ...version import __version__
 from dotenv import load_dotenv
 
 from lionagi.libs.ln_convert import to_list, to_dict, to_df, to_readable_dict
