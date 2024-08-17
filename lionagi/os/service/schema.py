@@ -1,4 +1,5 @@
 from pydantic import BaseModel, ConfigDict
+from lionagi.os.service.utils import create_payload
 
 
 class EndpointSchema(BaseModel):
@@ -22,3 +23,18 @@ class EndpointSchema(BaseModel):
     @classmethod
     def from_dict(cls, **data):
         return cls(**data)
+
+    def create_payload(self, input_):
+        return create_payload(
+            input_=input_,
+            input_key=self.input_key,
+            config=self.default_config,
+            required_=self.required_params,
+            optional_=self.optional_params,
+        )
+
+
+class ModelConfig(BaseModel):
+    model: str
+    alias: list[str]
+    endpoint_schema: dict[str, EndpointSchema]

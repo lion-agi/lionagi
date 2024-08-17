@@ -21,7 +21,7 @@ CACHED_CONFIG = {
 RETRY_CONFIG = {
     "retries": 3,
     "initial_delay": 0,
-    "delay": 2,
+    "delay": 1,
     "backoff_factor": 2,
     "default": LN_UNDEFINED,
     "timeout": 180,
