@@ -17,10 +17,9 @@ from pathlib import Path
 from shutil import copy2
 from typing import Any, List, Literal, Sequence, TypeVar, Union
 
-
 from lion_core import CoreUtil as cu
 from lion_core.libs import unique_hash
-from lion_core.generic.util import to_list_type
+from lion_core.generic.utils import to_list_type
 
 from lion_core.setting import LION_ID_CONFIG, TIME_CONFIG
 
@@ -94,7 +93,7 @@ class SysUtil:
     def id(
         n: int = LION_ID_CONFIG["n"],
         prefix: str | None = LION_ID_CONFIG["prefix"],
-        postfix: str | None = None,
+        postfix: str | None = LION_ID_CONFIG["postfix"],
         random_hyphen: bool = LION_ID_CONFIG["random_hyphen"],
         num_hyphens: int | None = LION_ID_CONFIG["num_hyphens"],
         hyphen_start_index: int | None = LION_ID_CONFIG["hyphen_start_index"],
@@ -441,25 +440,22 @@ class SysUtil:
             subprocess.CalledProcessError: If pip installation fails.
         """
         pip_name = pip_name or package_name
-        full_import_path = (
-            f"{package_name}.{module_name}" if module_name else package_name
-        )
 
         try:
-            if import_name:
-                module = __import__(full_import_path, fromlist=[import_name])
-                return getattr(module, import_name)
-            else:
-                return __import__(full_import_path)
+            return SysUtil.import_module(
+                package_name=package_name,
+                module_name=module_name,
+                import_name=import_name,
+            )
         except ImportError:
             logging.info(f"Installing {pip_name}...")
             try:
                 _run_pip_command(["install", pip_name])
-                if import_name:
-                    module = __import__(full_import_path, fromlist=[import_name])
-                    return getattr(module, import_name)
-                else:
-                    return __import__(full_import_path)
+                return SysUtil.import_module(
+                    package_name=package_name,
+                    module_name=module_name,
+                    import_name=import_name,
+                )
             except subprocess.CalledProcessError as e:
                 raise ImportError(f"Failed to install {pip_name}: {e}") from e
             except ImportError as e:
@@ -468,7 +464,11 @@ class SysUtil:
                 ) from e
 
     @staticmethod
-    def import_module(module_path: str) -> Any:
+    def import_module(
+        package_name: str,
+        module_name: str = None,
+        import_name: str = None,
+    ) -> Any:
         """
         Import a module by its path.
 
@@ -482,9 +482,18 @@ class SysUtil:
             ImportError: If the module cannot be imported.
         """
         try:
-            return importlib.import_module(module_path)
+            full_import_path = (
+                f"{package_name}.{module_name}" if module_name else package_name
+            )
+
+            if import_name:
+                module = __import__(full_import_path, fromlist=[import_name])
+                return getattr(module, import_name)
+            else:
+                return __import__(full_import_path)
+
         except ImportError as e:
-            raise ImportError(f"Failed to import module {module_path}: {e}") from e
+            raise ImportError(f"Failed to import module {full_import_path}: {e}") from e
 
     @staticmethod
     def is_package_installed(package_name: str) -> bool:
@@ -527,17 +536,30 @@ class SysUtil:
         if not SysUtil.is_package_installed(package_name):
             if attempt_install:
                 logging.info(
-                    f"Package {package_name} not found. Attempting to install."
+                    f"Package {package_name} not found. Attempting to install.",
                 )
                 try:
                     return SysUtil.install_import(
-                        package_name, module_name, import_name, pip_name
+                        package_name=package_name,
+                        module_name=module_name,
+                        import_name=import_name,
+                        pip_name=pip_name,
                     )
                 except ImportError as e:
                     raise ValueError(f"Failed to install {package_name}: {e}") from e
             else:
-                logging.info(f"Package {package_name} not found. {error_message}")
-                raise ImportError(f"Package {package_name} not found. {error_message}")
+                logging.info(
+                    f"Package {package_name} not found. {error_message}",
+                )
+                raise ImportError(
+                    f"Package {package_name} not found. {error_message}",
+                )
+
+        return SysUtil.import_module(
+            package_name=package_name,
+            module_name=module_name,
+            import_name=import_name,
+        )
 
     @staticmethod
     def list_installed_packages() -> List[str]:
@@ -621,3 +643,6 @@ def _run_pip_command(args: Sequence[str]) -> subprocess.CompletedProcess[bytes]:
     return subprocess.run(
         [sys.executable, "-m", "pip"] + list(args), check=True, capture_output=True
     )
+
+
+__all__ = ["SysUtil"]

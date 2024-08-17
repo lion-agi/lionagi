@@ -1,8 +1,8 @@
-from lionagi.os.service.api.specification import MODEL_CONFIG, ENDPOINT_CONFIG
-from ._config import oai_embeddings_schema
+from lionagi.os.service.schema import EndpointSchema, ModelConfig
+from lionagi.app.OpenAI.model_specs._config import oai_embeddings_schema
 
 
-TEXT_EMBEDDINGS3_SMALL_EMBED = ENDPOINT_CONFIG(
+TEXT_EMBEDDINGS3_SMALL_EMBED = EndpointSchema(
     endpoint="embeddings",
     pricing=0.02,
     batch_pricing=0.01,
@@ -18,7 +18,7 @@ TEXT_EMBEDDINGS3_SMALL_EMBED = ENDPOINT_CONFIG(
 )
 
 
-TEXT_EMBEDDINGS3_SMALL = MODEL_CONFIG(
+TEXT_EMBEDDINGS3_SMALL_MODEL_CONFIG = ModelConfig(
     model="text-embeddings-3-small",
     alias=["text-embeddings-3-small"],
     endpoint_schema={

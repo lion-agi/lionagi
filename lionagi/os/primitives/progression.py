@@ -1,8 +1,8 @@
-from typing import TypeAliasType, Any
+from typing import Any
 from lion_core.generic.progression import Progression
 
 
-def _prog(order: Any = None, name: str | None = None) -> Progression:
+def prog(order: Any = None, name: str | None = None) -> Progression:
     """
     Create a new Progression instance.
 
@@ -15,8 +15,5 @@ def _prog(order: Any = None, name: str | None = None) -> Progression:
     """
     return Progression(order=order, name=name)
 
-
-prog = TypeAliasType("prog", Progression)
-prog.__call__ = _prog
 
 __all__ = ["Progression", "prog"]

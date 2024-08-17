@@ -56,7 +56,6 @@ async def call_api(
         try:
             if (_m := getattr(http_session, method, None)) is not None:
                 async with _m(url, **kwargs) as response:
-                    response.raise_for_status()
                     response_json = await response.json()
                     if "error" not in response_json:
                         return response_json

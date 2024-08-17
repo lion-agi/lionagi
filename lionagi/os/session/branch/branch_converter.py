@@ -6,7 +6,7 @@ from lion_core.converter import Converter
 from lion_core.session.branch import BranchConverterRegistry as BCR
 
 
-from lionagi.os.primitives import Node, pile, Pile
+from lionagi.os.primitives import Node, Pile, pile
 from .branch import Branch
 
 
@@ -26,7 +26,7 @@ class PandasDataFrameConverter(Converter):
 
     @staticmethod
     def to_obj(self: Branch, **kwargs) -> pd.DataFrame:
-        dict_list = [self.messages[i].to_dict for i in self.order]
+        dict_list = [self.messages[i].to_dict() for i in self.order]
         return to_df(dict_list)
 
 

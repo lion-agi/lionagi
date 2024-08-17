@@ -20,7 +20,7 @@ oai_chat_llmconfig = {
     "logit_bias": None,
     "service_tier": None,
     "stream_options": None,
-    "parallel_tool_calls": True,
+    "parallel_tool_calls": None,
 }
 
 oai_chat_schema = {
@@ -57,7 +57,7 @@ oai_chat_schema = {
 
 # Finetune
 oai_finetune_llmconfig = {
-    "model": "gpt-3.5-turbo",
+    "model": "gpt-4o-mini",
     "hyperparameters": {
         "batch_size": "auto",
         "learning_rate_multiplier": "auto",

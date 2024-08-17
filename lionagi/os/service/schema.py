@@ -4,14 +4,15 @@ from lionagi.os.service.utils import create_payload
 
 class EndpointSchema(BaseModel):
     endpoint: str
-    pricing: tuple
-    batch_pricing: tuple
+    pricing: tuple | float
+    batch_pricing: tuple | float
     token_limit: int
     default_config: dict
     default_rate_limit: tuple  # (interval, interval_request, interval_token)
     required_params: list[str] = []
     optional_params: list[str] = []
-    input_key: str
+    input_key: str | list[str]
+    image_pricing: dict = None
 
     model_config = ConfigDict(
         arbitrary_types_allowed=True, populate_by_name=True, extra="forbid"

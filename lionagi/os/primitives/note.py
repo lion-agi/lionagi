@@ -1,8 +1,8 @@
-from typing import TypeAliasType
-from lion_core.generic.note import Note, note as _note
+from lion_core.generic.note import Note
 
 
-note = TypeAliasType("note", Note)
-note.__call__ = _note
+def note(**kwargs):
+    return Note(**kwargs)
+
 
 __all__ = ["Note", "note"]

@@ -1,3 +1,4 @@
+import inspect
 import asyncio
 from typing import Any
 
@@ -31,9 +32,9 @@ class EndPoint:
             refresh_time=refresh_time,
         )
         if self.rate_limiter.processor is None:
-            self._is_initialized = False
+            self._has_initialized = False
         else:
-            self._is_initialized = True
+            self._has_initialized = True
 
     async def init_rate_limiter(self) -> None:
         """Initialize the rate limiter for the endpoint."""
@@ -43,7 +44,7 @@ class EndPoint:
 
     async def add_api_calling(
         self,
-        payload: dict | None= None,       # priority 1
+        payload: dict | None = None,  # priority 1
         input_: Any = None,
         base_url: str = None,
         endpoint: str = None,
@@ -51,14 +52,17 @@ class EndPoint:
         method="post",
         retry_config=RETRY_CONFIG,
     ) -> None:
-        
+
         if (input_ and payload) or (not input_ and not payload):
             raise ValueError("Only one of input_ or payload should be provided.")
-        
+
         if payload is None:
             payload = self.schema.create_payload(input_)
-            
+
         input_ = payload[self.schema.input_key]
+        if inspect.isclass(self.token_calculator):
+            self.token_calculator = self.token_calculator()
+
         tokens = self.token_calculator.calculate(input_)
         action: APICalling = self.rate_limiter.create_api_calling(
             payload=payload,
@@ -72,14 +76,6 @@ class EndPoint:
         await self.rate_limiter.append(action)
         return action.ln_id
 
-    async def execute(self) -> None:
-        if not self._has_initialized:
-            await self.init_rate_limiter()
-        await self.rate_limiter.execute()
-
-    async def stop(self) -> None:
-        await self.rate_limiter.stop()
-
     async def serve(
         self,
         payload: dict = None,
@@ -88,9 +84,7 @@ class EndPoint:
         api_key: str = None,
         retry_config=RETRY_CONFIG,
     ):
-        if not self.rate_limiter.execution_mode:
-            await self.execute()
-
+        await self.init_rate_limiter()
         action_id = await self.add_api_calling(
             payload=payload,
             base_url=base_url,
@@ -99,12 +93,11 @@ class EndPoint:
             method=method,
             retry_config=retry_config,
         )
-
-        while action_id not in self.rate_limiter.completed_action:
-            await asyncio.sleep(0.25)
-
-        action: APICalling = self.rate_limiter.pile.pop(action_id)
-        return action.to_log()
+        await self.rate_limiter.process()
+        if action_id in self.rate_limiter.completed_action:
+            action: APICalling = self.rate_limiter.pile.pop(action_id)
+            return action.to_log()
+        return None
 
 
 # File: lionagi/os/service/api/endpoint.py

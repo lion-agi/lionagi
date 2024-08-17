@@ -1,7 +1,7 @@
 import aiohttp
 from pydantic import Field
 
-from lion_core.abc import Action
+from lion_core.abc import ObservableAction
 from lion_core.exceptions import LionOperationError
 from lion_core.action.status import ActionStatus
 from lion_core.generic.element import Element
@@ -12,7 +12,7 @@ from lionagi.os.service.utils import call_api
 from lionagi.os.service.config import RETRY_CONFIG
 
 
-class APICalling(Element, Action):
+class APICalling(Element, ObservableAction):
 
     payload: dict = Field(default_factory=dict)
     response: dict = Field(default_factory=dict)
@@ -24,6 +24,7 @@ class APICalling(Element, Action):
     retry_config: dict = Field(default_factory=dict, exclude=True)
     error: str = Field(default=None)
     required_tokens: int = Field(default=1)
+    api_key_schema: str = Field(default=None)
 
     def __init__(
         self,
@@ -34,6 +35,7 @@ class APICalling(Element, Action):
         method="post",
         retry_config=RETRY_CONFIG,
         required_tokens=1,
+        api_key_schema=None,
     ):
         super().__init__()
         self.payload = payload
@@ -43,9 +45,10 @@ class APICalling(Element, Action):
         self.method = method
         self.retry_config = retry_config
         self.required_tokens = required_tokens
+        self.api_key_schema = api_key_schema
 
     async def invoke(self):
-        with aiohttp.ClientSession() as session:
+        async with aiohttp.ClientSession() as session:
             url = self.base_url + self.endpoint
             headers = {"Authorization": f"Bearer {self.api_key}"}
             try:

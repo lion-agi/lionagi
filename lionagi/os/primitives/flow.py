@@ -1,9 +1,11 @@
-from typing import TypeAliasType
-from lion_core.generic.flow import Flow, flow as _flow
+from lion_core.generic.flow import Flow
 
 
-flow = TypeAliasType("flow", Flow)
-flow.__call__ = _flow
+def flow(progressions=None, default_name=None):
+    return Flow(
+        progressions,
+        default_name,
+    )
 
 
 __all__ = ["Flow", "flow"]

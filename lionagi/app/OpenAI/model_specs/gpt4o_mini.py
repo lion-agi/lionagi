@@ -1,8 +1,8 @@
-from lionagi.os.service.api.specification import MODEL_CONFIG, ENDPOINT_CONFIG
-from ._config import oai_chat_schema
+from lionagi.os.service.schema import EndpointSchema, ModelConfig
+from lionagi.app.OpenAI.model_specs._config import oai_chat_schema, oai_finetune_schema
 
 
-GPT4OMINI_CHAT_COMPLETIONS = ENDPOINT_CONFIG(
+GPT4O_MINI_CHAT_COMPLETIONS = EndpointSchema(
     endpoint="chat/completions",
     pricing=(0.15, 0.6),
     batch_pricing=(0.075, 0.3),
@@ -15,10 +15,23 @@ GPT4OMINI_CHAT_COMPLETIONS = ENDPOINT_CONFIG(
 )
 
 
-GPT4O_MINI = MODEL_CONFIG(
+GPT4O_MINI_FINETUNE = EndpointSchema(
+    endpoint="finetune",
+    pricing=(0.3, 1.2, 3),
+    batch_pricing=(0.15, 0.6, 3),
+    token_limit=128_000,
+    default_rate_limit=(60, 1_000, 5_000_000),
+    default_config={"model": "gpt-4o-mini", **oai_finetune_schema["config"]},
+    required_params=oai_finetune_schema["required_params"],
+    optional_params=oai_finetune_schema["optional_params"],
+    input_key=oai_finetune_schema["input_key"],
+)
+
+GPT4O_MINI_MODEL_CONFIG = ModelConfig(
     model="gpt-4o-mini",
-    alias=["gpt-4o-mini", "gpt-4o-mini-2024-07-18"],
+    alias=["gpt-4o-mini-2024-07-18"],
     endpoint_schema={
-        "chat/completions": GPT4OMINI_CHAT_COMPLETIONS,
+        "chat/completions": GPT4O_MINI_CHAT_COMPLETIONS,
+        "fine-tuning": GPT4O_MINI_FINETUNE,
     },
 )

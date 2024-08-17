@@ -1,4 +1,4 @@
-from typing import TypeAliasType, Any
+from typing import Any
 from lion_core.generic.pile import Pile as CorePile
 
 
@@ -8,7 +8,7 @@ class Pile(CorePile):
     pass
 
 
-def _pile(
+def pile(
     items: Any = None,
     item_type=None,
     order: list[str] | None = None,
@@ -40,9 +40,5 @@ def _pile(
         **kwargs,
     )
 
-
-pile = TypeAliasType("pile", Pile)
-pile.__call__ = _pile
-pile.__doc__ = _pile.__doc__
 
 __all__ = ["Pile", "pile"]

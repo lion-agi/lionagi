@@ -10,17 +10,16 @@ from lion_core.session.branch import Branch as CoreBranch
 
 from lionagi.os.primitives import (
     Node,
-    pile,
     Pile,
     Progression,
+    pile,
     prog,
     Exchange,
+    Form,
 )
 
 from lionagi.os.operator.imodel.imodel import iModel
 from lionagi.app.Pandas.convert import to_df
-
-from lionagi.os.primitives import Form
 from .branch_converter import BranchConverterRegistry
 
 

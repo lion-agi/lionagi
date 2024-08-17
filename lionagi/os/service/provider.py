@@ -1,5 +1,6 @@
 from os import getenv
 
+from typing import Type
 from pydantic import BaseModel
 from aiocache import cached
 
@@ -20,26 +21,29 @@ class ProviderConfig(BaseModel):
 
 class ProviderService:
 
+    default_endpoint = "chat/completions"
     config: ProviderConfig = None
-    token_calculator: ProviderTokenCalculator = None
+    token_calculator: Type[ProviderTokenCalculator] = None
     endpoint_config: dict[str, EndpointSchema] = None  # endpoint: EndpointSchema
     model_specification: dict[str, ModelConfig] = None  # model_name: ModelConfig
     active_endpoints: dict[str, EndPoint] = {}  # endpoint: EndPoint
 
     def __init__(
         self,
-        token_calculator: ProviderTokenCalculator = None,
+        token_calculator: Type[ProviderTokenCalculator] = None,
         config: ProviderConfig = None,
         model_specification: dict[str, ModelConfig] = None,
+        endpoint_config=None,
     ):
         self.token_calculator = token_calculator
-        self.endpoint_config = config
+        self.config = config
         self.model_specification = model_specification
+        self.endpoint_config = endpoint_config
 
     def add_endpoint(
         self,
         *,
-        endpoint="chat/completions",
+        endpoint=None,
         schema: EndpointSchema | None = None,  # priority 1
         interval: int | None = None,
         interval_request: int | None = None,
@@ -64,7 +68,7 @@ class ProviderService:
     async def serve(
         self,
         *,
-        endpoint="chat/completions",
+        endpoint=None,
         schema: EndpointSchema = None,
         payload: dict = None,
         method="post",
@@ -73,6 +77,7 @@ class ProviderService:
         api_key=None,  # priority 1
         cached=False,
     ) -> Log:
+        endpoint = endpoint or self.default_endpoint
         if cached:
             return await self._cached_serve(
                 endpoint=endpoint,
@@ -96,7 +101,7 @@ class ProviderService:
     async def _serve(
         self,
         *,
-        endpoint="chat/completions",
+        endpoint=None,
         schema: EndpointSchema = None,
         payload: dict = None,
         method="post",
@@ -107,10 +112,14 @@ class ProviderService:
         if not endpoint in self.active_endpoints:
             self.add_endpoint(endpoint, schema=schema)
 
+        api_key = api_key or self.api_key
+        if not api_key:
+            api_key = getenv(api_key_schema or self.config.api_key_schema)
+
         return await self.active_endpoints[endpoint].serve(
             payload=payload,
             base_url=self.config.base_url,
-            api_key=api_key or getenv(api_key_schema or self.config.api_key_schema),
+            api_key=api_key,
             method=method,
             retry_config=retry_config,
         )
@@ -167,3 +176,9 @@ class ProviderService:
                     msgs.append({"role": msg["role"], "content": _content})
 
         return msgs
+
+    # async def serve_embeddings(self, embed_str, **kwargs):
+    #     return await self.serve(input_=embed_str, endpioint="embeddings", **kwargs)
+
+    # async def serve_finetune(self, training_file, **kwargs):
+    #     return await self.serve(input_=training_file, endpoint="finetune", **kwargs)
