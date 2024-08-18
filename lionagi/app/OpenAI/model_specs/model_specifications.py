@@ -12,3 +12,6 @@ OAI_MODEL_SPECIFICATIONS = {
     "text-embeddings-3-large": TEXT_EMBEDDINGS3_LARGE_MODEL_CONFIG,
     "text-embeddings-3-small": TEXT_EMBEDDINGS3_SMALL_MODEL_CONFIG,
 }
+
+
+__all__ = ["OAI_MODEL_SPECIFICATIONS"]

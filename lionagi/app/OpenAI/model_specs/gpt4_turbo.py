@@ -4,9 +4,8 @@ from lionagi.app.OpenAI.model_specs._config import oai_chat_schema
 GPT4_TURBO_CHAT_COMPLETIONS = EndpointSchema(
     endpoint="chat/completions",
     pricing=(10, 30),
-    batch_pricing=(-1, -1),
     token_limit=128_000,
-    default_rate_limit=(60, 1_000, 5_000_000),
+    default_rate_limit=(None, None, None, None, None),
     default_config={"model": "gpt-4-turbo", **oai_chat_schema["config"]},
     required_params=oai_chat_schema["required_params"],
     optional_params=oai_chat_schema["optional_params"],
@@ -21,3 +20,6 @@ GPT4_TURBO_MODEL_CONFIG = ModelConfig(
         "chat/completions": GPT4_TURBO_CHAT_COMPLETIONS,
     },
 )
+
+
+__all__ = ["GPT4_TURBO_MODEL_CONFIG"]

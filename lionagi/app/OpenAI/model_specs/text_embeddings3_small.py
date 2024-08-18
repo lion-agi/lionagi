@@ -7,7 +7,7 @@ TEXT_EMBEDDINGS3_SMALL_EMBED = EndpointSchema(
     pricing=0.02,
     batch_pricing=0.01,
     token_limit=8_192,
-    default_rate_limit=(60, 3_000, 5_000_000),
+    default_rate_limit=(60, 10_000, 5_000_000, 1, 1_000),
     default_config={
         "model": "text-embeddings-3-small",
         **oai_embeddings_schema["config"],
@@ -25,3 +25,6 @@ TEXT_EMBEDDINGS3_SMALL_MODEL_CONFIG = ModelConfig(
         "embeddings": TEXT_EMBEDDINGS3_SMALL_EMBED,
     },
 )
+
+
+__all__ = ["TEXT_EMBEDDINGS3_SMALL_MODEL_CONFIG"]

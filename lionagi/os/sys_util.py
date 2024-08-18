@@ -14,13 +14,13 @@ import sys
 from datetime import datetime, timezone
 from pathlib import Path
 from shutil import copy2
-from typing import Any, List, Literal, Sequence, TypeVar, Union
+from typing import Any, Literal, Sequence, TypeVar, Union
 
 from lion_core import CoreUtil as cu
 from lion_core.libs import unique_hash
 from lion_core.generic.utils import to_list_type
 
-from lion_core.setting import LION_ID_CONFIG, TIME_CONFIG
+from lionagi.os._sys_config import LION_ID_CONFIG, TIME_CONFIG, LN_UNDEFINED
 
 
 T = TypeVar("T")
@@ -265,7 +265,7 @@ class SysUtil:
         return full_path
 
     @staticmethod
-    def list_files(dir_path: Path | str, extension: str | None = None) -> List[Path]:
+    def list_files(dir_path: Path | str, extension: str | None = None) -> list[Path]:
         """
         List all files in a specified directory with an optional extension filter.
 
@@ -560,7 +560,7 @@ class SysUtil:
         )
 
     @staticmethod
-    def list_installed_packages() -> List[str]:
+    def list_installed_packages() -> list[str]:
         """
         List all installed packages.
 
@@ -612,7 +612,7 @@ class SysUtil:
             raise
 
     @staticmethod
-    def to_list_type(item: T | list[T]) -> List[T]:
+    def to_list_type(item: T | list[T]) -> list[T]:
         """
         Convert an item to a list if it is not already a list.
 
@@ -643,4 +643,4 @@ def _run_pip_command(args: Sequence[str]) -> subprocess.CompletedProcess[bytes]:
     )
 
 
-__all__ = ["SysUtil"]
+__all__ = ["SysUtil", "LN_UNDEFINED"]

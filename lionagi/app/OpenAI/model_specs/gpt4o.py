@@ -17,7 +17,7 @@ GPT4O_CHAT_COMPLETIONS = EndpointSchema(
     pricing=(2.5, 10),  # input_token, output_token
     batch_pricing=(1.25, 5),  # input_token, output_token
     token_limit=128_000,
-    default_rate_limit=(60, 1_000, 5_000_000),
+    default_rate_limit=(None, None, None, None, None),
     default_config={"model": "gpt-4o-2024-08-06", **oai_chat_schema["config"]},
     required_params=oai_chat_schema["required_params"],
     optional_params=oai_chat_schema["optional_params"],
@@ -32,3 +32,6 @@ GPT4O_MODEL_CONFIG = ModelConfig(
         "chat/completions": GPT4O_CHAT_COMPLETIONS,
     },
 )
+
+
+__all__ = ["GPT4O_MODEL_CONFIG"]

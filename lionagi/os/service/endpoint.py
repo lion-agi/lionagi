@@ -1,8 +1,9 @@
+import logging
 import inspect
 from typing import Any
+from lion_core.exceptions import LionResourceError
 
 from lionagi.os.file.tokenize.token_calculator import TokenCalculator
-
 from lionagi.os.service.schema import EndpointSchema
 from lionagi.os.service.rate_limiter import RateLimitedExecutor
 from lionagi.os.service.config import RETRY_CONFIG
@@ -29,8 +30,8 @@ class EndPoint:
             interval=interval or schema.default_rate_limit[0],
             interval_request=interval_request or schema.default_rate_limit[1],
             interval_token=interval_token or schema.default_rate_limit[2],
-            refresh_time=refresh_time,
-            concurrent_capacity=concurrent_capacity,
+            refresh_time=refresh_time or schema.default_rate_limit[3],
+            concurrent_capacity=concurrent_capacity or schema.default_rate_limit[4],
         )
         if self.rate_limiter.processor is None:
             self._has_initialized = False
@@ -70,6 +71,14 @@ class EndPoint:
             self.token_calculator = self.token_calculator()
 
         tokens = self.token_calculator.calculate(input_)
+        required_tokens = tokens + payload.get("max_tokens", 100)  # buffer for chat
+
+        if required_tokens > self.schema.token_limit:
+            raise LionResourceError(
+                f"Number of required tokens {tokens} exceeds the Model"
+                f" limit of {self.schema.token_limit} for {payload.get("model", "N/A")}"
+            )
+
         action: APICalling = self.rate_limiter.create_api_calling(
             payload=payload,
             base_url=base_url,
@@ -78,7 +87,7 @@ class EndPoint:
             method=method,
             retry_config=retry_config,
         )
-        action.required_tokens = tokens
+        action.required_tokens = required_tokens
         await self.rate_limiter.append(action)
         return action.ln_id
 
@@ -99,15 +108,20 @@ class EndPoint:
             self.update_config(**c_)
 
         await self.init_rate_limiter()
-        action_id = await self.add_api_calling(
-            payload=payload,
-            base_url=base_url,
-            endpoint=self.endpoint,
-            api_key=api_key,
-            method=method,
-            retry_config=retry_config,
-        )
-        await self.rate_limiter.process()
+        try:
+            action_id = await self.add_api_calling(
+                payload=payload,
+                base_url=base_url,
+                endpoint=self.endpoint,
+                api_key=api_key,
+                method=method,
+                retry_config=retry_config,
+            )
+        except LionResourceError as e:
+            logging.error(e)
+            raise e
+
+        await self.rate_limiter.forward()
         if action_id in self.rate_limiter.completed_action:
             action: APICalling = self.rate_limiter.pile.pop(action_id)
             return action.to_log()

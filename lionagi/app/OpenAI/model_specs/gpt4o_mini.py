@@ -16,7 +16,7 @@ GPT4O_MINI_CHAT_COMPLETIONS = EndpointSchema(
     pricing=(0.15, 0.6),
     batch_pricing=(0.075, 0.3),
     token_limit=128_000,
-    default_rate_limit=(60, 1_000, 5_000_000),
+    default_rate_limit=(None, None, None, None, None),
     default_config={"model": "gpt-4o-mini", **oai_chat_schema["config"]},
     required_params=oai_chat_schema["required_params"],
     optional_params=oai_chat_schema["optional_params"],
@@ -30,7 +30,7 @@ GPT4O_MINI_FINETUNE = EndpointSchema(
     pricing=(0.3, 1.2, 3),
     batch_pricing=(0.15, 0.6, 3),
     token_limit=128_000,
-    default_rate_limit=(60, 1_000, 5_000_000),
+    default_rate_limit=(None, None, None, None, None),
     default_config={"model": "gpt-4o-mini", **oai_finetune_schema["config"]},
     required_params=oai_finetune_schema["required_params"],
     optional_params=oai_finetune_schema["optional_params"],
@@ -45,3 +45,6 @@ GPT4O_MINI_MODEL_CONFIG = ModelConfig(
         "fine-tuning": GPT4O_MINI_FINETUNE,
     },
 )
+
+
+__all__ = ["GPT4O_MINI_MODEL_CONFIG"]

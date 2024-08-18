@@ -1,16 +1,16 @@
+from typing_extensions import override
 import aiohttp
 from pydantic import Field
 
-from lion_core.abc import ObservableAction
+from lion_core.action.base import ObservableAction
 from lion_core.action.status import ActionStatus
-from lion_core.generic.element import Element
 
 from lionagi.os.primitives import log
 from lionagi.os.service.utils import call_api
 from lionagi.os.service.config import RETRY_CONFIG
 
 
-class APICalling(Element, ObservableAction):
+class APICalling(ObservableAction):
 
     payload: dict = Field(default_factory=dict)
     response: dict = Field(default_factory=dict)
@@ -46,6 +46,7 @@ class APICalling(Element, ObservableAction):
         self.required_tokens = required_tokens
         self.api_key_schema = api_key_schema
 
+    @override
     async def invoke(self):
         async with aiohttp.ClientSession() as session:
             url = self.base_url + self.endpoint
@@ -69,6 +70,7 @@ class APICalling(Element, ObservableAction):
                 self.status = ActionStatus.FAILED
                 self.error = str(e)
 
+    @override
     def to_dict(self):
         dict_ = super().to_dict()
         dict_["api_key"] = (
@@ -91,6 +93,13 @@ class APICalling(Element, ObservableAction):
     @classmethod
     def from_dict(cls, dict_):
         raise NotImplementedError
+
+    @override
+    @property
+    def request(self):
+        return {
+            "required_tokens": self.required_tokens,
+        }
 
 
 # File: lionagi/os/service/api/utils.py

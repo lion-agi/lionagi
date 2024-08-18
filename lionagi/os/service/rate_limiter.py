@@ -26,63 +26,46 @@ class RateLimitedProcessor(ActionProcessor):
         )
         self.interval = interval
         self.interval_token = interval_token
+        self.interval_request = interval_request
+        self.available_request = self.interval_request
+        self.available_token = self.interval_token
         self._rate_limit_replenisher_task: asyncio.Task | None = None
         self._lock: asyncio.Lock = asyncio.Lock()
-        self.available_request_capacity = self.capacity
-        self.available_token_capacity = self.interval_token
 
+    @override
     async def start_replenishing(self):
         """Start replenishing rate limit capacities at regular intervals."""
+        await self.start()
         try:
             while not self.stopped:
                 await asyncio.sleep(delay=self.interval)
                 async with self._lock:
-                    self.available_request_capacity = self.available_capacity
-                    self.available_token_capacity = self.interval_token
+                    self.available_request = self.interval_request - self.queue.qsize()
+                    self.available_token = self.interval_token
 
         except asyncio.CancelledError:
             logging.info("Rate limit replenisher task cancelled.")
         except Exception as e:
             logging.error(f"Error in rate limit replenisher: {e}")
 
-    async def stop_replenishing(self) -> None:
+    @override
+    async def stop(self) -> None:
         """Stop the replenishment task."""
         if self._rate_limit_replenisher_task:
             self._rate_limit_replenisher_task.cancel()
             await self._rate_limit_replenisher_task
-        await self.stop()
+        await super().stop()
 
+    @override
     async def request_permission(self, required_tokens: int) -> bool:
         async with self._lock:
-            if self.available_capacity > 0 and self.available_token_capacity > 0:
-                self.available_request_capacity -= 1
-                self.available_token_capacity -= required_tokens
+            if self.available_capacity > 0 and self.available_token > 0:
+                self.available_request -= 1
+                self.available_token -= required_tokens
                 return True
             return False
 
     @override
-    async def process(self) -> None:
-        """Process the work items in the queue."""
-        tasks = set()
-        prev = None
-        next = None
-        while self.available_capacity > 0 and self.queue.qsize() > 0:
-            if prev and prev.status == ActionStatus.PROCESSING:
-                next: APICalling = prev
-                asyncio.sleep(self.refresh_time)
-            else:
-                next: APICalling = await self.dequeue()
-                next.status = ActionStatus.PROCESSING
-
-            if await self.request_permission(next.required_tokens):
-                task = asyncio.create_task(next.invoke())
-                tasks.add(task)
-            prev = next
-
-        if tasks:
-            await asyncio.wait(tasks)
-            self.available_capacity = self.capacity
-
     @classmethod
     async def create(
         cls,
@@ -91,7 +74,7 @@ class RateLimitedProcessor(ActionProcessor):
         interval_token: int,
         refresh_time: float,
         concurrent_capacity: int,
-    ):
+    ) -> "RateLimitedProcessor":
         self = cls(
             interval=interval,
             interval_request=interval_request,
@@ -107,6 +90,8 @@ class RateLimitedProcessor(ActionProcessor):
 
 class RateLimitedExecutor(ActionExecutor):
 
+    processor_class = RateLimitedProcessor
+
     def __init__(
         self,
         interval: int | None = None,
@@ -115,15 +100,18 @@ class RateLimitedExecutor(ActionExecutor):
         refresh_time: float | None = None,
         concurrent_capacity: int = None,
     ):
-        super().__init__(
-            interval=interval or DEFAULT_RATE_LIMIT_CONFIG["interval"],
-            interval_request=interval_request
-            or DEFAULT_RATE_LIMIT_CONFIG["interval_request"],
-            interval_token=interval_token
-            or DEFAULT_RATE_LIMIT_CONFIG["interval_token"],
-            refresh_time=refresh_time or DEFAULT_RATE_LIMIT_CONFIG["refresh_time"],
-            concurrent_capacity=concurrent_capacity,
-        )
+        config = {
+            "interval": interval,
+            "interval_request": interval_request,
+            "interval_token": interval_token,
+            "refresh_time": refresh_time,
+            "concurrent_capacity": concurrent_capacity,
+        }
+        for k, v in config.items():
+            if v is None:
+                config[k] = DEFAULT_RATE_LIMIT_CONFIG[k]
+
+        super().__init__(**config)
 
     @staticmethod
     def create_api_calling(
@@ -143,18 +131,3 @@ class RateLimitedExecutor(ActionExecutor):
             retry_config=retry_config,
         )
         return action
-
-    async def create_processor(self):
-        self.processor = await RateLimitedProcessor.create(**self.processor_config)
-
-    async def stop(self):
-        await self.processor.stop_replenishing()
-
-    async def forward(self):
-        while len(self.pending) > 0:
-            work = self.pile[self.pending.popleft()]
-            await self.processor.enqueue(work)
-
-    async def process(self):
-        await self.forward()
-        await self.processor.process()

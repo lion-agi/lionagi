@@ -2,13 +2,29 @@ from pydantic import BaseModel, ConfigDict
 from lionagi.os.service.utils import create_payload
 
 
-class EndpointSchema(BaseModel):
+class SchemaModel(BaseModel):
+
+    def to_dict(self):
+        return self.model_dump()
+
+    @classmethod
+    def from_dict(cls, **data):
+        return cls(**data)
+
+
+class EndpointSchema(SchemaModel):
     endpoint: str
-    pricing: tuple | float
-    batch_pricing: tuple | float
+    pricing: tuple | float = None
+    batch_pricing: tuple | float = None
     token_limit: int
     default_config: dict
-    default_rate_limit: tuple  # (interval, interval_request, interval_token)
+    default_rate_limit: tuple = (
+        None,
+        None,
+        None,
+        None,
+        None,
+    )  # (interval, interval_request, interval_token, refresh_time, concurrent_capacity)
     required_params: list[str] = []
     optional_params: list[str] = []
     input_key: str | list[str]
@@ -20,13 +36,6 @@ class EndpointSchema(BaseModel):
         extra="forbid",
     )
 
-    def to_dict(self):
-        return self.model_dump()
-
-    @classmethod
-    def from_dict(cls, **data):
-        return cls(**data)
-
     def create_payload(self, input_):
         return create_payload(
             input_=input_,
@@ -37,14 +46,7 @@ class EndpointSchema(BaseModel):
         )
 
 
-class ModelConfig(BaseModel):
+class ModelConfig(SchemaModel):
     model: str
     alias: list[str]
     endpoint_schema: dict[str, EndpointSchema]
-
-    def to_dict(self):
-        return self.model_dump()
-
-    @classmethod
-    def from_dict(cls, **data):
-        return cls(**data)

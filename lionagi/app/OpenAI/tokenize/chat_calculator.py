@@ -31,13 +31,13 @@ class OpenAIChatTokenCalculator(TikTokenCalculator):
             num_tokens += 4
             _c = msg.get("content")
             num_tokens += self._calculate_chatitem(_c)
-        return num_tokens + 15  # buffer for chat
+        return num_tokens  # buffer for chat
 
     @singledispatchmethod
     def _calculate_chatitem(self, i_: Any):
         try:
             i_ = str(i_)
-            return self._calculate_chatitem(i_)
+            return self._calculate(i_)
         except:
             return 0
 
