@@ -3,18 +3,23 @@ from io import BytesIO
 
 from lionagi.os.sys_util import SysUtil
 from lionagi.os.file.tokenize.token_calculator import ImageTokenCalculator
-from .config import OPENAI_IMAGE_PRICING
 
 
 class OpenAIImageTokenCalculator(ImageTokenCalculator):
 
-    config = OPENAI_IMAGE_PRICING
+    def __init__(self, config=None):
+        super().__init__()
+        self.config = config
 
-    @classmethod
-    def calculate(cls, image_base64: str, detail: str):
+    def calculate(self, image_base64: str, detail: str):
         if not image_base64:
             return 0
-        return calculate_image_token_usage_from_base64(image_base64, detail, cls.config)
+
+        return calculate_image_token_usage_from_base64(
+            image_base64=image_base64,
+            detail=detail,
+            image_pricing=self.config,
+        )
 
 
 def calculate_image_token_usage_from_base64(image_base64: str, detail, image_pricing):

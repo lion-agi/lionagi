@@ -11,9 +11,15 @@ class OpenAITokenCalculator(ProviderTokenCalculator):
     image_calculator = OpenAIChatTokenCalculator.image_calculator
 
     @classmethod
-    def calculate(cls, endpoint: str = None, payload: dict = None, image_base64=None):
+    def calculate(
+        cls,
+        endpoint: str = None,
+        payload: dict = None,
+        image_base64=None,
+        image_detail=None,
+    ):
         if image_base64:
-            return cls.calculate_image(image_base64)
+            return cls.calculate_image(image_base64, image_detail)
 
         match endpoint:
             case "chat/completions":
@@ -32,5 +38,16 @@ class OpenAITokenCalculator(ProviderTokenCalculator):
         return cls.embedding_calculator.calculate(e_)
 
     @classmethod
-    def calculate_image(cls, i_: str):
-        return cls.image_calculator.calculate(i_)
+    def calculate_image(cls, i_: str, image_detail=None):
+        return cls.image_calculator.calculate(i_, image_detail)
+
+    def __getitem__(self, endpoint: str = "chat/completions"):
+        match endpoint:
+            case "chat/completions":
+                return self.chat_calculator
+            case "embeddings":
+                return self.embedding_calculator
+            case "images":
+                return self.image_calculator
+            case _:
+                raise ValueError(f"Invalid endpoint: {endpoint}")
