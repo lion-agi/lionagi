@@ -1,78 +1,61 @@
-import logging
-from typing import Callable
 from lionagi.os.sys_util import SysUtil
 from lionagi.os.file.tokenize.token_calculator import TextTokenCalculator
-from lionagi.app.TikToken.config import DEFAULT_CONFIG
+
+from .config import DEFAULT_CONFIG
 
 
 class TikTokenCalculator(TextTokenCalculator):
 
-    tiktoken = SysUtil.check_import("tiktoken")
+    tiktoken = SysUtil.import_module("tiktoken")
     config = DEFAULT_CONFIG
 
-    @classmethod
-    def calculate(
-        cls,
-        s_: str = None,
-        /,
-        encoding_name: str | None = None,
-        model_name: str | None = None,
-        tokenizer: Callable | None = None,
-    ) -> int:
+    def _calculate(self, s_, **kwargs):
+        if kwargs:
+            self.update_config(**kwargs)
+        return self.tokenize(s_)
 
-        return cls._calculate(
-            s_,
-            encoding_name=encoding_name,
-            model_name=model_name,
-            tokenizer=tokenizer,
-        )
-
-    @classmethod
     def tokenize(
-        cls,
-        s_: str = None,
+        self,
+        s_=None,
         /,
-        encoding_name: str | None = None,
-        model_name: str | None = None,
-        tokenizer: Callable | None = None,
-    ) -> int:
-        return cls._calculate(
-            s_,
-            encoding_name=encoding_name,
-            model_name=model_name,
-            tokenizer=tokenizer,
-            return_tokens=True,
-        )
-
-    @classmethod
-    def _calculate(
-        cls,
-        s_: str = None,
-        /,
-        encoding_name: str | None = None,
-        model_name: str | None = None,
-        tokenizer: Callable | None = None,
         return_tokens: bool = False,
-    ) -> int:
-
+        return_byte: bool = False,
+    ):
         if not s_:
             return 0
 
-        model_name = model_name or cls.config["model_name"]
-        tokenizer = tokenizer or cls.config["tokenizer"]
+        tokenizer = self.tokenizer
+        encoding = None
 
         if not callable(tokenizer):
-            if model_name:
+            if self.model_name:
                 try:
-                    encoding_name = encoding_name or cls.tiktoken.encoding_for_model(
-                        model_name
-                    )
+                    encoding_name = self.tiktoken.encoding_for_model(self.model_name)
                 except:
-                    encoding_name = encoding_name or cls.config["encoding_name"]
-            tokenizer = cls.tiktoken.get_encoding(encoding_name).encode
-        try:
+                    encoding_name = self.encoding_name
+            else:
+                encoding_name = self.encoding_name
+            encoding = self.tiktoken.get_encoding(encoding_name)
+
+            special_encodings = (
+                [encoding.encode(token) for token in self.disallowed_tokens]
+                if self.disallowed_tokens
+                else []
+            )
+            codes = encoding.encode(s_)
+
+            if special_encodings and len(special_encodings) > 0:
+                codes = [code for code in codes if code not in special_encodings]
+
+            if return_byte:
+                return codes
+
             if return_tokens:
-                return tokenizer(s_)
-            return len(tokenizer(s_))
-        except Exception as e:
-            logging.error(f"Error in tokenizing text with custom tokenizer, {e}")
+                return [encoding.decode([code]) for code in codes]
+            return len(codes)
+
+        tokens = tokenizer(s_)
+        valid_tokens = [
+            token for token in tokens if token not in self.disallowed_tokens
+        ]
+        return valid_tokens if return_tokens else len(valid_tokens)

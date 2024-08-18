@@ -1,8 +1,9 @@
 from functools import singledispatch
+from typing import Any
 from pandas import DataFrame, Series, concat
 from pandas.core.generic import NDFrame
-from typing import Any, Dict
-from lion_core.libs import to_list
+from lion_core.converter import Converter
+from lionagi.os.libs import to_dict, to_list
 
 
 @singledispatch
@@ -11,7 +12,7 @@ def to_df(
     /,
     *,
     drop_how: str = "all",
-    drop_kwargs: Dict[str, Any] | None = None,
+    drop_kwargs: dict[str, Any] | None = None,
     reset_index: bool = True,
     **kwargs: Any,
 ) -> DataFrame:
@@ -50,7 +51,7 @@ def to_df(
         drop_kwargs = {}
 
     try:
-        df = DataFrame(input_, **kwargs)
+        df: DataFrame = DataFrame(input_, **kwargs)
 
         if "thresh" not in drop_kwargs:
             drop_kwargs["how"] = drop_how
@@ -66,7 +67,7 @@ def _(
     /,
     *,
     drop_how: str = "all",
-    drop_kwargs: Dict | None = None,
+    drop_kwargs: dict | None = None,
     reset_index: bool = True,
     **kwargs,
 ) -> DataFrame:
@@ -97,7 +98,7 @@ def _(
         if drop_kwargs is None:
             drop_kwargs = {}
         try:
-            df = DataFrame(input_, **kwargs)
+            df: DataFrame = DataFrame(input_, **kwargs)
             if "thresh" not in drop_kwargs:
                 drop_kwargs["how"] = drop_how
             df = df.dropna(**drop_kwargs)
@@ -128,3 +129,14 @@ def _(
     drop_kwargs["how"] = drop_how
     df.dropna(**drop_kwargs, inplace=True)
     return df.reset_index(drop=True) if reset_index else df
+
+
+class PandasSeriesConverter(Converter):
+
+    @staticmethod
+    def from_obj(cls, obj: Series, **kwargs) -> dict:
+        return to_dict(obj, **kwargs)
+
+    @staticmethod
+    def to_obj(self, **kwargs) -> Series:
+        return Series(to_dict(self), **kwargs)

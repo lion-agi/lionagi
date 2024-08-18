@@ -4,7 +4,7 @@ from pydantic import Field
 from lion_core.abc import BaseRecord
 
 
-from lionagi.os.primitives import note, Node, Pile, pile, Note, Progression, prog
+from lionagi.os.primitives import note, Node, Pile, Note, Progression, pile, prog
 
 from lionagi.os.operator.validator.rule import Rule
 from lionagi.os.operator.validator.utils import validate_rules_info

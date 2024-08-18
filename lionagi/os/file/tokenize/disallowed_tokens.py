@@ -1,6 +1,6 @@
 # disallowed special tokens
 
-disallowed_tokens = [
+DISALLOWED_TOKENS = [
     "▄",
     "▅",
     "▆",

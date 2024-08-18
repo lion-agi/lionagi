@@ -1,8 +1,10 @@
-from lion_core.graph.node import Node as CoreNode
+from lion_core.generic.node import Node as CoreNode
 
 
 class Node(CoreNode):
-    pass
+
+    @classmethod
+    def from_obj(cls, *args, **kwargs): ...
 
 
 __all__ = ["Node"]

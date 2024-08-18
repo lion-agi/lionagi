@@ -9,7 +9,7 @@ from lion_core.action.function_calling import FunctionCalling
 from lion_core.exceptions import ItemNotFoundError
 from lion_core.session.utils import parse_action_request
 
-from lionagi.os.primitives.form.form import Form
+from lionagi.os.primitives.form._form import Form
 from lionagi.os.primitives.messages import Instruction, ActionRequest, System
 from lionagi.os.file.image.utils import ImageUtil
 from lionagi.os.operator.imodel.imodel import iModel

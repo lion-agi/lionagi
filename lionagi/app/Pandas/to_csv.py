@@ -1,6 +1,5 @@
 import zipfile
 import pandas as pd
-from pathlib import Path
 
 from lionagi.os.file.store.utils import output_node_list, output_edge_list
 

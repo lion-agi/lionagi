@@ -1,108 +1,137 @@
-from typing import Any, Callable
+from typing import Any, Callable, Literal
+from lion_core.imodel.imodel import iModel as CoreiModel
+from pydantic import Field
 
-from lion_core import LN_UNDEFINED
-
-from lion_core.abc import BaseiModel, Observable, Temporal
-from lion_core.exceptions import LionResourceError, LionTypeError
-from lion_core.libs import bcall, to_list
-from lion_core.communication.message import RoledMessage
-from lion_core.generic.util import to_list_type
-
+from lionagi.os.operator import imodel
 from lionagi.os.sys_util import SysUtil
-from lionagi.os.primitives.container.pile import pile
-from lionagi.os.service.endpoint.endpoint import EndPoint
-from lionagi.os.service.service.base_service import BaseService
+from lionagi.os.primitives import pile
+from lionagi.os.libs import bcall, to_list, alcall
 
-err_map = {LionResourceError: lambda e: None, LionTypeError: lambda e: None}
+from lionagi.os.service.provider import ProviderService
+from lionagi.os.service.rate_limiter import RateLimitedExecutor
+from lionagi.os.service.endpoint import EndPoint
+from lionagi.os.service.schema import EndpointSchema
 
 
-class iModel(BaseiModel, Observable, Temporal):
+class iModel(CoreiModel):
 
-    def __init__(self, service: BaseService):
-        self.ln_id = SysUtil.id()
-        self.timestamp = SysUtil.time(type_="timestamp")
-        self.service = service
+    service: ProviderService | None = Field(default=None, exclude=True)
+
+    def __init__(
+        self,
+        *,
+        model=None,
+        provider: str = None,
+        api_key=None,
+        api_key_schema=None,
+        interval: int = None,
+        interval_request: int = None,
+        interval_token: int | None = None,
+        endpoint: str = None,
+        active_endpoint: EndPoint | None = None,
+        endpoint_schema: EndpointSchema = None,
+        rate_limiter: RateLimitedExecutor = None,  # priority 1
+        refresh_time: float = 1,
+        service: ProviderService | None = None,
+        **kwargs,  # additional arguments for the model
+    ):
+        super().__init__()
+
+        if not active_endpoint:
+            endpoint = endpoint or "chat/completions"
+
+        if not service:
+            from lionagi.app.model_service import ModelService
+
+            self.service = ModelService.create_service(
+                provider=provider,
+                api_key=api_key,
+                api_key_schema=api_key_schema,
+            )
+
+        if not active_endpoint:
+            self.service.add_endpoint(
+                model=model,
+                endpoint=endpoint,
+                schema=endpoint_schema,
+                interval=interval,
+                interval_request=interval_request,
+                interval_token=interval_token,
+                refresh_time=refresh_time,
+                rate_limiter=rate_limiter,
+            )
+        else:
+            if rate_limiter:
+                active_endpoint.rate_limiter = rate_limiter
+            self.service.active_endpoints[active_endpoint.endpoint] = active_endpoint
+
+        if kwargs:
+            self.update_config(active_endpoint.endpoint, **kwargs)
+
+    @property
+    def provider(self):
+        return self.service.config.provider
+
+    def update_config(self, endpoint="chat/completions", **kwargs):
+        self.service.active_endpoints[endpoint].update_config(**kwargs)
 
     async def call(
         self,
-        input_: Any,
-        endpoint: str | EndPoint = None,
         *,
-        endpoint_config: dict | None = None,
+        endpoint: str,
+        input_: Any,
         method: str = "post",
-        retries: int | None = None,
-        initial_delay: float | None = None,
-        delay: float | None = None,
-        backoff_factor: float | None = None,
-        default: Any = LN_UNDEFINED,
-        timeout: float | None = None,
-        verbose: bool = True,
-        error_msg: str | None = None,
-        error_map: dict[type, Callable[[Exception], Any]] | None = None,
-        required_tokens: int | None = None,
-        cached: bool = False,
+        retry_config=None,
         **kwargs,
     ):
         return await self.service.serve(
-            input_=input_,
             endpoint=endpoint,
-            endpoint_config=endpoint_config,
+            input_=input_,
             method=method,
-            retries=retries,
-            initial_delay=initial_delay,
-            delay=delay,
-            backoff_factor=backoff_factor,
-            default=default,
-            timeout=timeout,
-            verbose=verbose,
-            error_msg=error_msg,
-            error_map=error_map,
-            required_tokens=required_tokens,
-            cached=cached,
+            retry_config=retry_config,
             **kwargs,
         )
 
-    async def chat(self, messages: list[RoledMessage], **kwargs):
-        return await self.call(messages, endpoint="chat/completions", **kwargs)
+    async def chat(self, messages, **kwargs):
+        return await self.service.serve_chat(messages, **kwargs)
 
     async def embed(self, input_: list[str], **kwargs):
-        return await self.call(input_, endpoint="embeddings", **kwargs)
+        return await self.call(input_=input_, endpoint="embeddings", **kwargs)
 
-    async def compute_perplexity(
-        self,
-        initial_context: str = None,
-        tokens: list[str] = None,
-        system_msg: str = None,
-        n_samples: int = 1,  # number of samples used for the computation per chunk
-        use_residual: bool = True,  # whether to use residual for the last sample
-        **kwargs,  # additional arguments for the model
-    ):
-        from .extension import iModelExtension
+    # async def structure(self, *args, **kwargs):
+    #     """raise error, or return structured output"""
+    #     raise NotImplementedError
 
-        return await iModelExtension.compute_perplexity(
-            imodel=self,
-            initial_context=initial_context,
-            tokens=tokens,
-            system_msg=system_msg,
-            n_samples=n_samples,
-            use_residual=use_residual,
-            **kwargs,
-        )
+    # async def compute_perplexity(
+    #     self,
+    #     initial_context: str = None,
+    #     tokens: list[str] = None,
+    #     system_msg: str = None,
+    #     n_samples: int = 1,  # number of samples used for the computation per chunk
+    #     use_residual: bool = True,  # whether to use residual for the last sample
+    #     **kwargs,  # additional arguments for the model
+    # ):
+    #     from .extension import iModelExtension
 
-    async def embed_nodes(self, nodes: Any, field="content", batch_size=100, **kwargs):
-        from .extension import iModelExtension
+    #     return await iModelExtension.compute_perplexity(
+    #         imodel=self,
+    #         initial_context=initial_context,
+    #         tokens=tokens,
+    #         system_msg=system_msg,
+    #         n_samples=n_samples,
+    #         use_residual=use_residual,
+    #         **kwargs,
+    #     )
 
-        p = pile()
+    # async def embed_nodes(self, nodes: Any, field="content", **kwargs):
+    #     from .extension import iModelExtension
 
-        async for batch in bcall(
-            input_=nodes,
-            func=iModelExtension.embed_node,
-            batch_size=batch_size,
-            imodel=self,
-            field=field,
-            error_map=err_map,
-            **kwargs,
-        ):
-            p.include(to_list(batch, flatten=True, dropna=True))
+    #     items = await alcall(
+    #         func=iModelExtension.embed_node,
+    #         input_=nodes,
+    #         imodel=self,
+    #         field=field,
+    #         **kwargs,
+    #     )
 
-        return p
+    #     return pile(items)

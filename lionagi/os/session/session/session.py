@@ -2,12 +2,18 @@ from typing import Any
 from lion_core.session.session import Session as CoreSession
 from lion_core.action.tool_manager import ToolManager
 
-from lionagi.os.primitives.node import Node
-from lionagi.os.primitives.container.pile import Pile
-from lionagi.os.primitives.container.exchange import Exchange
-from lionagi.os.primitives.container.flow import Flow
-from lionagi.os.primitives._funcs import prog, pile, flow
-from lionagi.os.primitives.session.branch.branch import Branch
+
+from lionagi.os.primitives import (
+    Node,
+    Pile,
+    Exchange,
+    Flow,
+    prog,
+    pile,
+    flow,
+)
+
+from lionagi.os.session.branch.branch import Branch
 from lionagi.os.operator.imodel.imodel import iModel
 
 
