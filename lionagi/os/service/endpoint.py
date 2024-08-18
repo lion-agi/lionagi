@@ -1,5 +1,4 @@
 import inspect
-import asyncio
 from typing import Any
 
 from lionagi.os.file.tokenize.token_calculator import TokenCalculator
@@ -26,15 +25,20 @@ class EndPoint:
         self.schema = schema
         self.token_calculator = token_calculator
         self.rate_limiter = rate_limiter or RateLimitedExecutor(
-            interval=interval,
-            interval_request=interval_request,
-            interval_token=interval_token,
+            interval=interval or schema.default_rate_limit[0],
+            interval_request=interval_request or schema.default_rate_limit[1],
+            interval_token=interval_token or schema.default_rate_limit[2],
             refresh_time=refresh_time,
         )
         if self.rate_limiter.processor is None:
             self._has_initialized = False
         else:
             self._has_initialized = True
+
+    def update_config(self, **kwargs):
+        schema = self.schema.model_copy()
+        schema.default_config.update(kwargs)
+        self.schema = schema
 
     async def init_rate_limiter(self) -> None:
         """Initialize the rate limiter for the endpoint."""
@@ -82,8 +86,16 @@ class EndPoint:
         base_url: str = None,
         method="post",
         api_key: str = None,
-        retry_config=RETRY_CONFIG,
+        retry_config=None,
+        **kwargs,
     ):
+        c_ = {k: v for k, v in kwargs.items() if k not in RETRY_CONFIG}
+        r_ = {k: v for k, v in kwargs.items() if k in RETRY_CONFIG}
+        retry_config = {**(retry_config or RETRY_CONFIG), **r_}
+
+        if c_:
+            self.update_config(**c_)
+
         await self.init_rate_limiter()
         action_id = await self.add_api_calling(
             payload=payload,

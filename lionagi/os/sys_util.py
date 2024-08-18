@@ -509,7 +509,6 @@ class SysUtil:
         return importlib.util.find_spec(package_name) is not None
 
     @staticmethod
-    @lru_cache(maxsize=None)
     def check_import(
         package_name: str,
         module_name: str | None = None,

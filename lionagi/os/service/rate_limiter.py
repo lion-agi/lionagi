@@ -19,13 +19,11 @@ class RateLimitedProcessor(ActionProcessor):
         refresh_time: float = 1,
     ):
         super().__init__(
-            capacity=interval_request or DEFAULT_RATE_LIMIT_CONFIG["interval_requests"],
+            capacity=interval_request,
             refresh_time=refresh_time,
         )
-        self.interval = interval or DEFAULT_RATE_LIMIT_CONFIG["interval"]
-        self.interval_token = (
-            interval_token or DEFAULT_RATE_LIMIT_CONFIG["interval_tokens"]
-        )
+        self.interval = interval
+        self.interval_token = interval_token
         self._rate_limit_replenisher_task: asyncio.Task | None = None
         self._lock: asyncio.Lock = asyncio.Lock()
         self.available_request_capacity = self.capacity
@@ -70,9 +68,9 @@ class RateLimitedProcessor(ActionProcessor):
                 next = prev
             else:
                 next = await self.dequeue()
+                next.status = ActionStatus.PROCESSING
 
             if await self.request_permission(next.required_tokens):
-                next.status = ActionStatus.PROCESSING
                 task = asyncio.create_task(next.invoke())
                 tasks.add(task)
                 prev = next
@@ -105,9 +103,9 @@ class RateLimitedExecutor(ActionExecutor):
 
     def __init__(
         self,
-        interval: int | None = 60,
-        interval_request: int | None = 1_000_000,
-        interval_token: int | None = 1_000,
+        interval: int | None = DEFAULT_RATE_LIMIT_CONFIG["interval"],
+        interval_request: int | None = DEFAULT_RATE_LIMIT_CONFIG["interval_request"],
+        interval_token: int | None = DEFAULT_RATE_LIMIT_CONFIG["interval_token"],
         refresh_time: float = 1,
     ):
         super().__init__(
@@ -142,7 +140,6 @@ class RateLimitedExecutor(ActionExecutor):
 
     async def stop(self):
         await self.processor.stop_replenishing()
-        await self.processor.stop()
 
     async def forward(self):
         while len(self.pending) > 0:
@@ -152,19 +149,3 @@ class RateLimitedExecutor(ActionExecutor):
     async def process(self):
         await self.forward()
         await self.processor.process()
-
-    # async def execute(self):
-    #     if self.processor is None:
-    #         self.create_processor()
-
-    #     self.execution_mode = True
-    #     self.processor._stop_event.clear()
-
-    #     while not self.processor.stopped:
-    #         await self.forward()
-    #         await self.processor.execute()
-
-    #     self.execution_mode = False
-
-
-# File: lionagi/os/service/api/rate_limited_processor.py

@@ -2,12 +2,10 @@ import aiohttp
 from pydantic import Field
 
 from lion_core.abc import ObservableAction
-from lion_core.exceptions import LionOperationError
 from lion_core.action.status import ActionStatus
 from lion_core.generic.element import Element
 
 from lionagi.os.primitives import log
-
 from lionagi.os.service.utils import call_api
 from lionagi.os.service.config import RETRY_CONFIG
 
@@ -67,12 +65,11 @@ class APICalling(Element, ObservableAction):
             except Exception as e:
                 self.status = ActionStatus.FAILED
                 self.error = str(e)
-                raise LionOperationError from e
 
     def to_dict(self):
         dict_ = super().to_dict()
         dict_["api_key"] = (
-            self.api_key[:4] + "*" * (len(self.api_key) - 8) + self.api_key[-4:],
+            self.api_key[:4] + "*" * (len(self.api_key) - 8) + self.api_key[-4:]
         )
         dict_["status"] = self.status.value
         return dict_

@@ -2,8 +2,8 @@ from lion_core.setting import LN_UNDEFINED
 
 DEFAULT_RATE_LIMIT_CONFIG = {
     "interval": 60,
-    "interval_requests": 1_000,
-    "interval_tokens": 1_000_000,
+    "interval_request": 1_000,
+    "interval_token": 1_000_000,
 }
 
 CACHED_CONFIG = {

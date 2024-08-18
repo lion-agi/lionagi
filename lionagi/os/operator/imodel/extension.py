@@ -4,10 +4,16 @@ import asyncio
 from typing import Any
 
 import numpy as np
-from lion_core.libs import nget, to_str, to_list
-from lion_core.exceptions import LionResourceError, LionTypeError
-from lion_core.generic.note import Note
+
 from lion_core.generic.component import Component
+from lion_core.exceptions import LionResourceError, LionTypeError
+
+
+from lionagi.os.libs import nget, to_str, to_list
+from lionagi.os.primitives import note, pile,  Note
+
+
+
 from .imodel import iModel
 
 
@@ -65,10 +71,10 @@ class iModelExtension(ABC):
         for idx, result in enumerate(results):
             _dict = {}
             _dict["tokens"] = samples[idx]
-
-            num_prompt_tokens += nget([1, "usage", "prompt_tokens"], result, 0)
-            num_completion_tokens += nget([1, "usage", "completion_tokens"], result, 0)
-            logprobs = nget([1, "choices", 0, "logprobs", "content"], result, [])
+            result = note(**result)
+            num_prompt_tokens += result.get([1, "usage", "prompt_tokens"], 0)
+            num_completion_tokens += result.get([1, "usage", "completion_tokens"], 0)
+            logprobs = result.get([1, "choices", 0, "logprobs", "content"], [])
             logprobs = to_list(logprobs, flatten=True, dropna=True)
             _dict["logprobs"] = [(i["token"], i["logprob"]) for i in logprobs]
             results_.append(_dict)

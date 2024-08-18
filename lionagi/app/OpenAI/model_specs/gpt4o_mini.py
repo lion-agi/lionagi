@@ -2,6 +2,15 @@ from lionagi.os.service.schema import EndpointSchema, ModelConfig
 from lionagi.app.OpenAI.model_specs._config import oai_chat_schema, oai_finetune_schema
 
 
+GPT4O_MINI_IMAGE_PRICING = {
+    "base_cost": 2833,
+    "low_detail": 0,
+    "max_dimension": 2048,
+    "min_side": 768,
+    "square_size": 512,
+    "square_cost": 5667,
+}
+
 GPT4O_MINI_CHAT_COMPLETIONS = EndpointSchema(
     endpoint="chat/completions",
     pricing=(0.15, 0.6),
@@ -12,6 +21,7 @@ GPT4O_MINI_CHAT_COMPLETIONS = EndpointSchema(
     required_params=oai_chat_schema["required_params"],
     optional_params=oai_chat_schema["optional_params"],
     input_key=oai_chat_schema["input_key"],
+    image_pricing=GPT4O_MINI_IMAGE_PRICING,
 )
 
 

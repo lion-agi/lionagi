@@ -4,7 +4,6 @@ from typing import Type
 from pydantic import BaseModel
 from aiocache import cached
 
-
 from lionagi.os.file.tokenize.token_calculator import ProviderTokenCalculator
 from lionagi.os.service.schema import ModelConfig, EndpointSchema
 from lionagi.os.service.endpoint import EndPoint
@@ -26,7 +25,6 @@ class ProviderService:
     token_calculator: Type[ProviderTokenCalculator] = None
     endpoint_config: dict[str, EndpointSchema] = None  # endpoint: EndpointSchema
     model_specification: dict[str, ModelConfig] = None  # model_name: ModelConfig
-    active_endpoints: dict[str, EndPoint] = {}  # endpoint: EndPoint
 
     def __init__(
         self,
@@ -34,28 +32,44 @@ class ProviderService:
         config: ProviderConfig = None,
         model_specification: dict[str, ModelConfig] = None,
         endpoint_config=None,
+        api_key=None,
+        api_key_schema=None,
     ):
         self.token_calculator = token_calculator
         self.config = config
         self.model_specification = model_specification
         self.endpoint_config = endpoint_config
+        self.active_endpoints: dict[str, EndPoint] = {}  # endpoint: EndPoint
+        
+        self.api_key = api_key
+        if api_key_schema:
+            self.config = self.config.model_copy()
+            self.config.api_key_schema = api_key_schema
+        if self.api_key is None:
+            self.api_key = getenv(self.config.api_key_schema)
+
 
     def add_endpoint(
         self,
         *,
-        endpoint=None,
+        endpoint,
+        model=None,
         schema: EndpointSchema | None = None,  # priority 1
         interval: int | None = None,
         interval_request: int | None = None,
         interval_token: int | None = None,
         refresh_time: float = 1,
+        rate_limiter=None,
     ):
         if not schema:
-            schema = self.endpoint_config[endpoint]
+            if model:
+                schema = self.model_specification[model].endpoint_schema[endpoint]
+            else:
+                schema = self.endpoint_config[endpoint]
 
         endpoint_ = EndPoint(
             schema=schema,
-            rate_limiter=None,
+            rate_limiter=rate_limiter,
             interval=interval,
             interval_request=interval_request,
             interval_token=interval_token,
@@ -69,15 +83,27 @@ class ProviderService:
         self,
         *,
         endpoint=None,
+        input_=None,
         schema: EndpointSchema = None,
         payload: dict = None,
         method="post",
-        retry_config=RETRY_CONFIG,
+        retry_config=None,
         api_key_schema=None,  # priority 2
         api_key=None,  # priority 1
         cached=False,
+        _parse_func=None,
+        **kwargs,
     ) -> Log:
         endpoint = endpoint or self.default_endpoint
+
+        if not endpoint in self.active_endpoints:
+            self.add_endpoint(endpoint=endpoint)
+
+        if _parse_func:
+            input_ = _parse_func(input_)
+
+        payload = self.active_endpoints[endpoint].schema.create_payload(input_=input_)
+
         if cached:
             return await self._cached_serve(
                 endpoint=endpoint,
@@ -87,6 +113,7 @@ class ProviderService:
                 retry_config=retry_config,
                 api_key_schema=api_key_schema,
                 api_key=api_key,
+                **kwargs,
             )
         return await self._serve(
             endpoint=endpoint,
@@ -96,6 +123,7 @@ class ProviderService:
             retry_config=retry_config,
             api_key_schema=api_key_schema,
             api_key=api_key,
+            **kwargs,
         )
 
     async def _serve(
@@ -108,6 +136,7 @@ class ProviderService:
         retry_config=RETRY_CONFIG,
         api_key_schema=None,  # priority 2
         api_key=None,  # priority 1
+        **kwargs,
     ) -> Log:
         if not endpoint in self.active_endpoints:
             self.add_endpoint(endpoint, schema=schema)
@@ -122,6 +151,7 @@ class ProviderService:
             api_key=api_key,
             method=method,
             retry_config=retry_config,
+            **kwargs,
         )
 
     @cached(**CACHED_CONFIG)
@@ -135,6 +165,7 @@ class ProviderService:
         retry_config=RETRY_CONFIG,
         api_key_schema=None,  # priority 2
         api_key=None,  # priority 1
+        **kwargs,
     ) -> Log:
 
         return await self._serve(
@@ -145,6 +176,15 @@ class ProviderService:
             retry_config=retry_config,
             api_key_schema=api_key_schema,
             api_key=api_key,
+            **kwargs,
+        )
+
+    async def serve_chat(self, messages, **kwargs):
+        return await self.serve(
+            input_=messages,
+            endpoint="chat/completions",
+            _parse_func=self.prepare_chat_input,
+            **kwargs,
         )
 
     # override this method for different providers
@@ -176,9 +216,3 @@ class ProviderService:
                     msgs.append({"role": msg["role"], "content": _content})
 
         return msgs
-
-    # async def serve_embeddings(self, embed_str, **kwargs):
-    #     return await self.serve(input_=embed_str, endpioint="embeddings", **kwargs)
-
-    # async def serve_finetune(self, training_file, **kwargs):
-    #     return await self.serve(input_=training_file, endpoint="finetune", **kwargs)

@@ -15,7 +15,9 @@ class EndpointSchema(BaseModel):
     image_pricing: dict = None
 
     model_config = ConfigDict(
-        arbitrary_types_allowed=True, populate_by_name=True, extra="forbid"
+        arbitrary_types_allowed=True,
+        populate_by_name=True,
+        extra="forbid",
     )
 
     def to_dict(self):

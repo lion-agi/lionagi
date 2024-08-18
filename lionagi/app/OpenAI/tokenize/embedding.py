@@ -21,9 +21,9 @@ class OpenAIEmbeddingTokenCalculator(TikTokenCalculator):
             return 0
 
     @_calculate_embed_item.register(str)
-    def _(cls, _e: str):
-        return cls._calculate(_e)
+    def _(cls, e_: str):
+        return cls._calculate(e_)
 
     @_calculate_embed_item.register(list)
-    def _(cls, _e: list):
-        return sum(cls._calculate_embed_item(e) for e in _e)
+    def _(cls, e_: list):
+        return sum(cls._calculate_embed_item(e) for e in e_)
