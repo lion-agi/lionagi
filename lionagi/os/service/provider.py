@@ -1,5 +1,4 @@
 from os import getenv
-
 from typing import Type
 from pydantic import BaseModel
 from aiocache import cached
@@ -28,6 +27,7 @@ class ProviderService:
 
     def __init__(
         self,
+        *,
         token_calculator: Type[ProviderTokenCalculator] = None,
         config: ProviderConfig = None,
         model_specification: dict[str, ModelConfig] = None,
@@ -43,6 +43,10 @@ class ProviderService:
 
         self.api_key = api_key
         if api_key_schema:
+            if getenv(api_key_schema, None) is None:
+                raise ValueError(
+                    f"API key schema {api_key_schema} not found in environment"
+                )
             self.config = self.config.model_copy()
             self.config.api_key_schema = api_key_schema
         if self.api_key is None:

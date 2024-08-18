@@ -1,11 +1,19 @@
+from lionagi.os.sys_util import SysUtil
+
+
 class LlamaPack:
 
-    @staticmethod
-    def download(pack_name, pack_path):
-        try:
-            from llama_index.llama_pack import download_llama_pack
+    download_llama_pack = SysUtil.check_import(
+        package_name="llama_index",
+        module_name="llama_pack",
+        import_name="download_llama_pack",
+    )
 
-            return download_llama_pack(pack_name, pack_path)
+    @classmethod
+    def download(cls, pack_name, pack_path):
+        try:
+            return cls.download_llama_pack(pack_name, pack_path)
+
         except Exception as e:
             raise ImportError(f"Error in downloading llama pack: {e}")
 

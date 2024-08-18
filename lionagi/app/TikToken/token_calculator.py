@@ -6,7 +6,7 @@ from .config import DEFAULT_CONFIG
 
 class TikTokenCalculator(TextTokenCalculator):
 
-    tiktoken = SysUtil.check_import("tiktoken")
+    tiktoken = SysUtil.import_module("tiktoken")
     config = DEFAULT_CONFIG
 
     def _calculate(self, s_, **kwargs):

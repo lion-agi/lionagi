@@ -4,7 +4,6 @@ from typing_extensions import override
 
 from lion_core.action.action_processor import ActionProcessor
 from lion_core.action.action_executor import ActionExecutor
-from lion_core.action.status import ActionStatus
 
 from lionagi.os.service.config import DEFAULT_RATE_LIMIT_CONFIG, RETRY_CONFIG
 from lionagi.os.service.api_calling import APICalling

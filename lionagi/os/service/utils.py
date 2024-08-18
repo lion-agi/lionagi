@@ -60,7 +60,6 @@ async def call_api(
                     if "error" not in response_json:
                         return response_json
                     if "Rate limit" in response_json["error"].get("message", ""):
-                        await asyncio.sleep(15)
                         raise LionResourceError(
                             f"Rate limit exceeded. Error: {response_json['error']}"
                         )

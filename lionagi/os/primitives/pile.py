@@ -1,11 +1,35 @@
-from typing import Any
+from typing import Any, ClassVar, Type
 from lion_core.generic.pile import Pile as CorePile
+
+from lionagi.os.primitives.node import Node
+from ._pile_loader import PileLoaderRegistry, PileLoader
 
 
 class Pile(CorePile):
     """async-compatible, ordered collection of Observable elements."""
 
-    pass
+    _loader_registry: ClassVar = PileLoaderRegistry
+
+    @classmethod
+    def get_loader_registry(cls) -> PileLoaderRegistry:
+        """Get the converter registry for the class."""
+        if isinstance(cls._loader_registry, type):
+            cls._loader_registry = cls._loader_registry()
+        return cls._loader_registry
+
+    @classmethod
+    def load_from(cls, obj: Any, key: str | None = None) -> "Pile":
+        data = cls.get_loader_registry().load_from(obj, key)
+        return cls([Node.from_dict(d) for d in data])
+
+    @classmethod
+    def register_loader(
+        cls,
+        key: str,
+        loader: Type[PileLoader],
+    ) -> None:
+        """Register a new converter. Can be used for both a class and/or an instance."""
+        cls.get_loader_registry().register(key, loader)
 
 
 def pile(

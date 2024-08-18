@@ -17,7 +17,7 @@ class LlamaIndex:
             llm_class = llm_class or OpenAI
             llm_kwargs = llm_kwargs or {}
             if "model" not in llm_kwargs:
-                llm_kwargs["model"] = "gpt-4o"
+                llm_kwargs["model"] = "gpt-4o-2024-08-06"
             llm_obj = llm_class(**llm_kwargs)
 
         Settings.llm = llm_obj
