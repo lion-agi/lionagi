@@ -91,13 +91,13 @@ class iModel(CoreiModel):
             retry_config=retry_config,
             **kwargs,
         )
-        
+
     async def chat(self, messages, **kwargs):
         return await self.service.serve_chat(messages, **kwargs)
-        
+
     async def embed(self, input_: list[str], **kwargs):
         return await self.call(input_=input_, endpoint="embeddings", **kwargs)
-        
+
     # async def structure(self, *args, **kwargs):
     #     """raise error, or return structured output"""
     #     raise NotImplementedError
@@ -125,7 +125,7 @@ class iModel(CoreiModel):
 
     # async def embed_nodes(self, nodes: Any, field="content", **kwargs):
     #     from .extension import iModelExtension
-                
+
     #     items = await alcall(
     #         func=iModelExtension.embed_node,
     #         input_=nodes,
@@ -133,5 +133,5 @@ class iModel(CoreiModel):
     #         field=field,
     #         **kwargs,
     #     )
-        
+
     #     return pile(items)

@@ -42,4 +42,3 @@ class OpenAIService(ProviderService):
             api_key=api_key,
             api_key_schema=api_key_schema,
         )
-

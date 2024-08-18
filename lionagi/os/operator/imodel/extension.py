@@ -10,8 +10,7 @@ from lion_core.exceptions import LionResourceError, LionTypeError
 
 
 from lionagi.os.libs import nget, to_str, to_list
-from lionagi.os.primitives import note, pile,  Note
-
+from lionagi.os.primitives import note, pile, Note
 
 
 from .imodel import iModel
@@ -110,13 +109,13 @@ class iModelExtension(ABC):
             embed_str.pop("images", None)
             embed_str.pop("image_detail", None)
 
-        num_tokens = imodel.service.provider.token_calculator.calculate(
+        num_tokens = imodel.service.token_calculator.calculate(
             "embeddings", to_str(embed_str)
         )
         model = imodel.service.endpoints["embeddings"].endpoint_config["model"]
 
         token_limit = (
-            imodel.service.provider.model_specification.models[model]
+            imodel.service.model_specification[model]
             .endpoint_schema["embeddings"]
             .token_limit
         )

@@ -1,5 +1,6 @@
 import logging
 import asyncio
+from typing_extensions import override
 
 from lion_core.action.action_processor import ActionProcessor
 from lion_core.action.action_executor import ActionExecutor
@@ -16,10 +17,11 @@ class RateLimitedProcessor(ActionProcessor):
         interval: int | None = None,
         interval_request: int | None = None,
         interval_token: int | None = None,
-        refresh_time: float = 1,
+        refresh_time: float = None,
+        concurrent_capacity: int = None,
     ):
         super().__init__(
-            capacity=interval_request,
+            capacity=concurrent_capacity or interval_request,
             refresh_time=refresh_time,
         )
         self.interval = interval
@@ -58,22 +60,24 @@ class RateLimitedProcessor(ActionProcessor):
                 return True
             return False
 
+    @override
     async def process(self) -> None:
         """Process the work items in the queue."""
         tasks = set()
         prev = None
-
+        next = None
         while self.available_capacity > 0 and self.queue.qsize() > 0:
             if prev and prev.status == ActionStatus.PROCESSING:
-                next = prev
+                next: APICalling = prev
+                asyncio.sleep(self.refresh_time)
             else:
-                next = await self.dequeue()
+                next: APICalling = await self.dequeue()
                 next.status = ActionStatus.PROCESSING
 
             if await self.request_permission(next.required_tokens):
                 task = asyncio.create_task(next.invoke())
                 tasks.add(task)
-                prev = next
+            prev = next
 
         if tasks:
             await asyncio.wait(tasks)
@@ -86,12 +90,14 @@ class RateLimitedProcessor(ActionProcessor):
         interval_request: int,
         interval_token: int,
         refresh_time: float,
+        concurrent_capacity: int,
     ):
         self = cls(
             interval=interval,
             interval_request=interval_request,
             interval_token=interval_token,
             refresh_time=refresh_time,
+            concurrent_capacity=concurrent_capacity,
         )
         self._rate_limit_replenisher_task = asyncio.create_task(
             self.start_replenishing()
@@ -103,18 +109,21 @@ class RateLimitedExecutor(ActionExecutor):
 
     def __init__(
         self,
-        interval: int | None = DEFAULT_RATE_LIMIT_CONFIG["interval"],
-        interval_request: int | None = DEFAULT_RATE_LIMIT_CONFIG["interval_request"],
-        interval_token: int | None = DEFAULT_RATE_LIMIT_CONFIG["interval_token"],
-        refresh_time: float = 1,
+        interval: int | None = None,
+        interval_request: int | None = None,
+        interval_token: int | None = None,
+        refresh_time: float | None = None,
+        concurrent_capacity: int = None,
     ):
         super().__init__(
-            interval=interval,
-            interval_request=interval_request,
-            interval_token=interval_token,
-            refresh_time=refresh_time,
+            interval=interval or DEFAULT_RATE_LIMIT_CONFIG["interval"],
+            interval_request=interval_request
+            or DEFAULT_RATE_LIMIT_CONFIG["interval_request"],
+            interval_token=interval_token
+            or DEFAULT_RATE_LIMIT_CONFIG["interval_token"],
+            refresh_time=refresh_time or DEFAULT_RATE_LIMIT_CONFIG["refresh_time"],
+            concurrent_capacity=concurrent_capacity,
         )
-        self.processor = None
 
     @staticmethod
     def create_api_calling(

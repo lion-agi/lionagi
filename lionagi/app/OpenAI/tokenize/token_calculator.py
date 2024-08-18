@@ -11,7 +11,13 @@ class OpenAITokenCalculator(ProviderTokenCalculator):
     image_calculator = OpenAIChatTokenCalculator.image_calculator
 
     @classmethod
-    def calculate(cls, endpoint: str = None, payload: dict = None, image_base64=None, image_detail=None):
+    def calculate(
+        cls,
+        endpoint: str = None,
+        payload: dict = None,
+        image_base64=None,
+        image_detail=None,
+    ):
         if image_base64:
             return cls.calculate_image(image_base64, image_detail)
 

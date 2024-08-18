@@ -12,7 +12,6 @@ import re
 import subprocess
 import sys
 from datetime import datetime, timezone
-from functools import lru_cache
 from pathlib import Path
 from shutil import copy2
 from typing import Any, List, Literal, Sequence, TypeVar, Union

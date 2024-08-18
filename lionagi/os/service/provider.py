@@ -40,14 +40,13 @@ class ProviderService:
         self.model_specification = model_specification
         self.endpoint_config = endpoint_config
         self.active_endpoints: dict[str, EndPoint] = {}  # endpoint: EndPoint
-        
+
         self.api_key = api_key
         if api_key_schema:
             self.config = self.config.model_copy()
             self.config.api_key_schema = api_key_schema
         if self.api_key is None:
             self.api_key = getenv(self.config.api_key_schema)
-
 
     def add_endpoint(
         self,

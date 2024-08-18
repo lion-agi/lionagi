@@ -20,6 +20,7 @@ class EndPoint:
         interval_token: int | None = None,
         refresh_time: float = 1,
         token_calculator: TokenCalculator = None,
+        concurrent_capacity: int = None,
     ) -> None:
         self.endpoint = schema.endpoint
         self.schema = schema
@@ -29,6 +30,7 @@ class EndPoint:
             interval_request=interval_request or schema.default_rate_limit[1],
             interval_token=interval_token or schema.default_rate_limit[2],
             refresh_time=refresh_time,
+            concurrent_capacity=concurrent_capacity,
         )
         if self.rate_limiter.processor is None:
             self._has_initialized = False

@@ -4,6 +4,7 @@ DEFAULT_RATE_LIMIT_CONFIG = {
     "interval": 60,
     "interval_request": 1_000,
     "interval_token": 1_000_000,
+    "refresh_time": 1,
 }
 
 CACHED_CONFIG = {

@@ -22,7 +22,8 @@ class APICalling(Element, ObservableAction):
     retry_config: dict = Field(default_factory=dict, exclude=True)
     error: str = Field(default=None)
     required_tokens: int = Field(default=1)
-    api_key_schema: str = Field(default=None)
+    api_key_schema: str = Field(default=None, exclude=True)
+    execution_time: float = Field(default=None)
 
     def __init__(
         self,
@@ -50,16 +51,18 @@ class APICalling(Element, ObservableAction):
             url = self.base_url + self.endpoint
             headers = {"Authorization": f"Bearer {self.api_key}"}
             try:
-                response = await call_api(
+                response, elp = await call_api(
                     http_session=session,
                     url=url,
                     method=self.method,
                     headers=headers,
                     json=self.payload,
+                    timing=True,
                     **self.retry_config,
                 )
                 if response:
                     self.response = response
+                    self.execution_time = elp
                     self.status = ActionStatus.COMPLETED
 
             except Exception as e:
@@ -69,7 +72,7 @@ class APICalling(Element, ObservableAction):
     def to_dict(self):
         dict_ = super().to_dict()
         dict_["api_key"] = (
-            self.api_key[:4] + "*" * (len(self.api_key) - 8) + self.api_key[-4:]
+            self.api_key[:6] + "*" * (len(self.api_key) - 10) + self.api_key[-4:]
         )
         dict_["status"] = self.status.value
         return dict_
@@ -84,6 +87,10 @@ class APICalling(Element, ObservableAction):
             content=content,
             loginfo=_dict,
         )
+
+    @classmethod
+    def from_dict(cls, dict_):
+        raise NotImplementedError
 
 
 # File: lionagi/os/service/api/utils.py

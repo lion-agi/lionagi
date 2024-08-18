@@ -41,3 +41,10 @@ class ModelConfig(BaseModel):
     model: str
     alias: list[str]
     endpoint_schema: dict[str, EndpointSchema]
+
+    def to_dict(self):
+        return self.model_dump()
+
+    @classmethod
+    def from_dict(cls, **data):
+        return cls(**data)
