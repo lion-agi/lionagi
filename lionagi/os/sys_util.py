@@ -14,7 +14,7 @@ import sys
 from datetime import datetime, timezone
 from pathlib import Path
 from shutil import copy2
-from typing import Any, Literal, Sequence, TypeVar, Union
+from typing import Any, Literal, Sequence, TypeVar
 
 from lion_core import CoreUtil as cu
 from lion_core.libs import unique_hash
@@ -24,7 +24,7 @@ from lionagi.os._sys_config import LION_ID_CONFIG, TIME_CONFIG, LN_UNDEFINED
 
 
 T = TypeVar("T")
-PATH_TYPE = Union[str, Path]
+PATH_TYPE = str | Path
 
 
 class SysUtil:
@@ -466,7 +466,7 @@ class SysUtil:
     def import_module(
         package_name: str,
         module_name: str = None,
-        import_name: str = None,
+        import_name: str | list = None,
     ) -> Any:
         """
         Import a module by its path.
@@ -486,7 +486,10 @@ class SysUtil:
             )
 
             if import_name:
-                module = __import__(full_import_path, fromlist=[import_name])
+                import_name = (
+                    [import_name] if not isinstance(import_name, list) else import_name
+                )
+                module = __import__(full_import_path, fromlist=import_name)
                 return getattr(module, import_name)
             else:
                 return __import__(full_import_path)
