@@ -16,37 +16,6 @@ def to_df(
     reset_index: bool = True,
     **kwargs: Any,
 ) -> DataFrame:
-    """
-    Converts various input types to a pandas DataFrame, with options for
-    handling missing data and resetting the index. This function is
-    overloaded to handle specific data structures such as lists of
-    dictionaries, lists of pandas objects (DataFrames or Series), and more.
-
-    The base implementation attempts to directly convert the input to a
-    DataFrame, applying dropna and reset_index as specified.
-
-    Args:
-        input_ (Any): The input data to convert into a DataFrame. Accepts a
-            wide range of types thanks to overloads.
-        drop_how (str): Specifies how missing values are dropped. Passed
-            directly to DataFrame.dropna().
-        drop_kwargs (Dict[str, Any] | None): Additional keyword arguments for
-            DataFrame.dropna().
-        reset_index (bool): If True, the DataFrame index will be reset,
-            removing the index labels.
-        **kwargs: Additional keyword arguments passed to the pandas DataFrame
-            constructor.
-
-    Returns:
-        pd.DataFrame: A pandas DataFrame constructed from the input data.
-
-    Raises:
-        ValueError: If there is an error during the conversion process.
-
-    Note:
-        - This function is overloaded to provide specialized behavior for
-          different input types, enhancing its flexibility.
-    """
     if drop_kwargs is None:
         drop_kwargs = {}
 
@@ -71,26 +40,6 @@ def _(
     reset_index: bool = True,
     **kwargs,
 ) -> DataFrame:
-    """
-    Specialized behavior for converting a list of data to a DataFrame.
-
-    Args:
-        input_ (list): The input list to convert into a DataFrame.
-        drop_how (str): Specifies how missing values are dropped. Passed
-            directly to DataFrame.dropna().
-        drop_kwargs (Dict | None): Additional keyword arguments for
-            DataFrame.dropna().
-        reset_index (bool): If True, the DataFrame index will be reset,
-            removing the index labels.
-        **kwargs: Additional keyword arguments passed to the pandas DataFrame
-            constructor.
-
-    Returns:
-        pd.DataFrame: A pandas DataFrame constructed from the input list.
-
-    Raises:
-        ValueError: If there is an error during the conversion process.
-    """
     if not input_:
         return DataFrame()
 
