@@ -1,30 +1,60 @@
-class LlamaIndex:
+from typing import Type, Any
 
-    @classmethod
-    def index(
-        cls,
-        nodes,
-        llm_obj=None,
-        llm_class=None,
-        llm_kwargs=None,
-        index_type=None,
-        **kwargs,
-    ):
-        from llama_index.core import Settings
-        from llama_index.llms.openai import OpenAI
+from lionagi.os.primitives import Node, Pile
+from lionagi.os.sys_util import SysUtil
+from .config import DEFAULT_MODEL
 
-        if not llm_obj:
-            llm_class = llm_class or OpenAI
-            llm_kwargs = llm_kwargs or {}
-            if "model" not in llm_kwargs:
-                llm_kwargs["model"] = "gpt-4o-2024-08-06"
-            llm_obj = llm_class(**llm_kwargs)
 
-        Settings.llm = llm_obj
+def create_llamaindex(
+    nodes: list | Pile | Any,
+    *args,  # additional index init args
+    index_type: Type | None = None,
+    llm=None,
+    model_config: dict = None,
+    return_llama_nodes=False,
+    **kwargs,  # additional index init kwargs
+):
+    Settings = SysUtil.check_import(
+        package_name="llama_index",
+        module_name="core",
+        import_name="Settings",
+        pip_name="llama-index",
+    )
 
-        if not index_type:
-            from llama_index.core import VectorStoreIndex
+    if not llm:
+        OpenAI = SysUtil.import_module(
+            package_name="llama_index",
+            module_name="llms.openai",
+            import_name="OpenAI",
+        )
+        config = {**(model_config or {})}
+        config["model"] = config.pop("model", DEFAULT_MODEL)
+        llm = OpenAI(**config)
 
-            index_type = VectorStoreIndex
+    Settings.llm = llm
 
-        return index_type(nodes, **kwargs)
+    if not index_type:
+        VectorStoreIndex = SysUtil.import_module(
+            package_name="llama_index",
+            module_name="core",
+            import_name="VectorStoreIndex",
+        )
+
+        index_type = VectorStoreIndex
+
+    if isinstance(nodes, Pile):
+        nodes = list(nodes)
+
+    if not isinstance(nodes, list):
+        nodes = [nodes]
+
+    _nodes = []
+    for i in nodes:
+        if isinstance(i, Node):
+            i = i.convert_to("llamaindex")
+        _nodes.append(i)
+
+    out = index_type(_nodes, *args, **kwargs)
+    if return_llama_nodes:
+        return out, _nodes
+    return out

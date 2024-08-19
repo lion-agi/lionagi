@@ -1,4 +1,4 @@
-llama_meta_fields = [
+LLAMAINDEX_META_FIELDS = [
     "id_",
     "embedding",
     "excluded_embed_metadata_keys",
