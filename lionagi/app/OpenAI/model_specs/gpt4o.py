@@ -27,7 +27,7 @@ GPT4O_CHAT_COMPLETIONS = EndpointSchema(
 
 GPT4O_MODEL_CONFIG = ModelConfig(
     model="gpt-4o-2024-08-06",
-    alias=["gpt-4o", "gpt-4o-2024-05-13"],
+    alias=["gpt-4o", "gpt-4o-2024-08-06"],
     endpoint_schema={
         "chat/completions": GPT4O_CHAT_COMPLETIONS,
     },

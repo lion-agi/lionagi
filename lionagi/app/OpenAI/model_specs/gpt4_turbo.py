@@ -15,7 +15,7 @@ GPT4_TURBO_CHAT_COMPLETIONS = EndpointSchema(
 
 GPT4_TURBO_MODEL_CONFIG = ModelConfig(
     model="gpt-4-turbo",
-    alias=["gpt-4-turbo-2024-04-09"],
+    alias=["gpt-4-turbo-2024-04-09", "gpt-4-turbo"],
     endpoint_schema={
         "chat/completions": GPT4_TURBO_CHAT_COMPLETIONS,
     },

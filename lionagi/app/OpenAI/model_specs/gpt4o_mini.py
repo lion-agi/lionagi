@@ -39,7 +39,7 @@ GPT4O_MINI_FINETUNE = EndpointSchema(
 
 GPT4O_MINI_MODEL_CONFIG = ModelConfig(
     model="gpt-4o-mini",
-    alias=["gpt-4o-mini-2024-07-18"],
+    alias=["gpt-4o-mini-2024-07-18", "gpt-4o-mini"],
     endpoint_schema={
         "chat/completions": GPT4O_MINI_CHAT_COMPLETIONS,
         "fine-tuning": GPT4O_MINI_FINETUNE,
