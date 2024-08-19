@@ -13,17 +13,12 @@ from lionagi.os.service.config import RETRY_CONFIG
 class APICalling(ObservableAction):
 
     payload: dict = Field(default_factory=dict)
-    response: dict = Field(default_factory=dict)
     base_url: str = Field(default=None)
     endpoint: str = Field(default=None)
     api_key: str = Field(default=None, exclude=True)
     method: str = Field("post")
-    status: ActionStatus = Field(ActionStatus.PENDING)
-    retry_config: dict = Field(default_factory=dict, exclude=True)
-    error: str = Field(default=None)
-    required_tokens: int = Field(default=1)
+    required_tokens: int = Field(default=1, exclude=True)
     api_key_schema: str = Field(default=None, exclude=True)
-    execution_time: float = Field(default=None)
 
     def __init__(
         self,
@@ -36,13 +31,12 @@ class APICalling(ObservableAction):
         required_tokens=1,
         api_key_schema=None,
     ):
-        super().__init__()
+        super().__init__(retry_config)
         self.payload = payload
         self.base_url = base_url
         self.endpoint = endpoint
         self.api_key = api_key
         self.method = method
-        self.retry_config = retry_config
         self.required_tokens = required_tokens
         self.api_key_schema = api_key_schema
 

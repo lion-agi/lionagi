@@ -1,6 +1,5 @@
 import re
 import logging
-import asyncio
 from typing import Any, Callable
 
 import aiohttp

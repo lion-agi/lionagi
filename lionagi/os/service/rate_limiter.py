@@ -31,7 +31,6 @@ class RateLimitedProcessor(ActionProcessor):
         self._rate_limit_replenisher_task: asyncio.Task | None = None
         self._lock: asyncio.Lock = asyncio.Lock()
 
-    @override
     async def start_replenishing(self):
         """Start replenishing rate limit capacities at regular intervals."""
         await self.start()
