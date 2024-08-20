@@ -1,6 +1,6 @@
 from lion_core.converter import Converter
 
-from lionagi.os._sys_config import BASE_LION_FIELDS
+from lionagi.os.sys_config import BASE_LION_FIELDS
 from lionagi.os.libs import to_dict
 
 from .utils import LC_META_FIELDS

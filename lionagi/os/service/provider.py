@@ -219,3 +219,21 @@ class ProviderService:
                     msgs.append({"role": msg["role"], "content": _content})
 
         return msgs
+
+    def get_endpoint_model(
+        self,
+        endpoint=None,
+        return_model_spec=False,
+    ) -> str | None | ModelConfig:
+        model = None
+        if endpoint in self.active_endpoints:
+            model = self.active_endpoints[endpoint].schema.default_config["model"]
+        if endpoint in self.endpoint_config:
+            model = self.endpoint_config[endpoint].default_config["model"]
+
+        if return_model_spec:
+            return self.model_specification.get(model, None)
+        return model
+
+    def get_endpoint_schema(self, endpoint=None) -> EndpointSchema:
+        return self.active_endpoints[endpoint].schema

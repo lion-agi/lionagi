@@ -5,7 +5,6 @@ from pydantic import Field
 from lion_core.action.base import ObservableAction
 from lion_core.action.status import ActionStatus
 
-from lionagi.os.primitives import log
 from lionagi.os.service.utils import call_api
 from lionagi.os.service.config import RETRY_CONFIG
 
@@ -19,6 +18,7 @@ class APICalling(ObservableAction):
     method: str = Field("post")
     required_tokens: int = Field(default=1, exclude=True)
     api_key_schema: str = Field(default=None, exclude=True)
+    content_fields: list = ["response", "payload"]
 
     def __init__(
         self,
@@ -72,17 +72,6 @@ class APICalling(ObservableAction):
         )
         dict_["status"] = self.status.value
         return dict_
-
-    def to_log(self):
-        _dict = self.to_dict()
-        content = {
-            "payload": _dict.pop("payload"),
-            "response": _dict.pop("response"),
-        }
-        return log(
-            content=content,
-            loginfo=_dict,
-        )
 
     @classmethod
     def from_dict(cls, dict_):

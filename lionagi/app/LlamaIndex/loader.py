@@ -2,7 +2,7 @@ import json
 from typing import Any
 from lionagi.os.sys_util import SysUtil
 from lionagi.os.libs import to_dict
-from lionagi.os.primitives import Node, note, pile
+from lionagi.os.primitives import Node, note
 
 
 def load_llamaindex_vector_store(folder):
@@ -22,7 +22,7 @@ def load_llamaindex_vector_store(folder):
         cp = ["index_store/data", i, "__data__"]
         index_note[*cp] = to_dict(index_note[*cp])
 
-    def _get_pile_by_index(index_id_):
+    def _get_index_node_list(index_id_):
         cp = ["index_store/data", index_id_, "__data__", "nodes_dict"]
         try:
             index_note[*cp] = to_dict(index_note[*cp])
@@ -31,20 +31,20 @@ def load_llamaindex_vector_store(folder):
 
         nodes_dict = index_note[*cp]
         all_nodes = list(nodes_dict.keys())
-        p_ = pile()
+        out = []
 
         for i in all_nodes:
             cp = ["docstore/data", i, "__data__"]
             doc_note[*cp] = to_dict(doc_note[*cp])
-            node = Node.from_obj(doc_note[*cp])
+            dict_ = doc_note[*cp]
 
-            cp = ["embedding_dict", node.metadata["id_"]]
-            node.embedding = vec_note[*cp]
+            cp = ["embedding_dict", i]
+            dict_["embedding"] = vec_note[*cp]
+            out.append(dict_)
 
-            p_.include(node)
-        return p_
+        return out
 
-    results = [_get_pile_by_index(i) for i in index_note["index_store/data"].keys()]
+    results = [_get_index_node_list(i) for i in index_note["index_store/data"].keys()]
 
     return results if len(results) > 1 else results[0]
 
@@ -201,21 +201,3 @@ def llamaindex_loader(
         return documents
     except Exception as e:
         raise ValueError(f"Failed to read and load data. Error: {e}")
-
-
-def llamaindex_reader(
-    reader=None,
-    /,
-    reader_args=[],
-    reader_kwargs={},
-    loader_args=[],
-    loader_kwargs={},
-):
-    docs = llamaindex_loader(
-        reader=reader,
-        *loader_args,
-        reader_args=reader_args,
-        reader_kwargs=reader_kwargs,
-        **loader_kwargs,
-    )
-    return pile([Node.from_obj(doc) for doc in docs])

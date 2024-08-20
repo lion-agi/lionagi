@@ -16,11 +16,11 @@ from pathlib import Path
 from shutil import copy2
 from typing import Any, Literal, Sequence, TypeVar
 
-from lion_core import CoreUtil as cu
+from lion_core.sys_utils import SysUtil as cu
 from lion_core.libs import unique_hash
 from lion_core.generic.utils import to_list_type
 
-from lionagi.os._sys_config import LION_ID_CONFIG, TIME_CONFIG, LN_UNDEFINED
+from lionagi.os.sys_config import LION_ID_CONFIG, TIME_CONFIG
 
 
 T = TypeVar("T")
@@ -90,13 +90,14 @@ class SysUtil:
 
     @staticmethod
     def id(
-        n: int = LION_ID_CONFIG["n"],
-        prefix: str | None = LION_ID_CONFIG["prefix"],
-        postfix: str | None = LION_ID_CONFIG["postfix"],
-        random_hyphen: bool = LION_ID_CONFIG["random_hyphen"],
-        num_hyphens: int | None = LION_ID_CONFIG["num_hyphens"],
-        hyphen_start_index: int | None = LION_ID_CONFIG["hyphen_start_index"],
-        hyphen_end_index: int | None = LION_ID_CONFIG["hyphen_end_index"],
+        n: int = None,
+        prefix: str | None = None,
+        postfix: str | None = None,
+        random_hyphen: bool = None,
+        num_hyphens: int | None = None,
+        hyphen_start_index: int | None = None,
+        hyphen_end_index: int | None = None,
+        _config=LION_ID_CONFIG,
     ) -> str:
         """
         Generate a unique identifier.
@@ -113,15 +114,20 @@ class SysUtil:
         Returns:
             A unique identifier string.
         """
-        return cu.id(
-            n=n,
-            prefix=prefix,
-            postfix=postfix,
-            random_hyphen=random_hyphen,
-            num_hyphens=num_hyphens,
-            hyphen_start_index=hyphen_start_index,
-            hyphen_end_index=hyphen_end_index,
-        )
+
+        dict_ = {
+            "n": n,
+            "prefix": prefix,
+            "postfix": postfix,
+            "random_hyphen": random_hyphen,
+            "num_hyphens": num_hyphens,
+            "hyphen_start_index": hyphen_start_index,
+            "hyphen_end_index": hyphen_end_index,
+        }
+
+        _config.update({k: v for k, v in dict_.items() if v is not None})
+
+        return cu.id(**_config)
 
     @staticmethod
     def get_id(item: Any, /, *, config: dict = LION_ID_CONFIG) -> str:
@@ -489,7 +495,10 @@ class SysUtil:
                 import_name = (
                     [import_name] if not isinstance(import_name, list) else import_name
                 )
-                module = __import__(full_import_path, fromlist=import_name)
+                module = __import__(
+                    full_import_path,
+                    fromlist=import_name,
+                )
                 return getattr(module, import_name)
             else:
                 return __import__(full_import_path)
@@ -629,21 +638,12 @@ class SysUtil:
 
 
 def _run_pip_command(args: Sequence[str]) -> subprocess.CompletedProcess[bytes]:
-    """
-    Run a pip command.
-
-    Args:
-        args: The arguments to pass to pip.
-
-    Returns:
-        A CompletedProcess instance.
-
-    Raises:
-        subprocess.CalledProcessError: If the pip command fails.
-    """
+    """Run a pip command."""
     return subprocess.run(
-        [sys.executable, "-m", "pip"] + list(args), check=True, capture_output=True
+        [sys.executable, "-m", "pip"] + list(args),
+        check=True,
+        capture_output=True,
     )
 
 
-__all__ = ["SysUtil", "LN_UNDEFINED"]
+__all__ = ["SysUtil"]

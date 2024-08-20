@@ -4,7 +4,7 @@ from pydantic import Field
 
 from lionagi.os.operator import imodel
 from lionagi.os.sys_util import SysUtil
-from lionagi.os.primitives import pile
+from lionagi.os.primitives import pile, Log, Node
 from lionagi.os.libs import bcall, to_list, alcall
 
 from lionagi.os.service.provider import ProviderService
@@ -16,6 +16,7 @@ from lionagi.os.service.schema import EndpointSchema
 class iModel(CoreiModel):
 
     service: ProviderService | None = Field(default=None, exclude=True)
+    log_manager: ...
 
     def __init__(
         self,
@@ -83,8 +84,8 @@ class iModel(CoreiModel):
         method: str = "post",
         retry_config=None,
         **kwargs,
-    ):
-        return await self.service.serve(
+    ) -> Log:
+        log_ = await self.service.serve(
             endpoint=endpoint,
             input_=input_,
             method=method,
@@ -92,11 +93,15 @@ class iModel(CoreiModel):
             **kwargs,
         )
 
-    async def chat(self, messages, **kwargs):
+    async def chat(self, messages, **kwargs) -> Log:
         return await self.service.serve_chat(messages, **kwargs)
 
-    async def embed(self, input_: list[str], **kwargs):
-        return await self.call(input_=input_, endpoint="embeddings", **kwargs)
+    async def embed(self, embed_str: list[str], **kwargs) -> Log:
+        return await self.call(input_=embed_str, endpoint="embeddings", **kwargs)
+
+    async def embed_node(
+        self, node: Node, field: str = "content", **kwargs
+    ) -> Node: ...
 
     # async def structure(self, *args, **kwargs):
     #     """raise error, or return structured output"""

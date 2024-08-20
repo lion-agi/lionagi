@@ -1,4 +1,5 @@
-from __future__ import annotations
+import inspect
+
 from abc import ABC
 import asyncio
 from typing import Any
@@ -8,6 +9,9 @@ import numpy as np
 from lion_core.generic.component import Component
 from lion_core.exceptions import LionResourceError, LionTypeError
 
+
+from lionagi.os.primitives import Log
+from lionagi.os.service.schema import ModelConfig, EndpointSchema
 
 from lionagi.os.libs import nget, to_str, to_list
 from lionagi.os.primitives import note, pile, Note
@@ -109,24 +113,34 @@ class iModelExtension(ABC):
             embed_str.pop("images", None)
             embed_str.pop("image_detail", None)
 
-        num_tokens = imodel.service.token_calculator.calculate(
-            "embeddings", to_str(embed_str)
-        )
-        model = imodel.service.endpoints["embeddings"].endpoint_config["model"]
+        if not "embeddings" in imodel.service.active_endpoints:
+            imodel.service.add_endpoint("embeddings")
 
-        token_limit = (
-            imodel.service.model_specification[model]
-            .endpoint_schema["embeddings"]
-            .token_limit
-        )
+        embed_str = to_str(embed_str)
+
+        endpoint = imodel.service.active_endpoints["embeddings"]
+        endpoint_schema = endpoint.schema
+        model = endpoint_schema.default_config["model"]
+        token_limit = endpoint_schema.token_limit
+        num_tokens = endpoint.token_calculator.calculate(to_str(embed_str))
 
         if token_limit and num_tokens > token_limit:
             raise LionResourceError(
-                f"Number of tokens {num_tokens} exceeds the limit {token_limit}"
+                f"Number of tokens {num_tokens} exceeds the limit of {token_limit} tokens for model {model}"
             )
 
-        payload, embed = await imodel.embed(to_str(embed_str), **kwargs)
-        payload.pop("input")
-        node.embedding = nget(["data", 0, "embedding"], embed, None)
-        node.metadata.set("embedding_meta", payload)
+        api_calling: Log = await imodel.embed(embed_str=embed_str, **kwargs)
+
+        payload: dict = api_calling.content["payload"]
+        loginfo: dict = api_calling.loginfo.to_dict()
+
+        payload.pop("input", None)
+        loginfo.update(payload)
+
+        node.embedding = api_calling.content.get(
+            ["response", "data", 0, "embedding"],
+            [],
+        )
+
+        node.metadata.update("embedding_meta", loginfo)
         return node

@@ -1,6 +1,5 @@
 from typing import Type, Any
 from pathlib import Path
-from lionagi.os.primitives import Pile, Node
 
 
 class LlamaIndexBridge:
@@ -23,7 +22,7 @@ class LlamaIndexBridge:
         return LlamaIndexNodeConverter
 
     @staticmethod
-    def load_vectorstore(dir: str | Path) -> Pile[Node]:
+    def load_vectorstore(dir: str | Path) -> list[dict] | list[list[dict]]:
         """return a pile of lion node"""
         from .loader import load_llamaindex_vector_store
 
@@ -57,17 +56,17 @@ class LlamaIndexBridge:
         reader_kwargs={},
         loader_args=[],
         loader_kwargs={},
-    ) -> Pile[Node]:
-        """return a pile of lion node"""
-        from .loader import llamaindex_reader
+    ):
+        from lionagi.os.primitives import pile, Node
 
-        return llamaindex_reader(
-            reader,
+        docs = LlamaIndexBridge.load_file(
+            reader=reader,
+            *loader_args,
             reader_args=reader_args,
             reader_kwargs=reader_kwargs,
-            loader_args=loader_args,
-            loader_kwargs=loader_kwargs,
+            **loader_kwargs,
         )
+        return pile([Node.from_obj(doc) for doc in docs])
 
     @staticmethod
     def parse_node(

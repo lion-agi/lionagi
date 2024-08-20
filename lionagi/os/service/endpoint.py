@@ -124,7 +124,7 @@ class EndPoint:
         await self.rate_limiter.forward()
         if action_id in self.rate_limiter.completed_action:
             action: APICalling = self.rate_limiter.pile.pop(action_id)
-            return action.to_log()
+            return await action.to_log()
         return None
 
 
