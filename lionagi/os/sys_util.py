@@ -20,7 +20,7 @@ from lion_core.sys_utils import SysUtil as cu
 from lion_core.libs import unique_hash
 from lion_core.generic.utils import to_list_type
 
-from lionagi.os.sys_config import LION_ID_CONFIG, TIME_CONFIG
+from lionagi.os.sys_config import TIME_CONFIG
 
 
 T = TypeVar("T")
@@ -89,48 +89,14 @@ class SysUtil:
         return cu.copy(obj, deep=deep, num=num)
 
     @staticmethod
-    def id(
-        n: int = None,
-        prefix: str | None = None,
-        postfix: str | None = None,
-        random_hyphen: bool = None,
-        num_hyphens: int | None = None,
-        hyphen_start_index: int | None = None,
-        hyphen_end_index: int | None = None,
-        _config=LION_ID_CONFIG,
-    ) -> str:
+    def id() -> str:
         """
         Generate a unique identifier.
-
-        Args:
-            n: Length of the ID (excluding prefix and postfix).
-            prefix: String to prepend to the ID.
-            postfix: String to append to the ID.
-            random_hyphen: If True, insert random hyphens into the ID.
-            num_hyphens: Number of hyphens to insert if random_hyphen is True.
-            hyphen_start_index: Start index for hyphen insertion.
-            hyphen_end_index: End index for hyphen insertion.
-
-        Returns:
-            A unique identifier string.
         """
-
-        dict_ = {
-            "n": n,
-            "prefix": prefix,
-            "postfix": postfix,
-            "random_hyphen": random_hyphen,
-            "num_hyphens": num_hyphens,
-            "hyphen_start_index": hyphen_start_index,
-            "hyphen_end_index": hyphen_end_index,
-        }
-
-        _config.update({k: v for k, v in dict_.items() if v is not None})
-
-        return cu.id(**_config)
+        return cu.id()
 
     @staticmethod
-    def get_id(item: Any, /, *, config: dict = LION_ID_CONFIG) -> str:
+    def get_id(item: Any, /) -> str:
         """
         Get the Lion ID of an item.
 
@@ -144,10 +110,10 @@ class SysUtil:
         Raises:
             `LionIDError`: If the item does not contain a valid Lion ID.
         """
-        return cu.get_id(item, config=config)
+        return cu.get_id(item)
 
     @staticmethod
-    def is_id(item: Any, /, *, config: dict = LION_ID_CONFIG) -> bool:
+    def is_id(item: Any, /) -> bool:
         """
         Check if an item is a valid Lion ID.
 
@@ -158,7 +124,7 @@ class SysUtil:
         Returns:
             True if the item is a valid Lion ID, False otherwise.
         """
-        return cu.is_id(item, config=config)
+        return cu.is_id(item)
 
     @staticmethod
     def clear_path(

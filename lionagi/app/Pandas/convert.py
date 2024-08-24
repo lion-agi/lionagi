@@ -2,8 +2,7 @@ from functools import singledispatch
 from typing import Any
 from pandas import DataFrame, Series, concat
 from pandas.core.generic import NDFrame
-from lion_core.converter import Converter
-from lionagi.os.libs import to_dict, to_list
+from lionagi.os.libs import to_list
 
 
 @singledispatch
@@ -78,14 +77,3 @@ def _(
     drop_kwargs["how"] = drop_how
     df.dropna(**drop_kwargs, inplace=True)
     return df.reset_index(drop=True) if reset_index else df
-
-
-class PandasSeriesConverter(Converter):
-
-    @staticmethod
-    def from_obj(cls, obj: Series, **kwargs) -> dict:
-        return to_dict(obj, **kwargs)
-
-    @staticmethod
-    def to_obj(self, **kwargs) -> Series:
-        return Series(to_dict(self), **kwargs)

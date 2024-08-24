@@ -2,7 +2,7 @@ import json
 from typing import Any
 from lionagi.os.sys_util import SysUtil
 from lionagi.os.libs import to_dict
-from lionagi.os.primitives import Node, note
+from lionagi.os.primitives import note
 
 
 def load_llamaindex_vector_store(folder):
@@ -20,26 +20,26 @@ def load_llamaindex_vector_store(folder):
 
     for i in index_note["index_store/data"].keys():
         cp = ["index_store/data", i, "__data__"]
-        index_note[*cp] = to_dict(index_note[*cp])
+        index_note[cp] = to_dict(index_note[cp])
 
     def _get_index_node_list(index_id_):
         cp = ["index_store/data", index_id_, "__data__", "nodes_dict"]
         try:
-            index_note[*cp] = to_dict(index_note[*cp])
+            index_note[cp] = to_dict(index_note[cp])
         except:
             raise Exception(f"Index {index_id_} not found")
 
-        nodes_dict = index_note[*cp]
+        nodes_dict = index_note[cp]
         all_nodes = list(nodes_dict.keys())
         out = []
 
         for i in all_nodes:
             cp = ["docstore/data", i, "__data__"]
-            doc_note[*cp] = to_dict(doc_note[*cp])
-            dict_ = doc_note[*cp]
+            doc_note[cp] = to_dict(doc_note[cp])
+            dict_ = doc_note[cp]
 
             cp = ["embedding_dict", i]
-            dict_["embedding"] = vec_note[*cp]
+            dict_["embedding"] = vec_note[cp]
             out.append(dict_)
 
         return out

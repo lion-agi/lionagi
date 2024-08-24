@@ -36,7 +36,6 @@ def get_llamaindex_node_parser(node_parser: Any):
 
 def llamaindex_parse_node(
     documents: list,
-    /,
     node_parser: Any,
     *args,
     **kwargs,

@@ -1,6 +1,6 @@
 aiohttp>=3.9.3
 python-dotenv>=1.0.0
-lion_core==0.1.2
+lion_core==0.1.6
 aiocache
 ipython
 pandas

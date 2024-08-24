@@ -120,7 +120,7 @@ class iModelExtension(ABC):
 
         endpoint = imodel.service.active_endpoints["embeddings"]
         endpoint_schema = endpoint.schema
-        model = endpoint_schema.default_config["model"]
+        model = endpoint_schema.default_model_config["model"]
         token_limit = endpoint_schema.token_limit
         num_tokens = endpoint.token_calculator.calculate(to_str(embed_str))
 
