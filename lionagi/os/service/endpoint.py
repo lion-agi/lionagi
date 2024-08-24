@@ -1,3 +1,41 @@
+from lionagi.os.service.schema import (
+    BaseEndpointSchema,
+    RetryConfig,
+    DEFAULT_RETRY_CONFIG,
+)
+
+
+class BaseEndpoint:
+
+    def __init__(self, schema: BaseEndpointSchema, **kwargs: Any):
+        schema = schema.update(new_schema_obj=True, **kwargs)
+        self.schema = schema
+
+
+class RateLimitedEndpoint(BaseEndpoint):
+
+    def __init__(
+        self,
+        schema,
+        rate_limiter,
+    ): ...
+
+
+class BaseEndpoint:
+
+    def __init__(
+        self,
+        endpoint_schema: BaseEndpointSchema,
+        **kwargs: Any,  # additional endpoint_schema or retry config parameters
+    ):
+        endpoint_schema = endpoint_schema.update(new_schema_obj=True, **kwargs)
+        endpoint_schema.retry_config = endpoint_schema.retry_config.update(
+            new_schema_obj=True,
+            **kwargs,
+        )
+        self.schema = endpoint_schema
+
+
 import logging
 import inspect
 from typing import Any
@@ -40,7 +78,7 @@ class EndPoint:
 
     def update_config(self, **kwargs):
         schema = self.schema.model_copy()
-        schema.default_config.update(kwargs)
+        schema.default_model_config.update(kwargs)
         self.schema = schema
 
     async def init_rate_limiter(self) -> None:

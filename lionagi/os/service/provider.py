@@ -227,9 +227,9 @@ class ProviderService:
     ) -> str | None | ModelConfig:
         model = None
         if endpoint in self.active_endpoints:
-            model = self.active_endpoints[endpoint].schema.default_config["model"]
+            model = self.active_endpoints[endpoint].schema.default_model_config["model"]
         if endpoint in self.endpoint_config:
-            model = self.endpoint_config[endpoint].default_config["model"]
+            model = self.endpoint_config[endpoint].default_model_config["model"]
 
         if return_model_spec:
             return self.model_specification.get(model, None)
