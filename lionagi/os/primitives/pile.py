@@ -109,7 +109,6 @@ class Pile(CorePile):
     def __repr__(self):
         return self.to_df().__repr__()
 
-    @override
     def info(self):
         return self.to_df().info()
 

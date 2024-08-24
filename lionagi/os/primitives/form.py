@@ -1,5 +1,5 @@
-from lion_core.libs import as_readable_json
 from lion_core.form.form import Form as CoreForm
+from lionagi.os.libs import as_readable_json
 
 
 class Form(CoreForm):

@@ -87,7 +87,7 @@ class LlamaIndexFileLoader(PileLoader):
         return False
 
 
-PileLoaderRegistry.register("pd.DataFrame", PandasDataFrameLoader)
+PileLoaderRegistry.register("pandas_dataframe", PandasDataFrameLoader)
 PileLoaderRegistry.register("llama_index_vector_store", LlamaIndexVectorStore)
 PileLoaderRegistry.register("llama_index_read_file", LlamaIndexFileLoader)
 
