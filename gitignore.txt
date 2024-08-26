@@ -1,0 +1,10 @@
+.idea/
+*.egg-info/
+*.egg/
+*.pyc
+*__pycache__/
+*.DS_Store
+*.env
+*.pyc
+*.csv
+*.env

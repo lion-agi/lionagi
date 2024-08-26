@@ -1,96 +1,73 @@
+# LionAGI (Version 0.0.3)
+
 ![PyPI - Version](https://img.shields.io/pypi/v/lionagi?labelColor=233476aa&color=231fc935) ![PyPI - Downloads](https://img.shields.io/pypi/dm/lionagi?color=blue)
 
+[PyPI](https://pypi.org/project/lionagi/) | [Discord](https://discord.gg/xCkA5ErGmV)
 
-
-[PyPI](https://pypi.org/project/lionagi/) | [Documentation](https://ocean-lion.com/Welcome) | [Discord](https://discord.gg/xCkA5ErGmV)
+> **IMPORTANT NOTE:** This README is for LionAGI version 0.0.300+. For the latest version (currently v0.2.5) and ongoing development (v0.3.0), please refer to the main branch. The usage patterns and features described here may not be compatible with newer versions.
 
 ```
-Documentation for v0.0.300+ is in progress
+Documentation for v0.0.3 is archived.
 
-To contribute, you need to make a fork first, and then make pull request from your fork. 
+For documentation specific to this version, please refer to the md_docs directory in this branch of the repository.
+For the latest version and documentation, please visit the main branch of the LionAGI repository.
 ```
-  
-# LionAGI
+
+## LionAGI v0.0.3
 
 **Powerful Intelligent Workflow Automation**
 
-It is an intelligent agentic workflow automation framework. It introduces advanced ML models into any existing workflows and data infrastructure.
+LionAGI v0.0.300+ is an intelligent agentic workflow automation framework. It introduces advanced ML models into existing workflows and data infrastructure.
 
+### Features in v0.0.3
 
-### Currently, it can
+- Interact with various models including local*
+- Run interactions in parallel for most models (OpenRouter, OpenAI, Ollama, litellm...)
+- Produce structured pydantic outputs with flexible usage**
+- Automate workflow via graph-based agents
+- Use advanced prompting techniques, i.e., ReAct (reason-action)
 
-- interact with almost any models including local*
-- run interactions in parallel for most models (OpenRouter, OpenAI, Ollama, litellm...)
-- produce structured pydantic outputs with flexible usage\*\*
-- automate workflow via graph based agents
-- use advanced prompting techniques, i.e. ReAct (reason-action)
-- …
+### Goals
 
-### It aims to:
+- Provide a centralized agent-managed framework for "ML-powered tools coordination"
+- Define workflows as ways of coordination and possible paths among nodes
+- Utilize intelligence to solve real-life problems
+- Lower the barrier of entry for creating use-case/domain-specific tools
 
-- provide a centralized agent-managed framework for, "ML-powered tools coordination".
-- The ways of coordination and possible path can occur among nodes is what we also refers to as `workflow` (the concept of workflow is still in design).
-- such that, people can utilize intelligence to solve their problems in real life.
-- achieve the goal by dramatically lowering the barrier of entries for creating use-case/domain specific tools.
+\* Configuration for unsupported models can be done by setting up your own AI providers and endpoints.
 
+\*\* Structured Input/Output, Graph-based agent system, and advanced prompting techniques were under active development in this version.
 
-All notebooks should run, as of 0.0.313,
-
-\* if there are models on providers that have not been configured, you can do so by configuring your own AI providers, and endpoints. 
-
-\*\* Structured Input/Output, Graph based agent system, as well as more advanced prompting techniques are undergoing fast interations...
-
-### Why Automating Workflows?
-
-Intelligent AI models such as [Large Language Model (LLM)](https://en.wikipedia.org/wiki/Large_language_model), introduced new possibilities of human-computer interaction. LLMs is drawing a lot of attention worldwide due to its “one model fits all”, and incredible performance. One way of using LLM is to use as search engine, however, this usage is complicated by the fact that LLMs [hallucinate](https://arxiv.org/abs/2311.05232).
-
-What goes inside of a LLM is more akin to a [black-box](https://pauldeepakraj-r.medium.com/demystifying-the-black-box-a-deep-dive-into-llm-interpretability-971524966fdf), lacking interpretability, meaning we don’t know how it reaches certain answer or conclusion, thus we cannot fully trust/rely the output from such a system. 
-
-<img width="500" alt="ReAct flow" src="https://github.com/lion-agi/lionagi/assets/122793010/fabec1eb-fa8e-4ce9-b75f-b7aca4809c0f">
-
-
-Another approach of using LLM is to treat them as [intelligent agent](https://arxiv.org/html/2401.03428v1), that are equipped with various tools and data sources. A workflow conducted by such an intelligent agent have clear steps, and we can specify, observe, evaluate and optimize the logic for each decision that the `agent` made to perform actions. This approach, though we still cannot pinpoint how LLM output what it outputs, but the flow itself is **explainable**.
-
-LionAGI `agent` can manage and direct other agents, can also use multiple different tools in parallel.
-
-<img width="700" alt="parallel agents" src="https://github.com/lion-agi/lionagi/assets/122793010/ab263a6a-c7cc-40c3-8c03-ba1968df7309">
-
-
-### Install LionAGI with pip:
+### Installation (v0.0.3)
 
 ```bash
-pip install lionagi
+pip install lionagi==0.0.316
 ```
+
 Download the `.env_template` file, input your appropriate `API_KEY`, save the file, rename as `.env` and put in your project's root directory. 
-by default we use `OPENAI_API_KEY`.
+By default, we use `OPENAI_API_KEY`.
 
+### Quick Start (v0.0.3)
 
-### Quick Start
-
-The following example shows how to use LionAGI's `Session` object to interact with `gpt-4-turbo` model:
+The following example shows how to use LionAGI's `Session` object to interact with the `gpt-4-turbo` model:
 
 ```python
-
-# define system messages, context and user instruction
+# Define system messages, context and user instruction
 system = "You are a helpful assistant designed to perform calculations."
-instruction = {"Addition":"Add the two numbers together i.e. x+y"}
+instruction = {"Addition": "Add the two numbers together i.e. x+y"}
 context = {"x": 10, "y": 5}
 
-model="gpt-4-turbo-preview"
-```
+model = "gpt-4o"
 
-```python
-# in interactive environment (.ipynb for example)
+# In interactive environment (.ipynb for example)
 from lionagi import Session
 
 calculator = Session(system)
 result = await calculator.chat(instruction, context=context, model=model)
 
 print(f"Calculation Result: {result}")
-```
 
-```python
-# or otherwise, you can use
+# Or otherwise, you can use
 import asyncio
 from dotenv import load_dotenv
 
@@ -108,20 +85,21 @@ if __name__ == "__main__":
     asyncio.run(main())
 ```
 
-Visit our notebooks for examples. 
+For more examples specific to v0.0.300+, please refer to the notebooks in the md_docs directory of this branch.
 
-LionAGI is designed to be `asynchronous` only, please check python official documentation on how `async` work: [here](https://docs.python.org/3/library/asyncio.html)
+LionAGI is designed to be `asynchronous` only. Please check Python's official documentation on how `async` works: [here](https://docs.python.org/3/library/asyncio.html)
 
 ---
 
 **Notice**: 
-* calling API with maximum throughput over large set of data with advanced models i.e. gpt-4 can get **EXPENSIVE IN JUST SECONDS**,
-* please know what you are doing, and check the usage on OpenAI regularly
-* default rate limits are set to be 1,000 requests, 100,000 tokens per miniute, please check the [OpenAI usage limit documentation](https://platform.openai.com/docs/guides/rate-limits?context=tier-free) you can modify token rate parameters to fit different use cases.
-* if you would like to build from source, please download the [latest release](https://github.com/lion-agi/lionagi/releases),  
+* Calling API with maximum throughput over a large set of data with advanced models (e.g., gpt-4) can get **EXPENSIVE IN JUST SECONDS**.
+* Please understand what you are doing and check the usage on OpenAI regularly.
+* Default rate limits are set to 1,000 requests, 100,000 tokens per minute. Please check the [OpenAI usage limit documentation](https://platform.openai.com/docs/guides/rate-limits?context=tier-free). You can modify token rate parameters to fit different use cases.
+* If you would like to build from source, please download the [appropriate release for v0.0.300+](https://github.com/lion-agi/lionagi/releases).
+
 ### Community
 
-We encourage contributions to LionAGI and invite you to enrich its features and capabilities. Engage with us and other community members [Join Our Discord](https://discord.gg/7RGWqpSxze)
+While this version is no longer actively developed, you can still engage with the LionAGI community for the latest versions: [Join Our Discord](https://discord.gg/7RGWqpSxze)
 
 ### Citation
 
@@ -134,10 +112,9 @@ When referencing LionAGI in your projects or research, please cite:
   year = {2023},
   title = {LionAGI: Towards Automated General Intelligence},
   url = {https://github.com/lion-agi/lionagi},
+  version = {0.0.3}
 }
 ```
 
-
 ### Requirements
-Python 3.10 or higher. 
-
+Python 3.10 or higher.
