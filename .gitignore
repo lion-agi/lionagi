@@ -1,0 +1,15 @@
+dev/
+*.egg-info/
+*__pycache__/
+*.env
+build/
+.venv/
+*.DS_Store
+.idea/
+*.pyc
+.conda/
+*.log
+*.swp
+*.csv
+data/
+*.zip
