@@ -2,7 +2,7 @@ from functools import singledispatch
 from typing import Any
 from pandas import DataFrame, Series, concat
 from pandas.core.generic import NDFrame
-from lionagi.os.libs import to_list
+from lionagi.os import Converter, lionfuncs as ln
 
 
 @singledispatch
@@ -64,7 +64,7 @@ def _(
         )
     except Exception as e1:
         try:
-            input_ = to_list(input_)
+            input_ = ln.to_list(input_)
             df = input_[0]
             if len(input_) > 1:
                 for i in input_[1:]:
@@ -77,3 +77,14 @@ def _(
     drop_kwargs["how"] = drop_how
     df.dropna(**drop_kwargs, inplace=True)
     return df.reset_index(drop=True) if reset_index else df
+
+
+class PandasSeriesConverter(Converter):
+
+    @staticmethod
+    def from_obj(cls, obj: Series, **kwargs: Any) -> dict:
+        return ln.to_dict(obj, **kwargs)
+
+    @staticmethod
+    def to_obj(self, **kwargs: Any) -> Series:
+        return Series(ln.to_dict(self), **kwargs)
