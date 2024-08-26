@@ -237,6 +237,27 @@ class SysUtil:
         return full_path
 
     @staticmethod
+    def _get_path_kwargs(persist_path: str | Path, postfix: str, **path_kwargs: Any):
+
+        dirname, filename = None, None
+
+        postfix = f".{postfix.strip().strip('.')}"
+
+        if postfix not in (_path := str(persist_path)):
+            dirname = _path
+            filename = f"new_file.{postfix}"
+
+        else:
+            dirname, filename = SysUtil.split_path(persist_path)
+
+        path_kwargs["timestamp"] = path_kwargs.get("timestamp", False)
+        path_kwargs["file_exist_ok"] = path_kwargs.get("file_exist_ok", True)
+        path_kwargs["directory"] = path_kwargs.get("directory", dirname)
+        path_kwargs["filename"] = path_kwargs.get("filename", filename)
+
+        return path_kwargs
+
+    @staticmethod
     def list_files(dir_path: Path | str, extension: str | None = None) -> list[Path]:
         """
         List all files in a specified directory with an optional extension filter.
@@ -378,6 +399,11 @@ class SysUtil:
         except OSError as e:
             logging.error(f"Failed to save file {filename}: {e}")
             raise
+
+    @staticmethod
+    def read_file(path: Path | str, /) -> str:
+        with open(path, "r", encoding="utf-8") as file:
+            return file.read()
 
     @staticmethod
     def get_cpu_architecture() -> str:
