@@ -1,0 +1,26 @@
+model:
+  gpt-4o:
+    input_tokens: 0.000005
+    output_tokens: 0.000015
+    input_tokens_with_batch: 0.0000025
+    output_tokens_with_batch: 0.0000075
+  gpt-4o-2024-08-06:
+    input_tokens: 0.0000025
+    output_tokens: 0.00001
+    input_tokens_with_batch: 0.00000125
+    output_tokens_with_batch: 0.000005
+  gpt-4o-2024-05-13:
+    input_tokens: 0.000005
+    output_tokens: 0.000015
+    input_tokens_with_batch: 0.0000025
+    output_tokens_with_batch: 0.0000075
+  gpt-4o-mini:
+    input_tokens: 0.00000015
+    output_tokens: 0.0000006
+    input_tokens_with_batch: 0.000000075
+    output_tokens_with_batch: 0.0000003
+  gpt-4o-mini-2024-07-18:
+    input_tokens: 0.00000015
+    output_tokens: 0.0000006
+    input_tokens_with_batch: 0.000000075
+    output_tokens_with_batch: 0.0000003
