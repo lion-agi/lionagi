@@ -2,7 +2,7 @@ from pathlib import Path
 from typing import Any
 import pandas as pd
 from lion_core.pile_loader import PileLoaderRegistry as PLR, PileLoader
-from lionagi.os.libs import to_dict
+from lionagi.os import lionfuncs as ln
 
 
 class PileLoaderRegistry(PLR):
@@ -35,7 +35,7 @@ class PandasDataFrameLoader(PileLoader):
         return isinstance(obj, pd.DataFrame)
 
 
-class LlamaIndexVectorStore(PileLoader):
+class LlamaIndexVectorStoreLoader(PileLoader):
 
     @staticmethod
     def from_obj(cls, obj: str | Path, **kwargs) -> list[dict] | list[list[dict]]:
@@ -71,7 +71,7 @@ class LlamaIndexFileLoader(PileLoader):
         )
         kwargs["reader_args"].insert(0, obj)
         docs = LlamaIndexBridge.load_file(**kwargs)
-        return [to_dict(doc) for doc in docs]
+        return [ln.to_dict(doc) for doc in docs]
 
     @staticmethod
     def can_load(cls, obj: Path | str, **kwargs) -> bool:
@@ -88,7 +88,7 @@ class LlamaIndexFileLoader(PileLoader):
 
 
 PileLoaderRegistry.register("pandas_dataframe", PandasDataFrameLoader)
-PileLoaderRegistry.register("llama_index_vector_store", LlamaIndexVectorStore)
+PileLoaderRegistry.register("llama_index_vector_store", LlamaIndexVectorStoreLoader)
 PileLoaderRegistry.register("llama_index_read_file", LlamaIndexFileLoader)
 
 

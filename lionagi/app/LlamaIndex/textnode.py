@@ -1,5 +1,5 @@
 from typing import Any
-from lionagi.os.sys_util import SysUtil
+from lionagi.os.sys_utils import SysUtil
 
 
 def to_llama_index_node(*, node_type: Any = None, **kwargs: Any) -> Any:

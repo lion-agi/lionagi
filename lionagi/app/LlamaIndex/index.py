@@ -1,7 +1,7 @@
 from typing import Type, Any
 
 from lionagi.os.primitives import Node, Pile
-from lionagi.os.sys_util import SysUtil
+from lionagi.os.sys_utils import SysUtil
 from .config import DEFAULT_MODEL
 
 

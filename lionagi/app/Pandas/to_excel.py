@@ -1,6 +1,6 @@
 import pandas as pd
 
-from lionagi.os.sys_util import SysUtil
+from lionagi.os.sys_utils import SysUtil
 from lionagi.os.file.store.utils import output_node_list, output_edge_list
 
 

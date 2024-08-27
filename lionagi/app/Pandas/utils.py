@@ -235,7 +235,7 @@ class PandasUtil:
     def html_to_df(html_str: str) -> pd.DataFrame:
         """Convert HTML to dataframe."""
         try:
-            from lionagi.os.sys_util import SysUtil
+            from lionagi.os.sys_utils import SysUtil
 
             html = SysUtil.check_import(
                 package_name="lxml",

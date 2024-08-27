@@ -1,0 +1,2 @@
+class OpenAIEndpoint(BaseModel):
+    pass

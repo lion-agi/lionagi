@@ -1,7 +1,7 @@
 from typing import Union, Dict, Any
 import subprocess
 
-from lionagi.os.sys_util import SysUtil
+from lionagi.os.sys_utils import SysUtil
 from lionagi.os.service.service.base_service import BaseService
 
 allowed_kwargs = [

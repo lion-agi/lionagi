@@ -1,6 +1,6 @@
 import json
 from typing import Any
-from lionagi.os.sys_util import SysUtil
+from lionagi.os.sys_utils import SysUtil
 from lionagi.os.libs import to_dict
 from lionagi.os.primitives import note
 

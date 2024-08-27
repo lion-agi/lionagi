@@ -1,7 +1,7 @@
 import base64
 from io import BytesIO
 
-from lionagi.os.sys_util import SysUtil
+from lionagi.os.sys_utils import SysUtil
 from lionagi.os.file.tokenize.token_calculator import ImageTokenCalculator
 
 

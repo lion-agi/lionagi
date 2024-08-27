@@ -2,7 +2,7 @@ from lion_core.abc import BaseExecutor, Temporal, Observable
 from lion_core.rule.default_rules._default import DEFAULT_RULES
 
 
-from lionagi.os.sys_util import SysUtil
+from lionagi.os.sys_utils import SysUtil
 from lionagi.os.operator.validator.rule import Rule
 from lionagi.os.operator.validator.rulebook import RuleBook
 
