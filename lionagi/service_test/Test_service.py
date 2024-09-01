@@ -104,7 +104,9 @@ class OpenAIModel(BaseModel):
             # mainly for chat/completions and embedding endpoints
             # update rate limit
             if response_body.get("usage"):
-                self.rate_limiter.update_text_rate_limit(response_body, response_headers)
+                self.rate_limiter.update_text_rate_limit(
+                    response_body, response_headers
+                )
 
             return response_body
 
@@ -118,6 +120,7 @@ class OpenAIModel(BaseModel):
         estimated_num_of_output_tokens: int = 0,
     ):
         import yaml
+
         # only if text_token_calculator is available
         num_of_input_tokens = self.text_token_calculator.calculate(input_text)
 
@@ -196,4 +199,5 @@ async def main():
 
 if __name__ == "__main__":
     import asyncio
+
     asyncio.run(main())

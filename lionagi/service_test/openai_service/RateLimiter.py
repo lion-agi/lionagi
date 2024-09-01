@@ -15,9 +15,15 @@ class RateLimiter(BaseModel):
 
     remaining_requests: int = Field(default=None)
 
-    last_check_timestamp: float = Field(default=None, description="Last time to check tokens and requests.")
+    last_check_timestamp: float = Field(
+        default=None, description="Last time to check tokens and requests."
+    )
 
-    unreleased_tokens: deque = Field(default_factory=deque, description="completed request info for replenish", exclude=True)
+    unreleased_tokens: deque = Field(
+        default_factory=deque,
+        description="completed request info for replenish",
+        exclude=True,
+    )
 
     def append_complete_request_token_info(self, info: CompleteRequestTokenInfo):
         self.unreleased_tokens.append(info)
@@ -54,6 +60,4 @@ class RateLimiter(BaseModel):
         complete_request_token_info = CompleteRequestTokenInfo(
             timestamp=request_timestamp, token_usage=total_token_usage
         )
-        self.append_complete_request_token_info(
-            complete_request_token_info
-        )
+        self.append_complete_request_token_info(complete_request_token_info)

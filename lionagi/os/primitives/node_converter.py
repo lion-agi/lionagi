@@ -150,7 +150,7 @@ from lion_core.converter import ConverterRegistry, Converter
 from lion_core.generic.component import Component
 
 from lionagi.os.libs import to_dict
-from lionagi.os.sys_util import SysUtil
+from lionagi.os.sys_utils import SysUtil
 
 
 

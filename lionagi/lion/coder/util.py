@@ -11,7 +11,7 @@ def set_up_interpreter(interpreter_provider="e2b", key_scheme=E2B_key_scheme):
 
         load_dotenv()
 
-        from v0.libs import SysUtil
+        from lionagi.libs import SysUtil
 
         SysUtil.check_import("e2b_code_interpreter")
 
@@ -81,7 +81,7 @@ def save_code_file(
     verbose: bool = True,
 ):
 
-    from v0.libs import SysUtil
+    from lionagi.libs import SysUtil
 
     return SysUtil.save_to_file(
         text=code,

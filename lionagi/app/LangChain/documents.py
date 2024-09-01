@@ -1,5 +1,5 @@
 from typing import Any, TypeVar
-from lionagi.os.sys_util import SysUtil
+from lionagi.os.sys_utils import SysUtil
 
 T = TypeVar("T")
 

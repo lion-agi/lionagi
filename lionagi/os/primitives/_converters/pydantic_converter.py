@@ -1,7 +1,8 @@
 from typing import Any
 from pydantic import BaseModel, create_model
 
-from lionagi.os import Converter, lionfuncs as ln
+from lionagi import lionfuncs as ln
+from lionagi.os import Converter
 from lionagi.os.primitives.core_types import Component
 
 

@@ -22,8 +22,7 @@ T = TypeVar("T")
 import time
 
 
-
-def format_msg(
+def format_deprecated_msg(
     deprecated_name: str,
     deprecated_version: str,
     remove_version: str,
@@ -544,7 +543,7 @@ class SysUtil:
     ## Deprecated
 
     @deprecated(
-        format_msg(
+        format_deprecated_msg(
             deprecated_name="SysUtil.sleep()",
             deprecated_version="0.3.0",
             remove_version="1.0.0",
@@ -564,7 +563,7 @@ class SysUtil:
         time.sleep(delay)
 
     @deprecated(
-        format_msg(
+        format_deprecated_msg(
             deprecated_name="SysUtil.get_now()",
             deprecated_version="0.3.0",
             remove_version="1.0.0",
@@ -591,7 +590,7 @@ class SysUtil:
         return datetime.now(**config_)
 
     @deprecated(
-        format_msg(
+        format_deprecated_msg(
             deprecated_name="SysUtil.change_dict_key()",
             deprecated_version="0.3.0",
             remove_version="1.0.0",
@@ -616,7 +615,7 @@ class SysUtil:
             dict_[new_key] = dict_.pop(old_key)
 
     @deprecated(
-        format_msg(
+        format_deprecated_msg(
             deprecated_name="SysUtil.get_timestamp()",
             deprecated_version="0.3.0",
             remove_version="1.0.0",
@@ -642,7 +641,7 @@ class SysUtil:
         return str_
 
     @deprecated(
-        format_msg(
+        format_deprecated_msg(
             deprecated_name="SysUtil.is_schema()",
             deprecated_version="0.3.0",
             remove_version="1.0.0",
@@ -659,7 +658,7 @@ class SysUtil:
         )
 
     @deprecated(
-        format_msg(
+        format_deprecated_msg(
             deprecated_name="SysUtil.create_copy()",
             deprecated_version="0.3.0",
             remove_version="1.0.0",
@@ -687,7 +686,7 @@ class SysUtil:
         )
 
     @deprecated(
-        format_msg(
+        format_deprecated_msg(
             deprecated_name="SysUtil.create_id()",
             deprecated_version="0.3.0",
             remove_version="1.0.0",
@@ -711,7 +710,7 @@ class SysUtil:
         return sha256(current_time + random_bytes).hexdigest()[:n]
 
     @deprecated(
-        format_msg(
+        format_deprecated_msg(
             deprecated_name="SysUtil.clear_dir()",
             deprecated_version="0.3.0",
             remove_version="1.0.0",
@@ -760,7 +759,7 @@ class SysUtil:
                     raise
 
     @deprecated(
-        format_msg(
+        format_deprecated_msg(
             deprecated_name="SysUtil.get_size()",
             deprecated_version="0.3.0",
             remove_version="1.0.0",

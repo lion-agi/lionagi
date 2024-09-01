@@ -3,7 +3,7 @@ from typing import Optional
 
 import numpy as np
 
-from lionagi.os.sys_util import SysUtil
+from lionagi.os.sys_utils import SysUtil
 
 
 class ImageUtil:

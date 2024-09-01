@@ -2,8 +2,8 @@ import asyncio
 from pathlib import Path
 
 from lionagi import logging as _logging
-from v0.core import Session
-from v0.libs import ParseUtil
+from lionagi.core import Session
+from lionagi.libs import ParseUtil
 
 from .base_prompts import CODER_PROMPTS
 from .util import install_missing_dependencies, set_up_interpreter, save_code_file

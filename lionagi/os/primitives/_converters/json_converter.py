@@ -2,8 +2,8 @@ import json
 from pathlib import Path
 from typing import Any
 
+from lionagi import lionfuncs as ln
 from lionagi.os import Converter, SysUtil
-from lionagi.os import lionfuncs as ln
 from lionagi.os.primitives.core_types import Component
 
 

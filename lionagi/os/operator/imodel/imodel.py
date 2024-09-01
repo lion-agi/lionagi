@@ -3,7 +3,7 @@ from lion_core.imodel.imodel import iModel as CoreiModel
 from pydantic import Field
 
 from lionagi.os.operator import imodel
-from lionagi.os.sys_util import SysUtil
+from lionagi.os.sys_utils import SysUtil
 from lionagi.os.primitives import pile, Log, Node
 from lionagi.os.libs import bcall, to_list, alcall
 

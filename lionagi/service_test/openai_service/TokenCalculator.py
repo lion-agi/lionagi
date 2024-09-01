@@ -11,9 +11,11 @@ class TokenCalculator(BaseModel):
 
 
 class TiktokenCalculator(TokenCalculator):
-    encoding_name: str = Field(description="Encoding for converting text to tokens. "
-                                           "Input encoding name or a specific OpenAI model",
-                               examples=["o200k_base", "gpt-4o"])
+    encoding_name: str = Field(
+        description="Encoding for converting text to tokens. "
+        "Input encoding name or a specific OpenAI model",
+        examples=["o200k_base", "gpt-4o"],
+    )
 
     @field_validator("encoding_name")
     @classmethod
@@ -32,7 +34,9 @@ class TiktokenCalculator(TokenCalculator):
         enc_text = self.encode(text)
         return len(enc_text)
 
-    def tokenize(self, text: str, decode_byte_str: bool = False, decoder: str = "utf-8"):
+    def tokenize(
+        self, text: str, decode_byte_str: bool = False, decoder: str = "utf-8"
+    ):
         enc = tiktoken.get_encoding(self.encoding_name)
         enc_text = self.encode(text)
         tokens = [enc.decode_single_token_bytes(token_id) for token_id in enc_text]

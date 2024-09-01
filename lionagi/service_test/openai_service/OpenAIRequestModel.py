@@ -13,7 +13,9 @@ class OpenAIRequest(BaseModel):
         default=None, description="Organization id", exclude=True
     )
 
-    openai_project: str | None = Field(default=None, description="Project id", exclude=True)
+    openai_project: str | None = Field(
+        default=None, description="Project id", exclude=True
+    )
 
     endpoint: str = Field(description="Endpoint for request")
 
@@ -49,7 +51,9 @@ class OpenAIRequest(BaseModel):
         data = data.model_dump(exclude_unset=True) if data else None
 
         async with aiohttp.ClientSession() as client:
-            async with client.request(method=self.method, url=url, headers=headers, json=data) as response:
+            async with client.request(
+                method=self.method, url=url, headers=headers, json=data
+            ) as response:
                 response.raise_for_status()
 
                 if response.headers.get("Content-Type") == "application/json":

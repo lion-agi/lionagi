@@ -1,5 +1,5 @@
 from lion_core.form.form import Form as CoreForm
-from lionagi.os.libs import as_readable_json
+from lionagi import lionfuncs as ln
 
 
 class Form(CoreForm):
@@ -21,7 +21,7 @@ class Form(CoreForm):
 
         for k, v in fields.items():
             if isinstance(v, dict):
-                v = as_readable_json(v)
+                v = ln.as_readable_json(v)
             if len(str(v)) > 50:
                 display(Markdown(f"**{k}**: \n {v}"))
             else:

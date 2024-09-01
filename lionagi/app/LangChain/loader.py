@@ -4,7 +4,7 @@ from lionagi.os.primitives import Node, Pile, pile
 
 def langchain_loader(loader: str | Callable, /, *args, **kwargs) -> list[Any]:
 
-    from lionagi.os.sys_util import SysUtil
+    from lionagi.os.sys_utils import SysUtil
 
     document_loaders = SysUtil.check_import(
         package_name="langchain_community",

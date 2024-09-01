@@ -8,7 +8,7 @@ def langchain_text_splitter(
     *splitter_args,
     **splitter_kwargs,
 ) -> list[str]:
-    from lionagi.os.sys_util import SysUtil
+    from lionagi.os.sys_utils import SysUtil
 
     text_splitter = SysUtil.check_import(
         package_name="langchain_text_splitters",

@@ -1,6 +1,6 @@
 from typing import Any
 
-from lionagi.os.sys_util import SysUtil
+from lionagi.os.sys_utils import SysUtil
 
 
 def get_llamaindex_node_parser(node_parser: Any):
