@@ -1,33 +1,61 @@
-from typing import Any
 import json
 from pathlib import Path
-from lionagi.os import SysUtil, Converter, lionfuncs as ln
+from typing import Any
+
+from lionagi.os import Converter, SysUtil
+from lionagi.os import lionfuncs as ln
+from lionagi.os.primitives.core_types import Component
 
 
-class JSONStringConverter(Converter):
+class JsonConverter(Converter):
+    _object = "json"
 
-    @staticmethod
-    def from_obj(cls, obj: str, **kwargs: Any) -> dict:
-        return json.loads(obj, **kwargs)
+    @classmethod
+    def convert_obj_to_sub_dict(cls, object_: str, **kwargs: Any) -> dict:
+        kwargs["str_type"] = "json"
+        return ln.to_dict(object_, **kwargs)
 
-    @staticmethod
-    def to_obj(self, **kwargs: Any) -> str:
-        return json.dumps(ln.to_dict(self), **kwargs)
+    @classmethod
+    def convert_sub_to_obj_dict(cls, subject: Component, **kwargs: Any) -> dict:
+        return ln.to_dict(subject, **kwargs)
+
+    @classmethod
+    def to_obj(
+        cls,
+        subject: Component,
+        *,
+        convert_kwargs: dict = {},
+        **kwargs: Any,
+    ) -> Any:
+        return ln.to_str(
+            subject, serialize_as="json", parser_kwargs=convert_kwargs, **kwargs
+        )
 
 
-class JSONFileConverter(Converter):
+class JsonFileConverter(Converter):
+    _object = "json_file"
 
-    @staticmethod
-    def from_obj(cls, obj: str | Path, **kwargs: Any) -> dict:
-        return json.load(fp=obj, **kwargs)
+    @classmethod
+    def convert_obj_to_sub_dict(cls, object_: str | Path, **kwargs: Any) -> dict:
+        object_ = json.load(object_)
+        return ln.to_dict(object_, **kwargs)
 
-    @staticmethod
-    def to_obj(self, persist_path: str | Path, path_kwargs: dict = {}, **kwargs: Any):
-        text = JSONStringConverter.to_obj(self, **kwargs)
+    @classmethod
+    def convert_sub_to_obj_dict(cls, subject: Component, **kwargs: Any) -> dict:
+        return ln.to_dict(subject, **kwargs)
+
+    @classmethod
+    def to_obj(
+        cls,
+        subject: Component,
+        persist_path: str | Path,
+        path_kwargs: dict = {},
+        **kwargs: Any,
+    ) -> Any:
+        text = JsonConverter.to_obj(subject, **kwargs)
         path_kwargs = SysUtil._get_path_kwargs(
             persist_path=persist_path,
             postfix="json",
             **path_kwargs,
         )
-        path_ = SysUtil.create_path(**path_kwargs)
-        json.dump(obj=text, fp=path_)
+        SysUtil.save_to_file(text=text, **path_kwargs)

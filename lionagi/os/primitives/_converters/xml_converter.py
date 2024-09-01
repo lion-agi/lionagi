@@ -1,53 +1,60 @@
 from pathlib import Path
 from typing import Any
 
-from lionagi.os import Converter, lionfuncs as ln, SysUtil
+from lionagi.os import Converter, SysUtil
+from lionagi.os import lionfuncs as ln
+from lionagi.os.primitives.core_types import Component
 
 
 class XMLStringConverter(Converter):
+    _object = "xml"
 
-    ET = SysUtil.import_module(
-        package_name="xml",
-        module_name="etree.ElementTree",
-    )
+    @classmethod
+    def convert_obj_to_sub_dict(cls, object_: str, **kwargs: Any) -> dict:
+        kwargs["str_type"] = "xml"
+        return ln.to_dict(object_, **kwargs)
 
-    @staticmethod
-    def from_obj(cls, obj: str, **kwargs) -> dict:
-        return ln.to_dict(obj, str_type="xml", **kwargs)
+    @classmethod
+    def convert_sub_to_obj_dict(cls, subject: Component, **kwargs: Any) -> dict:
+        return ln.to_dict(subject, **kwargs)
 
-    @staticmethod
-    def to_obj(self, **kwargs) -> str:
-        """Convert the component to an XML string."""
-
-        root = XMLStringConverter.ET.Element(self.__class__.__name__)
-
-        def convert(dict_obj: dict, parent: Any) -> None:
-            for key, val in dict_obj.items():
-                if isinstance(val, dict):
-                    element = XMLStringConverter.ET.SubElement(parent, key)
-                    convert(dict_obj=val, parent=element)
-                else:
-                    element = XMLStringConverter.ET.SubElement(parent, key)
-                    element.text = str(object=val)
-
-        convert(dict_obj=ln.to_dict(self, **kwargs), parent=root)
-        return XMLStringConverter.ET.tostring(root, encoding="unicode")
+    @classmethod
+    def to_obj(
+        cls,
+        subject: Component,
+        *,
+        convert_kwargs: dict = {},
+        **kwargs: Any,
+    ) -> Any:
+        """kwargs for to_str"""
+        return ln.to_str(
+            subject, serialize_as="xml", parser_kwargs=convert_kwargs, **kwargs
+        )
 
 
 class XMLFileConverter(Converter):
+    _object = "xml_file"
 
-    @staticmethod
-    def from_obj(cls, obj: str | Path, **kwargs) -> dict:
-        return ln.to_dict(SysUtil.read_file(obj), str_type="xml", **kwargs)
+    @classmethod
+    def convert_obj_to_sub_dict(cls, object_: str, **kwargs: Any) -> dict:
+        kwargs["str_type"] = "xml"
+        with open(object_, "r") as file:
+            return ln.to_dict(file.read(), **kwargs)
 
-    @staticmethod
+    @classmethod
+    def convert_sub_to_obj_dict(cls, subject: Component, **kwargs: Any) -> dict:
+        """kwargs for to_dict"""
+        return ln.to_dict(subject, **kwargs)
+
+    @classmethod
     def to_obj(
-        self,
+        cls,
+        subject: Component,
         persist_path: str | Path,
-        path_kwargs={},
-        **kwargs,
+        path_kwargs: dict = {},
+        **kwargs: Any,
     ):
-        text = XMLStringConverter.to_obj(self=self, **kwargs)
+        text = XMLStringConverter.to_obj(subject, **kwargs)
         path_kwargs = SysUtil._get_path_kwargs(
             persist_path=persist_path,
             postfix="xml",

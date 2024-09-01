@@ -1,22 +1,30 @@
 from typing import Any
 from pydantic import BaseModel, create_model
+
 from lionagi.os import Converter, lionfuncs as ln
 from lionagi.os.primitives.core_types import Component
 
 
 class DynamicPydanticConverter(Converter):
+    _object = "dynamic_pydantic"
 
-    @staticmethod
-    @staticmethod
-    def from_obj(cls, obj, **kwargs) -> dict:
-        if hasattr(obj, "model_dump"):
-            return obj.model_dump(**kwargs)
-        return ln.to_dict(obj, **kwargs)
+    @classmethod
+    def convert_obj_to_sub_dict(cls, object_: BaseModel, **kwargs: Any) -> dict:
+        kwargs["use_model_dump"] = True
+        return ln.to_dict(object_, **kwargs)
 
-    @staticmethod
-    def to_obj(self, **kwargs) -> Any:
+    @classmethod
+    def convert_sub_to_obj_dict(cls, subject: Component, **kwargs: Any) -> dict:
+        return ln.to_dict(subject, **kwargs)
+
+    @classmethod
+    def to_obj(
+        cls,
+        subject: Component,
+        **kwargs: Any,
+    ) -> Any:
         return create_dynamic_pydantic_model(
-            self=self,
+            self=subject,
             model_name="DynamicModel",
             base_cls=BaseModel,
             **kwargs,
@@ -24,14 +32,23 @@ class DynamicPydanticConverter(Converter):
 
 
 class DynamicLionModelConverter(Converter):
+    _object = "dynamic_lion"
 
-    @staticmethod
-    def from_obj(cls, obj, **kwargs) -> dict:
-        return obj.to_dict(**kwargs)
+    @classmethod
+    def convert_obj_to_sub_dict(cls, object_: Component, **kwargs: Any) -> dict:
+        return ln.to_dict(object_, **kwargs)
 
-    @staticmethod
-    def to_obj(self, **kwargs) -> Any:
-        return create_dynamic_pydantic_model(self=self, **kwargs)
+    @classmethod
+    def convert_sub_to_obj_dict(cls, subject: Component, **kwargs: Any) -> dict:
+        return ln.to_dict(subject, **kwargs)
+
+    @classmethod
+    def to_obj(
+        cls,
+        subject: Component,
+        **kwargs: Any,
+    ) -> Component:
+        return create_dynamic_pydantic_model(self=subject, **kwargs)
 
 
 def create_dynamic_pydantic_model(
