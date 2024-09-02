@@ -12,7 +12,20 @@ from lionagi.core.collections.abc import Component, Field
 from ..collections.util import to_list_type
 from lionagi.libs.ln_convert import to_str
 
+from typing_extensions import deprecated
 
+from lionagi.os.sys_utils import format_deprecated_msg
+
+
+@deprecated(
+    format_deprecated_msg(
+        deprecated_name="lionagi.core.action.function_calling.FunctionCalling",
+        deprecated_version="v0.3.0",
+        removal_version="v1.0",
+        replacement="check `lion-core` package for updates",
+    ),
+    category=DeprecationWarning,
+)
 class BaseForm(Component):
     """
     NOTICE:

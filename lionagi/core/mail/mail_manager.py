@@ -7,7 +7,20 @@ from lionagi.core.collections.util import to_list_type, get_lion_id
 from .mail import Mail, Package
 from lionagi.core.collections import Pile, pile
 
+from typing_extensions import deprecated
 
+from lionagi.os.sys_utils import format_deprecated_msg
+
+
+@deprecated(
+    format_deprecated_msg(
+        deprecated_name="lionagi.core.action.function_calling.FunctionCalling",
+        deprecated_version="v0.3.0",
+        removal_version="v1.0",
+        replacement="check `lion-core` package for updates",
+    ),
+    category=DeprecationWarning,
+)
 class MailManager(Element, Executable):
     """
     Manages the sending, receiving, and storage of mail items between various sources.

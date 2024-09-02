@@ -60,6 +60,20 @@ def _output_excel(
             tables[i].to_excel(writer, sheet_name=i, index=False)
 
 
+from typing_extensions import deprecated
+
+from lionagi.os.sys_utils import format_deprecated_msg
+
+
+@deprecated(
+    format_deprecated_msg(
+        deprecated_name="lionagi.core.action.function_calling.FunctionCalling",
+        deprecated_version="v0.3.0",
+        removal_version="v1.0",
+        replacement="check `lion-core` package for updates",
+    ),
+    category=DeprecationWarning,
+)
 def to_excel(structure, structure_name, dir="structure_storage"):
     """
     Converts a structure into a series of Excel sheets within a single workbook.

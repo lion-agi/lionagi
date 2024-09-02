@@ -3,7 +3,20 @@ from collections import deque
 
 from .abc import LionTypeError, Record, Ordering, Component, get_lion_id, Element
 
+from typing_extensions import deprecated
 
+from lionagi.os.sys_utils import format_deprecated_msg
+
+
+@deprecated(
+    format_deprecated_msg(
+        deprecated_name="lionagi.core.collections.abc.util.to_list_type",
+        deprecated_version="v0.3.0",
+        removal_version="v1.0",
+        replacement=None,
+    ),
+    category=DeprecationWarning,
+)
 def to_list_type(value):
     """
     Convert the provided value to a list.

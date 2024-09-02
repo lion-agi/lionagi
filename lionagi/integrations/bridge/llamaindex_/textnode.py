@@ -1,7 +1,20 @@
 from typing import Any, TypeVar
 from lionagi.libs.sys_util import SysUtil
 
+from typing_extensions import deprecated
 
+from lionagi.os.sys_utils import format_deprecated_msg
+
+
+@deprecated(
+    format_deprecated_msg(
+        deprecated_name="lionagi.core.action.function_calling.FunctionCalling",
+        deprecated_version="v0.3.0",
+        removal_version="v1.0",
+        replacement="check `lion-core` package for updates",
+    ),
+    category=DeprecationWarning,
+)
 def to_llama_index_node(lion_node, node_type: Any = None, **kwargs: Any) -> Any:
     """
     Converts a Lion node to a Llama Index node of a specified type.

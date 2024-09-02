@@ -28,7 +28,20 @@ from .util import to_list_type, _validate_order
 
 T = TypeVar("T")
 
+from typing_extensions import deprecated
 
+from lionagi.os.sys_utils import format_deprecated_msg
+
+
+@deprecated(
+    format_deprecated_msg(
+        deprecated_name="lionagi.core.collections.abc.pile.Pile",
+        deprecated_version="v0.3.0",
+        removal_version="v1.0",
+        replacement="lionagi.os.primitives.pile.Pile",
+    ),
+    category=DeprecationWarning,
+)
 class Pile(Element, Record, Generic[T]):
     """
     Collection class for managing Element objects.
@@ -857,6 +870,15 @@ class Pile(Element, Record, Generic[T]):
         return self.to_df().__repr__()
 
 
+@deprecated(
+    format_deprecated_msg(
+        deprecated_name="lionagi.core.collections.abc.pile.pile",
+        deprecated_version="v0.3.0",
+        removal_version="v1.0",
+        replacement="lionagi.os.primitives.pile.pile",
+    ),
+    category=DeprecationWarning,
+)
 def pile(
     items: Iterable[T] | None = None,
     item_type: set[Type] | None = None,

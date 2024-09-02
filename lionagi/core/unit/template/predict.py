@@ -1,6 +1,19 @@
 from .base import BaseUnitForm, Field
 
+from typing_extensions import deprecated
 
+from lionagi.os.sys_utils import format_deprecated_msg
+
+
+@deprecated(
+    format_deprecated_msg(
+        deprecated_name="lionagi.core.action.function_calling.FunctionCalling",
+        deprecated_version="v0.3.0",
+        removal_version="v1.0",
+        replacement="check `lion-core` package for updates",
+    ),
+    category=DeprecationWarning,
+)
 class PredictTemplate(BaseUnitForm):
     """
     A template for predicting the next sentence(s) based on given instructions and context.

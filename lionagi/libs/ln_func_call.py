@@ -32,6 +32,7 @@ from lionagi.os.sys_utils import format_deprecated_msg
 def lru_cache(*args, **kwargs):
     return functools.lru_cache(*args, **kwargs)
 
+
 @deprecated(
     format_deprecated_msg(
         deprecated_name="lionagi.libs.ln_func_call.lcall()",
@@ -94,6 +95,7 @@ def lcall(
         raise ValueError("There must be one and only one function for list calling.")
 
     return to_list([func(i, **kwargs) for i in lst], flatten=flatten, dropna=dropna)
+
 
 @deprecated(
     format_deprecated_msg(
@@ -160,6 +162,7 @@ async def alcall(
 
     return to_list(outs_, flatten=flatten, dropna=dropna)
 
+
 @deprecated(
     format_deprecated_msg(
         deprecated_name="lionagi.libs.ln_func_call.pcall()",
@@ -173,6 +176,7 @@ async def pcall(funcs):
     """parallel call to multiple functions"""
     task = [call_handler(func) for func in funcs]
     return await asyncio.gather(*task)
+
 
 @deprecated(
     format_deprecated_msg(
@@ -225,6 +229,7 @@ async def mcall(
         )
     return await AsyncUtil.execute_tasks(*tasks)
 
+
 @deprecated(
     format_deprecated_msg(
         deprecated_name="lionagi.libs.ln_func_call.bcall()",
@@ -262,6 +267,7 @@ async def bcall(
         results.extend(batch_results)
 
     return results
+
 
 @deprecated(
     format_deprecated_msg(
@@ -355,6 +361,7 @@ async def tcall(
             raise
 
     return await async_call() if AsyncUtil.is_coroutine_func(func) else sync_call()
+
 
 @deprecated(
     format_deprecated_msg(
@@ -571,6 +578,7 @@ async def _tcall(
             )
         else:
             raise e
+
 
 @deprecated(
     format_deprecated_msg(
@@ -1291,6 +1299,7 @@ def _custom_error_handler(error: Exception, error_map: dict[type, Callable]) -> 
     else:
         logging.error(f"Unhandled error: {error}")
 
+
 @deprecated(
     format_deprecated_msg(
         deprecated_name="lionagi.libs.ln_func_call.call_handler()",
@@ -1352,6 +1361,7 @@ async def call_handler(
         # else:
         #     logging.error(f"Error in call_handler: {e}")
         raise
+
 
 @deprecated(
     format_deprecated_msg(

@@ -7,7 +7,20 @@ from lionagi.core.collections.abc import FieldError, Condition, Actionable, Comp
 
 _rule_classes = {}
 
+from typing_extensions import deprecated
 
+from lionagi.os.sys_utils import format_deprecated_msg
+
+
+@deprecated(
+    format_deprecated_msg(
+        deprecated_name="lionagi.core.action.function_calling.FunctionCalling",
+        deprecated_version="v0.3.0",
+        removal_version="v1.0",
+        replacement="check `lion-core` package for updates",
+    ),
+    category=DeprecationWarning,
+)
 class Rule(Component, Condition, Actionable):
     """
     Combines a condition and an action that can be applied based on it.

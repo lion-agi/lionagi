@@ -1,7 +1,20 @@
 from typing import Any
 from lionagi.libs.sys_util import SysUtil
 
+from typing_extensions import deprecated
 
+from lionagi.os.sys_utils import format_deprecated_msg
+
+
+@deprecated(
+    format_deprecated_msg(
+        deprecated_name="lionagi.core.action.function_calling.FunctionCalling",
+        deprecated_version="v0.3.0",
+        removal_version="v1.0",
+        replacement="check `lion-core` package for updates",
+    ),
+    category=DeprecationWarning,
+)
 def get_llama_index_node_parser(node_parser: Any):
     """
     Retrieves a llama index node parser object based on the specified node parser name or class.

@@ -7,7 +7,20 @@ from ..bridge.llamaindex_.llama_index_bridge import LlamaIndexBridge
 
 from .load_util import dir_to_nodes, ReaderType, _datanode_parser
 
+from typing_extensions import deprecated
 
+from lionagi.os.sys_utils import format_deprecated_msg
+
+
+@deprecated(
+    format_deprecated_msg(
+        deprecated_name="lionagi.core.action.function_calling.FunctionCalling",
+        deprecated_version="v0.3.0",
+        removal_version="v1.0",
+        replacement="check `lion-core` package for updates",
+    ),
+    category=DeprecationWarning,
+)
 def text_reader(args, kwargs):
     """
     Reads text files from a directory and converts them to Node instances.

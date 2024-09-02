@@ -5,7 +5,20 @@ from lionagi.core.collections.abc import Actionable
 from lionagi.core.generic.node import Node
 from .function_calling import FunctionCalling
 
+from typing_extensions import deprecated
 
+from lionagi.os.sys_utils import format_deprecated_msg
+
+
+@deprecated(
+    format_deprecated_msg(
+        deprecated_name="lionagi.core.action.tool.Tool",
+        deprecated_version="v0.3.0",
+        removal_version="v1.0",
+        replacement="check `lion-core.action.tool` for updates",
+    ),
+    category=DeprecationWarning,
+)
 class Tool(Node, Actionable):
     """
     Class representing a Tool with capabilities for pre-processing, post-processing,

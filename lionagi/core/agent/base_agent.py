@@ -2,7 +2,6 @@
 This module contains the BaseAgent class, which serves as a base class for agents.
 """
 
-from pydantic import Field
 from typing import Any, Callable
 
 from lionagi.libs import func_call, AsyncUtil
@@ -12,9 +11,21 @@ from lionagi.core.mail.start_mail import StartMail
 from lionagi.core.generic.node import Node
 from lionagi.core.mail.mail_manager import MailManager
 from lionagi.core.executor.base_executor import BaseExecutor
-from lionagi.core.executor.graph_executor import GraphExecutor
+
+from typing_extensions import deprecated
+
+from lionagi.os.sys_utils import format_deprecated_msg
 
 
+@deprecated(
+    format_deprecated_msg(
+        deprecated_name="lionagi.core.agent.base_agent.BaseAgent",
+        deprecated_version="v0.3.0",
+        removal_version="v1.0",
+        replacement="lionagi.os.operator.agant.base_agent.BaseAgent",
+    ),
+    category=DeprecationWarning,
+)
 class BaseAgent(Node):
 
     def __init__(

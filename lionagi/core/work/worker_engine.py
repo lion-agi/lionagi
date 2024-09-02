@@ -8,7 +8,20 @@ from lionagi.core.work.work_function_node import WorkFunctionNode
 from lionagi.core.collections.pile import pile
 from lionagi.core.generic.graph import Graph
 
+from typing_extensions import deprecated
 
+from lionagi.os.sys_utils import format_deprecated_msg
+
+
+@deprecated(
+    format_deprecated_msg(
+        deprecated_name="lionagi.core.action.function_calling.FunctionCalling",
+        deprecated_version="v0.3.0",
+        removal_version="v1.0",
+        replacement="check `lion-core` package for updates",
+    ),
+    category=DeprecationWarning,
+)
 class WorkerEngine:
     """
     A class representing an engine that manages and executes work tasks for a worker.

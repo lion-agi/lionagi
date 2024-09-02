@@ -3,8 +3,20 @@ from pydantic import Field
 from lionagi.core.generic.node import Node
 from lionagi.core.mail.mail import Mail, Package
 from lionagi.core.collections import Exchange
+from typing_extensions import deprecated
+
+from lionagi.os.sys_utils import format_deprecated_msg
 
 
+@deprecated(
+    format_deprecated_msg(
+        deprecated_name="lionagi.core.action.function_calling.FunctionCalling",
+        deprecated_version="v0.3.0",
+        removal_version="v1.0",
+        replacement="check `lion-core` package for updates",
+    ),
+    category=DeprecationWarning,
+)
 class StartMail(Node):
     """
     Represents a start mail node that triggers the initiation of a process.

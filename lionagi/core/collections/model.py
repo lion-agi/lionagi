@@ -14,7 +14,20 @@ _oai_price_map = {
     "gpt-3.5-turbo": (0.5, 1.5),
 }
 
+from typing_extensions import deprecated
 
+from lionagi.os.sys_utils import format_deprecated_msg
+
+
+@deprecated(
+    format_deprecated_msg(
+        deprecated_name="lionagi.core.collections.abc.model.iModel",
+        deprecated_version="v0.3.0",
+        removal_version="v1.0",
+        replacement="`lionagi.os.operator.imodel.imodel.iModel`",
+    ),
+    category=DeprecationWarning,
+)
 class iModel:
     """
     iModel is a class for managing AI model configurations and service

@@ -13,7 +13,20 @@ from .assistant_response import AssistantResponse
 from .action_request import ActionRequest
 from .action_response import ActionResponse
 
+from typing_extensions import deprecated
 
+from lionagi.os.sys_utils import format_deprecated_msg
+
+
+@deprecated(
+    format_deprecated_msg(
+        deprecated_name="lionagi.core.action.function_calling.FunctionCalling",
+        deprecated_version="v0.3.0",
+        removal_version="v1.0",
+        replacement="check `lion-core` package for updates",
+    ),
+    category=DeprecationWarning,
+)
 def create_message(
     *,
     system=None,  # system node - JSON serializable

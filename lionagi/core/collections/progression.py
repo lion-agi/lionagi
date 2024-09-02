@@ -4,7 +4,20 @@ from pydantic import Field, field_validator
 from .abc import Ordering, get_lion_id, ItemNotFoundError, LionIDable, Element
 from .util import _validate_order
 
+from typing_extensions import deprecated
 
+from lionagi.os.sys_utils import format_deprecated_msg
+
+
+@deprecated(
+    format_deprecated_msg(
+        deprecated_name="lionagi.core.collections.abc.progression.Progression",
+        deprecated_version="v0.3.0",
+        removal_version="v1.0",
+        replacement="lionagi.os.primitives.progression.Progression",
+    ),
+    category=DeprecationWarning,
+)
 class Progression(Element, Ordering):
 
     name: str | None = Field(
@@ -216,5 +229,14 @@ class Progression(Element, Ordering):
         return hash((tuple(self.order), self.name))
 
 
+@deprecated(
+    format_deprecated_msg(
+        deprecated_name="lionagi.core.collections.abc.progression.Progression",
+        deprecated_version="v0.3.0",
+        removal_version="v1.0",
+        replacement="lionagi.os.primitives.progression.progression",
+    ),
+    category=DeprecationWarning,
+)
 def progression(order=None, name=None) -> Progression:
     return Progression(order=order, name=name)

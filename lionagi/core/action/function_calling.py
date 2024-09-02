@@ -14,8 +14,20 @@ from lionagi.libs import ParseUtil
 from lionagi.libs.ln_func_call import call_handler
 from lionagi.core.collections.abc import Actionable
 from lionagi.core.message.action_request import ActionRequest
+from typing_extensions import deprecated
+
+from lionagi.os.sys_utils import format_deprecated_msg
 
 
+@deprecated(
+    format_deprecated_msg(
+        deprecated_name="lionagi.core.action.function_calling.FunctionCalling",
+        deprecated_version="v0.3.0",
+        removal_version="v1.0",
+        replacement="check `lion-core.action.function_calling` for updates",
+    ),
+    category=DeprecationWarning,
+)
 class FunctionCalling(Actionable):
     """
     A class for dynamically invoking functions based on various input types,

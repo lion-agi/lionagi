@@ -8,7 +8,20 @@ from lionagi.core.action import DirectiveSelection
 from lionagi.core.agent.base_agent import BaseAgent
 from lionagi.core.generic.edge_condition import EdgeCondition
 
+from typing_extensions import deprecated
 
+from lionagi.os.sys_utils import format_deprecated_msg
+
+
+@deprecated(
+    format_deprecated_msg(
+        deprecated_name="lionagi.core.action.function_calling.FunctionCalling",
+        deprecated_version="v0.3.0",
+        removal_version="v1.0",
+        replacement="check `lion-core` package for updates",
+    ),
+    category=DeprecationWarning,
+)
 def output_node_list(structure):
     """
     Processes a structure object to extract and format all associated nodes into a summary list and detailed output dictionary.

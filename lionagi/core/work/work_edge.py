@@ -6,8 +6,20 @@ from lionagi.core.generic.edge import Edge
 from lionagi.core.collections.abc.concepts import Progressable
 
 from lionagi.core.work.worker import Worker
+from typing_extensions import deprecated
+
+from lionagi.os.sys_utils import format_deprecated_msg
 
 
+@deprecated(
+    format_deprecated_msg(
+        deprecated_name="lionagi.core.action.function_calling.FunctionCalling",
+        deprecated_version="v0.3.0",
+        removal_version="v1.0",
+        replacement="check `lion-core` package for updates",
+    ),
+    category=DeprecationWarning,
+)
 class WorkEdge(Edge, Progressable):
     """
     Represents a directed edge between work tasks, responsible for transforming

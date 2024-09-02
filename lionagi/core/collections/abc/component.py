@@ -21,7 +21,20 @@ T = TypeVar("T")
 
 _init_class = {}
 
+from typing_extensions import deprecated
 
+from lionagi.os.sys_utils import format_deprecated_msg
+
+
+@deprecated(
+    format_deprecated_msg(
+        deprecated_name="lionagi.core.collections.abc.component.Element",
+        deprecated_version="v0.3.0",
+        removal_version="v1.0",
+        replacement="check `lion_core.generic.element` for updates",
+    ),
+    category=DeprecationWarning,
+)
 class Element(BaseModel, ABC):
     """Base class for elements within the LionAGI system.
 
@@ -57,6 +70,15 @@ class Element(BaseModel, ABC):
         return True
 
 
+@deprecated(
+    format_deprecated_msg(
+        deprecated_name="lionagi.core.collections.abc.component.Component",
+        deprecated_version="v0.3.0",
+        removal_version="v1.0",
+        replacement="check `lion-core.generic.component` for updates",
+    ),
+    category=DeprecationWarning,
+)
 class Component(Element, ABC):
     """
     Represents a distinguishable, temporal entity in LionAGI.

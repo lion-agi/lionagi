@@ -25,7 +25,20 @@ from typing import Callable
 from lionagi.core.action.tool import Tool
 from lionagi.core.action.tool_manager import func_to_tool
 
+from typing_extensions import deprecated
 
+from lionagi.os.sys_utils import format_deprecated_msg
+
+
+@deprecated(
+    format_deprecated_msg(
+        deprecated_name="lionagi.core.action.function_calling.FunctionCalling",
+        deprecated_version="v0.3.0",
+        removal_version="v1.0",
+        replacement="check `lion-core` package for updates",
+    ),
+    category=DeprecationWarning,
+)
 def process_tools(tool_obj, branch):
     if isinstance(tool_obj, Callable):
         _process_tool(tool_obj, branch)

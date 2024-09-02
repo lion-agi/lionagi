@@ -4,7 +4,20 @@ from typing import Any, Dict, Tuple, Callable
 
 from lionagi.libs.ln_convert import to_dict
 
+from typing_extensions import deprecated
 
+from lionagi.os.sys_utils import format_deprecated_msg
+
+
+@deprecated(
+    format_deprecated_msg(
+        deprecated_name="lionagi.core.action.function_calling.FunctionCalling",
+        deprecated_version="v0.3.0",
+        removal_version="v1.0",
+        replacement="check `lion-core` package for updates",
+    ),
+    category=DeprecationWarning,
+)
 class BaseEvaluator:
     """
     A class to evaluate mathematical and boolean expressions from strings using Python's AST.

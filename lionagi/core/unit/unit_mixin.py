@@ -33,7 +33,20 @@ from lionagi.core.report.form import Form
 from lionagi.core.unit.util import process_tools
 from lionagi.core.validator.validator import Validator
 
+from typing_extensions import deprecated
 
+from lionagi.os.sys_utils import format_deprecated_msg
+
+
+@deprecated(
+    format_deprecated_msg(
+        deprecated_name="lionagi.core.action.function_calling.FunctionCalling",
+        deprecated_version="v0.3.0",
+        removal_version="v1.0",
+        replacement="check `lion-core` package for updates",
+    ),
+    category=DeprecationWarning,
+)
 class DirectiveMixin(ABC):
     """
     DirectiveMixin is a class for handling chat operations and

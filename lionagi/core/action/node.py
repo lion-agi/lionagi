@@ -4,7 +4,20 @@ from lionagi.core.collections.abc import Actionable
 from lionagi.core.generic.node import Node
 from .tool import Tool
 
+from typing_extensions import deprecated
 
+from lionagi.os.sys_utils import format_deprecated_msg
+
+
+@deprecated(
+    format_deprecated_msg(
+        deprecated_name="lionagi.core.action.node.DirectiveSelection",
+        deprecated_version="v0.3.0",
+        removal_version="v1.0",
+        replacement=None,
+    ),
+    category=DeprecationWarning,
+)
 class DirectiveSelection(Node, Actionable):
     """
     Represents a directive selection node which can be invoked to perform an action.

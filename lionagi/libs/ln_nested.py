@@ -61,6 +61,7 @@ def nset(nested_structure: dict | list, indices: list[int | str], value: Any) ->
     else:
         raise TypeError("Cannot set value on non-list/dict element")
 
+
 @deprecated(
     format_deprecated_msg(
         deprecated_name="lionagi.libs.nget()",
@@ -335,6 +336,7 @@ def unflatten(
         return [unflattened.get(i) for i in range(max_index + 1)]
     return unflattened or {}
 
+
 @deprecated(
     format_deprecated_msg(
         deprecated_name="lionagi.libs.nfilter()",
@@ -378,6 +380,7 @@ def nfilter(
         return _filter_list(nested_structure, condition)
     else:
         raise TypeError("The nested_structure must be either a dict or a list.")
+
 
 @deprecated(
     format_deprecated_msg(

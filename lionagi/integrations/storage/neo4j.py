@@ -2,7 +2,20 @@ from neo4j import AsyncGraphDatabase
 
 from lionagi.integrations.storage.storage_util import output_node_list, output_edge_list
 
+from typing_extensions import deprecated
 
+from lionagi.os.sys_utils import format_deprecated_msg
+
+
+@deprecated(
+    format_deprecated_msg(
+        deprecated_name="lionagi.core.action.function_calling.FunctionCalling",
+        deprecated_version="v0.3.0",
+        removal_version="v1.0",
+        replacement="check `lion-core` package for updates",
+    ),
+    category=DeprecationWarning,
+)
 class Neo4j:
     """
     Manages interactions with a Neo4j graph database, facilitating the creation, retrieval, and management

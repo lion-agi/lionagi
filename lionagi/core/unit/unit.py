@@ -7,7 +7,20 @@ from .unit_form import UnitForm
 from .unit_mixin import DirectiveMixin
 from .util import retry_kwargs
 
+from typing_extensions import deprecated
 
+from lionagi.os.sys_utils import format_deprecated_msg
+
+
+@deprecated(
+    format_deprecated_msg(
+        deprecated_name="lionagi.core.action.function_calling.FunctionCalling",
+        deprecated_version="v0.3.0",
+        removal_version="v1.0",
+        replacement="check `lion-core` package for updates",
+    ),
+    category=DeprecationWarning,
+)
 class Unit(Directive, DirectiveMixin):
     """
     Unit is a class that extends Directive and DirectiveMixin to provide

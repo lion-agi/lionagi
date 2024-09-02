@@ -41,6 +41,20 @@ def _output_csv(
                 tables[i].to_csv(file, index=False)
 
 
+from typing_extensions import deprecated
+
+from lionagi.os.sys_utils import format_deprecated_msg
+
+
+@deprecated(
+    format_deprecated_msg(
+        deprecated_name="lionagi.core.action.function_calling.FunctionCalling",
+        deprecated_version="v0.3.0",
+        removal_version="v1.0",
+        replacement="check `lion-core` package for updates",
+    ),
+    category=DeprecationWarning,
+)
 def to_csv(structure, filename="structure_storage"):
     """
     Converts a structure into a series of CSV files and stores them in a compressed ZIP archive.

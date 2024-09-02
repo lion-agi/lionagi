@@ -4,7 +4,20 @@ import lionagi.libs.ln_convert as convert
 from lionagi.libs.ln_api import BaseService
 from lionagi.integrations.config.mlx_configs import model
 
+from typing_extensions import deprecated
 
+from lionagi.os.sys_utils import format_deprecated_msg
+
+
+@deprecated(
+    format_deprecated_msg(
+        deprecated_name="lionagi.core.action.function_calling.FunctionCalling",
+        deprecated_version="v0.3.0",
+        removal_version="v1.0",
+        replacement="check `lion-core` package for updates",
+    ),
+    category=DeprecationWarning,
+)
 class MLXService(BaseService):
     def __init__(self, model=model, **kwargs):
 

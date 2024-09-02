@@ -8,7 +8,20 @@ from lionagi.core.agent.base_agent import BaseAgent
 from lionagi.core.executor.base_executor import BaseExecutor
 from lionagi.core.engine.instruction_map_engine import InstructionMapEngine
 
+from typing_extensions import deprecated
 
+from lionagi.os.sys_utils import format_deprecated_msg
+
+
+@deprecated(
+    format_deprecated_msg(
+        deprecated_name="lionagi.core.action.function_calling.FunctionCalling",
+        deprecated_version="v0.3.0",
+        removal_version="v1.0",
+        replacement="check `lion-core` package for updates",
+    ),
+    category=DeprecationWarning,
+)
 def excel_reload(structure_name=None, structure_id=None, dir="structure_storage"):
     """
     Loads a structure from an Excel file into a StructureExecutor instance.

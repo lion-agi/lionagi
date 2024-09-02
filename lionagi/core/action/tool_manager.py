@@ -15,7 +15,20 @@ from lionagi.core.collections.abc import Actionable
 from lionagi.core.action.function_calling import FunctionCalling
 from lionagi.core.action.tool import Tool, TOOL_TYPE
 
+from typing_extensions import deprecated
 
+from lionagi.os.sys_utils import format_deprecated_msg
+
+
+@deprecated(
+    format_deprecated_msg(
+        deprecated_name="lionagi.core.action.tool_manager.ToolManager",
+        deprecated_version="v0.3.0",
+        removal_version="v1.0",
+        replacement="check `lion-core.action.tool_manager` for updates",
+    ),
+    category=DeprecationWarning,
+)
 class ToolManager(Actionable):
     """
     Manages tools in the system. Provides functionality to register tools,

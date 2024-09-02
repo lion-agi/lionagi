@@ -11,7 +11,20 @@ from lionagi.libs import SysUtil, convert, nested
 
 # TODO: there should be a global data logger, under setting
 
+from typing_extensions import deprecated
 
+from lionagi.os.sys_utils import format_deprecated_msg
+
+
+@deprecated(
+    format_deprecated_msg(
+        deprecated_name="lionagi.core.collections._logger.DLog",
+        deprecated_version="v0.3.0",
+        removal_version="v1.0",
+        replacement="check `lion-core.generic.log` for updates",
+    ),
+    category=DeprecationWarning,
+)
 @dataclass
 class DLog:
     """Defines a log entry structure for data processing operations.
@@ -119,6 +132,15 @@ class DLog:
         return cls(input_data=input_data, output_data=output_data)
 
 
+@deprecated(
+    format_deprecated_msg(
+        deprecated_name="lionagi.core.collections._logger.DLog",
+        deprecated_version="v0.3.0",
+        removal_version="v1.0",
+        replacement="check `lion_core.log_manager.LogManager` for updates",
+    ),
+    category=DeprecationWarning,
+)
 class DataLogger:
     """Manages logging for data processing activities within an application.
 

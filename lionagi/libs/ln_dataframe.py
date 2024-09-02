@@ -22,7 +22,7 @@ from lionagi.os.sys_utils import format_deprecated_msg
         deprecated_name="lionagi.libs.ln_dataframe.extend_dataframe()",
         deprecated_version="v0.3.0",
         removal_version="v1.0",
-        replacement='`lion-app-pandas` package',
+        replacement="`lion-app-pandas` package",
     ),
     category=DeprecationWarning,
 )
@@ -59,12 +59,13 @@ def extend_dataframe(
     except Exception as e:
         raise ValueError(f"Error in extending messages: {e}") from e
 
+
 @deprecated(
     format_deprecated_msg(
         deprecated_name="lionagi.libs.ln_dataframe.search_keywords()",
         deprecated_version="v0.3.0",
         removal_version="v1.0",
-        replacement='`lion-app-pandas` package',
+        replacement="`lion-app-pandas` package",
     ),
     category=DeprecationWarning,
 )
@@ -109,12 +110,13 @@ def search_keywords(
 
     return out
 
+
 @deprecated(
     format_deprecated_msg(
         deprecated_name="lionagi.libs.ln_dataframe.replace_keyword()",
         deprecated_version="v0.3.0",
         removal_version="v1.0",
-        replacement='`lion-app-pandas` package',
+        replacement="`lion-app-pandas` package",
     ),
     category=DeprecationWarning,
 )
@@ -150,12 +152,13 @@ def replace_keyword(
 
     return df_ if inplace else True
 
+
 @deprecated(
     format_deprecated_msg(
         deprecated_name="lionagi.libs.ln_dataframe.read_csv()",
         deprecated_version="v0.3.0",
         removal_version="v1.0",
-        replacement='`lion-app-pandas` package',
+        replacement="`lion-app-pandas` package",
     ),
     category=DeprecationWarning,
 )
@@ -173,12 +176,13 @@ def read_csv(filepath: str, **kwargs) -> pd.DataFrame:
     df = pd.read_csv(filepath, **kwargs)
     return convert.to_df(df)
 
+
 @deprecated(
     format_deprecated_msg(
         deprecated_name="lionagi.libs.ln_dataframe.read_json()",
         deprecated_version="v0.3.0",
         removal_version="v1.0",
-        replacement='`lion-app-pandas` package',
+        replacement="`lion-app-pandas` package",
     ),
     category=DeprecationWarning,
 )
@@ -186,12 +190,13 @@ def read_json(filepath, **kwargs):
     df = pd.read_json(filepath, **kwargs)
     return convert.to_df(df)
 
+
 @deprecated(
     format_deprecated_msg(
         deprecated_name="lionagi.libs.ln_dataframe.remove_last_n_rows()",
         deprecated_version="v0.3.0",
         removal_version="v1.0",
-        replacement='`lion-app-pandas` package',
+        replacement="`lion-app-pandas` package",
     ),
     category=DeprecationWarning,
 )
@@ -217,12 +222,13 @@ def remove_last_n_rows(df: pd.DataFrame, steps: int) -> pd.DataFrame:
         )
     return convert.to_df(df[:-steps])
 
+
 @deprecated(
     format_deprecated_msg(
         deprecated_name="lionagi.libs.ln_dataframe.update_row()",
         deprecated_version="v0.3.0",
         removal_version="v1.0",
-        replacement='`lion-app-pandas` package',
+        replacement="`lion-app-pandas` package",
     ),
     category=DeprecationWarning,
 )
