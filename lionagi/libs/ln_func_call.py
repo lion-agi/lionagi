@@ -12,10 +12,35 @@ from lionagi.libs.ln_convert import to_list
 from lionagi.libs.ln_async import AsyncUtil
 
 
+from typing_extensions import deprecated
+
+from lionagi.os.sys_utils import format_deprecated_msg
+
+
+# to_list functions with datatype overloads
+
+
+@deprecated(
+    format_deprecated_msg(
+        deprecated_name="lionagi.libs.ln_func_call.lru_cache()",
+        deprecated_version="v0.3.0",
+        removal_version="v1.0",
+        replacement=None,
+    ),
+    category=DeprecationWarning,
+)
 def lru_cache(*args, **kwargs):
     return functools.lru_cache(*args, **kwargs)
 
-
+@deprecated(
+    format_deprecated_msg(
+        deprecated_name="lionagi.libs.ln_func_call.lcall()",
+        deprecated_version="v0.3.0",
+        removal_version="v1.0",
+        replacement="from lionagi import lionfuncs as ln; ln.lcall()",
+    ),
+    category=DeprecationWarning,
+)
 def lcall(
     input_: Any,
     /,
@@ -36,33 +61,33 @@ def lcall(
     function can be passed dynamically, allowing for flexible function application.
 
     Args:
-            input_ (Any):
-                    The input list or iterable to process. each element will be passed to the
-                    provided `func` Callable.
-            func (Callable):
-                    The function to apply to each element of `input_`. this function can be any
-                    Callable that accepts the elements of `input_` as arguments.
-            flatten (bool, optional):
-                    If True, the resulting list is flattened. useful when `func` returns a list.
-                    defaults to False.
-            dropna (bool, optional):
-                    If True, None values are removed from the final list. defaults to False.
-            **kwargs:
-                    Additional keyword arguments to be passed to `func`.
+        input_ (Any):
+            The input list or iterable to process. each element will be passed to the
+            provided `func` Callable.
+        func (Callable):
+            The function to apply to each element of `input_`. this function can be any
+            Callable that accepts the elements of `input_` as arguments.
+        flatten (bool, optional):
+            If True, the resulting list is flattened. useful when `func` returns a list.
+            defaults to False.
+        dropna (bool, optional):
+            If True, None values are removed from the final list. defaults to False.
+        **kwargs:
+            Additional keyword arguments to be passed to `func`.
 
     Returns:
-            list[Any]:
-                    The list of results after applying `func` to each input element, modified
-                    according to `flatten` and `dropna` options.
+        list[Any]:
+            The list of results after applying `func` to each input element, modified
+            according to `flatten` and `dropna` options.
 
     Examples:
-            Apply a doubling function to each element:
-            >>> lcall([1, 2, 3], lambda x: x * 2)
-            [2, 4, 6]
+        Apply a doubling function to each element:
+        >>> lcall([1, 2, 3], lambda x: x * 2)
+        [2, 4, 6]
 
-            apply a function that returns lists, then flatten the result:
-            >>> lcall([1, 2, None], lambda x: [x, x] if x else x, flatten=True, dropna=True)
-            [1, 1, 2, 2]
+        apply a function that returns lists, then flatten the result:
+        >>> lcall([1, 2, None], lambda x: [x, x] if x else x, flatten=True, dropna=True)
+        [1, 1, 2, 2]
     """
     lst = to_list(input_, dropna=dropna)
     if len(to_list(func)) != 1:
@@ -70,7 +95,15 @@ def lcall(
 
     return to_list([func(i, **kwargs) for i in lst], flatten=flatten, dropna=dropna)
 
-
+@deprecated(
+    format_deprecated_msg(
+        deprecated_name="lionagi.libs.ln_func_call.alcall()",
+        deprecated_version="v0.3.0",
+        removal_version="v1.0",
+        replacement="from lionagi import lionfuncs as ln; await ln.alcall(...)",
+    ),
+    category=DeprecationWarning,
+)
 async def alcall(
     input_: Any | None = None,
     func: Callable = None,
@@ -127,12 +160,29 @@ async def alcall(
 
     return to_list(outs_, flatten=flatten, dropna=dropna)
 
-
+@deprecated(
+    format_deprecated_msg(
+        deprecated_name="lionagi.libs.ln_func_call.pcall()",
+        deprecated_version="v0.3.0",
+        removal_version="v1.0",
+        replacement="from lionagi import lionfuncs as ln; await ln.pcall()",
+    ),
+    category=DeprecationWarning,
+)
 async def pcall(funcs):
+    """parallel call to multiple functions"""
     task = [call_handler(func) for func in funcs]
     return await asyncio.gather(*task)
 
-
+@deprecated(
+    format_deprecated_msg(
+        deprecated_name="lionagi.libs.ln_func_call.mcall()",
+        deprecated_version="v0.3.0",
+        removal_version="v1.0",
+        replacement="from lionagi import lionfuncs as ln; await ln.mcall()",
+    ),
+    category=DeprecationWarning,
+)
 async def mcall(
     input_: Any, /, func: Any, *, explode: bool = False, **kwargs
 ) -> tuple[Any]:
@@ -175,7 +225,15 @@ async def mcall(
         )
     return await AsyncUtil.execute_tasks(*tasks)
 
-
+@deprecated(
+    format_deprecated_msg(
+        deprecated_name="lionagi.libs.ln_func_call.bcall()",
+        deprecated_version="v0.3.0",
+        removal_version="v1.0",
+        replacement="from lionagi import lionfuncs as ln; await ln.bcall()",
+    ),
+    category=DeprecationWarning,
+)
 async def bcall(
     input_: Any, /, func: Callable, *, batch_size: int, **kwargs
 ) -> list[Any]:
@@ -205,7 +263,15 @@ async def bcall(
 
     return results
 
-
+@deprecated(
+    format_deprecated_msg(
+        deprecated_name="lionagi.libs.ln_func_call.tcall()",
+        deprecated_version="v0.3.0",
+        removal_version="v1.0",
+        replacement="from lionagi import lionfuncs as ln; await ln.tcall()",
+    ),
+    category=DeprecationWarning,
+)
 async def tcall(
     func: Callable,
     *args,
@@ -226,25 +292,25 @@ async def tcall(
     frame, or when monitoring execution duration.
 
     Args:
-            func (Callable):
-                    The asynchronous function to be called.
-            *args:
-                    Positional arguments to pass to the function.
-            delay (float, optional):
-                    Time in seconds to wait before executing the function. default to 0.
-            err_msg (str | None, optional):
-                    Custom error message to display if an error occurs. defaults to None.
-            ignore_err (bool, optional):
-                    If True, suppresses any errors that occur during function execution,
-                    optionally returning a default value. defaults to False.
-            timing (bool, optional):
-                    If True, returns a tuple containing the result of the function and the
-                    execution duration in seconds. defaults to False.
-            timeout (float | None, optional):
-                    Maximum time in seconds allowed for the function execution. if the execution
-                    exceeds this time, a timeout error is raised. defaults to None.
-            **kwargs:
-                    Keyword arguments to pass to the function.
+        func (Callable):
+                The asynchronous function to be called.
+        *args:
+                Positional arguments to pass to the function.
+        delay (float, optional):
+                Time in seconds to wait before executing the function. default to 0.
+        err_msg (str | None, optional):
+                Custom error message to display if an error occurs. defaults to None.
+        ignore_err (bool, optional):
+                If True, suppresses any errors that occur during function execution,
+                optionally returning a default value. defaults to False.
+        timing (bool, optional):
+                If True, returns a tuple containing the result of the function and the
+                execution duration in seconds. defaults to False.
+        timeout (float | None, optional):
+                Maximum time in seconds allowed for the function execution. if the execution
+                exceeds this time, a timeout error is raised. defaults to None.
+        **kwargs:
+                Keyword arguments to pass to the function.
 
     Returns:
             Any:
@@ -290,7 +356,15 @@ async def tcall(
 
     return await async_call() if AsyncUtil.is_coroutine_func(func) else sync_call()
 
-
+@deprecated(
+    format_deprecated_msg(
+        deprecated_name="lionagi.libs.ln_func_call.to_list()",
+        deprecated_version="v0.3.0",
+        removal_version="v1.0",
+        replacement="from lionagi import lionfuncs as ln; ln.to_list()",
+    ),
+    category=DeprecationWarning,
+)
 async def rcall(
     func: Callable,
     *args,
@@ -498,7 +572,15 @@ async def _tcall(
         else:
             raise e
 
-
+@deprecated(
+    format_deprecated_msg(
+        deprecated_name="lionagi.libs.ln_func_call.CallDecorator",
+        deprecated_version="v0.3.0",
+        removal_version="v1.0",
+        replacement="from lionagi import lionfuncs as ln; ln.to_list()",
+    ),
+    category=DeprecationWarning,
+)
 class CallDecorator:
     """
     Provides a collection of decorators to enhance asynchronous function calls with
@@ -1209,7 +1291,16 @@ def _custom_error_handler(error: Exception, error_map: dict[type, Callable]) -> 
     else:
         logging.error(f"Unhandled error: {error}")
 
-
+@deprecated(
+    format_deprecated_msg(
+        deprecated_name="lionagi.libs.ln_func_call.call_handler()",
+        deprecated_version="v0.3.0",
+        removal_version="v1.0",
+        replacement="use `lionfuncs.ucall(...)`",
+        python_msg="use the `asyncio.iscoroutinefunction` function",
+    ),
+    category=DeprecationWarning,
+)
 async def call_handler(
     func: Callable, *args, error_map: dict[type, Callable] = None, **kwargs
 ) -> Any:
@@ -1262,7 +1353,16 @@ async def call_handler(
         #     logging.error(f"Error in call_handler: {e}")
         raise
 
-
+@deprecated(
+    format_deprecated_msg(
+        deprecated_name="lionagi.libs.ln_func_call.is_coroutine_func()",
+        deprecated_version="v0.3.0",
+        removal_version="v1.0",
+        replacement="python",
+        python_msg="use the `asyncio.iscoroutinefunction` function",
+    ),
+    category=DeprecationWarning,
+)
 @functools.lru_cache(maxsize=None)
 def is_coroutine_func(func: Callable) -> bool:
     """

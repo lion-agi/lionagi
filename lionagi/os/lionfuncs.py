@@ -1,5 +1,3 @@
-from lion_core.libs.algorithms.jaro_distance import jaro_distance
-from lion_core.libs.algorithms.levenshtein_distance import levenshtein_distance
 from lion_core.libs.data_handlers._flatten import flatten
 from lion_core.libs.data_handlers._nfilter import nfilter
 from lion_core.libs.data_handlers._nget import nget

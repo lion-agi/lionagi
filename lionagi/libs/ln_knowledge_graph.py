@@ -3,9 +3,16 @@ from lionagi.libs import CallDecorator as cd
 
 from typing_extensions import deprecated
 
+from lionagi.os.sys_utils import format_deprecated_msg
+
 
 @deprecated(
-    "APIUtil is deprecated with no replacement, and will be removed in v1.0",
+    format_deprecated_msg(
+        deprecated_name="KnowledgeBase",
+        deprecated_version="v0.3.0",
+        removal_version="v1.0",
+        replacement="To Be Announced",
+    ),
     category=DeprecationWarning,
 )
 class KnowledgeBase:

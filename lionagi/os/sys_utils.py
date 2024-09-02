@@ -25,7 +25,7 @@ import time
 def format_deprecated_msg(
     deprecated_name: str,
     deprecated_version: str,
-    remove_version: str,
+    remove_version: str | None = None,
     replacement: str | Literal["python"] | None = None,
     python_msg: str | None = None,
 ) -> str:
@@ -34,7 +34,7 @@ def format_deprecated_msg(
     if replacement is None:
         msg += " No `LionAGI` replacement is available."
     if replacement == "python":
-        msg += f" Use the Python standard library <{python_msg}> instead."
+        msg += f" Use the Python directly: <{python_msg}> instead."
     elif isinstance(replacement, str):
         msg += f" Please use <{replacement}> instead."
     return msg

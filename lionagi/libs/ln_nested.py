@@ -5,7 +5,20 @@ from typing import Any, Generator, Callable
 from lionagi.libs.sys_util import SysUtil
 import lionagi.libs.ln_convert as convert
 
+from typing_extensions import deprecated
 
+from lionagi.os.sys_utils import format_deprecated_msg
+
+
+@deprecated(
+    format_deprecated_msg(
+        deprecated_name="lionagi.libs.nset()",
+        deprecated_version="v0.3.0",
+        removal_version="v1.0",
+        replacement="from lionagi import lionfuncs as ln; ln.nset()",
+    ),
+    category=DeprecationWarning,
+)
 def nset(nested_structure: dict | list, indices: list[int | str], value: Any) -> None:
     """
     sets a value within a nested structure at the specified path defined by indices.
@@ -48,7 +61,15 @@ def nset(nested_structure: dict | list, indices: list[int | str], value: Any) ->
     else:
         raise TypeError("Cannot set value on non-list/dict element")
 
-
+@deprecated(
+    format_deprecated_msg(
+        deprecated_name="lionagi.libs.nget()",
+        deprecated_version="v0.3.0",
+        removal_version="v1.0",
+        replacement="from lionagi import lionfuncs as ln; ln.nget()",
+    ),
+    category=DeprecationWarning,
+)
 def nget(
     nested_structure: dict | list,
     indices: list[int | str],
@@ -110,6 +131,15 @@ def nget(
 
 
 # nested merge
+@deprecated(
+    format_deprecated_msg(
+        deprecated_name="lionagi.libs.nmerge()",
+        deprecated_version="v0.3.0",
+        removal_version="v1.0",
+        replacement="from lionagi import lionfuncs as ln; ln.nmerge()",
+    ),
+    category=DeprecationWarning,
+)
 def nmerge(
     nested_structure: list[dict | list],
     /,
@@ -171,6 +201,15 @@ def nmerge(
 
 
 # flatten dictionary
+@deprecated(
+    format_deprecated_msg(
+        deprecated_name="lionagi.libs.flatten()",
+        deprecated_version="v0.3.0",
+        removal_version="v1.0",
+        replacement="from lionagi import lionfuncs as ln; ln.flatten()",
+    ),
+    category=DeprecationWarning,
+)
 def flatten(
     nested_structure: Any,
     /,
@@ -234,6 +273,15 @@ def flatten(
 
 
 # unflatten dictionary
+@deprecated(
+    format_deprecated_msg(
+        deprecated_name="lionagi.libs.unflatten()",
+        deprecated_version="v0.3.0",
+        removal_version="v1.0",
+        replacement="from lionagi import lionfuncs as ln; ln.unflatten()",
+    ),
+    category=DeprecationWarning,
+)
 def unflatten(
     flat_dict: dict[str, Any],
     /,
@@ -287,7 +335,15 @@ def unflatten(
         return [unflattened.get(i) for i in range(max_index + 1)]
     return unflattened or {}
 
-
+@deprecated(
+    format_deprecated_msg(
+        deprecated_name="lionagi.libs.nfilter()",
+        deprecated_version="v0.3.0",
+        removal_version="v1.0",
+        replacement="from lionagi import lionfuncs as ln; ln.nfilter()",
+    ),
+    category=DeprecationWarning,
+)
 def nfilter(
     nested_structure: dict | list, /, condition: Callable[[Any], bool]
 ) -> dict | list:
@@ -323,7 +379,15 @@ def nfilter(
     else:
         raise TypeError("The nested_structure must be either a dict or a list.")
 
-
+@deprecated(
+    format_deprecated_msg(
+        deprecated_name="lionagi.libs.ninsert()",
+        deprecated_version="v0.3.0",
+        removal_version="v1.0",
+        replacement="from lionagi import lionfuncs as ln; ln.ninsert()",
+    ),
+    category=DeprecationWarning,
+)
 def ninsert(
     nested_structure: dict | list,
     /,

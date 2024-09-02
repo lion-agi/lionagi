@@ -18,8 +18,6 @@ from lionagi.os.sys_utils import format_deprecated_msg
 # to_list functions with datatype overloads
 
 
-
-@singledispatch
 @deprecated(
     format_deprecated_msg(
         deprecated_name="lionagi.libs.ln_convert.to_list()",
@@ -29,6 +27,7 @@ from lionagi.os.sys_utils import format_deprecated_msg
     ),
     category=DeprecationWarning,
 )
+@singledispatch
 def to_list(input_, /, *, flatten: bool = True, dropna: bool = True) -> list[Any]:
     """
     Converts the input object to a list. This function is capable of handling various input types,

@@ -5,9 +5,16 @@ from .sys_util import SysUtil
 
 from typing_extensions import deprecated
 
+from lionagi.os.sys_utils import format_deprecated_msg
+
 
 @deprecated(
-    "APIUtil is deprecated with no replacement, and will be removed in v1.0",
+    format_deprecated_msg(
+        deprecated_name="ImageUtil",
+        deprecated_version="v0.3.0",
+        removal_version="v1.0",
+        replacement=None,
+    ),
     category=DeprecationWarning,
 )
 class ImageUtil:

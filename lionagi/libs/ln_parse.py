@@ -13,7 +13,7 @@ from typing_extensions import deprecated
 
 
 @deprecated(
-    "APIUtil is deprecated with no replacement, and will be removed in v1.0",
+    "ParseUtil is deprecated with no replacement, and will be removed in v1.0",
     category=DeprecationWarning,
 )
 class ParseUtil:
