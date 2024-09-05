@@ -3,8 +3,9 @@ from .os.version import __version__
 from dotenv import load_dotenv
 
 from lionagi.os import lionfuncs
-from lionagi.libs.ln_convert import to_list, to_dict, to_df, to_readable_dict
-from lionagi.libs.ln_func_call import alcall, bcall, lcall, CallDecorator as cd, tcall
+from lionagi.libs.ln_convert import to_list, to_dict, to_df, to_readable_dict, to_str, to_num
+from lionagi.libs.ln_func_call import alcall, bcall, lcall, CallDecorator as cd, tcall, rcall, pcall, mcall
+from lionagi.libs.ln_nested import nget, nset, nmerge, nfilter, ninsert, unflatten, flatten
 from pydantic import Field
 from lionagi.core.collections import progression, flow, pile, iModel
 from lionagi.core.generic import Node, Graph, Tree, Edge
@@ -30,7 +31,7 @@ __all__ = [
     "bcall",
     "tcall",
     "rcall",
-    "ucall",
+    # "ucall",
     "pcall",
     "mcall",
     "cd",
@@ -40,9 +41,9 @@ __all__ = [
     "ninsert",
     "flatten",
     "unflatten",
-    "npop",
+    # "npop",
     "nfilter",
-    "validate_mapping",
+    # "validate_mapping",
     "func_to_tool",
     "to_df",
     "to_readable_dict",

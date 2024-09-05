@@ -1,5 +1,5 @@
 """This module defines abstract base classes for LionAGI."""
-
+import warnings
 from abc import ABC, abstractmethod
 from collections.abc import Generator
 from typing import Any, Iterator, TypeVar
@@ -16,15 +16,15 @@ from typing_extensions import deprecated
 from lionagi.os.sys_utils import format_deprecated_msg
 
 
-@deprecated(
-    format_deprecated_msg(
-        deprecated_name="lionagi.core.collections.abc.concepts.Record",
-        deprecated_version="v0.3.0",
-        removal_version="v1.0",
-        replacement="check `lion_core.abc._record` for updates",
-    ),
-    category=DeprecationWarning,
-)
+# @deprecated(
+#     format_deprecated_msg(
+#         deprecated_name="lionagi.core.collections.abc.concepts.Record",
+#         deprecated_version="v0.3.0",
+#         removal_version="v1.0",
+#         replacement="check `lion_core.abc._record` for updates",
+#     ),
+#     category=DeprecationWarning,
+# )
 class Record(ABC):
     """
     Abstract base class for managing a collection of unique LionAGI items.
@@ -42,6 +42,17 @@ class Record(ABC):
         __len__: Return the number of items in the record.
         __iter__: Iterate over items in the record.
     """
+
+    def __init__(self):
+        warnings.warn(
+            format_deprecated_msg(
+                deprecated_name="lionagi.core.collections.abc.concepts.Record",
+                deprecated_version="v0.3.0",
+                removal_version="v1.0",
+                replacement="check `lion_core.abc._record` for updates",
+            ),
+            category=DeprecationWarning,
+        )
 
     @abstractmethod
     def keys(self) -> Generator[str, None, None]:

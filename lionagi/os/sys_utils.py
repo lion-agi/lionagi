@@ -25,12 +25,12 @@ import time
 def format_deprecated_msg(
     deprecated_name: str,
     deprecated_version: str,
-    remove_version: str | None = None,
+    removal_version: str | None = None,
     replacement: str | Literal["python"] | None = None,
     python_msg: str | None = None,
 ) -> str:
 
-    msg = f"<{deprecated_name}> is deprecated since <{deprecated_version}> and will be removed in {remove_version}."
+    msg = f"<{deprecated_name}> is deprecated since <{deprecated_version}> and will be removed in {removal_version}."
     if replacement is None:
         msg += " No `LionAGI` replacement is available."
     if replacement == "python":
@@ -546,7 +546,7 @@ class SysUtil:
         format_deprecated_msg(
             deprecated_name="SysUtil.sleep()",
             deprecated_version="0.3.0",
-            remove_version="1.0.0",
+            removal_version="1.0.0",
             replacement="python",
             python_msg="time.sleep()",
         ),
@@ -566,7 +566,7 @@ class SysUtil:
         format_deprecated_msg(
             deprecated_name="SysUtil.get_now()",
             deprecated_version="0.3.0",
-            remove_version="1.0.0",
+            removal_version="1.0.0",
             replacement="SysUtil.time()",
         ),
         category=DeprecationWarning,
@@ -593,7 +593,7 @@ class SysUtil:
         format_deprecated_msg(
             deprecated_name="SysUtil.change_dict_key()",
             deprecated_version="0.3.0",
-            remove_version="1.0.0",
+            removal_version="1.0.0",
             replacement="python",
             python_msg='d["new_key"] = d.pop("old_key")',
         ),
@@ -618,7 +618,7 @@ class SysUtil:
         format_deprecated_msg(
             deprecated_name="SysUtil.get_timestamp()",
             deprecated_version="0.3.0",
-            remove_version="1.0.0",
+            removal_version="1.0.0",
             replacement="SysUtil.time(type_='timestamp')",
         ),
         category=DeprecationWarning,
@@ -644,7 +644,7 @@ class SysUtil:
         format_deprecated_msg(
             deprecated_name="SysUtil.is_schema()",
             deprecated_version="0.3.0",
-            remove_version="1.0.0",
+            removal_version="1.0.0",
             replacement=None,
         ),
         category=DeprecationWarning,
@@ -661,7 +661,7 @@ class SysUtil:
         format_deprecated_msg(
             deprecated_name="SysUtil.create_copy()",
             deprecated_version="0.3.0",
-            remove_version="1.0.0",
+            removal_version="1.0.0",
             replacement="SysUtil.copy()",
         ),
         category=DeprecationWarning,
@@ -689,7 +689,7 @@ class SysUtil:
         format_deprecated_msg(
             deprecated_name="SysUtil.create_id()",
             deprecated_version="0.3.0",
-            remove_version="1.0.0",
+            removal_version="1.0.0",
             replacement="SysUtil.id()",
         ),
         category=DeprecationWarning,
@@ -713,7 +713,7 @@ class SysUtil:
         format_deprecated_msg(
             deprecated_name="SysUtil.clear_dir()",
             deprecated_version="0.3.0",
-            remove_version="1.0.0",
+            removal_version="1.0.0",
             replacement="SysUtil.clear_path()",
         ),
         category=DeprecationWarning,
@@ -762,7 +762,7 @@ class SysUtil:
         format_deprecated_msg(
             deprecated_name="SysUtil.get_size()",
             deprecated_version="0.3.0",
-            remove_version="1.0.0",
+            removal_version="1.0.0",
             replacement="SysUtil.get_file_size()",
         ),
         category=DeprecationWarning,
