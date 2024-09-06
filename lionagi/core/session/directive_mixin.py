@@ -51,6 +51,10 @@ class DirectiveMixin:
         return_branch=False,
         images=None,
         image_path=None,
+        template=None,
+        verbose=True,
+        formatter=None,
+        format_kwargs=None,
         **kwargs,
     ):
         """
@@ -114,7 +118,15 @@ class DirectiveMixin:
             >>> print(result)
         """
 
-        directive = Unit(self, imodel=imodel, rulebook=rulebook)
+        directive = Unit(
+            self,
+            imodel=imodel,
+            rulebook=rulebook,
+            template=template,
+            verbose=verbose,
+            formatter=formatter,
+            format_kwargs=format_kwargs,
+        )
         if system:
             self.add_message(system=system)
 
@@ -174,7 +186,10 @@ class DirectiveMixin:
         directive=None,
         images=None,
         image_path=None,
-        verbose=False,
+        template=None,
+        verbose=True,
+        formatter=None,
+        format_kwargs=None,
         **kwargs,
     ):
         """
@@ -220,7 +235,14 @@ class DirectiveMixin:
 
             images = ImageUtil.read_image_to_base64(image_path)
 
-        _directive = Unit(self, imodel=imodel, rulebook=rulebook, verbose=verbose)
+        _directive = Unit(
+            self,
+            imodel=imodel,
+            rulebook=rulebook,
+            verbose=verbose,
+            formatter=formatter,
+            format_kwargs=format_kwargs,
+        )
 
         idx = len(self.progress)
         if directive and isinstance(directive, str):
@@ -232,6 +254,7 @@ class DirectiveMixin:
                 reason=reason,
                 confidence=confidence,
                 images=images,
+                template=template,
                 **kwargs,
             )
 
@@ -269,6 +292,7 @@ class DirectiveMixin:
             plan_num_step=plan_num_step,
             predict_num_sentences=predict_num_sentences,
             images=images,
+            template=template,
             **kwargs,
         )
 

@@ -322,6 +322,38 @@ class iModel:
         node.add_field("embedding", embed["data"][0]["embedding"])
         node._meta_insert("embedding_meta", payload)
 
+    async def format_structure(
+        self,
+        data: str | dict,
+        json_schema: dict | str = None,
+        request_fields: dict | list = None,
+        **kwargs,
+    ) -> dict:
+        if json_schema:
+            kwargs["response_format"] = {
+                "type": "json_schema",
+                "json_schema": json_schema,
+            }
+            kwargs["model"] = kwargs.pop("model", "gpt-4o-mini")
+        if not request_fields and not json_schema:
+            raise ValueError("Either request_fields or json_schema must be provided")
+        request_fields = request_fields or json_schema["properties"]
+
+        messages = [
+            {
+                "role": "system",
+                "content": "You are a helpful json formatting assistant.",
+            },
+            {
+                "role": "user",
+                "content": f"can you please format the given data into given json schema?"
+                f"--- data --- {data} |||| ----json fields required --- {request_fields}",
+            },
+        ]
+
+        result = await self.call_chat_completion(messages, **kwargs)
+        return result["choices"][0]["message"]["content"]
+
     def to_dict(self):
         """
         Converts the model instance to a dictionary representation.

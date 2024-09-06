@@ -14,6 +14,7 @@ See the License for the specific language governing permissions and
 limitations under the License.
 """
 
+from typing import Callable
 from lionagi.libs.ln_convert import strip_lower
 from lionagi.libs.ln_func_call import rcall
 from lionagi.core.collections.abc import Directive
@@ -40,7 +41,14 @@ class Unit(Directive, DirectiveMixin):
     default_template = UnitForm
 
     def __init__(
-        self, branch, imodel: iModel = None, template=None, rulebook=None, verbose=False
+        self,
+        branch,
+        imodel: iModel = None,
+        template=None,
+        rulebook=None,
+        verbose=False,
+        formatter: Callable = None,
+        format_kwargs: dict = {},
     ) -> None:
         self.branch = branch
         if imodel and isinstance(imodel, iModel):
@@ -49,7 +57,11 @@ class Unit(Directive, DirectiveMixin):
         else:
             self.imodel = branch.imodel
         self.form_template = template or self.default_template
-        self.validator = Validator(rulebook=rulebook) if rulebook else Validator()
+        rule_config = {"formatter": formatter, "format_kwargs": format_kwargs}
+        if rulebook:
+            rule_config["rulebook"] = rulebook
+
+        self.validator = Validator(**rule_config)
         self.verbose = verbose
 
     async def chat(
@@ -71,6 +83,8 @@ class Unit(Directive, DirectiveMixin):
         clear_messages=False,
         use_annotation=True,
         return_branch=False,
+        formatter=None,
+        format_kwargs={},
         **kwargs,
     ):
         """
@@ -119,6 +133,8 @@ class Unit(Directive, DirectiveMixin):
             clear_messages=clear_messages,
             use_annotation=use_annotation,
             return_branch=return_branch,
+            formatter=formatter,
+            format_kwargs=format_kwargs,
             **kwargs,
         )
 

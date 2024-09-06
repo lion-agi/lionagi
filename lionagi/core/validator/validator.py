@@ -14,10 +14,12 @@ See the License for the specific language governing permissions and
 limitations under the License.
 """
 
-from typing import Any, Dict, List, Union
+import asyncio
+from typing import Any, Dict, List, Union, Callable
 from lionagi.libs import SysUtil
 from lionagi.libs.ln_func_call import lcall
 from lionagi.core.collections.abc import FieldError
+from lionagi.core.collections.model import iModel
 from ..rule.base import Rule
 from ..rule._default import DEFAULT_RULES
 from ..rule.rulebook import RuleBook
@@ -56,6 +58,8 @@ class Validator:
         order: List[str] = None,
         init_config: Dict[str, Dict] = None,
         active_rules: Dict[str, Rule] = None,
+        formatter: Callable = None,
+        format_kwargs: dict = {},
     ):
         """
         Initialize the Validator.
@@ -75,6 +79,8 @@ class Validator:
         )
         self.active_rules: Dict[str, Rule] = active_rules or self._initiate_rules()
         self.validation_log = []
+        self.formatter = formatter
+        self.format_kwargs = format_kwargs
 
     def _initiate_rules(self) -> Dict[str, Rule]:
         """
@@ -207,9 +213,16 @@ class Validator:
             if len(form.requested_fields) == 1:
                 response = {form.requested_fields[0]: response}
             else:
-                raise ValueError(
-                    "Response is a string, but form has multiple fields to be filled"
-                )
+                if self.formatter:
+                    if asyncio.iscoroutinefunction(self.formatter):
+                        response = await self.formatter(response, **self.format_kwargs)
+                        print("formatter used")
+                    else:
+                        response = self.formatter(response, **self.format_kwargs)
+                        print("formatter used")
+
+        if not isinstance(response, dict):
+            raise ValueError(f"The form response format is invalid for filling.")
 
         dict_ = {}
         for k, v in response.items():

@@ -257,7 +257,6 @@ class DirectiveMixin(ABC):
         form: Form = None,
         return_form: bool = True,
         strict: bool = False,
-        rulebook: Any = None,
         use_annotation: bool = True,
         template_name: str = None,
         costs=None,
@@ -274,7 +273,6 @@ class DirectiveMixin(ABC):
             form: Form data.
             return_form: Flag indicating if form should be returned.
             strict: Flag indicating if strict validation should be applied.
-            rulebook: Rulebook instance for validation.
             use_annotation: Flag indicating if annotations should be used.
             template_name: Template name for form.
 
@@ -295,8 +293,7 @@ class DirectiveMixin(ABC):
         response_ = self._process_model_response(_msg, requested_fields)
 
         if form:
-            validator = Validator(rulebook=rulebook) if rulebook else self.validator
-            form = await validator.validate_response(
+            form = await self.validator.validate_response(
                 form=form,
                 response=response_,
                 strict=strict,
@@ -332,7 +329,6 @@ class DirectiveMixin(ABC):
         invoke_tool: bool = True,
         return_form: bool = True,
         strict: bool = False,
-        rulebook: Any = None,
         imodel: Any = None,
         use_annotation: bool = True,
         branch: Any = None,
@@ -356,7 +352,6 @@ class DirectiveMixin(ABC):
             invoke_tool: Flag indicating if tools should be invoked.
             return_form: Flag indicating if form should be returned.
             strict: Flag indicating if strict validation should be applied.
-            rulebook: Rulebook instance for validation.
             imodel: Model instance.
             use_annotation: Flag indicating if annotations should be used.
             branch: Branch instance.
@@ -400,9 +395,8 @@ class DirectiveMixin(ABC):
             form=form,
             return_form=return_form,
             strict=strict,
-            rulebook=rulebook,
             use_annotation=use_annotation,
-            costs=imodel.costs,
+            costs=imodel.costs or (0, 0),
         )
 
         return out_, branch if return_branch else out_
@@ -421,13 +415,14 @@ class DirectiveMixin(ABC):
         invoke_tool=True,
         return_form=True,
         strict=False,
-        rulebook=None,
         imodel=None,
         images: Optional[str] = None,
         clear_messages=False,
         use_annotation=True,
         timeout: float = None,
         return_branch=False,
+        formatter=None,
+        format_kwargs={},
         **kwargs,
     ):
         """
@@ -470,13 +465,14 @@ class DirectiveMixin(ABC):
             invoke_tool=invoke_tool,
             return_form=return_form,
             strict=strict,
-            rulebook=rulebook,
             imodel=imodel,
             use_annotation=use_annotation,
             timeout=timeout,
             branch=branch,
             clear_messages=clear_messages,
             return_branch=return_branch,
+            formatter=formatter,
+            format_kwargs=format_kwargs,
             **kwargs,
         )
 
@@ -609,7 +605,9 @@ class DirectiveMixin(ABC):
         clear_messages=False,
         return_branch=False,
         images: Optional[str] = None,
-        verbose=None,
+        verbose=True,
+        formatter=None,
+        format_kwargs=None,
         **kwargs,
     ):
         """
