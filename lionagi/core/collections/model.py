@@ -26,6 +26,8 @@ load_dotenv()
 
 _oai_price_map = {
     "gpt-4o": (5, 15),
+    "gpt-4o-2024-08-06": (2.5, 10),
+    "gpt-4o-mini": (0.15, 0.6),
     "gpt-4-turbo": (10, 30),
     "gpt-3.5-turbo": (0.5, 1.5),
 }
