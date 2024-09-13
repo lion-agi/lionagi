@@ -58,7 +58,7 @@ class Branch(Node, DirectiveMixin):
     messages: Pile = Field(None)
     progress: Progression = Field(None)
     tool_manager: ToolManager = Field(None)
-    system: System = Field(None)
+    system: System | None = Field(None)
     user: str = Field(None)
     mailbox: Exchange[Mail] = Field(None)
     imodel: iModel = Field(None)
@@ -110,14 +110,14 @@ class Branch(Node, DirectiveMixin):
             system (System): The system message to set.
             sender (str, optional): The sender of the system message.
         """
-        system = system or "You are a helpful assistant."
-        if len(self.progress) == 0:
-            self.add_message(system=system, sender=sender)
-        else:
-            _msg = System(system=system, sender=sender)
-            _msg.recipient = self.ln_id
-            self._remove_system()
-            self.system = _msg
+        if system is not None:
+            if len(self.progress) == 0:
+                self.add_message(system=system, sender=sender)
+            else:
+                _msg = System(system=system, sender=sender)
+                _msg.recipient = self.ln_id
+                self._remove_system()
+                self.system = _msg
 
     def add_message(
         self,
