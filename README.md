@@ -8,7 +8,7 @@
 ### an AGentic Intelligence Operating System
 
 ```
-pip install lionagi==0.2.6
+pip install lionagi==0.2.7
 ```
 
 **Powerful Intelligent Workflow Automation**
