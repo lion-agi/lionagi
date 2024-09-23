@@ -1,3 +1,5 @@
+"""deprecated, use lionagi.core.generic instead"""
+
 from .model import iModel
 from .pile import Pile, pile
 from .progression import Progression, progression

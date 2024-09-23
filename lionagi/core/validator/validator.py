@@ -17,7 +17,7 @@ limitations under the License.
 import asyncio
 from typing import Any, Dict, List, Union, Callable
 from lionagi.libs import SysUtil
-from lionagi.libs.ln_func_call import lcall
+from lionagi.libs.lionfuncs import lcall
 from lionagi.core.collections.abc import FieldError
 from lionagi.core.collections.model import iModel
 from ..rule.base import Rule

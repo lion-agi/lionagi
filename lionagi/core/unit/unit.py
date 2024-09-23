@@ -15,8 +15,7 @@ limitations under the License.
 """
 
 from typing import Callable
-from lionagi.libs.ln_convert import strip_lower
-from lionagi.libs.ln_func_call import rcall
+from lionagi.libs.lionfuncs import rcall, to_str
 from lionagi.core.collections.abc import Directive
 from lionagi.core.validator.validator import Validator
 from lionagi.core.collections import iModel
@@ -361,8 +360,8 @@ class Unit(Directive, DirectiveMixin):
         if system:
             branch.add_message(system=system)
 
-        if hasattr(self, strip_lower(directive)):
-            directive = getattr(self, strip_lower(directive))
+        if hasattr(self, to_str(directive, strip_lower=True)):
+            directive = getattr(self, to_str(directive, strip_lower=True))
 
             verbose = verbose if verbose is not None else self.verbose
             if verbose:

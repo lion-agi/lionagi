@@ -1,7 +1,8 @@
 from abc import ABC
 
-from lionagi import iModel, pile, Branch, to_list
+from lion_core.sys_utils import SysUtil
 
+from lionagi import iModel, pile, Branch, to_list, Session
 from lionagi.core.manual.guide import OperationGuide
 from lionagi.core.manual.manual import OperationManual
 from lionagi.core.expert.expert_form import ExpertForm
@@ -9,7 +10,6 @@ from lionagi.core.expert.utils import save_to_jsonl
 
 
 class Expert(ABC):
-    """Base class for Expert agents in the AutoOS system."""
 
     manual: OperationManual
     form_template: type[ExpertForm] = ExpertForm
@@ -19,14 +19,15 @@ class Expert(ABC):
         verbose: bool = True,
         imodel: iModel | None = None,
         name: str = "ExpertOne",
-        persist_path="/data/experts/",
+        persist_dir="/data/experts/",
+        session: Session | None = None,
     ):
-        self.branches = pile()
-        self.forms: dict[str, list[ExpertForm]] = {}
-        self.verbose = verbose
-        self.imodel = imodel
         self.name = name
-        self.persist_path = persist_path
+        self.session = session or Session()
+        self.verbose = verbose
+        self.imodel = imodel or iModel()
+        self.persist_dir = persist_dir
+        self.forms: dict[str, list[ExpertForm]] = {}
 
     async def work(
         self,
@@ -47,7 +48,7 @@ class Expert(ABC):
 
         form: ExpertForm = self.form_template(
             operation=operation,
-            name=name,
+            operation_name=name,
             assignment=assignment,
             thinking_style=thinking_style,
             instruction=instruction,

@@ -14,7 +14,7 @@ See the License for the specific language governing permissions and
 limitations under the License.
 """
 
-from lionagi.libs.ln_func_call import rcall, pcall
+from lionagi.libs.lionfuncs import rcall, pcall
 from lionagi.libs import convert, AsyncUtil
 
 from lionagi.core.collections.abc import Directive
