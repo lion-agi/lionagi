@@ -17,7 +17,7 @@ limitations under the License.
 import asyncio
 import logging
 
-from lionagi.libs.ln_func_call import rcall
+from lionagi.libs.lionfuncs import rcall
 from lionagi.core.work.worklog import WorkLog
 
 

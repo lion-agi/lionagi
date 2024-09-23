@@ -132,6 +132,29 @@ class SysUtil:
         return CoreUtil.is_id(item, config=config)
 
     @staticmethod
+    def id(
+        config: LionIDConfig = DEFAULT_LION_ID_CONFIG,
+        /,
+        n: int = None,
+        prefix: str = None,
+        postfix: str = None,
+        random_hyphen: bool = None,
+        num_hyphens: int = None,
+        hyphen_start_index: int = None,
+        hyphen_end_index: int = None,
+    ) -> str:
+        return CoreUtil.id(
+            config=config,
+            n=n,
+            prefix=prefix,
+            postfix=postfix,
+            random_hyphen=random_hyphen,
+            num_hyphens=num_hyphens,
+            hyphen_start_index=hyphen_start_index,
+            hyphen_end_index=hyphen_end_index,
+        )
+
+    @staticmethod
     def clear_path(
         path: Path | str,
         /,
