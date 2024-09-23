@@ -26,7 +26,7 @@ from lionagi.settings import format_deprecated_msg
 
 
 @deprecated(
-    message=format_deprecated_msg(
+    format_deprecated_msg(
         deprecated_name="lionagi.libs.ln_nested.nset()",
         deprecated_type="function",
         deprecated_version="0.3.0",
@@ -79,7 +79,7 @@ def nset(nested_structure: dict | list, indices: list[int | str], value: Any) ->
 
 
 @deprecated(
-    message=format_deprecated_msg(
+    format_deprecated_msg(
         deprecated_name="lionagi.libs.ln_nested.nget()",
         deprecated_type="function",
         deprecated_version="0.3.0",
@@ -149,7 +149,7 @@ def nget(
 
 
 @deprecated(
-    message=format_deprecated_msg(
+    format_deprecated_msg(
         deprecated_name="lionagi.libs.ln_nested.nmerge()",
         deprecated_type="function",
         deprecated_version="0.3.0",
@@ -219,7 +219,7 @@ def nmerge(
 
 
 @deprecated(
-    message=format_deprecated_msg(
+    format_deprecated_msg(
         deprecated_name="lionagi.libs.ln_nested.flatten()",
         deprecated_type="function",
         deprecated_version="0.3.0",
@@ -291,7 +291,7 @@ def flatten(
 
 
 @deprecated(
-    message=format_deprecated_msg(
+    format_deprecated_msg(
         deprecated_name="lionagi.libs.ln_nested.unflatten()",
         deprecated_type="function",
         deprecated_version="0.3.0",
@@ -355,7 +355,7 @@ def unflatten(
 
 
 @deprecated(
-    message=format_deprecated_msg(
+    format_deprecated_msg(
         deprecated_name="lionagi.libs.ln_nested.nfilter()",
         deprecated_type="function",
         deprecated_version="0.3.0",
@@ -401,7 +401,7 @@ def nfilter(
 
 
 @deprecated(
-    message=format_deprecated_msg(
+    format_deprecated_msg(
         deprecated_name="lionagi.libs.ln_nested.nset()",
         deprecated_type="function",
         deprecated_version="0.3.0",
@@ -480,7 +480,7 @@ def ninsert(
 
 
 @deprecated(
-    message=format_deprecated_msg(
+    format_deprecated_msg(
         deprecated_name="lionagi.libs.ln_nested.get_flattened_keys()",
         deprecated_type="function",
         deprecated_version="0.3.0",

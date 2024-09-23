@@ -12,7 +12,7 @@ from lionagi.settings import format_deprecated_msg
 
 
 @deprecated(
-    message=format_deprecated_msg(
+    format_deprecated_msg(
         deprecated_name="lionagi.libs.ln_dataframe.extend_dataframe()",
         deprecated_type="function",
         deprecated_version="0.3.0",
@@ -56,7 +56,7 @@ def extend_dataframe(
 
 
 @deprecated(
-    message=format_deprecated_msg(
+    format_deprecated_msg(
         deprecated_name="lionagi.libs.ln_dataframe.search_keywords()",
         deprecated_type="function",
         deprecated_version="0.3.0",
@@ -108,7 +108,7 @@ def search_keywords(
 
 
 @deprecated(
-    message=format_deprecated_msg(
+    format_deprecated_msg(
         deprecated_name="lionagi.libs.ln_dataframe.replace_keyword()",
         deprecated_type="function",
         deprecated_version="0.3.0",
@@ -151,7 +151,7 @@ def replace_keyword(
 
 
 @deprecated(
-    message=format_deprecated_msg(
+    format_deprecated_msg(
         deprecated_name="lionagi.libs.ln_dataframe.read_csv()",
         deprecated_type="function",
         deprecated_version="0.3.0",
@@ -176,7 +176,7 @@ def read_csv(filepath: str, **kwargs) -> pd.DataFrame:
 
 
 @deprecated(
-    message=format_deprecated_msg(
+    format_deprecated_msg(
         deprecated_name="lionagi.libs.ln_dataframe.read_json()",
         deprecated_type="function",
         deprecated_version="0.3.0",
@@ -191,7 +191,7 @@ def read_json(filepath, **kwargs):
 
 
 @deprecated(
-    message=format_deprecated_msg(
+    format_deprecated_msg(
         deprecated_name="lionagi.libs.ln_dataframe.remove_last_n_rows()",
         deprecated_type="function",
         deprecated_version="0.3.0",
@@ -224,7 +224,7 @@ def remove_last_n_rows(df: pd.DataFrame, steps: int) -> pd.DataFrame:
 
 
 @deprecated(
-    message=format_deprecated_msg(
+    format_deprecated_msg(
         deprecated_name="lionagi.libs.ln_dataframe.update_row()",
         deprecated_type="function",
         deprecated_version="0.3.0",

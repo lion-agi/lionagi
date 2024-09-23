@@ -30,7 +30,7 @@ from lionagi.settings import format_deprecated_msg
 
 
 @deprecated(
-    message=format_deprecated_msg(
+    format_deprecated_msg(
         deprecated_name="lionagi.libs.ln_validate.ParseUtil",
         deprecated_type="class",
         deprecated_version="0.3.0",
@@ -52,7 +52,7 @@ def check_dict_field(x, keys: list[str] | dict, fix_=True, **kwargs):
 
 
 @deprecated(
-    message=format_deprecated_msg(
+    format_deprecated_msg(
         deprecated_name="lionagi.libs.ln_parse.ParseUtil",
         deprecated_type="class",
         deprecated_version="0.3.0",
@@ -76,7 +76,7 @@ def check_action_field(x, fix_=True, **kwargs):
 
 
 @deprecated(
-    message=format_deprecated_msg(
+    format_deprecated_msg(
         deprecated_name="lionagi.libs.ln_parse.ParseUtil",
         deprecated_type="class",
         deprecated_version="0.3.0",
@@ -114,7 +114,7 @@ def check_number_field(x, fix_=True, **kwargs):
 
 
 @deprecated(
-    message=format_deprecated_msg(
+    format_deprecated_msg(
         deprecated_name="lionagi.libs.ln_parse.ParseUtil",
         deprecated_type="class",
         deprecated_version="0.3.0",
@@ -151,7 +151,7 @@ def check_bool_field(x, fix_=True):
 
 
 @deprecated(
-    message=format_deprecated_msg(
+    format_deprecated_msg(
         deprecated_name="lionagi.libs.ln_parse.ParseUtil",
         deprecated_type="class",
         deprecated_version="0.3.0",
@@ -190,7 +190,7 @@ def check_str_field(x, *args, fix_=True, **kwargs):
 
 
 @deprecated(
-    message=format_deprecated_msg(
+    format_deprecated_msg(
         deprecated_name="lionagi.libs.ln_parse.ParseUtil",
         deprecated_type="class",
         deprecated_version="0.3.0",

@@ -15,7 +15,7 @@ from lionagi.settings import format_deprecated_msg
 
 
 @deprecated(
-    message=format_deprecated_msg(
+    format_deprecated_msg(
         deprecated_name="lionagi.libs.ln_convert.to_list()",
         deprecated_type="function",
         deprecated_version="0.3.0",
@@ -110,7 +110,7 @@ def _(input_, /, *, dropna=True):
 
 
 @deprecated(
-    message=format_deprecated_msg(
+    format_deprecated_msg(
         deprecated_name="lionagi.libs.ln_convert.to_dict()",
         deprecated_type="function",
         deprecated_version="0.3.0",
@@ -266,7 +266,7 @@ def _(input_, /, *args, **kwargs) -> dict[Any, Any]:
 
 
 @deprecated(
-    message=format_deprecated_msg(
+    format_deprecated_msg(
         deprecated_name="lionagi.libs.ln_convert.to_str()",
         deprecated_type="function",
         deprecated_version="0.3.0",
@@ -416,7 +416,7 @@ def _(input_, /, *args, as_list: bool = False, **kwargs) -> str | list[str]:
 
 
 @deprecated(
-    message=format_deprecated_msg(
+    format_deprecated_msg(
         deprecated_name="lionagi.libs.ln_convert.to_df()",
         deprecated_type="function",
         deprecated_version="0.3.0",
@@ -517,7 +517,7 @@ def _(
 
 
 @deprecated(
-    message=format_deprecated_msg(
+    format_deprecated_msg(
         deprecated_name="lionagi.libs.ln_convert.to_num()",
         deprecated_type="function",
         deprecated_version="0.3.0",
@@ -557,7 +557,7 @@ def to_num(
 
 
 @deprecated(
-    message=format_deprecated_msg(
+    format_deprecated_msg(
         deprecated_name="lionagi.libs.ln_convert.to_readable_dict()",
         deprecated_type="function",
         deprecated_version="0.3.0",
@@ -580,7 +580,7 @@ def to_readable_dict(input_: Any) -> str:
 
 
 @deprecated(
-    message=format_deprecated_msg(
+    format_deprecated_msg(
         deprecated_name="lionagi.libs.ln_convert.is_same_dtype()",
         deprecated_type="function",
         deprecated_version="0.3.0",
@@ -615,7 +615,7 @@ def is_same_dtype(
 
 
 @deprecated(
-    message=format_deprecated_msg(
+    format_deprecated_msg(
         deprecated_name="lionagi.libs.ln_convert.xml_to_dict()",
         deprecated_type="function",
         deprecated_version="0.3.0",
@@ -644,7 +644,7 @@ def xml_to_dict(root) -> dict[str, Any]:
 
 
 @deprecated(
-    message=format_deprecated_msg(
+    format_deprecated_msg(
         deprecated_name="lionagi.libs.ln_convert.strip_lower()",
         deprecated_type="function",
         deprecated_version="0.3.0",
@@ -673,7 +673,7 @@ def strip_lower(input_: Any) -> str:
 
 
 @deprecated(
-    message=format_deprecated_msg(
+    format_deprecated_msg(
         deprecated_name="lionagi.libs.ln_convert.is_structure_homogeneous()",
         deprecated_type="function",
         deprecated_version="0.3.0",
@@ -736,7 +736,7 @@ def is_structure_homogeneous(
 
 
 @deprecated(
-    message=format_deprecated_msg(
+    format_deprecated_msg(
         deprecated_name="lionagi.libs.ln_convert.is_homogeneous()",
         deprecated_type="function",
         deprecated_version="0.3.0",

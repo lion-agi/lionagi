@@ -16,7 +16,7 @@ from lionagi.settings import format_deprecated_msg
 
 
 @deprecated(
-    message=format_deprecated_msg(
+    format_deprecated_msg(
         deprecated_name="lionagi.libs.ln_func_call.lru_cache()",
         deprecated_type="function",
         deprecated_version="0.3.0",
@@ -31,7 +31,7 @@ def lru_cache(*args, **kwargs):
 
 
 @deprecated(
-    message=format_deprecated_msg(
+    format_deprecated_msg(
         deprecated_name="lionagi.libs.ln_func_call.lcall()",
         deprecated_type="function",
         deprecated_version="0.3.0",
@@ -96,7 +96,7 @@ def lcall(
 
 
 @deprecated(
-    message=format_deprecated_msg(
+    format_deprecated_msg(
         deprecated_name="lionagi.libs.ln_func_call.alcall()",
         deprecated_type="function",
         deprecated_version="0.3.0",
@@ -163,7 +163,7 @@ async def alcall(
 
 
 @deprecated(
-    message=format_deprecated_msg(
+    format_deprecated_msg(
         deprecated_name="lionagi.libs.ln_func_call.pcall()",
         deprecated_type="function",
         deprecated_version="0.3.0",
@@ -178,7 +178,7 @@ async def pcall(funcs):
 
 
 @deprecated(
-    message=format_deprecated_msg(
+    format_deprecated_msg(
         deprecated_name="lionagi.libs.ln_func_call.mcall()",
         deprecated_type="function",
         deprecated_version="0.3.0",
@@ -231,7 +231,7 @@ async def mcall(
 
 
 @deprecated(
-    message=format_deprecated_msg(
+    format_deprecated_msg(
         deprecated_name="lionagi.libs.ln_func_call.bcall()",
         deprecated_type="function",
         deprecated_version="0.3.0",
@@ -271,7 +271,7 @@ async def bcall(
 
 
 @deprecated(
-    message=format_deprecated_msg(
+    format_deprecated_msg(
         deprecated_name="lionagi.libs.ln_func_call.tcall()",
         deprecated_type="function",
         deprecated_version="0.3.0",
@@ -366,7 +366,7 @@ async def tcall(
 
 
 @deprecated(
-    message=format_deprecated_msg(
+    format_deprecated_msg(
         deprecated_name="lionagi.libs.ln_func_call.rcall()",
         deprecated_type="function",
         deprecated_version="0.3.0",
@@ -584,7 +584,7 @@ async def _tcall(
 
 
 @deprecated(
-    message=format_deprecated_msg(
+    format_deprecated_msg(
         deprecated_name="lionagi.libs.ln_func_call.CallDecorator",
         deprecated_type="class",
         deprecated_version="0.3.0",
@@ -1305,7 +1305,7 @@ def _custom_error_handler(error: Exception, error_map: dict[type, Callable]) -> 
 
 
 @deprecated(
-    message=format_deprecated_msg(
+    format_deprecated_msg(
         deprecated_name="lionagi.libs.ln_func_call.call_handler()",
         deprecated_type="function",
         deprecated_version="0.3.0",
@@ -1368,7 +1368,7 @@ async def call_handler(
 
 
 @deprecated(
-    message=format_deprecated_msg(
+    format_deprecated_msg(
         deprecated_name="lionagi.libs.ln_func_call.lru_cache()",
         deprecated_type="function",
         deprecated_version="0.3.0",

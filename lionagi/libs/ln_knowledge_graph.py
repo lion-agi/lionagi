@@ -6,7 +6,7 @@ from lionagi.settings import format_deprecated_msg
 
 
 @deprecated(
-    message=format_deprecated_msg(
+    format_deprecated_msg(
         deprecated_name="lionagi.libs.ln_knowledge_graph.KnowledgeBase",
         deprecated_type="class",
         deprecated_version="0.3.0",

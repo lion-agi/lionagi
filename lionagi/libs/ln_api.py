@@ -22,7 +22,7 @@ from lionagi.libs.ln_nested import nget
 
 
 @deprecated(
-    message=format_deprecated_msg(
+    format_deprecated_msg(
         deprecated_name="APIUtil",
         deprecated_type="class",
         deprecated_version="0.3.0",

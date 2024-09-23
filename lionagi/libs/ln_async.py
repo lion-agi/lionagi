@@ -13,7 +13,7 @@ from lionagi.settings import format_deprecated_msg
 
 
 @deprecated(
-    message=format_deprecated_msg(
+    format_deprecated_msg(
         deprecated_name="AsyncUtil",
         deprecated_type="class",
         deprecated_version="0.3.0",
