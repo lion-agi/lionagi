@@ -2,7 +2,7 @@ from typing import Union, Callable
 
 from lionagi.libs import func_call
 from lionagi.libs.ln_convert import to_list
-from lionagi.core.collections import pile
+from lionagi.core.generic.pile import Pile
 from lionagi.core.generic import Node
 from ..bridge.langchain_.langchain_bridge import LangchainBridge
 from ..bridge.llamaindex_.llama_index_bridge import LlamaIndexBridge
