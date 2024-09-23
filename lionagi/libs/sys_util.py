@@ -475,7 +475,7 @@ class SysUtil:
 
     ## Deprecated methods
     @deprecated(
-        message=format_deprecated_msg(
+        format_deprecated_msg(
             deprecated_name="SysUtil.change_dict_key()",
             deprecated_type="function",
             deprecated_version="0.3.0",
@@ -501,7 +501,7 @@ class SysUtil:
             dict_[new_key] = dict_.pop(old_key)
 
     @deprecated(
-        message=format_deprecated_msg(
+        format_deprecated_msg(
             deprecated_name="SysUtil.sleep()",
             deprecated_type="function",
             deprecated_version="0.3.0",
@@ -522,7 +522,7 @@ class SysUtil:
         time.sleep(delay)
 
     @deprecated(
-        message=format_deprecated_msg(
+        format_deprecated_msg(
             deprecated_name="SysUtil.get_now()",
             deprecated_type="function",
             deprecated_version="0.3.0",
@@ -550,7 +550,7 @@ class SysUtil:
         return datetime.now(**config_)
 
     @deprecated(
-        message=format_deprecated_msg(
+        format_deprecated_msg(
             deprecated_name="SysUtil.get_timestamp()",
             deprecated_type="function",
             deprecated_version="0.3.0",
@@ -577,7 +577,7 @@ class SysUtil:
         return str_
 
     @deprecated(
-        message=format_deprecated_msg(
+        format_deprecated_msg(
             deprecated_name="SysUtil.is_schema()",
             deprecated_type="function",
             deprecated_version="0.3.0",
@@ -595,7 +595,7 @@ class SysUtil:
         )
 
     @deprecated(
-        message=format_deprecated_msg(
+        format_deprecated_msg(
             deprecated_name="SysUtil.create_copy()",
             deprecated_type="function",
             deprecated_version="0.3.0",
@@ -624,7 +624,7 @@ class SysUtil:
         )
 
     @deprecated(
-        message=format_deprecated_msg(
+        format_deprecated_msg(
             deprecated_name="SysUtil.create_id()",
             deprecated_type="function",
             deprecated_version="0.3.0",
@@ -649,7 +649,7 @@ class SysUtil:
         return sha256(current_time + random_bytes).hexdigest()[:n]
 
     @deprecated(
-        message=format_deprecated_msg(
+        format_deprecated_msg(
             deprecated_name="SysUtil.get_bins()",
             deprecated_type="function",
             deprecated_version="0.3.0",
@@ -685,7 +685,7 @@ class SysUtil:
         return bins
 
     @deprecated(
-        message=format_deprecated_msg(
+        format_deprecated_msg(
             deprecated_name="SysUtil.clear_dir()",
             deprecated_type="function",
             deprecated_version="0.3.0",
@@ -735,7 +735,7 @@ class SysUtil:
                     raise
 
     @deprecated(
-        message=format_deprecated_msg(
+        format_deprecated_msg(
             deprecated_name="SysUtil.get_size()",
             deprecated_type="function",
             deprecated_version="0.3.0",
