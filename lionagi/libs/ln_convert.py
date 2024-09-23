@@ -1,19 +1,3 @@
-"""
-Copyright 2024 HaiyangLi
-
-Licensed under the Apache License, Version 2.0 (the "License");
-you may not use this file except in compliance with the License.
-You may obtain a copy of the License at
-
-    http://www.apache.org/licenses/LICENSE-2.0
-
-Unless required by applicable law or agreed to in writing, software
-distributed under the License is distributed on an "AS IS" BASIS,
-WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-See the License for the specific language governing permissions and
-limitations under the License.
-"""
-
 import json
 import re
 from functools import singledispatch
@@ -26,9 +10,52 @@ from pydantic import BaseModel
 number_regex = re.compile(r"-?\d+\.?\d*")
 
 
-# to_list functions with datatype overloads
-@singledispatch
+from typing_extensions import deprecated
+from lionagi.settings import format_deprecated_msg
+
+
+@deprecated(
+    message=format_deprecated_msg(
+        deprecated_name="lionagi.libs.ln_convert.to_list()",
+        deprecated_type="function",
+        deprecated_version="0.3.0",
+        removal_version="1.0.0",
+        replacement="lionagi.libs.lionfuncs.to_list()",
+        additional_msg="from lionagi import lionfunc as ln\nln.to_list()",
+    ),
+    category=DeprecationWarning,
+)
 def to_list(input_, /, *, flatten: bool = True, dropna: bool = True) -> list[Any]:
+    """
+    Converts the input object to a list. This function is capable of handling various input types,
+    utilizing single dispatch to specialize for different types such as list, tuple, and set.
+    The default implementation handles general iterables, excluding strings, bytes, bytearrays,
+    and dictionaries, by attempting to convert them to a list, optionally flattening and dropping
+    None values based on the provided arguments.
+
+    Specialized implementations may use additional keyword arguments specific to their conversion logic.
+
+    Args:
+            input_ (Any): The input object to convert to a list.
+            flatten (bool): If True, and the input is a nested list, the function will attempt to flatten it.
+            dropna (bool): If True, None values will be removed from the resulting list.
+
+    Returns:
+            list[Any]: A list representation of the input, with modifications based on `flatten` and `dropna`.
+
+    Raises:
+            ValueError: If the input type is unsupported or cannot be converted to a list.
+
+    Note:
+            - This function uses `@singledispatch` to handle different input types via overloading.
+            - The default behavior for dictionaries is to wrap them in a list without flattening.
+            - For specific behaviors with lists, tuples, sets, and other types, see the registered implementations.
+    """
+    return _to_list(input_, flatten=flatten, dropna=dropna)
+
+
+@singledispatch
+def _to_list(input_, /, *, flatten: bool = True, dropna: bool = True) -> list[Any]:
     """
     Converts the input object to a list. This function is capable of handling various input types,
     utilizing single dispatch to specialize for different types such as list, tuple, and set.
@@ -65,26 +92,60 @@ def to_list(input_, /, *, flatten: bool = True, dropna: bool = True) -> list[Any
         raise ValueError(f"Could not convert {type(input_)} object to list: {e}") from e
 
 
-@to_list.register(list)
+@_to_list.register(list)
 def _(input_, /, *, flatten: bool = True, dropna: bool = True) -> list[Any]:
     return _flatten_list(input_, dropna) if flatten else input_
 
 
-@to_list.register(tuple)
+@_to_list.register(tuple)
 def _(input_, /, *, flatten=True, dropna=True):
     """Specialized implementation of `to_list` for handling tuple inputs."""
     return _flatten_list(list(input_), dropna) if flatten else list(input_)
 
 
-@to_list.register(set)
+@_to_list.register(set)
 def _(input_, /, *, dropna=True):
     """Specialized implementation of `to_list` for handling set inputs."""
     return list(_dropna_iterator(list(input_))) if dropna else list(input_)
 
 
-# to_dict functions with datatype overloads
-@singledispatch
+@deprecated(
+    message=format_deprecated_msg(
+        deprecated_name="lionagi.libs.ln_convert.to_dict()",
+        deprecated_type="function",
+        deprecated_version="0.3.0",
+        removal_version="1.0.0",
+        replacement="lionagi.libs.lionfuncs.to_dict()",
+        additional_msg="from lionagi import lionfunc as ln\nln.to_dict()",
+    ),
+    category=DeprecationWarning,
+)
 def to_dict(input_, /, *args, **kwargs) -> dict[Any, Any]:
+    """
+    Converts the input object to a dictionary. This base function raises a ValueError for unsupported types.
+    The function is overloaded to handle specific input types such as dict, str, pandas.Series, pandas.DataFrame,
+    and Pydantic's BaseModel, utilizing the single dispatch mechanism for type-specific conversions.
+
+    Args:
+            input_ (Any): The input object to convert to a dictionary.
+            *args: Variable length argument list for additional options in type-specific handlers.
+            **kwargs: Arbitrary keyword arguments for additional options in type-specific handlers.
+
+    Returns:
+            dict[Any, Any]: A dictionary representation of the input object.
+
+    Raises:
+            ValueError: If the input type is not supported or cannot be converted to a dictionary.
+
+    Note:
+            - For specific behaviors with dict, str, pandas.Series, pandas.DataFrame, and BaseModel,
+              see the registered implementations.
+    """
+    return _to_dict(input_, *args, **kwargs)
+
+
+@singledispatch
+def _to_dict(input_, /, *args, **kwargs) -> dict[Any, Any]:
     """
     Converts the input object to a dictionary. This base function raises a ValueError for unsupported types.
     The function is overloaded to handle specific input types such as dict, str, pandas.Series, pandas.DataFrame,
@@ -113,7 +174,7 @@ def to_dict(input_, /, *args, **kwargs) -> dict[Any, Any]:
         ) from e
 
 
-@to_dict.register(dict)
+@_to_dict.register(dict)
 def _(input_) -> dict[Any, Any]:
     """
     Handles dictionary inputs directly, returning the input without modification.
@@ -127,7 +188,7 @@ def _(input_) -> dict[Any, Any]:
     return input_
 
 
-@to_dict.register(str)
+@_to_dict.register(str)
 def _(input_, /, *args, **kwargs) -> dict[Any, Any]:
     """
     Converts a JSON-formatted string to a dictionary.
@@ -149,7 +210,7 @@ def _(input_, /, *args, **kwargs) -> dict[Any, Any]:
         raise ValueError(f"Could not convert input_ to dict: {e}") from e
 
 
-@to_dict.register(pd.Series)
+@_to_dict.register(pd.Series)
 def _(input_, /, *args, **kwargs) -> dict[Any, Any]:
     """
     Converts a pandas Series to a dictionary.
@@ -165,7 +226,7 @@ def _(input_, /, *args, **kwargs) -> dict[Any, Any]:
     return input_.to_dict(*args, **kwargs)
 
 
-@to_dict.register(pd.DataFrame)
+@_to_dict.register(pd.DataFrame)
 def _(
     input_, /, *args, orient: str = "list", as_list: bool = False, **kwargs
 ) -> dict[Any, Any] | list[dict[Any, Any]]:
@@ -188,7 +249,7 @@ def _(
     return input_.to_dict(*args, orient=orient, **kwargs)
 
 
-@to_dict.register(BaseModel)
+@_to_dict.register(BaseModel)
 def _(input_, /, *args, **kwargs) -> dict[Any, Any]:
     """
     Converts a Pydantic BaseModel instance to a dictionary.
@@ -204,9 +265,41 @@ def _(input_, /, *args, **kwargs) -> dict[Any, Any]:
     return input_.model_dump(*args, **kwargs)
 
 
-# to_str functions with datatype overloads
+@deprecated(
+    message=format_deprecated_msg(
+        deprecated_name="lionagi.libs.ln_convert.to_str()",
+        deprecated_type="function",
+        deprecated_version="0.3.0",
+        removal_version="1.0.0",
+        replacement="lionagi.libs.lionfuncs.to_str()",
+        additional_msg="from lionagi import lionfunc as ln\nln.to_str()",
+    ),
+    category=DeprecationWarning,
+)
+def to_str(input_, *args, **kwargs) -> str:
+    """
+    Converts the input object to a string. This function utilizes single dispatch to handle
+    specific input types such as dict, str, list, pandas.Series, and pandas.DataFrame,
+    providing type-specific conversions to string format.
+
+    Args:
+            input_ (Any): The input object to convert to a string.
+            *args: Variable length argument list for additional options in type-specific handlers.
+            **kwargs: Arbitrary keyword arguments for additional options in type-specific handlers.
+
+    Returns:
+            str: A string representation of the input object.
+
+    Note:
+            - The base implementation simply uses the str() function for conversion.
+            - For detailed behaviors with dict, str, list, pandas.Series, and pandas.DataFrame,
+              refer to the registered implementations.
+    """
+    return _to_str(input_, *args, **kwargs)
+
+
 @singledispatch
-def to_str(input_) -> str:
+def _to_str(input_) -> str:
     """
     Converts the input object to a string. This function utilizes single dispatch to handle
     specific input types such as dict, str, list, pandas.Series, and pandas.DataFrame,
@@ -228,7 +321,7 @@ def to_str(input_) -> str:
     return str(input_)
 
 
-@to_str.register(dict)
+@_to_str.register(dict)
 def _(input_, /, *args, **kwargs) -> str:
     """
     Converts a dictionary to a JSON-formatted string.
@@ -244,7 +337,7 @@ def _(input_, /, *args, **kwargs) -> str:
     return json.dumps(input_, *args, **kwargs)
 
 
-@to_str.register(str)
+@_to_str.register(str)
 def _(input_) -> str:
     """
     Returns the input string unchanged.
@@ -260,7 +353,7 @@ def _(input_) -> str:
     return input_
 
 
-@to_str.register(list)
+@_to_str.register(list)
 def _(input_, /, *args, as_list: bool = False, **kwargs) -> str | list[str]:
     """
     Converts a list to a string. Optionally, the function can return a string representation
@@ -281,7 +374,7 @@ def _(input_, /, *args, as_list: bool = False, **kwargs) -> str | list[str]:
     return lst_ if as_list else ", ".join(lst_)
 
 
-@to_str.register(pd.Series)
+@_to_str.register(pd.Series)
 def _(input_, /, *args, **kwargs) -> str:
     """
     Converts a pandas Series to a JSON-formatted string.
@@ -297,7 +390,7 @@ def _(input_, /, *args, **kwargs) -> str:
     return input_.to_json(*args, **kwargs)
 
 
-@to_str.register(pd.DataFrame)
+@_to_str.register(pd.DataFrame)
 def _(input_, /, *args, as_list: bool = False, **kwargs) -> str | list[str]:
     """
     Converts a pandas DataFrame to a JSON-formatted string. Optionally, can convert to a list of dictionaries
@@ -322,6 +415,17 @@ def _(input_, /, *args, as_list: bool = False, **kwargs) -> str | list[str]:
 # to_df functions with datatype overloads
 
 
+@deprecated(
+    message=format_deprecated_msg(
+        deprecated_name="lionagi.libs.ln_convert.to_df()",
+        deprecated_type="function",
+        deprecated_version="0.3.0",
+        removal_version="1.0.0",
+        replacement="lionagi.libs.lionfuncs.to_df()",
+        additional_msg="from lionagi import lionfunc as ln\nln.to_df()",
+    ),
+    category=DeprecationWarning,
+)
 @singledispatch
 def to_df(
     input_: Any,
@@ -412,6 +516,17 @@ def _(
     return dfs.reset_index(drop=True) if reset_index else dfs
 
 
+@deprecated(
+    message=format_deprecated_msg(
+        deprecated_name="lionagi.libs.ln_convert.to_num()",
+        deprecated_type="function",
+        deprecated_version="0.3.0",
+        removal_version="1.0.0",
+        replacement="lionagi.libs.lionfuncs.to_num()",
+        additional_msg="from lionagi import lionfunc as ln\nln.to_num()",
+    ),
+    category=DeprecationWarning,
+)
 def to_num(
     input_: Any,
     /,
@@ -441,6 +556,17 @@ def to_num(
     return _str_to_num(str_, upper_bound, lower_bound, num_type, precision)
 
 
+@deprecated(
+    message=format_deprecated_msg(
+        deprecated_name="lionagi.libs.ln_convert.to_readable_dict()",
+        deprecated_type="function",
+        deprecated_version="0.3.0",
+        removal_version="1.0.0",
+        replacement="python",
+        additional_msg="json.dumps()",
+    ),
+    category=DeprecationWarning,
+)
 def to_readable_dict(input_: Any) -> str:
     """
     Converts a given input to a readable dictionary format
@@ -453,6 +579,16 @@ def to_readable_dict(input_: Any) -> str:
         raise ValueError(f"Could not convert given input to readable dict: {e}") from e
 
 
+@deprecated(
+    message=format_deprecated_msg(
+        deprecated_name="lionagi.libs.ln_convert.is_same_dtype()",
+        deprecated_type="function",
+        deprecated_version="0.3.0",
+        removal_version="1.0.0",
+        replacement=None,
+    ),
+    category=DeprecationWarning,
+)
 def is_same_dtype(
     input_: list | dict, dtype: Type | None = None, return_dtype=False
 ) -> bool:
@@ -478,6 +614,16 @@ def is_same_dtype(
     return a, dtype if return_dtype else a
 
 
+@deprecated(
+    message=format_deprecated_msg(
+        deprecated_name="lionagi.libs.ln_convert.xml_to_dict()",
+        deprecated_type="function",
+        deprecated_version="0.3.0",
+        removal_version="1.0.0",
+        replacement=None,
+    ),
+    category=DeprecationWarning,
+)
 def xml_to_dict(root) -> dict[str, Any]:
     import xml.etree.ElementTree as ET
     from collections import defaultdict
@@ -497,6 +643,16 @@ def xml_to_dict(root) -> dict[str, Any]:
     return {k: v[0] if len(v) == 1 else v for k, v in result.items()}
 
 
+@deprecated(
+    message=format_deprecated_msg(
+        deprecated_name="lionagi.libs.ln_convert.strip_lower()",
+        deprecated_type="function",
+        deprecated_version="0.3.0",
+        removal_version="1.0.0",
+        replacement="lionagi.libs.lionfuncs.to_str(strip_lower=True)",
+    ),
+    category=DeprecationWarning,
+)
 def strip_lower(input_: Any) -> str:
     """
     Converts the input to a lowercase string with leading and trailing whitespace removed.
@@ -516,6 +672,16 @@ def strip_lower(input_: Any) -> str:
         raise ValueError(f"Could not convert input_ to string: {input_}, Error: {e}")
 
 
+@deprecated(
+    message=format_deprecated_msg(
+        deprecated_name="lionagi.libs.ln_convert.is_structure_homogeneous()",
+        deprecated_type="function",
+        deprecated_version="0.3.0",
+        removal_version="1.0.0",
+        replacement=None,
+    ),
+    category=DeprecationWarning,
+)
 def is_structure_homogeneous(
     structure: Any, return_structure_type: bool = False
 ) -> bool | tuple[bool, type | None]:
@@ -569,6 +735,16 @@ def is_structure_homogeneous(
     return (is_, structure_type) if return_structure_type else is_
 
 
+@deprecated(
+    message=format_deprecated_msg(
+        deprecated_name="lionagi.libs.ln_convert.is_homogeneous()",
+        deprecated_type="function",
+        deprecated_version="0.3.0",
+        removal_version="1.0.0",
+        replacement=None,
+    ),
+    category=DeprecationWarning,
+)
 def is_homogeneous(iterables: list[Any] | dict[Any, Any], type_check: type) -> bool:
     if isinstance(iterables, list):
         return all(isinstance(it, type_check) for it in iterables)

@@ -25,7 +25,20 @@ maps data types to their corresponding validation functions.
 from .ln_convert import to_str, is_same_dtype, to_list, to_dict, to_num, strip_lower
 from .ln_parse import StringMatch, ParseUtil
 
+from typing_extensions import deprecated
+from lionagi.settings import format_deprecated_msg
 
+
+@deprecated(
+    message=format_deprecated_msg(
+        deprecated_name="lionagi.libs.ln_validate.ParseUtil",
+        deprecated_type="class",
+        deprecated_version="0.3.0",
+        removal_version="1.0.0",
+        replacement=None,
+    ),
+    category=DeprecationWarning,
+)
 def check_dict_field(x, keys: list[str] | dict, fix_=True, **kwargs):
     if isinstance(x, dict):
         return x
@@ -38,6 +51,16 @@ def check_dict_field(x, keys: list[str] | dict, fix_=True, **kwargs):
     raise ValueError(f"Default value for DICT must be a dict, got {type(x).__name__}")
 
 
+@deprecated(
+    message=format_deprecated_msg(
+        deprecated_name="lionagi.libs.ln_parse.ParseUtil",
+        deprecated_type="class",
+        deprecated_version="0.3.0",
+        removal_version="1.0.0",
+        replacement=None,
+    ),
+    category=DeprecationWarning,
+)
 def check_action_field(x, fix_=True, **kwargs):
     if (
         isinstance(x, list)
@@ -52,6 +75,16 @@ def check_action_field(x, fix_=True, **kwargs):
         raise ValueError("Invalid action field type.") from e
 
 
+@deprecated(
+    message=format_deprecated_msg(
+        deprecated_name="lionagi.libs.ln_parse.ParseUtil",
+        deprecated_type="class",
+        deprecated_version="0.3.0",
+        removal_version="1.0.0",
+        replacement=None,
+    ),
+    category=DeprecationWarning,
+)
 def check_number_field(x, fix_=True, **kwargs):
     """
     Checks if the given value is a valid numeric field.
@@ -80,6 +113,16 @@ def check_number_field(x, fix_=True, **kwargs):
     return x
 
 
+@deprecated(
+    message=format_deprecated_msg(
+        deprecated_name="lionagi.libs.ln_parse.ParseUtil",
+        deprecated_type="class",
+        deprecated_version="0.3.0",
+        removal_version="1.0.0",
+        replacement=None,
+    ),
+    category=DeprecationWarning,
+)
 def check_bool_field(x, fix_=True):
     """
     Checks if the given value is a valid boolean field.
@@ -107,6 +150,16 @@ def check_bool_field(x, fix_=True):
     return x
 
 
+@deprecated(
+    message=format_deprecated_msg(
+        deprecated_name="lionagi.libs.ln_parse.ParseUtil",
+        deprecated_type="class",
+        deprecated_version="0.3.0",
+        removal_version="1.0.0",
+        replacement=None,
+    ),
+    category=DeprecationWarning,
+)
 def check_str_field(x, *args, fix_=True, **kwargs):
     """
     Checks if the given value is a valid string field.
@@ -136,6 +189,16 @@ def check_str_field(x, *args, fix_=True, **kwargs):
     return x
 
 
+@deprecated(
+    message=format_deprecated_msg(
+        deprecated_name="lionagi.libs.ln_parse.ParseUtil",
+        deprecated_type="class",
+        deprecated_version="0.3.0",
+        removal_version="1.0.0",
+        replacement=None,
+    ),
+    category=DeprecationWarning,
+)
 def check_enum_field(x, choices, fix_=True, **kwargs):
     """
     Checks if the given value is a valid enum field.

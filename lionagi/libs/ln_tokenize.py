@@ -3,7 +3,20 @@ import math
 from .ln_convert import to_str
 from .special_tokens import disallowed_tokens
 
+from typing_extensions import deprecated
+from lionagi.settings import format_deprecated_msg
 
+
+@deprecated(
+    message=format_deprecated_msg(
+        deprecated_name="lionagi.libs.ln_tokenize.TokenizeUtil",
+        deprecated_type="class",
+        deprecated_version="0.3.0",
+        removal_version="1.0.0",
+        replacement=None,
+    ),
+    category=DeprecationWarning,
+)
 class TokenizeUtil:
 
     @staticmethod

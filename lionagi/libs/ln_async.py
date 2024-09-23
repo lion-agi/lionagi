@@ -8,7 +8,20 @@ import logging
 import aiocache
 import aiohttp
 
+from typing_extensions import deprecated
+from lionagi.settings import format_deprecated_msg
 
+
+@deprecated(
+    message=format_deprecated_msg(
+        deprecated_name="AsyncUtil",
+        deprecated_type="class",
+        deprecated_version="0.3.0",
+        removal_version="1.0.0",
+        replacement=None,
+    ),
+    category=DeprecationWarning,
+)
 class AsyncUtil:
 
     @staticmethod

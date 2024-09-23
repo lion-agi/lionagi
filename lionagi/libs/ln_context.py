@@ -20,7 +20,20 @@ from contextlib import asynccontextmanager
 # Replace the built-in print with the new print
 # builtins.print = new_print
 
+from typing_extensions import deprecated
+from lionagi.settings import format_deprecated_msg
 
+
+@deprecated(
+    message=format_deprecated_msg(
+        deprecated_name="async_suppress_print",
+        deprecated_type="function",
+        deprecated_version="0.3.0",
+        removal_version="1.0.0",
+        replacement=None,
+    ),
+    category=DeprecationWarning,
+)
 @asynccontextmanager
 async def async_suppress_print():
     """
