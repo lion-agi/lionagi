@@ -32,7 +32,7 @@ class DirectiveMixin:
         system=None,  # optionally swap system message
         sender=None,  # sender of the instruction, default "user"
         recipient=None,  # recipient of the instruction, default "branch.ln_id"
-        requested_fields=None,  # fields to request from the context, default None
+        request_fields=None,  # fields to request from the context, default None
         form=None,  # form to create instruction from, default None,
         tools=False,  # the tools to use, use True to consider all tools, no tools by default
         invoke_tool=True,  # whether to invoke the tool when function calling, default True
@@ -73,7 +73,7 @@ class DirectiveMixin:
             sender (str, optional): Sender of the instruction, default is "user".
             recipient (str, optional): Recipient of the instruction, default is
                 "branch.ln_id".
-            requested_fields (dict[str, str], optional): Fields to request from
+            request_fields (dict[str, str], optional): Fields to request from
                 the context.
             form (Any, optional): Form to create instruction from, default is None.
             tools (bool, optional): Tools to use, use True to consider all tools,
@@ -140,7 +140,7 @@ class DirectiveMixin:
             context=context,
             sender=sender,
             recipient=recipient,
-            requested_fields=requested_fields,
+            request_fields=request_fields,
             form=form,
             tools=tools,
             invoke_tool=invoke_tool,

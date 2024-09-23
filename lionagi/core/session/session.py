@@ -1,7 +1,7 @@
 from lion_core.session.session import Session as CoreSession
 from lionagi.core.session.branch import Branch
-from lionagi.core.collections import pile, Pile
-from lionagi.core.collections.abc import get_lion_id
+from lionagi.core.generic.pile import pile, Pile
+from lionagi.libs.sys_util import SysUtil
 
 
 class Session(CoreSession):
@@ -14,7 +14,7 @@ class Session(CoreSession):
         Args:
             branch (Branch | str): The branch or its ID to delete.
         """
-        branch_id = get_lion_id(branch)
+        branch_id = SysUtil.get_id(branch)
         self.branches.pop(branch_id)
         self.mail_manager.delete_source(branch_id)
 

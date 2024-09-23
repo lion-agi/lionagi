@@ -2,14 +2,16 @@ from lion_core.session.branch import Branch as CoreBranch
 
 from typing import Any
 from lionagi.libs.ln_convert import to_df
-from lionagi.core.collections.abc import Field
+from pydantic import Field
 from lionagi.core.generic.pile import Pile, pile
 
 
 from lionagi.core.generic.node import Node
 
+from .directive_mixin import DirectiveMixin
 
-class Branch(CoreBranch, Node):
+
+class Branch(CoreBranch, Node, DirectiveMixin):
 
     messages: Pile | None = Field(default_factory=pile)
 
