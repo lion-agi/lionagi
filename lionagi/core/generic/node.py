@@ -12,20 +12,21 @@ from pydantic import Field
 from pandas import Series
 from typing import Callable
 
-from lionagi.libs.ln_convert import to_list
 
-from lionagi.core.collections.abc import (
-    Component,
-    Condition,
-    Relatable,
-    RelationError,
-    get_lion_id,
-)
+from lion_core.abc import Condition
+from lion_core.exceptions import LionRelationError
+
+from lionagi.libs.sys_util import SysUtil
+
 from lionagi.core.collections import pile, Pile
 from lionagi.core.generic.edge import Edge
+from lionagi.core.generic.component import Component
+from lionagi.libs.lionfuncs import to_list
+
+from lion_core.generic.node import Node as CoreNode
 
 
-class Node(Component, Relatable):
+class Node(CoreNode, Component):
     """
     Node in a graph structure, can connect to other nodes via edges.
 
@@ -178,7 +179,7 @@ class Node(Component, Relatable):
         ]
 
         if not all(pile.exclude(edge) for pile in edge_piles):
-            raise RelationError(f"Failed to remove edge between nodes.")
+            raise LionRelationError(f"Failed to remove edge between nodes.")
         return True
 
     def unrelate(self, node: "Node", edge: Edge | str = "all") -> bool:
@@ -200,16 +201,16 @@ class Node(Component, Relatable):
                 node.ln_id, []
             ) + self.node_relations["in"].get(node.ln_id, [])
         else:
-            edges = [get_lion_id(edge)]
+            edges = [SysUtil.get_id(edge)]
 
         if not edges:
-            raise RelationError(f"Node is not related to {node.ln_id}.")
+            raise LionRelationError(f"Node is not related to {node.ln_id}.")
 
         try:
             for edge_id in edges:
                 self.remove_edge(node, edge_id)
             return True
-        except RelationError as e:
+        except LionRelationError as e:
             raise e
 
     def __str__(self):
