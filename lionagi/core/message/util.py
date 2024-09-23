@@ -44,7 +44,7 @@ def create_message(
     images=None,  # base64 encoded image
     sender=None,  # str
     recipient=None,  # str
-    requested_fields=None,  # dict[str, str]
+    request_fields=None,  # dict[str, str]
     **kwargs,  # additional context fields
 ):
     # order of handling
@@ -65,7 +65,7 @@ def create_message(
         action_response (ActionResponse, optional): The action response node.
         sender (str, optional): The sender of the message.
         recipient (str, optional): The recipient of the message.
-        requested_fields (dict[str, str], optional): The requested fields for the instruction.
+        request_fields (dict[str, str], optional): The requested fields for the instruction.
         **kwargs: Additional context fields.
 
     Returns:
@@ -125,8 +125,8 @@ def create_message(
                 if isinstance(v, Instruction):
                     if context:
                         v._add_context(context)
-                    if requested_fields:
-                        v._update_requested_fields(requested_fields)
+                    if request_fields:
+                        v._update_request_fields(request_fields)
                 return v
 
     if system:
@@ -148,7 +148,7 @@ def create_message(
             context=context,
             sender=sender,
             recipient=recipient,
-            requested_fields=requested_fields,
+            request_fields=request_fields,
             images=images,
             **kwargs,
         )

@@ -1,11 +1,12 @@
 from collections import deque
 from pydantic import Field
 from lionagi.libs import AsyncUtil
-from lionagi.core.collections.abc import Executable, Element
+from lion_core.abc import Action
+from lion_core.generic.element import Element
 from lionagi.core.collections import Exchange
-from lionagi.core.collections.util import to_list_type, get_lion_id
 from .mail import Mail, Package
-from lionagi.core.collections import Pile, pile
+from lionagi.core.generic.pile import Pile, pile
+from lionagi.libs.sys_util import SysUtil
 
 
 class MailManager(Element, Executable):
@@ -59,7 +60,7 @@ class MailManager(Element, Executable):
             ValueError: If failed to add sources.
         """
         try:
-            sources = to_list_type(sources)
+            sources = [sources] if not isinstance(sources, list) else sources
             self.sources.include(sources)
             for item in sources:
                 self.mails[item.ln_id] = {}
@@ -159,14 +160,14 @@ class MailManager(Element, Executable):
         Collects mails from all sources.
         """
         for source in self.sources:
-            self.collect(get_lion_id(source))
+            self.collect(SysUtil.get_id(source))
 
     def send_all(self):
         """
         Sends mails to all sources.
         """
         for source in self.sources:
-            self.send(get_lion_id(source))
+            self.send(SysUtil.get_id(source))
 
     async def execute(self, refresh_time=1):
         """

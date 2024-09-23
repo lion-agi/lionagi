@@ -96,7 +96,7 @@ async def invoke(self, field: str, value: Any, form: Any) -> Any:
 - `Any`: The validated or fixed value.
 
 **Exceptions Raised**:
-- `FieldError`: If validation or fixing fails.
+- `LionValueError`: If validation or fixing fails.
 
 **Description**:
 Invokes the rule's validation logic on a field and value.

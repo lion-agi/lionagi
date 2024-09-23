@@ -15,7 +15,7 @@ limitations under the License.
 """
 
 from typing import Any
-from ..collections.abc import Field
+from pydantic import Field
 from .message import RoledMessage, MessageRole
 
 

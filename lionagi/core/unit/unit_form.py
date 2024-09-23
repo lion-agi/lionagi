@@ -16,7 +16,7 @@ limitations under the License.
 
 from enum import Enum
 from lionagi.libs.lionfuncs import to_str, to_dict
-from lionagi.core.collections.abc import Field
+from pydantic import Field
 from .template.base import BaseUnitForm
 
 

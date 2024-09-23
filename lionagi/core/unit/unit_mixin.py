@@ -26,7 +26,7 @@ from typing import Any, Optional
 
 from lionagi.libs import ParseUtil, StringMatch, to_list
 from lionagi.libs.ln_nested import nmerge
-from lionagi.core.collections.abc import ActionError
+from lion_core.exceptions import LionOperationError
 from lionagi.core.message import ActionRequest, ActionResponse, Instruction
 from lionagi.core.message.util import _parse_action_request
 from lionagi.core.report.form import Form
@@ -48,7 +48,7 @@ class DirectiveMixin(ABC):
         images: Optional[str] = None,
         sender: Optional[str] = None,
         recipient: Optional[str] = None,
-        requested_fields: Optional[list] = None,
+        request_fields: Optional[list] = None,
         form: Form = None,
         tools: bool = False,
         branch: Optional[Any] = None,
@@ -63,7 +63,7 @@ class DirectiveMixin(ABC):
             context: Context message.
             sender: Sender identifier.
             recipient: Recipient identifier.
-            requested_fields: Fields requested in the response.
+            request_fields: Fields requested in the response.
             form: Form data.
             tools: Flag indicating if tools should be used.
             branch: Branch instance.
@@ -86,7 +86,7 @@ class DirectiveMixin(ABC):
                 context=context,
                 sender=sender,
                 recipient=recipient,
-                requested_fields=requested_fields,
+                request_fields=request_fields,
                 images=images,
             )
         else:
@@ -226,7 +226,7 @@ class DirectiveMixin(ABC):
                 if i.function in branch.tool_manager.registry:
                     i.recipient = branch.tool_manager.registry[i.function].ln_id
                 else:
-                    raise ActionError(f"Tool {i.function} not found in registry")
+                    raise LionOperationError(f"Tool {i.function} not found in registry")
                 branch.add_message(action_request=i, recipient=i.recipient)
 
         if invoke_tool:
@@ -253,7 +253,7 @@ class DirectiveMixin(ABC):
         completion: dict,
         sender: str,
         invoke_tool: bool,
-        requested_fields: dict,
+        request_fields: dict,
         form: Form = None,
         return_form: bool = True,
         strict: bool = False,
@@ -269,7 +269,7 @@ class DirectiveMixin(ABC):
             completion: The completion data.
             sender: The sender identifier.
             invoke_tool: Flag indicating if tools should be invoked.
-            requested_fields: Fields requested in the response.
+            request_fields: Fields requested in the response.
             form: Form data.
             return_form: Flag indicating if form should be returned.
             strict: Flag indicating if strict validation should be applied.
@@ -290,7 +290,7 @@ class DirectiveMixin(ABC):
         if _msg is None:
             return None
 
-        response_ = self._process_model_response(_msg, requested_fields)
+        response_ = self._process_model_response(_msg, request_fields)
 
         if form:
             form = await self.validator.validate_response(
@@ -307,7 +307,7 @@ class DirectiveMixin(ABC):
                 if return_form
                 else {
                     i: form.work_fields[i]
-                    for i in form.requested_fields
+                    for i in form.request_fields
                     if form.work_fields[i] is not None
                 }
             )
@@ -322,7 +322,7 @@ class DirectiveMixin(ABC):
         context: Any = None,
         sender: Any = None,
         recipient: Any = None,
-        requested_fields: dict = None,
+        request_fields: dict = None,
         form: Form = None,
         tools: Any = False,
         images: Optional[str] = None,
@@ -346,7 +346,7 @@ class DirectiveMixin(ABC):
             context: Context message.
             sender: Sender identifier.
             recipient: Recipient identifier.
-            requested_fields: Fields requested in the response.
+            request_fields: Fields requested in the response.
             form: Form data.
             tools: Flag indicating if tools should be used.
             invoke_tool: Flag indicating if tools should be invoked.
@@ -373,7 +373,7 @@ class DirectiveMixin(ABC):
             context=context,
             sender=sender,
             recipient=recipient,
-            requested_fields=requested_fields,
+            request_fields=request_fields,
             form=form,
             tools=tools,
             branch=branch,
@@ -391,7 +391,7 @@ class DirectiveMixin(ABC):
             completion=completion,
             sender=sender,
             invoke_tool=invoke_tool,
-            requested_fields=requested_fields,
+            request_fields=request_fields,
             form=form,
             return_form=return_form,
             strict=strict,
@@ -409,7 +409,7 @@ class DirectiveMixin(ABC):
         sender=None,
         recipient=None,
         branch=None,
-        requested_fields=None,
+        request_fields=None,
         form: Form = None,
         tools=False,
         invoke_tool=True,
@@ -435,7 +435,7 @@ class DirectiveMixin(ABC):
             sender: Sender identifier.
             recipient: Recipient identifier.
             branch: Branch instance.
-            requested_fields: Fields requested in the response.
+            request_fields: Fields requested in the response.
             form: Form data.
             tools: Flag indicating if tools should be used.
             invoke_tool: Flag indicating if tools should be invoked.
@@ -458,7 +458,7 @@ class DirectiveMixin(ABC):
             system=system,
             sender=sender,
             recipient=recipient,
-            requested_fields=requested_fields,
+            request_fields=request_fields,
             form=form,
             tools=tools,
             images=images,
@@ -1132,13 +1132,13 @@ class DirectiveMixin(ABC):
         return await self._chat(form=form, **kwargs)
 
     @staticmethod
-    def _process_model_response(content_, requested_fields):
+    def _process_model_response(content_, request_fields):
         """
         Processes the model response content.
 
         Args:
             content_: The content data.
-            requested_fields: Fields requested in the response.
+            request_fields: Fields requested in the response.
 
         Returns:
             Any: The processed response.
@@ -1147,9 +1147,9 @@ class DirectiveMixin(ABC):
         if out_ == "":
             out_ = content_
 
-        if requested_fields:
+        if request_fields:
             with contextlib.suppress(Exception):
-                return StringMatch.force_validate_dict(out_, requested_fields)
+                return StringMatch.force_validate_dict(out_, request_fields)
 
         if isinstance(out_, str):
             with contextlib.suppress(Exception):

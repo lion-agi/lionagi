@@ -1,5 +1,5 @@
 import unittest
-from lionagi.core.collections.abc import ItemNotFoundError
+from lion_core.exceptions import ItemNotFoundError
 from lionagi.core.collections import Progression
 from lionagi import Node
 

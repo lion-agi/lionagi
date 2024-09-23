@@ -1,8 +1,8 @@
-from lionagi.core.collections.abc import Element, Field, Sendable
+from lion_core.generic.element import Element, Field, Communicatable
 from .package import PackageCategory, Package
 
 
-class Mail(Element, Sendable):
+class Mail(Element, Communicatable):
     """Represents a mail component with sender and recipient information."""
 
     package: Package | None = Field(

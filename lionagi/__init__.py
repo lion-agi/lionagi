@@ -5,7 +5,10 @@ from dotenv import load_dotenv
 
 import lionagi.libs.lionfuncs as lionfuncs
 
-from lionagi.core.collections import progression, flow, pile, iModel
+from lionagi.core.generic.progression import progression
+from lionagi.core.generic.flow import flow
+from lionagi.core.generic.pile import pile
+from lionagi.core.collections.model import iModel
 from lionagi.core.generic import Node, Graph, Tree, Edge
 from lionagi.core.action import func_to_tool
 from lionagi.core.report import Form, Report
@@ -30,7 +33,7 @@ from lionagi.libs.lionfuncs import (
     CallDecorator as cd,
 )
 from lionagi.libs.ln_convert import to_readable_dict
-from lionagi.core.collections.abc import Field
+from pydantic import Field
 
 __all__ = [
     "Field",

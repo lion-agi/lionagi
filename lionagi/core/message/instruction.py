@@ -14,7 +14,7 @@ See the License for the specific language governing permissions and
 limitations under the License.
 """
 
-from lionagi.core.collections.abc import LionIDable, SYSTEM_FIELDS
+from lionagi.settings import BASE_LION_FIELDS
 from lionagi.core.report.form import Form
 from lionagi.core.message.message import RoledMessage, MessageRole
 
@@ -29,9 +29,9 @@ class Instruction(RoledMessage):
     Attributes:
         instruction (str): The instruction content.
         context (dict or str): Additional context for the instruction.
-        sender (LionIDable): The sender of the instruction.
-        recipient (LionIDable): The recipient of the instruction.
-        requested_fields (dict): Fields requested in the instruction.
+        sender (): The sender of the instruction.
+        recipient (): The recipient of the instruction.
+        request_fields (dict): Fields requested in the instruction.
     """
 
     def __init__(
@@ -39,9 +39,9 @@ class Instruction(RoledMessage):
         instruction: str | None = None,
         context: dict | str | None = None,
         images: list | None = None,
-        sender: LionIDable | None = None,
-        recipient: LionIDable | None = None,
-        requested_fields: dict | None = None,  # {"field": "description"}
+        sender=None,
+        recipient=None,
+        request_fields: dict | None = None,  # {"field": "description"}
         additional_context: dict | None = None,
         image_detail: str | None = None,
         **kwargs,
@@ -53,9 +53,9 @@ class Instruction(RoledMessage):
             instruction (str, optional): The instruction content.
             context (dict or str, optional): Additional context for the instruction.
             image (str, optional): The image content in base64 encoding.
-            sender (LionIDable, optional): The sender of the instruction.
-            recipient (LionIDable, optional): The recipient of the instruction.
-            requested_fields (dict, optional): Fields requested in the instruction.
+            sender (, optional): The sender of the instruction.
+            recipient (, optional): The recipient of the instruction.
+            request_fields (dict, optional): Fields requested in the instruction.
             **kwargs: Additional context fields to be added to the message content, must be JSON serializable.
         """
         if not instruction:
@@ -73,7 +73,7 @@ class Instruction(RoledMessage):
         additional_context = additional_context or {}
         self._initiate_content(
             context=context,
-            requested_fields=requested_fields,
+            request_fields=request_fields,
             images=images,
             image_detail=image_detail or "low",
             **additional_context,
@@ -122,43 +122,41 @@ class Instruction(RoledMessage):
         elif isinstance(context, str):
             self.content["context"]["additional_context"] = context
 
-    def _update_requested_fields(self, requested_fields: dict):
+    def _update_request_fields(self, request_fields: dict):
         """
         Updates the requested fields in the instruction message.
 
         Args:
-            requested_fields (dict): The fields requested in the instruction.
+            request_fields (dict): The fields requested in the instruction.
         """
         if "context" not in self.content:
             self.content["context"] = {}
-            self.content["context"]["requested_fields"] = {}
-        self.content["context"]["requested_fields"].update(requested_fields)
+            self.content["context"]["request_fields"] = {}
+        self.content["context"]["request_fields"].update(request_fields)
 
     def _initiate_content(
-        self, context, requested_fields, images, image_detail, **kwargs
+        self, context, request_fields, images, image_detail, **kwargs
     ):
         """
         Processes context and requested fields to update the message content.
 
         Args:
             context (dict or str, optional): Additional context for the instruction.
-            requested_fields (dict, optional): Fields requested in the instruction.
+            request_fields (dict, optional): Fields requested in the instruction.
             **kwargs: Additional context fields to be added.
         """
         if context:
             context = {"context": context} if not isinstance(context, dict) else context
             if (
                 additional_context := {
-                    k: v for k, v in kwargs.items() if k not in SYSTEM_FIELDS
+                    k: v for k, v in kwargs.items() if k not in BASE_LION_FIELDS
                 }
             ) != {}:
                 context["additional_context"] = additional_context
             self.content.update(context)
 
-        if not requested_fields in [None, {}]:
-            self.content["requested_fields"] = self._format_requested_fields(
-                requested_fields
-            )
+        if not request_fields in [None, {}]:
+            self.content["request_fields"] = self._format_request_fields(request_fields)
 
         if images:
             self.content["images"] = images if isinstance(images, list) else [images]
@@ -187,12 +185,12 @@ class Instruction(RoledMessage):
         return instruction_copy
 
     @staticmethod
-    def _format_requested_fields(requested_fields):
+    def _format_request_fields(request_fields):
         """
         Formats the requested fields into a JSON-parseable response format.
 
         Args:
-            requested_fields (dict): The fields requested in the instruction.
+            request_fields (dict): The fields requested in the instruction.
 
         Returns:
             dict: The formatted requested fields.
@@ -200,7 +198,7 @@ class Instruction(RoledMessage):
         format_ = f"""
         MUST RETURN JSON-PARSEABLE RESPONSE ENCLOSED BY JSON CODE BLOCKS. ----
         ```json
-        {requested_fields}
+        {request_fields}
         ```---
         """
         return {"response_format": format_.strip()}
@@ -219,7 +217,7 @@ class Instruction(RoledMessage):
         Args:
             form (Form): The form containing instruction details.
             sender (str, optional): The sender of the instruction.
-            recipient (LionIDable, optional): The recipient of the instruction.
+            recipient (, optional): The recipient of the instruction.
 
         Returns:
             Instruction: The created Instruction instance.
@@ -227,7 +225,7 @@ class Instruction(RoledMessage):
         return cls(
             instruction=form._instruction_prompt,
             context=form._instruction_context,
-            requested_fields=form._instruction_requested_fields,
+            request_fields=form._instruction_request_fields,
             image=image,
             sender=sender,
             recipient=recipient,
