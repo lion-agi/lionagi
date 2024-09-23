@@ -18,22 +18,15 @@ import os
 import asyncio
 import numpy as np
 from dotenv import load_dotenv
+from lion_core.abc import BaseiModel
 from lionagi.libs import SysUtil, BaseService, StatusTracker, APIUtil, to_list, ninsert
-from .abc import Component, ModelLimitExceededError
+from lion_core.exceptions import LionResourceError
+from lionagi.core.generic.component import Component
 
 load_dotenv()
 
 
-_oai_price_map = {
-    "gpt-4o": (5, 15),
-    "gpt-4o-2024-08-06": (2.5, 10),
-    "gpt-4o-mini": (0.15, 0.6),
-    "gpt-4-turbo": (10, 30),
-    "gpt-3.5-turbo": (0.5, 1.5),
-}
-
-
-class iModel:
+class iModel(BaseiModel):
     """
     iModel is a class for managing AI model configurations and service
     integrations.
@@ -176,10 +169,10 @@ class iModel:
             provider=self.provider,
             **set_up_kwargs,
         )
-        if self.iModel_name in _oai_price_map:
-            self.costs = _oai_price_map[self.iModel_name]
-        else:
-            self.costs = costs or (0, 0)
+        self.costs = costs or (0, 0)
+
+    async def call(self, *args, **kwargs):
+        return await self.call_chat_completion(*args, **kwargs)
 
     def update_config(self, **kwargs):
         """
@@ -275,7 +268,7 @@ class iModel:
         )
 
         if num_tokens > self.token_limit:
-            raise ModelLimitExceededError(
+            raise LionResourceError(
                 f"Number of tokens {num_tokens} exceeds the limit {self.token_limit}"
             )
 
@@ -315,7 +308,7 @@ class iModel:
         )
 
         if self.token_limit and num_tokens > self.token_limit:
-            raise ModelLimitExceededError(
+            raise LionResourceError(
                 f"Number of tokens {num_tokens} exceeds the limit {self.token_limit}"
             )
 

@@ -17,12 +17,8 @@ limitations under the License.
 """This module defines abstract base classes for LionAGI."""
 
 from abc import ABC, abstractmethod
-from collections.abc import Generator
 from typing import Any, Iterator, TypeVar
 
-from pydantic import Field, BaseModel, field_validator
-
-from .exceptions import LionTypeError
 
 T = TypeVar("T")
 
