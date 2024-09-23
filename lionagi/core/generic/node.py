@@ -1,13 +1,3 @@
-"""
-This module defines the Node class, representing a node in a graph-like
-structure within LionAGI. Nodes can form relationships with other nodes
-through directed edges, enabling construction and manipulation of complex
-relational networks.
-
-Includes functionality for managing relationships, such as adding,
-modifying, and removing edges, and querying related nodes and connections.
-"""
-
 from pydantic import Field
 from pandas import Series
 from typing import Callable
@@ -18,7 +8,7 @@ from lion_core.exceptions import LionRelationError
 
 from lionagi.libs.sys_util import SysUtil
 
-from lionagi.core.collections import pile, Pile
+from lionagi.core.generic.pile import pile, Pile
 from lionagi.core.generic.edge import Edge
 from lionagi.core.generic.component import Component
 from lionagi.libs.lionfuncs import to_list

@@ -1,5 +1,6 @@
 from lion_core.converter import ConverterRegistry
-from lionagi.integrations.bridge.langchain_.converter import LangChainConverter
+
+# from lionagi.integrations.bridge.langchain_.converter import LangChainConverter
 
 from .json_converter import JsonStringConverter, JsonFileConverter
 from .pandas_converter import PandasSeriesConverter
@@ -16,5 +17,5 @@ class ComponentConverterRegistry(ConverterRegistry):
         "json_file": JsonFileConverter,
         "xml": XMLStringConverter,
         "xml_file": XMLFileConverter,
-        "langchain": LangChainConverter,
+        # "langchain": LangChainConverter,
     }

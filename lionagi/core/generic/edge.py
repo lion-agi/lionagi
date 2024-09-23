@@ -1,9 +1,10 @@
 from pydantic import Field
-from lion_core.abc import Relational
+from lion_core.abc import Relational, Condition
 from lion_core.graph.edge import Edge as CoreEdge
-from lionagi.core.collections.abc import Component, get_lion_id, LionIDable, Condition
+from lionagi.core.generic.component import Component
 from lionagi.core.generic.edge_condition import EdgeCondition
 from lionagi.core.generic.note import Note
+from lionagi.libs.sys_util import SysUtil
 
 
 class Edge(Component, CoreEdge):
@@ -100,6 +101,6 @@ class Edge(Component, CoreEdge):
         class_code = extract_symbols(cell_code, obj.__name__)[0][0]
         return class_code
 
-    def __contains__(self, item: LionIDable) -> bool:
+    def __contains__(self, item) -> bool:
         """Check if the given item is the head or tail of the edge."""
-        return get_lion_id(item) in (self.head, self.tail)
+        return SysUtil.get_id(item) in (self.head, self.tail)
