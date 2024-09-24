@@ -24,7 +24,11 @@ class TiktokenCalculator(TokenCalculator):
             enc = tiktoken.encoding_for_model(value)
             return enc.name
         except:
-            return value
+            try:
+                tiktoken.get_encoding(value)
+                return value
+            except:
+                return "o200k_base"
 
     def encode(self, text: str) -> list[int]:
         enc = tiktoken.get_encoding(self.encoding_name)
