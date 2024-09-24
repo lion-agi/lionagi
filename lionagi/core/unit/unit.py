@@ -14,364 +14,297 @@ See the License for the specific language governing permissions and
 limitations under the License.
 """
 
-from typing import Callable
-from lionagi.libs.lionfuncs import rcall, to_str
-from lionagi.core.collections.abc.concepts import Directive
-from lionagi.core.validator.validator import Validator
-from lionagi.core.collections import iModel
-from .unit_form import UnitForm
-from .unit_mixin import DirectiveMixin
-from .util import retry_kwargs
+"""
+Module for the UnitProcessor class in the Lion framework.
+
+This module provides the UnitProcessor class, which encapsulates various
+processing methods for units, including act, action request, chat, direct,
+and validation processing.
+"""
+
+from functools import partial
+from typing import Callable, Any, Literal
+from lion_core.abc import BaseProcessor
+from lion_core.imodel.imodel import iModel
+from lion_core.generic.progression import Progression
+from lion_core.form.base import BaseForm
+from lion_core.rule.rule_processor import RuleProcessor
+from lion_core.form.form import Form
+from lion_core.unit.unit_form import UnitForm
+from lion_core.unit.process_act import process_action
+from lion_core.unit.process_action_request import process_action_request
+from lion_core.unit.process_action_response import process_action_response
+from lion_core.unit.process_chat import process_chat
+from lion_core.unit.process_direct import process_direct
+from lion_core.unit.process_rule import process_rule
+from lion_core.unit.process_completion import fallback_structure_model_response
+
+from lion_core.libs import rcall
+from lion_core.setting import LN_UNDEFINED
+from lion_core.session.branch import Branch
+from lion_core.rule.rulebook import RuleBook
 
 
-class Unit(Directive, DirectiveMixin):
+class Unit(BaseProcessor):
     """
-    Unit is a class that extends Directive and DirectiveMixin to provide
-    advanced operations like chat, direct actions, and predictions using a
-    specific branch and model.
+    Unit processor class for handling various processing tasks.
+
+    This class provides methods for processing acts, action requests, chats,
+    direct interactions, and validations within a branch context.
 
     Attributes:
-        branch (Branch): The branch instance associated with the Unit.
-        imodel (iModel): The model instance used for the Unit.
-        form_template (Type[Form]): The form template to use for operations.
-        validator (Validator): The validator instance for response validation.
+        default_form (Type[Form]): The default form type to use.
+        branch (Branch): The branch associated with this processor.
     """
-
-    default_template = UnitForm
 
     def __init__(
         self,
-        branch,
+        branch: "Branch",
         imodel: iModel = None,
-        template=None,
-        rulebook=None,
-        verbose=False,
-        formatter: Callable = None,
-        format_kwargs: dict = {},
-    ) -> None:
+        structure_str: bool = False,
+        fallback_structure: Callable | None = None,
+        fallback_imodel: iModel | None = None,
+        **kwargs,
+    ):
+        """
+        Initialize the UnitProcessor.
+
+        Args:
+            branch (Branch): The branch to associate with this processor.
+
+        kwargs for fallback_structure function
+
+        """
         self.branch = branch
-        if imodel and isinstance(imodel, iModel):
-            branch.imodel = imodel
-            self.imodel = imodel
-        else:
-            self.imodel = branch.imodel
-        self.form_template = template or self.default_template
-        rule_config = {"formatter": formatter, "format_kwargs": format_kwargs}
-        if rulebook:
-            rule_config["rulebook"] = rulebook
+        self.imodel = imodel or branch.imodel
+        self.structure_str = structure_str
+        if structure_str:
+            if not fallback_structure:
+                self.fallback_structure = partial(
+                    fallback_structure_model_response,
+                    imodel=fallback_imodel or self.imodel,
+                    **kwargs,
+                )
+            else:
+                self.fallback_structure = partial(fallback_structure, **kwargs)
 
-        self.validator = Validator(**rule_config)
-        self.verbose = verbose
+    async def process_action_request(
+        self,
+        response: dict | None = None,
+        action_request=None,
+        invoke_action: bool = True,
+    ) -> list | None:
+        return await process_action_request(
+            branch=self.branch,
+            response=response,
+            action_request=action_request,
+            invoke_action=invoke_action,
+        )
 
-    async def chat(
+    async def process_action_response(
+        self,
+        action_requests: list,
+        responses: list,
+        response_parser: Callable = None,
+        **kwargs: dict,
+    ):
+        await process_action_response(
+            branch=self.branch,
+            action_requests=action_requests,
+            responses=responses,
+            response_parser=response_parser,
+            parser_kwargs=kwargs,
+        )
+
+    async def process_chat(
         self,
         instruction=None,
+        *,
+        guidance=None,
         context=None,
         system=None,
         sender=None,
         recipient=None,
-        branch=None,
         request_fields=None,
-        form=None,
+        form: Form = None,
         tools=False,
-        invoke_tool=True,
-        return_form=True,
-        strict=False,
-        rulebook=None,
-        imodel=None,
-        clear_messages=False,
-        use_annotation=True,
-        return_branch=False,
-        formatter=None,
-        format_kwargs={},
-        **kwargs,
+        images=None,
+        image_detail=None,
+        system_sender=None,
+        model_config: dict | None = None,
+        assignment: str = None,  # if use form, must provide assignment
+        task_description: str = None,
+        clear_messages: bool = False,
+        imodel: iModel = None,
+        costs: tuple = (0, 0),
+        rule_processor: RuleProcessor = None,
+        rulebook: RuleBook = None,
+        return_branch: bool = False,
+        progress: Progression = None,
+        retries: int = 0,
+        initial_delay: float = 0,
+        delay: float = 0,
+        backoff_factor: float = 1,
+        default: Any = LN_UNDEFINED,
+        timeout: float | None = 120,
+        timing: bool = False,
+        verbose_error: bool = True,
+        error_msg: str | None = None,
+        error_map: dict = None,
+        **kwargs: Any,  # additional model parameters
     ):
-        """
-        Asynchronously performs a chat operation.
+        progress = progress or self.branch.progress
 
-        Args:
-            instruction (str, optional): Instruction message.
-            context (str, optional): Context message.
-            system (str, optional): System message.
-            sender (str, optional): Sender identifier.
-            recipient (str, optional): Recipient identifier.
-            branch (Branch, optional): Branch instance.
-            request_fields (list, optional): Fields requested in the response.
-            form (Form, optional): Form data.
-            tools (bool, optional): Flag indicating if tools should be used.
-            invoke_tool (bool, optional): Flag indicating if tools should be invoked.
-            return_form (bool, optional): Flag indicating if form should be returned.
-            strict (bool, optional): Flag indicating if strict validation should be applied.
-            rulebook (Rulebook, optional): Rulebook instance for validation.
-            imodel (iModel, optional): Model instance.
-            clear_messages (bool, optional): Flag indicating if messages should be cleared.
-            use_annotation (bool, optional): Flag indicating if annotations should be used.
-            return_branch (bool, optional): Flag indicating if branch should be returned.
-            kwargs: Additional keyword arguments.
+        retry_call = partial(
+            rcall,
+            default=default,
+            timeout=timeout,
+            timing=timing,
+            verbose=verbose_error,
+            error_msg=error_msg,
+            error_map=error_map,
+            retries=retries,
+            initial_delay=initial_delay,
+            delay=delay,
+            backoff_factor=backoff_factor,
+        )
 
-        Returns:
-            Any: The processed response.
-        """
-        kwargs = {**retry_kwargs, **kwargs}
-        return await rcall(
-            self._chat,
+        return await retry_call(
+            process_chat,
+            system_sender=system_sender,
+            branch=self.branch,
             instruction=instruction,
             context=context,
-            system=system,
+            form=form,
             sender=sender,
             recipient=recipient,
-            branch=branch,
             request_fields=request_fields,
-            form=form,
+            system=system,
+            guidance=guidance,
             tools=tools,
-            invoke_tool=invoke_tool,
-            return_form=return_form,
-            strict=strict,
-            rulebook=rulebook,
-            imodel=imodel,
+            images=images,
+            image_detail=image_detail,
+            model_config=model_config,
+            assignment=assignment,
+            task_description=task_description,
             clear_messages=clear_messages,
-            use_annotation=use_annotation,
+            imodel=imodel,
+            progress=progress,
+            costs=costs,
+            rule_processor=rule_processor,
+            rulebook=rulebook,
             return_branch=return_branch,
-            formatter=formatter,
-            format_kwargs=format_kwargs,
+            structure_str=self.structure_str,
+            fallback_structure=self.fallback_structure,
             **kwargs,
         )
 
-    async def direct(
+    async def process_action(
         self,
-        instruction=None,
+        form: UnitForm,
+        actions: dict,
+        handle_unmatched: Literal["ignore", "raise", "remove", "force"] = "force",
+        return_branch: bool = False,
+        invoke_action: bool = True,
+        action_response_parser: Callable = None,
+        action_parser_kwargs: dict = None,
+    ):
+        return await process_action(
+            branch=self.branch,
+            form=form,
+            actions=actions,
+            return_branch=return_branch,
+            handle_unmatched=handle_unmatched,
+            invoke_action=invoke_action,
+            action_response_parser=action_response_parser,
+            action_parser_kwargs=action_parser_kwargs,
+        )
+
+    async def process_rule(
+        self,
+        form: BaseForm,
+        rule_processor: RuleProcessor | None = None,  # priority 1
+        response: dict | str = None,
+        rulebook: Any = None,
+        strict_validation: bool = False,
+    ):
+        return await process_rule(
+            form=form,
+            rule_processor=rule_processor,
+            response_=response,
+            rulebook=rulebook,
+            strict=strict_validation,
+            structure_str=self.structure_str,
+            fallback_structure=self.fallback_structure,
+        )
+
+    async def process_direct(
+        self,
+        instruction: str | str = None,
         *,
-        context=None,
-        form=None,
-        branch=None,
-        tools=None,
-        return_branch=False,
+        form: UnitForm | None,
+        context: Any = None,
+        guidance: str = LN_UNDEFINED,
         reason: bool = False,
-        predict: bool = False,
-        score=None,
-        select=None,
-        plan=None,
+        confidence: bool = False,
+        plan: bool = False,
+        reflect: bool = False,
+        tool_schema: list = None,
+        invoke_tool: bool = None,
         allow_action: bool = False,
         allow_extension: bool = False,
         max_extension: int = None,
-        confidence=None,
-        score_num_digits=None,
-        score_range=None,
-        select_choices=None,
-        plan_num_step=None,
-        predict_num_sentences=None,
-        directive: str = None,
-        verbose=None,
-        **kwargs,
+        tools: Any | None = None,
+        return_branch=False,
+        chain_plan=False,
+        progress: Progression = None,
+        retries: int = 0,
+        initial_delay: float = 0,
+        delay: float = 0,
+        backoff_factor: float = 1,
+        default: Any = LN_UNDEFINED,
+        timeout: float | None = 120,
+        timing: bool = False,
+        verbose_error: bool = True,
+        error_msg: str | None = None,
+        error_map: dict = None,
+        **kwargs: Any,  # additional _direct kwargs
     ):
-        """
-        Asynchronously directs the operation based on the provided parameters.
+        progress = progress or self.branch.progress
 
-        Args:
-            instruction (str, optional): Instruction message.
-            context (str, optional): Context message.
-            form (Form, optional): Form data.
-            branch (Branch, optional): Branch instance.
-            tools (Any, optional): Tools to be used.
-            return_branch (bool, optional): Flag indicating if branch should be returned.
-            reason (bool, optional): Flag indicating if reason should be included.
-            predict (bool, optional): Flag indicating if prediction should be included.
-            score (Any, optional): Score parameters.
-            select (Any, optional): Select parameters.
-            plan (Any, optional): Plan parameters.
-            allow_action (bool, optional): Flag indicating if action should be allowed.
-            allow_extension (bool, optional): Flag indicating if extension should be allowed.
-            max_extension (int, optional): Maximum extension value.
-            confidence (Any, optional): Confidence parameters.
-            score_num_digits (int, optional): Number of digits for score.
-            score_range (tuple, optional): Range for score.
-            select_choices (list, optional): Choices for selection.
-            plan_num_step (int, optional): Number of steps for plan.
-            predict_num_sentences (int, optional): Number of sentences for prediction.
-            directive (str, optional): Directive for the operation.
-            kwargs: Additional keyword arguments.
-
-        Returns:
-            Any: The processed response.
-        """
-        kwargs = {**retry_kwargs, **kwargs}
-        verbose = verbose if verbose is not None else self.verbose
-
-        if not directive:
-
-            out = await rcall(
-                self._direct,
-                instruction=instruction,
-                context=context,
-                form=form,
-                branch=branch,
-                tools=tools,
-                return_branch=return_branch,
-                reason=reason,
-                predict=predict,
-                score=score,
-                select=select,
-                plan=plan,
-                allow_action=allow_action,
-                allow_extension=allow_extension,
-                max_extension=max_extension,
-                confidence=confidence,
-                score_num_digits=score_num_digits,
-                score_range=score_range,
-                select_choices=select_choices,
-                plan_num_step=plan_num_step,
-                predict_num_sentences=predict_num_sentences,
-                verbose=verbose,
-                **kwargs,
-            )
-
-            if verbose:
-                print(
-                    "\n--------------------------------------------------------------"
-                )
-                print(f"Directive successfully completed!")
-
-            return out
-
-        out = await rcall(
-            self._mono_direct,
-            directive=directive,
-            instruction=instruction,
-            context=context,
-            branch=branch,
-            tools=tools,
-            verbose=verbose,
-            **kwargs,
+        retry_call = partial(
+            rcall,
+            default=default,
+            timeout=timeout,
+            timing=timing,
+            verbose=verbose_error,
+            error_msg=error_msg,
+            error_map=error_map,
+            retries=retries,
+            initial_delay=initial_delay,
+            delay=delay,
+            backoff_factor=backoff_factor,
         )
 
-        if verbose:
-            print("--------------------------------------------------------------")
-            print(f"Directive successfully completed!")
-
-        return out
-
-    async def select(self, *args, **kwargs):
-        """
-        Asynchronously performs a select operation using the _select method with
-        retry logic.
-
-        Args:
-            *args: Positional arguments to pass to the _select method.
-            **kwargs: Keyword arguments to pass to the _select method, including
-                retry configurations.
-
-        Returns:
-            Any: The result of the select operation.
-        """
-        from .template.select import SelectTemplate
-
-        kwargs = {**retry_kwargs, **kwargs}
-        kwargs["template"] = kwargs.get("template", SelectTemplate)
-        return await rcall(self._select, *args, **kwargs)
-
-    async def predict(self, *args, **kwargs):
-        """
-        Asynchronously performs a predict operation using the _predict method with
-        retry logic.
-
-        Args:
-            *args: Positional arguments to pass to the _predict method.
-            **kwargs: Keyword arguments to pass to the _predict method, including
-                retry configurations.
-
-        Returns:
-            Any: The result of the predict operation.
-        """
-        from .template.predict import PredictTemplate
-
-        kwargs = {**retry_kwargs, **kwargs}
-        kwargs["template"] = kwargs.get("template", PredictTemplate)
-        return await rcall(self._predict, *args, **kwargs)
-
-    async def score(self, *args, **kwargs):
-        """
-        Asynchronously performs a score operation using the _score method with retry logic.
-
-        Args:
-            *args: Positional arguments to pass to the _score method.
-            **kwargs: Keyword arguments to pass to the _score method, including retry configurations.
-
-        Returns:
-            Any: The result of the score operation.
-        """
-        from .template.score import ScoreTemplate
-
-        kwargs = {**retry_kwargs, **kwargs}
-        kwargs["template"] = kwargs.get("template", ScoreTemplate)
-        return await rcall(self._score, *args, **kwargs)
-
-    async def plan(self, *args, **kwargs):
-        """
-        Asynchronously performs a plan operation using the _plan method with retry logic.
-
-        Args:
-            *args: Positional arguments to pass to the _plan method.
-            **kwargs: Keyword arguments to pass to the _plan method, including retry configurations.
-
-        Returns:
-            Any: The result of the plan operation.
-        """
-        from .template.plan import PlanTemplate
-
-        kwargs = {**retry_kwargs, **kwargs}
-        kwargs["template"] = kwargs.get("template", PlanTemplate)
-        return await rcall(self._plan, *args, **kwargs)
-
-    async def _mono_direct(
-        self,
-        directive: str,  # examples, "chat", "predict", "act"
-        instruction=None,  # additional instruction
-        context=None,  # context to perform the instruction on
-        system=None,  # optionally swap system message
-        branch=None,
-        tools=None,
-        template=None,
-        verbose=None,
-        **kwargs,
-    ):
-        """
-        Asynchronously performs a single direct operation.
-
-        Args:
-            directive (str): The directive for the operation.
-            instruction (str, optional): Additional instruction.
-            context (str, optional): Context for the operation.
-            system (str, optional): System message.
-            branch (Branch, optional): Branch instance.
-            tools (Any, optional): Tools to be used.
-            template (Any, optional): Template for the operation.
-            kwargs: Additional keyword arguments.
-
-        Returns:
-            Any: The result of the direct operation.
-        """
-
-        if template:
-            kwargs["template"] = template
-
-        kwargs = {**retry_kwargs, **kwargs}
-        branch = branch or self.branch
-
-        if system:
-            branch.add_message(system=system)
-
-        if hasattr(self, to_str(directive, strip_lower=True)):
-            directive = getattr(self, to_str(directive, strip_lower=True))
-
-            verbose = verbose if verbose is not None else self.verbose
-            if verbose:
-                print(f"Performing directive: {directive}...")
-
-            return await directive(
-                context=context,
-                instruction=instruction,
-                tools=tools,
-                **kwargs,
-            )
-
-        raise ValueError(f"invalid directive: {directive}")
+        return await retry_call(
+            process_direct,
+            branch=self.branch,
+            instruction=instruction,
+            form=form,
+            context=context,
+            guidance=guidance,
+            reason=reason,
+            confidence=confidence,
+            plan=plan,
+            reflect=reflect,
+            tool_schema=tool_schema,
+            invoke_tool=invoke_tool,
+            allow_action=allow_action,
+            allow_extension=allow_extension,
+            max_extension=max_extension,
+            tools=tools,
+            return_branch=return_branch,
+            chain_plan=chain_plan,
+            progress=progress,
+            **kwargs,
+        )
