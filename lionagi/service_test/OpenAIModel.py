@@ -28,8 +28,8 @@ from lion_openai.api_endpoints.match_response import match_response
 from lion_openai.image_token_calculator.image_token_calculator import (
     OpenAIImageTokenCalculator,
 )
-from openai_service.RateLimiter import RateLimiter, RateLimitError
-from openai_service.TokenCalculator import TiktokenCalculator
+from .RateLimiter import RateLimiter, RateLimitError
+from .TokenCalculator import TiktokenCalculator
 from .service_util import invoke_retry
 
 
