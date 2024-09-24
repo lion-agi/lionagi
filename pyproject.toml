@@ -1,42 +1,28 @@
-[build-system]
-requires = [
-    "setuptools>=61.0", 
-    "aiohttp>=3.9.3",
-    "python-dotenv>=1.0.0",
-    "tiktoken>=0.5.1",
-    "pydantic>=2.6.0",
-    "aiocache>=0.12.2",
-    "pandas>=2.1.0",
-    "pytest>=8.2.2",
-]
-
-build-backend = "setuptools.build_meta"
-
-[project]
-name="lionagi"
-authors=[{name = "Haiyang Li", email="ocean@lionagi.ai"}]
-description="Towards automated general intelligence."
-dynamic = ["version"]
+[tool.poetry]
+name = "lionagi"
+version = "0.3.0"
+description = ""
+authors = ["HaiyangLi <122793010+ohdearquant@users.noreply.github.com>"]
 readme = "README.md"
-requires-python = ">= 3.10"
-dependencies = [
-    "aiohttp>=3.9.3",
-    "python-dotenv>=1.0.0",
-    "tiktoken>=0.5.1",
-    "pydantic>=2.6.0",
-    "aiocache>=0.12.2",
-    "pandas>=2.1.0",
-    "pytest>=8.2.2",
-]
 
-license = {file = "LICENSE"}
-classifiers=[
-    "Programming Language :: Python :: 3",
-    "License :: OSI Approved :: Apache Software License",
-    "Operating System :: OS Independent",
-]
+[tool.poetry.dependencies]
+python = "^3.10"
+pandas = "^2.2.3"
+lion-core = "0.2.7"
+lion-openai = "^0.1.1"
+aiocache = "^0.12.2"
+ipython = "^8.27.0"
+python-dotenv = "^1.0.1"
 
-[project.urls]
-PyPI = "https://pypi.org/project/lionagi/"
-Repository = "https://github.com/lion-agi/lionagi"
-Discord = "https://discord.gg/JDj9ENhUE8"
+[tool.poetry.group.dev.dependencies]
+pytest = "^8.3.3"
+black = "^24.8.0"
+flake8 = "^7.1.1"
+isort = "^5.13.2"
+pre-commit = "^3.8.0"
+pytest-asyncio = "^0.24.0"
+poetry-dynamic-versioning = "^1.4.1"
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"
