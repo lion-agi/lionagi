@@ -21,7 +21,20 @@ from typing import Any, Generator, Callable
 from lionagi.libs.sys_util import SysUtil
 import lionagi.libs.ln_convert as convert
 
+from typing_extensions import deprecated
+from lionagi.settings import format_deprecated_msg
 
+
+@deprecated(
+    format_deprecated_msg(
+        deprecated_name="lionagi.libs.ln_nested.nset()",
+        deprecated_type="function",
+        deprecated_version="0.3.0",
+        removal_version="1.0.0",
+        replacement="from lionagi import lionfuncs as ln\nln.nset()",
+    ),
+    category=DeprecationWarning,
+)
 def nset(nested_structure: dict | list, indices: list[int | str], value: Any) -> None:
     """
     sets a value within a nested structure at the specified path defined by indices.
@@ -65,6 +78,16 @@ def nset(nested_structure: dict | list, indices: list[int | str], value: Any) ->
         raise TypeError("Cannot set value on non-list/dict element")
 
 
+@deprecated(
+    format_deprecated_msg(
+        deprecated_name="lionagi.libs.ln_nested.nget()",
+        deprecated_type="function",
+        deprecated_version="0.3.0",
+        removal_version="1.0.0",
+        replacement="from lionagi import lionfuncs as ln\nln.nget()",
+    ),
+    category=DeprecationWarning,
+)
 def nget(
     nested_structure: dict | list,
     indices: list[int | str],
@@ -125,7 +148,16 @@ def nget(
             raise LookupError("Target not found and no default value provided.")
 
 
-# nested merge
+@deprecated(
+    format_deprecated_msg(
+        deprecated_name="lionagi.libs.ln_nested.nmerge()",
+        deprecated_type="function",
+        deprecated_version="0.3.0",
+        removal_version="1.0.0",
+        replacement=None,
+    ),
+    category=DeprecationWarning,
+)
 def nmerge(
     nested_structure: list[dict | list],
     /,
@@ -186,7 +218,16 @@ def nmerge(
         )
 
 
-# flatten dictionary
+@deprecated(
+    format_deprecated_msg(
+        deprecated_name="lionagi.libs.ln_nested.flatten()",
+        deprecated_type="function",
+        deprecated_version="0.3.0",
+        removal_version="1.0.0",
+        replacement=None,
+    ),
+    category=DeprecationWarning,
+)
 def flatten(
     nested_structure: Any,
     /,
@@ -249,7 +290,16 @@ def flatten(
         )
 
 
-# unflatten dictionary
+@deprecated(
+    format_deprecated_msg(
+        deprecated_name="lionagi.libs.ln_nested.unflatten()",
+        deprecated_type="function",
+        deprecated_version="0.3.0",
+        removal_version="1.0.0",
+        replacement=None,
+    ),
+    category=DeprecationWarning,
+)
 def unflatten(
     flat_dict: dict[str, Any],
     /,
@@ -304,6 +354,16 @@ def unflatten(
     return unflattened or {}
 
 
+@deprecated(
+    format_deprecated_msg(
+        deprecated_name="lionagi.libs.ln_nested.nfilter()",
+        deprecated_type="function",
+        deprecated_version="0.3.0",
+        removal_version="1.0.0",
+        replacement=None,
+    ),
+    category=DeprecationWarning,
+)
 def nfilter(
     nested_structure: dict | list, /, condition: Callable[[Any], bool]
 ) -> dict | list:
@@ -340,6 +400,16 @@ def nfilter(
         raise TypeError("The nested_structure must be either a dict or a list.")
 
 
+@deprecated(
+    format_deprecated_msg(
+        deprecated_name="lionagi.libs.ln_nested.nset()",
+        deprecated_type="function",
+        deprecated_version="0.3.0",
+        removal_version="1.0.0",
+        replacement="from lionagi import lionfuncs as ln\nln.nset()",
+    ),
+    category=DeprecationWarning,
+)
 def ninsert(
     nested_structure: dict | list,
     /,
@@ -409,6 +479,16 @@ def ninsert(
         nested_structure[last_part] = value
 
 
+@deprecated(
+    format_deprecated_msg(
+        deprecated_name="lionagi.libs.ln_nested.get_flattened_keys()",
+        deprecated_type="function",
+        deprecated_version="0.3.0",
+        removal_version="1.0.0",
+        replacement=None,
+    ),
+    category=DeprecationWarning,
+)
 def get_flattened_keys(
     nested_structure: Any,
     /,

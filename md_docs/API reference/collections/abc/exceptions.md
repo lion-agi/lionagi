@@ -120,12 +120,12 @@ except ItemInvalidError as e:
     print(e)
 ```
 
-### Class: `FieldError`
+### Class: `LionValueError`
 
 **Parent Class:** [[#^c6806f|LionAGIError]]
 
 **Description**:
-`FieldError` is an exception raised for errors in field validation.
+`LionValueError` is an exception raised for errors in field validation.
 
 **Attributes:**
 - `message` (str): The error message. Defaults to "An error occurred with the specified field."
@@ -134,8 +134,8 @@ except ItemInvalidError as e:
 **Usage Examples**:
 ```python
 try:
-    raise FieldError("field_name", "Custom field error")
-except FieldError as e:
+    raise LionValueError("field_name", "Custom field error")
+except LionValueError as e:
     print(e)
 ```
 

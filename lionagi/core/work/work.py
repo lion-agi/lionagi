@@ -20,7 +20,7 @@ from typing import Any
 from collections.abc import Coroutine
 
 from lionagi.libs import SysUtil
-from lionagi.core.collections.abc import Component
+from lionagi.core.generic.component import Component
 
 
 class WorkStatus(str, Enum):

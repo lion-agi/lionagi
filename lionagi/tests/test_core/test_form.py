@@ -9,7 +9,7 @@ class TestForm(unittest.TestCase):
 
     def test_initial_state(self):
         self.assertEqual(self.form.input_fields, ["input1", "input2"])
-        self.assertEqual(self.form.requested_fields, ["output"])
+        self.assertEqual(self.form.request_fields, ["output"])
         self.assertFalse(self.form.workable)
         self.assertFalse(self.form.filled)
         self.assertEqual(

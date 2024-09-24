@@ -15,9 +15,8 @@ limitations under the License.
 """
 
 from typing import Callable
-from lionagi.libs.ln_convert import strip_lower
-from lionagi.libs.ln_func_call import rcall
-from lionagi.core.collections.abc import Directive
+from lionagi.libs.lionfuncs import rcall, to_str
+from lionagi.core.collections.abc.concepts import Directive
 from lionagi.core.validator.validator import Validator
 from lionagi.core.collections import iModel
 from .unit_form import UnitForm
@@ -72,7 +71,7 @@ class Unit(Directive, DirectiveMixin):
         sender=None,
         recipient=None,
         branch=None,
-        requested_fields=None,
+        request_fields=None,
         form=None,
         tools=False,
         invoke_tool=True,
@@ -97,7 +96,7 @@ class Unit(Directive, DirectiveMixin):
             sender (str, optional): Sender identifier.
             recipient (str, optional): Recipient identifier.
             branch (Branch, optional): Branch instance.
-            requested_fields (list, optional): Fields requested in the response.
+            request_fields (list, optional): Fields requested in the response.
             form (Form, optional): Form data.
             tools (bool, optional): Flag indicating if tools should be used.
             invoke_tool (bool, optional): Flag indicating if tools should be invoked.
@@ -122,7 +121,7 @@ class Unit(Directive, DirectiveMixin):
             sender=sender,
             recipient=recipient,
             branch=branch,
-            requested_fields=requested_fields,
+            request_fields=request_fields,
             form=form,
             tools=tools,
             invoke_tool=invoke_tool,
@@ -361,8 +360,8 @@ class Unit(Directive, DirectiveMixin):
         if system:
             branch.add_message(system=system)
 
-        if hasattr(self, strip_lower(directive)):
-            directive = getattr(self, strip_lower(directive))
+        if hasattr(self, to_str(directive, strip_lower=True)):
+            directive = getattr(self, to_str(directive, strip_lower=True))
 
             verbose = verbose if verbose is not None else self.verbose
             if verbose:

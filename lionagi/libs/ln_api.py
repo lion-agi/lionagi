@@ -1,25 +1,13 @@
-"""
-Copyright 2024 HaiyangLi
+from __future__ import annotations
+from lionagi.settings import format_deprecated_msg
+from typing_extensions import deprecated
 
-Licensed under the Apache License, Version 2.0 (the "License");
-you may not use this file except in compliance with the License.
-You may obtain a copy of the License at
-
-    http://www.apache.org/licenses/LICENSE-2.0
-
-Unless required by applicable law or agreed to in writing, software
-distributed under the License is distributed on an "AS IS" BASIS,
-WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-See the License for the specific language governing permissions and
-limitations under the License.
-"""
 
 from collections.abc import Sequence, Mapping
 
 from abc import ABC
 from dataclasses import dataclass
 
-import contextlib
 import logging
 import re
 import asyncio
@@ -28,11 +16,21 @@ import aiohttp
 from typing import Any, NoReturn, Type, Callable
 
 from lionagi.libs.ln_async import AsyncUtil
-from lionagi.libs.ln_convert import to_dict, strip_lower, to_str
+from lionagi.libs.ln_convert import strip_lower, to_str
 import lionagi.libs.ln_func_call as func_call
 from lionagi.libs.ln_nested import nget
 
 
+@deprecated(
+    format_deprecated_msg(
+        deprecated_name="APIUtil",
+        deprecated_type="class",
+        deprecated_version="0.3.0",
+        removal_version="1.0.0",
+        replacement=None,
+    ),
+    category=DeprecationWarning,
+)
 class APIUtil:
     """
     A utility class for assisting with common API usage patterns.

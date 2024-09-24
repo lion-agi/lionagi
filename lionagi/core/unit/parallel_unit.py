@@ -14,10 +14,10 @@ See the License for the specific language governing permissions and
 limitations under the License.
 """
 
-from lionagi.libs.ln_func_call import rcall, pcall
+from lionagi.libs.lionfuncs import rcall, pcall
 from lionagi.libs import convert, AsyncUtil
 
-from lionagi.core.collections.abc import Directive
+from lionagi.core.collections.abc.concepts import Directive
 from lionagi.core.collections import iModel
 from lionagi.core.validator.validator import Validator
 from lionagi.core.session.branch import Branch
@@ -45,7 +45,7 @@ class ParallelUnit(Directive):
             tools=False,
             out=True,
             invoke=True,
-            requested_fields=None,
+            request_fields=None,
             persist_path=None,
             branch_config={},
             explode=False,
@@ -103,7 +103,7 @@ class ParallelUnit(Directive):
         tools=False,
         out=True,
         invoke: bool = True,
-        requested_fields=None,
+        request_fields=None,
         persist_path=None,
         branch_config={},
         explode=False,
@@ -127,7 +127,7 @@ class ParallelUnit(Directive):
                                   Defaults to True.
             invoke (bool, optional): Flag indicating if tools should be invoked.
                                      Defaults to True.
-            requested_fields (list, optional): Fields to request from the context.
+            request_fields (list, optional): Fields to request from the context.
                                                Defaults to None.
             persist_path (str, optional): Path to persist the branch. Defaults to None.
             branch_config (dict, optional): Configuration for the branch. Defaults to {}.
@@ -167,7 +167,7 @@ class ParallelUnit(Directive):
                 tools=tools,
                 invoke=invoke,
                 out=out,
-                requested_fields=requested_fields,
+                request_fields=request_fields,
                 **kwargs,
             )
 

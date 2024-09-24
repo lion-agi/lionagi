@@ -25,7 +25,20 @@ import lionagi.libs.ln_convert as convert
 
 md_json_char_map = {"\n": "\\n", "\r": "\\r", "\t": "\\t", '"': '\\"'}
 
+from typing_extensions import deprecated
+from lionagi.settings import format_deprecated_msg
 
+
+@deprecated(
+    format_deprecated_msg(
+        deprecated_name="lionagi.libs.ln_parse.ParseUtil",
+        deprecated_type="class",
+        deprecated_version="0.3.0",
+        removal_version="1.0.0",
+        replacement=None,
+    ),
+    category=DeprecationWarning,
+)
 class ParseUtil:
 
     @staticmethod
@@ -498,6 +511,16 @@ class ParseUtil:
         }
 
 
+@deprecated(
+    format_deprecated_msg(
+        deprecated_name="lionagi.libs.ln_parse.StringMatch",
+        deprecated_type="class",
+        deprecated_version="0.3.0",
+        removal_version="1.0.0",
+        replacement=None,
+    ),
+    category=DeprecationWarning,
+)
 class StringMatch:
 
     @staticmethod

@@ -1,40 +1,515 @@
-"""
-Copyright 2024 HaiyangLi
-
-Licensed under the Apache License, Version 2.0 (the "License");
-you may not use this file except in compliance with the License.
-You may obtain a copy of the License at
-
-    http://www.apache.org/licenses/LICENSE-2.0
-
-Unless required by applicable law or agreed to in writing, software
-distributed under the License is distributed on an "AS IS" BASIS,
-WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-See the License for the specific language governing permissions and
-limitations under the License.
-"""
-
+# Standard library imports
 import copy
-import importlib
+from hashlib import sha256
 import logging
 import os
-import platform
 import re
-import subprocess
-import sys
 import time
+from collections.abc import Sequence
 from datetime import datetime, timezone
-from hashlib import sha256
 from pathlib import Path
-from typing import Any
+from typing import Any, Literal, TypeVar
+
+# Third-party imports
+from typing_extensions import deprecated
+
+# Local imports
+from lion_core.abc import Observable
+from lion_core.sys_utils import SysUtil as CoreUtil
+from lionagi.settings import (
+    DEFAULT_TIMEZONE,
+    DEFAULT_LION_ID_CONFIG,
+    LionIDConfig,
+    format_deprecated_msg,
+)
+
+# Type variable definition
+T = TypeVar("T")
 
 _timestamp_syms = ["-", ":", "."]
 
-PATH_TYPE = str | Path
 
-
+# Main class definition follows...
 class SysUtil:
+    """Utility class providing various system-related functionalities."""
 
+    @staticmethod
+    def time(
+        *,
+        tz: timezone = DEFAULT_TIMEZONE,
+        type_: Literal["timestamp", "datetime", "iso", "custom"] = "timestamp",
+        sep: str | None = "T",
+        timespec: str | None = "auto",
+        custom_format: str | None = None,
+        custom_sep: str | None = None,
+    ) -> float | str | datetime:
+        """
+        Get current time in various formats.
+
+        Args:
+            tz: Timezone for the time (default: utc).
+            type_: Type of time to return (default: "timestamp").
+                Options: "timestamp", "datetime", "iso", "custom".
+            sep: Separator for ISO format (default: "T").
+            timespec: Timespec for ISO format (default: "auto").
+            custom_format: Custom strftime format string for
+                type_="custom".
+            custom_sep: Custom separator for type_="custom",
+                replaces "-", ":", ".".
+
+        Returns:
+            Current time in the specified format.
+
+        Raises:
+            ValueError: If an invalid type_ is provided or if custom_format
+                is not provided when type_="custom".
+        """
+        return CoreUtil.time(
+            tz=tz,
+            type_=type_,
+            sep=sep,
+            timespec=timespec,
+            custom_format=custom_format,
+            custom_sep=custom_sep,
+        )
+
+    @staticmethod
+    def copy(obj: T, /, *, deep: bool = True, num: int = 1) -> T | list[T]:
+        """
+        Create one or more copies of an object.
+
+        Args:
+            obj: The object to be copied.
+            deep: If True, create a deep copy. Otherwise, create a shallow
+                copy.
+            num: The number of copies to create.
+
+        Returns:
+            A single copy if num is 1, otherwise a list of copies.
+
+        Raises:
+            ValueError: If num is less than 1.
+        """
+        return CoreUtil.copy(obj, deep=deep, num=num)
+
+    @staticmethod
+    def get_id(
+        item: Sequence[Observable] | Observable | str,
+        config: LionIDConfig = DEFAULT_LION_ID_CONFIG,
+        /,
+    ) -> str:
+        """
+        Get the Lion ID of an item.
+
+        Args:
+            item: The item to get the ID from.
+            config: Configuration dictionary for ID validation.
+
+        Returns:
+            The Lion ID of the item.
+
+        Raises:
+            LionIDError: If the item does not contain a valid Lion ID.
+        """
+        return CoreUtil.get_id(item, config=config)
+
+    @staticmethod
+    def is_id(
+        item: Sequence[Observable] | Observable | str,
+        config: LionIDConfig = DEFAULT_LION_ID_CONFIG,
+        /,
+    ) -> bool:
+        """
+        Check if an item is a valid Lion ID.
+
+        Args:
+            item: The item to check.
+            config: Configuration dictionary for ID validation.
+
+        Returns:
+            True if the item is a valid Lion ID, False otherwise.
+        """
+        return CoreUtil.is_id(item, config=config)
+
+    @staticmethod
+    def id(
+        config: LionIDConfig = DEFAULT_LION_ID_CONFIG,
+        n: int = None,
+        prefix: str = None,
+        postfix: str = None,
+        random_hyphen: bool = None,
+        num_hyphens: int = None,
+        hyphen_start_index: int = None,
+        hyphen_end_index: int = None,
+    ) -> str:
+        return CoreUtil.id(
+            config=config,
+            n=n,
+            prefix=prefix,
+            postfix=postfix,
+            random_hyphen=random_hyphen,
+            num_hyphens=num_hyphens,
+            hyphen_start_index=hyphen_start_index,
+            hyphen_end_index=hyphen_end_index,
+        )
+
+    @staticmethod
+    def clear_path(
+        path: Path | str,
+        /,
+        recursive: bool = False,
+        exclude: list[str] | None = None,
+    ) -> None:
+        """
+        Clear all files and directories in the specified path.
+
+        Args:
+            path: The path to the directory to clear.
+            recursive: If True, clears directories recursively.
+            exclude: A list of string patterns to exclude from deletion.
+
+        Raises:
+            FileNotFoundError: If the specified directory does not exist.
+            PermissionError: If there are insufficient permissions to delete
+                files.
+        """
+        CoreUtil.clear_path(path, recursive=recursive, exclude=exclude)
+
+    @staticmethod
+    def create_path(
+        directory: Path | str,
+        filename: str,
+        timestamp: bool = False,
+        dir_exist_ok: bool = True,
+        file_exist_ok: bool = False,
+        time_prefix: bool = False,
+        timestamp_format: str | None = None,
+        random_hash_digits: int = 0,
+    ) -> Path:
+        """
+        Generate a new file path with optional timestamp and random hash.
+
+        Args:
+            directory: The directory where the file will be created.
+            filename: The base name of the file to create.
+            timestamp: If True, adds a timestamp to the filename.
+            dir_exist_ok: If True, doesn't raise an error if the directory
+                exists.
+            file_exist_ok: If True, allows overwriting of existing files.
+            time_prefix: If True, adds the timestamp as a prefix instead of
+                a suffix.
+            timestamp_format: Custom format for the timestamp.
+            random_hash_digits: Number of digits for the random hash.
+
+        Returns:
+            The full path to the new or existing file.
+
+        Raises:
+            ValueError: If the filename contains illegal characters.
+            FileExistsError: If the file exists and file_exist_ok is False.
+        """
+        return CoreUtil.create_path(
+            directory=directory,
+            filename=filename,
+            timestamp=timestamp,
+            dir_exist_ok=dir_exist_ok,
+            file_exist_ok=file_exist_ok,
+            time_prefix=time_prefix,
+            timestamp_format=timestamp_format,
+            random_hash_digits=random_hash_digits,
+        )
+
+    @staticmethod
+    def list_files(dir_path: Path | str, extension: str | None = None) -> list[Path]:
+        """
+        List all files in a specified directory with an optional extension
+        filter, including files in subdirectories.
+
+        Args:
+            dir_path: The directory path where files are listed.
+            extension: Filter files by extension.
+
+        Returns:
+            A list of Path objects representing files in the directory.
+
+        Raises:
+            NotADirectoryError: If the provided dir_path is not a directory.
+        """
+        return CoreUtil.list_files(dir_path, extension=extension)
+
+    @staticmethod
+    def split_path(path: Path | str) -> tuple[Path, str]:
+        """
+        Split a path into its directory and filename components.
+
+        Args:
+            path: The path to split.
+
+        Returns:
+            A tuple containing the directory and filename.
+        """
+        return CoreUtil.split_path(path)
+
+    @staticmethod
+    def copy_file(src: Path | str, dest: Path | str) -> None:
+        """
+        Copy a file from a source path to a destination path.
+
+        Args:
+            src: The source file path.
+            dest: The destination file path.
+
+        Raises:
+            FileNotFoundError: If the source file does not exist or is not
+                a file.
+            PermissionError: If there are insufficient permissions to copy
+                the file.
+            OSError: If there's an OS-level error during the copy operation.
+        """
+        CoreUtil.copy_file(src, dest)
+
+    @staticmethod
+    def get_file_size(path: Path | str) -> int:
+        """
+        Get the size of a file or total size of files in a directory.
+
+        Args:
+            path: The file or directory path.
+
+        Returns:
+            The size in bytes.
+
+        Raises:
+            FileNotFoundError: If the path does not exist.
+            PermissionError: If there are insufficient permissions
+                to access the path.
+        """
+        return CoreUtil.get_file_size(path)
+
+    @staticmethod
+    def save_to_file(
+        text: str,
+        directory: Path | str,
+        filename: str,
+        timestamp: bool = False,
+        dir_exist_ok: bool = True,
+        file_exist_ok: bool = False,
+        time_prefix: bool = False,
+        timestamp_format: str | None = None,
+        random_hash_digits: int = 0,
+        verbose: bool = True,
+    ) -> Path:
+        """
+        Save text to a file within a specified directory, optionally adding a
+        timestamp, hash, and verbose logging.
+
+        Args:
+            text: The text to save.
+            directory: The directory path to save the file.
+            filename: The filename for the saved text.
+            timestamp: If True, append a timestamp to the filename.
+            dir_exist_ok: If True, creates the directory if it does not exist.
+            time_prefix: If True, prepend the timestamp instead of appending.
+            timestamp_format: A custom format for the timestamp.
+            random_hash_digits: Number of random hash digits to append
+                to filename.
+            verbose: If True, logs the file path after saving.
+
+        Returns:
+            Path: The path to the saved file.
+
+        Raises:
+            OSError: If there's an error creating the directory or
+                writing the file.
+        """
+        return CoreUtil.save_to_file(
+            text=text,
+            directory=directory,
+            filename=filename,
+            timestamp=timestamp,
+            dir_exist_ok=dir_exist_ok,
+            file_exist_ok=file_exist_ok,
+            time_prefix=time_prefix,
+            timestamp_format=timestamp_format,
+            random_hash_digits=random_hash_digits,
+            verbose=verbose,
+        )
+
+    @staticmethod
+    def read_file(path: Path | str, /) -> str:
+        """
+        Read the contents of a file.
+
+        Args:
+            path: The path to the file to read.
+
+        Returns:
+            str: The contents of the file.
+
+        Raises:
+            FileNotFoundError: If the file does not exist.
+            PermissionError: If there are insufficient permissions to read
+                the file.
+        """
+        return CoreUtil.read_file(path)
+
+    @staticmethod
+    def get_cpu_architecture() -> str:
+        """
+        Get the CPU architecture.
+
+        Returns:
+            str: 'arm64' if ARM-based, 'x86_64' for Intel/AMD 64-bit, or the
+                actual architecture string for other cases.
+        """
+        return CoreUtil.get_cpu_architecture()
+
+    @staticmethod
+    def install_import(
+        package_name: str,
+        module_name: str | None = None,
+        import_name: str | None = None,
+        pip_name: str | None = None,
+    ):
+        return CoreUtil.install_import(
+            package_name=package_name,
+            module_name=module_name,
+            import_name=import_name,
+            pip_name=pip_name,
+        )
+
+    @staticmethod
+    def import_module(
+        package_name: str,
+        module_name: str = None,
+        import_name: str | list = None,
+    ) -> Any:
+        return CoreUtil.import_module(
+            package_name=package_name,
+            module_name=module_name,
+            import_name=import_name,
+        )
+
+    @staticmethod
+    def is_package_installed(package_name: str) -> bool:
+        """
+        Check if a package is installed.
+
+        Args:
+            package_name: The name of the package to check.
+
+        Returns:
+            bool: True if the package is installed, False otherwise.
+        """
+        return CoreUtil.is_package_installed(package_name)
+
+    @staticmethod
+    def check_import(
+        package_name: str,
+        module_name: str | None = None,
+        import_name: str | None = None,
+        pip_name: str | None = None,
+        attempt_install: bool = True,
+        error_message: str = "",
+    ):
+        """
+        Check if a package is installed, attempt to install if not.
+
+        Args:
+            package_name: The name of the package to check.
+            module_name: The specific module to import (if any).
+            import_name: The specific name to import from the module (if any).
+            pip_name: The name to use for pip installation (if different).
+            attempt_install: Whether to attempt installation if not found.
+            error_message: Custom error message to use if package not found.
+
+        Raises:
+            ImportError: If the package is not found and not installed.
+            ValueError: If the import fails after installation attempt.
+        """
+        return CoreUtil.check_import(
+            package_name=package_name,
+            module_name=module_name,
+            import_name=import_name,
+            pip_name=pip_name,
+            attempt_install=attempt_install,
+            error_message=error_message,
+        )
+
+    @staticmethod
+    def list_installed_packages() -> list[str]:
+        """
+        List all installed packages.
+
+        Returns:
+            List[str]: A list of names of installed packages.
+        """
+        return CoreUtil.list_installed_packages()
+
+    @staticmethod
+    def update_package(package_name: str) -> None:
+        """
+        Update a specified package.
+
+        Args:
+            package_name: The name of the package to update.
+
+        Raises:
+            subprocess.CalledProcessError: If the update fails.
+        """
+        CoreUtil.update_package(package_name)
+
+    @staticmethod
+    def uninstall_package(package_name: str) -> None:
+        """
+        Uninstall a specified package.
+
+        Args:
+            package_name: The name of the package to uninstall.
+
+        Raises:
+            subprocess.CalledProcessError: If the uninstallation fails.
+        """
+        CoreUtil.uninstall_package(package_name)
+
+    ## Deprecated methods
+    @deprecated(
+        format_deprecated_msg(
+            deprecated_name="SysUtil.change_dict_key()",
+            deprecated_type="function",
+            deprecated_version="0.3.0",
+            removal_version="1.0.0",
+            replacement="python",
+            additional_msg="d[new_key] = d.pop(old_key)",
+        ),
+        category=DeprecationWarning,
+    )
+    @staticmethod
+    def change_dict_key(dict_: dict[Any, Any], old_key: str, new_key: str) -> None:
+        """Safely changes a key in a dictionary if the old key exists.
+
+        Args:
+                dict_ (Dict[Any, Any]): The dictionary in which to change the key.
+                old_key (str): The old key to be changed.
+                new_key (str): The new key to replace the old key.
+
+        Returns:
+                None
+        """
+        if old_key in dict_:
+            dict_[new_key] = dict_.pop(old_key)
+
+    @deprecated(
+        format_deprecated_msg(
+            deprecated_name="SysUtil.sleep()",
+            deprecated_type="function",
+            deprecated_version="0.3.0",
+            removal_version="1.0.0",
+            replacement="python",
+            additional_msg="import time\ntime.sleep()",
+        ),
+        category=DeprecationWarning,
+    )
     @staticmethod
     def sleep(delay: float) -> None:
         """
@@ -45,6 +520,16 @@ class SysUtil:
         """
         time.sleep(delay)
 
+    @deprecated(
+        format_deprecated_msg(
+            deprecated_name="SysUtil.get_now()",
+            deprecated_type="function",
+            deprecated_version="0.3.0",
+            removal_version="1.0.0",
+            replacement="SysUtil.time()",
+        ),
+        category=DeprecationWarning,
+    )
     @staticmethod
     def get_now(datetime_: bool = False, tz=None) -> float | datetime:
         """Returns the current time either as a Unix timestamp or a datetime object.
@@ -63,21 +548,16 @@ class SysUtil:
             config_["tz"] = tz if isinstance(tz, timezone) else timezone.utc
         return datetime.now(**config_)
 
-    @staticmethod
-    def change_dict_key(dict_: dict[Any, Any], old_key: str, new_key: str) -> None:
-        """Safely changes a key in a dictionary if the old key exists.
-
-        Args:
-                dict_ (Dict[Any, Any]): The dictionary in which to change the key.
-                old_key (str): The old key to be changed.
-                new_key (str): The new key to replace the old key.
-
-        Returns:
-                None
-        """
-        if old_key in dict_:
-            dict_[new_key] = dict_.pop(old_key)
-
+    @deprecated(
+        format_deprecated_msg(
+            deprecated_name="SysUtil.get_timestamp()",
+            deprecated_type="function",
+            deprecated_version="0.3.0",
+            removal_version="1.0.0",
+            replacement="SysUtil.time()",
+        ),
+        category=DeprecationWarning,
+    )
     @staticmethod
     def get_timestamp(tz: timezone = timezone.utc, sep: str = "_") -> str:
         """Returns a timestamp string with optional custom separators and timezone.
@@ -95,6 +575,16 @@ class SysUtil:
                 str_ = str_.replace(sym, sep)
         return str_
 
+    @deprecated(
+        format_deprecated_msg(
+            deprecated_name="SysUtil.is_schema()",
+            deprecated_type="function",
+            deprecated_version="0.3.0",
+            removal_version="1.0.0",
+            replacement=None,
+        ),
+        category=DeprecationWarning,
+    )
     @staticmethod
     def is_schema(dict_: dict[Any, Any], schema: dict[Any, type]) -> bool:
         """Validates if the given dictionary matches the expected schema types."""
@@ -103,6 +593,16 @@ class SysUtil:
             for key, expected_type in schema.items()
         )
 
+    @deprecated(
+        format_deprecated_msg(
+            deprecated_name="SysUtil.create_copy()",
+            deprecated_type="function",
+            deprecated_version="0.3.0",
+            removal_version="1.0.0",
+            replacement="SysUtil.copy()",
+        ),
+        category=DeprecationWarning,
+    )
     @staticmethod
     def create_copy(input_: Any, num: int = 1) -> Any | list[Any]:
         """Creates deep copies of the input, either as a single copy or a list of copies.
@@ -122,6 +622,16 @@ class SysUtil:
             else [copy.deepcopy(input_) for _ in range(num)]
         )
 
+    @deprecated(
+        format_deprecated_msg(
+            deprecated_name="SysUtil.create_id()",
+            deprecated_type="function",
+            deprecated_version="0.3.0",
+            removal_version="1.0.0",
+            replacement="SysUtil.id()",
+        ),
+        category=DeprecationWarning,
+    )
     @staticmethod
     def create_id(n: int = 32) -> str:
         """
@@ -137,6 +647,16 @@ class SysUtil:
         random_bytes = os.urandom(42)
         return sha256(current_time + random_bytes).hexdigest()[:n]
 
+    @deprecated(
+        format_deprecated_msg(
+            deprecated_name="SysUtil.get_bins()",
+            deprecated_type="function",
+            deprecated_version="0.3.0",
+            removal_version="1.0.0",
+            replacement=None,
+        ),
+        category=DeprecationWarning,
+    )
     @staticmethod
     def get_bins(input_: list[str], upper: int | None = 2000) -> list[list[int]]:
         """Organizes indices of strings into bins based on a cumulative upper limit.
@@ -163,148 +683,16 @@ class SysUtil:
             bins.append(current_bin)
         return bins
 
-    @staticmethod
-    def get_cpu_architecture() -> str:
-        """Returns a string identifying the CPU architecture.
-
-        This method categorizes some architectures as 'apple_silicon'.
-
-        Returns:
-                str: A string identifying the CPU architecture ('apple_silicon' or 'other_cpu').
-        """
-        arch: str = platform.machine().lower()
-        return "apple_silicon" if "arm" in arch or "aarch64" in arch else "other_cpu"
-
-    @staticmethod
-    def install_import(
-        package_name: str,
-        module_name: str = None,
-        import_name: str = None,
-        pip_name: str = None,
-    ) -> None:
-        """Attempts to import a package, installing it with pip if not found.
-
-        This method tries to import a specified module or attribute. If the import fails, it attempts
-        to install the package using pip and then retries the import.
-
-        Args:
-                package_name: The base name of the package to import.
-                module_name: The submodule name to import from the package, if applicable. Defaults to None.
-                import_name: The specific name to import from the module or package. Defaults to None.
-                pip_name: The pip package name if different from `package_name`. Defaults to None.
-
-        Prints a message indicating success or attempts installation if the import fails.
-        """
-        pip_name: str = pip_name or package_name
-        full_import_path: str = (
-            f"{package_name}.{module_name}" if module_name else package_name
-        )
-
-        try:
-            if import_name:
-                module = __import__(full_import_path, fromlist=[import_name])
-                getattr(module, import_name)
-            else:
-                __import__(full_import_path)
-            print(f"Successfully imported {import_name or full_import_path}.")
-        except ImportError:
-            print(
-                f"Module {full_import_path} or attribute {import_name} not found. Installing {pip_name}..."
-            )
-            subprocess.check_call([sys.executable, "-m", "pip", "install", pip_name])
-
-            # Retry the import after installation
-            if import_name:
-                module = __import__(full_import_path, fromlist=[import_name])
-                getattr(module, import_name)
-            else:
-                __import__(full_import_path)
-
-    @staticmethod
-    def import_module(module_path: str):
-        return importlib.import_module(module_path)
-
-    @staticmethod
-    def is_package_installed(package_name: str) -> bool:
-        """Checks if a package is currently installed.
-
-        Args:
-                package_name: The name of the package to check.
-
-        Returns:
-                A boolean indicating whether the package is installed.
-        """
-        package_spec = importlib.util.find_spec(package_name)
-        return package_spec is not None
-
-    @staticmethod
-    def check_import(
-        package_name: str,
-        module_name: str | None = None,
-        import_name: str | None = None,
-        pip_name: str | None = None,
-        attempt_install: bool = True,
-        error_message: str = "",
-    ) -> None:
-        """Checks if a package is installed; if not, attempts to install and import it.
-
-        This method first checks if a package is installed using `is_package_installed`. If not found,
-        it attempts to install the package using `install_import` and then retries the import.
-
-        Args:
-                package_name: The name of the package to check and potentially install.
-                module_name: The submodule name to import from the package, if applicable. Defaults to None.
-                import_name: The specific name to import from the module or package. Defaults to None.
-                pip_name: The pip package name if different from `package_name`. Defaults to None.
-                attempt_install: If attempt to install the package if uninstalled. Defaults to True.
-                error_message: Error message when the package is not installed and not attempt to install.
-        """
-        try:
-            if not SysUtil.is_package_installed(package_name):
-                # print("check")
-                if attempt_install:
-                    logging.info(
-                        f"Package {package_name} not found. Attempting to install."
-                    )
-                    SysUtil.install_import(
-                        package_name, module_name, import_name, pip_name
-                    )
-                else:
-                    logging.info(f"Package {package_name} not found. {error_message}")
-                    raise ImportError(
-                        f"Package {package_name} not found. {error_message}"
-                    )
-        except ImportError as e:  # More specific exception handling
-            logging.error(f"Failed to import {package_name}. Error: {e}")
-            raise ValueError(f"Failed to import {package_name}. Error: {e}") from e
-
-    @staticmethod
-    def list_installed_packages() -> list:
-        """list all installed packages using importlib.metadata."""
-        return [dist.metadata["Name"] for dist in importlib.metadata.distributions()]
-
-    @staticmethod
-    def uninstall_package(package_name: str) -> None:
-        """Uninstall a specified package."""
-        try:
-            subprocess.check_call(
-                [sys.executable, "-m", "pip", "uninstall", package_name, "-y"]
-            )
-            print(f"Successfully uninstalled {package_name}.")
-        except subprocess.CalledProcessError as e:
-            print(f"Failed to uninstall {package_name}. Error: {e}")
-
-    @staticmethod
-    def update_package(package_name: str) -> None:
-        """Update a specified package."""
-        try:
-            subprocess.check_call(
-                [sys.executable, "-m", "pip", "install", "--upgrade", package_name]
-            )
-            print(f"Successfully updated {package_name}.")
-        except subprocess.CalledProcessError as e:
-            print(f"Failed to update {package_name}. Error: {e}")
-
+    @deprecated(
+        format_deprecated_msg(
+            deprecated_name="SysUtil.clear_dir()",
+            deprecated_type="function",
+            deprecated_version="0.3.0",
+            removal_version="1.0.0",
+            replacement="SysUtil.clear_path()",
+        ),
+        category=DeprecationWarning,
+    )
     @staticmethod
     def clear_dir(
         dir_path: Path | str, recursive: bool = False, exclude: list[str] = None
@@ -345,121 +733,16 @@ class SysUtil:
                     logging.error(f"Failed to delete {file_path}. Reason: {e}")
                     raise
 
-    @staticmethod
-    def split_path(path: Path | str) -> tuple[Path, str]:
-        """
-        Splits a path into its directory and filename components.
-
-        Args:
-                path (Union[Path, str]): The path to split.
-
-        Returns:
-                Tuple[Path, str]: A tuple containing the directory and filename.
-        """
-        path = Path(path)
-        return path.parent, path.name
-
-    @staticmethod
-    def create_path(
-        directory: Path | str,
-        filename: str,
-        timestamp: bool = True,
-        dir_exist_ok: bool = True,
-        time_prefix: bool = False,
-        custom_timestamp_format: str | None = None,
-        random_hash_digits=0,
-    ) -> Path:
-        """
-        Creates a path with an optional timestamp in the specified directory.
-
-        Args:
-                directory (Union[Path, str]): The directory where the file will be located.
-                filename (str): The filename. Must include a valid extension.
-                timestamp (bool): If True, adds a timestamp to the filename. Defaults to True.
-                dir_exist_ok (bool): If True, does not raise an error if the directory exists. Defaults to True.
-                time_prefix (bool): If True, adds the timestamp as a prefix; otherwise, as a suffix. Defaults to False.
-                custom_timestamp_format (str): A custom format for the timestamp. Defaults to "%Y%m%d%H%M%S".
-
-        Returns:
-                Path: The full path to the file.
-
-        Raises:
-                ValueError: If the filename is invalid.
-        """
-        directory = Path(directory)
-        if not re.match(r"^[\w,\s-]+\.[A-Za-z]{1,5}$", filename):
-            raise ValueError(
-                "Invalid filename. Ensure it doesn't contain illegal characters and has a valid extension."
-            )
-
-        name, ext = filename.rsplit(".", 1) if "." in filename else (filename, "")
-        ext = f".{ext}" if ext else ""
-
-        timestamp_str = ""
-        if timestamp:
-            timestamp_format = custom_timestamp_format or "%Y%m%d%H%M%S"
-            timestamp_str = datetime.now().strftime(timestamp_format)
-            filename = (
-                f"{timestamp_str}_{name}" if time_prefix else f"{name}_{timestamp_str}"
-            )
-        else:
-            filename = name
-
-        random_hash = (
-            "-" + SysUtil.create_id(random_hash_digits)
-            if random_hash_digits > 0
-            else ""
-        )
-
-        full_filename = f"{filename}{random_hash}{ext}"
-        full_path = directory / full_filename
-        full_path.parent.mkdir(parents=True, exist_ok=dir_exist_ok)
-
-        return full_path
-
-    @staticmethod
-    def list_files(dir_path: Path | str, extension: str = None) -> list[Path]:
-        """
-        Lists all files in a specified directory with an optional filter for file extensions.
-
-        Args:
-            dir_path (Path | str): The directory path where files are listed.
-            extension (str, optional): Filter files by extension. Default is None, which lists all files.
-
-        Returns:
-            list[Path]: A list of Path objects representing files in the directory.
-
-        Raises:
-            NotADirectoryError: If the provided dir_path is not a directory.
-        """
-        dir_path = Path(dir_path)
-        if not dir_path.is_dir():
-            raise NotADirectoryError(f"{dir_path} is not a directory.")
-        if extension:
-            return list(dir_path.glob(f"*.{extension}"))
-        else:
-            return list(dir_path.glob("*"))
-
-    @staticmethod
-    def copy_file(src: Path | str, dest: Path | str) -> None:
-        """
-        Copies a file from a source path to a destination path.
-
-        Args:
-            src (Path | str): The source file path.
-            dest (Path | str): The destination file path.
-
-        Raises:
-            FileNotFoundError: If the source file does not exist or is not a file.
-        """
-        from shutil import copy2
-
-        src, dest = Path(src), Path(dest)
-        if not src.is_file():
-            raise FileNotFoundError(f"{src} does not exist or is not a file.")
-        dest.parent.mkdir(parents=True, exist_ok=True)
-        copy2(src, dest)
-
+    @deprecated(
+        format_deprecated_msg(
+            deprecated_name="SysUtil.get_size()",
+            deprecated_type="function",
+            deprecated_version="0.3.0",
+            removal_version="1.0.0",
+            replacement="SysUtil.get_file_size()",
+        ),
+        category=DeprecationWarning,
+    )
     @staticmethod
     def get_size(path: Path | str) -> int:
         """
@@ -481,50 +764,3 @@ class SysUtil:
             return sum(f.stat().st_size for f in path.glob("**/*") if f.is_file())
         else:
             raise FileNotFoundError(f"{path} does not exist.")
-
-    @staticmethod
-    def save_to_file(
-        text,
-        directory: Path | str,
-        filename: str,
-        timestamp: bool = True,
-        dir_exist_ok: bool = True,
-        time_prefix: bool = False,
-        custom_timestamp_format: str | None = None,
-        random_hash_digits=0,
-        verbose=True,
-    ):
-        """
-        Saves text to a file within a specified directory, optionally adding a timestamp, hash, and verbose logging.
-
-        Args:
-            text (str): The text to save.
-            directory (Path | str): The directory path to save the file.
-            filename (str): The filename for the saved text.
-            timestamp (bool): If True, append a timestamp to the filename. Default is True.
-            dir_exist_ok (bool): If True, creates the directory if it does not exist. Default is True.
-            time_prefix (bool): If True, prepend the timestamp instead of appending. Default is False.
-            custom_timestamp_format (str | None): A custom format for the timestamp, if None uses default format. Default is None.
-            random_hash_digits (int): Number of random hash digits to append to filename. Default is 0.
-            verbose (bool): If True, prints the file path after saving. Default is True.
-
-        Returns:
-            bool: True if the text was successfully saved.
-        """
-        file_path = SysUtil.create_path(
-            directory=directory,
-            filename=filename,
-            timestamp=timestamp,
-            dir_exist_ok=dir_exist_ok,
-            time_prefix=time_prefix,
-            custom_timestamp_format=custom_timestamp_format,
-            random_hash_digits=random_hash_digits,
-        )
-
-        with open(file_path, "w") as file:
-            file.write(text)
-
-        if verbose:
-            print(f"Text saved to: {file_path}")
-
-        return True

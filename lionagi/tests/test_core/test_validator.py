@@ -2,7 +2,7 @@ import unittest
 from typing import Dict, List, Any
 from lionagi.core.report.form import Form
 from lionagi.core.report.report import Report
-from lionagi.core.collections.abc import FieldError
+from lion_core.exceptions import LionValueError
 from lionagi.core.rule.base import Rule
 from lionagi.core.rule.rulebook import RuleBook
 from lionagi.core.validator.validator import (
@@ -33,12 +33,12 @@ class ValidatorTestCase(unittest.TestCase):
         self.form = Form(
             assignment="input1, input2 -> output",
             input_fields=["input1", "input2"],
-            requested_fields=["output"],
+            request_fields=["output"],
         )
         self.form2 = Form(
             assignment="total_amount, bike_price -> repair_price",
             input_fields=["total_amount", "bike_price"],
-            requested_fields=["repair_price"],
+            request_fields=["repair_price"],
         )
 
     def test_initiate_rules(self):
@@ -49,7 +49,7 @@ class ValidatorTestCase(unittest.TestCase):
         valid_value = await self.validator.validate_field("input1", 10, self.form)
         self.assertEqual(valid_value, 10)
 
-        with self.assertRaises(FieldError):
+        with self.assertRaises(LionValueError):
             await self.validator.validate_field("input1", -5, self.form)
 
     async def test_validate_response(self):
@@ -58,7 +58,7 @@ class ValidatorTestCase(unittest.TestCase):
         self.assertEqual(validated_form.output, 20)
 
         response_str = "20"
-        self.form.requested_fields = ["output"]
+        self.form.request_fields = ["output"]
         validated_form = await self.validator.validate_response(self.form, response_str)
         self.assertEqual(validated_form.output, 20)
 

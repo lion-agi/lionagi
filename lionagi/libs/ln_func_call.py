@@ -1,19 +1,3 @@
-"""
-Copyright 2024 HaiyangLi
-
-Licensed under the Apache License, Version 2.0 (the "License");
-you may not use this file except in compliance with the License.
-You may obtain a copy of the License at
-
-    http://www.apache.org/licenses/LICENSE-2.0
-
-Unless required by applicable law or agreed to in writing, software
-distributed under the License is distributed on an "AS IS" BASIS,
-WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-See the License for the specific language governing permissions and
-limitations under the License.
-"""
-
 from __future__ import annotations
 
 import functools
@@ -27,11 +11,35 @@ from lionagi.libs.sys_util import SysUtil
 from lionagi.libs.ln_convert import to_list
 from lionagi.libs.ln_async import AsyncUtil
 
+from typing_extensions import deprecated
+from lionagi.settings import format_deprecated_msg
 
+
+@deprecated(
+    format_deprecated_msg(
+        deprecated_name="lionagi.libs.ln_func_call.lru_cache()",
+        deprecated_type="function",
+        deprecated_version="0.3.0",
+        removal_version="1.0.0",
+        replacement="python",
+        additional_msg="from functools import lru_cache",
+    ),
+    category=DeprecationWarning,
+)
 def lru_cache(*args, **kwargs):
     return functools.lru_cache(*args, **kwargs)
 
 
+@deprecated(
+    format_deprecated_msg(
+        deprecated_name="lionagi.libs.ln_func_call.lcall()",
+        deprecated_type="function",
+        deprecated_version="0.3.0",
+        removal_version="1.0.0",
+        replacement="from lionagi import lionfuncs as ln\nln.lcall()",
+    ),
+    category=DeprecationWarning,
+)
 def lcall(
     input_: Any,
     /,
@@ -87,6 +95,16 @@ def lcall(
     return to_list([func(i, **kwargs) for i in lst], flatten=flatten, dropna=dropna)
 
 
+@deprecated(
+    format_deprecated_msg(
+        deprecated_name="lionagi.libs.ln_func_call.alcall()",
+        deprecated_type="function",
+        deprecated_version="0.3.0",
+        removal_version="1.0.0",
+        replacement="from lionagi import lionfuncs as ln\nawait ln.alcall()",
+    ),
+    category=DeprecationWarning,
+)
 async def alcall(
     input_: Any | None = None,
     func: Callable = None,
@@ -144,11 +162,31 @@ async def alcall(
     return to_list(outs_, flatten=flatten, dropna=dropna)
 
 
+@deprecated(
+    format_deprecated_msg(
+        deprecated_name="lionagi.libs.ln_func_call.pcall()",
+        deprecated_type="function",
+        deprecated_version="0.3.0",
+        removal_version="1.0.0",
+        replacement="from lionagi import lionfuncs as ln\nawait ln.pcall()",
+    ),
+    category=DeprecationWarning,
+)
 async def pcall(funcs):
     task = [call_handler(func) for func in funcs]
     return await asyncio.gather(*task)
 
 
+@deprecated(
+    format_deprecated_msg(
+        deprecated_name="lionagi.libs.ln_func_call.mcall()",
+        deprecated_type="function",
+        deprecated_version="0.3.0",
+        removal_version="1.0.0",
+        replacement="from lionagi import lionfuncs as ln\nawait ln.mcall()",
+    ),
+    category=DeprecationWarning,
+)
 async def mcall(
     input_: Any, /, func: Any, *, explode: bool = False, **kwargs
 ) -> tuple[Any]:
@@ -192,6 +230,16 @@ async def mcall(
     return await AsyncUtil.execute_tasks(*tasks)
 
 
+@deprecated(
+    format_deprecated_msg(
+        deprecated_name="lionagi.libs.ln_func_call.bcall()",
+        deprecated_type="function",
+        deprecated_version="0.3.0",
+        removal_version="1.0.0",
+        replacement="from lionagi import lionfuncs as ln\nawait ln.bcall()",
+    ),
+    category=DeprecationWarning,
+)
 async def bcall(
     input_: Any, /, func: Callable, *, batch_size: int, **kwargs
 ) -> list[Any]:
@@ -222,6 +270,16 @@ async def bcall(
     return results
 
 
+@deprecated(
+    format_deprecated_msg(
+        deprecated_name="lionagi.libs.ln_func_call.tcall()",
+        deprecated_type="function",
+        deprecated_version="0.3.0",
+        removal_version="1.0.0",
+        replacement="from lionagi import lionfuncs as ln\nawait ln.tcall()",
+    ),
+    category=DeprecationWarning,
+)
 async def tcall(
     func: Callable,
     *args,
@@ -307,6 +365,16 @@ async def tcall(
     return await async_call() if AsyncUtil.is_coroutine_func(func) else sync_call()
 
 
+@deprecated(
+    format_deprecated_msg(
+        deprecated_name="lionagi.libs.ln_func_call.rcall()",
+        deprecated_type="function",
+        deprecated_version="0.3.0",
+        removal_version="1.0.0",
+        replacement="from lionagi import lionfuncs as ln\nawait ln.rcall()",
+    ),
+    category=DeprecationWarning,
+)
 async def rcall(
     func: Callable,
     *args,
@@ -515,6 +583,16 @@ async def _tcall(
             raise e
 
 
+@deprecated(
+    format_deprecated_msg(
+        deprecated_name="lionagi.libs.ln_func_call.CallDecorator",
+        deprecated_type="class",
+        deprecated_version="0.3.0",
+        removal_version="1.0.0",
+        replacement="from lionagi import CallDecorator",
+    ),
+    category=DeprecationWarning,
+)
 class CallDecorator:
     """
     Provides a collection of decorators to enhance asynchronous function calls with
@@ -1226,6 +1304,16 @@ def _custom_error_handler(error: Exception, error_map: dict[type, Callable]) -> 
         logging.error(f"Unhandled error: {error}")
 
 
+@deprecated(
+    format_deprecated_msg(
+        deprecated_name="lionagi.libs.ln_func_call.call_handler()",
+        deprecated_type="function",
+        deprecated_version="0.3.0",
+        removal_version="1.0.0",
+        replacement=None,
+    ),
+    category=DeprecationWarning,
+)
 async def call_handler(
     func: Callable, *args, error_map: dict[type, Callable] = None, **kwargs
 ) -> Any:
@@ -1279,6 +1367,16 @@ async def call_handler(
         raise
 
 
+@deprecated(
+    format_deprecated_msg(
+        deprecated_name="lionagi.libs.ln_func_call.lru_cache()",
+        deprecated_type="function",
+        deprecated_version="0.3.0",
+        removal_version="1.0.0",
+        replacement=None,
+    ),
+    category=DeprecationWarning,
+)
 @functools.lru_cache(maxsize=None)
 def is_coroutine_func(func: Callable) -> bool:
     """

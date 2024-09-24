@@ -38,7 +38,7 @@ SYSTEM_FIELDS = [
     "assignment",
     "assignments",
     "input_fields",
-    "requested_fields",
+    "request_fields",
     "instruction",
     "system",
     "strict",

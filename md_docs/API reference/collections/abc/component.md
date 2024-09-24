@@ -421,7 +421,7 @@ def _get_field_attr(self, k: str, attr: str, default: Any = False) -> Any
 - `Any`: The value of the field attribute.
 
 **Exceptions Raised**:
-- `FieldError`: If the field has no such attribute.
+- `LionValueError`: If the field has no such attribute.
 - `KeyError`: If the field is not found in the model fields.
 
 **Description**:

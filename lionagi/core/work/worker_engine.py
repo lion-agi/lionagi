@@ -5,7 +5,7 @@ from lionagi.core.work.work_task import WorkTask
 from lionagi.core.work.work_edge import WorkEdge
 from lionagi.core.work.work_function_node import WorkFunctionNode
 
-from lionagi.core.collections.pile import pile
+from lionagi.core.generic.pile import pile
 from lionagi.core.generic.graph import Graph
 
 

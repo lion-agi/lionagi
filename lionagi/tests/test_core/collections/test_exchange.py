@@ -1,6 +1,6 @@
 import unittest
 from lionagi import Node, pile, progression
-from lionagi.core.collections.abc import Element
+from lion_core.generic.element import Element
 from lionagi.core.collections import Exchange
 
 
@@ -77,10 +77,10 @@ class TestExchange(unittest.TestCase):
         self.assertTrue(self.exchange)
 
     # Additional Tests for Edge Cases
-    def test_include_non_sendable(self):
-        non_sendable = Element()
+    def test_include_non_Communicatable(self):
+        non_Communicatable = Element()
         with self.assertRaises(AttributeError):
-            self.exchange.include(non_sendable, "in")
+            self.exchange.include(non_Communicatable, "in")
 
     def test_exclude_nonexistent_item(self):
         non_existent_node = Node(content="nonexistent")

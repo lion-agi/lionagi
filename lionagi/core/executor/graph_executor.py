@@ -10,7 +10,7 @@ from lionagi.core.action import Tool, DirectiveSelection, ActionNode
 
 from lionagi.core.mail import Mail
 from lionagi.core.generic.graph import Graph
-from lionagi.core.collections.progression import progression
+from lionagi.core.generic.progression import progression
 
 
 class GraphExecutor(BaseExecutor, Graph):
