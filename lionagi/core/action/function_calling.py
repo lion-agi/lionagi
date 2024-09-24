@@ -1,3 +1,3 @@
-from lion_core.action.function_calling import FunctionCalling
+from lionagi.core.action import FunctionCalling
 
 __all__ = ["FunctionCalling"]

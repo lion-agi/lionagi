@@ -1,8 +1,8 @@
 from pydantic import Field
 
 from lion_core.abc import Action
+from lion_core.action.tool import Tool
 from lionagi.core.generic.node import Node
-from .tool import Tool
 
 
 class DirectiveSelection(Node, Action):
