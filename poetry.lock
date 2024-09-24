@@ -733,13 +733,13 @@ dev = ["black (==24.8.0)", "flake8 (>=4.0)", "isort (>=5.0)", "mypy (>=0.910)", 
 
 [[package]]
 name = "lion-openai"
-version = "0.1.1"
+version = "0.1.2"
 description = ""
 optional = false
 python-versions = "<4.0,>=3.10"
 files = [
-    {file = "lion_openai-0.1.1-py3-none-any.whl", hash = "sha256:1e50a332b1e379944749dc53ec3b54d5a50d2e6a3fcec8dbe0f22e54be49cbc0"},
-    {file = "lion_openai-0.1.1.tar.gz", hash = "sha256:08ad73f51af621f6af4985a4c857bd7077e4e7f2db902a0631228deb48bb9577"},
+    {file = "lion_openai-0.1.2-py3-none-any.whl", hash = "sha256:48981ca3f585d690797fb2cc232639255329888abe93b2571ae53515c6535639"},
+    {file = "lion_openai-0.1.2.tar.gz", hash = "sha256:af4182fab267ff5c6cb11ab83e2bd0d38a3202c7c26f5fd9d9f077d742502cc7"},
 ]
 
 [package.dependencies]
@@ -2094,4 +2094,4 @@ multidict = ">=4.0"
 [metadata]
 lock-version = "2.0"
 python-versions = "^3.10"
-content-hash = "99afb7e8cf60dfd4ea5b178651459bce8922def3933fb417eb7eac95a70abdb1"
+content-hash = "7b18fd0afbb021f2043f907232f400e9174b662c47b6d3f76d50b236217ebac1"

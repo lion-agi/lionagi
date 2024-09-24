@@ -17,10 +17,9 @@ limitations under the License.
 from typing import Literal, Callable
 from lion_core.libs import validate_mapping
 
-from lion_core.session.branch import Branch
-from lion_core.generic.note import note
-from lion_core.communication.action_request import ActionRequest
-from lion_core.communication.action_response import ActionResponse
+from lionagi.core.session.branch import Branch
+from lionagi.core.generic.note import note
+from lionagi.core.message import ActionRequest, ActionResponse
 from lionagi.core.unit.process_action_request import process_action_request
 from lionagi.core.unit.process_action_response import process_action_response
 from lionagi.core.unit.unit_form import UnitForm

@@ -23,7 +23,7 @@ including configuration, completion, action requests, and validation.
 
 from typing import Any, Callable, Literal
 
-from lionagi import iModel
+from lionagi.core.generic.model import iModel
 
 from lion_core.generic.progression import Progression
 
@@ -38,7 +38,7 @@ from lionagi.core.unit.process_completion import (
 )
 from lionagi.core.unit.process_action_request import process_action_request
 from lionagi.core.unit.process_rule import process_rule
-from lion_core.session.branch import Branch
+from lionagi.core.session.branch import Branch
 
 from lion_core.abc import Observable
 from lion_core.form.base import BaseForm

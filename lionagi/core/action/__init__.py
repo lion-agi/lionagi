@@ -2,7 +2,8 @@ from lion_core.action import (
     ActionExecutor,
     ActionProcessor,
     FunctionCalling,
-    Tool, func_to_tool,
+    Tool,
+    func_to_tool,
     ToolManager,
 )
 from .node import DirectiveSelection, ActionNode

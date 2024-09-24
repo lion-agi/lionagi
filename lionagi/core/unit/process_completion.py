@@ -32,7 +32,7 @@ from lion_core.libs import (
     extract_json_block,
 )
 from lionagi.core.generic.model import iModel
-from lion_core.session.branch import Branch
+from lionagi.core.session.branch import Branch
 
 
 async def process_chatcompletion(

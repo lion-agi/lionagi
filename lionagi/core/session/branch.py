@@ -1,3 +1,4 @@
+from __future__ import annotations
 from lion_core.session.branch import Branch as CoreBranch
 
 from typing import Any

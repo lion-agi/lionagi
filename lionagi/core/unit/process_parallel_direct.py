@@ -27,7 +27,7 @@ from typing import Any, Tuple
 
 from lion_core.session.session import Session
 from lionagi.core.report.base import BaseForm
-from lion_core.session.branch import Branch
+from lionagi.core.session.branch import Branch
 from lion_core.generic.pile import pile, Pile
 from lion_core.libs import to_list
 from lionagi.core.unit.unit import Unit

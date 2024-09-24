@@ -28,7 +28,7 @@ from lion_core.exceptions import ItemNotFoundError
 from lion_core.action.function_calling import FunctionCalling
 from lion_core.communication.action_request import ActionRequest
 from lion_core.session.msg_handlers.create_request import create_action_request
-from lion_core.session.branch import Branch
+from lionagi.core.session.branch import Branch
 
 
 async def process_action_request(

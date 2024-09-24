@@ -1,5 +1,1 @@
-from ..generic.model import iModel
-
-__all__ = [
-    "iModel",
-]
+"""deprecated, will remove in v1.0.0"""

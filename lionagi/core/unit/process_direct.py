@@ -22,7 +22,7 @@ from lion_core.form.base import BaseForm
 from lionagi.core.unit.unit_form import UnitForm
 from lionagi.core.unit.process_chat import process_chat
 from lionagi.core.unit.process_act import process_action
-from lion_core.session.branch import Branch
+from lionagi.core.session.branch import Branch
 
 
 async def prepare_output(

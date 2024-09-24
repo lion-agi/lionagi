@@ -29,7 +29,7 @@ from lion_core.abc import BaseProcessor
 from lion_core.libs import to_list
 from lion_core.generic.pile import pile, Pile
 from lion_core.communication.action_request import ActionRequest
-from lion_core.session.branch import Branch
+from lionagi.core.session.branch import Branch
 from lionagi.core.unit.unit import Unit
 
 from lion_core.session.session import Session

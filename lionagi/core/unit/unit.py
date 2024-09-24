@@ -1,47 +1,26 @@
-"""
-Copyright 2024 HaiyangLi
-
-Licensed under the Apache License, Version 2.0 (the "License");
-you may not use this file except in compliance with the License.
-You may obtain a copy of the License at
-
-    http://www.apache.org/licenses/LICENSE-2.0
-
-Unless required by applicable law or agreed to in writing, software
-distributed under the License is distributed on an "AS IS" BASIS,
-WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-See the License for the specific language governing permissions and
-limitations under the License.
-"""
-
-"""
-Module for the UnitProcessor class in the Lion framework.
-
-This module provides the UnitProcessor class, which encapsulates various
-processing methods for units, including act, action request, chat, direct,
-and validation processing.
-"""
+from __future__ import annotations
 
 from functools import partial
 from typing import Callable, Any, Literal
 from lion_core.abc import BaseProcessor
-from lion_core.imodel.imodel import iModel
+from lionagi.core.generic.model import iModel
+
 from lion_core.generic.progression import Progression
 from lion_core.form.base import BaseForm
 from lion_core.rule.rule_processor import RuleProcessor
 from lion_core.form.form import Form
-from lion_core.unit.unit_form import UnitForm
-from lion_core.unit.process_act import process_action
-from lion_core.unit.process_action_request import process_action_request
-from lion_core.unit.process_action_response import process_action_response
-from lion_core.unit.process_chat import process_chat
-from lion_core.unit.process_direct import process_direct
-from lion_core.unit.process_rule import process_rule
-from lion_core.unit.process_completion import fallback_structure_model_response
+from lionagi.core.unit.unit_form import UnitForm
+from lionagi.core.unit.process_act import process_action
+from lionagi.core.unit.process_action_request import process_action_request
+from lionagi.core.unit.process_action_response import process_action_response
+from lionagi.core.unit.process_chat import process_chat
+from lionagi.core.unit.process_direct import process_direct
+from lionagi.core.unit.process_rule import process_rule
+from lionagi.core.unit.process_completion import fallback_structure_model_response
 
 from lion_core.libs import rcall
 from lion_core.setting import LN_UNDEFINED
-from lion_core.session.branch import Branch
+from lionagi.core.session.branch import Branch
 from lion_core.rule.rulebook import RuleBook
 
 

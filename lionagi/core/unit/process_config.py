@@ -4,11 +4,10 @@ from typing import Any, Literal
 
 from lion_core.abc import Observable
 from lion_core.form.base import BaseForm
-from lion_core.communication.action_request import ActionRequest
 from lion_core.communication.message import MessageFlag
-from lion_core.communication.instruction import Instruction
 
-from lion_core.session.branch import Branch
+from lionagi.core.message import ActionRequest, Instruction
+from lionagi.core.session.branch import Branch
 
 
 def process_chat_config(
