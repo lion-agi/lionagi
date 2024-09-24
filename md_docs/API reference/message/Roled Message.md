@@ -29,10 +29,10 @@
 ### Class: `RoledMessage`
 ^f41a31
 
-**Parent Class:** [[Node#^c394ef|Node]], [[API reference/collections/abc/Concepts#^ef363b|Sendable]]
+**Parent Class:** [[Node#^c394ef|Node]], [[API reference/collections/abc/Concepts#^ef363b|Communicatable]]
 
 **Description**:
-`RoledMessage` is a base class representing a message with validators and properties. It extends `Node` and `Sendable`.
+`RoledMessage` is a base class representing a message with validators and properties. It extends `Node` and `Communicatable`.
 
 #### Attributes:
 - `role` (MessageRole | None): The role of the message in the conversation.

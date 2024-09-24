@@ -14,7 +14,8 @@ See the License for the specific language governing permissions and
 limitations under the License.
 """
 
-from .base import BaseUnitForm, Field
+from pydantic import Field
+from .base import BaseUnitForm
 
 
 class ActionTemplate(BaseUnitForm):

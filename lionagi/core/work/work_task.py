@@ -2,7 +2,7 @@ import inspect
 from typing import Any, Callable
 from pydantic import Field, field_validator, model_validator
 
-from lionagi.core.collections.abc.component import Component
+from lionagi.core.generic.component import Component
 from lionagi.core.work.work import WorkStatus, Work
 from collections.abc import Coroutine
 

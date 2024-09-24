@@ -3,7 +3,7 @@
 
 ^c394ef
 
-**Parent Class:** [[Component#^ce462d|Component]], [[API reference/collections/abc/Concepts#^4af61d|Relatable]]
+**Parent Class:** [[Component#^ce462d|Component]], [[API reference/collections/abc/Concepts#^4af61d|Relational]]
 
 ^006c2c
 

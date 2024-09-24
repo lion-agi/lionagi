@@ -187,11 +187,11 @@ sequence = flow_instance["sequence_name"]
 
 **Signature**:
 ```python
-def __setitem__(self, seq: LionIDable | str, index=None, value=None)
+def __setitem__(self, seq, index=None, value=None)
 ```
 
 **Parameters**:
-- `seq` (LionIDable | str): The name of the sequence.
+- `seq` ( | str): The name of the sequence.
 - `index` (optional): The index within the sequence.
 - `value` (optional): The value to set at the specified index.
 
@@ -321,11 +321,11 @@ print(success)
 
 **Signature**:
 ```python
-def exclude(self, seq: LionIDable = None, item=None, name=None) -> bool
+def exclude(self, seq = None, item=None, name=None) -> bool
 ```
 
 **Parameters**:
-- `seq` (LionIDable, optional): The sequence to exclude from.
+- `seq` (, optional): The sequence to exclude from.
 - `item` (optional): The item to exclude.
 - `name` (optional): The name of the sequence.
 

@@ -88,7 +88,7 @@ You can retrieve specific nodes, edges, and other properties from the graph.
 The following code demonstrates how to retrieve a node, get the edges of a node, and check if the graph is acyclic.
 
 ```python
-# Retrieve a node by passing in a LionIDable
+# Retrieve a node by passing in a 
 node5 = g.get_node(node2)
 node5 == node2
 # Output: True

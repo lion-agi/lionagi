@@ -21,7 +21,7 @@ from lionagi import logging as _logging
 from lionagi.core.work.work_function import WorkFunction
 from lionagi.core.work.work import Work
 from lionagi.core.report.form import Form
-from lionagi.core.collections.abc import get_lion_id
+from lionagi.libs.sys_util import SysUtil
 
 
 class Worker(ABC):
@@ -208,7 +208,7 @@ class Worker(ABC):
 
             form_key = arguments.get(form_param_key)
             try:
-                form_key = get_lion_id(form_key)
+                form_key = SysUtil.get_id(form_key)
             except:
                 pass
             form = self.forms.get(form_key) or self.default_form

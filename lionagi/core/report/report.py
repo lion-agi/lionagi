@@ -1,41 +1,16 @@
-"""
-Copyright 2024 HaiyangLi
-
-Licensed under the Apache License, Version 2.0 (the "License");
-you may not use this file except in compliance with the License.
-You may obtain a copy of the License at
-
-    http://www.apache.org/licenses/LICENSE-2.0
-
-Unless required by applicable law or agreed to in writing, software
-distributed under the License is distributed on an "AS IS" BASIS,
-WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-See the License for the specific language governing permissions and
-limitations under the License.
-"""
-
-"""
-This module introduces the Report class, an extension of the BaseForm class
-designed to manage and synchronize a collection of Form instances based on
-specific assignments. The Report class handles the creation and updating of
-forms, ensuring each is properly configured according to the report's
-requirements.
-"""
-
 from typing import Any, Type
-from lionagi.core.collections.abc import Field
-from lionagi.core.collections import Pile, pile
+
+from lion_core.form.report import Report as CoreReport
+
+
+from pydantic import Field
+from lionagi.core.generic.pile import Pile, pile
 from lionagi.core.report.util import get_input_output_fields
 from lionagi.core.report.base import BaseForm
 from lionagi.core.report.form import Form
 
 
-class Report(BaseForm):
-    """
-    Extends BaseForm to handle a collection of Form instances based on specific
-    assignments, managing a pile of forms and ensuring synchronization and
-    proper configuration.
-    """
+class Report(CoreReport):
 
     forms: Pile[Form] = Field(
         None,
@@ -52,13 +27,17 @@ class Report(BaseForm):
         Form, description="The template for the forms in the report."
     )
 
+    @property
+    def form_template(self) -> Type[Form]:
+        return self.default_form_template
+
     def __init__(self, **kwargs):
         """
         Initializes the Report with input and requested fields based on the
         report's assignment, creating forms dynamically from provided assignments.
         """
         super().__init__(**kwargs)
-        self.input_fields, self.requested_fields = get_input_output_fields(
+        self.input_fields, self.request_fields = get_input_output_fields(
             self.assignment
         )
 
@@ -75,12 +54,12 @@ class Report(BaseForm):
         # Add undeclared fields to report with None values
         for v in self.forms:
             for _field in list(v.work_fields.keys()):
-                if _field not in self._all_fields:
-                    field_obj = v._all_fields[_field]
-                    self._add_field(_field, value=None, field_obj=field_obj)
+                if _field not in self.all_fields:
+                    field_obj = v.all_fields[_field]
+                    self.add_field(_field, value=None, field_obj=field_obj)
 
         # Synchronize fields between report and forms
-        for k, v in self._all_fields.items():
+        for k, v in self.all_fields.items():
             if getattr(self, k, None) is not None:
                 for _form in self.forms:
                     if k in _form.work_fields:
@@ -102,7 +81,7 @@ class Report(BaseForm):
 
         # gather all unique valid fields from input form,
         # kwargs and self workfields data
-        all_fields = self._get_all_fields(form, **kwargs)
+        all_fields = self._getall_fields(form, **kwargs)
 
         # if there are information in the forms that are not in the report,
         # add them to the report
@@ -136,7 +115,7 @@ class Report(BaseForm):
 
         # this is the required fields from report's own assignment
         fields = self.input_fields
-        fields.extend(self.requested_fields)
+        fields.extend(self.request_fields)
 
         # if the report's own assignment is not in the forms, return False
         for f in fields:
@@ -146,7 +125,7 @@ class Report(BaseForm):
         # get all the output fields from all the forms
         outs = []
         for form in self.forms.values():
-            outs.extend(form.requested_fields)
+            outs.extend(form.request_fields)
 
         # all output fields should be unique, not a single output field should be
         # calculated by more than one form

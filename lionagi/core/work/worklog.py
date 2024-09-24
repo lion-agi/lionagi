@@ -14,8 +14,9 @@ See the License for the specific language governing permissions and
 limitations under the License.
 """
 
-from lionagi.core.collections.abc import Progressable
-from lionagi.core.collections import pile, progression, Pile
+from lionagi.core.generic.progression import progression
+from lionagi.core.collections.abc.concepts import Progressable
+from lionagi.core.generic.pile import Pile, pile
 from lionagi.core.work.work import Work, WorkStatus
 from lionagi.core.work.work_queue import WorkQueue
 

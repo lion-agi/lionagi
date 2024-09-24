@@ -15,7 +15,7 @@ limitations under the License.
 """
 
 from lionagi.libs.ln_convert import to_str
-from lionagi.core.collections.abc import Field
+from pydantic import Field
 from lionagi.core.unit import UnitForm
 
 

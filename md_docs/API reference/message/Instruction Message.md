@@ -9,9 +9,9 @@
 #### Attributes:
 - `instruction` (str): The instruction content.
 - `context` (dict or str): Additional context for the instruction.
-- `sender` (LionIDable): The sender of the instruction.
-- `recipient` (LionIDable): The recipient of the instruction.
-- `requested_fields` (dict): Fields requested in the instruction.
+- `sender` (): The sender of the instruction.
+- `recipient` (): The recipient of the instruction.
+- `request_fields` (dict): Fields requested in the instruction.
 
 ### `__init__`
 
@@ -21,9 +21,9 @@ def __init__(
     instruction: str | None = None,
     context: dict | str | None = None,
     images: list | None = None,
-    sender: LionIDable | None = None,
-    recipient: LionIDable | None = None,
-    requested_fields: dict | None = None,
+    sender = None,
+    recipient = None,
+    request_fields: dict | None = None,
     additional_context: dict | None = None,
     image_detail: str | None = None,
     **kwargs,
@@ -34,9 +34,9 @@ def __init__(
 - `instruction` (str, optional): The instruction content.
 - `context` (dict or str, optional): Additional context for the instruction.
 - `images` (list, optional): The image content in base64 encoding.
-- `sender` (LionIDable, optional): The sender of the instruction.
-- `recipient` (LionIDable, optional): The recipient of the instruction.
-- `requested_fields` (dict, optional): Fields requested in the instruction.
+- `sender` (, optional): The sender of the instruction.
+- `recipient` (, optional): The recipient of the instruction.
+- `request_fields` (dict, optional): Fields requested in the instruction.
 - `additional_context` (dict, optional): Additional context for the instruction.
 - `image_detail` (str, optional): The detail level for images. Defaults to "low".
 - `**kwargs`: Additional keyword arguments to be passed to the parent class.
@@ -51,7 +51,7 @@ instruction = Instruction(
     context={"data": "sample_data"},
     sender="user_1",
     recipient="processor_1",
-    requested_fields={"result": "analysis_result"}
+    request_fields={"result": "analysis_result"}
 )
 print(instruction.instruct)  # Output: Analyze data
 ```
@@ -120,15 +120,15 @@ instruction._add_context(context={"additional_info": "important"})
 print(instruction.content["context"])  # Output: {'additional_info': 'important'}
 ```
 
-### `_update_requested_fields`
+### `_update_request_fields`
 
 **Signature**:
 ```python
-def _update_requested_fields(self, requested_fields: dict):
+def _update_request_fields(self, request_fields: dict):
 ```
 
 **Parameters**:
-- `requested_fields` (dict): The fields requested in the instruction.
+- `request_fields` (dict): The fields requested in the instruction.
 
 **Description**:
 Updates the requested fields in the instruction message.
@@ -136,8 +136,8 @@ Updates the requested fields in the instruction message.
 **Usage Examples**:
 ```python
 instruction = Instruction(instruction="Analyze data")
-instruction._update_requested_fields({"result": "analysis_result"})
-print(instruction.content["requested_fields"])  # Output: {'result': 'analysis_result'}
+instruction._update_request_fields({"result": "analysis_result"})
+print(instruction.content["request_fields"])  # Output: {'result': 'analysis_result'}
 ```
 
 ### `from_form`
@@ -157,7 +157,7 @@ def from_form(
 **Parameters**:
 - `form` (Form): The form containing instruction details.
 - `sender` (str, optional): The sender of the instruction.
-- `recipient` (LionIDable, optional): The recipient of the instruction.
+- `recipient` (, optional): The recipient of the instruction.
 - `image` (str, optional): The image content in base64 encoding.
 
 **Return Values**:
@@ -171,7 +171,7 @@ Creates an `Instruction` instance from a form.
 form = Form(
     _instruction_prompt="Analyze data",
     _instruction_context={"data": "sample_data"},
-    _instruction_requested_fields={"result": "analysis_result"}
+    _instruction_request_fields={"result": "analysis_result"}
 )
 instruction = Instruction.from_form(form)
 print(instruction.instruct)  # Output: Analyze data

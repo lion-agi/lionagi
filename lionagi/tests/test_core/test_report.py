@@ -10,7 +10,7 @@ class TestForm(unittest.TestCase):
 
     def test_initial_fields(self):
         self.assertEqual(self.form.input_fields, ["input1", "input2"])
-        self.assertEqual(self.form.requested_fields, ["output"])
+        self.assertEqual(self.form.request_fields, ["output"])
         self.assertFalse(self.form.workable)
         self.assertFalse(self.form.filled)
         self.assertEqual(
@@ -45,7 +45,7 @@ class TestReport(unittest.TestCase):
 
     def test_initial_fields(self):
         self.assertEqual(self.report.input_fields, ["a", "b"])
-        self.assertEqual(self.report.requested_fields, ["c"])
+        self.assertEqual(self.report.request_fields, ["c"])
         self.assertEqual(self.report.work_fields, {"a": None, "b": None, "c": None})
         self.assertFalse(self.report.filled)
         self.assertFalse(self.report.workable)

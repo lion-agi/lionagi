@@ -34,7 +34,7 @@ async def chat(
     sender=None,
     recipient=None,
     branch=None,
-    requested_fields=None,
+    request_fields=None,
     form=None,
     tools=False,
     invoke_tool=True,
@@ -56,7 +56,7 @@ async def chat(
 - `sender` (str, optional): Sender identifier.
 - `recipient` (str, optional): Recipient identifier.
 - `branch` (Branch, optional): Branch instance.
-- `requested_fields` (list, optional): Fields requested in the response.
+- `request_fields` (list, optional): Fields requested in the response.
 - `form` (Form, optional): Form data.
 - `tools` (bool, optional): Flag indicating if tools should be used.
 - `invoke_tool` (bool, optional): Flag indicating if tools should be invoked.

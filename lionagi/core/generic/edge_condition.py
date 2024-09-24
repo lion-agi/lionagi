@@ -1,16 +1,3 @@
-from typing import Any
-from pydantic import Field
-from lionagi.core.collections.abc import Condition
-from pydantic import BaseModel
+from lion_core.graph.edge_condition import EdgeCondition
 
-
-class EdgeCondition(Condition, BaseModel):
-    source: Any = Field(
-        title="Source",
-        description="The source for condition check",
-    )
-
-    class Config:
-        """Model configuration settings."""
-
-        extra = "allow"
+__all__ = ["EdgeCondition"]

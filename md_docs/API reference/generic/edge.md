@@ -87,11 +87,11 @@ print(length)  # Output: 1
 
 **Signature**:
 ```python
-def __contains__(self, item: LionIDable) -> bool:
+def __contains__(self, item) -> bool:
 ```
 
 **Parameters**:
-- `item` (LionIDable): The item to check.
+- `item` (): The item to check.
 
 **Return Values**:
 - `bool`: True if the item is the head or tail of the edge, False otherwise.

@@ -1,7 +1,20 @@
 import math
 from lionagi.libs import CallDecorator as cd
 
+from typing_extensions import deprecated
+from lionagi.settings import format_deprecated_msg
 
+
+@deprecated(
+    format_deprecated_msg(
+        deprecated_name="lionagi.libs.ln_knowledge_graph.KnowledgeBase",
+        deprecated_type="class",
+        deprecated_version="0.3.0",
+        removal_version="1.0.0",
+        replacement=None,
+    ),
+    category=DeprecationWarning,
+)
 class KnowledgeBase:
     """
     A class to represent a Knowledge Base (KB) containing entities, relations, and sources.

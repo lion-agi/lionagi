@@ -1,7 +1,8 @@
 import unittest
 from lionagi.core.generic import Node
-from lionagi.core.collections.abc import RelationError, Condition
+from lion_core.abc import Condition
 from lionagi.core.generic.edge import Edge
+from lion_core.exceptions import LionTypeError
 
 
 class TestNode(unittest.TestCase):

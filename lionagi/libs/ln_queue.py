@@ -22,7 +22,20 @@ from typing import Any, Callable
 import asyncio
 from lionagi.libs import func_call
 
+from typing_extensions import deprecated
+from lionagi.settings import format_deprecated_msg
 
+
+@deprecated(
+    format_deprecated_msg(
+        deprecated_name="lionagi.libs.ln_queue.AsyncQueue",
+        deprecated_type="class",
+        deprecated_version="0.3.0",
+        removal_version="1.0.0",
+        replacement=None,
+    ),
+    category=DeprecationWarning,
+)
 class AsyncQueue:
     """
     This class handles the enqueueing and processing of tasks with a limit on
