@@ -1,6 +1,6 @@
 import asyncio
 from functools import wraps
-from RateLimiter import RateLimitError
+from .RateLimiter import RateLimitError
 
 
 def invoke_retry(max_retries: int = 3, base_delay: int = 1, max_delay: int = 60):

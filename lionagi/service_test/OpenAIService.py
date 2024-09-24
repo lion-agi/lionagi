@@ -11,7 +11,11 @@ from .Service import Service, register_service
 @register_service
 class OpenAIService(Service):
     def __init__(
-        self, api_key: str, openai_organization: str = None, openai_project: str = None, name: str = None
+        self,
+        api_key: str,
+        openai_organization: str = None,
+        openai_project: str = None,
+        name: str = None,
     ):
         super().__setattr__("_initialized", False)
         self.api_key = api_key

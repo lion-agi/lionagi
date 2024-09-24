@@ -1,3 +1,4 @@
+from os import path
 import warnings
 
 from pydantic import (
@@ -28,13 +29,16 @@ from lion_openai.api_endpoints.match_response import match_response
 from lion_openai.image_token_calculator.image_token_calculator import (
     OpenAIImageTokenCalculator,
 )
-from openai_service.RateLimiter import RateLimiter, RateLimitError
-from openai_service.TokenCalculator import TiktokenCalculator
+from .RateLimiter import RateLimiter, RateLimitError
+from .TokenCalculator import TiktokenCalculator
 from .service_util import invoke_retry
 
+from pathlib import Path
 
-price_config_file_name = "Test_openai_price_data.yaml"
-max_output_token_file_name = "Test_openai_max_output_token_data.yaml"
+path = Path(__file__).parent
+
+price_config_file_name = path / "Test_openai_max_output_token_data.yaml"
+max_output_token_file_name = path / "Test_openai_price_data.yaml"
 
 
 class OpenAIModel(BaseModel):
