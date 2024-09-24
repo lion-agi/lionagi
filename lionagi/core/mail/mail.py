@@ -1,25 +1,3 @@
-from lion_core.generic.element import Element, Field, Communicatable
-from .package import PackageCategory, Package
+from lion_core.communication.mail import Mail
 
-
-class Mail(Element, Communicatable):
-    """Represents a mail component with sender and recipient information."""
-
-    package: Package | None = Field(
-        None,
-        title="Package",
-        description="The package to be delivered.",
-    )
-
-    @property
-    def category(self) -> PackageCategory:
-        """Return the category of the package."""
-        return self.package.category
-
-    def to_dict(self):
-        return {
-            "ln_id": self.ln_id,
-            "created": self.timestamp,
-            "package_category": self.package.category,
-            "package_id": self.package.ln_id,
-        }
+__all__ = ["Mail"]

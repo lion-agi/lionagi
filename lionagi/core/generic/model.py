@@ -18,14 +18,10 @@ import os
 import asyncio
 import numpy as np
 from dotenv import load_dotenv
-from lionagi.core.generic.component import Component
-
 from lion_core.abc import BaseiModel
-from lion_core.libs import ninsert, to_list
+from lionagi.libs import SysUtil, BaseService, StatusTracker, APIUtil, to_list, ninsert
 from lion_core.exceptions import LionResourceError
-from lionagi.libs.sys_util import SysUtil
-
-from lionagi.libs.ln_api import APIUtil, BaseService, StatusTracker
+from lionagi.core.generic.component import Component
 
 load_dotenv()
 
@@ -94,8 +90,9 @@ class iModel(BaseiModel):
             service (BaseService, optional): An instance of BaseService.
             **kwargs: Additional parameters for the model.
         """
-        self.ln_id: str = SysUtil.id()
-        self.timestamp: str = SysUtil.time()
+        super().__init__()
+        self.ln_id: str = SysUtil.create_id()
+        self.timestamp: str = SysUtil.get_timestamp(sep=None)[:-6]
         self.endpoint = endpoint
         self.allowed_parameters = allowed_parameters
         if isinstance(provider, type):
@@ -174,6 +171,9 @@ class iModel(BaseiModel):
             **set_up_kwargs,
         )
         self.costs = costs or (0, 0)
+
+    async def call(self, *args, **kwargs):
+        return await self.call_chat_completion(*args, **kwargs)
 
     def update_config(self, **kwargs):
         """

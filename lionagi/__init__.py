@@ -8,7 +8,7 @@ import lionagi.libs.lionfuncs as lionfuncs
 from lionagi.core.generic.progression import progression
 from lionagi.core.generic.flow import flow
 from lionagi.core.generic.pile import pile
-from lionagi.core.collections.model import iModel
+from lionagi.core.generic.model import iModel
 from lionagi.core.generic import Node, Graph, Tree, Edge
 from lionagi.core.action import func_to_tool
 from lionagi.core.report import Form, Report

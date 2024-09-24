@@ -19,7 +19,7 @@ from typing import Any, Dict, List, Union, Callable
 from lionagi.libs import SysUtil
 from lionagi.libs.lionfuncs import lcall
 from lion_core.exceptions import LionValueError
-from lionagi.core.collections.model import iModel
+from lionagi.core.generic.model import iModel
 from ..rule.base import Rule
 from lion_core.rule.default_rules._default import DEFAULT_RULE_INFO, DEFAULT_RULEORDER
 from ..rule.rulebook import RuleBook

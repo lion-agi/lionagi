@@ -9,7 +9,7 @@ from typing import Any
 
 from lion_core.generic import Component as CoreComponent
 from lion_core.converter import Converter
-from lionagi import lionfuncs as ln
+from lionagi.libs import lionfuncs as ln
 from lionagi.libs.sys_util import SysUtil
 
 
