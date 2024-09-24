@@ -1,11 +1,11 @@
-from .OpenAIModel import OpenAIModel
+from lionagi.integrations.provider.openai.OpenAIModel import OpenAIModel
 
 from dotenv import load_dotenv
 
 load_dotenv()
 
 from lion_openai.api_endpoints.api_request import OpenAIRequest
-from .Service import Service, register_service
+from lionagi.service_test.Service import Service, register_service
 
 
 @register_service

@@ -29,9 +29,9 @@ from lion_openai.api_endpoints.match_response import match_response
 from lion_openai.image_token_calculator.image_token_calculator import (
     OpenAIImageTokenCalculator,
 )
-from .RateLimiter import RateLimiter, RateLimitError
-from .TokenCalculator import TiktokenCalculator
-from .service_util import invoke_retry
+from lionagi.service_test.RateLimiter import RateLimiter, RateLimitError
+from lionagi.service_test.TokenCalculator import TiktokenCalculator
+from lionagi.service_test.service_util import invoke_retry
 
 from pathlib import Path
 
