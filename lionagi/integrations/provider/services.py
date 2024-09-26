@@ -134,3 +134,17 @@ class Services:
         from lionagi.integrations.provider.mlx_service import MLXService
 
         return MLXService(**kwargs)
+
+    @staticmethod
+    def Groq(**kwargs):
+        """
+        A provider to interact with Groq APLI
+
+        Attributes:
+                model (str): name of the model to use
+                kwargs (Optional[Any]): additional kwargs for calling the model
+        """
+
+        from lionagi.integrations.provider.groq import GroqService
+
+        return GroqService(**kwargs)
