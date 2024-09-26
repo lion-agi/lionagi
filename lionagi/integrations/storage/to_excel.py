@@ -1,7 +1,6 @@
 import pandas as pd
 
-from lionagi.integrations.storage.storage_util import (output_edge_list,
-                                                       output_node_list)
+from lionagi.integrations.storage.storage_util import output_edge_list, output_node_list
 from lionagi.libs import SysUtil
 
 

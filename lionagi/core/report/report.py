@@ -1,27 +1,3 @@
-"""
-Copyright 2024 HaiyangLi
-
-Licensed under the Apache License, Version 2.0 (the "License");
-you may not use this file except in compliance with the License.
-You may obtain a copy of the License at
-
-    http://www.apache.org/licenses/LICENSE-2.0
-
-Unless required by applicable law or agreed to in writing, software
-distributed under the License is distributed on an "AS IS" BASIS,
-WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-See the License for the specific language governing permissions and
-limitations under the License.
-"""
-
-"""
-This module introduces the Report class, an extension of the BaseForm class
-designed to manage and synchronize a collection of Form instances based on
-specific assignments. The Report class handles the creation and updating of
-forms, ensuring each is properly configured according to the report's
-requirements.
-"""
-
 from typing import Any, Type
 
 from lionagi.core.collections import Pile, pile

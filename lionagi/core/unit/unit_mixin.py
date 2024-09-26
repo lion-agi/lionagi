@@ -1,35 +1,16 @@
-"""
-Copyright 2024 HaiyangLi
-
-Licensed under the Apache License, Version 2.0 (the "License");
-you may not use this file except in compliance with the License.
-You may obtain a copy of the License at
-    http://www.apache.org/licenses/LICENSE-2.0
-
-Unless required by applicable law or agreed to in writing, software
-distributed under the License is distributed on an "AS IS" BASIS,
-WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-See the License for the specific language governing permissions and
-limitations under the License.
-"""
-
-"""
-The base directive module.
-"""
-
 import asyncio
 import contextlib
 import re
 from abc import ABC
 from typing import Any, Optional
 
+from lionfuncs import extract_json_block, to_dict, validate_mapping
+
 from lionagi.core.collections.abc import ActionError
 from lionagi.core.message import ActionRequest, ActionResponse, Instruction
 from lionagi.core.message.util import _parse_action_request
 from lionagi.core.report.form import Form
 from lionagi.core.unit.util import process_tools
-from lionagi.core.validator.validator import Validator
-from lionagi.libs import ParseUtil, StringMatch, to_list
 from lionagi.libs.ln_nested import nmerge
 
 
@@ -867,7 +848,7 @@ class DirectiveMixin(ABC):
 
         if plan:
             keys = [f"step_{i+1}" for i in range(len(plan))]
-            plan = StringMatch.force_validate_dict(plan, keys)
+            plan = validate_mapping(plan, keys, handle_unmatched="force")
 
             # If plan is provided, process each step
             for i in keys:
@@ -903,7 +884,7 @@ class DirectiveMixin(ABC):
             return form
 
         keys = [f"action_{i+1}" for i in range(len(actions))]
-        actions = StringMatch.force_validate_dict(actions, keys)
+        actions = validate_mapping(actions, keys, handle_unmatched="force")
 
         try:
             requests = []
@@ -1148,18 +1129,20 @@ class DirectiveMixin(ABC):
 
         if requested_fields:
             with contextlib.suppress(Exception):
-                return StringMatch.force_validate_dict(out_, requested_fields)
+                return validate_mapping(
+                    out_, requested_fields, handle_unmatched="force"
+                )
 
         if isinstance(out_, str):
             with contextlib.suppress(Exception):
-                return ParseUtil.fuzzy_parse_json(out_)
+                return to_dict(out_, fuzzy_parse=True)
 
             with contextlib.suppress(Exception):
-                return ParseUtil.extract_json_block(out_)
+                return extract_json_block(out_)
 
             with contextlib.suppress(Exception):
                 match = re.search(r"```json\n({.*?})\n```", out_, re.DOTALL)
                 if match:
-                    return ParseUtil.fuzzy_parse_json(match.group(1))
+                    return to_dict(match.group(1), fuzzy_parse=True)
 
         return out_

@@ -1,5 +1,6 @@
+from lionfuncs import choose_most_similar
+
 from lionagi.core.rule.base import Rule
-from lionagi.libs.ln_parse import StringMatch
 
 
 class ChoiceRule(Rule):
@@ -44,4 +45,4 @@ class ChoiceRule(Rule):
         Returns:
             str: The most similar value from the set of predefined choices.
         """
-        return StringMatch.choose_most_similar(value, self.keys)
+        return choose_most_similar(value, self.keys)

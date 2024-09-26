@@ -1,25 +1,9 @@
-"""
-Copyright 2024 HaiyangLi
-
-Licensed under the Apache License, Version 2.0 (the "License");
-you may not use this file except in compliance with the License.
-You may obtain a copy of the License at
-
-    http://www.apache.org/licenses/LICENSE-2.0
-
-Unless required by applicable law or agreed to in writing, software
-distributed under the License is distributed on an "AS IS" BASIS,
-WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-See the License for the specific language governing permissions and
-limitations under the License.
-"""
-
 from collections.abc import Mapping
 from typing import Any
 
+from lionfuncs import to_dict, validate_mapping
+
 from lionagi.core.rule.choice import ChoiceRule
-from lionagi.libs import ParseUtil, StringMatch
-from lionagi.libs.ln_convert import to_dict
 
 
 class MappingRule(ChoiceRule):
@@ -83,13 +67,15 @@ class MappingRule(ChoiceRule):
             check_keys = set(value.keys())
             if check_keys != set(self.keys):
                 try:
-                    return StringMatch.force_validate_dict(value, keys=self.keys)
+                    return validate_mapping(
+                        value, keys=self.keys, handle_unmatched="force"
+                    )
                 except Exception as e:
                     raise ValueError("Invalid dict keys.") from e
 
         else:
             try:
-                return ParseUtil.fuzzy_parse_json(value)
+                return to_dict(value, fuzzy_parse=True)
             except Exception as e:
                 raise ValueError("Invalid dict keys.") from e
 

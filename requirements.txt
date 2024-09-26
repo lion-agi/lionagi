@@ -3,5 +3,6 @@ python-dotenv>=1.0.0
 tiktoken>=0.5.1
 pydantic>=2.3.0
 aiocache>=0.12.2
+lionfuncs==1.0.1
 pandas
 ipython

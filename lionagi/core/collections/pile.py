@@ -10,15 +10,25 @@ from pydantic import Field, field_validator
 
 from lionagi.libs.ln_convert import is_same_dtype, to_df, to_dict
 from lionagi.libs.ln_func_call import CallDecorator as cd
-from lionagi.libs.ln_func_call import alcall, bcall
+from lionagi.libs.ln_func_call import alcall
 
-from .abc import (Component, Element, ItemNotFoundError, LionIDable,
-                  LionTypeError, LionValueError, ModelLimitExceededError,
-                  Ordering, Record, get_lion_id)
+from .abc import (
+    Component,
+    Element,
+    ItemNotFoundError,
+    LionIDable,
+    LionTypeError,
+    LionValueError,
+    ModelLimitExceededError,
+    Ordering,
+    Record,
+    get_lion_id,
+)
 from .model import iModel
 from .util import _validate_order, to_list_type
 
 T = TypeVar("T")
+
 
 def synchronized(func: Callable):
     @wraps(func)
@@ -71,7 +81,7 @@ class Pile(Element, Record, Generic[T]):
 
     def __pydantic_private__(self) -> dict[str, Any]:
         return self.__pydantic_extra__()
-    
+
     def __init__(
         self,
         items=None,
@@ -543,7 +553,7 @@ class Pile(Element, Record, Generic[T]):
             items=values,
             item_type=self.item_type,
         )
-        
+
     def size(self) -> int:
         """Return the total size of the pile."""
         return sum([len(i) for i in self])
@@ -1012,7 +1022,7 @@ class Pile(Element, Record, Generic[T]):
     @async_synchronized
     async def asetitem(
         self,
-        key: PILE_KEY_TYPE,
+        key: Any,
         item: T | Iterable[T],
         /,
     ) -> None:
@@ -1034,8 +1044,8 @@ class Pile(Element, Record, Generic[T]):
     @async_synchronized
     async def apop(
         self,
-        key: PILE_KEY_TYPE,
-        default: Any = LN_UNDEFINED,
+        key: Any,
+        default: Any = ...,
         /,
     ):
         """Asynchronously remove and return an item or items from the Pile.
@@ -1044,7 +1054,7 @@ class Pile(Element, Record, Generic[T]):
             key: The key of the item(s) to remove. Can be an integer index,
                 a string ID, or a slice.
             default: The value to return if the key is not found. Defaults to
-                LN_UNDEFINED.
+                ....
 
         Returns:
             The removed item(s), or the default value if not found.
@@ -1120,7 +1130,7 @@ class Pile(Element, Record, Generic[T]):
     async def aget(
         self,
         key: Any,
-        default=LN_UNDEFINED,
+        default=...,
         /,
     ) -> list | Any | T:
         return self._get(key, default)

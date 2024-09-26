@@ -1,3 +1,4 @@
+import asyncio
 from collections import deque
 
 from pydantic import Field
@@ -5,7 +6,6 @@ from pydantic import Field
 from lionagi.core.collections import Exchange, Pile, pile
 from lionagi.core.collections.abc import Element, Executable
 from lionagi.core.collections.util import get_lion_id, to_list_type
-from lionagi.libs import AsyncUtil
 
 from .mail import Mail, Package
 
@@ -180,4 +180,4 @@ class MailManager(Element, Executable):
         while not self.execute_stop:
             self.collect_all()
             self.send_all()
-            await AsyncUtil.sleep(refresh_time)
+            await asyncio.sleep(refresh_time)

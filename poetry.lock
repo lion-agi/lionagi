@@ -609,13 +609,13 @@ tiktoken = ">=0.7.0,<0.8.0"
 
 [[package]]
 name = "lionfuncs"
-version = "1.0.0"
+version = "1.0.1"
 description = ""
 optional = false
 python-versions = "<4.0,>=3.10"
 files = [
-    {file = "lionfuncs-1.0.0-py3-none-any.whl", hash = "sha256:22c64791e1389370afac121b8d5b1d3fafc8e1e0eefaed513d32d3fc1f60747d"},
-    {file = "lionfuncs-1.0.0.tar.gz", hash = "sha256:c1b3b9323863af02d83a493b7c2d4407788a979d33b04acb78a81f4f11fffbf6"},
+    {file = "lionfuncs-1.0.1-py3-none-any.whl", hash = "sha256:06810742fe30df1a02f7cc30ad5d64eaf5cd7710b1525ab9c65852ef5f332b29"},
+    {file = "lionfuncs-1.0.1.tar.gz", hash = "sha256:209a6b8ca44757324ef9f41fb5cd2cbcd96d6d9a5023192f475170d1234a0e16"},
 ]
 
 [package.dependencies]
@@ -1732,4 +1732,4 @@ multidict = ">=4.0"
 [metadata]
 lock-version = "2.0"
 python-versions = "^3.12"
-content-hash = "5ec096378f33ed0ef3338df6cafd33d36d452b53acffba6eb70243b1f81aa7e3"
+content-hash = "cd5a9ef8106593cf64414629463c674747e0c31f22794c4ed7365f4a990a0c41"

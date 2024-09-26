@@ -4,8 +4,7 @@ from unittest.mock import MagicMock, patch
 import lionagi as li
 from lionagi.core.action.tool_manager import ToolManager
 from lionagi.core.collections import Exchange, Pile, Progression
-from lionagi.core.message import (ActionResponse, AssistantResponse,
-                                  Instruction, System)
+from lionagi.core.message import ActionResponse, AssistantResponse, Instruction, System
 
 
 class TestBranch(unittest.TestCase):

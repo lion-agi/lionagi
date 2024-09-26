@@ -1,19 +1,3 @@
-"""
-Copyright 2024 HaiyangLi
-
-Licensed under the Apache License, Version 2.0 (the "License");
-you may not use this file except in compliance with the License.
-You may obtain a copy of the License at
-
-    http://www.apache.org/licenses/LICENSE-2.0
-
-Unless required by applicable law or agreed to in writing, software
-distributed under the License is distributed on an "AS IS" BASIS,
-WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-See the License for the specific language governing permissions and
-limitations under the License.
-"""
-
 from lionagi.core.collections.abc import SYSTEM_FIELDS, LionIDable
 from lionagi.core.message.message import MessageRole, RoledMessage
 from lionagi.core.report.form import Form
@@ -108,13 +92,6 @@ class Instruction(RoledMessage):
         return text_msg
 
     def _add_context(self, context: dict | str | None = None, **kwargs):
-        """
-        Adds context to the instruction message.
-
-        Args:
-            context (dict or str, optional): Additional context to be added.
-            **kwargs: Additional context fields to be added.
-        """
         if "context" not in self.content:
             self.content["context"] = {}
         if isinstance(context, dict):
@@ -123,12 +100,6 @@ class Instruction(RoledMessage):
             self.content["context"]["additional_context"] = context
 
     def _update_requested_fields(self, requested_fields: dict):
-        """
-        Updates the requested fields in the instruction message.
-
-        Args:
-            requested_fields (dict): The fields requested in the instruction.
-        """
         if "context" not in self.content:
             self.content["context"] = {}
             self.content["context"]["requested_fields"] = {}
@@ -137,14 +108,6 @@ class Instruction(RoledMessage):
     def _initiate_content(
         self, context, requested_fields, images, image_detail, **kwargs
     ):
-        """
-        Processes context and requested fields to update the message content.
-
-        Args:
-            context (dict or str, optional): Additional context for the instruction.
-            requested_fields (dict, optional): Fields requested in the instruction.
-            **kwargs: Additional context fields to be added.
-        """
         if context:
             context = {"context": context} if not isinstance(context, dict) else context
             if (
@@ -188,15 +151,6 @@ class Instruction(RoledMessage):
 
     @staticmethod
     def _format_requested_fields(requested_fields):
-        """
-        Formats the requested fields into a JSON-parseable response format.
-
-        Args:
-            requested_fields (dict): The fields requested in the instruction.
-
-        Returns:
-            dict: The formatted requested fields.
-        """
         format_ = f"""
         MUST RETURN JSON-PARSEABLE RESPONSE ENCLOSED BY JSON CODE BLOCKS. ----
         ```json

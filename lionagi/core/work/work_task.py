@@ -1,8 +1,7 @@
 import inspect
-from collections.abc import Coroutine
-from typing import Any, Callable
+from typing import Callable
 
-from pydantic import Field, field_validator, model_validator
+from pydantic import Field, field_validator
 
 from lionagi.core.collections.abc.component import Component
 from lionagi.core.work.work import Work, WorkStatus

@@ -7,7 +7,7 @@ readme = "README.md"
 
 [tool.poetry.dependencies]
 python = "^3.12"
-lionfuncs = "^1.0.0"
+lionfuncs = "1.0.1"
 lion-openai = "^0.1.4"
 ipython = "^8.27.0"
 pandas = "^2.2.3"

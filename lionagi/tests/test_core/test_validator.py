@@ -6,8 +6,11 @@ from lionagi.core.report.form import Form
 from lionagi.core.report.report import Report
 from lionagi.core.rule.base import Rule
 from lionagi.core.rule.rulebook import RuleBook
-from lionagi.core.validator.validator import (_DEFAULT_RULEORDER,
-                                              _DEFAULT_RULES, Validator)
+from lionagi.core.validator.validator import (
+    _DEFAULT_RULEORDER,
+    _DEFAULT_RULES,
+    Validator,
+)
 
 
 class MockRule(Rule):

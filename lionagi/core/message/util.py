@@ -1,26 +1,7 @@
-"""
-Copyright 2024 HaiyangLi
-
-Licensed under the Apache License, Version 2.0 (the "License");
-you may not use this file except in compliance with the License.
-You may obtain a copy of the License at
-
-    http://www.apache.org/licenses/LICENSE-2.0
-
-Unless required by applicable law or agreed to in writing, software
-distributed under the License is distributed on an "AS IS" BASIS,
-WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-See the License for the specific language governing permissions and
-limitations under the License.
-"""
-
-import contextlib
 import json
 import re
 
-from lionagi.libs import ParseUtil
-from lionagi.libs.ln_convert import strip_lower, to_dict
-from lionagi.libs.ln_nested import nget
+from lionfuncs import nget, to_dict
 
 from .action_request import ActionRequest
 from .action_response import ActionResponse
@@ -170,7 +151,7 @@ def _parse_action_request(response):
     message = to_dict(response) if not isinstance(response, dict) else response
     content_ = None
 
-    if strip_lower(nget(message, ["content"])) == "none":
+    if str(nget(message, ["content"])).strip().lower() == "none":
         content_ = _handle_action_request(message)
 
     elif nget(message, ["content", "tool_uses"], None):

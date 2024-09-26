@@ -3,9 +3,13 @@ from collections import deque
 from typing import Any
 
 from lionagi.core.collections import Pile, pile
-from lionagi.core.collections.abc import (Actionable, Condition,
-                                          ItemNotFoundError, LionIDable,
-                                          LionTypeError)
+from lionagi.core.collections.abc import (
+    Actionable,
+    Condition,
+    ItemNotFoundError,
+    LionIDable,
+    LionTypeError,
+)
 from lionagi.core.generic.edge import Edge
 from lionagi.core.generic.node import Node
 from lionagi.libs.ln_convert import to_list

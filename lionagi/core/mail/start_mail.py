@@ -1,5 +1,3 @@
-from collections import deque
-
 from pydantic import Field
 
 from lionagi.core.collections import Exchange

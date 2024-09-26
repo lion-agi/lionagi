@@ -3,8 +3,7 @@ from pathlib import Path
 
 import pandas as pd
 
-from lionagi.integrations.storage.storage_util import (output_edge_list,
-                                                       output_node_list)
+from lionagi.integrations.storage.storage_util import output_edge_list, output_node_list
 
 
 def _output_csv(

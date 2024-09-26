@@ -14,8 +14,13 @@ from pandas import Series
 from pydantic import Field
 
 from lionagi.core.collections import Pile, pile
-from lionagi.core.collections.abc import (Component, Condition, Relatable,
-                                          RelationError, get_lion_id)
+from lionagi.core.collections.abc import (
+    Component,
+    Condition,
+    Relatable,
+    RelationError,
+    get_lion_id,
+)
 from lionagi.core.generic.edge import Edge
 from lionagi.libs.ln_convert import to_list
 

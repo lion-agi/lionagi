@@ -4,8 +4,11 @@ from datetime import datetime
 
 import pandas as pd
 
-from lionagi.core.collections.abc.component import (Component, LionTypeError,
-                                                    LionValueError)
+from lionagi.core.collections.abc.component import (
+    Component,
+    LionTypeError,
+    LionValueError,
+)
 
 
 class TestComponent(unittest.TestCase):

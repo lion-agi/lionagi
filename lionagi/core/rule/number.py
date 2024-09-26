@@ -1,7 +1,8 @@
 from typing import Any
 
+from lionfuncs import to_num
+
 from lionagi.core.rule.base import Rule
-from lionagi.libs.ln_convert import to_num
 
 
 class NumberRule(Rule):

@@ -278,17 +278,18 @@ class KGTripletExtractor:
         article_publish_date=None,
         verbose=False,
     ):
-        from lionagi.integrations.bridge.transformers_.install_ import \
-            install_transformers
+        from lionagi.integrations.bridge.transformers_.install_ import (
+            install_transformers,
+        )
 
         try:
-            from transformers import (AutoModelForSeq2SeqLM,  # type: ignore
-                                      AutoTokenizer)
+            from transformers import AutoModelForSeq2SeqLM  # type: ignore
+            from transformers import AutoTokenizer
         except ImportError:
             install_transformers()
         import torch  # type: ignore
-        from transformers import (AutoModelForSeq2SeqLM,  # type: ignore
-                                  AutoTokenizer)
+        from transformers import AutoModelForSeq2SeqLM  # type: ignore
+        from transformers import AutoTokenizer
 
         """
         Extract knowledge graph triplets from text and create a KnowledgeBase (KB) containing entities and relations.
