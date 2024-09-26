@@ -27,7 +27,7 @@ allowed_kwargs = [
 
 
 class GroqService(BaseService):
-    base_url = "https://api.groq.com/v1/"
+    base_url = "https://api.groq.com/openai/v1"
     available_endpoints = ["chat/completions"]
     schema = groq_schema
     key_scheme = "GROQ_API_KEY"
