@@ -7,6 +7,7 @@ from .mlx_service import MLXService
 from .groq import GroqService
 from lionagi.integrations.config.oai_configs import oai_schema
 from lionagi.integrations.config.openrouter_configs import openrouter_schema
+from lionagi.integrations.config.groq_configs import groq_schema
 
 SERVICE_PROVIDERS_MAPPING = {
     "openai": {
