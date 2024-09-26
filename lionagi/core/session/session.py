@@ -14,23 +14,17 @@ See the License for the specific language governing permissions and
 limitations under the License.
 """
 
-from lionagi.core.collections import (
-    Pile,
-    Progression,
-    progression,
-    pile,
-    iModel,
-)
-from lionagi.core.message import System
 from typing import Any
-from lionagi.core.action.tool_manager import ToolManager
 
-from lionagi.libs import SysUtil
-from lionagi.core.session.branch import Branch
-from lionagi.core.collections import pile, Pile, Exchange
+from lionagi.core.action.tool_manager import ToolManager
+from lionagi.core.collections import (Exchange, Pile, Progression, iModel,
+                                      pile, progression)
 from lionagi.core.collections.abc import get_lion_id
 from lionagi.core.collections.util import to_list_type
 from lionagi.core.mail.mail_manager import MailManager
+from lionagi.core.message import System
+from lionagi.core.session.branch import Branch
+from lionagi.libs import SysUtil
 
 
 class Session:

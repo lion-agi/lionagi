@@ -14,9 +14,9 @@ See the License for the specific language governing permissions and
 limitations under the License.
 """
 
-from lionagi.core.collections.abc import LionIDable, SYSTEM_FIELDS
+from lionagi.core.collections.abc import SYSTEM_FIELDS, LionIDable
+from lionagi.core.message.message import MessageRole, RoledMessage
 from lionagi.core.report.form import Form
-from lionagi.core.message.message import RoledMessage, MessageRole
 
 
 class Instruction(RoledMessage):

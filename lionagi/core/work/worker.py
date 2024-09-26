@@ -14,14 +14,15 @@ See the License for the specific language governing permissions and
 limitations under the License.
 """
 
+import inspect
 from abc import ABC
 from functools import wraps
-import inspect
+
 from lionagi import logging as _logging
-from lionagi.core.work.work_function import WorkFunction
-from lionagi.core.work.work import Work
-from lionagi.core.report.form import Form
 from lionagi.core.collections.abc import get_lion_id
+from lionagi.core.report.form import Form
+from lionagi.core.work.work import Work
+from lionagi.core.work.work_function import WorkFunction
 
 
 class Worker(ABC):

@@ -14,14 +14,15 @@ See the License for the specific language governing permissions and
 limitations under the License.
 """
 
-from collections.abc import Callable
-import re
 import inspect
 import itertools
+import re
+from collections.abc import Callable
 from typing import Any
-import numpy as np
-import lionagi.libs.ln_convert as convert
 
+import numpy as np
+
+import lionagi.libs.ln_convert as convert
 
 md_json_char_map = {"\n": "\\n", "\r": "\\r", "\t": "\\t", '"': '\\"'}
 

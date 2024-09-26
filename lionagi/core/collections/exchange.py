@@ -14,7 +14,8 @@ See the License for the specific language governing permissions and
 limitations under the License.
 """
 
-from typing import TypeVar, Generic
+from typing import Generic, TypeVar
+
 from .abc import Element, Field, Sendable
 from .pile import Pile, pile
 from .progression import Progression, progression

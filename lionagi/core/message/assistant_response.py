@@ -15,7 +15,8 @@ limitations under the License.
 """
 
 from typing import Any
-from .message import RoledMessage, MessageRole
+
+from .message import MessageRole, RoledMessage
 
 
 class AssistantResponse(RoledMessage):

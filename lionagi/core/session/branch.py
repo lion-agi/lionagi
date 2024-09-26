@@ -15,30 +15,18 @@ limitations under the License.
 """
 
 from typing import Any
-from lionagi.libs.ln_convert import is_same_dtype, to_df
-from lionagi.core.collections.abc import Field
-from lionagi.core.collections import (
-    pile,
-    progression,
-    Pile,
-    Progression,
-    iModel,
-    Exchange,
-)
-from lionagi.core.generic.node import Node
-from lionagi.core.action import Tool, ToolManager
-from lionagi.core.mail import Mail, Package
-from lionagi.core.message import (
-    create_message,
-    System,
-    Instruction,
-    AssistantResponse,
-    ActionRequest,
-    ActionResponse,
-    RoledMessage,
-)
 
+from lionagi.core.action import Tool, ToolManager
+from lionagi.core.collections import (Exchange, Pile, Progression, iModel,
+                                      pile, progression)
+from lionagi.core.collections.abc import Field
+from lionagi.core.generic.node import Node
+from lionagi.core.mail import Mail, Package
+from lionagi.core.message import (ActionRequest, ActionResponse,
+                                  AssistantResponse, Instruction, RoledMessage,
+                                  System, create_message)
 from lionagi.core.session.directive_mixin import DirectiveMixin
+from lionagi.libs.ln_convert import is_same_dtype, to_df
 
 
 class Branch(Node, DirectiveMixin):

@@ -1,5 +1,5 @@
-from lionagi.libs.ln_convert import to_str
 from lionagi.core.rule.base import Rule
+from lionagi.libs.ln_convert import to_str
 
 
 class StringRule(Rule):

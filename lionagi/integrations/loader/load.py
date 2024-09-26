@@ -1,11 +1,11 @@
 from typing import Callable
 
-from lionagi.core.generic import Node
 from lionagi.core.collections import pile
+from lionagi.core.generic import Node
+
 from ..bridge.langchain_.langchain_bridge import LangchainBridge
 from ..bridge.llamaindex_.llama_index_bridge import LlamaIndexBridge
-
-from .load_util import dir_to_nodes, ReaderType, _datanode_parser
+from .load_util import ReaderType, _datanode_parser, dir_to_nodes
 
 
 def text_reader(args, kwargs):

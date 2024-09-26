@@ -1,6 +1,8 @@
 from enum import Enum
 from typing import Any
+
 from pydantic import field_validator
+
 from lionagi.core.collections.abc import Element, Field
 
 

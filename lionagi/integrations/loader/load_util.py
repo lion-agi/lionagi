@@ -1,11 +1,11 @@
 # use utils and schema
 from enum import Enum
 from pathlib import Path
-from typing import List, Union, Dict, Any, Tuple
+from typing import Any, Dict, List, Tuple, Union
 
+from lionagi.core.generic import Node
 from lionagi.libs import convert, func_call
 from lionagi.libs.ln_tokenize import TokenizeUtil
-from lionagi.core.generic import Node
 
 
 class ReaderType(str, Enum):

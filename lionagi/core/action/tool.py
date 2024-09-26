@@ -14,11 +14,14 @@ See the License for the specific language governing permissions and
 limitations under the License.
 """
 
-from typing import Callable, Union, List, Dict, Any
+from typing import Any, Callable, Dict, List, Union
+
 from pydantic import Field, field_serializer
-from lionagi.libs.ln_func_call import call_handler
+
 from lionagi.core.collections.abc import Actionable
 from lionagi.core.generic.node import Node
+from lionagi.libs.ln_func_call import call_handler
+
 from .function_calling import FunctionCalling
 
 

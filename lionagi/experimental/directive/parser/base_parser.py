@@ -17,7 +17,8 @@ limitations under the License.
 from typing import List, Optional
 
 from lionagi.experimental.directive.tokenizer import BaseToken
-from ..template.schema import IfNode, TryNode, ForNode
+
+from ..template.schema import ForNode, IfNode, TryNode
 
 
 class BaseDirectiveParser:

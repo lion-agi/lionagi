@@ -1,6 +1,5 @@
-from lionagi.libs.ln_func_call import lcall
 from lionagi.core.rule.base import Rule
-
+from lionagi.libs.ln_func_call import lcall
 
 """
 rule config schema 

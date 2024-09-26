@@ -1,15 +1,13 @@
 import unittest
-from typing import Dict, List, Any
+from typing import Any, Dict, List
+
+from lionagi.core.collections.abc import FieldError
 from lionagi.core.report.form import Form
 from lionagi.core.report.report import Report
-from lionagi.core.collections.abc import FieldError
 from lionagi.core.rule.base import Rule
 from lionagi.core.rule.rulebook import RuleBook
-from lionagi.core.validator.validator import (
-    Validator,
-    _DEFAULT_RULEORDER,
-    _DEFAULT_RULES,
-)
+from lionagi.core.validator.validator import (_DEFAULT_RULEORDER,
+                                              _DEFAULT_RULES, Validator)
 
 
 class MockRule(Rule):

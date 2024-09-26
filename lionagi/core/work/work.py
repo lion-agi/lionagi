@@ -14,13 +14,13 @@ See the License for the specific language governing permissions and
 limitations under the License.
 """
 
-from enum import Enum
 import asyncio
-from typing import Any
 from collections.abc import Coroutine
+from enum import Enum
+from typing import Any
 
-from lionagi.libs import SysUtil
 from lionagi.core.collections.abc import Component
+from lionagi.libs import SysUtil
 
 
 class WorkStatus(str, Enum):

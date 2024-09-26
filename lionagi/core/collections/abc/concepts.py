@@ -20,7 +20,7 @@ from abc import ABC, abstractmethod
 from collections.abc import Generator
 from typing import Any, Iterator, TypeVar
 
-from pydantic import Field, BaseModel, field_validator
+from pydantic import BaseModel, Field, field_validator
 
 from .component import LionIDable, get_lion_id
 from .exceptions import LionTypeError

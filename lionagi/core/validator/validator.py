@@ -15,16 +15,18 @@ limitations under the License.
 """
 
 import asyncio
-from typing import Any, Dict, List, Union, Callable
-from lionagi.libs import SysUtil
-from lionagi.libs.ln_func_call import lcall
+from typing import Any, Callable, Dict, List, Union
+
 from lionagi.core.collections.abc import FieldError
 from lionagi.core.collections.model import iModel
-from ..rule.base import Rule
-from ..rule._default import DEFAULT_RULES
-from ..rule.rulebook import RuleBook
+from lionagi.libs import SysUtil
+from lionagi.libs.ln_func_call import lcall
+
 from ..report.form import Form
 from ..report.report import Report
+from ..rule._default import DEFAULT_RULES
+from ..rule.base import Rule
+from ..rule.rulebook import RuleBook
 
 _DEFAULT_RULEORDER = [
     "choice",

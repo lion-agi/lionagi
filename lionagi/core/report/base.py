@@ -21,12 +21,14 @@ initialization, validation, and state management. Extend this class to
 implement specific form behaviors and configurations.
 """
 
-from abc import abstractmethod
-from typing import Any, List, Dict
 import contextlib
+from abc import abstractmethod
+from typing import Any, Dict, List
+
 from lionagi.core.collections.abc import Component, Field
-from ..collections.util import to_list_type
 from lionagi.libs.ln_convert import to_str
+
+from ..collections.util import to_list_type
 
 
 class BaseForm(Component):

@@ -15,9 +15,11 @@ limitations under the License.
 """
 
 from typing import Any
+
 from pydantic import Field
-from .message import RoledMessage, MessageRole
+
 from .action_request import ActionRequest
+from .message import MessageRole, RoledMessage
 
 
 # action response must correlates to a specific action request

@@ -14,12 +14,12 @@ See the License for the specific language governing permissions and
 limitations under the License.
 """
 
-from typing import Any
 from collections.abc import Mapping
-from lionagi.libs.ln_convert import to_dict
-from lionagi.libs import StringMatch, ParseUtil
+from typing import Any
 
 from lionagi.core.rule.choice import ChoiceRule
+from lionagi.libs import ParseUtil, StringMatch
+from lionagi.libs.ln_convert import to_dict
 
 
 class MappingRule(ChoiceRule):

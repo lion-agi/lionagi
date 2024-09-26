@@ -1,10 +1,10 @@
-from typing import Callable
-from pydantic import Field, field_validator
 import inspect
+from typing import Callable
 
-from lionagi.core.generic.edge import Edge
+from pydantic import Field, field_validator
+
 from lionagi.core.collections.abc.concepts import Progressable
-
+from lionagi.core.generic.edge import Edge
 from lionagi.core.work.worker import Worker
 
 

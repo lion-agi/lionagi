@@ -18,17 +18,16 @@ limitations under the License.
 This module contains the BaseAgent class, which serves as a base class for agents.
 """
 
-from pydantic import Field
 from typing import Any, Callable
 
-from lionagi.libs import func_call, AsyncUtil
+from pydantic import Field
 
-
-from lionagi.core.mail.start_mail import StartMail
-from lionagi.core.generic.node import Node
-from lionagi.core.mail.mail_manager import MailManager
 from lionagi.core.executor.base_executor import BaseExecutor
 from lionagi.core.executor.graph_executor import GraphExecutor
+from lionagi.core.generic.node import Node
+from lionagi.core.mail.mail_manager import MailManager
+from lionagi.core.mail.start_mail import StartMail
+from lionagi.libs import AsyncUtil, func_call
 
 
 class BaseAgent(Node):

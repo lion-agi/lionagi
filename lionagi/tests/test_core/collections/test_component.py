@@ -1,12 +1,11 @@
-import unittest
-from lionagi.core.collections.abc.component import (
-    Component,
-    LionValueError,
-    LionTypeError,
-)
-import pandas as pd
-from datetime import datetime
 import json
+import unittest
+from datetime import datetime
+
+import pandas as pd
+
+from lionagi.core.collections.abc.component import (Component, LionTypeError,
+                                                    LionValueError)
 
 
 class TestComponent(unittest.TestCase):

@@ -18,6 +18,7 @@ from pydantic import Field
 
 from lionagi.core.collections.abc import Actionable
 from lionagi.core.generic.node import Node
+
 from .tool import Tool
 
 

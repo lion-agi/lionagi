@@ -1,1 +1,2 @@
-from pydantic import BaseModel, Field, ValidationError, AliasChoices, field_serializer
+from pydantic import (AliasChoices, BaseModel, Field, ValidationError,
+                      field_serializer)

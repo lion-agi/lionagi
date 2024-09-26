@@ -16,22 +16,22 @@ limitations under the License.
 
 """Component class, base building block in LionAGI."""
 
-from abc import ABC
 import contextlib
+from abc import ABC
 from collections.abc import Sequence
 from functools import singledispatchmethod
-from typing import Any, TypeVar, Type, TypeAlias, Union
+from typing import Any, Type, TypeAlias, TypeVar, Union
 
 from pandas import DataFrame, Series
-from pydantic import BaseModel, Field, ValidationError, AliasChoices
+from pydantic import AliasChoices, BaseModel, Field, ValidationError
 
 from lionagi.libs import ParseUtil, SysUtil
 from lionagi.libs.ln_convert import strip_lower, to_dict, to_str
 from lionagi.libs.ln_func_call import lcall
-from lionagi.libs.ln_nested import nget, nset, ninsert, flatten, unflatten
+from lionagi.libs.ln_nested import flatten, nget, ninsert, nset, unflatten
 
 from .exceptions import FieldError, LionTypeError, LionValueError
-from .util import base_lion_fields, llama_meta_fields, lc_meta_fields
+from .util import base_lion_fields, lc_meta_fields, llama_meta_fields
 
 T = TypeVar("T")
 

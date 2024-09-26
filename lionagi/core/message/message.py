@@ -15,7 +15,8 @@ limitations under the License.
 """
 
 from enum import Enum
-from lionagi.core.collections.abc import Sendable, Field
+
+from lionagi.core.collections.abc import Field, Sendable
 from lionagi.core.generic.node import Node
 
 

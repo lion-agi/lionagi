@@ -21,11 +21,12 @@ functionalities for initializing fields, filling forms with data, and
 validating the readiness of forms for further processing.
 """
 
-from typing import Dict, Any
-from lionagi.libs.ln_convert import to_readable_dict
+from typing import Any, Dict
+
 from lionagi.core.collections.abc import SYSTEM_FIELDS
-from lionagi.core.report.util import get_input_output_fields
 from lionagi.core.report.base import BaseForm
+from lionagi.core.report.util import get_input_output_fields
+from lionagi.libs.ln_convert import to_readable_dict
 
 
 class Form(BaseForm):
@@ -214,7 +215,7 @@ class Form(BaseForm):
         Args:
             fields (optional): Specific fields to display. Defaults to None.
         """
-        from IPython.display import display, Markdown
+        from IPython.display import Markdown, display
 
         fields = fields or self.work_fields
 

@@ -1,5 +1,7 @@
-import tiktoken
 import math
+
+import tiktoken
+
 from .ln_convert import to_str
 from .special_tokens import disallowed_tokens
 

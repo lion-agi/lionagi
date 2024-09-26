@@ -15,8 +15,9 @@ limitations under the License.
 """
 
 from typing import Any
+
 from ..collections.abc import Field
-from .message import RoledMessage, MessageRole
+from .message import MessageRole, RoledMessage
 
 
 class System(RoledMessage):

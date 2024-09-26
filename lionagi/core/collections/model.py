@@ -14,11 +14,15 @@ See the License for the specific language governing permissions and
 limitations under the License.
 """
 
-import os
 import asyncio
+import os
+
 import numpy as np
 from dotenv import load_dotenv
-from lionagi.libs import SysUtil, BaseService, StatusTracker, APIUtil, to_list, ninsert
+
+from lionagi.libs import (APIUtil, BaseService, StatusTracker, SysUtil,
+                          ninsert, to_list)
+
 from .abc import Component, ModelLimitExceededError
 
 load_dotenv()
@@ -107,9 +111,8 @@ class iModel:
         else:
             provider = str(provider).lower() if provider else "openai"
 
-        from lionagi.integrations.provider._mapping import (
-            SERVICE_PROVIDERS_MAPPING,
-        )
+        from lionagi.integrations.provider._mapping import \
+            SERVICE_PROVIDERS_MAPPING
 
         self.provider_schema = (
             provider_schema or SERVICE_PROVIDERS_MAPPING[provider]["schema"]

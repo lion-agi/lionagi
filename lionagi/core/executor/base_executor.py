@@ -3,8 +3,8 @@ from typing import Any
 
 from pydantic import Field
 
-from lionagi.core.collections.abc import Element, Progressable, Executable
 from lionagi.core.collections import Exchange
+from lionagi.core.collections.abc import Element, Executable, Progressable
 from lionagi.core.mail.mail import Mail, Package
 
 

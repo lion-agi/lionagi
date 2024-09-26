@@ -1,5 +1,5 @@
-from lionagi.libs.ln_parse import StringMatch
 from lionagi.core.rule.base import Rule
+from lionagi.libs.ln_parse import StringMatch
 
 
 class ChoiceRule(Rule):

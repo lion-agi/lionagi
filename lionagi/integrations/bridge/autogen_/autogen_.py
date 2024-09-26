@@ -61,7 +61,8 @@ def get_autogen_coder(
         SysUtil.check_import("autogen", pip_name="pyautogen")
 
         import autogen
-        from autogen.agentchat.contrib.gpt_assistant_agent import GPTAssistantAgent
+        from autogen.agentchat.contrib.gpt_assistant_agent import \
+            GPTAssistantAgent
     except Exception as e:
         raise ImportError(f"Please install autogen. {e}")
 

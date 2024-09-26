@@ -1,4 +1,5 @@
 import math
+
 from lionagi.libs import CallDecorator as cd
 
 
@@ -277,16 +278,17 @@ class KGTripletExtractor:
         article_publish_date=None,
         verbose=False,
     ):
-        from lionagi.integrations.bridge.transformers_.install_ import (
-            install_transformers,
-        )
+        from lionagi.integrations.bridge.transformers_.install_ import \
+            install_transformers
 
         try:
-            from transformers import AutoModelForSeq2SeqLM, AutoTokenizer  # type: ignore
+            from transformers import (AutoModelForSeq2SeqLM,  # type: ignore
+                                      AutoTokenizer)
         except ImportError:
             install_transformers()
-        from transformers import AutoModelForSeq2SeqLM, AutoTokenizer  # type: ignore
         import torch  # type: ignore
+        from transformers import (AutoModelForSeq2SeqLM,  # type: ignore
+                                  AutoTokenizer)
 
         """
         Extract knowledge graph triplets from text and create a KnowledgeBase (KB) containing entities and relations.

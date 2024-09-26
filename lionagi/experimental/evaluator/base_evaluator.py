@@ -16,7 +16,7 @@ limitations under the License.
 
 import ast
 import operator
-from typing import Any, Dict, Tuple, Callable
+from typing import Any, Callable, Dict, Tuple
 
 from lionagi.libs.ln_convert import to_dict
 

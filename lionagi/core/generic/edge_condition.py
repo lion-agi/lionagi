@@ -1,7 +1,8 @@
 from typing import Any
-from pydantic import Field
+
+from pydantic import BaseModel, Field
+
 from lionagi.core.collections.abc import Condition
-from pydantic import BaseModel
 
 
 class EdgeCondition(Condition, BaseModel):

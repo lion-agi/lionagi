@@ -17,8 +17,7 @@ limitations under the License.
 import json
 import re
 from functools import singledispatch
-
-from typing import Any, Type, Iterable, Generator
+from typing import Any, Generator, Iterable, Type
 
 import pandas as pd
 from pydantic import BaseModel

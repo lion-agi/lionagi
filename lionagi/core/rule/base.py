@@ -15,11 +15,13 @@ limitations under the License.
 """
 
 from abc import abstractmethod
-from typing import Any, List, Dict
-from pandas import Series
-from lionagi.libs import SysUtil
+from typing import Any, Dict, List
 
-from lionagi.core.collections.abc import FieldError, Condition, Actionable, Component
+from pandas import Series
+
+from lionagi.core.collections.abc import (Actionable, Component, Condition,
+                                          FieldError)
+from lionagi.libs import SysUtil
 
 _rule_classes = {}
 

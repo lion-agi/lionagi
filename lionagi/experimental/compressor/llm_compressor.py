@@ -1,11 +1,14 @@
 import asyncio
-from lionagi import alcall
-from lionagi.libs.ln_convert import to_list
-import numpy as np
-from lionagi.core.collections import iModel
-from .base import TokenCompressor
-from lionagi.libs.ln_tokenize import TokenizeUtil
 from time import time
+
+import numpy as np
+
+from lionagi import alcall
+from lionagi.core.collections import iModel
+from lionagi.libs.ln_convert import to_list
+from lionagi.libs.ln_tokenize import TokenizeUtil
+
+from .base import TokenCompressor
 
 # inspired by LLMLingua, MIT License, Copyright (c) Microsoft Corporation.
 # https://github.com/microsoft/LLMLingua

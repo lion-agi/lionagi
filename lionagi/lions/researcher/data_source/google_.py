@@ -68,11 +68,10 @@ class GoogleSearch:
             )
 
             from llama_index.agent import OpenAIAgent
-            from llama_index.tools.tool_spec.load_and_search.base import (
-                LoadAndSearchToolSpec,
-            )
-            from llama_index.tools.google import GoogleSearchToolSpec
             from llama_index.llms.openai import OpenAI
+            from llama_index.tools.google import GoogleSearchToolSpec
+            from llama_index.tools.tool_spec.load_and_search.base import \
+                LoadAndSearchToolSpec
 
             llm = OpenAI(model="gpt-4-turbo", temperature=0.1)
 

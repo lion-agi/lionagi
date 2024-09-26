@@ -15,9 +15,12 @@ limitations under the License.
 """
 
 import contextlib
-from lionagi.libs import SysUtil
+
 from pydantic import Field, field_validator
-from .abc import Ordering, get_lion_id, ItemNotFoundError, LionIDable, Element
+
+from lionagi.libs import SysUtil
+
+from .abc import Element, ItemNotFoundError, LionIDable, Ordering, get_lion_id
 from .util import _validate_order
 
 

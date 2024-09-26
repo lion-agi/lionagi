@@ -15,11 +15,13 @@ limitations under the License.
 """
 
 from typing import Callable
-from lionagi.libs.ln_convert import strip_lower
-from lionagi.libs.ln_func_call import rcall
+
+from lionagi.core.collections import iModel
 from lionagi.core.collections.abc import Directive
 from lionagi.core.validator.validator import Validator
-from lionagi.core.collections import iModel
+from lionagi.libs.ln_convert import strip_lower
+from lionagi.libs.ln_func_call import rcall
+
 from .unit_form import UnitForm
 from .unit_mixin import DirectiveMixin
 from .util import retry_kwargs

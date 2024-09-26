@@ -18,8 +18,9 @@ limitations under the License.
 A class that manages asynchronous task processing with controlled concurrency.
 """
 
-from typing import Any, Callable
 import asyncio
+from typing import Any, Callable
+
 from lionagi.libs import func_call
 
 
