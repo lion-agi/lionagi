@@ -1,31 +1,10 @@
-"""
-Copyright 2024 HaiyangLi
+from typing import Any, Dict
 
-Licensed under the Apache License, Version 2.0 (the "License");
-you may not use this file except in compliance with the License.
-You may obtain a copy of the License at
+from lionfuncs import as_readable_json
 
-    http://www.apache.org/licenses/LICENSE-2.0
-
-Unless required by applicable law or agreed to in writing, software
-distributed under the License is distributed on an "AS IS" BASIS,
-WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-See the License for the specific language governing permissions and
-limitations under the License.
-"""
-
-"""
-This module extends the BaseForm class to implement the Form class, which
-dynamically manages form operations based on specific assignments. It provides
-functionalities for initializing fields, filling forms with data, and
-validating the readiness of forms for further processing.
-"""
-
-from typing import Dict, Any
-from lionagi.libs.ln_convert import to_readable_dict
 from lionagi.core.collections.abc import SYSTEM_FIELDS
-from lionagi.core.report.util import get_input_output_fields
 from lionagi.core.report.base import BaseForm
+from lionagi.core.report.util import get_input_output_fields
 
 
 class Form(BaseForm):
@@ -214,7 +193,7 @@ class Form(BaseForm):
         Args:
             fields (optional): Specific fields to display. Defaults to None.
         """
-        from IPython.display import display, Markdown
+        from IPython.display import Markdown, display
 
         fields = fields or self.work_fields
 
@@ -224,7 +203,7 @@ class Form(BaseForm):
 
         for k, v in fields.items():
             if isinstance(v, dict):
-                v = to_readable_dict(v)
+                v = as_readable_json(v)
             if len(str(v)) > 50:
                 display(Markdown(f"**{k}**: \n {v}"))
             else:

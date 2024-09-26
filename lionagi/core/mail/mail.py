@@ -1,5 +1,6 @@
 from lionagi.core.collections.abc import Element, Field, Sendable
-from .package import PackageCategory, Package
+
+from .package import Package, PackageCategory
 
 
 class Mail(Element, Sendable):

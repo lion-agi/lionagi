@@ -1,4 +1,4 @@
-from typing import Union, Callable, List, Dict, Any, TypeVar
+from typing import Any, Callable, Dict, List, TypeVar, Union
 
 from lionagi.libs.sys_util import SysUtil
 

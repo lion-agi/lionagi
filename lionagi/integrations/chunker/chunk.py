@@ -1,14 +1,13 @@
-from typing import Union, Callable
+from typing import Callable, Union
 
-from lionagi.libs import func_call
-from lionagi.libs.ln_convert import to_list
 from lionagi.core.collections import pile
 from lionagi.core.generic import Node
+from lionagi.libs import func_call
+from lionagi.libs.ln_convert import to_list
+
 from ..bridge.langchain_.langchain_bridge import LangchainBridge
 from ..bridge.llamaindex_.llama_index_bridge import LlamaIndexBridge
-
-
-from ..loader.load_util import ChunkerType, file_to_chunks, _datanode_parser
+from ..loader.load_util import ChunkerType, _datanode_parser, file_to_chunks
 
 
 def datanodes_convert(documents, chunker_type):

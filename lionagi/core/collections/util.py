@@ -1,7 +1,7 @@
-from collections.abc import Mapping, Generator
 from collections import deque
+from collections.abc import Generator, Mapping
 
-from .abc import LionTypeError, Record, Ordering, Component, get_lion_id, Element
+from .abc import Component, Element, LionTypeError, Ordering, Record, get_lion_id
 
 
 def to_list_type(value):

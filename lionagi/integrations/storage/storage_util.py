@@ -1,12 +1,11 @@
-import json
 import inspect
+import json
 import re
 
-from lionagi.core.message import System, Instruction, RoledMessage
-from lionagi.core.action import Tool, DirectiveSelection, func_to_tool
-from lionagi.core.action import DirectiveSelection
+from lionagi.core.action import DirectiveSelection, Tool, func_to_tool
 from lionagi.core.agent.base_agent import BaseAgent
 from lionagi.core.generic.edge_condition import EdgeCondition
+from lionagi.core.message import Instruction, RoledMessage, System
 
 
 def output_node_list(structure):

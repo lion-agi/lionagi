@@ -2,18 +2,17 @@ import contextlib
 from collections import deque
 from typing import Any
 
-from lionagi.libs.ln_convert import to_list
+from lionagi.core.collections import Pile, pile
 from lionagi.core.collections.abc import (
-    Condition,
     Actionable,
-    LionTypeError,
+    Condition,
     ItemNotFoundError,
     LionIDable,
+    LionTypeError,
 )
-from lionagi.core.collections import pile, Pile
-
 from lionagi.core.generic.edge import Edge
 from lionagi.core.generic.node import Node
+from lionagi.libs.ln_convert import to_list
 
 
 class Graph(Node):
@@ -211,8 +210,8 @@ class Graph(Node):
         SysUtil.check_import("networkx")
         SysUtil.check_import("matplotlib", "pyplot")
 
-        import networkx as nx
         import matplotlib.pyplot as plt
+        import networkx as nx
 
         g = self.to_networkx(**kwargs)
         pos = nx.spring_layout(g)

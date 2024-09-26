@@ -26,9 +26,9 @@ class WikipediaSearch:
             pip_name="llama-index-tools-wikipedia",
         )
 
-        from llama_index.tools.wikipedia import WikipediaToolSpec
         from llama_index.agent.openai import OpenAIAgent
         from llama_index.llms.openai import OpenAI
+        from llama_index.tools.wikipedia import WikipediaToolSpec
 
         llm = OpenAI(model="gpt-4-turbo", temperature=0.1)
 

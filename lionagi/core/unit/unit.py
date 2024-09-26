@@ -1,25 +1,10 @@
-"""
-Copyright 2024 HaiyangLi
-
-Licensed under the Apache License, Version 2.0 (the "License");
-you may not use this file except in compliance with the License.
-You may obtain a copy of the License at
-
-    http://www.apache.org/licenses/LICENSE-2.0
-
-Unless required by applicable law or agreed to in writing, software
-distributed under the License is distributed on an "AS IS" BASIS,
-WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-See the License for the specific language governing permissions and
-limitations under the License.
-"""
-
 from typing import Callable
-from lionagi.libs.ln_convert import strip_lower
-from lionagi.libs.ln_func_call import rcall
+
+from lionagi.core.collections import iModel
 from lionagi.core.collections.abc import Directive
 from lionagi.core.validator.validator import Validator
-from lionagi.core.collections import iModel
+from lionagi.libs.ln_func_call import rcall
+
 from .unit_form import UnitForm
 from .unit_mixin import DirectiveMixin
 from .util import retry_kwargs
@@ -361,8 +346,8 @@ class Unit(Directive, DirectiveMixin):
         if system:
             branch.add_message(system=system)
 
-        if hasattr(self, strip_lower(directive)):
-            directive = getattr(self, strip_lower(directive))
+        if hasattr(self, str(directive).strip().lower()):
+            directive = getattr(self, str(directive).strip().lower())
 
             verbose = verbose if verbose is not None else self.verbose
             if verbose:

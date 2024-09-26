@@ -1,35 +1,17 @@
-"""
-Copyright 2024 HaiyangLi
-
-Licensed under the Apache License, Version 2.0 (the "License");
-you may not use this file except in compliance with the License.
-You may obtain a copy of the License at
-
-    http://www.apache.org/licenses/LICENSE-2.0
-
-Unless required by applicable law or agreed to in writing, software
-distributed under the License is distributed on an "AS IS" BASIS,
-WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-See the License for the specific language governing permissions and
-limitations under the License.
-"""
-
-from collections.abc import Sequence, Mapping
-
-from abc import ABC
-from dataclasses import dataclass
-
+import asyncio
 import contextlib
 import logging
 import re
-import asyncio
+from abc import ABC
+from collections.abc import Mapping, Sequence
+from dataclasses import dataclass
+from typing import Any, Callable, NoReturn, Type
+
 import aiohttp
 
-from typing import Any, NoReturn, Type, Callable
-
-from lionagi.libs.ln_async import AsyncUtil
-from lionagi.libs.ln_convert import to_dict, strip_lower, to_str
 import lionagi.libs.ln_func_call as func_call
+from lionagi.libs.ln_async import AsyncUtil
+from lionagi.libs.ln_convert import strip_lower, to_dict, to_str
 from lionagi.libs.ln_nested import nget
 
 
@@ -372,6 +354,7 @@ class APIUtil:
                 # Expected token calculation for the given payload and endpoint.
         """
         import tiktoken
+
         from .ln_image import ImageUtil
 
         token_encoding_name = token_encoding_name or "cl100k_base"

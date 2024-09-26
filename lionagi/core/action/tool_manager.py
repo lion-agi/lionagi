@@ -1,35 +1,12 @@
-"""
-Copyright 2024 HaiyangLi
-
-Licensed under the Apache License, Version 2.0 (the "License");
-you may not use this file except in compliance with the License.
-You may obtain a copy of the License at
-
-    http://www.apache.org/licenses/LICENSE-2.0
-
-Unless required by applicable law or agreed to in writing, software
-distributed under the License is distributed on an "AS IS" BASIS,
-WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-See the License for the specific language governing permissions and
-limitations under the License.
-"""
-
-"""
-This module contains the ToolManager class, which manages tools in the system.
-It allows registering, invoking, and retrieving schemas of tools. Tools can be
-registered individually or in batches, and invoked using function names, JSON
-strings, or specialized objects.
-"""
-
 import inspect
 from functools import singledispatchmethod
-from typing import Any, Callable, List, Union, Tuple
-from lionagi.libs import ParseUtil
-from lionagi.libs.ln_convert import to_list, to_dict
-from lionagi.libs.ln_func_call import lcall
-from lionagi.core.collections.abc import Actionable
+from typing import Any, Callable, List, Tuple, Union
+
+from lionfuncs import function_to_schema, lcall, to_dict, to_list
+
 from lionagi.core.action.function_calling import FunctionCalling
-from lionagi.core.action.tool import Tool, TOOL_TYPE
+from lionagi.core.action.tool import TOOL_TYPE, Tool
+from lionagi.core.collections.abc import Actionable
 
 
 class ToolManager(Actionable):
@@ -336,7 +313,7 @@ def func_to_tool(
         for idx in range(len(funcs)):
             f_ = lambda _f: Tool(
                 function=_f,
-                schema_=ParseUtil._func_to_schema(_f, style=docstring_style),
+                schema_=function_to_schema(_f, style=docstring_style),
                 parser=parsers[idx] if len(parsers) > 1 else parsers[0],
                 **kwargs,
             )
@@ -348,7 +325,7 @@ def func_to_tool(
             funcs,
             lambda _f: Tool(
                 function=_f,
-                schema_=ParseUtil._func_to_schema(_f, style=docstring_style),
+                schema_=function_to_schema(_f, style=docstring_style),
                 **kwargs,
             ),
         )

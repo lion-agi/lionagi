@@ -1,9 +1,11 @@
 import unittest
 from unittest.mock import AsyncMock, patch
+
 from pydantic import ValidationError
-from lionagi.core.collections.abc import Component, get_lion_id, LionIDable, Condition
-from lionagi.core.generic.edge_condition import EdgeCondition
+
+from lionagi.core.collections.abc import Component, Condition, LionIDable, get_lion_id
 from lionagi.core.generic.edge import Edge
+from lionagi.core.generic.edge_condition import EdgeCondition
 
 
 class TestEdge(unittest.TestCase):

@@ -1,4 +1,5 @@
 from typing import Any
+
 from lionagi.libs.sys_util import SysUtil
 
 
@@ -25,8 +26,8 @@ def get_llama_index_node_parser(node_parser: Any):
     """
 
     SysUtil.check_import("llama_index", pip_name="llama-index")
-    from llama_index.core.node_parser.interface import NodeParser
     import llama_index.core.node_parser
+    from llama_index.core.node_parser.interface import NodeParser
 
     if not isinstance(node_parser, str) and not issubclass(node_parser, NodeParser):
         raise TypeError("node_parser must be a string or NodeParser.")

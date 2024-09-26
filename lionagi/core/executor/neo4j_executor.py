@@ -1,18 +1,16 @@
-from collections import deque
 import json
+from collections import deque
 from typing import Callable
 
+from lionagi.core.action import ActionNode, DirectiveSelection, Tool
+from lionagi.core.agent.base_agent import BaseAgent
+from lionagi.core.collections.progression import progression
+from lionagi.core.engine.instruction_map_engine import InstructionMapEngine
 from lionagi.core.executor.base_executor import BaseExecutor
+from lionagi.core.generic.edge import Edge
+from lionagi.core.mail import Mail
 from lionagi.integrations.storage.neo4j import Neo4j
 from lionagi.integrations.storage.storage_util import ParseNode
-from lionagi.core.agent.base_agent import BaseAgent
-from lionagi.core.engine.instruction_map_engine import InstructionMapEngine
-
-from lionagi.core.mail import Mail
-from lionagi.core.action import Tool, DirectiveSelection, ActionNode
-from lionagi.core.generic.edge import Edge
-from lionagi.core.collections.progression import progression
-
 from lionagi.libs import AsyncUtil
 
 

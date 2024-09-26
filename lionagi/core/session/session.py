@@ -1,36 +1,20 @@
-"""
-Copyright 2024 HaiyangLi
+from typing import Any
 
-Licensed under the Apache License, Version 2.0 (the "License");
-you may not use this file except in compliance with the License.
-You may obtain a copy of the License at
-
-    http://www.apache.org/licenses/LICENSE-2.0
-
-Unless required by applicable law or agreed to in writing, software
-distributed under the License is distributed on an "AS IS" BASIS,
-WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-See the License for the specific language governing permissions and
-limitations under the License.
-"""
-
+from lionagi.core.action.tool_manager import ToolManager
 from lionagi.core.collections import (
+    Exchange,
     Pile,
     Progression,
-    progression,
-    pile,
     iModel,
+    pile,
+    progression,
 )
-from lionagi.core.message import System
-from typing import Any
-from lionagi.core.action.tool_manager import ToolManager
-
-from lionagi.libs import SysUtil
-from lionagi.core.session.branch import Branch
-from lionagi.core.collections import pile, Pile, Exchange
 from lionagi.core.collections.abc import get_lion_id
 from lionagi.core.collections.util import to_list_type
 from lionagi.core.mail.mail_manager import MailManager
+from lionagi.core.message import System
+from lionagi.core.session.branch import Branch
+from lionagi.libs import SysUtil
 
 
 class Session:

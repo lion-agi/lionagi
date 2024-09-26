@@ -1,12 +1,12 @@
 import asyncio
+
 from pydantic import Field
 
-from lionagi.core.mail.mail import Mail, Package
-from lionagi.core.collections import Exchange
-from lionagi.core.mail.mail_manager import MailManager
-from lionagi.core.executor.base_executor import BaseExecutor
+from lionagi.core.collections import Exchange, Pile, pile, progression
 from lionagi.core.engine.branch_engine import BranchExecutor
-from lionagi.core.collections import progression, pile, Pile
+from lionagi.core.executor.base_executor import BaseExecutor
+from lionagi.core.mail.mail import Mail, Package
+from lionagi.core.mail.mail_manager import MailManager
 
 
 class InstructionMapEngine(BaseExecutor):

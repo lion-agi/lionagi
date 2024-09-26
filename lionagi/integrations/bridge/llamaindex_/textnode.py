@@ -1,4 +1,5 @@
 from typing import Any, TypeVar
+
 from lionagi.libs.sys_util import SysUtil
 
 
@@ -24,8 +25,8 @@ def to_llama_index_node(lion_node, node_type: Any = None, **kwargs: Any) -> Any:
     """
 
     SysUtil.check_import("llama_index", pip_name="llama-index")
-    from llama_index.core.schema import BaseNode
     import llama_index.core.schema
+    from llama_index.core.schema import BaseNode
 
     node_type = node_type or "TextNode"
 

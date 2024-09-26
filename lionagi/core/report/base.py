@@ -1,32 +1,10 @@
-"""
-Copyright 2024 HaiyangLi
-
-Licensed under the Apache License, Version 2.0 (the "License");
-you may not use this file except in compliance with the License.
-You may obtain a copy of the License at
-
-    http://www.apache.org/licenses/LICENSE-2.0
-
-Unless required by applicable law or agreed to in writing, software
-distributed under the License is distributed on an "AS IS" BASIS,
-WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-See the License for the specific language governing permissions and
-limitations under the License.
-"""
-
-"""
-This module defines the BaseForm class, a foundation for form handling in
-applications. It provides common functionalities for form operations like
-initialization, validation, and state management. Extend this class to
-implement specific form behaviors and configurations.
-"""
-
-from abc import abstractmethod
-from typing import Any, List, Dict
 import contextlib
+from abc import abstractmethod
+from typing import Any, Dict, List
+
 from lionagi.core.collections.abc import Component, Field
+
 from ..collections.util import to_list_type
-from lionagi.libs.ln_convert import to_str
 
 
 class BaseForm(Component):

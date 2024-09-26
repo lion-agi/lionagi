@@ -1,6 +1,8 @@
 import base64
-import numpy as np
 from typing import Optional
+
+import numpy as np
+
 from .sys_util import SysUtil
 
 
@@ -70,6 +72,7 @@ class ImageUtil:
         """
         import base64
         from io import BytesIO
+
         from PIL import Image
 
         # Decode the base64 string to get image data

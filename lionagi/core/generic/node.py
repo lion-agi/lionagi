@@ -8,12 +8,12 @@ Includes functionality for managing relationships, such as adding,
 modifying, and removing edges, and querying related nodes and connections.
 """
 
-from pydantic import Field
-from pandas import Series
 from typing import Callable
 
-from lionagi.libs.ln_convert import to_list
+from pandas import Series
+from pydantic import Field
 
+from lionagi.core.collections import Pile, pile
 from lionagi.core.collections.abc import (
     Component,
     Condition,
@@ -21,8 +21,8 @@ from lionagi.core.collections.abc import (
     RelationError,
     get_lion_id,
 )
-from lionagi.core.collections import pile, Pile
 from lionagi.core.generic.edge import Edge
+from lionagi.libs.ln_convert import to_list
 
 
 class Node(Component, Relatable):

@@ -1,5 +1,5 @@
 from typing import Any
-from lionagi.libs.ln_convert import to_str, strip_lower
+
 from lionagi.core.rule.base import Rule
 
 
@@ -46,7 +46,7 @@ class BooleanRule(Rule):
         Raises:
             ValueError: If the value cannot be converted to a boolean.
         """
-        value = strip_lower(to_str(value))
+        value = str(value).strip().lower()
         if value in ["true", "1", "correct", "yes"]:
             return True
 

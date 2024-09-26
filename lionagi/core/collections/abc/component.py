@@ -1,37 +1,21 @@
-"""
-Copyright 2024 HaiyangLi
-
-Licensed under the Apache License, Version 2.0 (the "License");
-you may not use this file except in compliance with the License.
-You may obtain a copy of the License at
-
-    http://www.apache.org/licenses/LICENSE-2.0
-
-Unless required by applicable law or agreed to in writing, software
-distributed under the License is distributed on an "AS IS" BASIS,
-WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-See the License for the specific language governing permissions and
-limitations under the License.
-"""
-
 """Component class, base building block in LionAGI."""
 
-from abc import ABC
 import contextlib
+from abc import ABC
 from collections.abc import Sequence
 from functools import singledispatchmethod
-from typing import Any, TypeVar, Type, TypeAlias, Union
+from typing import Any, Type, TypeAlias, TypeVar, Union
 
 from pandas import DataFrame, Series
-from pydantic import BaseModel, Field, ValidationError, AliasChoices
+from pydantic import AliasChoices, BaseModel, Field, ValidationError
 
 from lionagi.libs import ParseUtil, SysUtil
 from lionagi.libs.ln_convert import strip_lower, to_dict, to_str
 from lionagi.libs.ln_func_call import lcall
-from lionagi.libs.ln_nested import nget, nset, ninsert, flatten, unflatten
+from lionagi.libs.ln_nested import flatten, nget, ninsert, nset, unflatten
 
 from .exceptions import FieldError, LionTypeError, LionValueError
-from .util import base_lion_fields, llama_meta_fields, lc_meta_fields
+from .util import base_lion_fields, lc_meta_fields, llama_meta_fields
 
 T = TypeVar("T")
 

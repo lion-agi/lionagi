@@ -1,24 +1,11 @@
-"""
-Copyright 2024 HaiyangLi
+from typing import Any, Callable, Dict, List, Union
 
-Licensed under the Apache License, Version 2.0 (the "License");
-you may not use this file except in compliance with the License.
-You may obtain a copy of the License at
-
-    http://www.apache.org/licenses/LICENSE-2.0
-
-Unless required by applicable law or agreed to in writing, software
-distributed under the License is distributed on an "AS IS" BASIS,
-WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-See the License for the specific language governing permissions and
-limitations under the License.
-"""
-
-from typing import Callable, Union, List, Dict, Any
 from pydantic import Field, field_serializer
-from lionagi.libs.ln_func_call import call_handler
+
 from lionagi.core.collections.abc import Actionable
 from lionagi.core.generic.node import Node
+from lionagi.libs.ln_func_call import call_handler
+
 from .function_calling import FunctionCalling
 
 

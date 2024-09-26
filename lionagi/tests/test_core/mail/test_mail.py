@@ -1,8 +1,9 @@
+from datetime import datetime
+
 import pytest
 
 from lionagi.core.mail import Mail
 from lionagi.core.mail.package import Package
-from datetime import datetime
 
 """
 More to be added

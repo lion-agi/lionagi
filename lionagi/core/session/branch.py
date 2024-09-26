@@ -1,44 +1,28 @@
-"""
-Copyright 2024 HaiyangLi
-
-Licensed under the Apache License, Version 2.0 (the "License");
-you may not use this file except in compliance with the License.
-You may obtain a copy of the License at
-
-    http://www.apache.org/licenses/LICENSE-2.0
-
-Unless required by applicable law or agreed to in writing, software
-distributed under the License is distributed on an "AS IS" BASIS,
-WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-See the License for the specific language governing permissions and
-limitations under the License.
-"""
-
 from typing import Any
-from lionagi.libs.ln_convert import is_same_dtype, to_df
-from lionagi.core.collections.abc import Field
+
+from lionagi.core.action import Tool, ToolManager
 from lionagi.core.collections import (
-    pile,
-    progression,
+    Exchange,
     Pile,
     Progression,
     iModel,
-    Exchange,
+    pile,
+    progression,
 )
+from lionagi.core.collections.abc import Field
 from lionagi.core.generic.node import Node
-from lionagi.core.action import Tool, ToolManager
 from lionagi.core.mail import Mail, Package
 from lionagi.core.message import (
-    create_message,
-    System,
-    Instruction,
-    AssistantResponse,
     ActionRequest,
     ActionResponse,
+    AssistantResponse,
+    Instruction,
     RoledMessage,
+    System,
+    create_message,
 )
-
 from lionagi.core.session.directive_mixin import DirectiveMixin
+from lionagi.libs.ln_convert import is_same_dtype, to_df
 
 
 class Branch(Node, DirectiveMixin):

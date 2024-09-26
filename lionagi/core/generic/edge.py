@@ -1,6 +1,8 @@
-from pydantic import Field, field_validator
 from typing import Any
-from lionagi.core.collections.abc import Component, get_lion_id, LionIDable, Condition
+
+from pydantic import Field, field_validator
+
+from lionagi.core.collections.abc import Component, Condition, LionIDable, get_lion_id
 from lionagi.core.generic.edge_condition import EdgeCondition
 
 
@@ -70,7 +72,8 @@ class Edge(Component):
         if self.condition is None:
             return
 
-        import inspect, sys
+        import inspect
+        import sys
 
         def new_getfile(object, _old_getfile=inspect.getfile):
             if not inspect.isclass(object):
@@ -96,6 +99,7 @@ class Edge(Component):
         inspect.getfile = new_getfile
 
         import inspect
+
         from IPython.core.magics.code import extract_symbols
 
         obj = self.condition.__class__

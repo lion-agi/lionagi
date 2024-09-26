@@ -1,23 +1,9 @@
-"""
-Copyright 2024 HaiyangLi
-
-Licensed under the Apache License, Version 2.0 (the "License");
-you may not use this file except in compliance with the License.
-You may obtain a copy of the License at
-
-    http://www.apache.org/licenses/LICENSE-2.0
-
-Unless required by applicable law or agreed to in writing, software
-distributed under the License is distributed on an "AS IS" BASIS,
-WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-See the License for the specific language governing permissions and
-limitations under the License.
-"""
-
 import inspect
+
+from lionfuncs import to_dict
 from pydantic import Field
-from lionagi.libs import convert, ParseUtil
-from .message import RoledMessage, MessageRole
+
+from .message import MessageRole, RoledMessage
 
 
 class ActionRequest(RoledMessage):
@@ -111,21 +97,9 @@ class ActionRequest(RoledMessage):
 
 
 def _prepare_arguments(arguments):
-    """
-    Prepares the arguments for the action request.
-
-    Args:
-        arguments (Any): The arguments to be prepared.
-
-    Returns:
-        dict: The prepared arguments.
-
-    Raises:
-        ValueError: If the arguments are invalid.
-    """
     if not isinstance(arguments, dict):
         try:
-            arguments = ParseUtil.fuzzy_parse_json(convert.to_str(arguments))
+            arguments = to_dict(str(arguments), fuzzy_parse=True)
         except Exception as e:
             raise ValueError(f"Invalid arguments: {e}") from e
     if isinstance(arguments, dict):

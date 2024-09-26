@@ -1,10 +1,11 @@
 from __future__ import annotations
 
 import asyncio
-from collections.abc import Mapping, Callable, Coroutine
+import logging
+from collections.abc import Callable, Coroutine, Mapping
 from functools import lru_cache
 from typing import Any
-import logging
+
 import aiocache
 import aiohttp
 

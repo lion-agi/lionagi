@@ -1,16 +1,13 @@
 from collections import deque
 
-from lionagi.libs import AsyncUtil, convert
-
-from lionagi.core.generic.node import Node
-from lionagi.core.generic.edge import Edge
-from lionagi.core.executor.base_executor import BaseExecutor
-
-from lionagi.core.action import Tool, DirectiveSelection, ActionNode
-
-from lionagi.core.mail import Mail
-from lionagi.core.generic.graph import Graph
+from lionagi.core.action import ActionNode, DirectiveSelection, Tool
 from lionagi.core.collections.progression import progression
+from lionagi.core.executor.base_executor import BaseExecutor
+from lionagi.core.generic.edge import Edge
+from lionagi.core.generic.graph import Graph
+from lionagi.core.generic.node import Node
+from lionagi.core.mail import Mail
+from lionagi.libs import AsyncUtil, convert
 
 
 class GraphExecutor(BaseExecutor, Graph):

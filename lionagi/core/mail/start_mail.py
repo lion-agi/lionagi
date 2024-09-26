@@ -1,8 +1,8 @@
-from collections import deque
 from pydantic import Field
+
+from lionagi.core.collections import Exchange
 from lionagi.core.generic.node import Node
 from lionagi.core.mail.mail import Mail, Package
-from lionagi.core.collections import Exchange
 
 
 class StartMail(Node):

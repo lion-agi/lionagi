@@ -6,7 +6,7 @@ from lionagi.core import Session
 from lionagi.libs import ParseUtil
 
 from .base_prompts import CODER_PROMPTS
-from .util import install_missing_dependencies, set_up_interpreter, save_code_file
+from .util import install_missing_dependencies, save_code_file, set_up_interpreter
 
 
 class Coder:

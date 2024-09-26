@@ -1,5 +1,5 @@
-from ..collections.abc import Component, Field
 from ..collections import Pile, pile
+from ..collections.abc import Component, Field
 from ..generic import Node
 
 

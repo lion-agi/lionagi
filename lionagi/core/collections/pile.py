@@ -1,48 +1,41 @@
-"""
-Copyright 2024 HaiyangLi
+from __future__ import annotations
 
-Licensed under the Apache License, Version 2.0 (the "License");
-you may not use this file except in compliance with the License.
-You may obtain a copy of the License at
-
-    http://www.apache.org/licenses/LICENSE-2.0
-
-Unless required by applicable law or agreed to in writing, software
-distributed under the License is distributed on an "AS IS" BASIS,
-WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-See the License for the specific language governing permissions and
-limitations under the License.
-"""
-
-"""
-This module defines the Pile class, a versatile container for managing
-collections of Element objects. It supports structured access and
-manipulation, including retrieval, addition, and deletion of elements.
-"""
-
+import asyncio
 from collections.abc import Iterable
-from typing import TypeVar, Type, Any, Generic
+from functools import wraps
+from typing import Any, AsyncIterator, Callable, Generic, Type, TypeVar
 
 from pydantic import Field, field_validator
 
-from lionagi.libs.ln_convert import is_same_dtype, to_df
-from lionagi.libs.ln_func_call import bcall, alcall, CallDecorator as cd
+from lionagi.libs.ln_convert import is_same_dtype, to_df, to_dict
+from lionagi.libs.ln_func_call import CallDecorator as cd
+from lionagi.libs.ln_func_call import alcall
+
 from .abc import (
-    Element,
-    Record,
     Component,
-    Ordering,
-    LionIDable,
-    get_lion_id,
-    LionValueError,
-    LionTypeError,
+    Element,
     ItemNotFoundError,
+    LionIDable,
+    LionTypeError,
+    LionValueError,
     ModelLimitExceededError,
+    Ordering,
+    Record,
+    get_lion_id,
 )
 from .model import iModel
-from .util import to_list_type, _validate_order
+from .util import _validate_order, to_list_type
 
 T = TypeVar("T")
+
+
+def async_synchronized(func: Callable):
+    @wraps(func)
+    async def wrapper(self, *args, **kwargs):
+        async with self.async_lock:
+            return await func(self, *args, **kwargs)
+
+    return wrapper
 
 
 class Pile(Element, Record, Generic[T]):
@@ -69,6 +62,14 @@ class Pile(Element, Record, Generic[T]):
     engines: dict[str, Any] = Field(default_factory=dict)
     query_response: list = []
     tools: dict = {}
+
+    def __pydantic_extra__(self) -> dict[str, Any]:
+        return {
+            "_async": Field(default_factory=asyncio.Lock),
+        }
+
+    def __pydantic_private__(self) -> dict[str, Any]:
+        return self.__pydantic_extra__()
 
     def __init__(
         self,
@@ -442,6 +443,103 @@ class Pile(Element, Record, Generic[T]):
     def __radd__(self, other: T) -> "Pile":
         return other + self
 
+    def __ior__(self, other: Any | Pile) -> Pile:
+        if not isinstance(other, Pile):
+            raise LionTypeError(
+                "Invalid type for Pile operation.",
+                expected_type=Pile,
+                actual_type=type(other),
+            )
+        other = self._validate_pile(list(other))
+        self.include(other)
+        return self
+
+    def __or__(self, other: Any | Pile) -> Pile:
+        if not isinstance(other, Pile):
+            raise LionTypeError(
+                "Invalid type for Pile operation.",
+                expected_type=Pile,
+                actual_type=type(other),
+            )
+
+        result = self.__class__(
+            items=self.values(),
+            item_type=self.item_type,
+            order=self.order,
+        )
+        result.include(list(other))
+        return result
+
+    def __ixor__(self, other: Any | Pile) -> Pile:
+        if not isinstance(other, Pile):
+            raise LionTypeError(
+                "Invalid type for Pile operation.",
+                expected_type=Pile,
+                actual_type=type(other),
+            )
+
+        to_exclude = []
+        for i in other:
+            if i in self:
+                to_exclude.append(i)
+
+        other = [i for i in other if i not in to_exclude]
+        self.exclude(to_exclude)
+        self.include(other)
+        return self
+
+    def __xor__(self, other: Any | Pile) -> Pile:
+        if not isinstance(other, Pile):
+            raise LionTypeError(
+                "Invalid type for Pile operation.",
+                expected_type=Pile,
+                actual_type=type(other),
+            )
+
+        to_exclude = []
+        for i in other:
+            if i in self:
+                to_exclude.append(i)
+
+        values = [i for i in self if i not in to_exclude] + [
+            i for i in other if i not in to_exclude
+        ]
+
+        result = self.__class__(
+            items=values,
+            item_type=self.item_type,
+        )
+        return result
+
+    def __iand__(self, other: Any) -> Pile:
+        if not isinstance(other, Pile):
+            raise LionTypeError(
+                "Invalid type for Pile operation.",
+                expected_type=Pile,
+                actual_type=type(other),
+            )
+
+        to_exclude = []
+        for i in self.values():
+            if i not in other:
+                to_exclude.append(i)
+        self.exclude(to_exclude)
+        return self
+
+    def __and__(self, other: Any | Pile) -> Pile:
+        if not isinstance(other, Pile):
+            raise LionTypeError(
+                "Invalid type for Pile operation.",
+                expected_type=Pile,
+                actual_type=type(other),
+            )
+
+        values = [i for i in self if i in other]
+        return self.__class__(
+            items=values,
+            item_type=self.item_type,
+        )
+
     def size(self) -> int:
         """Return the total size of the pile."""
         return sum([len(i) for i in self])
@@ -666,7 +764,7 @@ class Pile(Element, Record, Generic[T]):
         else:
             raise ValueError("Invalid index type")
 
-    async def query_pile(self, query, engine_kwargs={}, **kwargs):
+    async def query_pile(self, query, engine_kwargs={}, return_dict=False, **kwargs):
         """
         Query the pile using the created query engine.
 
@@ -682,9 +780,11 @@ class Pile(Element, Record, Generic[T]):
             self.create_query_engine(**engine_kwargs)
         response = await self.engines["query"].aquery(query, **kwargs)
         self.query_response.append(response)
+        if return_dict:
+            return to_dict(response)
         return str(response)
 
-    async def chat_pile(self, query, engine_kwargs={}, **kwargs):
+    async def chat_pile(self, query, engine_kwargs={}, return_dict=False, **kwargs):
         """
         Chat with the pile using the created chat engine.
 
@@ -700,6 +800,8 @@ class Pile(Element, Record, Generic[T]):
             self.create_chat_engine(**engine_kwargs)
         response = await self.engines["chat"].achat(query, **kwargs)
         self.query_response.append(response)
+        if return_dict:
+            return to_dict(response)
         return str(response)
 
     async def embed_pile(
@@ -792,6 +894,7 @@ class Pile(Element, Record, Generic[T]):
         name=None,
         guidance=None,
         query_description=None,
+        return_dict=False,
         **kwargs,
     ):
         """
@@ -830,10 +933,10 @@ class Pile(Element, Record, Generic[T]):
 
         async def query(query: str):
             if query_type == "query":
-                return await self.query_pile(query, **kwargs)
+                return await self.query_pile(query, return_dict=return_dict, **kwargs)
 
             elif query_type == "chat":
-                return await self.chat_pile(query, **kwargs)
+                return await self.chat_pile(query, return_dict=return_dict, **kwargs)
 
         name = name or "query"
         tool = func_to_tool(query)[0]
@@ -871,6 +974,185 @@ class Pile(Element, Record, Generic[T]):
             str: The representation of the pile.
         """
         return self.to_df().__repr__()
+
+    def __getstate__(self):
+        """Prepare the Pile instance for pickling."""
+        state = self.__dict__.copy()
+        state["_async_lock"] = None
+        return state
+
+    def __setstate__(self, state):
+        """Restore the Pile instance after unpickling."""
+        self.__dict__.update(state)
+        self._async_lock = asyncio.Lock()
+
+    @property
+    def async_lock(self):
+        """Ensure the async lock is always available, even during unpickling"""
+        if not hasattr(self, "_async_lock") or self._async_lock is None:
+            self._async_lock = asyncio.Lock()
+        return self._async_lock
+
+    # Async Interface methods
+    @async_synchronized
+    async def asetitem(
+        self,
+        key: Any,
+        item: T | Iterable[T],
+        /,
+    ) -> None:
+        """Asynchronously set an item or items in the Pile.
+
+        Args:
+            key: The key to set. Can be an integer index, a string ID, or a
+                slice.
+            item: The item or items to set. Must be of type T or an iterable
+                of T for slices.
+
+        Raises:
+            TypeError: If the item type is not allowed.
+            KeyError: If the key is invalid.
+            ValueError: If trying to set multiple items with a non-slice key.
+        """
+        self._setitem(key, item)
+
+    @async_synchronized
+    async def apop(
+        self,
+        key: Any,
+        default: Any = ...,
+        /,
+    ):
+        """Asynchronously remove and return an item or items from the Pile.
+
+        Args:
+            key: The key of the item(s) to remove. Can be an integer index,
+                a string ID, or a slice.
+            default: The value to return if the key is not found. Defaults to
+                ....
+
+        Returns:
+            The removed item(s), or the default value if not found.
+
+        Raises:
+            KeyError: If the key is not found and no default is provided.
+        """
+        return self._pop(key, default)
+
+    @async_synchronized
+    async def aremove(
+        self,
+        item: T,
+        /,
+    ) -> None:
+        """Asynchronously remove a specific item from the Pile.
+
+        Args:
+            item: The item to remove.
+
+        Raises:
+            ValueError: If the item is not found in the Pile.
+        """
+        self._remove(item)
+
+    @async_synchronized
+    async def ainclude(
+        self,
+        item: T | Iterable[T],
+        /,
+    ) -> None:
+        """Asynchronously include item(s) in the Pile if not already present.
+
+        Args:
+            item: Item or iterable of items to include.
+
+        Raises:
+            TypeError: If the item(s) are not of allowed types.
+        """
+        self._include(item)
+        if item not in self:
+            raise LionTypeError(f"Item {item} is not of allowed types")
+
+    @async_synchronized
+    async def aexclude(
+        self,
+        item: T | Iterable[T],
+        /,
+    ) -> None:
+        """Asynchronously exclude item(s) from the Pile if present.
+
+        Args:
+            item: Item or iterable of items to exclude.
+
+        Note:
+            This method does not raise an error if an item is not found.
+        """
+        self._exclude(item)
+
+    @async_synchronized
+    async def aclear(self) -> None:
+        self._clear()
+
+    @async_synchronized
+    async def aupdate(
+        self,
+        other: Any,
+        /,
+    ) -> None:
+        self._update(other)
+
+    @async_synchronized
+    async def aget(
+        self,
+        key: Any,
+        default=...,
+        /,
+    ) -> list | Any | T:
+        return self._get(key, default)
+
+    async def __aiter__(self) -> AsyncIterator[T]:
+        """Return an asynchronous iterator over the items in the Pile.
+
+        This method creates a snapshot of the current order to prevent
+        issues with concurrent modifications during iteration.
+
+        Yields:
+            Items in the Pile in their current order.
+
+        Note:
+            This method yields control to the event loop after each item,
+            allowing other async operations to run between iterations.
+        """
+
+        async with self.async_lock:
+            current_order = list(self.order)
+
+        for key in current_order:
+            yield self.pile_[key]
+            await asyncio.sleep(0)  # Yield control to the event loop
+
+    async def __anext__(self) -> T:
+        """Asynchronously return the next item in the Pile."""
+        try:
+            return await anext(self.AsyncPileIterator(self))
+        except StopAsyncIteration:
+            raise StopAsyncIteration("End of pile")
+
+    class AsyncPileIterator:
+        def __init__(self, pile: Pile):
+            self.pile = pile
+            self.index = 0
+
+        def __aiter__(self) -> AsyncIterator[T]:
+            return self
+
+        async def __anext__(self) -> T:
+            if self.index >= len(self.pile):
+                raise StopAsyncIteration
+            item = self.pile[self.pile.order[self.index]]
+            self.index += 1
+            await asyncio.sleep(0)  # Yield control to the event loop
+            return item
 
 
 def pile(

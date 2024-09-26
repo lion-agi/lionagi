@@ -1,6 +1,7 @@
 import unittest
+
+from lionagi.core.collections.abc import Condition, RelationError
 from lionagi.core.generic import Node
-from lionagi.core.collections.abc import RelationError, Condition
 from lionagi.core.generic.edge import Edge
 
 
