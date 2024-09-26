@@ -1,7 +1,6 @@
 from __future__ import annotations
 
 import asyncio
-import threading
 from collections.abc import Iterable
 from functools import wraps
 from typing import Any, AsyncIterator, Callable, Generic, Type, TypeVar
@@ -28,15 +27,6 @@ from .model import iModel
 from .util import _validate_order, to_list_type
 
 T = TypeVar("T")
-
-
-def synchronized(func: Callable):
-    @wraps(func)
-    def wrapper(self, *args, **kwargs):
-        with self.lock:
-            return func(self, *args, **kwargs)
-
-    return wrapper
 
 
 def async_synchronized(func: Callable):
@@ -75,7 +65,6 @@ class Pile(Element, Record, Generic[T]):
 
     def __pydantic_extra__(self) -> dict[str, Any]:
         return {
-            "_lock": Field(default_factory=threading.Lock),
             "_async": Field(default_factory=asyncio.Lock),
         }
 
@@ -221,7 +210,6 @@ class Pile(Element, Record, Generic[T]):
 
         return True
 
-    @synchronized
     def pop(self, key: Any, default=...) -> T | "Pile[T]" | None:
         """
         Remove and return item(s) associated with given key.
@@ -259,7 +247,6 @@ class Pile(Element, Record, Generic[T]):
 
         return pile(items) if len(items) > 1 else items[0]
 
-    @synchronized
     def get(self, key: Any, default=...) -> T | "Pile[T]" | None:
         """
         Retrieve item(s) associated with given key.
@@ -300,7 +287,6 @@ class Pile(Element, Record, Generic[T]):
         p = pile(other)
         self[p] = p
 
-    @synchronized
     def clear(self):
         """Clear all items, resetting pile to empty state."""
         self.pile.clear()
@@ -558,7 +544,6 @@ class Pile(Element, Record, Generic[T]):
         """Return the total size of the pile."""
         return sum([len(i) for i in self])
 
-    @synchronized
     def insert(self, index, item):
         """
         Insert item(s) at specific position.
@@ -581,7 +566,6 @@ class Pile(Element, Record, Generic[T]):
             self.order.insert(index, k)
             self.pile[k] = v
 
-    @synchronized
     def append(self, item: T):
         """
         Append item to end of pile.
@@ -994,22 +978,13 @@ class Pile(Element, Record, Generic[T]):
     def __getstate__(self):
         """Prepare the Pile instance for pickling."""
         state = self.__dict__.copy()
-        state["_lock"] = None
         state["_async_lock"] = None
         return state
 
     def __setstate__(self, state):
         """Restore the Pile instance after unpickling."""
         self.__dict__.update(state)
-        self._lock = threading.Lock()
         self._async_lock = asyncio.Lock()
-
-    @property
-    def lock(self):
-        """Ensure the lock is always available, even during unpickling."""
-        if not hasattr(self, "_lock") or self._lock is None:
-            self._lock = threading.Lock()
-        return self._lock
 
     @property
     def async_lock(self):
