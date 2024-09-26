@@ -4,6 +4,7 @@ from .ollama import OllamaService
 from .transformers import TransformersService
 from .litellm import LiteLLMService
 from .mlx_service import MLXService
+from .groq import GroqService
 from lionagi.integrations.config.oai_configs import oai_schema
 from lionagi.integrations.config.openrouter_configs import openrouter_schema
 
@@ -38,6 +39,10 @@ SERVICE_PROVIDERS_MAPPING = {
         "schema": {"model": "mlx-community/OLMo-7B-hf-4bit-mlx"},
         "default_model": "mlx-community/OLMo-7B-hf-4bit-mlx",
     },
+    "groq": {
+        "service": GroqService,
+        "schema": groq_schema,
+        "default_model": "llama3-70b-8192",
 }
 
 # TODO
