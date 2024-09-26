@@ -43,6 +43,7 @@ SERVICE_PROVIDERS_MAPPING = {
         "service": GroqService,
         "schema": groq_schema,
         "default_model": "llama3-70b-8192",
+    },
 }
 
 # TODO
