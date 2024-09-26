@@ -3,7 +3,7 @@
 API_key_schema = ("GROQ_API_KEY",)
 
 groq_chat_llmconfig = {
-    "model": "llama3-70b-8192,
+    "model": "llama3-70b-8192",
     "frequency_penalty": 0,
     "max_tokens": None,
     "num": 1,
