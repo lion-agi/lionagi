@@ -26,7 +26,7 @@ allowed_kwargs = [
 ]
 
 
-class cerebrasService(BaseService):
+class CerebrasService(BaseService):
     base_url = "https://api.cerebras.ai/v1"
     available_endpoints = ["chat/completions"]
     schema = cerebras_schema
