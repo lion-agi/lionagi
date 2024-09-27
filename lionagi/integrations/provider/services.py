@@ -148,3 +148,17 @@ class Services:
         from lionagi.integrations.provider.groq import GroqService
 
         return GroqService(**kwargs)
+
+    @staticmethod
+    def Cerebras(**kwargs):
+        """
+        A provider to interact with Cerebras APLI
+
+        Attributes:
+                model (str): name of the model to use
+                kwargs (Optional[Any]): additional kwargs for calling the model
+        """
+
+        from lionagi.integrations.provider.cerebras import CerebrasService
+
+        return CerebrasService(**kwargs)
