@@ -1,9 +1,14 @@
+from lionfuncs import check_import
+
+
 class LlamaPack:
 
     @staticmethod
     def download(pack_name, pack_path):
         try:
-            from llama_index.llama_pack import download_llama_pack
+            download_llama_pack = check_import(
+                "llama_index.llama_pack", import_name="download_llama_pack"
+            )
 
             return download_llama_pack(pack_name, pack_path)
         except Exception as e:

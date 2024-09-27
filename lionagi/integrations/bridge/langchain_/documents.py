@@ -1,5 +1,7 @@
 from typing import Any, Callable, Dict, List, TypeVar, Union
 
+from lionfuncs import check_import
+
 from lionagi.libs.sys_util import SysUtil
 
 T = TypeVar("T")
@@ -21,8 +23,9 @@ def to_langchain_document(datanode: T, **kwargs: Any) -> Any:
             Any: An instance of `LangchainDocument` populated with data from the input node.
     """
 
-    SysUtil.check_import("langchain")
-    from langchain.schema import Document as LangchainDocument
+    LangchainDocument = check_import(
+        "langchain", module_name="schema", import_name="Document"
+    )
 
     dnode = datanode.to_dict()
     SysUtil.change_dict_key(dnode, old_key="content", new_key="page_content")
@@ -63,8 +66,9 @@ def langchain_loader(
             True
     """
 
-    SysUtil.check_import("langchain")
-    import langchain_community.document_loaders as document_loaders
+    document_loaders = check_import(
+        "langchain_community", module_name="document_loaders", pip_name="langchain"
+    )
 
     try:
         if isinstance(loader, str):

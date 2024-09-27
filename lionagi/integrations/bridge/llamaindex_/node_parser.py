@@ -1,5 +1,7 @@
 from typing import Any
 
+from lionfuncs import check_import, import_module
+
 from lionagi.libs.sys_util import SysUtil
 
 
@@ -25,9 +27,11 @@ def get_llama_index_node_parser(node_parser: Any):
             found within the llama_index.core.node_parser module.
     """
 
-    SysUtil.check_import("llama_index", pip_name="llama-index")
-    import llama_index.core.node_parser
-    from llama_index.core.node_parser.interface import NodeParser
+    NodeParser = check_import(
+        "llama_index.core.node_parser.interface",
+        import_name="NodeParser",
+        pip_name="llama-index",
+    )
 
     if not isinstance(node_parser, str) and not issubclass(node_parser, NodeParser):
         raise TypeError("node_parser must be a string or NodeParser.")
@@ -37,7 +41,8 @@ def get_llama_index_node_parser(node_parser: Any):
             SysUtil.check_import("tree_sitter_languages")
 
         try:
-            return getattr(llama_index.core.node_parser, node_parser)
+            node_module = import_module("llama_index.core", module_name="node_parser")
+            return getattr(node_module, node_parser)
         except Exception as e:
             raise AttributeError(
                 f"llama_index_core has no such attribute:" f" {node_parser}, Error: {e}"

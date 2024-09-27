@@ -1,15 +1,14 @@
 from typing import Dict, Union
 
+from lionfuncs import check_import
+
 
 def get_ipython_user_proxy():
 
     try:
-        from lionagi.libs import SysUtil
-
-        SysUtil.check_import("autogen", pip_name="pyautogen")
-
-        import autogen
+        autogen = check_import("autogen", pip_name="pyautogen")
         from IPython import get_ipython
+
     except Exception as e:
         raise ImportError(f"Please install autogen and IPython. {e}")
 
