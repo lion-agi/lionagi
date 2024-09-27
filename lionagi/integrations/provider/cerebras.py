@@ -30,7 +30,7 @@ class CerebrasService(BaseService):
     base_url = "https://api.cerebras.ai/v1"
     available_endpoints = ["chat/completions"]
     schema = cerebras_schema
-    key_scheme = "cerebras_API_KEY"
+    key_scheme = "CEREBRAS_API_KEY"
     token_encoding_name = "cl100k_base"
 
     def __init__(
