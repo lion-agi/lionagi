@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "lionagi"
-version = "0.2.8"
+version = "0.2.9"
 description = "Towards automated general intelligence."
 authors = ["HaiyangLi <quantocean.li@gmail.com>"]
 readme = "README.md"
