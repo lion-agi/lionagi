@@ -1,6 +1,5 @@
+import json
 from typing import Any, Dict
-
-from lionfuncs import as_readable_json
 
 from lionagi.core.collections.abc import SYSTEM_FIELDS
 from lionagi.core.report.base import BaseForm
@@ -203,7 +202,7 @@ class Form(BaseForm):
 
         for k, v in fields.items():
             if isinstance(v, dict):
-                v = as_readable_json(v)
+                v = json.dumps(v, indent=4)
             if len(str(v)) > 50:
                 display(Markdown(f"**{k}**: \n {v}"))
             else:
