@@ -1,20 +1,19 @@
 """Component class, base building block in LionAGI."""
 
 import contextlib
-from abc import ABC
-from collections.abc import Sequence
+import json
 from functools import singledispatchmethod
-from typing import Any, Type, TypeAlias, TypeVar, Union
+from typing import Any, Type, TypeVar, Union, TypeAlias, Sequence
 
+from lion_core.sys_utils import SysUtil
+from lionabc import AbstractElement, Real
+from lionabc.exceptions import LionTypeError, LionValueError
+from lionfuncs import flatten, lcall, nget, ninsert, nset
+from lionfuncs import time as _t
+from lionfuncs import to_dict, to_list, unflatten
 from pandas import DataFrame, Series
-from pydantic import AliasChoices, BaseModel, Field, ValidationError
+from pydantic import AliasChoices, BaseModel, ConfigDict, Field, ValidationError
 
-from lionagi.libs import ParseUtil, SysUtil
-from lionagi.libs.ln_convert import strip_lower, to_dict, to_str
-from lionagi.libs.ln_func_call import lcall
-from lionagi.libs.ln_nested import flatten, nget, ninsert, nset, unflatten
-
-from .exceptions import FieldError, LionTypeError, LionValueError
 from .util import base_lion_fields, lc_meta_fields, llama_meta_fields
 
 T = TypeVar("T")
@@ -22,7 +21,7 @@ T = TypeVar("T")
 _init_class = {}
 
 
-class Element(BaseModel, ABC):
+class Element(BaseModel, AbstractElement, Real):
     """Base class for elements within the LionAGI system.
 
     Attributes:
@@ -31,20 +30,17 @@ class Element(BaseModel, ABC):
     """
 
     ln_id: str = Field(
-        default_factory=SysUtil.create_id,
+        default_factory=SysUtil.id,
         title="ID",
-        description="A 32-char unique hash identifier.",
         frozen=True,
-        validation_alias=AliasChoices("node_id", "ID", "id"),
     )
 
     timestamp: str = Field(
-        default_factory=lambda: SysUtil.get_timestamp(sep=None)[:-6],
+        default_factory=lambda: _t(type_="iso")[:-6],
         title="Creation Timestamp",
         description="The UTC timestamp of creation",
         frozen=True,
         alias="created",
-        validation_alias=AliasChoices("created_on", "creation_date"),
     )
 
     def __init_subclass__(cls, **kwargs):
@@ -57,21 +53,7 @@ class Element(BaseModel, ABC):
         return True
 
 
-class Component(Element, ABC):
-    """
-    Represents a distinguishable, temporal entity in LionAGI.
-
-    Encapsulates essential attributes and behaviors needed for individual
-    components within the system's architecture. Each component is uniquely
-    identifiable, with built-in version control and metadata handling.
-
-    Attributes:
-        ln_id (str): A unique identifier for the component.
-        timestamp (str): The UTC timestamp when the component was created.
-        metadata (dict): Additional metadata for the component.
-        extra_fields (dict): Additional fields for the component.
-        content (Any): Optional content of the component.
-    """
+class Component(Element):
 
     metadata: dict[str, Any] = Field(
         default_factory=dict,
@@ -98,6 +80,13 @@ class Component(Element, ABC):
         description="The optional embedding of the node.",
     )
 
+    model_config = ConfigDict(
+        extra="allow",  # this will be changed into "forbid" in v1.0.0
+        arbitrary_types_allowed=True,
+        use_enum_values=True,
+        populate_by_name=True,
+    )
+
     @staticmethod
     def _validate_embedding(value: Any) -> list:
         if not value:
@@ -109,16 +98,12 @@ class Component(Element, ABC):
             string_elements = value.strip("[]").split(",")
             # Convert each string element to a float
             with contextlib.suppress(ValueError):
-                return [float(element) for element in string_elements]
+                return to_list(
+                    [float(element) for element in string_elements],
+                    dropna=True,
+                    flatten=True,
+                )
         raise ValueError("Invalid embedding format.")
-
-    class Config:
-        """Model configuration settings."""
-
-        extra = "allow"
-        arbitrary_types_allowed = True
-        populate_by_name = True
-        use_enum_values = True
 
     @singledispatchmethod
     @classmethod
@@ -191,17 +176,17 @@ class Component(Element, ABC):
     @classmethod
     def _from_llama_index(cls, obj: Any) -> T:
         """Create a Component instance from a LlamaIndex object."""
-        dict_ = obj.to_dict()
+        dict_ = to_dict(obj)
+        dict_["content"] = dict_.pop("text", None)
 
-        SysUtil.change_dict_key(dict_, "text", "content")
-        metadata = dict_.pop("metadata", {})
+        metadata: dict = dict_.pop("metadata", {})
 
         for field in llama_meta_fields:
             metadata[field] = dict_.pop(field, None)
 
-        SysUtil.change_dict_key(metadata, "class_name", "llama_index_class")
-        SysUtil.change_dict_key(metadata, "id_", "llama_index_id")
-        SysUtil.change_dict_key(metadata, "relationships", "llama_index_relationships")
+        metadata["llama_index_class"] = metadata.pop("class_name", None)
+        metadata["llama_index_id"] = metadata.pop("id_", None)
+        metadata["llama_index_relationships"] = metadata.pop("relationships", None)
 
         dict_["metadata"] = metadata
         return cls.from_obj(dict_)
@@ -236,7 +221,7 @@ class Component(Element, ABC):
     @classmethod
     def _process_langchain_dict(cls, dict_: dict) -> dict:
         """Process a dictionary containing Langchain-specific data."""
-        SysUtil.change_dict_key(dict_, "page_content", "content")
+        dict_["content"] = dict_.pop("page_content", None)
 
         metadata = dict_.pop("metadata", {})
         metadata.update(dict_.pop("kwargs", {}))
@@ -256,9 +241,9 @@ class Component(Element, ABC):
             if field in dict_:
                 metadata[field] = dict_.pop(field)
 
-        SysUtil.change_dict_key(metadata, "lc", "langchain")
-        SysUtil.change_dict_key(metadata, "type", "lc_type")
-        SysUtil.change_dict_key(metadata, "id", "lc_id")
+        metadata["langchain"] = metadata.pop("lc", None)
+        metadata["lc_type"] = metadata.pop("type", None)
+        metadata["lc_id"] = metadata.pop("id", None)
 
         extra_fields = {k: v for k, v in metadata.items() if k not in lc_meta_fields}
         metadata = {k: v for k, v in metadata.items() if k in lc_meta_fields}
@@ -288,9 +273,9 @@ class Component(Element, ABC):
         dict_["metadata"] = meta_
 
         if "ln_id" not in dict_:
-            dict_["ln_id"] = meta_.pop("ln_id", SysUtil.create_id())
+            dict_["ln_id"] = meta_.pop("ln_id", SysUtil.id())
         if "timestamp" not in dict_:
-            dict_["timestamp"] = SysUtil.get_timestamp(sep=None)[:-6]
+            dict_["timestamp"] = _t(type_="iso")[:-6]
         if "metadata" not in dict_:
             dict_["metadata"] = {}
         if "extra_fields" not in dict_:
@@ -301,7 +286,7 @@ class Component(Element, ABC):
     @classmethod
     def _from_str(cls, obj: str, /, *args, fuzzy_parse: bool = False, **kwargs) -> T:
         """Create a Component instance from a JSON string."""
-        obj = ParseUtil.fuzzy_parse_json(obj) if fuzzy_parse else to_dict(obj)
+        obj = to_dict(obj, fuzzy_parse=fuzzy_parse)
         try:
             return cls.from_obj(obj, *args, **kwargs)
         except ValidationError as e:
@@ -378,7 +363,7 @@ class Component(Element, ABC):
     def to_json_str(self, *args, dropna=False, **kwargs) -> str:
         """Convert the component to a JSON string."""
         dict_ = self.to_dict(*args, dropna=dropna, **kwargs)
-        return to_str(dict_)
+        return json.dumps(dict_)
 
     def to_dict(self, *args, dropna=False, **kwargs) -> dict[str, Any]:
         """Convert the component to a dictionary."""
@@ -435,13 +420,13 @@ class Component(Element, ABC):
             ninsert(
                 self.metadata,
                 ["last_updated", name],
-                SysUtil.get_timestamp(sep=None)[:-6],
+                _t(type_="iso")[:-6],
             )
         elif isinstance(a, tuple) and isinstance(a[0], int):
             nset(
                 self.metadata,
                 ["last_updated", name],
-                SysUtil.get_timestamp(sep=None)[:-6],
+                _t(type_="iso")[:-6],
             )
 
     def _meta_pop(self, indices, default=...):
@@ -519,7 +504,7 @@ class Component(Element, ABC):
         """Get the value of a field attribute."""
         try:
             if not self._field_has_attr(k, attr):
-                raise FieldError(f"field {k} has no attribute {attr}")
+                raise LionValueError(f"field {k} has no attribute {attr}")
 
             field = self._all_fields[k]
             if not (a := getattr(field, attr, None)):
@@ -544,7 +529,7 @@ class Component(Element, ABC):
             if "|" in str(v):
                 v = str(v)
                 v = v.split("|")
-                dict_[k] = lcall(v, strip_lower)
+                dict_[k] = lcall(v, lambda x: str(x).strip().lower())
             else:
                 dict_[k] = [v.__name__] if v else None
         return dict_
@@ -583,7 +568,6 @@ class Component(Element, ABC):
 
     def __len__(self):
         return 1
-
 
 LionIDable: TypeAlias = Union[str, Element]
 

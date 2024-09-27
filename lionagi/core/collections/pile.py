@@ -5,11 +5,11 @@ from collections.abc import Iterable
 from functools import wraps
 from typing import Any, AsyncIterator, Callable, Generic, Type, TypeVar
 
+from lionfuncs import CallDecorator as cd
+from lionfuncs import alcall, is_same_dtype, to_dict
 from pydantic import Field, field_validator
 
-from lionagi.libs.ln_convert import is_same_dtype, to_df, to_dict
-from lionagi.libs.ln_func_call import CallDecorator as cd
-from lionagi.libs.ln_func_call import alcall
+from lionagi.libs.ln_convert import to_df
 
 from .abc import (
     Component,
