@@ -605,18 +605,18 @@ testing = ["Django", "attrs", "colorama", "docopt", "pytest (<7.0.0)"]
 
 [[package]]
 name = "lion-core"
-version = "0.3.5"
+version = "0.3.6"
 description = "A core package for the Lion framework."
 optional = false
 python-versions = "<4.0,>=3.10"
 files = [
-    {file = "lion_core-0.3.5-py3-none-any.whl", hash = "sha256:75ea3496e3e322856d55f22485f8942110c3ded30fc3fd06108f7b27ca865648"},
-    {file = "lion_core-0.3.5.tar.gz", hash = "sha256:ddc1f79517813e7607993fe5b900844dde3161266f18000676f76734973457b4"},
+    {file = "lion_core-0.3.6-py3-none-any.whl", hash = "sha256:49e816009e7342aa94c9059f4b3e1edb2fd8208df10275d4a48cdd46496b15f8"},
+    {file = "lion_core-0.3.6.tar.gz", hash = "sha256:acb5ab83294df386a8fa746f1479e9dbd72416b7fd3f037d72ed0536becee6e7"},
 ]
 
 [package.dependencies]
 lionabc = ">=1.0.1,<2.0.0"
-lionfuncs = "1.0.3"
+lionfuncs = ">=1.0.4,<2.0.0"
 
 [[package]]
 name = "lion-openai"
@@ -664,18 +664,18 @@ files = [
 
 [[package]]
 name = "lionfuncs"
-version = "1.0.3"
+version = "1.0.4"
 description = ""
 optional = false
 python-versions = "<4.0,>=3.10"
 files = [
-    {file = "lionfuncs-1.0.3-py3-none-any.whl", hash = "sha256:ff2a0ce76d3efa4741e566100f59b754dd56141c3611a7175e01519eadc78ee0"},
-    {file = "lionfuncs-1.0.3.tar.gz", hash = "sha256:5f1897a172bd4bd4e5e754bd2f21d6869bdc233aff194b737a4161c53ea8bdb9"},
+    {file = "lionfuncs-1.0.4-py3-none-any.whl", hash = "sha256:e8c9462ba413e4123a8465ffa9688fb1b1f36619a729b5566b9773f1b767f416"},
+    {file = "lionfuncs-1.0.4.tar.gz", hash = "sha256:22034ce708ee324cc3a72ad3498adbb71bba81fee6add8273b6bb4c98ffd90ca"},
 ]
 
 [package.dependencies]
-pandas = ">=2.2.3,<3.0.0"
-pydantic = ">=2.9.2,<3.0.0"
+pandas = ">=1.2.0"
+pydantic = ">=2.0.0"
 
 [[package]]
 name = "matplotlib-inline"
@@ -932,9 +932,9 @@ files = [
 
 [package.dependencies]
 numpy = [
+    {version = ">=1.26.0", markers = "python_version >= \"3.12\""},
     {version = ">=1.22.4", markers = "python_version < \"3.11\""},
     {version = ">=1.23.2", markers = "python_version == \"3.11\""},
-    {version = ">=1.26.0", markers = "python_version >= \"3.12\""},
 ]
 python-dateutil = ">=2.8.2"
 pytz = ">=2020.1"
@@ -1172,8 +1172,8 @@ files = [
 annotated-types = ">=0.6.0"
 pydantic-core = "2.23.4"
 typing-extensions = [
-    {version = ">=4.6.1", markers = "python_version < \"3.13\""},
     {version = ">=4.12.2", markers = "python_version >= \"3.13\""},
+    {version = ">=4.6.1", markers = "python_version < \"3.13\""},
 ]
 
 [package.extras]
@@ -1806,4 +1806,4 @@ multidict = ">=4.0"
 [metadata]
 lock-version = "2.0"
 python-versions = "^3.10"
-content-hash = "8162402fa350252f0a98ee8dc52c50db5b9b4cae402679602ffc3f54c8c67649"
+content-hash = "81c85f47cca79d015914d09f1cfa9cb2c0e99a346a66dfc18775893ca5729c3f"
