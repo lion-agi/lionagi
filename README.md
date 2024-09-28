@@ -8,9 +8,12 @@
 ### an AGentic Intelligence Operating System
 
 ```
-pip install lionagi==0.2.8
+pip install lionagi
 ```
-
+or
+```
+poetry add lionagi
+```
 **Powerful Intelligent Workflow Automation**
 
 lionagi is an intelligent agentic workflow automation framework. It introduces advanced ML models into any existing workflows and data infrastructure.
