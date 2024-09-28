@@ -1,18 +1,17 @@
 [tool.poetry]
 name = "lionagi"
-version = "0.2.9"
+version = "0.3.0"
 description = "Towards automated general intelligence."
 authors = ["HaiyangLi <quantocean.li@gmail.com>"]
 readme = "README.md"
 
 [tool.poetry.dependencies]
 python = "^3.10"
-lionfuncs = "1.0.1"
 lion-openai = "^0.1.4"
-ipython = "^8.27.0"
-pandas = "^2.2.3"
-aiocache = "^0.12.3"
+ipython = ">=8.0.0"
+aiocache = ">=0.12.0"
 python-dotenv = "^1.0.1"
+lion-core = "^0.3.5"
 
 
 [tool.poetry.group.dev.dependencies]
