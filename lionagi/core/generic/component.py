@@ -1,12 +1,11 @@
-from typing import Any, ClassVar
+from pathlib import Path
+from typing import Any, ClassVar, Literal
 
-from lion_core.converter import Converter
+import pandas as pd
 from lion_core.generic.component import Component as CoreComponent
-from lion_core.generic.note import Note
-from lionfuncs import LN_UNDEFINED, format_deprecation_msg
+from lionfuncs import LN_UNDEFINED, read_file, to_dict
 from pydantic import Field
-from pydantic.fields import FieldInfo
-from typing_extensions import Annotated, deprecated, override
+from typing_extensions import Annotated, deprecated
 
 from lionagi.core.generic._component_registry import ComponentConverterRegistry
 
@@ -26,144 +25,167 @@ class Component(CoreComponent):
 
     _converter_registry: ClassVar = ComponentConverterRegistry
 
-    # class methods
     @classmethod
-    def from_dict(cls, data: dict, /, **kwargs):
-        """
-        must use from_dict, do not use __init__ to create instance
-        """
-        return super().from_dict(data, **kwargs)
+    def from_obj(
+        cls,
+        obj: Any,
+        /,
+        handle_how: Literal["suppress", "raise", "coerce", "coerce_key"] = "raise",
+        **kwargs: Any,
+    ):
+        if isinstance(obj, pd.DataFrame):
+            obj = [i for _, i in obj.iterrows()]
+        if isinstance(obj, (list, tuple)) and len(obj) > 1:
+            return [
+                cls._dispatch_from_obj(i, handle_how=handle_how, **kwargs) for i in obj
+            ]
 
-    @classmethod
-    def from_obj(cls, obj: Any, /, **kwargs):
-        """
-        basically obj -> dict -> from_dict
-        """
-        ...
-
-    @classmethod
-    def convert_from(cls, object_: Any, object_key: str = None, /, **kwargs):
-        return super().convert_from(object_, object_key, **kwargs)
+        return cls._dispatch_from_obj(obj, handle_how=handle_how, **kwargs)
 
     @classmethod
-    def register_converter(cls, converter: type[Converter]) -> None:
-        """Register a new converter."""
-        cls.get_converter_registry().register(converter=converter)
-
-    # properties
-    @property
-    def all_fields(self):
-        return super().all_fields
-
-    # fields_methods
-    def add_field(
-        self,
-        field_name: NAMED_FIELD,
+    def _dispatch_from_obj(
+        cls,
+        obj: Any,
         /,
-        value: Any = LN_UNDEFINED,
-        annotation: Any = LN_UNDEFINED,
-        field_obj: FieldInfo = LN_UNDEFINED,
-        **kwargs,
-    ) -> None:
-        super().add_field(
-            field_name=field_name,
-            value=value,
-            annotation=annotation,
-            field_obj=field_obj,
-            **kwargs,
-        )
+        handle_how: Literal["suppress", "raise", "coerce", "coerce_key"] = "raise",
+        **kwargs: Any,
+    ):
 
-    # when updating field, we do not check the validity of annotation
-    # meaning current value will not get validated, and can lead to
-    # errors when storing and loading if you change annotation to a type
-    # that is not compatible with the current value
-    def update_field(
-        self,
-        field_name: NAMED_FIELD,
-        /,
-        value: Any = LN_UNDEFINED,
-        annotation: Any = LN_UNDEFINED,
-        field_obj: FieldInfo | Any = LN_UNDEFINED,
-        **kwargs,
-    ) -> None:
-        super().update_field(
-            field_name=field_name,
-            value=value,
-            annotation=annotation,
-            field_obj=field_obj,
-            **kwargs,
-        )
+        try:
+            obj = cls._obj_to_dict(obj, **kwargs)
+            if any(
+                key in obj
+                for key in [
+                    "lc_id_",
+                    "lc_metadata",
+                    "lc_type",
+                    "page_content",
+                ]
+            ):
+                return cls.convert_from(obj, "langchain", **kwargs)
+            elif any(
+                key in obj
+                for key in [
+                    "llama_index_id",
+                    "llama_index_metadata",
+                    "excluded_llm_metadata_keys",
+                ]
+            ):
+                return cls.convert_from(obj, "llamaindex", **kwargs)
+            else:
+                return cls.from_dict(obj)
+        except Exception as e:
+            if handle_how == "raise":
+                raise e
+            if handle_how == "coerce":
+                return cls.from_dict({"content": obj})
+            if handle_how == "suppress":
+                return None
+            if handle_how == "coerce_key":
+                return cls.from_dict({str(k): v for k, v in obj.items()})
 
-    # field management methods
-    def field_setattr(
-        self,
-        field_name: str,
-        attr: Any,
-        value: Any,
-        /,
-    ) -> None:
-        super().field_setattr(field_name, attr, value)
-
-    def field_hasattr(
-        self,
-        field_name: str,
-        attr: str,
-        /,
-    ) -> bool:
-        return super().field_hasattr(field_name, attr)
-
-    def field_getattr(
-        self,
-        field_name: str,
-        attr: str,
-        default: Any = LN_UNDEFINED,
-        /,
-    ) -> Any:
-        return super().field_getattr(field_name, attr, default)
-
-    def field_annotation(self, field_name: Any, /) -> dict[str, Any]:
-        """Get the annotation of a field."""
-        return super().field_annotation(field_name)
-
-    @override
-    def to_dict(self, **kwargs: Any) -> dict:
+    @classmethod
+    def _obj_to_dict(cls, obj: Any, /, **kwargs) -> dict:
         """
-        Convert the component to a dictionary representation.
-
-        Args:
-            **kwargs: Additional arguments to pass to model_dump.
-
-        Returns:
-            dict[str, Any]: A dictionary representation of the component.
+        Create a Component instance from various object types.
+        kwargs for to_dict and convert_from
         """
-        return super().to_dict(**kwargs)
 
-    def to_note(self, **kwargs: Any) -> Note:
-        return Note(**self.to_dict(**kwargs))
+        # Unpack if obj is a single-element list or tuple
+        if isinstance(obj, (list, tuple)) and len(obj) == 1:
+            obj = obj[0]
+        kwargs["suppress"] = True
+        kwargs["fuzzy_parse"] = True
+        data_, dict_ = None, None
+
+        if isinstance(obj, pd.Series):
+            return obj.to_dict()
+
+        if isinstance(obj, Path):
+            try:
+                data_ = read_file(obj)
+                if data_ is not None:
+                    suffix = Path(obj).suffix.lower().strip(".") + "_file"
+                if suffix not in cls._get_converter_registry().list_obj_keys():
+                    raise ValueError(f"Unsupported file type: {Path(obj).suffix}")
+            except FileNotFoundError:
+                pass
+            except Exception as e:
+                raise ValueError(f"Unsupported file type: {obj.suffix}") from e
+
+        if isinstance(obj, str) and "." in obj:
+            suffix = obj.split(".")[-1].lower() + "_file"
+            if suffix in cls._get_converter_registry().list_obj_keys():
+                try:
+                    data_ = read_file(obj)
+                except FileNotFoundError:
+                    pass
+                except Exception as e:
+                    raise ValueError(f"Unsupported file type: {obj.suffix}") from e
+
+        if isinstance(data_, str):
+            if "{" in obj and "}" in obj:
+                dict_ = to_dict(obj, str_type="json", **kwargs)
+            if dict_ is None and "<" in obj and ">" in obj:
+                dict_ = to_dict(obj, str_type="xml", **kwargs)
+            if dict_ is not None:
+                obj = dict_
+            else:
+                msg = str(data_)
+                msg = msg[:100] + "..." if len(msg) > 100 else msg
+                raise ValueError(
+                    f"The value input cannot be converted to a valid dict: {msg}"
+                )
+
+        if dict_ is None:
+            kwargs["suppress"] = True
+            kwargs["fuzzy_parse"] = True
+            dict_ = to_dict(obj, **kwargs)
+            if dict_ is None:
+                raise ValueError(f"Unsupported object type: {type(obj)}")
+            else:
+                obj = dict_
+
+        if isinstance(obj, dict):
+            return obj
+
+        try:
+            kwargs["suppress"] = False
+            return to_dict(obj, **kwargs)
+        except Exception:
+            pass
+
+        # If we reach here, we don't know how to handle obj
+        raise ValueError(f"Unsupported object type: {type(obj)}")
 
     # legacy methods (for backward compatibility )
+
+    @property
     @deprecated(
-        format_deprecation_msg(
-            deprecated_name="Component.to_json()",
-            type_="method",
-            deprecated_version="0.3.0",
-            removal_version="1.0.0",
-            replacement="Component.convert_to('json')",
-        ),
+        "Use Component.all_fields instead", category=DeprecationWarning, stacklevel=2
+    )
+    def _all_fields(self):
+        return self.all_fields
+
+    @property
+    @deprecated(
+        "Use Component.field_annotation instead",
         category=DeprecationWarning,
         stacklevel=2,
     )
-    def to_json(self, **kwargs: Any) -> str:
+    def _field_annotations(self) -> dict[str, Any]:
+        return self.field_annotation(list(self.all_fields.keys()))
+
+    @deprecated(
+        "Use Component.convert_to('json') instead",
+        category=DeprecationWarning,
+        stacklevel=2,
+    )
+    def to_json_str(self, **kwargs: Any) -> str:
         return self.convert_to("json", **kwargs)
 
     @deprecated(
-        format_deprecation_msg(
-            deprecated_name="Component.to_json_file()",
-            type_="method",
-            deprecated_version="0.3.0",
-            removal_version="1.0.0",
-            replacement="Component.convert_to('json_file')",
-        ),
+        "Use Component.convert_to('json_file') instead",
         category=DeprecationWarning,
         stacklevel=2,
     )
@@ -171,13 +193,7 @@ class Component(CoreComponent):
         return self.convert_to("json_file", **kwargs)
 
     @deprecated(
-        format_deprecation_msg(
-            deprecated_name="Component.to_xml()",
-            type_="method",
-            deprecated_version="0.3.0",
-            removal_version="1.0.0",
-            replacement="Component.convert_to('xml')",
-        ),
+        "Use Component.convert_to('xml') instead",
         category=DeprecationWarning,
         stacklevel=2,
     )
@@ -185,13 +201,7 @@ class Component(CoreComponent):
         return self.convert_to("xml", **kwargs)
 
     @deprecated(
-        format_deprecation_msg(
-            deprecated_name="Component.to_xml_file()",
-            type_="method",
-            deprecated_version="0.3.0",
-            removal_version="1.0.0",
-            replacement="Component.convert_to('xml_file')",
-        ),
+        "Use Component.convert_to('xml_file') instead",
         category=DeprecationWarning,
         stacklevel=2,
     )
@@ -199,13 +209,7 @@ class Component(CoreComponent):
         return self.convert_to("xml_file", **kwargs)
 
     @deprecated(
-        format_deprecation_msg(
-            deprecated_name="Component.to_pd_series()",
-            type_="method",
-            deprecated_version="0.3.0",
-            removal_version="1.0.0",
-            replacement="Component.convert_to('pd_series')",
-        ),
+        "Use Component.convert_to('pd_series') instead",
         category=DeprecationWarning,
         stacklevel=2,
     )
@@ -213,90 +217,86 @@ class Component(CoreComponent):
         return self.convert_to("pd_series", **kwargs)
 
     @deprecated(
-        format_deprecation_msg(
-            deprecated_name="Component.to_llama_index_node()",
-            type_="method",
-            deprecated_version="0.3.0",
-            removal_version="1.0.0",
-            replacement="Component.convert_to('llama_index')",
-        ),
+        "Use Component.convert_to('llamaindex') instead",
         category=DeprecationWarning,
         stacklevel=2,
     )
     def to_llama_index_node(self, **kwargs: Any) -> str:
-        return self.convert_to("llama_index", **kwargs)
+        return self.convert_to("llamaindex", **kwargs)
 
     @deprecated(
-        format_deprecation_msg(
-            deprecated_name="Component.to_langchain_doc()",
-            type_="method",
-            deprecated_version="0.3.0",
-            removal_version="1.0.0",
-            replacement="Component.convert_to('langchain')",
-        ),
+        "Use Component.convert_to('langchain') instead",
         category=DeprecationWarning,
         stacklevel=2,
     )
     def to_langchain_doc(self, **kwargs: Any) -> str:
-        format_deprecation_msg("to_langchain_doc", "convert_to('langchain')")
         return self.convert_to("langchain", **kwargs)
 
     @deprecated(
-        format_deprecation_msg(
-            deprecated_name="Component._meta_pop()",
-            type_="method",
-            deprecated_version="0.3.0",
-            removal_version="1.0.0",
-            replacement="Component.metadata.pop()",
-        ),
+        "Use Component.metadata.pop() instead",
         category=DeprecationWarning,
         stacklevel=2,
     )
     def _meta_pop(self, indices, default=LN_UNDEFINED):
-        format_deprecation_msg("_meta_pop", "metadata.pop()")
         return self.metadata.pop(indices, default)
 
     @deprecated(
-        format_deprecation_msg(
-            deprecated_name="Component._meta_insert()",
-            type_="method",
-            deprecated_version="0.3.0",
-            removal_version="1.0.0",
-            replacement="Component.metadata.insert()",
-        ),
+        "Use Component.metadata.insert() instead",
         category=DeprecationWarning,
         stacklevel=2,
     )
     def _meta_insert(self, indices, value):
-        format_deprecation_msg("_meta_insert", "metadata.insert()")
         self.metadata.insert(indices, value)
 
     @deprecated(
-        format_deprecation_msg(
-            deprecated_name="Component._meta_set()",
-            type_="method",
-            deprecated_version="0.3.0",
-            removal_version="1.0.0",
-            replacement="Component.metadata.set()",
-        ),
+        "Use Component.metadata.set() instead",
         category=DeprecationWarning,
         stacklevel=2,
     )
     def _meta_set(self, indices, value):
-        format_deprecation_msg("_meta_set", "metadata.set()")
         self.metadata.set(indices, value)
 
     @deprecated(
-        format_deprecation_msg(
-            deprecated_name="Component._meta_get()",
-            type_="method",
-            deprecated_version="0.3.0",
-            removal_version="1.0.0",
-            replacement="Component.metadata.get()",
-        ),
+        "Use Component.metadata.get() instead",
         category=DeprecationWarning,
         stacklevel=2,
     )
     def _meta_get(self, indices, default=LN_UNDEFINED):
-        format_deprecation_msg("_meta_get", "metadata.get()")
         return self.metadata.get(indices, default)
+
+    @deprecated(
+        "Use Component.field_hasattr() instead",
+        category=DeprecationWarning,
+        stacklevel=2,
+    )
+    def _field_has_attr(self, k, attr) -> bool:
+        return self.field_hasattr(k, attr)
+
+    @deprecated(
+        "Use Component.field_getattr() instead",
+        category=DeprecationWarning,
+        stacklevel=2,
+    )
+    def _get_field_attr(self, k, attr, default=LN_UNDEFINED):
+        return self.field_getattr(k, attr, default)
+
+    @deprecated(
+        "Use Component.add_field() instead", category=DeprecationWarning, stacklevel=2
+    )
+    def _add_field(
+        self,
+        field: str,
+        annotation: Any = LN_UNDEFINED,
+        default: Any = LN_UNDEFINED,
+        value: Any = LN_UNDEFINED,
+        field_obj: Any = LN_UNDEFINED,
+        **kwargs,
+    ) -> None:
+        kwargs["default"] = default
+        self.add_field(
+            field,
+            value=value,
+            annotation=annotation,
+            field_obj=field_obj,
+            **kwargs,
+        )

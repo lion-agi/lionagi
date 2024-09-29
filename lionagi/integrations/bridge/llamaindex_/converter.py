@@ -9,9 +9,9 @@ T = TypeVar("T", bound=RealElement)
 
 class LlamaIndexConverter(Converter):
 
-    obj_key = "llama_index"
-    BaseNode = check_import(
-        "llama_index", module_name="core.schema", import_name="BaseNode"
+    obj_key = "llamaindex"
+    TextNode = check_import(
+        "llama_index", module_name="core.schema", import_name="TextNode"
     )
 
     @classmethod
@@ -31,6 +31,8 @@ class LlamaIndexConverter(Converter):
             dict_["llama_index_id"] = dict_.pop("node_id")
         if "lion_metadata" in dict_:
             dict_["metadata"] = to_dict(dict_.pop("lion_metadata"))
+        if "class_name" in dict_:
+            dict_["llama_index_class_name"] = dict_.pop("class_name")
 
         dict_["llama_index_metadata"] = dict_.pop("metadata", {})
         if "lion_metadata" in dict_["llama_index_metadata"]:
@@ -63,5 +65,7 @@ class LlamaIndexConverter(Converter):
             dict_["node_id"] = dict_.pop("llama_index_id")
         if "llama_index_metadata" in dict_:
             dict_["metadata"] = dict_.pop("llama_index_metadata")
+        if "llama_index_class_name" in dict_:
+            dict_["class_name"] = dict_.pop("llama_index_class_name")
 
-        return cls.BaseNode(**dict_)
+        return cls.TextNode(**dict_)

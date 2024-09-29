@@ -2,6 +2,7 @@ import json
 from pathlib import Path
 from typing import Any, TypeVar
 
+import pandas as pd
 from lion_core.converter import Converter, ConverterRegistry
 from lion_core.generic.base import RealElement
 from lionfuncs import check_import, dict_to_xml, save_to_file, to_dict
@@ -149,11 +150,11 @@ class PandasSeriesConverter(Converter):
     def from_obj(
         cls,
         subj_cls: type[RealElement],
-        obj: Any,
+        obj: pd.Series,
         /,
-        **kwargs: Any,
+        **kwargs: pd.Series,
     ) -> dict[str, Any]:
-        return to_dict(obj, **kwargs)
+        return obj.to_dict()
 
     @classmethod
     def to_obj(
@@ -162,7 +163,7 @@ class PandasSeriesConverter(Converter):
         /,
         **kwargs: Any,
     ) -> Any:
-        dict_ = subj.to_dict(**kwargs)
+        dict_ = subj.to_dict()
         return cls.Series(dict_)
 
 

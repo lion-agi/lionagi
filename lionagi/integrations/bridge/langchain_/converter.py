@@ -2,7 +2,7 @@ from typing import Any, TypeVar
 
 from lion_core.converter import Converter
 from lion_core.generic.base import RealElement
-from lionfuncs import check_import, to_dict
+from lionfuncs import check_import, to_dict, to_str
 
 T = TypeVar("T", bound=RealElement)
 
@@ -50,7 +50,7 @@ class LangChainConverter(Converter):
     ) -> Any:
         dict_ = subj.to_dict(**kwargs)
         dict_["lion_metadata"] = dict_.pop("metadata", {})
-        dict_["page_content"] = dict_.pop("content", "")
+        dict_["page_content"] = to_str(dict_.pop("content", ""))
 
         for i in ["id_", "metadata", "type"]:
             if f"lc_{i}" in dict_:
