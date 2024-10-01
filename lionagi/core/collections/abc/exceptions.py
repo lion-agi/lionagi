@@ -1,10 +1,4 @@
-# import logging
-
-# # Configure logging
-# logging.basicConfig(
-#     level=logging.ERROR,
-#     format="%(asctime)s:%(levelname)s:%(message)s",
-# )
+"""deprecated, use lion_core.exceptions"""
 
 
 class LionAGIError(Exception):
@@ -132,3 +126,21 @@ class ServiceError(LionAGIError):
         else:
             msg += f" for {service.__class__.__name__}"
         return cls(msg)
+
+
+# for backwards compatibility
+__all__ = [
+    "LionAGIError",
+    "LionValueError",
+    "LionTypeError",
+    "ItemNotFoundError",
+    "ItemInvalidError",
+    "FieldError",
+    "LionOperationError",
+    "ConcurrencyError",
+    "RelationError",
+    "ActionError",
+    "ModelLimitExceededError",
+    "TimeoutError",
+    "ServiceError",
+]

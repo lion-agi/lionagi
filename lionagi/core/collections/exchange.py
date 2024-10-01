@@ -8,71 +8,7 @@ T = TypeVar("T")
 
 
 class Exchange(Element, Generic[T]):
-    """
-    Item exchange system designed to handle incoming and outgoing flows of items.
-
-    Attributes:
-        pile (Pile[T]): The pile of items in the exchange.
-        pending_ins (dict[str, Progression]): The pending incoming items to the exchange.
-        pending_outs (Progression): The progression of pending outgoing items.
-    """
-
-    pile: Pile[T] = Field(
-        default_factory=lambda: pile(),
-        description="The pile of items in the exchange.",
-        title="pending items",
-    )
-
-    pending_ins: dict[str, Progression] = Field(
-        default_factory=dict,
-        description="The pending incoming items to the exchange.",
-        title="pending incoming items",
-        examples=["{'sender_id': Progression}"],
-    )
-
-    pending_outs: Progression = Field(
-        default_factory=lambda: progression(),
-        description="The pending outgoing items to the exchange.",
-        title="pending outgoing items",
-    )
-
-    def __contains__(self, item):
-        """
-        Check if an item is in the pile.
-
-        Args:
-            item: The item to check.
-
-        Returns:
-            bool: True if the item is in the pile, False otherwise.
-        """
-        return item in self.pile
-
-    @property
-    def unassigned(self) -> Pile[T]:
-        """
-        if the item is not in the pending_ins or pending_outs, it is unassigned.
-        """
-        return pile(
-            [
-                item
-                for item in self.pile
-                if (
-                    all(item not in j for j in self.pending_ins.values())
-                    and item not in self.pending_outs
-                )
-            ]
-        )
-
-    @property
-    def senders(self) -> list[str]:
-        """
-        Get the list of senders for the pending incoming items.
-
-        Returns:
-            list[str]: The list of sender IDs.
-        """
-        return list(self.pending_ins.keys())
+    """Item exchange system"""
 
     def exclude(self, item) -> bool:
         """

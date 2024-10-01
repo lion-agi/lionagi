@@ -106,10 +106,8 @@ class Component(CoreComponent):
                 data_ = read_file(obj)
                 if data_ is not None:
                     suffix = Path(obj).suffix.lower().strip(".") + "_file"
-                if suffix not in cls._get_converter_registry().list_obj_keys():
-                    raise ValueError(f"Unsupported file type: {Path(obj).suffix}")
-            except FileNotFoundError:
-                pass
+                    if suffix not in cls._get_converter_registry().list_obj_keys():
+                        raise ValueError(f"Unsupported file type: {obj.suffix}")
             except Exception as e:
                 raise ValueError(f"Unsupported file type: {obj.suffix}") from e
 

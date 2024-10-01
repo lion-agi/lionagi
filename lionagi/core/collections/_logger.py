@@ -1,3 +1,5 @@
+"""deprecated, use LogManager"""
+
 import atexit
 import contextlib
 import logging

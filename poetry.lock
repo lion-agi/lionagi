@@ -18,13 +18,13 @@ redis = ["redis (>=4.2.0)"]
 
 [[package]]
 name = "aiohappyeyeballs"
-version = "2.4.2"
+version = "2.4.3"
 description = "Happy Eyeballs for asyncio"
 optional = false
 python-versions = ">=3.8"
 files = [
-    {file = "aiohappyeyeballs-2.4.2-py3-none-any.whl", hash = "sha256:8522691d9a154ba1145b157d6d5c15e5c692527ce6a53c5e5f9876977f6dab2f"},
-    {file = "aiohappyeyeballs-2.4.2.tar.gz", hash = "sha256:4ca893e6c5c1f5bf3888b04cb5a3bee24995398efef6e0b9f747b5e89d84fd74"},
+    {file = "aiohappyeyeballs-2.4.3-py3-none-any.whl", hash = "sha256:8a7a83727b2756f394ab2895ea0765a0a8c475e3c71e98d43d76f22b4b435572"},
+    {file = "aiohappyeyeballs-2.4.3.tar.gz", hash = "sha256:75cf88a15106a5002a8eb1dab212525c00d1f4c0fa96e551c9fbe6f09a621586"},
 ]
 
 [[package]]
@@ -245,10 +245,12 @@ files = [
 
 [package.dependencies]
 click = ">=8.0.0"
+ipython = {version = ">=7.8.0", optional = true, markers = "extra == \"jupyter\""}
 mypy-extensions = ">=0.4.3"
 packaging = ">=22.0"
 pathspec = ">=0.9.0"
 platformdirs = ">=2"
+tokenize-rt = {version = ">=3.2.0", optional = true, markers = "extra == \"jupyter\""}
 tomli = {version = ">=1.1.0", markers = "python_version < \"3.11\""}
 typing-extensions = {version = ">=4.0.1", markers = "python_version < \"3.11\""}
 
@@ -605,18 +607,18 @@ testing = ["Django", "attrs", "colorama", "docopt", "pytest (<7.0.0)"]
 
 [[package]]
 name = "lion-core"
-version = "0.3.6"
+version = "0.3.7"
 description = "A core package for the Lion framework."
 optional = false
 python-versions = "<4.0,>=3.10"
 files = [
-    {file = "lion_core-0.3.6-py3-none-any.whl", hash = "sha256:49e816009e7342aa94c9059f4b3e1edb2fd8208df10275d4a48cdd46496b15f8"},
-    {file = "lion_core-0.3.6.tar.gz", hash = "sha256:acb5ab83294df386a8fa746f1479e9dbd72416b7fd3f037d72ed0536becee6e7"},
+    {file = "lion_core-0.3.7-py3-none-any.whl", hash = "sha256:1c1ff925ecb6a86f51b3692a42672d4518ee474a33cf492520c76ae7583a0ed1"},
+    {file = "lion_core-0.3.7.tar.gz", hash = "sha256:d9046ee380d6acfe4bed7e954cd51f7ae796a32f4d25dc5bbe6b4fef6ccb8c29"},
 ]
 
 [package.dependencies]
 lionabc = ">=1.0.1,<2.0.0"
-lionfuncs = ">=1.0.4,<2.0.0"
+lionfuncs = ">=1.0.5,<2.0.0"
 
 [[package]]
 name = "lion-openai"
@@ -664,13 +666,13 @@ files = [
 
 [[package]]
 name = "lionfuncs"
-version = "1.0.5"
+version = "1.0.6"
 description = ""
 optional = false
 python-versions = "<4.0,>=3.10"
 files = [
-    {file = "lionfuncs-1.0.5-py3-none-any.whl", hash = "sha256:7c970659779c27f0ee38c90a312de7630c73ebe9ceac7aaa3db985993c67e4fb"},
-    {file = "lionfuncs-1.0.5.tar.gz", hash = "sha256:7f6c63c9081f266e1d84f9c2fbe18b8094575222ee0c97d45a813e02308dccc4"},
+    {file = "lionfuncs-1.0.6-py3-none-any.whl", hash = "sha256:45d1d598deb8f2435fa948f79f6043869a540faaca115eeda61b02a19ba8e00f"},
+    {file = "lionfuncs-1.0.6.tar.gz", hash = "sha256:7bd823a189b6787d9379fe8909b14f56ba2729eed7f3523b09777f3fb6007ef6"},
 ]
 
 [package.dependencies]
@@ -932,9 +934,9 @@ files = [
 
 [package.dependencies]
 numpy = [
-    {version = ">=1.26.0", markers = "python_version >= \"3.12\""},
     {version = ">=1.22.4", markers = "python_version < \"3.11\""},
     {version = ">=1.23.2", markers = "python_version == \"3.11\""},
+    {version = ">=1.26.0", markers = "python_version >= \"3.12\""},
 ]
 python-dateutil = ">=2.8.2"
 pytz = ">=2020.1"
@@ -1172,8 +1174,8 @@ files = [
 annotated-types = ">=0.6.0"
 pydantic-core = "2.23.4"
 typing-extensions = [
-    {version = ">=4.12.2", markers = "python_version >= \"3.13\""},
     {version = ">=4.6.1", markers = "python_version < \"3.13\""},
+    {version = ">=4.12.2", markers = "python_version >= \"3.13\""},
 ]
 
 [package.extras]
@@ -1623,6 +1625,17 @@ requests = ">=2.26.0"
 blobfile = ["blobfile (>=2)"]
 
 [[package]]
+name = "tokenize-rt"
+version = "6.0.0"
+description = "A wrapper around the stdlib `tokenize` which roundtrips."
+optional = false
+python-versions = ">=3.8"
+files = [
+    {file = "tokenize_rt-6.0.0-py2.py3-none-any.whl", hash = "sha256:d4ff7ded2873512938b4f8cbb98c9b07118f01d30ac585a30d7a88353ca36d22"},
+    {file = "tokenize_rt-6.0.0.tar.gz", hash = "sha256:b9711bdfc51210211137499b5e355d3de5ec88a85d2025c520cbb921b5194367"},
+]
+
+[[package]]
 name = "tomli"
 version = "2.0.1"
 description = "A lil' TOML parser"
@@ -1806,4 +1819,4 @@ multidict = ">=4.0"
 [metadata]
 lock-version = "2.0"
 python-versions = "^3.10"
-content-hash = "81c85f47cca79d015914d09f1cfa9cb2c0e99a346a66dfc18775893ca5729c3f"
+content-hash = "fedaa8a4d9a638ebca0d064b9563df841cf23ba26300d8c79d7d4255eafc9bda"

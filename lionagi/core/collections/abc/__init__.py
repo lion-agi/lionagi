@@ -1,4 +1,4 @@
-"""abc: Abstract Base Classes for lionagi."""
+"""deprecated"""
 
 from pydantic import Field
 
