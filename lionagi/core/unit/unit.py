@@ -2,6 +2,7 @@ from typing import Callable
 
 from lionagi.core.collections import iModel
 from lionagi.core.collections.abc import Directive
+from lionagi.core.report.form import Form
 from lionagi.core.validator.validator import Validator
 from lionagi.libs.ln_func_call import rcall
 
@@ -361,3 +362,48 @@ class Unit(Directive, DirectiveMixin):
             )
 
         raise ValueError(f"invalid directive: {directive}")
+
+    async def ReactInstruct(
+        self,
+        instruction: str | dict,
+        context: str | dict,
+        form_cls: type[Form],
+        branch=None,
+        tools: list = None,
+        imodel1: iModel = None,
+        imodel2: iModel = None,
+        allow_extension1: bool = False,
+        allow_extension2: bool = False,
+        max_extension1: int = None,
+        max_extension2: int = None,
+        form_kwargs: dict = {},
+        **kwargs,
+    ):
+        """
+        kwargs for direct
+        """
+
+        kwargs.pop("allow_action", None)
+
+        direct_form: UnitForm = await self.direct(
+            instruction=instruction,
+            context=context,
+            branch=branch,
+            allow_extension=allow_extension1,
+            tools=tools if tools else True,
+            max_extension=max_extension1,
+            imodel=imodel1,
+            allow_action=True,
+            **kwargs,
+        )
+
+        form: Form = await self.direct(
+            form=form_cls(**form_kwargs),
+            imodel=imodel2,
+            branch=branch,
+            allow_extension=allow_extension2,
+            max_extension=max_extension2,
+            **kwargs,
+        )
+
+        return direct_form, form
