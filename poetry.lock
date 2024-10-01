@@ -605,18 +605,18 @@ testing = ["Django", "attrs", "colorama", "docopt", "pytest (<7.0.0)"]
 
 [[package]]
 name = "lion-core"
-version = "0.3.7"
+version = "0.3.9"
 description = "A core package for the Lion framework."
 optional = false
 python-versions = "<4.0,>=3.10"
 files = [
-    {file = "lion_core-0.3.7-py3-none-any.whl", hash = "sha256:1c1ff925ecb6a86f51b3692a42672d4518ee474a33cf492520c76ae7583a0ed1"},
-    {file = "lion_core-0.3.7.tar.gz", hash = "sha256:d9046ee380d6acfe4bed7e954cd51f7ae796a32f4d25dc5bbe6b4fef6ccb8c29"},
+    {file = "lion_core-0.3.9-py3-none-any.whl", hash = "sha256:9991b588f6fb70635d0b73c7dee760f76bc36a5c13e77262c7171f9c1717b757"},
+    {file = "lion_core-0.3.9.tar.gz", hash = "sha256:53ff2077b06c275ba41a385dc79673b99b0996ce1babf1afbedb7ceab995ba2c"},
 ]
 
 [package.dependencies]
 lionabc = ">=1.0.1,<2.0.0"
-lionfuncs = ">=1.0.5,<2.0.0"
+lionfuncs = ">=1.0.7,<2.0.0"
 
 [[package]]
 name = "lion-openai"
@@ -1806,4 +1806,4 @@ multidict = ">=4.0"
 [metadata]
 lock-version = "2.0"
 python-versions = "^3.10"
-content-hash = "5a8d800044df93159d8fc825bbc7e4c9b730a36a7f87fff6828d727ec92fffb5"
+content-hash = "fe7a582da1b4c9ce04d6456764810f7e110173bb269f0b0d1685d7b4ff37dffb"
