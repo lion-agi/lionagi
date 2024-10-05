@@ -1,17 +1,93 @@
+from typing import Any, TypeVar
+from pathlib import Path
+import json
 from lion_core.generic.pile import Pile
 from lion_core.pile_adapter import AdapterRegistry, Dumper, Loader
+import pandas as pd
+from lionfuncs import to_dict, dict_to_xml, save_to_file, create_path, to_df, read_file
+
+
+DEFAULT_SAVE_DIRECTORY: Path = Path(".") / "data" / "pile_dump"
+DEFAULT_FILENAME: str = "unnamed_pile_dump"
 
 
 
-class XMLDumper(Dumper):
-    default_directory: Path = Path(".") / "data" / "pile_dump" / "xml"
-    default_filename: str = "unnamed_pile_dump_xml"
+
+class JsonFileDumper(Dumper):
+
+    default_directory: Path = DEFAULT_SAVE_DIRECTORY / "json"
+    default_filename: str = DEFAULT_FILENAME + "_json"
+    obj_key = "json"
+
+    @classmethod
+    def dump_to(
+        cls,
+        subj: Pile,
+        /,
+        **kwargs,
+    ) -> Path:
+        """
+        kwargs for save to file
+        """
+        str_ = json.dumps(subj.to_dict())
+        fp = save_to_file(
+            str_,
+            extension=cls.obj_key,
+            **kwargs,
+        )
+        return fp
+
+        
+class JsonDataLoader(Loader):
+
+    obj_key = "json"
+
+    @classmethod
+    def load_from(
+        cls,
+        obj: str,
+        recursive: bool = False,
+        recursive_python_only: bool = True,
+        **kwargs: Any,
+    ) -> dict:
+        return to_dict(
+            obj,
+            recursive=recursive,
+            recursive_python_only=recursive_python_only,
+            **kwargs,
+        )
+
+
+class JsonFileLoader(Loader):
+
+    obj_key = ".json"
+
+    @classmethod
+    def load_from(
+        cls,
+        obj: str,
+        recursive: bool = False,
+        recursive_python_only: bool = True,
+        **kwargs: Any,
+    ) -> dict:
+        dict_ = json.load(obj)
+        return to_dict(
+            dict_,
+            recursive=recursive,
+            recursive_python_only=recursive_python_only,
+            **kwargs,
+        )
+
+
+class XMLFileDumper(Dumper):
+    default_directory: Path = DEFAULT_SAVE_DIRECTORY / "xml"
+    default_filename: str = DEFAULT_FILENAME + "_xml"
     obj_key = ".xml"
 
     @classmethod
     def dump_to(
         cls,
-        subj: T,
+        subj: Pile,
         /,
         *,
         directory: Path | str = None,
@@ -19,9 +95,9 @@ class XMLDumper(Dumper):
         timestamp: bool = True,
         root_tag: str = None,
         **kwargs,
-    ):
+    ) -> Path:
         str_ = dict_to_xml(subj.to_dict(), root_tag=root_tag)
-        save_to_file(
+        fp = save_to_file(
             str_,
             directory=directory or cls.default_directory,
             filename=filename or cls.default_directory,
@@ -29,19 +105,66 @@ class XMLDumper(Dumper):
             extension=cls.obj_key,
             **kwargs,
         )
+        return fp
+
+
+class XMLDataLoader(Loader):
+    obj_key = "xml"
+
+    @classmethod
+    def load_from(
+        cls,
+        obj,
+        /,
+        **kwargs
+    ) -> dict:
+        kwargs['str_type'] = "xml"
+        return to_dict(obj, **kwargs)
+
+
+
+class XMLFileLoader(Loader):
+    obj_key = ".xml"
+
+    @classmethod
+    def load_from(
+        cls,
+        obj,
+        /,
+        **kwargs
+    ) -> dict:
+        str_ = read_file(obj)
+        kwargs['str_type'] = "xml"
+        return to_dict(str_, **kwargs)
+
+
+
+
+class CSVFileLoader(Loader):
+    obj_key = ".csv"
+    
+    @classmethod
+    def load_from(
+        cls,
+        obj: str,
+        /,
+        **kwargs: Any,
+    ) -> list[dict]:
+        df = pd.read_csv(obj)
+        dicts = df.to_dict(orient="records", index=False)
+        return [to_dict(i, **kwargs) for i in dicts]
 
 
 class CSVDumper(Dumper):
 
-    default_directory: Path = Path(".") / "data" / "pile_dump" / "csv"
-    default_filename: str = "unnamed_pile_dump_csv"
+    default_directory: Path = DEFAULT_SAVE_DIRECTORY / "csv"
+    default_filename: str = DEFAULT_FILENAME + "_csv"
     obj_key = ".csv"
-    to_df = import_module("lionfuncs", "to_df")
 
     @classmethod
     def dump_to(
         cls,
-        subj: T,
+        subj: Pile,
         /,
         *,
         directory: Path | str = None,
@@ -55,7 +178,8 @@ class CSVDumper(Dumper):
         **kwargs,
     ):
         dicts_ = [i.to_dict() for i in subj]
-        df = cls.to_df(
+
+        df = to_df(
             dicts_,
             drop_how=drop_how,
             drop_kwargs=drop_kwargs,
@@ -63,7 +187,7 @@ class CSVDumper(Dumper):
             concat_kwargs=concat_kwargs,
             **(pd_kwargs or {}),
         )
-
+        
         filepath = create_path(
             directory=directory or cls.default_directory,
             filename=filename or cls.default_filename,
@@ -71,8 +195,10 @@ class CSVDumper(Dumper):
             extension=cls.obj_key,
             **kwargs,
         )
+        
+        df.to_csv(filepath, index=False)
+        return filepath
 
-        df.to_csv(filepath, **kwargs)
 
 
     # load / dump methods, should be added in lionagi

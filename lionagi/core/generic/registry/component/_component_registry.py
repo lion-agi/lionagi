@@ -3,6 +3,10 @@ from pathlib import Path
 from typing import Any, TypeVar
 
 import pandas as pd
+from lion_core.protocols.adapter import Adapter, AdapterRegistry
+
+
+
 from lion_core.converter import Converter, ConverterRegistry
 from lion_core.generic.base import RealElement
 from lionfuncs import check_import, dict_to_xml, save_to_file, to_dict
@@ -18,19 +22,46 @@ class JsonConverter(Converter):
     obj_key = "json"
 
     @classmethod
+    def from_obj(
+        cls,
+        subj_cls,
+        obj: Any,
+        /,
+        **kwargs: Any,
+    ) -> dict:
+        """
+        kwargs for to_dict
+        """
+        return to_dict(obj, **kwargs)
+
+    @classmethod
     def to_obj(
         cls,
         subj: T,
         /,
         **kwargs: Any,
     ) -> str:
-        dict_ = subj.to_dict(**kwargs)
-        return json.dumps(dict_)
+        """
+        kwargs for json.dumps
+        """
+        dict_ = subj.to_dict()
+        return json.dumps(dict_, **kwargs)
 
 
 class JsonFileConverter(Converter):
 
-    obj_key = "json_file"
+    obj_key = ".json"
+
+
+
+
+
+
+
+
+class JsonFileConverter(Converter):
+
+    obj_key = ".json"
 
     @classmethod
     def from_obj(
@@ -105,7 +136,7 @@ class XMLConverter(Converter):
 
 class XMLFileConverter(Converter):
 
-    obj_key = "xml_file"
+    obj_key = ".xml"
 
     @classmethod
     def from_obj(

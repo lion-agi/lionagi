@@ -1,10 +1,9 @@
 from typing import Any
 import warnings
-
 from lion_core.generic.pile import Pile
-from lionabc.exceptions import ItemNotFoundError, LionValueError
-from lionagi.core.generic._pile_registry import PileAdapterRegistry
-
+from lionagi.core.generic.component import Component
+from lionabc.exceptions import ItemNotFoundError, LionValueError, LionTypeError
+from lionagi.core.generic.registry.pile._pile_registry import AdapterRegistry
 
 
 
@@ -83,56 +82,42 @@ def _isub(self: Pile, other) -> Pile:
 def _radd(self: Pile, other) -> Pile:
     return other + self
 
-@classmethod
-def _get_adapter_registry(cls) -> AdapterRegistry:
-    if isinstance(cls._adapter_registry, type):
-        cls._adapter_registry = cls._adapter_registry()
-    return cls._adapter_registry
 
 @classmethod
-def _load(cls, obj: Any, obj_key: str = None, /, **kwargs: Any) -> Pile:
+def _load(
+    cls: type[Pile],
+    obj: Any,
+    obj_key: str, 
+    /, 
+    recursive_to_dict: bool = False,
+    recursive_python_only: bool = True,
+    **kwargs: Any
+) -> Pile:
     try:
-        item = cls._get_adapter_registry().load(obj, obj_key, **kwargs)
+        item = cls._get_adapter_registry().load(
+            obj,
+            obj_key,
+            recursive=recursive_to_dict,
+            recursive_python_only=recursive_python_only,
+            **kwargs,
+        )
         if isinstance(item, list):
             return cls([Component.from_obj(i) for i in item])
         if isinstance(item, dict):
-            if "pile" in item:
-                return cls.from_dict(item)
-            return cls([Component.from_obj(i) for i in item])
+            return cls.from_dict(item)
         return cls([Component.from_obj(item)])
     except Exception as e:
         raise LionTypeError(f"Failed to load pile. Error: {e}")
-
-
-def dump(self, obj_key, *, clear=False, **kwargs) -> None:
-    try:
-        self._get_adapter_registry().dump(self, obj_key, **kwargs)
-        if clear:
-            self.clear()
-    except Exception as e:
-        raise LionTypeError(f"Failed to dump pile. Error: {e}")
-
-
-
-
-
-
-Pile._converter_registry = PileAdapterRegistry
-
-
-
-
+    
+    
+Pile._adapter_registry = AdapterRegistry 
 Pile.__add__ = _add
 Pile.__iadd__ = _iadd
 Pile.__sub__ = _sub
 Pile.__isub__ = _isub
 Pile.__radd__ = _radd
+Pile.load = _load
 
 
-
-
-
-def pile(*args, **kwargs) -> Pile:
-    return Pile(*args, **kwargs)
 
 __all__ = ["Pile"]

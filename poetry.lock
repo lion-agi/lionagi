@@ -607,18 +607,18 @@ testing = ["Django", "attrs", "colorama", "docopt", "pytest (<7.0.0)"]
 
 [[package]]
 name = "lion-core"
-version = "0.3.7"
+version = "0.3.14"
 description = "A core package for the Lion framework."
 optional = false
 python-versions = "<4.0,>=3.10"
 files = [
-    {file = "lion_core-0.3.7-py3-none-any.whl", hash = "sha256:1c1ff925ecb6a86f51b3692a42672d4518ee474a33cf492520c76ae7583a0ed1"},
-    {file = "lion_core-0.3.7.tar.gz", hash = "sha256:d9046ee380d6acfe4bed7e954cd51f7ae796a32f4d25dc5bbe6b4fef6ccb8c29"},
+    {file = "lion_core-0.3.14-py3-none-any.whl", hash = "sha256:6ff916daf851f6a8c8edf5d1a97bc083238ab81b53c05f30237e298ab2f00570"},
+    {file = "lion_core-0.3.14.tar.gz", hash = "sha256:179dbb9d20d1ed8707bf0bb659b8ffd633b818415102ee6895dcd8e88dd2570d"},
 ]
 
 [package.dependencies]
 lionabc = ">=1.0.1,<2.0.0"
-lionfuncs = ">=1.0.5,<2.0.0"
+lionfuncs = ">=1.0.9,<2.0.0"
 
 [[package]]
 name = "lion-openai"
@@ -666,13 +666,13 @@ files = [
 
 [[package]]
 name = "lionfuncs"
-version = "1.0.6"
+version = "1.0.9"
 description = ""
 optional = false
 python-versions = "<4.0,>=3.10"
 files = [
-    {file = "lionfuncs-1.0.6-py3-none-any.whl", hash = "sha256:45d1d598deb8f2435fa948f79f6043869a540faaca115eeda61b02a19ba8e00f"},
-    {file = "lionfuncs-1.0.6.tar.gz", hash = "sha256:7bd823a189b6787d9379fe8909b14f56ba2729eed7f3523b09777f3fb6007ef6"},
+    {file = "lionfuncs-1.0.9-py3-none-any.whl", hash = "sha256:a829baf62d0124ddcd303320d38a7affaeb1977f90511144141145a3b6eb28c6"},
+    {file = "lionfuncs-1.0.9.tar.gz", hash = "sha256:468599110513055e637f094f396d3768708eb55210a72b5715b533bddb724cc4"},
 ]
 
 [package.dependencies]
@@ -1819,4 +1819,4 @@ multidict = ">=4.0"
 [metadata]
 lock-version = "2.0"
 python-versions = "^3.10"
-content-hash = "fedaa8a4d9a638ebca0d064b9563df841cf23ba26300d8c79d7d4255eafc9bda"
+content-hash = "5cb5b87c26708380b4886eb952110f84e2dd369926e020ed078f3c350dcab406"

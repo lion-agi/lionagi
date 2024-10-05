@@ -11,7 +11,7 @@ lion-openai = "^0.1.5"
 ipython = ">=8.0.0"
 aiocache = ">=0.12.0"
 python-dotenv = "^1.0.1"
-lion-core = "^0.3.7"
+lion-core = "^0.3.14"
 
 
 [tool.poetry.group.dev.dependencies]

@@ -7,7 +7,7 @@ from lionfuncs import LN_UNDEFINED, read_file, to_dict
 from pydantic import Field
 from typing_extensions import Annotated, deprecated
 
-from lionagi.core.generic._component_registry import ComponentConverterRegistry
+from lionagi.core.generic.registry.component._component_registry import ComponentConverterRegistry
 
 NAMED_FIELD = Annotated[str, Field(..., alias="field")]
 
