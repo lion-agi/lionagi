@@ -51,7 +51,9 @@ class GoogleSearch:
         try:
             from lionagi.libs import SysUtil
 
-            SysUtil.check_import(package_name="llama_index", pip_name="llama-index")
+            SysUtil.check_import(
+                package_name="llama_index", pip_name="llama-index"
+            )
 
             SysUtil.check_import(
                 package_name="llama_index",
@@ -77,8 +79,12 @@ class GoogleSearch:
             llm = OpenAI(model="gpt-4-turbo", temperature=0.1)
 
             api_key = api_key if api_key else cls.api_key
-            search_engine = search_engine if search_engine else cls.search_engine
-            google_spec = GoogleSearchToolSpec(key=api_key, engine=search_engine)
+            search_engine = (
+                search_engine if search_engine else cls.search_engine
+            )
+            google_spec = GoogleSearchToolSpec(
+                key=api_key, engine=search_engine
+            )
 
             # Wrap the google search tool as it returns large payloads
             tools = LoadAndSearchToolSpec.from_defaults(
@@ -90,7 +96,9 @@ class GoogleSearch:
             return agent
 
         except Exception as e:
-            raise ImportError(f"Error in importing OpenAIAgent from llama_index: {e}")
+            raise ImportError(
+                f"Error in importing OpenAIAgent from llama_index: {e}"
+            )
 
 
 # responses_google = []

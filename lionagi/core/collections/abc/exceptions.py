@@ -115,7 +115,9 @@ class TimeoutError(LionOperationError):
     """Exception raised when an operation times out."""
 
     def __init__(self, operation, timeout):
-        super().__init__(operation, f"Operation timed out after {timeout} seconds.")
+        super().__init__(
+            operation, f"Operation timed out after {timeout} seconds."
+        )
 
 
 class ServiceError(LionAGIError):

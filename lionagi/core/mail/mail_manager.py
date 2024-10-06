@@ -126,7 +126,9 @@ class MailManager(Element, Executable):
             mail_id = mailbox.pending_outs.popleft()
             mail = mailbox.pile.pop(mail_id)
             if mail.recipient not in self.sources:
-                raise ValueError(f"Recipient source {mail.recipient} does not exist")
+                raise ValueError(
+                    f"Recipient source {mail.recipient} does not exist"
+                )
             if mail.sender not in self.mails[mail.recipient]:
                 self.mails[mail.recipient].update({mail.sender: deque()})
             self.mails[mail.recipient][mail.sender].append(mail)

@@ -3,7 +3,9 @@ def get_input_output_fields(str_: str) -> list[list[str]]:
         return [], []
 
     if "->" not in str_:
-        raise ValueError("Invalid assignment format. Expected 'inputs -> outputs'.")
+        raise ValueError(
+            "Invalid assignment format. Expected 'inputs -> outputs'."
+        )
 
     inputs, outputs = str_.split("->")
 

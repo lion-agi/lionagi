@@ -269,4 +269,3 @@ print(result)  # Output: "Result for example"
 ```
 
 These examples demonstrate the usage of various functions and decorators provided by the `func_call` module. The functions support both synchronous and asynchronous execution, allowing for flexible and efficient function call patterns.
-

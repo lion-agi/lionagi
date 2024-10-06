@@ -101,7 +101,12 @@ class LLMCompressor(TokenCompressor):
         return a(text, **kwargs)
 
     async def rank_by_pplex(
-        self, items: list, initial_text=None, cumulative=False, n_samples=None, **kwargs
+        self,
+        items: list,
+        initial_text=None,
+        cumulative=False,
+        n_samples=None,
+        **kwargs,
     ):
         """
         rank a list of items according to their perplexity
@@ -180,17 +185,23 @@ class LLMCompressor(TokenCompressor):
 
         if rank_by == "perplexity":
             ranked_items = await self.rank_by_pplex(
-                items=items, initial_text=initial_text, cumulative=cumulative, **kwargs
+                items=items,
+                initial_text=initial_text,
+                cumulative=cumulative,
+                **kwargs,
             )
 
-            prompt_tokens = sum([i[1]["num_prompt_tokens"] for i in ranked_items])
+            prompt_tokens = sum(
+                [i[1]["num_prompt_tokens"] for i in ranked_items]
+            )
 
             num_completion_tokens = sum(
                 [i[1]["num_completion_tokens"] for i in ranked_items]
             )
 
             price = (
-                prompt_tokens * 0.5 / 1000000 + num_completion_tokens * 1.5 / 1000000
+                prompt_tokens * 0.5 / 1000000
+                + num_completion_tokens * 1.5 / 1000000
             )
 
             selected_items = self.select_by_pplex(
@@ -227,7 +238,11 @@ class LLMCompressor(TokenCompressor):
         raise ValueError(f"Ranking method {rank_by} is not supported")
 
     def select_by_pplex(
-        self, ranked_items, target_compression_ratio, original_length, min_pplex=None
+        self,
+        ranked_items,
+        target_compression_ratio,
+        original_length,
+        min_pplex=None,
     ):
         min_pplex = min_pplex or 0
 

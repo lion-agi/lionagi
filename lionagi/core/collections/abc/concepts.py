@@ -1,8 +1,8 @@
 """This module defines abstract base classes for LionAGI."""
 
 from abc import ABC, abstractmethod
-from collections.abc import Generator
-from typing import Any, Iterator, TypeVar
+from collections.abc import Generator, Iterator
+from typing import Any, TypeVar
 
 from pydantic import BaseModel, Field, field_validator
 
@@ -194,7 +194,9 @@ class Sendable(BaseModel, ABC):
     sender: str = Field(
         "N/A",
         title="Sender",
-        description=("The id of the sender node, or 'system', 'user', or 'assistant'."),
+        description=(
+            "The id of the sender node, or 'system', 'user', or 'assistant'."
+        ),
     )
 
     recipient: str = Field(

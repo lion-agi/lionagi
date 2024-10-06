@@ -25,8 +25,12 @@ class ActionResponse(RoledMessage):
         description="The id of the action request that this response corresponds to",
     )
 
-    function: str | None = Field(None, description="The name of the function called")
-    arguments: dict | None = Field(None, description="The keyword arguments provided")
+    function: str | None = Field(
+        None, description="The name of the function called"
+    )
+    arguments: dict | None = Field(
+        None, description="The keyword arguments provided"
+    )
     func_outputs: Any | None = Field(
         None, description="The output of the function call"
     )
@@ -108,7 +112,9 @@ class ActionResponse(RoledMessage):
         action_request = ActionRequest(
             function=self.function, arguments=json.loads(arguments)
         )
-        action_response_copy = ActionResponse(action_request=action_request, **kwargs)
+        action_response_copy = ActionResponse(
+            action_request=action_request, **kwargs
+        )
         action_response_copy.action_request = self.action_request
         action_response_copy.func_outputs = self.func_outputs
         action_response_copy.metadata["origin_ln_id"] = self.ln_id

@@ -21,7 +21,9 @@ class TestFuzzyParseJson(unittest.TestCase):
         ]
         for json_str, expected in test_cases:
             with self.subTest(json_str=json_str):
-                self.assertEqual(ParseUtil.fuzzy_parse_json(json_str), expected)
+                self.assertEqual(
+                    ParseUtil.fuzzy_parse_json(json_str), expected
+                )
 
     def test_nested_structures(self):
         """Test with nested JSON objects and arrays."""
@@ -50,7 +52,9 @@ class TestFuzzyParseJson(unittest.TestCase):
         self.assertEqual(
             ParseUtil.escape_chars_in_json("Line 1\nLine 2"), "Line 1\\nLine 2"
         )
-        self.assertEqual(ParseUtil.escape_chars_in_json('Quote: "'), 'Quote: \\"')
+        self.assertEqual(
+            ParseUtil.escape_chars_in_json('Quote: "'), 'Quote: \\"'
+        )
 
     def test_extract_code_block(self):
         """Test extracting and parsing code blocks from Markdown."""
@@ -71,7 +75,9 @@ class TestFuzzyParseJson(unittest.TestCase):
     def test_jaro_distance(self):
         """Test Jaro distance calculations."""
         self.assertAlmostEqual(
-            StringMatch.jaro_distance("martha", "marhta"), 0.9444444444444445, places=7
+            StringMatch.jaro_distance("martha", "marhta"),
+            0.9444444444444445,
+            places=7,
         )
         self.assertAlmostEqual(StringMatch.jaro_distance("", ""), 1.0)
         self.assertAlmostEqual(StringMatch.jaro_distance("abc", "abc"), 1.0)
@@ -80,12 +86,16 @@ class TestFuzzyParseJson(unittest.TestCase):
     def test_jaro_winkler_similarity(self):
         """Test Jaro-Winkler similarity calculations."""
         self.assertAlmostEqual(
-            StringMatch.jaro_winkler_similarity("dixon", "dicksonx", scaling=0.1),
+            StringMatch.jaro_winkler_similarity(
+                "dixon", "dicksonx", scaling=0.1
+            ),
             0.8133333333333332,
             places=7,
         )
         self.assertAlmostEqual(
-            StringMatch.jaro_winkler_similarity("martha", "marhta", scaling=0.1),
+            StringMatch.jaro_winkler_similarity(
+                "martha", "marhta", scaling=0.1
+            ),
             0.9611111111111111,
             places=7,
         )
@@ -101,7 +111,9 @@ class TestFuzzyParseJson(unittest.TestCase):
 
     def test_levenshtein_distance(self):
         """Test Levenshtein distance calculations."""
-        self.assertEqual(StringMatch.levenshtein_distance("kitten", "sitting"), 3)
+        self.assertEqual(
+            StringMatch.levenshtein_distance("kitten", "sitting"), 3
+        )
         self.assertEqual(StringMatch.levenshtein_distance("", ""), 0)
         self.assertEqual(StringMatch.levenshtein_distance("book", "back"), 2)
         self.assertEqual(StringMatch.levenshtein_distance("book", ""), 4)
@@ -118,11 +130,16 @@ class TestFuzzyParseJson(unittest.TestCase):
             """
             pass
 
-        description, params = ParseUtil._extract_docstring_details_google(sample_func)
+        description, params = ParseUtil._extract_docstring_details_google(
+            sample_func
+        )
         self.assertEqual(description, "Sample function.")
         self.assertDictEqual(
             params,
-            {"param1": "Description of param1.", "param2": "Description of param2."},
+            {
+                "param1": "Description of param1.",
+                "param2": "Description of param2.",
+            },
         )
 
     def test_extract_reST_style(self):
@@ -137,11 +154,16 @@ class TestFuzzyParseJson(unittest.TestCase):
             """
             pass
 
-        description, params = ParseUtil._extract_docstring_details_rest(sample_func)
+        description, params = ParseUtil._extract_docstring_details_rest(
+            sample_func
+        )
         self.assertEqual(description, "Sample function.")
         self.assertDictEqual(
             params,
-            {"param1": "Description of param1.", "param2": "Description of param2."},
+            {
+                "param1": "Description of param1.",
+                "param2": "Description of param2.",
+            },
         )
 
     @patch("lionagi.libs.ln_parse.ParseUtil._extract_docstring_details")
@@ -156,13 +178,18 @@ class TestFuzzyParseJson(unittest.TestCase):
 
         schema = ParseUtil._func_to_schema(sample_func)
         self.assertEqual(schema["function"]["name"], "sample_func")
-        self.assertEqual(schema["function"]["description"], "Function description")
+        self.assertEqual(
+            schema["function"]["description"], "Function description"
+        )
         self.assertIn("param1", schema["function"]["parameters"]["properties"])
         self.assertEqual(
-            schema["function"]["parameters"]["properties"]["param1"]["type"], "number"
+            schema["function"]["parameters"]["properties"]["param1"]["type"],
+            "number",
         )
         self.assertEqual(
-            schema["function"]["parameters"]["properties"]["param1"]["description"],
+            schema["function"]["parameters"]["properties"]["param1"][
+                "description"
+            ],
             "Description of param1.",
         )
 

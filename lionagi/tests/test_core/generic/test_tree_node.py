@@ -46,7 +46,8 @@ class TestTreeNode(unittest.TestCase):
 
     def test_tree_integration(self):
         self.tree.relate_parent_child(
-            self.tree_node1, [self.tree_node2, self.tree_node3, self.tree_node4]
+            self.tree_node1,
+            [self.tree_node2, self.tree_node3, self.tree_node4],
         )
         self.assertEqual(len(self.tree.internal_nodes), 4)
         self.assertEqual(len(self.tree_node1.children), 3)
@@ -62,7 +63,8 @@ class TestTreeNode(unittest.TestCase):
     def test_tree_display(self):
         # This test is mainly to check if the display function runs without errors
         self.tree.relate_parent_child(
-            self.tree_node1, [self.tree_node2, self.tree_node3, self.tree_node4]
+            self.tree_node1,
+            [self.tree_node2, self.tree_node3, self.tree_node4],
         )
         try:
             self.tree.display()

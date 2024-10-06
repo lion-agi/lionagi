@@ -71,7 +71,9 @@ class TestSysUtil(unittest.TestCase):
 
     def test_is_package_installed(self):
         with patch("importlib.util.find_spec", return_value=None):
-            self.assertFalse(SysUtil.is_package_installed("nonexistent_package"))
+            self.assertFalse(
+                SysUtil.is_package_installed("nonexistent_package")
+            )
         with patch("importlib.util.find_spec", return_value=True):
             self.assertTrue(SysUtil.is_package_installed("existent_package"))
 
@@ -94,7 +96,14 @@ class TestSysUtil(unittest.TestCase):
     def test_update_package(self, mock_subprocess):
         SysUtil.update_package("fake-package")
         mock_subprocess.assert_called_with(
-            [sys.executable, "-m", "pip", "install", "--upgrade", "fake-package"]
+            [
+                sys.executable,
+                "-m",
+                "pip",
+                "install",
+                "--upgrade",
+                "fake-package",
+            ]
         )
 
     def test_split_path_file(self):

@@ -45,7 +45,9 @@ class TestAsyncQueue(unittest.TestCase):
             await self.queue.stop()
 
         async def process():
-            await self.queue.process_requests(processor, retry_kwargs={"retries": 2})
+            await self.queue.process_requests(
+                processor, retry_kwargs={"retries": 2}
+            )
 
         self.loop.create_task(add_tasks())
         self.loop.run_until_complete(process())

@@ -2,7 +2,12 @@ from typing import Any
 
 from pydantic import Field, field_validator
 
-from lionagi.core.collections.abc import Component, Condition, LionIDable, get_lion_id
+from lionagi.core.collections.abc import (
+    Component,
+    Condition,
+    LionIDable,
+    get_lion_id,
+)
 from lionagi.core.generic.edge_condition import EdgeCondition
 
 
@@ -94,7 +99,7 @@ class Edge(Component):
                 ):
                     return inspect.getfile(member)
             else:
-                raise TypeError("Source for {!r} not found".format(object))
+                raise TypeError(f"Source for {object!r} not found")
 
         inspect.getfile = new_getfile
 

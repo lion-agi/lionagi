@@ -47,8 +47,7 @@ class Progression(Element, Ordering):
         yield from self.order
 
     def items(self):
-        for idx, item in enumerate(self.order):
-            yield idx, item
+        yield from enumerate(self.order)
 
     def size(self):
         return len(self)

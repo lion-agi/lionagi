@@ -10,7 +10,7 @@ from lionagi import Session
 comedian = Session("you are sarcastically funny comedian")
 
 instruct1 = """
-	very short joke: a blue whale and a big shark meet 
+	very short joke: a blue whale and a big shark meet
 	at the bar and start dancing
 """
 
@@ -44,7 +44,7 @@ instruct3 = """
 """
 
 instruct4 = """
-	provide a concise artistic critique on both jokes, and 
+	provide a concise artistic critique on both jokes, and
 	rate from 1-10
 """
 ```
@@ -62,7 +62,7 @@ With the critiques received, we then feed this feedback back into the comedian s
 ```python
 # Integrating critic feedback into the comedian session for reflection and improvement
 instruct5 = """
-	your jokes were evaluated by a critic, 
+	your jokes were evaluated by a critic,
 	does it make sense to you? why?
 """
 

@@ -165,7 +165,9 @@ class Branch(Node, DirectiveMixin):
         )
 
         if isinstance(_msg, System):
-            _msg.recipient = self.ln_id  # the branch itself, system is to the branch
+            _msg.recipient = (
+                self.ln_id
+            )  # the branch itself, system is to the branch
             self._remove_system()
             self.system = _msg
 
@@ -255,8 +257,13 @@ class Branch(Node, DirectiveMixin):
             return True
         elif is_same_dtype(tools, Tool):
             for act_ in tools:
-                if act_.schema_["function"]["name"] in self.tool_manager.registry:
-                    self.tool_manager.registry.pop(act_.schema_["function"]["name"])
+                if (
+                    act_.schema_["function"]["name"]
+                    in self.tool_manager.registry
+                ):
+                    self.tool_manager.registry.pop(
+                        act_.schema_["function"]["name"]
+                    )
             if verbose:
                 print("tools successfully deleted")
             return True
@@ -330,7 +337,11 @@ class Branch(Node, DirectiveMixin):
         return isinstance(self.messages[-1], ActionResponse)
 
     def send(
-        self, recipient: str, category: str, package: Any, request_source: str = None
+        self,
+        recipient: str,
+        category: str,
+        package: Any,
+        request_source: str = None,
     ) -> None:
         """
         Sends a mail to a recipient.

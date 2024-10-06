@@ -70,7 +70,7 @@ class Flow(Element):
         """
         return [list(seq) for seq in self.sequences]
 
-    def all_unique_items(self) -> Tuple[str]:
+    def all_unique_items(self) -> tuple[str]:
         """
         Retrieves all unique items across sequences.
 
@@ -115,7 +115,9 @@ class Flow(Element):
                 seq = self.registry[seq]
 
         return (
-            self.sequences[seq] if default == ... else self.sequences.get(seq, default)
+            self.sequences[seq]
+            if default == ...
+            else self.sequences.get(seq, default)
         )
 
     def __getitem__(self, seq=None, /):
@@ -149,7 +151,9 @@ class Flow(Element):
         self.registry.clear()
 
     def include(self, seq=None, item=None, name=None):
-        _sequence = self._find_sequence(seq, None) or self._find_sequence(name, None)
+        _sequence = self._find_sequence(seq, None) or self._find_sequence(
+            name, None
+        )
         if not _sequence:
             if not item and not name:
                 """None is not in the registry or sequencees."""
@@ -285,7 +289,10 @@ class Flow(Element):
         return self.sequences[sequence].popleft()
 
     def shape(self):
-        return {key: len(self.sequences[value]) for key, value in self.registry.items()}
+        return {
+            key: len(self.sequences[value])
+            for key, value in self.registry.items()
+        }
 
     def get(self, sequence: str, /, default=...) -> deque[str] | None:
         sequence = getattr(sequence, "ln_id", None) or sequence
@@ -348,7 +355,11 @@ class Flow(Element):
             raise ItemNotFoundError("No sequence found.")
 
         if sequence in self.sequences:
-            return sequence.ln_id if isinstance(sequence, Progression) else sequence
+            return (
+                sequence.ln_id
+                if isinstance(sequence, Progression)
+                else sequence
+            )
 
         if sequence in self.registry:
             return self.registry[sequence]

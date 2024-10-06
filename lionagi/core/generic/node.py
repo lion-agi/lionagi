@@ -8,7 +8,7 @@ Includes functionality for managing relationships, such as adding,
 modifying, and removing edges, and querying related nodes and connections.
 """
 
-from typing import Callable
+from collections.abc import Callable
 
 from pandas import Series
 from pydantic import Field
@@ -62,7 +62,11 @@ class Node(Component, Relatable):
             List of node IDs related to this node.
         """
         all_nodes = set(
-            to_list([[i.head, i.tail] for i in self.edges], flatten=True, dropna=True)
+            to_list(
+                [[i.head, i.tail] for i in self.edges],
+                flatten=True,
+                dropna=True,
+            )
         )
         all_nodes.discard(self.ln_id)
         return list(all_nodes)
@@ -101,7 +105,9 @@ class Node(Component, Relatable):
             List of node IDs that precede this node.
         """
         return [
-            node_id for node_id, edges in self.node_relations["in"].items() if edges
+            node_id
+            for node_id, edges in self.node_relations["in"].items()
+            if edges
         ]
 
     @property
@@ -113,7 +119,9 @@ class Node(Component, Relatable):
             List of node IDs that succeed this node.
         """
         return [
-            node_id for node_id, edges in self.node_relations["out"].items() if edges
+            node_id
+            for node_id, edges in self.node_relations["out"].items()
+            if edges
         ]
 
     def relate(
@@ -141,7 +149,8 @@ class Node(Component, Relatable):
         """
         if direction not in ["in", "out"]:
             raise ValueError(
-                f"Invalid value for direction: {direction}, " "must be 'in' or 'out'"
+                f"Invalid value for direction: {direction}, "
+                "must be 'in' or 'out'"
             )
 
         edge = edge_class(

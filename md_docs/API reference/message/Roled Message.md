@@ -2,7 +2,7 @@
 ### Class: `MessageField`
 
 **Description**:
-`MessageField` is an enumeration used to store message fields for consistent referencing. 
+`MessageField` is an enumeration used to store message fields for consistent referencing.
 
 ### Enum Members:
 - `LION_ID`: Represents the lion_id field.

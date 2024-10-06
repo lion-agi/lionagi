@@ -28,14 +28,18 @@ class TestValidationFunctions(unittest.TestCase):
         try:
             _fix_action_field(x)
         except ValueError as e:
-            self.assertEqual(str(e), "Invalid action field: {'invalid_key': 'value'}")
+            self.assertEqual(
+                str(e), "Invalid action field: {'invalid_key': 'value'}"
+            )
 
     def test_fix_action_field_invalid_discard_disabled(self):
         x = '[{"function": "func1", "arguments": {}}, {"invalid_key": "value"}]'
         try:
             _fix_action_field(x, discard_=False)
         except ValueError as e:
-            self.assertEqual(str(e), "Invalid action field: {'invalid_key': 'value'}")
+            self.assertEqual(
+                str(e), "Invalid action field: {'invalid_key': 'value'}"
+            )
 
     def test_check_dict_field_invalid_fixable(self):
         x = '{"key": "value"}'
@@ -107,7 +111,8 @@ class TestValidationFunctions(unittest.TestCase):
         with self.assertRaises(ValueError) as cm:
             check_number_field(x, fix_=True)
         self.assertEqual(
-            str(cm.exception), "Failed to convert not_a_number into a numeric value"
+            str(cm.exception),
+            "Failed to convert not_a_number into a numeric value",
         )
 
     def test_check_number_field_invalid_fix_disabled(self):
@@ -134,7 +139,8 @@ class TestValidationFunctions(unittest.TestCase):
         with self.assertRaises(ValueError) as cm:
             check_bool_field(x, fix_=True)
         self.assertEqual(
-            str(cm.exception), "Failed to convert not_a_boolean into a boolean value"
+            str(cm.exception),
+            "Failed to convert not_a_boolean into a boolean value",
         )
 
     def test_check_bool_field_invalid_fix_disabled(self):
@@ -142,7 +148,8 @@ class TestValidationFunctions(unittest.TestCase):
         with self.assertRaises(ValueError) as cm:
             check_bool_field(x, fix_=False)
         self.assertEqual(
-            str(cm.exception), "Default value for BOOLEAN must be a bool, got str"
+            str(cm.exception),
+            "Default value for BOOLEAN must be a bool, got str",
         )
 
     def test_check_str_field_valid(self):
@@ -169,7 +176,8 @@ class TestValidationFunctions(unittest.TestCase):
         with self.assertRaises(ValueError) as cm:
             check_str_field(x, fix_=False)
         self.assertEqual(
-            str(cm.exception), "Default value for STRING must be a str, got int"
+            str(cm.exception),
+            "Default value for STRING must be a str, got int",
         )
 
     def test_check_enum_field_valid(self):
@@ -181,7 +189,9 @@ class TestValidationFunctions(unittest.TestCase):
     def test_check_enum_field_invalid_fixable(self):
         x = "option3"
         choices = ["option1", "option2"]
-        with patch("lionagi.libs.ln_validate._fix_enum_field", return_value="option1"):
+        with patch(
+            "lionagi.libs.ln_validate._fix_enum_field", return_value="option1"
+        ):
             result = check_enum_field(x, choices, fix_=True)
         self.assertEqual(result, "option1")
 
@@ -231,14 +241,18 @@ class TestValidationFunctions(unittest.TestCase):
         try:
             _fix_action_field(x)
         except ValueError as e:
-            self.assertEqual(str(e), "Invalid action field: {'invalid_key': 'value'}")
+            self.assertEqual(
+                str(e), "Invalid action field: {'invalid_key': 'value'}"
+            )
 
     def test_fix_action_field_invalid_discard_disabled(self):
         x = '[{"function": "func1", "arguments": {}}, {"invalid_key": "value"}]'
         try:
             _fix_action_field(x, discard_=False)
         except ValueError as e:
-            self.assertEqual(str(e), "Invalid action field: {'invalid_key': 'value'}")
+            self.assertEqual(
+                str(e), "Invalid action field: {'invalid_key': 'value'}"
+            )
 
     def test_fix_number_field_valid(self):
         x = "42"
@@ -250,7 +264,8 @@ class TestValidationFunctions(unittest.TestCase):
         with self.assertRaises(ValueError) as cm:
             _fix_number_field(x)
         self.assertEqual(
-            str(cm.exception), "Failed to convert not_a_number into a numeric value"
+            str(cm.exception),
+            "Failed to convert not_a_number into a numeric value",
         )
 
     def test_fix_bool_field_true(self):
@@ -268,7 +283,8 @@ class TestValidationFunctions(unittest.TestCase):
         with self.assertRaises(ValueError) as cm:
             _fix_bool_field(x)
         self.assertEqual(
-            str(cm.exception), "Failed to convert not_a_boolean into a boolean value"
+            str(cm.exception),
+            "Failed to convert not_a_boolean into a boolean value",
         )
 
     def test_fix_str_field_valid(self):
@@ -292,7 +308,8 @@ class TestValidationFunctions(unittest.TestCase):
         x = "option3"
         choices = ["option1", "option2"]
         with patch(
-            "lionagi.libs.StringMatch.choose_most_similar", return_value="option1"
+            "lionagi.libs.StringMatch.choose_most_similar",
+            return_value="option1",
         ):
             result = _fix_enum_field(x, choices)
         self.assertEqual(result, "option1")
@@ -307,7 +324,8 @@ class TestValidationFunctions(unittest.TestCase):
             with self.assertRaises(ValueError) as cm:
                 _fix_enum_field(x, choices)
         self.assertEqual(
-            str(cm.exception), "Failed to convert option3 into one of the choices"
+            str(cm.exception),
+            "Failed to convert option3 into one of the choices",
         )
 
     def test_fix_bool_field_false(self):
@@ -331,7 +349,8 @@ class TestValidationFunctions(unittest.TestCase):
         x = "option3"
         choices = ["option1", "option2"]
         with patch(
-            "lionagi.libs.StringMatch.choose_most_similar", return_value="option1"
+            "lionagi.libs.StringMatch.choose_most_similar",
+            return_value="option1",
         ):
             result = _fix_enum_field(x, choices)
         self.assertEqual(result, "option1")
@@ -346,7 +365,8 @@ class TestValidationFunctions(unittest.TestCase):
             with self.assertRaises(ValueError) as cm:
                 _fix_enum_field(x, choices)
         self.assertEqual(
-            str(cm.exception), "Failed to convert option3 into one of the choices"
+            str(cm.exception),
+            "Failed to convert option3 into one of the choices",
         )
 
 

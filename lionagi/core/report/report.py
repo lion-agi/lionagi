@@ -25,7 +25,7 @@ class Report(BaseForm):
         examples=[["a, b -> c", "a -> e", "b -> f", "c -> g", "e, f, g -> h"]],
     )
 
-    form_template: Type[Form] = Field(
+    form_template: type[Form] = Field(
         Form, description="The template for the forms in the report."
     )
 
@@ -72,7 +72,12 @@ class Report(BaseForm):
                     all_fields[k] = v
         return all_fields
 
-    def fill(self, form: Form | list[Form] | dict[Form] = None, strict=True, **kwargs):
+    def fill(
+        self,
+        form: Form | list[Form] | dict[Form] = None,
+        strict=True,
+        **kwargs,
+    ):
         if self.filled:
             if strict:
                 raise ValueError("Form is filled, cannot be worked on again")
@@ -105,7 +110,9 @@ class Report(BaseForm):
             bool: True if the report is workable, otherwise raises ValueError.
         """
         if self.filled:
-            raise ValueError("Form is already filled, cannot be worked on again")
+            raise ValueError(
+                "Form is already filled, cannot be worked on again"
+            )
 
         for i in self.input_fields:
             if not getattr(self, i, None):

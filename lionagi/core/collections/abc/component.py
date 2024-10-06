@@ -90,7 +90,9 @@ class Component(Element, ABC):
     content: Any = Field(
         default=None,
         description="The optional content of the node.",
-        validation_alias=AliasChoices("text", "page_content", "chunk_content", "data"),
+        validation_alias=AliasChoices(
+            "text", "page_content", "chunk_content", "data"
+        ),
     )
 
     embedding: list[float] = Field(
@@ -201,7 +203,9 @@ class Component(Element, ABC):
 
         SysUtil.change_dict_key(metadata, "class_name", "llama_index_class")
         SysUtil.change_dict_key(metadata, "id_", "llama_index_id")
-        SysUtil.change_dict_key(metadata, "relationships", "llama_index_relationships")
+        SysUtil.change_dict_key(
+            metadata, "relationships", "llama_index_relationships"
+        )
 
         dict_["metadata"] = metadata
         return cls.from_obj(dict_)
@@ -218,7 +222,9 @@ class Component(Element, ABC):
         try:
             dict_ = {**obj, **kwargs}
             if "embedding" in dict_:
-                dict_["embedding"] = cls._validate_embedding(dict_["embedding"])
+                dict_["embedding"] = cls._validate_embedding(
+                    dict_["embedding"]
+                )
 
             if "lion_class" in dict_:
                 cls = _init_class.get(dict_.pop("lion_class"), cls)
@@ -231,7 +237,9 @@ class Component(Element, ABC):
             return cls.model_validate(dict_, *args, **kwargs)
 
         except ValidationError as e:
-            raise LionValueError("Invalid dictionary for deserialization.") from e
+            raise LionValueError(
+                "Invalid dictionary for deserialization."
+            ) from e
 
     @classmethod
     def _process_langchain_dict(cls, dict_: dict) -> dict:
@@ -260,7 +268,9 @@ class Component(Element, ABC):
         SysUtil.change_dict_key(metadata, "type", "lc_type")
         SysUtil.change_dict_key(metadata, "id", "lc_id")
 
-        extra_fields = {k: v for k, v in metadata.items() if k not in lc_meta_fields}
+        extra_fields = {
+            k: v for k, v in metadata.items() if k not in lc_meta_fields
+        }
         metadata = {k: v for k, v in metadata.items() if k in lc_meta_fields}
         dict_["metadata"] = metadata
         dict_.update(extra_fields)
@@ -299,7 +309,9 @@ class Component(Element, ABC):
         return dict_
 
     @classmethod
-    def _from_str(cls, obj: str, /, *args, fuzzy_parse: bool = False, **kwargs) -> T:
+    def _from_str(
+        cls, obj: str, /, *args, fuzzy_parse: bool = False, **kwargs
+    ) -> T:
         """Create a Component instance from a JSON string."""
         obj = ParseUtil.fuzzy_parse_json(obj) if fuzzy_parse else to_dict(obj)
         try:
@@ -412,17 +424,23 @@ class Component(Element, ABC):
         convert(self.to_dict(*args, dropna=dropna, **kwargs), root)
         return ET.tostring(root, encoding="unicode")
 
-    def to_pd_series(self, *args, pd_kwargs=None, dropna=False, **kwargs) -> Series:
+    def to_pd_series(
+        self, *args, pd_kwargs=None, dropna=False, **kwargs
+    ) -> Series:
         """Convert the node to a Pandas Series."""
         pd_kwargs = pd_kwargs or {}
         dict_ = self.to_dict(*args, dropna=dropna, **kwargs)
         return Series(dict_, **pd_kwargs)
 
-    def to_llama_index_node(self, node_type: Type | str | Any = None, **kwargs) -> Any:
+    def to_llama_index_node(
+        self, node_type: type | str | Any = None, **kwargs
+    ) -> Any:
         """Serializes this node for LlamaIndex."""
         from lionagi.integrations.bridge import LlamaIndexBridge
 
-        return LlamaIndexBridge.to_llama_index_node(self, node_type=node_type, **kwargs)
+        return LlamaIndexBridge.to_llama_index_node(
+            self, node_type=node_type, **kwargs
+        )
 
     def to_langchain_doc(self, **kwargs) -> Any:
         """Serializes this node for Langchain."""
@@ -454,7 +472,11 @@ class Component(Element, ABC):
         dict_ = flatten(dict_)
 
         try:
-            out_ = dict_.pop(indices, default) if default != ... else dict_.pop(indices)
+            out_ = (
+                dict_.pop(indices, default)
+                if default != ...
+                else dict_.pop(indices)
+            )
         except KeyError as e:
             if default == ...:
                 raise KeyError(f"Key {indices} not found in metadata.") from e
@@ -494,7 +516,9 @@ class Component(Element, ABC):
         **kwargs,
     ) -> None:
         """Add a field to the model after initialization."""
-        self.extra_fields[field] = field_obj or Field(default=default, **kwargs)
+        self.extra_fields[field] = field_obj or Field(
+            default=default, **kwargs
+        )
         if annotation:
             self.extra_fields[field].annotation = annotation
 

@@ -44,4 +44,6 @@ class Package(Element):
             try:
                 return PackageCategory(value)
             except Exception as e:
-                raise ValueError(f"Invalid value for category: {value}.") from e
+                raise ValueError(
+                    f"Invalid value for category: {value}."
+                ) from e

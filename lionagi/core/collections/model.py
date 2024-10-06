@@ -4,7 +4,14 @@ import os
 import numpy as np
 from dotenv import load_dotenv
 
-from lionagi.libs import APIUtil, BaseService, StatusTracker, SysUtil, ninsert, to_list
+from lionagi.libs import (
+    APIUtil,
+    BaseService,
+    StatusTracker,
+    SysUtil,
+    ninsert,
+    to_list,
+)
 
 from .abc import Component, ModelLimitExceededError
 
@@ -94,7 +101,9 @@ class iModel:
         else:
             provider = str(provider).lower() if provider else "openai"
 
-        from lionagi.integrations.provider._mapping import SERVICE_PROVIDERS_MAPPING
+        from lionagi.integrations.provider._mapping import (
+            SERVICE_PROVIDERS_MAPPING,
+        )
 
         self.provider_schema = (
             provider_schema or SERVICE_PROVIDERS_MAPPING[provider]["schema"]
@@ -233,7 +242,9 @@ class iModel:
         if allowed_params != []:
             if (
                 len(
-                    not_allowed := [k for k in params.keys() if k not in allowed_params]
+                    not_allowed := [
+                        k for k in params.keys() if k not in allowed_params
+                    ]
                 )
                 > 0
             ):
@@ -294,7 +305,13 @@ class iModel:
             embed_str.pop("image_detail", None)
 
         num_tokens = APIUtil.calculate_num_token(
-            {"input": str(embed_str) if isinstance(embed_str, dict) else embed_str},
+            {
+                "input": (
+                    str(embed_str)
+                    if isinstance(embed_str, dict)
+                    else embed_str
+                )
+            },
             "embeddings",
             self.endpoint_schema["token_encoding_name"],
         )
@@ -323,7 +340,9 @@ class iModel:
             }
             kwargs["model"] = kwargs.pop("model", "gpt-4o-mini")
         if not request_fields and not json_schema:
-            raise ValueError("Either request_fields or json_schema must be provided")
+            raise ValueError(
+                "Either request_fields or json_schema must be provided"
+            )
         request_fields = request_fields or json_schema["properties"]
 
         messages = [
@@ -360,7 +379,8 @@ class iModel:
             **{
                 k: v
                 for k, v in self.config.items()
-                if k in getattr(self.service, "allowed_kwargs", []) and v is not None
+                if k in getattr(self.service, "allowed_kwargs", [])
+                and v is not None
             },
             "model_costs": None if self.costs == (0, 0) else self.costs,
         }
@@ -384,7 +404,9 @@ class iModel:
         if n_samples == 1:
             samples = [tokens]
         else:
-            samples = [tokens[: (i + 1) * sample_token_len] for i in range(n_samples)]
+            samples = [
+                tokens[: (i + 1) * sample_token_len] for i in range(n_samples)
+            ]
 
             if use_residue and residue != 0:
                 samples.append(tokens[-residue:])
@@ -392,7 +414,11 @@ class iModel:
         sampless = [context + " ".join(sample) for sample in samples]
 
         for sample in sampless:
-            messages = [{"role": "system", "content": system_msg}] if system_msg else []
+            messages = (
+                [{"role": "system", "content": system_msg}]
+                if system_msg
+                else []
+            )
             messages.append(
                 {"role": "user", "content": sample},
             )

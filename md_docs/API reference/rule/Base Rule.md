@@ -3,7 +3,7 @@
 
 ^34c3a1
 
-**Parent Class:** [[Component#^ce462d|Component]], [[API reference/collections/abc/Concepts#^d5e7b6|Condition]], [[API reference/collections/abc/Concepts#^007122|Actionable]] 
+**Parent Class:** [[Component#^ce462d|Component]], [[API reference/collections/abc/Concepts#^d5e7b6|Condition]], [[API reference/collections/abc/Concepts#^007122|Actionable]]
 
 **Description**:
 `Rule` combines a condition and an action that can be applied based on it. It includes methods to log applications, determine if the rule applies, invoke the rule's logic, and perform fixes if necessary.

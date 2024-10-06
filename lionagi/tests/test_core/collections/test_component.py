@@ -76,11 +76,15 @@ class TestComponent(unittest.TestCase):
 
     def test_from_obj_fuzzy_str(self):
         """Test creating a Component from a fuzzy JSON string."""
-        fuzzy_json_str = '{"name": "John", "age": 30, "city": ["New York", "DC", "LA"]'
+        fuzzy_json_str = (
+            '{"name": "John", "age": 30, "city": ["New York", "DC", "LA"]'
+        )
         new_component = Component.from_obj(fuzzy_json_str, fuzzy_parse=True)
         self.assertEqual(new_component.metadata["name"], "John")
         self.assertEqual(new_component.metadata["age"], 30)
-        self.assertEqual(new_component.metadata["city"], ["New York", "DC", "LA"])
+        self.assertEqual(
+            new_component.metadata["city"], ["New York", "DC", "LA"]
+        )
 
     def test_from_obj_series(self):
         """Test creating a Component from a Pandas Series."""
@@ -129,7 +133,9 @@ class TestComponent(unittest.TestCase):
         self.assertEqual(
             self.component._get_field_attr("welcome", "default"), "new value"
         )
-        self.assertEqual(getattr(self.component, "welcome"), "hello world again")
+        self.assertEqual(
+            getattr(self.component, "welcome"), "hello world again"
+        )
 
     def test_validation_error_handling(self):
         """Test handling of validation errors."""
@@ -145,7 +151,9 @@ class TestComponent(unittest.TestCase):
     def test_embedded_content(self):
         """Test embedded content handling."""
         embedding_str = "[1.0, 2.0, 3.0]"
-        self.component.embedding = self.component._validate_embedding(embedding_str)
+        self.component.embedding = self.component._validate_embedding(
+            embedding_str
+        )
         self.assertEqual(self.component.embedding, [1.0, 2.0, 3.0])
 
     def test_invalid_embedded_content(self):
@@ -174,7 +182,9 @@ class TestComponent(unittest.TestCase):
         nested_value = {"level1": {"level2": {"level3": "deep_value"}}}
         self.component._meta_insert(["nested", 0], nested_value)
         self.assertEqual(
-            self.component._meta_get(["nested", 0, "level1", "level2", "level3"]),
+            self.component._meta_get(
+                ["nested", 0, "level1", "level2", "level3"]
+            ),
             "deep_value",
         )
 

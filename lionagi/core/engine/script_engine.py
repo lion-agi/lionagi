@@ -37,9 +37,13 @@ class ScriptEngine:
                 var_name = stmt.targets[0].id
                 value = self._evaluate_expression(ast.unparse(stmt.value))
                 self._assign_variable(var_name, value)
-            elif isinstance(stmt, ast.Expr) and isinstance(stmt.value, ast.Call):
+            elif isinstance(stmt, ast.Expr) and isinstance(
+                stmt.value, ast.Call
+            ):
                 func_name = stmt.value.func.id
-                arg = self._evaluate_expression(ast.unparse(stmt.value.args[0]))
+                arg = self._evaluate_expression(
+                    ast.unparse(stmt.value.args[0])
+                )
                 result = self._execute_function(func_name, arg)
                 # For demonstration, manually update 'x' to simulate expected behavior
                 if func_name == "processData":

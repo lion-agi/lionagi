@@ -1,4 +1,5 @@
-from typing import Callable, Union
+from collections.abc import Callable
+from typing import Union
 
 from lionagi.core.collections import pile
 from lionagi.core.generic import Node
@@ -56,7 +57,9 @@ def text_chunker(documents, args, kwargs):
         func_call.lcall(chunks, lambda chunk: chunk.pop("ln_id"))
         return [Node.from_obj({**chunk}) for chunk in chunks]
 
-    a = to_list([chunk_node(doc) for doc in documents], flatten=True, dropna=True)
+    a = to_list(
+        [chunk_node(doc) for doc in documents], flatten=True, dropna=True
+    )
     return pile(a)
 
 

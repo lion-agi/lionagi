@@ -3,12 +3,12 @@ from lionfuncs import lcall
 from lionagi.core.rule.base import Rule
 
 """
-rule config schema 
+rule config schema
 
 {
     rule_name: {
         "fields: [],
-        "config": {}, 
+        "config": {},
         ...
     }
 }
@@ -30,12 +30,16 @@ class RuleBook:
     @property
     def _all_applied_log(self):
         """return all applied logs from all rules in the rulebook"""
-        return lcall(self.rules.values(), lambda x: x.applied_log, flatten=True)
+        return lcall(
+            self.rules.values(), lambda x: x.applied_log, flatten=True
+        )
 
     @property
     def _all_invoked_log(self):
         """return all invoked logs from all rules in the rulebook"""
-        return lcall(self.rules.values(), lambda x: x.invoked_log, flatten=True)
+        return lcall(
+            self.rules.values(), lambda x: x.invoked_log, flatten=True
+        )
 
     def __getitem__(self, key: str) -> Rule:
         return self.rules[key]
