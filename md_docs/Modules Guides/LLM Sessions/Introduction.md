@@ -66,7 +66,7 @@ model = "mistralai/mistral-7b-instruct"
 
 # Creating a new session with the configured service
 comedian2 = Session(
-	"you are sarcastically funny comedian", 
+	"you are sarcastically funny comedian",
 	service=service
 )
 
@@ -86,8 +86,7 @@ The messages within a session's branch can be accessed for review or analysis, p
 
 ```python
 # Accessing the messages in the default branch of the session
-comedian2.messages 
+comedian2.messages
 comedian2.branches['main'].messages # getting messages from a branch
 comedian2.all_messages. # get all messages across all branches
 ```
-

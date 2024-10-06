@@ -63,7 +63,7 @@ Expected Output:
 ```markdown
 To analyze the situation where a blue whale is chasing a big white shark, let's consider several factors:
 
-1. **Behavioral Context**: 
+1. **Behavioral Context**:
    - Blue whales are generally filter feeders and consume krill and small fish. They are not known to chase or hunt sharks.
    - White sharks are apex predators and typically do not have natural predators, especially not from baleen whales like the blue whale.
 
@@ -130,7 +130,7 @@ for i in forms:
 Expected Output:
 
 ```markdown
-task: 
+task:
 Follow the prompt and provide the necessary output.
 - Additional instruction: analyze the situation, what should the whale do? write a poeticly absurd story
 - Additional context: a blue whale is chasing a big white shark
@@ -139,23 +139,23 @@ Follow the prompt and provide the necessary output.
 - Perform scoring according to score range: [0, 10] and precision: integer.
 - Select 1 item from the provided choices: ['run', 'chase', 'fight', 'hide', 'call for help', 'stop', 'dive', 'swim'].
 
-answer: 
+answer:
 PLEASE_EXTEND
 
-extension_required: 
+extension_required:
 True
 
-plan: 
+plan:
 {'step_1': {'plan': 'The blue whale should reflect on the vastness of the ocean and the absurdity of its chase.', 'reason': 'This will set the stage for a poetic and absurd narrative.'}, 'step_2': {'plan': 'The blue whale should then engage in an unexpected activity, such as singing a melancholic song to the moon.', 'reason': 'This adds a layer of poetic absurdity to the story.'}, 'step_3': {'plan': 'Finally, the blue whale should decide on a course of action, such as stopping the chase and pondering the meaning of its pursuit.', 'reason': 'This concludes the story with a reflective and poetic note.'}}
 
-score: 
+score:
 8
 
-selection: 
+selection:
 stop
 
 ----
-task: 
+task:
 Follow the prompt and provide the necessary output.
 - Additional instruction: {"plan": "The blue whale should reflect on the vastness of the ocean and the absurdity of its chase.", "reason": "This will set the stage for a poetic and absurd narrative."}
 - Additional context: N/A
@@ -163,16 +163,16 @@ Follow the prompt and provide the necessary output.
 - Perform scoring according to score range: [0, 10] and precision: integer.
 - Select 1 item from the provided choices: ['run', 'chase', 'fight', 'hide', 'call for help', 'stop', 'dive', 'swim'].
 
-answer: 
+answer:
 The blue whale, amidst the vastness of the ocean, ponders the absurdity of its chase. It realizes that in such an expansive and boundless environment, the pursuit seems almost trivial and nonsensical. The whale decides to stop and reflect on the beauty and enormity of its surroundings, embracing the poetic absurdity of its existence.
 
-extension_required: 
+extension_required:
 False
 
-score: 
+score:
 9
 
-selection: 
+selection:
 stop
 
 ----

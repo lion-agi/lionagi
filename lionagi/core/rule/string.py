@@ -38,4 +38,6 @@ class StringRule(Rule):
         try:
             return to_str(value, **self.validation_kwargs)
         except Exception as e:
-            raise ValueError(f"Failed to convert {value} into a string value") from e
+            raise ValueError(
+                f"Failed to convert {value} into a string value"
+            ) from e

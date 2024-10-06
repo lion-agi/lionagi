@@ -81,7 +81,9 @@ def create_message(
 
     if function:
         if not arguments:
-            raise ValueError("Error: please provide arguments for the function.")
+            raise ValueError(
+                "Error: please provide arguments for the function."
+            )
         return ActionRequest(
             function=function,
             arguments=arguments,
@@ -158,7 +160,9 @@ def _parse_action_request(response):
         content_ = message["content"]["tool_uses"]
 
     else:
-        json_block_pattern = re.compile(r"```json\n({.*?tool_uses.*?})\n```", re.DOTALL)
+        json_block_pattern = re.compile(
+            r"```json\n({.*?tool_uses.*?})\n```", re.DOTALL
+        )
 
         # Find the JSON block in the text
         match = json_block_pattern.search(str(message["content"]))
@@ -179,7 +183,9 @@ def _parse_action_request(response):
         outs = []
         for func_calling in content_:
             if "recipient_name" in func_calling:
-                func_calling["action"] = func_calling["recipient_name"].split(".")[1]
+                func_calling["action"] = func_calling["recipient_name"].split(
+                    "."
+                )[1]
                 func_calling["arguments"] = func_calling["parameters"]
             elif "function" in func_calling:
                 func_calling["action"] = func_calling["function"]
@@ -212,9 +218,13 @@ def _parse_action_request(response):
                     if "function" in func_calling:
                         func_calling["action"] = func_calling["function"]
                         if "parameters" in func_calling:
-                            func_calling["arguments"] = func_calling["parameters"]
+                            func_calling["arguments"] = func_calling[
+                                "parameters"
+                            ]
                         elif "arguments" in func_calling:
-                            func_calling["arguments"] = func_calling["arguments"]
+                            func_calling["arguments"] = func_calling[
+                                "arguments"
+                            ]
                     msg = ActionRequest(
                         function=func_calling["action"]
                         .replace("action_", "")

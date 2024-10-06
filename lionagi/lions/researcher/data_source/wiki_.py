@@ -10,7 +10,9 @@ class WikipediaSearch:
     def create_agent(verbose=False):
         from lionagi.libs import SysUtil
 
-        SysUtil.check_import(package_name="llama_index", pip_name="llama-index")
+        SysUtil.check_import(
+            package_name="llama_index", pip_name="llama-index"
+        )
 
         SysUtil.check_import(
             package_name="llama_index",

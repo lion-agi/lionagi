@@ -22,16 +22,16 @@ class DirectiveMixin(ABC):
 
     def _create_chat_config(
         self,
-        system: Optional[str] = None,
-        instruction: Optional[str] = None,
-        context: Optional[str] = None,
-        images: Optional[str] = None,
-        sender: Optional[str] = None,
-        recipient: Optional[str] = None,
-        requested_fields: Optional[list] = None,
+        system: str | None = None,
+        instruction: str | None = None,
+        context: str | None = None,
+        images: str | None = None,
+        sender: str | None = None,
+        recipient: str | None = None,
+        requested_fields: list | None = None,
         form: Form = None,
         tools: bool = False,
-        branch: Optional[Any] = None,
+        branch: Any | None = None,
         **kwargs,
     ) -> Any:
         """
@@ -87,7 +87,7 @@ class DirectiveMixin(ABC):
         return config
 
     async def _call_chatcompletion(
-        self, imodel: Optional[Any] = None, branch: Optional[Any] = None, **kwargs
+        self, imodel: Any | None = None, branch: Any | None = None, **kwargs
     ) -> Any:
         """
         Calls the chat completion model.
@@ -102,7 +102,9 @@ class DirectiveMixin(ABC):
         """
         imodel = imodel or self.imodel
         branch = branch or self.branch
-        return await imodel.call_chat_completion(branch.to_chat_messages(), **kwargs)
+        return await imodel.call_chat_completion(
+            branch.to_chat_messages(), **kwargs
+        )
 
     async def _process_chatcompletion(
         self,
@@ -110,8 +112,8 @@ class DirectiveMixin(ABC):
         completion: dict,
         sender: str,
         invoke_tool: bool = True,
-        branch: Optional[Any] = None,
-        action_request: Optional[Any] = None,
+        branch: Any | None = None,
+        action_request: Any | None = None,
         costs=None,
     ) -> Any:
         """
@@ -157,7 +159,9 @@ class DirectiveMixin(ABC):
                 m = completion.get("model", None)
                 if m:
                     ttl = (a * price[0] + b * price[1]) / 1000000
-                    branch.messages[-1]._meta_insert(["extra", "usage", "expense"], ttl)
+                    branch.messages[-1]._meta_insert(
+                        ["extra", "usage", "expense"], ttl
+                    )
                 return msg
 
             if _choices and not isinstance(_choices, list):
@@ -180,10 +184,10 @@ class DirectiveMixin(ABC):
 
     async def _process_action_request(
         self,
-        _msg: Optional[dict] = None,
-        branch: Optional[Any] = None,
+        _msg: dict | None = None,
+        branch: Any | None = None,
         invoke_tool: bool = True,
-        action_request: Optional[Any] = None,
+        action_request: Any | None = None,
     ) -> Any:
         """
         Processes an action request from the assistant response.
@@ -204,9 +208,13 @@ class DirectiveMixin(ABC):
         if action_request:
             for i in action_request:
                 if i.function in branch.tool_manager.registry:
-                    i.recipient = branch.tool_manager.registry[i.function].ln_id
+                    i.recipient = branch.tool_manager.registry[
+                        i.function
+                    ].ln_id
                 else:
-                    raise ActionError(f"Tool {i.function} not found in registry")
+                    raise ActionError(
+                        f"Tool {i.function} not found in registry"
+                    )
                 branch.add_message(action_request=i, recipient=i.recipient)
 
         if invoke_tool:
@@ -305,7 +313,7 @@ class DirectiveMixin(ABC):
         requested_fields: dict = None,
         form: Form = None,
         tools: Any = False,
-        images: Optional[str] = None,
+        images: str | None = None,
         invoke_tool: bool = True,
         return_form: bool = True,
         strict: bool = False,
@@ -396,7 +404,7 @@ class DirectiveMixin(ABC):
         return_form=True,
         strict=False,
         imodel=None,
-        images: Optional[str] = None,
+        images: str | None = None,
         clear_messages=False,
         use_annotation=True,
         timeout: float = None,
@@ -493,7 +501,7 @@ class DirectiveMixin(ABC):
         predict_num_sentences=None,
         clear_messages=False,
         return_branch=False,
-        images: Optional[str] = None,
+        images: str | None = None,
         verbose=None,
         **kwargs,
     ):
@@ -584,7 +592,7 @@ class DirectiveMixin(ABC):
         predict_num_sentences=None,
         clear_messages=False,
         return_branch=False,
-        images: Optional[str] = None,
+        images: str | None = None,
         verbose=True,
         formatter=None,
         format_kwargs=None,
@@ -736,10 +744,14 @@ class DirectiveMixin(ABC):
             )
 
             if verbose:
-                print(f"------------------- Extension completed -------------------\n")
+                print(
+                    f"------------------- Extension completed -------------------\n"
+                )
 
             extension_forms.extend(new_form)
-            last_form = new_form[-1] if isinstance(new_form, list) else new_form
+            last_form = (
+                new_form[-1] if isinstance(new_form, list) else new_form
+            )
             ctr += len(form)
 
         if extension_forms:
@@ -977,7 +989,9 @@ class DirectiveMixin(ABC):
                 context=context,
             )
 
-        return await self._chat(form=form, return_form=True, branch=branch, **kwargs)
+        return await self._chat(
+            form=form, return_form=True, branch=branch, **kwargs
+        )
 
     async def _predict(
         self,
@@ -1019,7 +1033,9 @@ class DirectiveMixin(ABC):
                 reason=reason,
             )
 
-        return await self._chat(form=form, return_form=True, branch=branch, **kwargs)
+        return await self._chat(
+            form=form, return_form=True, branch=branch, **kwargs
+        )
 
     async def _score(
         self,
@@ -1066,7 +1082,9 @@ class DirectiveMixin(ABC):
                 context=context,
             )
 
-        return await self._chat(form=form, return_form=True, branch=branch, **kwargs)
+        return await self._chat(
+            form=form, return_form=True, branch=branch, **kwargs
+        )
 
     async def _plan(
         self,

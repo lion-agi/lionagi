@@ -29,7 +29,9 @@ class MockRule(Rule):
 class ValidatorTestCase(unittest.TestCase):
     def setUp(self):
         self.validator = Validator(
-            rulebook=RuleBook(rules=_DEFAULT_RULES, ruleorder=_DEFAULT_RULEORDER)
+            rulebook=RuleBook(
+                rules=_DEFAULT_RULES, ruleorder=_DEFAULT_RULEORDER
+            )
         )
         self.form = Form(
             assignment="input1, input2 -> output",
@@ -47,7 +49,9 @@ class ValidatorTestCase(unittest.TestCase):
 
     async def test_validate_field(self):
         self.validator.add_rule("mock_rule", MockRule)
-        valid_value = await self.validator.validate_field("input1", 10, self.form)
+        valid_value = await self.validator.validate_field(
+            "input1", 10, self.form
+        )
         self.assertEqual(valid_value, 10)
 
         with self.assertRaises(FieldError):
@@ -55,16 +59,22 @@ class ValidatorTestCase(unittest.TestCase):
 
     async def test_validate_response(self):
         response = {"output": 20}
-        validated_form = await self.validator.validate_response(self.form, response)
+        validated_form = await self.validator.validate_response(
+            self.form, response
+        )
         self.assertEqual(validated_form.output, 20)
 
         response_str = "20"
         self.form.requested_fields = ["output"]
-        validated_form = await self.validator.validate_response(self.form, response_str)
+        validated_form = await self.validator.validate_response(
+            self.form, response_str
+        )
         self.assertEqual(validated_form.output, 20)
 
         with self.assertRaises(ValueError):
-            await self.validator.validate_response(self.form, "invalid_response")
+            await self.validator.validate_response(
+                self.form, "invalid_response"
+            )
 
     async def test_validate_report(self):
         report = Report(assignment="a, b -> c", forms=[self.form])

@@ -109,7 +109,11 @@ class Instruction(RoledMessage):
         self, context, requested_fields, images, image_detail, **kwargs
     ):
         if context:
-            context = {"context": context} if not isinstance(context, dict) else context
+            context = (
+                {"context": context}
+                if not isinstance(context, dict)
+                else context
+            )
             if (
                 additional_context := {
                     k: v for k, v in kwargs.items() if k not in SYSTEM_FIELDS
@@ -124,7 +128,9 @@ class Instruction(RoledMessage):
             )
 
         if images:
-            self.content["images"] = images if isinstance(images, list) else [images]
+            self.content["images"] = (
+                images if isinstance(images, list) else [images]
+            )
             self.content["image_detail"] = image_detail
 
     def clone(self, **kwargs):

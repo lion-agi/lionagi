@@ -1,4 +1,4 @@
-from typing import Callable
+from collections.abc import Callable
 
 from lionagi.core.collections import iModel
 from lionagi.core.collections.abc import Directive
@@ -232,7 +232,9 @@ class Unit(Directive, DirectiveMixin):
         )
 
         if verbose:
-            print("--------------------------------------------------------------")
+            print(
+                "--------------------------------------------------------------"
+            )
             print(f"Directive successfully completed!")
 
         return out

@@ -1,7 +1,8 @@
 import json
 import re
+from collections.abc import Generator, Iterable
 from functools import singledispatch
-from typing import Any, Generator, Iterable, Type
+from typing import Any, Type
 
 import pandas as pd
 from pydantic import BaseModel
@@ -11,7 +12,9 @@ number_regex = re.compile(r"-?\d+\.?\d*")
 
 # to_list functions with datatype overloads
 @singledispatch
-def to_list(input_, /, *, flatten: bool = True, dropna: bool = True) -> list[Any]:
+def to_list(
+    input_, /, *, flatten: bool = True, dropna: bool = True
+) -> list[Any]:
     """
     Converts the input object to a list. This function is capable of handling various input types,
     utilizing single dispatch to specialize for different types such as list, tuple, and set.
@@ -43,9 +46,13 @@ def to_list(input_, /, *, flatten: bool = True, dropna: bool = True) -> list[Any
         ):
             return [input_]
         iterable_list = list(input_)
-        return _flatten_list(iterable_list, dropna) if flatten else iterable_list
+        return (
+            _flatten_list(iterable_list, dropna) if flatten else iterable_list
+        )
     except Exception as e:
-        raise ValueError(f"Could not convert {type(input_)} object to list: {e}") from e
+        raise ValueError(
+            f"Could not convert {type(input_)} object to list: {e}"
+        ) from e
 
 
 @to_list.register(list)
@@ -362,7 +369,9 @@ def _(
 ) -> pd.DataFrame:
     if not input_:
         return pd.DataFrame()
-    if not isinstance(input_[0], (pd.DataFrame, pd.Series, pd.core.generic.NDFrame)):
+    if not isinstance(
+        input_[0], (pd.DataFrame, pd.Series, pd.core.generic.NDFrame)
+    ):
         if drop_kwargs is None:
             drop_kwargs = {}
         try:
@@ -370,7 +379,9 @@ def _(
             dfs = dfs.dropna(**(drop_kwargs | {"how": how}))
             return dfs.reset_index(drop=True) if reset_index else dfs
         except Exception as e:
-            raise ValueError(f"Error converting input_ to DataFrame: {e}") from e
+            raise ValueError(
+                f"Error converting input_ to DataFrame: {e}"
+            ) from e
 
     dfs = ""
     if drop_kwargs is None:
@@ -401,7 +412,7 @@ def to_num(
     *,
     upper_bound: int | float | None = None,
     lower_bound: int | float | None = None,
-    num_type: Type[int | float] = float,
+    num_type: type[int | float] = float,
     precision: int | None = None,
 ) -> int | float:
     """
@@ -431,13 +442,17 @@ def to_readable_dict(input_: Any) -> str:
 
     try:
         dict_ = to_dict(input_)
-        return json.dumps(dict_, indent=4) if isinstance(input_, dict) else input_
+        return (
+            json.dumps(dict_, indent=4) if isinstance(input_, dict) else input_
+        )
     except Exception as e:
-        raise ValueError(f"Could not convert given input to readable dict: {e}") from e
+        raise ValueError(
+            f"Could not convert given input to readable dict: {e}"
+        ) from e
 
 
 def is_same_dtype(
-    input_: list | dict, dtype: Type | None = None, return_dtype=False
+    input_: list | dict, dtype: type | None = None, return_dtype=False
 ) -> bool:
     """
     Checks if all elements in a list or dictionary values are of the same data type.
@@ -496,7 +511,9 @@ def strip_lower(input_: Any) -> str:
     try:
         return str(input_).strip().lower()
     except Exception as e:
-        raise ValueError(f"Could not convert input_ to string: {input_}, Error: {e}")
+        raise ValueError(
+            f"Could not convert input_ to string: {input_}, Error: {e}"
+        )
 
 
 def is_structure_homogeneous(
@@ -552,7 +569,9 @@ def is_structure_homogeneous(
     return (is_, structure_type) if return_structure_type else is_
 
 
-def is_homogeneous(iterables: list[Any] | dict[Any, Any], type_check: type) -> bool:
+def is_homogeneous(
+    iterables: list[Any] | dict[Any, Any], type_check: type
+) -> bool:
     if isinstance(iterables, list):
         return all(isinstance(it, type_check) for it in iterables)
     return isinstance(iterables, type_check)
@@ -562,7 +581,7 @@ def _str_to_num(
     input_: str,
     upper_bound: float | None = None,
     lower_bound: float | None = None,
-    num_type: Type[int | float] = int,
+    num_type: type[int | float] = int,
     precision: int | None = None,
 ) -> int | float:
     number_str = _extract_first_number(input_)
@@ -590,7 +609,9 @@ def _extract_first_number(input_: str) -> str | None:
 
 
 def _convert_to_num(
-    number_str: str, num_type: Type[int | float] = int, precision: int | None = None
+    number_str: str,
+    num_type: type[int | float] = int,
+    precision: int | None = None,
 ) -> int | float:
     if num_type is int:
         return int(float(number_str))

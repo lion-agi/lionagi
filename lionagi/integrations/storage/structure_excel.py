@@ -10,7 +10,9 @@ from lionagi.core.executor.graph_executor import GraphExecutor
 from lionagi.integrations.storage.storage_util import ParseNode
 
 
-def excel_reload(structure_name=None, structure_id=None, dir="structure_storage"):
+def excel_reload(
+    structure_name=None, structure_id=None, dir="structure_storage"
+):
     """
     Loads a structure from an Excel file into a StructureExecutor instance.
 
@@ -58,7 +60,10 @@ class StructureExcel:
     default_agent_executable: BaseExecutor = InstructionMapEngine()
 
     def __init__(
-        self, structure_name=None, structure_id=None, file_path="structure_storage"
+        self,
+        structure_name=None,
+        structure_id=None,
+        file_path="structure_storage",
     ):
         """
         Initializes the StructureExcel class with specified parameters.

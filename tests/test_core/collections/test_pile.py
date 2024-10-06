@@ -40,7 +40,9 @@ class TestPile(unittest.TestCase):
 
     def test_exclude_nodes(self):
         """Test excluding nodes from a pile."""
-        self.p1.include(self.nodes2)  # Include first to have something to exclude
+        self.p1.include(
+            self.nodes2
+        )  # Include first to have something to exclude
         self.p1.exclude(self.nodes2)
         self.assertEqual(len(self.p1), 5)
         contents = [node.content for node in self.p1.values()]
@@ -68,7 +70,9 @@ class TestPile(unittest.TestCase):
         """Test if all items in the pile are of the same type."""
         self.assertTrue(self.p1.is_homogenous())
         with self.assertRaises(AttributeError):
-            mixed_pile = Pile(self.nodes1 + [123])  # Adding an int to mix types
+            mixed_pile = Pile(
+                self.nodes1 + [123]
+            )  # Adding an int to mix types
 
     def test_is_empty(self):
         """Test if the pile is empty."""
@@ -136,7 +140,7 @@ class TestPile(unittest.TestCase):
     def test_to_csv(self):
         """Test saving the pile to a CSV file."""
         self.p1.to_csv("test_pile.csv")
-        with open("test_pile.csv", "r") as f:
+        with open("test_pile.csv") as f:
             content = f.read()
         self.assertIn("content", content)
 

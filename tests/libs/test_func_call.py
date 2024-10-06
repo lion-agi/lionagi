@@ -33,7 +33,8 @@ class TestLCall(unittest.TestCase):
 
     def test_flatten(self):
         self.assertEqual(
-            lcall([[1, 2], [3, 4]], lambda x: x * 2, flatten=True), [2, 4, 6, 8]
+            lcall([[1, 2], [3, 4]], lambda x: x * 2, flatten=True),
+            [2, 4, 6, 8],
         )
 
     def test_drop_none(self):
@@ -207,7 +208,9 @@ class TestMCall(unittest.IsolatedAsyncioTestCase):
         async def async_func2(x):
             return x + 3
 
-        result = await mcall([[1, None], [None, 2]], [async_func1, async_func2])
+        result = await mcall(
+            [[1, None], [None, 2]], [async_func1, async_func2]
+        )
         self.assertEqual(result, [2, 5])
 
     async def test_exception_handling(self):
@@ -360,7 +363,9 @@ class TestCallDecorator(unittest.IsolatedAsyncioTestCase):
         second_call = test_func()
         end_time = time.time()
 
-        self.assertLess(first_call - start_time, 1)  # First call should be immediate
+        self.assertLess(
+            first_call - start_time, 1
+        )  # First call should be immediate
         self.assertGreaterEqual(
             second_call - first_call, 2
         )  # Second call should be delayed
@@ -561,7 +566,9 @@ class TestCallDecorator(unittest.IsolatedAsyncioTestCase):
         async def test_func():
             nonlocal current_concurrency, max_concurrent_calls
             current_concurrency += 1
-            max_concurrent_calls = max(max_concurrent_calls, current_concurrency)
+            max_concurrent_calls = max(
+                max_concurrent_calls, current_concurrency
+            )
             await asyncio.sleep(0.1)  # Simulate async work
             current_concurrency -= 1
 
@@ -692,7 +699,8 @@ class TestAsyncRetryDecorator(unittest.IsolatedAsyncioTestCase):
         self.assertEqual(result, "Success")
         # Note: The actual delay might be slightly longer than expected due to asyncio's event loop scheduling.
         self.assertTrue(
-            elapsed_time >= 0.3, f"Elapsed time was {elapsed_time}, expected >= 3"
+            elapsed_time >= 0.3,
+            f"Elapsed time was {elapsed_time}, expected >= 3",
         )
         self.assertEqual(attempt, 3)
 

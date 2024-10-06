@@ -14,7 +14,8 @@ class TestForm(unittest.TestCase):
         self.assertFalse(self.form.workable)
         self.assertFalse(self.form.filled)
         self.assertEqual(
-            self.form.work_fields, {"input1": None, "input2": None, "output": None}
+            self.form.work_fields,
+            {"input1": None, "input2": None, "output": None},
         )
 
     def test_fill_input_fields(self):
@@ -30,7 +31,9 @@ class TestForm(unittest.TestCase):
         self.form.fill(output=3)
         self.assertTrue(self.form.filled)
         self.assertFalse(self.form.workable)
-        self.assertEqual(self.form.work_fields, {"input1": 1, "input2": 2, "output": 3})
+        self.assertEqual(
+            self.form.work_fields, {"input1": 1, "input2": 2, "output": 3}
+        )
 
     def test_fill_once(self):
         self.form.fill(input1=1, input2=2)
@@ -38,9 +41,12 @@ class TestForm(unittest.TestCase):
         with self.assertRaises(ValueError) as context:
             self.form.fill(input1=2, input2=3)
         self.assertTrue(
-            "Form is filled, cannot be worked on again" in str(context.exception)
+            "Form is filled, cannot be worked on again"
+            in str(context.exception)
         )
-        self.assertEqual(self.form.work_fields, {"input1": 1, "input2": 2, "output": 3})
+        self.assertEqual(
+            self.form.work_fields, {"input1": 1, "input2": 2, "output": 3}
+        )
 
 
 if __name__ == "__main__":

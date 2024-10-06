@@ -6,7 +6,11 @@ from lionagi.core import Session
 from lionagi.libs import ParseUtil
 
 from .base_prompts import CODER_PROMPTS
-from .util import install_missing_dependencies, save_code_file, set_up_interpreter
+from .util import (
+    install_missing_dependencies,
+    save_code_file,
+    set_up_interpreter,
+)
 
 
 class Coder:
@@ -55,38 +59,50 @@ class Coder:
 
     async def _plan_code(self, context):
         print("Planning code...")
-        plans = await self.session.chat(self.prompts["plan_code"], context=context)
+        plans = await self.session.chat(
+            self.prompts["plan_code"], context=context
+        )
         print("Code planning completed.")
         return plans
 
     async def _write_code(self, context=None):
         print("Writing code...")
-        code = await self.session.chat(self.prompts["write_code"], context=context)
+        code = await self.session.chat(
+            self.prompts["write_code"], context=context
+        )
         print("Code writing completed.")
         return ParseUtil.extract_code_blocks(code)
 
     async def _review_code(self, context=None):
         print("Reviewing code...")
-        code = await self.session.chat(self.prompts["review_code"], context=context)
+        code = await self.session.chat(
+            self.prompts["review_code"], context=context
+        )
         print("Code review completed.")
         return code
 
     async def _modify_code(self, context=None):
         print("Modifying code...")
-        code = await self.session.chat(self.prompts["modify_code"], context=context)
+        code = await self.session.chat(
+            self.prompts["modify_code"], context=context
+        )
         print("Code modification completed.")
         return code
 
     async def _debug_code(self, context=None):
         print("Debugging code...")
-        code = await self.session.chat(self.prompts["debug_code"], context=context)
+        code = await self.session.chat(
+            self.prompts["debug_code"], context=context
+        )
         print("Code debugging completed.")
         return code
 
     def _handle_execution_error(self, execution, required_libraries=None):
         print("Handling execution error...")
         if execution.error and execution.error.name == "ModuleNotFoundError":
-            print("ModuleNotFoundError detected. Installing missing dependencies...")
+            print(
+                "ModuleNotFoundError detected. Installing missing dependencies..."
+            )
             install_missing_dependencies(required_libraries)
             print("Dependencies installed. Retrying execution.")
             return "try again"
@@ -118,7 +134,7 @@ class Coder:
     def _load_code_file(file_path):
         print("Loading code...")
         try:
-            with open(file_path, "r") as file:
+            with open(file_path) as file:
                 print("Code loaded.")
                 return file.read()
         except FileNotFoundError:

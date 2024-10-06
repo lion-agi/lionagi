@@ -28,7 +28,9 @@ class DLog:
     input_data: Any
     output_data: Any
 
-    def serialize(self, *, flatten_: bool = True, sep: str = "[^_^]") -> dict[str, Any]:
+    def serialize(
+        self, *, flatten_: bool = True, sep: str = "[^_^]"
+    ) -> dict[str, Any]:
         """Serialize the DLog instance into a dictionary with an added timestamp.
 
         Args:
@@ -51,7 +53,9 @@ class DLog:
                         data = convert.to_dict(data)
 
                     if isinstance(self.input_data, dict) and flatten_:
-                        log_dict[field] = convert.to_str(nested.flatten(data, sep=sep))
+                        log_dict[field] = convert.to_str(
+                            nested.flatten(data, sep=sep)
+                        )
                     else:
                         log_dict[field] = convert.to_str(data)
 
@@ -134,7 +138,7 @@ class DataLogger:
     def __init__(
         self,
         persist_path: str | Path | None = None,
-        log: List[Dict] | None = None,
+        log: list[dict] | None = None,
         filename: str | None = None,
     ) -> None:
         """Initialize the DataLogger with optional custom settings for log storage.
@@ -145,7 +149,9 @@ class DataLogger:
             log: Initial log entries.
             filename: Base name for exported log files.
         """
-        self.persist_path = Path(persist_path) if persist_path else Path("data/logs/")
+        self.persist_path = (
+            Path(persist_path) if persist_path else Path("data/logs/")
+        )
         self.log = deque(log) if log else deque()
         self.filename = filename or "log"
         atexit.register(self.save_at_exit)
@@ -218,7 +224,9 @@ class DataLogger:
             random_hash_digits=random_hash_digits,
         )
         try:
-            logs = [log.serialize(flatten_=flatten_, sep=sep) for log in self.log]
+            logs = [
+                log.serialize(flatten_=flatten_, sep=sep) for log in self.log
+            ]
             df = convert.to_df(convert.to_list(logs, flatten=True))
             df.to_csv(filepath, index=index, **kwargs)
             if verbose:
@@ -271,7 +279,9 @@ class DataLogger:
         )
 
         try:
-            logs = [log.serialize(flatten_=flatten_, sep=sep) for log in self.log]
+            logs = [
+                log.serialize(flatten_=flatten_, sep=sep) for log in self.log
+            ]
             df = convert.to_df(convert.to_list(logs, flatten=True))
             df.to_json(filepath, index=index, **kwargs)
             if verbose:

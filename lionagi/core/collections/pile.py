@@ -1,9 +1,9 @@
 from __future__ import annotations
 
 import asyncio
-from collections.abc import Iterable
+from collections.abc import AsyncIterator, Callable, Iterable
 from functools import wraps
-from typing import Any, AsyncIterator, Callable, Generic, Type, TypeVar
+from typing import Any, Generic, Type, TypeVar
 
 from pydantic import Field, field_validator
 
@@ -55,7 +55,7 @@ class Pile(Element, Record, Generic[T]):
 
     use_obj: bool = False
     pile: dict[str, T] = Field(default_factory=dict)
-    item_type: set[Type[Element]] | None = Field(default=None)
+    item_type: set[type[Element]] | None = Field(default=None)
     name: str | None = None
     order: list[str] = Field(default_factory=list)
     index: Any = None
@@ -91,7 +91,7 @@ class Pile(Element, Record, Generic[T]):
             )
         self.order = order
 
-    def __getitem__(self, key) -> T | "Pile[T]":
+    def __getitem__(self, key) -> T | Pile[T]:
         """
         Retrieve items from the pile using a key.
 
@@ -117,7 +117,11 @@ class Pile(Element, Record, Generic[T]):
                 _key = self.order[key]
                 _key = [_key] if isinstance(key, int) else _key
                 _out = [self.pile.get(i) for i in _key]
-                return _out[0] if len(_out) == 1 else pile(_out, self.item_type, _key)
+                return (
+                    _out[0]
+                    if len(_out) == 1
+                    else pile(_out, self.item_type, _key)
+                )
         except IndexError as e:
             raise ItemNotFoundError(key) from e
 
@@ -130,7 +134,9 @@ class Pile(Element, Record, Generic[T]):
                 keys[idx] = item.ln_id
 
         if not all(keys):
-            raise LionTypeError("Invalid item type. Expected LionIDable object(s).")
+            raise LionTypeError(
+                "Invalid item type. Expected LionIDable object(s)."
+            )
 
         try:
             if len(keys) == 1:
@@ -164,7 +170,9 @@ class Pile(Element, Record, Generic[T]):
                 raise e
 
             if isinstance(_key, str) and len(item) != 1:
-                raise ValueError("Cannot assign multiple items to a single item.")
+                raise ValueError(
+                    "Cannot assign multiple items to a single item."
+                )
 
             if isinstance(_key, list) and len(item) != len(_key):
                 raise ValueError(
@@ -173,7 +181,9 @@ class Pile(Element, Record, Generic[T]):
 
             for k, v in item.items():
                 if self.item_type and type(v) not in self.item_type:
-                    raise LionTypeError(f"Invalid item type. Expected {self.item_type}")
+                    raise LionTypeError(
+                        f"Invalid item type. Expected {self.item_type}"
+                    )
 
                 self.pile[k] = v
                 self.order[key] = k
@@ -181,7 +191,9 @@ class Pile(Element, Record, Generic[T]):
             return
 
         if len(to_list_type(key)) != len(item):
-            raise ValueError("The length of keys does not match the length of values")
+            raise ValueError(
+                "The length of keys does not match the length of values"
+            )
 
         self.pile.update(item)
         self.order.extend(item.keys())
@@ -210,7 +222,7 @@ class Pile(Element, Record, Generic[T]):
 
         return True
 
-    def pop(self, key: Any, default=...) -> T | "Pile[T]" | None:
+    def pop(self, key: Any, default=...) -> T | Pile[T] | None:
         """
         Remove and return item(s) associated with given key.
 
@@ -247,7 +259,7 @@ class Pile(Element, Record, Generic[T]):
 
         return pile(items) if len(items) > 1 else items[0]
 
-    def get(self, key: Any, default=...) -> T | "Pile[T]" | None:
+    def get(self, key: Any, default=...) -> T | Pile[T] | None:
         """
         Retrieve item(s) associated with given key.
 
@@ -366,7 +378,7 @@ class Pile(Element, Record, Generic[T]):
         """
         return len(self.pile)
 
-    def __add__(self, other: T) -> "Pile":
+    def __add__(self, other: T) -> Pile:
         """Create a new pile by including item(s) using `+`.
 
         Returns a new `Pile` with all items from the current pile plus
@@ -387,7 +399,7 @@ class Pile(Element, Record, Generic[T]):
             return _copy
         raise LionValueError("Item cannot be included in the pile.")
 
-    def __sub__(self, other) -> "Pile":
+    def __sub__(self, other) -> Pile:
         """
         Create a new pile by excluding item(s) using `-`.
 
@@ -412,7 +424,7 @@ class Pile(Element, Record, Generic[T]):
             raise LionValueError("Item cannot be excluded from the pile.")
         return _copy
 
-    def __iadd__(self, other: T) -> "Pile":
+    def __iadd__(self, other: T) -> Pile:
         """
         Include item(s) in the current pile in place using `+=`.
 
@@ -425,7 +437,7 @@ class Pile(Element, Record, Generic[T]):
 
         return self + other
 
-    def __isub__(self, other: LionIDable) -> "Pile":
+    def __isub__(self, other: LionIDable) -> Pile:
         """
         Exclude item(s) from the current pile using `-=`.
 
@@ -440,7 +452,7 @@ class Pile(Element, Record, Generic[T]):
         """
         return self - other
 
-    def __radd__(self, other: T) -> "Pile":
+    def __radd__(self, other: T) -> Pile:
         return other + self
 
     def __ior__(self, other: Any | Pile) -> Pile:
@@ -630,7 +642,9 @@ class Pile(Element, Record, Generic[T]):
                 )
 
         if len(value) != len(set(value)):
-            raise LionValueError("Detected duplicated item types in item_type.")
+            raise LionValueError(
+                "Detected duplicated item types in item_type."
+            )
 
         if len(value) > 0:
             return set(value)
@@ -716,7 +730,9 @@ class Pile(Element, Record, Generic[T]):
 
         raise ValueError("Invalid index type")
 
-    def create_query_engine(self, index_type="llama_index", engine_kwargs={}, **kwargs):
+    def create_query_engine(
+        self, index_type="llama_index", engine_kwargs={}, **kwargs
+    ):
         """
         Create a query engine for the pile.
 
@@ -730,7 +746,9 @@ class Pile(Element, Record, Generic[T]):
         """
         if index_type == "llama_index":
             if "node_postprocessor" in kwargs:
-                engine_kwargs["node_postprocessor"] = kwargs.pop("node_postprocessor")
+                engine_kwargs["node_postprocessor"] = kwargs.pop(
+                    "node_postprocessor"
+                )
             if "llm" in kwargs:
                 engine_kwargs["llm"] = kwargs.pop("llm")
             if not self.index:
@@ -740,7 +758,9 @@ class Pile(Element, Record, Generic[T]):
         else:
             raise ValueError("Invalid index type")
 
-    def create_chat_engine(self, index_type="llama_index", engine_kwargs={}, **kwargs):
+    def create_chat_engine(
+        self, index_type="llama_index", engine_kwargs={}, **kwargs
+    ):
         """
         Create a chat engine for the pile.
 
@@ -754,7 +774,9 @@ class Pile(Element, Record, Generic[T]):
         """
         if index_type == "llama_index":
             if "node_postprocessor" in kwargs:
-                engine_kwargs["node_postprocessor"] = kwargs.pop("node_postprocessor")
+                engine_kwargs["node_postprocessor"] = kwargs.pop(
+                    "node_postprocessor"
+                )
             if "llm" in kwargs:
                 engine_kwargs["llm"] = kwargs.pop("llm")
             if not self.index:
@@ -764,7 +786,9 @@ class Pile(Element, Record, Generic[T]):
         else:
             raise ValueError("Invalid index type")
 
-    async def query_pile(self, query, engine_kwargs={}, return_dict=False, **kwargs):
+    async def query_pile(
+        self, query, engine_kwargs={}, return_dict=False, **kwargs
+    ):
         """
         Query the pile using the created query engine.
 
@@ -784,7 +808,9 @@ class Pile(Element, Record, Generic[T]):
             return to_dict(response)
         return str(response)
 
-    async def chat_pile(self, query, engine_kwargs={}, return_dict=False, **kwargs):
+    async def chat_pile(
+        self, query, engine_kwargs={}, return_dict=False, **kwargs
+    ):
         """
         Chat with the pile using the created chat engine.
 
@@ -805,7 +831,12 @@ class Pile(Element, Record, Generic[T]):
         return str(response)
 
     async def embed_pile(
-        self, imodel=None, field="content", embed_kwargs={}, verbose=True, **kwargs
+        self,
+        imodel=None,
+        field="content",
+        embed_kwargs={},
+        verbose=True,
+        **kwargs,
     ):
         """
         Embed the items in the pile.
@@ -829,7 +860,9 @@ class Pile(Element, Record, Generic[T]):
         @cd.max_concurrency(max_concurrency)
         async def _embed_item(item):
             try:
-                return await imodel.embed_node(item, field=field, **embed_kwargs)
+                return await imodel.embed_node(
+                    item, field=field, **embed_kwargs
+                )
             except ModelLimitExceededError:
                 pass
             return None
@@ -933,10 +966,14 @@ class Pile(Element, Record, Generic[T]):
 
         async def query(query: str):
             if query_type == "query":
-                return await self.query_pile(query, return_dict=return_dict, **kwargs)
+                return await self.query_pile(
+                    query, return_dict=return_dict, **kwargs
+                )
 
             elif query_type == "chat":
-                return await self.chat_pile(query, return_dict=return_dict, **kwargs)
+                return await self.chat_pile(
+                    query, return_dict=return_dict, **kwargs
+                )
 
         name = name or "query"
         tool = func_to_tool(query)[0]
@@ -1157,7 +1194,7 @@ class Pile(Element, Record, Generic[T]):
 
 def pile(
     items: Iterable[T] | None = None,
-    item_type: set[Type] | None = None,
+    item_type: set[type] | None = None,
     order=None,
     use_obj=None,
     csv_file=None,

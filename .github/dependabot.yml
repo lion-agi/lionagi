@@ -1,0 +1,22 @@
+version: 2
+updates:
+  # Poetry
+  - package-ecosystem: "pip"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+    allow:
+      - dependency-type: "all"
+    versioning-strategy: "lockfile-only"
+    ignore:
+      - dependency-name: "*"
+        update-types: ["version-update:semver-patch"]
+    # As we use Poetry, we need to specify this as the package manager
+
+  # GitHub Actions
+  - package-ecosystem: "github-actions"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+
+# filepath: .github/dependabot.yml

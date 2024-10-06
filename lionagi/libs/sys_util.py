@@ -48,7 +48,9 @@ class SysUtil:
         return datetime.now(**config_)
 
     @staticmethod
-    def change_dict_key(dict_: dict[Any, Any], old_key: str, new_key: str) -> None:
+    def change_dict_key(
+        dict_: dict[Any, Any], old_key: str, new_key: str
+    ) -> None:
         """Safely changes a key in a dictionary if the old key exists.
 
         Args:
@@ -122,7 +124,9 @@ class SysUtil:
         return sha256(current_time + random_bytes).hexdigest()[:n]
 
     @staticmethod
-    def get_bins(input_: list[str], upper: int | None = 2000) -> list[list[int]]:
+    def get_bins(
+        input_: list[str], upper: int | None = 2000
+    ) -> list[list[int]]:
         """Organizes indices of strings into bins based on a cumulative upper limit.
 
         Args:
@@ -157,7 +161,11 @@ class SysUtil:
                 str: A string identifying the CPU architecture ('apple_silicon' or 'other_cpu').
         """
         arch: str = platform.machine().lower()
-        return "apple_silicon" if "arm" in arch or "aarch64" in arch else "other_cpu"
+        return (
+            "apple_silicon"
+            if "arm" in arch or "aarch64" in arch
+            else "other_cpu"
+        )
 
     @staticmethod
     def install_import(
@@ -195,7 +203,9 @@ class SysUtil:
             print(
                 f"Module {full_import_path} or attribute {import_name} not found. Installing {pip_name}..."
             )
-            subprocess.check_call([sys.executable, "-m", "pip", "install", pip_name])
+            subprocess.check_call(
+                [sys.executable, "-m", "pip", "install", pip_name]
+            )
 
             # Retry the import after installation
             if import_name:
@@ -254,18 +264,25 @@ class SysUtil:
                         package_name, module_name, import_name, pip_name
                     )
                 else:
-                    logging.info(f"Package {package_name} not found. {error_message}")
+                    logging.info(
+                        f"Package {package_name} not found. {error_message}"
+                    )
                     raise ImportError(
                         f"Package {package_name} not found. {error_message}"
                     )
         except ImportError as e:  # More specific exception handling
             logging.error(f"Failed to import {package_name}. Error: {e}")
-            raise ValueError(f"Failed to import {package_name}. Error: {e}") from e
+            raise ValueError(
+                f"Failed to import {package_name}. Error: {e}"
+            ) from e
 
     @staticmethod
     def list_installed_packages() -> list:
         """list all installed packages using importlib.metadata."""
-        return [dist.metadata["Name"] for dist in importlib.metadata.distributions()]
+        return [
+            dist.metadata["Name"]
+            for dist in importlib.metadata.distributions()
+        ]
 
     @staticmethod
     def uninstall_package(package_name: str) -> None:
@@ -283,7 +300,14 @@ class SysUtil:
         """Update a specified package."""
         try:
             subprocess.check_call(
-                [sys.executable, "-m", "pip", "install", "--upgrade", package_name]
+                [
+                    sys.executable,
+                    "-m",
+                    "pip",
+                    "install",
+                    "--upgrade",
+                    package_name,
+                ]
             )
             print(f"Successfully updated {package_name}.")
         except subprocess.CalledProcessError as e:
@@ -291,7 +315,9 @@ class SysUtil:
 
     @staticmethod
     def clear_dir(
-        dir_path: Path | str, recursive: bool = False, exclude: list[str] = None
+        dir_path: Path | str,
+        recursive: bool = False,
+        exclude: list[str] = None,
     ) -> None:
         """
         Clears all files (and, if recursive, directories) in the specified directory,
@@ -376,7 +402,9 @@ class SysUtil:
                 "Invalid filename. Ensure it doesn't contain illegal characters and has a valid extension."
             )
 
-        name, ext = filename.rsplit(".", 1) if "." in filename else (filename, "")
+        name, ext = (
+            filename.rsplit(".", 1) if "." in filename else (filename, "")
+        )
         ext = f".{ext}" if ext else ""
 
         timestamp_str = ""
@@ -384,7 +412,9 @@ class SysUtil:
             timestamp_format = custom_timestamp_format or "%Y%m%d%H%M%S"
             timestamp_str = datetime.now().strftime(timestamp_format)
             filename = (
-                f"{timestamp_str}_{name}" if time_prefix else f"{name}_{timestamp_str}"
+                f"{timestamp_str}_{name}"
+                if time_prefix
+                else f"{name}_{timestamp_str}"
             )
         else:
             filename = name
@@ -462,7 +492,9 @@ class SysUtil:
         if path.is_file():
             return path.stat().st_size
         elif path.is_dir():
-            return sum(f.stat().st_size for f in path.glob("**/*") if f.is_file())
+            return sum(
+                f.stat().st_size for f in path.glob("**/*") if f.is_file()
+            )
         else:
             raise FileNotFoundError(f"{path} does not exist.")
 

@@ -62,7 +62,7 @@ Let's illustrate concurrency with a calculator session example, performing opera
 from timeit import default_timer as timer
 
 system = """
-	You are asked to perform as a calculator. 
+	You are asked to perform as a calculator.
 	Return only a numeric value.
 """
 

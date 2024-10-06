@@ -39,7 +39,7 @@ async def main():
     result = await calculator.chat(
 		instruction, context=context, model="gpt-4-turbo"
 	)
-    
+
     print(f"Calculation Result: {result}")
 
 if __name__ == "__main__":

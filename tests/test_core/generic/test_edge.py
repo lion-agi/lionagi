@@ -3,7 +3,12 @@ from unittest.mock import AsyncMock, patch
 
 from pydantic import ValidationError
 
-from lionagi.core.collections.abc import Component, Condition, LionIDable, get_lion_id
+from lionagi.core.collections.abc import (
+    Component,
+    Condition,
+    LionIDable,
+    get_lion_id,
+)
 from lionagi.core.generic.edge import Edge
 from lionagi.core.generic.edge_condition import EdgeCondition
 
@@ -28,7 +33,10 @@ class TestEdge(unittest.TestCase):
         with self.assertRaises(ValueError):
             await self.edge.check_condition({})
 
-    @patch("lionagi.core.models.edge.EdgeCondition.applies", new_callable=AsyncMock)
+    @patch(
+        "lionagi.core.models.edge.EdgeCondition.applies",
+        new_callable=AsyncMock,
+    )
     async def test_check_condition_with_condition(self, mock_applies):
         """Test check_condition with a set condition."""
         mock_applies.return_value = True

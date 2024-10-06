@@ -4,7 +4,7 @@
 ^209f34
 
 **Description**:
-`BranchExecutor` is a class designed to manage and execute various tasks within a branch context. It extends the [[branch#^958e6d|Branch]] and BaseExecutor classes, integrating functionalities for processing different types of nodes (e.g., start, node, node list, condition, end) and handling asynchronous operations. 
+`BranchExecutor` is a class designed to manage and execute various tasks within a branch context. It extends the [[branch#^958e6d|Branch]] and BaseExecutor classes, integrating functionalities for processing different types of nodes (e.g., start, node, node list, condition, end) and handling asynchronous operations.
 
 **Attributes**:
 - `context`: The context for the execution.
@@ -64,4 +64,3 @@ async def execute(self, refresh_time=1) -> None
 
 **Returns**:
 - `None`
-

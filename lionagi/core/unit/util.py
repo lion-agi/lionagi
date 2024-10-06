@@ -21,7 +21,7 @@ choices_fields = ["index", "message", "logprobs", "finish_reason"]
 
 usage_fields = ["prompt_tokens", "completion_tokens", "total_tokens"]
 
-from typing import Callable
+from collections.abc import Callable
 
 from lionagi.core.action.tool import Tool
 from lionagi.core.action.tool_manager import func_to_tool
@@ -40,12 +40,16 @@ def process_tools(tool_obj, branch):
 def _process_tool(tool_obj, branch):
     if (
         isinstance(tool_obj, Tool)
-        and tool_obj.schema_["function"]["name"] not in branch.tool_manager.registry
+        and tool_obj.schema_["function"]["name"]
+        not in branch.tool_manager.registry
     ):
         branch.register_tools(tool_obj)
     if isinstance(tool_obj, Callable):
         tool = func_to_tool(tool_obj)[0]
-        if tool.schema_["function"]["name"] not in branch.tool_manager.registry:
+        if (
+            tool.schema_["function"]["name"]
+            not in branch.tool_manager.registry
+        ):
             branch.register_tools(tool)
 
 

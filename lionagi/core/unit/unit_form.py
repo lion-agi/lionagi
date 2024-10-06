@@ -38,7 +38,9 @@ class UnitForm(BaseUnitForm):
             "number, you should provide a number like 1, 23, or 1.1 if float is "
             "allowed."
         ),
-        examples=["{action_1: {function: 'add', arguments: {num1: 1, num2: 2}}}"],
+        examples=[
+            "{action_1: {function: 'add', arguments: {num1: 1, num2: 2}}}"
+        ],
     )
 
     action_required: bool | None = Field(
@@ -188,13 +190,13 @@ class UnitForm(BaseUnitForm):
 
         if allow_action:
             self.append_to_request("actions, action_required, reason")
-            self.task += "- Reason and prepare actions with GIVEN TOOLS ONLY.\n"
+            self.task += (
+                "- Reason and prepare actions with GIVEN TOOLS ONLY.\n"
+            )
 
         if allow_extension:
             self.append_to_request("extension_required")
-            self.task += (
-                f"- Allow auto-extension up to another {max_extension} rounds.\n"
-            )
+            self.task += f"- Allow auto-extension up to another {max_extension} rounds.\n"
 
         if tool_schema:
             self.append_to_input("tool_schema")
@@ -209,21 +211,15 @@ class UnitForm(BaseUnitForm):
             max_extension = max_extension or plan_num_step
             allow_extension = True
             self.append_to_request("plan, extension_required")
-            self.task += (
-                f"- Generate a {plan_num_step}-step plan based on the context.\n"
-            )
+            self.task += f"- Generate a {plan_num_step}-step plan based on the context.\n"
 
         if predict:
             self.append_to_request("prediction")
-            self.task += (
-                f"- Predict the next {predict_num_sentences or 1} sentence(s).\n"
-            )
+            self.task += f"- Predict the next {predict_num_sentences or 1} sentence(s).\n"
 
         if select:
             self.append_to_request("selection")
-            self.task += (
-                f"- Select 1 item from the provided choices: {select_choices}.\n"
-            )
+            self.task += f"- Select 1 item from the provided choices: {select_choices}.\n"
 
         if confidence:
             self.append_to_request("confidence_score")
@@ -238,7 +234,9 @@ class UnitForm(BaseUnitForm):
                 "upper_bound": score_range[1],
                 "lower_bound": score_range[0],
                 "num_type": int if score_num_digits == 0 else float,
-                "precision": score_num_digits if score_num_digits != 0 else None,
+                "precision": (
+                    score_num_digits if score_num_digits != 0 else None
+                ),
             }
 
             self.task += (

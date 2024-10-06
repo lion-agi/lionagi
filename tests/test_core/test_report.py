@@ -15,7 +15,8 @@ class TestForm(unittest.TestCase):
         self.assertFalse(self.form.workable)
         self.assertFalse(self.form.filled)
         self.assertEqual(
-            self.form.work_fields, {"input1": None, "input2": None, "output": None}
+            self.form.work_fields,
+            {"input1": None, "input2": None, "output": None},
         )
 
     def test_fill_input_fields(self):
@@ -30,7 +31,9 @@ class TestForm(unittest.TestCase):
         self.form.fill(input1=1, input2=2)
         self.form.fill(output=3)
         self.assertTrue(self.form.filled)
-        self.assertEqual(self.form.work_fields, {"input1": 1, "input2": 2, "output": 3})
+        self.assertEqual(
+            self.form.work_fields, {"input1": 1, "input2": 2, "output": 3}
+        )
         self.assertFalse(self.form.workable)
 
     def test_fill_again_raises_error(self):
@@ -47,7 +50,9 @@ class TestReport(unittest.TestCase):
     def test_initial_fields(self):
         self.assertEqual(self.report.input_fields, ["a", "b"])
         self.assertEqual(self.report.requested_fields, ["c"])
-        self.assertEqual(self.report.work_fields, {"a": None, "b": None, "c": None})
+        self.assertEqual(
+            self.report.work_fields, {"a": None, "b": None, "c": None}
+        )
         self.assertFalse(self.report.filled)
         self.assertFalse(self.report.workable)
 

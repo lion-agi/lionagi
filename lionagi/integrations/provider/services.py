@@ -68,7 +68,9 @@ class Services:
                 asynchronous operations.
         """
 
-        from lionagi.integrations.provider.transformers import TransformersService
+        from lionagi.integrations.provider.transformers import (
+            TransformersService,
+        )
 
         return TransformersService(**kwargs)
 

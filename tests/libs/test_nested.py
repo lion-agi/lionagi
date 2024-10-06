@@ -107,7 +107,9 @@ class TestNFilter(unittest.TestCase):
     def test_filter_with_complex_conditions(self):
         test_dict = {"a": 1, "b": 2, "c": 3, "d": 4}
         # Condition: key is not 'a' and value is an even number
-        result = nfilter(test_dict, lambda item: item[0] != "a" and item[1] % 2 == 0)
+        result = nfilter(
+            test_dict, lambda item: item[0] != "a" and item[1] % 2 == 0
+        )
         self.assertEqual(result, {"b": 2, "d": 4})
 
 
@@ -212,7 +214,9 @@ class TestNMerge(unittest.TestCase):
     def test_custom_sort_function(self):
         list_of_lists = [["b", "a"], ["d", "c"]]
         custom_sort_func = lambda x: x
-        result = nmerge(list_of_lists, sort_list=True, custom_sort=custom_sort_func)
+        result = nmerge(
+            list_of_lists, sort_list=True, custom_sort=custom_sort_func
+        )
         self.assertEqual(result, ["a", "b", "c", "d"])
 
     def test_inhomogeneous_type_error(self):
@@ -342,7 +346,9 @@ class TestGetFlattenedKeys(unittest.TestCase):
     def test_get_keys_from_nested_dict(self):
         nested_dict = {"a": {"b": 1, "c": {"d": 2}}}
         expected_keys = ["a[^_^]b", "a[^_^]c[^_^]d"]
-        self.assertEqual(set(get_flattened_keys(nested_dict)), set(expected_keys))
+        self.assertEqual(
+            set(get_flattened_keys(nested_dict)), set(expected_keys)
+        )
 
     def test_get_keys_from_nested_list(self):
         nested_list = [[1, 2], [3, [4, 5]]]
@@ -353,20 +359,24 @@ class TestGetFlattenedKeys(unittest.TestCase):
             "1[^_^]1[^_^]0",
             "1[^_^]1[^_^]1",
         ]
-        self.assertEqual(set(get_flattened_keys(nested_list)), set(expected_keys))
+        self.assertEqual(
+            set(get_flattened_keys(nested_list)), set(expected_keys)
+        )
 
     def test_get_keys_with_max_depth(self):
         nested_dict = {"a": {"b": {"c": 1}}}
         expected_keys = ["a[^_^]b"]
         self.assertEqual(
-            set(get_flattened_keys(nested_dict, max_depth=1)), set(expected_keys)
+            set(get_flattened_keys(nested_dict, max_depth=1)),
+            set(expected_keys),
         )
 
     def test_get_keys_dict_only(self):
         nested_mix = {"a": [1, 2], "b": {"c": 3}}
         expected_keys = ["a", "b[^_^]c"]
         self.assertEqual(
-            set(get_flattened_keys(nested_mix, dict_only=True)), set(expected_keys)
+            set(get_flattened_keys(nested_mix, dict_only=True)),
+            set(expected_keys),
         )
 
     def test_get_keys_from_empty_structure(self):
@@ -375,7 +385,9 @@ class TestGetFlattenedKeys(unittest.TestCase):
     def test_keys_from_deeply_nested_structure(self):
         deeply_nested = {"a": {"b": {"c": {"d": 1}}}}
         expected_keys = ["a[^_^]b[^_^]c[^_^]d"]
-        self.assertEqual(set(get_flattened_keys(deeply_nested)), set(expected_keys))
+        self.assertEqual(
+            set(get_flattened_keys(deeply_nested)), set(expected_keys)
+        )
 
 
 if __name__ == "__main__":

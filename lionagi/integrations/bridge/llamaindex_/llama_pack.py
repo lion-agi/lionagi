@@ -20,7 +20,9 @@ class LlamaPack:
         return pack(*args, **kwargs)
 
     @staticmethod
-    def stock_market_pack(pack_path="./stock_market_data_pack", args=[], **kwargs):
+    def stock_market_pack(
+        pack_path="./stock_market_data_pack", args=[], **kwargs
+    ):
         name_ = "StockMarketDataQueryEnginePack"
         return LlamaPack.build(name_, pack_path, args, **kwargs)
 
@@ -32,7 +34,9 @@ class LlamaPack:
         return LlamaPack.build(name_, pack_path, args, **kwargs)
 
     @staticmethod
-    def rag_evaluator_pack(pack_path="./rag_evaluator_pack", args=[], **kwargs):
+    def rag_evaluator_pack(
+        pack_path="./rag_evaluator_pack", args=[], **kwargs
+    ):
         name_ = "RagEvaluatorPack"
         return LlamaPack.build(name_, pack_path, args, **kwargs)
 
@@ -49,17 +53,23 @@ class LlamaPack:
         return LlamaPack.build(name_, pack_path, args, **kwargs)
 
     @staticmethod
-    def resume_screener_pack(pack_path="./resume_screener_pack", args=[], **kwargs):
+    def resume_screener_pack(
+        pack_path="./resume_screener_pack", args=[], **kwargs
+    ):
         name_ = "ResumeScreenerPack"
         return LlamaPack.build(name_, pack_path, args, **kwargs)
 
     @staticmethod
-    def ragatouille_retriever_pack(pack_path="./ragatouille_pack", args=[], **kwargs):
+    def ragatouille_retriever_pack(
+        pack_path="./ragatouille_pack", args=[], **kwargs
+    ):
         name_ = "RAGatouilleRetrieverPack"
         return LlamaPack.build(name_, pack_path, args, **kwargs)
 
     @staticmethod
-    def chain_of_table_pack(pack_path="./chain_of_table_pack", args=[], **kwargs):
+    def chain_of_table_pack(
+        pack_path="./chain_of_table_pack", args=[], **kwargs
+    ):
         name_ = "ChainOfTablePack"
         return LlamaPack.build(name_, pack_path, args, **kwargs)
 
@@ -152,7 +162,9 @@ class LlamaPack:
         return LlamaPack.build(name_, pack_path, args, **kwargs)
 
     @staticmethod
-    def llama_guard_moderator_pack(pack_path="./llamaguard_pack", args=[], **kwargs):
+    def llama_guard_moderator_pack(
+        pack_path="./llamaguard_pack", args=[], **kwargs
+    ):
         name_ = "LlamaGuardModeratorPack"
         return LlamaPack.build(name_, pack_path, args, **kwargs)
 
@@ -178,7 +190,9 @@ class LlamaPack:
         return LlamaPack.build(name_, pack_path, args, **kwargs)
 
     @staticmethod
-    def multi_tenancy_rag_pack(pack_path="./multitenancy_rag_pack", args=[], **kwargs):
+    def multi_tenancy_rag_pack(
+        pack_path="./multitenancy_rag_pack", args=[], **kwargs
+    ):
         name_ = "MultiTenancyRAGPack"
         return LlamaPack.build(name_, pack_path, args, **kwargs)
 
@@ -188,12 +202,16 @@ class LlamaPack:
         return LlamaPack.build(name_, pack_path, args, **kwargs)
 
     @staticmethod
-    def snowflake_query_engine_pack(pack_path="./snowflake_pack", args=[], **kwargs):
+    def snowflake_query_engine_pack(
+        pack_path="./snowflake_pack", args=[], **kwargs
+    ):
         name_ = "SnowflakeQueryEnginePack"
         return LlamaPack.build(name_, pack_path, args, **kwargs)
 
     @staticmethod
-    def agent_search_retriever_pack(pack_path="./agent_search_pack", args=[], **kwargs):
+    def agent_search_retriever_pack(
+        pack_path="./agent_search_pack", args=[], **kwargs
+    ):
         name_ = "AgentSearchRetrieverPack"
         return LlamaPack.build(name_, pack_path, args, **kwargs)
 
@@ -203,12 +221,16 @@ class LlamaPack:
         return LlamaPack.build(name_, pack_path, args, **kwargs)
 
     @staticmethod
-    def chroma_autoretrieval_pack(pack_path="./chroma_pack", args=[], **kwargs):
+    def chroma_autoretrieval_pack(
+        pack_path="./chroma_pack", args=[], **kwargs
+    ):
         name_ = "ChromaAutoretrievalPack"
         return LlamaPack.build(name_, pack_path, args, **kwargs)
 
     @staticmethod
-    def arize_phoenix_query_engine_pack(pack_path="./arize_pack", args=[], **kwargs):
+    def arize_phoenix_query_engine_pack(
+        pack_path="./arize_pack", args=[], **kwargs
+    ):
         name_ = "ArizePhoenixQueryEnginePack"
         return LlamaPack.build(name_, pack_path, args, **kwargs)
 
@@ -227,6 +249,8 @@ class LlamaPack:
         return LlamaPack.build(name_, pack_path, args, **kwargs)
 
     @staticmethod
-    def weaviate_retry_engine_pack(pack_path="./weaviate_pack", args=[], **kwargs):
+    def weaviate_retry_engine_pack(
+        pack_path="./weaviate_pack", args=[], **kwargs
+    ):
         name_ = "WeaviateRetryEnginePack"
         return LlamaPack.build(name_, pack_path, args, **kwargs)

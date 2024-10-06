@@ -4,7 +4,12 @@ from unittest.mock import MagicMock, patch
 import lionagi as li
 from lionagi.core.action.tool_manager import ToolManager
 from lionagi.core.collections import Exchange, Pile, Progression
-from lionagi.core.message import ActionResponse, AssistantResponse, Instruction, System
+from lionagi.core.message import (
+    ActionResponse,
+    AssistantResponse,
+    Instruction,
+    System,
+)
 
 
 class TestBranch(unittest.TestCase):
@@ -27,7 +32,9 @@ class TestBranch(unittest.TestCase):
         self.assertEqual(len(self.branch.messages), 1)
         self.assertEqual(
             self.branch.messages[0].content,
-            {"system_info": "You are a helpful assistant, let's think step by step"},
+            {
+                "system_info": "You are a helpful assistant, let's think step by step"
+            },
         )
 
     def test_to_df(self):
@@ -54,11 +61,16 @@ class TestBranch(unittest.TestCase):
         mock_chat.return_value = (
             "Rain poured, but their love shone brighter than any storm."
         )
-        response = await self.branch.chat("tell me a 10 word story", logprobs=True)
-        self.assertEqual(
-            response, "Rain poured, but their love shone brighter than any storm."
+        response = await self.branch.chat(
+            "tell me a 10 word story", logprobs=True
         )
-        mock_chat.assert_called_once_with("tell me a 10 word story", logprobs=True)
+        self.assertEqual(
+            response,
+            "Rain poured, but their love shone brighter than any storm.",
+        )
+        mock_chat.assert_called_once_with(
+            "tell me a 10 word story", logprobs=True
+        )
 
     def test_metadata(self):
         self.branch.add_message(
@@ -82,7 +94,9 @@ class TestBranch(unittest.TestCase):
         self.branch.send = MagicMock()
         self.branch.receive = MagicMock()
         package = MagicMock()
-        self.branch.send(recipient="recipient_id", category="message", package=package)
+        self.branch.send(
+            recipient="recipient_id", category="message", package=package
+        )
         self.branch.receive(sender="recipient_id")
         self.branch.send.assert_called_once_with(
             recipient="recipient_id", category="message", package=package
@@ -97,8 +111,8 @@ class TestBranch(unittest.TestCase):
         solve the following problem
         """
         context = """
-        I have 730_000 trees, with average 123 apples per tree, each weigh 0.4 lbs. 
-        20 percent are bad and sold for 0.1 dollar per lbs, 30 percent are sold to 
+        I have 730_000 trees, with average 123 apples per tree, each weigh 0.4 lbs.
+        20 percent are bad and sold for 0.1 dollar per lbs, 30 percent are sold to
         brewery for 0.3 dollar per apple, what is my revenue?
         """
 
