@@ -670,13 +670,13 @@ testing = ["Django", "attrs", "colorama", "docopt", "pytest (<7.0.0)"]
 
 [[package]]
 name = "lion-core"
-version = "0.3.15"
+version = "0.3.17"
 description = "A core package for the Lion framework."
 optional = false
 python-versions = "<4.0,>=3.10"
 files = [
-    {file = "lion_core-0.3.15-py3-none-any.whl", hash = "sha256:b5254e23c0dc428ea18e44244dd74ea7bddb04e2f631e1fd42620ecf014f2159"},
-    {file = "lion_core-0.3.15.tar.gz", hash = "sha256:d11b1b5f96411569086e535c6db73f28476ac074182ac230c6ceef15367c9086"},
+    {file = "lion_core-0.3.17-py3-none-any.whl", hash = "sha256:bc7ddc199933f77cf197173c6c84a4a48579ee7446a58d77f0e935c3c39b1a34"},
+    {file = "lion_core-0.3.17.tar.gz", hash = "sha256:ac75e2e2ded714f644400667cab3682cee1b4d4b2084cbfd9c70567774c0d446"},
 ]
 
 [package.dependencies]
@@ -1008,9 +1008,9 @@ files = [
 
 [package.dependencies]
 numpy = [
-    {version = ">=1.26.0", markers = "python_version >= \"3.12\""},
     {version = ">=1.22.4", markers = "python_version < \"3.11\""},
     {version = ">=1.23.2", markers = "python_version == \"3.11\""},
+    {version = ">=1.26.0", markers = "python_version >= \"3.12\""},
 ]
 python-dateutil = ">=2.8.2"
 pytz = ">=2020.1"
@@ -1281,8 +1281,8 @@ files = [
 annotated-types = ">=0.6.0"
 pydantic-core = "2.23.4"
 typing-extensions = [
-    {version = ">=4.12.2", markers = "python_version >= \"3.13\""},
     {version = ">=4.6.1", markers = "python_version < \"3.13\""},
+    {version = ">=4.12.2", markers = "python_version >= \"3.13\""},
 ]
 
 [package.extras]
@@ -1986,4 +1986,4 @@ multidict = ">=4.0"
 [metadata]
 lock-version = "2.0"
 python-versions = "^3.10"
-content-hash = "fa3682a69bbb2e2d50219977d42097246a89d71cfe2bfe1dfdc0af6cd3cf1984"
+content-hash = "d4eb239954788a7874464886b338e64fa2f3d6be0371a5d1e7daad34d2f4898a"

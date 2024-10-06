@@ -147,9 +147,12 @@ class DirectiveMixin:
             return_branch=False,
             **kwargs,
         )
-        while isinstance(output, tuple | list):
-            if len(output) == 2 and output[0] == output[1]:
-                output = output[0]
+        if (
+            isinstance(output, tuple | list)
+            and len(output) == 2
+            and output[0] == output[1]
+        ):
+            output = output[0]
         return output
 
     async def direct(
