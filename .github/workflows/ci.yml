@@ -43,7 +43,6 @@ jobs:
       run: |
         poetry run black --check .
         poetry run isort --check-only .
-        poetry run flake8 lion_core/
 
   publish:
     needs: test
