@@ -1,6 +1,8 @@
+import inspect
 import logging
 from collections.abc import Callable
 
+from lionabc.exceptions import LionTypeError
 from lionfuncs import to_dict
 from pydantic import BaseModel
 
@@ -107,12 +109,30 @@ class Unit(Directive, DirectiveMixin):
         """
         kwargs = {**retry_kwargs, **kwargs}
 
+        if return_pydantic_model and not pydantic_model:
+            raise ValueError(
+                "Cannot use return_pydantic_model without specifying pydantic_model."
+            )
+
         if pydantic_model:
             if form:
                 raise ValueError("Cannot use both form and pydantic_model.")
             if requested_fields:
                 raise ValueError(
                     "Cannot use both requested_fields and pydantic_model."
+                )
+            if not inspect.isclass(pydantic_model):
+                raise LionTypeError(
+                    "Pydantic model must be a class.",
+                    expected_type=type(BaseModel),
+                    actual_type=type(pydantic_model),
+                )
+
+            if not issubclass(pydantic_model, BaseModel):
+                raise LionTypeError(
+                    "Pydantic model must be a subclass of pydantic.BaseModel.",
+                    expected_type=type[BaseModel],
+                    received_type=type(pydantic_model),
                 )
             requested_fields = pydantic_model.model_json_schema()["properties"]
 
