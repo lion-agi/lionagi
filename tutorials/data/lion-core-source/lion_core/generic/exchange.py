@@ -1,13 +1,12 @@
 from typing import Literal
 
+from lion_core.generic.element import Element
+from lion_core.generic.pile import Pile, pile
+from lion_core.generic.progression import Progression, progression
 from lionabc import Communicatable, Structure
 from lionabc.exceptions import ItemExistsError, LionValueError
 from pydantic import Field
 from typing_extensions import override
-
-from lion_core.generic.element import Element
-from lion_core.generic.pile import Pile, pile
-from lion_core.generic.progression import Progression, progression
 
 
 class Exchange(Element, Structure):

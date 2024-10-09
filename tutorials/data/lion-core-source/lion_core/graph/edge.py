@@ -1,10 +1,9 @@
-from lionabc import Relational
-from pydantic import Field, field_serializer
-
 from lion_core.generic.element import Element
 from lion_core.generic.note import Note
 from lion_core.graph.edge_condition import EdgeCondition
 from lion_core.sys_utils import SysUtil
+from lionabc import Relational
+from pydantic import Field, field_serializer
 
 
 class Edge(Element):

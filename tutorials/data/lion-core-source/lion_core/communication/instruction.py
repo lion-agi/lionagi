@@ -1,10 +1,6 @@
 import inspect
 from typing import Any, Literal
 
-from lionabc.exceptions import LionTypeError
-from lionfuncs import LN_UNDEFINED
-from typing_extensions import override
-
 from lion_core.communication.message import (
     MessageFlag,
     MessageRole,
@@ -13,6 +9,9 @@ from lion_core.communication.message import (
 from lion_core.form.base import BaseForm
 from lion_core.form.form import Form
 from lion_core.generic.note import Note, note
+from lionabc.exceptions import LionTypeError
+from lionfuncs import LN_UNDEFINED
+from typing_extensions import override
 
 
 def prepare_request_response_format(request_fields: dict) -> str:

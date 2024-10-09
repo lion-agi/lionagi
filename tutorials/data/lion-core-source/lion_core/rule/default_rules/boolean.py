@@ -1,8 +1,7 @@
+from lion_core.rule.base import Rule
 from lionabc.exceptions import LionOperationError
 from lionfuncs import validate_boolean
 from typing_extensions import override
-
-from lion_core.rule.base import Rule
 
 
 class BooleanRule(Rule):

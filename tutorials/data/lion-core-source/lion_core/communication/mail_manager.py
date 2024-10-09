@@ -2,13 +2,12 @@ import asyncio
 from collections import deque
 from typing import Any
 
-from lionabc import BaseManager
-
 from lion_core.communication.mail import Mail, Package
 from lion_core.generic.exchange import Exchange
 from lion_core.generic.pile import Pile, pile
 from lion_core.generic.utils import to_list_type
 from lion_core.sys_utils import SysUtil
+from lionabc import BaseManager
 
 
 class MailManager(BaseManager):

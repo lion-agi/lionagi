@@ -1,10 +1,6 @@
 from collections.abc import Callable
 from typing import Any, ClassVar, Literal
 
-from lionabc import BaseiModel, Traversal
-from lionfuncs import is_same_dtype
-from pydantic import Field, model_validator
-
 from lion_core.action import Tool, ToolManager
 from lion_core.communication.action_request import ActionRequest
 from lion_core.communication.action_response import ActionResponse
@@ -22,6 +18,9 @@ from lion_core.generic.progression import Progression, progression
 from lion_core.session.base import BaseSession
 from lion_core.session.msg_handlers.create_msg import create_message
 from lion_core.session.msg_handlers.validate_msg import validate_message
+from lionabc import BaseiModel, Traversal
+from lionfuncs import is_same_dtype
+from pydantic import Field, model_validator
 
 
 class BranchConverterRegistry(ConverterRegistry):

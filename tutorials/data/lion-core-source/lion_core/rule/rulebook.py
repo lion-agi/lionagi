@@ -1,10 +1,5 @@
 import inspect
 
-from lionabc import BaseRecord
-from lionabc.exceptions import LionTypeError, LionValueError
-from lionfuncs import copy, to_dict
-from pydantic import Field
-
 from lion_core.generic.element import Element
 from lion_core.generic.flow import Flow, flow
 from lion_core.generic.note import Note, note
@@ -14,6 +9,10 @@ from lion_core.rule.default_rules._default import (
     DEFAULT_RULE_INFO,
     DEFAULT_RULEORDER,
 )
+from lionabc import BaseRecord
+from lionabc.exceptions import LionTypeError, LionValueError
+from lionfuncs import copy, to_dict
+from pydantic import Field
 
 
 class RuleBook(Element, BaseRecord):

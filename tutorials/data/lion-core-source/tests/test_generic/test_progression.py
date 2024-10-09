@@ -4,12 +4,11 @@ import string
 from typing import Any
 
 import pytest
-from lionabc.exceptions import ItemNotFoundError
-from pydantic import Field
-
 from lion_core.generic.element import Element
 from lion_core.generic.progression import Progression
 from lion_core.sys_utils import SysUtil
+from lionabc.exceptions import ItemNotFoundError
+from pydantic import Field
 
 
 class MockElement(Element):

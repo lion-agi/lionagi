@@ -1,5 +1,4 @@
 import pytest
-
 from lion_core.communication.assistant_response import AssistantResponse
 from lion_core.communication.message import MessageFlag, MessageRole
 

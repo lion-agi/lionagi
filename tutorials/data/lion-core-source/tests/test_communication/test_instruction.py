@@ -1,5 +1,4 @@
 import pytest
-
 from lion_core.communication.instruction import (
     Instruction,
     format_image_content,

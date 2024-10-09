@@ -2,18 +2,17 @@ from collections import deque
 from functools import singledispatchmethod
 from typing import Annotated, Any, ClassVar, TypeVar
 
+from lion_core._class_registry import get_class
+from lion_core.generic.component_adapter import ComponentAdapterRegistry
+from lion_core.generic.element import Element
+from lion_core.generic.note import Note
+from lion_core.protocols.adapter import Adapter, AdapterRegistry
 from lionabc.exceptions import LionValueError
 from lionfuncs import LN_UNDEFINED, copy, time
 from pydantic import Field, field_serializer, field_validator
 from pydantic.fields import FieldInfo
 from pydantic_core import PydanticUndefined
 from typing_extensions import override
-
-from lion_core._class_registry import get_class
-from lion_core.generic.component_adapter import ComponentAdapterRegistry
-from lion_core.generic.element import Element
-from lion_core.generic.note import Note
-from lion_core.protocols.adapter import Adapter, AdapterRegistry
 
 T = TypeVar("T", bound=Element)
 

@@ -2,11 +2,10 @@ from collections import deque
 from collections.abc import Generator, Mapping
 from typing import Any, TypeVar
 
-from lionabc import Collective
-from lionabc.exceptions import LionIDError
-
 from lion_core.generic.element import Element
 from lion_core.sys_utils import SysUtil
+from lionabc import Collective
+from lionabc.exceptions import LionIDError
 
 T = TypeVar("T")
 

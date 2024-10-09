@@ -1,12 +1,11 @@
 from typing import Any
 
-from typing_extensions import override
-
 from lion_core.communication.message import (
     MessageFlag,
     MessageRole,
     RoledMessage,
 )
+from typing_extensions import override
 
 
 class AssistantResponse(RoledMessage):

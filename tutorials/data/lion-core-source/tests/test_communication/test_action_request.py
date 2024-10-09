@@ -1,5 +1,4 @@
 import pytest
-
 from lion_core.communication.action_request import (
     ActionRequest,
     prepare_action_request,
