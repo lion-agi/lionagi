@@ -1,9 +1,8 @@
 from collections.abc import Callable
 
-from lionfuncs import to_dict, to_str
-
 from lion_core.generic.base import RealElement
 from lion_core.protocols.adapter import Adapter
+from lionfuncs import to_dict, to_str
 
 
 class DataAdapterConfig:

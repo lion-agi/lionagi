@@ -1,8 +1,7 @@
+from lion_core.rule.default_rules.mapping import MappingRule
 from lionabc.exceptions import LionOperationError
 from lionfuncs import to_dict, to_list
 from typing_extensions import override
-
-from lion_core.rule.default_rules.mapping import MappingRule
 
 
 class FunctionCallingRule(MappingRule):

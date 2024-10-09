@@ -1,10 +1,9 @@
 from typing import Any
 
+from lion_core.sys_utils import SysUtil
 from lionabc import AbstractElement, Real
 from lionfuncs import time
 from pydantic import BaseModel, Field
-
-from lion_core.sys_utils import SysUtil
 
 
 class RealElement(BaseModel, AbstractElement, Real):

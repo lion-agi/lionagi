@@ -1,6 +1,5 @@
-from lionfuncs import nget, to_dict
-
 from lion_core.communication.action_request import ActionRequest
+from lionfuncs import nget, to_dict
 
 
 def extract_request_plain_function_calling(

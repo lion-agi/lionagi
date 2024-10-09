@@ -1,10 +1,5 @@
 from typing import Any
 
-from lionabc import BaseiModel
-from lionabc.exceptions import ItemNotFoundError, LionValueError
-from lionfuncs import LN_UNDEFINED
-from pydantic import Field, PrivateAttr
-
 from lion_core.action.tool_manager import ToolManager
 from lion_core.communication.mail_manager import MailManager
 from lion_core.communication.message import RoledMessage
@@ -16,6 +11,10 @@ from lion_core.generic.utils import to_list_type
 from lion_core.session.base import BaseSession
 from lion_core.session.branch import Branch
 from lion_core.sys_utils import SysUtil
+from lionabc import BaseiModel
+from lionabc.exceptions import ItemNotFoundError, LionValueError
+from lionfuncs import LN_UNDEFINED
+from pydantic import Field, PrivateAttr
 
 
 class Session(BaseSession):

@@ -1,10 +1,5 @@
 from typing import Any, NoReturn
 
-from lionabc import Action, EventStatus
-from lionabc.exceptions import LionAccessError
-from pydantic import PrivateAttr
-from typing_extensions import override
-
 from lion_core import event_log_manager
 from lion_core.generic.element import Element
 from lion_core.generic.log import Log
@@ -12,6 +7,10 @@ from lion_core.setting import (
     DEFAULT_TIMED_FUNC_CALL_CONFIG,
     TimedFuncCallConfig,
 )
+from lionabc import Action, EventStatus
+from lionabc.exceptions import LionAccessError
+from pydantic import PrivateAttr
+from typing_extensions import override
 
 
 class ObservableAction(Element, Action):

@@ -1,6 +1,4 @@
 import pytest
-from lionabc.exceptions import LionValueError
-
 from lion_core.communication.action_request import ActionRequest
 from lion_core.communication.action_response import (
     ActionResponse,
@@ -9,6 +7,7 @@ from lion_core.communication.action_response import (
 from lion_core.communication.message import MessageFlag, MessageRole
 from lion_core.generic.note import Note
 from lion_core.sys_utils import SysUtil
+from lionabc.exceptions import LionValueError
 
 
 # Tests for prepare_action_response_content function

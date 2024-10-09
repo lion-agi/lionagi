@@ -1,10 +1,9 @@
 from collections.abc import Callable
 from pathlib import Path
 
-from lionfuncs import read_file, save_to_file
-
 from lion_core.protocols.adapter import Adapter
 from lion_core.protocols.data_adapter import DataAdapter, JsonDataAdapter
+from lionfuncs import read_file, save_to_file
 
 
 class DataSourceAdapterConfig:

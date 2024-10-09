@@ -1,14 +1,13 @@
 from typing import Any
 
-from lionfuncs import time
-from typing_extensions import override
-
 from lion_core.communication.message import (
     MessageFlag,
     MessageRole,
     RoledMessage,
 )
 from lion_core.generic.note import Note
+from lionfuncs import time
+from typing_extensions import override
 
 DEFAULT_SYSTEM = "You are a helpful AI assistant. Let's think step by step."
 

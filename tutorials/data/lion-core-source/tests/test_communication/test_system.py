@@ -1,5 +1,4 @@
 import pytest
-
 from lion_core.communication.message import MessageFlag, MessageRole
 from lion_core.communication.system import (
     DEFAULT_SYSTEM,

@@ -1,9 +1,8 @@
 import pytest
-from pydantic import ValidationError
-
 from lion_core.communication.message import MessageRole, RoledMessage
 from lion_core.generic.note import Note
 from lion_core.sys_utils import SysUtil
+from pydantic import ValidationError
 
 
 def test_roled_message_init():

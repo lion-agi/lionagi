@@ -1,8 +1,7 @@
 from typing import override
 
-from lionfuncs import to_str
-
 from lion_core.rule.base import Rule
+from lionfuncs import to_str
 
 
 class StringRule(Rule):

@@ -3,11 +3,10 @@ from collections.abc import Sequence
 from hashlib import sha256
 from typing import TypeVar
 
+from lion_core.setting import DEFAULT_LION_ID_CONFIG, LionIDConfig
 from lionabc import Observable
 from lionabc.exceptions import LionIDError
 from lionfuncs import insert_random_hyphens, time
-
-from lion_core.setting import DEFAULT_LION_ID_CONFIG, LionIDConfig
 
 T = TypeVar("T")
 

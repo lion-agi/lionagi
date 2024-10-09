@@ -1,10 +1,9 @@
 import pytest
-from lionabc.exceptions import LionIDError
-
 from lion_core.generic.component import Component
 from lion_core.generic.flow import Flow
 from lion_core.generic.progression import progression
 from lion_core.sys_utils import SysUtil
+from lionabc.exceptions import LionIDError
 
 sample_progressions = [
     progression([Component(content=i) for i in range(3)], f"prog_{j}")

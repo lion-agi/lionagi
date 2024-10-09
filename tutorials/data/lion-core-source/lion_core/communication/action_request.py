@@ -1,15 +1,14 @@
 from collections.abc import Callable
 from typing import Any
 
-from lionfuncs import to_dict, to_str
-from typing_extensions import override
-
 from lion_core.communication.message import (
     MessageFlag,
     MessageRole,
     RoledMessage,
 )
 from lion_core.generic.note import Note
+from lionfuncs import to_dict, to_str
+from typing_extensions import override
 
 
 def prepare_action_request(

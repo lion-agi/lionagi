@@ -1,8 +1,7 @@
 import re
 
-from lionfuncs import extract_json_block, md_to_json, to_dict
-
 from lion_core.generic.note import note
+from lionfuncs import extract_json_block, md_to_json, to_dict
 
 identifier = [
     "tool_uses",

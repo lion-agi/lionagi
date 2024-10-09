@@ -1,14 +1,13 @@
 from typing import Any, Literal
 
-from lionabc import Relational, Structure
-from lionabc.exceptions import ItemExistsError, LionRelationError
-from pydantic import Field, field_serializer
-
 from lion_core.generic.component import Component
 from lion_core.generic.note import Note
 from lion_core.generic.pile import Pile, pile
 from lion_core.graph.edge import Edge
 from lion_core.sys_utils import SysUtil
+from lionabc import Relational, Structure
+from lionabc.exceptions import ItemExistsError, LionRelationError
+from pydantic import Field, field_serializer
 
 
 class Graph(Component, Relational, Structure):

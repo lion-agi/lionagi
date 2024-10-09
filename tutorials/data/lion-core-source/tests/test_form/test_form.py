@@ -1,6 +1,10 @@
 from typing import Any
 
 import pytest
+from lion_core.form.base import BaseForm
+from lion_core.form.form import Form
+from lion_core.generic.component import Component
+from lion_core.generic.note import Note
 from lionabc.exceptions import (
     LionOperationError,
     LionTypeError,
@@ -9,11 +13,6 @@ from lionabc.exceptions import (
 from lionfuncs import LN_UNDEFINED, LionUndefinedType
 from pydantic import Field
 from pydantic_core import PydanticUndefined
-
-from lion_core.form.base import BaseForm
-from lion_core.form.form import Form
-from lion_core.generic.component import Component
-from lion_core.generic.note import Note
 
 
 # Helper functions and classes

@@ -2,16 +2,15 @@ import contextlib
 from collections.abc import Iterator
 from typing import Any
 
+from lion_core.generic.element import Element
+from lion_core.generic.pile import Pile, pile
+from lion_core.generic.progression import Progression, progression
 from lionabc import Collective
 from lionabc.exceptions import ItemNotFoundError, LionTypeError, LionValueError
 from lionfuncs import LN_UNDEFINED
 from pydantic import Field
 from pydantic_core import PydanticUndefined
 from typing_extensions import Self
-
-from lion_core.generic.element import Element
-from lion_core.generic.pile import Pile, pile
-from lion_core.generic.progression import Progression, progression
 
 
 class Flow(Element):

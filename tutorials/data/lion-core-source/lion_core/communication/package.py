@@ -1,10 +1,9 @@
 from enum import Enum
 from typing import Any
 
+from lion_core.sys_utils import SysUtil
 from lionabc import Real
 from lionfuncs import time
-
-from lion_core.sys_utils import SysUtil
 
 
 class PackageCategory(str, Enum):

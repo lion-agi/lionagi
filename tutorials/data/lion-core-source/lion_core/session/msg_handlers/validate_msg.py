@@ -2,11 +2,10 @@ from collections.abc import Mapping
 from functools import singledispatch
 from typing import Any
 
-from lionfuncs import to_dict, to_list
-
 from lion_core.communication.message import RoledMessage
 from lion_core.generic.pile import Pile
 from lion_core.setting import LionUndefinedType
+from lionfuncs import to_dict, to_list
 
 
 def validate_message(

@@ -2,12 +2,11 @@ import time
 from datetime import datetime, timezone
 
 import pytest
-from lionabc.exceptions import LionValueError
-from pydantic_core._pydantic_core import ValidationError
-
 from lion_core.generic.component import Component
 from lion_core.generic.note import Note
 from lion_core.sys_utils import SysUtil
+from lionabc.exceptions import LionValueError
+from pydantic_core._pydantic_core import ValidationError
 
 
 @pytest.fixture

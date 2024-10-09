@@ -12,6 +12,11 @@ from collections.abc import (
 from functools import wraps
 from typing import Any, ClassVar, Generic, TypeVar
 
+from lion_core.generic.element import Element
+from lion_core.generic.progression import Progression
+from lion_core.generic.utils import to_list_type, validate_order
+from lion_core.protocols.adapter import Adapter, AdapterRegistry
+from lion_core.sys_utils import SysUtil
 from lionabc import Collective, Observable
 from lionabc.exceptions import (
     ItemExistsError,
@@ -22,12 +27,6 @@ from lionabc.exceptions import (
 from lionfuncs import LN_UNDEFINED, is_same_dtype, to_list
 from pydantic import Field, field_serializer
 from typing_extensions import Self, override
-
-from lion_core.generic.element import Element
-from lion_core.generic.progression import Progression
-from lion_core.generic.utils import to_list_type, validate_order
-from lion_core.protocols.adapter import Adapter, AdapterRegistry
-from lion_core.sys_utils import SysUtil
 
 T = TypeVar("T", bound=Observable)
 
