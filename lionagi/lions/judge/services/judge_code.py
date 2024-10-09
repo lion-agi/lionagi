@@ -3,10 +3,9 @@ import asyncio
 from aiocache import cached
 
 from lionagi import Branch, iModel
-
-from ..config import judge_model_config
-from ..forms.code_analysis_form import CodeAnalysisForm
-from ..rubric import Rubric
+from lionagi.lions.judge.config import judge_model_config
+from lionagi.lions.judge.forms.code_analysis_form import CodeAnalysisForm
+from lionagi.lions.judge.rubric import Rubric
 
 
 @cached(ttl=3600)

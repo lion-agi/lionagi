@@ -1,4 +1,4 @@
-from ..rubric import Rubric, RubricItem
+from lionagi.lions.judge.rubric import Rubric, RubricItem
 
 functionality = RubricItem(
     name="functionality",

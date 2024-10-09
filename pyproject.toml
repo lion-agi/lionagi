@@ -7,7 +7,7 @@ classifiers=[
 
 [tool.poetry]
 name = "lionagi"
-version = "0.3.2"
+version = "0.3.3"
 description = "Towards automated general intelligence."
 authors = ["HaiyangLi <quantocean.li@gmail.com>"]
 readme = "README.md"

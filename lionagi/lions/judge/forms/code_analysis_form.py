@@ -2,8 +2,7 @@ from lionfuncs import to_num
 from pydantic import Field
 
 from lionagi import Form
-
-from ..rubric import Rubric
+from lionagi.lions.judge.rubric import Rubric
 
 
 class CodeAnalysisForm(Form):
