@@ -12,7 +12,7 @@ from lionagi.libs.ln_func_call import rcall
 
 from .unit_form import UnitForm
 from .unit_mixin import DirectiveMixin
-from .util import retry_kwargs
+from .util import break_down_annotation, retry_kwargs
 
 
 class Unit(Directive, DirectiveMixin):
@@ -75,7 +75,7 @@ class Unit(Directive, DirectiveMixin):
         return_branch=False,
         formatter=None,
         format_kwargs={},
-        pydantic_model: type[BaseModel] = None,
+        pydantic_model: type[BaseModel] | BaseModel = None,
         return_pydantic_model: bool = False,
         **kwargs,
     ):
@@ -114,7 +114,13 @@ class Unit(Directive, DirectiveMixin):
                 raise ValueError(
                     "Cannot use both requested_fields and pydantic_model."
                 )
-            requested_fields = pydantic_model.model_json_schema()["properties"]
+            requested_fields = break_down_annotation(pydantic_model)
+            context = {
+                "info": context,
+                "return_guidance": pydantic_model.model_json_schema()[
+                    "properties"
+                ],
+            }
 
         output, branch = await rcall(
             self._chat,
@@ -148,8 +154,13 @@ class Unit(Directive, DirectiveMixin):
 
         if return_pydantic_model:
             try:
-                a_ = to_dict(output, recursive=True, max_recursive_depth=3)
-                output = pydantic_model(**a_)
+                a_ = to_dict(
+                    output,
+                    recursive=True,
+                    max_recursive_depth=5,
+                    fuzzy_parse=True,
+                )
+                output = pydantic_model.model_validate(a_)
                 return output, branch if return_branch else output
             except Exception as e:
                 logging.error(f"Error converting to pydantic model: {e}")
