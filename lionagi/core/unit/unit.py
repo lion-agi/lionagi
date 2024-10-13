@@ -117,9 +117,7 @@ class Unit(Directive, DirectiveMixin):
             requested_fields = break_down_annotation(pydantic_model)
             context = {
                 "info": context,
-                "return_guidance": pydantic_model.model_json_schema()[
-                    "properties"
-                ],
+                "return_guidance": pydantic_model.model_json_schema(),
             }
 
         output, branch = await rcall(
