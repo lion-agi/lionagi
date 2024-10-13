@@ -1,6 +1,6 @@
 from collections.abc import Callable
 from functools import singledispatchmethod
-from typing import Any, Dict
+from typing import Any
 
 from lionagi.core.collections.abc import Actionable
 from lionagi.core.message.action_request import ActionRequest

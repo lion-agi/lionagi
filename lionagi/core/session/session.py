@@ -9,12 +9,11 @@ from lionagi.core.collections import (
     pile,
     progression,
 )
-from lionagi.core.collections.abc import get_lion_id
 from lionagi.core.collections.util import to_list_type
 from lionagi.core.mail.mail_manager import MailManager
 from lionagi.core.message import System
 from lionagi.core.session.branch import Branch
-from lionagi.libs import SysUtil
+from lionagi.libs.sys_util import SysUtil
 
 
 class Session:
@@ -43,7 +42,7 @@ class Session:
         imodel=None,
         tools=None,
     ):
-        self.ln_id = SysUtil.create_id()
+        self.ln_id = SysUtil.id()
         self.timestamp = SysUtil.get_timestamp(sep=None)[:-6]
         system = (
             system or "You are a helpful assistant, let's think step by step"
@@ -145,7 +144,7 @@ class Session:
         Args:
             branch (Branch | str): The branch or its ID to delete.
         """
-        branch_id = get_lion_id(branch)
+        branch_id = SysUtil.get_id(branch)
         self.branches.pop(branch_id)
         self.mail_manager.delete_source(branch_id)
 
@@ -221,7 +220,7 @@ class Session:
             try:
                 sources = to_list_type(from_)
                 for source in sources:
-                    self.mail_manager.collect(get_lion_id(source))
+                    self.mail_manager.collect(SysUtil.get_id(source))
             except Exception as e:
                 raise ValueError(f"Failed to collect mail. Error: {e}")
 
@@ -239,7 +238,7 @@ class Session:
             try:
                 sources = to_list_type(to_)
                 for source in sources:
-                    self.mail_manager.send(get_lion_id(source))
+                    self.mail_manager.send(SysUtil.get_id(source))
             except Exception as e:
                 raise ValueError(f"Failed to send mail. Error: {e}")
 
