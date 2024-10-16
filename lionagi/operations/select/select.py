@@ -1,74 +1,80 @@
-from __future__ import annotations
-
 from collections.abc import Callable
 from enum import Enum
+from typing import Any, Literal
 
 from lionfuncs import choose_most_similar
-from pydantic import BaseModel
+from pydantic import field_validator
 
-from lionagi.core.director.models import ReasonModel
+from lionagi.core.operative.operative import Operative
 from lionagi.core.session.branch import Branch
 
+from .prompt import PROMPT
 from .utils import is_enum
 
-PROMPT = "Please select up to {max_num_selections} items from the following list {choices}. Provide the selection(s), and no comments from you"
 
+class SelectModel(Operative):
+    selected: list = []
 
-class SelectionModel(BaseModel):
-    selected: list[str | Enum]
-
-
-class ReasonSelectionModel(BaseModel):
-    selected: list[str | Enum]
-    reason: ReasonModel
+    @field_validator("selected", mode="before")
+    def validate_selected(cls, value) -> list:
+        return [value] if not isinstance(value, list) else value
 
 
 async def select(
-    choices: list[str] | type[Enum],
+    choices: list[Any] | type[Enum],
     max_num_selections: int = 1,
     instruction=None,
     context=None,
     system=None,
     sender=None,
     recipient=None,
+    tools=None,
     reason: bool = False,
+    actions: bool = False,
+    invoke_action: bool = True,
+    max_num_actions: int | Literal["auto"] = "auto",
     return_enum: bool = False,
     enum_parser: Callable = None,  # parse the model string response to appropriate type
-    branch: Branch = None,
-    return_pydantic_model=False,
-    **kwargs,  # additional chat arguments
+    branch=None,
+    return_branch=False,
+    **kwargs,
 ):
-    selections = []
     if return_enum and not is_enum(choices):
         raise ValueError("return_enum can only be True if choices is an Enum")
 
-    if is_enum(choices):
-        selections = [selection.value for selection in choices]
-    else:
-        selections = choices
-
+    selections = (
+        [selection.value for selection in choices]
+        if is_enum(choices)
+        else choices
+    )
     prompt = PROMPT.format(
         max_num_selections=max_num_selections, choices=selections
     )
 
     if instruction:
-        prompt = f"{instruction}\n\n{prompt} \n\n "
+        prompt = f"{instruction}\n{prompt}\n"
 
     branch = branch or Branch()
-    response: SelectionModel | ReasonSelectionModel | str = await branch.chat(
-        instruction=prompt,
+
+    response = await branch.operate(
+        operative=SelectModel,
+        intruction=prompt,
         context=context,
         system=system,
         sender=sender,
         recipient=recipient,
-        pydantic_model=SelectionModel if not reason else ReasonSelectionModel,
-        return_pydantic_model=True,
+        tools=tools,
+        reason=reason,
+        actions=actions,
+        invoke_action=invoke_action,
+        max_num_actions=max_num_actions,
         **kwargs,
     )
 
     selected = response
-    if isinstance(response, SelectionModel | ReasonSelectionModel):
+    if hasattr(response, "selected"):
         selected = response.selected
+
     selected = [selected] if not isinstance(selected, list) else selected
     corrected_selections = [
         choose_most_similar(selection, selections) for selection in selected
@@ -85,9 +91,7 @@ async def select(
                     out.append(member)
         corrected_selections = out
 
-    if return_pydantic_model:
-        if not isinstance(response, SelectionModel | ReasonSelectionModel):
-            return SelectionModel(selected=corrected_selections)
-        response.selected = corrected_selections
-        return response
-    return corrected_selections
+    response.selected = corrected_selections
+    if return_branch:
+        return response, branch
+    return response
