@@ -13,7 +13,7 @@ from .utils import is_enum
 
 
 class SelectModel(Operative):
-    selected: list
+    selected: list = []
 
     @field_validator("selected", mode="before")
     def validate_selected(cls, value) -> list:

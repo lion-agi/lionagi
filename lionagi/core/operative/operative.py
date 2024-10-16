@@ -1,6 +1,6 @@
 from lionfuncs import MutableModel
 
-from .fields import (
+from .models import (
     ACTION_REQUESTS_FIELD,
     ACTION_REQUIRED_FIELD,
     ACTION_RESPONSES_FIELD,

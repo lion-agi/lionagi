@@ -83,3 +83,30 @@ class ActionResponseModel(BaseModel):
     function: str
     arguments: dict[str, Any]
     response: Any
+
+
+REASON_FIELD: ReasonModel | None = Field(None)
+
+ACTION_REQUESTS_FIELD: list[ActionRequestModel] = Field(
+    [],
+    title="Actions",
+    description=(
+        "List of actions to be performed if `action_required` is **True**. Leave "
+        "empty if no action is required. **When providing actions, you must "
+        "choose from the provided `tool_schemas`. Do not invent function or "
+        "argument names.**"
+    ),
+)
+
+ACTION_REQUIRED_FIELD: bool = Field(
+    False,
+    title="Action Required",
+    description=(
+        "if there are no tool_schemas provied, must mark as **False**. "
+        "Indicate whether this step requires an action. Set to **True** if an "
+        "action is required; otherwise, set to **False**."
+    ),
+)
+
+ACTION_RESPONSES_FIELD: list[ActionResponseModel] = []
+RESPONSE_FIELD: Any = Field(None)
