@@ -4,9 +4,8 @@ from inspect import isclass
 from typing import Any
 
 from lionfuncs import choose_most_similar
-from pydantic import field_validator
+from pydantic import BaseModel, field_validator
 
-from lionagi.core.operative.operative import Operative
 from lionagi.core.session.branch import Branch
 
 
@@ -17,7 +16,7 @@ def is_enum(choices):
 PROMPT = "Please select up to {max_num_selections} items from the following list {choices}. Provide the selection(s), and no comments from you"
 
 
-class SelectModel(Operative):
+class SelectModel(BaseModel):
 
     selected: list = []
 
