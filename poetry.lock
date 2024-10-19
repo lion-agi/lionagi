@@ -685,18 +685,23 @@ testing = ["Django", "attrs", "colorama", "docopt", "pytest (<7.0.0)"]
 
 [[package]]
 name = "lion-core"
-version = "0.4.2"
+version = "0.5.0"
 description = "A core package for the Lion framework."
 optional = false
-python-versions = "<4.0,>=3.10"
-files = [
-    {file = "lion_core-0.4.2-py3-none-any.whl", hash = "sha256:bc94cced28080c9237541c66442841e369433a29644a4b7a5958617f847ec5e9"},
-    {file = "lion_core-0.4.2.tar.gz", hash = "sha256:420afbf1d1bc8845894643345c01344ef4b80f4df43d84127e526d28f927e170"},
-]
+python-versions = "^3.10"
+files = []
+develop = false
 
 [package.dependencies]
-lionabc = ">=1.0.1,<2.0.0"
-lionfuncs = ">=1.1.2,<2.0.0"
+lion-service = "^1.0.1"
+lionabc = "^1.0.1"
+lionfuncs = "^1.1.4"
+
+[package.source]
+type = "git"
+url = "https://github.com/lion-agi/lion-core"
+reference = "dev_imodel"
+resolved_reference = "4db4d40ad65da4ad103459895ab311951160fbb6"
 
 [[package]]
 name = "lion-openai"
@@ -1023,9 +1028,9 @@ files = [
 
 [package.dependencies]
 numpy = [
+    {version = ">=1.26.0", markers = "python_version >= \"3.12\""},
     {version = ">=1.22.4", markers = "python_version < \"3.11\""},
     {version = ">=1.23.2", markers = "python_version == \"3.11\""},
-    {version = ">=1.26.0", markers = "python_version >= \"3.12\""},
 ]
 python-dateutil = ">=2.8.2"
 pytz = ">=2020.1"
@@ -1403,8 +1408,8 @@ files = [
 annotated-types = ">=0.6.0"
 pydantic-core = "2.23.4"
 typing-extensions = [
-    {version = ">=4.6.1", markers = "python_version < \"3.13\""},
     {version = ">=4.12.2", markers = "python_version >= \"3.13\""},
+    {version = ">=4.6.1", markers = "python_version < \"3.13\""},
 ]
 
 [package.extras]
@@ -2099,4 +2104,4 @@ propcache = ">=0.2.0"
 [metadata]
 lock-version = "2.0"
 python-versions = "^3.10"
-content-hash = "dacd1ae1afa2bc31da7dcb657a868732dd7a0b37118821edbddc4726d01009e6"
+content-hash = "70a36549c6d3e05fcc483168d0704eb3df47c53ffd9b754c9c04a9a562fc6cf4"
