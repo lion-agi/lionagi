@@ -1,8 +1,7 @@
-from .brainstorm.brainstorm import brainstorm
-from .plan.plan import plan
-from .rank.rank import rank
-from .react.act import act
-from .score.score import score
-from .select.select import select
+from .brainstorm import brainstorm
+from .plan import plan
+from .rank import rank
+from .score import score
+from .select import select
 
-__all__ = ["act", "brainstorm", "plan", "score", "rank", "select"]
+__all__ = ["brainstorm", "plan", "rank", "score", "select"]
