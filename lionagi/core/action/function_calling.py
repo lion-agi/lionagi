@@ -1,7 +1,6 @@
 from collections.abc import Callable
 from functools import singledispatchmethod
 from typing import Any
-
 from lionfuncs import ucall
 
 from lionagi.core.collections.abc import Actionable

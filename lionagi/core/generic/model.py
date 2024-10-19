@@ -3,7 +3,9 @@ import os
 
 import numpy as np
 from dotenv import load_dotenv
+from lionabc.exceptions import LionResourceError
 
+from lionagi.core.generic.component import Component
 from lionagi.libs import (
     APIUtil,
     BaseService,
@@ -12,8 +14,6 @@ from lionagi.libs import (
     ninsert,
     to_list,
 )
-
-from .abc import Component, ModelLimitExceededError
 
 load_dotenv()
 
@@ -271,7 +271,7 @@ class iModel:
         )
 
         if num_tokens > self.token_limit:
-            raise ModelLimitExceededError(
+            raise LionResourceError(
                 f"Number of tokens {num_tokens} exceeds the limit {self.token_limit}"
             )
 
@@ -317,7 +317,7 @@ class iModel:
         )
 
         if self.token_limit and num_tokens > self.token_limit:
-            raise ModelLimitExceededError(
+            raise LionResourceError(
                 f"Number of tokens {num_tokens} exceeds the limit {self.token_limit}"
             )
 
