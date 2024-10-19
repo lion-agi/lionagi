@@ -1,5 +1,7 @@
 from typing import Any
 
+from lionfuncs import time
+
 from lionagi.core.action.tool_manager import ToolManager
 from lionagi.core.collections import (
     Exchange,
@@ -14,6 +16,7 @@ from lionagi.core.collections.util import to_list_type
 from lionagi.core.mail.mail_manager import MailManager
 from lionagi.core.message import System
 from lionagi.core.session.branch import Branch
+from lionagi.core.sys_utils import SysUtil as _s
 from lionagi.libs import SysUtil
 
 
@@ -43,8 +46,8 @@ class Session:
         imodel=None,
         tools=None,
     ):
-        self.ln_id = SysUtil.create_id()
-        self.timestamp = SysUtil.get_timestamp(sep=None)[:-6]
+        self.ln_id = _s.id()
+        self.timestamp = time(type_="iso")
         system = (
             system or "You are a helpful assistant, let's think step by step"
         )

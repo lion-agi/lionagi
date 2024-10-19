@@ -6,23 +6,30 @@ from lion_core.session.branch import Branch
 from pydantic import BaseModel, Field
 
 
-class BrainstormModel(BaseModel):
+class PlanningModel(BaseModel):
 
-    topic: str = Field(
+    title: str | None = Field(
+        None,
+        title="Title",
+        description="**Provide a concise title summarizing the plan.**",
+    )
+    objective: str = Field(
         default_factory=str,
-        description="**Specify the topic or theme for the brainstorming session.**",
+        description="**State the goal or purpose of the plan in a clear and concise manner.**",
     )
-    ideas: list[StepModel] = Field(
+    steps: list[StepModel] = Field(
         default_factory=list,
-        description="**Provide a list of ideas needed to accomplish the objective. Each step should be as described in a `PlanStepModel`.**",
+        description="**Outline the sequence of steps needed to accomplish the objective. Each step should be as described in a `PlanStepModel`.**",
     )
 
 
-PROMPT = "Please follow prompt and provide {num_ideas} different ideas for the next step"
+PROMPT = (
+    "Please follow prompt and provide step-by-step plan of {num_steps} steps"
+)
 
 
-# the inner steps are not immidiately executed
-async def brainstorm(
+# the inner steps are not immidiately executed, but are planned
+async def plan(
     num_steps: int = 3,
     instruction=None,
     guidance=None,
@@ -39,9 +46,11 @@ async def brainstorm(
     system_sender=None,
     system_datetime=None,
     return_branch=False,
+    invoke_action: bool = True,
     **kwargs,  # additional operate arguments
-):
-    response, branch = await _brainstorm(
+) -> PlanningModel:
+    branch = branch or Branch()
+    response, branch = await _plan(
         num_steps=num_steps,
         instruction=instruction,
         guidance=guidance,
@@ -56,14 +65,16 @@ async def brainstorm(
         clear_messages=clear_messages,
         progress=progress,
         system_sender=system_sender,
-        system_datetime=system_datetime**kwargs,
+        system_datetime=system_datetime,
+        invoke_action=invoke_action,
+        **kwargs,
     )
     if return_branch:
         return response, branch
     return response
 
 
-async def _brainstorm(
+async def _plan(
     num_steps: int = 3,
     instruction=None,
     guidance=None,
@@ -79,6 +90,7 @@ async def _brainstorm(
     clear_messages: bool = False,
     system_sender=None,
     system_datetime=None,
+    invoke_action: bool = True,
     **kwargs,  # additional operate arguments
 ):
     prompt = PROMPT.format(num_steps=num_steps)
@@ -105,7 +117,8 @@ async def _brainstorm(
         tools=tools,
         progress=progress,
         clear_messages=clear_messages,
-        operative_model=BrainstormModel,
+        operative_model=PlanningModel,
+        invoke_action=invoke_action,
         **kwargs,
     )
     return response, branch
