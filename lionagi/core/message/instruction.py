@@ -1,4 +1,6 @@
-from lionagi.core.collections.abc import SYSTEM_FIELDS, LionIDable
+from typing import Any
+
+from lionagi.core.collections.abc import SYSTEM_FIELDS
 from lionagi.core.message.message import MessageRole, RoledMessage
 from lionagi.core.report.form import Form
 
@@ -13,8 +15,8 @@ class Instruction(RoledMessage):
     Attributes:
         instruction (str): The instruction content.
         context (dict or str): Additional context for the instruction.
-        sender (LionIDable): The sender of the instruction.
-        recipient (LionIDable): The recipient of the instruction.
+        sender (Any): The sender of the instruction.
+        recipient (Any): The recipient of the instruction.
         requested_fields (dict): Fields requested in the instruction.
     """
 
@@ -23,8 +25,8 @@ class Instruction(RoledMessage):
         instruction: str | None = None,
         context: dict | str | None = None,
         images: list | None = None,
-        sender: LionIDable | None = None,
-        recipient: LionIDable | None = None,
+        sender: Any | None = None,
+        recipient: Any | None = None,
         requested_fields: dict | None = None,  # {"field": "description"}
         additional_context: dict | None = None,
         image_detail: str | None = None,
@@ -37,8 +39,8 @@ class Instruction(RoledMessage):
             instruction (str, optional): The instruction content.
             context (dict or str, optional): Additional context for the instruction.
             image (str, optional): The image content in base64 encoding.
-            sender (LionIDable, optional): The sender of the instruction.
-            recipient (LionIDable, optional): The recipient of the instruction.
+            sender (Any, optional): The sender of the instruction.
+            recipient (Any, optional): The recipient of the instruction.
             requested_fields (dict, optional): Fields requested in the instruction.
             **kwargs: Additional context fields to be added to the message content, must be JSON serializable.
         """
@@ -179,7 +181,7 @@ class Instruction(RoledMessage):
         Args:
             form (Form): The form containing instruction details.
             sender (str, optional): The sender of the instruction.
-            recipient (LionIDable, optional): The recipient of the instruction.
+            recipient (Any, optional): The recipient of the instruction.
 
         Returns:
             Instruction: The created Instruction instance.
