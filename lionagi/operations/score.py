@@ -1,10 +1,9 @@
 import logging
 
 import numpy as np
+from lion_core.session.branch import Branch
 from lionfuncs import to_num
 from pydantic import BaseModel, Field, field_validator
-
-from lionagi.core.session.branch import Branch
 
 
 class ScoreModel(BaseModel):
@@ -19,7 +18,7 @@ class ScoreModel(BaseModel):
         return [value] if not isinstance(value, list) else value
 
 
-PROMPT = "Please follow prompt and provide {num_scores} numeric score(s) in {score_range} for the given context. Return as {return_precision} format"
+PROMPT = "Please follow prompt and provide {num_scores} numeric score(s) in {score_range} (inclusive) for the given context. Return as {return_precision} format"
 
 
 async def score(

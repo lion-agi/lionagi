@@ -2,10 +2,9 @@ import asyncio
 from typing import Any
 
 import numpy as np
+from lion_core.session.branch import Branch
+from lion_core.session.session import Session
 from lionfuncs import alcall, to_list
-
-from lionagi.core.session.branch import Branch
-from lionagi.core.session.session import Session
 
 from .score import score
 
@@ -29,12 +28,11 @@ async def rank(
     invoke_action: bool = True,
     **kwargs,  # additional kwargs for score function
 ) -> dict:
-    session = Session()
     branch = branch or Branch()
-    session.change_default_branch(branch)
+    session = Session(default_branch=branch)
 
     async def _score(item):
-        b_ = session.new_branch(messages=branch.messages)
+        b_ = await session.new_branch(messages=branch.messages)
         prompt = PROMPT.format(choices=choices, item=item)
         if instruction:
             prompt = f"{instruction}\n\n{prompt} \n\n "

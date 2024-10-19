@@ -3,10 +3,9 @@ from enum import Enum
 from inspect import isclass
 from typing import Any
 
+from lion_core.session.branch import Branch
 from lionfuncs import choose_most_similar
 from pydantic import BaseModel, field_validator
-
-from lionagi.core.session.branch import Branch
 
 
 def is_enum(choices):
