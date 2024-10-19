@@ -1,7 +1,7 @@
-from collections.abc import Callable
+import inspect
+from typing import get_args
 
-from lionagi.core.action.tool import Tool
-from lionagi.core.action.tool_manager import func_to_tool
+from pydantic import BaseModel
 
 retry_kwargs = {
     "retries": 0,  # kwargs for rcall, number of retries if failed
@@ -25,6 +25,11 @@ oai_fields = [
 choices_fields = ["index", "message", "logprobs", "finish_reason"]
 
 usage_fields = ["prompt_tokens", "completion_tokens", "total_tokens"]
+
+from collections.abc import Callable
+
+from lionagi.core.action.tool import Tool
+from lionagi.core.action.tool_manager import func_to_tool
 
 
 def process_tools(tool_obj, branch):
@@ -74,3 +79,25 @@ async def _direct(
         )
 
     return await directive.direct(form=form, return_form=True, **kwargs)
+
+
+def break_down_annotation(model: type[BaseModel]):
+
+    def _ispydantic_model(x):
+        return inspect.isclass(x) and issubclass(x, BaseModel)
+
+    if not _ispydantic_model(model):
+        return model
+
+    out = {}
+    for k, v in model.__annotations__.items():
+        if _ispydantic_model(v):
+            out[k] = break_down_annotation(v)
+        elif "list" in str(v) and get_args(v):
+            v = get_args(v)[0]
+            if _ispydantic_model(v):
+                v = break_down_annotation(v)
+            out[k] = [v]
+        else:
+            out[k] = v
+    return out

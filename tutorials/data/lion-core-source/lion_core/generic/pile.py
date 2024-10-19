@@ -839,10 +839,10 @@ class Pile(Element, Collective, Generic[T]):
         Set new values in the pile using various key types.
 
         Handles single/multiple assignments, ensures type consistency.
-        Supports index/slice, LionID, and Any key access.
+        Supports index/slice, LionID, and LionIDable key access.
 
         Args:
-            key: Key to set items. Can be index, slice, LionID, Any.
+            key: Key to set items. Can be index, slice, LionID, LionIDable.
             item: Item(s) to set. Can be single item or collection.
 
         Raises:

@@ -1,13 +1,9 @@
-import asyncio
-from typing import Literal
-
-from lion_core.action.function_calling import FunctionCalling
-from lionfuncs import note
+# lionagi/core/session/directive_mixin.py
 from pydantic import BaseModel
 
-from lionagi.core.message import ActionRequest, ActionResponse
-from lionagi.core.operative.operative import Operative
 from lionagi.core.unit import Unit
+
+from ..message.action_response import ActionResponse
 
 
 class DirectiveMixin:
@@ -309,93 +305,3 @@ class DirectiveMixin:
             form.action_response.update(_dict)
 
         return form
-
-    async def operate(
-        self,
-        operative: type[Operative],
-        instruction=None,
-        context=None,
-        system=None,
-        sender=None,
-        recipient=None,
-        tools=None,
-        reason: bool = False,
-        actions: bool = False,
-        invoke_action: bool = True,
-        max_num_actions: int | Literal["auto"] = "auto",
-        **kwargs,
-    ) -> BaseModel:
-        if max_num_actions != "auto" and max_num_actions < 1:
-            raise ValueError(
-                "max_num_actions must be 'auto' or an integer greater than 0"
-            )
-
-        tool_schemas = None
-        if actions:
-            tools = tools or True
-            self.register_tools(tools)
-            if not self.has_tools:
-                raise ValueError("No tools registered in the branch")
-            tool_schemas = self.tool_manager.get_tool_schema(tools)
-            if context is None:
-                context = {"tool_schemas": tool_schemas}
-            else:
-                context = {
-                    "tool_schemas": tool_schemas,
-                    "info": context,
-                }
-
-        req_model, res_model = operative.get_request_response_model(
-            reason=reason,
-            actions=actions,
-        )
-
-        response = await self.chat(
-            instruction=instruction,
-            context=context,
-            system=system,
-            sender=sender,
-            recipient=recipient,
-            pydantic_model=req_model,
-            return_pydantic_model=True,
-            **kwargs,
-        )
-
-        out_note = note(**response.model_dump())
-
-        if actions and getattr(response, "actions", None):
-            _req_msgs, _func_calls = [], []
-            _actions = response.actions
-
-            if (
-                max_num_actions != "auto"
-                and isinstance(max_num_actions, int)
-                and max_num_actions < len(_actions)
-            ):
-                _actions = _actions[:max_num_actions]
-
-            for i in _actions:
-                if i.function in self.tool_manager.registry:
-                    msg = ActionRequest(func=i.function, arguments=i.arguments)
-                    self.add_message(action_request=msg)
-                    _req_msgs.append(msg)
-
-                    _func_call = FunctionCalling(
-                        func_tool=self.tool_manager.registry[i.function],
-                        arguments=i.arguments,
-                    )
-                    _func_calls.append(
-                        asyncio.create_task(_func_call.invoke())
-                    )
-
-            if invoke_action:
-                results = await asyncio.gather(*_func_calls)
-                for idx, item in enumerate(results):
-                    msg = ActionResponse(
-                        action_request=_req_msgs[idx],
-                        func_outputs=item,
-                    )
-                    self.add_message(action_response=msg)
-                    out_note["actions", idx, "response"] = item
-
-        return res_model.model_validate(out_note.content)

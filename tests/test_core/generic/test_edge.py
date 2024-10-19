@@ -1,13 +1,16 @@
 import unittest
-from typing import Any, Dict, List, Optional, Union
 from unittest.mock import AsyncMock, patch
 
 from pydantic import ValidationError
 
-from lionagi.core.collections.abc import Component, Condition
+from lionagi.core.collections.abc import (
+    Component,
+    Condition,
+    LionIDable,
+    get_lion_id,
+)
 from lionagi.core.generic.edge import Edge
 from lionagi.core.generic.edge_condition import EdgeCondition
-from lionagi.core.sys_utils import SysUtil
 
 
 class TestEdge(unittest.TestCase):
@@ -46,7 +49,7 @@ class TestEdge(unittest.TestCase):
     def test_validate_head_tail(self):
         """Test the head and tail validation."""
         try:
-            valid_id = SysUtil.get_id("valid_head")
+            valid_id = get_lion_id("valid_head")
         except Exception as e:
             if e.__class__.__name__ == "LionTypeError":
                 return

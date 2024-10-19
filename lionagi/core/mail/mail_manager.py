@@ -5,8 +5,7 @@ from pydantic import Field
 
 from lionagi.core.collections import Exchange, Pile, pile
 from lionagi.core.collections.abc import Element, Executable
-from lionagi.core.collections.util import to_list_type
-from lionagi.core.sys_utils import SysUtil
+from lionagi.core.collections.util import get_lion_id, to_list_type
 
 from .mail import Mail, Package
 
@@ -164,14 +163,14 @@ class MailManager(Element, Executable):
         Collects mails from all sources.
         """
         for source in self.sources:
-            self.collect(SysUtil.get_id(source))
+            self.collect(get_lion_id(source))
 
     def send_all(self):
         """
         Sends mails to all sources.
         """
         for source in self.sources:
-            self.send(SysUtil.get_id(source))
+            self.send(get_lion_id(source))
 
     async def execute(self, refresh_time=1):
         """

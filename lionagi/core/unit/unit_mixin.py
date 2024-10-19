@@ -2,7 +2,7 @@ import asyncio
 import contextlib
 import re
 from abc import ABC
-from typing import Any
+from typing import Any, Optional
 
 from lionfuncs import extract_json_block, to_dict, validate_mapping
 
