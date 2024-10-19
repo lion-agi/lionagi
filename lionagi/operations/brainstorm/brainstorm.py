@@ -1,11 +1,4 @@
-from lionagi.core.session.branch import Branch
-
-from .brainstorm_model import BrainstormModel, ReasonBrainstormModel
-
-PROMPT = "Please follow prompt and provide {num_ideas} different ideas for the next step"
-
-
-from pydantic import Field
+from lion_core.session.branch import Branch
 
 
 class BrainstormModel(Operative):

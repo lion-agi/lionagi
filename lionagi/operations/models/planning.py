@@ -2,12 +2,6 @@ from pydantic import BaseModel, Field
 
 
 class PlanStepModel(BaseModel):
-    title: str | None = Field(
-        None,
-        title="Title",
-        description="**Provide a concise title summarizing the step.**",
-    )
-
     description: str = Field(
         ...,
         description="**Describe a specific action step required to achieve the plan's objective.**",
@@ -15,12 +9,6 @@ class PlanStepModel(BaseModel):
 
 
 class PlanningModel(BaseModel):
-    title: str | None = Field(
-        None,
-        title="Title",
-        description="**Provide a concise title summarizing the plan.**",
-    )
-
     objective: str = Field(
         ...,
         description="**State the goal or purpose of the plan in a clear and concise manner.**",
