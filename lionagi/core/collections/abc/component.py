@@ -6,9 +6,11 @@ from collections.abc import Sequence
 from functools import singledispatchmethod
 from typing import Any, Type, TypeAlias, TypeVar, Union
 
+from lionfuncs import time
 from pandas import DataFrame, Series
 from pydantic import AliasChoices, BaseModel, Field, ValidationError
 
+from lionagi.core.sys_utils import SysUtil as _s
 from lionagi.libs import ParseUtil, SysUtil
 from lionagi.libs.ln_convert import strip_lower, to_dict, to_str
 from lionagi.libs.ln_func_call import lcall
@@ -31,7 +33,7 @@ class Element(BaseModel, ABC):
     """
 
     ln_id: str = Field(
-        default_factory=SysUtil.create_id,
+        default_factory=_s.id,
         title="ID",
         description="A 32-char unique hash identifier.",
         frozen=True,
@@ -39,7 +41,7 @@ class Element(BaseModel, ABC):
     )
 
     timestamp: str = Field(
-        default_factory=lambda: SysUtil.get_timestamp(sep=None)[:-6],
+        default_factory=lambda: time(type_="iso"),
         title="Creation Timestamp",
         description="The UTC timestamp of creation",
         frozen=True,
@@ -298,9 +300,9 @@ class Component(Element, ABC):
         dict_["metadata"] = meta_
 
         if "ln_id" not in dict_:
-            dict_["ln_id"] = meta_.pop("ln_id", SysUtil.create_id())
+            dict_["ln_id"] = meta_.pop("ln_id", _s.id())
         if "timestamp" not in dict_:
-            dict_["timestamp"] = SysUtil.get_timestamp(sep=None)[:-6]
+            dict_["timestamp"] = time(type_="iso")
         if "metadata" not in dict_:
             dict_["metadata"] = {}
         if "extra_fields" not in dict_:
