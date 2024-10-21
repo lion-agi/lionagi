@@ -1,6 +1,7 @@
 import asyncio
 import os
 
+import lionfuncs as ln
 import numpy as np
 from dotenv import load_dotenv
 
@@ -91,8 +92,8 @@ class iModel:
             service (BaseService, optional): An instance of BaseService.
             **kwargs: Additional parameters for the model.
         """
-        self.ln_id: str = SysUtil.create_id()
-        self.timestamp: str = SysUtil.get_timestamp(sep=None)[:-6]
+        self.ln_id: str = SysUtil.id()
+        self.timestamp: str = ln.time(type_="iso")
         self.endpoint = endpoint
         self.allowed_parameters = allowed_parameters
         if isinstance(provider, type):

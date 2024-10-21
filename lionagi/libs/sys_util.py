@@ -7,10 +7,16 @@ import re
 import subprocess
 import sys
 import time
+from collections.abc import Sequence
 from datetime import datetime, timezone
 from hashlib import sha256
 from pathlib import Path
 from typing import Any
+
+from lion_core.setting import DEFAULT_LION_ID_CONFIG, LionIDConfig
+from lion_core.sys_utils import SysUtil as _u
+from lionabc import Observable
+from typing_extensions import deprecated
 
 _timestamp_syms = ["-", ":", "."]
 
@@ -20,24 +26,74 @@ PATH_TYPE = str | Path
 class SysUtil:
 
     @staticmethod
+    def id(
+        config: LionIDConfig = DEFAULT_LION_ID_CONFIG,
+        n: int = None,
+        prefix: str = None,
+        postfix: str = None,
+        random_hyphen: bool = None,
+        num_hyphens: int = None,
+        hyphen_start_index: int = None,
+        hyphen_end_index: int = None,
+    ) -> str:
+        return _u.id(
+            config=config,
+            n=n,
+            prefix=prefix,
+            postfix=postfix,
+            random_hyphen=random_hyphen,
+            num_hyphens=num_hyphens,
+            hyphen_start_index=hyphen_start_index,
+            hyphen_end_index=hyphen_end_index,
+        )
+
+    @staticmethod
+    def get_id(
+        item: Sequence[Observable] | Observable | str,
+        config: LionIDConfig = DEFAULT_LION_ID_CONFIG,
+        /,
+    ) -> str:
+        return _u.get_id(item, config)
+
+    @staticmethod
+    def is_id(
+        item: Sequence[Observable] | Observable | str,
+        config: LionIDConfig = DEFAULT_LION_ID_CONFIG,
+        /,
+    ) -> bool:
+        return _u.is_id(item, config)
+
+    # legacy methods, kept for backward compatibility
+
+    @staticmethod
+    @deprecated(
+        "Deprecated since v0.3, will be removed in v1.0. Use time.sleep instead.",
+        category=DeprecationWarning,
+        stacklevel=2,
+    )
     def sleep(delay: float) -> None:
         """
         Pauses execution for a specified duration.
 
         Args:
-                delay (float): The amount of time, in seconds, to pause execution.
+            delay (float): The amount of time, in seconds, to pause execution.
         """
         time.sleep(delay)
 
     @staticmethod
+    @deprecated(
+        "Deprecated since v0.3, will be removed in v1.0. Use lionfuncs.time instead",
+        category=DeprecationWarning,
+        stacklevel=2,
+    )
     def get_now(datetime_: bool = False, tz=None) -> float | datetime:
         """Returns the current time either as a Unix timestamp or a datetime object.
 
         Args:
-                datetime_ (bool): If True, returns a datetime object; otherwise, returns a Unix timestamp.
+            datetime_ (bool): If True, returns a datetime object; otherwise, returns a Unix timestamp.
 
         Returns:
-                Union[float, datetime.datetime]: The current time as a Unix timestamp or a datetime object.
+            Union[float, datetime.datetime]: The current time as a Unix timestamp or a datetime object.
         """
 
         if not datetime_:
@@ -48,6 +104,11 @@ class SysUtil:
         return datetime.now(**config_)
 
     @staticmethod
+    @deprecated(
+        "Deprecated since v0.3, will be removed in v1.0. Use d_[k2] = d_.pop(k1) instead",
+        category=DeprecationWarning,
+        stacklevel=2,
+    )
     def change_dict_key(
         dict_: dict[Any, Any], old_key: str, new_key: str
     ) -> None:
@@ -65,15 +126,20 @@ class SysUtil:
             dict_[new_key] = dict_.pop(old_key)
 
     @staticmethod
+    @deprecated(
+        "Deprecated since v0.3, will be removed in v1.0. Use lionfuncs.time instead",
+        category=DeprecationWarning,
+        stacklevel=2,
+    )
     def get_timestamp(tz: timezone = timezone.utc, sep: str = "_") -> str:
         """Returns a timestamp string with optional custom separators and timezone.
 
         Args:
-                tz (timezone): The timezone for the timestamp.
-                sep (str): The separator to use in the timestamp string, replacing '-', ':', and '.'.
+            tz (timezone): The timezone for the timestamp.
+            sep (str): The separator to use in the timestamp string, replacing '-', ':', and '.'.
 
         Returns:
-                str: A string representation of the current timestamp.
+            str: A string representation of the current timestamp.
         """
         str_ = datetime.now(tz=tz).isoformat()
         if sep is not None:
@@ -82,6 +148,11 @@ class SysUtil:
         return str_
 
     @staticmethod
+    @deprecated(
+        "Deprecated since v0.3, will be removed in v1.0. Deprecated without replacement",
+        category=DeprecationWarning,
+        stacklevel=2,
+    )
     def is_schema(dict_: dict[Any, Any], schema: dict[Any, type]) -> bool:
         """Validates if the given dictionary matches the expected schema types."""
         return all(
@@ -90,6 +161,11 @@ class SysUtil:
         )
 
     @staticmethod
+    @deprecated(
+        "Deprecated since v0.3, will be removed in v1.0. Use lionfuncs.copy instead",
+        category=DeprecationWarning,
+        stacklevel=2,
+    )
     def create_copy(input_: Any, num: int = 1) -> Any | list[Any]:
         """Creates deep copies of the input, either as a single copy or a list of copies.
 
@@ -109,6 +185,11 @@ class SysUtil:
         )
 
     @staticmethod
+    @deprecated(
+        "Deprecated since v0.3, will be removed in v1.0. Use SysUtil.id instead",
+        category=DeprecationWarning,
+        stacklevel=2,
+    )
     def create_id(n: int = 32) -> str:
         """
         Generates a unique identifier based on the current time and random bytes.
@@ -124,17 +205,22 @@ class SysUtil:
         return sha256(current_time + random_bytes).hexdigest()[:n]
 
     @staticmethod
+    @deprecated(
+        "Deprecated since v0.3, will be removed in v1.0. Use lionfuncs.get_bins instead",
+        category=DeprecationWarning,
+        stacklevel=2,
+    )
     def get_bins(
         input_: list[str], upper: int | None = 2000
     ) -> list[list[int]]:
         """Organizes indices of strings into bins based on a cumulative upper limit.
 
         Args:
-                input_ (List[str]): The list of strings to be binned.
-                upper (int): The cumulative length upper limit for each bin.
+            input_ (List[str]): The list of strings to be binned.
+            upper (int): The cumulative length upper limit for each bin.
 
         Returns:
-                List[List[int]]: A list of bins, each bin is a list of indices from the input list.
+            List[List[int]]: A list of bins, each bin is a list of indices from the input list.
         """
         current = 0
         bins = []
@@ -152,13 +238,18 @@ class SysUtil:
         return bins
 
     @staticmethod
+    @deprecated(
+        "Deprecated since v0.3, will be removed in v1.0. Use lionfuncs.get_cpu_architecture instead",
+        category=DeprecationWarning,
+        stacklevel=2,
+    )
     def get_cpu_architecture() -> str:
         """Returns a string identifying the CPU architecture.
 
         This method categorizes some architectures as 'apple_silicon'.
 
         Returns:
-                str: A string identifying the CPU architecture ('apple_silicon' or 'other_cpu').
+            str: A string identifying the CPU architecture ('apple_silicon' or 'other_cpu').
         """
         arch: str = platform.machine().lower()
         return (
@@ -168,6 +259,11 @@ class SysUtil:
         )
 
     @staticmethod
+    @deprecated(
+        "Deprecated since v0.3, will be removed in v1.0. Use lionfuncs.install_import instead",
+        category=DeprecationWarning,
+        stacklevel=2,
+    )
     def install_import(
         package_name: str,
         module_name: str = None,
@@ -180,10 +276,10 @@ class SysUtil:
         to install the package using pip and then retries the import.
 
         Args:
-                package_name: The base name of the package to import.
-                module_name: The submodule name to import from the package, if applicable. Defaults to None.
-                import_name: The specific name to import from the module or package. Defaults to None.
-                pip_name: The pip package name if different from `package_name`. Defaults to None.
+            package_name: The base name of the package to import.
+            module_name: The submodule name to import from the package, if applicable. Defaults to None.
+            import_name: The specific name to import from the module or package. Defaults to None.
+            pip_name: The pip package name if different from `package_name`. Defaults to None.
 
         Prints a message indicating success or attempts installation if the import fails.
         """
@@ -215,23 +311,38 @@ class SysUtil:
                 __import__(full_import_path)
 
     @staticmethod
+    @deprecated(
+        "Deprecated since v0.3, will be removed in v1.0. Use lionfuncs.import_module instead",
+        category=DeprecationWarning,
+        stacklevel=2,
+    )
     def import_module(module_path: str):
         return importlib.import_module(module_path)
 
     @staticmethod
+    @deprecated(
+        "Deprecated since v0.3, will be removed in v1.0. Use lionfuncs.is_package_installed instead",
+        category=DeprecationWarning,
+        stacklevel=2,
+    )
     def is_package_installed(package_name: str) -> bool:
         """Checks if a package is currently installed.
 
         Args:
-                package_name: The name of the package to check.
+            package_name: The name of the package to check.
 
         Returns:
-                A boolean indicating whether the package is installed.
+            A boolean indicating whether the package is installed.
         """
         package_spec = importlib.util.find_spec(package_name)
         return package_spec is not None
 
     @staticmethod
+    @deprecated(
+        "Deprecated since v0.3, will be removed in v1.0. Use lionfuncs.check_import instead",
+        category=DeprecationWarning,
+        stacklevel=2,
+    )
     def check_import(
         package_name: str,
         module_name: str | None = None,
@@ -246,12 +357,12 @@ class SysUtil:
         it attempts to install the package using `install_import` and then retries the import.
 
         Args:
-                package_name: The name of the package to check and potentially install.
-                module_name: The submodule name to import from the package, if applicable. Defaults to None.
-                import_name: The specific name to import from the module or package. Defaults to None.
-                pip_name: The pip package name if different from `package_name`. Defaults to None.
-                attempt_install: If attempt to install the package if uninstalled. Defaults to True.
-                error_message: Error message when the package is not installed and not attempt to install.
+            package_name: The name of the package to check and potentially install.
+            module_name: The submodule name to import from the package, if applicable. Defaults to None.
+            import_name: The specific name to import from the module or package. Defaults to None.
+            pip_name: The pip package name if different from `package_name`. Defaults to None.
+            attempt_install: If attempt to install the package if uninstalled. Defaults to True.
+            error_message: Error message when the package is not installed and not attempt to install.
         """
         try:
             if not SysUtil.is_package_installed(package_name):
@@ -277,6 +388,11 @@ class SysUtil:
             ) from e
 
     @staticmethod
+    @deprecated(
+        "Deprecated since v0.3, will be removed in v1.0. Use lionfuncs.list_installed_packages instead",
+        category=DeprecationWarning,
+        stacklevel=2,
+    )
     def list_installed_packages() -> list:
         """list all installed packages using importlib.metadata."""
         return [
@@ -285,6 +401,11 @@ class SysUtil:
         ]
 
     @staticmethod
+    @deprecated(
+        "Deprecated since v0.3, will be removed in v1.0. Use lionfuncs.uninstall_package instead",
+        category=DeprecationWarning,
+        stacklevel=2,
+    )
     def uninstall_package(package_name: str) -> None:
         """Uninstall a specified package."""
         try:
@@ -296,6 +417,11 @@ class SysUtil:
             print(f"Failed to uninstall {package_name}. Error: {e}")
 
     @staticmethod
+    @deprecated(
+        "Deprecated since v0.3, will be removed in v1.0. Use lionfuncs.update_package instead",
+        category=DeprecationWarning,
+        stacklevel=2,
+    )
     def update_package(package_name: str) -> None:
         """Update a specified package."""
         try:
@@ -314,6 +440,11 @@ class SysUtil:
             print(f"Failed to update {package_name}. Error: {e}")
 
     @staticmethod
+    @deprecated(
+        "Deprecated since v0.3, will be removed in v1.0. Use lionfuncs.clear_path instead",
+        category=DeprecationWarning,
+        stacklevel=2,
+    )
     def clear_dir(
         dir_path: Path | str,
         recursive: bool = False,
@@ -324,12 +455,12 @@ class SysUtil:
         excluding files that match any pattern in the exclude list.
 
         Args:
-                dir_path (Union[Path, str]): The path to the directory to clear.
-                recursive (bool): If True, clears directories recursively. Defaults to False.
-                exclude (List[str]): A list of string patterns to exclude from deletion. Defaults to None.
+            dir_path (Union[Path, str]): The path to the directory to clear.
+            recursive (bool): If True, clears directories recursively. Defaults to False.
+            exclude (List[str]): A list of string patterns to exclude from deletion. Defaults to None.
 
         Raises:
-                FileNotFoundError: If the specified directory does not exist.
+            FileNotFoundError: If the specified directory does not exist.
         """
         dir_path = Path(dir_path)
         if not dir_path.exists():
@@ -356,6 +487,11 @@ class SysUtil:
                     raise
 
     @staticmethod
+    @deprecated(
+        "Deprecated since v0.3, will be removed in v1.0. Use lionfuncs.split_path instead",
+        category=DeprecationWarning,
+        stacklevel=2,
+    )
     def split_path(path: Path | str) -> tuple[Path, str]:
         """
         Splits a path into its directory and filename components.
@@ -370,6 +506,11 @@ class SysUtil:
         return path.parent, path.name
 
     @staticmethod
+    @deprecated(
+        "Deprecated since v0.3, will be removed in v1.0. Use lionfuncs.create_path instead",
+        category=DeprecationWarning,
+        stacklevel=2,
+    )
     def create_path(
         directory: Path | str,
         filename: str,
@@ -383,12 +524,12 @@ class SysUtil:
         Creates a path with an optional timestamp in the specified directory.
 
         Args:
-                directory (Union[Path, str]): The directory where the file will be located.
-                filename (str): The filename. Must include a valid extension.
-                timestamp (bool): If True, adds a timestamp to the filename. Defaults to True.
-                dir_exist_ok (bool): If True, does not raise an error if the directory exists. Defaults to True.
-                time_prefix (bool): If True, adds the timestamp as a prefix; otherwise, as a suffix. Defaults to False.
-                custom_timestamp_format (str): A custom format for the timestamp. Defaults to "%Y%m%d%H%M%S".
+            directory (Union[Path, str]): The directory where the file will be located.
+            filename (str): The filename. Must include a valid extension.
+            timestamp (bool): If True, adds a timestamp to the filename. Defaults to True.
+            dir_exist_ok (bool): If True, does not raise an error if the directory exists. Defaults to True.
+            time_prefix (bool): If True, adds the timestamp as a prefix; otherwise, as a suffix. Defaults to False.
+            custom_timestamp_format (str): A custom format for the timestamp. Defaults to "%Y%m%d%H%M%S".
 
         Returns:
                 Path: The full path to the file.
@@ -432,6 +573,11 @@ class SysUtil:
         return full_path
 
     @staticmethod
+    @deprecated(
+        "Deprecated since v0.3, will be removed in v1.0. Use lionfuncs.list_files instead",
+        category=DeprecationWarning,
+        stacklevel=2,
+    )
     def list_files(dir_path: Path | str, extension: str = None) -> list[Path]:
         """
         Lists all files in a specified directory with an optional filter for file extensions.
@@ -455,6 +601,11 @@ class SysUtil:
             return list(dir_path.glob("*"))
 
     @staticmethod
+    @deprecated(
+        "Deprecated since v0.3, will be removed in v1.0. Use lionfuncs.copy_file instead",
+        category=DeprecationWarning,
+        stacklevel=2,
+    )
     def copy_file(src: Path | str, dest: Path | str) -> None:
         """
         Copies a file from a source path to a destination path.
@@ -475,6 +626,11 @@ class SysUtil:
         copy2(src, dest)
 
     @staticmethod
+    @deprecated(
+        "Deprecated since v0.3, will be removed in v1.0. Use lionfuncs.get_file_size instead",
+        category=DeprecationWarning,
+        stacklevel=2,
+    )
     def get_size(path: Path | str) -> int:
         """
         Gets the size of a file or total size of files in a directory.
@@ -499,6 +655,11 @@ class SysUtil:
             raise FileNotFoundError(f"{path} does not exist.")
 
     @staticmethod
+    @deprecated(
+        "Deprecated since v0.3, will be removed in v1.0. Use lionfuncs.save_to_file instead",
+        category=DeprecationWarning,
+        stacklevel=2,
+    )
     def save_to_file(
         text,
         directory: Path | str,
@@ -544,3 +705,6 @@ class SysUtil:
             print(f"Text saved to: {file_path}")
 
         return True
+
+
+__all__ = ["SysUtil"]

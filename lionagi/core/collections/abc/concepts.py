@@ -227,12 +227,6 @@ class Sendable(BaseModel, ABC):
             return value
 
         a = get_lion_id(value)
-        if not isinstance(a, str) or len(a) != 32:
-            raise LionTypeError(
-                "Invalid sender or recipient value. "
-                "Expected a valid node id or one of "
-                "'system' or 'user'."
-            )
         return a
 
 
