@@ -257,18 +257,8 @@ class Directive(ABC):
     #         *args: Positional arguments for directing the directive.
     #         **kwargs: Keyword arguments for directing the directive.
     #     """
-
-    @property
-    def class_name(self) -> str:
-        """Get the class name of the directive.
-
-        Returns:
-            str: The class name of the directive.
-        """
-        return self._class_name()
-
     @classmethod
-    def _class_name(cls) -> str:
+    def class_name(cls) -> str:
         """Get the class name of the directive.
 
         Returns:
