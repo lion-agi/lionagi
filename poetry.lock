@@ -685,50 +685,51 @@ testing = ["Django", "attrs", "colorama", "docopt", "pytest (<7.0.0)"]
 
 [[package]]
 name = "lion-core"
-version = "0.4.2"
+version = "0.5.0"
 description = "A core package for the Lion framework."
 optional = false
 python-versions = "<4.0,>=3.10"
 files = [
-    {file = "lion_core-0.4.2-py3-none-any.whl", hash = "sha256:bc94cced28080c9237541c66442841e369433a29644a4b7a5958617f847ec5e9"},
-    {file = "lion_core-0.4.2.tar.gz", hash = "sha256:420afbf1d1bc8845894643345c01344ef4b80f4df43d84127e526d28f927e170"},
+    {file = "lion_core-0.5.0-py3-none-any.whl", hash = "sha256:d2798c9e58aca527550e3bfb1dbabe0975f1d8adad4f7e5b5db3781f5f15cb76"},
+    {file = "lion_core-0.5.0.tar.gz", hash = "sha256:b4a1d40ffcd2a4d32b737e43666119f834ba356d31c228e9b5dba9b4cb9d1325"},
 ]
 
 [package.dependencies]
+lion-service = ">=1.0.1,<2.0.0"
 lionabc = ">=1.0.1,<2.0.0"
-lionfuncs = ">=1.1.2,<2.0.0"
+lionfuncs = ">=1.2.1,<2.0.0"
 
 [[package]]
 name = "lion-openai"
-version = "0.1.5"
+version = "1.0.1"
 description = ""
 optional = false
 python-versions = "<4.0,>=3.10"
 files = [
-    {file = "lion_openai-0.1.5-py3-none-any.whl", hash = "sha256:9e8b8f5d336fe3b9c038b6bdd25d5776ad63706399394dd82ea1247aa002005a"},
-    {file = "lion_openai-0.1.5.tar.gz", hash = "sha256:0df586f1dc1a54e5dd102548231f40587fdd22a1c47adf6d0cdad4ef24a82a24"},
+    {file = "lion_openai-1.0.1-py3-none-any.whl", hash = "sha256:153194fdf3a24b28a8c0a343aa8a888765f2d8de90f43ee870503d7d2e389a02"},
+    {file = "lion_openai-1.0.1.tar.gz", hash = "sha256:353681742218be4f76fcf8f345eb26fbf932fd86dcc2d5095127488e4d328639"},
 ]
 
 [package.dependencies]
 aiohttp = ">=3.10.5,<4.0.0"
-lion-service = "0.1.1"
+lion-service = ">=1.0.1,<2.0.0"
 pillow = ">=10.4.0,<11.0.0"
 pyyaml = ">=6.0.2,<7.0.0"
 tiktoken = ">=0.7.0,<0.8.0"
 
 [[package]]
 name = "lion-service"
-version = "0.1.1"
+version = "1.0.1"
 description = ""
 optional = false
 python-versions = "<4.0,>=3.10"
 files = [
-    {file = "lion_service-0.1.1-py3-none-any.whl", hash = "sha256:a10286dba8bd59a1ae65cbbda5819175ca78c60cf52fd5a2769fb02e1fc5801e"},
-    {file = "lion_service-0.1.1.tar.gz", hash = "sha256:ecb844ce4a51b87b84b71677cc690b9762a1ddc38c95fb417c1d95fb76abb917"},
+    {file = "lion_service-1.0.1-py3-none-any.whl", hash = "sha256:db5209e72503541121532cc8a1b29a4eac44f71d18e4824754c2bc33db6c779e"},
+    {file = "lion_service-1.0.1.tar.gz", hash = "sha256:7ae844caf41aa258cdcc85bed507dcc7b71c815c47c54d7162c87494bfcf7beb"},
 ]
 
 [package.dependencies]
-pydantic = ">=2.9.2,<3.0.0"
+pydantic = ">=2.0.0,<3.0.0"
 tiktoken = ">=0.7.0,<0.8.0"
 
 [[package]]
@@ -2099,4 +2100,4 @@ propcache = ">=0.2.0"
 [metadata]
 lock-version = "2.0"
 python-versions = "^3.10"
-content-hash = "cd9bfc7a2d46a49942be3b7506e1f51202def76a64044f94052d8f25b6feecb6"
+content-hash = "4434ad511787f8911686bf31cd674ade69bbecd564921ffd158d8ee5126993e3"

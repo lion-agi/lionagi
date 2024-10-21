@@ -7,7 +7,7 @@ classifiers=[
 
 [tool.poetry]
 name = "lionagi"
-version = "0.3.7"
+version = "0.4.0"
 description = "Towards automated general intelligence."
 authors = ["HaiyangLi <quantocean.li@gmail.com>"]
 readme = "README.md"
@@ -16,10 +16,9 @@ readme = "README.md"
 python = "^3.10"
 aiocache = "^0.12.0"
 ipython = "^8.0.0"
-lion-core = "^0.4.0"
-lion-openai = "^0.1.5"
+lion-core = "^0.5.0"
+lion-openai = "^1.0.1"
 python-dotenv = "^1.0.1"
-lionfuncs = "^1.2.1"
 
 [tool.poetry.group.dev.dependencies]
 isort = "^5.13.2"
