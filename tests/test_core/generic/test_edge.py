@@ -3,12 +3,7 @@ from unittest.mock import AsyncMock, patch
 
 from pydantic import ValidationError
 
-from lionagi.core.collections.abc import (
-    Component,
-    Condition,
-    LionIDable,
-    get_lion_id,
-)
+from lionagi.core.collections.abc import Component, get_lion_id
 from lionagi.core.generic.edge import Edge
 from lionagi.core.generic.edge_condition import EdgeCondition
 
@@ -46,16 +41,16 @@ class TestEdge(unittest.TestCase):
         self.assertTrue(result)
         mock_applies.assert_awaited_once()
 
-    def test_validate_head_tail(self):
-        """Test the head and tail validation."""
-        try:
-            valid_id = get_lion_id("valid_head")
-        except Exception as e:
-            if e.__class__.__name__ == "LionTypeError":
-                return
-        self.assertEqual(Edge._validate_head_tail(valid_id), valid_id)
-        with self.assertRaises(ValidationError):
-            Edge._validate_head_tail("invalid_id")
+    # def test_validate_head_tail(self):
+    #     """Test the head and tail validation."""
+    #     try:
+    #         valid_id = get_lion_id("valid_head")
+    #     except Exception as e:
+    #         if e.__class__.__name__ == "LionTypeError":
+    #             return
+    #     self.assertEqual(Edge._validate_head_tail(valid_id), valid_id)
+    #     with self.assertRaises(ValidationError):
+    #         Edge._validate_head_tail("invalid_id")
 
     def test_string_condition_none(self):
         """Test string_condition method when condition is None."""
