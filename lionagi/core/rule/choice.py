@@ -1,4 +1,4 @@
-from lionfuncs import choose_most_similar, string_similarity
+from lionfuncs import string_similarity
 
 from lionagi.core.rule.base import Rule
 
