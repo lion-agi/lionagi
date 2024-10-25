@@ -1,7 +1,7 @@
 import re
 
 from lion_core.generic.note import note
-from lionfuncs import extract_json_block, md_to_json, to_dict
+from lionfuncs import extract_block, to_dict, to_json
 
 identifier = [
     "tool_uses",
@@ -37,7 +37,7 @@ def _force_parse_json(s_: str) -> tuple:
             out = to_dict(
                 s_,
                 str_type="json",
-                parser=md_to_json,
+                parser=to_json,
                 suppress=True,
             )
             if not out:
@@ -51,7 +51,7 @@ def _force_parse_json(s_: str) -> tuple:
                 out = to_dict(
                     s_,
                     str_type="json",
-                    parser=extract_json_block,
+                    parser=extract_block,
                     suppress=True,
                 )
             if out and isinstance(out, dict):

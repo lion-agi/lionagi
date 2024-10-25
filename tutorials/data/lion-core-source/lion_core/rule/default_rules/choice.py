@@ -1,5 +1,5 @@
 from lion_core.rule.base import Rule
-from lionfuncs import choose_most_similar
+from lionfuncs import string_similarity
 from typing_extensions import override
 
 
@@ -26,8 +26,8 @@ class ChoiceRule(Rule):
         Returns:
             str: The most similar value from the set of predefined choices.
         """
-        return choose_most_similar(
+        return string_similarity(
             word=value,
             correct_words_list=self.keys,
-            **self.validation_kwargs,
+            return_most_similar=True,
         )
