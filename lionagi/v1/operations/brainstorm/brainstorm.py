@@ -5,6 +5,8 @@ from lion_core.operative.step_model import StepModel
 from lion_core.session.branch import Branch
 from pydantic import BaseModel, Field
 
+from .prompt import PROMPT
+
 
 class BrainstormModel(BaseModel):
 
@@ -14,11 +16,8 @@ class BrainstormModel(BaseModel):
     )
     ideas: list[StepModel] = Field(
         default_factory=list,
-        description="**Provide a list of ideas needed to accomplish the objective. Each step should be as described in a `PlanStepModel`.**",
+        description="**Provide a list of ideas needed to accomplish the objective.**",
     )
-
-
-PROMPT = "Please follow prompt and provide {num_ideas} different ideas for the next step"
 
 
 # the inner steps are not immidiately executed
