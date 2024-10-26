@@ -35,7 +35,7 @@ comedian = Branch(
 )
 
 # Chat asynchronously
-response = await branch.chat(
+response = await comedian.chat(
     "tell me a joke on knight vs dragon"
 )
 ```
