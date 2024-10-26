@@ -8,19 +8,17 @@ from typing import Any
 from lion_core.session.branch import Branch
 from lion_service import iModel
 from lionfuncs import string_similarity
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
+
+from lionagi.libs.sys_util import SysUtil
 
 from .config import DEFAULT_CHAT_CONFIG
 
-PROMPT = "Please select up to {max_num_selections} items from the following list {choices}. Provide the selection(s), and no comments from you"
-
-
-def is_enum(choices):
-    return inspect.isclass(choices) and issubclass(choices, Enum)
+PROMPT = "Please select up to {max_num_selections} items from the following list {choices}. Provide the selection(s) into appropriate field in format required, and no comments from you"
 
 
 class SelectionModel(BaseModel):
-    selected: list[str | Enum] = []
+    selected: list[str | Enum] = Field(default_factory=list)
 
 
 async def select(
@@ -43,15 +41,22 @@ async def select(
     system_sender=None,
     system_datetime=None,
     return_branch=False,
-    **kwargs,  # additional chat arguments
+    num_parse_retries: int = 3,
+    retry_imodel: iModel = None,
+    branch_user=None,
+    **kwargs,
 ) -> SelectionModel | tuple[SelectionModel, Branch]:
-    imodel = imodel or iModel(**DEFAULT_CHAT_CONFIG)
+
+    if branch and branch.imodel:
+        imodel = imodel or branch.imodel
+    else:
+        imodel = imodel or iModel(**DEFAULT_CHAT_CONFIG)
 
     selections = []
-    if return_enum and not is_enum(choices):
+    if return_enum and not _is_enum(choices):
         raise ValueError("return_enum can only be True if choices is an Enum")
 
-    if is_enum(choices):
+    if _is_enum(choices):
         selections = [selection.value for selection in choices]
     else:
         selections = choices
@@ -63,7 +68,13 @@ async def select(
     if instruction:
         prompt = f"{instruction}\n\n{prompt} \n\n "
 
-    branch = branch or Branch(imodel=imodel, tools=tools)
+    branch = branch or Branch(imodel=imodel)
+    if branch_user:
+        try:
+            a = SysUtil.get_id(branch_user)
+            branch.user = a
+        except:
+            branch.user = branch_user
     if system:
         branch.add_message(
             system=system,
@@ -71,6 +82,7 @@ async def select(
             system_sender=system_sender,
         )
 
+    kwargs["frozen"] = False
     response_model: SelectionModel = await branch.operate(
         instruction=prompt,
         guidance=guidance,
@@ -82,6 +94,9 @@ async def select(
         operative_model=SelectionModel,
         clear_messages=clear_messages,
         imodel=imodel,
+        num_parse_retries=num_parse_retries,
+        retry_imodel=retry_imodel,
+        tools=tools,
         **kwargs,
     )
 
@@ -111,7 +126,16 @@ async def select(
                     out.append(member)
         corrected_selections = out
 
-    response_model.selected = corrected_selections
+    if isinstance(response_model, BaseModel):
+        response_model.selected = corrected_selections
+
+    elif isinstance(response_model, dict):
+        response_model["selected"] = corrected_selections
+
     if return_branch:
         return response_model, branch
     return response_model
+
+
+def _is_enum(choices):
+    return inspect.isclass(choices) and issubclass(choices, Enum)
