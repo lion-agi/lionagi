@@ -1,4 +1,4 @@
-![PyPI - Version](https://img.shields.io/pypi/v/lionagi?labelColor=233476aa&color=231fc935) 
+![PyPI - Version](https://img.shields.io/pypi/v/lionagi?labelColor=233476aa&color=231fc935)
 ![PyPI - Downloads](https://img.shields.io/pypi/dm/lionagi?color=blue)
 ![Dependencies](https://img.shields.io/badge/dependencies-4-brightgreen)
 ![Python Version](https://img.shields.io/badge/python-3.10%2B-blue)
@@ -120,7 +120,7 @@ graph TB
             AA[Analysis Agent]
             VA[Validation Agent]
         end
-        
+
         subgraph Agent Controls
             AC[Access Control]
             AM[Action Monitor]
@@ -133,7 +133,7 @@ graph TB
             TM[Tool Registry]
             TP[Tool Policies]
         end
-        
+
         subgraph Data Sources
             DS[Data Access]
             DV[Data Validation]
@@ -146,7 +146,7 @@ graph TB
     RA & AA & VA --> AC
     AC --> TM
     TM --> DS
-    
+
     %% Control Flow
     ORC --> SEC
     SEC --> MON
