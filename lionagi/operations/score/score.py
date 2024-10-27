@@ -7,9 +7,8 @@ from lion_service import iModel
 from lionfuncs import to_num
 from pydantic import BaseModel, ConfigDict, Field, field_validator
 
-from .config import DEFAULT_CHAT_CONFIG
-
-PROMPT = "Please follow prompt and provide {num_scores} numeric score(s) in {score_range} for the given context. Return as {return_precision} format"
+from ..config import DEFAULT_CHAT_CONFIG
+from .prompt import PROMPT
 
 
 class ScoreModel(BaseModel):

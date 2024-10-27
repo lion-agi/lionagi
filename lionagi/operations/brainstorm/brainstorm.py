@@ -1,48 +1,46 @@
-from typing import Any
-
+from lion_core.action.tool import Tool
+from lion_core.communication import Instruction, System
 from lion_core.operative.step_model import StepModel
 from lion_core.session.branch import Branch
+from lion_core.types import IDTypes
 from lion_service import iModel
 from pydantic import BaseModel, Field
+from pydantic.types import JsonValue
 
-from .config import DEFAULT_CHAT_CONFIG
+from ..config import DEFAULT_CHAT_CONFIG
+from .fields import IDEAS_FIELD, TOPIC_FIELD
+from .prompt import PROMPT
+
+TOPIC_ = TOPIC_FIELD.to_dict()
+IDEAS_ = IDEAS_FIELD.to_dict()
 
 
 class BrainstormModel(BaseModel):
 
-    topic: str = Field(
-        default_factory=str,
-        description="**Specify the topic or theme for the brainstorming session.**",
-    )
-    ideas: list[StepModel] = Field(
-        default_factory=list,
-        description="**Provide a list of ideas needed to accomplish the objective. Each step should be as described in a `PlanStepModel`.**",
-    )
-
-
-PROMPT = "Please follow prompt and provide {num_steps} different ideas for the next step"
+    topic: str = Field(**TOPIC_)
+    ideas: list[StepModel] = Field(**IDEAS_)
 
 
 async def brainstorm(
     num_steps: int = 3,
-    instruction=None,
-    guidance=None,
-    context=None,
-    system=None,
+    instruction: JsonValue | Instruction = None,
+    guidance: JsonValue = None,
+    context: JsonValue = None,
+    system: JsonValue | System = None,
     reason: bool = False,
     actions: bool = False,
-    tools: Any = None,
+    tools: bool | str | list | Tool = None,
     imodel: iModel = None,
     branch: Branch = None,
-    sender=None,
-    recipient=None,
+    sender: IDTypes.SenderRecipient = None,
+    recipient: IDTypes.SenderRecipient = None,
     clear_messages: bool = False,
-    system_sender=None,
-    system_datetime=None,
-    return_branch=False,
-    num_parse_retries: int = 3,
+    system_sender: IDTypes.SenderRecipient = None,
+    system_datetime: bool | str = None,
+    return_branch: bool = False,
+    num_parse_retries: int = 0,
     retry_imodel: iModel = None,
-    branch_user=None,
+    branch_user: IDTypes.SenderRecipient = None,
     **kwargs,  # additional operate arguments
 ):
     if branch and branch.imodel:
@@ -64,7 +62,10 @@ async def brainstorm(
         )
     _context = [{"operation": prompt}]
     if context:
-        _context.append(context)
+        if isinstance(context, list):
+            _context.extend(context)
+        else:
+            _context.append(context)
 
     response = await branch.operate(
         instruction=instruction,

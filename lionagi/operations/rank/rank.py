@@ -7,18 +7,14 @@ from lion_core.session.session import Session
 from lion_service import iModel
 from lionfuncs import alcall, to_list
 
-from .config import DEFAULT_CHAT_CONFIG
-from .score import score
-
-PROMPT = (
-    "Given all items: \n {choices} \n\n Please follow prompt and give score "
-    "to the item of interest: \n {item} \n\n"
-)
+from ..config import DEFAULT_CHAT_CONFIG
+from ..score.score import score
+from .prompt import PROMPT
 
 
 async def rank(
     choices: list[Any],
-    num_scorers: int = 5,
+    num_scorers: int = 1,
     instruction=None,
     guidance=None,
     context=None,
