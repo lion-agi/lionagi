@@ -1,3 +1,6 @@
+"""deprecated, do not use"""
+
+
 class LangchainBridge:
 
     @staticmethod

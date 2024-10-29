@@ -1,115 +1,24 @@
 from __future__ import annotations
 
-from pathlib import Path
-from typing import Any, Literal
+from typing import Any, TypeVar
 
-import pandas as pd
 from lion_core.generic.component import Component
-from lionfuncs import LN_UNDEFINED, to_dict, to_json, to_str
+from lionfuncs import LN_UNDEFINED
 from typing_extensions import deprecated
 
 from ._component_adapters import ComponentAdapterRegistry
+from .utils import from_obj
 
-
-def from_obj(
-    cls,
-    obj: Any,
-    /,
-    handle_how: Literal["suppress", "raise", "coerce", "coerce_key"] = "raise",
-    fuzzy_parse: bool = False,
-) -> Component | list[Component]:
-
-    if isinstance(obj, pd.DataFrame):
-        obj = [i for _, i in obj.iterrows()]
-
-    def _obj_to_dict(obj_: Any, /) -> dict:
-
-        dict_ = None
-
-        if isinstance(obj_, dict):
-            return obj_
-
-        fp = None
-        if isinstance(obj_, str):
-            try:
-                fp = Path(obj_)
-            except Exception:
-                pass
-        fp = fp or obj_
-        if isinstance(fp, Path):
-            suffix = fp.suffix
-            if suffix in cls.list_adapters():
-                return cls.adapt_from(obj_, suffix)
-
-        if isinstance(obj_, str):
-            if "{" in obj_ or "}" in obj_:
-                dict_ = to_json(obj_, fuzzy_parse=fuzzy_parse)
-            if isinstance(dict_, dict):
-                return dict_
-            else:
-                msg = obj_[:100] + "..." if len(obj_) > 100 else obj_
-                raise ValueError(
-                    f"The value input cannot be converted to a valid dict: {msg}"
-                )
-
-        dict_ = to_dict(obj_, suppress=True)
-        if not dict_:
-            raise ValueError(f"Unsupported object type: {type(obj)}")
-        return dict_
-
-    def _dispatch_from_obj(
-        obj_: Any,
-        /,
-        handle_how: Literal[
-            "suppress", "raise", "coerce", "coerce_key"
-        ] = "raise",
-    ) -> Component:
-        try:
-            type_ = (
-                str(type(obj_))
-                .strip("_")
-                .strip("<")
-                .strip(">")
-                .strip(".")
-                .lower()
-            )
-
-            if "langchain" in type_:
-                return cls.adapt_from(obj_, "langchain_doc")
-
-            if "llamaindex" in type_:
-                return cls.adapt_from(obj_, "llama_index_node")
-
-            if "pandas" in type_ and "series" in type_:
-                return cls.adapt_from(obj_, "pd_series")
-
-            obj_ = _obj_to_dict(obj_)
-            return cls.from_dict(obj_)
-
-        except Exception as e:
-            if handle_how == "raise":
-                raise e
-            if handle_how == "coerce":
-                return cls.from_dict({"content": obj_})
-            if handle_how == "suppress":
-                return None
-            if handle_how == "coerce_key":
-                return cls.from_dict({str(k): v for k, v in obj_.items()})
-
-    if isinstance(obj, (list, tuple)) and len(obj) > 1:
-        return [_dispatch_from_obj(i, handle_how=handle_how) for i in obj]
-    return _dispatch_from_obj(obj, handle_how=handle_how)
+T = TypeVar("T", bound=Component)
 
 
 # legacy methods (for backward compatibility )
-
-
 @deprecated(
     "Use Component.all_fields instead",
     category=DeprecationWarning,
     stacklevel=2,
 )
-def _all_fields(self):
+def _all_fields(self: T):
     return self.all_fields
 
 
@@ -118,7 +27,7 @@ def _all_fields(self):
     category=DeprecationWarning,
     stacklevel=2,
 )
-def _field_annotations(self, *args, **kwargs) -> dict[str, Any]:
+def _field_annotations(self: T, *args, **kwargs) -> dict[str, Any]:
     return self.__annotations__
 
 
@@ -127,7 +36,7 @@ def _field_annotations(self, *args, **kwargs) -> dict[str, Any]:
     category=DeprecationWarning,
     stacklevel=2,
 )
-def to_json_str(self, *args, **kwargs) -> str:
+def to_json_str(self: T, *args, **kwargs) -> str:
     return self.adapt_to("json")
 
 
@@ -136,7 +45,7 @@ def to_json_str(self, *args, **kwargs) -> str:
     category=DeprecationWarning,
     stacklevel=2,
 )
-def to_json_file(self, *args, **kwargs) -> str:
+def to_json_file(self: T, *args, **kwargs) -> str:
     return self.adapt_to(".json", **kwargs)
 
 
@@ -145,8 +54,8 @@ def to_json_file(self, *args, **kwargs) -> str:
     category=DeprecationWarning,
     stacklevel=2,
 )
-def to_pd_series(self, *args, **kwargs) -> str:
-    return self.adapt_to("pd_series", **kwargs)
+def to_pd_series(self: T, *args, **kwargs) -> str:
+    return self.adapt_to("pd_series")
 
 
 @deprecated(
@@ -154,8 +63,8 @@ def to_pd_series(self, *args, **kwargs) -> str:
     category=DeprecationWarning,
     stacklevel=2,
 )
-def to_llama_index_node(self, *args, **kwargs) -> str:
-    return self.adapt_to("llama_index_node", **kwargs)
+def to_llama_index_node(self: T, *args, **kwargs) -> str:
+    return self.adapt_to("llama_index_node")
 
 
 @deprecated(
@@ -163,8 +72,8 @@ def to_llama_index_node(self, *args, **kwargs) -> str:
     category=DeprecationWarning,
     stacklevel=2,
 )
-def to_langchain_doc(self, *args, **kwargs) -> str:
-    return self.adapt_to("langchain_doc", **kwargs)
+def to_langchain_doc(self: T, *args, **kwargs) -> str:
+    return self.adapt_to("langchain_doc")
 
 
 @deprecated(
@@ -172,7 +81,7 @@ def to_langchain_doc(self, *args, **kwargs) -> str:
     category=DeprecationWarning,
     stacklevel=2,
 )
-def _meta_pop(self, indices, default=LN_UNDEFINED):
+def _meta_pop(self: T, indices, default=LN_UNDEFINED):
     return self.metadata.pop(indices, default)
 
 
@@ -181,7 +90,7 @@ def _meta_pop(self, indices, default=LN_UNDEFINED):
     category=DeprecationWarning,
     stacklevel=2,
 )
-def _meta_insert(self, indices, value):
+def _meta_insert(self: T, indices, value):
     self.metadata.insert(indices, value)
 
 
@@ -190,7 +99,7 @@ def _meta_insert(self, indices, value):
     category=DeprecationWarning,
     stacklevel=2,
 )
-def _meta_set(self, indices, value):
+def _meta_set(self: T, indices, value):
     self.metadata.set(indices, value)
 
 
@@ -199,7 +108,7 @@ def _meta_set(self, indices, value):
     category=DeprecationWarning,
     stacklevel=2,
 )
-def _meta_get(self, indices, default=LN_UNDEFINED):
+def _meta_get(self: T, indices, default=LN_UNDEFINED):
     return self.metadata.get(indices, default)
 
 
@@ -208,7 +117,7 @@ def _meta_get(self, indices, default=LN_UNDEFINED):
     category=DeprecationWarning,
     stacklevel=2,
 )
-def _field_has_attr(self, k, attr) -> bool:
+def _field_has_attr(self: T, k, attr) -> bool:
     return self.field_hasattr(k, attr)
 
 
@@ -217,7 +126,7 @@ def _field_has_attr(self, k, attr) -> bool:
     category=DeprecationWarning,
     stacklevel=2,
 )
-def _get_field_attr(self, k, attr, default=LN_UNDEFINED):
+def _get_field_attr(self: T, k, attr, default=LN_UNDEFINED):
     return self.field_getattr(k, attr, default)
 
 
@@ -227,7 +136,7 @@ def _get_field_attr(self, k, attr, default=LN_UNDEFINED):
     stacklevel=2,
 )
 def _add_field(
-    self,
+    self: T,
     field: str,
     annotation: Any = LN_UNDEFINED,
     default: Any = LN_UNDEFINED,
@@ -246,7 +155,7 @@ def _add_field(
 
 
 deprecated_methods = {
-    "_all_fields": _all_fields,
+    "_all_fields": property(_all_fields),
     "_field_annotations": _field_annotations,
     "to_json_str": to_json_str,
     "to_json_file": to_json_file,

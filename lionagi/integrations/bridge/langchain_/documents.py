@@ -1,3 +1,5 @@
+"""deprecated, do not use"""
+
 from collections.abc import Callable
 from typing import Any, Dict, List, TypeVar, Union
 

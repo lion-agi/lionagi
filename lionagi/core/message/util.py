@@ -1,3 +1,5 @@
+"""deprecated, do not use, will remove in v1.0.0"""
+
 import json
 import re
 

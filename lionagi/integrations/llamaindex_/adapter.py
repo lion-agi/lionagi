@@ -1,5 +1,4 @@
 from lion_core.protocols.adapters import Adapter
-from lion_core.types import LN_UNDEFINED
 from lionfuncs import check_import, to_dict
 
 from lionagi.core.generic.component import Component
@@ -26,9 +25,7 @@ class LlamaIndexNodeAdapter(Adapter):
         lion_fields = {
             k: v for k, v in dict_.items() if k in subj_cls.model_fields
         }
-        lion_fields["llama_index_metadata"] = dict_.pop(
-            "metadata", LN_UNDEFINED
-        )
+        lion_fields["llama_index_metadata"] = dict_.pop("metadata", {})
         if (
             isinstance(lion_fields["llama_index_metadata"], dict)
             and "lion_metadata" in lion_fields["llama_index_metadata"]
@@ -36,6 +33,8 @@ class LlamaIndexNodeAdapter(Adapter):
             lion_fields["metadata"] = lion_fields["llama_index_metadata"].pop(
                 "lion_metadata"
             )
+            if (a := lion_fields.pop("class_name", None)) is not None:
+                lion_fields["llama_index_metadata"]["class_name"] = a
         return lion_fields
 
     @classmethod

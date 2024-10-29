@@ -6,9 +6,6 @@ from typing import Any, TypeVar
 
 from pydantic import BaseModel, Field, field_validator
 
-from .component import LionIDable, get_lion_id
-from .exceptions import LionTypeError
-
 T = TypeVar("T")
 
 
@@ -39,7 +36,7 @@ class Record(ABC):
         """Return an iterator over items in the record."""
 
     @abstractmethod
-    def get(self, item: LionIDable, /, default: Any = None) -> T:
+    def get(self, item, /, default: Any = None) -> T:
         """
         Retrieve an item by identifier.
 
@@ -55,7 +52,7 @@ class Record(ABC):
         """
 
     @abstractmethod
-    def __getitem__(self, item: LionIDable) -> T:
+    def __getitem__(self, item) -> T:
         """
         Return an item using a LionIDable identifier.
 
@@ -70,7 +67,7 @@ class Record(ABC):
         """
 
     @abstractmethod
-    def __setitem__(self, item: LionIDable, value: T) -> None:
+    def __setitem__(self, item, value: T) -> None:
         """
         Add or update an item in the record.
 
@@ -82,7 +79,7 @@ class Record(ABC):
         """
 
     @abstractmethod
-    def __contains__(self, item: LionIDable) -> bool:
+    def __contains__(self, item) -> bool:
         """
         Check if an item is in the record, using either an ID or an object.
 
@@ -226,8 +223,8 @@ class Sendable(BaseModel, ABC):
         if value in ["system", "user", "N/A", "assistant"]:
             return value
 
-        a = get_lion_id(value)
-        return a
+        # a = get_lion_id(value)
+        return value
 
 
 class Executable(ABC):
