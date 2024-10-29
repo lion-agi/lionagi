@@ -21,19 +21,33 @@ class LangChainDocumentAdapter(Adapter):
     @classmethod
     def from_obj(cls, subj_cls: type[Component], obj, /):
         dict_ = to_dict(obj)
-        dict_["langchain_metadata"] = dict_.pop("metadata", LN_UNDEFINED)
-        dict_["metadata"] = dict_.pop("lion_metadata", LN_UNDEFINED)
-        dict_["lion_class"] = dict_.pop("lion_class", LN_UNDEFINED)
-        return {k: v for k, v in dict_.items() if v is not LN_UNDEFINED}
+        lion_fields = {
+            k: v for k, v in dict_.items() if k in subj_cls.model_fields
+        }
+        lion_fields["langchain_metadata"] = dict_.pop("metadata", LN_UNDEFINED)
+        if (
+            isinstance(lion_fields["langchain_metadata"], dict)
+            and "lion_metadata" in lion_fields["langchain_metadata"]
+        ):
+            lion_fields["metadata"] = lion_fields["langchain_metadata"].pop(
+                "lion_metadata"
+            )
+        return lion_fields
 
     @classmethod
     def to_obj(cls, subj: Component, /):
-        dict_ = subj.to_dict()
-        lion_meta = dict_.pop("metadata", {})
-        lion_meta["lion_class"] = dict_.pop("lion_class", LN_UNDEFINED)
-        lion_meta = {
-            k: v for k, v in lion_meta.items() if v is not LN_UNDEFINED
+
+        dict_ = to_dict(subj)
+
+        lion_fields = {
+            k: v for k, v in dict_.items() if k in subj.model_fields
         }
-        dict_["lion_metadata"] = lion_meta
-        dict_ = {k: v for k, v in dict_.items() if v is not LN_UNDEFINED}
-        return cls.LangchainDocument(**dict_)
+        extra_fields = {
+            k: v for k, v in dict_.items() if k not in subj.model_fields
+        }
+
+        extra_fields["embedding"] = lion_fields.pop("embedding", [])
+        extra_fields["metadata"] = extra_fields.pop("langchain_metadata", {})
+        extra_fields["metadata"]["lion_metadata"] = lion_fields
+        extra_fields["page_content"] = dict_.pop("page_content", "")
+        return cls.LangchainDocument(**extra_fields)
