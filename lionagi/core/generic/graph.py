@@ -24,7 +24,11 @@ class Graph(Node):
     def internal_edges(self) -> Pile[Edge]:
         """Return a pile of all edges in the graph."""
         return pile(
-            {edge.ln_id: edge for node in self.internal_nodes for edge in node.edges},
+            {
+                edge.ln_id: edge
+                for node in self.internal_nodes
+                for edge in node.edges
+            },
             Edge,
         )
 
@@ -70,7 +74,9 @@ class Graph(Node):
         edge = edge if isinstance(edge, list) else [edge]
         for i in edge:
             if i not in self.internal_edges:
-                raise ItemNotFoundError(f"Edge {i} does not exist in structure.")
+                raise ItemNotFoundError(
+                    f"Edge {i} does not exist in structure."
+                )
             with contextlib.suppress(ItemNotFoundError):
                 self._remove_edge(i)
 
@@ -105,7 +111,8 @@ class Graph(Node):
                     [
                         edge
                         for edge in edges
-                        if edge.label in to_list(label, dropna=True, flatten=True)
+                        if edge.label
+                        in to_list(label, dropna=True, flatten=True)
                     ]
                 )
                 if edges
@@ -124,7 +131,9 @@ class Graph(Node):
     def _remove_edge(self, edge: Edge | str) -> bool:
         """Remove a specific edge from the graph."""
         if edge not in self.internal_edges:
-            raise ItemNotFoundError(f"Edge {edge} does not exist in structure.")
+            raise ItemNotFoundError(
+                f"Edge {edge} does not exist in structure."
+            )
 
         edge = self.internal_edges[edge]
         head: Node = self.internal_nodes[edge.head]
@@ -139,7 +148,8 @@ class Graph(Node):
             [
                 node
                 for node in self.internal_nodes
-                if node.relations["in"].is_empty() and not isinstance(node, Actionable)
+                if node.relations["in"].is_empty()
+                and not isinstance(node, Actionable)
             ]
         )
 
@@ -147,7 +157,9 @@ class Graph(Node):
         """Check if the graph is acyclic (contains no cycles)."""
         node_ids = list(self.internal_nodes.keys())
         check_deque = deque(node_ids)
-        check_dict = {key: 0 for key in node_ids}  # 0: not visited, 1: temp, 2: perm
+        check_dict = {
+            key: 0 for key in node_ids
+        }  # 0: not visited, 1: temp, 2: perm
 
         def visit(key):
             if check_dict[key] == 2:
@@ -202,7 +214,11 @@ class Graph(Node):
         return g
 
     def display(
-        self, node_label="class_name", edge_label="label", draw_kwargs={}, **kwargs
+        self,
+        node_label="class_name",
+        edge_label="label",
+        draw_kwargs={},
+        **kwargs,
     ):
         """Display the graph using NetworkX and Matplotlib."""
         from lionagi.libs import SysUtil

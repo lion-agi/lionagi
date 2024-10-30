@@ -25,7 +25,9 @@ class WorkLog(Progressable):
                 Defaults to 1.
         """
         self.pile = (
-            workpile if workpile and isinstance(workpile, Pile) else pile({}, Work)
+            workpile
+            if workpile and isinstance(workpile, Pile)
+            else pile({}, Work)
         )
         self.pending = progression(workpile) if workpile else progression()
         self.queue = WorkQueue(capacity=capacity, refresh_time=refresh_time)

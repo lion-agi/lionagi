@@ -23,9 +23,12 @@ class InstructionMapEngine(BaseExecutor):
     """
 
     branches: Pile[BranchExecutor] = Field(
-        default_factory=dict, description="The branches of the instruction mapping."
+        default_factory=dict,
+        description="The branches of the instruction mapping.",
     )
-    structure_id: str = Field("", description="The ID of the executable structure.")
+    structure_id: str = Field(
+        "", description="The ID of the executable structure."
+    )
     mail_transfer: Exchange = Field(
         default_factory=Exchange, description="The mail transfer."
     )
@@ -106,7 +109,9 @@ class InstructionMapEngine(BaseExecutor):
         self.mail_manager.add_sources([branch])
         self.structure_id = start_mail.package.package["structure_id"]
 
-        pack = Package(category="start", package="start", request_source=branch.ln_id)
+        pack = Package(
+            category="start", package="start", request_source=branch.ln_id
+        )
         mail = Mail(
             sender=self.ln_id,
             recipient=self.structure_id,
@@ -129,7 +134,9 @@ class InstructionMapEngine(BaseExecutor):
         base_branch = self.branches[source_branch_id]
 
         pack = Package(
-            category="node", package=node_list[0], request_source=source_branch_id
+            category="node",
+            package=node_list[0],
+            request_source=source_branch_id,
         )
         mail = Mail(
             sender=self.mail_transfer.ln_id,
@@ -167,7 +174,9 @@ class InstructionMapEngine(BaseExecutor):
             self.branches[branch.ln_id] = branch
             self.mail_manager.add_sources([branch])
             node_pacakge = Package(
-                category="node", package=node_list[i], request_source=source_branch_id
+                category="node",
+                package=node_list[i],
+                request_source=source_branch_id,
             )
             node_mail = Mail(
                 sender=self.mail_transfer.ln_id,

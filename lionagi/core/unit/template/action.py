@@ -58,7 +58,7 @@ class ActionTemplate(BaseUnitForm):
 
         self.task = f"""
 Perform reasoning and prepare actions with GIVEN TOOLS ONLY.
-1. additional instruction: {instruction or "N/A"}. 
+1. additional instruction: {instruction or "N/A"}.
 2. additional context: {context or "N/A"}.
 """
         if confidence_score:

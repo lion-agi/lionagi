@@ -1,4 +1,5 @@
-from typing import Any, Callable
+from collections.abc import Callable
+from typing import Any
 
 from lionagi.core.executor.base_executor import BaseExecutor
 from lionagi.core.generic.node import Node
@@ -41,7 +42,9 @@ class BaseAgent(Node):
         Args:
             refresh_time: The time interval (in seconds) for checking the execution states (default: 1).
         """
-        while not self.structure.execute_stop or not self.executable.execute_stop:
+        while (
+            not self.structure.execute_stop or not self.executable.execute_stop
+        ):
             await AsyncUtil.sleep(refresh_time)
         self.mail_manager.execute_stop = True
 

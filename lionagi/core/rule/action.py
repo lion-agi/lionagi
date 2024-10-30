@@ -49,7 +49,10 @@ class ActionRequestRule(MappingRule):
         Raises:
             ActionError: If the action request is invalid.
         """
-        if isinstance(value, dict) and list(value.keys()) >= ["function", "arguments"]:
+        if isinstance(value, dict) and list(value.keys()) >= [
+            "function",
+            "arguments",
+        ]:
             return value
         raise ActionError(f"Invalid action request: {value}")
 

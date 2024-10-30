@@ -3,8 +3,9 @@ from __future__ import annotations
 import asyncio
 import functools
 import logging
+from collections.abc import Callable, Coroutine
 from concurrent.futures import ThreadPoolExecutor
-from typing import Any, Callable, Coroutine
+from typing import Any
 
 from lionagi.libs.ln_async import AsyncUtil
 from lionagi.libs.ln_convert import to_list
@@ -65,9 +66,13 @@ def lcall(
     """
     lst = to_list(input_, dropna=dropna)
     if len(to_list(func)) != 1:
-        raise ValueError("There must be one and only one function for list calling.")
+        raise ValueError(
+            "There must be one and only one function for list calling."
+        )
 
-    return to_list([func(i, **kwargs) for i in lst], flatten=flatten, dropna=dropna)
+    return to_list(
+        [func(i, **kwargs) for i in lst], flatten=flatten, dropna=dropna
+    )
 
 
 async def alcall(
@@ -122,7 +127,9 @@ async def alcall(
     outs = await asyncio.gather(*tasks)
     outs_ = []
     for i in outs:
-        outs_.append(await i if isinstance(i, (Coroutine, asyncio.Future)) else i)
+        outs_.append(
+            await i if isinstance(i, (Coroutine, asyncio.Future)) else i
+        )
 
     return to_list(outs_, flatten=flatten, dropna=dropna)
 
@@ -260,7 +267,9 @@ async def tcall(
     async def async_call() -> tuple[Any, float]:
         start_time = SysUtil.get_now(datetime_=False)
         if timeout is not None:
-            result = await AsyncUtil.execute_timeout(func(*args, **kwargs), timeout)
+            result = await AsyncUtil.execute_timeout(
+                func(*args, **kwargs), timeout
+            )
             duration = SysUtil.get_now(datetime_=False) - start_time
             return (result, duration) if timing else result
         try:
@@ -282,12 +291,18 @@ async def tcall(
             handle_error(e)
 
     def handle_error(e: Exception):
-        _msg = f"{err_msg} Error: {e}" if err_msg else f"An error occurred: {e}"
+        _msg = (
+            f"{err_msg} Error: {e}" if err_msg else f"An error occurred: {e}"
+        )
         print(_msg)
         if not ignore_err:
             raise
 
-    return await async_call() if AsyncUtil.is_coroutine_func(func) else sync_call()
+    return (
+        await async_call()
+        if AsyncUtil.is_coroutine_func(func)
+        else sync_call()
+    )
 
 
 async def rcall(
@@ -348,7 +363,9 @@ async def rcall(
     start = SysUtil.get_now(datetime_=False)
     for attempt in range(retries + 1) if retries == 0 else range(retries):
         try:
-            err_msg = f"Attempt {attempt + 1}/{retries}: " if retries > 0 else None
+            err_msg = (
+                f"Attempt {attempt + 1}/{retries}: " if retries > 0 else None
+            )
             if timing:
                 return (
                     await _tcall(
@@ -362,7 +379,9 @@ async def rcall(
             last_exception = e
             if attempt < retries:
                 if verbose:
-                    print(f"Attempt {attempt + 1}/{retries} failed: {e}, retrying...")
+                    print(
+                        f"Attempt {attempt + 1}/{retries} failed: {e}, retrying..."
+                    )
                 await asyncio.sleep(delay)
                 delay *= backoff_factor
             else:
@@ -485,9 +504,13 @@ async def _tcall(
                 else default
             )
         else:
-            raise asyncio.TimeoutError(err_msg)  # Re-raise the timeout exception
+            raise asyncio.TimeoutError(
+                err_msg
+            )  # Re-raise the timeout exception
     except Exception as e:
-        err_msg = f"{err_msg} Error: {e}" if err_msg else f"An error occurred: {e}"
+        err_msg = (
+            f"{err_msg} Error: {e}" if err_msg else f"An error occurred: {e}"
+        )
         if ignore_err:
             return (
                 (default, SysUtil.get_now(datetime_=False) - start_time)
@@ -645,7 +668,9 @@ class CallDecorator:
         def decorator(func: Callable[..., Any]) -> Callable:
             @functools.wraps(func)
             async def wrapper(*args, **kwargs) -> Any:
-                return await rcall(func, *args, default=default_value, **kwargs)
+                return await rcall(
+                    func, *args, default=default_value, **kwargs
+                )
 
             return wrapper
 
@@ -863,8 +888,12 @@ class CallDecorator:
                         k: preprocess(v, *preprocess_args, **preprocess_kwargs)
                         for k, v in kwargs.items()
                     }
-                    result = await func(*preprocessed_args, **preprocessed_kwargs)
-                    return postprocess(result, *postprocess_args, **postprocess_kwargs)
+                    result = await func(
+                        *preprocessed_args, **preprocessed_kwargs
+                    )
+                    return postprocess(
+                        result, *postprocess_args, **postprocess_kwargs
+                    )
 
                 return async_wrapper
             else:
@@ -880,7 +909,9 @@ class CallDecorator:
                         for k, v in kwargs.items()
                     }
                     result = func(*preprocessed_args, **preprocessed_kwargs)
-                    return postprocess(result, *postprocess_args, **postprocess_kwargs)
+                    return postprocess(
+                        result, *postprocess_args, **postprocess_kwargs
+                    )
 
                 return sync_wrapper
 
@@ -1165,7 +1196,9 @@ class Throttle:
 
         return wrapper
 
-    async def __call_async__(self, func: Callable[..., Any]) -> Callable[..., Any]:
+    async def __call_async__(
+        self, func: Callable[..., Any]
+    ) -> Callable[..., Any]:
         """
         Decorates an asynchronous function with the throttling mechanism.
 
@@ -1187,7 +1220,9 @@ class Throttle:
         return wrapper
 
 
-def _custom_error_handler(error: Exception, error_map: dict[type, Callable]) -> None:
+def _custom_error_handler(
+    error: Exception, error_map: dict[type, Callable]
+) -> None:
     # noinspection PyUnresolvedReferences
     """
     handle errors based on a given error mapping.
@@ -1262,7 +1297,7 @@ async def call_handler(
         raise
 
 
-@functools.lru_cache(maxsize=None)
+@functools.cache
 def is_coroutine_func(func: Callable) -> bool:
     """
     checks if the specified function is an asyncio coroutine function.

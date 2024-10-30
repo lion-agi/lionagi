@@ -71,12 +71,12 @@ class BaseForm(Component):
         examples=["input1, input2 -> output"],
     )
 
-    input_fields: List[str] = Field(
+    input_fields: list[str] = Field(
         default_factory=list,
         description="Fields required to carry out the objective of the form.",
     )
 
-    requested_fields: List[str] = Field(
+    requested_fields: list[str] = Field(
         default_factory=list,
         description="Fields requested to be filled by the user.",
     )
@@ -86,14 +86,14 @@ class BaseForm(Component):
         description="The work to be done by the form, including custom instructions.",
     )
 
-    validation_kwargs: Dict[str, Dict[str, Any]] = Field(
+    validation_kwargs: dict[str, dict[str, Any]] = Field(
         default_factory=dict,
         description="Additional validation constraints for the form fields.",
         examples=[{"field": {"config1": "a", "config2": "b"}}],
     )
 
     @property
-    def work_fields(self) -> Dict[str, Any]:
+    def work_fields(self) -> dict[str, Any]:
         """
         Get the fields relevant to the current task, including input and
         requested fields. Must be implemented by subclasses.
@@ -169,8 +169,8 @@ class BaseForm(Component):
         return True
 
     def _get_all_fields(
-        self, form: List["BaseForm"] = None, **kwargs
-    ) -> Dict[str, Any]:
+        self, form: list["BaseForm"] = None, **kwargs
+    ) -> dict[str, Any]:
         """
         Given a form or collections of forms, and additional fields, gather
         all fields together including self fields with valid value.
@@ -187,7 +187,12 @@ class BaseForm(Component):
         all_form_fields = (
             {}
             if not form
-            else {k: v for i in form for k, v in i.work_fields.items() if v is not None}
+            else {
+                k: v
+                for i in form
+                for k, v in i.work_fields.items()
+                if v is not None
+            }
         )
         all_fields.update({**all_form_fields, **kwargs})
         return all_fields

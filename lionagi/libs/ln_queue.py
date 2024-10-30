@@ -3,7 +3,8 @@ A class that manages asynchronous task processing with controlled concurrency.
 """
 
 import asyncio
-from typing import Any, Callable
+from collections.abc import Callable
+from typing import Any
 
 from lionagi.libs import func_call
 
@@ -69,7 +70,9 @@ class AsyncQueue:
         """
         return self._stop_event.is_set()
 
-    async def process_requests(self, func: Callable, retry_kwargs: dict = {}) -> None:
+    async def process_requests(
+        self, func: Callable, retry_kwargs: dict = {}
+    ) -> None:
         """
         Processes tasks from the queue using the provided function with retries.
 
@@ -85,7 +88,9 @@ class AsyncQueue:
         tasks = set()
         while not self.stopped():
             if len(tasks) >= self.max_concurrent_tasks:
-                _, done = await asyncio.wait(tasks, return_when=asyncio.FIRST_COMPLETED)
+                _, done = await asyncio.wait(
+                    tasks, return_when=asyncio.FIRST_COMPLETED
+                )
                 tasks.difference_update(done)
 
             async with self.semaphore:

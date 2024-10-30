@@ -1,5 +1,3 @@
-"""deprecated"""
-
 base_lion_fields = [
     "ln_id",
     "timestamp",

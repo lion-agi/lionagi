@@ -10,7 +10,7 @@ class ImageUtil:
 
     @staticmethod
     def preprocess_image(
-        image: np.ndarray, color_conversion_code: Optional[int] = None
+        image: np.ndarray, color_conversion_code: int | None = None
     ) -> np.ndarray:
         SysUtil.check_import("cv2", pip_name="opencv-python")
         import cv2
@@ -19,19 +19,23 @@ class ImageUtil:
         return cv2.cvtColor(image, color_conversion_code)
 
     @staticmethod
-    def encode_image_to_base64(image: np.ndarray, file_extension: str = ".jpg") -> str:
+    def encode_image_to_base64(
+        image: np.ndarray, file_extension: str = ".jpg"
+    ) -> str:
         SysUtil.check_import("cv2", pip_name="opencv-python")
         import cv2
 
         success, buffer = cv2.imencode(file_extension, image)
         if not success:
-            raise ValueError(f"Could not encode image to {file_extension} format.")
+            raise ValueError(
+                f"Could not encode image to {file_extension} format."
+            )
         encoded_image = base64.b64encode(buffer).decode("utf-8")
         return encoded_image
 
     @staticmethod
     def read_image_to_array(
-        image_path: str, color_flag: Optional[int] = None
+        image_path: str, color_flag: int | None = None
     ) -> np.ndarray:
         SysUtil.check_import("cv2", pip_name="opencv-python")
         import cv2
@@ -45,7 +49,7 @@ class ImageUtil:
     @staticmethod
     def read_image_to_base64(
         image_path: str,
-        color_flag: Optional[int] = None,
+        color_flag: int | None = None,
     ) -> str:
         image_path = str(image_path)
         image = ImageUtil.read_image_to_array(image_path, color_flag)

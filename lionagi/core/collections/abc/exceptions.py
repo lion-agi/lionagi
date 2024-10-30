@@ -1,4 +1,10 @@
-"""deprecated, use lion_core.exceptions"""
+# import logging
+
+# # Configure logging
+# logging.basicConfig(
+#     level=logging.ERROR,
+#     format="%(asctime)s:%(levelname)s:%(message)s",
+# )
 
 
 class LionAGIError(Exception):
@@ -109,7 +115,9 @@ class TimeoutError(LionOperationError):
     """Exception raised when an operation times out."""
 
     def __init__(self, operation, timeout):
-        super().__init__(operation, f"Operation timed out after {timeout} seconds.")
+        super().__init__(
+            operation, f"Operation timed out after {timeout} seconds."
+        )
 
 
 class ServiceError(LionAGIError):
@@ -126,21 +134,3 @@ class ServiceError(LionAGIError):
         else:
             msg += f" for {service.__class__.__name__}"
         return cls(msg)
-
-
-# for backwards compatibility
-__all__ = [
-    "LionAGIError",
-    "LionValueError",
-    "LionTypeError",
-    "ItemNotFoundError",
-    "ItemInvalidError",
-    "FieldError",
-    "LionOperationError",
-    "ConcurrencyError",
-    "RelationError",
-    "ActionError",
-    "ModelLimitExceededError",
-    "TimeoutError",
-    "ServiceError",
-]

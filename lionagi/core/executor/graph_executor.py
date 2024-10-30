@@ -21,7 +21,9 @@ class GraphExecutor(BaseExecutor, Graph):
 
     condition_check_result: bool | None = None
 
-    async def check_edge_condition(self, edge: Edge, executable_id, request_source):
+    async def check_edge_condition(
+        self, edge: Edge, executable_id, request_source
+    ):
         """
         Evaluates the condition associated with an edge, determining if execution should proceed along that edge based
         on the condition's source type.
@@ -67,7 +69,9 @@ class GraphExecutor(BaseExecutor, Graph):
                     and mail.package.package["edge_id"] == edge_id
                 ):
                     self.mailbox.pile.pop(mail_id)
-                    self.condition_check_result = mail.package.package["check_result"]
+                    self.condition_check_result = mail.package.package[
+                        "check_result"
+                    ]
                 else:
                     skipped_requests.append(mail)
             self.mailbox.pending_ins[key] = skipped_requests
@@ -162,7 +166,9 @@ class GraphExecutor(BaseExecutor, Graph):
             except Exception as e:
                 raise ValueError(f"Error handling node_id: {e}") from e
 
-        elif mail.category == "node" and isinstance(mail.package.package, Node):
+        elif mail.category == "node" and isinstance(
+            mail.package.package, Node
+        ):
             try:
                 return await self._handle_node(mail)
             except Exception as e:
@@ -171,7 +177,9 @@ class GraphExecutor(BaseExecutor, Graph):
         else:
             raise ValueError(f"Invalid mail type for structure")
 
-    async def _next_node(self, current_node: Node, executable_id, request_source):
+    async def _next_node(
+        self, current_node: Node, executable_id, request_source
+    ):
         """
         Get the next step nodes based on the current node.
 

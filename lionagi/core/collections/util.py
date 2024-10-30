@@ -1,7 +1,14 @@
 from collections import deque
 from collections.abc import Generator, Mapping
 
-from .abc import Component, Element, LionTypeError, Ordering, Record, get_lion_id
+from .abc import (
+    Component,
+    Element,
+    LionTypeError,
+    Ordering,
+    Record,
+    get_lion_id,
+)
 
 
 def to_list_type(value):
@@ -21,7 +28,9 @@ def to_list_type(value):
     Raises:
         TypeError: If the value cannot be converted to a list.
     """
-    if isinstance(value, Component) and not isinstance(value, (Record, Ordering)):
+    if isinstance(value, Component) and not isinstance(
+        value, (Record, Ordering)
+    ):
         return [value]
     if isinstance(value, (Mapping, Record)):
         return list(value.values())

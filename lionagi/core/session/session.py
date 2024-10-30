@@ -45,7 +45,9 @@ class Session:
     ):
         self.ln_id = SysUtil.create_id()
         self.timestamp = SysUtil.get_timestamp(sep=None)[:-6]
-        system = system or "You are a helpful assistant, let's think step by step"
+        system = (
+            system or "You are a helpful assistant, let's think step by step"
+        )
         self.system = System(system=system, sender=system_sender)
         self.system_sender = system_sender
         self.branches: Pile[Branch] = self._validate_branches(branches)
@@ -77,7 +79,9 @@ class Session:
         if isinstance(value, Pile):
             for branch in value:
                 if not isinstance(branch, Branch):
-                    raise ValueError("The branches pile contains non-Branch object")
+                    raise ValueError(
+                        "The branches pile contains non-Branch object"
+                    )
             return value
         else:
             try:

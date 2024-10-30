@@ -30,14 +30,21 @@ class BaseExecutor(Element, Progressable, Executable, ABC):
         default_factory=list, description="The list of responses."
     )
 
-    context_log: list = Field(default_factory=list, description="The context log.")
+    context_log: list = Field(
+        default_factory=list, description="The context log."
+    )
 
     verbose: bool = Field(
-        True, description="A flag indicating whether to provide verbose output."
+        True,
+        description="A flag indicating whether to provide verbose output.",
     )
 
     def send(
-        self, recipient: str, category: str, package: Any, request_source: str = None
+        self,
+        recipient: str,
+        category: str,
+        package: Any,
+        request_source: str = None,
     ) -> None:
         """
         Sends a mail to a recipient.

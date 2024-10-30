@@ -1,4 +1,5 @@
-from typing import Any, Callable, Dict, List, TypeVar, Union
+from collections.abc import Callable
+from typing import Any, Dict, List, TypeVar, Union
 
 from lionfuncs import check_import
 
@@ -39,9 +40,9 @@ def to_langchain_document(datanode: T, **kwargs: Any) -> Any:
 
 
 def langchain_loader(
-    loader: Union[str, Callable],
-    loader_args: List[Any] = [],
-    loader_kwargs: Dict[str, Any] = {},
+    loader: str | Callable,
+    loader_args: list[Any] = [],
+    loader_kwargs: dict[str, Any] = {},
 ) -> Any:
     """
     Initializes and uses a specified loader to load data within the Langchain ecosystem.
@@ -67,7 +68,9 @@ def langchain_loader(
     """
 
     document_loaders = check_import(
-        "langchain_community", module_name="document_loaders", pip_name="langchain"
+        "langchain_community",
+        module_name="document_loaders",
+        pip_name="langchain",
     )
 
     try:
@@ -87,11 +90,11 @@ def langchain_loader(
 
 
 def langchain_text_splitter(
-    data: Union[str, List],
-    splitter: Union[str, Callable],
-    splitter_args: List[Any] = None,
-    splitter_kwargs: Dict[str, Any] = None,
-) -> List[str]:
+    data: str | list,
+    splitter: str | Callable,
+    splitter_args: list[Any] = None,
+    splitter_kwargs: dict[str, Any] = None,
+) -> list[str]:
     """
     Splits text or a list of texts using a specified Langchain text splitter.
 

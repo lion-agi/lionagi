@@ -167,4 +167,4 @@ cython_debug/
 setup.py
 pyproject.toml
 .idea/
-data/
+.data/

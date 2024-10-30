@@ -39,7 +39,9 @@ class SelectTemplate(BaseUnitForm):
     selection: Enum | str | list | None = Field(
         None, description="selection from given choices"
     )
-    choices: list = Field(default_factory=list, description="the given choices")
+    choices: list = Field(
+        default_factory=list, description="the given choices"
+    )
 
     assignment: str = "task -> selection"
 
@@ -78,9 +80,9 @@ class SelectTemplate(BaseUnitForm):
 
         self.choices = choices
         self.task = f"""
-select 1 item from the provided choices {choices}.        
+select 1 item from the provided choices {choices}.
 1. additional objective: {instruction or "N/A"}.
-2. additional information: {context or "N/A"}.     
+2. additional information: {context or "N/A"}.
 """
         if reason:
             self.append_to_request("reason")

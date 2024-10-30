@@ -28,7 +28,11 @@ class TreeNode(Node):
         if not self.parent:
             return list(self.related_nodes)
         else:
-            return [node for node in self.related_nodes if node != self.parent.ln_id]
+            return [
+                node
+                for node in self.related_nodes
+                if node != self.parent.ln_id
+            ]
 
     def relate_child(
         self,

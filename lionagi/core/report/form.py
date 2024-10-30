@@ -84,7 +84,7 @@ class Form(BaseForm):
                 )
 
     @property
-    def work_fields(self) -> Dict[str, Any]:
+    def work_fields(self) -> dict[str, Any]:
         """
         Retrieves a dictionary of the fields relevant to the current task,
         excluding any SYSTEM_FIELDS and including only the input and requested
@@ -97,7 +97,8 @@ class Form(BaseForm):
         return {
             k: v
             for k, v in dict_.items()
-            if k not in SYSTEM_FIELDS and k in self.input_fields + self.requested_fields
+            if k not in SYSTEM_FIELDS
+            and k in self.input_fields + self.requested_fields
         }
 
     def fill(self, form: "Form" = None, strict: bool = True, **kwargs) -> None:
@@ -134,7 +135,9 @@ class Form(BaseForm):
             bool: True if the form is workable, otherwise raises ValueError.
         """
         if self.filled:
-            raise ValueError("Form is already filled, cannot be worked on again")
+            raise ValueError(
+                "Form is already filled, cannot be worked on again"
+            )
 
         for i in self.input_fields:
             if not getattr(self, i, None):
@@ -172,7 +175,7 @@ class Form(BaseForm):
         """
 
     @property
-    def _instruction_requested_fields(self) -> Dict[str, str]:
+    def _instruction_requested_fields(self) -> dict[str, str]:
         """
         Provides a dictionary mapping requested field names to their
         descriptions.

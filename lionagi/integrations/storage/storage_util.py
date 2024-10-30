@@ -58,7 +58,9 @@ def output_node_list(structure):
         elif isinstance(node, BaseAgent):
             node_output["structure_id"] = node.structure.ln_id
             node_output["output_parser"] = (
-                inspect.getsource(node.output_parser) if node.output_parser else None
+                inspect.getsource(node.output_parser)
+                if node.output_parser
+                else None
             )
         else:
             raise ValueError("Not supported node type detected")
@@ -94,7 +96,9 @@ def output_edge_list(structure):
         }
         if edge.condition:
             cls_name = edge.condition.__class__.__qualname__
-            cond = json.dumps({"class": cls_name, "args": edge.condition.model_dump()})
+            cond = json.dumps(
+                {"class": cls_name, "args": edge.condition.model_dump()}
+            )
             cls = edge.string_condition()
             if cls is not None and cls_name not in edge_cls_dict:
                 edge_cls_dict.update({cls_name: cls})
@@ -184,7 +188,9 @@ class ParseNode:
         Returns:
             System: An instantiated System node filled with properties from info_dict.
         """
-        info_dict["system"] = json.loads(info_dict.pop("content"))["system_info"]
+        info_dict["system"] = json.loads(info_dict.pop("content"))[
+            "system_info"
+        ]
         node = System.from_obj(info_dict)
         return node
 
@@ -199,7 +205,9 @@ class ParseNode:
         Returns:
             Instruction: An instantiated Instruction node filled with properties from info_dict.
         """
-        info_dict["instruction"] = json.loads(info_dict.pop("content"))["instruction"]
+        info_dict["instruction"] = json.loads(info_dict.pop("content"))[
+            "instruction"
+        ]
         node = Instruction.from_obj(info_dict)
         return node
 
@@ -218,10 +226,14 @@ class ParseNode:
         node.directive = info_dict["directive"]
         if "directive_kwargs" in info_dict:
             if info_dict["directive_kwargs"]:
-                node.directive_kwargs = json.loads(info_dict["directive_kwargs"])
+                node.directive_kwargs = json.loads(
+                    info_dict["directive_kwargs"]
+                )
         elif "directiveKwargs" in info_dict:
             if info_dict["directiveKwargs"]:
-                node.directive_kwargs = json.loads(info_dict["directiveKwargs"])
+                node.directive_kwargs = json.loads(
+                    info_dict["directiveKwargs"]
+                )
         return node
 
     @staticmethod
@@ -239,7 +251,11 @@ class ParseNode:
             ValueError: If unsafe code is detected in the function definition.
         """
         func_code = info_dict["function"]
-        if "import os" in func_code or "__" in func_code or "import sys" in func_code:
+        if (
+            "import os" in func_code
+            or "__" in func_code
+            or "import sys" in func_code
+        ):
             raise ValueError(
                 "Unsafe code detected in Tool function. Please double check or implement explicitly"
             )

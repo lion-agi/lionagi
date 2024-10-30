@@ -28,7 +28,9 @@ def set_up_interpreter(interpreter_provider="e2b", key_scheme=E2B_key_scheme):
 def install_missing_dependencies(required_libraries):
     print("Checking for missing dependencies...")
     missing_libraries = [
-        library for library in required_libraries if not is_library_installed(library)
+        library
+        for library in required_libraries
+        if not is_library_installed(library)
     ]
 
     if missing_libraries:
@@ -58,7 +60,9 @@ def install_library(library):
         import subprocess
         import sys
 
-        subprocess.check_call([sys.executable, "-m", "pip", "install", library])
+        subprocess.check_call(
+            [sys.executable, "-m", "pip", "install", library]
+        )
         print(f"Successfully installed {library}.")
     except subprocess.CalledProcessError as e:
         print(f"Error occurred while installing {library}: {str(e)}")
