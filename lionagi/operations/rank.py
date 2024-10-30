@@ -2,11 +2,12 @@ import asyncio
 from typing import Any
 
 import numpy as np
+from lion_core.session.branch import Branch
+from lion_core.session.session import Session
+from lion_service import iModel
 from lionfuncs import alcall, to_list
 
-from lionagi.core.session.branch import Branch
-from lionagi.core.session.session import Session
-
+from .config import DEFAULT_CHAT_CONFIG
 from .score import score
 
 PROMPT = (
@@ -24,17 +25,30 @@ async def rank(
     system=None,
     reason: bool = False,
     actions: bool = False,
-    tools=None,
+    tools: Any = None,
+    imodel: iModel = None,
     branch: Branch = None,  # branch won't be used for the vote, it is for configuration
-    invoke_action: bool = True,
+    clear_messages: bool = False,
+    system_sender=None,
+    system_datetime=None,
+    num_parse_retries: int = 0,
+    retry_imodel: iModel = None,
+    return_session: bool = False,
     **kwargs,  # additional kwargs for score function
 ) -> dict:
-    session = Session()
-    branch = branch or Branch()
-    session.change_default_branch(branch)
+
+    if branch and branch.imodel:
+        imodel = imodel or branch.imodel
+    else:
+        imodel = imodel or iModel(**DEFAULT_CHAT_CONFIG)
+
+    branch = branch or Branch(imodel=imodel)
+    session = Session(default_branch=branch)
 
     async def _score(item):
-        b_ = session.new_branch(messages=branch.messages)
+        async with session.branches.async_lock:
+            b_ = session.new_branch(messages=session.default_branch.messages)
+
         prompt = PROMPT.format(choices=choices, item=item)
         if instruction:
             prompt = f"{instruction}\n\n{prompt} \n\n "
@@ -49,13 +63,17 @@ async def rank(
             guidance=guidance,
             context=context,
             system=system,
+            system_datetime=system_datetime,
+            system_sender=system_sender,
             sender=session.ln_id,
             recipient=b_.ln_id,
             default_score=-1,
             reason=reason,
             actions=actions,
-            invoke_action=invoke_action,
             tools=tools,
+            clear_messages=clear_messages,
+            num_parse_retries=num_parse_retries,
+            retry_imodel=retry_imodel,
             **kwargs,
         )
 
@@ -67,6 +85,7 @@ async def rank(
     async def _group_score(item):
         tasks = [asyncio.create_task(_score(item)) for _ in range(num_scorers)]
         responses = await asyncio.gather(*tasks)
+        responses = [i for i in responses if i is not None]
         scores = to_list(
             [i.score for i in responses], dropna=True, flatten=True
         )
@@ -77,4 +96,7 @@ async def rank(
         }
 
     results = await alcall(choices, _group_score)
-    return sorted(results, key=lambda x: x["average"], reverse=True)
+    results = sorted(results, key=lambda x: x["average"], reverse=True)
+    if return_session:
+        return results, session
+    return results

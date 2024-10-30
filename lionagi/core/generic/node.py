@@ -1,18 +1,31 @@
+"""
+This module defines the Node class, representing a node in a graph-like
+structure within LionAGI. Nodes can form relationships with other nodes
+through directed edges, enabling construction and manipulation of complex
+relational networks.
+
+Includes functionality for managing relationships, such as adding,
+modifying, and removing edges, and querying related nodes and connections.
+"""
+
 from collections.abc import Callable
 
-from lionabc import Condition, Relational
-from lionabc.exceptions import LionRelationError
 from pandas import Series
 from pydantic import Field
 
-from lionagi.core.generic.component import Component
+from lionagi.core.collections import Pile, pile
+from lionagi.core.collections.abc import (
+    Component,
+    Condition,
+    Relatable,
+    RelationError,
+    get_lion_id,
+)
 from lionagi.core.generic.edge import Edge
-from lionagi.core.generic.pile import Pile, pile
-from lionagi.core.sys_utils import SysUtil
 from lionagi.libs.ln_convert import to_list
 
 
-class Node(Component, Relational):
+class Node(Component, Relatable):
     """
     Node in a graph structure, can connect to other nodes via edges.
 
@@ -174,7 +187,7 @@ class Node(Component, Relational):
         ]
 
         if not all(pile.exclude(edge) for pile in edge_piles):
-            raise LionRelationError(f"Failed to remove edge between nodes.")
+            raise RelationError(f"Failed to remove edge between nodes.")
         return True
 
     def unrelate(self, node: "Node", edge: Edge | str = "all") -> bool:
@@ -196,16 +209,16 @@ class Node(Component, Relational):
                 node.ln_id, []
             ) + self.node_relations["in"].get(node.ln_id, [])
         else:
-            edges = [SysUtil.get_id(edge)]
+            edges = [get_lion_id(edge)]
 
         if not edges:
-            raise LionRelationError(f"Node is not related to {node.ln_id}.")
+            raise RelationError(f"Node is not related to {node.ln_id}.")
 
         try:
             for edge_id in edges:
                 self.remove_edge(node, edge_id)
             return True
-        except LionRelationError as e:
+        except RelationError as e:
             raise e
 
     def __str__(self):

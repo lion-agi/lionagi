@@ -1,7 +1,7 @@
 import logging
 from collections.abc import Callable
 
-from lionfuncs import break_down_annotation, to_dict
+from lionfuncs import to_dict
 from pydantic import BaseModel
 
 from lionagi.core.collections import iModel
@@ -12,7 +12,7 @@ from lionagi.libs.ln_func_call import rcall
 
 from .unit_form import UnitForm
 from .unit_mixin import DirectiveMixin
-from .util import retry_kwargs
+from .util import break_down_annotation, retry_kwargs
 
 
 class Unit(Directive, DirectiveMixin):

@@ -1,11 +1,11 @@
 from collections.abc import Callable
 from functools import singledispatchmethod
-from typing import Any
-from lionfuncs import ucall
+from typing import Any, Dict
 
 from lionagi.core.collections.abc import Actionable
 from lionagi.core.message.action_request import ActionRequest
 from lionagi.libs import ParseUtil
+from lionagi.libs.ln_func_call import call_handler
 
 
 class FunctionCalling(Actionable):
@@ -103,7 +103,7 @@ class FunctionCalling(Actionable):
         Returns:
             Any: The result of the function call.
         """
-        return await ucall(self.function, **self.arguments)
+        return await call_handler(self.function, **self.arguments)
 
     def __str__(self) -> str:
         """

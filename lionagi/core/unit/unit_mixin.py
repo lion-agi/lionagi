@@ -4,7 +4,7 @@ import re
 from abc import ABC
 from typing import Any
 
-from lionfuncs import extract_json_block, to_dict, validate_mapping
+from lionfuncs import extract_block, to_dict, validate_mapping
 
 from lionagi.core.collections.abc import ActionError
 from lionagi.core.message import ActionRequest, ActionResponse, Instruction
@@ -1156,7 +1156,7 @@ class DirectiveMixin(ABC):
                 return to_dict(out_, fuzzy_parse=True)
 
             with contextlib.suppress(Exception):
-                return extract_json_block(out_)
+                return extract_block(out_)
 
             with contextlib.suppress(Exception):
                 match = re.search(r"```json\n({.*?})\n```", out_, re.DOTALL)

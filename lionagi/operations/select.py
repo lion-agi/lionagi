@@ -1,32 +1,28 @@
+from __future__ import annotations
+
+import inspect
 from collections.abc import Callable
 from enum import Enum
-from inspect import isclass
 from typing import Any
 
-from lionfuncs import choose_most_similar
-from pydantic import BaseModel, field_validator
+from lion_core.session.branch import Branch
+from lion_service import iModel
+from lionfuncs import string_similarity
+from pydantic import BaseModel, Field
 
-from lionagi.core.session.branch import Branch
+from lionagi.libs.sys_util import SysUtil
+
+from .config import DEFAULT_CHAT_CONFIG
+
+PROMPT = "Please select up to {max_num_selections} items from the following list {choices}. Provide the selection(s) into appropriate field in format required, and no comments from you"
 
 
-def is_enum(choices):
-    return isclass(choices) and issubclass(choices, Enum)
-
-
-PROMPT = "Please select up to {max_num_selections} items from the following list {choices}. Provide the selection(s), and no comments from you"
-
-
-class SelectModel(BaseModel):
-
-    selected: list = []
-
-    @field_validator("selected", mode="before")
-    def validate_selected(cls, value) -> list:
-        return [value] if not isinstance(value, list) else value
+class SelectionModel(BaseModel):
+    selected: list[str | Enum] = Field(default_factory=list)
 
 
 async def select(
-    choices: list[Any] | type[Enum],
+    choices: list[str] | type[Enum],
     max_num_selections: int = 1,
     instruction=None,
     guidance=None,
@@ -35,70 +31,88 @@ async def select(
     reason: bool = False,
     actions: bool = False,
     tools: Any = None,
+    imodel: iModel = None,
     branch: Branch = None,
     sender=None,
     recipient=None,
-    progress=None,
+    return_enum: bool = False,
+    enum_parser: Callable = None,  # parse the model string response to appropriate type
     clear_messages: bool = False,
     system_sender=None,
     system_datetime=None,
     return_branch=False,
-    invoke_action: bool = True,
-    return_enum: bool = False,
-    enum_parser: Callable = None,  # parse the model string response to appropriate type
+    num_parse_retries: int = 3,
+    retry_imodel: iModel = None,
+    branch_user=None,
     **kwargs,
-):
-    if return_enum and not is_enum(choices):
+) -> SelectionModel | tuple[SelectionModel, Branch]:
+
+    if branch and branch.imodel:
+        imodel = imodel or branch.imodel
+    else:
+        imodel = imodel or iModel(**DEFAULT_CHAT_CONFIG)
+
+    selections = []
+    if return_enum and not _is_enum(choices):
         raise ValueError("return_enum can only be True if choices is an Enum")
 
-    selections = (
-        [selection.value for selection in choices]
-        if is_enum(choices)
-        else choices
-    )
+    if _is_enum(choices):
+        selections = [selection.value for selection in choices]
+    else:
+        selections = choices
+
     prompt = PROMPT.format(
         max_num_selections=max_num_selections, choices=selections
     )
 
     if instruction:
-        prompt = f"{instruction}\n{prompt}\n"
+        prompt = f"{instruction}\n\n{prompt} \n\n "
 
-    branch = branch or Branch()
-
+    branch = branch or Branch(imodel=imodel)
+    if branch_user:
+        try:
+            a = SysUtil.get_id(branch_user)
+            branch.user = a
+        except:
+            branch.user = branch_user
     if system:
         branch.add_message(
             system=system,
             system_datetime=system_datetime,
-            sender=system_sender,
+            system_sender=system_sender,
         )
 
-    response = await branch.operate(
-        instruction=instruction,
+    kwargs["frozen"] = False
+    response_model: SelectionModel = await branch.operate(
+        instruction=prompt,
         guidance=guidance,
-        context=(
-            [{"operation": prompt}, context]
-            if context
-            else {"operation": prompt}
-        ),
+        context=context,
         sender=sender,
         recipient=recipient,
         reason=reason,
         actions=actions,
-        tools=tools,
-        progress=progress,
+        operative_model=SelectionModel,
         clear_messages=clear_messages,
-        operative_model=SelectModel,
-        invoke_action=invoke_action,
+        imodel=imodel,
+        num_parse_retries=num_parse_retries,
+        retry_imodel=retry_imodel,
+        tools=tools,
         **kwargs,
     )
 
-    selected = response
-    if hasattr(response, "selected"):
-        selected = response.selected
-
+    selected = response_model
+    if isinstance(response_model, BaseModel) and hasattr(
+        response_model, "selected"
+    ):
+        selected = response_model.selected
     selected = [selected] if not isinstance(selected, list) else selected
     corrected_selections = [
-        choose_most_similar(selection, selections) for selection in selected
+        string_similarity(
+            word=selection,
+            correct_words=selections,
+            return_most_similar=True,
+        )
+        for selection in selected
     ]
 
     if return_enum:
@@ -112,7 +126,16 @@ async def select(
                     out.append(member)
         corrected_selections = out
 
-    response.selected = corrected_selections
+    if isinstance(response_model, BaseModel):
+        response_model.selected = corrected_selections
+
+    elif isinstance(response_model, dict):
+        response_model["selected"] = corrected_selections
+
     if return_branch:
-        return response, branch
-    return response
+        return response_model, branch
+    return response_model
+
+
+def _is_enum(choices):
+    return inspect.isclass(choices) and issubclass(choices, Enum)

@@ -53,7 +53,7 @@ class SysUtil:
         config: LionIDConfig = DEFAULT_LION_ID_CONFIG,
         /,
     ) -> str:
-        return _u.get_id(item, config=config)
+        return _u.get_id(item, config)
 
     @staticmethod
     def is_id(
@@ -61,7 +61,7 @@ class SysUtil:
         config: LionIDConfig = DEFAULT_LION_ID_CONFIG,
         /,
     ) -> bool:
-        return _u.is_id(item, config=config)
+        return _u.is_id(item, config)
 
     # legacy methods, kept for backward compatibility
 
