@@ -2,8 +2,6 @@ import contextlib
 from collections import deque
 from typing import Any
 
-from lionfuncs import check_import
-
 from lionagi.core.collections import Pile, pile
 from lionagi.core.collections.abc import (
     Actionable,
@@ -188,14 +186,17 @@ class Graph(Node):
 
     def to_networkx(self, **kwargs) -> Any:
         """Convert the graph to a NetworkX graph object."""
+        from lionagi.libs import SysUtil
 
-        DiGraph = check_import("networkx", import_name="DiGraph")
+        SysUtil.check_import("networkx")
+
+        from networkx import DiGraph
 
         g = DiGraph(**kwargs)
         for node in self.internal_nodes:
             node_info = node.to_dict()
             node_info.pop("ln_id")
-            node_info.update({"class_name": node_info["lion_class"]})
+            node_info.update({"class_name": node.class_name})
             if hasattr(node, "name"):
                 node_info.update({"name": node.name})
             g.add_node(node.ln_id, **node_info)
@@ -203,7 +204,7 @@ class Graph(Node):
         for _edge in self.internal_edges:
             edge_info = _edge.to_dict()
             edge_info.pop("ln_id")
-            edge_info.update({"class_name": edge_info["lion_class"]})
+            edge_info.update({"class_name": _edge.class_name})
             if hasattr(_edge, "name"):
                 edge_info.update({"name": _edge.name})
             source_node_id = edge_info.pop("head")
@@ -220,20 +221,16 @@ class Graph(Node):
         **kwargs,
     ):
         """Display the graph using NetworkX and Matplotlib."""
+        from lionagi.libs import SysUtil
 
-        nx = check_import("networkx")
-        check_import("matplotlib")
+        SysUtil.check_import("networkx")
+        SysUtil.check_import("matplotlib", "pyplot")
 
         import matplotlib.pyplot as plt
+        import networkx as nx
 
         g = self.to_networkx(**kwargs)
         pos = nx.spring_layout(g)
-
-        labels = nx.get_node_attributes(g, node_label)
-        print(labels)
-
-        labels = {k: v for k, v in labels.items() if v}
-
         nx.draw(
             g,
             pos,
@@ -243,12 +240,12 @@ class Graph(Node):
             node_size=500,
             node_color="orange",
             alpha=0.9,
-            labels=labels,
+            labels=nx.get_node_attributes(g, node_label),
             **draw_kwargs,
         )
 
         labels = nx.get_edge_attributes(g, edge_label)
-        labels = {k: v() for k, v in labels.items() if v}
+        labels = {k: v for k, v in labels.items() if v}
 
         if labels:
             nx.draw_networkx_edge_labels(

@@ -1,5 +1,5 @@
 from abc import abstractmethod
-from typing import Any
+from typing import Any, Dict, List
 
 from pandas import Series
 
@@ -56,7 +56,7 @@ class Rule(Component, Condition, Actionable):
         """
         a = {
             "type": "rule",
-            "class": self.class_name(),
+            "class": self.class_name,
             "ln_id": self.ln_id,
             "timestamp": SysUtil.get_timestamp(sep=None)[:-6],
             "field": field,
