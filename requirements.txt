@@ -1,7 +1,0 @@
-aiohttp>=3.9.3
-python-dotenv>=1.0.0
-lion-core==0.2.2
-lion-app-openai==0.1.0
-lion-app-pandas==0.1.0
-aiocache>=0.12.0
-ipython
