@@ -1,21 +1,5 @@
-"""
-Copyright 2024 HaiyangLi
-
-Licensed under the Apache License, Version 2.0 (the "License");
-you may not use this file except in compliance with the License.
-You may obtain a copy of the License at
-
-    http://www.apache.org/licenses/LICENSE-2.0
-
-Unless required by applicable law or agreed to in writing, software
-distributed under the License is distributed on an "AS IS" BASIS,
-WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-See the License for the specific language governing permissions and
-limitations under the License.
-"""
-
-from typing import Any, Dict
 import re
+from typing import Any, Dict
 
 from ..evaluator.base_evaluator import BaseEvaluator
 
@@ -27,9 +11,11 @@ class DirectiveTemplate:
         self.template_str = template_str
         self.evaluator = BaseEvaluator()
 
-    def _render_conditionals(self, context: Dict[str, Any]) -> str:
+    def _render_conditionals(self, context: dict[str, Any]) -> str:
         """Processes conditional statements with improved logic and support for 'else'."""
-        pattern = re.compile(r"\{if (.*?)\}(.*?)\{else\}(.*?)\{endif\}", re.DOTALL)
+        pattern = re.compile(
+            r"\{if (.*?)\}(.*?)\{else\}(.*?)\{endif\}", re.DOTALL
+        )
 
         def evaluate_condition(match):
             condition, if_text, else_text = match.groups()
@@ -40,9 +26,11 @@ class DirectiveTemplate:
 
         return pattern.sub(evaluate_condition, self.template_str)
 
-    def _render_loops(self, template: str, context: Dict[str, Any]) -> str:
+    def _render_loops(self, template: str, context: dict[str, Any]) -> str:
         """Processes loop statements within the template."""
-        loop_pattern = re.compile(r"\{for (\w+) in (\w+)\}(.*?)\{endfor\}", re.DOTALL)
+        loop_pattern = re.compile(
+            r"\{for (\w+) in (\w+)\}(.*?)\{endfor\}", re.DOTALL
+        )
 
         def render_loop(match):
             iterator_var, collection_name, loop_body = match.groups()
@@ -62,7 +50,9 @@ class DirectiveTemplate:
 
         return loop_pattern.sub(render_loop, template)
 
-    def fill(self, template_str: str = "", context: Dict[str, Any] = {}) -> str:
+    def fill(
+        self, template_str: str = "", context: dict[str, Any] = {}
+    ) -> str:
         """Fills the template with values from context after processing conditionals and loops."""
         if not template_str:  # Use the instance's template if not provided
             template_str = self.template_str
@@ -70,7 +60,9 @@ class DirectiveTemplate:
         # First, process conditionals with 'else'
         template_with_conditionals = self._render_conditionals(template_str)
         # Then, process loops
-        template_with_loops = self._render_loops(template_with_conditionals, context)
+        template_with_loops = self._render_loops(
+            template_with_conditionals, context
+        )
         # Finally, substitute the placeholders with context values
         try:
             return template_with_loops.format(**context)

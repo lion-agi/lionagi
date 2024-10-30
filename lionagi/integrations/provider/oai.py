@@ -1,23 +1,7 @@
-"""
-Copyright 2024 HaiyangLi
-
-Licensed under the Apache License, Version 2.0 (the "License");
-you may not use this file except in compliance with the License.
-You may obtain a copy of the License at
-
-    http://www.apache.org/licenses/LICENSE-2.0
-
-Unless required by applicable law or agreed to in writing, software
-distributed under the License is distributed on an "AS IS" BASIS,
-WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-See the License for the specific language governing permissions and
-limitations under the License.
-"""
-
 from os import getenv
+
 from lionagi.integrations.config.oai_configs import oai_schema
 from lionagi.libs.ln_api import BaseService, PayloadPackage
-
 
 allowed_kwargs = [
     "model",
@@ -92,7 +76,9 @@ class OpenAIService(BaseService):
         self.active_endpoint = []
         self.allowed_kwargs = allowed_kwargs
 
-    async def serve(self, input_, endpoint="chat/completions", method="post", **kwargs):
+    async def serve(
+        self, input_, endpoint="chat/completions", method="post", **kwargs
+    ):
         """
         Serves the input using the specified endpoint and method.
 
@@ -153,14 +139,18 @@ class OpenAIService(BaseService):
                     _content = []
                     for i in content:
                         if "text" in i:
-                            _content.append({"type": "text", "text": str(i["text"])})
+                            _content.append(
+                                {"type": "text", "text": str(i["text"])}
+                            )
                         elif "image_url" in i:
                             _content.append(
                                 {
                                     "type": "image_url",
                                     "image_url": {
                                         "url": f"{i['image_url'].get('url')}",
-                                        "detail": i["image_url"].get("detail", "low"),
+                                        "detail": i["image_url"].get(
+                                            "detail", "low"
+                                        ),
                                     },
                                 }
                             )
@@ -174,7 +164,10 @@ class OpenAIService(BaseService):
         )
         try:
             completion = await self.call_api(
-                payload, "chat/completions", "post", required_tokens=required_tokens
+                payload,
+                "chat/completions",
+                "post",
+                required_tokens=required_tokens,
             )
             return payload, completion
         except Exception as e:

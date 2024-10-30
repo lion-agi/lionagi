@@ -80,7 +80,7 @@ async def validate_field(
 - `Any`: The validated value.
 
 **Raises**:
-- `LionValueError`: If validation fails.
+- `FieldError`: If validation fails.
 
 **Description**:
 Validates a specific field in a form, using the active rules.

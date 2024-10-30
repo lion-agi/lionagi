@@ -1,6 +1,5 @@
-from typing import Any, Union
+from typing import Any
 
-from lionagi.libs.ln_convert import strip_lower
 from lionagi.libs.sys_util import SysUtil
 
 
@@ -41,7 +40,9 @@ def get_llama_index_reader(reader: Any | str = None) -> Any:
     ]:
         return SimpleDirectoryReader
 
-    if not isinstance(reader, str) and not issubclass(reader, BasePydanticReader):
+    if not isinstance(reader, str) and not issubclass(
+        reader, BasePydanticReader
+    ):
         raise TypeError(f"reader must be a string or BasePydanticReader.")
 
     if isinstance(reader, str):

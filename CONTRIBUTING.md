@@ -19,7 +19,7 @@ Thank you for considering contributing to LionAGI! This document provides guidel
 ## Submitting Contributions
 
 1. **Pull Requests**: Once you are ready with your changes, push your branch to your fork and open a pull request against the main repository.
-   
+
 2. **Pull Request Description**: Provide a detailed description of the changes in your pull request. Link it to any relevant issues.
 
 3. **Code Review Process**: Your pull request will be reviewed by the project maintainers. Feedback may be provided for improvements.

@@ -252,11 +252,11 @@ print("First item:", item)
 
 **Signature**:
 ```python
-def remove(self, item) -> None
+def remove(self, item: LionIDable) -> None
 ```
 
 **Parameters**:
-- `item` (): The item to remove from the progression.
+- `item` (LionIDable): The item to remove from the progression.
 
 **Exceptions Raised**:
 - [[Exceptions#^ee9dbb|ItemNotFoundError]]: If the item is not found.

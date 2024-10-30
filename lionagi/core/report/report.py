@@ -1,16 +1,18 @@
 from typing import Any, Type
 
-from lion_core.form.report import Report as CoreReport
-
-
-from pydantic import Field
-from lionagi.core.generic.pile import Pile, pile
-from lionagi.core.report.util import get_input_output_fields
+from lionagi.core.collections import Pile, pile
+from lionagi.core.collections.abc import Field
 from lionagi.core.report.base import BaseForm
 from lionagi.core.report.form import Form
+from lionagi.core.report.util import get_input_output_fields
 
 
-class Report(CoreReport):
+class Report(BaseForm):
+    """
+    Extends BaseForm to handle a collection of Form instances based on specific
+    assignments, managing a pile of forms and ensuring synchronization and
+    proper configuration.
+    """
 
     forms: Pile[Form] = Field(
         None,
@@ -23,13 +25,9 @@ class Report(CoreReport):
         examples=[["a, b -> c", "a -> e", "b -> f", "c -> g", "e, f, g -> h"]],
     )
 
-    form_template: Type[Form] = Field(
+    form_template: type[Form] = Field(
         Form, description="The template for the forms in the report."
     )
-
-    @property
-    def form_template(self) -> Type[Form]:
-        return self.default_form_template
 
     def __init__(self, **kwargs):
         """
@@ -37,7 +35,7 @@ class Report(CoreReport):
         report's assignment, creating forms dynamically from provided assignments.
         """
         super().__init__(**kwargs)
-        self.input_fields, self.request_fields = get_input_output_fields(
+        self.input_fields, self.requested_fields = get_input_output_fields(
             self.assignment
         )
 
@@ -54,12 +52,12 @@ class Report(CoreReport):
         # Add undeclared fields to report with None values
         for v in self.forms:
             for _field in list(v.work_fields.keys()):
-                if _field not in self.all_fields:
-                    field_obj = v.all_fields[_field]
-                    self.add_field(_field, value=None, field_obj=field_obj)
+                if _field not in self._all_fields:
+                    field_obj = v._all_fields[_field]
+                    self._add_field(_field, value=None, field_obj=field_obj)
 
         # Synchronize fields between report and forms
-        for k, v in self.all_fields.items():
+        for k, v in self._all_fields.items():
             if getattr(self, k, None) is not None:
                 for _form in self.forms:
                     if k in _form.work_fields:
@@ -74,14 +72,19 @@ class Report(CoreReport):
                     all_fields[k] = v
         return all_fields
 
-    def fill(self, form: Form | list[Form] | dict[Form] = None, strict=True, **kwargs):
+    def fill(
+        self,
+        form: Form | list[Form] | dict[Form] = None,
+        strict=True,
+        **kwargs,
+    ):
         if self.filled:
             if strict:
                 raise ValueError("Form is filled, cannot be worked on again")
 
         # gather all unique valid fields from input form,
         # kwargs and self workfields data
-        all_fields = self._getall_fields(form, **kwargs)
+        all_fields = self._get_all_fields(form, **kwargs)
 
         # if there are information in the forms that are not in the report,
         # add them to the report
@@ -107,7 +110,9 @@ class Report(CoreReport):
             bool: True if the report is workable, otherwise raises ValueError.
         """
         if self.filled:
-            raise ValueError("Form is already filled, cannot be worked on again")
+            raise ValueError(
+                "Form is already filled, cannot be worked on again"
+            )
 
         for i in self.input_fields:
             if not getattr(self, i, None):
@@ -115,7 +120,7 @@ class Report(CoreReport):
 
         # this is the required fields from report's own assignment
         fields = self.input_fields
-        fields.extend(self.request_fields)
+        fields.extend(self.requested_fields)
 
         # if the report's own assignment is not in the forms, return False
         for f in fields:
@@ -125,7 +130,7 @@ class Report(CoreReport):
         # get all the output fields from all the forms
         outs = []
         for form in self.forms.values():
-            outs.extend(form.request_fields)
+            outs.extend(form.requested_fields)
 
         # all output fields should be unique, not a single output field should be
         # calculated by more than one form

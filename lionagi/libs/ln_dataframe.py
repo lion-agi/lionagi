@@ -7,20 +7,7 @@ from lionagi.libs import ln_convert as convert
 ln_DataFrame = pd.DataFrame
 ln_Series = pd.Series
 
-from typing_extensions import deprecated
-from lionagi.settings import format_deprecated_msg
 
-
-@deprecated(
-    format_deprecated_msg(
-        deprecated_name="lionagi.libs.ln_dataframe.extend_dataframe()",
-        deprecated_type="function",
-        deprecated_version="0.3.0",
-        removal_version="1.0.0",
-        replacement=None,
-    ),
-    category=DeprecationWarning,
-)
 def extend_dataframe(
     df1: pd.DataFrame,
     df2: pd.DataFrame,
@@ -44,7 +31,9 @@ def extend_dataframe(
     try:
         if len(df2.dropna(how="all")) > 0 and len(df1.dropna(how="all")) > 0:
             df = convert.to_df([df1, df2])
-            df.drop_duplicates(inplace=True, subset=[unique_col], keep=keep, **kwargs)
+            df.drop_duplicates(
+                inplace=True, subset=[unique_col], keep=keep, **kwargs
+            )
             df_ = convert.to_df(df)
             if len(df_) > 1:
                 return df_
@@ -55,16 +44,6 @@ def extend_dataframe(
         raise ValueError(f"Error in extending messages: {e}") from e
 
 
-@deprecated(
-    format_deprecated_msg(
-        deprecated_name="lionagi.libs.ln_dataframe.search_keywords()",
-        deprecated_type="function",
-        deprecated_version="0.3.0",
-        removal_version="1.0.0",
-        replacement=None,
-    ),
-    category=DeprecationWarning,
-)
 def search_keywords(
     df: pd.DataFrame,
     /,
@@ -107,16 +86,6 @@ def search_keywords(
     return out
 
 
-@deprecated(
-    format_deprecated_msg(
-        deprecated_name="lionagi.libs.ln_dataframe.replace_keyword()",
-        deprecated_type="function",
-        deprecated_version="0.3.0",
-        removal_version="1.0.0",
-        replacement=None,
-    ),
-    category=DeprecationWarning,
-)
 def replace_keyword(
     df: pd.DataFrame,
     /,
@@ -145,21 +114,13 @@ def replace_keyword(
             keyword, replacement, case=False, regex=False
         )
     else:
-        df_.loc[:, column] = df_[column].str.replace(keyword, replacement, regex=False)
+        df_.loc[:, column] = df_[column].str.replace(
+            keyword, replacement, regex=False
+        )
 
     return df_ if inplace else True
 
 
-@deprecated(
-    format_deprecated_msg(
-        deprecated_name="lionagi.libs.ln_dataframe.read_csv()",
-        deprecated_type="function",
-        deprecated_version="0.3.0",
-        removal_version="1.0.0",
-        replacement=None,
-    ),
-    category=DeprecationWarning,
-)
 def read_csv(filepath: str, **kwargs) -> pd.DataFrame:
     """
     Reads a CSV file into a DataFrame with optional additional pandas read_csv parameters.
@@ -175,31 +136,11 @@ def read_csv(filepath: str, **kwargs) -> pd.DataFrame:
     return convert.to_df(df)
 
 
-@deprecated(
-    format_deprecated_msg(
-        deprecated_name="lionagi.libs.ln_dataframe.read_json()",
-        deprecated_type="function",
-        deprecated_version="0.3.0",
-        removal_version="1.0.0",
-        replacement=None,
-    ),
-    category=DeprecationWarning,
-)
 def read_json(filepath, **kwargs):
     df = pd.read_json(filepath, **kwargs)
     return convert.to_df(df)
 
 
-@deprecated(
-    format_deprecated_msg(
-        deprecated_name="lionagi.libs.ln_dataframe.remove_last_n_rows()",
-        deprecated_type="function",
-        deprecated_version="0.3.0",
-        removal_version="1.0.0",
-        replacement=None,
-    ),
-    category=DeprecationWarning,
-)
 def remove_last_n_rows(df: pd.DataFrame, steps: int) -> pd.DataFrame:
     """
     Removes the last 'n' rows from a DataFrame.
@@ -223,17 +164,9 @@ def remove_last_n_rows(df: pd.DataFrame, steps: int) -> pd.DataFrame:
     return convert.to_df(df[:-steps])
 
 
-@deprecated(
-    format_deprecated_msg(
-        deprecated_name="lionagi.libs.ln_dataframe.update_row()",
-        deprecated_type="function",
-        deprecated_version="0.3.0",
-        removal_version="1.0.0",
-        replacement=None,
-    ),
-    category=DeprecationWarning,
-)
-def update_row(df: pd.DataFrame, row: str | int, column: str | int, value: Any) -> bool:
+def update_row(
+    df: pd.DataFrame, row: str | int, column: str | int, value: Any
+) -> bool:
     """
     Updates a row's value for a specified column in a DataFrame.
 

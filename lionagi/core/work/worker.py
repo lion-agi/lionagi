@@ -1,27 +1,12 @@
-"""
-Copyright 2024 HaiyangLi
-
-Licensed under the Apache License, Version 2.0 (the "License");
-you may not use this file except in compliance with the License.
-You may obtain a copy of the License at
-
-    http://www.apache.org/licenses/LICENSE-2.0
-
-Unless required by applicable law or agreed to in writing, software
-distributed under the License is distributed on an "AS IS" BASIS,
-WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-See the License for the specific language governing permissions and
-limitations under the License.
-"""
-
+import inspect
 from abc import ABC
 from functools import wraps
-import inspect
+
 from lionagi import logging as _logging
-from lionagi.core.work.work_function import WorkFunction
-from lionagi.core.work.work import Work
+from lionagi.core.collections.abc import get_lion_id
 from lionagi.core.report.form import Form
-from lionagi.libs.sys_util import SysUtil
+from lionagi.core.work.work import Work
+from lionagi.core.work.work_function import WorkFunction
 
 
 class Worker(ABC):
@@ -77,7 +62,12 @@ class Worker(ABC):
         """
 
         return (
-            any([await i.is_progressable() for i in self.work_functions.values()])
+            any(
+                [
+                    await i.is_progressable()
+                    for i in self.work_functions.values()
+                ]
+            )
             and not self.stopped
         )
 
@@ -208,7 +198,7 @@ class Worker(ABC):
 
             form_key = arguments.get(form_param_key)
             try:
-                form_key = SysUtil.get_id(form_key)
+                form_key = get_lion_id(form_key)
             except:
                 pass
             form = self.forms.get(form_key) or self.default_form
@@ -276,7 +266,9 @@ def work(
             **kwargs,
         ):
             if not inspect.iscoroutinefunction(func):
-                raise TypeError(f"{func.__name__} must be an asynchronous function")
+                raise TypeError(
+                    f"{func.__name__} must be an asynchronous function"
+                )
             retry_kwargs = retry_kwargs or {}
             retry_kwargs["timeout"] = retry_kwargs.get("timeout", timeout)
             return await self._work_wrapper(
@@ -324,7 +316,9 @@ def worklink(from_: str, to_: str, auto_schedule: bool = True):
             self: Worker, *args, func=func, from_=from_, to_=to_, **kwargs
         ):
             if not inspect.iscoroutinefunction(func):
-                raise TypeError(f"{func.__name__} must be an asynchronous function")
+                raise TypeError(
+                    f"{func.__name__} must be an asynchronous function"
+                )
 
             work_funcs = self._get_decorated_functions(
                 decorator_attr="_work_decorator_params"
@@ -378,7 +372,9 @@ def worklink(from_: str, to_: str, auto_schedule: bool = True):
                     next_params[1], dict
                 ):
                     if wrapper.auto_schedule:
-                        return await to_work_func(*next_params[0], **next_params[1])
+                        return await to_work_func(
+                            *next_params[0], **next_params[1]
+                        )
                 else:
                     raise TypeError(f"Invalid return type {func.__name__}")
             else:
@@ -387,7 +383,11 @@ def worklink(from_: str, to_: str, auto_schedule: bool = True):
             return next_params
 
         wrapper.auto_schedule = auto_schedule
-        wrapper._worklink_decorator_params = {"func": func, "from_": from_, "to_": to_}
+        wrapper._worklink_decorator_params = {
+            "func": func,
+            "from_": from_,
+            "to_": to_,
+        }
 
         return wrapper
 

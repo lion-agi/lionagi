@@ -1,11 +1,11 @@
-from typing import Callable
+from collections.abc import Callable
 
+from lionagi.core.collections import pile
 from lionagi.core.generic import Node
-from lionagi.core.generic.pile import Pile
+
 from ..bridge.langchain_.langchain_bridge import LangchainBridge
 from ..bridge.llamaindex_.llama_index_bridge import LlamaIndexBridge
-
-from .load_util import dir_to_nodes, ReaderType, _datanode_parser
+from .load_util import ReaderType, _datanode_parser, dir_to_nodes
 
 
 def text_reader(args, kwargs):
@@ -141,7 +141,9 @@ def _plain_reader(reader, reader_args, reader_kwargs):
         ) from e
 
 
-def _langchain_reader(reader, reader_args, reader_kwargs, to_lion: bool | Callable):
+def _langchain_reader(
+    reader, reader_args, reader_kwargs, to_lion: bool | Callable
+):
     """
     Reads data using a Langchain reader.
 
@@ -157,7 +159,9 @@ def _langchain_reader(reader, reader_args, reader_kwargs, to_lion: bool | Callab
     Example usage:
         >>> nodes = _langchain_reader('langchain_reader', ['arg1'], {'key': 'value'}, True)
     """
-    nodes = LangchainBridge.langchain_loader(reader, reader_args, reader_kwargs)
+    nodes = LangchainBridge.langchain_loader(
+        reader, reader_args, reader_kwargs
+    )
     if isinstance(to_lion, bool) and to_lion is True:
         return pile([Node.from_langchain(i) for i in nodes])
 

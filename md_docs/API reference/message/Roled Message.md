@@ -2,7 +2,7 @@
 ### Class: `MessageField`
 
 **Description**:
-`MessageField` is an enumeration used to store message fields for consistent referencing. 
+`MessageField` is an enumeration used to store message fields for consistent referencing.
 
 ### Enum Members:
 - `LION_ID`: Represents the lion_id field.
@@ -29,10 +29,10 @@
 ### Class: `RoledMessage`
 ^f41a31
 
-**Parent Class:** [[Node#^c394ef|Node]], [[API reference/collections/abc/Concepts#^ef363b|Communicatable]]
+**Parent Class:** [[Node#^c394ef|Node]], [[API reference/collections/abc/Concepts#^ef363b|Sendable]]
 
 **Description**:
-`RoledMessage` is a base class representing a message with validators and properties. It extends `Node` and `Communicatable`.
+`RoledMessage` is a base class representing a message with validators and properties. It extends `Node` and `Sendable`.
 
 #### Attributes:
 - `role` (MessageRole | None): The role of the message in the conversation.

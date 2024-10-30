@@ -82,7 +82,7 @@ def __setitem__(self, key, item) -> None
 ```
 
 **Parameters**:
-- `key`: Key to set items. Can be index, slice, LionID, .
+- `key`: Key to set items. Can be index, slice, LionID, LionIDable.
 - `item`: Item(s) to set. Can be single item or collection.
 
 **Exceptions Raised**:
@@ -190,7 +190,7 @@ def update(self, other: Any) -> None
 ```
 
 **Parameters**:
-- `other`: Collection to update with. Can be any .
+- `other`: Collection to update with. Can be any LionIDable.
 
 **Return Values**:
 - `None`
@@ -827,7 +827,7 @@ pile_instance += new_item
 
 **Signature**:
 ```python
-def __isub__(self, other) -> "Pile"
+def __isub__(self, other: LionIDable) -> "Pile"
 ```
 
 **Parameters**:

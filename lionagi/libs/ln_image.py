@@ -1,27 +1,16 @@
 import base64
-import numpy as np
 from typing import Optional
+
+import numpy as np
+
 from .sys_util import SysUtil
 
-from typing_extensions import deprecated
-from lionagi.settings import format_deprecated_msg
 
-
-@deprecated(
-    format_deprecated_msg(
-        deprecated_name="lionagi.libs.ln_image.ImageUtil",
-        deprecated_type="class",
-        deprecated_version="0.3.0",
-        removal_version="1.0.0",
-        replacement=None,
-    ),
-    category=DeprecationWarning,
-)
 class ImageUtil:
 
     @staticmethod
     def preprocess_image(
-        image: np.ndarray, color_conversion_code: Optional[int] = None
+        image: np.ndarray, color_conversion_code: int | None = None
     ) -> np.ndarray:
         SysUtil.check_import("cv2", pip_name="opencv-python")
         import cv2
@@ -30,19 +19,23 @@ class ImageUtil:
         return cv2.cvtColor(image, color_conversion_code)
 
     @staticmethod
-    def encode_image_to_base64(image: np.ndarray, file_extension: str = ".jpg") -> str:
+    def encode_image_to_base64(
+        image: np.ndarray, file_extension: str = ".jpg"
+    ) -> str:
         SysUtil.check_import("cv2", pip_name="opencv-python")
         import cv2
 
         success, buffer = cv2.imencode(file_extension, image)
         if not success:
-            raise ValueError(f"Could not encode image to {file_extension} format.")
+            raise ValueError(
+                f"Could not encode image to {file_extension} format."
+            )
         encoded_image = base64.b64encode(buffer).decode("utf-8")
         return encoded_image
 
     @staticmethod
     def read_image_to_array(
-        image_path: str, color_flag: Optional[int] = None
+        image_path: str, color_flag: int | None = None
     ) -> np.ndarray:
         SysUtil.check_import("cv2", pip_name="opencv-python")
         import cv2
@@ -56,7 +49,7 @@ class ImageUtil:
     @staticmethod
     def read_image_to_base64(
         image_path: str,
-        color_flag: Optional[int] = None,
+        color_flag: int | None = None,
     ) -> str:
         image_path = str(image_path)
         image = ImageUtil.read_image_to_array(image_path, color_flag)
@@ -83,6 +76,7 @@ class ImageUtil:
         """
         import base64
         from io import BytesIO
+
         from PIL import Image
 
         # Decode the base64 string to get image data

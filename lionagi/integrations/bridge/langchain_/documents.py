@@ -1,4 +1,7 @@
-from typing import Union, Callable, List, Dict, Any, TypeVar
+from collections.abc import Callable
+from typing import Any, Dict, List, TypeVar, Union
+
+from lionfuncs import check_import
 
 from lionagi.libs.sys_util import SysUtil
 
@@ -21,8 +24,9 @@ def to_langchain_document(datanode: T, **kwargs: Any) -> Any:
             Any: An instance of `LangchainDocument` populated with data from the input node.
     """
 
-    SysUtil.check_import("langchain")
-    from langchain.schema import Document as LangchainDocument
+    LangchainDocument = check_import(
+        "langchain", module_name="schema", import_name="Document"
+    )
 
     dnode = datanode.to_dict()
     SysUtil.change_dict_key(dnode, old_key="content", new_key="page_content")
@@ -36,9 +40,9 @@ def to_langchain_document(datanode: T, **kwargs: Any) -> Any:
 
 
 def langchain_loader(
-    loader: Union[str, Callable],
-    loader_args: List[Any] = [],
-    loader_kwargs: Dict[str, Any] = {},
+    loader: str | Callable,
+    loader_args: list[Any] = [],
+    loader_kwargs: dict[str, Any] = {},
 ) -> Any:
     """
     Initializes and uses a specified loader to load data within the Langchain ecosystem.
@@ -63,8 +67,11 @@ def langchain_loader(
             True
     """
 
-    SysUtil.check_import("langchain")
-    import langchain_community.document_loaders as document_loaders
+    document_loaders = check_import(
+        "langchain_community",
+        module_name="document_loaders",
+        pip_name="langchain",
+    )
 
     try:
         if isinstance(loader, str):
@@ -83,11 +90,11 @@ def langchain_loader(
 
 
 def langchain_text_splitter(
-    data: Union[str, List],
-    splitter: Union[str, Callable],
-    splitter_args: List[Any] = None,
-    splitter_kwargs: Dict[str, Any] = None,
-) -> List[str]:
+    data: str | list,
+    splitter: str | Callable,
+    splitter_args: list[Any] = None,
+    splitter_kwargs: dict[str, Any] = None,
+) -> list[str]:
     """
     Splits text or a list of texts using a specified Langchain text splitter.
 

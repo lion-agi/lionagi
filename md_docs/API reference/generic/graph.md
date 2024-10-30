@@ -142,11 +142,11 @@ print("Node added")
 
 **Signature**:
 ```python
-def get_node(self, item, default=...) -> Node:
+def get_node(self, item: LionIDable, default=...) -> Node:
 ```
 
 **Parameters**:
-- `item` (): The identifier of the node.
+- `item` (LionIDable): The identifier of the node.
 - `default` (optional): The default value if the node is not found. Default is `...`.
 
 **Return Values**:

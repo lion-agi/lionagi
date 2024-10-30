@@ -1,65 +1,32 @@
-"""
-Copyright 2024 HaiyangLi
+from enum import Enum
 
-Licensed under the Apache License, Version 2.0 (the "License");
-you may not use this file except in compliance with the License.
-You may obtain a copy of the License at
+from lionfuncs import to_dict
 
-    http://www.apache.org/licenses/LICENSE-2.0
+from lionagi.core.collections.abc import Field
 
-Unless required by applicable law or agreed to in writing, software
-distributed under the License is distributed on an "AS IS" BASIS,
-WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-See the License for the specific language governing permissions and
-limitations under the License.
-"""
-
-from typing import Any
-
-from pydantic import Field, PrivateAttr
-
-from lion_core.libs import to_dict
-from lion_core.form.form import Form
-from lion_core.setting import LN_UNDEFINED
+from .template.base import BaseUnitForm
 
 
-class UnitForm(Form):
+class UnitForm(BaseUnitForm):
+    """
+    Form for managing unit directives and outputs.
 
-    assignment: str = Field(
-        "task -> answer",
-    )
+    Attributes:
+        actions (dict|None): Actions to take based on the context and instruction.
+        action_required (bool|None): Set to True if actions are provided, else False.
+        answer (str|None): Answer to the questions asked.
+        extension_required (bool|None): Set to True if more steps are needed.
+        prediction (str|None): Likely prediction based on context and instruction.
+        plan (dict|str|None): Step-by-step plan.
+        next_steps (dict|str|None): Ideas on next actions to take.
+        score (float|None): Numeric performance score.
+        reflection (str|None): Self-reflection on reasoning and performance.
+        selection (Enum|str|list|None): A single item from the choices.
+        tool_schema (list|dict|None): The list of tools available for use.
+        assignment (str): Default assignment task description.
+    """
 
-    template_name: str = Field(
-        "UnitProcess",
-    )
-
-    confidence: float | None = Field(
-        None,
-        description=(
-            "Provide a numeric confidence score on how likely you successfully "
-            "achieved the task  between 0 and 1, with precision in 2 decimal "
-            "places. 1 being very confident in a good job, 0 is not confident "
-            "at all."
-        ),
-        json_schema_extra={
-            "validation_kwargs": {
-                "upper_bound": 1,
-                "lower_bound": 0,
-                "num_type": float,
-                "precision": 2,
-            },
-        },
-    )
-
-    reason: str | None = Field(  # Reason
-        None,
-        description=(
-            "Explain yourself, provide concise reasoning for the process. "
-            "Must start with: Let's think step by step, "
-        ),
-    )
-
-    actions: dict | None = Field(  # Actions
+    actions: dict | None = Field(
         None,
         description=(
             "Actions to take based on the context and instruction. "
@@ -68,10 +35,12 @@ class UnitForm(Form):
             "Must use provided functions and parameters, DO NOT MAKE UP NAMES!!! "
             "Flag `action_required` as True if filled. When providing parameters, "
             "you must follow the provided type and format. If the parameter is a "
-            "number, you should provide a number like 1/6, 23, 1.1, 314e-10, or 3.5-4j"
-            "if float is allowed."
+            "number, you should provide a number like 1, 23, or 1.1 if float is "
+            "allowed."
         ),
-        examples=["{action_1: {function: 'add', arguments: {num1: 1, num2: 2}}}"],
+        examples=[
+            "{action_1: {function: 'add', arguments: {num1: 1, num2: 2}}}"
+        ],
     )
 
     action_required: bool | None = Field(
@@ -101,6 +70,11 @@ class UnitForm(Form):
         examples=[True, False],
     )
 
+    prediction: None | str = Field(
+        None,
+        description="Provide the likely prediction based on context and instruction.",
+    )
+
     plan: dict | str | None = Field(
         None,
         description=(
@@ -109,6 +83,27 @@ class UnitForm(Form):
             "if plan requires more steps."
         ),
         examples=["{step_1: {plan: '...', reason: '...'}}"],
+    )
+
+    next_steps: dict | str | None = Field(
+        None,
+        description=(
+            "Brainstorm ideas on next actions to take. Format: {next_step_n: {plan: "
+            "..., reason: ...}}. Next_step is about anticipating future actions, "
+            "but it does not have to be in a sequential format. Set `extend_required` "
+            "to True if more steps are needed."
+        ),
+        examples=["{next_step_1: {plan: '...', reason: '...'}}"],
+    )
+
+    score: float | None = Field(
+        None,
+        description=(
+            "A numeric score. Higher is better. If not otherwise instructed, "
+            "fill this field with your own performance rating. Try hard and be "
+            "self-critical."
+        ),
+        examples=[0.2, 5, 2.7],
     )
 
     reflection: str | None = Field(
@@ -122,54 +117,69 @@ class UnitForm(Form):
         ),
     )
 
+    selection: Enum | str | list | None = Field(
+        None, description="a single item from the choices."
+    )
+
     tool_schema: list | dict | None = Field(
         None, description="The list of tools available for using."
     )
 
-    action_response: list = Field(default_factory=list)
-    extension_forms: list = Field(default_factory=list)
+    assignment: str = Field("task -> answer")
 
-    # flag, should not be passed into LLM
-    _action_performed: bool | None = PrivateAttr(None)
-    _is_extension: bool = PrivateAttr(False)
-    _invoke_tool: bool = PrivateAttr(True)
+    is_extension: bool = Field(False)
 
     def __init__(
         self,
-        *,
-        instruction: str | str = None,
-        context: Any = None,
-        guidance: str = LN_UNDEFINED,
-        reason: bool = False,
-        confidence: bool = False,
-        plan: bool = False,
-        reflect: bool = False,
-        tool_schema: list = None,
-        invoke_tool: bool = None,
+        instruction=None,
+        context=None,
+        reason: bool = True,
+        predict: bool = False,
+        score=True,
+        select=None,
+        plan=None,
+        brainstorm=None,
+        reflect=None,
+        tool_schema=None,
         allow_action: bool = False,
         allow_extension: bool = False,
         max_extension: int = None,
-        plan_num_step: int = None,
-        strict=LN_UNDEFINED,
-        task_description=LN_UNDEFINED,
-        **kwargs,  # additional input for form
+        confidence=None,
+        score_num_digits=None,
+        score_range=None,
+        select_choices=None,
+        plan_num_step=None,
+        predict_num_sentences=None,
+        **kwargs,
     ):
+        """
+        Initialize the UnitForm with various parameters and settings.
 
-        a = {
-            "guidance": guidance,
-            "strict": strict,
-            "task_description": task_description,
-        }
-
-        for k, v in a.items():
-            if v is not LN_UNDEFINED:
-                kwargs[k] = v
-
+        Args:
+            instruction (str|None): Additional instruction.
+            context (str|None): Additional context.
+            reason (bool): Flag to include reasoning.
+            predict (bool): Flag to include prediction.
+            score (bool): Flag to include score.
+            select (Enum|str|list|None): Selection choices.
+            plan (dict|str|None): Step-by-step plan.
+            brainstorm (bool): Flag to include brainstorming next steps.
+            reflect (bool): Flag to include self-reflection.
+            tool_schema (list|dict|None): Schema of available tools.
+            allow_action (bool): Allow actions to be added.
+            allow_extension (bool): Allow extension for more steps.
+            max_extension (int|None): Maximum number of extensions allowed.
+            confidence (bool|None): Flag to include confidence score.
+            score_num_digits (int|None): Number of decimal places for the score.
+            score_range (list|None): Range for the score.
+            select_choices (list|None): Choices for selection.
+            plan_num_step (int|None): Number of steps in the plan.
+            predict_num_sentences (int|None): Number of sentences for prediction.
+            **kwargs: Additional keyword arguments.
+        """
         super().__init__(**kwargs)
 
         self.task = (
-            "A high level guidance from user for the given task: "
-            f"{guidance or ''}"
             f"Follow the prompt and provide the necessary output.\n"
             f"- Additional instruction: {str(instruction or 'N/A')}\n"
             f"- Additional context: {str(context or 'N/A')}\n"
@@ -179,50 +189,75 @@ class UnitForm(Form):
             self.append_to_request("reason")
 
         if allow_action:
-            self._invoke_tool = invoke_tool or self._invoke_tool
-            self.append_to_request("actions")
-            self.append_to_request("action_required")
-            self.append_to_request("reason")
-            self.task += "- Reason and prepare actions with GIVEN TOOLS ONLY.\n"
+            self.append_to_request("actions, action_required, reason")
+            self.task += (
+                "- Reason and prepare actions with GIVEN TOOLS ONLY.\n"
+            )
 
         if allow_extension:
             self.append_to_request("extension_required")
-            self.task += (
-                f"- Allow auto-extension up to another {max_extension} rounds.\n"
-            )
+            self.task += f"- Allow auto-extension up to another {max_extension} rounds.\n"
 
         if tool_schema:
             self.append_to_input("tool_schema")
             self.tool_schema = tool_schema
 
+        if brainstorm:
+            self.append_to_request("next_steps, extension_required")
+            self.task += "- Explore ideas on next actions to take.\n"
+
         if plan:
-            plan_num_step = plan_num_step or 2
+            plan_num_step = plan_num_step or 3
             max_extension = max_extension or plan_num_step
             allow_extension = True
-            self.append_to_request("plan")
-            self.append_to_request("extension_required")
-            self.task += (
-                f"- Generate a {plan_num_step}-step plan based on the context.\n"
-            )
+            self.append_to_request("plan, extension_required")
+            self.task += f"- Generate a {plan_num_step}-step plan based on the context.\n"
+
+        if predict:
+            self.append_to_request("prediction")
+            self.task += f"- Predict the next {predict_num_sentences or 1} sentence(s).\n"
+
+        if select:
+            self.append_to_request("selection")
+            self.task += f"- Select 1 item from the provided choices: {select_choices}.\n"
 
         if confidence:
-            self.append_to_request("confidence")
+            self.append_to_request("confidence_score")
+
+        if score:
+            self.append_to_request("score")
+
+            score_range = score_range or [0, 10]
+            score_num_digits = score_num_digits or 0
+
+            self.validation_kwargs["score"] = {
+                "upper_bound": score_range[1],
+                "lower_bound": score_range[0],
+                "num_type": int if score_num_digits == 0 else float,
+                "precision": (
+                    score_num_digits if score_num_digits != 0 else None
+                ),
+            }
+
+            self.task += (
+                f"- Give a numeric score in [{score_range[0]}, {score_range[1]}] "
+                f"and precision of {score_num_digits or 0} decimal places.\n"
+            )
 
         if reflect:
             self.append_to_request("reflection")
 
-    @property
-    def display_dict(self):
+    def display(self):
         """
         Display the current form fields and values in a user-friendly format.
         """
-        fields = self.required_dict
+        fields = self.work_fields.copy()
 
-        if "task" in fields and len(str(fields["task"])) > 1000:
-            fields["task"] = str(fields["task"])[:1000].strip() + "..."
+        if "task" in fields and len(str(fields["task"])) > 2000:
+            fields["task"] = fields["task"][:2000] + "..."
 
         if "tool_schema" in fields:
-            tools = to_dict(fields["tool_schema"])["tools"]
+            tools = to_dict(fields["tool_schema"], fuzzy_parse=True)["tools"]
             fields["available_tools"] = [i["function"]["name"] for i in tools]
             fields.pop("tool_schema")
 
@@ -252,9 +287,4 @@ class UnitForm(Form):
                 idx += 1
             fields["action_response"] = a[:-2]
 
-        # change the order of answer to the end
-        if "answer" in fields:
-            answer = fields.pop("answer")
-            fields["answer"] = answer
-
-        return fields
+        super().display(fields=fields)

@@ -62,7 +62,7 @@ async def _parallel_chat(
     tools=False,
     out=True,
     invoke: bool = True,
-    request_fields=None,
+    requested_fields=None,
     persist_path=None,
     branch_config={},
     explode=False,
@@ -81,7 +81,7 @@ async def _parallel_chat(
 - `tools` (bool, optional): Flag indicating if tools should be used. Defaults to False.
 - `out` (bool, optional): Flag indicating if output should be returned. Defaults to True.
 - `invoke` (bool, optional): Flag indicating if tools should be invoked. Defaults to True.
-- `request_fields` (list, optional): Fields to request from the context. Defaults to None.
+- `requested_fields` (list, optional): Fields to request from the context. Defaults to None.
 - `persist_path` (str, optional): Path to persist the branch. Defaults to None.
 - `branch_config` (dict, optional): Configuration for the branch. Defaults to {}.
 - `explode` (bool, optional): Flag indicating if combinations of instructions and context should be exploded. Defaults to False.

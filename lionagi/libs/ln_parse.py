@@ -1,44 +1,16 @@
-"""
-Copyright 2024 HaiyangLi
-
-Licensed under the Apache License, Version 2.0 (the "License");
-you may not use this file except in compliance with the License.
-You may obtain a copy of the License at
-
-    http://www.apache.org/licenses/LICENSE-2.0
-
-Unless required by applicable law or agreed to in writing, software
-distributed under the License is distributed on an "AS IS" BASIS,
-WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-See the License for the specific language governing permissions and
-limitations under the License.
-"""
-
-from collections.abc import Callable
-import re
 import inspect
 import itertools
+import re
+from collections.abc import Callable
 from typing import Any
-import numpy as np
-import lionagi.libs.ln_convert as convert
 
+import numpy as np
+
+import lionagi.libs.ln_convert as convert
 
 md_json_char_map = {"\n": "\\n", "\r": "\\r", "\t": "\\t", '"': '\\"'}
 
-from typing_extensions import deprecated
-from lionagi.settings import format_deprecated_msg
 
-
-@deprecated(
-    format_deprecated_msg(
-        deprecated_name="lionagi.libs.ln_parse.ParseUtil",
-        deprecated_type="class",
-        deprecated_version="0.3.0",
-        removal_version="1.0.0",
-        replacement=None,
-    ),
-    category=DeprecationWarning,
-)
 class ParseUtil:
 
     @staticmethod
@@ -91,7 +63,9 @@ class ParseUtil:
                 open_brackets.append(brackets[char])
             elif char in brackets.values():
                 if not open_brackets or open_brackets[-1] != char:
-                    raise ValueError("Mismatched or extra closing bracket found.")
+                    raise ValueError(
+                        "Mismatched or extra closing bracket found."
+                    )
                 open_brackets.pop()
 
         return str_to_parse + "".join(reversed(open_brackets))
@@ -122,7 +96,9 @@ class ParseUtil:
         def replacement(match):
             char = match.group(0)
             _char_map = char_map or md_json_char_map
-            return _char_map.get(char, char)  # Default to the char itself if not in map
+            return _char_map.get(
+                char, char
+            )  # Default to the char itself if not in map
 
         # Match any of the special characters to be escaped.
         return re.sub(r'[\n\r\t"]', replacement, value)
@@ -177,7 +153,9 @@ class ParseUtil:
             )
         if not match:
             str_to_parse = str_to_parse.strip()
-            if str_to_parse.startswith("```json\n") and str_to_parse.endswith("\n```"):
+            if str_to_parse.startswith("```json\n") and str_to_parse.endswith(
+                "\n```"
+            ):
                 str_to_parse = str_to_parse[8:-4].strip()
 
         parser = parser or ParseUtil.fuzzy_parse_json
@@ -237,11 +215,15 @@ class ParseUtil:
                 {'key': 'value'}
         """
         json_obj = ParseUtil.extract_json_block(
-            str_to_parse, language="json", parser=parser or ParseUtil.fuzzy_parse_json
+            str_to_parse,
+            language="json",
+            parser=parser or ParseUtil.fuzzy_parse_json,
         )
 
         if expected_keys:
-            if missing_keys := [key for key in expected_keys if key not in json_obj]:
+            if missing_keys := [
+                key for key in expected_keys if key not in json_obj
+            ]:
                 raise ValueError(
                     f"Missing expected keys in JSON object: {', '.join(missing_keys)}"
                 )
@@ -304,7 +286,9 @@ class ParseUtil:
             elif lines[i].startswith(" "):
                 param_desc = lines[i].split(":", 1)
                 if len(param_desc) == 1:
-                    params_description[current_param] += f" {param_desc[0].strip()}"
+                    params_description[
+                        current_param
+                    ] += f" {param_desc[0].strip()}"
                     continue
                 param, desc = param_desc
                 param = param.split("(")[0].strip()
@@ -471,9 +455,13 @@ class ParseUtil:
         func_name = func.__name__
 
         if not func_description:
-            func_description, _ = ParseUtil._extract_docstring_details(func, style)
+            func_description, _ = ParseUtil._extract_docstring_details(
+                func, style
+            )
         if not params_description:
-            _, params_description = ParseUtil._extract_docstring_details(func, style)
+            _, params_description = ParseUtil._extract_docstring_details(
+                func, style
+            )
 
         # Extracting parameters with typing hints
         sig = inspect.signature(func)
@@ -487,7 +475,9 @@ class ParseUtil:
             # Default type to string and update if type hint is available
             param_type = "string"
             if param.annotation is not inspect.Parameter.empty:
-                param_type = ParseUtil._python_to_json_type(param.annotation.__name__)
+                param_type = ParseUtil._python_to_json_type(
+                    param.annotation.__name__
+                )
 
             # Extract parameter description from docstring, if available
             param_description = params_description.get(
@@ -511,16 +501,6 @@ class ParseUtil:
         }
 
 
-@deprecated(
-    format_deprecated_msg(
-        deprecated_name="lionagi.libs.ln_parse.StringMatch",
-        deprecated_type="class",
-        deprecated_version="0.3.0",
-        removal_version="1.0.0",
-        replacement=None,
-    ),
-    category=DeprecationWarning,
-)
 class StringMatch:
 
     @staticmethod
@@ -584,7 +564,9 @@ class StringMatch:
 
         transpositions //= 2
         return (
-            matches / s_len + matches / t_len + (matches - transpositions) / matches
+            matches / s_len
+            + matches / t_len
+            + (matches - transpositions) / matches
         ) / 3.0
 
     @staticmethod
@@ -677,7 +659,9 @@ class StringMatch:
                 used_keys.add(k)
             else:
                 # Calculate Jaro-Winkler similarity scores for each potential match
-                scores = np.array([score_func(k, field) for field in fields_set])
+                scores = np.array(
+                    [score_func(k, field) for field in fields_set]
+                )
                 # Find the index of the highest score
                 max_score_index = np.argmax(scores)
                 # Select the best match based on the highest score
@@ -735,19 +719,25 @@ class StringMatch:
 
                     except Exception:
                         # if still failed we try to extract the json block using re and parse it again
-                        match = re.search(r"```json\n({.*?})\n```", out_, re.DOTALL)
+                        match = re.search(
+                            r"```json\n({.*?})\n```", out_, re.DOTALL
+                        )
                         if match:
                             out_ = match.group(1)
                             try:
                                 out_ = ParseUtil.fuzzy_parse_json(out_)
-                                return StringMatch.correct_dict_keys(keys, out_)
+                                return StringMatch.correct_dict_keys(
+                                    keys, out_
+                                )
 
                             except:
                                 try:
                                     out_ = ParseUtil.fuzzy_parse_json(
                                         out_.replace("'", '"')
                                     )
-                                    return StringMatch.correct_dict_keys(keys, out_)
+                                    return StringMatch.correct_dict_keys(
+                                        keys, out_
+                                    )
                                 except:
                                     pass
 
@@ -755,4 +745,6 @@ class StringMatch:
             try:
                 return StringMatch.correct_dict_keys(keys, out_)
             except Exception as e:
-                raise ValueError(f"Failed to force_validate_dict for input: {x}") from e
+                raise ValueError(
+                    f"Failed to force_validate_dict for input: {x}"
+                ) from e

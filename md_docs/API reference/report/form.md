@@ -8,7 +8,7 @@
 
 #### Attributes:
 - `input_fields` (List[str]): Fields required to carry out the objective of the form.
-- `request_fields` (List[str]): Fields requested to be filled by the user.
+- `requested_fields` (List[str]): Fields requested to be filled by the user.
 
 ### `__init__`
 
@@ -121,12 +121,12 @@ def _instruction_prompt(self) -> str:
 **Description**:
 Generates a prompt for task instructions, describing the task, input fields, and requested output fields.
 
-### `_instruction_request_fields`
+### `_instruction_requested_fields`
 
 **Signature**:
 ```python
 @property
-def _instruction_request_fields(self) -> Dict[str, str]:
+def _instruction_requested_fields(self) -> Dict[str, str]:
 ```
 
 **Return Values**:

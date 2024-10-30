@@ -1,11 +1,11 @@
 # use utils and schema
 from enum import Enum
 from pathlib import Path
-from typing import List, Union, Dict, Any, Tuple
+from typing import Any, Dict, List, Tuple, Union
 
+from lionagi.core.generic import Node
 from lionagi.libs import convert, func_call
 from lionagi.libs.ln_tokenize import TokenizeUtil
-from lionagi.core.generic import Node
 
 
 class ReaderType(str, Enum):
@@ -24,7 +24,7 @@ class ChunkerType(str, Enum):
 
 def dir_to_path(
     dir: str, ext: str, recursive: bool = False, flatten: bool = True
-) -> List[Path]:
+) -> list[Path]:
     """
     Generates a list of file paths from a directory with the given file extension.
 
@@ -53,16 +53,18 @@ def dir_to_path(
             func_call.lcall(ext, _dir_to_path, flatten=True), flatten=flatten
         )
     except:
-        raise ValueError("Invalid directory or extension, please check the path")
+        raise ValueError(
+            "Invalid directory or extension, please check the path"
+        )
 
 
 def dir_to_nodes(
     dir_: str,
-    ext: Union[List[str], str],
+    ext: list[str] | str,
     recursive: bool = False,
     flatten: bool = True,
     clean_text: bool = True,
-) -> List[Node]:
+) -> list[Node]:
     """
     Converts directory contents into Node objects based on specified file extensions.
 
@@ -84,12 +86,16 @@ def dir_to_nodes(
         # converting them into Node objects.
     """
 
-    path_list = dir_to_path(dir=dir_, ext=ext, recursive=recursive, flatten=flatten)
+    path_list = dir_to_path(
+        dir=dir_, ext=ext, recursive=recursive, flatten=flatten
+    )
     files_info = func_call.lcall(path_list, read_text, clean=clean_text)
-    return func_call.lcall(files_info, lambda x: Node(content=x[0], metadata=x[1]))
+    return func_call.lcall(
+        files_info, lambda x: Node(content=x[0], metadata=x[1])
+    )
 
 
-def read_text(filepath: str, clean: bool = True) -> Tuple[str, dict]:
+def read_text(filepath: str, clean: bool = True) -> tuple[str, dict]:
     """
     Reads text from a file and optionally cleans it, returning the content and metadata.
 
@@ -115,9 +121,15 @@ def read_text(filepath: str, clean: bool = True) -> Tuple[str, dict]:
 
         file = filepath
         size = os.path.getsize(filepath)
-        creation_date = datetime.fromtimestamp(os.path.getctime(filepath)).date()
-        modified_date = datetime.fromtimestamp(os.path.getmtime(filepath)).date()
-        last_accessed_date = datetime.fromtimestamp(os.path.getatime(filepath)).date()
+        creation_date = datetime.fromtimestamp(
+            os.path.getctime(filepath)
+        ).date()
+        modified_date = datetime.fromtimestamp(
+            os.path.getmtime(filepath)
+        ).date()
+        last_accessed_date = datetime.fromtimestamp(
+            os.path.getatime(filepath)
+        ).date()
         return {
             "file": convert.to_str(file),
             "size": size,
@@ -127,7 +139,7 @@ def read_text(filepath: str, clean: bool = True) -> Tuple[str, dict]:
         }
 
     try:
-        with open(filepath, "r") as f:
+        with open(filepath) as f:
             content = f.read()
             if clean:
                 # Define characters to replace and their replacements
@@ -141,19 +153,22 @@ def read_text(filepath: str, clean: bool = True) -> Tuple[str, dict]:
 
 
 def _file_to_chunks(
-    input: Dict[str, Any],
+    input: dict[str, Any],
     field: str = "content",
     chunk_size: int = 1500,
     overlap: float = 0.1,
     threshold: int = 200,
-) -> List[Dict[str, Any]]:
+) -> list[dict[str, Any]]:
     try:
         out = {key: value for key, value in input.items() if key != field} | {
             "chunk_overlap": overlap,
             "chunk_threshold": threshold,
         }
         chunks = TokenizeUtil.chunk_by_chars(
-            input[field], chunk_size=chunk_size, overlap=overlap, threshold=threshold
+            input[field],
+            chunk_size=chunk_size,
+            overlap=overlap,
+            threshold=threshold,
         )
         logs = []
         for i, chunk in enumerate(chunks):
@@ -168,7 +183,9 @@ def _file_to_chunks(
         return logs
 
     except Exception as e:
-        raise ValueError(f"An error occurred while chunking the file. {e}") from e
+        raise ValueError(
+            f"An error occurred while chunking the file. {e}"
+        ) from e
 
 
 # needs doing TODO
@@ -184,7 +201,9 @@ def file_to_chunks(
     #    verbose=True,
     #    timestamp=True,
     #    logger=None,
-    return convert.to_list(func_call.lcall(input, chunk_func, **kwargs), flatten=True)
+    return convert.to_list(
+        func_call.lcall(input, chunk_func, **kwargs), flatten=True
+    )
 
 
 def _datanode_parser(nodes, parser):

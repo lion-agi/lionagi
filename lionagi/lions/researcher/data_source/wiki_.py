@@ -10,7 +10,9 @@ class WikipediaSearch:
     def create_agent(verbose=False):
         from lionagi.libs import SysUtil
 
-        SysUtil.check_import(package_name="llama_index", pip_name="llama-index")
+        SysUtil.check_import(
+            package_name="llama_index", pip_name="llama-index"
+        )
 
         SysUtil.check_import(
             package_name="llama_index",
@@ -26,9 +28,9 @@ class WikipediaSearch:
             pip_name="llama-index-tools-wikipedia",
         )
 
-        from llama_index.tools.wikipedia import WikipediaToolSpec
         from llama_index.agent.openai import OpenAIAgent
         from llama_index.llms.openai import OpenAI
+        from llama_index.tools.wikipedia import WikipediaToolSpec
 
         llm = OpenAI(model="gpt-4-turbo", temperature=0.1)
 

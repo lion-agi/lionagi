@@ -1,49 +1,58 @@
-from pydantic import Field
-from lion_core.abc import Relational, Condition
-from lion_core.graph.edge import Edge as CoreEdge
-from lionagi.core.generic.component import Component
+from typing import Any
+
+from pydantic import Field, field_validator
+
+from lionagi.core.collections.abc import (
+    Component,
+    Condition,
+    LionIDable,
+    get_lion_id,
+)
 from lionagi.core.generic.edge_condition import EdgeCondition
-from lionagi.core.generic.note import Note
-from lionagi.libs.sys_util import SysUtil
 
 
-class Edge(Component, CoreEdge):
+class Edge(Component):
     """Represents a directed edge between two nodes in a graph."""
+
+    head: str = Field(
+        ...,
+        title="Head",
+        description="The identifier of the head node of the edge.",
+    )
+
+    tail: str = Field(
+        ...,
+        title="Out",
+        description="The identifier of the tail node of the edge.",
+    )
 
     condition: Condition | EdgeCondition | None = Field(
         default=None,
         description="Optional condition that must be met for the edge "
-        "to be considered active. `deprecated`, use `properties` instead.",
-        deprecated=True,
+        "to be considered active.",
     )
 
     label: str | None = Field(
         default=None,
-        description="An optional label for the edge. `deprecated`, use `properties` instead.",
+        description="An optional label for the edge.",
     )
 
     bundle: bool = Field(
         default=False,
-        description="A flag indicating if the edge is bundled. `deprecated`, use `properties` instead.",
+        description="A flag indicating if the edge is bundled.",
     )
 
-    properties: Note = Field(default_factory=Note)
+    async def check_condition(self, obj: Any) -> bool:
+        """Check if the edge condition is met for the given object."""
+        if not self.condition:
+            raise ValueError("The condition for the edge is not set.")
+        check = await self.condition.applies(obj)
+        return check
 
-    def __init__(
-        self,
-        head: Relational | str,
-        tail: Relational | str,
-        condition: EdgeCondition | None = None,
-        label: list[str] | None = None,
-        **kwargs,
-    ):
-        super().__init__(
-            head=head,
-            tail=tail,
-            condition=condition,
-            label=label,
-            **kwargs,
-        )
+    @field_validator("head", "tail", mode="before")
+    def _validate_head_tail(cls, value):
+        """Validate the head and tail fields."""
+        return get_lion_id(value)
 
     def string_condition(self):
         """
@@ -68,7 +77,8 @@ class Edge(Component, CoreEdge):
         if self.condition is None:
             return
 
-        import inspect, sys
+        import inspect
+        import sys
 
         def new_getfile(object, _old_getfile=inspect.getfile):
             if not inspect.isclass(object):
@@ -89,11 +99,12 @@ class Edge(Component, CoreEdge):
                 ):
                     return inspect.getfile(member)
             else:
-                raise TypeError("Source for {!r} not found".format(object))
+                raise TypeError(f"Source for {object!r} not found")
 
         inspect.getfile = new_getfile
 
         import inspect
+
         from IPython.core.magics.code import extract_symbols
 
         obj = self.condition.__class__
@@ -101,6 +112,10 @@ class Edge(Component, CoreEdge):
         class_code = extract_symbols(cell_code, obj.__name__)[0][0]
         return class_code
 
-    def __contains__(self, item) -> bool:
+    def __len__(self):
+        """Return the length of the edge (always 1)."""
+        return 1
+
+    def __contains__(self, item: LionIDable) -> bool:
         """Check if the given item is the head or tail of the edge."""
-        return SysUtil.get_id(item) in (self.head, self.tail)
+        return get_lion_id(item) in (self.head, self.tail)

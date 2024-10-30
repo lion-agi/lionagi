@@ -1,8 +1,8 @@
-from typing import Union, Dict, Any
 import subprocess
+from typing import Any, Dict, Union
 
-from lionagi.libs.sys_util import SysUtil
 from lionagi.libs.ln_api import BaseService
+from lionagi.libs.sys_util import SysUtil
 
 allowed_kwargs = [
     # "model",
@@ -46,8 +46,8 @@ class TransformersService(BaseService):
     def __init__(
         self,
         task: str = None,
-        model: Union[str, Any] = None,
-        config: Union[str, Dict, Any] = None,
+        model: str | Any = None,
+        config: str | dict | Any = None,
         device="cpu",
         **kwargs,
     ):
@@ -83,7 +83,9 @@ class TransformersService(BaseService):
     async def serve_chat(self, messages, **kwargs):
         if self.task:
             if self.task != "conversational":
-                raise ValueError(f"Invalid transformers pipeline task: {self.task}.")
+                raise ValueError(
+                    f"Invalid transformers pipeline task: {self.task}."
+                )
 
         payload = {"messages": messages}
         config = {}

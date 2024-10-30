@@ -6,7 +6,7 @@
 **Parent Class:** [`ABC`](https://docs.python.org/3/library/abc.html)
 
 **Description**:
-`Record` is an abstract base class for managing a collection of unique LionAGI items. It accepts `` for retrieval and requires `Component` instances for addition.
+`Record` is an abstract base class for managing a collection of unique LionAGI items. It accepts `LionIDable` for retrieval and requires `Component` instances for addition.
 
 ### `keys`
 
@@ -53,18 +53,18 @@ for value in record.values():
 **Signature**:
 ```python
 @abstractmethod
-def get(item, /, default: Any = None) -> T:
+def get(item: LionIDable, /, default: Any = None) -> T:
 ```
 
 **Parameters**:
-- `item` (``): The identifier of the item to retrieve.
+- `item` (`LionIDable`): The identifier of the item to retrieve.
 - `default` (Any, optional): The default value to return if the item is not found. Defaults to `None`.
 
 **Return Values**:
 - `T`: The retrieved item or the default value.
 
 **Description**:
-Retrieves an item by identifier. Accepts a `` object. Returns the default if the item is not found.
+Retrieves an item by identifier. Accepts a `LionIDable` object. Returns the default if the item is not found.
 
 **Usage Examples**:
 ```python
@@ -76,11 +76,11 @@ item = record.get(item_id, default=None)
 **Signature**:
 ```python
 @abstractmethod
-def __getitem__(item) -> T:
+def __getitem__(item: LionIDable) -> T:
 ```
 
 **Parameters**:
-- `item` (): The identifier of the item to retrieve.
+- `item` (LionIDable): The identifier of the item to retrieve.
 
 **Return Values**:
 - `T`: The retrieved item.
@@ -89,7 +89,7 @@ def __getitem__(item) -> T:
 - `KeyError`: If the item ID is not found.
 
 **Description**:
-Returns an item using a `` identifier.
+Returns an item using a `LionIDable` identifier.
 
 **Usage Examples**:
 ```python
@@ -101,11 +101,11 @@ item = record[item_id]
 **Signature**:
 ```python
 @abstractmethod
-def __setitem__(item, value: T) -> None:
+def __setitem__(item: LionIDable, value: T) -> None:
 ```
 
 **Parameters**:
-- `item` (``): The identifier of the item to add or update.
+- `item` (`LionIDable`): The identifier of the item to add or update.
 - `value` (T): The `Component` instance to add or update.
 
 **Return Values**:
@@ -124,11 +124,11 @@ record[item_id] = component_instance
 **Signature**:
 ```python
 @abstractmethod
-def __contains__(item) -> bool:
+def __contains__(item: LionIDable) -> bool:
 ```
 
 **Parameters**:
-- `item` (``): The identifier or object to check.
+- `item` (`LionIDable`): The identifier or object to check.
 
 **Return Values**:
 - `bool`: True if the item is in the record, False otherwise.
@@ -336,14 +336,14 @@ await progressable.forward()
 
 ---
 
-## Class: `Relational`
+## Class: `Relatable`
 
 ^4af61d
 
 **Parent Class:** [`ABC`](https://docs.python.org/3/library/abc.html)
 
 **Description**:
-`Relational` defines a relationship that can be established with arguments.
+`Relatable` defines a relationship that can be established with arguments.
 
 
 ### `relate`
@@ -366,19 +366,19 @@ Establishes a relationship based on the provided arguments.
 
 **Usage Examples**:
 ```python
-Relational.relate(arg1, arg2, key=value)
+relatable.relate(arg1, arg2, key=value)
 ```
 
 ---
 
-## Class: `Communicatable`
+## Class: `Sendable`
 
 ^ef363b
 
 **Parent Class:** [`ABC`](https://docs.python.org/3/library/abc.html), [`pydantic.BaseModel`](https://docs.pydantic.dev/latest/),
 
 **Description**:
-`Communicatable` represents an object that can be sent with a sender and recipient.
+`Sendable` represents an object that can be sent with a sender and recipient.
 
 Attributes:
 - `sender` (str): The ID of the sender node, or 'system', 'user', or 'assistant'.
@@ -406,8 +406,8 @@ Validates the sender and recipient fields.
 
 **Usage Examples**:
 ```python
-# Example usage of Communicatable class
-Communicatable_instance = Communicatable(sender="user", recipient="assistant")
+# Example usage of Sendable class
+sendable_instance = Sendable(sender="user", recipient="assistant")
 ```
 
 ---

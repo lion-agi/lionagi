@@ -1,15 +1,14 @@
 from typing import Dict, Union
 
+from lionfuncs import check_import
+
 
 def get_ipython_user_proxy():
 
     try:
-        from lionagi.libs import SysUtil
-
-        SysUtil.check_import("autogen", pip_name="pyautogen")
-
-        import autogen
+        autogen = check_import("autogen", pip_name="pyautogen")
         from IPython import get_ipython
+
     except Exception as e:
         raise ImportError(f"Please install autogen and IPython. {e}")
 
@@ -19,14 +18,16 @@ def get_ipython_user_proxy():
             super().__init__(name, **kwargs)
             self._ipython = get_ipython()
 
-        def generate_init_message(self, *args, **kwargs) -> Union[str, Dict]:
+        def generate_init_message(self, *args, **kwargs) -> str | dict:
             return (
                 super().generate_init_message(*args, **kwargs)
                 + """If you suggest code, the code will be executed in IPython."""
             )
 
         def run_code(self, code, **kwargs):
-            result = self._ipython.run_cell("%%capture --no-display cap\n" + code)
+            result = self._ipython.run_cell(
+                "%%capture --no-display cap\n" + code
+            )
             log = self._ipython.ev("cap.stdout")
             log += self._ipython.ev("cap.stderr")
             if result.result is not None:
@@ -61,7 +62,9 @@ def get_autogen_coder(
         SysUtil.check_import("autogen", pip_name="pyautogen")
 
         import autogen
-        from autogen.agentchat.contrib.gpt_assistant_agent import GPTAssistantAgent
+        from autogen.agentchat.contrib.gpt_assistant_agent import (
+            GPTAssistantAgent,
+        )
     except Exception as e:
         raise ImportError(f"Please install autogen. {e}")
 

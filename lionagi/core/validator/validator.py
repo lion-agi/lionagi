@@ -1,30 +1,35 @@
-"""
-Copyright 2024 HaiyangLi
-
-Licensed under the Apache License, Version 2.0 (the "License");
-you may not use this file except in compliance with the License.
-You may obtain a copy of the License at
-
-    http://www.apache.org/licenses/LICENSE-2.0
-
-Unless required by applicable law or agreed to in writing, software
-distributed under the License is distributed on an "AS IS" BASIS,
-WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-See the License for the specific language governing permissions and
-limitations under the License.
-"""
-
 import asyncio
-from typing import Any, Dict, List, Union, Callable
+from collections.abc import Callable
+from typing import Any, Dict, List, Union
+
+from lionfuncs import lcall
+
+from lionagi.core.collections.abc import FieldError
 from lionagi.libs import SysUtil
-from lionagi.libs.lionfuncs import lcall
-from lion_core.exceptions import LionValueError
-from lionagi.core.generic.model import iModel
-from ..rule.base import Rule
-from lion_core.rule.default_rules._default import DEFAULT_RULE_INFO, DEFAULT_RULEORDER
-from ..rule.rulebook import RuleBook
+
 from ..report.form import Form
 from ..report.report import Report
+from ..rule._default import DEFAULT_RULES
+from ..rule.base import Rule
+from ..rule.rulebook import RuleBook
+
+_DEFAULT_RULEORDER = [
+    "choice",
+    "actionrequest",
+    "number",
+    "mapping",
+    "str",
+    "bool",
+]
+
+_DEFAULT_RULES = {
+    "choice": DEFAULT_RULES.CHOICE.value,
+    "actionrequest": DEFAULT_RULES.ACTION.value,
+    "bool": DEFAULT_RULES.BOOL.value,
+    "number": DEFAULT_RULES.NUMBER.value,
+    "mapping": DEFAULT_RULES.MAPPING.value,
+    "str": DEFAULT_RULES.STR.value,
+}
 
 
 class Validator:
@@ -36,10 +41,10 @@ class Validator:
         self,
         *,
         rulebook: RuleBook = None,
-        rules: Dict[str, Rule] = None,
-        order: List[str] = None,
-        init_config: Dict[str, Dict] = None,
-        active_rules: Dict[str, Rule] = None,
+        rules: dict[str, Rule] = None,
+        order: list[str] = None,
+        init_config: dict[str, dict] = None,
+        active_rules: dict[str, Rule] = None,
         formatter: Callable = None,
         format_kwargs: dict = {},
     ):
@@ -54,17 +59,51 @@ class Validator:
             active_rules (Dict[str, Rule], optional): Dictionary of currently active rules.
         """
 
-        self.ln_id: str = SysUtil.id()
-        self.timestamp: str = SysUtil.time()
+        self.ln_id: str = SysUtil.create_id()
+        self.timestamp: str = SysUtil.get_timestamp(sep=None)[:-6]
         self.rulebook = rulebook or RuleBook(
-            rules_info=DEFAULT_RULE_INFO, default_rule_order=DEFAULT_RULEORDER
+            rules or _DEFAULT_RULES, order or _DEFAULT_RULEORDER, init_config
         )
-        if not active_rules:
-            for k, v in self.rulebook.rules_info.items():
-                self.rulebook.init_rule(k)
+        self.active_rules: dict[str, Rule] = (
+            active_rules or self._initiate_rules()
+        )
         self.validation_log = []
         self.formatter = formatter
         self.format_kwargs = format_kwargs
+
+    def _initiate_rules(self) -> dict[str, Rule]:
+        """
+        Initialize rules from the rulebook.
+
+        Returns:
+            dict: A dictionary of active rules.
+        """
+
+        def _init_rule(rule_name: str) -> Rule:
+
+            if not issubclass(self.rulebook[rule_name], Rule):
+                raise FieldError(
+                    f"Invalid rule class for {rule_name}, must be a subclass of Rule"
+                )
+
+            _config = self.rulebook.rule_config[rule_name] or {}
+            if not isinstance(_config, dict):
+                raise FieldError(
+                    f"Invalid config for {rule_name}, must be a dictionary"
+                )
+
+            _rule = self.rulebook.rules[rule_name](**_config.get("config", {}))
+            _rule.fields = _config.get("fields", [])
+            _rule._is_init = True
+            return _rule
+
+        _rules = lcall(self.rulebook.ruleorder, _init_rule)
+
+        return {
+            rule_name: _rules[idx]
+            for idx, rule_name in enumerate(self.rulebook.ruleorder)
+            if getattr(_rules[idx], "_is_init", None)
+        }
 
     async def validate_field(
         self,
@@ -94,7 +133,7 @@ class Validator:
             Any: The validated value.
 
         Raises:
-            LionLionValueError: If validation fails.
+            LionFieldError: If validation fails.
         """
         for rule in self.active_rules.values():
             try:
@@ -110,7 +149,7 @@ class Validator:
                     return await rule.invoke(field, value, form)
             except Exception as e:
                 self.log_validation_error(field, value, str(e))
-                raise LionValueError(f"Failed to validate {field}") from e
+                raise FieldError(f"Failed to validate {field}") from e
 
         if strict:
             error_message = (
@@ -118,10 +157,10 @@ class Validator:
                 f"original value directly when no rule applies, set strict=False."
             )
             self.log_validation_error(field, value, error_message)
-            raise LionValueError(error_message)
+            raise FieldError(error_message)
 
     async def validate_report(
-        self, report: Report, forms: List[Form], strict: bool = True
+        self, report: Report, forms: list[Form], strict: bool = True
     ) -> Report:
         """
         Validate a report based on active rules.
@@ -140,7 +179,7 @@ class Validator:
     async def validate_response(
         self,
         form: Form,
-        response: Union[dict, str],
+        response: dict | str,
         strict: bool = True,
         use_annotation: bool = True,
     ) -> Form:
@@ -160,26 +199,34 @@ class Validator:
             ValueError: If the response format is invalid.
         """
         if isinstance(response, str):
-            if len(form.request_fields) == 1:
-                response = {form.request_fields[0]: response}
+            if len(form.requested_fields) == 1:
+                response = {form.requested_fields[0]: response}
             else:
                 if self.formatter:
                     if asyncio.iscoroutinefunction(self.formatter):
-                        response = await self.formatter(response, **self.format_kwargs)
+                        response = await self.formatter(
+                            response, **self.format_kwargs
+                        )
                         print("formatter used")
                     else:
-                        response = self.formatter(response, **self.format_kwargs)
+                        response = self.formatter(
+                            response, **self.format_kwargs
+                        )
                         print("formatter used")
 
         if not isinstance(response, dict):
-            raise ValueError(f"The form response format is invalid for filling.")
+            raise ValueError(
+                f"The form response format is invalid for filling."
+            )
 
         dict_ = {}
         for k, v in response.items():
-            if k in form.request_fields:
+            if k in form.requested_fields:
                 kwargs = form.validation_kwargs.get(k, {})
                 _annotation = form._field_annotations[k]
-                if (keys := form._get_field_attr(k, "choices", None)) is not None:
+                if (
+                    keys := form._get_field_attr(k, "choices", None)
+                ) is not None:
                     v = await self.validate_field(
                         field=k,
                         value=v,
@@ -191,7 +238,9 @@ class Validator:
                         **kwargs,
                     )
 
-                elif (_keys := form._get_field_attr(k, "keys", None)) is not None:
+                elif (
+                    _keys := form._get_field_attr(k, "keys", None)
+                ) is not None:
 
                     v = await self.validate_field(
                         field=k,
@@ -231,7 +280,7 @@ class Validator:
             raise ValueError(f"Rule '{rule_name}' already exists.")
         self.active_rules[rule_name] = rule
         self.rulebook.rules[rule_name] = rule
-        self.rulebook.default_rule_order.append(rule_name)
+        self.rulebook.ruleorder.append(rule_name)
         self.rulebook.rule_config[rule_name] = config or {}
 
     def remove_rule(self, rule_name: str):
@@ -310,7 +359,7 @@ class Validator:
         }
         self.validation_log.append(log_entry)
 
-    def get_validation_summary(self) -> Dict[str, Any]:
+    def get_validation_summary(self) -> dict[str, Any]:
         """
         Get a summary of validation results.
 

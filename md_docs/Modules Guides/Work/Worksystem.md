@@ -97,7 +97,7 @@ python: 🐍💻🖥️:
 print("Hello, World!")
 ```
 
-c++: 
+c++:
 ```cpp
 #include <iostream>
 using namespace std;
@@ -108,34 +108,34 @@ int main() {
 }
 ```
 
-java: 
+java:
 ```java
 👋🌍🛠️☕💻
 ```
 
-javascript: 
+javascript:
 ```javascript
 console.log("👋🌍");
 ```
 
-ruby: 
+ruby:
 ```ruby
 👋🌍
 ```
 
-php: 
+php:
 ```php
 <?php
 echo "👋🌍";
 ?>
 ```
 
-c#: 
+c#:
 ```
 👋🌍
 ```
 
-matlab: 
+matlab:
 ```matlab
 disp('👋🌍')
 ```
@@ -150,44 +150,44 @@ chat_func_log.pile.to_df()
 
 ```markdown
                               ln_id                     created  \
-0  1d83d5869bda3cd48d71b4e1bcc20d8c  2024-05-14T02:08:47.770981   
-1  1eee56b3cfa52375e4a87efb530582c6  2024-05-14T02:08:47.771030   
-2  d36e13084a824a2e4e880c726d2c8799  2024-05-14T02:08:47.771046   
-3  3ddc0be116f799288e0a107f5df4163e  2024-05-14T02:08:47.771061   
-4  a1100aa0df9209fc400164cb580371b1  2024-05-14T02:08:47.771073   
-5  30d22e8c32d20a7cf65e09db4c7fe052  2024-05-14T02:08:47.771084   
-6  8a928c0d06b9fab9e2f812f9f15a948b  2024-05-14T02:08:47.771095   
-7  2f875d1fa6b76c82d399610bf17aa80b  2024-05-14T02:08:47.771110   
+0  1d83d5869bda3cd48d71b4e1bcc20d8c  2024-05-14T02:08:47.770981
+1  1eee56b3cfa52375e4a87efb530582c6  2024-05-14T02:08:47.771030
+2  d36e13084a824a2e4e880c726d2c8799  2024-05-14T02:08:47.771046
+3  3ddc0be116f799288e0a107f5df4163e  2024-05-14T02:08:47.771061
+4  a1100aa0df9209fc400164cb580371b1  2024-05-14T02:08:47.771073
+5  30d22e8c32d20a7cf65e09db4c7fe052  2024-05-14T02:08:47.771084
+6  8a928c0d06b9fab9e2f812f9f15a948b  2024-05-14T02:08:47.771095
+7  2f875d1fa6b76c82d399610bf17aa80b  2024-05-14T02:08:47.771110
 
                                             metadata content  \
-0  {'last_updated': {'status': '2024-05-14T02:08:...    None   
-1  {'last_updated': {'status': '2024-05-14T02:08:...    None   
-2  {'last_updated': {'status': '2024-05-14T02:08:...    None   
-3  {'last_updated': {'status': '2024-05-14T02:08:...    None   
-4  {'last_updated': {'status': '2024-05-14T02:08:...    None   
-5  {'last_updated': {'status': '2024-05-14T02:08:...    None   
-6  {'last_updated': {'status': '2024-05-14T02:08:...    None   
-7  {'last_updated': {'status': '2024-05-14T02:08:...    None   
+0  {'last_updated': {'status': '2024-05-14T02:08:...    None
+1  {'last_updated': {'status': '2024-05-14T02:08:...    None
+2  {'last_updated': {'status': '2024-05-14T02:08:...    None
+3  {'last_updated': {'status': '2024-05-14T02:08:...    None
+4  {'last_updated': {'status': '2024-05-14T02:08:...    None
+5  {'last_updated': {'status': '2024-05-14T02:08:...    None
+6  {'last_updated': {'status': '2024-05-14T02:08:...    None
+7  {'last_updated': {'status': '2024-05-14T02:08:...    None
 
                  status                                             result  \
-0  WorkStatus.COMPLETED      🐍💻🖥️:\n\`\`\`python\nprint("Hello, World!")\n\`\`\`   
-1  WorkStatus.COMPLETED  \`\`\`cpp\n#include <iostream>\nusing namespace s...   
-2  WorkStatus.COMPLETED                                    \`\`\`java\n👋🌍🛠️☕💻   
-3  WorkStatus.COMPLETED             \`\`\`javascript\nconsole.log("👋🌍");\n\`\`\`   
-4  WorkStatus.COMPLETED                                   \`\`\`ruby\n👋🌍\n\`\`\`   
-5  WorkStatus.COMPLETED                 \`\`\`\php\n<?php\necho "👋🌍";\n?>\n\`\`\`   
-6  WorkStatus.COMPLETED                                       \`\`\`\n👋🌍\n\`\`\`   
-7  WorkStatus.COMPLETED                         \`\`\`matlab\ndisp('👋🌍')\n\`\`\`   
+0  WorkStatus.COMPLETED      🐍💻🖥️:\n\`\`\`python\nprint("Hello, World!")\n\`\`\`
+1  WorkStatus.COMPLETED  \`\`\`cpp\n#include <iostream>\nusing namespace s...
+2  WorkStatus.COMPLETED                                    \`\`\`java\n👋🌍🛠️☕💻
+3  WorkStatus.COMPLETED             \`\`\`javascript\nconsole.log("👋🌍");\n\`\`\`
+4  WorkStatus.COMPLETED                                   \`\`\`ruby\n👋🌍\n\`\`\`
+5  WorkStatus.COMPLETED                 \`\`\`\php\n<?php\necho "👋🌍";\n?>\n\`\`\`
+6  WorkStatus.COMPLETED                                       \`\`\`\n👋🌍\n\`\`\`
+7  WorkStatus.COMPLETED                         \`\`\`matlab\ndisp('👋🌍')\n\`\`\`
 
-  error        completion_timestamp  duration  
-0  None  2024-05-14T02:08:48.866292  1.095071  
-1  None  2024-05-14T02:08:48.866428  1.009315  
-2  None  2024-05-14T02:08:48.866513  0.739154  
-3  None  2024-05-14T02:08:48.866595  0.670039  
-4  None  2024-05-14T02:08:48.866680  0.652948  
-5  None  2024-05-14T02:08:48.875319  0.726192  
-6  None  2024-05-14T02:08:48.875526  0.595971  
-7  None  2024-05-14T02:08:48.875733  0.691921  
+  error        completion_timestamp  duration
+0  None  2024-05-14T02:08:48.866292  1.095071
+1  None  2024-05-14T02:08:48.866428  1.009315
+2  None  2024-05-14T02:08:48.866513  0.739154
+3  None  2024-05-14T02:08:48.866595  0.670039
+4  None  2024-05-14T02:08:48.866680  0.652948
+5  None  2024-05-14T02:08:48.875319  0.726192
+6  None  2024-05-14T02:08:48.875526  0.595971
+7  None  2024-05-14T02:08:48.875733  0.691921
 ```
 
 ## Conclusion

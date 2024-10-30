@@ -1,10 +1,10 @@
-from typing import Callable
-from pydantic import Field, field_validator
 import inspect
+from collections.abc import Callable
 
-from lionagi.core.generic.edge import Edge
+from pydantic import Field, field_validator
+
 from lionagi.core.collections.abc.concepts import Progressable
-
+from lionagi.core.generic.edge import Edge
 from lionagi.core.work.worker import Worker
 
 
@@ -54,7 +54,9 @@ class WorkEdge(Edge, Progressable):
             getattr(func, "_worklink_decorator_params")
             return func
         except:
-            raise ValueError("convert_function must be a worklink decorated function")
+            raise ValueError(
+                "convert_function must be a worklink decorated function"
+            )
 
     @property
     def name(self):
@@ -94,5 +96,7 @@ class WorkEdge(Edge, Progressable):
             kwargs = {"from_result": task.current_work.result} | kwargs
 
         self.convert_function.auto_schedule = True
-        next_work = await self.convert_function(self=self.associated_worker, **kwargs)
+        next_work = await self.convert_function(
+            self=self.associated_worker, **kwargs
+        )
         return next_work

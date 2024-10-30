@@ -19,7 +19,7 @@ async def multiply(number1:float, number2:float):
     Args:
         number1: First number to multiply.
         number2: Second number to multiply.
-    
+
     Returns:
         The product of number1, number2
 
@@ -37,7 +37,7 @@ async def add(number1:float, number2:float):
     Args:
         number1: First number to add.
         number2: Second number to add.
-    
+
     Returns:
         The sum of number1, number2
     '''
@@ -51,7 +51,7 @@ async def minus(number1:float, number2:float):
     Args:
         number1: First number
         number2: Second number
-    
+
     Returns:
         number 1 minus number 2.
 
@@ -65,7 +65,7 @@ async def division(number1:float, number2:float):
     Args:
         number1: First number
         number2: Second number
-    
+
     Returns:
         number 1 divide number 2.
 
@@ -75,7 +75,7 @@ async def division(number1:float, number2:float):
 
 ## Strategic Reasoning with ReAct
 
-ReAct elevates LLMs to the realm of strategic planners. It prompts the LLM to reason about the appropriate tool for each task, guiding it through a sequence of actions towards the solution. 
+ReAct elevates LLMs to the realm of strategic planners. It prompts the LLM to reason about the appropriate tool for each task, guiding it through a sequence of actions towards the solution.
 
 **Define context**
 
@@ -94,7 +94,7 @@ context = 'I have...' #copy from above
 ```python
 from lionagi import Session
 
-session = Session(system, tools=[multiply, add, minus, division]) 
+session = Session(system, tools=[multiply, add, minus, division])
 ```
 
 **Run ReAct Workflow**
@@ -107,4 +107,3 @@ result = await session.ReAct(instruction, context=context)
 ## Practical Applications
 
 While our example centers on solving a mathematical problem, the ReAct method's applications are wide-ranging. It's applicable in scenarios that demand sequential decision-making and problem-solving, from programming tasks to data analysis, and beyond.
-

@@ -1,11 +1,12 @@
 from pydantic import Field
 
-from lion_core.abc import Action
-from lion_core.action.tool import Tool
+from lionagi.core.collections.abc import Actionable
 from lionagi.core.generic.node import Node
 
+from .tool import Tool
 
-class DirectiveSelection(Node, Action):
+
+class DirectiveSelection(Node, Actionable):
     """
     Represents a directive selection node which can be invoked to perform an action.
 

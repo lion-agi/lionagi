@@ -103,7 +103,7 @@ class MockStructure:
             {"ln_id": "1", "timestamp": "2023-05-23T10:00:00", "type": "System"},
             {"ln_id": "2", "timestamp": "2023-05-23T10:05:00", "type": "Instruction"}
         ]
-    
+
     def get_edges(self):
         return [
             {"ln_id": "e1", "timestamp": "2023-05-23T10:10:00", "head": "1", "tail": "2", "label": "connects"}

@@ -1,6 +1,9 @@
 from enum import Enum
+
 from pydantic import Field
-from lion_core.abc import Condition
+
+from lionagi.core.collections.abc import Condition
+from lionagi.core.collections.util import to_list_type
 from lionagi.core.generic.node import Node
 
 
@@ -25,7 +28,11 @@ class TreeNode(Node):
         if not self.parent:
             return list(self.related_nodes)
         else:
-            return [node for node in self.related_nodes if node != self.parent.ln_id]
+            return [
+                node
+                for node in self.related_nodes
+                if node != self.parent.ln_id
+            ]
 
     def relate_child(
         self,
@@ -34,7 +41,7 @@ class TreeNode(Node):
         bundle: bool = False,
     ) -> None:
         """Establish a parent-child relationship with the given node(s)."""
-        children = [node] if isinstance(node, Node) else node
+        children = to_list_type(node)
         for _child in children:
             self.relate(
                 _child,

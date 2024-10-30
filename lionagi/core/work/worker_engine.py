@@ -1,12 +1,12 @@
 import asyncio
+
+from lionagi.core.collections.pile import pile
+from lionagi.core.generic.graph import Graph
 from lionagi.core.work.work import WorkStatus
-from lionagi.core.work.worker import Worker
-from lionagi.core.work.work_task import WorkTask
 from lionagi.core.work.work_edge import WorkEdge
 from lionagi.core.work.work_function_node import WorkFunctionNode
-
-from lionagi.core.generic.pile import pile
-from lionagi.core.generic.graph import Graph
+from lionagi.core.work.work_task import WorkTask
+from lionagi.core.work.worker import Worker
 
 
 class WorkerEngine:
@@ -172,8 +172,12 @@ class WorkerEngine:
         )
         for func_name, func, dec_params in work_decorated_function:
             if func_name not in self.worker.work_functions:
-                self.worker.work_functions[func_name] = WorkFunctionNode(**dec_params)
-                self.worker_graph.add_node(self.worker.work_functions[func_name])
+                self.worker.work_functions[func_name] = WorkFunctionNode(
+                    **dec_params
+                )
+                self.worker_graph.add_node(
+                    self.worker.work_functions[func_name]
+                )
             else:
                 if not isinstance(
                     self.worker.work_functions[func_name], WorkFunctionNode

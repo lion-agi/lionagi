@@ -1,28 +1,15 @@
-from lionagi.libs.ln_convert import strip_lower
-
-
 def get_input_output_fields(str_: str) -> list[list[str]]:
-    """
-    Parses an assignment string to extract input and output fields.
-
-    Args:
-        str_ (str): The assignment string in the format 'inputs -> outputs'.
-
-    Returns:
-        list[list[str]]: A list containing two lists - one for input fields and one for requested fields.
-
-    Raises:
-        ValueError: If the assignment string is None or if it does not contain '->' indicating invalid format.
-    """
     if str_ is None:
         return [], []
 
     if "->" not in str_:
-        raise ValueError("Invalid assignment format. Expected 'inputs -> outputs'.")
+        raise ValueError(
+            "Invalid assignment format. Expected 'inputs -> outputs'."
+        )
 
     inputs, outputs = str_.split("->")
 
-    input_fields = [strip_lower(i) for i in inputs.split(",")]
-    request_fields = [strip_lower(o) for o in outputs.split(",")]
+    input_fields = [str(i).strip().lower() for i in inputs.split(",")]
+    requested_fields = [str(o).strip().lower() for o in outputs.split(",")]
 
-    return input_fields, request_fields
+    return input_fields, requested_fields

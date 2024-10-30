@@ -1,4 +1,5 @@
 import subprocess
+
 from lionagi.libs import SysUtil
 
 
@@ -33,4 +34,6 @@ def install_transformers():
             "transformers is required. Would you like to install it now? (y/n): "
         )
         if in_ == "y":
-            SysUtil.install_import(package_name="transformers", import_name="pipeline")
+            SysUtil.install_import(
+                package_name="transformers", import_name="pipeline"
+            )

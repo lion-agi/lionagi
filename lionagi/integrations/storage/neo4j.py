@@ -1,6 +1,9 @@
 from neo4j import AsyncGraphDatabase
 
-from lionagi.integrations.storage.storage_util import output_node_list, output_edge_list
+from lionagi.integrations.storage.storage_util import (
+    output_edge_list,
+    output_node_list,
+)
 
 
 class Neo4j:
@@ -45,7 +48,9 @@ class Neo4j:
             SET n.timestamp = $timestamp
             SET n.name = $name
             """
-        await tx.run(query, ln_id=node["ln_id"], timestamp=node["timestamp"], name=name)
+        await tx.run(
+            query, ln_id=node["ln_id"], timestamp=node["timestamp"], name=name
+        )
         # heads=node['head_nodes'],
         # nodes=node['nodes'],
         # edges=node['edges'])
@@ -247,7 +252,9 @@ class Neo4j:
             MERGE (n:EdgeCondition:LionNode {className: $className})
             SET n.code = $code
             """
-        await tx.run(query, className=condCls["class_name"], code=condCls["class"])
+        await tx.run(
+            query, className=condCls["class_name"], code=condCls["class"]
+        )
 
     async def add_node(self, tx, node_dict, structure_name):
         """
@@ -278,7 +285,10 @@ class Neo4j:
             elif node == "Tool":
                 [await self.add_tool_node(tx, i) for i in node_list]
             elif node == "DirectiveSelection":
-                [await self.add_directiveSelection_node(tx, i) for i in node_list]
+                [
+                    await self.add_directiveSelection_node(tx, i)
+                    for i in node_list
+                ]
             elif node == "BaseAgent":
                 [await self.add_baseAgent_node(tx, i) for i in node_list]
             else:
@@ -382,7 +392,9 @@ class Neo4j:
                     await self.check_structure_name_constraint(tx)
                     await tx.commit()
                 except Exception as e:
-                    raise ValueError(f"transaction rolled back due to exception: {e}")
+                    raise ValueError(
+                        f"transaction rolled back due to exception: {e}"
+                    )
                 finally:
                     await tx.close()
 
@@ -395,7 +407,9 @@ class Neo4j:
                     await self.add_head_edge(tx, structure)
                     await tx.commit()
                 except Exception as e:
-                    raise ValueError(f"transaction rolled back due to exception: {e}")
+                    raise ValueError(
+                        f"transaction rolled back due to exception: {e}"
+                    )
                 finally:
                     await tx.close()
 
@@ -566,7 +580,9 @@ class Neo4j:
             else:
                 raise ValueError(f"Structure id {structure_id} is invalid")
 
-    async def get_heads(self, structure_name: str = None, structure_id: str = None):
+    async def get_heads(
+        self, structure_name: str = None, structure_id: str = None
+    ):
         """
         Asynchronously retrieves the head nodes associated with a given structure in the graph.
 

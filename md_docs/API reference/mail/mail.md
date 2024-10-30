@@ -6,7 +6,7 @@
 **Parent Class: [[Component#^bb802e|Element]]
 
 **Description**:
-`Mail` represents a mail component with sender and recipient information. It extends the `Element` and `Communicatable` classes, providing functionalities to handle mail packages within a system.
+`Mail` represents a mail component with sender and recipient information. It extends the `Element` and `Sendable` classes, providing functionalities to handle mail packages within a system.
 
 #### Attributes:
 - `package` (Package | None): The package to be delivered.

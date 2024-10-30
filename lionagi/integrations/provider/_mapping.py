@@ -1,11 +1,12 @@
-from .oai import OpenAIService
-from .openrouter import OpenRouterService
-from .ollama import OllamaService
-from .transformers import TransformersService
-from .litellm import LiteLLMService
-from .mlx_service import MLXService
 from lionagi.integrations.config.oai_configs import oai_schema
 from lionagi.integrations.config.openrouter_configs import openrouter_schema
+
+from .litellm import LiteLLMService
+from .mlx_service import MLXService
+from .oai import OpenAIService
+from .ollama import OllamaService
+from .openrouter import OpenRouterService
+from .transformers import TransformersService
 
 SERVICE_PROVIDERS_MAPPING = {
     "openai": {

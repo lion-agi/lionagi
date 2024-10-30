@@ -12,7 +12,7 @@
 - `template_name` (str): The name of the template used by the form.
 - `assignment` (str | None): The objective of the form specifying input/output fields.
 - `input_fields` (List[str]): Fields required to carry out the objective of the form.
-- `request_fields` (List[str]): Fields requested to be filled by the user.
+- `requested_fields` (List[str]): Fields requested to be filled by the user.
 - `task` (Any): The work to be done by the form, including custom instructions.
 - `validation_kwargs` (Dict[str, Dict[str, Any]]): Additional validation constraints for the form fields.
 

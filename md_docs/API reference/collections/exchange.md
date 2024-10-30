@@ -107,11 +107,11 @@ print("Item included out:", success)
 
 **Signature**:
 ```python
-def _include(self, item: Communicatable, direction: str) -> bool:
+def _include(self, item: Sendable, direction: str) -> bool:
 ```
 
 **Parameters**:
-- `item` (Communicatable): The item to include.
+- `item` (Sendable): The item to include.
 - `direction` (str): The direction to include the item ('in' or 'out').
 
 **Return Values**:

@@ -1,36 +1,20 @@
-from __future__ import annotations
-from lionagi.settings import format_deprecated_msg
-from typing_extensions import deprecated
-
-
-from collections.abc import Sequence, Mapping
-
-from abc import ABC
-from dataclasses import dataclass
-
+import asyncio
+import contextlib
 import logging
 import re
-import asyncio
+from abc import ABC
+from collections.abc import Callable, Mapping, Sequence
+from dataclasses import dataclass
+from typing import Any, NoReturn, Type
+
 import aiohttp
 
-from typing import Any, NoReturn, Type, Callable
-
-from lionagi.libs.ln_async import AsyncUtil
-from lionagi.libs.ln_convert import strip_lower, to_str
 import lionagi.libs.ln_func_call as func_call
+from lionagi.libs.ln_async import AsyncUtil
+from lionagi.libs.ln_convert import strip_lower, to_dict, to_str
 from lionagi.libs.ln_nested import nget
 
 
-@deprecated(
-    format_deprecated_msg(
-        deprecated_name="APIUtil",
-        deprecated_type="class",
-        deprecated_version="0.3.0",
-        removal_version="1.0.0",
-        replacement=None,
-    ),
-    category=DeprecationWarning,
-)
 class APIUtil:
     """
     A utility class for assisting with common API usage patterns.
@@ -86,7 +70,9 @@ class APIUtil:
                 False
         """
         if "error" in response_json:
-            logging.warning(f"API call failed with error: {response_json['error']}")
+            logging.warning(
+                f"API call failed with error: {response_json['error']}"
+            )
             return True
         return False
 
@@ -109,7 +95,9 @@ class APIUtil:
                 >>> api_rate_limit_error(response_json_without_rate_limit)
                 False
         """
-        return "Rate limit" in response_json.get("error", {}).get("message", "")
+        return "Rate limit" in response_json.get("error", {}).get(
+            "message", ""
+        )
 
     @staticmethod
     @func_call.lru_cache(maxsize=128)
@@ -370,6 +358,7 @@ class APIUtil:
                 # Expected token calculation for the given payload and endpoint.
         """
         import tiktoken
+
         from .ln_image import ImageUtil
 
         token_encoding_name = token_encoding_name or "cl100k_base"
@@ -404,15 +393,15 @@ class APIUtil:
                                     num_tokens += ImageUtil.calculate_image_token_usage_from_base64(
                                         a, item.get("detail", "low")
                                     )
-                                    num_tokens += (
-                                        20  # for every image we add 20 tokens buffer
-                                    )
+                                    num_tokens += 20  # for every image we add 20 tokens buffer
                             elif isinstance(item, str):
                                 num_tokens += len(encoding.encode(item))
                             else:
                                 num_tokens += len(encoding.encode(str(item)))
 
-                num_tokens += 2  # every reply is primed with <im_start>assistant
+                num_tokens += (
+                    2  # every reply is primed with <im_start>assistant
+                )
                 return num_tokens + completion_tokens
             else:
                 prompt = payload["format_prompt"]
@@ -420,7 +409,9 @@ class APIUtil:
                     prompt_tokens = len(encoding.encode(prompt))
                     return prompt_tokens + completion_tokens
                 elif isinstance(prompt, list):  # multiple prompts
-                    prompt_tokens = sum(len(encoding.encode(p)) for p in prompt)
+                    prompt_tokens = sum(
+                        len(encoding.encode(p)) for p in prompt
+                    )
                     return prompt_tokens + completion_tokens * len(prompt)
                 else:
                     raise TypeError(
@@ -442,7 +433,9 @@ class APIUtil:
             )
 
     @staticmethod
-    def create_payload(input_, config, required_, optional_, input_key, **kwargs):
+    def create_payload(
+        input_, config, required_, optional_, input_key, **kwargs
+    ):
         config = {**config, **kwargs}
         payload = {input_key: input_}
 
@@ -529,7 +522,9 @@ class BaseRateLimiter(ABC):
         except asyncio.CancelledError:
             logging.info("Rate limit replenisher task cancelled.")
         except Exception as e:
-            logging.error(f"An error occurred in the rate limit replenisher: {e}")
+            logging.error(
+                f"An error occurred in the rate limit replenisher: {e}"
+            )
 
     async def stop_replenishing(self) -> None:
         """Stops the replenishment task."""
@@ -673,7 +668,9 @@ class SimpleRateLimiter(BaseRateLimiter):
         token_encoding_name=None,
     ) -> None:
         """Initializes the SimpleRateLimiter with the specified parameters."""
-        super().__init__(max_requests, max_tokens, interval, token_encoding_name)
+        super().__init__(
+            max_requests, max_tokens, interval, token_encoding_name
+        )
 
 
 class EndPoint:
@@ -710,7 +707,7 @@ class EndPoint:
         max_tokens: int = 100000,
         interval: int = 60,
         endpoint_: str | None = None,
-        rate_limiter_class: Type[BaseRateLimiter] = SimpleRateLimiter,
+        rate_limiter_class: type[BaseRateLimiter] = SimpleRateLimiter,
         token_encoding_name=None,
         config: Mapping = None,
     ) -> None:
@@ -727,7 +724,10 @@ class EndPoint:
     async def init_rate_limiter(self) -> None:
         """Initializes the rate limiter for the endpoint."""
         self.rate_limiter = await self.rate_limiter_class.create(
-            self.max_requests, self.max_tokens, self.interval, self.token_encoding_name
+            self.max_requests,
+            self.max_tokens,
+            self.interval,
+            self.token_encoding_name,
         )
         self._has_initialized = True
 
@@ -801,7 +801,9 @@ class BaseService:
                             max_tokens=self.chat_config_rate_limit.get(
                                 "max_tokens", 100000
                             ),
-                            interval=self.chat_config_rate_limit.get("interval", 60),
+                            interval=self.chat_config_rate_limit.get(
+                                "interval", 60
+                            ),
                             endpoint_=ep,
                             token_encoding_name=self.token_encoding_name,
                             config=endpoint_config,
@@ -810,17 +812,20 @@ class BaseService:
                         self.endpoints[ep] = EndPoint(
                             max_requests=(
                                 endpoint_config.get("max_requests", 1000)
-                                if endpoint_config.get("max_requests", 1000) is not None
+                                if endpoint_config.get("max_requests", 1000)
+                                is not None
                                 else 1000
                             ),
                             max_tokens=(
                                 endpoint_config.get("max_tokens", 100000)
-                                if endpoint_config.get("max_tokens", 100000) is not None
+                                if endpoint_config.get("max_tokens", 100000)
+                                is not None
                                 else 100000
                             ),
                             interval=(
                                 endpoint_config.get("interval", 60)
-                                if endpoint_config.get("interval", 60) is not None
+                                if endpoint_config.get("interval", 60)
+                                is not None
                                 else 60
                             ),
                             endpoint_=ep,
@@ -847,7 +852,9 @@ class BaseService:
                 if not self.endpoints[ep]._has_initialized:
                     await self.endpoints[ep].init_rate_limiter()
 
-    async def call_api(self, payload, endpoint, method, required_tokens=None, **kwargs):
+    async def call_api(
+        self, payload, endpoint, method, required_tokens=None, **kwargs
+    ):
         """
         Calls the specified API endpoint with the given payload and method.
 

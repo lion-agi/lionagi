@@ -18,7 +18,7 @@ def _create_chat_config(
     images: Optional[str] = None,
     sender: Optional[str] = None,
     recipient: Optional[str] = None,
-    request_fields: Optional[list] = None,
+    requested_fields: Optional[list] = None,
     form: Form = None,
     tools: bool = False,
     branch: Optional[Any] = None,
@@ -33,7 +33,7 @@ def _create_chat_config(
 - `images` (Optional[str]): Images data.
 - `sender` (Optional[str]): Sender identifier.
 - `recipient` (Optional[str]): Recipient identifier.
-- `request_fields` (Optional[list]): Fields requested in the response.
+- `requested_fields` (Optional[list]): Fields requested in the response.
 - `form` (Form): Form data.
 - `tools` (bool): Flag indicating if tools should be used.
 - `branch` (Optional[Any]): Branch instance.
@@ -129,7 +129,7 @@ async def _output(
     completion: dict,
     sender: str,
     invoke_tool: bool,
-    request_fields: dict,
+    requested_fields: dict,
     form: Form = None,
     return_form: bool = True,
     strict: bool = False,
@@ -144,7 +144,7 @@ async def _output(
 - `completion` (dict): The completion data.
 - `sender` (str): The sender identifier.
 - `invoke_tool` (bool): Flag indicating if tools should be invoked.
-- `request_fields` (dict): Fields requested in the response.
+- `requested_fields` (dict): Fields requested in the response.
 - `form` (Form): Form data.
 - `return_form` (bool): Flag indicating if form should be returned.
 - `strict` (bool): Flag indicating if strict validation should be applied.
@@ -170,7 +170,7 @@ async def _base_chat(
     context: Any = None,
     sender: Any = None,
     recipient: Any = None,
-    request_fields: dict = None,
+    requested_fields: dict = None,
     form: Form = None,
     tools: Any = False,
     images: Optional[str] = None,
@@ -193,7 +193,7 @@ async def _base_chat(
 - `context` (Any, optional): Context message.
 - `sender` (Any, optional): Sender identifier.
 - `recipient` (Any, optional): Recipient identifier.
-- `request_fields` (dict, optional): Fields requested in the response.
+- `requested_fields` (dict, optional): Fields requested in the response.
 - `form` (Form, optional): Form data.
 - `tools` (Any, optional): Flag indicating if tools should be used.
 - `images` (Optional[str], optional): Images data.
@@ -226,7 +226,7 @@ async def _chat(
     sender=None,
     recipient=None,
     branch=None,
-    request_fields=None,
+    requested_fields=None,
     form: Form = None,
     tools=False,
     invoke_tool=True,
@@ -250,7 +250,7 @@ async def _chat(
 - `sender` (Any, optional): Sender identifier.
 - `recipient` (Any, optional): Recipient identifier.
 - `branch` (Any, optional): Branch instance.
-- `request_fields` (dict, optional): Fields requested in the response.
+- `requested_fields` (dict, optional): Fields requested in the response.
 - `form` (Form, optional): Form data.
 - `tools` (Any, optional): Flag indicating if tools should be used.
 - `invoke_tool` (bool, optional): Flag indicating if tools should be invoked.
@@ -614,12 +614,12 @@ Plans a response based on the provided parameters.
 
 **Signature**:
 ```python
-def _process_model_response(content_, request_fields) -> Any
+def _process_model_response(content_, requested_fields) -> Any
 ```
 
 **Parameters**:
 - `content_` (Any): The content data.
-- `request_fields` (list): Fields requested in the response.
+- `requested_fields` (list): Fields requested in the response.
 
 **Returns**:
 - `Any`: The processed response.

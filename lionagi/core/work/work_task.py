@@ -1,10 +1,10 @@
 import inspect
-from typing import Any, Callable
-from pydantic import Field, field_validator, model_validator
+from collections.abc import Callable
 
-from lionagi.core.generic.component import Component
-from lionagi.core.work.work import WorkStatus, Work
-from collections.abc import Coroutine
+from pydantic import Field, field_validator
+
+from lionagi.core.collections.abc.component import Component
+from lionagi.core.work.work import Work, WorkStatus
 
 
 class WorkTask(Component):
@@ -31,9 +31,13 @@ class WorkTask(Component):
 
     work_history: list[Work] = Field([], description="List of works processed")
 
-    max_steps: int | None = Field(10, description="Maximum number of works allowed")
+    max_steps: int | None = Field(
+        10, description="Maximum number of works allowed"
+    )
 
-    current_work: Work | None = Field(None, description="The current work in progress")
+    current_work: Work | None = Field(
+        None, description="The current work in progress"
+    )
 
     post_processing: Callable | None = Field(
         None,
@@ -55,7 +59,9 @@ class WorkTask(Component):
             ValueError: If value is not a positive integer.
         """
         if value <= 0:
-            raise ValueError("Invalid value: max_steps must be a positive integer.")
+            raise ValueError(
+                "Invalid value: max_steps must be a positive integer."
+            )
         return value
 
     @field_validator("post_processing", mode="before")
@@ -72,7 +78,7 @@ class WorkTask(Component):
         Raises:
             ValueError: If value is not an asynchronous function.
         """
-        if value is not None and not inspect.iscoroutinefunction((value)):
+        if value is not None and not inspect.iscoroutinefunction(value):
             raise ValueError("post_processing must be a async function")
         return value
 

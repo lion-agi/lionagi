@@ -109,8 +109,8 @@ list.
 
 ``` python
 f = lambda i: {
-	"x": str(xs[i]), 
-	"y": str(ys[i]), 
+	"x": str(xs[i]),
+	"y": str(ys[i]),
 	"case": str(cases[i])
 }
 
@@ -139,7 +139,7 @@ async def calculator_workflow(context):
      case = int(context.pop("case"))
      instruct = instruct1 if case == 0 else instruct2
 
-     step1 = await calculator.chat(instruct, context=context)    
+     step1 = await calculator.chat(instruct, context=context)
      step2 = await calculator.chat(instruct3, temperature=0.5)
 
      return (step1, step2)

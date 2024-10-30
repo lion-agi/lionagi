@@ -1,22 +1,5 @@
-"""
-Copyright 2024 HaiyangLi
-
-Licensed under the Apache License, Version 2.0 (the "License");
-you may not use this file except in compliance with the License.
-You may obtain a copy of the License at
-
-    http://www.apache.org/licenses/LICENSE-2.0
-
-Unless required by applicable law or agreed to in writing, software
-distributed under the License is distributed on an "AS IS" BASIS,
-WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-See the License for the specific language governing permissions and
-limitations under the License.
-"""
-
-from lionagi.core.generic.progression import progression
-from lionagi.core.collections.abc.concepts import Progressable
-from lionagi.core.generic.pile import Pile, pile
+from lionagi.core.collections import Pile, pile, progression
+from lionagi.core.collections.abc import Progressable
 from lionagi.core.work.work import Work, WorkStatus
 from lionagi.core.work.work_queue import WorkQueue
 
@@ -42,7 +25,9 @@ class WorkLog(Progressable):
                 Defaults to 1.
         """
         self.pile = (
-            workpile if workpile and isinstance(workpile, Pile) else pile({}, Work)
+            workpile
+            if workpile and isinstance(workpile, Pile)
+            else pile({}, Work)
         )
         self.pending = progression(workpile) if workpile else progression()
         self.queue = WorkQueue(capacity=capacity, refresh_time=refresh_time)

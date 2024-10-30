@@ -25,7 +25,7 @@ output = template.fill(context=context)
 print(output)
 # Output:
 # Condition is true
-# 1 2 3 
+# 1 2 3
 ```
 
 ### `__init__`
@@ -94,7 +94,7 @@ template_str = "{for item in items}{item} {endfor}"
 context = {"items": [1, 2, 3]}
 output = template._render_loops(template_str, context)
 print(output)
-# Output: 1 2 3 
+# Output: 1 2 3
 ```
 
 ### `fill`
@@ -131,5 +131,5 @@ output = template.fill(context=context)
 print(output)
 # Output:
 # Condition is true
-# 1 2 3 
+# 1 2 3
 ```

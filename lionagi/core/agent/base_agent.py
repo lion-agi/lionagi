@@ -1,13 +1,11 @@
-import asyncio
-from typing import Any, Callable
+from collections.abc import Callable
+from typing import Any
 
-from lionagi.libs import lionfuncs as ln
-
-from lionagi.core.mail.start_mail import StartMail
+from lionagi.core.executor.base_executor import BaseExecutor
 from lionagi.core.generic.node import Node
 from lionagi.core.mail.mail_manager import MailManager
-from lionagi.core.executor.base_executor import BaseExecutor
-from lionagi.core.executor.graph_executor import GraphExecutor
+from lionagi.core.mail.start_mail import StartMail
+from lionagi.libs import AsyncUtil, func_call
 
 
 class BaseAgent(Node):
@@ -44,8 +42,10 @@ class BaseAgent(Node):
         Args:
             refresh_time: The time interval (in seconds) for checking the execution states (default: 1).
         """
-        while not self.structure.execute_stop or not self.executable.execute_stop:
-            await asyncio.sleep(refresh_time)
+        while (
+            not self.structure.execute_stop or not self.executable.execute_stop
+        ):
+            await AsyncUtil.sleep(refresh_time)
         self.mail_manager.execute_stop = True
 
     async def execute(self, context=None):
@@ -64,7 +64,7 @@ class BaseAgent(Node):
             structure_id=self.structure.ln_id,
             executable_id=self.executable.ln_id,
         )
-        await ln.mcall(
+        await func_call.mcall(
             [0.1, 0.1, 0.1, 0.1],
             [
                 self.structure.execute,

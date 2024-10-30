@@ -1,9 +1,11 @@
 """This module provides tree structure."""
 
 from pydantic import Field
-from lion_core.abc import Condition
-from lionagi.core.generic.tree_node import TreeNode
+
+from lionagi.core.collections.abc import Condition
+from lionagi.core.collections.util import to_list_type
 from lionagi.core.generic.graph import Graph
+from lionagi.core.generic.tree_node import TreeNode
 
 
 class Tree(Graph):
@@ -38,8 +40,7 @@ class Tree(Graph):
                            transaction. Defaults to False.
         """
 
-        children = [children] if not isinstance(children, list) else children
-        for i in children:
+        for i in to_list_type(children):
             i.relate_parent(parent, condition=condition, bundle=bundle)
 
         if self.root is None:

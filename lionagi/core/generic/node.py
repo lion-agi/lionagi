@@ -1,22 +1,31 @@
-from pydantic import Field
+"""
+This module defines the Node class, representing a node in a graph-like
+structure within LionAGI. Nodes can form relationships with other nodes
+through directed edges, enabling construction and manipulation of complex
+relational networks.
+
+Includes functionality for managing relationships, such as adding,
+modifying, and removing edges, and querying related nodes and connections.
+"""
+
+from collections.abc import Callable
+
 from pandas import Series
-from typing import Callable
+from pydantic import Field
 
-
-from lion_core.abc import Condition
-from lion_core.exceptions import LionRelationError
-
-from lionagi.libs.sys_util import SysUtil
-
-from lionagi.core.generic.pile import pile, Pile
+from lionagi.core.collections import Pile, pile
+from lionagi.core.collections.abc import (
+    Component,
+    Condition,
+    Relatable,
+    RelationError,
+    get_lion_id,
+)
 from lionagi.core.generic.edge import Edge
-from lionagi.core.generic.component import Component
-from lionagi.libs.lionfuncs import to_list
-
-from lion_core.generic.node import Node as CoreNode
+from lionagi.libs.ln_convert import to_list
 
 
-class Node(CoreNode, Component):
+class Node(Component, Relatable):
     """
     Node in a graph structure, can connect to other nodes via edges.
 
@@ -53,7 +62,11 @@ class Node(CoreNode, Component):
             List of node IDs related to this node.
         """
         all_nodes = set(
-            to_list([[i.head, i.tail] for i in self.edges], flatten=True, dropna=True)
+            to_list(
+                [[i.head, i.tail] for i in self.edges],
+                flatten=True,
+                dropna=True,
+            )
         )
         all_nodes.discard(self.ln_id)
         return list(all_nodes)
@@ -92,7 +105,9 @@ class Node(CoreNode, Component):
             List of node IDs that precede this node.
         """
         return [
-            node_id for node_id, edges in self.node_relations["in"].items() if edges
+            node_id
+            for node_id, edges in self.node_relations["in"].items()
+            if edges
         ]
 
     @property
@@ -104,7 +119,9 @@ class Node(CoreNode, Component):
             List of node IDs that succeed this node.
         """
         return [
-            node_id for node_id, edges in self.node_relations["out"].items() if edges
+            node_id
+            for node_id, edges in self.node_relations["out"].items()
+            if edges
         ]
 
     def relate(
@@ -132,7 +149,8 @@ class Node(CoreNode, Component):
         """
         if direction not in ["in", "out"]:
             raise ValueError(
-                f"Invalid value for direction: {direction}, " "must be 'in' or 'out'"
+                f"Invalid value for direction: {direction}, "
+                "must be 'in' or 'out'"
             )
 
         edge = edge_class(
@@ -169,7 +187,7 @@ class Node(CoreNode, Component):
         ]
 
         if not all(pile.exclude(edge) for pile in edge_piles):
-            raise LionRelationError(f"Failed to remove edge between nodes.")
+            raise RelationError(f"Failed to remove edge between nodes.")
         return True
 
     def unrelate(self, node: "Node", edge: Edge | str = "all") -> bool:
@@ -191,16 +209,16 @@ class Node(CoreNode, Component):
                 node.ln_id, []
             ) + self.node_relations["in"].get(node.ln_id, [])
         else:
-            edges = [SysUtil.get_id(edge)]
+            edges = [get_lion_id(edge)]
 
         if not edges:
-            raise LionRelationError(f"Node is not related to {node.ln_id}.")
+            raise RelationError(f"Node is not related to {node.ln_id}.")
 
         try:
             for edge_id in edges:
                 self.remove_edge(node, edge_id)
             return True
-        except LionRelationError as e:
+        except RelationError as e:
             raise e
 
     def __str__(self):

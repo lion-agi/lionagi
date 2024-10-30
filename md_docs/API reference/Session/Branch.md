@@ -80,7 +80,7 @@ def add_message(
     images=None,
     sender=None,
     recipient=None,
-    request_fields=None,
+    requested_fields=None,
     metadata: dict | None = None,
     **kwargs,
 ) -> bool
@@ -98,7 +98,7 @@ def add_message(
 - `action_response` (Any, optional): The action response node.
 - `sender` (str, optional): The sender of the message.
 - `recipient` (str, optional): The recipient of the message.
-- `request_fields` (dict[str, str], optional): Requested fields for the message.
+- `requested_fields` (dict[str, str], optional): Requested fields for the message.
 - `metadata` (dict, optional): Extra metadata for the message.
 - `kwargs`: Additional context fields.
 

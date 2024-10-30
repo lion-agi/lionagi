@@ -1,41 +1,14 @@
 """
-Copyright 2024 HaiyangLi
-
-Licensed under the Apache License, Version 2.0 (the "License");
-you may not use this file except in compliance with the License.
-You may obtain a copy of the License at
-
-    http://www.apache.org/licenses/LICENSE-2.0
-
-Unless required by applicable law or agreed to in writing, software
-distributed under the License is distributed on an "AS IS" BASIS,
-WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-See the License for the specific language governing permissions and
-limitations under the License.
-"""
-
-"""
 A class that manages asynchronous task processing with controlled concurrency.
 """
 
-from typing import Any, Callable
 import asyncio
+from collections.abc import Callable
+from typing import Any
+
 from lionagi.libs import func_call
 
-from typing_extensions import deprecated
-from lionagi.settings import format_deprecated_msg
 
-
-@deprecated(
-    format_deprecated_msg(
-        deprecated_name="lionagi.libs.ln_queue.AsyncQueue",
-        deprecated_type="class",
-        deprecated_version="0.3.0",
-        removal_version="1.0.0",
-        replacement=None,
-    ),
-    category=DeprecationWarning,
-)
 class AsyncQueue:
     """
     This class handles the enqueueing and processing of tasks with a limit on
@@ -97,7 +70,9 @@ class AsyncQueue:
         """
         return self._stop_event.is_set()
 
-    async def process_requests(self, func: Callable, retry_kwargs: dict = {}) -> None:
+    async def process_requests(
+        self, func: Callable, retry_kwargs: dict = {}
+    ) -> None:
         """
         Processes tasks from the queue using the provided function with retries.
 
@@ -113,7 +88,9 @@ class AsyncQueue:
         tasks = set()
         while not self.stopped():
             if len(tasks) >= self.max_concurrent_tasks:
-                _, done = await asyncio.wait(tasks, return_when=asyncio.FIRST_COMPLETED)
+                _, done = await asyncio.wait(
+                    tasks, return_when=asyncio.FIRST_COMPLETED
+                )
                 tasks.difference_update(done)
 
             async with self.semaphore:

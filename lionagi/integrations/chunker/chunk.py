@@ -1,14 +1,14 @@
-from typing import Union, Callable
+from collections.abc import Callable
+from typing import Union
 
+from lionagi.core.collections import pile
+from lionagi.core.generic import Node
 from lionagi.libs import func_call
 from lionagi.libs.ln_convert import to_list
-from lionagi.core.generic.pile import Pile
-from lionagi.core.generic import Node
+
 from ..bridge.langchain_.langchain_bridge import LangchainBridge
 from ..bridge.llamaindex_.llama_index_bridge import LlamaIndexBridge
-
-
-from ..loader.load_util import ChunkerType, file_to_chunks, _datanode_parser
+from ..loader.load_util import ChunkerType, _datanode_parser, file_to_chunks
 
 
 def datanodes_convert(documents, chunker_type):
@@ -57,7 +57,9 @@ def text_chunker(documents, args, kwargs):
         func_call.lcall(chunks, lambda chunk: chunk.pop("ln_id"))
         return [Node.from_obj({**chunk}) for chunk in chunks]
 
-    a = to_list([chunk_node(doc) for doc in documents], flatten=True, dropna=True)
+    a = to_list(
+        [chunk_node(doc) for doc in documents], flatten=True, dropna=True
+    )
     return pile(a)
 
 

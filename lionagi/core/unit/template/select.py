@@ -1,20 +1,5 @@
-"""
-Copyright 2024 HaiyangLi
-
-Licensed under the Apache License, Version 2.0 (the "License");
-you may not use this file except in compliance with the License.
-You may obtain a copy of the License at
-
-    http://www.apache.org/licenses/LICENSE-2.0
-
-Unless required by applicable law or agreed to in writing, software
-distributed under the License is distributed on an "AS IS" BASIS,
-WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-See the License for the specific language governing permissions and
-limitations under the License.
-"""
-
 from enum import Enum
+
 from .base import BaseUnitForm, Field
 
 
@@ -54,7 +39,9 @@ class SelectTemplate(BaseUnitForm):
     selection: Enum | str | list | None = Field(
         None, description="selection from given choices"
     )
-    choices: list = Field(default_factory=list, description="the given choices")
+    choices: list = Field(
+        default_factory=list, description="the given choices"
+    )
 
     assignment: str = "task -> selection"
 
@@ -93,9 +80,9 @@ class SelectTemplate(BaseUnitForm):
 
         self.choices = choices
         self.task = f"""
-select 1 item from the provided choices {choices}.        
+select 1 item from the provided choices {choices}.
 1. additional objective: {instruction or "N/A"}.
-2. additional information: {context or "N/A"}.     
+2. additional information: {context or "N/A"}.
 """
         if reason:
             self.append_to_request("reason")

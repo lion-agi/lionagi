@@ -42,7 +42,7 @@ form.input_fields
 # Output: ['input1', 'input2']
 
 # Retrieve requested fields
-form.request_fields
+form.requested_fields
 # Output: ['output']
 ```
 

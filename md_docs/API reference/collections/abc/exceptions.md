@@ -3,7 +3,7 @@
 
 ^c6806f
 
-**Parent Class:** [`Exception`](https://docs.python.org/3/library/exceptions.html)  
+**Parent Class:** [`Exception`](https://docs.python.org/3/library/exceptions.html)
 
 **Description**:
 `LionAGIError` is the base class for all exceptions in the LionAGI system.
@@ -120,12 +120,12 @@ except ItemInvalidError as e:
     print(e)
 ```
 
-### Class: `LionValueError`
+### Class: `FieldError`
 
 **Parent Class:** [[#^c6806f|LionAGIError]]
 
 **Description**:
-`LionValueError` is an exception raised for errors in field validation.
+`FieldError` is an exception raised for errors in field validation.
 
 **Attributes:**
 - `message` (str): The error message. Defaults to "An error occurred with the specified field."
@@ -134,8 +134,8 @@ except ItemInvalidError as e:
 **Usage Examples**:
 ```python
 try:
-    raise LionValueError("field_name", "Custom field error")
-except LionValueError as e:
+    raise FieldError("field_name", "Custom field error")
+except FieldError as e:
     print(e)
 ```
 
