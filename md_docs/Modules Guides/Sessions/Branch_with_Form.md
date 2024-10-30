@@ -106,7 +106,7 @@ form2 = BikeRepairInvoice(
 )
 
 instruction2 = """
-given the total amount and cost of bike model, find the repair service cost, return as an int, 
+given the total amount and cost of bike model, find the repair service cost, return as an int,
 hint: repair_service = amount - bike_model
 """
 

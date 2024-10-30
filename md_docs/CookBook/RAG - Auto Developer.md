@@ -318,4 +318,3 @@ import json
 response = json.loads(response)
 Markdown(response['output']['content'])
 ```
-

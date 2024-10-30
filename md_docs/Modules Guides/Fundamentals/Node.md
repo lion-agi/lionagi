@@ -150,16 +150,16 @@ The edges of a node can be represented as a pandas DataFrame for better visualiz
 a.edges.to_df()
 # Output:
 #                               ln_id                     created metadata  \
-# 0  8040e746e68953ef7d38088146452ea1  2024-05-14T02:09:33.304702       {}   
-# 1  77869eedcdaba2a6aa21f5da74000ea2  2024-05-14T02:09:33.304591       {}   
-# 
+# 0  8040e746e68953ef7d38088146452ea1  2024-05-14T02:09:33.304702       {}
+# 1  77869eedcdaba2a6aa21f5da74000ea2  2024-05-14T02:09:33.304591       {}
+#
 #   content                              head                              tail  \
-# 0    None  908ffd19146a7831d9b2d1a9892f8bfe  d5100be6f786f545931f321c32d167e5   
-# 1    None  d5100be6f786f545931f321c32d167e5  451711ff6d088d1480cedf949787955d   
-# 
-#   condition label  bundle  
-# 0      None  None   False  
-# 1      None  None   False  
+# 0    None  908ffd19146a7831d9b2d1a9892f8bfe  d5100be6f786f545931f321c32d167e5
+# 1    None  d5100be6f786f545931f321c32d167e5  451711ff6d088d1480cedf949787955d
+#
+#   condition label  bundle
+# 0      None  None   False
+# 1      None  None   False
 ```
 
 ### Relations as DataFrame
@@ -170,13 +170,13 @@ You can also convert specific relations to a pandas DataFrame.
 a.relations["in"].to_df()
 # Output:
 #                               ln_id                     created metadata  \
-# 0  8040e746e68953ef7d38088146452ea1  2024-05-14T02:09:33.304702       {}   
-# 
+# 0  8040e746e68953ef7d38088146452ea1  2024-05-14T02:09:33.304702       {}
+#
 #   content                              head                              tail  \
-# 0    None  908ffd19146a7831d9b2d1a9892f8bfe  d5100be6f786f545931f321c32d167e5   
-# 
-#   condition label  bundle  
-# 0      None  None   False  
+# 0    None  908ffd19146a7831d9b2d1a9892f8bfe  d5100be6f786f545931f321c32d167e5
+#
+#   condition label  bundle
+# 0      None  None   False
 ```
 
 ## Manipulating Node Relationships

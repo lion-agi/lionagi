@@ -1,2 +1,0 @@
-class OpenAIEndpoint(BaseModel):
-    pass

@@ -204,7 +204,7 @@ The `to_json_str` method converts the component to a JSON string.
 ```python
 print("json_str: \n\n", a.to_json_str())
 # Output:
-# json_str: 
+# json_str:
 #
 #  {"ln_id": "161d6169b07c7cfb527d3d2ec83893ff", "created": "2024-05-14T02:06:49.251951", "metadata": {"last_updated": {"welcome": "2024-05-14T02:06:49.280206"}}, "content": null, "form_name": "form", "date": "today", "welcome": "hello world again"}
 ```
@@ -216,7 +216,7 @@ The `to_dict` method converts the component to a dictionary.
 ```python
 print("dict: \n\n", a.to_dict())
 # Output:
-# dict: 
+# dict:
 #
 #  {'ln_id': '161d6169b07c7cfb527d3d2ec83893ff', 'created': '2024-05-14T02:06:49.251951', 'metadata': {'last_updated': {'welcome': '2024-05-14T02:06:49.280206'}}, 'content': None, 'form_name': 'form', 'date': 'today', 'welcome': 'hello world again'}
 ```
@@ -228,7 +228,7 @@ The `to_xml` method converts the component to an XML string.
 ```python
 print("xml: \n\n", a.to_xml())
 # Output:
-# xml: 
+# xml:
 #
 #  <Form><ln_id>161d6169b07c7cfb527d3d2ec83893ff</ln_id><created>2024-05-14T02:06:49.251951</created><metadata><last_updated><welcome>2024-05-14T02:06:49.280206</welcome></last_updated></metadata><content>None</content><form_name>form</form_name><date>today</date><welcome>hello world again</welcome></Form
 
@@ -242,7 +242,7 @@ The `to_pd_series` method converts the component to a pandas Series.
 ```python
 print("pd.Series: \n\n", a.to_pd_series())
 # Output:
-# pd.Series: 
+# pd.Series:
 #
 #  ln_id                         161d6169b07c7cfb527d3d2ec83893ff
 # created                             2024-05-14T02:06:49.251951

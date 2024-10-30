@@ -103,32 +103,32 @@ nice_print(out_)
 Expected Output:
 
 ```markdown
-task: 
+task:
 Follow the prompt and provide the necessary output.
 - Additional instruction: Think step by step, understand the following basic math question and provide parameters for function calling.
 - Additional context: {"Question1": "A school is ordering laptops for its students. If each classroom has 25 students and the school wants to provide a laptop for each student in its 8 classrooms, how many laptops in total does the school need to order?", "question2": "A bakery sells cupcakes in boxes of 6. If a customer wants to buy 8 boxes, with each person getting one cupcake, how many people can the customer serve cupcake to?"}
 - Perform reasoning and prepare actions with GIVEN TOOLS ONLY.
 - Perform scoring according to score range: [0, 10] and precision: integer.
 
-reason: 
+reason:
 Let's think step by step, because we need to perform multiplication to find the answers to both questions.
 
-actions: 
+actions:
 {'action_1': {'function': 'functions.multiply', 'arguments': {'number1': 25, 'number2': 8}}, 'action_2': {'function': 'functions.multiply', 'arguments': {'number1': 6, 'number2': 8}}}
 
-action_required: 
+action_required:
 True
 
-answer: 
+answer:
 The school needs to order 200 laptops. The customer can serve cupcakes to 48 people.
 
-score: 
+score:
 10
 
-action_response: 
+action_response:
 {'action_1': {'function': 'multiply', 'arguments': {'number1': 25, 'number2': 8}, 'output': 200}, 'action_2': {'function': 'multiply', 'arguments': {'number1': 6, 'number2': 8}, 'output': 48}}
 
-action_performed: 
+action_performed:
 True
 ```
 

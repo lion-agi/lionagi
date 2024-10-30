@@ -75,7 +75,7 @@ solve the following problem
 
 context = """
 I have 730,000 trees, with an average of 123 apples per tree, each weighing 0.4 lbs.
-20 percent are bad and sold for 0.1 dollar per lbs, 30 percent are sold to 
+20 percent are bad and sold for 0.1 dollar per lbs, 30 percent are sold to
 brewery for 0.3 dollar per apple. What is my revenue?
 """
 
