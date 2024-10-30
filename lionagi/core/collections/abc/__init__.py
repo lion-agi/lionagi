@@ -2,7 +2,7 @@
 
 from pydantic import Field
 
-from .component import Component, Element
+from .component import Component, Element, LionIDable, get_lion_id
 from .concepts import (
     Actionable,
     Condition,
@@ -33,6 +33,8 @@ __all__ = [
     "Condition",
     "Actionable",
     "Component",
+    "LionIDable",
+    "get_lion_id",
     "LionTypeError",
     "LionValueError",
     "ActionError",

@@ -1,12 +1,10 @@
-"""deprecated, do not use this module, will be removed in v1.0.0"""
-
 import atexit
 import contextlib
 import logging
 from collections import deque
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Any
+from typing import Any, Dict, List
 
 from lionagi.libs import SysUtil, convert, nested
 

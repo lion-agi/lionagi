@@ -1,5 +1,3 @@
-"""deprecated, do not use"""
-
 from lionfuncs import check_import
 
 

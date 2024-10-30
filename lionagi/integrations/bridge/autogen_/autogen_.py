@@ -1,5 +1,3 @@
-"""deprecated, do not use"""
-
 from typing import Dict, Union
 
 from lionfuncs import check_import
