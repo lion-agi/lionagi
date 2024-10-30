@@ -3,7 +3,10 @@ from pathlib import Path
 
 import pandas as pd
 
-from lionagi.integrations.storage.storage_util import output_edge_list, output_node_list
+from lionagi.integrations.storage.storage_util import (
+    output_edge_list,
+    output_node_list,
+)
 
 
 def _output_csv(
@@ -27,7 +30,10 @@ def _output_csv(
     Returns:
         None: This function does not return a value but outputs a ZIP file containing the CSVs.
     """
-    tables = {"Nodes": pd.DataFrame(node_list), "Edges": pd.DataFrame(edge_list)}
+    tables = {
+        "Nodes": pd.DataFrame(node_list),
+        "Edges": pd.DataFrame(edge_list),
+    }
     if edge_cls_list:
         tables["EdgesCondClass"] = pd.DataFrame(edge_cls_list)
     for i in node_dict:

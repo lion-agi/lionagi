@@ -1,4 +1,5 @@
 # lionagi/core/session/directive_mixin.py
+from pydantic import BaseModel
 
 from lionagi.core.unit import Unit
 
@@ -33,13 +34,14 @@ class DirectiveMixin:
         default=None,
         timeout: float = None,
         timing: bool = False,
-        return_branch=False,
         images=None,
         image_path=None,
         template=None,
         verbose=True,
         formatter=None,
         format_kwargs=None,
+        pydantic_model: type[BaseModel] = None,
+        return_pydantic_model: bool = False,
         **kwargs,
     ):
         """
@@ -120,7 +122,7 @@ class DirectiveMixin:
 
             images = ImageUtil.read_image_to_base64(image_path)
 
-        return await directive.chat(
+        output = await directive.chat(
             instruction=instruction,
             context=context,
             sender=sender,
@@ -139,10 +141,19 @@ class DirectiveMixin:
             timeout=timeout,
             timing=timing,
             clear_messages=clear_messages,
-            return_branch=return_branch,
             images=images,
+            return_pydantic_model=return_pydantic_model,
+            pydantic_model=pydantic_model,
+            return_branch=False,
             **kwargs,
         )
+        if (
+            isinstance(output, tuple | list)
+            and len(output) == 2
+            and output[0] == output[1]
+        ):
+            output = output[0]
+        return output
 
     async def direct(
         self,

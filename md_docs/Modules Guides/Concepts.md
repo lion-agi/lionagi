@@ -1,7 +1,7 @@
 
 LioN Directive Language (LNDL)
 
-**intelligent event** is a situation that requires decision making, the states and data associated with such an event is called **work**. A **work function** defines and implements the logic of carrying out work, and a **worker** handles intelligent events to desired situation. 
+**intelligent event** is a situation that requires decision making, the states and data associated with such an event is called **work**. A **work function** defines and implements the logic of carrying out work, and a **worker** handles intelligent events to desired situation.
 
 
 😐
@@ -102,7 +102,7 @@ intelligent event,  intelligent model,  work,  work function,  worker,  form, ta
 |RAG
 
 
-   
+
 |||DSPy|LionAGI|LlamaIndex|LangChain / LangGraph|
 |RAG|Index, Load, Chunk, Store|/|via LL, LC|Native and awesome|Native|
 ||Retrieve|Native|via LL, LC|Native and awesome|Native|
@@ -130,7 +130,3 @@ intelligent event,  intelligent model,  work,  work function,  worker,  form, ta
 ||# of dependencies (from github dependency)|2673|36|4193|12714|
 ||complex dependencies (according to GPT)|Pandas, OpenAI, Optuna, and Datasets|pandas, aiohttp|???|???|
 ||Community|enthuisastic|crying|enthuisastic|enthuisastic|
-
-
-
-

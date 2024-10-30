@@ -59,7 +59,9 @@ class ParallelUnit(Directive):
         else:
             self.imodel = session.imodel
         self.form_template = template or self.default_template
-        self.validator = Validator(rulebook=rulebook) if rulebook else Validator()
+        self.validator = (
+            Validator(rulebook=rulebook) if rulebook else Validator()
+        )
 
     async def pchat(self, *args, **kwargs):
         """
@@ -174,13 +176,17 @@ class ParallelUnit(Directive):
 
         async def _inner_3(i):
             """different instructions but same context"""
-            tasks = [_inner_2(i, ins_=ins_) for ins_ in convert.to_list(instruction)]
+            tasks = [
+                _inner_2(i, ins_=ins_) for ins_ in convert.to_list(instruction)
+            ]
             ress = await AsyncUtil.execute_tasks(*tasks)
             return convert.to_list(ress)
 
         async def _inner_3_b(i):
             """different context but same instruction"""
-            tasks = [_inner_2(i, cxt_=cxt_) for cxt_ in convert.to_list(context)]
+            tasks = [
+                _inner_2(i, cxt_=cxt_) for cxt_ in convert.to_list(context)
+            ]
             ress = await AsyncUtil.execute_tasks(*tasks)
             return convert.to_list(ress)
 

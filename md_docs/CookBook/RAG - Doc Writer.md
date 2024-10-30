@@ -61,12 +61,12 @@ Define the instruction for generating the API documentation. We use Lionagi's mo
 
 ```python
 instruction = """
-write a good API documentation for this code, must use 
-query engine to check meanings of related code concepts 
+write a good API documentation for this code, must use
+query engine to check meanings of related code concepts
 to accurately describe, for example if a name of a variable,
 function, class, or module is used but not present in context,
-you must check with the query engine. make sure to cross 
-reference the code with the query engine to ensure the 
+you must check with the query engine. make sure to cross
+reference the code with the query engine to ensure the
 documentation is accurate.
 """
 

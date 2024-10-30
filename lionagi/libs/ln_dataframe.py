@@ -31,7 +31,9 @@ def extend_dataframe(
     try:
         if len(df2.dropna(how="all")) > 0 and len(df1.dropna(how="all")) > 0:
             df = convert.to_df([df1, df2])
-            df.drop_duplicates(inplace=True, subset=[unique_col], keep=keep, **kwargs)
+            df.drop_duplicates(
+                inplace=True, subset=[unique_col], keep=keep, **kwargs
+            )
             df_ = convert.to_df(df)
             if len(df_) > 1:
                 return df_
@@ -112,7 +114,9 @@ def replace_keyword(
             keyword, replacement, case=False, regex=False
         )
     else:
-        df_.loc[:, column] = df_[column].str.replace(keyword, replacement, regex=False)
+        df_.loc[:, column] = df_[column].str.replace(
+            keyword, replacement, regex=False
+        )
 
     return df_ if inplace else True
 
@@ -160,7 +164,9 @@ def remove_last_n_rows(df: pd.DataFrame, steps: int) -> pd.DataFrame:
     return convert.to_df(df[:-steps])
 
 
-def update_row(df: pd.DataFrame, row: str | int, column: str | int, value: Any) -> bool:
+def update_row(
+    df: pd.DataFrame, row: str | int, column: str | int, value: Any
+) -> bool:
     """
     Updates a row's value for a specified column in a DataFrame.
 

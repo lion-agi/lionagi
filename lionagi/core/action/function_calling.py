@@ -1,5 +1,6 @@
+from collections.abc import Callable
 from functools import singledispatchmethod
-from typing import Any, Callable, Dict
+from typing import Any, Dict
 
 from lionagi.core.collections.abc import Actionable
 from lionagi.core.message.action_request import ActionRequest
@@ -14,7 +15,7 @@ class FunctionCalling(Actionable):
     formats including tuples, dictionaries, ActionRequests, or JSON strings.
     """
 
-    def __init__(self, function: Callable, arguments: Dict[str, Any] = None):
+    def __init__(self, function: Callable, arguments: dict[str, Any] = None):
         """
         Initializes a new instance of FunctionCalling with the given function
         and optional arguments.
@@ -59,12 +60,14 @@ class FunctionCalling(Actionable):
     @create.register(tuple)
     def _(cls, function_calling: tuple) -> "FunctionCalling":
         if len(function_calling) == 2:
-            return cls(function=function_calling[0], arguments=function_calling[1])
+            return cls(
+                function=function_calling[0], arguments=function_calling[1]
+            )
         else:
             raise ValueError(f"Invalid function call {function_calling}")
 
     @create.register(dict)
-    def _(cls, function_calling: Dict[str, Any]) -> "FunctionCalling":
+    def _(cls, function_calling: dict[str, Any]) -> "FunctionCalling":
         if len(function_calling) == 2 and (
             {"function", "arguments"} <= function_calling.keys()
         ):
@@ -75,7 +78,9 @@ class FunctionCalling(Actionable):
 
     @create.register(ActionRequest)
     def _(cls, function_calling: ActionRequest) -> "FunctionCalling":
-        return cls.create((function_calling.function, function_calling.arguments))
+        return cls.create(
+            (function_calling.function, function_calling.arguments)
+        )
 
     @create.register(str)
     def _(cls, function_calling: str) -> "FunctionCalling":
@@ -83,7 +88,9 @@ class FunctionCalling(Actionable):
         try:
             _call = ParseUtil.fuzzy_parse_json(function_calling)
         except Exception as e:
-            raise ValueError(f"Invalid function call {function_calling}") from e
+            raise ValueError(
+                f"Invalid function call {function_calling}"
+            ) from e
 
         if isinstance(_call, dict):
             return cls.create(_call)

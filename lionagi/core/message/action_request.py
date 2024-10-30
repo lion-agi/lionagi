@@ -48,14 +48,21 @@ class ActionRequest(RoledMessage):
             sender (str, optional): The sender of the request.
             recipient (str, optional): The recipient of the request.
         """
-        function = function.__name__ if inspect.isfunction(function) else function
+        function = (
+            function.__name__ if inspect.isfunction(function) else function
+        )
         arguments = _prepare_arguments(arguments)
 
         super().__init__(
             role=MessageRole.ASSISTANT,
             sender=sender,
             recipient=recipient,
-            content={"action_request": {"function": function, "arguments": arguments}},
+            content={
+                "action_request": {
+                    "function": function,
+                    "arguments": arguments,
+                }
+            },
             **kwargs,
         )
         self.function = function

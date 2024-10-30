@@ -172,8 +172,12 @@ class WorkerEngine:
         )
         for func_name, func, dec_params in work_decorated_function:
             if func_name not in self.worker.work_functions:
-                self.worker.work_functions[func_name] = WorkFunctionNode(**dec_params)
-                self.worker_graph.add_node(self.worker.work_functions[func_name])
+                self.worker.work_functions[func_name] = WorkFunctionNode(
+                    **dec_params
+                )
+                self.worker_graph.add_node(
+                    self.worker.work_functions[func_name]
+                )
             else:
                 if not isinstance(
                     self.worker.work_functions[func_name], WorkFunctionNode

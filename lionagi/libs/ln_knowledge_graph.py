@@ -33,7 +33,9 @@ class KnowledgeBase:
         Initialize an empty Knowledge Base (KB) with empty dictionaries for entities, relations, and sources.
         """
         self.entities = {}  # { entity_title: {...} }
-        self.relations = []  # [ head: entity_title, type: ..., tail: entity_title,
+        self.relations = (
+            []
+        )  # [ head: entity_title, type: ..., tail: entity_title,
         # meta: { article_url: { spans: [...] } } ]
         self.sources = {}  # { article_url: {...} }
 
@@ -48,7 +50,9 @@ class KnowledgeBase:
             article_url = list(r["meta"].keys())[0]
             source_data = kb2.sources[article_url]
             self.add_relation(
-                r, source_data["article_title"], source_data["article_publish_date"]
+                r,
+                source_data["article_title"],
+                source_data["article_publish_date"],
             )
 
     def are_relations_equal(self, r1, r2):
@@ -137,7 +141,9 @@ class KnowledgeBase:
         Args:
             e (dict): A dictionary containing information about the entity (title and additional attributes).
         """
-        self.entities[e["title"]] = {k: v for k, v in e.items() if k != "title"}
+        self.entities[e["title"]] = {
+            k: v for k, v in e.items() if k != "title"
+        }
 
     def add_relation(self, r, article_title, article_publish_date):
         """
@@ -210,7 +216,9 @@ class KnowledgeBase:
         relation, subject, relation, object_ = "", "", "", ""
         text = text.strip()
         current = "x"
-        text_replaced = text.replace("<s>", "").replace("<pad>", "").replace("</s>", "")
+        text_replaced = (
+            text.replace("<s>", "").replace("<pad>", "").replace("</s>", "")
+        )
         for token in text_replaced.split():
             if token == "<triplet>":
                 current = "t"
@@ -311,7 +319,9 @@ class KGTripletExtractor:
 
         if not any([model, tokenizer]):
             tokenizer = AutoTokenizer.from_pretrained("Babelscape/rebel-large")
-            model = AutoModelForSeq2SeqLM.from_pretrained("Babelscape/rebel-large")
+            model = AutoModelForSeq2SeqLM.from_pretrained(
+                "Babelscape/rebel-large"
+            )
             model.to(device)
 
         inputs = tokenizer([text], return_tensors="pt")
@@ -373,10 +383,14 @@ class KGTripletExtractor:
         i = 0
         for sentence_pred in decoded_preds:
             current_span_index = i // num_return_sequences
-            relations = KnowledgeBase.extract_relations_from_model_output(sentence_pred)
+            relations = KnowledgeBase.extract_relations_from_model_output(
+                sentence_pred
+            )
             for relation in relations:
                 relation["meta"] = {
-                    "article_url": {"spans": [spans_boundaries[current_span_index]]}
+                    "article_url": {
+                        "spans": [spans_boundaries[current_span_index]]
+                    }
                 }
                 kb.add_relation(relation, article_title, article_publish_date)
             i += 1

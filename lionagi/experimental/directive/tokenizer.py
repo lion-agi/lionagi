@@ -44,7 +44,9 @@ class BaseTokenizer:
                     position = match.end()  # Move past the matched token
                     break
             if not match:  # No match found, unrecognized token
-                raise SyntaxError(f"Unexpected character: {self.script[position]}")
+                raise SyntaxError(
+                    f"Unexpected character: {self.script[position]}"
+                )
                 # break
 
     def get_tokens(self):

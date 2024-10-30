@@ -1,4 +1,8 @@
-from typing import Callable
+import logging
+from collections.abc import Callable
+
+from lionfuncs import to_dict
+from pydantic import BaseModel
 
 from lionagi.core.collections import iModel
 from lionagi.core.collections.abc import Directive
@@ -8,7 +12,7 @@ from lionagi.libs.ln_func_call import rcall
 
 from .unit_form import UnitForm
 from .unit_mixin import DirectiveMixin
-from .util import retry_kwargs
+from .util import break_down_annotation, retry_kwargs
 
 
 class Unit(Directive, DirectiveMixin):
@@ -71,6 +75,8 @@ class Unit(Directive, DirectiveMixin):
         return_branch=False,
         formatter=None,
         format_kwargs={},
+        pydantic_model: type[BaseModel] | BaseModel = None,
+        return_pydantic_model: bool = False,
         **kwargs,
     ):
         """
@@ -100,7 +106,21 @@ class Unit(Directive, DirectiveMixin):
             Any: The processed response.
         """
         kwargs = {**retry_kwargs, **kwargs}
-        return await rcall(
+
+        if pydantic_model:
+            if form:
+                raise ValueError("Cannot use both form and pydantic_model.")
+            if requested_fields:
+                raise ValueError(
+                    "Cannot use both requested_fields and pydantic_model."
+                )
+            requested_fields = break_down_annotation(pydantic_model)
+            context = {
+                "info": context,
+                "return_guidance": pydantic_model.model_json_schema(),
+            }
+
+        output, branch = await rcall(
             self._chat,
             instruction=instruction,
             context=context,
@@ -118,11 +138,32 @@ class Unit(Directive, DirectiveMixin):
             imodel=imodel,
             clear_messages=clear_messages,
             use_annotation=use_annotation,
-            return_branch=return_branch,
+            return_branch=True,
             formatter=formatter,
             format_kwargs=format_kwargs,
             **kwargs,
         )
+        if isinstance(output, tuple | list) and len(output) == 1:
+            output = output[0]
+
+        if isinstance(output, tuple | list) and len(output) == 2:
+            if output[0] == output[1]:
+                output = output[0]
+
+        if return_pydantic_model:
+            try:
+                a_ = to_dict(
+                    output,
+                    recursive=True,
+                    max_recursive_depth=5,
+                    fuzzy_parse=True,
+                )
+                output = pydantic_model.model_validate(a_)
+                return output, branch if return_branch else output
+            except Exception as e:
+                logging.error(f"Error converting to pydantic model: {e}")
+
+        return output, branch if return_branch else output
 
     async def direct(
         self,
@@ -232,7 +273,9 @@ class Unit(Directive, DirectiveMixin):
         )
 
         if verbose:
-            print("--------------------------------------------------------------")
+            print(
+                "--------------------------------------------------------------"
+            )
             print(f"Directive successfully completed!")
 
         return out

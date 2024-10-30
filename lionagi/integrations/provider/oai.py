@@ -76,7 +76,9 @@ class OpenAIService(BaseService):
         self.active_endpoint = []
         self.allowed_kwargs = allowed_kwargs
 
-    async def serve(self, input_, endpoint="chat/completions", method="post", **kwargs):
+    async def serve(
+        self, input_, endpoint="chat/completions", method="post", **kwargs
+    ):
         """
         Serves the input using the specified endpoint and method.
 
@@ -137,14 +139,18 @@ class OpenAIService(BaseService):
                     _content = []
                     for i in content:
                         if "text" in i:
-                            _content.append({"type": "text", "text": str(i["text"])})
+                            _content.append(
+                                {"type": "text", "text": str(i["text"])}
+                            )
                         elif "image_url" in i:
                             _content.append(
                                 {
                                     "type": "image_url",
                                     "image_url": {
                                         "url": f"{i['image_url'].get('url')}",
-                                        "detail": i["image_url"].get("detail", "low"),
+                                        "detail": i["image_url"].get(
+                                            "detail", "low"
+                                        ),
                                     },
                                 }
                             )
@@ -158,7 +164,10 @@ class OpenAIService(BaseService):
         )
         try:
             completion = await self.call_api(
-                payload, "chat/completions", "post", required_tokens=required_tokens
+                payload,
+                "chat/completions",
+                "post",
+                required_tokens=required_tokens,
             )
             return payload, completion
         except Exception as e:

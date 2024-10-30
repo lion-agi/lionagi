@@ -24,11 +24,11 @@ ELIF
 ELSE
 
 # loop
-FOR 
+FOR
 IN
 
 # EXCEPTION
-TRY 
+TRY
 EXCEPT
 
 """
@@ -54,33 +54,33 @@ tools 1,2,3
 
 def main():  <-> compose
 
-    If condition1 && condition2 || !condition3; 
+    If condition1 && condition2 || !condition3;
     DO tool1(param1, param2);
     ENDIF;
-    
+
     IF  must follow condition, (condition parsing logic);
     DO ....;
     ENDIF;
-    
-    
-    
-    
-THEN; 
-    DO tool2(param1, param2);
-    
+
+
+
+
 THEN;
-    
-    TRY; DO ACTION_C; 
-    EXCEPT; DO ACTION_D;    
-    ENDEXCEPT; 
-    ENDTRY; 
+    DO tool2(param1, param2);
+
+THEN;
+
+    TRY; DO ACTION_C;
+    EXCEPT; DO ACTION_D;
+    ENDEXCEPT;
+    ENDTRY;
 
     RETURN  <-> run
 
 
 
 
-COMPOSE; - indicate the beginning of a script-like block to execute 
+COMPOSE; - indicate the beginning of a script-like block to execute
 
 THEN; - indicate continuation of a script-like block, another statement to execute
 
@@ -91,7 +91,7 @@ XX;  ; END XX;
 
 
 
-TRY; DO ACTION_A; END TRY; 
+TRY; DO ACTION_A; END TRY;
 
 
 
@@ -108,15 +108,15 @@ THEN TRY; DO ACTION_C ENDTRY;
 
 THEN IF EXCEPT; IF CONDITION_C; DO ACTION_D; ENDEXCEPT
 
-; 
+;
 THEN FOR ITEM IN COLLECTION; DO ACTION_E(input_.param1, input_.param2); ENDFOR
 RUN;
 
 
 
-DO ACTION B; 
+DO ACTION B;
 
-IF 
+IF
 THEN
 
 GROUP
@@ -150,7 +150,7 @@ FOR input_ IN collections DO action2(input_.param1, input_.param2); ENDFOR; END;
 
 example 2:
 BEGIN; IF condition1; TRY DO action1(param1, param2); EXCEPT DO action2(param3, param4);
-ENDTRY; ELIF condition2; DO action2(param1, param2); ELSE DO action3(param1, param2); 
+ENDTRY; ELIF condition2; DO action2(param1, param2); ELSE DO action3(param1, param2);
 ENDIF; END;
 
 """
@@ -180,7 +180,7 @@ CHAT / REACT
 DO 1,2
     session = Li.Session(..., tools=tools)
     await alcall(session.branches, func_1)
-    
+
 
 THEN DO 3,4
     session.chat.py(3,4)

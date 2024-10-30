@@ -3,7 +3,7 @@
 
 ^c6806f
 
-**Parent Class:** [`Exception`](https://docs.python.org/3/library/exceptions.html)  
+**Parent Class:** [`Exception`](https://docs.python.org/3/library/exceptions.html)
 
 **Description**:
 `LionAGIError` is the base class for all exceptions in the LionAGI system.

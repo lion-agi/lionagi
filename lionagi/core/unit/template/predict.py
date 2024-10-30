@@ -34,7 +34,9 @@ class PredictTemplate(BaseUnitForm):
 
     template_name: str = "predict_template"
 
-    num_sentences: int = Field(2, description="the number of sentences to predict")
+    num_sentences: int = Field(
+        2, description="the number of sentences to predict"
+    )
 
     prediction: None | str | list = Field(
         None,

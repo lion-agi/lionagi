@@ -31,14 +31,14 @@ You can register one or more tools with a session using the `register_tools` met
 ```python
 # Initialize a session with a system message
 session = li.Session(
-	"Function picker and parameter provider", 
+	"Function picker and parameter provider",
 	tools=add_numbers  # directly use the functions as tool
 )
 
 # Specify the tool by its name
 response = await session.chat(
-	"Calculate the sum of two numbers.", 
-	context = {"number1": 5, "number2": 3}, 
+	"Calculate the sum of two numbers.",
+	context = {"number1": 5, "number2": 3},
 	tools = 'add_numbers'
 )
 ```
@@ -63,7 +63,7 @@ By default, no tools will be used. If you want to include all registered
 tools in the step, you can add `tools=True`.
 
 ``` python
-# a tool object can be created by 
+# a tool object can be created by
 from lionagi import func_to_tool
 
 tool_add = func_to_tool(add_numbers)

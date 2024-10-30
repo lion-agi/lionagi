@@ -380,7 +380,7 @@ def append(self, item, sequence=None) -> None
 - `item`: The item to append.
 - `sequence` (optional): The sequence to append to.
 
-**Return Values**: `None` 
+**Return Values**: `None`
 
 **Description**:
 Appends an item to a sequence.

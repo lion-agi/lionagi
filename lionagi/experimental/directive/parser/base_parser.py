@@ -21,10 +21,10 @@ class BaseDirectiveParser:
         BaseToken(KEYWORD, IF)
     """
 
-    def __init__(self, tokens: List[BaseToken]):
+    def __init__(self, tokens: list[BaseToken]):
         self.tokens = tokens
         self.current_token_index = -1
-        self.current_token: Optional[BaseToken] = None
+        self.current_token: BaseToken | None = None
         self.next_token()
 
     def next_token(self) -> None:
@@ -50,13 +50,15 @@ class BaseDirectiveParser:
         else:
             return None
 
-    def skip_until(self, token_types: List[str]) -> None:
+    def skip_until(self, token_types: list[str]) -> None:
         """Skips tokens until a token of the specified type is found.
 
         Args:
             token_types (List[str]): A list of token types to stop skipping.
         """
-        while self.current_token and self.current_token.type not in token_types:
+        while (
+            self.current_token and self.current_token.type not in token_types
+        ):
             self.next_token()
 
     def mark(self) -> int:
@@ -108,10 +110,15 @@ class BaseDirectiveParser:
         """
         block = []
         # Parse the block until 'ELSE', 'ENDIF', ensuring not to include semicolons as part of the block
-        while self.current_token and self.current_token.value not in ("ENDIF", "ELSE"):
+        while self.current_token and self.current_token.value not in (
+            "ENDIF",
+            "ELSE",
+        ):
             if self.current_token.value == "DO":
                 self.next_token()  # Move past 'DO' to get to the action
-            block.append(self.current_token.value)  # Add the action to the block
+            block.append(
+                self.current_token.value
+            )  # Add the action to the block
             self.next_token()  # Move to the next token, which could be a semicolon or the next action
             if self.current_token.value == ";":
                 self.next_token()  # Move past the semicolon
@@ -126,11 +133,16 @@ class BaseDirectiveParser:
         Raises:
             SyntaxError: If the IF statement is not properly formed.
         """
-        if self.current_token.type != "KEYWORD" or self.current_token.value != "IF":
+        if (
+            self.current_token.type != "KEYWORD"
+            or self.current_token.value != "IF"
+        ):
             raise SyntaxError("Expected IF statement")
         self.next_token()  # Skip 'IF'
 
-        condition = self.parse_expression()  # Now properly ends after the semicolon
+        condition = (
+            self.parse_expression()
+        )  # Now properly ends after the semicolon
 
         true_block = []
         if self.current_token.value == "DO":
@@ -156,7 +168,10 @@ class BaseDirectiveParser:
         Raises:
             SyntaxError: If the FOR statement is not properly formed.
         """
-        if self.current_token.type != "KEYWORD" or self.current_token.value != "FOR":
+        if (
+            self.current_token.type != "KEYWORD"
+            or self.current_token.value != "FOR"
+        ):
             raise SyntaxError("Expected FOR statement")
         self.next_token()  # Skip 'FOR'
 
@@ -167,7 +182,10 @@ class BaseDirectiveParser:
         self.next_token()  # Move past the iterator variable
 
         # Expect and skip 'IN' keyword
-        if self.current_token.type != "KEYWORD" or self.current_token.value != "IN":
+        if (
+            self.current_token.type != "KEYWORD"
+            or self.current_token.value != "IN"
+        ):
             raise SyntaxError("Expected 'IN' after iterator variable")
         self.next_token()  # Move past 'IN'
 
@@ -194,7 +212,9 @@ class BaseDirectiveParser:
         if self.current_token and self.current_token.value == "DO":
             self.next_token()
 
-        while self.current_token and self.current_token.value not in ("ENDFOR",):
+        while self.current_token and self.current_token.value not in (
+            "ENDFOR",
+        ):
             if self.current_token.value == ";":
                 # If a semicolon is encountered, skip it and move to the next token
                 self.next_token()
@@ -217,11 +237,16 @@ class BaseDirectiveParser:
         Raises:
             SyntaxError: If the TRY statement is not properly formed.
         """
-        if self.current_token.type != "KEYWORD" or self.current_token.value != "TRY":
+        if (
+            self.current_token.type != "KEYWORD"
+            or self.current_token.value != "TRY"
+        ):
             raise SyntaxError("Expected TRY statement")
         self.next_token()  # Skip 'TRY'
 
-        try_block = self.parse_try_block("EXCEPT")  # Parse the try block until 'EXCEPT'
+        try_block = self.parse_try_block(
+            "EXCEPT"
+        )  # Parse the try block until 'EXCEPT'
 
         # Now expecting 'EXCEPT' keyword
         if not (self.current_token and self.current_token.value == "EXCEPT"):
@@ -256,7 +281,9 @@ class BaseDirectiveParser:
                 self.next_token()  # Move past the semicolon
                 continue  # Skip adding ';' to the block
             else:
-                block.append(self.current_token.value)  # Add the action to the block
+                block.append(
+                    self.current_token.value
+                )  # Add the action to the block
                 self.next_token()
 
         return block
