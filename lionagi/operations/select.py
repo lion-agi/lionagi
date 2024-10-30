@@ -12,8 +12,9 @@ from pydantic import BaseModel, Field
 
 from lionagi.libs.sys_util import SysUtil
 
-from ..config import DEFAULT_CHAT_CONFIG
-from .prompt import PROMPT
+from .config import DEFAULT_CHAT_CONFIG
+
+PROMPT = "Please select up to {max_num_selections} items from the following list {choices}. Provide the selection(s) into appropriate field in format required, and no comments from you"
 
 
 class SelectionModel(BaseModel):
