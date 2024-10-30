@@ -1,15 +1,11 @@
-import tiktoken
 import math
+
+import tiktoken
+
 from .ln_convert import to_str
 from .special_tokens import disallowed_tokens
 
-from typing_extensions import deprecated
 
-
-@deprecated(
-    "APIUtil is deprecated with no replacement, and will be removed in v1.0",
-    category=DeprecationWarning,
-)
 class TokenizeUtil:
 
     @staticmethod
@@ -24,11 +20,16 @@ class TokenizeUtil:
 
         if encoding_model:
             try:
-                encoding_name = tiktoken.encoding_name_for_model(encoding_model)
+                encoding_name = tiktoken.encoding_name_for_model(
+                    encoding_model
+                )
             except:
                 encoding_name = encoding_name or "cl100k_base"
 
-        if not encoding_name or encoding_name in tiktoken.list_encoding_names():
+        if (
+            not encoding_name
+            or encoding_name in tiktoken.list_encoding_names()
+        ):
             encoding_name = encoding_name or "cl100k_base"
             encoding = tiktoken.get_encoding(encoding_name)
 
@@ -92,9 +93,13 @@ class TokenizeUtil:
                 chunks.append(text[start_idx:end_idx])
 
             if len(text) - chunk_size * (n_chunks - 1) > threshold:
-                chunks.append(text[chunk_size * (n_chunks - 1) - overlap_size :])
+                chunks.append(
+                    text[chunk_size * (n_chunks - 1) - overlap_size :]
+                )
             else:
-                chunks[-1] += text[chunk_size * (n_chunks - 1) + overlap_size :]
+                chunks[-1] += text[
+                    chunk_size * (n_chunks - 1) + overlap_size :
+                ]
 
             return chunks
 
@@ -161,10 +166,14 @@ class TokenizeUtil:
                 chunks.append(tokens[start_idx:end_idx])
 
             if len(tokens) - chunk_size * (n_chunks - 1) > threshold:
-                chunks.append(tokens[chunk_size * (n_chunks - 1) - overlap_size :])
+                chunks.append(
+                    tokens[chunk_size * (n_chunks - 1) - overlap_size :]
+                )
             else:
                 chunks[-1] += tokens[-residue:]
 
             return (
-                [" ".join(chunk) for chunk in chunks] if not return_tokens else chunks
+                [" ".join(chunk) for chunk in chunks]
+                if not return_tokens
+                else chunks
             )

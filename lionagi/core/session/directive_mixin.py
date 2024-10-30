@@ -1,22 +1,11 @@
 # lionagi/core/session/directive_mixin.py
+from pydantic import BaseModel
 
 from lionagi.core.unit import Unit
+
 from ..message.action_response import ActionResponse
 
-from typing_extensions import deprecated
 
-from lionagi.os.sys_utils import format_deprecated_msg
-
-
-@deprecated(
-    format_deprecated_msg(
-        deprecated_name="lionagi.core.action.function_calling.FunctionCalling",
-        deprecated_version="v0.3.0",
-        removal_version="v1.0",
-        replacement="check `lion-core` package for updates",
-    ),
-    category=DeprecationWarning,
-)
 class DirectiveMixin:
     """
     Mixin class for handling chat interactions within the directive framework.
@@ -45,9 +34,14 @@ class DirectiveMixin:
         default=None,
         timeout: float = None,
         timing: bool = False,
-        return_branch=False,
         images=None,
         image_path=None,
+        template=None,
+        verbose=True,
+        formatter=None,
+        format_kwargs=None,
+        pydantic_model: type[BaseModel] = None,
+        return_pydantic_model: bool = False,
         **kwargs,
     ):
         """
@@ -111,7 +105,15 @@ class DirectiveMixin:
             >>> print(result)
         """
 
-        directive = Unit(self, imodel=imodel, rulebook=rulebook)
+        directive = Unit(
+            self,
+            imodel=imodel,
+            rulebook=rulebook,
+            template=template,
+            verbose=verbose,
+            formatter=formatter,
+            format_kwargs=format_kwargs,
+        )
         if system:
             self.add_message(system=system)
 
@@ -120,7 +122,7 @@ class DirectiveMixin:
 
             images = ImageUtil.read_image_to_base64(image_path)
 
-        return await directive.chat(
+        output = await directive.chat(
             instruction=instruction,
             context=context,
             sender=sender,
@@ -139,10 +141,19 @@ class DirectiveMixin:
             timeout=timeout,
             timing=timing,
             clear_messages=clear_messages,
-            return_branch=return_branch,
             images=images,
+            return_pydantic_model=return_pydantic_model,
+            pydantic_model=pydantic_model,
+            return_branch=False,
             **kwargs,
         )
+        if (
+            isinstance(output, tuple | list)
+            and len(output) == 2
+            and output[0] == output[1]
+        ):
+            output = output[0]
+        return output
 
     async def direct(
         self,
@@ -171,7 +182,10 @@ class DirectiveMixin:
         directive=None,
         images=None,
         image_path=None,
-        verbose=False,
+        template=None,
+        verbose=True,
+        formatter=None,
+        format_kwargs=None,
         **kwargs,
     ):
         """
@@ -217,7 +231,14 @@ class DirectiveMixin:
 
             images = ImageUtil.read_image_to_base64(image_path)
 
-        _directive = Unit(self, imodel=imodel, rulebook=rulebook, verbose=verbose)
+        _directive = Unit(
+            self,
+            imodel=imodel,
+            rulebook=rulebook,
+            verbose=verbose,
+            formatter=formatter,
+            format_kwargs=format_kwargs,
+        )
 
         idx = len(self.progress)
         if directive and isinstance(directive, str):
@@ -229,6 +250,7 @@ class DirectiveMixin:
                 reason=reason,
                 confidence=confidence,
                 images=images,
+                template=template,
                 **kwargs,
             )
 
@@ -266,6 +288,7 @@ class DirectiveMixin:
             plan_num_step=plan_num_step,
             predict_num_sentences=predict_num_sentences,
             images=images,
+            template=template,
             **kwargs,
         )
 

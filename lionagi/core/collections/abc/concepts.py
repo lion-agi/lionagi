@@ -1,30 +1,17 @@
 """This module defines abstract base classes for LionAGI."""
-import warnings
-from abc import ABC, abstractmethod
-from collections.abc import Generator
-from typing import Any, Iterator, TypeVar
 
-from pydantic import Field, BaseModel, field_validator
+from abc import ABC, abstractmethod
+from collections.abc import Generator, Iterator
+from typing import Any, TypeVar
+
+from pydantic import BaseModel, Field, field_validator
 
 from .component import LionIDable, get_lion_id
 from .exceptions import LionTypeError
 
 T = TypeVar("T")
 
-from typing_extensions import deprecated
 
-from lionagi.os.sys_utils import format_deprecated_msg
-
-
-# @deprecated(
-#     format_deprecated_msg(
-#         deprecated_name="lionagi.core.collections.abc.concepts.Record",
-#         deprecated_version="v0.3.0",
-#         removal_version="v1.0",
-#         replacement="check `lion_core.abc._record` for updates",
-#     ),
-#     category=DeprecationWarning,
-# )
 class Record(ABC):
     """
     Abstract base class for managing a collection of unique LionAGI items.
@@ -42,17 +29,6 @@ class Record(ABC):
         __len__: Return the number of items in the record.
         __iter__: Iterate over items in the record.
     """
-
-    def __init__(self):
-        warnings.warn(
-            format_deprecated_msg(
-                deprecated_name="lionagi.core.collections.abc.concepts.Record",
-                deprecated_version="v0.3.0",
-                removal_version="v1.0",
-                replacement="check `lion_core.abc._record` for updates",
-            ),
-            category=DeprecationWarning,
-        )
 
     @abstractmethod
     def keys(self) -> Generator[str, None, None]:
@@ -136,15 +112,6 @@ class Record(ABC):
         """
 
 
-@deprecated(
-    format_deprecated_msg(
-        deprecated_name="lionagi.core.collections.abc.concepts.Ordering",
-        deprecated_version="v0.3.0",
-        removal_version="v1.0",
-        replacement="check `lion_core.abc._space` for updates",
-    ),
-    category=DeprecationWarning,
-)
 class Ordering(ABC):
     """Represents sequencing of certain order."""
 
@@ -161,15 +128,6 @@ class Ordering(ABC):
         """Check if an item id is in the ordering."""
 
 
-@deprecated(
-    format_deprecated_msg(
-        deprecated_name="lionagi.core.collections.abc.concepts.Condition",
-        deprecated_version="v0.3.0",
-        removal_version="v1.0",
-        replacement="check `lion_core.abc._observation` for updates",
-    ),
-    category=DeprecationWarning,
-)
 class Condition(ABC):
     """Represents a condition in a given context."""
 
@@ -187,15 +145,6 @@ class Condition(ABC):
         """
 
 
-@deprecated(
-    format_deprecated_msg(
-        deprecated_name="lionagi.core.collections.abc.concepts.Actionable",
-        deprecated_version="v0.3.0",
-        removal_version="v1.0",
-        replacement=None,
-    ),
-    category=DeprecationWarning,
-)
 class Actionable(ABC):
     """Represents an action that can be invoked with arguments."""
 
@@ -213,15 +162,6 @@ class Actionable(ABC):
         """
 
 
-@deprecated(
-    format_deprecated_msg(
-        deprecated_name="lionagi.core.collections.abc.concepts.Progressable",
-        deprecated_version="v0.3.0",
-        removal_version="v1.0",
-        replacement=None,
-    ),
-    category=DeprecationWarning,
-)
 class Progressable(ABC):
     """Represents a process that can progress forward asynchronously."""
 
@@ -235,15 +175,6 @@ class Progressable(ABC):
         """
 
 
-@deprecated(
-    format_deprecated_msg(
-        deprecated_name="lionagi.core.collections.abc.concepts.Relatable",
-        deprecated_version="v0.3.0",
-        removal_version="v1.0",
-        replacement="check `lion_core.abc._chracteristic.Relational` for updates",
-    ),
-    category=DeprecationWarning,
-)
 class Relatable(ABC):
     """Defines a relationship that can be established with arguments."""
 
@@ -257,22 +188,15 @@ class Relatable(ABC):
         """
 
 
-@deprecated(
-    format_deprecated_msg(
-        deprecated_name="lionagi.core.collections.abc.concepts.Sendable",
-        deprecated_version="v0.3.0",
-        removal_version="v1.0",
-        replacement="check `lion-core.abc._characteristic.Communicatable` for updates",
-    ),
-    category=DeprecationWarning,
-)
 class Sendable(BaseModel, ABC):
     """Represents an object that can be sent with a sender and recipient."""
 
     sender: str = Field(
         "N/A",
         title="Sender",
-        description=("The id of the sender node, or 'system', 'user', or 'assistant'."),
+        description=(
+            "The id of the sender node, or 'system', 'user', or 'assistant'."
+        ),
     )
 
     recipient: str = Field(
@@ -303,24 +227,9 @@ class Sendable(BaseModel, ABC):
             return value
 
         a = get_lion_id(value)
-        if not isinstance(a, str) or len(a) != 32:
-            raise LionTypeError(
-                "Invalid sender or recipient value. "
-                "Expected a valid node id or one of "
-                "'system' or 'user'."
-            )
         return a
 
 
-@deprecated(
-    format_deprecated_msg(
-        deprecated_name="lionagi.core.collections.abc.concepts.Executable",
-        deprecated_version="v0.3.0",
-        removal_version="v1.0",
-        replacement="check `lion_core.abc._observer.BaseExecutor` package for updates",
-    ),
-    category=DeprecationWarning,
-)
 class Executable(ABC):
     """Represents an object that can be executed with arguments."""
 
@@ -337,15 +246,6 @@ class Executable(ABC):
         """
 
 
-@deprecated(
-    format_deprecated_msg(
-        deprecated_name="lionagi.core.collections.abc.concepts.Directive",
-        deprecated_version="v0.3.0",
-        removal_version="v1.0",
-        replacement=None,
-    ),
-    category=DeprecationWarning,
-)
 class Directive(ABC):
     """Represents a directive that can be directed with arguments."""
 

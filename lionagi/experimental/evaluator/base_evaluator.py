@@ -1,23 +1,11 @@
 import ast
 import operator
-from typing import Any, Dict, Tuple, Callable
+from collections.abc import Callable
+from typing import Any, Dict, Tuple
 
 from lionagi.libs.ln_convert import to_dict
 
-from typing_extensions import deprecated
 
-from lionagi.os.sys_utils import format_deprecated_msg
-
-
-@deprecated(
-    format_deprecated_msg(
-        deprecated_name="lionagi.core.action.function_calling.FunctionCalling",
-        deprecated_version="v0.3.0",
-        removal_version="v1.0",
-        replacement="check `lion-core` package for updates",
-    ),
-    category=DeprecationWarning,
-)
 class BaseEvaluator:
     """
     A class to evaluate mathematical and boolean expressions from strings using Python's AST.
@@ -29,7 +17,7 @@ class BaseEvaluator:
 
     def __init__(self) -> None:
         """Initializes the evaluator with supported operators and an empty cache."""
-        self.allowed_operators: Dict[type, Any] = {
+        self.allowed_operators: dict[type, Any] = {
             ast.Add: operator.add,
             ast.Sub: operator.sub,
             ast.Mult: operator.mul,
@@ -47,9 +35,9 @@ class BaseEvaluator:
             ast.Not: operator.not_,
             ast.USub: operator.neg,
         }
-        self.cache: Dict[Tuple[str, Tuple], Any] = {}
+        self.cache: dict[tuple[str, tuple], Any] = {}
 
-    def evaluate(self, expression: str, context: Dict[str, Any]) -> Any:
+    def evaluate(self, expression: str, context: dict[str, Any]) -> Any:
         """
         Evaluates a given expression string using the provided context.
 
@@ -73,9 +61,11 @@ class BaseEvaluator:
             self.cache[cache_key] = result
             return result
         except Exception as e:
-            raise ValueError(f"Failed to evaluate expression: {expression}. Error: {e}")
+            raise ValueError(
+                f"Failed to evaluate expression: {expression}. Error: {e}"
+            )
 
-    def _evaluate_node(self, node: ast.AST, context: Dict[str, Any]) -> Any:
+    def _evaluate_node(self, node: ast.AST, context: dict[str, Any]) -> Any:
         """Recursively evaluates an AST node."""
         if isinstance(node, ast.BinOp):
             left = self._evaluate_node(node.left, context)
@@ -100,7 +90,9 @@ class BaseEvaluator:
                     break
                 left = right
         elif isinstance(node, ast.BoolOp):
-            values = [self._evaluate_node(value, context) for value in node.values]
+            values = [
+                self._evaluate_node(value, context) for value in node.values
+            ]
             if isinstance(node.op, ast.And):
                 result = all(values)
             elif isinstance(node.op, ast.Or):
@@ -117,12 +109,14 @@ class BaseEvaluator:
         if custom_node_class not in self.allowed_operators:
             self.allowed_operators[custom_node_class] = operation_func
         else:
-            raise ValueError(f"Custom operator '{operator_name}' is already defined.")
+            raise ValueError(
+                f"Custom operator '{operator_name}' is already defined."
+            )
 
     def evaluate_file(self, file_path, context, format="line"):
         """Evaluates expressions from a file."""
         if format == "line":
-            with open(file_path, "r") as file:
+            with open(file_path) as file:
                 last_result = None
                 for line in file:
                     line = line.strip()
@@ -130,7 +124,7 @@ class BaseEvaluator:
                         last_result = self.evaluate(line, context)
                 return last_result
         elif format == "json":
-            with open(file_path, "r") as file:
+            with open(file_path) as file:
                 data = to_dict(file)
                 last_result = None
                 for expression in data:
@@ -166,8 +160,8 @@ class BaseEvaluator:
 
 class BaseEvaluationEngine:
     def __init__(self) -> None:
-        self.variables: Dict[str, Any] = {}
-        self.functions: Dict[str, Callable] = {
+        self.variables: dict[str, Any] = {}
+        self.functions: dict[str, Callable] = {
             "print": print,
         }
 
@@ -194,16 +188,20 @@ class BaseEvaluationEngine:
         elif isinstance(stmt, ast.Expr) and isinstance(stmt.value, ast.Call):
             func_name = stmt.value.func.id
             args = [
-                self._evaluate_expression(ast.unparse(arg)) for arg in stmt.value.args
+                self._evaluate_expression(ast.unparse(arg))
+                for arg in stmt.value.args
             ]
             self._execute_function(func_name, *args)
         elif isinstance(stmt, ast.For):
             iter_var = stmt.target.id
-            if isinstance(stmt.iter, ast.Call) and stmt.iter.func.id == "range":
-                start, end = [
+            if (
+                isinstance(stmt.iter, ast.Call)
+                and stmt.iter.func.id == "range"
+            ):
+                start, end = (
                     self._evaluate_expression(ast.unparse(arg))
                     for arg in stmt.iter.args
-                ]
+                )
                 for i in range(start, end):
                     self.variables[iter_var] = i
                     for body_stmt in stmt.body:

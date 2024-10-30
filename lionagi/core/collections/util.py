@@ -1,22 +1,16 @@
-from collections.abc import Mapping, Generator
 from collections import deque
+from collections.abc import Generator, Mapping
 
-from .abc import LionTypeError, Record, Ordering, Component, get_lion_id, Element
-
-from typing_extensions import deprecated
-
-from lionagi.os.sys_utils import format_deprecated_msg
-
-
-@deprecated(
-    format_deprecated_msg(
-        deprecated_name="lionagi.core.collections.abc.util.to_list_type",
-        deprecated_version="v0.3.0",
-        removal_version="v1.0",
-        replacement=None,
-    ),
-    category=DeprecationWarning,
+from .abc import (
+    Component,
+    Element,
+    LionTypeError,
+    Ordering,
+    Record,
+    get_lion_id,
 )
+
+
 def to_list_type(value):
     """
     Convert the provided value to a list.
@@ -34,7 +28,9 @@ def to_list_type(value):
     Raises:
         TypeError: If the value cannot be converted to a list.
     """
-    if isinstance(value, Component) and not isinstance(value, (Record, Ordering)):
+    if isinstance(value, Component) and not isinstance(
+        value, (Record, Ordering)
+    ):
         return [value]
     if isinstance(value, (Mapping, Record)):
         return list(value.values())

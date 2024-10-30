@@ -1,24 +1,11 @@
-from typing import Any
 from collections.abc import Mapping
-from lionagi.libs.ln_convert import to_dict
-from lionagi.libs import StringMatch, ParseUtil
+from typing import Any
+
+from lionfuncs import to_dict, validate_mapping
 
 from lionagi.core.rule.choice import ChoiceRule
 
-from typing_extensions import deprecated
 
-from lionagi.os.sys_utils import format_deprecated_msg
-
-
-@deprecated(
-    format_deprecated_msg(
-        deprecated_name="lionagi.core.action.function_calling.FunctionCalling",
-        deprecated_version="v0.3.0",
-        removal_version="v1.0",
-        replacement="check `lion-core` package for updates",
-    ),
-    category=DeprecationWarning,
-)
 class MappingRule(ChoiceRule):
     """
     Rule for validating that a value is a mapping (dictionary) with specific keys.
@@ -80,13 +67,15 @@ class MappingRule(ChoiceRule):
             check_keys = set(value.keys())
             if check_keys != set(self.keys):
                 try:
-                    return StringMatch.force_validate_dict(value, keys=self.keys)
+                    return validate_mapping(
+                        value, keys=self.keys, handle_unmatched="force"
+                    )
                 except Exception as e:
                     raise ValueError("Invalid dict keys.") from e
 
         else:
             try:
-                return ParseUtil.fuzzy_parse_json(value)
+                return to_dict(value, fuzzy_parse=True)
             except Exception as e:
                 raise ValueError("Invalid dict keys.") from e
 

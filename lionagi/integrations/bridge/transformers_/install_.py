@@ -1,20 +1,8 @@
 import subprocess
+
 from lionagi.libs import SysUtil
 
-from typing_extensions import deprecated
 
-from lionagi.os.sys_utils import format_deprecated_msg
-
-
-@deprecated(
-    format_deprecated_msg(
-        deprecated_name="lionagi.core.action.function_calling.FunctionCalling",
-        deprecated_version="v0.3.0",
-        removal_version="v1.0",
-        replacement="check `lion-core` package for updates",
-    ),
-    category=DeprecationWarning,
-)
 def get_pytorch_install_command():
     cpu_arch = SysUtil.get_cpu_architecture()
 
@@ -46,4 +34,6 @@ def install_transformers():
             "transformers is required. Would you like to install it now? (y/n): "
         )
         if in_ == "y":
-            SysUtil.install_import(package_name="transformers", import_name="pipeline")
+            SysUtil.install_import(
+                package_name="transformers", import_name="pipeline"
+            )

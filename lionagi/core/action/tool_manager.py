@@ -1,34 +1,15 @@
-"""
-This module contains the ToolManager class, which manages tools in the system.
-It allows registering, invoking, and retrieving schemas of tools. Tools can be
-registered individually or in batches, and invoked using function names, JSON
-strings, or specialized objects.
-"""
-
 import inspect
+from collections.abc import Callable
 from functools import singledispatchmethod
-from typing import Any, Callable, List, Union, Tuple
-from lionagi.libs import ParseUtil
-from lionagi.libs.ln_convert import to_list, to_dict
-from lionagi.libs.ln_func_call import lcall
-from lionagi.core.collections.abc import Actionable
+from typing import Any, List, Tuple, Union
+
+from lionfuncs import function_to_schema, lcall, to_dict, to_list
+
 from lionagi.core.action.function_calling import FunctionCalling
-from lionagi.core.action.tool import Tool, TOOL_TYPE
-
-from typing_extensions import deprecated
-
-from lionagi.os.sys_utils import format_deprecated_msg
+from lionagi.core.action.tool import TOOL_TYPE, Tool
+from lionagi.core.collections.abc import Actionable
 
 
-@deprecated(
-    format_deprecated_msg(
-        deprecated_name="lionagi.core.action.tool_manager.ToolManager",
-        deprecated_version="v0.3.0",
-        removal_version="v1.0",
-        replacement="check `lion-core.action.tool_manager` for updates",
-    ),
-    category=DeprecationWarning,
-)
 class ToolManager(Actionable):
     """
     Manages tools in the system. Provides functionality to register tools,
@@ -57,7 +38,9 @@ class ToolManager(Actionable):
 
         return False
 
-    def _register_tool(self, tool: Tool | Callable, update: bool = False) -> bool:
+    def _register_tool(
+        self, tool: Tool | Callable, update: bool = False
+    ) -> bool:
         """
         Registers a single tool or multiple tools based on the input type.
 
@@ -71,7 +54,9 @@ class ToolManager(Actionable):
             raise ValueError(f"Function {tool.name} is already registered.")
         if isinstance(tool, Callable):
             tool = func_to_tool(tool)
-            tool = tool[0] if isinstance(tool, list) and len(tool) == 1 else tool
+            tool = (
+                tool[0] if isinstance(tool, list) and len(tool) == 1 else tool
+            )
         if not isinstance(tool, Tool):
             raise TypeError("Please register a Tool object.")
         self.registry[tool.name] = tool
@@ -127,7 +112,9 @@ class ToolManager(Actionable):
                 func_calling=func_calling
             )
 
-        raise ValueError(f"Function {func_calling.func_name} is not registered.")
+        raise ValueError(
+            f"Function {func_calling.func_name} is not registered."
+        )
 
     @property
     def _schema_list(self) -> list[dict[str, Any]]:
@@ -253,14 +240,16 @@ class ToolManager(Actionable):
                 tool_kwarg = {"tools": self._schema_list}
                 kwargs = tool_kwarg | kwargs
             else:
-                tools = to_list(tools) if not isinstance(tools, list) else [tools]
+                tools = (
+                    to_list(tools) if not isinstance(tools, list) else [tools]
+                )
                 tool_kwarg = {"tools": lcall(tools, self._get_tool_schema)}
                 kwargs = tool_kwarg | kwargs
 
         return kwargs
 
     @staticmethod
-    def parse_tool_request(response: dict) -> Tuple[str, dict]:
+    def parse_tool_request(response: dict) -> tuple[str, dict]:
         """
         Parses a tool request from a given response dictionary.
 
@@ -287,11 +276,11 @@ class ToolManager(Actionable):
 
 
 def func_to_tool(
-    func_: Union[Callable, List[Callable]],
-    parser: Union[Callable, List[Callable]] = None,
+    func_: Callable | list[Callable],
+    parser: Callable | list[Callable] = None,
     docstring_style: str = "google",
     **kwargs,
-) -> List[Tool]:
+) -> list[Tool]:
     """
     Converts functions to Tool objects, optionally associating parsers with each function
     and applying a specified docstring parsing style to generate tool schemas.
@@ -333,7 +322,7 @@ def func_to_tool(
         for idx in range(len(funcs)):
             f_ = lambda _f: Tool(
                 function=_f,
-                schema_=ParseUtil._func_to_schema(_f, style=docstring_style),
+                schema_=function_to_schema(_f, style=docstring_style),
                 parser=parsers[idx] if len(parsers) > 1 else parsers[0],
                 **kwargs,
             )
@@ -345,7 +334,7 @@ def func_to_tool(
             funcs,
             lambda _f: Tool(
                 function=_f,
-                schema_=ParseUtil._func_to_schema(_f, style=docstring_style),
+                schema_=function_to_schema(_f, style=docstring_style),
                 **kwargs,
             ),
         )

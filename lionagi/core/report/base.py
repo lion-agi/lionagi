@@ -1,31 +1,12 @@
-"""
-This module defines the BaseForm class, a foundation for form handling in
-applications. It provides common functionalities for form operations like
-initialization, validation, and state management. Extend this class to
-implement specific form behaviors and configurations.
-"""
-
-from abc import abstractmethod
-from typing import Any, List, Dict
 import contextlib
+from abc import abstractmethod
+from typing import Any, Dict, List
+
 from lionagi.core.collections.abc import Component, Field
+
 from ..collections.util import to_list_type
-from lionagi.libs.ln_convert import to_str
-
-from typing_extensions import deprecated
-
-from lionagi.os.sys_utils import format_deprecated_msg
 
 
-@deprecated(
-    format_deprecated_msg(
-        deprecated_name="lionagi.core.action.function_calling.FunctionCalling",
-        deprecated_version="v0.3.0",
-        removal_version="v1.0",
-        replacement="check `lion-core` package for updates",
-    ),
-    category=DeprecationWarning,
-)
 class BaseForm(Component):
     """
     NOTICE:
@@ -90,12 +71,12 @@ class BaseForm(Component):
         examples=["input1, input2 -> output"],
     )
 
-    input_fields: List[str] = Field(
+    input_fields: list[str] = Field(
         default_factory=list,
         description="Fields required to carry out the objective of the form.",
     )
 
-    requested_fields: List[str] = Field(
+    requested_fields: list[str] = Field(
         default_factory=list,
         description="Fields requested to be filled by the user.",
     )
@@ -105,14 +86,14 @@ class BaseForm(Component):
         description="The work to be done by the form, including custom instructions.",
     )
 
-    validation_kwargs: Dict[str, Dict[str, Any]] = Field(
+    validation_kwargs: dict[str, dict[str, Any]] = Field(
         default_factory=dict,
         description="Additional validation constraints for the form fields.",
         examples=[{"field": {"config1": "a", "config2": "b"}}],
     )
 
     @property
-    def work_fields(self) -> Dict[str, Any]:
+    def work_fields(self) -> dict[str, Any]:
         """
         Get the fields relevant to the current task, including input and
         requested fields. Must be implemented by subclasses.
@@ -188,8 +169,8 @@ class BaseForm(Component):
         return True
 
     def _get_all_fields(
-        self, form: List["BaseForm"] = None, **kwargs
-    ) -> Dict[str, Any]:
+        self, form: list["BaseForm"] = None, **kwargs
+    ) -> dict[str, Any]:
         """
         Given a form or collections of forms, and additional fields, gather
         all fields together including self fields with valid value.
@@ -206,7 +187,12 @@ class BaseForm(Component):
         all_form_fields = (
             {}
             if not form
-            else {k: v for i in form for k, v in i.work_fields.items() if v is not None}
+            else {
+                k: v
+                for i in form
+                for k, v in i.work_fields.items()
+                if v is not None
+            }
         )
         all_fields.update({**all_form_fields, **kwargs})
         return all_fields

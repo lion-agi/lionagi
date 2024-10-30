@@ -1,43 +1,30 @@
 from typing import Any
-from lionagi.libs.ln_convert import is_same_dtype, to_df
-from lionagi.core.collections.abc import Field
+
+from lionagi.core.action import Tool, ToolManager
 from lionagi.core.collections import (
-    pile,
-    progression,
+    Exchange,
     Pile,
     Progression,
     iModel,
-    Exchange,
+    pile,
+    progression,
 )
+from lionagi.core.collections.abc import Field
 from lionagi.core.generic.node import Node
-from lionagi.core.action import Tool, ToolManager
 from lionagi.core.mail import Mail, Package
 from lionagi.core.message import (
-    create_message,
-    System,
-    Instruction,
-    AssistantResponse,
     ActionRequest,
     ActionResponse,
+    AssistantResponse,
+    Instruction,
     RoledMessage,
+    System,
+    create_message,
 )
-
 from lionagi.core.session.directive_mixin import DirectiveMixin
-
-from typing_extensions import deprecated
-
-from lionagi.os.sys_utils import format_deprecated_msg
+from lionagi.libs.ln_convert import is_same_dtype, to_df
 
 
-@deprecated(
-    format_deprecated_msg(
-        deprecated_name="lionagi.core.action.function_calling.FunctionCalling",
-        deprecated_version="v0.3.0",
-        removal_version="v1.0",
-        replacement="check `lion-core` package for updates",
-    ),
-    category=DeprecationWarning,
-)
 class Branch(Node, DirectiveMixin):
     """
     A class representing a branch in a messaging system.
@@ -55,7 +42,7 @@ class Branch(Node, DirectiveMixin):
     messages: Pile = Field(None)
     progress: Progression = Field(None)
     tool_manager: ToolManager = Field(None)
-    system: System = Field(None)
+    system: System | None = Field(None)
     user: str = Field(None)
     mailbox: Exchange[Mail] = Field(None)
     imodel: iModel = Field(None)
@@ -107,14 +94,14 @@ class Branch(Node, DirectiveMixin):
             system (System): The system message to set.
             sender (str, optional): The sender of the system message.
         """
-        system = system or "You are a helpful assistant."
-        if len(self.progress) == 0:
-            self.add_message(system=system, sender=sender)
-        else:
-            _msg = System(system=system, sender=sender)
-            _msg.recipient = self.ln_id
-            self._remove_system()
-            self.system = _msg
+        if system is not None:
+            if len(self.progress) == 0:
+                self.add_message(system=system, sender=sender)
+            else:
+                _msg = System(system=system, sender=sender)
+                _msg.recipient = self.ln_id
+                self._remove_system()
+                self.system = _msg
 
     def add_message(
         self,
@@ -178,7 +165,9 @@ class Branch(Node, DirectiveMixin):
         )
 
         if isinstance(_msg, System):
-            _msg.recipient = self.ln_id  # the branch itself, system is to the branch
+            _msg.recipient = (
+                self.ln_id
+            )  # the branch itself, system is to the branch
             self._remove_system()
             self.system = _msg
 
@@ -268,8 +257,13 @@ class Branch(Node, DirectiveMixin):
             return True
         elif is_same_dtype(tools, Tool):
             for act_ in tools:
-                if act_.schema_["function"]["name"] in self.tool_manager.registry:
-                    self.tool_manager.registry.pop(act_.schema_["function"]["name"])
+                if (
+                    act_.schema_["function"]["name"]
+                    in self.tool_manager.registry
+                ):
+                    self.tool_manager.registry.pop(
+                        act_.schema_["function"]["name"]
+                    )
             if verbose:
                 print("tools successfully deleted")
             return True
@@ -343,7 +337,11 @@ class Branch(Node, DirectiveMixin):
         return isinstance(self.messages[-1], ActionResponse)
 
     def send(
-        self, recipient: str, category: str, package: Any, request_source: str = None
+        self,
+        recipient: str,
+        category: str,
+        package: Any,
+        request_source: str = None,
     ) -> None:
         """
         Sends a mail to a recipient.

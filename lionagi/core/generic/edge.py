@@ -1,22 +1,16 @@
-from pydantic import Field, field_validator
 from typing import Any
-from lionagi.core.collections.abc import Component, get_lion_id, LionIDable, Condition
+
+from pydantic import Field, field_validator
+
+from lionagi.core.collections.abc import (
+    Component,
+    Condition,
+    LionIDable,
+    get_lion_id,
+)
 from lionagi.core.generic.edge_condition import EdgeCondition
 
-from typing_extensions import deprecated
 
-from lionagi.os.sys_utils import format_deprecated_msg
-
-
-@deprecated(
-    format_deprecated_msg(
-        deprecated_name="lionagi.core.action.function_calling.FunctionCalling",
-        deprecated_version="v0.3.0",
-        removal_version="v1.0",
-        replacement="check `lion-core` package for updates",
-    ),
-    category=DeprecationWarning,
-)
 class Edge(Component):
     """Represents a directed edge between two nodes in a graph."""
 
@@ -83,7 +77,8 @@ class Edge(Component):
         if self.condition is None:
             return
 
-        import inspect, sys
+        import inspect
+        import sys
 
         def new_getfile(object, _old_getfile=inspect.getfile):
             if not inspect.isclass(object):
@@ -104,11 +99,12 @@ class Edge(Component):
                 ):
                     return inspect.getfile(member)
             else:
-                raise TypeError("Source for {!r} not found".format(object))
+                raise TypeError(f"Source for {object!r} not found")
 
         inspect.getfile = new_getfile
 
         import inspect
+
         from IPython.core.magics.code import extract_symbols
 
         obj = self.condition.__class__

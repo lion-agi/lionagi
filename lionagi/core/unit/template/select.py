@@ -1,20 +1,8 @@
 from enum import Enum
+
 from .base import BaseUnitForm, Field
 
-from typing_extensions import deprecated
 
-from lionagi.os.sys_utils import format_deprecated_msg
-
-
-@deprecated(
-    format_deprecated_msg(
-        deprecated_name="lionagi.core.action.function_calling.FunctionCalling",
-        deprecated_version="v0.3.0",
-        removal_version="v1.0",
-        replacement="check `lion-core` package for updates",
-    ),
-    category=DeprecationWarning,
-)
 class SelectTemplate(BaseUnitForm):
     """
     A template for performing a selection task based on given instructions and context.
@@ -51,7 +39,9 @@ class SelectTemplate(BaseUnitForm):
     selection: Enum | str | list | None = Field(
         None, description="selection from given choices"
     )
-    choices: list = Field(default_factory=list, description="the given choices")
+    choices: list = Field(
+        default_factory=list, description="the given choices"
+    )
 
     assignment: str = "task -> selection"
 
@@ -90,9 +80,9 @@ class SelectTemplate(BaseUnitForm):
 
         self.choices = choices
         self.task = f"""
-select 1 item from the provided choices {choices}.        
+select 1 item from the provided choices {choices}.
 1. additional objective: {instruction or "N/A"}.
-2. additional information: {context or "N/A"}.     
+2. additional information: {context or "N/A"}.
 """
         if reason:
             self.append_to_request("reason")

@@ -1,22 +1,9 @@
+from lionagi.core.collections import Pile, pile, progression
 from lionagi.core.collections.abc import Progressable
-from lionagi.core.collections import pile, progression, Pile
 from lionagi.core.work.work import Work, WorkStatus
 from lionagi.core.work.work_queue import WorkQueue
 
-from typing_extensions import deprecated
 
-from lionagi.os.sys_utils import format_deprecated_msg
-
-
-@deprecated(
-    format_deprecated_msg(
-        deprecated_name="lionagi.core.action.function_calling.FunctionCalling",
-        deprecated_version="v0.3.0",
-        removal_version="v1.0",
-        replacement="check `lion-core` package for updates",
-    ),
-    category=DeprecationWarning,
-)
 class WorkLog(Progressable):
     """
     A class representing a log of work items.
@@ -38,7 +25,9 @@ class WorkLog(Progressable):
                 Defaults to 1.
         """
         self.pile = (
-            workpile if workpile and isinstance(workpile, Pile) else pile({}, Work)
+            workpile
+            if workpile and isinstance(workpile, Pile)
+            else pile({}, Work)
         )
         self.pending = progression(workpile) if workpile else progression()
         self.queue = WorkQueue(capacity=capacity, refresh_time=refresh_time)

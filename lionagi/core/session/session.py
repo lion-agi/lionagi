@@ -1,36 +1,22 @@
+from typing import Any
+
+from lionagi.core.action.tool_manager import ToolManager
 from lionagi.core.collections import (
+    Exchange,
     Pile,
     Progression,
-    progression,
-    pile,
     iModel,
+    pile,
+    progression,
 )
-from lionagi.core.message import System
-from typing import Any
-from lionagi.core.action.tool_manager import ToolManager
-
-from lionagi.libs import SysUtil
-from lionagi.core.session.branch import Branch
-from lionagi.core.collections import pile, Pile, Exchange
 from lionagi.core.collections.abc import get_lion_id
 from lionagi.core.collections.util import to_list_type
 from lionagi.core.mail.mail_manager import MailManager
+from lionagi.core.message import System
+from lionagi.core.session.branch import Branch
+from lionagi.libs import SysUtil
 
 
-from typing_extensions import deprecated
-
-from lionagi.os.sys_utils import format_deprecated_msg
-
-
-@deprecated(
-    format_deprecated_msg(
-        deprecated_name="lionagi.core.action.function_calling.FunctionCalling",
-        deprecated_version="v0.3.0",
-        removal_version="v1.0",
-        replacement="check `lion-core` package for updates",
-    ),
-    category=DeprecationWarning,
-)
 class Session:
     """
     A session for managing branches, mail transfer, and interactions with a model.
@@ -59,7 +45,9 @@ class Session:
     ):
         self.ln_id = SysUtil.create_id()
         self.timestamp = SysUtil.get_timestamp(sep=None)[:-6]
-        system = system or "You are a helpful assistant, let's think step by step"
+        system = (
+            system or "You are a helpful assistant, let's think step by step"
+        )
         self.system = System(system=system, sender=system_sender)
         self.system_sender = system_sender
         self.branches: Pile[Branch] = self._validate_branches(branches)
@@ -91,7 +79,9 @@ class Session:
         if isinstance(value, Pile):
             for branch in value:
                 if not isinstance(branch, Branch):
-                    raise ValueError("The branches pile contains non-Branch object")
+                    raise ValueError(
+                        "The branches pile contains non-Branch object"
+                    )
             return value
         else:
             try:

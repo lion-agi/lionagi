@@ -1,22 +1,11 @@
 import inspect
+
+from lionfuncs import to_dict
 from pydantic import Field
-from lionagi.libs import convert, ParseUtil
-from .message import RoledMessage, MessageRole
 
-from typing_extensions import deprecated
-
-from lionagi.os.sys_utils import format_deprecated_msg
+from .message import MessageRole, RoledMessage
 
 
-@deprecated(
-    format_deprecated_msg(
-        deprecated_name="lionagi.core.action.function_calling.FunctionCalling",
-        deprecated_version="v0.3.0",
-        removal_version="v1.0",
-        replacement="check `lion-core` package for updates",
-    ),
-    category=DeprecationWarning,
-)
 class ActionRequest(RoledMessage):
     """
     Represents a request for an action with function and arguments.
@@ -59,14 +48,21 @@ class ActionRequest(RoledMessage):
             sender (str, optional): The sender of the request.
             recipient (str, optional): The recipient of the request.
         """
-        function = function.__name__ if inspect.isfunction(function) else function
+        function = (
+            function.__name__ if inspect.isfunction(function) else function
+        )
         arguments = _prepare_arguments(arguments)
 
         super().__init__(
             role=MessageRole.ASSISTANT,
             sender=sender,
             recipient=recipient,
-            content={"action_request": {"function": function, "arguments": arguments}},
+            content={
+                "action_request": {
+                    "function": function,
+                    "arguments": arguments,
+                }
+            },
             **kwargs,
         )
         self.function = function
@@ -108,21 +104,9 @@ class ActionRequest(RoledMessage):
 
 
 def _prepare_arguments(arguments):
-    """
-    Prepares the arguments for the action request.
-
-    Args:
-        arguments (Any): The arguments to be prepared.
-
-    Returns:
-        dict: The prepared arguments.
-
-    Raises:
-        ValueError: If the arguments are invalid.
-    """
     if not isinstance(arguments, dict):
         try:
-            arguments = ParseUtil.fuzzy_parse_json(convert.to_str(arguments))
+            arguments = to_dict(str(arguments), fuzzy_parse=True)
         except Exception as e:
             raise ValueError(f"Invalid arguments: {e}") from e
     if isinstance(arguments, dict):

@@ -1,24 +1,15 @@
-from typing import Callable, Union, List, Dict, Any
+from collections.abc import Callable
+from typing import Any, Dict, List, Union
+
 from pydantic import Field, field_serializer
-from lionagi.libs.ln_func_call import call_handler
+
 from lionagi.core.collections.abc import Actionable
 from lionagi.core.generic.node import Node
+from lionagi.libs.ln_func_call import call_handler
+
 from .function_calling import FunctionCalling
 
-from typing_extensions import deprecated
 
-from lionagi.os.sys_utils import format_deprecated_msg
-
-
-@deprecated(
-    format_deprecated_msg(
-        deprecated_name="lionagi.core.action.tool.Tool",
-        deprecated_version="v0.3.0",
-        removal_version="v1.0",
-        replacement="check `lion-core.action.tool` for updates",
-    ),
-    category=DeprecationWarning,
-)
 class Tool(Node, Actionable):
     """
     Class representing a Tool with capabilities for pre-processing, post-processing,
@@ -39,18 +30,18 @@ class Tool(Node, Actionable):
         description="The callable function or capability of the tool.",
     )
 
-    schema_: Union[Dict, None] = Field(
+    schema_: dict | None = Field(
         None,
         description="Schema in OpenAI format.",
     )
 
-    pre_processor: Union[Callable, None] = None
-    pre_processor_kwargs: Union[Dict, None] = None
+    pre_processor: Callable | None = None
+    pre_processor_kwargs: dict | None = None
 
-    post_processor: Union[Callable, None] = None
-    post_processor_kwargs: Union[Dict, None] = None
+    post_processor: Callable | None = None
+    post_processor_kwargs: dict | None = None
 
-    parser: Union[Callable, None] = None  # Parse result to JSON serializable format
+    parser: Callable | None = None  # Parse result to JSON serializable format
 
     @field_serializer("function", check_fields=False)
     def serialize_func(self, func: Callable) -> str:
@@ -75,7 +66,7 @@ class Tool(Node, Actionable):
         """
         return self.schema_["function"]["name"]
 
-    async def invoke(self, kwargs: Dict = {}) -> Any:
+    async def invoke(self, kwargs: dict = {}) -> Any:
         """
         Invoke the tool's function with optional pre-processing and post-processing.
 
@@ -108,4 +99,4 @@ class Tool(Node, Actionable):
         return result if not self.parser else self.parser(result)
 
 
-TOOL_TYPE = Union[bool, Tool, str, List[Union[Tool, str, Dict]], Dict]
+TOOL_TYPE = Union[bool, Tool, str, list[Union[Tool, str, dict]], dict]

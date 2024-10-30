@@ -1,32 +1,14 @@
-from collections.abc import Mapping
-from collections import deque
-from typing import Tuple
-from pydantic import Field
 import contextlib
-from .abc import (
-    Record,
-    LionTypeError,
-    ItemNotFoundError,
-    LionIDable,
-    Element,
-)
+from collections import deque
+from collections.abc import Mapping
+
+from pydantic import Field
+
+from .abc import Element, ItemNotFoundError, LionIDable, LionTypeError, Record
 from .pile import Pile, pile
 from .progression import Progression, progression
 
-from typing_extensions import deprecated
 
-from lionagi.os.sys_utils import format_deprecated_msg
-
-
-@deprecated(
-    format_deprecated_msg(
-        deprecated_name="lionagi.core.collections.abc.Flow",
-        deprecated_version="v0.3.0",
-        removal_version="v1.0",
-        replacement="`lionagi.os.primitives.core_types.Flow`",
-    ),
-    category=DeprecationWarning,
-)
 class Flow(Element):
     """
     Represents a flow of categorical sequences.
@@ -87,7 +69,7 @@ class Flow(Element):
         """
         return [list(seq) for seq in self.sequences]
 
-    def all_unique_items(self) -> Tuple[str]:
+    def all_unique_items(self) -> tuple[str]:
         """
         Retrieves all unique items across sequences.
 
@@ -132,7 +114,9 @@ class Flow(Element):
                 seq = self.registry[seq]
 
         return (
-            self.sequences[seq] if default == ... else self.sequences.get(seq, default)
+            self.sequences[seq]
+            if default == ...
+            else self.sequences.get(seq, default)
         )
 
     def __getitem__(self, seq=None, /):
@@ -166,7 +150,9 @@ class Flow(Element):
         self.registry.clear()
 
     def include(self, seq=None, item=None, name=None):
-        _sequence = self._find_sequence(seq, None) or self._find_sequence(name, None)
+        _sequence = self._find_sequence(seq, None) or self._find_sequence(
+            name, None
+        )
         if not _sequence:
             if not item and not name:
                 """None is not in the registry or sequencees."""
@@ -302,7 +288,10 @@ class Flow(Element):
         return self.sequences[sequence].popleft()
 
     def shape(self):
-        return {key: len(self.sequences[value]) for key, value in self.registry.items()}
+        return {
+            key: len(self.sequences[value])
+            for key, value in self.registry.items()
+        }
 
     def get(self, sequence: str, /, default=...) -> deque[str] | None:
         sequence = getattr(sequence, "ln_id", None) or sequence
@@ -365,7 +354,11 @@ class Flow(Element):
             raise ItemNotFoundError("No sequence found.")
 
         if sequence in self.sequences:
-            return sequence.ln_id if isinstance(sequence, Progression) else sequence
+            return (
+                sequence.ln_id
+                if isinstance(sequence, Progression)
+                else sequence
+            )
 
         if sequence in self.registry:
             return self.registry[sequence]

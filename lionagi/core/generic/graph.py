@@ -2,33 +2,19 @@ import contextlib
 from collections import deque
 from typing import Any
 
-from lionagi.libs.ln_convert import to_list
+from lionagi.core.collections import Pile, pile
 from lionagi.core.collections.abc import (
-    Condition,
     Actionable,
-    LionTypeError,
+    Condition,
     ItemNotFoundError,
     LionIDable,
+    LionTypeError,
 )
-from lionagi.core.collections import pile, Pile
-
 from lionagi.core.generic.edge import Edge
 from lionagi.core.generic.node import Node
-
-from typing_extensions import deprecated
-
-from lionagi.os.sys_utils import format_deprecated_msg
+from lionagi.libs.ln_convert import to_list
 
 
-@deprecated(
-    format_deprecated_msg(
-        deprecated_name="lionagi.core.action.function_calling.FunctionCalling",
-        deprecated_version="v0.3.0",
-        removal_version="v1.0",
-        replacement="check `lion-core` package for updates",
-    ),
-    category=DeprecationWarning,
-)
 class Graph(Node):
     """Represents a graph structure with nodes and edges."""
 
@@ -38,7 +24,11 @@ class Graph(Node):
     def internal_edges(self) -> Pile[Edge]:
         """Return a pile of all edges in the graph."""
         return pile(
-            {edge.ln_id: edge for node in self.internal_nodes for edge in node.edges},
+            {
+                edge.ln_id: edge
+                for node in self.internal_nodes
+                for edge in node.edges
+            },
             Edge,
         )
 
@@ -84,7 +74,9 @@ class Graph(Node):
         edge = edge if isinstance(edge, list) else [edge]
         for i in edge:
             if i not in self.internal_edges:
-                raise ItemNotFoundError(f"Edge {i} does not exist in structure.")
+                raise ItemNotFoundError(
+                    f"Edge {i} does not exist in structure."
+                )
             with contextlib.suppress(ItemNotFoundError):
                 self._remove_edge(i)
 
@@ -119,7 +111,8 @@ class Graph(Node):
                     [
                         edge
                         for edge in edges
-                        if edge.label in to_list(label, dropna=True, flatten=True)
+                        if edge.label
+                        in to_list(label, dropna=True, flatten=True)
                     ]
                 )
                 if edges
@@ -138,7 +131,9 @@ class Graph(Node):
     def _remove_edge(self, edge: Edge | str) -> bool:
         """Remove a specific edge from the graph."""
         if edge not in self.internal_edges:
-            raise ItemNotFoundError(f"Edge {edge} does not exist in structure.")
+            raise ItemNotFoundError(
+                f"Edge {edge} does not exist in structure."
+            )
 
         edge = self.internal_edges[edge]
         head: Node = self.internal_nodes[edge.head]
@@ -153,7 +148,8 @@ class Graph(Node):
             [
                 node
                 for node in self.internal_nodes
-                if node.relations["in"].is_empty() and not isinstance(node, Actionable)
+                if node.relations["in"].is_empty()
+                and not isinstance(node, Actionable)
             ]
         )
 
@@ -161,7 +157,9 @@ class Graph(Node):
         """Check if the graph is acyclic (contains no cycles)."""
         node_ids = list(self.internal_nodes.keys())
         check_deque = deque(node_ids)
-        check_dict = {key: 0 for key in node_ids}  # 0: not visited, 1: temp, 2: perm
+        check_dict = {
+            key: 0 for key in node_ids
+        }  # 0: not visited, 1: temp, 2: perm
 
         def visit(key):
             if check_dict[key] == 2:
@@ -216,7 +214,11 @@ class Graph(Node):
         return g
 
     def display(
-        self, node_label="class_name", edge_label="label", draw_kwargs={}, **kwargs
+        self,
+        node_label="class_name",
+        edge_label="label",
+        draw_kwargs={},
+        **kwargs,
     ):
         """Display the graph using NetworkX and Matplotlib."""
         from lionagi.libs import SysUtil
@@ -224,8 +226,8 @@ class Graph(Node):
         SysUtil.check_import("networkx")
         SysUtil.check_import("matplotlib", "pyplot")
 
-        import networkx as nx
         import matplotlib.pyplot as plt
+        import networkx as nx
 
         g = self.to_networkx(**kwargs)
         pos = nx.spring_layout(g)

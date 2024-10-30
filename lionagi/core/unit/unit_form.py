@@ -1,22 +1,12 @@
 from enum import Enum
-from lionagi.libs.ln_convert import to_str, to_dict
+
+from lionfuncs import to_dict
+
 from lionagi.core.collections.abc import Field
+
 from .template.base import BaseUnitForm
 
-from typing_extensions import deprecated
 
-from lionagi.os.sys_utils import format_deprecated_msg
-
-
-@deprecated(
-    format_deprecated_msg(
-        deprecated_name="lionagi.core.action.function_calling.FunctionCalling",
-        deprecated_version="v0.3.0",
-        removal_version="v1.0",
-        replacement="check `lion-core` package for updates",
-    ),
-    category=DeprecationWarning,
-)
 class UnitForm(BaseUnitForm):
     """
     Form for managing unit directives and outputs.
@@ -48,7 +38,9 @@ class UnitForm(BaseUnitForm):
             "number, you should provide a number like 1, 23, or 1.1 if float is "
             "allowed."
         ),
-        examples=["{action_1: {function: 'add', arguments: {num1: 1, num2: 2}}}"],
+        examples=[
+            "{action_1: {function: 'add', arguments: {num1: 1, num2: 2}}}"
+        ],
     )
 
     action_required: bool | None = Field(
@@ -189,8 +181,8 @@ class UnitForm(BaseUnitForm):
 
         self.task = (
             f"Follow the prompt and provide the necessary output.\n"
-            f"- Additional instruction: {to_str(instruction or 'N/A')}\n"
-            f"- Additional context: {to_str(context or 'N/A')}\n"
+            f"- Additional instruction: {str(instruction or 'N/A')}\n"
+            f"- Additional context: {str(context or 'N/A')}\n"
         )
 
         if reason:
@@ -198,13 +190,13 @@ class UnitForm(BaseUnitForm):
 
         if allow_action:
             self.append_to_request("actions, action_required, reason")
-            self.task += "- Reason and prepare actions with GIVEN TOOLS ONLY.\n"
+            self.task += (
+                "- Reason and prepare actions with GIVEN TOOLS ONLY.\n"
+            )
 
         if allow_extension:
             self.append_to_request("extension_required")
-            self.task += (
-                f"- Allow auto-extension up to another {max_extension} rounds.\n"
-            )
+            self.task += f"- Allow auto-extension up to another {max_extension} rounds.\n"
 
         if tool_schema:
             self.append_to_input("tool_schema")
@@ -219,21 +211,15 @@ class UnitForm(BaseUnitForm):
             max_extension = max_extension or plan_num_step
             allow_extension = True
             self.append_to_request("plan, extension_required")
-            self.task += (
-                f"- Generate a {plan_num_step}-step plan based on the context.\n"
-            )
+            self.task += f"- Generate a {plan_num_step}-step plan based on the context.\n"
 
         if predict:
             self.append_to_request("prediction")
-            self.task += (
-                f"- Predict the next {predict_num_sentences or 1} sentence(s).\n"
-            )
+            self.task += f"- Predict the next {predict_num_sentences or 1} sentence(s).\n"
 
         if select:
             self.append_to_request("selection")
-            self.task += (
-                f"- Select 1 item from the provided choices: {select_choices}.\n"
-            )
+            self.task += f"- Select 1 item from the provided choices: {select_choices}.\n"
 
         if confidence:
             self.append_to_request("confidence_score")
@@ -248,7 +234,9 @@ class UnitForm(BaseUnitForm):
                 "upper_bound": score_range[1],
                 "lower_bound": score_range[0],
                 "num_type": int if score_num_digits == 0 else float,
-                "precision": score_num_digits if score_num_digits != 0 else None,
+                "precision": (
+                    score_num_digits if score_num_digits != 0 else None
+                ),
             }
 
             self.task += (
@@ -269,7 +257,7 @@ class UnitForm(BaseUnitForm):
             fields["task"] = fields["task"][:2000] + "..."
 
         if "tool_schema" in fields:
-            tools = to_dict(fields["tool_schema"])["tools"]
+            tools = to_dict(fields["tool_schema"], fuzzy_parse=True)["tools"]
             fields["available_tools"] = [i["function"]["name"] for i in tools]
             fields.pop("tool_schema")
 

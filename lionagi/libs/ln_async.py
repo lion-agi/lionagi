@@ -1,27 +1,15 @@
 from __future__ import annotations
 
 import asyncio
-from collections.abc import Mapping, Callable, Coroutine
+import logging
+from collections.abc import Callable, Coroutine, Mapping
 from functools import lru_cache
 from typing import Any
-import logging
+
 import aiocache
+import aiohttp
 
 
-from typing_extensions import deprecated
-
-from lionagi.os.sys_utils import format_deprecated_msg
-
-
-@deprecated(
-    format_deprecated_msg(
-        deprecated_name="AsyncUtil",
-        deprecated_version="v0.3.0",
-        removal_version="v1.0",
-        replacement=None,
-    ),
-    category=DeprecationWarning,
-)
 class AsyncUtil:
 
     @staticmethod

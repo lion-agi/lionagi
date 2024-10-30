@@ -1,32 +1,12 @@
-"""
-This module introduces the Report class, an extension of the BaseForm class
-designed to manage and synchronize a collection of Form instances based on
-specific assignments. The Report class handles the creation and updating of
-forms, ensuring each is properly configured according to the report's
-requirements.
-"""
-
 from typing import Any, Type
-from lionagi.core.collections.abc import Field
+
 from lionagi.core.collections import Pile, pile
-from lionagi.core.report.util import get_input_output_fields
+from lionagi.core.collections.abc import Field
 from lionagi.core.report.base import BaseForm
 from lionagi.core.report.form import Form
-
-from typing_extensions import deprecated
-
-from lionagi.os.sys_utils import format_deprecated_msg
+from lionagi.core.report.util import get_input_output_fields
 
 
-@deprecated(
-    format_deprecated_msg(
-        deprecated_name="lionagi.core.action.function_calling.FunctionCalling",
-        deprecated_version="v0.3.0",
-        removal_version="v1.0",
-        replacement="check `lion-core` package for updates",
-    ),
-    category=DeprecationWarning,
-)
 class Report(BaseForm):
     """
     Extends BaseForm to handle a collection of Form instances based on specific
@@ -45,7 +25,7 @@ class Report(BaseForm):
         examples=[["a, b -> c", "a -> e", "b -> f", "c -> g", "e, f, g -> h"]],
     )
 
-    form_template: Type[Form] = Field(
+    form_template: type[Form] = Field(
         Form, description="The template for the forms in the report."
     )
 
@@ -92,7 +72,12 @@ class Report(BaseForm):
                     all_fields[k] = v
         return all_fields
 
-    def fill(self, form: Form | list[Form] | dict[Form] = None, strict=True, **kwargs):
+    def fill(
+        self,
+        form: Form | list[Form] | dict[Form] = None,
+        strict=True,
+        **kwargs,
+    ):
         if self.filled:
             if strict:
                 raise ValueError("Form is filled, cannot be worked on again")
@@ -125,7 +110,9 @@ class Report(BaseForm):
             bool: True if the report is workable, otherwise raises ValueError.
         """
         if self.filled:
-            raise ValueError("Form is already filled, cannot be worked on again")
+            raise ValueError(
+                "Form is already filled, cannot be worked on again"
+            )
 
         for i in self.input_fields:
             if not getattr(self, i, None):

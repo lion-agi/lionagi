@@ -1,20 +1,7 @@
-from lionagi.core.unit.unit import Unit
 from lionagi.core.session.branch import Branch
-
-from typing_extensions import deprecated
-
-from lionagi.os.sys_utils import format_deprecated_msg
+from lionagi.core.unit.unit import Unit
 
 
-@deprecated(
-    format_deprecated_msg(
-        deprecated_name="lionagi.core.director.direct.chat",
-        deprecated_version="v0.3.0",
-        removal_version="v1.0",
-        replacement="`lionagi.os.operation.chat",
-    ),
-    category=DeprecationWarning,
-)
 async def chat(
     instruction=None,
     context=None,
@@ -62,15 +49,6 @@ async def chat(
     )
 
 
-@deprecated(
-    format_deprecated_msg(
-        deprecated_name="lionagi.core.director.direct.select",
-        deprecated_version="v0.3.0",
-        removal_version="v1.0",
-        replacement="`lionagi.os.operation.select",
-    ),
-    category=DeprecationWarning,
-)
 async def select(
     instruction=None,
     context=None,
@@ -120,15 +98,6 @@ async def select(
     )
 
 
-@deprecated(
-    format_deprecated_msg(
-        deprecated_name="lionagi.core.director.direct.predict",
-        deprecated_version="v0.3.0",
-        removal_version="v1.0",
-        replacement="`lionagi.os.operation.predict",
-    ),
-    category=DeprecationWarning,
-)
 async def predict(
     instruction=None,
     context=None,
@@ -177,15 +146,6 @@ async def predict(
     )
 
 
-@deprecated(
-    format_deprecated_msg(
-        deprecated_name="lionagi.core.director.direct.react",
-        deprecated_version="v0.3.0",
-        removal_version="v1.0",
-        replacement="`lionagi.os.operation.react",
-    ),
-    category=DeprecationWarning,
-)
 async def act(
     instruction=None,
     context=None,
@@ -232,15 +192,6 @@ async def act(
     )
 
 
-@deprecated(
-    format_deprecated_msg(
-        deprecated_name="lionagi.core.director.direct.score",
-        deprecated_version="v0.3.0",
-        removal_version="v1.0",
-        replacement="`lionagi.os.operation.score",
-    ),
-    category=DeprecationWarning,
-)
 async def score(
     instruction=None,
     context=None,
@@ -297,15 +248,6 @@ async def score(
     )
 
 
-@deprecated(
-    format_deprecated_msg(
-        deprecated_name="lionagi.core.director.direct.plan",
-        deprecated_version="v0.3.0",
-        removal_version="v1.0",
-        replacement="`lionagi.os.operation.plan",
-    ),
-    category=DeprecationWarning,
-)
 async def plan(
     instruction=None,
     context=None,

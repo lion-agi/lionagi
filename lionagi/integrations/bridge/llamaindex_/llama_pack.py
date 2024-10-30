@@ -1,23 +1,14 @@
-from typing_extensions import deprecated
-
-from lionagi.os.sys_utils import format_deprecated_msg
+from lionfuncs import check_import
 
 
-@deprecated(
-    format_deprecated_msg(
-        deprecated_name="lionagi.core.action.function_calling.FunctionCalling",
-        deprecated_version="v0.3.0",
-        removal_version="v1.0",
-        replacement="check `lion-core` package for updates",
-    ),
-    category=DeprecationWarning,
-)
 class LlamaPack:
 
     @staticmethod
     def download(pack_name, pack_path):
         try:
-            from llama_index.llama_pack import download_llama_pack
+            download_llama_pack = check_import(
+                "llama_index.llama_pack", import_name="download_llama_pack"
+            )
 
             return download_llama_pack(pack_name, pack_path)
         except Exception as e:
@@ -29,7 +20,9 @@ class LlamaPack:
         return pack(*args, **kwargs)
 
     @staticmethod
-    def stock_market_pack(pack_path="./stock_market_data_pack", args=[], **kwargs):
+    def stock_market_pack(
+        pack_path="./stock_market_data_pack", args=[], **kwargs
+    ):
         name_ = "StockMarketDataQueryEnginePack"
         return LlamaPack.build(name_, pack_path, args, **kwargs)
 
@@ -41,7 +34,9 @@ class LlamaPack:
         return LlamaPack.build(name_, pack_path, args, **kwargs)
 
     @staticmethod
-    def rag_evaluator_pack(pack_path="./rag_evaluator_pack", args=[], **kwargs):
+    def rag_evaluator_pack(
+        pack_path="./rag_evaluator_pack", args=[], **kwargs
+    ):
         name_ = "RagEvaluatorPack"
         return LlamaPack.build(name_, pack_path, args, **kwargs)
 
@@ -58,17 +53,23 @@ class LlamaPack:
         return LlamaPack.build(name_, pack_path, args, **kwargs)
 
     @staticmethod
-    def resume_screener_pack(pack_path="./resume_screener_pack", args=[], **kwargs):
+    def resume_screener_pack(
+        pack_path="./resume_screener_pack", args=[], **kwargs
+    ):
         name_ = "ResumeScreenerPack"
         return LlamaPack.build(name_, pack_path, args, **kwargs)
 
     @staticmethod
-    def ragatouille_retriever_pack(pack_path="./ragatouille_pack", args=[], **kwargs):
+    def ragatouille_retriever_pack(
+        pack_path="./ragatouille_pack", args=[], **kwargs
+    ):
         name_ = "RAGatouilleRetrieverPack"
         return LlamaPack.build(name_, pack_path, args, **kwargs)
 
     @staticmethod
-    def chain_of_table_pack(pack_path="./chain_of_table_pack", args=[], **kwargs):
+    def chain_of_table_pack(
+        pack_path="./chain_of_table_pack", args=[], **kwargs
+    ):
         name_ = "ChainOfTablePack"
         return LlamaPack.build(name_, pack_path, args, **kwargs)
 
@@ -161,7 +162,9 @@ class LlamaPack:
         return LlamaPack.build(name_, pack_path, args, **kwargs)
 
     @staticmethod
-    def llama_guard_moderator_pack(pack_path="./llamaguard_pack", args=[], **kwargs):
+    def llama_guard_moderator_pack(
+        pack_path="./llamaguard_pack", args=[], **kwargs
+    ):
         name_ = "LlamaGuardModeratorPack"
         return LlamaPack.build(name_, pack_path, args, **kwargs)
 
@@ -187,7 +190,9 @@ class LlamaPack:
         return LlamaPack.build(name_, pack_path, args, **kwargs)
 
     @staticmethod
-    def multi_tenancy_rag_pack(pack_path="./multitenancy_rag_pack", args=[], **kwargs):
+    def multi_tenancy_rag_pack(
+        pack_path="./multitenancy_rag_pack", args=[], **kwargs
+    ):
         name_ = "MultiTenancyRAGPack"
         return LlamaPack.build(name_, pack_path, args, **kwargs)
 
@@ -197,12 +202,16 @@ class LlamaPack:
         return LlamaPack.build(name_, pack_path, args, **kwargs)
 
     @staticmethod
-    def snowflake_query_engine_pack(pack_path="./snowflake_pack", args=[], **kwargs):
+    def snowflake_query_engine_pack(
+        pack_path="./snowflake_pack", args=[], **kwargs
+    ):
         name_ = "SnowflakeQueryEnginePack"
         return LlamaPack.build(name_, pack_path, args, **kwargs)
 
     @staticmethod
-    def agent_search_retriever_pack(pack_path="./agent_search_pack", args=[], **kwargs):
+    def agent_search_retriever_pack(
+        pack_path="./agent_search_pack", args=[], **kwargs
+    ):
         name_ = "AgentSearchRetrieverPack"
         return LlamaPack.build(name_, pack_path, args, **kwargs)
 
@@ -212,12 +221,16 @@ class LlamaPack:
         return LlamaPack.build(name_, pack_path, args, **kwargs)
 
     @staticmethod
-    def chroma_autoretrieval_pack(pack_path="./chroma_pack", args=[], **kwargs):
+    def chroma_autoretrieval_pack(
+        pack_path="./chroma_pack", args=[], **kwargs
+    ):
         name_ = "ChromaAutoretrievalPack"
         return LlamaPack.build(name_, pack_path, args, **kwargs)
 
     @staticmethod
-    def arize_phoenix_query_engine_pack(pack_path="./arize_pack", args=[], **kwargs):
+    def arize_phoenix_query_engine_pack(
+        pack_path="./arize_pack", args=[], **kwargs
+    ):
         name_ = "ArizePhoenixQueryEnginePack"
         return LlamaPack.build(name_, pack_path, args, **kwargs)
 
@@ -236,6 +249,8 @@ class LlamaPack:
         return LlamaPack.build(name_, pack_path, args, **kwargs)
 
     @staticmethod
-    def weaviate_retry_engine_pack(pack_path="./weaviate_pack", args=[], **kwargs):
+    def weaviate_retry_engine_pack(
+        pack_path="./weaviate_pack", args=[], **kwargs
+    ):
         name_ = "WeaviateRetryEnginePack"
         return LlamaPack.build(name_, pack_path, args, **kwargs)

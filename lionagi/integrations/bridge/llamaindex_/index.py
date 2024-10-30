@@ -1,18 +1,9 @@
-from typing_extensions import deprecated
-
-from lionagi.os.sys_utils import format_deprecated_msg
+from lionfuncs import check_import
 
 
-@deprecated(
-    format_deprecated_msg(
-        deprecated_name="lionagi.core.action.function_calling.FunctionCalling",
-        deprecated_version="v0.3.0",
-        removal_version="v1.0",
-        replacement="check `lion-core` package for updates",
-    ),
-    category=DeprecationWarning,
-)
 class LlamaIndex:
+
+    llama_index = check_import("llama_index", pip_name="llama-index")
 
     @classmethod
     def index(
@@ -24,8 +15,8 @@ class LlamaIndex:
         index_type=None,
         **kwargs,
     ):
-        from llama_index.core import Settings
-        from llama_index.llms.openai import OpenAI
+        Settings = check_import("llama_index.core", import_name="Settings")
+        OpenAI = check_import("llama_index.llms.openai", import_name="OpenAI")
 
         if not llm_obj:
             llm_class = llm_class or OpenAI
@@ -37,8 +28,9 @@ class LlamaIndex:
         Settings.llm = llm_obj
 
         if not index_type:
-            from llama_index.core import VectorStoreIndex
-
+            VectorStoreIndex = check_import(
+                "llama_index.core", import_name="VectorStoreIndex"
+            )
             index_type = VectorStoreIndex
 
         return index_type(nodes, **kwargs)

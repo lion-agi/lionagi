@@ -3,24 +3,11 @@ from typing import Any
 
 from pydantic import Field
 
-from lionagi.core.collections.abc import Element, Progressable, Executable
 from lionagi.core.collections import Exchange
+from lionagi.core.collections.abc import Element, Executable, Progressable
 from lionagi.core.mail.mail import Mail, Package
 
-from typing_extensions import deprecated
 
-from lionagi.os.sys_utils import format_deprecated_msg
-
-
-@deprecated(
-    format_deprecated_msg(
-        deprecated_name="lionagi.core.action.function_calling.FunctionCalling",
-        deprecated_version="v0.3.0",
-        removal_version="v1.0",
-        replacement="check `lion-core` package for updates",
-    ),
-    category=DeprecationWarning,
-)
 class BaseExecutor(Element, Progressable, Executable, ABC):
     """
     BaseExecutor is an abstract base class that defines the structure for executors
@@ -43,14 +30,21 @@ class BaseExecutor(Element, Progressable, Executable, ABC):
         default_factory=list, description="The list of responses."
     )
 
-    context_log: list = Field(default_factory=list, description="The context log.")
+    context_log: list = Field(
+        default_factory=list, description="The context log."
+    )
 
     verbose: bool = Field(
-        True, description="A flag indicating whether to provide verbose output."
+        True,
+        description="A flag indicating whether to provide verbose output.",
     )
 
     def send(
-        self, recipient: str, category: str, package: Any, request_source: str = None
+        self,
+        recipient: str,
+        category: str,
+        package: Any,
+        request_source: str = None,
     ) -> None:
         """
         Sends a mail to a recipient.

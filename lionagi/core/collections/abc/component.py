@@ -1,41 +1,34 @@
 """Component class, base building block in LionAGI."""
 
-from abc import ABC
 import contextlib
-from collections.abc import Sequence
 from functools import singledispatchmethod
-from typing import Any, TypeVar, Type, TypeAlias, Union
+from typing import Any, TypeAlias, TypeVar, Union
 
+import lionfuncs as ln
+from lionabc import Observable
 from pandas import DataFrame, Series
-from pydantic import BaseModel, Field, ValidationError, AliasChoices
+from pydantic import AliasChoices, BaseModel, Field, ValidationError
 
 from lionagi.libs import ParseUtil, SysUtil
 from lionagi.libs.ln_convert import strip_lower, to_dict, to_str
 from lionagi.libs.ln_func_call import lcall
-from lionagi.libs.ln_nested import nget, nset, ninsert, flatten, unflatten
+from lionagi.libs.ln_nested import flatten, nget, ninsert, nset, unflatten
 
 from .exceptions import FieldError, LionTypeError, LionValueError
-from .util import base_lion_fields, llama_meta_fields, lc_meta_fields
+from .util import base_lion_fields, lc_meta_fields, llama_meta_fields
 
 T = TypeVar("T")
 
 _init_class = {}
 
-from typing_extensions import deprecated
 
-from lionagi.os.sys_utils import format_deprecated_msg
+def change_dict_key(dict_: dict, old_key: str, new_key: str) -> None:
+    """Change a key in a dictionary."""
+    if old_key in dict_:
+        dict_[new_key] = dict_.pop(old_key)
 
 
-@deprecated(
-    format_deprecated_msg(
-        deprecated_name="lionagi.core.collections.abc.component.Element",
-        deprecated_version="v0.3.0",
-        removal_version="v1.0",
-        replacement="check `lion_core.generic.element` for updates",
-    ),
-    category=DeprecationWarning,
-)
-class Element(BaseModel, ABC):
+class Element(BaseModel, Observable):
     """Base class for elements within the LionAGI system.
 
     Attributes:
@@ -44,15 +37,14 @@ class Element(BaseModel, ABC):
     """
 
     ln_id: str = Field(
-        default_factory=SysUtil.create_id,
+        default_factory=SysUtil.id,
         title="ID",
-        description="A 32-char unique hash identifier.",
         frozen=True,
         validation_alias=AliasChoices("node_id", "ID", "id"),
     )
 
     timestamp: str = Field(
-        default_factory=lambda: SysUtil.get_timestamp(sep=None)[:-6],
+        default_factory=lambda: ln.time(type_="iso"),
         title="Creation Timestamp",
         description="The UTC timestamp of creation",
         frozen=True,
@@ -70,16 +62,7 @@ class Element(BaseModel, ABC):
         return True
 
 
-@deprecated(
-    format_deprecated_msg(
-        deprecated_name="lionagi.core.collections.abc.component.Component",
-        deprecated_version="v0.3.0",
-        removal_version="v1.0",
-        replacement="check `lion-core.generic.component` for updates",
-    ),
-    category=DeprecationWarning,
-)
-class Component(Element, ABC):
+class Component(Element):
     """
     Represents a distinguishable, temporal entity in LionAGI.
 
@@ -112,7 +95,9 @@ class Component(Element, ABC):
     content: Any = Field(
         default=None,
         description="The optional content of the node.",
-        validation_alias=AliasChoices("text", "page_content", "chunk_content", "data"),
+        validation_alias=AliasChoices(
+            "text", "page_content", "chunk_content", "data"
+        ),
     )
 
     embedding: list[float] = Field(
@@ -215,15 +200,15 @@ class Component(Element, ABC):
         """Create a Component instance from a LlamaIndex object."""
         dict_ = obj.to_dict()
 
-        SysUtil.change_dict_key(dict_, "text", "content")
+        change_dict_key(dict_, "text", "content")
         metadata = dict_.pop("metadata", {})
 
         for field in llama_meta_fields:
             metadata[field] = dict_.pop(field, None)
 
-        SysUtil.change_dict_key(metadata, "class_name", "llama_index_class")
-        SysUtil.change_dict_key(metadata, "id_", "llama_index_id")
-        SysUtil.change_dict_key(metadata, "relationships", "llama_index_relationships")
+        change_dict_key(metadata, "class_name", "llama_index_class")
+        change_dict_key(metadata, "id_", "llama_index_id")
+        change_dict_key(metadata, "relationships", "llama_index_relationships")
 
         dict_["metadata"] = metadata
         return cls.from_obj(dict_)
@@ -240,7 +225,9 @@ class Component(Element, ABC):
         try:
             dict_ = {**obj, **kwargs}
             if "embedding" in dict_:
-                dict_["embedding"] = cls._validate_embedding(dict_["embedding"])
+                dict_["embedding"] = cls._validate_embedding(
+                    dict_["embedding"]
+                )
 
             if "lion_class" in dict_:
                 cls = _init_class.get(dict_.pop("lion_class"), cls)
@@ -253,12 +240,14 @@ class Component(Element, ABC):
             return cls.model_validate(dict_, *args, **kwargs)
 
         except ValidationError as e:
-            raise LionValueError("Invalid dictionary for deserialization.") from e
+            raise LionValueError(
+                "Invalid dictionary for deserialization."
+            ) from e
 
     @classmethod
     def _process_langchain_dict(cls, dict_: dict) -> dict:
         """Process a dictionary containing Langchain-specific data."""
-        SysUtil.change_dict_key(dict_, "page_content", "content")
+        change_dict_key(dict_, "page_content", "content")
 
         metadata = dict_.pop("metadata", {})
         metadata.update(dict_.pop("kwargs", {}))
@@ -278,11 +267,13 @@ class Component(Element, ABC):
             if field in dict_:
                 metadata[field] = dict_.pop(field)
 
-        SysUtil.change_dict_key(metadata, "lc", "langchain")
-        SysUtil.change_dict_key(metadata, "type", "lc_type")
-        SysUtil.change_dict_key(metadata, "id", "lc_id")
+        change_dict_key(metadata, "lc", "langchain")
+        change_dict_key(metadata, "type", "lc_type")
+        change_dict_key(metadata, "id", "lc_id")
 
-        extra_fields = {k: v for k, v in metadata.items() if k not in lc_meta_fields}
+        extra_fields = {
+            k: v for k, v in metadata.items() if k not in lc_meta_fields
+        }
         metadata = {k: v for k, v in metadata.items() if k in lc_meta_fields}
         dict_["metadata"] = metadata
         dict_.update(extra_fields)
@@ -310,9 +301,9 @@ class Component(Element, ABC):
         dict_["metadata"] = meta_
 
         if "ln_id" not in dict_:
-            dict_["ln_id"] = meta_.pop("ln_id", SysUtil.create_id())
+            dict_["ln_id"] = meta_.pop("ln_id", SysUtil.id())
         if "timestamp" not in dict_:
-            dict_["timestamp"] = SysUtil.get_timestamp(sep=None)[:-6]
+            dict_["timestamp"] = ln.time(type_="iso")
         if "metadata" not in dict_:
             dict_["metadata"] = {}
         if "extra_fields" not in dict_:
@@ -321,7 +312,9 @@ class Component(Element, ABC):
         return dict_
 
     @classmethod
-    def _from_str(cls, obj: str, /, *args, fuzzy_parse: bool = False, **kwargs) -> T:
+    def _from_str(
+        cls, obj: str, /, *args, fuzzy_parse: bool = False, **kwargs
+    ) -> T:
         """Create a Component instance from a JSON string."""
         obj = ParseUtil.fuzzy_parse_json(obj) if fuzzy_parse else to_dict(obj)
         try:
@@ -434,17 +427,23 @@ class Component(Element, ABC):
         convert(self.to_dict(*args, dropna=dropna, **kwargs), root)
         return ET.tostring(root, encoding="unicode")
 
-    def to_pd_series(self, *args, pd_kwargs=None, dropna=False, **kwargs) -> Series:
+    def to_pd_series(
+        self, *args, pd_kwargs=None, dropna=False, **kwargs
+    ) -> Series:
         """Convert the node to a Pandas Series."""
         pd_kwargs = pd_kwargs or {}
         dict_ = self.to_dict(*args, dropna=dropna, **kwargs)
         return Series(dict_, **pd_kwargs)
 
-    def to_llama_index_node(self, node_type: Type | str | Any = None, **kwargs) -> Any:
+    def to_llama_index_node(
+        self, node_type: type | str | Any = None, **kwargs
+    ) -> Any:
         """Serializes this node for LlamaIndex."""
         from lionagi.integrations.bridge import LlamaIndexBridge
 
-        return LlamaIndexBridge.to_llama_index_node(self, node_type=node_type, **kwargs)
+        return LlamaIndexBridge.to_llama_index_node(
+            self, node_type=node_type, **kwargs
+        )
 
     def to_langchain_doc(self, **kwargs) -> Any:
         """Serializes this node for Langchain."""
@@ -457,13 +456,13 @@ class Component(Element, ABC):
             ninsert(
                 self.metadata,
                 ["last_updated", name],
-                SysUtil.get_timestamp(sep=None)[:-6],
+                ln.time(type_="iso")[:-6],
             )
         elif isinstance(a, tuple) and isinstance(a[0], int):
             nset(
                 self.metadata,
                 ["last_updated", name],
-                SysUtil.get_timestamp(sep=None)[:-6],
+                ln.time(type_="iso")[:-6],
             )
 
     def _meta_pop(self, indices, default=...):
@@ -476,7 +475,11 @@ class Component(Element, ABC):
         dict_ = flatten(dict_)
 
         try:
-            out_ = dict_.pop(indices, default) if default != ... else dict_.pop(indices)
+            out_ = (
+                dict_.pop(indices, default)
+                if default != ...
+                else dict_.pop(indices)
+            )
         except KeyError as e:
             if default == ...:
                 raise KeyError(f"Key {indices} not found in metadata.") from e
@@ -516,7 +519,9 @@ class Component(Element, ABC):
         **kwargs,
     ) -> None:
         """Add a field to the model after initialization."""
-        self.extra_fields[field] = field_obj or Field(default=default, **kwargs)
+        self.extra_fields[field] = field_obj or Field(
+            default=default, **kwargs
+        )
         if annotation:
             self.extra_fields[field].annotation = annotation
 
@@ -612,10 +617,4 @@ LionIDable: TypeAlias = Union[str, Element]
 
 def get_lion_id(item: LionIDable) -> str:
     """Get the Lion ID of an item."""
-    if isinstance(item, Sequence) and len(item) == 1:
-        item = item[0]
-    if isinstance(item, str) and len(item) == 32:
-        return item
-    if getattr(item, "ln_id", None) is not None:
-        return item.ln_id
-    raise LionTypeError("Item must be a single LionIDable object.")
+    return SysUtil.get_id(item)

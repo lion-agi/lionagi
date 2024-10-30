@@ -1,52 +1,19 @@
-"""
-Copyright 2024 HaiyangLi
-
-Licensed under the Apache License, Version 2.0 (the "License");
-you may not use this file except in compliance with the License.
-You may obtain a copy of the License at
-    http://www.apache.org/licenses/LICENSE-2.0
-
-Unless required by applicable law or agreed to in writing, software
-distributed under the License is distributed on an "AS IS" BASIS,
-WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-See the License for the specific language governing permissions and
-limitations under the License.
-"""
-
-"""
-The base directive module.
-"""
-
 import asyncio
 import contextlib
 import re
 from abc import ABC
+from typing import Any
 
-from typing import Any, Optional
+from lionfuncs import extract_block, to_dict, validate_mapping
 
-from lionagi.libs import ParseUtil, StringMatch, to_list
-from lionagi.libs.ln_nested import nmerge
 from lionagi.core.collections.abc import ActionError
 from lionagi.core.message import ActionRequest, ActionResponse, Instruction
 from lionagi.core.message.util import _parse_action_request
 from lionagi.core.report.form import Form
 from lionagi.core.unit.util import process_tools
-from lionagi.core.validator.validator import Validator
-
-from typing_extensions import deprecated
-
-from lionagi.os.sys_utils import format_deprecated_msg
+from lionagi.libs.ln_nested import nmerge
 
 
-@deprecated(
-    format_deprecated_msg(
-        deprecated_name="lionagi.core.action.function_calling.FunctionCalling",
-        deprecated_version="v0.3.0",
-        removal_version="v1.0",
-        replacement="check `lion-core` package for updates",
-    ),
-    category=DeprecationWarning,
-)
 class DirectiveMixin(ABC):
     """
     DirectiveMixin is a class for handling chat operations and
@@ -55,16 +22,16 @@ class DirectiveMixin(ABC):
 
     def _create_chat_config(
         self,
-        system: Optional[str] = None,
-        instruction: Optional[str] = None,
-        context: Optional[str] = None,
-        images: Optional[str] = None,
-        sender: Optional[str] = None,
-        recipient: Optional[str] = None,
-        requested_fields: Optional[list] = None,
+        system: str | None = None,
+        instruction: str | None = None,
+        context: str | None = None,
+        images: str | None = None,
+        sender: str | None = None,
+        recipient: str | None = None,
+        requested_fields: list | None = None,
         form: Form = None,
         tools: bool = False,
-        branch: Optional[Any] = None,
+        branch: Any | None = None,
         **kwargs,
     ) -> Any:
         """
@@ -120,7 +87,7 @@ class DirectiveMixin(ABC):
         return config
 
     async def _call_chatcompletion(
-        self, imodel: Optional[Any] = None, branch: Optional[Any] = None, **kwargs
+        self, imodel: Any | None = None, branch: Any | None = None, **kwargs
     ) -> Any:
         """
         Calls the chat completion model.
@@ -135,7 +102,9 @@ class DirectiveMixin(ABC):
         """
         imodel = imodel or self.imodel
         branch = branch or self.branch
-        return await imodel.call_chat_completion(branch.to_chat_messages(), **kwargs)
+        return await imodel.call_chat_completion(
+            branch.to_chat_messages(), **kwargs
+        )
 
     async def _process_chatcompletion(
         self,
@@ -143,8 +112,8 @@ class DirectiveMixin(ABC):
         completion: dict,
         sender: str,
         invoke_tool: bool = True,
-        branch: Optional[Any] = None,
-        action_request: Optional[Any] = None,
+        branch: Any | None = None,
+        action_request: Any | None = None,
         costs=None,
     ) -> Any:
         """
@@ -190,7 +159,9 @@ class DirectiveMixin(ABC):
                 m = completion.get("model", None)
                 if m:
                     ttl = (a * price[0] + b * price[1]) / 1000000
-                    branch.messages[-1]._meta_insert(["extra", "usage", "expense"], ttl)
+                    branch.messages[-1]._meta_insert(
+                        ["extra", "usage", "expense"], ttl
+                    )
                 return msg
 
             if _choices and not isinstance(_choices, list):
@@ -213,10 +184,10 @@ class DirectiveMixin(ABC):
 
     async def _process_action_request(
         self,
-        _msg: Optional[dict] = None,
-        branch: Optional[Any] = None,
+        _msg: dict | None = None,
+        branch: Any | None = None,
         invoke_tool: bool = True,
-        action_request: Optional[Any] = None,
+        action_request: Any | None = None,
     ) -> Any:
         """
         Processes an action request from the assistant response.
@@ -237,9 +208,13 @@ class DirectiveMixin(ABC):
         if action_request:
             for i in action_request:
                 if i.function in branch.tool_manager.registry:
-                    i.recipient = branch.tool_manager.registry[i.function].ln_id
+                    i.recipient = branch.tool_manager.registry[
+                        i.function
+                    ].ln_id
                 else:
-                    raise ActionError(f"Tool {i.function} not found in registry")
+                    raise ActionError(
+                        f"Tool {i.function} not found in registry"
+                    )
                 branch.add_message(action_request=i, recipient=i.recipient)
 
         if invoke_tool:
@@ -270,7 +245,6 @@ class DirectiveMixin(ABC):
         form: Form = None,
         return_form: bool = True,
         strict: bool = False,
-        rulebook: Any = None,
         use_annotation: bool = True,
         template_name: str = None,
         costs=None,
@@ -287,7 +261,6 @@ class DirectiveMixin(ABC):
             form: Form data.
             return_form: Flag indicating if form should be returned.
             strict: Flag indicating if strict validation should be applied.
-            rulebook: Rulebook instance for validation.
             use_annotation: Flag indicating if annotations should be used.
             template_name: Template name for form.
 
@@ -308,8 +281,7 @@ class DirectiveMixin(ABC):
         response_ = self._process_model_response(_msg, requested_fields)
 
         if form:
-            validator = Validator(rulebook=rulebook) if rulebook else self.validator
-            form = await validator.validate_response(
+            form = await self.validator.validate_response(
                 form=form,
                 response=response_,
                 strict=strict,
@@ -341,11 +313,10 @@ class DirectiveMixin(ABC):
         requested_fields: dict = None,
         form: Form = None,
         tools: Any = False,
-        images: Optional[str] = None,
+        images: str | None = None,
         invoke_tool: bool = True,
         return_form: bool = True,
         strict: bool = False,
-        rulebook: Any = None,
         imodel: Any = None,
         use_annotation: bool = True,
         branch: Any = None,
@@ -369,7 +340,6 @@ class DirectiveMixin(ABC):
             invoke_tool: Flag indicating if tools should be invoked.
             return_form: Flag indicating if form should be returned.
             strict: Flag indicating if strict validation should be applied.
-            rulebook: Rulebook instance for validation.
             imodel: Model instance.
             use_annotation: Flag indicating if annotations should be used.
             branch: Branch instance.
@@ -413,9 +383,8 @@ class DirectiveMixin(ABC):
             form=form,
             return_form=return_form,
             strict=strict,
-            rulebook=rulebook,
             use_annotation=use_annotation,
-            costs=imodel.costs,
+            costs=imodel.costs or (0, 0),
         )
 
         return out_, branch if return_branch else out_
@@ -434,13 +403,14 @@ class DirectiveMixin(ABC):
         invoke_tool=True,
         return_form=True,
         strict=False,
-        rulebook=None,
         imodel=None,
-        images: Optional[str] = None,
+        images: str | None = None,
         clear_messages=False,
         use_annotation=True,
         timeout: float = None,
         return_branch=False,
+        formatter=None,
+        format_kwargs={},
         **kwargs,
     ):
         """
@@ -483,13 +453,14 @@ class DirectiveMixin(ABC):
             invoke_tool=invoke_tool,
             return_form=return_form,
             strict=strict,
-            rulebook=rulebook,
             imodel=imodel,
             use_annotation=use_annotation,
             timeout=timeout,
             branch=branch,
             clear_messages=clear_messages,
             return_branch=return_branch,
+            formatter=formatter,
+            format_kwargs=format_kwargs,
             **kwargs,
         )
 
@@ -530,7 +501,7 @@ class DirectiveMixin(ABC):
         predict_num_sentences=None,
         clear_messages=False,
         return_branch=False,
-        images: Optional[str] = None,
+        images: str | None = None,
         verbose=None,
         **kwargs,
     ):
@@ -621,8 +592,10 @@ class DirectiveMixin(ABC):
         predict_num_sentences=None,
         clear_messages=False,
         return_branch=False,
-        images: Optional[str] = None,
-        verbose=None,
+        images: str | None = None,
+        verbose=True,
+        formatter=None,
+        format_kwargs=None,
         **kwargs,
     ):
         """
@@ -771,10 +744,14 @@ class DirectiveMixin(ABC):
             )
 
             if verbose:
-                print(f"------------------- Extension completed -------------------\n")
+                print(
+                    f"------------------- Extension completed -------------------\n"
+                )
 
             extension_forms.extend(new_form)
-            last_form = new_form[-1] if isinstance(new_form, list) else new_form
+            last_form = (
+                new_form[-1] if isinstance(new_form, list) else new_form
+            )
             ctr += len(form)
 
         if extension_forms:
@@ -883,7 +860,7 @@ class DirectiveMixin(ABC):
 
         if plan:
             keys = [f"step_{i+1}" for i in range(len(plan))]
-            plan = StringMatch.force_validate_dict(plan, keys)
+            plan = validate_mapping(plan, keys, handle_unmatched="force")
 
             # If plan is provided, process each step
             for i in keys:
@@ -919,7 +896,7 @@ class DirectiveMixin(ABC):
             return form
 
         keys = [f"action_{i+1}" for i in range(len(actions))]
-        actions = StringMatch.force_validate_dict(actions, keys)
+        actions = validate_mapping(actions, keys, handle_unmatched="force")
 
         try:
             requests = []
@@ -1012,7 +989,9 @@ class DirectiveMixin(ABC):
                 context=context,
             )
 
-        return await self._chat(form=form, return_form=True, branch=branch, **kwargs)
+        return await self._chat(
+            form=form, return_form=True, branch=branch, **kwargs
+        )
 
     async def _predict(
         self,
@@ -1054,7 +1033,9 @@ class DirectiveMixin(ABC):
                 reason=reason,
             )
 
-        return await self._chat(form=form, return_form=True, branch=branch, **kwargs)
+        return await self._chat(
+            form=form, return_form=True, branch=branch, **kwargs
+        )
 
     async def _score(
         self,
@@ -1101,7 +1082,9 @@ class DirectiveMixin(ABC):
                 context=context,
             )
 
-        return await self._chat(form=form, return_form=True, branch=branch, **kwargs)
+        return await self._chat(
+            form=form, return_form=True, branch=branch, **kwargs
+        )
 
     async def _plan(
         self,
@@ -1164,18 +1147,20 @@ class DirectiveMixin(ABC):
 
         if requested_fields:
             with contextlib.suppress(Exception):
-                return StringMatch.force_validate_dict(out_, requested_fields)
+                return validate_mapping(
+                    out_, requested_fields, handle_unmatched="force"
+                )
 
         if isinstance(out_, str):
             with contextlib.suppress(Exception):
-                return ParseUtil.fuzzy_parse_json(out_)
+                return to_dict(out_, fuzzy_parse=True)
 
             with contextlib.suppress(Exception):
-                return ParseUtil.extract_json_block(out_)
+                return extract_block(out_)
 
             with contextlib.suppress(Exception):
                 match = re.search(r"```json\n({.*?})\n```", out_, re.DOTALL)
                 if match:
-                    return ParseUtil.fuzzy_parse_json(match.group(1))
+                    return to_dict(match.group(1), fuzzy_parse=True)
 
         return out_

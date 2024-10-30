@@ -1,26 +1,15 @@
+import asyncio
 from collections import deque
+
 from pydantic import Field
-from lionagi.libs import AsyncUtil
-from lionagi.core.collections.abc import Executable, Element
-from lionagi.core.collections import Exchange
-from lionagi.core.collections.util import to_list_type, get_lion_id
+
+from lionagi.core.collections import Exchange, Pile, pile
+from lionagi.core.collections.abc import Element, Executable
+from lionagi.core.collections.util import get_lion_id, to_list_type
+
 from .mail import Mail, Package
-from lionagi.core.collections import Pile, pile
-
-from typing_extensions import deprecated
-
-from lionagi.os.sys_utils import format_deprecated_msg
 
 
-@deprecated(
-    format_deprecated_msg(
-        deprecated_name="lionagi.core.action.function_calling.FunctionCalling",
-        deprecated_version="v0.3.0",
-        removal_version="v1.0",
-        replacement="check `lion-core` package for updates",
-    ),
-    category=DeprecationWarning,
-)
 class MailManager(Element, Executable):
     """
     Manages the sending, receiving, and storage of mail items between various sources.
@@ -137,7 +126,9 @@ class MailManager(Element, Executable):
             mail_id = mailbox.pending_outs.popleft()
             mail = mailbox.pile.pop(mail_id)
             if mail.recipient not in self.sources:
-                raise ValueError(f"Recipient source {mail.recipient} does not exist")
+                raise ValueError(
+                    f"Recipient source {mail.recipient} does not exist"
+                )
             if mail.sender not in self.mails[mail.recipient]:
                 self.mails[mail.recipient].update({mail.sender: deque()})
             self.mails[mail.recipient][mail.sender].append(mail)
@@ -191,4 +182,4 @@ class MailManager(Element, Executable):
         while not self.execute_stop:
             self.collect_all()
             self.send_all()
-            await AsyncUtil.sleep(refresh_time)
+            await asyncio.sleep(refresh_time)

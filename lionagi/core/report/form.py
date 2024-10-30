@@ -1,30 +1,11 @@
-"""
-This module extends the BaseForm class to implement the Form class, which
-dynamically manages form operations based on specific assignments. It provides
-functionalities for initializing fields, filling forms with data, and
-validating the readiness of forms for further processing.
-"""
+import json
+from typing import Any, Dict
 
-from typing import Dict, Any
-from lionagi.libs.ln_convert import to_readable_dict
 from lionagi.core.collections.abc import SYSTEM_FIELDS
-from lionagi.core.report.util import get_input_output_fields
 from lionagi.core.report.base import BaseForm
-
-from typing_extensions import deprecated
-
-from lionagi.os.sys_utils import format_deprecated_msg
+from lionagi.core.report.util import get_input_output_fields
 
 
-@deprecated(
-    format_deprecated_msg(
-        deprecated_name="lionagi.core.action.function_calling.FunctionCalling",
-        deprecated_version="v0.3.0",
-        removal_version="v1.0",
-        replacement="check `lion-core` package for updates",
-    ),
-    category=DeprecationWarning,
-)
 class Form(BaseForm):
     """
     A specialized implementation of BaseForm designed to manage form fields
@@ -103,7 +84,7 @@ class Form(BaseForm):
                 )
 
     @property
-    def work_fields(self) -> Dict[str, Any]:
+    def work_fields(self) -> dict[str, Any]:
         """
         Retrieves a dictionary of the fields relevant to the current task,
         excluding any SYSTEM_FIELDS and including only the input and requested
@@ -116,7 +97,8 @@ class Form(BaseForm):
         return {
             k: v
             for k, v in dict_.items()
-            if k not in SYSTEM_FIELDS and k in self.input_fields + self.requested_fields
+            if k not in SYSTEM_FIELDS
+            and k in self.input_fields + self.requested_fields
         }
 
     def fill(self, form: "Form" = None, strict: bool = True, **kwargs) -> None:
@@ -153,7 +135,9 @@ class Form(BaseForm):
             bool: True if the form is workable, otherwise raises ValueError.
         """
         if self.filled:
-            raise ValueError("Form is already filled, cannot be worked on again")
+            raise ValueError(
+                "Form is already filled, cannot be worked on again"
+            )
 
         for i in self.input_fields:
             if not getattr(self, i, None):
@@ -191,7 +175,7 @@ class Form(BaseForm):
         """
 
     @property
-    def _instruction_requested_fields(self) -> Dict[str, str]:
+    def _instruction_requested_fields(self) -> dict[str, str]:
         """
         Provides a dictionary mapping requested field names to their
         descriptions.
@@ -211,7 +195,7 @@ class Form(BaseForm):
         Args:
             fields (optional): Specific fields to display. Defaults to None.
         """
-        from IPython.display import display, Markdown
+        from IPython.display import Markdown, display
 
         fields = fields or self.work_fields
 
@@ -221,7 +205,7 @@ class Form(BaseForm):
 
         for k, v in fields.items():
             if isinstance(v, dict):
-                v = to_readable_dict(v)
+                v = json.dumps(v, indent=4)
             if len(str(v)) > 50:
                 display(Markdown(f"**{k}**: \n {v}"))
             else:

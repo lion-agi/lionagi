@@ -1,7 +1,10 @@
 import pandas as pd
-from lionagi.libs import SysUtil
 
-from lionagi.integrations.storage.storage_util import output_node_list, output_edge_list
+from lionagi.integrations.storage.storage_util import (
+    output_edge_list,
+    output_node_list,
+)
+from lionagi.libs import SysUtil
 
 
 def _output_excel(
@@ -38,7 +41,10 @@ def _output_excel(
 
     structure_id = ""
 
-    tables = {"Nodes": pd.DataFrame(node_list), "Edges": pd.DataFrame(edge_list)}
+    tables = {
+        "Nodes": pd.DataFrame(node_list),
+        "Edges": pd.DataFrame(edge_list),
+    }
     if edge_cls_list:
         tables["EdgesCondClass"] = pd.DataFrame(edge_cls_list)
     for i in node_dict:
@@ -60,20 +66,6 @@ def _output_excel(
             tables[i].to_excel(writer, sheet_name=i, index=False)
 
 
-from typing_extensions import deprecated
-
-from lionagi.os.sys_utils import format_deprecated_msg
-
-
-@deprecated(
-    format_deprecated_msg(
-        deprecated_name="lionagi.core.action.function_calling.FunctionCalling",
-        deprecated_version="v0.3.0",
-        removal_version="v1.0",
-        replacement="check `lion-core` package for updates",
-    ),
-    category=DeprecationWarning,
-)
 def to_excel(structure, structure_name, dir="structure_storage"):
     """
     Converts a structure into a series of Excel sheets within a single workbook.
@@ -94,4 +86,6 @@ def to_excel(structure, structure_name, dir="structure_storage"):
     node_list, node_dict = output_node_list(structure)
     edge_list, edge_cls_list = output_edge_list(structure)
 
-    _output_excel(node_list, node_dict, edge_list, edge_cls_list, structure_name, dir)
+    _output_excel(
+        node_list, node_dict, edge_list, edge_cls_list, structure_name, dir
+    )

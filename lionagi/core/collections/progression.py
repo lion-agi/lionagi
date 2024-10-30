@@ -1,23 +1,12 @@
 import contextlib
-from lionagi.libs import SysUtil
+
+import lionfuncs as ln
 from pydantic import Field, field_validator
-from .abc import Ordering, get_lion_id, ItemNotFoundError, LionIDable, Element
+
+from .abc import Element, ItemNotFoundError, LionIDable, Ordering, get_lion_id
 from .util import _validate_order
 
-from typing_extensions import deprecated
 
-from lionagi.os.sys_utils import format_deprecated_msg
-
-
-@deprecated(
-    format_deprecated_msg(
-        deprecated_name="lionagi.core.collections.abc.progression.Progression",
-        deprecated_version="v0.3.0",
-        removal_version="v1.0",
-        replacement="lionagi.os.primitives.progression.Progression",
-    ),
-    category=DeprecationWarning,
-)
 class Progression(Element, Ordering):
 
     name: str | None = Field(
@@ -57,8 +46,7 @@ class Progression(Element, Ordering):
         yield from self.order
 
     def items(self):
-        for idx, item in enumerate(self.order):
-            yield idx, item
+        yield from enumerate(self.order)
 
     def size(self):
         return len(self)
@@ -101,7 +89,7 @@ class Progression(Element, Ordering):
         """Remove the next occurrence of an item from the progression."""
         if item in self:
             item = self._validate_order(item)
-            l_ = SysUtil.create_copy(self.order)
+            l_ = ln.copy(self.order)
 
             with contextlib.suppress(Exception):
                 for i in item:
@@ -154,7 +142,7 @@ class Progression(Element, Ordering):
     def __radd__(self, other):
         if not isinstance(other, Progression):
             _copy = self.copy()
-            l_ = SysUtil.create_copy(_copy.order)
+            l_ = ln.copy(_copy.order)
             l_.insert(0, get_lion_id(other))
             _copy.order = l_
             return _copy
@@ -201,7 +189,7 @@ class Progression(Element, Ordering):
 
     def __list__(self):
         """Return a list representation of the progression."""
-        return SysUtil.create_copy(self.order)
+        return ln.copy(self.order)
 
     def __reversed__(self):
         """Return a reversed progression."""
@@ -229,14 +217,5 @@ class Progression(Element, Ordering):
         return hash((tuple(self.order), self.name))
 
 
-@deprecated(
-    format_deprecated_msg(
-        deprecated_name="lionagi.core.collections.abc.progression.Progression",
-        deprecated_version="v0.3.0",
-        removal_version="v1.0",
-        replacement="lionagi.os.primitives.progression.progression",
-    ),
-    category=DeprecationWarning,
-)
 def progression(order=None, name=None) -> Progression:
     return Progression(order=order, name=name)

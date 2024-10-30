@@ -1,24 +1,12 @@
 from typing import Any
+
 from pydantic import Field
-from .message import RoledMessage, MessageRole
+
 from .action_request import ActionRequest
+from .message import MessageRole, RoledMessage
 
 
 # action response must correlates to a specific action request
-from typing_extensions import deprecated
-
-from lionagi.os.sys_utils import format_deprecated_msg
-
-
-@deprecated(
-    format_deprecated_msg(
-        deprecated_name="lionagi.core.action.function_calling.FunctionCalling",
-        deprecated_version="v0.3.0",
-        removal_version="v1.0",
-        replacement="check `lion-core` package for updates",
-    ),
-    category=DeprecationWarning,
-)
 class ActionResponse(RoledMessage):
     """
     Represents a response to a specific action request.
@@ -37,8 +25,12 @@ class ActionResponse(RoledMessage):
         description="The id of the action request that this response corresponds to",
     )
 
-    function: str | None = Field(None, description="The name of the function called")
-    arguments: dict | None = Field(None, description="The keyword arguments provided")
+    function: str | None = Field(
+        None, description="The name of the function called"
+    )
+    arguments: dict | None = Field(
+        None, description="The keyword arguments provided"
+    )
     func_outputs: Any | None = Field(
         None, description="The output of the function call"
     )
@@ -93,12 +85,6 @@ class ActionResponse(RoledMessage):
         action_request.action_response = self.ln_id
 
     def _to_dict(self):
-        """
-        Converts the action response to a dictionary.
-
-        Returns:
-            dict: A dictionary representation of the action response.
-        """
         return {
             "function": self.function,
             "arguments": self.arguments,
@@ -126,7 +112,9 @@ class ActionResponse(RoledMessage):
         action_request = ActionRequest(
             function=self.function, arguments=json.loads(arguments)
         )
-        action_response_copy = ActionResponse(action_request=action_request, **kwargs)
+        action_response_copy = ActionResponse(
+            action_request=action_request, **kwargs
+        )
         action_response_copy.action_request = self.action_request
         action_response_copy.func_outputs = self.func_outputs
         action_response_copy.metadata["origin_ln_id"] = self.ln_id

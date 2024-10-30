@@ -1,8 +1,8 @@
-from typing import Union, Dict, Any
 import subprocess
+from typing import Any, Dict, Union
 
-from lionagi.libs.sys_util import SysUtil
 from lionagi.libs.ln_api import BaseService
+from lionagi.libs.sys_util import SysUtil
 
 allowed_kwargs = [
     # "model",
@@ -22,20 +22,7 @@ allowed_kwargs = [
     "max_new_tokens",
 ]
 
-from typing_extensions import deprecated
 
-from lionagi.os.sys_utils import format_deprecated_msg
-
-
-@deprecated(
-    format_deprecated_msg(
-        deprecated_name="lionagi.core.action.function_calling.FunctionCalling",
-        deprecated_version="v0.3.0",
-        removal_version="v1.0",
-        replacement="check `lion-core` package for updates",
-    ),
-    category=DeprecationWarning,
-)
 def get_pytorch_install_command():
     cpu_arch = SysUtil.get_cpu_architecture()
 
@@ -59,8 +46,8 @@ class TransformersService(BaseService):
     def __init__(
         self,
         task: str = None,
-        model: Union[str, Any] = None,
-        config: Union[str, Dict, Any] = None,
+        model: str | Any = None,
+        config: str | dict | Any = None,
         device="cpu",
         **kwargs,
     ):
@@ -96,7 +83,9 @@ class TransformersService(BaseService):
     async def serve_chat(self, messages, **kwargs):
         if self.task:
             if self.task != "conversational":
-                raise ValueError(f"Invalid transformers pipeline task: {self.task}.")
+                raise ValueError(
+                    f"Invalid transformers pipeline task: {self.task}."
+                )
 
         payload = {"messages": messages}
         config = {}

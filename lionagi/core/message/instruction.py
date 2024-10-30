@@ -1,21 +1,8 @@
-from lionagi.core.collections.abc import LionIDable, SYSTEM_FIELDS
+from lionagi.core.collections.abc import SYSTEM_FIELDS, LionIDable
+from lionagi.core.message.message import MessageRole, RoledMessage
 from lionagi.core.report.form import Form
-from lionagi.core.message.message import RoledMessage, MessageRole
-
-from typing_extensions import deprecated
-
-from lionagi.os.sys_utils import format_deprecated_msg
 
 
-@deprecated(
-    format_deprecated_msg(
-        deprecated_name="lionagi.core.action.function_calling.FunctionCalling",
-        deprecated_version="v0.3.0",
-        removal_version="v1.0",
-        replacement="check `lion-core` package for updates",
-    ),
-    category=DeprecationWarning,
-)
 class Instruction(RoledMessage):
     """
     Represents an instruction message with additional context and requested fields.
@@ -105,13 +92,6 @@ class Instruction(RoledMessage):
         return text_msg
 
     def _add_context(self, context: dict | str | None = None, **kwargs):
-        """
-        Adds context to the instruction message.
-
-        Args:
-            context (dict or str, optional): Additional context to be added.
-            **kwargs: Additional context fields to be added.
-        """
         if "context" not in self.content:
             self.content["context"] = {}
         if isinstance(context, dict):
@@ -120,12 +100,6 @@ class Instruction(RoledMessage):
             self.content["context"]["additional_context"] = context
 
     def _update_requested_fields(self, requested_fields: dict):
-        """
-        Updates the requested fields in the instruction message.
-
-        Args:
-            requested_fields (dict): The fields requested in the instruction.
-        """
         if "context" not in self.content:
             self.content["context"] = {}
             self.content["context"]["requested_fields"] = {}
@@ -134,16 +108,12 @@ class Instruction(RoledMessage):
     def _initiate_content(
         self, context, requested_fields, images, image_detail, **kwargs
     ):
-        """
-        Processes context and requested fields to update the message content.
-
-        Args:
-            context (dict or str, optional): Additional context for the instruction.
-            requested_fields (dict, optional): Fields requested in the instruction.
-            **kwargs: Additional context fields to be added.
-        """
         if context:
-            context = {"context": context} if not isinstance(context, dict) else context
+            context = (
+                {"context": context}
+                if not isinstance(context, dict)
+                else context
+            )
             if (
                 additional_context := {
                     k: v for k, v in kwargs.items() if k not in SYSTEM_FIELDS
@@ -158,7 +128,9 @@ class Instruction(RoledMessage):
             )
 
         if images:
-            self.content["images"] = images if isinstance(images, list) else [images]
+            self.content["images"] = (
+                images if isinstance(images, list) else [images]
+            )
             self.content["image_detail"] = image_detail
 
     def clone(self, **kwargs):
@@ -185,15 +157,6 @@ class Instruction(RoledMessage):
 
     @staticmethod
     def _format_requested_fields(requested_fields):
-        """
-        Formats the requested fields into a JSON-parseable response format.
-
-        Args:
-            requested_fields (dict): The fields requested in the instruction.
-
-        Returns:
-            dict: The formatted requested fields.
-        """
         format_ = f"""
         MUST RETURN JSON-PARSEABLE RESPONSE ENCLOSED BY JSON CODE BLOCKS. ----
         ```json

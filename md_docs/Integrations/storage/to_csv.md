@@ -58,4 +58,3 @@ Converts a structure into a series of CSV files and stores them in a compressed 
 structure = ...  # some structure object
 to_csv(structure, filename="my_structure")
 ```
-

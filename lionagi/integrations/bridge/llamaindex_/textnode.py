@@ -1,21 +1,11 @@
 from typing import Any, TypeVar
+
 from lionagi.libs.sys_util import SysUtil
 
-from typing_extensions import deprecated
 
-from lionagi.os.sys_utils import format_deprecated_msg
-
-
-@deprecated(
-    format_deprecated_msg(
-        deprecated_name="lionagi.core.action.function_calling.FunctionCalling",
-        deprecated_version="v0.3.0",
-        removal_version="v1.0",
-        replacement="check `lion-core` package for updates",
-    ),
-    category=DeprecationWarning,
-)
-def to_llama_index_node(lion_node, node_type: Any = None, **kwargs: Any) -> Any:
+def to_llama_index_node(
+    lion_node, node_type: Any = None, **kwargs: Any
+) -> Any:
     """
     Converts a Lion node to a Llama Index node of a specified type.
 
@@ -37,8 +27,8 @@ def to_llama_index_node(lion_node, node_type: Any = None, **kwargs: Any) -> Any:
     """
 
     SysUtil.check_import("llama_index", pip_name="llama-index")
-    from llama_index.core.schema import BaseNode
     import llama_index.core.schema
+    from llama_index.core.schema import BaseNode
 
     node_type = node_type or "TextNode"
 
@@ -56,10 +46,14 @@ def to_llama_index_node(lion_node, node_type: Any = None, **kwargs: Any) -> Any:
             if isinstance(node_type, str) and hasattr(
                 llama_index.core.schema, node_type
             ):
-                return getattr(llama_index.core.schema, node_type).from_dict(_dict)
+                return getattr(llama_index.core.schema, node_type).from_dict(
+                    _dict
+                )
             elif issubclass(node_type, BaseNode):
                 return node_type.from_dict(_dict)
             else:
-                raise AttributeError(f"Invalid llama-index node type: {node_type}")
+                raise AttributeError(
+                    f"Invalid llama-index node type: {node_type}"
+                )
         except Exception as e:
             raise AttributeError(f"Error: {e}")

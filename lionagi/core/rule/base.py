@@ -1,26 +1,19 @@
 from abc import abstractmethod
-from typing import Any, List, Dict
-from pandas import Series
-from lionagi.libs import SysUtil
+from typing import Any, Dict, List
 
-from lionagi.core.collections.abc import FieldError, Condition, Actionable, Component
+from pandas import Series
+
+from lionagi.core.collections.abc import (
+    Actionable,
+    Component,
+    Condition,
+    FieldError,
+)
+from lionagi.libs import SysUtil
 
 _rule_classes = {}
 
-from typing_extensions import deprecated
 
-from lionagi.os.sys_utils import format_deprecated_msg
-
-
-@deprecated(
-    format_deprecated_msg(
-        deprecated_name="lionagi.core.action.function_calling.FunctionCalling",
-        deprecated_version="v0.3.0",
-        removal_version="v1.0",
-        replacement="check `lion-core` package for updates",
-    ),
-    category=DeprecationWarning,
-)
 class Rule(Component, Condition, Actionable):
     """
     Combines a condition and an action that can be applied based on it.
@@ -49,7 +42,9 @@ class Rule(Component, Condition, Actionable):
         if cls.__name__ not in _rule_classes:
             _rule_classes[cls.__name__] = cls
 
-    def add_log(self, field: str, form: Any, apply: bool = True, **kwargs) -> None:
+    def add_log(
+        self, field: str, form: Any, apply: bool = True, **kwargs
+    ) -> None:
         """
         Adds an entry to the applied or invoked log.
 
@@ -79,7 +74,7 @@ class Rule(Component, Condition, Actionable):
         value: Any,
         form: Any,
         *args,
-        annotation: List[str] = None,
+        annotation: list[str] = None,
         use_annotation: bool = True,
         **kwargs,
     ) -> bool:
@@ -105,7 +100,9 @@ class Rule(Component, Condition, Actionable):
 
         if use_annotation:
             annotation = annotation or form._get_field_annotation(field)
-            annotation = [annotation] if isinstance(annotation, str) else annotation
+            annotation = (
+                [annotation] if isinstance(annotation, str) else annotation
+            )
 
             for i in annotation:
                 if i in self.apply_type and i not in self.exclude_type:
@@ -144,7 +141,9 @@ class Rule(Component, Condition, Actionable):
             if self.fix:
                 try:
                     a = await self.perform_fix(value, **self.validation_kwargs)
-                    self.add_log(field, form, apply=False, **self.validation_kwargs)
+                    self.add_log(
+                        field, form, apply=False, **self.validation_kwargs
+                    )
                     return a
                 except Exception as e2:
                     raise FieldError(f"failed to fix field") from e2
@@ -196,7 +195,7 @@ class Rule(Component, Condition, Actionable):
         """
         pass
 
-    def _to_dict(self) -> Dict[str, Any]:
+    def _to_dict(self) -> dict[str, Any]:
         """
         Converts the rule's attributes to a dictionary.
 

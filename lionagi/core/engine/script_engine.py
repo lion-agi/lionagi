@@ -1,23 +1,12 @@
 import ast
 from functools import lru_cache
+
 from lionagi.libs import AsyncUtil
+
 from ..evaluator.base_evaluator import BaseEvaluator
 from .sandbox_ import SandboxTransformer
 
-from typing_extensions import deprecated
 
-from lionagi.os.sys_utils import format_deprecated_msg
-
-
-@deprecated(
-    format_deprecated_msg(
-        deprecated_name="lionagi.core.action.function_calling.FunctionCalling",
-        deprecated_version="v0.3.0",
-        removal_version="v1.0",
-        replacement="check `lion-core` package for updates",
-    ),
-    category=DeprecationWarning,
-)
 class ScriptEngine:
     def __init__(self):
         self.variables = {}
@@ -48,9 +37,13 @@ class ScriptEngine:
                 var_name = stmt.targets[0].id
                 value = self._evaluate_expression(ast.unparse(stmt.value))
                 self._assign_variable(var_name, value)
-            elif isinstance(stmt, ast.Expr) and isinstance(stmt.value, ast.Call):
+            elif isinstance(stmt, ast.Expr) and isinstance(
+                stmt.value, ast.Call
+            ):
                 func_name = stmt.value.func.id
-                arg = self._evaluate_expression(ast.unparse(stmt.value.args[0]))
+                arg = self._evaluate_expression(
+                    ast.unparse(stmt.value.args[0])
+                )
                 result = self._execute_function(func_name, arg)
                 # For demonstration, manually update 'x' to simulate expected behavior
                 if func_name == "processData":

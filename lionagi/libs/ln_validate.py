@@ -6,8 +6,15 @@ including numeric, boolean, string, and enum. It also provides a dictionary `val
 maps data types to their corresponding validation functions.
 """
 
-from .ln_convert import to_str, is_same_dtype, to_list, to_dict, to_num, strip_lower
-from .ln_parse import StringMatch, ParseUtil
+from .ln_convert import (
+    is_same_dtype,
+    strip_lower,
+    to_dict,
+    to_list,
+    to_num,
+    to_str,
+)
+from .ln_parse import ParseUtil, StringMatch
 
 
 def check_dict_field(x, keys: list[str] | dict, fix_=True, **kwargs):
@@ -19,7 +26,9 @@ def check_dict_field(x, keys: list[str] | dict, fix_=True, **kwargs):
             return StringMatch.force_validate_dict(x, keys=keys, **kwargs)
         except Exception as e:
             raise ValueError("Invalid dict field type.") from e
-    raise ValueError(f"Default value for DICT must be a dict, got {type(x).__name__}")
+    raise ValueError(
+        f"Default value for DICT must be a dict, got {type(x).__name__}"
+    )
 
 
 def check_action_field(x, fix_=True, **kwargs):
@@ -275,7 +284,9 @@ def _fix_enum_field(x, choices, **kwargs):
         x = to_str(x)
         return StringMatch.choose_most_similar(x, choices, **kwargs)
     except Exception as e:
-        raise ValueError(f"Failed to convert {x} into one of the choices") from e
+        raise ValueError(
+            f"Failed to convert {x} into one of the choices"
+        ) from e
 
 
 validation_funcs = {

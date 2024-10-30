@@ -1,26 +1,7 @@
-from pydantic import Field
-import asyncio
-
 from lionagi.core.generic.node import Node
 from lionagi.core.work.work_function import WorkFunction
-from lionagi.core.collections import Exchange
-from lionagi.core.mail.mail import Mail
 
 
-from typing_extensions import deprecated
-
-from lionagi.os.sys_utils import format_deprecated_msg
-
-
-@deprecated(
-    format_deprecated_msg(
-        deprecated_name="lionagi.core.action.function_calling.FunctionCalling",
-        deprecated_version="v0.3.0",
-        removal_version="v1.0",
-        replacement="check `lion-core` package for updates",
-    ),
-    category=DeprecationWarning,
-)
 class WorkFunctionNode(WorkFunction, Node):
     """
     A class representing a work function node, combining the functionality

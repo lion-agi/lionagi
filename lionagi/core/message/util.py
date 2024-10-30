@@ -1,32 +1,16 @@
-import re
 import json
-import contextlib
+import re
 
-from lionagi.libs import ParseUtil
-from lionagi.libs.ln_convert import strip_lower, to_dict
-from lionagi.libs.ln_nested import nget
+from lionfuncs import nget, to_dict
 
-from .message import RoledMessage
-from .system import System
-from .instruction import Instruction
-from .assistant_response import AssistantResponse
 from .action_request import ActionRequest
 from .action_response import ActionResponse
+from .assistant_response import AssistantResponse
+from .instruction import Instruction
+from .message import RoledMessage
+from .system import System
 
-from typing_extensions import deprecated
 
-from lionagi.os.sys_utils import format_deprecated_msg
-
-
-@deprecated(
-    format_deprecated_msg(
-        deprecated_name="lionagi.core.action.function_calling.FunctionCalling",
-        deprecated_version="v0.3.0",
-        removal_version="v1.0",
-        replacement="check `lion-core` package for updates",
-    ),
-    category=DeprecationWarning,
-)
 def create_message(
     *,
     system=None,  # system node - JSON serializable
@@ -97,7 +81,9 @@ def create_message(
 
     if function:
         if not arguments:
-            raise ValueError("Error: please provide arguments for the function.")
+            raise ValueError(
+                "Error: please provide arguments for the function."
+            )
         return ActionRequest(
             function=function,
             arguments=arguments,
@@ -167,14 +153,16 @@ def _parse_action_request(response):
     message = to_dict(response) if not isinstance(response, dict) else response
     content_ = None
 
-    if strip_lower(nget(message, ["content"])) == "none":
+    if str(nget(message, ["content"])).strip().lower() == "none":
         content_ = _handle_action_request(message)
 
     elif nget(message, ["content", "tool_uses"], None):
         content_ = message["content"]["tool_uses"]
 
     else:
-        json_block_pattern = re.compile(r"```json\n({.*?tool_uses.*?})\n```", re.DOTALL)
+        json_block_pattern = re.compile(
+            r"```json\n({.*?tool_uses.*?})\n```", re.DOTALL
+        )
 
         # Find the JSON block in the text
         match = json_block_pattern.search(str(message["content"]))
@@ -195,7 +183,9 @@ def _parse_action_request(response):
         outs = []
         for func_calling in content_:
             if "recipient_name" in func_calling:
-                func_calling["action"] = func_calling["recipient_name"].split(".")[1]
+                func_calling["action"] = func_calling["recipient_name"].split(
+                    "."
+                )[1]
                 func_calling["arguments"] = func_calling["parameters"]
             elif "function" in func_calling:
                 func_calling["action"] = func_calling["function"]
@@ -228,9 +218,13 @@ def _parse_action_request(response):
                     if "function" in func_calling:
                         func_calling["action"] = func_calling["function"]
                         if "parameters" in func_calling:
-                            func_calling["arguments"] = func_calling["parameters"]
+                            func_calling["arguments"] = func_calling[
+                                "parameters"
+                            ]
                         elif "arguments" in func_calling:
-                            func_calling["arguments"] = func_calling["arguments"]
+                            func_calling["arguments"] = func_calling[
+                                "arguments"
+                            ]
                     msg = ActionRequest(
                         function=func_calling["action"]
                         .replace("action_", "")

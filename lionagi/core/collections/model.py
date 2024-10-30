@@ -1,8 +1,19 @@
-import os
 import asyncio
+import os
+
+import lionfuncs as ln
 import numpy as np
 from dotenv import load_dotenv
-from lionagi.libs import SysUtil, BaseService, StatusTracker, APIUtil, to_list, ninsert
+
+from lionagi.libs import (
+    APIUtil,
+    BaseService,
+    StatusTracker,
+    SysUtil,
+    ninsert,
+    to_list,
+)
+
 from .abc import Component, ModelLimitExceededError
 
 load_dotenv()
@@ -10,24 +21,13 @@ load_dotenv()
 
 _oai_price_map = {
     "gpt-4o": (5, 15),
+    "gpt-4o-2024-08-06": (2.5, 10),
+    "gpt-4o-mini": (0.15, 0.6),
     "gpt-4-turbo": (10, 30),
     "gpt-3.5-turbo": (0.5, 1.5),
 }
 
-from typing_extensions import deprecated
 
-from lionagi.os.sys_utils import format_deprecated_msg
-
-
-@deprecated(
-    format_deprecated_msg(
-        deprecated_name="lionagi.core.collections.abc.model.iModel",
-        deprecated_version="v0.3.0",
-        removal_version="v1.0",
-        replacement="`lionagi.os.operator.imodel.imodel.iModel`",
-    ),
-    category=DeprecationWarning,
-)
 class iModel:
     """
     iModel is a class for managing AI model configurations and service
@@ -92,8 +92,8 @@ class iModel:
             service (BaseService, optional): An instance of BaseService.
             **kwargs: Additional parameters for the model.
         """
-        self.ln_id: str = SysUtil.create_id()
-        self.timestamp: str = SysUtil.get_timestamp(sep=None)[:-6]
+        self.ln_id: str = SysUtil.id()
+        self.timestamp: str = ln.time(type_="iso")
         self.endpoint = endpoint
         self.allowed_parameters = allowed_parameters
         if isinstance(provider, type):
@@ -243,7 +243,9 @@ class iModel:
         if allowed_params != []:
             if (
                 len(
-                    not_allowed := [k for k in params.keys() if k not in allowed_params]
+                    not_allowed := [
+                        k for k in params.keys() if k not in allowed_params
+                    ]
                 )
                 > 0
             ):
@@ -304,7 +306,13 @@ class iModel:
             embed_str.pop("image_detail", None)
 
         num_tokens = APIUtil.calculate_num_token(
-            {"input": str(embed_str) if isinstance(embed_str, dict) else embed_str},
+            {
+                "input": (
+                    str(embed_str)
+                    if isinstance(embed_str, dict)
+                    else embed_str
+                )
+            },
             "embeddings",
             self.endpoint_schema["token_encoding_name"],
         )
@@ -318,6 +326,40 @@ class iModel:
         payload.pop("input")
         node.add_field("embedding", embed["data"][0]["embedding"])
         node._meta_insert("embedding_meta", payload)
+
+    async def format_structure(
+        self,
+        data: str | dict,
+        json_schema: dict | str = None,
+        request_fields: dict | list = None,
+        **kwargs,
+    ) -> dict:
+        if json_schema:
+            kwargs["response_format"] = {
+                "type": "json_schema",
+                "json_schema": json_schema,
+            }
+            kwargs["model"] = kwargs.pop("model", "gpt-4o-mini")
+        if not request_fields and not json_schema:
+            raise ValueError(
+                "Either request_fields or json_schema must be provided"
+            )
+        request_fields = request_fields or json_schema["properties"]
+
+        messages = [
+            {
+                "role": "system",
+                "content": "You are a helpful json formatting assistant.",
+            },
+            {
+                "role": "user",
+                "content": f"can you please format the given data into given json schema?"
+                f"--- data --- {data} |||| ----json fields required --- {request_fields}",
+            },
+        ]
+
+        result = await self.call_chat_completion(messages, **kwargs)
+        return result["choices"][0]["message"]["content"]
 
     def to_dict(self):
         """
@@ -338,7 +380,8 @@ class iModel:
             **{
                 k: v
                 for k, v in self.config.items()
-                if k in getattr(self.service, "allowed_kwargs", []) and v is not None
+                if k in getattr(self.service, "allowed_kwargs", [])
+                and v is not None
             },
             "model_costs": None if self.costs == (0, 0) else self.costs,
         }
@@ -362,7 +405,9 @@ class iModel:
         if n_samples == 1:
             samples = [tokens]
         else:
-            samples = [tokens[: (i + 1) * sample_token_len] for i in range(n_samples)]
+            samples = [
+                tokens[: (i + 1) * sample_token_len] for i in range(n_samples)
+            ]
 
             if use_residue and residue != 0:
                 samples.append(tokens[-residue:])
@@ -370,7 +415,11 @@ class iModel:
         sampless = [context + " ".join(sample) for sample in samples]
 
         for sample in sampless:
-            messages = [{"role": "system", "content": system_msg}] if system_msg else []
+            messages = (
+                [{"role": "system", "content": system_msg}]
+                if system_msg
+                else []
+            )
             messages.append(
                 {"role": "user", "content": sample},
             )

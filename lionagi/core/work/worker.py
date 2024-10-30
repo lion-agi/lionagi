@@ -1,26 +1,14 @@
+import inspect
 from abc import ABC
 from functools import wraps
-import inspect
+
 from lionagi import logging as _logging
-from lionagi.core.work.work_function import WorkFunction
-from lionagi.core.work.work import Work
-from lionagi.core.report.form import Form
 from lionagi.core.collections.abc import get_lion_id
+from lionagi.core.report.form import Form
+from lionagi.core.work.work import Work
+from lionagi.core.work.work_function import WorkFunction
 
-from typing_extensions import deprecated
 
-from lionagi.os.sys_utils import format_deprecated_msg
-
-
-@deprecated(
-    format_deprecated_msg(
-        deprecated_name="lionagi.core.action.function_calling.FunctionCalling",
-        deprecated_version="v0.3.0",
-        removal_version="v1.0",
-        replacement="check `lion-core` package for updates",
-    ),
-    category=DeprecationWarning,
-)
 class Worker(ABC):
     """
     This class represents a worker that handles multiple work functions.
@@ -74,7 +62,12 @@ class Worker(ABC):
         """
 
         return (
-            any([await i.is_progressable() for i in self.work_functions.values()])
+            any(
+                [
+                    await i.is_progressable()
+                    for i in self.work_functions.values()
+                ]
+            )
             and not self.stopped
         )
 
@@ -273,7 +266,9 @@ def work(
             **kwargs,
         ):
             if not inspect.iscoroutinefunction(func):
-                raise TypeError(f"{func.__name__} must be an asynchronous function")
+                raise TypeError(
+                    f"{func.__name__} must be an asynchronous function"
+                )
             retry_kwargs = retry_kwargs or {}
             retry_kwargs["timeout"] = retry_kwargs.get("timeout", timeout)
             return await self._work_wrapper(
@@ -321,7 +316,9 @@ def worklink(from_: str, to_: str, auto_schedule: bool = True):
             self: Worker, *args, func=func, from_=from_, to_=to_, **kwargs
         ):
             if not inspect.iscoroutinefunction(func):
-                raise TypeError(f"{func.__name__} must be an asynchronous function")
+                raise TypeError(
+                    f"{func.__name__} must be an asynchronous function"
+                )
 
             work_funcs = self._get_decorated_functions(
                 decorator_attr="_work_decorator_params"
@@ -375,7 +372,9 @@ def worklink(from_: str, to_: str, auto_schedule: bool = True):
                     next_params[1], dict
                 ):
                     if wrapper.auto_schedule:
-                        return await to_work_func(*next_params[0], **next_params[1])
+                        return await to_work_func(
+                            *next_params[0], **next_params[1]
+                        )
                 else:
                     raise TypeError(f"Invalid return type {func.__name__}")
             else:
@@ -384,7 +383,11 @@ def worklink(from_: str, to_: str, auto_schedule: bool = True):
             return next_params
 
         wrapper.auto_schedule = auto_schedule
-        wrapper._worklink_decorator_params = {"func": func, "from_": from_, "to_": to_}
+        wrapper._worklink_decorator_params = {
+            "func": func,
+            "from_": from_,
+            "to_": to_,
+        }
 
         return wrapper
 

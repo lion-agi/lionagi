@@ -2,17 +2,13 @@
 A class that manages asynchronous task processing with controlled concurrency.
 """
 
-from typing import Any, Callable
 import asyncio
+from collections.abc import Callable
+from typing import Any
+
 from lionagi.libs import func_call
 
-from typing_extensions import deprecated
 
-
-@deprecated(
-    "APIUtil is deprecated with no replacement, and will be removed in v1.0",
-    category=DeprecationWarning,
-)
 class AsyncQueue:
     """
     This class handles the enqueueing and processing of tasks with a limit on
@@ -74,7 +70,9 @@ class AsyncQueue:
         """
         return self._stop_event.is_set()
 
-    async def process_requests(self, func: Callable, retry_kwargs: dict = {}) -> None:
+    async def process_requests(
+        self, func: Callable, retry_kwargs: dict = {}
+    ) -> None:
         """
         Processes tasks from the queue using the provided function with retries.
 
@@ -90,7 +88,9 @@ class AsyncQueue:
         tasks = set()
         while not self.stopped():
             if len(tasks) >= self.max_concurrent_tasks:
-                _, done = await asyncio.wait(tasks, return_when=asyncio.FIRST_COMPLETED)
+                _, done = await asyncio.wait(
+                    tasks, return_when=asyncio.FIRST_COMPLETED
+                )
                 tasks.difference_update(done)
 
             async with self.semaphore:

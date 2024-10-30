@@ -1,24 +1,12 @@
-from typing import TypeVar, Generic
+from typing import Generic, TypeVar
+
 from .abc import Element, Field, Sendable
 from .pile import Pile, pile
 from .progression import Progression, progression
 
 T = TypeVar("T")
 
-from typing_extensions import deprecated
 
-from lionagi.os.sys_utils import format_deprecated_msg
-
-
-@deprecated(
-    format_deprecated_msg(
-        deprecated_name="lionagi.core.collections.abc.Exchange",
-        deprecated_version="v0.3.0",
-        removal_version="v1.0",
-        replacement="`lionagi.os.primitives.core_types.Exchange`",
-    ),
-    category=DeprecationWarning,
-)
 class Exchange(Element, Generic[T]):
     """
     Item exchange system designed to handle incoming and outgoing flows of items.

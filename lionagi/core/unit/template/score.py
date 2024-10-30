@@ -1,21 +1,8 @@
-from lionagi.libs.ln_convert import to_str
 from lionagi.core.collections.abc import Field
 from lionagi.core.unit import UnitForm
-
-from typing_extensions import deprecated
-
-from lionagi.os.sys_utils import format_deprecated_msg
+from lionagi.libs.ln_convert import to_str
 
 
-@deprecated(
-    format_deprecated_msg(
-        deprecated_name="lionagi.core.action.function_calling.FunctionCalling",
-        deprecated_version="v0.3.0",
-        removal_version="v1.0",
-        replacement="check `lion-core` package for updates",
-    ),
-    category=DeprecationWarning,
-)
 class ScoreTemplate(UnitForm):
     """
     A template for performing a scoring task based on given instructions and context.

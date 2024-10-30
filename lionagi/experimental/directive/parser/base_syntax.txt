@@ -1,0 +1,200 @@
+
+"""
+# basic syntax
+executeAction(param1, param2) IF condition1 && condition2 || !condition3;
+
+# verb
+DO
+
+# logic operator
+
+AND: &&
+OR: ||
+NOT: !
+GREATER_THAN: >
+LESS_THAN: <
+GREATER_THAN_OR_EQUAL: >=
+LESS_THAN_OR_EQUAL: <=
+EQUAL: ==
+NOT_EQUAL: !=
+
+# conditions
+IF
+ELIF
+ELSE
+
+# loop
+FOR
+IN
+
+# EXCEPTION
+TRY
+EXCEPT
+
+"""
+
+"""
+DO: perform a single action
+THEN: extend directive to include more statment
+IF: condition
+
+FOR
+IN
+END
+BEGIN
+
+TRY
+EXCEPT
+
+---
+
+tools 1,2,3
+
+
+
+def main():  <-> compose
+
+    If condition1 && condition2 || !condition3;
+    DO tool1(param1, param2);
+    ENDIF;
+
+    IF  must follow condition, (condition parsing logic);
+    DO ....;
+    ENDIF;
+
+
+
+
+THEN;
+    DO tool2(param1, param2);
+
+THEN;
+
+    TRY; DO ACTION_C;
+    EXCEPT; DO ACTION_D;
+    ENDEXCEPT;
+    ENDTRY;
+
+    RETURN  <-> run
+
+
+
+
+COMPOSE; - indicate the beginning of a script-like block to execute
+
+THEN; - indicate continuation of a script-like block, another statement to execute
+
+RUN; - indicate the end of script-like block, and let the script execute
+
+
+XX;  ; END XX;
+
+
+
+TRY; DO ACTION_A; END TRY;
+
+
+
+COMPOSE;
+
+IF CONDITION_A; DO ACTION_B; ELIF CONDITION_C; DO ACTION_D; ELSE; DO ACTION_E; ENDIF;
+
+THEN TRY; DO ACTION_C; EXCEPT; DO ACTION_D; ENDEXCEPT; ENDTRY;
+
+
+THEN TRY; DO ACTION_C ENDTRY;
+
+
+
+THEN IF EXCEPT; IF CONDITION_C; DO ACTION_D; ENDEXCEPT
+
+;
+THEN FOR ITEM IN COLLECTION; DO ACTION_E(input_.param1, input_.param2); ENDFOR
+RUN;
+
+
+
+DO ACTION B;
+
+IF
+THEN
+
+GROUP
+
+"""
+
+"""syntax:
+
+
+BEGIN; IF condition1 && condition2 || !condition3; THEN DO action(param1, param2); END IF; END;
+
+BEGIN; FOR input_ IN nested_structure; DO action(input_.param1, input_.param2); END FOR; END;
+
+BEGIN; DO action1(param1, param2); DO action2(param3, param4); END GROUP; END;
+
+
+"""
+
+"""
+FOR input_ IN nested_structure DO
+    executeAction(input_.param1, input_.param2);
+END FOR;
+"""
+
+"""
+example 1:
+
+BEGIN; IF condition1 && condition2 || !condition3; DO action1(param1, param2); ENDIF;
+FOR input_ IN collections DO action2(input_.param1, input_.param2); ENDFOR; END;
+
+
+example 2:
+BEGIN; IF condition1; TRY DO action1(param1, param2); EXCEPT DO action2(param3, param4);
+ENDTRY; ELIF condition2; DO action2(param1, param2); ELSE DO action3(param1, param2);
+ENDIF; END;
+
+"""
+
+"""
+BEGIN
+    executeAction1(param1, param2);
+    IF condition2 THEN executeAction2(param3, param4);
+    FOR input_ IN nested_structure DO
+        executeAction3(input_.param1, input_.param2);
+    END FOR;
+END;
+"""
+
+"""
+TRY
+    executeAction(param1, param2);
+EXCEPT
+    handleErrorAction(param1, param2);
+"""
+
+"""
+
+CHAT / REACT
+
+
+DO 1,2
+    session = Li.Session(..., tools=tools)
+    await alcall(session.branches, func_1)
+
+
+THEN DO 3,4
+    session.chat.py(3,4)
+
+
+THEN 5
+    session.chat.py(5)
+
+
+call (1,2,3,4,5)
+
+run 1,2,3,4,5
+
+
+1->2, or 1->3, or 1->4, THEN....
+
+"""

@@ -1,28 +1,15 @@
 import contextlib
-from lionagi.libs import convert, AsyncUtil, ParseUtil
-from lionagi.core.generic.edge import Edge
+
 from lionagi.core.action import ActionNode
-from lionagi.core.mail.mail import Mail
-from lionagi.core.message import System, Instruction
 from lionagi.core.collections import Pile, Progression
-
-from lionagi.core.session.branch import Branch
 from lionagi.core.executor.base_executor import BaseExecutor
+from lionagi.core.generic.edge import Edge
+from lionagi.core.mail.mail import Mail
+from lionagi.core.message import Instruction, System
+from lionagi.core.session.branch import Branch
+from lionagi.libs import AsyncUtil, ParseUtil, convert
 
-from typing_extensions import deprecated
 
-from lionagi.os.sys_utils import format_deprecated_msg
-
-
-@deprecated(
-    format_deprecated_msg(
-        deprecated_name="lionagi.core.action.function_calling.FunctionCalling",
-        deprecated_version="v0.3.0",
-        removal_version="v1.0",
-        replacement="check `lion-core` package for updates",
-    ),
-    category=DeprecationWarning,
-)
 class BranchExecutor(Branch, BaseExecutor):
 
     def __init__(
@@ -135,7 +122,9 @@ class BranchExecutor(Branch, BaseExecutor):
                     request_source=self.ln_id,
                 )
             except Exception as e:
-                raise ValueError(f"Invalid mail to process. Mail:{mail}, Error: {e}")
+                raise ValueError(
+                    f"Invalid mail to process. Mail:{mail}, Error: {e}"
+                )
 
     def _process_node_list(self, mail: Mail):
         """
@@ -147,9 +136,16 @@ class BranchExecutor(Branch, BaseExecutor):
         Raises:
             ValueError: When trying to process multiple paths which is currently unsupported.
         """
-        self.send(mail.sender, category="end", package="end", request_source=self.ln_id)
+        self.send(
+            mail.sender,
+            category="end",
+            package="end",
+            request_source=self.ln_id,
+        )
         self.execute_stop = True
-        raise ValueError("Multiple path selection is not supported in BranchExecutor")
+        raise ValueError(
+            "Multiple path selection is not supported in BranchExecutor"
+        )
 
     async def _process_condition(self, mail: Mail):
         """
@@ -172,7 +168,9 @@ class BranchExecutor(Branch, BaseExecutor):
             request_source=self.ln_id,
         )
 
-    def _system_process(self, system: System, verbose=True, context_verbose=False):
+    def _system_process(
+        self, system: System, verbose=True, context_verbose=False
+    ):
         """
         Processes a system node, possibly displaying its content and context if verbose is enabled.
 
@@ -187,7 +185,9 @@ class BranchExecutor(Branch, BaseExecutor):
         from IPython.display import Markdown, display
 
         if verbose:
-            print(f"------------------Welcome: {system.sender}--------------------")
+            print(
+                f"------------------Welcome: {system.sender}--------------------"
+            )
             with contextlib.suppress(Exception):
                 system.content = ParseUtil.fuzzy_parse_json(system.content)
             display(Markdown(f"system: {convert.to_str(system.system_info)}"))
@@ -214,7 +214,9 @@ class BranchExecutor(Branch, BaseExecutor):
 
         if verbose:
             with contextlib.suppress(Exception):
-                instruction.content = ParseUtil.fuzzy_parse_json(instruction.content)
+                instruction.content = ParseUtil.fuzzy_parse_json(
+                    instruction.content
+                )
             display(
                 Markdown(
                     f"{instruction.sender}: {convert.to_str(instruction.instruct)}"
@@ -223,11 +225,15 @@ class BranchExecutor(Branch, BaseExecutor):
 
         if self.context:
             result = await self.chat(
-                instruction=instruction.instruct, context=self.context, **kwargs
+                instruction=instruction.instruct,
+                context=self.context,
+                **kwargs,
             )
             self.context = None
         else:
-            result = await self.chat(instruction=instruction.instruct, **kwargs)
+            result = await self.chat(
+                instruction=instruction.instruct, **kwargs
+            )
             # instruction._add_context(context=self.context)
             # self.context_log.append(self.context)
             # self.context = None
@@ -237,7 +243,9 @@ class BranchExecutor(Branch, BaseExecutor):
             if "assistant_response" in result.keys():
                 result = result["assistant_response"]
         if verbose:
-            display(Markdown(f"assistant {self.ln_id}: {convert.to_str(result)}"))
+            display(
+                Markdown(f"assistant {self.ln_id}: {convert.to_str(result)}")
+            )
             print("-----------------------------------------------------")
 
         self.execution_responses.append(result)
@@ -289,7 +297,11 @@ class BranchExecutor(Branch, BaseExecutor):
 
         if verbose:
             if action.directive == "chat":
-                display(Markdown(f"assistant {self.ln_id}: {convert.to_str(result)}"))
+                display(
+                    Markdown(
+                        f"assistant {self.ln_id}: {convert.to_str(result)}"
+                    )
+                )
             else:
                 display(Markdown(f"assistant {self.ln_id}:\n"))
                 for k, v in result.work_fields.items():

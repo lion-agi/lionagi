@@ -1,20 +1,7 @@
 import ast
 import operator
 
-from typing_extensions import deprecated
 
-from lionagi.os.sys_utils import format_deprecated_msg
-
-
-@deprecated(
-    format_deprecated_msg(
-        deprecated_name="lionagi.core.action.function_calling.FunctionCalling",
-        deprecated_version="v0.3.0",
-        removal_version="v1.0",
-        replacement="check `lion-core` package for updates",
-    ),
-    category=DeprecationWarning,
-)
 class ASTEvaluator:
     """
     Safely evaluates expressions using AST parsing to prevent unsafe operations.
@@ -39,7 +26,9 @@ class ASTEvaluator:
             tree = ast.parse(expression, mode="eval")
             return self._evaluate_node(tree.body, context)
         except Exception as e:
-            raise ValueError(f"Failed to evaluate expression: {expression}. Error: {e}")
+            raise ValueError(
+                f"Failed to evaluate expression: {expression}. Error: {e}"
+            )
 
     def _evaluate_node(self, node, context):
         if isinstance(node, ast.Compare):
@@ -117,7 +106,9 @@ class ASTEvaluationEngine:
                 value_expr = ast.unparse(stmt.value)
                 value = self._evaluate_expression(value_expr)
                 self._assign_variable(var_name, value)
-            elif isinstance(stmt, ast.Expr) and isinstance(stmt.value, ast.Call):
+            elif isinstance(stmt, ast.Expr) and isinstance(
+                stmt.value, ast.Call
+            ):
                 func_name = stmt.value.func.id
                 arg_expr = ast.unparse(stmt.value.args[0])
                 arg = self._evaluate_expression(arg_expr)

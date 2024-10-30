@@ -1,25 +1,13 @@
-from typing import Callable
-from pydantic import Field, field_validator
 import inspect
+from collections.abc import Callable
 
-from lionagi.core.generic.edge import Edge
+from pydantic import Field, field_validator
+
 from lionagi.core.collections.abc.concepts import Progressable
-
+from lionagi.core.generic.edge import Edge
 from lionagi.core.work.worker import Worker
-from typing_extensions import deprecated
-
-from lionagi.os.sys_utils import format_deprecated_msg
 
 
-@deprecated(
-    format_deprecated_msg(
-        deprecated_name="lionagi.core.action.function_calling.FunctionCalling",
-        deprecated_version="v0.3.0",
-        removal_version="v1.0",
-        replacement="check `lion-core` package for updates",
-    ),
-    category=DeprecationWarning,
-)
 class WorkEdge(Edge, Progressable):
     """
     Represents a directed edge between work tasks, responsible for transforming
@@ -66,7 +54,9 @@ class WorkEdge(Edge, Progressable):
             getattr(func, "_worklink_decorator_params")
             return func
         except:
-            raise ValueError("convert_function must be a worklink decorated function")
+            raise ValueError(
+                "convert_function must be a worklink decorated function"
+            )
 
     @property
     def name(self):
@@ -106,5 +96,7 @@ class WorkEdge(Edge, Progressable):
             kwargs = {"from_result": task.current_work.result} | kwargs
 
         self.convert_function.auto_schedule = True
-        next_work = await self.convert_function(self=self.associated_worker, **kwargs)
+        next_work = await self.convert_function(
+            self=self.associated_worker, **kwargs
+        )
         return next_work

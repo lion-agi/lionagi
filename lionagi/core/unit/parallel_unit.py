@@ -1,26 +1,12 @@
-from lionagi.libs.ln_func_call import rcall, pcall
-from lionagi.libs import convert, AsyncUtil
-
-from lionagi.core.collections.abc import Directive
 from lionagi.core.collections import iModel
-from lionagi.core.validator.validator import Validator
+from lionagi.core.collections.abc import Directive
 from lionagi.core.session.branch import Branch
 from lionagi.core.unit.util import retry_kwargs
+from lionagi.core.validator.validator import Validator
+from lionagi.libs import AsyncUtil, convert
+from lionagi.libs.ln_func_call import rcall
 
-from typing_extensions import deprecated
 
-from lionagi.os.sys_utils import format_deprecated_msg
-
-
-@deprecated(
-    format_deprecated_msg(
-        deprecated_name="lionagi.core.action.function_calling.FunctionCalling",
-        deprecated_version="v0.3.0",
-        removal_version="v1.0",
-        replacement="check `lion-core` package for updates",
-    ),
-    category=DeprecationWarning,
-)
 class ParallelUnit(Directive):
     """
     A class representing a unit that can perform parallel chat interactions.
@@ -73,7 +59,9 @@ class ParallelUnit(Directive):
         else:
             self.imodel = session.imodel
         self.form_template = template or self.default_template
-        self.validator = Validator(rulebook=rulebook) if rulebook else Validator()
+        self.validator = (
+            Validator(rulebook=rulebook) if rulebook else Validator()
+        )
 
     async def pchat(self, *args, **kwargs):
         """
@@ -188,13 +176,17 @@ class ParallelUnit(Directive):
 
         async def _inner_3(i):
             """different instructions but same context"""
-            tasks = [_inner_2(i, ins_=ins_) for ins_ in convert.to_list(instruction)]
+            tasks = [
+                _inner_2(i, ins_=ins_) for ins_ in convert.to_list(instruction)
+            ]
             ress = await AsyncUtil.execute_tasks(*tasks)
             return convert.to_list(ress)
 
         async def _inner_3_b(i):
             """different context but same instruction"""
-            tasks = [_inner_2(i, cxt_=cxt_) for cxt_ in convert.to_list(context)]
+            tasks = [
+                _inner_2(i, cxt_=cxt_) for cxt_ in convert.to_list(context)
+            ]
             ress = await AsyncUtil.execute_tasks(*tasks)
             return convert.to_list(ress)
 

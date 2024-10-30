@@ -1,25 +1,15 @@
 from collections import defaultdict
+from collections.abc import Callable, Generator
 from itertools import chain
-from typing import Any, Generator, Callable
+from typing import Any
 
-from lionagi.libs.sys_util import SysUtil
 import lionagi.libs.ln_convert as convert
-
-from typing_extensions import deprecated
-
-from lionagi.os.sys_utils import format_deprecated_msg
+from lionagi.libs.sys_util import SysUtil
 
 
-@deprecated(
-    format_deprecated_msg(
-        deprecated_name="lionagi.libs.nset()",
-        deprecated_version="v0.3.0",
-        removal_version="v1.0",
-        replacement="from lionagi import lionfuncs as ln; ln.nset()",
-    ),
-    category=DeprecationWarning,
-)
-def nset(nested_structure: dict | list, indices: list[int | str], value: Any) -> None:
+def nset(
+    nested_structure: dict | list, indices: list[int | str], value: Any
+) -> None:
     """
     sets a value within a nested structure at the specified path defined by indices.
 
@@ -47,7 +37,9 @@ def nset(nested_structure: dict | list, indices: list[int | str], value: Any) ->
             >>> assert data == [0, [1, 99], 3]
     """
     if not indices:
-        raise ValueError("Indices list is empty, cannot determine target container")
+        raise ValueError(
+            "Indices list is empty, cannot determine target container"
+        )
 
     _indices = convert.to_list(indices)
     target_container = _get_target_container(nested_structure, _indices[:-1])
@@ -62,15 +54,6 @@ def nset(nested_structure: dict | list, indices: list[int | str], value: Any) ->
         raise TypeError("Cannot set value on non-list/dict element")
 
 
-@deprecated(
-    format_deprecated_msg(
-        deprecated_name="lionagi.libs.nget()",
-        deprecated_version="v0.3.0",
-        removal_version="v1.0",
-        replacement="from lionagi import lionfuncs as ln; ln.nget()",
-    ),
-    category=DeprecationWarning,
-)
 def nget(
     nested_structure: dict | list,
     indices: list[int | str],
@@ -108,7 +91,9 @@ def nget(
     """
 
     try:
-        target_container = _get_target_container(nested_structure, indices[:-1])
+        target_container = _get_target_container(
+            nested_structure, indices[:-1]
+        )
         last_index = indices[-1]
 
         if (
@@ -118,29 +103,27 @@ def nget(
         ):
 
             return target_container[last_index]
-        elif isinstance(target_container, dict) and last_index in target_container:
+        elif (
+            isinstance(target_container, dict)
+            and last_index in target_container
+        ):
             return target_container[last_index]
         elif default is not ...:
             return default
         else:
-            raise LookupError("Target not found and no default value provided.")
+            raise LookupError(
+                "Target not found and no default value provided."
+            )
     except (IndexError, KeyError, TypeError):
         if default is not ...:
             return default
         else:
-            raise LookupError("Target not found and no default value provided.")
+            raise LookupError(
+                "Target not found and no default value provided."
+            )
 
 
 # nested merge
-@deprecated(
-    format_deprecated_msg(
-        deprecated_name="lionagi.libs.nmerge()",
-        deprecated_version="v0.3.0",
-        removal_version="v1.0",
-        replacement="from lionagi import lionfuncs as ln; ln.nmerge()",
-    ),
-    category=DeprecationWarning,
-)
 def nmerge(
     nested_structure: list[dict | list],
     /,
@@ -202,15 +185,6 @@ def nmerge(
 
 
 # flatten dictionary
-@deprecated(
-    format_deprecated_msg(
-        deprecated_name="lionagi.libs.flatten()",
-        deprecated_version="v0.3.0",
-        removal_version="v1.0",
-        replacement="from lionagi import lionfuncs as ln; ln.flatten()",
-    ),
-    category=DeprecationWarning,
-)
 def flatten(
     nested_structure: Any,
     /,
@@ -252,7 +226,9 @@ def flatten(
     """
     if inplace:
         if not isinstance(nested_structure, dict):
-            raise ValueError("Object must be a dictionary when 'inplace' is True.")
+            raise ValueError(
+                "Object must be a dictionary when 'inplace' is True."
+            )
         _dynamic_flatten_in_place(
             nested_structure,
             parent_key=parent_key,
@@ -274,15 +250,6 @@ def flatten(
 
 
 # unflatten dictionary
-@deprecated(
-    format_deprecated_msg(
-        deprecated_name="lionagi.libs.unflatten()",
-        deprecated_version="v0.3.0",
-        removal_version="v1.0",
-        replacement="from lionagi import lionfuncs as ln; ln.unflatten()",
-    ),
-    category=DeprecationWarning,
-)
 def unflatten(
     flat_dict: dict[str, Any],
     /,
@@ -327,7 +294,13 @@ def unflatten(
         if not unflattened and all(isinstance(part, int) for part in parts):
             unflattened = []
 
-        ninsert(unflattened, indices=parts, value=value, sep=sep, max_depth=max_depth)
+        ninsert(
+            unflattened,
+            indices=parts,
+            value=value,
+            sep=sep,
+            max_depth=max_depth,
+        )
 
     if isinstance(unflattened, dict) and all(
         isinstance(k, int) for k in unflattened.keys()
@@ -337,15 +310,6 @@ def unflatten(
     return unflattened or {}
 
 
-@deprecated(
-    format_deprecated_msg(
-        deprecated_name="lionagi.libs.nfilter()",
-        deprecated_version="v0.3.0",
-        removal_version="v1.0",
-        replacement="from lionagi import lionfuncs as ln; ln.nfilter()",
-    ),
-    category=DeprecationWarning,
-)
 def nfilter(
     nested_structure: dict | list, /, condition: Callable[[Any], bool]
 ) -> dict | list:
@@ -379,18 +343,11 @@ def nfilter(
     elif isinstance(nested_structure, list):
         return _filter_list(nested_structure, condition)
     else:
-        raise TypeError("The nested_structure must be either a dict or a list.")
+        raise TypeError(
+            "The nested_structure must be either a dict or a list."
+        )
 
 
-@deprecated(
-    format_deprecated_msg(
-        deprecated_name="lionagi.libs.ninsert()",
-        deprecated_version="v0.3.0",
-        removal_version="v1.0",
-        replacement="from lionagi import lionfuncs as ln; ln.ninsert()",
-    ),
-    category=DeprecationWarning,
-)
 def ninsert(
     nested_structure: dict | list,
     /,
@@ -440,7 +397,9 @@ def ninsert(
                 nested_structure[part], (dict, list)
             ):
                 next_part = indices[i + 1]
-                nested_structure[part] = [] if isinstance(next_part, int) else {}
+                nested_structure[part] = (
+                    [] if isinstance(next_part, int) else {}
+                )
         elif part not in nested_structure:
             next_part = indices[i + 1]
             nested_structure[part] = [] if isinstance(next_part, int) else {}
@@ -501,11 +460,20 @@ def get_flattened_keys(
     if not inplace:
         return convert.to_list(
             flatten(
-                nested_structure, sep=sep, max_depth=max_depth, dict_only=dict_only
+                nested_structure,
+                sep=sep,
+                max_depth=max_depth,
+                dict_only=dict_only,
             ).keys()
         )
     obj_copy = SysUtil.create_copy(nested_structure, num=1)
-    flatten(obj_copy, sep=sep, max_depth=max_depth, inplace=True, dict_only=dict_only)
+    flatten(
+        obj_copy,
+        sep=sep,
+        max_depth=max_depth,
+        inplace=True,
+        dict_only=dict_only,
+    )
     return convert.to_list(obj_copy.keys())
 
 
@@ -551,7 +519,9 @@ def _dynamic_flatten_in_place(
         for k, v in items:
             new_key = f"{parent_key}{sep}{k}" if parent_key else k
 
-            if isinstance(v, dict) and (max_depth is None or current_depth < max_depth):
+            if isinstance(v, dict) and (
+                max_depth is None or current_depth < max_depth
+            ):
                 _dynamic_flatten_in_place(
                     v,
                     parent_key=new_key,
@@ -811,7 +781,9 @@ def _filter_dict(
     return {k: v for k, v in dictionary.items() if condition((k, v))}
 
 
-def _filter_list(lst: list[Any], condition: Callable[[Any], bool]) -> list[Any]:
+def _filter_list(
+    lst: list[Any], condition: Callable[[Any], bool]
+) -> list[Any]:
     """
     Filters elements in a list based on a specified condition.
 
@@ -844,5 +816,7 @@ def _get_target_container(
             else:
                 raise KeyError("Key not found in dictionary")
         else:
-            raise TypeError("Current element is neither a list nor a dictionary")
+            raise TypeError(
+                "Current element is neither a list nor a dictionary"
+            )
     return current_element

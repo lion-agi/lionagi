@@ -40,7 +40,7 @@ To change the default behavior for a session, you can either:
 
     ```python
     from lionagi import Session
-    
+
     llmconfig_ = {...}
     session = Session(system, llmconfig=llmconfig_)
     ```
@@ -93,4 +93,3 @@ session3 = Session('you are a helpful assistant', service=service)
 ```
 
 This approach ensures consistency in rate limiting and API key usage across your sessions.
-

@@ -1,8 +1,12 @@
 import zipfile
-import pandas as pd
 from pathlib import Path
 
-from lionagi.integrations.storage.storage_util import output_node_list, output_edge_list
+import pandas as pd
+
+from lionagi.integrations.storage.storage_util import (
+    output_edge_list,
+    output_node_list,
+)
 
 
 def _output_csv(
@@ -26,7 +30,10 @@ def _output_csv(
     Returns:
         None: This function does not return a value but outputs a ZIP file containing the CSVs.
     """
-    tables = {"Nodes": pd.DataFrame(node_list), "Edges": pd.DataFrame(edge_list)}
+    tables = {
+        "Nodes": pd.DataFrame(node_list),
+        "Edges": pd.DataFrame(edge_list),
+    }
     if edge_cls_list:
         tables["EdgesCondClass"] = pd.DataFrame(edge_cls_list)
     for i in node_dict:
@@ -41,20 +48,6 @@ def _output_csv(
                 tables[i].to_csv(file, index=False)
 
 
-from typing_extensions import deprecated
-
-from lionagi.os.sys_utils import format_deprecated_msg
-
-
-@deprecated(
-    format_deprecated_msg(
-        deprecated_name="lionagi.core.action.function_calling.FunctionCalling",
-        deprecated_version="v0.3.0",
-        removal_version="v1.0",
-        replacement="check `lion-core` package for updates",
-    ),
-    category=DeprecationWarning,
-)
 def to_csv(structure, filename="structure_storage"):
     """
     Converts a structure into a series of CSV files and stores them in a compressed ZIP archive.

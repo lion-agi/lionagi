@@ -1,29 +1,19 @@
 import asyncio
-from lionagi import alcall
-from lionagi.libs.ln_convert import to_list
-import numpy as np
-from lionagi.core.collections import iModel
-from .base import TokenCompressor
-from lionagi.libs.ln_tokenize import TokenizeUtil
 from time import time
+
+import numpy as np
+
+from lionagi import alcall
+from lionagi.core.collections import iModel
+from lionagi.libs.ln_convert import to_list
+from lionagi.libs.ln_tokenize import TokenizeUtil
+
+from .base import TokenCompressor
 
 # inspired by LLMLingua, MIT License, Copyright (c) Microsoft Corporation.
 # https://github.com/microsoft/LLMLingua
 
-from typing_extensions import deprecated
 
-from lionagi.os.sys_utils import format_deprecated_msg
-
-
-@deprecated(
-    format_deprecated_msg(
-        deprecated_name="lionagi.core.action.function_calling.FunctionCalling",
-        deprecated_version="v0.3.0",
-        removal_version="v1.0",
-        replacement="check `lion-core` package for updates",
-    ),
-    category=DeprecationWarning,
-)
 class LLMCompressor(TokenCompressor):
 
     def __init__(
@@ -111,7 +101,12 @@ class LLMCompressor(TokenCompressor):
         return a(text, **kwargs)
 
     async def rank_by_pplex(
-        self, items: list, initial_text=None, cumulative=False, n_samples=None, **kwargs
+        self,
+        items: list,
+        initial_text=None,
+        cumulative=False,
+        n_samples=None,
+        **kwargs,
     ):
         """
         rank a list of items according to their perplexity
@@ -190,17 +185,23 @@ class LLMCompressor(TokenCompressor):
 
         if rank_by == "perplexity":
             ranked_items = await self.rank_by_pplex(
-                items=items, initial_text=initial_text, cumulative=cumulative, **kwargs
+                items=items,
+                initial_text=initial_text,
+                cumulative=cumulative,
+                **kwargs,
             )
 
-            prompt_tokens = sum([i[1]["num_prompt_tokens"] for i in ranked_items])
+            prompt_tokens = sum(
+                [i[1]["num_prompt_tokens"] for i in ranked_items]
+            )
 
             num_completion_tokens = sum(
                 [i[1]["num_completion_tokens"] for i in ranked_items]
             )
 
             price = (
-                prompt_tokens * 0.5 / 1000000 + num_completion_tokens * 1.5 / 1000000
+                prompt_tokens * 0.5 / 1000000
+                + num_completion_tokens * 1.5 / 1000000
             )
 
             selected_items = self.select_by_pplex(
@@ -237,7 +238,11 @@ class LLMCompressor(TokenCompressor):
         raise ValueError(f"Ranking method {rank_by} is not supported")
 
     def select_by_pplex(
-        self, ranked_items, target_compression_ratio, original_length, min_pplex=None
+        self,
+        ranked_items,
+        target_compression_ratio,
+        original_length,
+        min_pplex=None,
     ):
         min_pplex = min_pplex or 0
 

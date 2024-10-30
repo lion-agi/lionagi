@@ -1,20 +1,8 @@
-from lionagi.libs.ln_convert import to_str
+from lionfuncs import to_str
+
 from lionagi.core.rule.base import Rule
 
-from typing_extensions import deprecated
 
-from lionagi.os.sys_utils import format_deprecated_msg
-
-
-@deprecated(
-    format_deprecated_msg(
-        deprecated_name="lionagi.core.action.function_calling.FunctionCalling",
-        deprecated_version="v0.3.0",
-        removal_version="v1.0",
-        replacement="check `lion-core` package for updates",
-    ),
-    category=DeprecationWarning,
-)
 class StringRule(Rule):
     """
     Rule for validating and converting string values.
@@ -47,19 +35,9 @@ class StringRule(Rule):
         raise ValueError(f"Invalid string field type.")
 
     async def perform_fix(self, value):
-        """
-        Attempt to convert a value to a string.
-
-        Args:
-            value: The value to convert to a string.
-
-        Returns:
-            str: The value converted to a string.
-
-        Raises:
-            ValueError: If the value cannot be converted to a string.
-        """
         try:
             return to_str(value, **self.validation_kwargs)
         except Exception as e:
-            raise ValueError(f"Failed to convert {value} into a string value") from e
+            raise ValueError(
+                f"Failed to convert {value} into a string value"
+            ) from e

@@ -1,12 +1,17 @@
+import asyncio
+from collections.abc import Callable
 from typing import Any, Dict, List, Union
-from lionagi.libs import SysUtil
-from lionagi.libs.ln_func_call import lcall
+
+from lionfuncs import lcall
+
 from lionagi.core.collections.abc import FieldError
-from ..rule.base import Rule
-from ..rule._default import DEFAULT_RULES
-from ..rule.rulebook import RuleBook
+from lionagi.libs import SysUtil
+
 from ..report.form import Form
 from ..report.report import Report
+from ..rule._default import DEFAULT_RULES
+from ..rule.base import Rule
+from ..rule.rulebook import RuleBook
 
 _DEFAULT_RULEORDER = [
     "choice",
@@ -26,20 +31,7 @@ _DEFAULT_RULES = {
     "str": DEFAULT_RULES.STR.value,
 }
 
-from typing_extensions import deprecated
 
-from lionagi.os.sys_utils import format_deprecated_msg
-
-
-@deprecated(
-    format_deprecated_msg(
-        deprecated_name="lionagi.core.action.function_calling.FunctionCalling",
-        deprecated_version="v0.3.0",
-        removal_version="v1.0",
-        replacement="check `lion-core` package for updates",
-    ),
-    category=DeprecationWarning,
-)
 class Validator:
     """
     Validator class to manage the validation of forms using a RuleBook.
@@ -49,10 +41,12 @@ class Validator:
         self,
         *,
         rulebook: RuleBook = None,
-        rules: Dict[str, Rule] = None,
-        order: List[str] = None,
-        init_config: Dict[str, Dict] = None,
-        active_rules: Dict[str, Rule] = None,
+        rules: dict[str, Rule] = None,
+        order: list[str] = None,
+        init_config: dict[str, dict] = None,
+        active_rules: dict[str, Rule] = None,
+        formatter: Callable = None,
+        format_kwargs: dict = {},
     ):
         """
         Initialize the Validator.
@@ -70,10 +64,14 @@ class Validator:
         self.rulebook = rulebook or RuleBook(
             rules or _DEFAULT_RULES, order or _DEFAULT_RULEORDER, init_config
         )
-        self.active_rules: Dict[str, Rule] = active_rules or self._initiate_rules()
+        self.active_rules: dict[str, Rule] = (
+            active_rules or self._initiate_rules()
+        )
         self.validation_log = []
+        self.formatter = formatter
+        self.format_kwargs = format_kwargs
 
-    def _initiate_rules(self) -> Dict[str, Rule]:
+    def _initiate_rules(self) -> dict[str, Rule]:
         """
         Initialize rules from the rulebook.
 
@@ -162,7 +160,7 @@ class Validator:
             raise FieldError(error_message)
 
     async def validate_report(
-        self, report: Report, forms: List[Form], strict: bool = True
+        self, report: Report, forms: list[Form], strict: bool = True
     ) -> Report:
         """
         Validate a report based on active rules.
@@ -181,7 +179,7 @@ class Validator:
     async def validate_response(
         self,
         form: Form,
-        response: Union[dict, str],
+        response: dict | str,
         strict: bool = True,
         use_annotation: bool = True,
     ) -> Form:
@@ -204,16 +202,31 @@ class Validator:
             if len(form.requested_fields) == 1:
                 response = {form.requested_fields[0]: response}
             else:
-                raise ValueError(
-                    "Response is a string, but form has multiple fields to be filled"
-                )
+                if self.formatter:
+                    if asyncio.iscoroutinefunction(self.formatter):
+                        response = await self.formatter(
+                            response, **self.format_kwargs
+                        )
+                        print("formatter used")
+                    else:
+                        response = self.formatter(
+                            response, **self.format_kwargs
+                        )
+                        print("formatter used")
+
+        if not isinstance(response, dict):
+            raise ValueError(
+                f"The form response format is invalid for filling."
+            )
 
         dict_ = {}
         for k, v in response.items():
             if k in form.requested_fields:
                 kwargs = form.validation_kwargs.get(k, {})
                 _annotation = form._field_annotations[k]
-                if (keys := form._get_field_attr(k, "choices", None)) is not None:
+                if (
+                    keys := form._get_field_attr(k, "choices", None)
+                ) is not None:
                     v = await self.validate_field(
                         field=k,
                         value=v,
@@ -225,7 +238,9 @@ class Validator:
                         **kwargs,
                     )
 
-                elif (_keys := form._get_field_attr(k, "keys", None)) is not None:
+                elif (
+                    _keys := form._get_field_attr(k, "keys", None)
+                ) is not None:
 
                     v = await self.validate_field(
                         field=k,
@@ -344,7 +359,7 @@ class Validator:
         }
         self.validation_log.append(log_entry)
 
-    def get_validation_summary(self) -> Dict[str, Any]:
+    def get_validation_summary(self) -> dict[str, Any]:
         """
         Get a summary of validation results.
 

@@ -1,34 +1,19 @@
-from collections import deque
 import json
-from typing import Callable
+from collections import deque
+from collections.abc import Callable
 
+from lionagi.core.action import ActionNode, DirectiveSelection, Tool
+from lionagi.core.agent.base_agent import BaseAgent
+from lionagi.core.collections.progression import progression
+from lionagi.core.engine.instruction_map_engine import InstructionMapEngine
 from lionagi.core.executor.base_executor import BaseExecutor
+from lionagi.core.generic.edge import Edge
+from lionagi.core.mail import Mail
 from lionagi.integrations.storage.neo4j import Neo4j
 from lionagi.integrations.storage.storage_util import ParseNode
-from lionagi.core.agent.base_agent import BaseAgent
-from lionagi.core.engine.instruction_map_engine import InstructionMapEngine
-
-from lionagi.core.mail import Mail
-from lionagi.core.action import Tool, DirectiveSelection, ActionNode
-from lionagi.core.generic.edge import Edge
-from lionagi.core.collections.progression import progression
-
 from lionagi.libs import AsyncUtil
 
-from typing_extensions import deprecated
 
-from lionagi.os.sys_utils import format_deprecated_msg
-
-
-@deprecated(
-    format_deprecated_msg(
-        deprecated_name="lionagi.core.action.function_calling.FunctionCalling",
-        deprecated_version="v0.3.0",
-        removal_version="v1.0",
-        replacement="check `lion-core` package for updates",
-    ),
-    category=DeprecationWarning,
-)
 class Neo4jExecutor(BaseExecutor):
     """
     Executes tasks within a Neo4j graph database, handling dynamic instruction flows and conditional logic across various nodes and agents.
@@ -92,7 +77,9 @@ class Neo4jExecutor(BaseExecutor):
                     and mail.package.package["edge_id"] == edge_id
                 ):
                     self.mailbox.pile.pop(mail_id)
-                    self.condition_check_result = mail.package.package["check_result"]
+                    self.condition_check_result = mail.package.package[
+                        "check_result"
+                    ]
                 else:
                     skipped_requests.append(mail)
             self.mailbox.pending_ins[key] = skipped_requests
@@ -220,12 +207,18 @@ class Neo4jExecutor(BaseExecutor):
                     condition_cls = await self.driver.get_condition_cls_code(
                         condition["class"]
                     )
-                    condition_obj = ParseNode.parse_condition(condition, condition_cls)
+                    condition_obj = ParseNode.parse_condition(
+                        condition, condition_cls
+                    )
 
                     head = node_id
                     tail = node_properties["ln_id"]
                     check = await self.check_edge_condition(
-                        condition_obj, executable_id, request_source, head, tail
+                        condition_obj,
+                        executable_id,
+                        request_source,
+                        head,
+                        tail,
                     )
                     if not check:
                         continue
@@ -274,7 +267,9 @@ class Neo4jExecutor(BaseExecutor):
             self.structure_id = id_
             return await self._next_node(head_list)
         except Exception as e:
-            raise ValueError(f"Error in searching for structure in Neo4j. Error: {e}")
+            raise ValueError(
+                f"Error in searching for structure in Neo4j. Error: {e}"
+            )
 
     async def _handle_node_id(self, node_id, executable_id, request_source):
         """
@@ -292,7 +287,9 @@ class Neo4jExecutor(BaseExecutor):
         if not check:
             raise ValueError(f"Node {node_id} if not found in the database")
         node_list = await self.driver.get_forwards(node_id)
-        return await self._next_node(node_list, node_id, executable_id, request_source)
+        return await self._next_node(
+            node_list, node_id, executable_id, request_source
+        )
 
     async def _handle_mail(self, mail: Mail):
         """

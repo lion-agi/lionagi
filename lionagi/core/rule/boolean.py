@@ -1,21 +1,8 @@
 from typing import Any
-from lionagi.libs.ln_convert import to_str, strip_lower
+
 from lionagi.core.rule.base import Rule
 
-from typing_extensions import deprecated
 
-from lionagi.os.sys_utils import format_deprecated_msg
-
-
-@deprecated(
-    format_deprecated_msg(
-        deprecated_name="lionagi.core.action.function_calling.FunctionCalling",
-        deprecated_version="v0.3.0",
-        removal_version="v1.0",
-        replacement="check `lion-core` package for updates",
-    ),
-    category=DeprecationWarning,
-)
 class BooleanRule(Rule):
     """
     Rule for validating that a value is a boolean.
@@ -59,7 +46,7 @@ class BooleanRule(Rule):
         Raises:
             ValueError: If the value cannot be converted to a boolean.
         """
-        value = strip_lower(to_str(value))
+        value = str(value).strip().lower()
         if value in ["true", "1", "correct", "yes"]:
             return True
 

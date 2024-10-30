@@ -1,26 +1,20 @@
-from lionagi.libs.ln_convert import strip_lower
-from lionagi.libs.ln_func_call import rcall
-from lionagi.core.collections.abc import Directive
-from lionagi.core.validator.validator import Validator
+import logging
+from collections.abc import Callable
+
+from lionfuncs import to_dict
+from pydantic import BaseModel
+
 from lionagi.core.collections import iModel
+from lionagi.core.collections.abc import Directive
+from lionagi.core.report.form import Form
+from lionagi.core.validator.validator import Validator
+from lionagi.libs.ln_func_call import rcall
+
 from .unit_form import UnitForm
 from .unit_mixin import DirectiveMixin
-from .util import retry_kwargs
-
-from typing_extensions import deprecated
-
-from lionagi.os.sys_utils import format_deprecated_msg
+from .util import break_down_annotation, retry_kwargs
 
 
-@deprecated(
-    format_deprecated_msg(
-        deprecated_name="lionagi.core.action.function_calling.FunctionCalling",
-        deprecated_version="v0.3.0",
-        removal_version="v1.0",
-        replacement="check `lion-core` package for updates",
-    ),
-    category=DeprecationWarning,
-)
 class Unit(Directive, DirectiveMixin):
     """
     Unit is a class that extends Directive and DirectiveMixin to provide
@@ -37,7 +31,14 @@ class Unit(Directive, DirectiveMixin):
     default_template = UnitForm
 
     def __init__(
-        self, branch, imodel: iModel = None, template=None, rulebook=None, verbose=False
+        self,
+        branch,
+        imodel: iModel = None,
+        template=None,
+        rulebook=None,
+        verbose=False,
+        formatter: Callable = None,
+        format_kwargs: dict = {},
     ) -> None:
         self.branch = branch
         if imodel and isinstance(imodel, iModel):
@@ -46,7 +47,11 @@ class Unit(Directive, DirectiveMixin):
         else:
             self.imodel = branch.imodel
         self.form_template = template or self.default_template
-        self.validator = Validator(rulebook=rulebook) if rulebook else Validator()
+        rule_config = {"formatter": formatter, "format_kwargs": format_kwargs}
+        if rulebook:
+            rule_config["rulebook"] = rulebook
+
+        self.validator = Validator(**rule_config)
         self.verbose = verbose
 
     async def chat(
@@ -68,6 +73,10 @@ class Unit(Directive, DirectiveMixin):
         clear_messages=False,
         use_annotation=True,
         return_branch=False,
+        formatter=None,
+        format_kwargs={},
+        pydantic_model: type[BaseModel] | BaseModel = None,
+        return_pydantic_model: bool = False,
         **kwargs,
     ):
         """
@@ -97,7 +106,21 @@ class Unit(Directive, DirectiveMixin):
             Any: The processed response.
         """
         kwargs = {**retry_kwargs, **kwargs}
-        return await rcall(
+
+        if pydantic_model:
+            if form:
+                raise ValueError("Cannot use both form and pydantic_model.")
+            if requested_fields:
+                raise ValueError(
+                    "Cannot use both requested_fields and pydantic_model."
+                )
+            requested_fields = break_down_annotation(pydantic_model)
+            context = {
+                "info": context,
+                "return_guidance": pydantic_model.model_json_schema(),
+            }
+
+        output, branch = await rcall(
             self._chat,
             instruction=instruction,
             context=context,
@@ -115,9 +138,32 @@ class Unit(Directive, DirectiveMixin):
             imodel=imodel,
             clear_messages=clear_messages,
             use_annotation=use_annotation,
-            return_branch=return_branch,
+            return_branch=True,
+            formatter=formatter,
+            format_kwargs=format_kwargs,
             **kwargs,
         )
+        if isinstance(output, tuple | list) and len(output) == 1:
+            output = output[0]
+
+        if isinstance(output, tuple | list) and len(output) == 2:
+            if output[0] == output[1]:
+                output = output[0]
+
+        if return_pydantic_model:
+            try:
+                a_ = to_dict(
+                    output,
+                    recursive=True,
+                    max_recursive_depth=5,
+                    fuzzy_parse=True,
+                )
+                output = pydantic_model.model_validate(a_)
+                return output, branch if return_branch else output
+            except Exception as e:
+                logging.error(f"Error converting to pydantic model: {e}")
+
+        return output, branch if return_branch else output
 
     async def direct(
         self,
@@ -227,7 +273,9 @@ class Unit(Directive, DirectiveMixin):
         )
 
         if verbose:
-            print("--------------------------------------------------------------")
+            print(
+                "--------------------------------------------------------------"
+            )
             print(f"Directive successfully completed!")
 
         return out
@@ -342,8 +390,8 @@ class Unit(Directive, DirectiveMixin):
         if system:
             branch.add_message(system=system)
 
-        if hasattr(self, strip_lower(directive)):
-            directive = getattr(self, strip_lower(directive))
+        if hasattr(self, str(directive).strip().lower()):
+            directive = getattr(self, str(directive).strip().lower())
 
             verbose = verbose if verbose is not None else self.verbose
             if verbose:
@@ -357,3 +405,48 @@ class Unit(Directive, DirectiveMixin):
             )
 
         raise ValueError(f"invalid directive: {directive}")
+
+    async def ReactInstruct(
+        self,
+        instruction: str | dict,
+        context: str | dict,
+        form_cls: type[Form],
+        branch=None,
+        tools: list = None,
+        imodel1: iModel = None,
+        imodel2: iModel = None,
+        allow_extension1: bool = False,
+        allow_extension2: bool = False,
+        max_extension1: int = None,
+        max_extension2: int = None,
+        form_kwargs: dict = {},
+        **kwargs,
+    ):
+        """
+        kwargs for direct
+        """
+
+        kwargs.pop("allow_action", None)
+
+        direct_form: UnitForm = await self.direct(
+            instruction=instruction,
+            context=context,
+            branch=branch,
+            allow_extension=allow_extension1,
+            tools=tools if tools else True,
+            max_extension=max_extension1,
+            imodel=imodel1,
+            allow_action=True,
+            **kwargs,
+        )
+
+        form: Form = await self.direct(
+            form=form_cls(**form_kwargs),
+            imodel=imodel2,
+            branch=branch,
+            allow_extension=allow_extension2,
+            max_extension=max_extension2,
+            **kwargs,
+        )
+
+        return direct_form, form

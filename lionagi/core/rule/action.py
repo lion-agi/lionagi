@@ -1,23 +1,11 @@
 from enum import Enum
+
+from lionfuncs import to_dict, to_list
+
 from lionagi.core.collections.abc import ActionError
-from lionagi.libs import ParseUtil
-from lionagi.libs.ln_convert import to_list, to_dict
 from lionagi.core.rule.mapping import MappingRule
 
-from typing_extensions import deprecated
 
-from lionagi.os.sys_utils import format_deprecated_msg
-
-
-@deprecated(
-    format_deprecated_msg(
-        deprecated_name="lionagi.core.action.function_calling.FunctionCalling",
-        deprecated_version="v0.3.0",
-        removal_version="v1.0",
-        replacement="check `lion-core` package for updates",
-    ),
-    category=DeprecationWarning,
-)
 class ActionRequestKeys(Enum):
     FUNCTION = "function"
     ARGUMENTS = "arguments"
@@ -61,7 +49,10 @@ class ActionRequestRule(MappingRule):
         Raises:
             ActionError: If the action request is invalid.
         """
-        if isinstance(value, dict) and list(value.keys()) >= ["function", "arguments"]:
+        if isinstance(value, dict) and list(value.keys()) >= [
+            "function",
+            "arguments",
+        ]:
             return value
         raise ActionError(f"Invalid action request: {value}")
 
@@ -80,10 +71,10 @@ class ActionRequestRule(MappingRule):
         """
         corrected = []
         if isinstance(value, str):
-            value = ParseUtil.fuzzy_parse_json(value)
+            value = to_dict(value, fuzzy_parse=True)
 
         try:
-            value = to_list(value)
+            value = to_list(value, dropna=True, flatten=True)
             for i in value:
                 i = to_dict(i)
                 if list(i.keys()) >= ["function", "arguments"]:

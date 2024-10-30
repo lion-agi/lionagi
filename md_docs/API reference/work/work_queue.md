@@ -157,10 +157,10 @@ class Work:
 
 async def main():
     work_queue = WorkQueue(capacity=3)
-    
+
     for _ in range(5):
         await work_queue.enqueue(Work())
-    
+
     print("Starting work processing")
     await work_queue.process()
     print("All work processed")
