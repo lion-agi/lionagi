@@ -1,9 +1,11 @@
 from typing import Any
 
-from lion_core.generic import Progression
-from lion_core.operative.operative import StepModel
+from lion_core.operative.step_model import StepModel
 from lion_core.session.branch import Branch
+from lion_service import iModel
 from pydantic import BaseModel, Field
+
+from .config import DEFAULT_CHAT_CONFIG
 
 
 class BrainstormModel(BaseModel):
@@ -18,10 +20,9 @@ class BrainstormModel(BaseModel):
     )
 
 
-PROMPT = "Please follow prompt and provide {num_ideas} different ideas for the next step"
+PROMPT = "Please follow prompt and provide {num_steps} different ideas for the next step"
 
 
-# the inner steps are not immidiately executed
 async def brainstorm(
     num_steps: int = 3,
     instruction=None,
@@ -31,57 +32,29 @@ async def brainstorm(
     reason: bool = False,
     actions: bool = False,
     tools: Any = None,
+    imodel: iModel = None,
     branch: Branch = None,
     sender=None,
     recipient=None,
-    progress: Progression = None,
     clear_messages: bool = False,
     system_sender=None,
     system_datetime=None,
     return_branch=False,
+    num_parse_retries: int = 3,
+    retry_imodel: iModel = None,
+    branch_user=None,
     **kwargs,  # additional operate arguments
 ):
-    response, branch = await _brainstorm(
-        num_steps=num_steps,
-        instruction=instruction,
-        guidance=guidance,
-        context=context,
-        system=system,
-        sender=sender,
-        recipient=recipient,
-        reason=reason,
-        actions=actions,
-        tools=tools,
-        branch=branch,
-        clear_messages=clear_messages,
-        progress=progress,
-        system_sender=system_sender,
-        system_datetime=system_datetime**kwargs,
-    )
-    if return_branch:
-        return response, branch
-    return response
+    if branch and branch.imodel:
+        imodel = imodel or branch.imodel
+    else:
+        imodel = imodel or iModel(**DEFAULT_CHAT_CONFIG)
 
-
-async def _brainstorm(
-    num_steps: int = 3,
-    instruction=None,
-    guidance=None,
-    context=None,
-    system=None,
-    reason: bool = False,
-    actions: bool = False,
-    tools: Any = None,
-    branch: Branch = None,
-    sender=None,
-    recipient=None,
-    progress: Progression = None,
-    clear_messages: bool = False,
-    system_sender=None,
-    system_datetime=None,
-    **kwargs,  # additional operate arguments
-):
     prompt = PROMPT.format(num_steps=num_steps)
+
+    branch = branch or Branch(imodel=imodel)
+    if branch_user:
+        branch.user = branch_user
 
     if system:
         branch.add_message(
@@ -89,23 +62,26 @@ async def _brainstorm(
             system_datetime=system_datetime,
             sender=system_sender,
         )
+    _context = [{"operation": prompt}]
+    if context:
+        _context.append(context)
 
     response = await branch.operate(
         instruction=instruction,
         guidance=guidance,
-        context=(
-            [{"operation": prompt}, context]
-            if context
-            else {"operation": prompt}
-        ),
+        context=_context,
         sender=sender,
         recipient=recipient,
         reason=reason,
         actions=actions,
         tools=tools,
-        progress=progress,
         clear_messages=clear_messages,
         operative_model=BrainstormModel,
+        retry_imodel=retry_imodel,
+        num_parse_retries=num_parse_retries,
+        imodel=imodel,
         **kwargs,
     )
-    return response, branch
+    if return_branch:
+        return response, branch
+    return response

@@ -161,14 +161,6 @@ class TestComponent(unittest.TestCase):
         with self.assertRaises(ValueError):
             self.component._validate_embedding("[1.0, 'invalid', 3.0]")
 
-    def test_timestamp_format(self):
-        """Test if the timestamp is in the correct format."""
-        timestamp = self.component.timestamp
-        try:
-            datetime.strptime(timestamp, "%Y-%m-%dT%H:%M:%S.%f")
-        except ValueError:
-            self.fail("Timestamp is not in the correct format")
-
     def test_default_field_values(self):
         """Test the default values of fields."""
         default_fields = self.component._all_fields

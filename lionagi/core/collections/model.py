@@ -1,12 +1,18 @@
 import asyncio
 import os
 
+import lionfuncs as ln
 import numpy as np
 from dotenv import load_dotenv
-from lionfuncs import time
 
-from lionagi.core.sys_utils import SysUtil as _s
-from lionagi.libs import APIUtil, BaseService, StatusTracker, ninsert, to_list
+from lionagi.libs import (
+    APIUtil,
+    BaseService,
+    StatusTracker,
+    SysUtil,
+    ninsert,
+    to_list,
+)
 
 from .abc import Component, ModelLimitExceededError
 
@@ -86,8 +92,8 @@ class iModel:
             service (BaseService, optional): An instance of BaseService.
             **kwargs: Additional parameters for the model.
         """
-        self.ln_id: str = _s.id()
-        self.timestamp: str = time(type_="iso")
+        self.ln_id: str = SysUtil.id()
+        self.timestamp: str = ln.time(type_="iso")
         self.endpoint = endpoint
         self.allowed_parameters = allowed_parameters
         if isinstance(provider, type):

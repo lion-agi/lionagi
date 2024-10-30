@@ -1,16 +1,14 @@
 """Component class, base building block in LionAGI."""
 
 import contextlib
-from abc import ABC
-from collections.abc import Sequence
 from functools import singledispatchmethod
-from typing import Any, Type, TypeAlias, TypeVar, Union
+from typing import Any, TypeAlias, TypeVar, Union
 
-from lionfuncs import time
+import lionfuncs as ln
+from lionabc import Observable
 from pandas import DataFrame, Series
 from pydantic import AliasChoices, BaseModel, Field, ValidationError
 
-from lionagi.core.sys_utils import SysUtil as _s
 from lionagi.libs import ParseUtil, SysUtil
 from lionagi.libs.ln_convert import strip_lower, to_dict, to_str
 from lionagi.libs.ln_func_call import lcall
@@ -24,7 +22,13 @@ T = TypeVar("T")
 _init_class = {}
 
 
-class Element(BaseModel, ABC):
+def change_dict_key(dict_: dict, old_key: str, new_key: str) -> None:
+    """Change a key in a dictionary."""
+    if old_key in dict_:
+        dict_[new_key] = dict_.pop(old_key)
+
+
+class Element(BaseModel, Observable):
     """Base class for elements within the LionAGI system.
 
     Attributes:
@@ -33,15 +37,14 @@ class Element(BaseModel, ABC):
     """
 
     ln_id: str = Field(
-        default_factory=_s.id,
+        default_factory=SysUtil.id,
         title="ID",
-        description="A 32-char unique hash identifier.",
         frozen=True,
         validation_alias=AliasChoices("node_id", "ID", "id"),
     )
 
     timestamp: str = Field(
-        default_factory=lambda: time(type_="iso"),
+        default_factory=lambda: ln.time(type_="iso"),
         title="Creation Timestamp",
         description="The UTC timestamp of creation",
         frozen=True,
@@ -59,7 +62,7 @@ class Element(BaseModel, ABC):
         return True
 
 
-class Component(Element, ABC):
+class Component(Element):
     """
     Represents a distinguishable, temporal entity in LionAGI.
 
@@ -197,17 +200,15 @@ class Component(Element, ABC):
         """Create a Component instance from a LlamaIndex object."""
         dict_ = obj.to_dict()
 
-        SysUtil.change_dict_key(dict_, "text", "content")
+        change_dict_key(dict_, "text", "content")
         metadata = dict_.pop("metadata", {})
 
         for field in llama_meta_fields:
             metadata[field] = dict_.pop(field, None)
 
-        SysUtil.change_dict_key(metadata, "class_name", "llama_index_class")
-        SysUtil.change_dict_key(metadata, "id_", "llama_index_id")
-        SysUtil.change_dict_key(
-            metadata, "relationships", "llama_index_relationships"
-        )
+        change_dict_key(metadata, "class_name", "llama_index_class")
+        change_dict_key(metadata, "id_", "llama_index_id")
+        change_dict_key(metadata, "relationships", "llama_index_relationships")
 
         dict_["metadata"] = metadata
         return cls.from_obj(dict_)
@@ -246,7 +247,7 @@ class Component(Element, ABC):
     @classmethod
     def _process_langchain_dict(cls, dict_: dict) -> dict:
         """Process a dictionary containing Langchain-specific data."""
-        SysUtil.change_dict_key(dict_, "page_content", "content")
+        change_dict_key(dict_, "page_content", "content")
 
         metadata = dict_.pop("metadata", {})
         metadata.update(dict_.pop("kwargs", {}))
@@ -266,9 +267,9 @@ class Component(Element, ABC):
             if field in dict_:
                 metadata[field] = dict_.pop(field)
 
-        SysUtil.change_dict_key(metadata, "lc", "langchain")
-        SysUtil.change_dict_key(metadata, "type", "lc_type")
-        SysUtil.change_dict_key(metadata, "id", "lc_id")
+        change_dict_key(metadata, "lc", "langchain")
+        change_dict_key(metadata, "type", "lc_type")
+        change_dict_key(metadata, "id", "lc_id")
 
         extra_fields = {
             k: v for k, v in metadata.items() if k not in lc_meta_fields
@@ -300,9 +301,9 @@ class Component(Element, ABC):
         dict_["metadata"] = meta_
 
         if "ln_id" not in dict_:
-            dict_["ln_id"] = meta_.pop("ln_id", _s.id())
+            dict_["ln_id"] = meta_.pop("ln_id", SysUtil.id())
         if "timestamp" not in dict_:
-            dict_["timestamp"] = time(type_="iso")
+            dict_["timestamp"] = ln.time(type_="iso")
         if "metadata" not in dict_:
             dict_["metadata"] = {}
         if "extra_fields" not in dict_:
@@ -455,13 +456,13 @@ class Component(Element, ABC):
             ninsert(
                 self.metadata,
                 ["last_updated", name],
-                SysUtil.get_timestamp(sep=None)[:-6],
+                ln.time(type_="iso")[:-6],
             )
         elif isinstance(a, tuple) and isinstance(a[0], int):
             nset(
                 self.metadata,
                 ["last_updated", name],
-                SysUtil.get_timestamp(sep=None)[:-6],
+                ln.time(type_="iso")[:-6],
             )
 
     def _meta_pop(self, indices, default=...):
@@ -616,10 +617,4 @@ LionIDable: TypeAlias = Union[str, Element]
 
 def get_lion_id(item: LionIDable) -> str:
     """Get the Lion ID of an item."""
-    if isinstance(item, Sequence) and len(item) == 1:
-        item = item[0]
-    if isinstance(item, str) and len(item) == 32:
-        return item
-    if getattr(item, "ln_id", None) is not None:
-        return item.ln_id
-    raise LionTypeError("Item must be a single LionIDable object.")
+    return SysUtil.get_id(item)

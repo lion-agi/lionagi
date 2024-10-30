@@ -1,11 +1,10 @@
 import asyncio
 from collections.abc import Callable
-from typing import Any
+from typing import Any, Dict, List, Union
 
-from lionfuncs import lcall, time
+from lionfuncs import lcall
 
 from lionagi.core.collections.abc import FieldError
-from lionagi.core.sys_utils import SysUtil as _s
 from lionagi.libs import SysUtil
 
 from ..report.form import Form
@@ -60,8 +59,8 @@ class Validator:
             active_rules (Dict[str, Rule], optional): Dictionary of currently active rules.
         """
 
-        self.ln_id: str = _s.id()
-        self.timestamp: str = time(type_="iso")
+        self.ln_id: str = SysUtil.create_id()
+        self.timestamp: str = SysUtil.get_timestamp(sep=None)[:-6]
         self.rulebook = rulebook or RuleBook(
             rules or _DEFAULT_RULES, order or _DEFAULT_RULEORDER, init_config
         )
