@@ -3,10 +3,10 @@
 # SPDX-License-Identifier: Apache-2.0
 import contextlib
 from collections.abc import Iterator
-from typing import Any, Self
+from typing import Any
 
 from pydantic import Field, field_validator
-from typing_extensions import override
+from typing_extensions import Self, override
 
 from lionagi.libs.parse import to_list
 from lionagi.utils import ItemNotFoundError

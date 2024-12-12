@@ -11,7 +11,8 @@ import os
 import uuid
 from pathlib import Path
 from types import TracebackType
-from typing import List, Optional, Self, Type, Union
+
+from typing_extensions import Self
 
 from ..base import CodeBlock, CodeExecutor, CodeExtractor, IPythonCodeResult
 from ..markdown_code_extractor import MarkdownCodeExtractor

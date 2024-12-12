@@ -3,7 +3,6 @@
 # SPDX-License-Identifier: Apache-2.0
 import inspect
 from collections.abc import Callable
-from typing import Self
 
 from pydantic import (
     BaseModel,
@@ -14,6 +13,7 @@ from pydantic import (
     model_validator,
 )
 from pydantic.fields import FieldInfo
+from typing_extensions import Self
 
 from lionagi.libs.parse import validate_boolean
 from lionagi.utils import copy

@@ -14,7 +14,8 @@ import secrets
 import uuid
 from pathlib import Path
 from types import TracebackType
-from typing import Dict, Optional, Self, Type, Union
+
+from typing_extensions import Self
 
 from ..docker_commandline_code_executor import _wait_for_ready, docker
 from .base import JupyterConnectable, JupyterConnectionInfo

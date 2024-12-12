@@ -3,9 +3,10 @@
 # SPDX-License-Identifier: Apache-2.0
 
 import asyncio
-from typing import Any, Self
+from typing import Any
 
 from pydantic import PrivateAttr, field_serializer, model_validator
+from typing_extensions import Self
 
 from ..protocols.base import EventStatus, IDType
 from .base import Action

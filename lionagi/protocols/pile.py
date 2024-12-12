@@ -8,11 +8,11 @@ import threading
 from collections.abc import AsyncIterator, Callable, Iterator, Sequence
 from functools import wraps
 from pathlib import Path
-from typing import Any, ClassVar, Generic, Self, TypeVar
+from typing import Any, ClassVar, Generic, TypeVar
 
 from pydantic import Field, field_serializer
 from pydantic.fields import FieldInfo
-from typing_extensions import override
+from typing_extensions import Self, override
 
 from lionagi.libs.parse import to_list
 from lionagi.utils import UNDEFINED, ItemExistsError, ItemNotFoundError

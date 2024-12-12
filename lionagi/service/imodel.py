@@ -3,10 +3,10 @@
 # SPDX-License-Identifier: Apache-2.0
 import json
 import os
-from typing import Self
 
 import litellm
 from dotenv import load_dotenv
+from typing_extensions import Self
 
 litellm.drop_params = True
 load_dotenv()

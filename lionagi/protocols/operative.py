@@ -1,10 +1,9 @@
 # Copyright (c) 2023 - 2024, HaiyangLi <quantocean.li at gmail dot com>
 #
 # SPDX-License-Identifier: Apache-2.0
-from typing import Self
-
 from pydantic import BaseModel, Field, PrivateAttr, model_validator
 from pydantic.fields import FieldInfo
+from typing_extensions import Self
 
 from lionagi.libs.parse import to_json, validate_keys
 from lionagi.utils import UNDEFINED

@@ -12,10 +12,20 @@ import json
 import uuid
 from dataclasses import dataclass
 from types import TracebackType
-from typing import Any, Dict, List, Optional, Self, Type, cast
+from typing import Any, cast
 
 import requests
-import websocket
+from typing_extensions import Self
+
+try:
+    import websocket
+
+except ImportError:
+    from ...imports_utils import check_import
+
+    check_import("websocket")
+    import websocket
+
 from requests.adapters import HTTPAdapter, Retry
 from websocket import WebSocket
 

@@ -3,7 +3,9 @@
 # SPDX-License-Identifier: Apache-2.0
 
 from dataclasses import asdict, dataclass
-from typing import Any, Self
+from typing import Any
+
+from typing_extensions import Self
 
 PY_TYPE_TO_JSON = {
     "int": "integer",

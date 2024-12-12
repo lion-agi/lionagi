@@ -3,9 +3,10 @@
 # SPDX-License-Identifier: Apache-2.0
 
 from collections.abc import Awaitable, Callable
-from typing import Any, Self
+from typing import Any
 
 from pydantic import Field, model_validator
+from typing_extensions import Self
 
 from lionagi.libs.async_utils import TCallParams
 from lionagi.libs.parse import function_to_schema, to_dict

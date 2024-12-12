@@ -14,7 +14,9 @@ from hashlib import md5
 from pathlib import Path
 from time import sleep
 from types import TracebackType
-from typing import Any, ClassVar, Dict, List, Optional, Self, Type, Union
+from typing import Any, ClassVar
+
+from typing_extensions import Self
 
 try:
     import docker

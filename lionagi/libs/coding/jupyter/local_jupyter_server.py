@@ -14,7 +14,8 @@ import signal
 import subprocess
 import sys
 from types import TracebackType
-from typing import Optional, Self, Type, Union
+
+from typing_extensions import Self
 
 from .base import JupyterConnectable, JupyterConnectionInfo
 from .jupyter_client import JupyterClient
