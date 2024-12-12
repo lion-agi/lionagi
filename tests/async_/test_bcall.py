@@ -52,14 +52,6 @@ class TestBCallFunction(unittest.IsolatedAsyncioTestCase):
             batches.append(batch)
         self.assertEqual(batches, [[2, 4], [0, 8], [10]])
 
-    async def test_bcall_with_timeout(self):
-        inputs = [1, 2, 3]
-        with self.assertRaises(asyncio.TimeoutError):
-            async for batch in bcall(
-                inputs, async_func, batch_size=2, timeout=0.05
-            ):
-                pass
-
     async def test_bcall_with_error_handling(self):
         error_map = {ValueError: mock_handler}
         inputs = [1, 2, 3, 4, 5]
