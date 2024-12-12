@@ -1,0 +1,11 @@
+{{ system_message }}
+{% if system_datetime %}
+System datetime: {{ system_datetime }}
+{% endif %}
+
+{% if additional_context %}
+Additional Context:
+{% for c in additional_context %}
+- {{ c }}
+{% endfor %}
+{% endif %}
