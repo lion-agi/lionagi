@@ -3,7 +3,9 @@
 # SPDX-License-Identifier: Apache-2.0
 
 from collections.abc import Iterator
-from typing import Any, override
+from typing import Any
+
+from typing_extensions import override
 
 from ..protocols.base import ID, EventStatus
 from ..protocols.pile import Pile

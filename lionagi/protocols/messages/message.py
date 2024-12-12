@@ -3,10 +3,11 @@
 # SPDX-License-Identifier: Apache-2.0
 import inspect
 import os
-from typing import Any, override
+from typing import Any
 
 from jinja2 import Environment, FileSystemLoader, Template
 from pydantic import Field, field_serializer, field_validator
+from typing_extensions import override
 
 from lionagi.utils import copy
 

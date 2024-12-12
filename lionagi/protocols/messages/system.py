@@ -1,9 +1,8 @@
 # Copyright (c) 2023 - 2024, HaiyangLi <quantocean.li at gmail dot com>
 #
 # SPDX-License-Identifier: Apache-2.0
-from typing import override
-
 from pydantic import JsonValue
+from typing_extensions import override
 
 from lionagi.utils import time
 

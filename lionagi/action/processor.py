@@ -3,7 +3,8 @@
 # SPDX-License-Identifier: Apache-2.0
 
 import asyncio
-from typing import override
+
+from typing_extensions import override
 
 from ..protocols.base import EventStatus
 from ..protocols.processors import BaseProcessor

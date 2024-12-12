@@ -2,9 +2,10 @@
 #
 # SPDX-License-Identifier: Apache-2.0
 
-from typing import ClassVar, override
+from typing import ClassVar
 
 from pydantic import BaseModel, JsonValue
+from typing_extensions import override
 
 from lionagi.utils import copy
 

@@ -1,5 +1,7 @@
 from collections.abc import Callable
-from typing import Any, ClassVar, override
+from typing import Any, ClassVar
+
+from typing_extensions import override
 
 from lionagi.libs.parse import to_dict
 from lionagi.utils import copy
