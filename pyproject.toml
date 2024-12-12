@@ -17,8 +17,8 @@ python = "^3.10"
 aiocache = "^0.12.0"
 ipython = "^8.0.0"
 litellm = "^1.55.0"
-xmltodict = "^0.14.2"
-pandas = "^2.2.3"
+xmltodict = "^0.14.0"
+pandas = "^2.0.0"
 
 [tool.poetry.group.dev.dependencies]
 isort = "^5.13.2"
