@@ -5,9 +5,6 @@
 
 [Documentation](https://ocean-lion.com/Welcome) | [Discord](https://discord.gg/aqSJ2v46vu) | [PyPI](https://pypi.org/project/lionagi/) | [Roadmap](https://trello.com/b/3seomsrI/lionagi)
 
-# Note
-The LION framework is now being actively developed under [lion-os](https://github.com/lion-agi/lion-os), which is rewritten from ground up, supports dynamic structured output at run time, and uses `litellm` for model integration. We are shifting our focus away from `lionagi` and `lion-core` in favor of `lion-os`, which is even more light weight and powerful. The purpose and positioning of `lionagi` is under re-design, we might or might not continue maintaining certain higher level APIs such as worker, graph executor in future releases.
-
 # LION Framework
 ### Language InterOperable Network - The Future of Controlled AI Operations
 
