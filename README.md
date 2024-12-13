@@ -1,6 +1,6 @@
 ![PyPI - Version](https://img.shields.io/pypi/v/lionagi?labelColor=233476aa&color=231fc935)
 ![PyPI - Downloads](https://img.shields.io/pypi/dm/lionagi?color=blue)
-![Dependencies](https://img.shields.io/badge/dependencies-4-brightgreen)
+![Dependencies](https://img.shields.io/badge/dependencies-5-brightgreen)
 ![Python Version](https://img.shields.io/badge/python-3.11%2B-blue)
 
 [Documentation](https://ocean-lion.com/Welcome) | [Discord](https://discord.gg/aqSJ2v46vu) | [PyPI](https://pypi.org/project/lionagi/) | [Roadmap](https://trello.com/b/3seomsrI/lionagi)
