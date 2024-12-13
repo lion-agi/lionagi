@@ -1,40 +1,48 @@
-license = {file = "LICENSE"}
-classifiers=[
-    "Programming Language :: Python :: 3",
-    "License :: OSI Approved :: Apache Software License",
-    "Operating System :: OS Independent",
-]
-
-[tool.poetry]
+[project]
 name = "lionagi"
 version = "0.5.0"
-description = "Towards automated general intelligence."
-authors = ["HaiyangLi <quantocean.li@gmail.com>"]
+description = "An AGentic Intelligence Operating System."
+authors = [
+    { name = "HaiyangLi", email = "quantocean.li@gmail.com" },
+]
 readme = "README.md"
+requires-python = ">=3.11"
+dependencies = [
+    "aiocache>=0.12.3",
+    "aiohttp>=3.11.10",
+    "litellm>=1.55.0",
+    "pandas>=2.0.0",
+    "pydantic>=2.0.0",
+    "python-dotenv>=1.0.1",
+]
+license = {file = "LICENSE"}
+classifiers=[
+    "Development Status :: 2 - Alpha",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3 :: Only",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Programming Language :: Python :: 3.13",
+    "Intended Audience :: Developers",
+    "License :: OSI Approved :: Apache Software License",
+    "Operating System :: OS Independent",
+    "Framework :: Pydantic",
+    "Framework :: Pydantic :: 2",
+    "Framework :: Pytest",
+]
 
-[tool.poetry.dependencies]
-python = "^3.11"
-aiocache = "^0.12.0"
-ipython = "^8.0.0"
-litellm = "^1.55.0"
-xmltodict = "^0.14.0"
-pandas = "^2.0.0"
-
-[tool.poetry.group.dev.dependencies]
-isort = "^5.13.2"
-setuptools = "^75.1.0"
-pytest = "^8.3.3"
-pre-commit = "^4.0.0"
-pytest-asyncio = "^0.24.0"
-black = {extras = ["jupyter"], version = "^24.8.0"}
-
-[build-system]
-requires = ["poetry-core"]
-build-backend = "poetry.core.masonry.api"
+[dependency-groups]
+dev = [
+    "black[jupyter]>=24.10.0",
+    "isort>=5.13.2",
+    "pre-commit>=4.0.1",
+    "pytest>=8.3.4",
+    "pytest-asyncio>=0.25.0",
+]
 
 [tool.black]
 line-length = 79
-target-version = ['py310']
+target-version = ['py311']
 
 [tool.isort]
 profile = "black"
