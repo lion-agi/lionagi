@@ -7,7 +7,7 @@ from typing import Any, ClassVar
 from pydantic import JsonValue, field_validator
 
 from lionagi.libs.parse import validate_boolean
-from lionagi.protocols.models import BaseAutoModel, FieldModel, ValidatorConfig
+from lionagi.protocols.models import BaseAutoModel, FieldModel
 
 from .prompts import (
     actions_field_description,
@@ -15,8 +15,10 @@ from .prompts import (
     context_field_description,
     guidance_examples,
     guidance_field_description,
+    instruct_model_examples,
     instruction_examples,
     instruction_field_description,
+    operation_instruct_model_examples,
     reason_field_description,
 )
 
@@ -188,6 +190,17 @@ INSTRUCT_FIELD_MODEL = FieldModel(
     default_factory=list,
     title="Instruction Model",
     description="Model for defining instruction parameters and execution requirements.",
+    examples=instruct_model_examples,
+)
+
+
+OPERATION_INSTRUCT_FIELD_MODEL = FieldModel(
+    name="operation_instruct_models",
+    annotation=list[OperationInstruct],
+    default_factory=list,
+    title="Operation Instruction Model",
+    description="Model for defining operation instruction parameters and execution requirements.",
+    examples=operation_instruct_model_examples,
 )
 
 
@@ -195,14 +208,5 @@ class InstructResponse(Instruct):
     response: Any | None = None
 
 
-# Export all components
-__all__ = [
-    "INSTRUCTION_FIELD_MODEL",
-    "GUIDANCE_FIELD_MODEL",
-    "CONTEXT_FIELD_MODEL",
-    "REASON_FIELD_MODEL",
-    "ACTIONS_FIELD_MODEL",
-    "Instruct",
-    "INSTRUCT_FIELD_MODEL",
-    "InstructResponse",
-]
+class OperationInstructResponse(OperationInstruct):
+    response: Any | None = None
