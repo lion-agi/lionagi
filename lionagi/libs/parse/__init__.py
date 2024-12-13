@@ -1,3 +1,7 @@
+# Copyright (c) 2023 - 2024, HaiyangLi <quantocean.li at gmail dot com>
+#
+# SPDX-License-Identifier: Apache-2.0
+
 from .breakdown_pydantic_annotation import breakdown_pydantic_annotation
 from .extract_code_block import extract_code_block
 from .function_to_schema import function_to_schema

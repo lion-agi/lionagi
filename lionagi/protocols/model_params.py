@@ -1,6 +1,7 @@
 # Copyright (c) 2023 - 2024, HaiyangLi <quantocean.li at gmail dot com>
 #
 # SPDX-License-Identifier: Apache-2.0
+
 import inspect
 from collections.abc import Callable
 
@@ -19,6 +20,8 @@ from lionagi.libs.parse import validate_boolean
 from lionagi.utils import copy
 
 from .models import BaseSchemaModel, FieldModel
+
+__all__ = ("ModelParams",)
 
 
 class ModelParams(BaseSchemaModel):
