@@ -19,6 +19,8 @@ except ImportError:
 
 from .base import QueryResults
 
+__all__ = ("ColoredLogger",)
+
 
 class ColoredLogger(logging.Logger):
     def __init__(self, name, level=logging.NOTSET):

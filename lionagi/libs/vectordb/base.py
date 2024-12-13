@@ -13,6 +13,14 @@ Vector = Union[Sequence[float], Sequence[int]]
 ItemID = Union[str, int]  # chromadb doesn't support int ids, VikingDB does
 
 
+__all__ = (
+    "Document",
+    "QueryResults",
+    "VectorDB",
+    "VectorDBFactory",
+)
+
+
 class Document(TypedDict):
     """A Document is a record in the vector database.
 

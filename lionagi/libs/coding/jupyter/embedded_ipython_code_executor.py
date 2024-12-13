@@ -12,7 +12,7 @@ import re
 import uuid
 from pathlib import Path
 from queue import Empty
-from typing import Any, List
+from typing import Any
 
 try:
     from jupyter_client import KernelManager  # type: ignore[attr-defined]

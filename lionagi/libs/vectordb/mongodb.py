@@ -31,6 +31,8 @@ from sentence_transformers import SentenceTransformer
 from .base import Document, ItemID, QueryResults, VectorDB
 from .utils import get_logger
 
+__all__ = ("MongoDBAtlasVectorDB",)
+
 logger = get_logger(__name__)
 
 DEFAULT_INSERT_BATCH_SIZE = 100_000

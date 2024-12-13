@@ -18,7 +18,6 @@ from concurrent.futures import ThreadPoolExecutor, TimeoutError
 from hashlib import md5
 from pathlib import Path
 from types import SimpleNamespace
-from typing import List, Optional, Tuple, Union
 
 try:
     import docker

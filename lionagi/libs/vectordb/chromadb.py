@@ -27,6 +27,9 @@ except ImportError:
 import chromadb.utils.embedding_functions as ef
 from chromadb.api.models.Collection import Collection
 
+__all__ = ("ChromaVectorDB",)
+
+
 CHROMADB_MAX_BATCH_SIZE = os.environ.get("CHROMADB_MAX_BATCH_SIZE", 40000)
 logger = get_logger(__name__)
 

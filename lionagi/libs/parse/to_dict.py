@@ -258,9 +258,9 @@ def _str_to_dict(
     """
     if not parser:
         if str_type == "xml" and not parser:
-            from xmltodict import parse
+            from ..imports_utils import check_import
 
-            parser = parse
+            parser = check_import("xmltodict", import_name="parse")
 
         elif fuzzy_parse:
             parser = fuzzy_parse_json
