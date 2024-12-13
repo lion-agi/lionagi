@@ -29,7 +29,6 @@ __all__ = (
     "BaseLionModel",
     "BaseSchemaModel",
     "BaseAutoModel",
-    "ValidatorConfig",
     "FieldModel",
 )
 
@@ -271,12 +270,13 @@ class BaseAutoModel(BaseLionModel, Observable):
         timestamp_str = self.created_datetime.isoformat(timespec="minutes")
         return f"{self.class_name()}(id={str(self.id)[:6]}.., timestamp={timestamp_str})"
 
+    def __repr__(self) -> str:
+        """Detailed representation of the model.
 
-@dataclass
-class ValidatorConfig:
-    func: Callable[[Any], Any]
-    mode: str | None = None
-    kwargs: dict[str, Any] = {}
+        Returns:
+            A string showing class name, full ID, and creation time.
+        """
+        return f"{self.class_name()}(id={self.id}, timestamp={self.created_datetime})"
 
 
 class FieldModel(BaseSchemaModel):

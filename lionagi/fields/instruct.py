@@ -7,7 +7,7 @@ from typing import Any, ClassVar
 from pydantic import JsonValue, field_validator
 
 from lionagi.libs.parse import validate_boolean
-from lionagi.protocols.models import BaseAutoModel, FieldModel
+from lionagi.protocols.models import BaseAutoModel, FieldModel, ValidatorConfig
 
 from .prompts import (
     actions_field_description,
@@ -56,6 +56,8 @@ def validate_boolean_field(cls, value) -> bool | None:
     Returns:
         bool | None: The validated boolean value or None if invalid.
     """
+    if value is None:
+        return None
     try:
         return validate_boolean(value)
     except Exception:
