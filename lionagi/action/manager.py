@@ -2,42 +2,67 @@
 #
 # SPDX-License-Identifier: Apache-2.0
 
-from typing import Any
+from collections.abc import Sequence
+from typing import Any, TypeAlias
 
-from lionagi.protocols.base import Observer
+from lionagi.protocols.base import Manager
 
 from .function_calling import FunctionCalling
 from .tool import FuncTool, Tool
 
+# Type aliases
+ToolName: TypeAlias = str
+ToolInput: TypeAlias = FuncTool | Sequence[FuncTool]
+ToolRegistry: TypeAlias = dict[str, Tool] | Sequence[Tool]
+ToolSpecifier: TypeAlias = bool | ToolName | Tool | Sequence[ToolName | Tool]
+Schema: TypeAlias = dict[str, Any]
 
-class ActionManager(Observer):
 
-    def __init__(self, registry: dict | list = {}):
-        """registry can be a dictionary of proper tool objects
-        or a list of FuncTool objects"""
+__all__ = ("ActionManager",)
+
+
+class ActionManager(Manager):
+    """Manages tool registration, validation, and asynchronous invocation.
+
+    Handles registration and execution of tools while maintaining a validated
+    registry. Supports both individual and batch tool operations with schema
+    management.
+    """
+
+    def __init__(self, registry: ToolRegistry = {}) -> None:
+        """Initialize with optional tool registry."""
         super().__init__()
-        self.registry = self._validate_registry(registry)
+        self.registry: dict[ToolName, Tool] = self._validate_registry(registry)
 
-    def _validate_registry(self, value) -> dict[str, Tool]:
+    def _validate_registry(self, value: ToolRegistry) -> dict[ToolName, Tool]:
+        """Validate and normalize registry input."""
         if not value:
             return {}
+
         if isinstance(value, list):
             if not all(isinstance(v, Tool) for v in value):
                 raise ValueError("All items in registry must be Tool objects.")
             return {t.function_name: t for t in value}
+
         if isinstance(value, dict):
             if not all(isinstance(v, Tool) for v in value.values()):
                 raise ValueError(
                     "All values in registry must be Tool objects."
                 )
             return value
+
         raise ValueError(
-            "Registry must be a list or dictionary of Tool objects."
+            "Registry must be a sequence or dictionary of Tool objects."
         )
 
     def register_tool(
-        self, tool: FuncTool, update: bool = False, schema: dict = None
+        self,
+        tool: FuncTool,
+        *,
+        update: bool = False,
+        schema: Schema | None = None,
     ) -> None:
+        """Register a single tool with optional schema."""
         if not isinstance(tool, Tool):
             tool = Tool(function=tool, schema_=schema)
 
@@ -48,34 +73,18 @@ class ActionManager(Observer):
         self.registry[tool.function_name] = tool
 
     def register_tools(
-        self, tools: list[FuncTool] | FuncTool, update: bool = False
+        self, tools: ToolInput, *, update: bool = False
     ) -> None:
-        """Register multiple tools.
-
-        Args:
-            tools: A single tool or list of tools (Tool objects or async callables).
-            update: If True, allow overwriting existing tools.
-        """
+        """Register multiple tools simultaneously."""
         if not isinstance(tools, list):
             tools = [tools]
         for t in tools:
             self.register_tool(t, update=update)
 
     async def invoke(
-        self, function_name: str, arguments: dict[str, Any]
+        self, function_name: ToolName, arguments: dict[str, Any]
     ) -> FunctionCalling:
-        """Invoke a registered tool asynchronously by its name.
-
-        Args:
-            function_name: The name of the tool (function) to invoke.
-            arguments: A dictionary of arguments to pass to the tool function.
-
-        Returns:
-            The result of the async tool invocation.
-
-        Raises:
-            ValueError: If no tool is registered under the given function_name.
-        """
+        """Invoke registered tool asynchronously."""
         if function_name not in self.registry:
             raise ValueError(f"Function {function_name} is not registered.")
         tool = self.registry[function_name]
@@ -84,33 +93,14 @@ class ActionManager(Observer):
         return action
 
     @property
-    def schema_list(self) -> list[dict[str, Any]]:
-        """Return a list of schemas for all registered tools.
-
-        If a tool does not have a schema, a minimal schema with the tool name is returned.
-
-        Returns:
-            A list of dictionaries representing schemas for each tool.
-        """
+    def schema_list(self) -> list[Schema]:
+        """Get schemas for all registered tools."""
         return [tool.schema_ for tool in self.registry.values()]
 
     def get_tool_schema(
-        self, tools: bool | str | Tool | list[str | Tool] = False, /
-    ) -> list | None:
-        """Get schemas for specific tools or for all tools.
-
-        Args:
-            tools: If True, return schemas for all tools. If False, return empty dict.
-                If a string or Tool is given, return schema for that tool.
-                If a list is given, return schemas for all specified tools.
-            **kwargs: Additional keyword arguments to include in the returned dictionary.
-
-        Returns:
-            A dictionary containing 'tools' key with schemas if requested, merged with kwargs.
-
-        Raises:
-            ValueError: If a specified tool is not registered.
-        """
+        self, tools: ToolSpecifier = False
+    ) -> list[Schema] | None:
+        """Get schemas for specified tools."""
         if tools is True:
             return self.schema_list
         elif tools is False:

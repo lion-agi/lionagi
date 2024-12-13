@@ -14,19 +14,14 @@ from ..protocols.progression import Progression
 from .base import Action
 from .processor import ActionProcessor
 
+__all__ = ("ActionExecutor",)
+
 
 class ActionExecutor(BaseExecutor):
-    """
-    Executor class for managing and processing actions.
+    """Executes and manages asynchronous actions with status tracking.
 
-    This class is responsible for managing a collection of actions, tracking
-    their status, and processing them using a specified processor class.
-
-    Attributes:
-        processor_config (dict): Configuration for initializing the processor.
-        processor_class (Type[ActionProcessor]): Class used to process actions.
-        pile (Pile): A collection of actions managed by the executor.
-        pending (Progression): A progression tracking the pending actions.
+    Handles action queuing, processing, and status management using a configured
+    processor. Supports both strict and non-strict type checking modes.
     """
 
     processor_class: type[ActionProcessor] = ActionProcessor
@@ -34,11 +29,10 @@ class ActionExecutor(BaseExecutor):
 
     @override
     def __init__(self, **kwargs: Any) -> None:
-        """
-        Initializes the ActionExecutor with the provided configuration.
+        """Initialize executor with processor configuration.
 
         Args:
-            **kwargs: Configuration parameters for initializing the processor.
+            **kwargs: Configuration options passed to the processor.
         """
         super().__init__(**kwargs)
         self.pile: Pile[Action] = Pile(
@@ -50,34 +44,23 @@ class ActionExecutor(BaseExecutor):
 
     @property
     def pending_action(self) -> Pile[Action]:
-        """
-        Retrieves a pile of all pending actions.
-
-        Returns:
-            Pile: A collection of actions that are still pending.
-        """
+        """Get pile of actions with pending status."""
         return Pile(
             items=[i for i in self.pile if i.status == EventStatus.PENDING],
         )
 
     @property
     def completed_action(self) -> Pile[Action]:
-        """
-        Retrieves a pile of all completed actions.
-
-        Returns:
-            Pile: A collection of actions that have been completed.
-        """
+        """Get pile of actions with completed status."""
         return Pile(
             items=[i for i in self.pile if i.status == EventStatus.COMPLETED],
         )
 
-    async def append(self, action: ID[Action].Item) -> None:
-        """
-        Appends a new action to the executor.
+    async def append(self, action: Action) -> None:
+        """Add new action to executor and pending queue.
 
         Args:
-            action (ObservableAction): The action to be added to the pile.
+            action: Action instance to append.
         """
         async with self.pile:
             self.pile.include(item=action)
@@ -85,7 +68,7 @@ class ActionExecutor(BaseExecutor):
 
     @override
     async def forward(self) -> None:
-        """Forwards pending actions to the processor."""
+        """Process all pending actions through configured processor."""
         while len(self.pending) > 0:
             action = self.pile[self.pending.popleft()]
             await self.processor.enqueue(action)
@@ -96,9 +79,8 @@ class ActionExecutor(BaseExecutor):
         return action in self.pile
 
     def __iter__(self) -> Iterator[Action]:
-        """Returns an iterator over the actions in the pile."""
+        """Iterate over all actions in pile."""
         return iter(self.pile)
 
 
-__all__ = ["ActionExecutor"]
 # File: lioncore/action/action_executor.py
