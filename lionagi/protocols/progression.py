@@ -22,6 +22,8 @@ from .base import (
 )
 from .models import BaseAutoModel
 
+__all__ = ("Progression",)
+
 
 class Progression(BaseAutoModel, Ordering):
 
@@ -359,3 +361,6 @@ class Progression(BaseAutoModel, Ordering):
 
     def __hash__(self) -> int:
         return hash(self.id)
+
+
+# File: lionagi/protocols/progression.py

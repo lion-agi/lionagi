@@ -37,6 +37,8 @@ __all__ = (
 
 
 class EventStatus(str, Enum):
+    """Event execution status states."""
+
     PENDING = "pending"
     IN_PROGRESS = "in_progress"
     COMPLETED = "completed"
@@ -44,7 +46,7 @@ class EventStatus(str, Enum):
 
 
 class MessageRole(str, Enum):
-    """Defines possible roles a message can have in a conversation."""
+    """Message participant roles in conversations."""
 
     SYSTEM = "system"
     USER = "user"
@@ -53,32 +55,14 @@ class MessageRole(str, Enum):
 
 
 class MessageFlag(str, Enum):
-    """
-    Enum to signal special message construction modes.
-
-    These flags are used internally to control message instantiation:
-    - MESSAGE_CLONE: Signal to create a clone of an existing message
-    - MESSAGE_LOAD: Signal to load a message from stored data
-    """
+    """Internal flags for message construction control."""
 
     MESSAGE_CLONE = "MESSAGE_CLONE"
     MESSAGE_LOAD = "MESSAGE_LOAD"
 
 
 class MessageField(str, Enum):
-    """
-    Enum for standard message fields.
-
-    Defines the standard fields that can be present in a message:
-    - TIMESTAMP: Message creation timestamp
-    - LION_CLASS: Class identifier for LION system
-    - ROLE: Message role (system/user/assistant)
-    - CONTENT: Message content
-    - id: Unique message identifier
-    - SENDER: Message sender
-    - RECIPIENT: Message recipient
-    - METADATA: Additional message metadata
-    """
+    """Standard message field identifiers."""
 
     TIMESTAMP = "timestamp"
     LION_CLASS = "lion_class"
@@ -96,35 +80,35 @@ DEFAULT_SYSTEM = "You are a helpful AI assistant. Let's think step by step."
 
 
 class Observable(ABC):
-    """An interface indicating an object can be identified by a stable ID."""
+    """Interface for objects with stable ID identification."""
 
     id: IDType
 
     def to_dict(self, **kwargs: Any) -> dict[str, Any]:
-        """Convert the object to a dictionary."""
+        """Convert the object to a dictionary format."""
         return {}
 
 
 class Ordering(ABC, Generic[T]):
-    """Base for objects maintaining ordered collections."""
+    """Base for ordered collection management."""
 
     pass
 
 
 class Container(ABC, Generic[T]):
-    """Base for objects that can contain Observable items."""
+    """Base for Observable item containers."""
 
     pass
 
 
 class Communicatable(ABC):
-    """An interface indicating an object can be communicated with."""
+    """Interface for communication-capable objects."""
 
     pass
 
 
 class Event(ABC):
-    """Base for events in the system."""
+    """Base for system events."""
 
     @abstractmethod
     async def invoke(self) -> NoReturn:
@@ -132,7 +116,7 @@ class Event(ABC):
 
 
 class Condition(Event):
-    """Base for conditions in the system."""
+    """Base for system conditions."""
 
     @abstractmethod
     async def apply(self) -> NoReturn:
@@ -140,20 +124,19 @@ class Condition(Event):
 
 
 class Observer(ABC):
+    """Base for system observers."""
+
     pass
 
 
-class Manager(Observable):
+class Manager(Observer):
+    """Base for system managers."""
+
     pass
 
 
 class IDType:
-    """
-    A validated ID string.
-
-    A simplified ID type: a 32-char hex string. This provides stable,
-    unique references. If needed, can be extended, but we keep it simple here.
-    """
+    """32-character hexadecimal ID validation and handling."""
 
     PATTERN = re.compile(r"^[0-9a-f]{32}$")
 
@@ -182,18 +165,8 @@ class IDType:
 
 
 class ID(Generic[T]):
-    """
-    Utilities for ID generation and handling.
+    """ID generation and reference handling utilities."""
 
-    Provides:
-    - A stable generate() method for new IDs.
-    - is_id() to check if a string is a valid ID.
-    - get_id() to extract the ID from an Observable or a string.
-
-    This is enough to handle stable references in a concurrency-friendly environment.
-    """
-
-    # For functions that accept either ID or item
     Ref: TypeAlias = IDType | T  # type: ignore
     ID: TypeAlias = IDType  # type: ignore
 
@@ -208,11 +181,12 @@ class ID(Generic[T]):
 
     @staticmethod
     def generate() -> IDType:
-        # Generate a 32-char hex string (128 bits of randomness)
+        """Generate new unique ID."""
         return IDType(uuid4().hex[:32])
 
     @staticmethod
     def is_id(item: Any) -> bool:
+        """Check if item is valid ID."""
         if isinstance(item, IDType):
             return True
         if isinstance(item, str):
@@ -221,23 +195,18 @@ class ID(Generic[T]):
 
     @staticmethod
     def get_id(item: T | IDType | str) -> IDType:
-        # If Observable, return item.id
+        """Extract ID from item or validate ID string."""
         if isinstance(item, Observable):
             return item.id
-
-        # If IDType, return it
         if isinstance(item, IDType):
             return item
-
-        # If str, validate and convert
         if isinstance(item, str):
             return IDType(item)
-
         raise TypeError("Item does not contain or represent a valid ID.")
 
 
 def to_list_type(value: Any, /) -> list[Any]:
-    """Convert input to a list format"""
+    """Convert input to list format, handling various input types."""
     if value is None:
         return []
     if isinstance(value, str):
@@ -253,19 +222,20 @@ def to_list_type(value: Any, /) -> list[Any]:
 
 def validate_order(value: Any, /) -> list[str]:
     """Validate and standardize order representation"""
-
     try:
         return [ID.get_id(item) for item in to_list_type(value)]
     except Exception as e:
         raise ValueError("Must only contain valid Lion IDs.") from e
 
 
-def validate_sender_recipient(value) -> MessageRole | IDType | MessageFlag:
-    if isinstance(value, MessageRole | MessageFlag):
-        return value
-    if isinstance(value, IDType):
+def validate_sender_recipient(value) -> ID.SenderRecipient:
+    """Validate and standardize sender/recipient identifiers."""
+    if isinstance(value, IDType | MessageRole | MessageFlag):
         return value
     try:
         return ID.get_id(value)
     except Exception as e:
         raise ValueError(f"Invalid sender or recipient: {value}") from e
+
+
+# File: lionagi/protocols/base.py
