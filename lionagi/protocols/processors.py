@@ -1,6 +1,12 @@
 # Copyright (c) 2023 - 2024, HaiyangLi <quantocean.li at gmail dot com>
 #
 # SPDX-License-Identifier: Apache-2.0
+
+"""
+Base processor and executor classes for asynchronous event handling.
+Provides queuing, processing control, and execution management.
+"""
+
 from __future__ import annotations
 
 import asyncio
@@ -17,11 +23,21 @@ __all__ = (
 
 
 class BaseProcessor(Observer):
-    """Observers for information transformation and analysis."""
+    """
+    Async event processor with queue management and capacity control.
+    Handles event transformation and processing with configurable refresh rate.
+    """
 
     event_type: type[Event]
 
     def __init__(self, capacity: int, refresh_time: float) -> None:
+        """
+        Initialize processor with capacity and refresh settings.
+
+        Args:
+            capacity: Maximum concurrent processing capacity
+            refresh_time: Processing cycle interval in seconds
+        """
         if capacity < 0:
             raise ValueError("initial capacity must be >= 0")
         if refresh_time < 0:
@@ -35,36 +51,29 @@ class BaseProcessor(Observer):
         self.refresh_time = refresh_time
 
     def is_stopped(self) -> bool:
-        """
-        Indicates whether the processor has been stopped.
-
-        Returns:
-            True if the processor has been stopped, otherwise False.
-        """
+        """Check if processor is stopped."""
         return self._stop_event.is_set()
 
     @classmethod
-    def create(cls, **kwargs: Any) -> BaseProcessor:
-        processor = cls(**kwargs)
-        return processor
-
-    @classmethod
-    async def acreate(cls, **kwargs: Any) -> BaseProcessor:
+    async def create(cls, **kwargs: Any) -> BaseProcessor:
+        """Create processor instance asynchronously."""
         processor = cls(**kwargs)
         return processor
 
     async def enqueue(self, event: Event) -> None:
-        await self.queue.put(item=event)
+        """Add event to processing queue."""
+        await self.queue.put(event)
 
     async def dequeue(self) -> Event:
+        """Get next event from queue."""
         return await self.queue.get()
 
     async def join(self) -> None:
-        """Blocks until all items in the queue have been processed."""
+        """Wait for queue completion."""
         await self.queue.join()
 
     async def stop(self) -> None:
-        """Signals the processor to stop processing actions."""
+        """Stop event processing."""
         self._stop_event.set()
 
     async def start(self) -> None:
@@ -77,9 +86,11 @@ class BaseProcessor(Observer):
         pass
 
     async def request_permission(self, **kwargs: Any) -> bool:
+        """Check if processing is allowed."""
         return True
 
     async def execute(self) -> None:
+        """Run processing loop until stopped."""
         self.execution_mode = True
         await self.start()
 
@@ -91,7 +102,10 @@ class BaseProcessor(Observer):
 
 @dataclass
 class BaseExecutor(Observer):
-    """Performing tasks with `processor`."""
+    """
+    Task executor using configured processor.
+    Manages processor lifecycle and task execution.
+    """
 
     processor_class: type[BaseProcessor]
     strict: bool = True
@@ -102,11 +116,9 @@ class BaseExecutor(Observer):
     async def forward(self, *args: Any, **kwargs: Any) -> Any:
         """Move onto the next step."""
 
-    def create_processor(self) -> NoReturn:
-        self.processor = self.processor_class.create(**self.processor_config)
-
     async def acreate_processor(self) -> NoReturn:
-        self.processor = await self.processor_class.acreate(
+        """Create processor instance asynchronously."""
+        self.processor = await self.processor_class.create(
             **self.processor_config
         )
 

@@ -16,7 +16,7 @@ from hashlib import md5
 from pathlib import Path
 from string import Template
 from types import SimpleNamespace
-from typing import Any, ClassVar, Dict, List, Optional, Union
+from typing import Any, ClassVar
 
 from typing_extensions import ParamSpec
 

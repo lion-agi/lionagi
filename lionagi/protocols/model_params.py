@@ -1,6 +1,7 @@
 # Copyright (c) 2023 - 2024, HaiyangLi <quantocean.li at gmail dot com>
 #
 # SPDX-License-Identifier: Apache-2.0
+
 import inspect
 from collections.abc import Callable
 
@@ -20,8 +21,26 @@ from lionagi.utils import copy
 
 from .models import BaseSchemaModel, FieldModel
 
+__all__ = ("ModelParams",)
+
 
 class ModelParams(BaseSchemaModel):
+    """
+    Configuration class for dynamic Pydantic model generation.
+    Manages field definitions, validators, inheritance, and model metadata.
+
+    Attributes:
+        name: Model class name, defaults to base class name if not specified
+        parameter_fields: Field definitions as {name: FieldInfo} mapping
+        base_type: Base class for model inheritance, defaults to BaseModel
+        field_models: List of field model definitions with validators
+        exclude_fields: Fields to exclude from final model
+        field_descriptions: Field documentation as {name: description} mapping
+        inherit_base: Whether to inherit from base_type, defaults to True
+        config_dict: Model configuration options
+        doc: Model class docstring
+        frozen: Whether model should be immutable
+    """
 
     name: str | None = None
     parameter_fields: dict[str, FieldInfo] = Field(default_factory=dict)
@@ -38,7 +57,12 @@ class ModelParams(BaseSchemaModel):
 
     @property
     def use_fields(self):
-        """Get field definitions to use in new model."""
+        """
+        Get field definitions for model creation.
+
+        Returns:
+            dict: Mapping of field names to (annotation, field_info) tuples.
+        """
         params = {
             k: v
             for k, v in self.parameter_fields.items()
@@ -55,7 +79,7 @@ class ModelParams(BaseSchemaModel):
 
     @field_validator("parameter_fields", mode="before")
     def validate_parameters(cls, value):
-        """Validate parameter field definitions."""
+        """Validate field info dictionary structure and types."""
         if value is None:
             return {}
         if not isinstance(value, dict):
@@ -69,7 +93,7 @@ class ModelParams(BaseSchemaModel):
 
     @field_validator("base_type", mode="before")
     def validate_base(cls, value) -> type[BaseModel]:
-        """Validate base model type."""
+        """Validate base model type is proper Pydantic model class."""
         if value is None:
             return BaseModel
         if isinstance(value, type) and issubclass(value, BaseModel):
@@ -80,7 +104,7 @@ class ModelParams(BaseSchemaModel):
 
     @field_validator("exclude_fields", mode="before")
     def validate_fields(cls, value) -> list[str]:
-        """Validate excluded fields list."""
+        """Validate and normalize excluded fields list."""
         if value is None:
             return []
         if isinstance(value, dict):
@@ -95,7 +119,7 @@ class ModelParams(BaseSchemaModel):
 
     @field_validator("field_descriptions", mode="before")
     def validate_field_descriptions(cls, value) -> dict[str, str]:
-        """Validate field descriptions dictionary."""
+        """Validate field description dictionary format."""
         if value is None:
             return {}
         if not isinstance(value, dict):
@@ -109,7 +133,7 @@ class ModelParams(BaseSchemaModel):
 
     @field_validator("inherit_base", mode="before")
     def validate_inherit_base(cls, value) -> bool:
-        """Validate inherit_base flag."""
+        """Validate and normalize inheritance flag."""
         try:
             return validate_boolean(value)
         except Exception:
@@ -117,7 +141,7 @@ class ModelParams(BaseSchemaModel):
 
     @field_validator("name", mode="before")
     def validate_name(cls, value) -> str:
-        """Validate model name."""
+        """Validate model name format."""
         if value is None:
             return None
         if not isinstance(value, str):
@@ -126,7 +150,7 @@ class ModelParams(BaseSchemaModel):
 
     @field_validator("field_models", mode="before")
     def _validate_field_models(cls, value):
-        """Validate field model definitions."""
+        """Validate field model list contents."""
         if value is None:
             return []
         value = [value] if not isinstance(value, list) else value
@@ -136,7 +160,10 @@ class ModelParams(BaseSchemaModel):
 
     @model_validator(mode="after")
     def validate_param_model(self) -> Self:
-        """Validate complete model configuration."""
+        """
+        Validate and configure complete model structure.
+        Merges base fields, applies exclusions, and sets up validators.
+        """
         if self.base_type is not None:
             self.parameter_fields.update(copy(self.base_type.model_fields))
 
@@ -176,7 +203,13 @@ class ModelParams(BaseSchemaModel):
         return self
 
     def create_new_model(self) -> type[BaseModel]:
-        """Create new Pydantic model with specified configuration."""
+        """
+        Create new Pydantic model based on configuration.
+
+        Returns:
+            type[BaseModel]: New model class with configured fields and validators.
+        """
+
         a: type[BaseModel] = create_model(
             self.name or "StepModel",
             __config__=self.config_dict,
@@ -188,3 +221,6 @@ class ModelParams(BaseSchemaModel):
         if self.frozen:
             a.model_config["frozen"] = True
         return a
+
+
+# File: lionagi/protocols/model_params.py

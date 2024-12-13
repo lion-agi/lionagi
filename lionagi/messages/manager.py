@@ -1,14 +1,12 @@
 # Copyright (c) 2023 - 2024, HaiyangLi <quantocean.li at gmail dot com>
 #
 # SPDX-License-Identifier: Apache-2.0
+
 from typing import Any, Literal
 
 from pydantic import BaseModel, JsonValue
 
-from ..base import ID
-from ..log import LogManager
-from ..pile import Pile
-from ..progression import Progression
+from ..protocols.types import ID, LogManager, Pile, Progression
 from .action_request import ActionRequest
 from .action_response import ActionResponse
 from .assistant_response import AssistantResponse

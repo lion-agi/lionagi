@@ -1,6 +1,7 @@
 # Copyright (c) 2023 - 2024, HaiyangLi <quantocean.li at gmail dot com>
 #
 # SPDX-License-Identifier: Apache-2.0
+
 import contextlib
 from collections.abc import Iterator
 from typing import Any
@@ -20,6 +21,8 @@ from .base import (
     validate_order,
 )
 from .models import BaseAutoModel
+
+__all__ = ("Progression",)
 
 
 class Progression(BaseAutoModel, Ordering):
@@ -358,3 +361,6 @@ class Progression(BaseAutoModel, Ordering):
 
     def __hash__(self) -> int:
         return hash(self.id)
+
+
+# File: lionagi/protocols/progression.py

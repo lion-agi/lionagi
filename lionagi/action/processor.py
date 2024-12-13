@@ -3,6 +3,7 @@
 # SPDX-License-Identifier: Apache-2.0
 
 import asyncio
+from typing import ClassVar, TypeAlias
 
 from typing_extensions import override
 
@@ -10,29 +11,30 @@ from ..protocols.base import EventStatus
 from ..protocols.processors import BaseProcessor
 from .base import Action
 
+TaskSet: TypeAlias = set[asyncio.Task[None]]
+
+__all__ = ("ActionProcessor",)
+
 
 class ActionProcessor(BaseProcessor):
-    """
-    A processor class for processing action invokations.
+    """Processes queued actions asynchronously with capacity management.
 
-    The `ActionProcessor` manages a queue of actions, processing them according
-    to the specified capacity and refresh time. It handles the lifecycle of
-    actions from enqueuing to processing and stopping. Optionally, it can
-    request permission before processing each action.
+    Handles action lifecycle from queue to completion, managing concurrency
+    limits and optional permission checks before processing.
     """
 
-    observation_type = Action
+    observation_type: ClassVar[type[Action]] = Action
 
     @override
     async def process(self) -> None:
-        """
-        Processes the work items in the queue.
+        """Process queued work items up to capacity limit.
 
-        Processes items up to the available capacity. Each action is marked as
-        `PROCESSING` before execution. After processing, capacity is reset.
+        Executes actions concurrently within capacity constraints. Actions
+        require permission before processing and are tracked through completion.
         """
-        tasks = set()
-        prev, next = None, None
+        tasks: TaskSet = set()
+        prev: Action | None = None
+        next: Action | None = None
 
         while self.available_capacity > 0 and self.queue.qsize() > 0:
             if prev and prev.status == EventStatus.PENDING:
@@ -52,4 +54,4 @@ class ActionProcessor(BaseProcessor):
             self.available_capacity = self.capacity
 
 
-__all__ = ["ActionProcessor"]
+# File: lionagi/action/processor.py

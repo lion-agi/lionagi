@@ -6,20 +6,19 @@
 # SPDX-License-Identifier: MIT
 
 from collections.abc import Callable, Mapping, Sequence
-from typing import (
-    Any,
-    List,
-    Optional,
-    Protocol,
-    Tuple,
-    TypedDict,
-    Union,
-    runtime_checkable,
-)
+from typing import Any, Protocol, TypedDict, Union, runtime_checkable
 
 Metadata = Union[Mapping[str, Any], None]
 Vector = Union[Sequence[float], Sequence[int]]
 ItemID = Union[str, int]  # chromadb doesn't support int ids, VikingDB does
+
+
+__all__ = (
+    "Document",
+    "QueryResults",
+    "VectorDB",
+    "VectorDBFactory",
+)
 
 
 class Document(TypedDict):

@@ -2,6 +2,8 @@
 #
 # SPDX-License-Identifier: Apache-2.0
 
+from typing import Any, TypeAlias
+
 from pydantic import BaseModel, field_validator
 
 from lionagi.libs.parse import to_num
@@ -10,6 +12,10 @@ from lionagi.protocols.models import FieldModel
 from .prompts import confidence_description
 
 __all__ = ("ReasonModel",)
+
+
+# Type aliases
+ConfidenceScore: TypeAlias = float
 
 
 def validate_confidence_score(cls, value) -> float:
@@ -38,6 +44,13 @@ CONFIDENCE_SCORE_FIELD = FieldModel(
 
 
 class ReasonModel(BaseModel):
+    """Model for storing reasoning details with confidence scoring.
+
+    Attributes:
+        title: Optional title for the reason
+        content: Optional content explaining the reason
+        confidence_score: Optional confidence score in [0, 1] range
+    """
 
     title: str | None = None
     content: str | None = None

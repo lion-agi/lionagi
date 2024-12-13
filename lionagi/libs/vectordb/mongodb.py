@@ -9,7 +9,7 @@
 from collections.abc import Callable, Iterable, Mapping
 from copy import deepcopy
 from time import monotonic, sleep
-from typing import Any, Dict, List, Literal, Set, Tuple, Union
+from typing import Any, Literal
 
 import numpy as np
 
@@ -30,6 +30,8 @@ from sentence_transformers import SentenceTransformer
 
 from .base import Document, ItemID, QueryResults, VectorDB
 from .utils import get_logger
+
+__all__ = ("MongoDBAtlasVectorDB",)
 
 logger = get_logger(__name__)
 

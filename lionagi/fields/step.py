@@ -5,38 +5,38 @@
 from pydantic import BaseModel
 from pydantic.fields import FieldInfo
 
-from lionagi.protocols.models import FieldModel
-
 from ..protocols.model_params import ModelParams
 from ..protocols.models import FieldModel
 from ..protocols.operative import Operative
 from .action import (
-    ACTION_REQUESTS_FIELD,
-    ACTION_REQUIRED_FIELD,
-    ACTION_RESPONSES_FIELD,
+    ACTION_REQUESTS_FIELD_MODEL,
+    ACTION_REQUIRED_FIELD_MODEL,
+    ACTION_RESPONSES_FIELD_MODEL,
     ActionRequestModel,
     ActionResponseModel,
 )
 from .reason import REASON_FIELD, ReasonModel
 
+__all__ = ("StepModel", "Step")
+
 
 class StepModel(BaseModel):
-    """Model representing a single operational step with optional reasoning and actions."""
+    """Model representing a single operational step with actions and reasoning."""
 
     title: str
     description: str
     reason: ReasonModel | None = REASON_FIELD.field_info
     action_requests: list[ActionRequestModel] = (
-        ACTION_REQUESTS_FIELD.field_info
+        ACTION_REQUESTS_FIELD_MODEL.field_info
     )
-    action_required: bool = ACTION_REQUIRED_FIELD.field_info
+    action_required: bool = ACTION_REQUIRED_FIELD_MODEL.field_info
     action_responses: list[ActionResponseModel] = (
-        ACTION_RESPONSES_FIELD.field_info
+        ACTION_RESPONSES_FIELD_MODEL.field_info
     )
 
 
 class Step:
-    """Utility class providing methods to create and manage Operative instances for steps."""
+    """Utility class for creating and managing Operative instances."""
 
     @staticmethod
     def request_operative(
@@ -86,8 +86,8 @@ class Step:
         if actions:
             field_models.extend(
                 [
-                    ACTION_REQUESTS_FIELD,
-                    ACTION_REQUIRED_FIELD,
+                    ACTION_REQUESTS_FIELD_MODEL,
+                    ACTION_REQUIRED_FIELD_MODEL,
                 ]
             )
         request_params = request_params or ModelParams(
@@ -184,9 +184,9 @@ class Step:
         ):
             field_models.extend(
                 [
-                    ACTION_RESPONSES_FIELD,
-                    ACTION_REQUIRED_FIELD,
-                    ACTION_REQUESTS_FIELD,
+                    ACTION_RESPONSES_FIELD_MODEL,
+                    ACTION_REQUIRED_FIELD_MODEL,
+                    ACTION_REQUESTS_FIELD_MODEL,
                 ]
             )
         if hasattr(operative.request_type, "reason"):

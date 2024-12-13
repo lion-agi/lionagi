@@ -1,12 +1,13 @@
 # Copyright (c) 2023 - 2024, HaiyangLi <quantocean.li at gmail dot com>
 #
 # SPDX-License-Identifier: Apache-2.0
+
 from pydantic import JsonValue
 from typing_extensions import override
 
 from lionagi.utils import time
 
-from ..base import ID, MessageRole, validate_sender_recipient
+from ..protocols.base import ID, MessageRole, validate_sender_recipient
 from .message import MessageFlag, MessageRole, RoledMessage, Template, env
 
 

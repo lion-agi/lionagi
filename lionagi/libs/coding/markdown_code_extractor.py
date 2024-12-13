@@ -6,7 +6,6 @@
 # SPDX-License-Identifier: MIT
 
 import re
-from typing import List, Union
 
 from .base import (
     CodeBlock,

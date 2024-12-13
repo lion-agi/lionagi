@@ -1,6 +1,19 @@
 # Copyright (c) 2023 - 2024, HaiyangLi <quantocean.li at gmail dot com>
 #
 # SPDX-License-Identifier: Apache-2.0
+
+"""
+Asynchronous log management system with thread-safe operations and file persistence.
+Provides automatic log rotation, capacity management, and graceful shutdown handling.
+Core features:
+- Concurrent-safe log operations using async locks
+- Configurable file persistence with rotation
+- Automatic cleanup and exit handling
+- Flexible log entry validation and formatting
+"""
+
+from __future__ import annotations
+
 import asyncio
 import atexit
 import json
@@ -36,11 +49,13 @@ TO_LOGDICT = ToDictParams(
 
 
 class Log(BaseAutoModel):
-    """A log entry containing content and metadata.
+    """
+    Log entry model with automatic content validation and conversion.
+    Handles both dictionary and object content by converting to a standardized format.
 
     Attributes:
-        content: The main log content as a dictionary.
-        loginfo: Metadata about the log entry as a dictionary.
+        content: Dictionary containing log data. Objects with to_dict() method
+                are automatically converted.
     """
 
     content: dict[str, Any] = Field(
@@ -57,14 +72,16 @@ class Log(BaseAutoModel):
 
 
 class LogParams(BaseModel):
-    """Parameters for log management, including file location and capacity.
+    """
+    Configuration for log management behavior and persistence.
+    Controls file locations, capacity limits, and cleanup behavior.
 
     Attributes:
-        persist_dir: Directory for saving log files.
-        filename: Base name of the log file (without randomization).
-        capacity: Maximum number of logs before triggering a dump. If None, unlimited.
-        auto_save_on_exit: If True, logs are saved automatically at program exit.
-        clear_after_dump: If True, logs are cleared after being dumped.
+        persist_dir: Directory path for log files
+        filename: Base name for log files before timestamp/hash
+        capacity: Max logs before auto-dump (None for unlimited)
+        auto_save_on_exit: Enable automatic save on program exit
+        clear_after_dump: Clear logs after successful file dump
     """
 
     persist_dir: str = "./logs"
@@ -74,10 +91,10 @@ class LogParams(BaseModel):
     clear_after_dump: bool = True
 
     def generate_filename(self) -> Path:
-        """Generate a unique filename with a timestamp and a random hash.
-
-        Returns:
-            A Path object pointing to the uniquely named log file.
+        """
+        Creates unique log filename using timestamp and random hash.
+        Ensures directory exists and generates collision-resistant names.
+        Format: {filename}_{YYYYMMDDHHMMSS}_{random6chars}.json
         """
         Path(self.persist_dir).mkdir(parents=True, exist_ok=True)
         timestamp = datetime.now().strftime("%Y%m%d%H%M%S")
@@ -89,25 +106,26 @@ class LogParams(BaseModel):
 
 
 class LogManager:
-    """Manages log entries with concurrency safety using Pile.
+    """
+    Thread-safe log manager supporting async operations and file persistence.
+    Handles concurrent log updates, automatic capacity management, and file I/O.
 
-    Logs are stored in a Pile[Log], providing asynchronous safe operations.
-    Logs can be asynchronously logged and dumped to a unique file each time.
-    If configured, logs are automatically saved upon program exit.
-
-    Attributes:
-        params: Configuration parameters for the log manager.
-        logs: A Pile of Log entries.
+    Features:
+        - Async locking for thread-safe operations
+        - Automatic log rotation based on capacity
+        - Configurable file persistence and cleanup
+        - Graceful shutdown handling
     """
 
     def __init__(
         self, params: LogParams | None = None, logs: list[Log] | None = None
     ):
-        """Initialize a LogManager instance.
+        """
+        Initialize log manager with optional configuration and initial logs.
 
         Args:
-            params: `LogParams` configuration or None for defaults.
-            logs: Initial list of `Log` entries or None for empty.
+            params: Custom logging parameters, uses defaults if None
+            logs: Initial log entries to manage, starts empty if None
         """
         self.params = params or LogParams()
         self.logs: Pile[Log] = Pile(items=logs or [], strict_type=False)
@@ -115,13 +133,15 @@ class LogManager:
             atexit.register(self._sync_save_at_exit)
 
     async def log(self, log_: Log) -> None:
-        """Asynchronously add a log entry.
-
-        If capacity is reached, logs are dumped before adding the new log.
+        """
+        Add new log entry with capacity management and thread safety.
+        Auto-dumps logs if capacity limit reached before adding new entry.
 
         Args:
-            log_: The Log entry to add.
+            log_: Log entry to add, converted to Log type if needed
         """
+        if not isinstance(log_, Log):
+            log_ = Log(log_)
         if (
             self.params.capacity is not None
             and len(self.logs) >= self.params.capacity
@@ -134,15 +154,16 @@ class LogManager:
     async def dump(
         self, clear: bool | None = None, persist_path: str | Path | None = None
     ) -> None:
-        """Asynchronously dump all logs to a uniquely named JSON file.
+        """
+        Thread-safely dump logs to file system with configurable cleanup.
+        Generates unique filename if path not specified.
 
         Args:
-            clear: Whether to clear logs after dumping. Defaults to `params.clear_after_dump`.
-            persist_path: Optional override path for the log file.
-                          If None, a unique path is generated.
+            clear: Override default clear behavior, uses param setting if None
+            persist_path: Optional specific file path, auto-generates if None
 
         Raises:
-            Exception: If dumping fails.
+            Exception: If file write fails, with error logging
         """
         async with self.logs:
             if not self.logs:
@@ -168,7 +189,10 @@ class LogManager:
             raise
 
     def _sync_save_at_exit(self) -> None:
-        """Sync handler for saving logs at exit, since `atexit` cannot be async."""
+        """
+        Synchronous handler for atexit log saving.
+        Ensures logs are saved during program shutdown.
+        """
         if self.logs:
             try:
                 asyncio.run(self.dump(clear=self.params.clear_after_dump))
@@ -176,10 +200,10 @@ class LogManager:
                 logging.error(f"Failed to save logs on exit: {e}")
 
     def has_logs(self) -> bool:
-        """Check if there are any logs.
-
+        """
+        Check if manager currently contains any logs.
         Returns:
-            True if at least one log exists, False otherwise.
+            bool: True if logs exist, False if empty
         """
         return bool(self.logs)
 

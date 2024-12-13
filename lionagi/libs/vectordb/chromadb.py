@@ -8,7 +8,6 @@
 
 import os
 from collections.abc import Callable
-from typing import List
 
 from .base import Document, ItemID, QueryResults, VectorDB
 from .utils import (
@@ -27,6 +26,9 @@ except ImportError:
 
 import chromadb.utils.embedding_functions as ef
 from chromadb.api.models.Collection import Collection
+
+__all__ = ("ChromaVectorDB",)
+
 
 CHROMADB_MAX_BATCH_SIZE = os.environ.get("CHROMADB_MAX_BATCH_SIZE", 40000)
 logger = get_logger(__name__)

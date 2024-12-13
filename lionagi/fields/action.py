@@ -3,11 +3,17 @@
 # SPDX-License-Identifier: Apache-2.0
 
 import re
-from typing import Any
+from collections.abc import Sequence
+from typing import Any, TypeAlias, TypeVar
 
 from pydantic import BaseModel, Field, field_validator
 
-from lionagi.libs.parse import to_dict, to_json, validate_boolean
+from lionagi.libs.parse import (
+    fuzzy_parse_json,
+    to_dict,
+    to_json,
+    validate_boolean,
+)
 from lionagi.protocols.models import FieldModel
 
 from .prompts import (
@@ -17,14 +23,22 @@ from .prompts import (
     function_field_description,
 )
 
+# Type aliases
+JsonDict: TypeAlias = dict[str, Any]
+ValidatorType = TypeVar("ValidatorType")
+ActionList: TypeAlias = list[JsonDict]
+
+
 __all__ = (
     "ActionRequestModel",
     "ActionResponseModel",
-    "ACTION_REQUESTS_FIELD",
+    "ACTION_REQUESTS_FIELD_MODEL",
+    "ACTION_RESPONSES_FIELD_MODEL",
 )
 
 
-def parse_action_request(content: str | dict) -> list[dict]:
+def parse_action_request(content: str | JsonDict | BaseModel) -> ActionList:
+    """Parse action request from various input formats."""
 
     json_blocks = []
 
@@ -33,12 +47,13 @@ def parse_action_request(content: str | dict) -> list[dict]:
 
     elif isinstance(content, str):
         json_blocks = to_json(content, fuzzy_parse=True)
-        print(json_blocks)
         if not json_blocks:
             pattern2 = r"```python\s*(.*?)\s*```"
             _d = re.findall(pattern2, content, re.DOTALL)
-            json_blocks = [to_dict(match, fuzzy_parse=True) for match in _d]
-            json_blocks = [i for i in json_blocks if i]
+            json_blocks = []
+            for match in _d:
+                if a := fuzzy_parse_json(match):
+                    json_blocks.append(a)
 
     elif content and isinstance(content, dict):
         json_blocks = [content]
@@ -64,9 +79,7 @@ def parse_action_request(content: str | dict) -> list[dict]:
                 if k in ["name", "function", "recipient"]:
                     j["function"] = v
                 elif k in ["parameter", "argument", "arg"]:
-                    j["arguments"] = to_dict(
-                        v, str_type="json", fuzzy_parse=True, suppress=True
-                    )
+                    j["arguments"] = fuzzy_parse_json(v)
             if (
                 j
                 and all(key in j for key in ["function", "arguments"])
@@ -78,27 +91,30 @@ def parse_action_request(content: str | dict) -> list[dict]:
 
 
 def _validate_function_name(cls, value: Any) -> str | None:
-    if not isinstance(value, str):
-        return None
-    return value
+    """Validate function name is string type."""
+    return value if isinstance(value, str) else None
 
 
-def _validate_action_required(cls, value) -> bool:
+def _validate_action_required(cls, value: Any) -> bool:
+    """Validate and convert action required flag."""
     try:
         return validate_boolean(value)
     except Exception:
         return False
 
 
-def _validate_arguments(cls, value: Any) -> dict:
+def _validate_arguments(cls, value: Any) -> JsonDict:
+    """Validate and parse arguments to dictionary."""
     return to_dict(
         value,
         fuzzy_parse=True,
         suppress=True,
         recursive=True,
+        recursive_python_only=False,
     )
 
 
+# Field models
 FUNCTION_FIELD_MODEL = FieldModel(
     name="function",
     default=None,
@@ -120,7 +136,7 @@ ARGUMENTS_FIELD_MODEL = FieldModel(
     validator_kwargs={"mode": "before"},
 )
 
-ACTION_REQUIRED_FIELD = FieldModel(
+ACTION_REQUIRED_FIELD_MODEL = FieldModel(
     name="action_required",
     annotation=bool,
     default=False,
@@ -132,26 +148,25 @@ ACTION_REQUIRED_FIELD = FieldModel(
 
 
 class ActionRequestModel(BaseModel):
+    """Model for action requests with function name and arguments."""
 
     function: str | None = FUNCTION_FIELD_MODEL.field_info
     arguments: dict[str, Any] | None = ARGUMENTS_FIELD_MODEL.field_info
 
     @field_validator("arguments", mode="before")
     def validate_arguments(cls, value: Any) -> dict[str, Any]:
-        return to_dict(
-            value,
-            fuzzy_parse=True,
-            recursive=True,
-            recursive_python_only=False,
-        )
+        return _validate_arguments(cls, value)
 
     @classmethod
-    def create(cls, content: str):
+    def create(cls, content: str) -> Sequence[BaseModel]:
+        """Create request models from content string."""
         try:
-            content = parse_action_request(content)
-            if content:
-                return [cls.model_validate(i) for i in content]
-            return []
+            requests = parse_action_request(content)
+            return (
+                [cls.model_validate(req) for req in requests]
+                if requests
+                else []
+            )
         except Exception:
             return []
 
@@ -163,7 +178,8 @@ class ActionResponseModel(BaseModel):
     output: Any = None
 
 
-ACTION_REQUESTS_FIELD = FieldModel(
+# Field definitions for action collections
+ACTION_REQUESTS_FIELD_MODEL = FieldModel(
     name="action_requests",
     annotation=list[ActionRequestModel],
     default_factory=list,
@@ -171,18 +187,10 @@ ACTION_REQUESTS_FIELD = FieldModel(
     description=action_requests_field_description,
 )
 
-
-ACTION_RESPONSES_FIELD = FieldModel(
+ACTION_RESPONSES_FIELD_MODEL = FieldModel(
     name="action_responses",
     annotation=list[ActionResponseModel],
     default_factory=list,
     title="Actions",
     description="**do not fill**",
 )
-
-__all__ = [
-    "ActionRequestModel",
-    "ActionResponseModel",
-    "ACTION_REQUESTS_FIELD",
-    "ACTION_RESPONSES_FIELD",
-]

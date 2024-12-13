@@ -1,6 +1,7 @@
 # Copyright (c) 2023 - 2024, HaiyangLi <quantocean.li at gmail dot com>
 #
 # SPDX-License-Identifier: Apache-2.0
+
 from typing import Any, Literal
 
 from pydantic import BaseModel, JsonValue
@@ -9,9 +10,8 @@ from typing_extensions import override
 from lionagi.libs.parse import breakdown_pydantic_annotation, to_str
 from lionagi.utils import copy
 
-from ..base import ID
-from ..log import Log
-from .message import MessageFlag, MessageRole, RoledMessage
+from ..protocols.types import ID, Log, MessageFlag, MessageRole
+from .message import RoledMessage
 from .utils import (
     format_image_content,
     format_text_content,

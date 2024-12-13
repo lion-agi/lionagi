@@ -23,6 +23,7 @@ from .jupyter_client import JupyterClient
 
 
 class DockerJupyterServer(JupyterConnectable):
+
     DEFAULT_DOCKERFILE = """FROM quay.io/jupyter/docker-stacks-foundation
 
 SHELL ["/bin/bash", "-o", "pipefail", "-c"]

@@ -6,7 +6,7 @@
 # SPDX-License-Identifier: MIT
 
 from dataclasses import dataclass, field
-from typing import List, Optional, Protocol
+from typing import Protocol
 
 from .document import Document
 

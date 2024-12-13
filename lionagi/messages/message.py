@@ -1,6 +1,7 @@
 # Copyright (c) 2023 - 2024, HaiyangLi <quantocean.li at gmail dot com>
 #
 # SPDX-License-Identifier: Apache-2.0
+
 import inspect
 import os
 from typing import Any
@@ -11,20 +12,22 @@ from typing_extensions import override
 
 from lionagi.utils import copy
 
-from ..base import (
+from ..protocols.base import (
     Communicatable,
     IDType,
     MessageFlag,
     MessageRole,
     validate_sender_recipient,
 )
-from ..component import Component
-from ..log import Log
-from ..models import get_class
+from ..protocols.models import get_class
+from ..protocols.types import Component, Log
 
 base_dir = os.path.dirname(os.path.abspath(__file__))
 templates_path = os.path.join(base_dir, "templates")
 env = Environment(loader=FileSystemLoader(templates_path))
+
+
+__all__ = ("RoledMessage", "env", "Template")
 
 
 class RoledMessage(Component, Communicatable):
