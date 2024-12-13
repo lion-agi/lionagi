@@ -6,6 +6,9 @@
 # SPDX-License-Identifier: MIT
 
 
+__all__ = ("transcribe_audio_file",)
+
+
 def transcribe_audio_file(file_path):
     """
     Transcribes the audio file located at the given file path.

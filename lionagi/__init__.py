@@ -7,6 +7,7 @@ import logging
 from dotenv import load_dotenv
 
 from .operations import ops
+from .protocols import types
 from .service.types import EndPoint, Service, iModel
 from .session.session import Branch, Session
 
@@ -14,6 +15,7 @@ __all__ = [
     "Branch",
     "Session",
     "ops",
+    "types",
     "iModel",
     "EndPoint",
     "Service",
