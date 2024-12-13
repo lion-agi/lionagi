@@ -10,8 +10,8 @@ from typing_extensions import override
 from lionagi.libs.parse import to_dict
 from lionagi.utils import copy
 
-from ..base import ID
-from .message import MessageFlag, MessageRole, RoledMessage, Template, env
+from ..protocols.types import ID, MessageFlag, MessageRole
+from .message import RoledMessage, Template, env
 
 
 def prepare_action_request(

@@ -8,9 +8,9 @@ from typing_extensions import override
 
 from lionagi.utils import copy
 
-from ..base import ID
+from ..protocols.types import ID, MessageFlag, MessageRole
 from .action_request import ActionRequest
-from .message import MessageFlag, MessageRole, RoledMessage, Template, env
+from .message import RoledMessage, Template, env
 
 
 def prepare_action_response_content(

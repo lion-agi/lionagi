@@ -9,8 +9,8 @@ from typing_extensions import override
 
 from lionagi.utils import copy
 
-from ..base import ID
-from .message import MessageFlag, MessageRole, RoledMessage, Template, env
+from ..protocols.types import ID, MessageFlag, MessageRole
+from .message import RoledMessage, Template, env
 from .utils import prepare_assistant_response
 
 

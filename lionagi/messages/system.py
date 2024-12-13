@@ -7,7 +7,7 @@ from typing_extensions import override
 
 from lionagi.utils import time
 
-from ..base import ID, MessageRole, validate_sender_recipient
+from ..protocols.base import ID, MessageRole, validate_sender_recipient
 from .message import MessageFlag, MessageRole, RoledMessage, Template, env
 
 
