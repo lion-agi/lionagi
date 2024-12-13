@@ -5,12 +5,12 @@
 from __future__ import annotations
 
 import re
-import secrets
 from abc import ABC, abstractmethod
 from collections import deque
 from collections.abc import Generator, Mapping, Sequence
 from enum import Enum
 from typing import Any, Generic, NoReturn, TypeAlias, TypeVar
+from uuid import uuid4
 
 # A generic type var bound to Observable
 T = TypeVar("T", bound="Observable")
@@ -123,6 +123,30 @@ class Communicatable(ABC):
     pass
 
 
+class Event(ABC):
+    """Base for events in the system."""
+
+    @abstractmethod
+    async def invoke(self) -> NoReturn:
+        raise NotImplementedError("Action must be subclassed to invoke.")
+
+
+class Condition(Event):
+    """Base for conditions in the system."""
+
+    @abstractmethod
+    async def apply(self) -> NoReturn:
+        raise NotImplementedError("Action must be subclassed to invoke.")
+
+
+class Observer(ABC):
+    pass
+
+
+class Manager(Observable):
+    pass
+
+
 class IDType:
     """
     A validated ID string.
@@ -154,6 +178,8 @@ class IDType:
     def __repr__(self) -> str:
         return f"IDType('{self._value}')"
 
+    __slots__ = ("_value", "PATTERN")
+
 
 class ID(Generic[T]):
     """
@@ -183,7 +209,7 @@ class ID(Generic[T]):
     @staticmethod
     def generate() -> IDType:
         # Generate a 32-char hex string (128 bits of randomness)
-        return IDType(secrets.token_hex(16))
+        return IDType(uuid4().hex[:32])
 
     @staticmethod
     def is_id(item: Any) -> bool:
@@ -243,27 +269,3 @@ def validate_sender_recipient(value) -> MessageRole | IDType | MessageFlag:
         return ID.get_id(value)
     except Exception as e:
         raise ValueError(f"Invalid sender or recipient: {value}") from e
-
-
-class Event(ABC):
-    """Base for events in the system."""
-
-    @abstractmethod
-    async def invoke(self) -> NoReturn:
-        raise NotImplementedError("Action must be subclassed to invoke.")
-
-
-class Condition(Event):
-    """Base for conditions in the system."""
-
-    @abstractmethod
-    async def apply(self) -> NoReturn:
-        raise NotImplementedError("Action must be subclassed to invoke.")
-
-
-class Observer(ABC):
-    pass
-
-
-class Manager(Observable):
-    pass
