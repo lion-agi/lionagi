@@ -6,7 +6,7 @@ from typing import Any, Literal
 
 from pydantic import BaseModel
 
-from lionagi.libs.parse import breakdown_pydantic_annotation, to_str
+from lionagi.libs.parse.types import breakdown_pydantic_annotation, to_str
 from lionagi.utils import UNDEFINED, is_same_dtype
 
 

@@ -7,7 +7,7 @@ from typing import Any, ClassVar
 
 from typing_extensions import override
 
-from lionagi.libs.parse import to_dict
+from lionagi.libs.parse.types import to_dict
 from lionagi.utils import copy
 
 from ..protocols.types import ID, MessageFlag, MessageRole

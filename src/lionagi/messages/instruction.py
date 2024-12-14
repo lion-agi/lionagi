@@ -7,7 +7,7 @@ from typing import Any, Literal
 from pydantic import BaseModel, JsonValue
 from typing_extensions import override
 
-from lionagi.libs.parse import breakdown_pydantic_annotation, to_str
+from lionagi.libs.parse.types import breakdown_pydantic_annotation, to_str
 from lionagi.utils import copy
 
 from ..protocols.types import ID, Log, MessageFlag, MessageRole
