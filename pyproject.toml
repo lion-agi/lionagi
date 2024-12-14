@@ -52,3 +52,8 @@ line_length = 79
 ignore = ["E203", "W503", "E501", "E402"]
 max-line-length = 79
 exclude = [".git", "__pycache__", "build", "dist", ".venv"]
+
+[tool.pytest.ini_options]
+asyncio_mode = "auto"
+testpaths = ["tests"]
+python_files = ["test_*.py"]
