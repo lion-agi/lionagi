@@ -2,9 +2,10 @@ from typing import Any, Literal
 
 from pydantic import Field, field_validator, model_validator
 
-from ..fields.instruct import INSTRUCT_MODEL_FIELD, Instruct
 from ..libs.async_utils import RCallParams
-from ..protocols.types import BaseSchemaModel, FieldModel
+from ..operations.fields.instruct import INSTRUCT_MODEL_FIELD, Instruct
+from ..operations.models import FieldModel
+from ..protocols.types import BaseSchemaModel
 from ..session.types import Branch, Session
 
 

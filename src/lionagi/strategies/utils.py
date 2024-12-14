@@ -1,7 +1,8 @@
 from typing import Any
 
-from ..fields.instruct import Instruct
-from ..libs.async_utils import alcall
+from lionagi.utils import alcall
+
+from ..operations.fields.instruct import Instruct
 from ..session.types import Branch, Session
 
 
