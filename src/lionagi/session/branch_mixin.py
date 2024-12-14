@@ -7,29 +7,31 @@ from abc import ABC
 from collections.abc import Callable
 from typing import Literal
 
+from lion_service import iModel
 from pydantic import BaseModel, JsonValue
 
 from lionagi.action.types import FuncTool, Tool
-from lionagi.fields.action import ActionRequestModel, ActionResponseModel
-from lionagi.fields.step import Step
-from lionagi.libs.async_utils import alcall
-from lionagi.libs.parse import (
+from lionagi.libs.parse.types import (
     breakdown_pydantic_annotation,
     to_json,
     validate_mapping,
 )
-from lionagi.protocols.base import ID
-from lionagi.protocols.messages import (
+from lionagi.messages.types import (
     ActionRequest,
     ActionResponse,
     AssistantResponse,
     Instruction,
 )
-from lionagi.protocols.model_params import ModelParams
-from lionagi.protocols.models import FieldModel
-from lionagi.protocols.operative import Operative
-from lionagi.service.types import iModel
-from lionagi.utils import UNDEFINED
+from lionagi.operations.fields.action import (
+    ActionRequestModel,
+    ActionResponseModel,
+)
+from lionagi.operations.model_params import ModelParams
+from lionagi.operations.models import FieldModel
+from lionagi.operations.operative import Operative
+from lionagi.operations.step import Step
+from lionagi.protocols.base import ID
+from lionagi.utils import UNDEFINED, alcall
 
 
 class BranchActionMixin(ABC):

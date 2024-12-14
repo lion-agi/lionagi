@@ -5,18 +5,20 @@
 from pathlib import Path
 
 import pandas as pd
+from lion_service.imodel import iModel
 from pydantic import model_validator
 
-from lionagi.service.imodel import iModel
-
 from ..action.types import ActionManager
-from ..fields.instruct import Instruct, OperationInstruct
-from ..protocols.base import ID, MESSAGE_FIELDS
-from ..protocols.component import Component
-from ..protocols.log import LogManager
-from ..protocols.messages import MessageManager
-from ..protocols.pile import Pile
-from ..protocols.progression import Progression
+from ..messages.types import MessageManager
+from ..operations.fields.types import Instruct, OperationInstruct
+from ..protocols.types import (
+    ID,
+    MESSAGE_FIELDS,
+    Component,
+    LogManager,
+    Pile,
+    Progression,
+)
 from ..settings import Settings
 from .branch_mixin import BranchActionMixin, BranchOperationMixin
 
