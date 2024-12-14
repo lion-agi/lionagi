@@ -4,7 +4,7 @@ from collections import OrderedDict
 import pytest
 from pydantic import BaseModel
 
-from lionagi.libs.parse import to_dict
+from lionagi.libs.parse.types import to_dict
 
 
 # Mock classes and functions for testing
