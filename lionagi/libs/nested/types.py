@@ -1,3 +1,7 @@
+# Copyright (c) 2023 - 2024, HaiyangLi <quantocean.li at gmail dot com>
+#
+# SPDX-License-Identifier: Apache-2.0
+
 """Nested data structure manipulation utilities."""
 
 from .nfilter import nfilter
@@ -6,7 +10,6 @@ from .ninsert import ninsert
 from .nmerge import nmerge
 from .npop import npop
 from .nset import nset
-from .to_flat_list import to_flat_list
 from .utils import (
     deep_update,
     ensure_list_index,
@@ -23,7 +26,6 @@ __all__ = [
     "nmerge",
     "npop",
     "nset",
-    "to_flat_list",
     "deep_update",
     "ensure_list_index",
     "get_target_container",
