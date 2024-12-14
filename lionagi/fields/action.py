@@ -183,7 +183,7 @@ ACTION_REQUESTS_FIELD_MODEL = FieldModel(
     name="action_requests",
     annotation=list[ActionRequestModel],
     default_factory=list,
-    title="Actions",
+    title="Action Requests",
     description=action_requests_field_description,
 )
 
@@ -191,6 +191,6 @@ ACTION_RESPONSES_FIELD_MODEL = FieldModel(
     name="action_responses",
     annotation=list[ActionResponseModel],
     default_factory=list,
-    title="Actions",
+    title="Action Responses",
     description="**do not fill**",
 )
