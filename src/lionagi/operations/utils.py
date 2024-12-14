@@ -5,7 +5,7 @@
 from lionagi.protocols.base import ID
 from lionagi.session.types import Branch, Session
 
-from ..fields.instruct import Instruct
+from .fields.instruct import Instruct
 
 
 def prepare_session(

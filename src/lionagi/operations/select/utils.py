@@ -8,7 +8,7 @@ from typing import Any
 
 from pydantic import BaseModel, JsonValue
 
-from lionagi.libs.parse import string_similarity
+from lionagi.libs.parse.types import string_similarity
 from lionagi.utils import is_same_dtype
 
 

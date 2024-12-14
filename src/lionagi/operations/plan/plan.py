@@ -6,14 +6,10 @@ from typing import Any, Literal
 
 from pydantic import BaseModel
 
-from lionagi.fields.instruct import (
-    INSTRUCT_MODEL_FIELD,
-    Instruct,
-    InstructResponse,
-)
 from lionagi.protocols.base import ID
 from lionagi.session.types import Branch, Session
 
+from ..fields.instruct import INSTRUCT_FIELD_MODEL, Instruct, InstructResponse
 from ..utils import prepare_instruct, prepare_session
 from .prompt import EXPANSION_PROMPT, PLAN_PROMPT
 
@@ -97,8 +93,8 @@ async def plan(
         print(f"Planning execution with {num_steps} steps...")
 
     field_models: list = kwargs.get("field_models", [])
-    if INSTRUCT_MODEL_FIELD not in field_models:
-        field_models.append(INSTRUCT_MODEL_FIELD)
+    if INSTRUCT_FIELD_MODEL not in field_models:
+        field_models.append(INSTRUCT_FIELD_MODEL)
     kwargs["field_models"] = field_models
     session, branch = prepare_session(session, branch, branch_kwargs)
     execute_branch: Branch = session.split(branch)

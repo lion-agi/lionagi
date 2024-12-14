@@ -16,10 +16,11 @@ from pydantic import (
 from pydantic.fields import FieldInfo
 from typing_extensions import Self
 
-from lionagi.libs.parse import validate_boolean
+from lionagi.libs.parse.types import validate_boolean
 from lionagi.utils import copy
 
-from .models import BaseSchemaModel, FieldModel
+from ..protocols.models import BaseSchemaModel
+from .models import FieldModel
 
 __all__ = ("ModelParams",)
 

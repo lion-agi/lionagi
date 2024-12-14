@@ -6,16 +6,12 @@ from typing import Any
 
 from pydantic import BaseModel
 
-from lionagi.fields.instruct import (
-    INSTRUCT_FIELD_MODEL,
-    Instruct,
-    InstructResponse,
-)
 from lionagi.libs.async_utils import alcall
-from lionagi.libs.parse import to_list
 from lionagi.protocols.base import ID
 from lionagi.session.session import Branch, Session
+from lionagi.utils import to_list
 
+from ..fields.instruct import INSTRUCT_FIELD_MODEL, Instruct, InstructResponse
 from ..utils import prepare_instruct, prepare_session
 from .get_prompt import BrainStormTemplate, get_prompt
 

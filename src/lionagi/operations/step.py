@@ -5,17 +5,18 @@
 from pydantic import BaseModel
 from pydantic.fields import FieldInfo
 
-from ..protocols.model_params import ModelParams
-from ..protocols.models import FieldModel
-from ..protocols.operative import Operative
-from .action import (
+from .fields.types import (
     ACTION_REQUESTS_FIELD_MODEL,
     ACTION_REQUIRED_FIELD_MODEL,
     ACTION_RESPONSES_FIELD_MODEL,
+    REASON_FIELD_MODEL,
     ActionRequestModel,
     ActionResponseModel,
+    ReasonModel,
 )
-from .reason import REASON_FIELD, ReasonModel
+from .model_params import ModelParams
+from .models import FieldModel
+from .operative import Operative
 
 __all__ = ("StepModel", "Step")
 
@@ -25,7 +26,7 @@ class StepModel(BaseModel):
 
     title: str
     description: str
-    reason: ReasonModel | None = REASON_FIELD.field_info
+    reason: ReasonModel | None = REASON_FIELD_MODEL.field_info
     action_requests: list[ActionRequestModel] = (
         ACTION_REQUESTS_FIELD_MODEL.field_info
     )
@@ -82,7 +83,7 @@ class Step:
         exclude_fields = exclude_fields or []
         field_descriptions = field_descriptions or {}
         if reason:
-            field_models.append(REASON_FIELD)
+            field_models.append(REASON_FIELD_MODEL)
         if actions:
             field_models.extend(
                 [
@@ -190,7 +191,7 @@ class Step:
                 ]
             )
         if hasattr(operative.request_type, "reason"):
-            field_models.extend([REASON_FIELD])
+            field_models.extend([REASON_FIELD_MODEL])
 
         exclude_fields = exclude_fields or []
         exclude_fields.extend(operative.request_params.exclude_fields)

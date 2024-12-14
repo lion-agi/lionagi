@@ -8,11 +8,11 @@ import numpy as np
 from pydantic import BaseModel
 
 from lionagi.fields.instruct import Instruct
-from lionagi.libs.parse import to_num
+from lionagi.libs.parse.types import to_num
 from lionagi.session.types import Branch
 
+from ...fields.score import SCORES_FIELD
 from .prompt import PROMPT
-from .utils import SCORES_FIELD
 
 
 class ScoreOperation(BaseModel):

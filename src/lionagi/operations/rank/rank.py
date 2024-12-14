@@ -6,11 +6,11 @@ import asyncio
 from typing import Any
 
 import numpy as np
+from lion_service.imodel import iModel
 
 from lionagi.libs.async_utils import alcall
-from lionagi.libs.parse import to_list
-from lionagi.service.imodel import iModel
 from lionagi.session.types import Branch, Session
+from lionagi.utils import to_list
 
 from ..score.score import score
 from .prompt import PROMPT

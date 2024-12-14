@@ -13,11 +13,12 @@ from pydantic import BaseModel, Field, PrivateAttr, model_validator
 from pydantic.fields import FieldInfo
 from typing_extensions import Self
 
-from lionagi.libs.parse import to_json, validate_keys
+from lionagi.libs.parse.types import to_json, validate_keys
 from lionagi.utils import UNDEFINED
 
+from ..protocols.models import BaseAutoModel
 from .model_params import ModelParams
-from .models import BaseAutoModel, FieldModel
+from .models import FieldModel
 
 __all__ = ("Operative",)
 
