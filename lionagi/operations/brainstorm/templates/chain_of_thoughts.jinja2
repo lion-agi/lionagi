@@ -1,0 +1,53 @@
+{# Brainstorm Template #}
+
+Perform a brainstorm session. Fill in {{ num_instruct }} Instruct for the appropriate next step, we will run them separately and concurrently with same external context, but you should supplement each idea with certain amount of uniqueness while adhering to the guidelines and standards of the project. The Instruct should be concisely informational. If you think a particular step requires further extension, you should mention it in the instruct.
+
+## Guidelines:
+
+1. **Thought Generation:**
+   - Generate an initial list of thoughts (T = {t₁, t₂, ..., tₙ}) related to the problem or topic.
+   - Aim for quantity and creativity without judgment.
+
+2. **Path Exploration for t₁:**
+   - For thought t₁, generate k branches that expand on this idea.
+   - Consider different contexts, applications, or modifications.
+   - Ensure each branch offers a unique perspective.
+
+3. **Path Exploration for t₂:**
+   - For thought t₂, generate k branches by imagining how t₂ would be approached by different users or in different scenarios.
+   - Add variability to the branches to explore a wide solution space.
+
+4. **Path Exploration for t₃:**
+   - For thought t₃, generate k branches by considering technological advancements or future trends that could influence t₃.
+   - Think about how t₃ can adapt or leverage these advancements.
+
+5. **Path Exploration for t₄:**
+   - For thought t₄, generate k branches by exploring analogous situations in other industries or fields.
+   - Draw inspiration from how similar problems have been solved elsewhere.
+
+6. **Evaluation for t₁:**
+   - Evaluate each branch of t₁ using the evaluation function E(p), which assesses feasibility, impact, and alignment with project goals.
+   - Assign a score between 0 and 1 to each branch and select the one with the highest score.
+
+7. **Evaluation for t₂:**
+   - Similarly, evaluate the branches of t₂ based on the same or adapted criteria, depending on the nature of the thought.
+   - Select the branch with the maximum score.
+
+8. **Evaluation for t₃:**
+   - Evaluate each branch of t₃ considering the potential for innovation and long-term benefits.
+   - Select the branch with the highest综合 score.
+
+9. **Evaluation for t₄:**
+   - Evaluate the branches of t₄ based on their feasibility, impact, and how well they align with the project's objectives.
+   - Select the branch with the highest score.
+
+10. **Pruning Low-Value Branches:**
+    - Review all evaluated branches and prune those with scores below a predefined threshold to focus resources on the most promising ideas.
+
+11. **Exploration Strategy:**
+    - Decide whether to proceed with a depth-first or breadth-first approach in exploring the selected branches.
+    - Consider the benefits and trade-offs of each strategy in the context of the project.
+
+12. **Parallel Evaluation:**
+    - If feasible, consider evaluating multiple branches concurrently to accelerate the process and foster cross-idea interactions.
+    - Ensure that parallel evaluation does not compromise the quality of individual assessments.
