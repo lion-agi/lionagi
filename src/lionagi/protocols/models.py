@@ -10,8 +10,8 @@ Integrates with Pydantic for robust data handling and validation.
 
 from __future__ import annotations
 
-from collections.abc import Callable
 from datetime import datetime
+from os import name
 from typing import Any
 
 from pydantic import (
@@ -21,9 +21,6 @@ from pydantic import (
     field_serializer,
     field_validator,
 )
-from pydantic.fields import FieldInfo
-
-from lionagi.utils import UNDEFINED
 
 from .base import ID, IDType, Observable
 
@@ -34,7 +31,6 @@ __all__ = (
     "BaseLionModel",
     "BaseSchemaModel",
     "BaseAutoModel",
-    "FieldModel",
 )
 
 
@@ -62,7 +58,8 @@ class BaseLionModel(BaseModel):
     @classmethod
     def from_dict(cls, data: dict[str, Any]) -> BaseLionModel:
         """Create instance from dict, handling class type."""
-        data.pop("lion_class", None)
+        if "lion_class" in data:
+            data.pop("lion_class")
         return cls(**data)
 
 
@@ -113,6 +110,13 @@ class BaseAutoModel(BaseLionModel, Observable):
         frozen=True,
     )
 
+    def __init_subclass__(cls, **kwargs):
+        """Register class in the global registry."""
+        if cls.class_name() not in LION_CLASS_REGISTRY:
+            LION_CLASS_REGISTRY[cls.class_name()] = cls
+
+        return super().__init_subclass__(**kwargs)
+
     @field_serializer("id")
     def _serialize_id(self, value: IDType) -> str:
         """Serialize ID to string."""
@@ -155,6 +159,22 @@ class BaseAutoModel(BaseLionModel, Observable):
         """Get creation time as datetime."""
         return datetime.fromtimestamp(self.created_timestamp)
 
+    @classmethod
+    def from_dict(cls, data: dict) -> BaseAutoModel:
+        """Create instance from dict, handling class type."""
+        if "lion_class" in data:
+            lion_class = get_class(data.pop("lion_class"))
+            if lion_class.from_dict != BaseAutoModel.from_dict:
+                data = {
+                    k: v
+                    for k, v in data.items()
+                    if k in lion_class.model_fields
+                }
+                return lion_class.from_dict(data)
+        return cls.model_validate(
+            {k: v for k, v in data.items() if k in cls.model_fields}
+        )
+
     def __hash__(self) -> int:
         """Hash based on ID."""
         return hash(self.id)
@@ -175,77 +195,3 @@ class BaseAutoModel(BaseLionModel, Observable):
     def __repr__(self) -> str:
         """Full representation with complete ID."""
         return f"{self.class_name()}(id={self.id}, timestamp={self.created_datetime})"
-
-
-class FieldModel(BaseSchemaModel):
-    """Configuration model for dynamic field creation.
-
-    Provides comprehensive field configuration including:
-    - Basic field attributes (name, type, defaults)
-    - Documentation (title, description, examples)
-    - Validation rules and custom validators
-    - Serialization options
-    """
-
-    model_config = ConfigDict(
-        extra="allow",
-        validate_default=False,
-        populate_by_name=True,
-        arbitrary_types_allowed=True,
-        use_enum_values=True,
-    )
-
-    # Field configuration attributes
-    default: Any = UNDEFINED
-    default_factory: Callable = UNDEFINED
-    title: str = UNDEFINED
-    description: str = UNDEFINED
-    examples: list = UNDEFINED
-    validators: list = UNDEFINED
-    exclude: bool = UNDEFINED
-    deprecated: bool = UNDEFINED
-    frozen: bool = UNDEFINED
-    alias: str = UNDEFINED
-    alias_priority: int = UNDEFINED
-
-    name: str = Field(
-        ...,
-        exclude=True,
-        description="Field name (required)",
-    )
-    annotation: type | Any = Field(
-        UNDEFINED,
-        exclude=True,
-        description="Type annotation for the field",
-    )
-    validator: Callable | Any = Field(
-        UNDEFINED,
-        exclude=True,
-        description="Custom validation function",
-    )
-    validator_kwargs: dict | Any = Field(
-        default_factory=dict,
-        exclude=True,
-        description="Configuration for validator",
-    )
-
-    @property
-    def field_info(self) -> FieldInfo:
-        """Generate Pydantic field configuration."""
-        field_obj: FieldInfo = Field(**self.model_dump(exclude_unset=True))  # type: ignore
-        field_obj.annotation = (
-            self.annotation if self.annotation is not UNDEFINED else Any
-        )
-        return field_obj
-
-    @property
-    def field_validator(self) -> dict[str, Callable] | None:
-        """Generate validator configuration if set."""
-        if self.validator is UNDEFINED:
-            return None
-        kwargs = self.validator_kwargs or {}
-        return {
-            f"{self.name}_validator": field_validator(self.name, **kwargs)(
-                self.validator
-            )
-        }

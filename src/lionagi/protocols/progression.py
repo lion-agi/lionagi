@@ -9,8 +9,7 @@ from typing import Any
 from pydantic import Field, field_validator
 from typing_extensions import Self, override
 
-from lionagi.libs.parse import to_list
-from lionagi.utils import ItemNotFoundError
+from lionagi.utils import ItemNotFoundError, to_list
 
 from .base import (
     ID,

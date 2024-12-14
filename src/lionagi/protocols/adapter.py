@@ -184,7 +184,10 @@ class PandasDataFrameAdapter(Adapter):
         cls, subj_cls: type[T], obj: pd.DataFrame, /, many=False, **kwargs
     ) -> list[dict]:
         """Converts DataFrame to list of dictionaries."""
-        return obj.to_dict(orient="records", **kwargs)
+        lst_ = obj.to_dict(orient="records", **kwargs)
+        if not many:
+            return lst_[0]
+        return lst_
 
     @classmethod
     def to_obj(cls, subj: list[T], /, many=False, **kwargs) -> pd.DataFrame:
@@ -195,7 +198,6 @@ class PandasDataFrameAdapter(Adapter):
             _dict = i.to_dict()
             _dict["timestamp"] = i.created_datetime
             out_.append(_dict)
-        kwargs["index"] = False
         df = pd.DataFrame(out_, **kwargs)
         if "timestamp" in df.columns:
             df["timestamp"] = pd.to_datetime(df["timestamp"])
@@ -213,6 +215,8 @@ class CSVFileAdapter(Adapter):
     ) -> list[dict]:
         """Loads list of dictionaries from CSV file."""
         df: pd.DataFrame = pd.read_csv(obj, **kwargs)
+        if not many:
+            return df.to_dict(orient="records")[0]
         return df.to_dict(orient="records")
 
     @classmethod
@@ -225,7 +229,6 @@ class CSVFileAdapter(Adapter):
         **kwargs,
     ) -> None:
         """Saves list of objects to CSV file."""
-        kwargs["index"] = False
         subj = [subj] if not isinstance(subj, list) else subj
         pd.DataFrame([i.to_dict() for i in subj]).to_csv(fp, **kwargs)
         logging.info(f"Successfully saved data to {fp}")

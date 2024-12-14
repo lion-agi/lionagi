@@ -26,7 +26,7 @@ from typing import Any
 
 from pydantic import BaseModel, Field, field_validator
 
-from lionagi.libs.parse import ToDictParams
+from lionagi.libs.parse.types import ToDictParams
 
 from .models import BaseAutoModel
 from .pile import Pile

@@ -15,8 +15,12 @@ from pydantic import Field, field_serializer
 from pydantic.fields import FieldInfo
 from typing_extensions import Self, override
 
-from lionagi.libs.parse import to_list
-from lionagi.utils import UNDEFINED, ItemExistsError, ItemNotFoundError
+from lionagi.utils import (
+    UNDEFINED,
+    ItemExistsError,
+    ItemNotFoundError,
+    to_list,
+)
 
 from .adapter import Adapter, AdapterRegistry, PileRegistry
 from .base import ID, Observable, T, to_list_type, validate_order

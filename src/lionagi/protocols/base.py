@@ -161,7 +161,7 @@ class IDType:
     def __repr__(self) -> str:
         return f"IDType('{self._value}')"
 
-    __slots__ = ("_value", "PATTERN")
+    __slots__ = "_value"
 
 
 class ID(Generic[T]):
