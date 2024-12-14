@@ -131,6 +131,7 @@ class Instruct(BaseAutoModel):
     instruction: JsonValue | None = INSTRUCTION_FIELD_MODEL.field_info
     guidance: JsonValue | None = GUIDANCE_FIELD_MODEL.field_info
     context: JsonValue | None = CONTEXT_FIELD_MODEL.field_info
+    extension_required: bool = False
 
     @field_validator("instruction", **INSTRUCTION_FIELD_MODEL.validator_kwargs)
     def _validate_instruction(cls, v):
@@ -143,6 +144,21 @@ class Instruct(BaseAutoModel):
             JsonValue | None: The validated instruction value.
         """
         return INSTRUCTION_FIELD_MODEL.validator(cls, v)
+
+    @field_validator("extension_required", mode="before")
+    def _validate_extension_required(cls, v):
+        """Field validator for the 'extension_required' field.
+
+        Args:
+            v: The value to validate.
+
+        Returns:
+            bool: The validated boolean value.
+        """
+        try:
+            return validate_boolean_field(cls, v)
+        except Exception:
+            return False
 
 
 class OperationInstruct(Instruct):

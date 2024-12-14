@@ -17,7 +17,7 @@ from lionagi.protocols.base import ID
 from lionagi.session.session import Branch, Session
 
 from ..utils import prepare_instruct, prepare_session
-from .prompt import PROMPT
+from .get_prompt import BrainStormTemplate, match_template
 
 
 class BrainstormOperation(BaseModel):
@@ -94,6 +94,8 @@ async def brainstorm(
     branch_kwargs: dict[str, Any] | None = None,
     return_session: bool = False,
     verbose: bool = False,
+    template: BrainStormTemplate = BrainStormTemplate.DEFAULT,
+    template_context: dict[str, Any] | None = None,
     **kwargs: Any,
 ) -> Any:
     """Perform a brainstorming session.
@@ -125,9 +127,9 @@ async def brainstorm(
 
     kwargs["field_models"] = field_models
     session, branch = prepare_session(session, branch, branch_kwargs)
-    instruct = prepare_instruct(
-        instruct, PROMPT.format(num_instruct=num_instruct)
-    )
+    prompt = match_template(template, num_instruct=num_instruct)
+    instruct = prepare_instruct(instruct, prompt, **(template_context or {}))
+
     res1 = await branch.operate(**instruct, **kwargs)
     out = BrainstormOperation(initial=res1)
 

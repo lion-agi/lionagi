@@ -7,6 +7,14 @@ from typing import Any
 
 from typing_extensions import Self
 
+__all__ = (
+    "DataClass",
+    "CodeBlock",
+    "CodeResult",
+    "FunctionSchema",
+)
+
+
 PY_TYPE_TO_JSON = {
     "int": "integer",
     "str": "string",
