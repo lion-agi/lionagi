@@ -8,24 +8,28 @@
 import os
 import warnings
 
-from ..imports_utils import check_import
-
-try:
-    from falkordb import FalkorDB
-    from graphrag_sdk import KnowledgeGraph
-except ImportError:
-    check_import("falkordb")
-    check_import("graphrag_sdk")
-
-from falkordb import FalkorDB, Graph
-from graphrag_sdk import KnowledgeGraph, Source
-from graphrag_sdk.model_config import KnowledgeGraphModelConfig
-from graphrag_sdk.models import GenerativeModel
-from graphrag_sdk.models.openai import OpenAiGenerativeModel
-from graphrag_sdk.ontology import Ontology
-
 from .document import Document
 from .graph_query_engine import GraphStoreQueryResult
+
+
+class _ModuleImportClass:
+
+    from ..imports_utils import check_import
+
+    FalkorDB = check_import("falkordb", import_name="FalkorDB")
+    KnowledgeGraph = check_import("graphrag_sdk", import_name="KnowledgeGraph")
+    Graph = check_import("falkordb", import_name="Graph")
+    Source = check_import("graphrag_sdk", import_name="Source")
+    KnowledgeGraphModelConfig = check_import(
+        "graphrag_sdk.model_config", import_name="KnowledgeGraphModelConfig"
+    )
+    GenerativeModel = check_import(
+        "graphrag_sdk.models", import_name="GenerativeModel"
+    )
+    OpenAiGenerativeModel = check_import(
+        "graphrag_sdk.models.openai", import_name="OpenAiGenerativeModel"
+    )
+    Ontology = check_import("graphrag_sdk.ontology", import_name="Ontology")
 
 
 class FalkorGraphQueryEngine:
@@ -40,8 +44,8 @@ class FalkorGraphQueryEngine:
         port: int = 6379,
         username: str | None = None,
         password: str | None = None,
-        model: GenerativeModel = OpenAiGenerativeModel("gpt-4o"),
-        ontology: Ontology | None = None,
+        model=_ModuleImportClass.OpenAiGenerativeModel("gpt-4o"),
+        ontology=None,
     ):
         """
         Initialize a FalkorDB knowledge graph.
@@ -65,10 +69,12 @@ class FalkorGraphQueryEngine:
         self.username = username
         self.password = password
         self.model = model
-        self.model_config = KnowledgeGraphModelConfig.with_model(model)
+        self.model_config = (
+            _ModuleImportClass.KnowledgeGraphModelConfig.with_model(model)
+        )
         self.ontology = ontology
         self.knowledge_graph = None
-        self.falkordb = FalkorDB(
+        self.falkordb = _ModuleImportClass.FalkorDB(
             host=self.host,
             port=self.port,
             username=self.username,
@@ -90,7 +96,7 @@ class FalkorGraphQueryEngine:
                     f"Ontology of the knowledge graph '{self.name}' can't be None."
                 )
 
-            self.knowledge_graph = KnowledgeGraph(
+            self.knowledge_graph = _ModuleImportClass.KnowledgeGraph(
                 name=self.name,
                 host=self.host,
                 port=self.port,
@@ -112,23 +118,25 @@ class FalkorGraphQueryEngine:
         sources = []
         for doc in input_doc:
             if os.path.exists(doc.path_or_url):
-                sources.append(Source(doc.path_or_url))
+                sources.append(_ModuleImportClass.Source(doc.path_or_url))
 
         if sources:
             # Auto generate graph ontology if not created by user.
             if self.ontology is None:
-                self.ontology = Ontology.from_sources(
+                self.ontology = _ModuleImportClass.Ontology.from_sources(
                     sources=sources,
                     model=self.model,
                 )
 
-            self.knowledge_graph = KnowledgeGraph(
+            self.knowledge_graph = _ModuleImportClass.KnowledgeGraph(
                 name=self.name,
                 host=self.host,
                 port=self.port,
                 username=self.username,
                 password=self.password,
-                model_config=KnowledgeGraphModelConfig.with_model(self.model),
+                model_config=_ModuleImportClass.KnowledgeGraphModelConfig.with_model(
+                    self.model
+                ),
                 ontology=self.ontology,
             )
 
@@ -173,17 +181,21 @@ class FalkorGraphQueryEngine:
 
         return GraphStoreQueryResult(answer=response["response"], results=[])
 
-    def __get_ontology_storage_graph(self, graph_name: str) -> Graph:
+    def __get_ontology_storage_graph(self, graph_name: str):
         ontology_table_name = graph_name + "_ontology"
         return self.falkordb.select_graph(ontology_table_name)
 
-    def _save_ontology_to_db(self, graph_name: str, ontology: Ontology):
+    def _save_ontology_to_db(
+        self, graph_name: str, ontology: "_ModuleImportClass.Ontology"
+    ):
         """
         Save graph ontology to a separate table with {graph_name}_ontology
         """
         graph = self.__get_ontology_storage_graph(graph_name)
         ontology.save_to_graph(graph)
 
-    def _load_ontology_from_db(self, graph_name: str) -> Ontology:
+    def _load_ontology_from_db(
+        self, graph_name: str
+    ) -> "_ModuleImportClass.Ontology":
         graph = self.__get_ontology_storage_graph(graph_name)
-        return Ontology.from_graph(graph)
+        return _ModuleImportClass.Ontology.from_graph(graph)
