@@ -13,23 +13,26 @@ from typing import Any, Literal
 
 import numpy as np
 
-try:
-    from pymongo import MongoClient
-    from sentence_transformers import SentenceTransformer
-except ImportError:
-    from ..imports_utils import check_import
-
-    check_import("pymongo")
-    check_import("sentence_transformers")
-
-from pymongo import MongoClient, UpdateOne, errors
-from pymongo.collection import Collection
-from pymongo.driver_info import DriverInfo
-from pymongo.operations import SearchIndexModel
-from sentence_transformers import SentenceTransformer
-
 from .base import Document, ItemID, QueryResults, VectorDB
 from .utils import get_logger
+
+
+class _ModuleImportClass:
+
+    from ..imports_utils import check_import, import_module
+
+    MongoClient = check_import("pymongo", import_name="MongoClient")
+    SentenceTransformer = import_module(
+        "sentence_transformers", import_name="SentenceTransformer"
+    )
+    UpdateOne = import_module("pymongo", import_name="UpdateOne")
+    errors = import_module("pymongo", import_name="errors")
+    Collection = import_module("pymongo.collection", import_name="Collection")
+    DriverInfo = import_module("pymongo.driver_info", import_name="DriverInfo")
+    SearchIndexModel = import_module(
+        "pymongo.operations", import_name="SearchIndexModel"
+    )
+
 
 __all__ = ("MongoDBAtlasVectorDB",)
 
@@ -57,7 +60,7 @@ class MongoDBAtlasVectorDB(VectorDB):
         self,
         connection_string: str = "",
         database_name: str = "vector_db",
-        embedding_function: Callable = SentenceTransformer(
+        embedding_function: Callable = _ModuleImportClass.SentenceTransformer(
             "all-MiniLM-L6-v2"
         ).encode,
         collection_name: str = None,
@@ -91,12 +94,13 @@ class MongoDBAtlasVectorDB(VectorDB):
         self.dimensions = self._get_embedding_size()
 
         try:
-            self.client = MongoClient(
-                connection_string, driver=DriverInfo(name="autogen")
+            self.client = _ModuleImportClass.MongoClient(
+                connection_string,
+                driver=_ModuleImportClass.DriverInfo(name="autogen"),
             )
             self.client.admin.command("ping")
             logger.debug("Successfully created MongoClient")
-        except errors.ServerSelectionTimeoutError as err:
+        except _ModuleImportClass.errors.ServerSelectionTimeoutError as err:
             raise ConnectionError(
                 "Could not connect to MongoDB server"
             ) from err
@@ -110,7 +114,9 @@ class MongoDBAtlasVectorDB(VectorDB):
         else:
             self.active_collection = None
 
-    def _is_index_ready(self, collection: Collection, index_name: str):
+    def _is_index_ready(
+        self, collection: "_ModuleImportClass.Collection", index_name: str
+    ):
         """Check for the index name in the list of available search indexes to see if the
         specified index is of status READY
 
@@ -127,7 +133,10 @@ class MongoDBAtlasVectorDB(VectorDB):
         return False
 
     def _wait_for_index(
-        self, collection: Collection, index_name: str, action: str = "create"
+        self,
+        collection: "_ModuleImportClass.Collection",
+        index_name: str,
+        action: str = "create",
     ):
         """Waits for the index action to be completed. Otherwise throws a TimeoutError.
 
@@ -154,7 +163,10 @@ class MongoDBAtlasVectorDB(VectorDB):
         raise TimeoutError(f"Index {self.index_name} is not ready!")
 
     def _wait_for_document(
-        self, collection: Collection, index_name: str, doc: Document
+        self,
+        collection: "_ModuleImportClass.Collection",
+        index_name: str,
+        doc: Document,
     ):
         start = monotonic()
         while monotonic() - start < self._wait_until_document_ready:
@@ -189,7 +201,7 @@ class MongoDBAtlasVectorDB(VectorDB):
         collection_name: str,
         overwrite: bool = False,
         get_or_create: bool = True,
-    ) -> Collection:
+    ) -> "_ModuleImportClass.Collection":
         """
         Create a collection in the vector database and create a vector search index in the collection.
 
@@ -221,7 +233,9 @@ class MongoDBAtlasVectorDB(VectorDB):
             raise ValueError(f"Collection {collection_name} already exists.")
 
     def create_index_if_not_exists(
-        self, index_name: str = "vector_index", collection: Collection = None
+        self,
+        index_name: str = "vector_index",
+        collection: "_ModuleImportClass.Collection" = None,
     ) -> None:
         """
         Creates a vector search index on the specified collection in MongoDB.
@@ -233,7 +247,9 @@ class MongoDBAtlasVectorDB(VectorDB):
         if not self._is_index_ready(collection, index_name):
             self.create_vector_search_index(collection, index_name)
 
-    def get_collection(self, collection_name: str = None) -> Collection:
+    def get_collection(
+        self, collection_name: str = None
+    ) -> "_ModuleImportClass.Collection":
         """
         Get the collection from the vector database.
 
@@ -273,7 +289,7 @@ class MongoDBAtlasVectorDB(VectorDB):
 
     def create_vector_search_index(
         self,
-        collection: Collection,
+        collection: "_ModuleImportClass.Collection",
         index_name: str | None = "vector_index",
         similarity: Literal["euclidean", "cosine", "dotProduct"] = "cosine",
     ) -> None:
@@ -288,7 +304,7 @@ class MongoDBAtlasVectorDB(VectorDB):
         Returns:
             None
         """
-        search_index_model = SearchIndexModel(
+        search_index_model = _ModuleImportClass.SearchIndexModel(
             definition={
                 "fields": [
                     {
@@ -395,7 +411,7 @@ class MongoDBAtlasVectorDB(VectorDB):
 
     def _insert_batch(
         self,
-        collection: Collection,
+        collection: "_ModuleImportClass.Collection",
         texts: list[str],
         metadatas: list[Mapping[str, Any]],
         ids: list[ItemID],
@@ -461,7 +477,7 @@ class MongoDBAtlasVectorDB(VectorDB):
             doc["_id"] = doc.pop("id")
 
             all_updates.append(
-                UpdateOne(
+                _ModuleImportClass.UpdateOne(
                     {"_id": doc["_id"]},
                     {"$set": doc},
                     upsert=kwargs.get("upsert", False),
@@ -597,7 +613,7 @@ class MongoDBAtlasVectorDB(VectorDB):
 def _vector_search(
     embedding_vector: list[float],
     n_results: int,
-    collection: Collection,
+    collection: "_ModuleImportClass.Collection",
     index_name: str,
     distance_threshold: float = -1.0,
     oversampling_factor=10,

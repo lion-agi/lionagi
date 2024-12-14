@@ -16,16 +16,18 @@ from .utils import (
     get_logger,
 )
 
-try:
-    import chromadb.errors
-except ImportError:
-    from ..imports_utils import check_import
 
-    check_import("chromadb")
-    import chromadb.errors
+class _ModuleImportClass:
 
-import chromadb.utils.embedding_functions as ef
-from chromadb.api.models.Collection import Collection
+    from ..imports_utils import check_import, import_module
+
+    chromadb = check_import("chromadb")
+    chromadb_errors = import_module("chromadb.errors")
+    ef = import_module("chromadb.utils.embedding_functions")
+    Collection = import_module(
+        "chromadb.api.models.Collection", import_name="Collection"
+    )
+
 
 __all__ = ("ChromaVectorDB",)
 
@@ -81,11 +83,11 @@ class ChromaVectorDB(VectorDB):
         )
         if not self.client:
             if self.path is not None:
-                self.client = chromadb.PersistentClient(
+                self.client = _ModuleImportClass.chromadb.PersistentClient(
                     path=self.path, **kwargs
                 )
             else:
-                self.client = chromadb.Client(**kwargs)
+                self.client = _ModuleImportClass.chromadb.Client(**kwargs)
         self.active_collection = None
         self.type = "chroma"
 
@@ -94,7 +96,7 @@ class ChromaVectorDB(VectorDB):
         collection_name: str,
         overwrite: bool = False,
         get_or_create: bool = True,
-    ) -> Collection:
+    ) -> "_ModuleImportClass.Collection":
         """
         Create a collection in the vector database.
         Case 1. if the collection does not exist, create the collection.
@@ -120,7 +122,7 @@ class ChromaVectorDB(VectorDB):
                 collection = self.client.get_collection(
                     collection_name, embedding_function=self.embedding_function
                 )
-        except (ValueError, chromadb.errors.ChromaError):
+        except (ValueError, _ModuleImportClass.chromadb_errors.ChromaError):
             collection = None
         if collection is None:
             return self.client.create_collection(
@@ -142,7 +144,9 @@ class ChromaVectorDB(VectorDB):
         else:
             raise ValueError(f"Collection {collection_name} already exists.")
 
-    def get_collection(self, collection_name: str = None) -> Collection:
+    def get_collection(
+        self, collection_name: str = None
+    ) -> "_ModuleImportClass.Collection":
         """
         Get the collection from the vector database.
 
@@ -189,7 +193,7 @@ class ChromaVectorDB(VectorDB):
 
     def _batch_insert(
         self,
-        collection: Collection,
+        collection: "_ModuleImportClass.Collection",
         embeddings=None,
         ids=None,
         metadatas=None,

@@ -7,15 +7,7 @@
 
 
 import logging
-from typing import Any, Dict, List
-
-from ..imports_utils import check_import
-
-try:
-    from termcolor import colored
-except ImportError:
-    check_import("termcolor")
-    from termcolor import colored
+from typing import Any
 
 from .base import QueryResults
 
@@ -23,26 +15,31 @@ __all__ = ("ColoredLogger",)
 
 
 class ColoredLogger(logging.Logger):
+
+    from ..imports_utils import check_import
+
+    colored = check_import("termcolor", import_name="colored")
+
     def __init__(self, name, level=logging.NOTSET):
         super().__init__(name, level)
 
     def debug(self, msg, *args, color=None, **kwargs):
-        super().debug(colored(msg, color), *args, **kwargs)
+        super().debug(self.colored(msg, color), *args, **kwargs)
 
     def info(self, msg, *args, color=None, **kwargs):
-        super().info(colored(msg, color), *args, **kwargs)
+        super().info(self.colored(msg, color), *args, **kwargs)
 
     def warning(self, msg, *args, color="yellow", **kwargs):
-        super().warning(colored(msg, color), *args, **kwargs)
+        super().warning(self.colored(msg, color), *args, **kwargs)
 
     def error(self, msg, *args, color="light_red", **kwargs):
-        super().error(colored(msg, color), *args, **kwargs)
+        super().error(self.colored(msg, color), *args, **kwargs)
 
     def critical(self, msg, *args, color="red", **kwargs):
-        super().critical(colored(msg, color), *args, **kwargs)
+        super().critical(self.colored(msg, color), *args, **kwargs)
 
     def fatal(self, msg, *args, color="red", **kwargs):
-        super().fatal(colored(msg, color), *args, **kwargs)
+        super().fatal(self.colored(msg, color), *args, **kwargs)
 
 
 def get_logger(name: str, level: int = logging.INFO) -> ColoredLogger:
