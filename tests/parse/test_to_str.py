@@ -3,7 +3,7 @@ from collections import OrderedDict, namedtuple
 import pytest
 from pydantic import BaseModel
 
-from lionagi.libs.parse import to_str
+from lionagi.libs.parse.types import to_str
 from lionagi.utils import UNDEFINED, UndefinedType
 
 

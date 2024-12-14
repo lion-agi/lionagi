@@ -3,7 +3,7 @@ from decimal import Decimal
 
 import pytest
 
-from lionagi.libs.parse import to_num
+from lionagi.libs.parse.types import to_num
 
 
 # Basic numeric conversion tests
