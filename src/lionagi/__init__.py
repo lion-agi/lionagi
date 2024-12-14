@@ -7,18 +7,18 @@ import logging
 from dotenv import load_dotenv
 from lion_service import iModel
 
-from .operations import ops
 from .protocols import types
 from .session.session import Branch, Session
 from .settings import Settings
+from .version import __version__
 
 __all__ = [
     "Branch",
     "Session",
-    "ops",
     "types",
     "iModel",
     "Settings",
+    "__version__",
 ]
 
 
