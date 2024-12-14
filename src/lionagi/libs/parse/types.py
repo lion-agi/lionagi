@@ -9,7 +9,6 @@ from .fuzzy_parse_json import fuzzy_parse_json
 from .string_similarity import string_similarity
 from .to_dict import ToDictParams, to_dict
 from .to_json import to_json
-from .to_list import to_list
 from .to_num import to_num
 from .to_str import dict_to_xml, to_str
 from .validate_boolean import validate_boolean
@@ -21,7 +20,6 @@ __all__ = [
     "fuzzy_parse_json",
     "string_similarity",
     "to_dict",
-    "to_list",
     "to_num",
     "to_json",
     "validate_mapping",
