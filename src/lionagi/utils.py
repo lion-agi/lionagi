@@ -5,11 +5,34 @@
 import asyncio
 import copy as _copy
 import logging
-from collections.abc import Callable, Mapping
+from collections.abc import Callable, Iterable, Mapping
 from concurrent.futures import ThreadPoolExecutor
 from datetime import datetime, timezone
+from enum import Enum
 from functools import lru_cache, wraps
-from typing import Any, Literal, TypeVar
+from typing import Any, Literal, TypeVar, overload
+
+from pydantic import BaseModel
+from pydantic_core import PydanticUndefinedType
+
+__all__ = (
+    "UNDEFINED",
+    "UndefinedType",
+    "ItemError",
+    "IDError",
+    "ItemNotFoundError",
+    "ItemExistsError",
+    "is_same_dtype",
+    "force_async",
+    "max_concurrent",
+    "custom_error_handler",
+    "to_list",
+    "ucall",
+    "alcall",
+    "time",
+    "copy",
+)
+
 
 T = TypeVar("T")
 
@@ -216,3 +239,390 @@ async def custom_error_handler(
                 return await handler(error)
             return handler(error)
     logging.error(f"Unhandled error: {error}")
+
+
+@overload
+def to_list(
+    input_: None | UndefinedType | PydanticUndefinedType, /
+) -> list: ...
+
+
+@overload
+def to_list(
+    input_: str | bytes | bytearray, /, use_values: bool = False
+) -> list[str | int]: ...
+
+
+@overload
+def to_list(input_: Mapping, /, use_values: bool = False) -> list[Any]: ...
+
+
+@overload
+def to_list(
+    input_: Any,
+    /,
+    *,
+    flatten: bool = False,
+    dropna: bool = False,
+    unique: bool = False,
+) -> list: ...
+
+
+def to_list(
+    input_: Any,
+    /,
+    *,
+    flatten: bool = False,
+    dropna: bool = False,
+    unique: bool = False,
+    use_values: bool = False,
+) -> list:
+    """Convert various input types to a list.
+
+    Handles different input types and converts them to a list, with options
+    for flattening nested structures and removing None values.
+
+    Args:
+        input_: The input to be converted to a list.
+        flatten: If True, flattens nested list structures.
+        dropna: If True, removes None values from the result.
+        unique: If True, returns only unique values (requires flatten=True).
+        use_values: If True, uses .values() for dict-like inputs.
+
+    Returns:
+        A list derived from the input, processed as specified.
+
+    Raises:
+        ValueError: If unique=True and flatten=False.
+
+    Examples:
+        >>> to_list(1)
+        [1]
+        >>> to_list([1, [2, 3]], flatten=True)
+        [1, 2, 3]
+        >>> to_list([1, None, 2], dropna=True)
+        [1, 2]
+        >>> to_list({'a': 1, 'b': 2}, use_values=True)
+        [1, 2]
+    """
+    lst_ = _to_list_type(input_, use_values=use_values)
+
+    if any((flatten, dropna)):
+        lst_ = _process_list(
+            lst=lst_,
+            flatten=flatten,
+            dropna=dropna,
+        )
+
+    if unique:
+        out_ = []
+        for i in lst_:
+            if i not in out_:
+                out_.append(i)
+        return out_
+
+    return lst_
+
+
+def _undefined_to_list(
+    input_: None | UndefinedType | PydanticUndefinedType, /
+) -> list:
+    return []
+
+
+def _str_to_list(
+    input_: str | bytes | bytearray, /, use_values: bool = False
+) -> list[str | int]:
+    if use_values:
+        return list(input_)
+    return [input_]
+
+
+def _enum_to_list(
+    input_: type[Enum], /, use_values: bool = False
+) -> list[Any]:
+    if use_values:
+        return [i.value for i in input_.__members__.values()]
+    return list(input_)
+
+
+def _dict_to_list(input_: Mapping, /, use_values: bool = False) -> list[Any]:
+    if use_values:
+        return list(input_.values())
+    return [input_]
+
+
+def _to_list_type(input_: Any, /, use_values: bool = False) -> Any | None:
+
+    if isinstance(input_, BaseModel):
+        return [input_]
+
+    if use_values and hasattr(input_, "values"):
+        return list(input_.values())
+
+    if isinstance(input_, list):
+        return input_
+
+    if isinstance(input_, type(None) | UndefinedType | PydanticUndefinedType):
+        return _undefined_to_list(input_)
+
+    if isinstance(input_, type) and issubclass(input_, Enum):
+        return _enum_to_list(input_, use_values=use_values)
+
+    if isinstance(input_, str | bytes | bytearray):
+        return _str_to_list(input_, use_values=use_values)
+
+    if isinstance(input_, dict):
+        return _dict_to_list(input_, use_values=use_values)
+
+    if isinstance(input_, Iterable):
+        return list(input_)
+
+    return [input_]
+
+
+def _process_list(lst: list[Any], flatten: bool, dropna: bool) -> list[Any]:
+    """Process a list by optionally flattening and removing None values.
+
+    Args:
+        lst: The list to process.
+        flatten: If True, flattens nested list structures.
+        dropna: If True, removes None values.
+
+    Returns:
+        The processed list.
+    """
+    result = []
+    for item in lst:
+        if isinstance(item, Iterable) and not isinstance(
+            item, (str, bytes, bytearray, Mapping, BaseModel)
+        ):
+            if flatten:
+                result.extend(
+                    _process_list(
+                        lst=list(item),
+                        flatten=flatten,
+                        dropna=dropna,
+                    )
+                )
+            else:
+                result.append(
+                    _process_list(
+                        lst=list(item),
+                        flatten=flatten,
+                        dropna=dropna,
+                    )
+                )
+        elif not dropna or item not in [None, UNDEFINED]:
+            result.append(item)
+
+    return result
+
+
+async def ucall(
+    func: Callable[..., T],
+    /,
+    *args: Any,
+    error_map: dict[type, Callable[[Exception], None]] | None = None,
+    **kwargs: Any,
+) -> T:
+    """Execute a function asynchronously with error handling.
+
+    Ensures asynchronous execution of both coroutine and regular functions,
+    managing event loops and applying custom error handling.
+
+    Args:
+        func: The function to be executed (coroutine or regular).
+        *args: Positional arguments for the function.
+        error_map: Dict mapping exception types to error handlers.
+        **kwargs: Keyword arguments for the function.
+
+    Returns:
+        T: The result of the function call.
+
+    Raises:
+        Exception: Any unhandled exception from the function execution.
+
+    Examples:
+        >>> async def example_func(x):
+        ...     return x * 2
+        >>> await ucall(example_func, 5)
+        10
+        >>> await ucall(lambda x: x + 1, 5)  # Non-coroutine function
+        6
+
+    Note:
+        - Automatically wraps non-coroutine functions for async execution.
+        - Manages event loop creation and closure when necessary.
+        - Applies custom error handling based on the provided error_map.
+    """
+    try:
+        if not is_coroutine_func(func):
+            return func(*args, **kwargs)
+
+        # Checking for a running event loop
+        try:
+            loop = asyncio.get_running_loop()
+            if loop.is_running():
+                return await func(*args, **kwargs)
+            else:
+                return await asyncio.run(func(*args, **kwargs))
+
+        except RuntimeError:  # No running event loop
+            loop = asyncio.new_event_loop()
+            result = await func(*args, **kwargs)
+            loop.close()
+            return result
+
+    except Exception as e:
+        if error_map:
+
+            return await custom_error_handler(e, error_map)
+        raise e
+
+
+async def alcall(
+    input_: list[Any],
+    func: Callable[..., T],
+    /,
+    num_retries: int = 0,
+    delay: float = 0,
+    retry_delay: float = 0,
+    backoff_factor: float = 1,
+    default: Any = UNDEFINED,
+    timeout: float | None = None,
+    timing: bool = False,
+    verbose: bool = True,
+    error_msg: str | None = None,
+    error_map: dict[type, Callable[[Exception], None]] | None = None,
+    max_concurrent: int | None = None,
+    throttle_period: float | None = None,
+    flatten: bool = False,
+    dropna: bool = False,
+    unique: bool = False,
+    **kwargs: Any,
+) -> list[T] | list[tuple[T, float]]:
+    """Apply a function to each element of a list asynchronously with options.
+
+    Args:
+        input_: List of inputs to be processed.
+        func: Async or sync function to apply to each input element.
+        num_retries: Number of retry attempts for each function call.
+        delay: Initial delay before starting execution (seconds).
+        retry_delay: Delay between retry attempts (seconds).
+        backoff_factor: Factor by which delay increases after each attempt.
+        retry_default: Default value to return if all attempts fail.
+        retry_timeout: Timeout for each function execution (seconds).
+        retry_timing: If True, return execution duration for each call.
+        verbose: If True, print retry messages.
+        error_msg: Custom error message prefix for exceptions.
+        error_map: Dict mapping exception types to error handlers.
+        max_concurrent: Maximum number of concurrent executions.
+        throttle_period: Minimum time between function executions (seconds).
+        flatten: If True, flatten the resulting list.
+        dropna: If True, remove None values from the result.
+        **kwargs: Additional keyword arguments passed to func.
+
+    Returns:
+        list[T] | list[tuple[T, float]]: List of results, optionally with
+        execution times if retry_timing is True.
+
+    Raises:
+        asyncio.TimeoutError: If execution exceeds retry_timeout.
+        Exception: Any exception raised by func if not handled by error_map.
+
+    Examples:
+        >>> async def square(x):
+        ...     return x * x
+        >>> await alcall([1, 2, 3], square)
+        [1, 4, 9]
+        >>> await alcall([1, 2, 3], square, retry_timing=True)
+        [(1, 0.001), (4, 0.001), (9, 0.001)]
+
+    Note:
+        - Uses semaphores for concurrency control if max_concurrent is set.
+        - Supports both synchronous and asynchronous functions for `func`.
+        - Results are returned in the original input order.
+    """
+    if delay:
+        await asyncio.sleep(delay)
+
+    semaphore = asyncio.Semaphore(max_concurrent) if max_concurrent else None
+    throttle_delay = throttle_period if throttle_period else 0
+
+    async def _task(i: Any, index: int) -> Any:
+        if semaphore:
+            async with semaphore:
+                return await _execute_task(i, index)
+        else:
+            return await _execute_task(i, index)
+
+    async def _execute_task(i: Any, index: int) -> Any:
+        attempts = 0
+        current_delay = retry_delay
+        while True:
+            try:
+                if timing:
+                    start_time = asyncio.get_event_loop().time()
+                    result = await asyncio.wait_for(
+                        ucall(func, i, **kwargs), timeout
+                    )
+                    end_time = asyncio.get_event_loop().time()
+                    return index, result, end_time - start_time
+                else:
+                    result = await asyncio.wait_for(
+                        ucall(func, i, **kwargs), timeout
+                    )
+                    return index, result
+            except TimeoutError as e:
+                raise TimeoutError(
+                    f"{error_msg or ''} Timeout {timeout} seconds " "exceeded"
+                ) from e
+            except Exception as e:
+                if error_map and type(e) in error_map:
+                    handler = error_map[type(e)]
+                    if asyncio.iscoroutinefunction(handler):
+                        return index, await handler(e)
+                    else:
+                        return index, handler(e)
+                attempts += 1
+                if attempts <= num_retries:
+                    if verbose:
+                        print(
+                            f"Attempt {attempts}/{num_retries} failed: {e}"
+                            ", retrying..."
+                        )
+                    await asyncio.sleep(current_delay)
+                    current_delay *= backoff_factor
+                else:
+                    if default is not UNDEFINED:
+                        return index, default
+                    raise e
+
+    tasks = [_task(i, index) for index, i in enumerate(input_)]
+    results = []
+    for coro in asyncio.as_completed(tasks):
+        result = await coro
+        results.append(result)
+        await asyncio.sleep(throttle_delay)
+
+    results.sort(
+        key=lambda x: x[0]
+    )  # Sort results based on the original index
+
+    if timing:
+        if dropna:
+            return [
+                (result[1], result[2])
+                for result in results
+                if result[1] is not None
+            ]
+        else:
+            return [(result[1], result[2]) for result in results]
+    else:
+        return to_list(
+            [result[1] for result in results],
+            flatten=flatten,
+            dropna=dropna,
+            unique=unique,
+        )
