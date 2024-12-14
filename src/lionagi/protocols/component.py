@@ -66,6 +66,8 @@ class Component(BaseAutoModel):
         if isinstance(value, list):
             if is_same_dtype(value, str):
                 return [float(v) for v in value]
+            if is_same_dtype(value, float | int):
+                return value
         return []
 
     @classmethod
