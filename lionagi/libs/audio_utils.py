@@ -9,20 +9,26 @@
 __all__ = ("transcribe_audio_file",)
 
 
-def transcribe_audio_file(file_path):
-    """
-    Transcribes the audio file located at the given file path.
+from pathlib import Path
 
-    Args:
-        file_path (str): The path to the audio file.
 
-    Returns:
-        str: The transcribed text from the audio file.
-    """
-    from .imports_utils import check_import
+class AudioUtils:
 
-    whisper = check_import("whisper", pip_name="openai-whisper")
+    @staticmethod
+    def transcribe_audio_file(fp: str | Path) -> str:
+        """
+        Transcribes the audio file located at the given file path.
 
-    model = whisper.load_model("base")
-    result = model.transcribe(file_path)
-    return result["text"]
+        Args:
+            file_path (str): The path to the audio file.
+
+        Returns:
+            str: The transcribed text from the audio file.
+        """
+        from .imports_utils import check_import
+
+        whisper = check_import("whisper", pip_name="openai-whisper")
+
+        model = whisper.load_model("base")
+        result = model.transcribe(fp)
+        return result["text"]

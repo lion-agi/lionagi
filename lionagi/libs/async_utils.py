@@ -17,25 +17,28 @@ T = TypeVar("T")
 __all__ = (
     "TCallParams",
     "ALCallParams",
+    "RCallParams",
+    "BCallParams",
     "tcall",
     "ucall",
     "alcall",
+    "bcall",
+    "rcall",
 )
 
 
 @dataclass
 class TCallParams(DataClass):
-    function: Callable[..., T]
     delay: float = 0
     error_msg: str | None = None
     timing: bool = False
     timeout: float | None = None
-    default: Any = ...
+    default: Any = UNDEFINED
     error_map: dict[type, Callable[[Exception], None]] | None = None
 
-    async def __call__(self, *args, **kwargs) -> T:
+    async def __call__(self, func, *args, **kwargs) -> T:
         return await tcall(
-            self.function,
+            func,
             *args,
             delay=self.delay,
             error_msg=self.error_msg,
@@ -60,7 +63,7 @@ class ALCallParams(DataClass):
     delay: float = 0
     retry_delay: float = 0
     backoff_factor: float = 1
-    default: Any = (UNDEFINED,)
+    default: Any = UNDEFINED
     timeout: float | None = None
     timing: bool = False
     verbose: bool = True
@@ -96,6 +99,51 @@ class ALCallParams(DataClass):
         )
 
 
+@dataclass
+class BCallParams(DataClass):
+    function: Callable[..., T]
+    batch_size: int
+    num_retries: int = 0
+    delay: float = 0
+    retry_delay: float = 0
+    backoff_factor: float = 1
+    default: Any = UNDEFINED
+    timeout: float | None = None
+    timing: bool = False
+    verbose: bool = True
+    error_msg: str | None = None
+    error_map: dict[type, Callable[[Exception], None]] | None = None
+    max_concurrent: int | None = None
+    throttle_period: float | None = None
+    flatten: bool = False
+    dropna: bool = False
+    unique: bool = False
+
+    async def __call__(self, input_, *args, **kwargs):
+        return await bcall(
+            input_,
+            self.function,
+            *args,
+            batch_size=self.batch_size,
+            num_retries=self.num_retries,
+            delay=self.delay,
+            retry_delay=self.retry_delay,
+            backoff_factor=self.backoff_factor,
+            default=self.default,
+            timeout=self.timeout,
+            timing=self.timing,
+            verbose=self.verbose,
+            error_msg=self.error_msg,
+            error_map=self.error_map,
+            max_concurrent=self.max_concurrent,
+            throttle_period=self.throttle_period,
+            flatten=self.flatten,
+            dropna=self.dropna,
+            unique=self.unique,
+            **kwargs,
+        )
+
+
 async def tcall(
     func: Callable[..., T],
     /,
@@ -104,7 +152,7 @@ async def tcall(
     error_msg: str | None = None,
     timing: bool = False,
     timeout: float | None = None,
-    default: Any = ...,
+    default: Any = UNDEFINED,
     error_map: dict[type, Callable[[Exception], None]] | None = None,
     **kwargs: Any,
 ) -> T | tuple[T, float]:
@@ -175,7 +223,7 @@ async def tcall(
 
     except TimeoutError as e:
         error_msg = f"{error_msg or ''} Timeout {timeout} seconds exceeded"
-        if default is not ...:
+        if default is not UNDEFINED:
             duration = asyncio.get_event_loop().time() - start
             return (default, duration) if timing else default
         else:
@@ -191,7 +239,7 @@ async def tcall(
             if error_msg
             else f"An error occurred in async execution: {e}"
         )
-        if default is not ...:
+        if default is not UNDEFINED:
             duration = asyncio.get_event_loop().time() - start
             return (default, duration) if timing else default
         else:
@@ -416,7 +464,7 @@ async def bcall(
     delay: float = 0,
     retry_delay: float = 0,
     backoff_factor: float = 1,
-    default: Any = ...,
+    default: Any = UNDEFINED,
     timeout: float | None = None,
     timing: bool = False,
     verbose: bool = True,
@@ -479,3 +527,131 @@ async def bcall(
             **kwargs,
         )
         yield batch_results
+
+
+@dataclass
+class RCallParams(DataClass):
+    num_retries: int = 0
+    delay: float = 0
+    retry_delay: float = 0
+    backoff_factor: float = 1
+    default: Any = UNDEFINED
+    timeout: float | None = None
+    timing: bool = False
+    verbose: bool = True
+    error_msg: str | None = None
+    error_map: dict[type, Callable[[Exception], None]] | None = None
+
+    async def __call__(self, func, *args, **kwargs) -> T | tuple[T, float]:
+        return await rcall(
+            func,
+            *args,
+            num_retries=self.num_retries,
+            delay=self.delay,
+            retry_delay=self.retry_delay,
+            backoff_factor=self.backoff_factor,
+            default=self.default,
+            timeout=self.timeout,
+            timing=self.timing,
+            verbose=self.verbose,
+            error_msg=self.error_msg,
+            error_map=self.error_map,
+            **kwargs,
+        )
+
+    def __str__(self) -> str:
+        return (
+            f"RCallParams(num_retries={self.num_retries}, delay={self.delay}, "
+            f"retry_delay={self.retry_delay}, backoff_factor={self.backoff_factor}, "
+            f"default={self.default}, timeout={self.timeout}, timing={self.timing}, "
+            f"verbose={self.verbose}, error_msg={self.error_msg}, error_map={self.error_map})"
+        )
+
+    def __repr__(self) -> str:
+        return str(self)
+
+
+async def rcall(
+    func: Callable[..., T],
+    /,
+    *args: Any,
+    num_retries: int = 0,
+    delay: float = 0,
+    retry_delay: float = 0,
+    backoff_factor: float = 1,
+    default: Any = UNDEFINED,
+    timeout: float | None = None,
+    timing: bool = False,
+    verbose: bool = True,
+    error_msg: str | None = None,
+    error_map: dict[type, Callable[[Exception], None]] | None = None,
+    **kwargs: Any,
+) -> T | tuple[T, float]:
+    """
+    Retry a function asynchronously with customizable options, using `tcall` under the hood.
+
+    Attempts to run the given function, retrying up to `num_retries` times if an exception or
+    timeout occurs. The `tcall` function is used to handle execution timing, errors, and timeouts.
+
+    Args:
+        func: The function to execute (coroutine or regular).
+        *args: Positional arguments for the function.
+        num_retries: Number of retry attempts (default: 0).
+        delay: Initial delay before the first attempt (seconds).
+        retry_delay: Delay between retry attempts (seconds).
+        backoff_factor: Factor to increase the retry delay after each failed attempt.
+        default: Value to return if all attempts fail. If not provided, an exception will be raised.
+        timeout: Timeout for each function execution (seconds).
+        timing: If True, include execution duration in the return value.
+        verbose: If True, print retry messages.
+        error_msg: Custom error message prefix.
+        error_map: Dict mapping exception types to error handlers.
+        **kwargs: Additional keyword arguments for the function.
+
+    Returns:
+        T or (T, float): Result of the function call, optionally with timing.
+
+    Raises:
+        RuntimeError: If the function fails after all attempts and no default is provided.
+        TimeoutError: If the function call exceeds the specified timeout.
+    """
+    current_retry_delay = retry_delay
+
+    for attempt in range(num_retries + 1):
+        try:
+            # We do not supply `default` to tcall directly because we want to handle retries ourselves.
+            # If we gave `default` to tcall, it would return the default on the first error, preventing retries.
+            result = await tcall(
+                func,
+                *args,
+                delay=delay if attempt == 0 else 0,
+                error_msg=error_msg,
+                timing=timing,
+                timeout=timeout,
+                default=...,
+                error_map=error_map,
+                **kwargs,
+            )
+            # If tcall succeeded or returned a value (including None if error_map handled it),
+            # we consider this a successful attempt and return.
+            return result
+        except Exception as e:
+            # An exception means this attempt failed.
+            if attempt < num_retries:
+                # If we still have retries left, print a message and try again.
+                if verbose:
+                    print(
+                        f"Attempt {attempt + 1}/{num_retries + 1} failed: {e}, retrying..."
+                    )
+                await asyncio.sleep(current_retry_delay)
+                current_retry_delay *= backoff_factor
+            else:
+                # All attempts exhausted.
+                if default is not UNDEFINED:
+                    # Return default if provided. Note that we do not return timing here,
+                    # since we have no successful timing information to provide.
+                    return default
+
+                raise RuntimeError(
+                    f"{error_msg or ''} Operation failed after {num_retries + 1} attempts: {e}"
+                ) from e
