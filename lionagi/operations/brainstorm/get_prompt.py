@@ -1,3 +1,7 @@
+# Copyright (c) 2023 - 2024, HaiyangLi <quantocean.li at gmail dot com>
+#
+# SPDX-License-Identifier: Apache-2.0
+
 import os
 from enum import Enum
 
@@ -9,7 +13,7 @@ env = Environment(loader=FileSystemLoader(templates_path))
 
 __all__ = (
     "BrainStormTemplate",
-    "match_template",
+    "get_prompt",
 )
 
 
@@ -19,6 +23,6 @@ class BrainStormTemplate(str, Enum):
     ONTOLOGICAL = "ontological.jinja2"
 
 
-def match_template(template: BrainStormTemplate, **kwargs) -> str:
+def get_prompt(template: BrainStormTemplate, **kwargs) -> str:
     template: Template = env.get_template(template.value)
     return template.render(**kwargs)

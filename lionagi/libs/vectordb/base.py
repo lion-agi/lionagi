@@ -26,8 +26,8 @@ class Document(TypedDict):
 
     id: ItemID | the unique identifier of the document.
     content: str | the text content of the chunk.
-    metadata: Metadata, Optional | contains additional information about the document such as source, date, etc.
-    embedding: Vector, Optional | the vector representation of the content.
+    metadata: Metadata | contains additional information about the document such as source, date, etc.
+    embedding: Vector | the vector representation of the content.
     """
 
     id: ItemID

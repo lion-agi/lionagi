@@ -5,11 +5,12 @@
 import logging
 
 from dotenv import load_dotenv
+from lion_service import iModel
 
 from .operations import ops
 from .protocols import types
-from .service.types import EndPoint, Service, iModel
 from .session.session import Branch, Session
+from .settings import Settings
 
 __all__ = [
     "Branch",
@@ -17,11 +18,10 @@ __all__ = [
     "ops",
     "types",
     "iModel",
-    "EndPoint",
-    "Service",
+    "Settings",
 ]
 
 
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.INFO)
-load_dotenv()
+load_dotenv(Settings.Config.ENV_FILE)

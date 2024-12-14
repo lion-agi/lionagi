@@ -2,6 +2,23 @@
 #
 # SPDX-License-Identifier: Apache-2.0
 
+from datetime import UTC, timezone
 
-class Settings:
-    pass
+__all__ = ("Settings",)
+
+
+class SettingsClass:
+
+    _instance = None
+
+    def __new__(cls):
+        if cls._instance is None:
+            cls._instance = super().__new__(cls)
+        return cls._instance
+
+    class Config:
+        ENV_FILE: str = ".env"
+        TIMEZONE: timezone = UTC
+
+
+Settings = SettingsClass()
