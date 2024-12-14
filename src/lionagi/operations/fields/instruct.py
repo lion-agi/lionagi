@@ -6,9 +6,10 @@ from typing import Any, ClassVar
 
 from pydantic import JsonValue, field_validator
 
-from lionagi.libs.parse import validate_boolean
-from lionagi.protocols.models import BaseAutoModel, FieldModel
+from lionagi.libs.parse.types import validate_boolean
+from lionagi.protocols.models import BaseAutoModel
 
+from ..models import FieldModel
 from .prompts import (
     actions_field_description,
     context_examples,

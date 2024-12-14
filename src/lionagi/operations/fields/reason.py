@@ -6,12 +6,16 @@ from typing import TypeAlias
 
 from pydantic import BaseModel, field_validator
 
-from lionagi.libs.parse import to_num
-from lionagi.protocols.models import FieldModel
+from lionagi.libs.parse.types import to_num
 
+from ..models import FieldModel
 from .prompts import confidence_description
 
-__all__ = ("ReasonModel",)
+__all__ = (
+    "ReasonModel",
+    "CONFIDENCE_SCORE_FIELD_MODEL",
+    "REASON_FIELD_MODEL",
+)
 
 
 # Type aliases
@@ -31,7 +35,7 @@ def validate_confidence_score(cls, value) -> float:
         return -1
 
 
-CONFIDENCE_SCORE_FIELD = FieldModel(
+CONFIDENCE_SCORE_FIELD_MODEL = FieldModel(
     name="confidence_score",
     annotation=float | None,
     default=None,
@@ -54,16 +58,16 @@ class ReasonModel(BaseModel):
 
     title: str | None = None
     content: str | None = None
-    confidence_score: float | None = CONFIDENCE_SCORE_FIELD.field_info
+    confidence_score: float | None = CONFIDENCE_SCORE_FIELD_MODEL.field_info
 
     @field_validator(
-        "confidence_score", **CONFIDENCE_SCORE_FIELD.validator_kwargs
+        "confidence_score", **CONFIDENCE_SCORE_FIELD_MODEL.validator_kwargs
     )
     def _validate_confidence(cls, v):
-        return CONFIDENCE_SCORE_FIELD.validator(cls, v)
+        return CONFIDENCE_SCORE_FIELD_MODEL.validator(cls, v)
 
 
-REASON_FIELD = FieldModel(
+REASON_FIELD_MODEL = FieldModel(
     name="reason",
     annotation=ReasonModel | None,
     default=None,

@@ -8,14 +8,14 @@ from typing import Any, TypeAlias, TypeVar
 
 from pydantic import BaseModel, Field, field_validator
 
-from lionagi.libs.parse import (
+from lionagi.libs.parse.types import (
     fuzzy_parse_json,
     to_dict,
     to_json,
     validate_boolean,
 )
-from lionagi.protocols.models import FieldModel
 
+from ..models import FieldModel
 from .prompts import (
     action_requests_field_description,
     action_required_field_description,
@@ -34,6 +34,7 @@ __all__ = (
     "ActionResponseModel",
     "ACTION_REQUESTS_FIELD_MODEL",
     "ACTION_RESPONSES_FIELD_MODEL",
+    "ACTION_REQUIRED_FIELD_MODEL",
 )
 
 
