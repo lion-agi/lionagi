@@ -7,9 +7,7 @@ from typing import Any, NoReturn
 
 from pydantic import Field, field_serializer
 
-from ..protocols.base import Event, EventStatus
-from ..protocols.log import Log
-from ..protocols.models import BaseAutoModel
+from ..protocols.types import BaseAutoModel, Event, EventStatus, Log
 
 __all__ = ("Action",)
 

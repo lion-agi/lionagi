@@ -7,10 +7,7 @@ from typing import Any
 
 from typing_extensions import override
 
-from ..protocols.base import ID, EventStatus
-from ..protocols.pile import Pile
-from ..protocols.processors import BaseExecutor
-from ..protocols.progression import Progression
+from ..protocols.types import ID, BaseExecutor, EventStatus, Pile, Progression
 from .base import Action
 from .processor import ActionProcessor
 

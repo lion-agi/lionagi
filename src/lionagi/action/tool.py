@@ -9,7 +9,7 @@ from pydantic import Field, field_serializer, model_validator
 from typing_extensions import Self
 
 from lionagi.libs.async_utils import TCallParams
-from lionagi.libs.parse import function_to_schema, to_dict
+from lionagi.libs.parse.types import function_to_schema, to_dict
 
 from ..protocols.models import BaseAutoModel
 
