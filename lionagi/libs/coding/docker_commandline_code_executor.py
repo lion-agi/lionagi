@@ -18,19 +18,18 @@ from typing import Any, ClassVar
 
 from typing_extensions import Self
 
-try:
-    import docker
-except ImportError:
-    from ..imports_utils import check_import
-
-    check_import("docker")
-    import docker
-
-from docker.errors import ImageNotFound
-
 from .base import CodeBlock, CodeExecutor, CodeExtractor, CommandLineCodeResult
 from .markdown_code_extractor import MarkdownCodeExtractor
 from .utils import TIMEOUT_MSG, _cmd, _get_file_name_from_content, silence_pip
+
+
+class _ModuleImportClass:
+
+    from ..imports_utils import check_import
+
+    docker = check_import("docker")
+    ImageNotFound = check_import("docker.errors", import_name="ImageNotFound")
+    NotFound = check_import("docker.errors", import_name="NotFound")
 
 
 def _wait_for_ready(
@@ -121,11 +120,11 @@ class DockerCommandLineCodeExecutor(CodeExecutor):
         elif isinstance(bind_dir, str):
             bind_dir = Path(bind_dir)
 
-        client = docker.from_env()
+        client = _ModuleImportClass.docker.from_env()
         # Check if the image exists
         try:
             client.images.get(image)
-        except ImageNotFound:
+        except _ModuleImportClass.ImageNotFound:
             logging.info(f"Pulling image {image}...")
             # Let the docker exception escape if this fails.
             client.images.pull(image)
@@ -153,7 +152,7 @@ class DockerCommandLineCodeExecutor(CodeExecutor):
             try:
                 container = client.containers.get(container_name)
                 container.stop()
-            except docker.errors.NotFound:
+            except _ModuleImportClass.NotFound:
                 pass
             atexit.unregister(cleanup)
 

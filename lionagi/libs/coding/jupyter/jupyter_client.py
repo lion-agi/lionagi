@@ -15,21 +15,21 @@ from types import TracebackType
 from typing import Any, cast
 
 import requests
+from requests.adapters import HTTPAdapter, Retry
 from typing_extensions import Self
 
-try:
-    import websocket
+from .base import JupyterConnectionInfo
 
-except ImportError:
+
+class _ModuleImportClass:
+
     from ...imports_utils import check_import
 
-    check_import("websocket")
-    import websocket
-
-from requests.adapters import HTTPAdapter, Retry
-from websocket import WebSocket
-
-from .base import JupyterConnectionInfo
+    websocket = check_import("websocket")
+    WebSocket = check_import("websocket", import_name="WebSocket")
+    KernelSpecManager = check_import(
+        "jupyter_client", import_name="KernelSpecManager"
+    )
 
 
 class JupyterClient:
@@ -113,7 +113,9 @@ class JupyterClient:
 
     def get_kernel_client(self, kernel_id: str) -> JupyterKernelClient:
         ws_url = f"{self._get_ws_base_url()}/api/kernels/{kernel_id}/channels"
-        ws = websocket.create_connection(ws_url, header=self._get_headers())
+        ws = _ModuleImportClass.websocket.create_connection(
+            ws_url, header=self._get_headers()
+        )
         return JupyterKernelClient(ws)
 
 
@@ -131,9 +133,9 @@ class JupyterKernelClient:
         output: str
         data_items: list[DataItem]
 
-    def __init__(self, websocket: WebSocket):
+    def __init__(self, websocket: _ModuleImportClass.WebSocket):
         self._session_id: str = uuid.uuid4().hex
-        self._websocket: WebSocket = websocket
+        self._websocket: _ModuleImportClass.WebSocket = websocket
 
     def __enter__(self) -> Self:
         return self
@@ -181,7 +183,7 @@ class JupyterKernelClient:
             if isinstance(data, bytes):
                 data = data.decode("utf-8")
             return cast(dict[str, Any], json.loads(data))
-        except websocket.WebSocketTimeoutException:
+        except _ModuleImportClass.websocket.WebSocketTimeoutException:
             return None
 
     def wait_for_ready(self, timeout_seconds: float | None = None) -> bool:

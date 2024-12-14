@@ -19,15 +19,17 @@ from hashlib import md5
 from pathlib import Path
 from types import SimpleNamespace
 
-try:
-    import docker
-except ImportError:
+
+class _ModuleImportClass:
+
     from ..imports_utils import check_import
 
-    check_import("docker")
-    import docker
+    docker = check_import("docker")
+    DockerException = check_import(
+        "docker.errors", import_name="DockerException"
+    )
+    ImageNotFound = check_import("docker.errors", import_name="ImageNotFound")
 
-from docker.errors import DockerException
 
 filename_patterns = [
     re.compile(r"^<!-- (filename:)?(.+?) -->", re.DOTALL),
@@ -278,10 +280,10 @@ def is_docker_running() -> bool:
         bool: True if docker is running; False otherwise.
     """
     try:
-        client = docker.from_env()
+        client = _ModuleImportClass.docker.from_env()
         client.ping()
         return True
-    except DockerException:
+    except _ModuleImportClass.DockerException:
         return False
 
 
@@ -481,7 +483,7 @@ def execute_code(
             "Docker package is missing or docker is not running. Please make sure docker is running or set use_docker=False."
         )
 
-    client = docker.from_env()
+    client = _ModuleImportClass.docker.from_env()
 
     image_list = (
         ["python:3-slim", "python:3", "python:3-windowsservercore"]
@@ -493,13 +495,13 @@ def execute_code(
         try:
             client.images.get(image)
             break
-        except docker.errors.ImageNotFound:
+        except _ModuleImportClass.ImageNotFound:
             # pull the image
             print("Pulling image", image)
             try:
                 client.images.pull(image)
                 break
-            except docker.errors.DockerException:
+            except _ModuleImportClass.DockerException:
                 print("Failed to pull image", image)
     # get a randomized str based on current time to wrap the exit code
     exit_code_str = f"exitcode{time.time()}"

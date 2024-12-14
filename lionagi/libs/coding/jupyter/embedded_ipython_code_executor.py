@@ -14,19 +14,21 @@ from pathlib import Path
 from queue import Empty
 from typing import Any
 
-try:
-    from jupyter_client import KernelManager  # type: ignore[attr-defined]
-except ImportError:
-    from ...imports_utils import check_import
-
-    check_import("jupyter_client")
-    from jupyter_client import KernelManager
-
-from jupyter_client.kernelspec import KernelSpecManager
 from pydantic import BaseModel, Field, field_validator
 
 from ..base import CodeBlock, CodeExtractor, IPythonCodeResult
 from ..markdown_code_extractor import MarkdownCodeExtractor
+
+
+class _ModuleImportClass:
+
+    from ...imports_utils import check_import
+
+    KernelManager = check_import("jupyter_client", import_name="KernelManager")
+    KernelSpecManager = check_import(
+        "jupyter_client", import_name="KernelSpecManager"
+    )
+
 
 __all__ = "EmbeddedIPythonCodeExecutor"
 
@@ -71,13 +73,18 @@ class EmbeddedIPythonCodeExecutor(BaseModel):
     def __init__(self, **kwargs: Any):
         super().__init__(**kwargs)
         # Check if the kernel is installed.
-        if self.kernel_name not in KernelSpecManager().find_kernel_specs():
+        if (
+            self.kernel_name
+            not in _ModuleImportClass.KernelSpecManager().find_kernel_specs()
+        ):
             raise ValueError(
                 f"Kernel {self.kernel_name} is not installed. "
                 "Please first install it with "
                 f"`python -m ipykernel install --user --name {self.kernel_name}`."
             )
-        self._kernel_manager = KernelManager(kernel_name=self.kernel_name)
+        self._kernel_manager = _ModuleImportClass.KernelManager(
+            kernel_name=self.kernel_name
+        )
         self._kernel_manager.start_kernel()
         self._kernel_client = self._kernel_manager.client()
         self._kernel_client.start_channels()
@@ -168,7 +175,9 @@ class EmbeddedIPythonCodeExecutor(BaseModel):
         """(Experimental) Restart a new session."""
         self._kernel_client.stop_channels()
         self._kernel_manager.shutdown_kernel()
-        self._kernel_manager = KernelManager(kernel_name=self.kernel_name)
+        self._kernel_manager = _ModuleImportClass.KernelManager(
+            kernel_name=self.kernel_name
+        )
         self._kernel_manager.start_kernel()
         self._kernel_client = self._kernel_manager.client()
         self._kernel_client.start_channels()
