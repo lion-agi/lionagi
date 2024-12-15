@@ -280,14 +280,22 @@ class Pile(BaseAutoModel, Generic[T]):
                 actual_type=type(other),
             )
 
-        to_exclude = []
+        # Items in both piles - need to be removed
+        to_remove = []
         for i in other:
-            if i in self:
-                to_exclude.append(i)
+            if i.id in self.progress:
+                to_remove.append(i.id)
 
-        other = [i for i in other if i not in to_exclude]
-        self.exclude(to_exclude)
-        self.include(other)
+        # Items in other but not in self - need to be added
+        to_add = [i for i in other if i.id not in self.progress]
+
+        # Remove common items first
+        if to_remove:
+            self.exclude(to_remove)
+        # Then add items unique to other
+        if to_add:
+            self.include(to_add)
+
         return self
 
     def __xor__(self, other: Pile) -> Pile:
@@ -299,14 +307,16 @@ class Pile(BaseAutoModel, Generic[T]):
                 actual_type=type(other),
             )
 
+        # Items in both piles - need to be removed
         to_exclude = []
         for i in other:
-            if i in self:
+            if i.id in self.progress:
                 to_exclude.append(i)
 
-        values = [i for i in self if i not in to_exclude] + [
-            i for i in other if i not in to_exclude
-        ]
+        # Items unique to each pile
+        values = [
+            i for i in self if i.id not in [x.id for x in to_exclude]
+        ] + [i for i in other if i.id not in [x.id for x in to_exclude]]
 
         result = self.__class__(
             items=values,
@@ -539,12 +549,15 @@ class Pile(BaseAutoModel, Generic[T]):
                     if isinstance(self.progress[key], Progression)
                     else [self.progress[key]]
                 )
-                self.progress[key] = item_order
-                for i in to_list(delete_order, flatten=True):
-                    self.pile_.pop(i)
-                self.pile_.update(item_dict)
+            except ItemNotFoundError:
+                raise
             except Exception as e:
                 raise ValueError(f"Failed to set pile. Error: {e}")
+
+            self.progress[key] = item_order
+            for i in to_list(delete_order, flatten=True):
+                self.pile_.pop(i)
+            self.pile_.update(item_dict)
         else:
             key = to_list_type(key)
             if isinstance(key[0], list):
@@ -646,22 +659,29 @@ class Pile(BaseAutoModel, Generic[T]):
         raise ItemNotFoundError(f"{item}")
 
     def _include(self, item: ID.ItemSeq | ID.Item):
-        item_dict = self._validate_pile(item)
+        # First validate and get IDs to check for duplicates
+        items = to_list_type(item)
+        for i in items:
+            if hasattr(i, "id") and i.id in self.progress:
+                raise ItemExistsError(
+                    f"Item {i.id} already exists in the pile"
+                )
 
-        item_order = []
-        for i in item_dict.keys():
-            if i not in self.progress:
-                item_order.append(i)
-
-        self.progress.append(item_order)
-        self.pile_.update(item_dict)
+        # Then validate and add items
+        item_dict = self._validate_pile(items)
+        item_order = list(item_dict.keys())
+        if item_order:
+            self.progress.append(item_order)
+            self.pile_.update(item_dict)
 
     def _exclude(self, item: ID.Ref | ID.RefSeq):
-        item = to_list_type(item)
+        items = to_list_type(item)
         exclude_list = []
-        for i in item:
-            if i in self:
-                exclude_list.append(i)
+        for i in items:
+            # Handle both ID strings and objects with IDs
+            item_id = i if isinstance(i, str) else getattr(i, "id", None)
+            if item_id and item_id in self.progress:
+                exclude_list.append(item_id)
         if exclude_list:
             self.pop(exclude_list)
 
@@ -764,9 +784,17 @@ class Pile(BaseAutoModel, Generic[T]):
         self.progress.insert(index, item_order)
         self.pile_.update(item_dict)
 
+    @override
+    def to_dict(self) -> dict[str, Any]:
+        """Convert to dictionary."""
+        return {
+            **super().to_dict(),
+            "pile_": [item.to_dict() for item in self.values()],
+        }
+
     @field_serializer("pile_")
     def _(self, value: dict[str, T]):
-        return [i.to_dict() for i in value.values()]
+        return [item.to_dict() for item in self.values()]
 
     class AsyncPileIterator:
         def __init__(self, pile: Pile):
