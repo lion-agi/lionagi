@@ -2,7 +2,7 @@ from typing import ClassVar
 
 from pydantic import model_validator
 
-from ..fields.instruct import Instruct, InstructResponse
+from ..operations.fields.instruct import Instruct, InstructResponse
 from ..protocols.types import BaseLionModel
 from ..session.types import Branch, Session
 from .params import StrategyParams

@@ -2,89 +2,119 @@
 #
 # SPDX-License-Identifier: Apache-2.0
 
-from datetime import datetime
+from abc import ABC, abstractmethod
 from typing import Any, NoReturn
 
-from pydantic import Field, field_serializer
+from pydantic import Field
 
 from ..protocols.types import BaseAutoModel, Event, EventStatus, Log
 
 __all__ = ("Action",)
 
 
-class Action(BaseAutoModel, Event):
+class Action(BaseAutoModel, Event, ABC):
     """
-    Represents an executable action with status tracking and result management.
+    Base class for executable actions with status tracking and result management.
 
-    Inherits from BaseAutoModel for data validation and Event for event protocol
-    compatibility. Tracks execution status, timing, results, and potential errors.
+    An Action represents a discrete unit of work that can be executed asynchronously.
+    It tracks its execution state, timing, results, and any errors that occur during
+    execution.
 
     Attributes:
-        status (EventStatus): Current status of the action. Defaults to PENDING.
-        execution_time (float | None): Time taken for execution in seconds.
-        execution_result (Any | None): Result of the action execution.
-        error (str | None): Error message if execution failed.
+        status (EventStatus): Current execution status. Defaults to PENDING.
+        execution_time (Optional[float]): Time taken for execution in seconds.
+        execution_result (Optional[Any]): Result produced by the action execution.
+        error (Optional[str]): Error message if execution failed.
 
-    Methods:
-        to_log(): Converts the action to a Log entry.
-
-    Raises:
-        NotImplementedError: When attempting to recreate from dictionary.
+    Properties:
+        request (dict[str, Any]): Request parameters for permission checking.
     """
 
     status: EventStatus = Field(
-        default=EventStatus.PENDING, description="Current status of the action"
+        default=EventStatus.PENDING,
+        description="Current status of the action execution",
     )
     execution_time: float | None = Field(
-        default=None, description="Execution duration in seconds"
+        default=None, description="Time taken to execute the action in seconds"
     )
     execution_result: Any | None = Field(
-        default=None, description="Result of the action execution"
+        default=None, description="Result produced by the action execution"
     )
     error: str | None = Field(
         default=None, description="Error message if execution failed"
     )
 
-    created_at: datetime = Field(
-        default_factory=datetime.utcnow,
-        description="Timestamp of action creation",
-    )
-
-    @field_serializer("status")
-    def _serialize_status(self, value: EventStatus) -> str:
-        """Serializes the EventStatus enum to string format."""
-        return value.value
+    model_config = {
+        "arbitrary_types_allowed": True,
+        "validate_assignment": True,
+        "use_enum_values": False,
+    }
 
     def from_dict(self, *args: Any, **kwargs: Any) -> NoReturn:
         """
         Explicitly prevents recreation from dictionary.
 
+        Actions are meant to be created and executed once, not recreated from
+        serialized state.
+
         Raises:
             NotImplementedError: Always, as Actions cannot be recreated.
         """
         raise NotImplementedError(
-            "An Action cannot be re-created from a dictionary."
+            "Actions cannot be re-created from dictionaries. Create a new Action instance instead."
         )
 
     def to_log(self) -> Log:
         """
         Converts the action instance to a Log entry.
 
+        Creates a log entry capturing the current state of the action for
+        tracking and auditing purposes.
+
         Returns:
             Log: A log entry representing the current action state.
         """
-        return Log(self)
+        return Log(
+            content={
+                "id": str(self.id),
+                "created_timestamp": self.created_timestamp,
+                "status": self.status,
+                "execution_time": self.execution_time,
+                "execution_result": self.execution_result,
+                "error": self.error,
+            }
+        )
 
     @property
     def request(self) -> dict[str, Any]:
+        """
+        Gets request parameters for permission checking.
+
+        Override this in subclasses to provide custom permission parameters.
+
+        Returns:
+            Empty dict by default. Subclasses should override to provide
+            relevant permission parameters.
+        """
         return {}
 
     def __repr__(self) -> str:
-        """Returns a string representation of the Action instance."""
+        """
+        Returns a string representation of the Action instance.
+
+        Returns:
+            String containing key action state (status and execution time).
+        """
         return (
-            f"Action(status={self.status.value}, "
+            f"Action(status={self.status.name}, "
             f"execution_time={self.execution_time})"
         )
 
+    @abstractmethod
+    async def invoke(self) -> None:
+        """Execute the action.
 
-# File: lionagi/action/base.py
+        This method must be implemented by subclasses to define the actual
+        execution behavior of the action.
+        """
+        pass

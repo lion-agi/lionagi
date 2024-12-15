@@ -1,7 +1,7 @@
 from pydantic import model_validator
 
-from ..fields.instruct import Instruct, InstructResponse
 from ..libs.async_utils import alcall
+from ..operations.fields.instruct import Instruct, InstructResponse
 from ..session.types import Branch, Session
 from .base import StrategyExecutor
 from .params import HybridStrategyParams

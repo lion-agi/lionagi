@@ -5,8 +5,7 @@
 import asyncio
 from typing import Any
 
-from pydantic import PrivateAttr, field_serializer, model_validator
-from typing_extensions import Self
+from pydantic import Field, PrivateAttr, field_serializer
 
 from ..protocols.base import EventStatus, IDType
 from .base import Action
@@ -24,12 +23,33 @@ class FunctionCalling(Action):
 
     _tool: Tool = PrivateAttr()
     arguments: dict[str, Any]
-    tool_id: IDType | None = None
+    tool_id: IDType | None = Field(
+        default=None, description="ID of the tool being called"
+    )
 
-    @model_validator(mode="after")
-    def _validate_model(self) -> Self:
-        """Validate and set tool ID after model initialization."""
-        self.tool_id = self._tool.id
+    model_config = {
+        "arbitrary_types_allowed": True,
+        "validate_assignment": True,
+        "use_enum_values": False,
+    }
+
+    @classmethod
+    def create(
+        cls, tool: Tool, arguments: dict[str, Any]
+    ) -> "FunctionCalling":
+        """Create a new FunctionCalling instance.
+
+        Args:
+            tool: Tool to execute
+            arguments: Arguments to pass to the tool
+
+        Returns:
+            New FunctionCalling instance
+        """
+        instance = cls(arguments=arguments)
+        object.__setattr__(instance, "_tool", tool)
+        instance.tool_id = tool.id
+        return instance
 
     @field_serializer("tool_id")
     def _serialize_tool_id(self, value: IDType) -> str:
@@ -43,17 +63,32 @@ class FunctionCalling(Action):
         that occur during tool invocation.
         """
         start = asyncio.get_event_loop().time()
-        self.status = EventStatus.IN_PROGRESS
+        self.status = EventStatus.PROCESSING
 
         try:
-            res = await self._tool.tcall(**self.arguments)
-            self.execution_time = start - asyncio.get_event_loop().time()
+            if not hasattr(self, "_tool"):
+                raise ValueError("Tool not initialized")
+
+            if not self._tool.tcall:
+                raise ValueError("Tool call parameters not initialized")
+
+            if not self._tool.tcall.function:
+                raise ValueError("Tool function not initialized")
+
+            res = await self._tool.tcall.function(**self.arguments)
+            self.execution_time = asyncio.get_event_loop().time() - start
             self.execution_result = res
             self.status = EventStatus.COMPLETED
+
         except Exception as e:
-            self.execution_time = start - asyncio.get_event_loop().time()
+            self.execution_time = asyncio.get_event_loop().time() - start
             self.error = str(e)
             self.status = EventStatus.FAILED
 
-
-# File: lionagi/action/function_calling.py
+    def __repr__(self) -> str:
+        """Returns a string representation of the FunctionCalling instance."""
+        return (
+            f"FunctionCalling(tool_id={self.tool_id}, "
+            f"status={self.status.name}, "
+            f"execution_time={self.execution_time})"
+        )

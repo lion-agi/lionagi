@@ -1,9 +1,9 @@
 from pydantic import model_validator
 
 from lionagi.session.types import Branch, Session
+from lionagi.utils import alcall
 
-from ..fields.instruct import Instruct, InstructResponse
-from ..libs.async_utils import alcall
+from ..operations.fields.instruct import Instruct, InstructResponse
 from .base import StrategyExecutor
 from .params import HybridStrategyParams
 
