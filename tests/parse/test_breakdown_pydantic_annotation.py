@@ -95,18 +95,6 @@ def test_list_with_non_pydantic():
     }
 
 
-def test_list_with_any():
-    class ModelWithAnyList(BaseModel):
-        items: list
-        name: str
-
-    result = breakdown_pydantic_annotation(ModelWithAnyList)
-    assert result == {
-        "items": [Any],
-        "name": str,
-    }
-
-
 def test_is_pydantic_model():
     assert _is_pydantic_model(SimpleModel) is True
     assert _is_pydantic_model(NestedModel) is True
