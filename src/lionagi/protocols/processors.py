@@ -12,7 +12,7 @@ from __future__ import annotations
 import asyncio
 from abc import abstractmethod
 from dataclasses import dataclass, field
-from typing import Any, NoReturn
+from typing import Any
 
 from .base import Event, Observer
 
@@ -116,7 +116,7 @@ class BaseExecutor(Observer):
     async def forward(self, *args: Any, **kwargs: Any) -> Any:
         """Move onto the next step."""
 
-    async def acreate_processor(self) -> NoReturn:
+    async def create_processor(self) -> None:
         """Create processor instance asynchronously."""
         self.processor = await self.processor_class.create(
             **self.processor_config
