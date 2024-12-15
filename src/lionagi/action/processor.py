@@ -23,7 +23,7 @@ class ActionProcessor(BaseProcessor):
     limits and optional permission checks before processing.
     """
 
-    observation_type: ClassVar[type[Action]] = Action
+    event_type: ClassVar[type[Action]] = Action
 
     @override
     async def process(self) -> None:
@@ -52,6 +52,3 @@ class ActionProcessor(BaseProcessor):
         if tasks:
             await asyncio.wait(tasks)
             self.available_capacity = self.capacity
-
-
-# File: lionagi/action/processor.py
