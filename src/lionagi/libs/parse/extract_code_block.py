@@ -22,28 +22,26 @@ def extract_code_block(
 
     Args:
         str_to_parse (str): The input Markdown string.
-        return_as_list (bool): If True, return code blocks as a list of CodeBlock objects.
-            Otherwise, return a single string separated by double newlines.
         languages (list[str] | None): If provided, only return code blocks
             whose language matches one in this list. If None, return all.
         categorize (bool): If True, return a dictionary mapping each language
             to a list of CodeBlock objects.
 
     Returns:
-        str | list[CodeBlock] | dict[str, list[CodeBlock]]:
+        list[CodeBlock] | dict[str, list[CodeBlock]]:
             - If categorize=True: a dict mapping languages to lists of CodeBlock objects.
-            - Else if return_as_list=True: a list of CodeBlock objects.
-            - Otherwise: a single string of all code blocks separated by two newlines.
+            - Otherwise: a list of CodeBlock objects.
     """
     code_blocks = []
     code_dict = {}
 
     pattern = re.compile(
         r"""
-        ^(?P<fence>```|~~~)[ \t]*       # Opening fence
-        (?P<lang>[\w+-]*)[ \t]*\n       # Optional language
-        (?P<code>.*?)(?<=\n)            # Code content
-        ^(?P=fence)[ \t]*$              # Matching closing fence
+        ^[ \t]*(?P<fence>```|~~~)[ \t]*  # Opening fence with optional leading whitespace
+        (?P<lang>[\w+-]*)[ \t]*\n        # Optional language
+        (?P<code>.*?)                     # Code content
+        (?:\n[ \t]*)?                     # Optional trailing newline
+        ^[ \t]*(?P=fence)[ \t]*$         # Matching closing fence with optional leading whitespace
         """,
         re.MULTILINE | re.DOTALL | re.VERBOSE,
     )
@@ -51,6 +49,8 @@ def extract_code_block(
     for match in pattern.finditer(str_to_parse):
         lang = match.group("lang") or "plain"
         code = match.group("code")
+        # Ensure code ends with exactly one newline
+        code = (code or "").rstrip("\n") + "\n"
 
         if languages is None or lang in languages:
             block = CodeBlock(lang=lang, code=code)

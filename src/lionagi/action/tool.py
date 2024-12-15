@@ -41,19 +41,30 @@ class Tool(BaseAutoModel):
     @model_validator(mode="after")
     def _validate_schema(self) -> Self:
         """Validate and normalize schema after model initialization."""
-        if not self.schema_:
-            self.schema_ = function_to_schema(self.function).to_dict()
-            return
-
-        if hasattr(self.schema_, "to_dict"):
-            self.schema_ = self.schema_.to_dict()
-        if not isinstance(self.schema_, dict):
-            self.schema_ = to_dict(self.schema_)
-
+        # Initialize tcall first
         if not self.tcall:
             self.tcall = TCallParams()
         self.tcall.timing = False
         self.tcall.function = self.function
+
+        # Handle schema
+        if not self.schema_:
+            schema = function_to_schema(self.function)
+            self.schema_ = {
+                "name": schema.name,
+                "description": schema.description,
+                "parameters": schema.parameters,
+            }
+        elif hasattr(self.schema_, "to_dict"):
+            schema_dict = self.schema_.to_dict()
+            if isinstance(schema_dict, dict) and "name" not in schema_dict:
+                schema_dict["name"] = self.function.__name__
+            self.schema_ = schema_dict
+        elif not isinstance(self.schema_, dict):
+            schema_dict = to_dict(self.schema_)
+            if "name" not in schema_dict:
+                schema_dict["name"] = self.function.__name__
+            self.schema_ = schema_dict
 
         return self
 

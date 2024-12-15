@@ -168,3 +168,7 @@ setup.py
 pyproject.toml
 .idea/
 .data/
+notebooks/.lock
+notebooks/meta.json
+logs/
+temp_logs/

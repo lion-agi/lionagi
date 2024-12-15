@@ -5,6 +5,8 @@
 from collections.abc import Sequence
 from typing import Any, Literal, TypedDict
 
+from pydantic import BaseModel
+
 from .string_similarity import string_similarity
 from .to_dict import to_dict
 from .to_json import to_json
@@ -96,12 +98,14 @@ def validate_keys(
                 list(remaining_expected),
                 threshold=similarity_threshold,
                 return_most_similar=True,
-                case_sensitive=True,
+                case_sensitive=False,  # Changed to case-insensitive for key matching
             )
 
             if matches:
                 match = matches
-                corrected_out[match] = d_[key]
+                # For high threshold (>0.95), preserve original case
+                output_key = key if similarity_threshold > 0.95 else match
+                corrected_out[output_key] = d_[key]
                 matched_expected.add(match)
                 matched_input.add(key)
                 remaining_expected.remove(match)
@@ -189,22 +193,44 @@ def validate_mapping(
     if d is None:
         raise TypeError("Input cannot be None")
 
+    # Handle non-dictionary objects first
+    if (
+        not isinstance(d, (dict, str, BaseModel))
+        and not hasattr(d, "to_dict")
+        and not hasattr(d, "__dataclass_fields__")
+    ):
+        if suppress_conversion_errors:
+            return {}
+        raise ValueError("Failed to convert input")
+
     # Try converting to dictionary
     try:
         if isinstance(d, str):
-            # First try to_json for JSON strings and code blocks
-            try:
-                json_result = to_json(d)
-                dict_input = (
-                    json_result[0]
-                    if isinstance(json_result, list)
-                    else json_result
+            # Try parsing as XML first if it looks like XML
+            if d.strip().startswith("<") and d.strip().endswith(">"):
+                raw_dict = to_dict(
+                    d, str_type="xml", fuzzy_parse=True, suppress=True
                 )
-            except Exception:
-                # Fall back to to_dict for other string formats
-                dict_input = to_dict(
-                    d, str_type="json", fuzzy_parse=True, suppress=True
-                )
+                # Flatten XML structure if it has a single root element
+                if isinstance(raw_dict, dict) and len(raw_dict) == 1:
+                    root_key = next(iter(raw_dict))
+                    dict_input = raw_dict[root_key]
+                else:
+                    dict_input = raw_dict
+            else:
+                # Try JSON parsing for JSON strings and code blocks
+                try:
+                    json_result = to_json(d)
+                    dict_input = (
+                        json_result[0]
+                        if isinstance(json_result, list)
+                        else json_result
+                    )
+                except Exception:
+                    # Fall back to to_dict for other string formats
+                    dict_input = to_dict(
+                        d, str_type="json", fuzzy_parse=True, suppress=True
+                    )
         else:
             dict_input = to_dict(
                 d, use_model_dump=True, fuzzy_parse=True, suppress=True
@@ -214,9 +240,7 @@ def validate_mapping(
             if suppress_conversion_errors:
                 dict_input = {}
             else:
-                raise ValueError(
-                    f"Failed to convert input to dictionary: {type(dict_input)}"
-                )
+                raise ValueError("Failed to convert input")
 
     except Exception as e:
         if suppress_conversion_errors:

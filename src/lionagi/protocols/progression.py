@@ -2,7 +2,8 @@
 #
 # SPDX-License-Identifier: Apache-2.0
 
-import contextlib
+from __future__ import annotations
+
 from collections.abc import Iterator
 from typing import Any
 
@@ -52,35 +53,34 @@ class Progression(BaseAutoModel, Ordering):
         if item is None or not self.order:
             return False
 
-        item = to_list_type(item) if not isinstance(item, list) else item
+        try:
+            if isinstance(item, Observable):
+                return item.id in self.order
+            if isinstance(item, IDType):
+                return item in self.order
+            if isinstance(item, str) and ID.is_id(item):
+                return IDType(item) in self.order
+        except:
+            pass
 
-        check = False
-        for i in item:
-            check = False
-            if isinstance(i, str):
-                check = i in self.order
-            elif isinstance(i, Observable):
-                check = i.id in self.order
-            if not check:
-                return False
-        return check
+        return False
 
-    def __list__(self) -> list[IDType]:
-        """Return a copy of the order."""
-        return self.order[:]
+    def __list__(self) -> list[str]:
+        """Return a copy of the order as strings."""
+        return [str(id_) for id_ in self.order]
 
     def __len__(self) -> int:
         """Get the length of the progression."""
         return len(self.order)
 
-    def __getitem__(self, key: int | slice) -> ID.IDSeq:
+    def __getitem__(self, key: int | slice) -> str | Progression:
         """Get an item or slice of items from the progression.
 
         Args:
             key: Integer index or slice object.
 
         Returns:
-            Single ID for integer key, new Progression for slice.
+            Single ID as str for integer key, new Progression for slice.
 
         Raises:
             TypeError: If key is not int or slice.
@@ -93,13 +93,13 @@ class Progression(BaseAutoModel, Ordering):
             )
 
         try:
-            a = self.order[key]
-            if not a:
+            result = self.order[key]
+            if not result:
                 raise ItemNotFoundError(f"index {key} item not found")
             if isinstance(key, slice):
-                return self.__class__(order=a)
+                return self.__class__(order=result)
             else:
-                return a
+                return str(result)
         except IndexError:
             raise ItemNotFoundError(f"index {key} item not found")
 
@@ -143,8 +143,11 @@ class Progression(BaseAutoModel, Ordering):
         Args:
             item: Item or sequence to append.
         """
-        item_ = validate_order(item)
-        self.order.extend(item_)
+        if isinstance(item, list):
+            items = [ID.get_id(i) for i in item]
+        else:
+            items = [ID.get_id(item)]
+        self.order.extend(items)
 
     def pop(self, index: int = None, /) -> str:
         """Remove and return an item from the progression.
@@ -171,8 +174,12 @@ class Progression(BaseAutoModel, Ordering):
         Args:
             item: Item or sequence to include.
         """
-        item_ = validate_order(item)
-        for i in item_:
+        if isinstance(item, list):
+            items = [ID.get_id(i) for i in item]
+        else:
+            items = [ID.get_id(item)]
+
+        for i in items:
             if i not in self.order:
                 self.order.append(i)
 
@@ -182,24 +189,30 @@ class Progression(BaseAutoModel, Ordering):
         Args:
             item: Item or sequence to exclude.
         """
-        for i in validate_order(item):
-            while i in self:
-                self.remove(i)
+        if isinstance(item, list):
+            items = [ID.get_id(i) for i in item]
+        else:
+            items = [ID.get_id(item)]
+
+        for i in items:
+            if i not in self.order:
+                raise ItemNotFoundError(f"{i}")
+            self.order.remove(i)
 
     def is_empty(self) -> bool:
         """Check if the progression is empty."""
         return not self.order
 
-    def reverse(self) -> "Progression":
+    def reverse(self) -> Progression:
         """Return a reversed progression."""
         return self.__class__(order=list(reversed(self.order)), name=self.name)
 
-    def __reverse__(self) -> "Progression":
+    def __reverse__(self) -> Progression:
         """Return a reversed progression."""
         return self.reverse()
 
     @override
-    def __eq__(self, other: "Progression", /) -> bool:
+    def __eq__(self, other: Progression, /) -> bool:
         """Compare two Progression instances for equality."""
         if not isinstance(other, Progression):
             return NotImplemented
@@ -234,17 +247,18 @@ class Progression(BaseAutoModel, Ordering):
         Raises:
             ItemNotFoundError: If item not found.
         """
-        if item in self:
-            item = validate_order(item)
-            l_ = list(self.order)
+        try:
+            if isinstance(item, list):
+                items = [ID.get_id(i) for i in item]
+            else:
+                items = [ID.get_id(item)]
+        except ValueError:
+            raise ItemNotFoundError(f"{item}")
 
-            with contextlib.suppress(ValueError):
-                for i in item:
-                    l_.remove(i)
-                self.order = l_
-                return
-
-        raise ItemNotFoundError(f"{item}")
+        for i in items:
+            if i not in self.order:
+                raise ItemNotFoundError(f"{i}")
+            self.order.remove(i)
 
     def popleft(self) -> str:
         """Remove and return the leftmost item from the progression.
@@ -260,7 +274,7 @@ class Progression(BaseAutoModel, Ordering):
         except IndexError as e:
             raise ItemNotFoundError from e
 
-    def extend(self, item: "Progression", /) -> None:
+    def extend(self, item: Progression, /) -> None:
         """Extend the progression from the right with another progression.
 
         Args:
@@ -291,7 +305,7 @@ class Progression(BaseAutoModel, Ordering):
         """Check if the container is not empty."""
         return not self.is_empty()
 
-    def __add__(self, other: ID.RefSeq) -> "Progression":
+    def __add__(self, other: ID.RefSeq) -> Progression:
         """Returns a new progression with items added to the end.
 
         Args:
@@ -307,7 +321,7 @@ class Progression(BaseAutoModel, Ordering):
         new_order.extend(other)
         return self.__class__(order=new_order)
 
-    def __radd__(self, other: ID.RefSeq) -> "Progression":
+    def __radd__(self, other: ID.RefSeq) -> Progression:
         """Reverse add operation."""
         return self + other
 
@@ -321,7 +335,7 @@ class Progression(BaseAutoModel, Ordering):
         self.remove(other)
         return self
 
-    def __sub__(self, other: ID.RefSeq) -> "Progression":
+    def __sub__(self, other: ID.RefSeq) -> Progression:
         """Remove an item or items from the progression.
 
         Args:

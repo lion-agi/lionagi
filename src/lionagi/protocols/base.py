@@ -40,7 +40,7 @@ class EventStatus(str, Enum):
     """Event execution status states."""
 
     PENDING = "pending"
-    IN_PROGRESS = "in_progress"
+    PROCESSING = "processing"
     COMPLETED = "completed"
     FAILED = "failed"
 
@@ -220,7 +220,7 @@ def to_list_type(value: Any, /) -> list[Any]:
     return [value]
 
 
-def validate_order(value: Any, /) -> list[str]:
+def validate_order(value: Any, /) -> list[IDType]:
     """Validate and standardize order representation"""
     try:
         return [ID.get_id(item) for item in to_list_type(value)]
@@ -230,7 +230,7 @@ def validate_order(value: Any, /) -> list[str]:
 
 def validate_sender_recipient(value) -> ID.SenderRecipient:
     """Validate and standardize sender/recipient identifiers."""
-    if isinstance(value, IDType | MessageRole | MessageFlag):
+    if isinstance(value, ID.SenderRecipient):
         return value
     try:
         return ID.get_id(value)

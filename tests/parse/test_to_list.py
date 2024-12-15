@@ -3,8 +3,7 @@ from collections import OrderedDict, deque, namedtuple
 import pytest
 from pydantic import BaseModel
 
-from lionagi.libs.parse.types import to_list
-from lionagi.utils import UndefinedType
+from lionagi.utils import to_list
 
 
 class CustomIterable:

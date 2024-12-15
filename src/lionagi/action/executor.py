@@ -34,7 +34,7 @@ class ActionExecutor(BaseExecutor):
         super().__init__(**kwargs)
         self.pile: Pile[Action] = Pile(
             item_type={self.processor_class.event_type},
-            strict_type=self.strict,
+            strict_type=False,  # Allow subclasses of Action
         )
         self.pending: Progression = Progression()
         self.processor: ActionProcessor = None
@@ -60,8 +60,8 @@ class ActionExecutor(BaseExecutor):
             action: Action instance to append.
         """
         async with self.pile:
-            self.pile.include(item=action)
-            self.pending.include(item=action)
+            self.pile.include(action)  # Pass as positional argument
+            self.pending.include(action)  # Pass as positional argument
 
     @override
     async def forward(self) -> None:
@@ -78,6 +78,3 @@ class ActionExecutor(BaseExecutor):
     def __iter__(self) -> Iterator[Action]:
         """Iterate over all actions in pile."""
         return iter(self.pile)
-
-
-# File: lioncore/action/action_executor.py

@@ -122,9 +122,20 @@ async def brainstorm(
         field_models.append(INSTRUCT_FIELD_MODEL)
 
     kwargs["field_models"] = field_models
-    session, branch = prepare_session(session, branch, branch_kwargs)
-    prompt = get_prompt(template, num_instruct=num_instruct)
-    instruct = prepare_instruct(instruct, prompt, **(template_context or {}))
+    session, branch = prepare_session(
+        session=session,
+        branch=branch,
+        branch_kwargs=branch_kwargs,
+    )
+    prompt = get_prompt(
+        template=template,
+        num_instruct=num_instruct,
+        **(template_context or {}),
+    )
+    instruct = prepare_instruct(
+        instruct=instruct,
+        prompt=prompt,
+    )
 
     res1 = await branch.operate(**instruct, **kwargs)
     out = BrainstormOperation(initial=res1)
