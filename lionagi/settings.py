@@ -3,17 +3,16 @@ from enum import Enum
 
 from lionagi.protocols.configs import (
     BranchConfig,
-    LionIDConfig,
+    LogConfig,
     MessageConfig,
     RetryConfig,
     TimedFuncCallConfig,
     iModelConfig,
 )
-from lionagi.protocols.configs.log_config import LogConfig
 
 
 class BaseSystemFields(str, Enum):
-    ln_id = "ln_id"
+    LN_ID = "ln_id"
     TIMESTAMP = "timestamp"
     METADATA = "metadata"
     EXTRA_FIELDS = "extra_fields"
@@ -22,15 +21,8 @@ class BaseSystemFields(str, Enum):
     EMBEDDING = "embedding"
 
 
-DEFAULT_ID_CONFIG = LionIDConfig(
-    n=36,
-    random_hyphen=True,
-    num_hyphens=4,
-    hyphen_start_index=6,
-    hyphen_end_index=-6,
-    prefix="ao",
-    postfix="",
-)
+UUID_VERSION = 4
+
 
 DEFAULT_TIMED_FUNC_CALL_CONFIG = TimedFuncCallConfig(
     initial_delay=0,
@@ -61,7 +53,7 @@ DEFAULT_CHAT_CONFIG = iModelConfig(
 )
 
 
-DEFAULT_RETRY_iMODEL_CONFIG = iModelConfig(
+DEFAULT_PARSE_CONFIG = iModelConfig(
     provider="openai",
     task="chat",
     model="gpt-4o-mini",
@@ -109,7 +101,7 @@ DEFAULT_BRANCH_CONFIG = BranchConfig(
     auto_register_tools=True,
     action_call_config=DEFAULT_TIMED_FUNC_CALL_CONFIG,
     imodel_config=DEFAULT_CHAT_CONFIG,
-    retry_imodel_config=DEFAULT_RETRY_iMODEL_CONFIG,
+    retry_imodel_config=DEFAULT_PARSE_CONFIG,
 )
 
 
@@ -120,7 +112,7 @@ BASE_LION_FIELDS = set(BaseSystemFields.__members__.values())
 class Settings:
 
     class Config:
-        ID: LionIDConfig = DEFAULT_ID_CONFIG
+        UUID_VERSION: int = UUID_VERSION
         RETRY: RetryConfig = DEFAULT_RETRY_CONFIG
         TIMED_CALL: TimedFuncCallConfig = DEFAULT_TIMED_FUNC_CALL_CONFIG
         TIMEZONE: timezone = DEFAULT_TIMEZONE
@@ -129,8 +121,8 @@ class Settings:
         BRANCH: BranchConfig = DEFAULT_BRANCH_CONFIG
 
     class iModel:
-        CHAT: dict = {"model": "openai/gpt-4o"}
-        PARSE: iModelConfig = DEFAULT_CHAT_CONFIG
+        CHAT: iModelConfig = DEFAULT_CHAT_CONFIG
+        PARSE: iModelConfig = DEFAULT_PARSE_CONFIG
 
 
 # File: autoos/setting.py

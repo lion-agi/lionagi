@@ -1,10 +1,8 @@
 import json
-import os
 from datetime import datetime
-from unittest.mock import AsyncMock, MagicMock, mock_open, patch
+from unittest.mock import MagicMock, mock_open, patch
 
 import pytest
-from pydantic import ValidationError
 
 from lionagi.integrations.openai_.api_endpoints.chat_completions.request.message_models import (
     AssistantMessage,

@@ -1,10 +1,6 @@
-import json
-import os
-from datetime import datetime
-from unittest.mock import AsyncMock, MagicMock, mock_open, patch
+from unittest.mock import mock_open, patch
 
 import pytest
-from pydantic import ValidationError
 
 from lionagi.integrations.anthropic_.AnthropicModel import AnthropicModel
 from lionagi.integrations.anthropic_.api_endpoints.messages.request.message_models import (
@@ -13,7 +9,6 @@ from lionagi.integrations.anthropic_.api_endpoints.messages.request.message_mode
 from lionagi.integrations.anthropic_.api_endpoints.messages.request.request_body import (
     AnthropicMessageRequestBody,
 )
-from lionagi.service.rate_limiter import RateLimitError
 from lionagi.service.token_calculator import TiktokenCalculator
 
 MOCK_PRICE_YAML = """
