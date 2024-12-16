@@ -103,6 +103,10 @@ class Element(BaseModel, Observable):
         super().__pydantic_init_subclass__(**kwargs)
         LION_CLASS_REGISTRY[cls.__name__] = cls
 
+    @field_serializer("ln_id")
+    def _serialize_id(self, value: IDType) -> str:
+        return str(self.ln_id)
+
     @field_validator("ln_id", mode="before")
     def _validate_id(cls, value: str | IDType) -> str:
         try:
@@ -172,7 +176,6 @@ class Element(BaseModel, Observable):
         """
         dict_ = self.model_dump(**kwargs)
         dict_["lion_class"] = self.class_name()
-        dict_["ln_id"] = str(self.ln_id)
         return dict_
 
     @override
