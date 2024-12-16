@@ -3,21 +3,37 @@
 # SPDX-License-Identifier: Apache-2.0
 
 from collections.abc import Callable
-from typing import Any, ClassVar
+from typing import Any
 
 from typing_extensions import override
 
-from lionagi.libs.parse.types import to_dict
+from lionagi.libs.parse import to_dict
+from lionagi.protocols.types import ID, MessageFlag, MessageRole, Note
 from lionagi.utils import copy
 
-from ..protocols.types import ID, MessageFlag, MessageRole
-from .message import RoledMessage, Template, env
+from .message import RoledMessage
 
 
 def prepare_action_request(
     function: str | Callable,
     arguments: dict,
-) -> dict:
+) -> Note:
+    """
+    Prepare an action request with function and arguments.
+
+    This function validates and formats the action request parameters,
+    ensuring arguments are properly structured as a dictionary.
+
+    Args:
+        function: Function to execute, either as name or callable
+        arguments: Arguments to pass to the function
+
+    Returns:
+        Note: Formatted action request
+
+    Raises:
+        ValueError: If arguments cannot be converted to a dictionary
+    """
     args = copy(arguments)
     if not isinstance(arguments, dict):
         try:
@@ -30,7 +46,7 @@ def prepare_action_request(
                 raise ValueError
         except Exception:
             raise ValueError("Arguments must be a dictionary.")
-    return {"action_request": {"function": function, "arguments": arguments}}
+    return Note(action_request={"function": function, "arguments": arguments})
 
 
 class ActionRequest(RoledMessage):
@@ -51,8 +67,6 @@ class ActionRequest(RoledMessage):
         >>> print(request.function)
         'calculate_sum'
     """
-
-    template: ClassVar[Template] = env.get_template("action_request.jinja2")
 
     @override
     def __init__(
@@ -128,16 +142,6 @@ class ActionRequest(RoledMessage):
         return a
 
     @property
-    def rendered(self) -> str:
-        """
-        Get the rendered content of the action request.
-
-        Returns:
-            str: The rendered content of the request
-        """
-        return self.template.render(self.request)
-
-    @property
     def arguments(self) -> dict[str, Any]:
         """
         Get the arguments for the action request.
@@ -159,4 +163,4 @@ class ActionRequest(RoledMessage):
 
     @override
     def _format_content(self) -> dict[str, Any]:
-        return {"role": self.role.value, "content": self.rendered}
+        return {"role": self.role.value, "content": self.request}

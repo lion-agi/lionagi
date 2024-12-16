@@ -6,8 +6,35 @@ from typing import Any, Literal
 
 from pydantic import BaseModel
 
-from lionagi.libs.parse.types import breakdown_pydantic_annotation, to_str
-from lionagi.utils import UNDEFINED, is_same_dtype
+from lionagi.libs.parse.types import breakdown_pydantic_annotation
+from lionagi.protocols.base import IDType
+from lionagi.protocols.types import ID, IDError, Note
+from lionagi.utils import UNDEFINED, time
+
+DEFAULT_SYSTEM = "You are a helpful AI assistant. Let's think step by step."
+
+
+def format_system_content(
+    system_datetime: bool | str | None,
+    system_message: str,
+) -> Note:
+    """
+    Format system message content with optional datetime information.
+
+    Args:
+        system_datetime: Flag or string for datetime inclusion
+        system_message: The system message content
+
+    Returns:
+        Note: Formatted system content
+    """
+    content = Note(system=str(system_message or DEFAULT_SYSTEM))
+    if system_datetime:
+        if isinstance(system_datetime, str):
+            content["system_datetime"] = system_datetime
+        else:
+            content["system_datetime"] = time(type_="iso", timespec="minutes")
+    return content
 
 
 def prepare_request_response_format(request_fields: dict) -> str:
@@ -129,7 +156,7 @@ def prepare_instruction_content(
     images: str | list | None = None,
     image_detail: Literal["low", "high", "auto"] | None = None,
     tool_schemas: dict | None = None,
-) -> dict:
+) -> Note:
     """
     Prepare the content for an instruction message.
 
@@ -191,60 +218,33 @@ def prepare_instruction_content(
     if plain_content:
         out_["plain_content"] = plain_content
 
-    return {k: v for k, v in out_.items() if v not in [None, UNDEFINED]}
+    return Note(
+        **{k: v for k, v in out_.items() if v not in [None, UNDEFINED]},
+    )
 
 
-def prepare_assistant_response(
-    assistant_response: BaseModel | list[BaseModel] | dict | str | Any, /
-) -> dict:
-    if assistant_response:
-        content = {}
-        # Handle model.choices[0].message.content format
-        if isinstance(assistant_response, BaseModel):
-            content["assistant_response"] = (
-                assistant_response.choices[0].message.content or ""
-            )
-            content["model_response"] = assistant_response.model_dump(
-                exclude_none=True, exclude_unset=True
-            )
-        # Handle streaming response[i].choices[0].delta.content format
-        elif isinstance(assistant_response, list):
-            if is_same_dtype(assistant_response, BaseModel):
-                msg = "".join(
-                    [
-                        i.choices[0].delta.content or ""
-                        for i in assistant_response
-                    ]
-                )
-                content["assistant_response"] = msg
-                content["model_response"] = [
-                    i.model_dump(
-                        exclude_none=True,
-                        exclude_unset=True,
-                    )
-                    for i in assistant_response
-                ]
-            elif is_same_dtype(assistant_response, dict):
-                msg = "".join(
-                    [
-                        i["choices"][0]["delta"]["content"] or ""
-                        for i in assistant_response
-                    ]
-                )
-                content["assistant_response"] = msg
-                content["model_response"] = assistant_response
-        elif isinstance(assistant_response, dict):
-            if "content" in assistant_response:
-                content["assistant_response"] = assistant_response["content"]
-            elif "choices" in assistant_response:
-                content["assistant_response"] = assistant_response["choices"][
-                    0
-                ]["message"]["content"]
-            content["model_response"] = assistant_response
-        elif isinstance(assistant_response, str):
-            content["assistant_response"] = assistant_response
-        else:
-            content["assistant_response"] = to_str(assistant_response)
-        return content
-    else:
-        return {"assistant_response": ""}
+def validate_sender_recipient(
+    value: Any, /
+) -> IDType | Literal["system", "user", "N/A", "assistant"]:
+    """
+    Validate sender and recipient fields for mail-like communication.
+
+    Args:
+        value: The value to validate
+
+    Returns:
+        Union[LnID, Literal]: Valid sender/recipient value
+
+    Raises:
+        ValueError: If value is not a valid sender or recipient
+    """
+    if value in ["system", "user", "N/A", "assistant"]:
+        return value
+
+    if value is None:
+        return "N/A"
+
+    try:
+        return ID.get_id(value)
+    except IDError as e:
+        raise ValueError("Invalid sender or recipient") from e

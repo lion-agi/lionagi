@@ -8,27 +8,15 @@ from pydantic import BaseModel, JsonValue
 from typing_extensions import override
 
 from lionagi.libs.parse.types import breakdown_pydantic_annotation, to_str
+from lionagi.protocols.types import ID, Log
 from lionagi.utils import copy
 
-from ..protocols.types import ID, Log, MessageFlag, MessageRole
-from .message import RoledMessage
+from .message import MessageFlag, MessageRole, RoledMessage
 from .utils import (
     format_image_content,
     format_text_content,
     prepare_instruction_content,
     prepare_request_response_format,
-)
-
-TEMPLATE_KEYS = (
-    "plain_content",
-    "guidance",
-    "instruction",
-    "context",
-    "request_fields",
-    "request_response_format",
-    "tool_schemas",
-    "images",
-    "image_detail",
 )
 
 
@@ -347,7 +335,7 @@ class Instruction(RoledMessage):
     @override
     def _format_content(self) -> dict[str, Any]:
         """Format the content of the instruction."""
-        content = self.content
+        content = self.content.to_dict()
         text_content = format_text_content(content)
         if "images" not in content:
             return {"role": self.role.value, "content": text_content}
@@ -371,11 +359,14 @@ class Instruction(RoledMessage):
             Log: A Log object representing the message.
         """
         dict_ = self.to_dict()
-        content: dict = dict_.pop("content")
+        content = dict_.pop("content")
         content.pop("request_model", None)
         content.pop("request_fields", None)
-        dict_["content"] = content
-        return Log(self)
+        _log = Log(
+            content=content,
+            loginfo=dict_,
+        )
+        return _log
 
 
 __all__ = ["Instruction"]

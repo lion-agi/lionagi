@@ -2,21 +2,21 @@
 #
 # SPDX-License-Identifier: Apache-2.0
 
-from typing import Any, ClassVar
+from typing import Any
 
 from typing_extensions import override
 
+from lionagi.protocols.types import ID, MessageFlag, MessageRole, Note
 from lionagi.utils import copy
 
-from ..protocols.types import ID, MessageFlag, MessageRole
 from .action_request import ActionRequest
-from .message import RoledMessage, Template, env
+from .message import RoledMessage
 
 
 def prepare_action_response_content(
     action_request: ActionRequest,
     output: Any,
-) -> dict:
+) -> Note:
     """
     Prepare the content for an action response.
 
@@ -30,14 +30,14 @@ def prepare_action_response_content(
     Returns:
         Note: Formatted action response content
     """
-    return {
-        "action_request_id": action_request.id,
-        "action_response": {
+    return Note(
+        action_request_id=action_request.ln_id,
+        action_response={
             "function": action_request.function,
             "arguments": action_request.arguments,
             "output": output,
         },
-    }
+    )
 
 
 class ActionResponse(RoledMessage):
@@ -55,12 +55,10 @@ class ActionResponse(RoledMessage):
         6
     """
 
-    template: ClassVar[Template] = env.get_template("action_response.jinja2")
-
     @override
     def __init__(
         self,
-        action_request: ActionRequest,
+        action_request: ID[ActionRequest].Item,
         output: Any = None,
         protected_init_params: dict | None = None,
     ) -> None:
@@ -98,7 +96,7 @@ class ActionResponse(RoledMessage):
                 output=output,
             ),
         )
-        action_request.content["action_response_id"] = self.id
+        action_request.content["action_response_id"] = self.ln_id
 
     @property
     def function(self) -> str:
@@ -138,10 +136,10 @@ class ActionResponse(RoledMessage):
         Returns:
             dict[str, Any]: The response including function details and output
         """
-        return self.content.get("action_response")
+        return copy(self.content.get("action_response", {}))
 
     @property
-    def action_request_id(self) -> ID[ActionRequest] | None:
+    def action_request_id(self) -> ID[ActionRequest].ID | None:
         """
         Get the ID of the corresponding action request.
 
@@ -150,10 +148,6 @@ class ActionResponse(RoledMessage):
         """
         return copy(self.content.get("action_request_id", None))
 
-    @property
-    def rendered(self) -> str:
-        return self.template.render(self.content)
-
     @override
     def _format_content(self) -> dict[str, Any]:
-        return {"role": self.role.value, "content": self.rendered}
+        return {"role": self.role.value, "content": self.response}
