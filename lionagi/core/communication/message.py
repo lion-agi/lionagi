@@ -58,7 +58,7 @@ class MessageField(str, Enum):
     - LION_CLASS: Class identifier for LION system
     - ROLE: Message role (system/user/assistant)
     - CONTENT: Message content
-    - ln_id: Unique message identifier
+    - id: Unique message identifier
     - SENDER: Message sender
     - RECIPIENT: Message recipient
     - METADATA: Additional message metadata
@@ -68,7 +68,7 @@ class MessageField(str, Enum):
     LION_CLASS = "lion_class"
     ROLE = "role"
     CONTENT = "content"
-    ln_id = "ln_id"
+    id = "id"
     SENDER = "sender"
     RECIPIENT = "recipient"
     METADATA = "metadata"
@@ -248,7 +248,7 @@ class RoledMessage(Component, BaseMail):
         if origin_obj and isinstance(origin_obj, Communicatable):
             info_dict = {
                 "clone_from_info": {
-                    "original_ln_id": origin_obj.ln_id,
+                    "original_id": origin_obj.id,
                     "original_timestamp": origin_obj.timestamp,
                     "original_sender": origin_obj.sender,
                     "original_recipient": origin_obj.recipient,

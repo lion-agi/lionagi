@@ -102,7 +102,7 @@ def test_base_mail_inheritance():
 
     # Test Element inheritance
     assert hasattr(mail, "ln_id")
-    assert hasattr(mail, "timestamp")
+    assert hasattr(mail, "created_timestamp")
 
     # Test Communicatable inheritance
     assert hasattr(mail, "sender")
@@ -118,4 +118,4 @@ def test_base_mail_serialization():
     assert serialized["sender"] == "system"
     assert serialized["recipient"] == "user"
     assert "ln_id" in serialized
-    assert "timestamp" in serialized
+    assert "created_timestamp" in serialized
