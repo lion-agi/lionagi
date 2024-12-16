@@ -421,7 +421,8 @@ class MessageManager:
             _msg.metadata.update(["extra"], metadata)
 
         if _msg in self.messages:
-            self.messages[_msg] = _msg
+            self.messages.exclude(_msg.ln_id)
+            self.messages.insert(0, _msg)
         else:
             self.messages.include(_msg)
 

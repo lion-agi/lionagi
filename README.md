@@ -22,21 +22,22 @@ LION is designed to be:
 ## Quick Start
 
 ```python
-from lionagi import Branch, iModel
+from lionagi import iModel, Branch
 
 # Initialize model
 gpt4o = iModel(provider="openai", model="gpt-4o")
 
-# Create a branch with personality
-comedian = Branch(
-    system="you are a sarcastic dragon hunter",
-    imodel=gpt4o
+hunter = Branch(
+    system="you are a hilarious dragon hunter who responds in 10 words rhymes",
+    imodel=gpt4o,
 )
 
 # Chat asynchronously
-response = await comedian.chat(
-    "tell me a joke on knight vs dragon"
-)
+print(await hunter.communicate("I am a dragon"))
+```
+
+```
+You claim to be a dragon, oh what a braggin'!
 ```
 
 ## Installation
@@ -44,14 +45,15 @@ response = await comedian.chat(
 LION maintains minimal dependencies for maximum reliability:
 
 ```bash
-pip install lionagi
+uv pip install lionagi
 ```
 
 Dependencies:
-- aiocache
-- lion-core
+- litellm
+- jinja2
+- pandas
+- pillow
 - python-dotenv
-- IPython
 
 ## 🌟 Example Workflow
 
@@ -97,109 +99,6 @@ sequenceDiagram
     Orchestrator-->>-Client: Return Validated Output
 ```
 
-## 🏗️ System Architecture
-
-Here's how you can structure your LION-powered system. Each component can be customized to your specific needs.
-
-```mermaid
-graph TB
-    subgraph Client Layer
-        CL[Client Application]
-    end
-
-    subgraph Orchestration Layer
-        ORC[Orchestrator]
-        SEC[Security Controls]
-        MON[Monitoring]
-    end
-
-    subgraph Agent Layer
-        subgraph Specialized Agents
-            RA[Research Agent]
-            AA[Analysis Agent]
-            VA[Validation Agent]
-        end
-
-        subgraph Agent Controls
-            AC[Access Control]
-            AM[Action Monitor]
-            VE[Verification]
-        end
-    end
-
-    subgraph Resource Layer
-        subgraph Tool Management
-            TM[Tool Registry]
-            TP[Tool Policies]
-        end
-
-        subgraph Data Sources
-            DS[Data Access]
-            DV[Data Validation]
-        end
-    end
-
-    %% Connections
-    CL --> ORC
-    ORC --> RA & AA & VA
-    RA & AA & VA --> AC
-    AC --> TM
-    TM --> DS
-
-    %% Control Flow
-    ORC --> SEC
-    SEC --> MON
-    MON --> AM
-    AM --> VE
-    VE --> TP
-    TP --> DV
-
-    classDef primary fill:#1e40af,stroke:#1e3a8a,color:#fff
-    classDef secondary fill:#3b82f6,stroke:#2563eb,color:#fff
-    classDef control fill:#7c3aed,stroke:#6d28d9,color:#fff
-```
-
-## 🛠️ Building Blocks
-
-LION provides the essential components you need to build reliable AI workflows:
-
-- **Branch**: Core conversation unit with built-in safety mechanisms
-- **iModel**: Standardized interface to AI models
-- **Tools**: Framework for safe tool integration
-- **Exchange**: Reliable message passing between components
-
-Each component is designed to be:
-- Fully customizable to your needs
-- Safe by default
-- Easy to integrate
-- Highly reliable
-
-## 🎯 Key Use Cases
-
-- **Enterprise Operations**
-  - Complex workflow automation
-  - Data analysis and processing
-  - Decision support systems
-
-- **AI Integration**
-  - Controlled model deployment
-  - Safe tool usage
-  - Reliable agent operations
-
-- **Development**
-  - Rapid prototyping
-  - System integration
-  - Workflow optimization
-
-## 🔒 Built for Reliability
-
-LION isn't just another framework - it's your partner in responsible AI adoption. Build enterprise-grade AI systems with:
-
-- Complete control over AI behaviors
-- Comprehensive audit trails
-- Built-in safety mechanisms
-- Minimal dependencies
-- Maximum reliability
 
 ## 🤝 Contributing
 

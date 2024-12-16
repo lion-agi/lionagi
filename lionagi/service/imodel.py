@@ -20,78 +20,23 @@ class iModel:
         interval_requests: int = None,
         **kwargs,
     ):
+
         if api_key is not None:
             api_key = api_key
         elif api_key_schema is not None:
             api_key = api_key_schema
 
-        # Deprecation
-        if "config" in kwargs:
-            warnings.warn(
-                "'config' is deprecated in 'iModel'. Please pass configurations directly as keyword arguments. "
-                "If 'config' is a parameter name for further request settings, it will still be passed along.",
-                DeprecationWarning,
-                stacklevel=2,
-            )
-        if "provider_schema" in kwargs:
-            warnings.warn(
-                "'provider_schema' is deprecated in 'iModel'. Please refer to the corresponding service's "
-                "Pydantic models for the schema structure. "
-                "If 'provider_schema' is a parameter name for further request settings, it will still be passed along.",
-                DeprecationWarning,
-                stacklevel=2,
-            )
-        if "endpoint" in kwargs:
-            warnings.warn(
-                "'endpoint' is deprecated in 'iModel'. Please specify 'task' instead. "
-                "If 'endpoint' is a parameter name for further request settings, it will still be passed along.",
-                DeprecationWarning,
-                stacklevel=2,
-            )
-            task = kwargs["endpoint"]
-        if "token_encoding_name" in kwargs:
-            warnings.warn(
-                "'token_encoding_name' is deprecated in 'iModel' as it is now automatically detected. "
-                "To explicitly set the encoding method, please refer to TokenCalculator.",
-                DeprecationWarning,
-                stacklevel=2,
-            )
-        if "interval" in kwargs:
-            warnings.warn(
-                "'interval' is deprecated in 'iModel' as the unit is now set per minute. "
-                "If 'interval' is a parameter name for further request settings, it will still be passed along.",
-                DeprecationWarning,
-                stacklevel=2,
-            )
-        if "service" in kwargs:
-            warnings.warn(
-                "'service' parameter is deprecated in 'iModel'. Please use 'provider' instead. For more "
-                "details about service configurations, refer to 'lion.service' or the corresponding service's package. "
-                "If 'service' is a parameter name for further request settings, it will still be passed along.",
-                DeprecationWarning,
-                stacklevel=2,
-            )
-        if "allowed_parameters" in kwargs:
-            warnings.warn(
-                "'allowed_parameters' is deprecated in 'iModel'. If 'allowed_parameters' is a parameter "
-                "name for further request settings, it will still be passed along.",
-                DeprecationWarning,
-                stacklevel=2,
-            )
-        if "device" in kwargs:
-            warnings.warn(
-                "'device' is deprecated in 'iModel'. "
-                "If 'device' is a parameter name for further request settings, it will still be passed along.",
-                DeprecationWarning,
-                stacklevel=2,
-            )
-        if "costs" in kwargs:
-            warnings.warn(
-                "'cost' is deprecated in 'iModel'. "
-                "If 'costs' is a parameter name for further request settings, it will still be passed along.",
-                DeprecationWarning,
-                stacklevel=2,
-            )
+        if api_key is None:
+            if isinstance(provider, str):
+                match provider:
+                    case "openai":
+                        api_key = "OPENAI_API_KEY"
+                    case "anthropic":
+                        api_key = "ANTHROPIC_API_KEY"
+                    case "grok":
+                        api_key = "GROK_API_KEY"
+                    case "perplexity":
+                        api_key = "PERPLEXITY_API_KEY"
 
         if isinstance(provider, str):
             self.service = match_service(provider, api_key=api_key, **kwargs)
