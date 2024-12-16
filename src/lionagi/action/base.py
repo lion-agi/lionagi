@@ -2,119 +2,48 @@
 #
 # SPDX-License-Identifier: Apache-2.0
 
-from abc import ABC, abstractmethod
 from typing import Any, NoReturn
 
-from pydantic import Field
+from pydantic import PrivateAttr
 
-from ..protocols.types import BaseAutoModel, Event, EventStatus, Log
+from lionagi.protocols.types import (
+    AccessError,
+    Element,
+    Event,
+    EventStatus,
+    Log,
+)
 
-__all__ = ("Action",)
 
+class Action(Element, Event):
 
-class Action(BaseAutoModel, Event, ABC):
-    """
-    Base class for executable actions with status tracking and result management.
-
-    An Action represents a discrete unit of work that can be executed asynchronously.
-    It tracks its execution state, timing, results, and any errors that occur during
-    execution.
-
-    Attributes:
-        status (EventStatus): Current execution status. Defaults to PENDING.
-        execution_time (Optional[float]): Time taken for execution in seconds.
-        execution_result (Optional[Any]): Result produced by the action execution.
-        error (Optional[str]): Error message if execution failed.
-
-    Properties:
-        request (dict[str, Any]): Request parameters for permission checking.
-    """
-
-    status: EventStatus = Field(
-        default=EventStatus.PENDING,
-        description="Current status of the action execution",
-    )
-    execution_time: float | None = Field(
-        default=None, description="Time taken to execute the action in seconds"
-    )
-    execution_result: Any | None = Field(
-        default=None, description="Result produced by the action execution"
-    )
-    error: str | None = Field(
-        default=None, description="Error message if execution failed"
-    )
-
-    model_config = {
-        "arbitrary_types_allowed": True,
-        "validate_assignment": True,
-        "use_enum_values": False,
-    }
-
-    def from_dict(self, *args: Any, **kwargs: Any) -> NoReturn:
-        """
-        Explicitly prevents recreation from dictionary.
-
-        Actions are meant to be created and executed once, not recreated from
-        serialized state.
-
-        Raises:
-            NotImplementedError: Always, as Actions cannot be recreated.
-        """
-        raise NotImplementedError(
-            "Actions cannot be re-created from dictionaries. Create a new Action instance instead."
-        )
+    status: EventStatus = EventStatus.PENDING
+    execution_time: float | None = None
+    execution_response: Any = None
+    execution_error: str | None = None
+    _content_fields: list = PrivateAttr(["execution_response"])
 
     def to_log(self) -> Log:
         """
-        Converts the action instance to a Log entry.
-
-        Creates a log entry capturing the current state of the action for
-        tracking and auditing purposes.
+        Convert the action to a log entry. Will forcefully convert all fields
+        into a dictionary or json serializable format.
 
         Returns:
-            Log: A log entry representing the current action state.
+            BaseLog: A log entry representing the action.
         """
-        return Log(
-            content={
-                "id": str(self.id),
-                "created_timestamp": self.created_timestamp,
-                "status": self.status,
-                "execution_time": self.execution_time,
-                "execution_result": self.execution_result,
-                "error": self.error,
-            }
+        dict_ = self.to_dict()
+        dict_["status"] = self.status.value
+        content = {k: dict_[k] for k in self._content_fields if k in dict_}
+        loginfo = {k: dict_[k] for k in dict_ if k not in self._content_fields}
+        return Log(content=content, loginfo=loginfo)
+
+    @classmethod
+    def from_dict(cls, data: dict, /, **kwargs: Any) -> NoReturn:
+        """Event cannot be re-created."""
+        raise AccessError(
+            "An event cannot be recreated. Once it's done, it's done."
         )
 
-    @property
-    def request(self) -> dict[str, Any]:
-        """
-        Gets request parameters for permission checking.
 
-        Override this in subclasses to provide custom permission parameters.
-
-        Returns:
-            Empty dict by default. Subclasses should override to provide
-            relevant permission parameters.
-        """
-        return {}
-
-    def __repr__(self) -> str:
-        """
-        Returns a string representation of the Action instance.
-
-        Returns:
-            String containing key action state (status and execution time).
-        """
-        return (
-            f"Action(status={self.status.name}, "
-            f"execution_time={self.execution_time})"
-        )
-
-    @abstractmethod
-    async def invoke(self) -> None:
-        """Execute the action.
-
-        This method must be implemented by subclasses to define the actual
-        execution behavior of the action.
-        """
-        pass
+__all__ = ["ObservableAction"]
+# File: lion_core/action/base.py

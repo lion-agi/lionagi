@@ -3,142 +3,117 @@
 # SPDX-License-Identifier: Apache-2.0
 
 import asyncio
-import json
 from typing import Any
 
-from pydantic import Field, PrivateAttr, ValidationError, field_serializer
+from pydantic import Field, PrivateAttr
+from typing_extensions import override
 
-from ..protocols.base import EventStatus, IDType
-from .base import Action
+from lionagi.libs.async_utils import TCallParams
+from lionagi.utils import pre_post_process
+
+from .base import Action, EventStatus
 from .tool import Tool
 
 __all__ = ("FunctionCalling",)
 
 
 class FunctionCalling(Action):
-    """Handles asynchronous function calling with execution tracking.
+    """Represents an action that calls a function with specified arguments.
 
-    Manages tool invocation, execution timing, and error handling while
-    maintaining state through Pydantic validation.
+    Encapsulates a function call, including pre-processing, invocation,
+    and post-processing steps. Designed to be executed asynchronously.
+
+    Attributes:
+        func_tool (Tool): Tool containing the function to be invoked.
+        arguments (dict[str, Any]): Arguments for the function invocation.
+        function (str | None): Name of the function to be called.
     """
 
-    _tool: Tool = PrivateAttr()
-    arguments: dict[str, Any]
-    tool_id: IDType | None = Field(
-        default=None, description="ID of the tool being called"
+    func_tool: Tool | None = Field(default=None, exclude=True)
+    _content_fields: list = PrivateAttr(
+        default=["execution_response", "arguments", "function"]
     )
+    arguments: dict[str, Any] | None = None
+    function: str | None = None
+    tcall_params: TCallParams | None = None
 
-    model_config = {
-        "arbitrary_types_allowed": True,
-        "validate_assignment": True,
-        "use_enum_values": False,
-    }
+    def __init__(
+        self,
+        func_tool: Tool,
+        arguments: dict[str, Any],
+        tcall_params: TCallParams = None,
+        **kwargs: Any,
+    ) -> None:
+        """
+        kwargs for timed config
+        """
+        super().__init__(**kwargs)
+        self.func_tool = func_tool
+        self.arguments = arguments or {}
+        self.tcall_params = tcall_params or TCallParams()
+        self.function = self.func_tool.function_name
+        self.tcall_params.timing = True
 
-    @classmethod
-    def create(
-        cls, tool: Tool, arguments: dict[str, Any]
-    ) -> "FunctionCalling":
-        """Create a new FunctionCalling instance.
+    @override
+    async def invoke(self) -> Any:
+        """Asynchronously invokes the function with stored arguments.
 
-        Args:
-            tool: Tool to execute
-            arguments: Arguments to pass to the tool
+        Handles function invocation, applying pre/post-processing steps.
+        If a parser is defined, it's applied to the result before returning.
 
         Returns:
-            New FunctionCalling instance
+            Any: Result of the function call, possibly processed.
+
+        Raises:
+            Exception: If function call or processing steps fail.
         """
-        instance = cls(arguments=arguments)
-        object.__setattr__(instance, "_tool", tool)
-        instance.tool_id = tool.id
-        return instance
 
-    @field_serializer("tool_id")
-    def _serialize_tool_id(self, value: IDType) -> str:
-        """Serialize tool ID to string format."""
-        return str(value)
+        @pre_post_process(
+            preprocess=self.func_tool.pre_processor,
+            preprocess_kwargs=self.func_tool.pre_processor_kwargs,
+        )
+        async def _inner(**kwargs) -> tuple[Any, Any | float]:
+            kwargs["retry_timing"] = True
+            result, elp = await self.tcall_params(
+                self.func_tool.function, **kwargs
+            )
+            if self.func_tool.post_processor:
+                _kwargs = self.func_tool.post_processor_kwargs or {}
+                result, elp2 = await self.tcall_params(
+                    self.func_tool.post_processor, result, **_kwargs
+                )
+                elp += elp2
+            return result, elp
 
-    def _validate_arguments(self) -> None:
-        """Validate arguments against tool schema."""
-        if not self._tool.schema_:
-            return
-
-        schema = self._tool.schema_
-        if "parameters" not in schema:
-            return
-
-        params_schema = schema["parameters"]
-        required = params_schema.get("required", [])
-        properties = params_schema.get("properties", {})
-
-        # Check required parameters
-        for param in required:
-            if param not in self.arguments:
-                raise ValueError(f"Missing required parameter: {param}")
-
-        # Validate parameter types
-        for param, value in self.arguments.items():
-            if param not in properties:
-                raise ValueError(f"Unknown parameter: {param}")
-
-            param_schema = properties[param]
-            param_type = param_schema.get("type")
-
-            # Basic type validation
-            if param_type == "string" and not isinstance(value, str):
-                raise ValueError(f"Parameter {param} must be a string")
-            elif param_type == "number" and not isinstance(
-                value, (int, float)
-            ):
-                raise ValueError(f"Parameter {param} must be a number")
-            elif param_type == "integer" and not isinstance(value, int):
-                raise ValueError(f"Parameter {param} must be an integer")
-            elif param_type == "boolean" and not isinstance(value, bool):
-                raise ValueError(f"Parameter {param} must be a boolean")
-            elif param_type == "array" and not isinstance(value, list):
-                raise ValueError(f"Parameter {param} must be an array")
-            elif param_type == "object" and not isinstance(value, dict):
-                raise ValueError(f"Parameter {param} must be an object")
-
-    async def invoke(self) -> None:
-        """Execute tool function with timing and error tracking.
-
-        Updates status and tracks execution time while handling any errors
-        that occur during tool invocation.
-        """
         start = asyncio.get_event_loop().time()
-        self.status = EventStatus.PROCESSING
-
         try:
-            if not hasattr(self, "_tool"):
-                raise ValueError("Tool not initialized")
-
-            if not self._tool.tcall:
-                raise ValueError("Tool call parameters not initialized")
-
-            if not self._tool.tcall.function:
-                raise ValueError("Tool function not initialized")
-
-            # Validate arguments before execution
-            self._validate_arguments()
-
-            res = await self._tool.tcall.function(**self.arguments)
-            self.execution_time = asyncio.get_event_loop().time() - start
-            self.execution_result = res
+            result, elp = await _inner(**self.arguments)
+            self.execution_response = result
+            self.execution_time = elp
             self.status = EventStatus.COMPLETED
 
-        except (ValueError, ValidationError) as e:
-            self.execution_time = asyncio.get_event_loop().time() - start
-            self.error = str(e)
-            self.status = EventStatus.FAILED
+            if self.func_tool.parser is not None:
+                if asyncio.iscoroutinefunction(self.func_tool.parser):
+                    result = await self.func_tool.parser(result)
+                else:
+                    result = self.func_tool.parser(result)
+            return result
+
         except Exception as e:
-            self.execution_time = asyncio.get_event_loop().time() - start
-            self.error = str(e)
             self.status = EventStatus.FAILED
+            self.execution_error = str(e)
+            self.execution_time = asyncio.get_event_loop().time() - start
+
+    def __str__(self) -> str:
+        """Returns a string representation of the function call."""
+        return f"{self.func_tool.function_name}({self.arguments})"
 
     def __repr__(self) -> str:
-        """Returns a string representation of the FunctionCalling instance."""
+        """Returns a detailed string representation of the function call."""
         return (
-            f"FunctionCalling(tool_id={self.tool_id}, "
-            f"status={self.status.name}, "
-            f"execution_time={self.execution_time})"
+            f"FunctionCalling(function={self.func_tool.function_name}, "
+            f"arguments={self.arguments})"
         )
+
+
+# File: lionagi/action/function_calling.py
