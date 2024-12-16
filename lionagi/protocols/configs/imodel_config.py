@@ -6,8 +6,8 @@ import json
 import os
 
 from lionagi.core.models.schema_model import SchemaModel
-from lionagi.core.typing.pydantic_ import Field
-from lionagi.core.typing.typing_ import Any
+from lionagi.core.typing._pydantic import Field
+from lionagi.core.typing._typing import Any
 
 
 class iModelConfig(SchemaModel):
