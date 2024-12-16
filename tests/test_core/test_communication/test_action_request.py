@@ -2,8 +2,8 @@ from typing import Any
 
 import pytest
 
-from lionagi.core.communication import ActionRequest
 from lionagi.core.communication.message import MessageRole
+from lionagi.core.communication.types import ActionRequest
 from lionagi.core.typing import Note
 
 

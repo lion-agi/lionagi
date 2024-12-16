@@ -12,7 +12,7 @@ from lionagi.core.communication.utils import (
     prepare_request_response_format,
     validate_sender_recipient,
 )
-from lionagi.core.generic import Element
+from lionagi.core.generic.types import Element
 from lionagi.core.typing import ID, Note
 
 

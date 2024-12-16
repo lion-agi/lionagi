@@ -47,7 +47,7 @@ def test_imodel_initialization():
 
 def test_imodel_initialization_with_string_provider():
     """Test iModel initialization with provider name."""
-    with patch("lion.service.imodel.match_service") as mock_match:
+    with patch("lionagi.service.imodel.match_service") as mock_match:
         mock_service = MockService()
         mock_match.return_value = mock_service
 
@@ -175,7 +175,7 @@ def test_imodel_with_deprecated_parameters():
 
 def test_imodel_with_api_key_schema():
     """Test initialization with api_key_schema."""
-    with patch("lion.service.imodel.match_service") as mock_match:
+    with patch("lionagi.service.imodel.match_service") as mock_match:
         mock_service = MockService()
         mock_match.return_value = mock_service
 

@@ -1,7 +1,8 @@
 import pytest
 from pydantic import BaseModel
 
-from lionagi.core.communication import (
+from lionagi.core.communication.message import MessageRole
+from lionagi.core.communication.types import (
     ActionRequest,
     ActionResponse,
     AssistantResponse,
@@ -9,8 +10,7 @@ from lionagi.core.communication import (
     MessageManager,
     System,
 )
-from lionagi.core.communication.message import MessageRole
-from lionagi.core.generic import Pile
+from lionagi.core.generic.types import Pile
 
 
 class RequestModel(BaseModel):

@@ -4,7 +4,6 @@ import pytest
 from pydantic import BaseModel, ConfigDict, Field
 
 from lionagi.core.models import BaseAutoModel
-from lionagi.libs.constants import UNDEFINED
 
 
 class TestBaseAutoModel:

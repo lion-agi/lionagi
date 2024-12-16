@@ -2,10 +2,8 @@
 
 import pytest
 from pydantic import Field
-from pydantic.fields import FieldInfo
 
 from lionagi.core.models import OperableModel, SchemaModel
-from lionagi.libs.constants import UNDEFINED
 
 
 class TestOperableModel:

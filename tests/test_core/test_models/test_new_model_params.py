@@ -2,10 +2,8 @@
 
 import pytest
 from pydantic import BaseModel, ConfigDict, Field
-from pydantic.fields import FieldInfo
 
 from lionagi.core.models import FieldModel, NewModelParams, SchemaModel
-from lionagi.libs.constants import UNDEFINED
 
 
 class TestNewModelParams:

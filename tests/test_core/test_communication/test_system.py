@@ -1,7 +1,7 @@
 import pytest
 
-from lionagi.core.communication import System
 from lionagi.core.communication.message import MessageRole
+from lionagi.core.communication.types import System
 from lionagi.core.typing import Note
 
 

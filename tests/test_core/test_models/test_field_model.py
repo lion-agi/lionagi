@@ -1,11 +1,8 @@
 """Tests for FieldModel class."""
 
-import pytest
-from pydantic import Field
 from pydantic.fields import FieldInfo
 
 from lionagi.core.models import FieldModel
-from lionagi.libs.constants import UNDEFINED
 
 
 class TestFieldModel:

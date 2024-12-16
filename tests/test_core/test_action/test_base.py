@@ -3,7 +3,7 @@ from typing import Any
 import pytest
 
 from lionagi.core.action.base import EventStatus, ObservableAction
-from lionagi.core.generic import Log
+from lionagi.core.generic.types import Log
 from lionagi.core.typing import UNDEFINED
 from lionagi.settings import TimedFuncCallConfig
 

@@ -3,7 +3,7 @@ from pydantic import Field
 
 from lionagi.core.forms.form import Form
 from lionagi.core.forms.report import Report
-from lionagi.core.generic import Pile
+from lionagi.core.generic.types import Pile
 from lionagi.core.typing import UNDEFINED
 
 
