@@ -14,16 +14,15 @@ from pydantic.fields import FieldInfo
 from typing_extensions import Self
 
 from lionagi.libs.parse.types import to_json, validate_keys
+from lionagi.protocols.models import FieldModel
 from lionagi.utils import UNDEFINED
 
-from ..protocols.models import BaseAutoModel
 from .model_params import ModelParams
-from .models import FieldModel
 
 __all__ = ("Operative",)
 
 
-class Operative(BaseAutoModel):
+class Operative(BaseModel):
     """
     Handles request-response model validation and transformation.
     Manages model creation, validation rules, and response parsing.

@@ -2,25 +2,42 @@
 #
 # SPDX-License-Identifier: Apache-2.0
 
+from typing import Any
+
 from pydantic import JsonValue
 from typing_extensions import override
 
-from lionagi.utils import time
+from lionagi.libs.parse.types import to_str
+from lionagi.protocols.types import ID, MessageFlag, MessageRole
 
-from ..protocols.base import ID, MessageRole, validate_sender_recipient
-from .message import MessageFlag, MessageRole, RoledMessage, Template, env
+from .message import RoledMessage
+from .utils import format_system_content, validate_sender_recipient
 
 
 class System(RoledMessage):
+    """
+    Represents a system message in a language model conversation.
 
-    template: Template = env.get_template("system_message.jinja2")
+    This class extends RoledMessage to provide functionality specific to
+    system messages, which are typically used to set the context or provide
+    instructions to the language model. It supports including system datetime
+    information and maintains a clean interface for accessing the content.
+
+    Example:
+        >>> system_msg = System(
+        ...     system="You are a helpful assistant.",
+        ...     system_datetime=True
+        ... )
+        >>> print(system_msg.system_info)
+        'System datetime: 2024-01-20T14:30\n\nYou are a helpful assistant.'
+    """
 
     @override
     def __init__(
         self,
         system: JsonValue = None,
-        sender: ID.Ref | MessageRole = None,
-        recipient: ID.Ref | MessageRole = None,
+        sender: ID.SenderRecipient = None,
+        recipient: ID.SenderRecipient = None,
         system_datetime: bool | JsonValue = None,
         protected_init_params: dict | None = None,
     ):
@@ -51,23 +68,20 @@ class System(RoledMessage):
             super().__init__(role=MessageRole.SYSTEM)
             return
 
-        if system_datetime is True:
-            system_datetime = time(type_="iso", timespec="minutes")
         super().__init__(
             role=MessageRole.SYSTEM,
             sender=sender or "system",
-            content={
-                "system_datetime": system_datetime,
-                "system_message": system,
-            },
+            content=format_system_content(
+                system_datetime=system_datetime, system_message=system
+            ),
             recipient=recipient or "N/A",
         )
 
     def update(
         self,
         system: JsonValue = None,
-        sender: ID.Ref | MessageRole = None,
-        recipient: ID.Ref | MessageRole = None,
+        sender: ID.SenderRecipient = None,
+        recipient: ID.Ref = None,
         system_datetime: bool | str = None,
     ) -> None:
         """
@@ -80,17 +94,28 @@ class System(RoledMessage):
             system_datetime: New datetime flag or string
         """
         if system:
-            self.content = {
-                "system_datetime": system_datetime,
-                "system_message": system,
-            }
+            self.content = format_system_content(
+                system_datetime=system_datetime, system_message=system
+            )
         if sender:
             self.sender = validate_sender_recipient(sender)
         if recipient:
             self.recipient = validate_sender_recipient(recipient)
 
-    def _format_content(self):
-        return {
-            "role": self.role.value,
-            "content": self.template.render(self.content),
-        }
+    @property
+    def system_info(self) -> str:
+        """
+        Get the complete system information.
+
+        Returns:
+            str: The formatted system information including datetime if present
+        """
+        if "system_datetime" in self.content:
+            msg = f"System datetime: {self.content['system_datetime']}\n\n"
+            return msg + f"{self.content['system']}"
+
+        return to_str(self.content["system"])
+
+    @override
+    def _format_content(self) -> dict[str, Any]:
+        return {"role": self.role.value, "content": self.system_info}

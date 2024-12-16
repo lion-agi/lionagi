@@ -19,12 +19,13 @@ from lionagi.utils import (
     UNDEFINED,
     ItemExistsError,
     ItemNotFoundError,
+    is_same_dtype,
     to_list,
 )
 
 from .adapter import Adapter, AdapterRegistry, PileRegistry
 from .base import ID, Observable, T, to_list_type, validate_order
-from .models import BaseAutoModel
+from .element import Element
 from .progression import Progression
 
 D = TypeVar("D")
@@ -51,10 +52,24 @@ def async_synchronized(func: Callable):
     return wrapper
 
 
-class Pile(BaseAutoModel, Generic[T]):
+class Pile(Element, Generic[T]):
+    """Thread-safe async-compatible, ordered collection of elements.
+
+    The Pile class provides a thread-safe, async-compatible collection with:
+    - Type validation and enforcement
+    - Order preservation
+    - Format adapters (JSON, CSV, Excel)
+    - Memory efficient storage
+
+    Attributes:
+        pile_ (dict[str, T]): Internal storage mapping IDs to elements
+        item_type (set[type[T]] | None): Allowed element types
+        progress (Progression): Order tracking
+        strict_type (bool): Whether to enforce strict type checking
+    """
 
     pile_: dict[str, T] = Field(default_factory=dict)
-    item_type: set[type] | None = Field(
+    item_type: set[type[T]] | None = Field(
         default=None,
         description="Set of allowed types for items in the pile.",
         exclude=True,
@@ -90,9 +105,17 @@ class Pile(BaseAutoModel, Generic[T]):
         strict_type: bool = False,
         **kwargs,
     ) -> None:
+        """Initialize a Pile instance.
+
+        Args:
+            items: Initial items for the pile.
+            item_type: Allowed types for items in the pile.
+            order: Initial order of items (as Progression).
+            strict_type: If True, enforce strict type checking.
+        """
         _config = {}
-        if "id" in kwargs:
-            _config["id"] = kwargs["id"]
+        if "ln_id" in kwargs:
+            _config["ln_id"] = kwargs["ln_id"]
         if "created" in kwargs:
             _config["created"] = kwargs["created"]
 
@@ -121,7 +144,7 @@ class Pile(BaseAutoModel, Generic[T]):
             ValueError: If the dictionary format is invalid.
         """
         items = data.pop("pile_", [])
-        items = [BaseAutoModel.from_dict(i) for i in items]
+        items = [Element.from_dict(i) for i in items]
         return cls(items=items, **data)
 
     def __setitem__(
@@ -129,6 +152,16 @@ class Pile(BaseAutoModel, Generic[T]):
         key: ID.Ref | ID.RefSeq | int | slice,
         item: ID.ItemSeq | ID.Item,
     ) -> None:
+        """Set an item or items in the Pile.
+
+        Args:
+            key: The key to set (index, ID, or slice).
+            item: The item(s) to set.
+
+        Raises:
+            TypeError: If item type not allowed.
+            KeyError: If key invalid.
+        """
         self._setitem(key, item)
 
     @synchronized
@@ -138,15 +171,60 @@ class Pile(BaseAutoModel, Generic[T]):
         default: D = UNDEFINED,
         /,
     ) -> T | Pile | D:
+        """Remove and return item(s) from the Pile.
+
+        Args:
+            key: Key of item(s) to remove.
+            default: Value if key not found.
+
+        Returns:
+            Removed item(s) or default.
+
+        Raises:
+            KeyError: If key not found and no default.
+        """
         return self._pop(key, default)
 
-    def remove(self, item: T, /) -> None:
+    def remove(
+        self,
+        item: T,
+        /,
+    ) -> None:
+        """Remove a specific item from the Pile.
+
+        Args:
+            item: Item to remove.
+
+        Raises:
+            ValueError: If item not found.
+        """
         self._remove(item)
 
-    def include(self, item: ID.ItemSeq | ID.Item, /) -> None:
+    def include(
+        self,
+        item: ID.ItemSeq | ID.Item,
+        /,
+    ) -> None:
+        """Include item(s) if not present.
+
+        Args:
+            item: Item(s) to include.
+
+        Raises:
+            TypeError: If item type not allowed.
+        """
         self._include(item)
 
-    def exclude(self, item: ID.ItemSeq | ID.Item, /) -> None:
+    def exclude(
+        self,
+        item: ID.ItemSeq | ID.Item,
+        /,
+    ) -> None:
+        """Exclude item(s) if present.
+
+        Args:
+            item: Item(s) to exclude.
+        """
         self._exclude(item)
 
     @synchronized
@@ -154,15 +232,45 @@ class Pile(BaseAutoModel, Generic[T]):
         """Remove all items."""
         self._clear()
 
-    def update(self, other: ID.Item | ID.ItemSeq, /) -> None:
+    def update(
+        self,
+        other: ID.Item | ID.ItemSeq,
+        /,
+    ) -> None:
+        """Update with items from another source.
+
+        Args:
+            other: Items to update from.
+
+        Raises:
+            TypeError: If item types not allowed.
+        """
         self._update(other)
 
     @synchronized
     def insert(self, index: int, item: T, /) -> None:
+        """Insert item at position.
+
+        Args:
+            index: Position to insert at.
+            item: Item to insert.
+
+        Raises:
+            IndexError: If index out of range.
+            TypeError: If item type not allowed.
+        """
         self._insert(index, item)
 
     @synchronized
     def append(self, item: T, /) -> None:
+        """Append item to end (alias for include).
+
+        Args:
+            item: Item to append.
+
+        Raises:
+            TypeError: If item type not allowed.
+        """
         self.update(item)
 
     @synchronized
@@ -172,6 +280,15 @@ class Pile(BaseAutoModel, Generic[T]):
         default: D = UNDEFINED,
         /,
     ) -> T | Pile | D:
+        """Get item(s) by key with default.
+
+        Args:
+            key: Key to get items by.
+            default: Value if not found.
+
+        Returns:
+            Item(s) or default.
+        """
         return self._get(key, default)
 
     def keys(self) -> Sequence[str]:
@@ -280,22 +397,14 @@ class Pile(BaseAutoModel, Generic[T]):
                 actual_type=type(other),
             )
 
-        # Items in both piles - need to be removed
-        to_remove = []
+        to_exclude = []
         for i in other:
-            if i.id in self.progress:
-                to_remove.append(i.id)
+            if i in self:
+                to_exclude.append(i)
 
-        # Items in other but not in self - need to be added
-        to_add = [i for i in other if i.id not in self.progress]
-
-        # Remove common items first
-        if to_remove:
-            self.exclude(to_remove)
-        # Then add items unique to other
-        if to_add:
-            self.include(to_add)
-
+        other = [i for i in other if i not in to_exclude]
+        self.exclude(to_exclude)
+        self.include(other)
         return self
 
     def __xor__(self, other: Pile) -> Pile:
@@ -307,16 +416,14 @@ class Pile(BaseAutoModel, Generic[T]):
                 actual_type=type(other),
             )
 
-        # Items in both piles - need to be removed
         to_exclude = []
         for i in other:
-            if i.id in self.progress:
+            if i in self:
                 to_exclude.append(i)
 
-        # Items unique to each pile
-        values = [
-            i for i in self if i.id not in [x.id for x in to_exclude]
-        ] + [i for i in other if i.id not in [x.id for x in to_exclude]]
+        values = [i for i in self if i not in to_exclude] + [
+            i for i in other if i not in to_exclude
+        ]
 
         result = self.__class__(
             items=values,
@@ -549,15 +656,12 @@ class Pile(BaseAutoModel, Generic[T]):
                     if isinstance(self.progress[key], Progression)
                     else [self.progress[key]]
                 )
-            except ItemNotFoundError:
-                raise
+                self.progress[key] = item_order
+                for i in to_list(delete_order, flatten=True):
+                    self.pile_.pop(i)
+                self.pile_.update(item_dict)
             except Exception as e:
                 raise ValueError(f"Failed to set pile. Error: {e}")
-
-            self.progress[key] = item_order
-            for i in to_list(delete_order, flatten=True):
-                self.pile_.pop(i)
-            self.pile_.update(item_dict)
         else:
             key = to_list_type(key)
             if isinstance(key[0], list):
@@ -659,29 +763,22 @@ class Pile(BaseAutoModel, Generic[T]):
         raise ItemNotFoundError(f"{item}")
 
     def _include(self, item: ID.ItemSeq | ID.Item):
-        # First validate and get IDs to check for duplicates
-        items = to_list_type(item)
-        for i in items:
-            if hasattr(i, "id") and i.id in self.progress:
-                raise ItemExistsError(
-                    f"Item {i.id} already exists in the pile"
-                )
+        item_dict = self._validate_pile(item)
 
-        # Then validate and add items
-        item_dict = self._validate_pile(items)
-        item_order = list(item_dict.keys())
-        if item_order:
-            self.progress.append(item_order)
-            self.pile_.update(item_dict)
+        item_order = []
+        for i in item_dict.keys():
+            if i not in self.progress:
+                item_order.append(i)
+
+        self.progress.append(item_order)
+        self.pile_.update(item_dict)
 
     def _exclude(self, item: ID.Ref | ID.RefSeq):
-        items = to_list_type(item)
+        item = to_list_type(item)
         exclude_list = []
-        for i in items:
-            # Handle both ID strings and objects with IDs
-            item_id = i if isinstance(i, str) else getattr(i, "id", None)
-            if item_id and item_id in self.progress:
-                exclude_list.append(item_id)
+        for i in item:
+            if i in self:
+                exclude_list.append(i)
         if exclude_list:
             self.pop(exclude_list)
 
@@ -731,7 +828,8 @@ class Pile(BaseAutoModel, Generic[T]):
                 if self.strict_type:
                     if type(i) not in self.item_type:
                         raise TypeError(
-                            f"Invalid item type in pile. Expected {self.item_type}"
+                            message="Invalid item type in pile."
+                            f" Expected {self.item_type}",
                         )
                 else:
                     if not any(issubclass(type(i), t) for t in self.item_type):
@@ -743,7 +841,7 @@ class Pile(BaseAutoModel, Generic[T]):
                 if not isinstance(i, Observable):
                     raise ValueError(f"Invalid pile item {i}")
 
-            result[i.id] = i
+            result[i.ln_id] = i
 
         return result
 
@@ -783,17 +881,9 @@ class Pile(BaseAutoModel, Generic[T]):
         self.progress.insert(index, item_order)
         self.pile_.update(item_dict)
 
-    @override
-    def to_dict(self) -> dict[str, Any]:
-        """Convert to dictionary."""
-        return {
-            **super().to_dict(),
-            "pile_": [item.to_dict() for item in self.values()],
-        }
-
     @field_serializer("pile_")
     def _(self, value: dict[str, T]):
-        return [item.to_dict() for item in self.values()]
+        return [i.to_dict() for i in value.values()]
 
     class AsyncPileIterator:
         def __init__(self, pile: Pile):
@@ -825,14 +915,17 @@ class Pile(BaseAutoModel, Generic[T]):
         """Exit async context."""
         self.async_lock.release()
 
+    def is_homogenous(self) -> bool:
+        """Check if all items are same type."""
+        return len(self.pile_) < 2 or all(is_same_dtype(self.pile_.values()))
+
     def adapt_to(self, obj_key: str, /, **kwargs: Any) -> Any:
         """Convert to another format."""
-        kwargs["many"] = True
         return self._get_adapter_registry().adapt_to(self, obj_key, **kwargs)
 
     @classmethod
     def list_adapters(cls):
-        """List available adapaters"""
+        """List available adapters."""
         return cls._get_adapter_registry().list_adapters()
 
     @classmethod
@@ -849,7 +942,6 @@ class Pile(BaseAutoModel, Generic[T]):
     @classmethod
     def adapt_from(cls, obj: Any, obj_key: str, /, **kwargs: Any):
         """Create from another format."""
-        kwargs["many"] = True
         dict_ = cls._get_adapter_registry().adapt_from(
             cls, obj, obj_key, **kwargs
         )
@@ -869,5 +961,6 @@ class Pile(BaseAutoModel, Generic[T]):
         """Save to CSV file."""
         self.adapt_to(".csv", fp=fp, **kwargs)
 
-
-# File: autoos/generic/pile.py
+    def to_excel(self, fp: str | Path, **kwargs: Any) -> None:
+        """Save to Excel file."""
+        self.adapt_to(".xlsx", fp=fp, **kwargs)

@@ -1,7 +1,8 @@
 from pydantic import model_validator
 
-from ..operations.fields.instruct import Instruct, InstructResponse
-from ..session.types import Branch, Session
+from lionagi.fields.instruct import Instruct, InstructResponse
+from lionagi.session.types import Branch, Session
+
 from .base import StrategyExecutor
 from .params import ChunkStrategyParams
 

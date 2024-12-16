@@ -5,7 +5,7 @@
 from pydantic import BaseModel
 from pydantic.fields import FieldInfo
 
-from .fields.types import (
+from lionagi.fields.types import (
     ACTION_REQUESTS_FIELD_MODEL,
     ACTION_REQUIRED_FIELD_MODEL,
     ACTION_RESPONSES_FIELD_MODEL,
@@ -14,8 +14,9 @@ from .fields.types import (
     ActionResponseModel,
     ReasonModel,
 )
+from lionagi.protocols.types import FieldModel
+
 from .model_params import ModelParams
-from .models import FieldModel
 from .operative import Operative
 
 __all__ = ("StepModel", "Step")

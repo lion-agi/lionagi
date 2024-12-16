@@ -2,10 +2,9 @@
 #
 # SPDX-License-Identifier: Apache-2.0
 
+from lionagi.fields.types import Instruct
 from lionagi.protocols.base import ID
 from lionagi.session.types import Branch, Session
-
-from .fields.instruct import Instruct
 
 
 def prepare_session(

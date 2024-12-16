@@ -32,7 +32,7 @@ __all__ = (
     "Condition",
     "Observer",
     "Manager",
-    "T",
+    "Communicatable" "T",
 )
 
 
@@ -236,6 +236,18 @@ def validate_sender_recipient(value) -> ID.SenderRecipient:
         return ID.get_id(value)
     except Exception as e:
         raise ValueError(f"Invalid sender or recipient: {value}") from e
+
+
+class IDError(ValueError):
+    """Custom error for ID validation issues."""
+
+    pass
+
+
+class AccessError(AttributeError):
+    """Custom error for access control issues."""
+
+    pass
 
 
 # File: lionagi/protocols/base.py

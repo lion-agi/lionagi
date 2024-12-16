@@ -2,16 +2,86 @@
 #
 # SPDX-License-Identifier: Apache-2.0
 
-from typing import ClassVar
+from typing import Any
 
 from pydantic import BaseModel, JsonValue
 from typing_extensions import override
 
-from lionagi.utils import copy
+from lionagi.libs.parse.types import to_str
+from lionagi.protocols.types import ID, MessageFlag, MessageRole, Note
+from lionagi.utils import copy, is_same_dtype
 
-from ..protocols.types import ID, MessageFlag, MessageRole
-from .message import RoledMessage, Template, env
-from .utils import prepare_assistant_response
+from .message import MessageFlag, MessageRole, RoledMessage
+
+
+def prepare_assistant_response(
+    assistant_response: BaseModel | list[BaseModel] | dict | str | Any, /
+) -> Note:
+    """
+    Prepare an assistant's response for storage and transmission.
+
+    This function handles various input formats including:
+    - Single model outputs (response.choices[0].message.content)
+    - Streaming responses (response[i].choices[0].delta.content)
+    - Direct content in dictionaries or strings
+
+    Args:
+        assistant_response: The response content in any supported format
+
+    Returns:
+        Note: Formatted response content
+    """
+    if assistant_response:
+        content = Note()
+        # Handle model.choices[0].message.content format
+        if isinstance(assistant_response, BaseModel):
+            content["assistant_response"] = (
+                assistant_response.choices[0].message.content or ""
+            )
+            content["model_response"] = assistant_response.model_dump(
+                exclude_none=True, exclude_unset=True
+            )
+        # Handle streaming response[i].choices[0].delta.content format
+        elif isinstance(assistant_response, list):
+            if is_same_dtype(assistant_response, BaseModel):
+                msg = "".join(
+                    [
+                        i.choices[0].delta.content or ""
+                        for i in assistant_response
+                    ]
+                )
+                content["assistant_response"] = msg
+                content["model_response"] = [
+                    i.model_dump(
+                        exclude_none=True,
+                        exclude_unset=True,
+                    )
+                    for i in assistant_response
+                ]
+            elif is_same_dtype(assistant_response, dict):
+                msg = "".join(
+                    [
+                        i["choices"][0]["delta"]["content"] or ""
+                        for i in assistant_response
+                    ]
+                )
+                content["assistant_response"] = msg
+                content["model_response"] = assistant_response
+        elif isinstance(assistant_response, dict):
+            if "content" in assistant_response:
+                content["assistant_response"] = assistant_response["content"]
+            elif "choices" in assistant_response:
+                content["assistant_response"] = assistant_response["choices"][
+                    0
+                ]["message"]["content"]
+            content["model_response"] = assistant_response
+        elif isinstance(assistant_response, str):
+            content["assistant_response"] = assistant_response
+        else:
+            content["assistant_response"] = to_str(assistant_response)
+        return content
+    else:
+        return Note(assistant_response="")
 
 
 class AssistantResponse(RoledMessage):
@@ -31,10 +101,6 @@ class AssistantResponse(RoledMessage):
         >>> print(response.response)
         'The answer is 42'
     """
-
-    template: ClassVar[Template] = env.get_template(
-        "assistant_response.jinja2"
-    )
 
     @override
     def __init__(
@@ -83,7 +149,7 @@ class AssistantResponse(RoledMessage):
         Returns:
             str: The formatted content of the assistant's response
         """
-        return self.template.render(self.content)
+        return copy(self.content["assistant_response"])
 
     @property
     def model_response(self) -> dict | list[dict]:

@@ -1,15 +1,19 @@
 # Copyright (c) 2023 - 2024, HaiyangLi <quantocean.li at gmail dot com>
 #
 # SPDX-License-Identifier: Apache-2.0
-
+import ast
 import asyncio
 import copy as _copy
+import importlib.util
 import logging
-from collections.abc import Callable, Iterable, Mapping
+import os
+from collections.abc import Callable, Iterable, Mapping, Sequence
 from concurrent.futures import ThreadPoolExecutor
 from datetime import datetime, timezone
 from enum import Enum
 from functools import lru_cache, wraps
+from hashlib import sha256
+from pathlib import Path
 from typing import Any, Literal, TypeVar, overload
 
 from pydantic import BaseModel
@@ -31,10 +35,16 @@ __all__ = (
     "alcall",
     "time",
     "copy",
+    "get_file_classes",
+    "get_class_file_registry",
+    "get_class_objects",
+    "unique_hash",
+    "create_path",
 )
 
 
 T = TypeVar("T")
+F = TypeVar("F", bound=Callable[..., Any])
 
 
 class UndefinedType:
@@ -626,3 +636,176 @@ async def alcall(
             dropna=dropna,
             unique=unique,
         )
+
+
+def get_file_classes(file_path):
+    with open(file_path) as file:
+        file_content = file.read()
+
+    tree = ast.parse(file_content)
+
+    class_file_dict = {}
+    for node in tree.body:
+        if isinstance(node, ast.ClassDef):
+            class_file_dict[node.name] = file_path
+
+    return class_file_dict
+
+
+def get_class_file_registry(folder_path, pattern_list):
+    class_file_registry = {}
+    for root, _, files in os.walk(folder_path):
+        for file in files:
+            if file.endswith(".py"):
+                if any(pattern in root for pattern in pattern_list):
+                    class_file_dict = get_file_classes(
+                        os.path.join(root, file)
+                    )
+                    class_file_registry.update(class_file_dict)
+    return class_file_registry
+
+
+def get_class_objects(file_path):
+    class_objects = {}
+    spec = importlib.util.spec_from_file_location("module.name", file_path)
+    module = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(module)
+
+    for class_name in dir(module):
+        obj = getattr(module, class_name)
+        if isinstance(obj, type):
+            class_objects[class_name] = obj
+
+    return class_objects
+
+
+def unique_hash(n: int = 32) -> str:
+    """unique random hash"""
+    current_time = datetime.now().isoformat().encode("utf-8")
+    random_bytes = os.urandom(42)
+    return sha256(current_time + random_bytes).hexdigest()[:n]
+
+
+def create_path(
+    directory: Path | str,
+    filename: str,
+    extension: str = None,
+    timestamp: bool = False,
+    dir_exist_ok: bool = True,
+    file_exist_ok: bool = False,
+    time_prefix: bool = False,
+    timestamp_format: str | None = None,
+    random_hash_digits: int = 0,
+) -> Path:
+    if "/" in filename or "\\" in filename:
+        raise ValueError("Filename cannot contain directory separators.")
+    directory = Path(directory)
+
+    name, ext = None, None
+    if "." in filename:
+        name, ext = filename.rsplit(".", 1)
+    else:
+        name = filename
+        ext = extension.strip(".").strip() if extension else None
+
+    if not ext:
+        raise ValueError("No extension provided for filename.")
+
+    ext = f".{ext}" if ext else ""
+
+    if timestamp:
+        timestamp_str = datetime.now().strftime(
+            timestamp_format or "%Y%m%d%H%M%S"
+        )
+        name = (
+            f"{timestamp_str}_{name}"
+            if time_prefix
+            else f"{name}_{timestamp_str}"
+        )
+
+    if random_hash_digits > 0:
+        random_hash = "-" + unique_hash(random_hash_digits)
+        name = f"{name}{random_hash}"
+
+    full_filename = f"{name}{ext}"
+    full_path = directory / full_filename
+
+    if full_path.exists():
+        if file_exist_ok:
+            return full_path
+        raise FileExistsError(
+            f"File {full_path} already exists and file_exist_ok is False."
+        )
+    full_path.parent.mkdir(parents=True, exist_ok=dir_exist_ok)
+    return full_path
+
+
+def pre_post_process(
+    preprocess: Callable[..., Any] | None = None,
+    postprocess: Callable[..., Any] | None = None,
+    preprocess_args: Sequence[Any] = (),
+    preprocess_kwargs: dict[str, Any] = {},
+    postprocess_args: Sequence[Any] = (),
+    postprocess_kwargs: dict[str, Any] = {},
+) -> Callable[[F], F]:
+    """Decorator to apply pre-processing and post-processing functions.
+
+    Args:
+        preprocess: Function to apply before the main function.
+        postprocess: Function to apply after the main function.
+        preprocess_args: Arguments for the preprocess function.
+        preprocess_kwargs: Keyword arguments for preprocess function.
+        postprocess_args: Arguments for the postprocess function.
+        postprocess_kwargs: Keyword arguments for postprocess function.
+
+    Returns:
+        The decorated function.
+    """
+
+    def decorator(func: F) -> F:
+        @wraps(func)
+        async def async_wrapper(*args, **kwargs) -> Any:
+            preprocessed_args = (
+                [
+                    await ucall(
+                        preprocess,
+                        arg,
+                        *preprocess_args,
+                        **preprocess_kwargs,
+                    )
+                    for arg in args
+                ]
+                if preprocess
+                else args
+            )
+            preprocessed_kwargs = (
+                {
+                    k: await ucall(
+                        preprocess,
+                        v,
+                        *preprocess_args,
+                        **preprocess_kwargs,
+                    )
+                    for k, v in kwargs.items()
+                }
+                if preprocess
+                else kwargs
+            )
+            result = await ucall(
+                func, *preprocessed_args, **preprocessed_kwargs
+            )
+
+            return (
+                await ucall(
+                    postprocess,
+                    result,
+                    *postprocess_args,
+                    **postprocess_kwargs,
+                )
+                if postprocess
+                else result
+            )
+
+        return async_wrapper
+
+    return decorator

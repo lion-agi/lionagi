@@ -14,8 +14,8 @@ from lionagi.libs.parse.types import (
     to_json,
     validate_boolean,
 )
+from lionagi.protocols.types import FieldModel
 
-from ..models import FieldModel
 from .prompts import (
     action_requests_field_description,
     action_required_field_description,

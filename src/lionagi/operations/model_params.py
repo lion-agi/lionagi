@@ -17,15 +17,13 @@ from pydantic.fields import FieldInfo
 from typing_extensions import Self
 
 from lionagi.libs.parse.types import validate_boolean
+from lionagi.protocols.models import FieldModel, SchemaModel
 from lionagi.utils import copy
-
-from ..protocols.models import BaseSchemaModel
-from .models import FieldModel
 
 __all__ = ("ModelParams",)
 
 
-class ModelParams(BaseSchemaModel):
+class ModelParams(SchemaModel):
     """
     Configuration class for dynamic Pydantic model generation.
     Manages field definitions, validators, inheritance, and model metadata.

@@ -3,34 +3,76 @@
 # SPDX-License-Identifier: Apache-2.0
 
 import inspect
-import os
+from enum import Enum
 from typing import Any
 
-from jinja2 import Environment, FileSystemLoader, Template
 from pydantic import Field, field_serializer, field_validator
 from typing_extensions import override
 
+from lionagi._class_registry import get_class
+from lionagi.protocols.types import Communicatable, Component, Log, Note
 from lionagi.utils import copy
 
-from ..protocols.base import (
-    Communicatable,
-    IDType,
-    MessageFlag,
-    MessageRole,
-    validate_sender_recipient,
-)
-from ..protocols.models import get_class
-from ..protocols.types import Component, Log
-
-base_dir = os.path.dirname(os.path.abspath(__file__))
-templates_path = os.path.join(base_dir, "templates")
-env = Environment(loader=FileSystemLoader(templates_path))
+from .base_mail import BaseMail
 
 
-__all__ = ("RoledMessage", "env", "Template")
+class MessageRole(str, Enum):
+    """
+    Enum for possible roles a message can assume in a conversation.
+
+    These roles define the nature and purpose of messages in the system:
+    - SYSTEM: System-level messages providing context or instructions
+    - USER: Messages from users making requests or providing input
+    - ASSISTANT: Messages from AI assistants providing responses
+    """
+
+    SYSTEM = "system"
+    USER = "user"
+    ASSISTANT = "assistant"
 
 
-class RoledMessage(Component, Communicatable):
+class MessageFlag(str, Enum):
+    """
+    Enum to signal special message construction modes.
+
+    These flags are used internally to control message instantiation:
+    - MESSAGE_CLONE: Signal to create a clone of an existing message
+    - MESSAGE_LOAD: Signal to load a message from stored data
+    """
+
+    MESSAGE_CLONE = "MESSAGE_CLONE"
+    MESSAGE_LOAD = "MESSAGE_LOAD"
+
+
+class MessageField(str, Enum):
+    """
+    Enum for standard message fields.
+
+    Defines the standard fields that can be present in a message:
+    - TIMESTAMP: Message creation timestamp
+    - LION_CLASS: Class identifier for LION system
+    - ROLE: Message role (system/user/assistant)
+    - CONTENT: Message content
+    - ln_id: Unique message identifier
+    - SENDER: Message sender
+    - RECIPIENT: Message recipient
+    - METADATA: Additional message metadata
+    """
+
+    TIMESTAMP = "timestamp"
+    LION_CLASS = "lion_class"
+    ROLE = "role"
+    CONTENT = "content"
+    ln_id = "ln_id"
+    SENDER = "sender"
+    RECIPIENT = "recipient"
+    METADATA = "metadata"
+
+
+MESSAGE_FIELDS = [i.value for i in MessageField.__members__.values()]
+
+
+class RoledMessage(Component, BaseMail):
     """
     A base class representing a message with roles and properties.
 
@@ -39,7 +81,7 @@ class RoledMessage(Component, Communicatable):
     foundation for all specific message types in the system.
 
     Attributes:
-        content (dict): The content of the message, stored in a dict
+        content (Note): The content of the message, stored in a Note object
         role (MessageRole): The role of the message in the conversation
             (system, user, or assistant)
 
@@ -49,20 +91,8 @@ class RoledMessage(Component, Communicatable):
         MessageRole.USER
     """
 
-    sender: IDType | MessageRole | MessageFlag = Field(
-        default=MessageRole.UNSPECIFIED,
-        title="Sender",
-        description="The ID of the sender node or a role.",
-    )
-
-    recipient: IDType | MessageRole | MessageFlag = Field(
-        default=MessageRole.UNSPECIFIED,
-        title="Recipient",
-        description="The ID of the recipient node or a role.",
-    )
-
-    content: dict = Field(
-        default_factory=dict,
+    content: Note = Field(
+        default_factory=Note,
         description="The content of the message.",
     )
 
@@ -71,10 +101,6 @@ class RoledMessage(Component, Communicatable):
         description="The role of the message in the conversation.",
         examples=["system", "user", "assistant"],
     )
-
-    @field_validator("sender", "recipient", mode="before")
-    def _validate_sender_recipient(cls, value) -> IDType | MessageRole:
-        return validate_sender_recipient(value)
 
     @property
     def image_content(self) -> list[dict[str, Any]] | None:
@@ -200,19 +226,25 @@ class RoledMessage(Component, Communicatable):
         Returns:
             Log: A Log object representing the message.
         """
-        return Log(self)
+        dict_ = self.to_dict()
+        content = dict_.pop("content")
+        _log = Log(
+            content=content,
+            loginfo=dict_,
+        )
+        return _log
 
     @field_serializer("content")
-    def _serialize_content(self, value: dict) -> dict[str, Any]:
+    def _serialize_content(self, value: Note) -> dict[str, Any]:
 
-        output_dict = copy(value, deep=True)
+        output_dict = copy(value.content, deep=True)
         origin_obj = output_dict.pop("clone_from", None)
 
-        if origin_obj and isinstance(origin_obj, RoledMessage):
+        if origin_obj and isinstance(origin_obj, Communicatable):
             info_dict = {
                 "clone_from_info": {
-                    "original_id": origin_obj.id,
-                    "original_timestamp": origin_obj.created_timestamp,
+                    "original_ln_id": origin_obj.ln_id,
+                    "original_timestamp": origin_obj.timestamp,
                     "original_sender": origin_obj.sender,
                     "original_recipient": origin_obj.recipient,
                 }
@@ -234,6 +266,16 @@ class RoledMessage(Component, Communicatable):
         return value.value
 
     def _format_content(self) -> dict[str, Any]:
-        raise NotImplementedError(
-            "Method _format_content must be implemented."
-        )
+        """
+        Format the message content for chat representation.
+
+        Handles both text and image content appropriately.
+
+        Returns:
+            dict[str, Any]: The formatted content with role and content fields
+        """
+        if self.content.get("images", None):
+            content = self.content.to_dict()
+        else:
+            content = str(self.content.to_dict())
+        return {"role": self.role.value, "content": content}

@@ -10,7 +10,8 @@ from typing import Literal
 from lion_service import iModel
 from pydantic import BaseModel, JsonValue
 
-from lionagi.action.types import FuncTool, Tool
+from lionagi.action.tool import FuncTool, Tool
+from lionagi.fields.action import ActionRequestModel, ActionResponseModel
 from lionagi.libs.parse.types import (
     breakdown_pydantic_annotation,
     to_json,
@@ -22,15 +23,8 @@ from lionagi.messages.types import (
     AssistantResponse,
     Instruction,
 )
-from lionagi.operations.fields.action import (
-    ActionRequestModel,
-    ActionResponseModel,
-)
-from lionagi.operations.model_params import ModelParams
-from lionagi.operations.models import FieldModel
-from lionagi.operations.operative import Operative
-from lionagi.operations.step import Step
-from lionagi.protocols.base import ID
+from lionagi.operations.types import ModelParams, Operative, Step
+from lionagi.protocols.types import ID, FieldModel
 from lionagi.utils import UNDEFINED, alcall
 
 
