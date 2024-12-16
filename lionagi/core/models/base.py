@@ -2,8 +2,8 @@
 #
 # SPDX-License-Identifier: Apache-2.0
 
-from ..typing.pydantic_ import BaseModel
-from ..typing.typing_ import UNDEFINED, Any, Self
+from ..typing._pydantic import BaseModel
+from ..typing._typing import UNDEFINED, Any, Self
 
 __all__ = ("BaseAutoModel",)
 

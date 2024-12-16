@@ -4,8 +4,8 @@
 
 from lionagi.libs.utils import is_same_dtype
 
-from ..typing.pydantic_ import ConfigDict, Field, FieldInfo, field_validator
-from ..typing.typing_ import UNDEFINED, Any, Callable, UndefinedType
+from ..typing._pydantic import ConfigDict, Field, FieldInfo, field_validator
+from ..typing._typing import UNDEFINED, Any, Callable, UndefinedType
 from .schema_model import SchemaModel
 
 __all__ = ("FieldModel",)

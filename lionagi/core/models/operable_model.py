@@ -4,7 +4,7 @@
 
 from lionagi.libs.utils import is_same_dtype
 
-from ..typing.pydantic_ import (
+from ..typing._pydantic import (
     ConfigDict,
     Field,
     FieldInfo,
@@ -12,7 +12,7 @@ from ..typing.pydantic_ import (
     field_serializer,
     field_validator,
 )
-from ..typing.typing_ import UNDEFINED, Any, TypeVar, override
+from ..typing._typing import UNDEFINED, Any, TypeVar, override
 from .base import BaseAutoModel
 from .field_model import FieldModel
 

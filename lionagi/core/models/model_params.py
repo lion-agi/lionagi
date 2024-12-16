@@ -9,7 +9,7 @@ from pydantic import BaseModel
 from lionagi.libs.parse import validate_boolean
 from lionagi.libs.utils import copy
 
-from ..typing.pydantic_ import (
+from ..typing._pydantic import (
     Field,
     FieldInfo,
     PrivateAttr,
@@ -17,7 +17,7 @@ from ..typing.pydantic_ import (
     field_validator,
     model_validator,
 )
-from ..typing.typing_ import Callable, Self
+from ..typing._typing import Callable, Self
 from .field_model import FieldModel
 from .schema_model import SchemaModel
 
