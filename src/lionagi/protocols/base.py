@@ -32,7 +32,7 @@ __all__ = (
     "Condition",
     "Observer",
     "Manager",
-    "T",
+    "Communicatable" "T",
 )
 
 

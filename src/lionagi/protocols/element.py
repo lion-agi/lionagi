@@ -2,8 +2,6 @@
 #
 # SPDX-License-Identifier: Apache-2.0
 
-from collections import deque
-from collections.abc import Generator
 from datetime import datetime
 from typing import Any
 

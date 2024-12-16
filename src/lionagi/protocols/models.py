@@ -28,16 +28,12 @@ __all__ = (
     "FieldModel",
     "OperableModel",
     "Note",
+    "HashableModel",
 )
 
 
 class BaseLionModel(BaseModel):
     """Base model with serialization and class type preservation."""
-
-    @classmethod
-    def class_name(cls) -> str:
-        """Get class name."""
-        return cls.__name__
 
     def to_dict(self, **kwargs) -> dict[str, Any]:
         """Convert to dict with class type info."""
@@ -593,6 +589,12 @@ class Note(BaseLionModel):
     def __setitem__(self, indices: INDICE_TYPE, value: Any) -> None:
         """Set an item in the Note using index notation."""
         self.set(indices, value)
+
+
+class HashableModel(BaseLionModel):
+
+    def __hash__(self) -> int:
+        return hash(self.model_dump_json())
 
 
 # File: lionagi/protocols/models.py
