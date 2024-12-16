@@ -5,6 +5,7 @@
 from .action_request import ActionRequest
 from .action_response import ActionResponse
 from .assistant_response import AssistantResponse
+from .base_mail import BaseMail
 from .instruction import Instruction
 from .manager import MessageManager
 from .message import RoledMessage
@@ -18,4 +19,5 @@ __all__ = (
     "MessageManager",
     "RoledMessage",
     "System",
+    "BaseMail",
 )
