@@ -1,3 +1,5 @@
+from lionagi.integrations.litellm_.imodel import LiteiModel
+
 from .imodel import iModel
 from .rate_limiter import RateLimiter, RateLimitError
 from .service import Service, register_service
@@ -10,4 +12,5 @@ __all__ = [
     "RateLimitError",
     "invoke_retry",
     "iModel",
+    "LiteiModel",
 ]

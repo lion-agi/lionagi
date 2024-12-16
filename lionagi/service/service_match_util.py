@@ -19,7 +19,7 @@ def match_service(service_name: str, **kwargs):
         return key1 == key2
 
     if service_name == "openai":
-        from lionagi.integrations.services import OpenAIService
+        from lionagi.integrations._services import OpenAIService
 
         api_key = kwargs.get("api_key")
         openai_organization = kwargs.get("openai_organization")
@@ -44,7 +44,7 @@ def match_service(service_name: str, **kwargs):
         )
 
     elif service_name == "anthropic":
-        from lionagi.integrations.services import AnthropicService
+        from lionagi.integrations._services import AnthropicService
 
         api_key = kwargs.get("api_key")
         api_version = kwargs.get("api_version", "2023-06-01")
@@ -63,7 +63,7 @@ def match_service(service_name: str, **kwargs):
         )
 
     elif service_name == "perplexity":
-        from lionagi.integrations.services import PerplexityService
+        from lionagi.integrations._services import PerplexityService
 
         api_key = kwargs.get("api_key")
         api_version = kwargs.get("api_version", "2023-06-01")
@@ -77,7 +77,7 @@ def match_service(service_name: str, **kwargs):
         return PerplexityService(api_key=api_key)
 
     elif service_name == "groq":
-        from lionagi.integrations.services import GroqService
+        from lionagi.integrations._services import GroqService
 
         api_key = kwargs.get("api_key")
         for service in ServiceSetting.services.values():
