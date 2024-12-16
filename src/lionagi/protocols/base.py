@@ -238,4 +238,10 @@ def validate_sender_recipient(value) -> ID.SenderRecipient:
         raise ValueError(f"Invalid sender or recipient: {value}") from e
 
 
+class IDError(ValueError):
+    """Custom error for ID validation issues."""
+
+    pass
+
+
 # File: lionagi/protocols/base.py
