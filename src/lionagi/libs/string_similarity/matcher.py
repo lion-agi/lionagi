@@ -4,7 +4,7 @@ from collections.abc import Callable, Sequence
 from dataclasses import dataclass
 
 from .algorithms import SIMILARITY_ALGO_MAP
-from .types import SIMILARITY_TYPE
+from .utils import SIMILARITY_TYPE
 
 
 @dataclass(frozen=True)
