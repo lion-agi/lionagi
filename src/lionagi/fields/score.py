@@ -2,7 +2,7 @@
 #
 # SPDX-License-Identifier: Apache-2.0
 
-from ..models import FieldModel
+from lionagi.protocols.types import FieldModel
 
 __all__ = ("SCORES_FIELD",)
 

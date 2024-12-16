@@ -7,8 +7,8 @@ from typing import TypeAlias
 from pydantic import BaseModel, field_validator
 
 from lionagi.libs.parse.types import to_num
+from lionagi.protocols.types import FieldModel
 
-from ..models import FieldModel
 from .prompts import confidence_description
 
 __all__ = (

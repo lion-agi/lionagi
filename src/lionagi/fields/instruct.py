@@ -7,9 +7,9 @@ from typing import Any, ClassVar
 from pydantic import JsonValue, field_validator
 
 from lionagi.libs.parse.types import validate_boolean
-from lionagi.protocols.models import BaseAutoModel
+from lionagi.protocols.models import HashableModel
+from lionagi.protocols.types import FieldModel
 
-from ..models import FieldModel
 from .prompts import (
     actions_field_description,
     context_examples,
@@ -118,15 +118,13 @@ ACTIONS_FIELD_MODEL = FieldModel(
 )
 
 
-class Instruct(BaseAutoModel):
+class Instruct(HashableModel):
     """Model for defining instruction parameters and execution requirements.
 
     Attributes:
         instruction (JsonValue | None): The primary instruction.
         guidance (JsonValue | None): Execution guidance.
         context (JsonValue | None): Task context.
-        reason (bool): Whether to include reasoning.
-        actions (bool): Whether specific actions are required.
     """
 
     instruction: JsonValue | None = INSTRUCTION_FIELD_MODEL.field_info
