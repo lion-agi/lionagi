@@ -14,6 +14,8 @@ from lionagi.libs.parse import function_to_schema
 from lionagi.protocols.element import Element
 from lionagi.utils import to_list
 
+__all__ = ("Tool", "func_to_tool", "FuncTool")
+
 
 class Tool(Element):
     """Represents a callable tool with pre/post-processing capabilities.
@@ -165,5 +167,6 @@ def func_to_tool(
     return tools
 
 
-__all__ = ["Tool", "func_to_tool"]
+FuncTool = Callable[..., Any] | Tool
+
 # File: lion_core/action/tool.py
