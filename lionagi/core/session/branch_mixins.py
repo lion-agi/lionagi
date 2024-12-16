@@ -14,9 +14,8 @@ from lionagi.core.typing import (
     UNDEFINED,
     BaseModel,
     FieldModel,
-    NewModelParams,
+    ModelParams,
 )
-from lionagi.integrations.litellm_.imodel import LiteiModel
 from lionagi.integrations.pydantic_ import break_down_pydantic_annotation
 from lionagi.libs.func.types import alcall
 from lionagi.libs.parse import to_json, validate_mapping
@@ -108,7 +107,7 @@ class BranchOperationMixin(ABC):
         recipient=None,
         operative_model: type[BaseModel] = None,
         progress=None,
-        imodel: iModel | LiteiModel = None,
+        imodel: iModel = None,
         reason: bool = False,
         actions: bool = False,
         exclude_fields: list | dict | None = None,
@@ -120,15 +119,15 @@ class BranchOperationMixin(ABC):
         images: list = None,
         image_detail: Literal["low", "high", "auto"] = None,
         max_retries: int = None,
-        retry_imodel: iModel | LiteiModel = None,
+        retry_imodel: iModel = None,
         retry_kwargs: dict = {},
         auto_retry_parse: bool = True,
         field_models: list[FieldModel] | None = None,
         skip_validation: bool = False,
         tools: str | Tool | list[Tool | str] | bool = None,
-        request_params: NewModelParams = None,
+        request_params: ModelParams = None,
         request_param_kwargs: dict = {},
-        response_params: NewModelParams = None,
+        response_params: ModelParams = None,
         response_param_kwargs: dict = {},
         **kwargs,
     ) -> list | BaseModel | None | dict | str:
@@ -269,7 +268,7 @@ class BranchOperationMixin(ABC):
         request_fields=None,
         request_model: type[BaseModel] = None,
         progress=None,
-        imodel: iModel | LiteiModel = None,
+        imodel: iModel = None,
         tool_schemas=None,
         images: list = None,
         image_detail: Literal["low", "high", "auto"] = None,
@@ -321,9 +320,9 @@ class BranchOperationMixin(ABC):
         imodel = imodel or self.imodel
         api_response = None
 
-        if isinstance(imodel, LiteiModel):
+        if not hasattr(imodel, "parse_to_data_model"):
             api_response = await imodel.invoke(**kwargs)
-        elif isinstance(imodel, iModel):
+        else:
             data_model = imodel.parse_to_data_model(**kwargs)
             api_response = await imodel.invoke(**data_model)
 
@@ -344,12 +343,12 @@ class BranchOperationMixin(ABC):
         progress: ID.IDSeq = None,
         request_model: type[BaseModel] | BaseModel = None,
         request_fields: dict | list[str] = None,
-        imodel: iModel | LiteiModel = None,
+        imodel: iModel = None,
         images: list = None,
         image_detail: Literal["low", "high", "auto"] = None,
         tools: str | FUNCTOOL | list[FUNCTOOL | str] | bool = None,
         num_parse_retries: int = 0,
-        retry_imodel: iModel | LiteiModel = None,
+        retry_imodel: iModel = None,
         retry_kwargs: dict = {},
         handle_validation: Literal[
             "raise", "return_value", "return_none"

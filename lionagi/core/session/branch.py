@@ -9,7 +9,6 @@ from pydantic import model_validator
 
 from lionagi.core.generic.types import Component, LogManager, Pile, Progression
 from lionagi.core.typing import ID
-from lionagi.integrations.litellm_.imodel import LiteiModel
 from lionagi.protocols.operatives.instruct import Instruct, OperationInstruct
 from lionagi.service import iModel
 from lionagi.settings import Settings
@@ -25,8 +24,8 @@ class Branch(Component, BranchActionMixin, BranchOperationMixin):
     name: str | None = None
     msgs: MessageManager = None
     acts: ActionManager = None
-    imodel: iModel | LiteiModel | None = None
-    parse_imodel: iModel | LiteiModel | None = None
+    imodel: iModel | None = None
+    parse_imodel: iModel | None = None
 
     @model_validator(mode="before")
     def _validate_data(cls, data: dict) -> dict:
@@ -42,29 +41,33 @@ class Branch(Component, BranchActionMixin, BranchOperationMixin):
             )
         if not message_manager.logger:
             message_manager.logger = LogManager(
-                **Settings.Branch.BRANCH.message_log_config.to_dict(True)
+                **Settings.Branch.BRANCH.message_log_config.to_dict()
             )
 
         acts = data.pop("acts", None)
         if not acts:
             acts = ActionManager()
             acts.logger = LogManager(
-                **Settings.Branch.BRANCH.action_log_config.to_dict(True)
+                **Settings.Branch.BRANCH.action_log_config.to_dict()
             )
         if "tools" in data:
             acts.register_tools(data.pop("tools"))
 
         imodel = data.pop(
             "imodel",
-            LiteiModel(**Settings.iModel.CHAT),
+            iModel(**Settings.iModel.CHAT.to_dict()),
         )
-
+        parse_imodel = data.pop(
+            "parse_imodel",
+            iModel(**Settings.iModel.PARSE.to_dict()),
+        )
         out = {
             "user": user,
             "name": name,
             "msgs": message_manager,
             "acts": acts,
             "imodel": imodel,
+            "parse_imodel": parse_imodel,
             **data,
         }
         return out
