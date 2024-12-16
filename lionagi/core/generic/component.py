@@ -29,7 +29,7 @@ from .element import Element
 FIELD_NAME = TypeVar("FIELD_NAME", bound=str)
 
 DEFAULT_SERIALIZATION_INCLUDE: set[str] = {
-    "ln_id",
+    "id",
     "timestamp",
     "metadata",
     "content",
@@ -289,7 +289,7 @@ class Component(Element, OperableModel):
 
         output_str = (
             f"{self.__class__.__name__}("
-            f"ln_id={self.ln_id[:8]}..., "
+            f"id={str(self.ln_id)[:8]}..., "
             f"timestamp={str(self.created_datetime)[:-6]}, "
             f"content='{content_preview}', "
             f"metadata_keys={list(self.metadata.keys())}, "
@@ -340,7 +340,7 @@ class Component(Element, OperableModel):
 
         repr_str = (
             f"{self.class_name()}("
-            f"ln_id={repr(self.ln_id)}, "
+            f"id=IDType({str(self.ln_id)}), "
             f"timestamp={str(self.created_datetime)[:-6]}, "
             f"content={content_repr}, "
             f"metadata={truncate_dict(self.metadata.content)}, "
