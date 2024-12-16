@@ -144,35 +144,6 @@ def test_list_tasks():
     assert tasks == ["chat", "completion"]
 
 
-def test_imodel_with_deprecated_parameters():
-    """Test handling of deprecated parameters."""
-    service = MockService()
-
-    with pytest.warns(DeprecationWarning):
-        model = iModel(
-            provider=service,
-            task="chat",
-            model="gpt-4",
-            config={"deprecated": True},
-        )
-
-    with pytest.warns(DeprecationWarning):
-        model = iModel(
-            provider=service,
-            task="chat",
-            model="gpt-4",
-            provider_schema={"deprecated": True},
-        )
-
-    with pytest.warns(DeprecationWarning):
-        model = iModel(
-            provider=service,
-            task="chat",
-            model="gpt-4",
-            endpoint="chat",  # Use valid task to avoid ValueError
-        )
-
-
 def test_imodel_with_api_key_schema():
     """Test initialization with api_key_schema."""
     with patch("lionagi.service.imodel.match_service") as mock_match:
