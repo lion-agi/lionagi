@@ -2,7 +2,7 @@
 #
 # SPDX-License-Identifier: Apache-2.0
 
-from lionagi.core.generic import Pile
+from lionagi.core.generic.types import Pile
 from lionagi.core.typing import UNDEFINED, Field
 
 from .base import BaseForm

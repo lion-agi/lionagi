@@ -2,7 +2,7 @@
 #
 # SPDX-License-Identifier: Apache-2.0
 
-from lionagi.core.generic import Element, Log
+from lionagi.core.generic.types import Element, Log
 from lionagi.core.typing import Any, Enum, NoReturn, PrivateAttr, override
 from lionagi.settings import Settings, TimedFuncCallConfig
 

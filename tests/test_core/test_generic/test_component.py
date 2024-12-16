@@ -4,7 +4,7 @@ from datetime import datetime
 
 import pytest
 
-from lionagi.core.generic import Component
+from lionagi.core.generic.types import Component
 from lionagi.core.typing import UNDEFINED, Field, Note
 
 

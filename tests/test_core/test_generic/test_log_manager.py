@@ -6,7 +6,7 @@ from pathlib import Path
 
 import pytest
 
-from lionagi.core.generic import Log, LogManager
+from lionagi.core.generic.types import Log, LogManager
 from lionagi.core.typing import Note
 from lionagi.protocols.configs.log_config import LogConfig
 

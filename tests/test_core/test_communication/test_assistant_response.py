@@ -1,8 +1,8 @@
 import pytest
 from pydantic import BaseModel
 
-from lionagi.core.communication import AssistantResponse
 from lionagi.core.communication.message import MessageRole
+from lionagi.core.communication.types import AssistantResponse
 from lionagi.core.typing import Note
 
 

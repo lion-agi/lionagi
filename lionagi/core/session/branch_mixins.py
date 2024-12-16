@@ -18,7 +18,7 @@ from lionagi.core.typing import (
 )
 from lionagi.integrations.litellm_.imodel import LiteiModel
 from lionagi.integrations.pydantic_ import break_down_pydantic_annotation
-from lionagi.libs.func import alcall
+from lionagi.libs.func.types import alcall
 from lionagi.libs.parse import to_json, validate_mapping
 from lionagi.protocols.operatives import (
     ActionRequestModel,

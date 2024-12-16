@@ -4,7 +4,7 @@ from datetime import datetime, timezone
 
 import pytest
 
-from lionagi.core.generic import Element
+from lionagi.core.generic.types import Element
 from lionagi.core.typing import IDError
 from lionagi.settings import Settings
 

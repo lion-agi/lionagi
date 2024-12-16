@@ -2,7 +2,7 @@ import asyncio
 import unittest
 from unittest.mock import AsyncMock, patch
 
-from lionagi.libs.func import pcall
+from lionagi.libs.func.types import pcall
 
 
 async def async_func() -> int:

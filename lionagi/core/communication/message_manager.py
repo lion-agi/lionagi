@@ -2,7 +2,7 @@
 #
 # SPDX-License-Identifier: Apache-2.0
 
-from lionagi.core.generic import LogManager, Pile, Progression
+from lionagi.core.generic.types import LogManager, Pile, Progression
 from lionagi.core.typing import ID, Any, BaseModel, JsonValue, Literal
 
 from .action_request import ActionRequest

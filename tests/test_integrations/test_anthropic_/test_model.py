@@ -57,7 +57,7 @@ def mock_yaml_files():
 @pytest.fixture
 def mock_token_calculator():
     with patch(
-        "lion.service.token_calculator.TiktokenCalculator",
+        "lionagi.service.token_calculator.TiktokenCalculator",
         MockTiktokenCalculator,
     ):
         yield

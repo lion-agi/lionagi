@@ -2,7 +2,7 @@
 #
 # SPDX-License-Identifier: Apache-2.0
 
-from lionagi.core.generic import Element
+from lionagi.core.generic.types import Element
 from lionagi.core.typing import ID, Any, Communicatable, Field, field_validator
 
 from .utils import validate_sender_recipient

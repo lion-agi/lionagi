@@ -4,7 +4,7 @@
 
 from pydantic import field_validator
 
-from ..generic import Component
+from ..generic.types import Component
 from ..typing import UNDEFINED, Any, Field, Literal, PydanticUndefined
 
 

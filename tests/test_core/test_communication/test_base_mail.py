@@ -2,7 +2,7 @@ import pytest
 from pydantic import ValidationError
 
 from lionagi.core.communication.base_mail import BaseMail
-from lionagi.core.generic import Element
+from lionagi.core.generic.types import Element
 from lionagi.core.typing import ID
 
 

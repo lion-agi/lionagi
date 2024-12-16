@@ -2,7 +2,7 @@ from pathlib import Path
 from typing import Any
 
 from lionagi.integrations.pandas_.to_df import to_df
-from lionagi.libs.file import create_path
+from lionagi.libs.file.types import create_path
 
 
 def to_csv(

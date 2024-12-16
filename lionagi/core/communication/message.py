@@ -5,7 +5,7 @@
 import inspect
 
 from lionagi.core._class_registry import get_class
-from lionagi.core.generic import Component, Log
+from lionagi.core.generic.types import Component, Log
 from lionagi.core.typing import (
     Any,
     Communicatable,

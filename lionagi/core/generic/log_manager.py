@@ -9,7 +9,7 @@ from pathlib import Path
 from lionagi.core.generic.log import Log
 from lionagi.core.generic.pile import Pile
 from lionagi.core.typing import Any
-from lionagi.libs.file import create_path
+from lionagi.libs.file.types import create_path
 from lionagi.protocols.configs.log_config import LogConfig
 
 
