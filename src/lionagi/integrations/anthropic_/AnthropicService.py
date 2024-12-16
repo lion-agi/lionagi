@@ -1,10 +1,11 @@
+# Copyright (c) 2023 - 2024, HaiyangLi <quantocean.li at gmail dot com>
+#
+# SPDX-License-Identifier: Apache-2.0
+
 import inspect
 
 from dotenv import load_dotenv
 
-from lionagi.integrations.anthropic_.api_endpoints.api_request import (
-    AnthropicRequest,
-)
 from lionagi.integrations.anthropic_.api_endpoints.messages.request.request_body import (
     AnthropicMessageRequestBody,
 )

@@ -1,4 +1,7 @@
-from typing import List
+# Copyright (c) 2023 - 2024, HaiyangLi <quantocean.li at gmail dot com>
+#
+# SPDX-License-Identifier: Apache-2.0
+
 
 from pydantic import BaseModel, Field
 

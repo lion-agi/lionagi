@@ -11,7 +11,7 @@ from .algorithms import (
     sequence_matcher_similarity,
 )
 from .matcher import MatchResult, string_similarity
-from .types import SIMILARITY_TYPE, SimilarityFunc
+from .utils import SIMILARITY_TYPE, SimilarityFunc
 
 __all__ = [
     # Main functionality

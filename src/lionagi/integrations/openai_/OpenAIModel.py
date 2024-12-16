@@ -11,32 +11,22 @@ from pydantic import (
     model_validator,
 )
 
-from lionagi.integrations.openai_.api_endpoints.api_request import (
-    OpenAIRequest,
-)
-from lionagi.integrations.openai_.api_endpoints.chat_completions.request.request_body import (
-    OpenAIChatCompletionRequestBody,
-    StreamOptions,
-)
-from lionagi.integrations.openai_.api_endpoints.chat_completions.util import (
-    get_images,
-    get_text_messages,
-)
-from lionagi.integrations.openai_.api_endpoints.data_models import (
-    OpenAIEndpointRequestBody,
-)
-from lionagi.integrations.openai_.api_endpoints.embeddings.request_body import (
-    OpenAIEmbeddingRequestBody,
-)
-from lionagi.integrations.openai_.api_endpoints.match_response import (
-    match_response,
-)
-from lionagi.integrations.openai_.image_token_calculator.image_token_calculator import (
-    OpenAIImageTokenCalculator,
-)
 from lionagi.service.rate_limiter import RateLimiter, RateLimitError
 from lionagi.service.service_util import invoke_retry
 from lionagi.service.token_calculator import TiktokenCalculator
+
+from .api_endpoints.api_request import OpenAIRequest
+from .api_endpoints.chat_completions.request.request_body import (
+    OpenAIChatCompletionRequestBody,
+    StreamOptions,
+)
+from .api_endpoints.chat_completions.util import get_images, get_text_messages
+from .api_endpoints.data_models import OpenAIEndpointRequestBody
+from .api_endpoints.embeddings.request_body import OpenAIEmbeddingRequestBody
+from .api_endpoints.match_response import match_response
+from .image_token_calculator.image_token_calculator import (
+    OpenAIImageTokenCalculator,
+)
 
 load_dotenv()
 path = Path(__file__).parent

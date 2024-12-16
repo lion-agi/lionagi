@@ -2,9 +2,6 @@ import inspect
 
 from dotenv import load_dotenv
 
-from lionagi.integrations.perplexity_.api_endpoints.api_request import (
-    PerplexityRequest,
-)
 from lionagi.integrations.perplexity_.api_endpoints.chat_completions.request.request_body import (
     PerplexityChatCompletionRequestBody,
 )
