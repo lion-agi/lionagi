@@ -5,7 +5,6 @@
 import os
 from pathlib import Path
 
-import yaml
 from dotenv import load_dotenv
 from pydantic import (
     BaseModel,
@@ -33,6 +32,12 @@ path = Path(__file__).parent
 
 price_config_file_name = path / "perplexity_price_data.yaml"
 max_output_token_file_name = path / "perplexity_max_output_token_data.yaml"
+
+
+class _ModuleImportClass:
+    from lionagi.libs.package.imports import check_import
+
+    yaml = check_import("yaml", pip_name="pyyaml")
 
 
 class PerplexityModel(BaseModel):
@@ -235,7 +240,7 @@ class PerplexityModel(BaseModel):
         )
         if estimated_output_len == 0:
             with open(max_output_token_file_name) as file:
-                output_token_config = yaml.safe_load(file)
+                output_token_config = _ModuleImportClass.yaml.safe_load(file)
                 estimated_output_len = output_token_config.get(self.model, 0)
                 self.estimated_output_len = estimated_output_len
 
@@ -257,7 +262,7 @@ class PerplexityModel(BaseModel):
         num_of_input_tokens = self.text_token_calculator.calculate(input_text)
 
         with open(price_config_file_name) as file:
-            price_config = yaml.safe_load(file)
+            price_config = _ModuleImportClass.yaml.safe_load(file)
 
         model_price_info_dict = price_config["model"][self.model]
         estimated_price = (

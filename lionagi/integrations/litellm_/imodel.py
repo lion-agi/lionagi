@@ -5,13 +5,6 @@
 import json
 import os
 
-import litellm
-from dotenv import load_dotenv
-
-litellm.drop_params = True
-load_dotenv()
-
-
 RESERVED_PARAMS = [
     "invoke_action",
     "instruction",
@@ -20,6 +13,11 @@ RESERVED_PARAMS = [
 
 
 class LiteiModel:
+
+    from lionagi.libs.package.imports import check_import
+
+    litellm = check_import("litellm")
+    litellm.drop_params = True
 
     def __init__(self, **kwargs):
         if "api_key" in kwargs:
@@ -33,7 +31,7 @@ class LiteiModel:
             except Exception:
                 pass
         self.kwargs = kwargs
-        self.acompletion = litellm.acompletion
+        self.acompletion = self.litellm.acompletion
 
     def to_dict(self) -> dict:
         dict_ = {
