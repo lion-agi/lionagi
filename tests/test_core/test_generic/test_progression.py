@@ -8,6 +8,7 @@ import pytest
 from lionagi.core.generic.element import Element
 from lionagi.core.generic.progression import Progression
 from lionagi.core.typing import ID, Field, ItemNotFoundError
+from lionagi.core.typing._concepts import IDType
 
 
 class MockElement(Element):
@@ -65,7 +66,7 @@ def test_list_conversion(sample_progression, sample_elements):
     prog_list = sample_progression.__list__()
     assert isinstance(prog_list, list)
     assert len(prog_list) == len(sample_elements)
-    assert all(isinstance(item, str) for item in prog_list)
+    assert all(isinstance(item, IDType) for item in prog_list)
 
 
 def test_len(sample_progression, sample_elements):
@@ -75,7 +76,7 @@ def test_len(sample_progression, sample_elements):
 @pytest.mark.parametrize(
     "index, expected_type",
     [
-        (0, str),
+        (0, IDType),
         (slice(0, 2), Progression),
     ],
 )
@@ -392,11 +393,11 @@ def test_progression_serialization_advanced():
         ]
     )
 
-    serialized = json.dumps(p.to_dict())
+    serialized = p.model_dump_json()
     deserialized = Progression.from_dict(json.loads(serialized))
 
     assert len(deserialized) == 5
     assert all(
-        isinstance(elem, str) for elem in deserialized
-    )  # IDs are strings
+        isinstance(elem, IDType) for elem in deserialized
+    )  # IDs are IDTypes
     assert p == deserialized
