@@ -1,0 +1,105 @@
+# Text Models Rate Limits
+text_models:
+  gemma-7b-it:
+    requests_per_minute: 30
+    requests_per_day: 14400
+    tokens_per_minute: 15000
+    tokens_per_day: 500000
+  gemma2-9b-it:
+    requests_per_minute: 30
+    requests_per_day: 14400
+    tokens_per_minute: 15000
+    tokens_per_day: 500000
+  llama-3.1-70b-versatile:
+    requests_per_minute: 30
+    requests_per_day: 14400
+    tokens_per_minute: 6000
+    tokens_per_day: 200000
+  llama-3.1-8b-instant:
+    requests_per_minute: 30
+    requests_per_day: 14400
+    tokens_per_minute: 20000
+    tokens_per_day: 500000
+  llama-3.2-11b-text-preview:
+    requests_per_minute: 30
+    requests_per_day: 7000
+    tokens_per_minute: 7000
+    tokens_per_day: 500000
+  llama-3.2-11b-vision-preview:
+    requests_per_minute: 30
+    requests_per_day: 7000
+    tokens_per_minute: 7000
+    tokens_per_day: 500000
+  llama-3.2-1b-preview:
+    requests_per_minute: 30
+    requests_per_day: 7000
+    tokens_per_minute: 7000
+    tokens_per_day: 500000
+  llama-3.2-3b-preview:
+    requests_per_minute: 30
+    requests_per_day: 7000
+    tokens_per_minute: 7000
+    tokens_per_day: 500000
+  llama-3.2-90b-text-preview:
+    requests_per_minute: 30
+    requests_per_day: 7000
+    tokens_per_minute: 7000
+    tokens_per_day: 500000
+  llama-3.2-90b-vision-preview:
+    requests_per_minute: 15
+    requests_per_day: 3500
+    tokens_per_minute: 7000
+    tokens_per_day: 250000
+  llama-guard-3-8b:
+    requests_per_minute: 30
+    requests_per_day: 14400
+    tokens_per_minute: 15000
+    tokens_per_day: 500000
+  llama3-70b-8192:
+    requests_per_minute: 30
+    requests_per_day: 14400
+    tokens_per_minute: 6000
+    tokens_per_day: 500000
+  llama3-8b-8192:
+    requests_per_minute: 30
+    requests_per_day: 14400
+    tokens_per_minute: 30000
+    tokens_per_day: 500000
+  llama3-groq-70b-8192-tool-use-preview:
+    requests_per_minute: 30
+    requests_per_day: 14400
+    tokens_per_minute: 15000
+    tokens_per_day: 500000
+  llama3-groq-8b-8192-tool-use-preview:
+    requests_per_minute: 30
+    requests_per_day: 14400
+    tokens_per_minute: 15000
+    tokens_per_day: 500000
+  llava-v1.5-7b-4096-preview:
+    requests_per_minute: 30
+    requests_per_day: 14400
+    tokens_per_minute: 30000
+    tokens_per_day: null  # No limit
+  mixtral-8x7b-32768:
+    requests_per_minute: 30
+    requests_per_day: 14400
+    tokens_per_minute: 5000
+    tokens_per_day: 500000
+
+# Audio Models Rate Limits
+audio_models:
+  distil-whisper-large-v3-en:
+    requests_per_minute: 20
+    requests_per_day: 2000
+    audio_seconds_per_hour: 7200
+    audio_seconds_per_day: 28800
+  whisper-large-v3:
+    requests_per_minute: 20
+    requests_per_day: 2000
+    audio_seconds_per_hour: 7200
+    audio_seconds_per_day: 28800
+  whisper-large-v3-turbo:
+    requests_per_minute: 20
+    requests_per_day: 2000
+    audio_seconds_per_hour: 7200
+    audio_seconds_per_day: 28800

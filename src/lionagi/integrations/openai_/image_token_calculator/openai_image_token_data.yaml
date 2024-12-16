@@ -1,0 +1,15 @@
+gpt-4o:
+  base: 85
+  tile: 170
+gpt-4o-2024-05-13:
+  base: 85
+  tile: 170
+gpt-4o-2024-08-06:
+  base: 85
+  tile: 170
+gpt-4o-mini:
+  base: 2833
+  tile: 5667
+gpt-4o-mini-2024-07-18:
+  base: 2833
+  tile: 5667

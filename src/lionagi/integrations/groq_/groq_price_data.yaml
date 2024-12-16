@@ -1,0 +1,58 @@
+model:
+  # Text Models
+  gemma2-9b-it:
+    input_tokens: 0
+    output_tokens: 0
+  gemma-7b-it:
+    input_tokens: 0
+    output_tokens: 0
+  llama3-groq-70b-8192-tool-use-preview:
+    input_tokens: 0
+    output_tokens: 0
+  llama3-groq-8b-8192-tool-use-preview:
+    input_tokens: 0
+    output_tokens: 0
+  llama-3.1-70b-versatile:
+    input_tokens: 0
+    output_tokens: 0
+  llama-3.1-70b-specdec:
+    input_tokens: 0
+    output_tokens: 0
+  llama-3.1-8b-instant:
+    input_tokens: 0
+    output_tokens: 0
+  llama-3.2-1b-preview:
+    input_tokens: 0
+    output_tokens: 0
+  llama-3.2-3b-preview:
+    input_tokens: 0
+    output_tokens: 0
+  llama-3.2-11b-vision-preview:
+    input_tokens: 0
+    output_tokens: 0
+  llama-3.2-90b-vision-preview:
+    input_tokens: 0
+    output_tokens: 0
+  llama-guard-3-8b:
+    input_tokens: 0
+    output_tokens: 0
+  llama3-70b-8192:
+    input_tokens: 0
+    output_tokens: 0
+  llama3-8b-8192:
+    input_tokens: 0
+    output_tokens: 0
+  mixtral-8x7b-32768:
+    input_tokens: 0
+    output_tokens: 0
+
+  # Audio Models
+  whisper-large-v3:
+    input_tokens: 0
+    output_tokens: 0
+  whisper-large-v3-turbo:
+    input_tokens: 0
+    output_tokens: 0
+  distil-whisper-large-v3-en:
+    input_tokens: 0
+    output_tokens: 0

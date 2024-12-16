@@ -1,0 +1,10 @@
+model:
+  claude-3-opus-20240229:
+    input_tokens: 0.000015
+    output_tokens: 0.000075
+  claude-3-sonnet-20240229:
+    input_tokens: 0.000003
+    output_tokens: 0.000015
+  claude-3-haiku-20240307:
+    input_tokens: 0.0000005
+    output_tokens: 0.0000025

@@ -1,23 +1,32 @@
-# Copyright (c) 2023 - 2024, HaiyangLi <quantocean.li at gmail dot com>
-#
-# SPDX-License-Identifier: Apache-2.0
+"""
+Copyright 2024 HaiyangLi
 
-from typing import Any
+   Licensed under the Apache License, Version 2.0 (the "License");
+   you may not use this file except in compliance with the License.
+   You may obtain a copy of the License at
 
-from pydantic import BaseModel
+       http://www.apache.org/licenses/LICENSE-2.0
 
-from lionagi.fields.instruct import (
-    INSTRUCT_FIELD_MODEL,
+   Unless required by applicable law or agreed to in writing, software
+   distributed under the License is distributed on an "AS IS" BASIS,
+   WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+   See the License for the specific language governing permissions and
+   limitations under the License.
+"""
+
+from lionagi.core.session.branch import Branch
+from lionagi.core.session.session import Session
+from lionagi.core.typing import ID, Any, BaseModel
+from lionagi.libs.func import alcall
+from lionagi.libs.parse import to_flat_list
+from lionagi.protocols.operatives.instruct import (
+    INSTRUCT_MODEL_FIELD,
     Instruct,
     InstructResponse,
 )
-from lionagi.libs.async_utils import alcall
-from lionagi.protocols.base import ID
-from lionagi.session.session import Branch, Session
-from lionagi.utils import to_list
 
 from ..utils import prepare_instruct, prepare_session
-from .get_prompt import BrainStormTemplate, get_prompt
+from .prompt import PROMPT
 
 
 class BrainstormOperation(BaseModel):
@@ -94,8 +103,6 @@ async def brainstorm(
     branch_kwargs: dict[str, Any] | None = None,
     return_session: bool = False,
     verbose: bool = False,
-    template: BrainStormTemplate = BrainStormTemplate.DEFAULT,
-    template_context: dict[str, Any] | None = None,
     **kwargs: Any,
 ) -> Any:
     """Perform a brainstorming session.
@@ -122,25 +129,14 @@ async def brainstorm(
         print(f"Starting brainstorming...")
 
     field_models: list = kwargs.get("field_models", [])
-    if INSTRUCT_FIELD_MODEL not in field_models:
-        field_models.append(INSTRUCT_FIELD_MODEL)
+    if INSTRUCT_MODEL_FIELD not in field_models:
+        field_models.append(INSTRUCT_MODEL_FIELD)
 
     kwargs["field_models"] = field_models
-    session, branch = prepare_session(
-        session=session,
-        branch=branch,
-        branch_kwargs=branch_kwargs,
-    )
-    prompt = get_prompt(
-        template=template,
-        num_instruct=num_instruct,
-        **(template_context or {}),
-    )
+    session, branch = prepare_session(session, branch, branch_kwargs)
     instruct = prepare_instruct(
-        instruct=instruct,
-        prompt=prompt,
+        instruct, PROMPT.format(num_instruct=num_instruct)
     )
-
     res1 = await branch.operate(**instruct, **kwargs)
     out = BrainstormOperation(initial=res1)
 
@@ -172,15 +168,13 @@ async def brainstorm(
         if hasattr(res1, "instruct_models"):
             instructs: list[Instruct] = res1.instruct_models
             ress = await alcall(instructs, run)
-            ress = to_list(ress, dropna=True, flatten=True)
+            ress = to_flat_list(ress, dropna=True)
 
             response_ = [
                 res if not isinstance(res, str | dict) else None
                 for res in ress
             ]
-            response_ = to_list(
-                response_, unique=True, dropna=True, flatten=True
-            )
+            response_ = to_flat_list(response_, unique=True, dropna=True)
             out.brainstorm = (
                 response_ if isinstance(response_, list) else [response_]
             )
@@ -198,9 +192,12 @@ async def brainstorm(
                     print(f"\n-----Exploring Idea-----\n{msg_}")
                 b_ = session.split(branch)
                 res = await b_.instruct(ins_, **(explore_kwargs or {}))
-                return InstructResponse(response=res, **ins_.model_dump())
+                return InstructResponse(
+                    instruct=ins_,
+                    response=res,
+                )
 
-            response_ = to_list(
+            response_ = to_flat_list(
                 [
                     i.instruct_models
                     for i in response_
@@ -208,7 +205,6 @@ async def brainstorm(
                 ],
                 dropna=True,
                 unique=True,
-                flatten=True,
             )
             res_explore = await alcall(response_, explore)
             out.explore = res_explore

@@ -1,27 +1,27 @@
-# Copyright (c) 2023 - 2024, HaiyangLi <quantocean.li at gmail dot com>
-#
-# SPDX-License-Identifier: Apache-2.0
+"""The LION framework."""
 
 import logging
 
 from dotenv import load_dotenv
-from lion_service import iModel
 
-from .protocols import types
-from .session.session import Branch, Session
+from .core.session.types import Branch
+from .integrations.litellm_.imodel import LiteiModel
+from .protocols.operatives.step import Step
+from .service import iModel
 from .settings import Settings
 from .version import __version__
 
+load_dotenv()
+
+
 __all__ = [
-    "Branch",
-    "Session",
-    "types",
-    "iModel",
     "Settings",
     "__version__",
+    "iModel",
+    "LiteiModel",
+    "Branch",
+    "Step",
 ]
-
 
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.INFO)
-load_dotenv(Settings.Config.ENV_FILE)
