@@ -29,7 +29,7 @@ from .element import Element
 FIELD_NAME = TypeVar("FIELD_NAME", bound=str)
 
 DEFAULT_SERIALIZATION_INCLUDE: set[str] = {
-    "id",
+    "ln_id",
     "timestamp",
     "metadata",
     "content",
