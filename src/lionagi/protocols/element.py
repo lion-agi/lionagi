@@ -56,8 +56,8 @@ class Element(BaseModel, Observable):
             self.timestamp, tz=Settings.Config.TIMEZONE
         )
 
-    @field_validator("ln_id", mode="before")
-    def _validate_id(cls, value: ID.ID) -> str:
+    @field_validator("id", mode="before")
+    def _validate_id(cls, value: IDType) -> IDType:
         try:
             return ID.get_id(value)
         except Exception:
@@ -100,12 +100,12 @@ class Element(BaseModel, Observable):
     def __str__(self) -> str:
         timestamp_str = self.created_datetime.isoformat(timespec="minutes")
         return (
-            f"{self.class_name()}(ln_id={self.ln_id[:6]}.., "
+            f"{self.class_name()}(id={self.id[:6]}.., "
             f"timestamp={timestamp_str})"
         )
 
     def __hash__(self) -> int:
-        return hash(self.ln_id)
+        return hash(self.id)
 
     def __bool__(self) -> bool:
         """Always True"""
