@@ -26,6 +26,7 @@ from lionagi.core.typing import (
     TypeVar,
     field_serializer,
 )
+from lionagi.core.typing._concepts import IDType
 from lionagi.libs.parse import is_same_dtype, to_list
 from lionagi.protocols.adapters.adapter import Adapter, AdapterRegistry
 from lionagi.protocols.registries._pile_registry import PileAdapterRegistry
@@ -36,6 +37,9 @@ from .utils import to_list_type, validate_order
 
 T = TypeVar("T", bound=Element)
 D = TypeVar("D")
+
+
+__all__ = ("Pile", "pile")
 
 
 def synchronized(func: Callable):
@@ -72,7 +76,7 @@ class Pile(Element, Generic[T]):
         strict_type (bool): Whether to enforce strict type checking
     """
 
-    pile_: dict[str, T] = Field(default_factory=dict)
+    pile_: dict[IDType, T] = Field(default_factory=dict)
     item_type: set[type[T]] | None = Field(
         default=None,
         description="Set of allowed types for items in the pile.",
@@ -120,8 +124,8 @@ class Pile(Element, Generic[T]):
         _config = {}
         if "ln_id" in kwargs:
             _config["ln_id"] = kwargs["ln_id"]
-        if "created" in kwargs:
-            _config["created"] = kwargs["created"]
+        if "created_timestamp" in kwargs:
+            _config["created_timestamp"] = kwargs["created_timestamp"]
 
         super().__init__(strict_type=strict_type, **_config)
         self.item_type = self._validate_item_type(item_type)
@@ -303,7 +307,7 @@ class Pile(Element, Generic[T]):
         """Get all items in order."""
         return [self.pile_[key] for key in self.progress]
 
-    def items(self) -> Sequence[tuple[str, T]]:
+    def items(self) -> Sequence[tuple[IDType, T]]:
         """Get all (ID, item) pairs in order."""
         return [(key, self.pile_[key]) for key in self.progress]
 
@@ -619,7 +623,7 @@ class Pile(Element, Generic[T]):
             except Exception as e:
                 raise ItemNotFoundError(f"index {key}. Error: {e}")
 
-        elif isinstance(key, str):
+        elif isinstance(key, IDType):
             try:
                 return self.pile_[key]
             except Exception as e:
@@ -724,7 +728,7 @@ class Pile(Element, Generic[T]):
         if isinstance(key, int | slice):
             try:
                 pops = self.progress[key]
-                pops = [pops] if isinstance(pops, str) else pops
+                pops = [pops] if isinstance(pops, IDType) else pops
                 result = []
                 for i in pops:
                     self.progress.remove(i)
@@ -965,10 +969,6 @@ class Pile(Element, Generic[T]):
         """Save to CSV file."""
         self.adapt_to(".csv", fp=fp, **kwargs)
 
-    def to_excel(self, fp: str | Path, **kwargs: Any) -> None:
-        """Save to Excel file."""
-        self.adapt_to(".xlsx", fp=fp, **kwargs)
-
 
 def pile(
     items: Any = None,
@@ -1013,5 +1013,4 @@ def pile(
     )
 
 
-__all__ = [Pile, pile]
 # File: autoos/generic/pile.py
