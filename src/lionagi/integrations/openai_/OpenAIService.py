@@ -2,14 +2,10 @@ import inspect
 
 from dotenv import load_dotenv
 
-from lionagi.integrations.openai_.api_endpoints.api_request import (
-    OpenAIRequest,
-)
-from lionagi.integrations.openai_.api_endpoints.match_data_model import (
-    match_data_model,
-)
 from lionagi.service import Service, register_service
 
+from .api_endpoints.api_request import OpenAIRequest
+from .api_endpoints.match_data_model import match_data_model
 from .OpenAIModel import OpenAIModel
 
 load_dotenv()
