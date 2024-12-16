@@ -145,3 +145,7 @@ class GroqService(Service):
             model_obj,
             limit_requests=limit_requests,
         )
+
+    @property
+    def allowed_roles(self):
+        return ["user", "assistant", "system"]

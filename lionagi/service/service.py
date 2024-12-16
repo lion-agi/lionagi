@@ -3,6 +3,10 @@ class Service:
     def list_tasks(self):
         pass
 
+    @property
+    def allowed_roles(self):
+        return ["user", "assistant", "system"]
+
 
 def register_service(cls):
     original_init = cls.__init__

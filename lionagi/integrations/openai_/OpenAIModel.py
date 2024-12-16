@@ -412,3 +412,7 @@ class OpenAIModel(BaseModel):
                 "Estimating price currently only supports chat/completions endpoint"
             )
         return estimated_price
+
+    @property
+    def allowed_roles(self):
+        return ["user", "assistant", "system"]

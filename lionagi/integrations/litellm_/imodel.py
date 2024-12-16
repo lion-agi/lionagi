@@ -67,3 +67,7 @@ class LiteiModel:
                 v = str(v)
             hashable_items.append((k, v))
         return hash(frozenset(hashable_items))
+
+    @property
+    def allowed_roles(self):
+        return ["user", "assistant", "system"]
