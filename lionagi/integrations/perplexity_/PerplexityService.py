@@ -107,3 +107,7 @@ class PerplexityService(Service):
         return self.check_rate_limiter(
             model_obj, limit_requests=limit_requests, limit_tokens=limit_tokens
         )
+
+    @property
+    def allowed_roles(self):
+        return ["user", "assistant", "system"]

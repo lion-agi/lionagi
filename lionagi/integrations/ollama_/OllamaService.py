@@ -136,3 +136,7 @@ class OllamaService(Service):
     # List Running Models
     def list_running_models(self):
         return OllamaRequest(endpoint="ps", method="GET")
+
+    @property
+    def allowed_roles(self):
+        return ["user", "assistant", "system"]
