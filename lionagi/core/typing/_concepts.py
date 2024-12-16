@@ -2,19 +2,58 @@
 #
 # SPDX-License-Identifier: Apache-2.0
 
+from __future__ import annotations
+
+import uuid
 from abc import ABC, abstractmethod
+from dataclasses import dataclass
 from typing import Any, Generic, TypeVar
+
+from lionagi.settings import Settings
+
+
+class IDType:
+
+    def __init__(self, _id: uuid.UUID):
+        self._id = _id
+
+    @classmethod
+    def validate(cls, value) -> IDType:
+        if isinstance(value, cls):
+            return value
+        if isinstance(value, str | int):
+            try:
+                _id = uuid.UUID(value, version=Settings.Config.UUID_VERSION)
+                return cls(_id=_id)
+            except Exception as e:
+                raise ValueError(f"Invalid IDType value: {value}") from e
+
+    def __str__(self):
+        return str(self._id)
+
+    def __repr__(self):
+        return f"{self.__class__.__name__}({self._id})"
+
+    def __hash__(self):
+        return hash(self._id)
+
+    def __eq__(self, other):
+        if not isinstance(other, IDType):
+            return False
+        return self._id == other._id
+
+    __slots__ = ("_id",)
 
 
 class Observable(ABC):
     """
     Abstract base class for objects that can be uniquely identified and tracked.
 
-    All Observable objects must have a unique identifier (ln_id) that allows them
+    All Observable objects must have a unique identifier (id) that allows them
     to be tracked and referenced within the Lion system.
     """
 
-    ln_id: str
+    ln_id: IDType
 
 
 T = TypeVar("T", bound=Observable)
@@ -129,4 +168,5 @@ __all__ = [
     "Condition",
     "Structure",
     "RelationError",
+    "IDType",
 ]
