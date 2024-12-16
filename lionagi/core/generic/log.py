@@ -72,7 +72,7 @@ class Log(Element):
             if "log_id" in data:
                 data["ln_id"] = data.pop("log_id")
             if "log_timestamp" in data:
-                data["timestamp"] = data.pop("log_timestamp")
+                data["created_timestamp"] = data.pop("log_timestamp")
             if "log_class" in data:
                 data["lion_class"] = data.pop("log_class")
             return data
@@ -140,7 +140,7 @@ class Log(Element):
         # Convert standard fields to log_* fields
         dict_["log_id"] = dict_.pop("ln_id")
         dict_["log_class"] = dict_.pop("lion_class")
-        dict_["log_timestamp"] = dict_.pop("timestamp")
+        dict_["log_timestamp"] = dict_.pop("created_timestamp")
 
         dict_ = to_dict(
             dict_,
