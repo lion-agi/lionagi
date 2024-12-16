@@ -1,4 +1,10 @@
-from .async_calls import alcall, bcall, mcall, pcall, rcall, tcall, ucall
+from .async_calls.alcall import alcall
+from .async_calls.bcall import bcall
+from .async_calls.mcall import mcall
+from .async_calls.pcall import pcall
+from .async_calls.rcall import rcall
+from .async_calls.tcall import tcall
+from .async_calls.ucall import ucall
 from .decorators import CallDecorator
 from .lcall import lcall
 from .throttle import Throttle, throttle

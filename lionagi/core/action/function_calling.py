@@ -5,7 +5,7 @@
 import asyncio
 
 from lionagi.core.typing import Any, Field, PrivateAttr, override
-from lionagi.libs.func.types import CallDecorator as cd
+from lionagi.libs.func.decorators import CallDecorator as cd
 from lionagi.libs.func.types import tcall
 from lionagi.settings import TimedFuncCallConfig
 
