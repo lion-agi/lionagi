@@ -1,5 +1,3 @@
-from typing import List, Optional, Union
-
 from pydantic import BaseModel, ConfigDict, Field, field_validator
 
 from lionagi.integrations.perplexity_.api_endpoints.data_models import (
