@@ -1,9 +1,12 @@
-import asyncio
+# Copyright (c) 2023 - 2024, HaiyangLi <quantocean.li at gmail dot com>
+#
+# SPDX-License-Identifier: Apache-2.0
+
 import json
 import re
 from collections.abc import AsyncGenerator
 from os import getenv
-from typing import Any, Dict, Optional, Union
+from typing import Any
 
 import aiohttp
 from pydantic import BaseModel, Field, field_validator
