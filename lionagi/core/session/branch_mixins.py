@@ -288,11 +288,39 @@ class BranchOperationMixin(ABC):
             image_detail=image_detail,
             tool_schemas=tool_schemas,
         )
-        kwargs["messages"] = self.msgs.to_chat_msgs(progress)
-        kwargs["messages"].append(ins.chat_msg)
 
+        progress = progress or self.msgs.progress
+        messages = [self.msgs.messages[i] for i in progress]
+
+        if self.msgs.system and "system" not in imodel.allowed_roles:
+            messages = [msg for msg in messages if msg.role != "system"]
+            first_instruction = None
+
+            if len(messages) == 0:
+                first_instruction = ins.model_copy()
+                first_instruction.guidance = self.msgs.system.system_info + (
+                    first_instruction.guidance or ""
+                )
+                messages.append(first_instruction)
+            elif len(messages) >= 1:
+                first_instruction = messages[0]
+                if not isinstance(first_instruction, Instruction):
+                    raise ValueError(
+                        "First message in progress must be an Instruction or System"
+                    )
+                first_instruction = first_instruction.model_copy()
+                first_instruction.guidance = self.msgs.system.system_info + (
+                    first_instruction.guidance or ""
+                )
+                messages[0] = first_instruction
+
+        else:
+            messages.append(ins)
+
+        kwargs["messages"] = [i.chat_msg for i in messages]
         imodel = imodel or self.imodel
         api_response = None
+
         if isinstance(imodel, LiteiModel):
             api_response = await imodel.invoke(**kwargs)
         elif isinstance(imodel, iModel):
@@ -329,12 +357,22 @@ class BranchOperationMixin(ABC):
         skip_validation: bool = False,
         clear_messages: bool = False,
         invoke_action: bool = True,
+        response_format: (
+            type[BaseModel] | BaseModel
+        ) = None,  # alias of request_model
         **kwargs,
     ):
+        if response_format and request_model:
+            raise ValueError(
+                "Cannot specify both response_format and request_model"
+                "as they are aliases for the same parameter."
+            )
+        request_model = request_model or response_format
+
         imodel = imodel or self.imodel
         retry_imodel = retry_imodel or imodel
         if clear_messages:
-            self.clear_messages()
+            self.msgs.clear_messages()
 
         if num_parse_retries > 5:
             logging.warning(
