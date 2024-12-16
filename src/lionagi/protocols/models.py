@@ -593,3 +593,6 @@ class Note(BaseLionModel):
     def __setitem__(self, indices: INDICE_TYPE, value: Any) -> None:
         """Set an item in the Note using index notation."""
         self.set(indices, value)
+
+
+# File: lionagi/protocols/models.py

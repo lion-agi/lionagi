@@ -2,11 +2,6 @@
 #
 # SPDX-License-Identifier: Apache-2.0
 
-"""
-Base processor and executor classes for asynchronous event handling.
-Provides queuing, processing control, and execution management.
-"""
-
 from __future__ import annotations
 
 import asyncio

@@ -4,6 +4,7 @@
 
 from __future__ import annotations
 
+import contextlib
 from collections.abc import Iterator
 from typing import Any
 
@@ -12,20 +13,30 @@ from typing_extensions import Self, override
 
 from lionagi.utils import ItemNotFoundError, to_list
 
-from .base import (
-    ID,
-    IDType,
-    Observable,
-    Ordering,
-    to_list_type,
-    validate_order,
-)
-from .models import BaseAutoModel
+from .base import ID, IDType, Ordering, to_list_type, validate_order
+from .element import Element
 
 __all__ = ("Progression",)
 
 
-class Progression(BaseAutoModel, Ordering):
+class Progression(Element, Ordering):
+    """A flexible, ordered sequence container for Lion IDs.
+
+    The Progression class provides an ordered sequence of Lion IDs with support
+    for standard sequence operations, ID validation, and element containment
+    checks. It maintains order while ensuring ID validity and uniqueness.
+
+    Key Features:
+        - Ordered sequence operations
+        - ID validation and uniqueness
+        - Element containment checks
+        - Memory efficient storage
+        - Slice operations
+
+    Attributes:
+        name (str | None): Optional name for the progression
+        order (list[ID.ID]): Ordered list of Lion IDs
+    """
 
     name: str | None = Field(
         None,
@@ -53,34 +64,35 @@ class Progression(BaseAutoModel, Ordering):
         if item is None or not self.order:
             return False
 
-        try:
-            if isinstance(item, Observable):
-                return item.id in self.order
-            if isinstance(item, IDType):
-                return item in self.order
-            if isinstance(item, str) and ID.is_id(item):
-                return IDType(item) in self.order
-        except:
-            pass
+        item = to_list_type(item) if not isinstance(item, list) else item
 
-        return False
+        check = False
+        for i in item:
+            check = False
+            if isinstance(i, str):
+                check = i in self.order
+            elif isinstance(i, Element):
+                check = i.ln_id in self.order
+            if not check:
+                return False
+        return check
 
-    def __list__(self) -> list[str]:
-        """Return a copy of the order as strings."""
-        return [str(id_) for id_ in self.order]
+    def __list__(self) -> list[IDType]:
+        """Return a copy of the order."""
+        return self.order[:]
 
     def __len__(self) -> int:
         """Get the length of the progression."""
         return len(self.order)
 
-    def __getitem__(self, key: int | slice) -> str | Progression:
+    def __getitem__(self, key: int | slice) -> ID.IDSeq:
         """Get an item or slice of items from the progression.
 
         Args:
             key: Integer index or slice object.
 
         Returns:
-            Single ID as str for integer key, new Progression for slice.
+            Single ID for integer key, new Progression for slice.
 
         Raises:
             TypeError: If key is not int or slice.
@@ -93,13 +105,13 @@ class Progression(BaseAutoModel, Ordering):
             )
 
         try:
-            result = self.order[key]
-            if not result:
+            a = self.order[key]
+            if not a:
                 raise ItemNotFoundError(f"index {key} item not found")
             if isinstance(key, slice):
-                return self.__class__(order=result)
+                return self.__class__(order=a)
             else:
-                return str(result)
+                return a
         except IndexError:
             raise ItemNotFoundError(f"index {key} item not found")
 
@@ -143,11 +155,8 @@ class Progression(BaseAutoModel, Ordering):
         Args:
             item: Item or sequence to append.
         """
-        if isinstance(item, list):
-            items = [ID.get_id(i) for i in item]
-        else:
-            items = [ID.get_id(item)]
-        self.order.extend(items)
+        item_ = validate_order(item)
+        self.order.extend(item_)
 
     def pop(self, index: int = None, /) -> str:
         """Remove and return an item from the progression.
@@ -174,12 +183,8 @@ class Progression(BaseAutoModel, Ordering):
         Args:
             item: Item or sequence to include.
         """
-        if isinstance(item, list):
-            items = [ID.get_id(i) for i in item]
-        else:
-            items = [ID.get_id(item)]
-
-        for i in items:
+        item_ = validate_order(item)
+        for i in item_:
             if i not in self.order:
                 self.order.append(i)
 
@@ -189,15 +194,9 @@ class Progression(BaseAutoModel, Ordering):
         Args:
             item: Item or sequence to exclude.
         """
-        if isinstance(item, list):
-            items = [ID.get_id(i) for i in item]
-        else:
-            items = [ID.get_id(item)]
-
-        for i in items:
-            if i not in self.order:
-                raise ItemNotFoundError(f"{i}")
-            self.order.remove(i)
+        for i in validate_order(item):
+            while i in self:
+                self.remove(i)
 
     def is_empty(self) -> bool:
         """Check if the progression is empty."""
@@ -247,18 +246,17 @@ class Progression(BaseAutoModel, Ordering):
         Raises:
             ItemNotFoundError: If item not found.
         """
-        try:
-            if isinstance(item, list):
-                items = [ID.get_id(i) for i in item]
-            else:
-                items = [ID.get_id(item)]
-        except ValueError:
-            raise ItemNotFoundError(f"{item}")
+        if item in self:
+            item = validate_order(item)
+            l_ = list(self.order)
 
-        for i in items:
-            if i not in self.order:
-                raise ItemNotFoundError(f"{i}")
-            self.order.remove(i)
+            with contextlib.suppress(ValueError):
+                for i in item:
+                    l_.remove(i)
+                self.order = l_
+                return
+
+        raise ItemNotFoundError(f"{item}")
 
     def popleft(self) -> str:
         """Remove and return the leftmost item from the progression.
@@ -373,7 +371,4 @@ class Progression(BaseAutoModel, Ordering):
             self.order.insert(index, ID.get_id(i))
 
     def __hash__(self) -> int:
-        return hash(self.id)
-
-
-# File: lionagi/protocols/progression.py
+        return hash(self.ln_id)

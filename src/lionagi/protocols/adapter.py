@@ -2,11 +2,6 @@
 #
 # SPDX-License-Identifier: Apache-2.0
 
-"""
-Adapter registry system for managing data format conversions and I/O operations.
-Supports JSON, CSV, Pandas Series/DataFrame, and file handling with extensible adapter pattern.
-"""
-
 import json
 import logging
 from pathlib import Path

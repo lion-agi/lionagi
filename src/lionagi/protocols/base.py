@@ -244,4 +244,10 @@ class IDError(ValueError):
     pass
 
 
+class AccessError(AttributeError):
+    """Custom error for access control issues."""
+
+    pass
+
+
 # File: lionagi/protocols/base.py
