@@ -1,11 +1,9 @@
 """Tests for the Component class."""
 
-from datetime import datetime
-
 import pytest
 
 from lionagi.core.generic.types import Component
-from lionagi.core.typing import UNDEFINED, Field, Note
+from lionagi.core.typing import UNDEFINED, Note
 
 
 def test_component_creation():
