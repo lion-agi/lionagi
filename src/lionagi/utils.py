@@ -7,7 +7,7 @@ import copy as _copy
 import importlib.util
 import logging
 import os
-from collections.abc import Callable, Iterable, Mapping
+from collections.abc import Callable, Iterable, Mapping, Sequence
 from concurrent.futures import ThreadPoolExecutor
 from datetime import datetime, timezone
 from enum import Enum
@@ -44,6 +44,7 @@ __all__ = (
 
 
 T = TypeVar("T")
+F = TypeVar("F", bound=Callable[..., Any])
 
 
 class UndefinedType:
@@ -737,3 +738,74 @@ def create_path(
         )
     full_path.parent.mkdir(parents=True, exist_ok=dir_exist_ok)
     return full_path
+
+
+def pre_post_process(
+    preprocess: Callable[..., Any] | None = None,
+    postprocess: Callable[..., Any] | None = None,
+    preprocess_args: Sequence[Any] = (),
+    preprocess_kwargs: dict[str, Any] = {},
+    postprocess_args: Sequence[Any] = (),
+    postprocess_kwargs: dict[str, Any] = {},
+) -> Callable[[F], F]:
+    """Decorator to apply pre-processing and post-processing functions.
+
+    Args:
+        preprocess: Function to apply before the main function.
+        postprocess: Function to apply after the main function.
+        preprocess_args: Arguments for the preprocess function.
+        preprocess_kwargs: Keyword arguments for preprocess function.
+        postprocess_args: Arguments for the postprocess function.
+        postprocess_kwargs: Keyword arguments for postprocess function.
+
+    Returns:
+        The decorated function.
+    """
+
+    def decorator(func: F) -> F:
+        @wraps(func)
+        async def async_wrapper(*args, **kwargs) -> Any:
+            preprocessed_args = (
+                [
+                    await ucall(
+                        preprocess,
+                        arg,
+                        *preprocess_args,
+                        **preprocess_kwargs,
+                    )
+                    for arg in args
+                ]
+                if preprocess
+                else args
+            )
+            preprocessed_kwargs = (
+                {
+                    k: await ucall(
+                        preprocess,
+                        v,
+                        *preprocess_args,
+                        **preprocess_kwargs,
+                    )
+                    for k, v in kwargs.items()
+                }
+                if preprocess
+                else kwargs
+            )
+            result = await ucall(
+                func, *preprocessed_args, **preprocessed_kwargs
+            )
+
+            return (
+                await ucall(
+                    postprocess,
+                    result,
+                    *postprocess_args,
+                    **postprocess_kwargs,
+                )
+                if postprocess
+                else result
+            )
+
+        return async_wrapper
+
+    return decorator
