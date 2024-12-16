@@ -57,7 +57,7 @@ class TestSchemaModel:
             field2: str = Field(default=UNDEFINED)
 
         model = TestSchema(field1="test")
-        result = model.to_dict(True)
+        result = model.to_dict()
 
         assert "field1" in result
         assert "field2" not in result  # UNDEFINED fields should be excluded

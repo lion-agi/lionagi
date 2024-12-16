@@ -3,7 +3,7 @@
 import pytest
 from pydantic import BaseModel, ConfigDict, Field
 
-from lionagi.core.models import FieldModel, NewModelParams, SchemaModel
+from lionagi.core.models import FieldModel, ModelParams, SchemaModel
 
 
 class TestNewModelParams:
@@ -16,7 +16,7 @@ class TestNewModelParams:
         field1.annotation = str
         field2.annotation = int
 
-        params = NewModelParams(
+        params = ModelParams(
             name="TestModel",
             parameter_fields={"field1": field1, "field2": field2},
             inherit_base=True,
@@ -37,7 +37,7 @@ class TestNewModelParams:
 
         a = Field(default="test")
         a.annotation = str
-        params = NewModelParams(
+        params = ModelParams(
             name="TestModel",
             base_type=CustomBase,
             parameter_fields={"field1": a},
@@ -58,7 +58,7 @@ class TestNewModelParams:
             description="A test field",
         )
 
-        params = NewModelParams(name="TestModel", field_models=[field_model])
+        params = ModelParams(name="TestModel", field_models=[field_model])
 
         model_class = params.create_new_model()
         instance = model_class()
@@ -84,7 +84,7 @@ class TestNewModelParams:
             validator=validate_positive,
         )
 
-        params = NewModelParams(name="TestModel", field_models=[field_model])
+        params = ModelParams(name="TestModel", field_models=[field_model])
 
         model_class = params.create_new_model()
 
@@ -103,7 +103,7 @@ class TestNewModelParams:
             keep_field: str = "keep"
             exclude_field: str = "exclude"
 
-        params = NewModelParams(
+        params = ModelParams(
             name="TestModel",
             base_type=BaseWithFields,
             exclude_fields=["exclude_field"],
@@ -122,7 +122,7 @@ class TestNewModelParams:
             name="test_field", annotation=str, default="test"
         )
 
-        params = NewModelParams(
+        params = ModelParams(
             name="TestModel",
             field_models=[field_model],
             field_descriptions={"test_field": "Updated description"},
@@ -138,7 +138,7 @@ class TestNewModelParams:
         """Test config dictionary handling."""
         a = Field(default="test")
         a.annotation = str
-        params = NewModelParams(
+        params = ModelParams(
             name="TestModel",
             parameter_fields={"field1": a},
             config_dict=ConfigDict(frozen=True),
@@ -159,7 +159,7 @@ class TestNewModelParams:
             base_field: str = "base"
 
         # With inheritance
-        params = NewModelParams(
+        params = ModelParams(
             name="TestModel", base_type=CustomBase, inherit_base=True
         )
 
@@ -167,7 +167,7 @@ class TestNewModelParams:
         assert issubclass(model_class, CustomBase)
 
         # Without inheritance
-        params = NewModelParams(
+        params = ModelParams(
             name="TestModel", base_type=CustomBase, inherit_base=False
         )
 
@@ -180,7 +180,7 @@ class TestNewModelParams:
         doc = "This is a test model"
         a = Field(default="test")
         a.annotation = str
-        params = NewModelParams(
+        params = ModelParams(
             name="TestModel",
             parameter_fields={"field1": a},
             doc=doc,
@@ -193,7 +193,7 @@ class TestNewModelParams:
         """Test frozen model creation."""
         a = Field(annotation=str, default="test")
         a.annotation = str
-        params = NewModelParams(
+        params = ModelParams(
             name="TestModel",
             parameter_fields={"field1": a},
             frozen=True,
@@ -226,7 +226,7 @@ class TestNewModelParams:
         ]
         a = Field(default="regular")
         a.annotation = str
-        params = NewModelParams(
+        params = ModelParams(
             name="ComplexModel",
             field_models=field_models,
             parameter_fields={"regular_field": a},
@@ -255,17 +255,15 @@ class TestNewModelParams:
         """Test error handling in model creation."""
         # Invalid base type
         with pytest.raises(ValueError):
-            NewModelParams(name="TestModel", base_type=str)
+            ModelParams(name="TestModel", base_type=str)
 
         # Invalid field models
         with pytest.raises(ValueError):
-            NewModelParams(
-                name="TestModel", field_models=["not a field model"]
-            )
+            ModelParams(name="TestModel", field_models=["not a field model"])
 
         # Invalid parameter fields
         with pytest.raises(ValueError):
-            NewModelParams(
+            ModelParams(
                 name="TestModel",
                 parameter_fields={"field": "not a field info"},
             )
