@@ -3,7 +3,7 @@
 import pytest
 from pydantic import BaseModel
 
-from lionagi.core.typing import NewModelParams
+from lionagi.core.typing import ModelParams
 from lionagi.protocols.operatives.action import (
     ACTION_REQUESTS_FIELD,
     ACTION_REQUIRED_FIELD,
@@ -178,7 +178,7 @@ class TestStep:
         )
 
         # Create response type with action fields
-        response_params = NewModelParams(
+        response_params = ModelParams(
             base_type=SampleModel,
             field_models=[
                 ACTION_RESPONSES_FIELD,

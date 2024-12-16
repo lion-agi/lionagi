@@ -1,7 +1,6 @@
 import warnings
 from pathlib import Path
 
-import yaml
 from dotenv import load_dotenv
 from pydantic import (
     BaseModel,
@@ -33,6 +32,12 @@ path = Path(__file__).parent
 
 price_config_file_name = path / "openai_max_output_token_data.yaml"
 max_output_token_file_name = path / "openai_price_data.yaml"
+
+
+class _ModuleImportClass:
+    from lionagi.libs.package.imports import check_import
+
+    yaml = check_import("yaml", pip_name="pyyaml")
 
 
 class OpenAIModel(BaseModel):
@@ -303,7 +308,7 @@ class OpenAIModel(BaseModel):
         )
         if estimated_output_len == 0:
             with open(max_output_token_file_name) as file:
-                output_token_config = yaml.safe_load(file)
+                output_token_config = _ModuleImportClass.yaml.safe_load(file)
                 estimated_output_len = output_token_config.get(self.model, 0)
                 self.estimated_output_len = (
                     estimated_output_len  # update to default max output len
@@ -388,7 +393,7 @@ class OpenAIModel(BaseModel):
 
         # read openai price info from config file
         with open(price_config_file_name) as file:
-            price_config = yaml.safe_load(file)
+            price_config = _ModuleImportClass.yaml.safe_load(file)
 
         if self.request_model.endpoint == "chat/completions":
             model_price_info_dict = price_config["model"][self.model]

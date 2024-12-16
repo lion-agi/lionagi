@@ -1,18 +1,16 @@
 """Tests for the Component class."""
 
-from datetime import datetime
-
 import pytest
 
 from lionagi.core.generic.types import Component
-from lionagi.core.typing import UNDEFINED, Field, Note
+from lionagi.core.typing import UNDEFINED, Note
 
 
 def test_component_creation():
     """Test basic Component creation."""
     component = Component()
     assert component.ln_id is not None
-    assert isinstance(component.timestamp, float)
+    assert isinstance(component.created_timestamp, float)
     assert isinstance(component.metadata, Note)
     assert component.content is None
     assert isinstance(component.embedding, list)
@@ -123,7 +121,7 @@ def test_component_str_representation():
     component = Component(content="test content")
     str_repr = str(component)
     assert "Component" in str_repr
-    assert component.ln_id[:8] in str_repr
+    assert str(component.ln_id)[:8] in str_repr
     assert "test content" in str_repr
 
 

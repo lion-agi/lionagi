@@ -281,7 +281,7 @@ class Graph(Node):
             node_info.update({"class_name": node.class_name()})
             if hasattr(node, "name"):
                 node_info.update({"name": node.name})
-            g.add_node(node.ln_id, **node_info)
+            g.add_node(str(node.ln_id), **node_info)
 
         for _edge in self.internal_edges:
             edge_info = _edge.to_dict()

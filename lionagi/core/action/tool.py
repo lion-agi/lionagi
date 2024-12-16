@@ -138,12 +138,10 @@ class Tool(Element):
         Returns:
             str: A detailed string representation of the Tool.
         """
-        timestamp_str = datetime.fromtimestamp(self.timestamp).isoformat(
-            timespec="minutes"
-        )
+        timestamp_str = self.created_datetime.strftime("%Y-%m-%d %H:%M:%S")
         return (
-            f"{self.class_name()}(ln_id={self.ln_id[:6]}.., "
-            f"timestamp={timestamp_str}), "
+            f"{self.class_name()}(ln_id={str(self.ln_id)[:6]}.., "
+            f"created_timestamp={timestamp_str}), "
             f"schema_={json.dumps(self.schema_, indent=4)}"
         )
 

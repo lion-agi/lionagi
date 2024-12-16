@@ -6,14 +6,17 @@ import contextlib
 from collections.abc import Iterator
 from typing import Any, Self
 
-from pydantic import field_validator
+from pydantic import field_serializer, field_validator
 from typing_extensions import override
 
-from lionagi.core.typing import ID, Field, ItemNotFoundError, LnID, Ordering
+from lionagi.core.typing import ID, Field, IDType, ItemNotFoundError, Ordering
+from lionagi.core.typing._concepts import Observable
 from lionagi.libs.parse import to_list
 
 from .element import Element
 from .utils import to_list_type, validate_order
+
+__all__ = ("Progression", "prog")
 
 
 class Progression(Element, Ordering):
@@ -41,14 +44,18 @@ class Progression(Element, Ordering):
         description="The name of the progression.",
     )
 
-    order: list[ID.ID] = Field(
+    order: list[IDType] = Field(
         default_factory=list,
         title="Order",
         description="The order of the progression.",
     )
 
+    @field_serializer("order")
+    def _serialize_order(self, value: list[IDType]) -> list[str]:
+        return [str(i) for i in self.order]
+
     @field_validator("order", mode="before")
-    def _validate_order(cls, value: ID.RefSeq) -> list[LnID]:
+    def _validate_order(cls, value: ID.RefSeq) -> list[IDType]:
         if not value:
             return []
         try:
@@ -66,15 +73,15 @@ class Progression(Element, Ordering):
         check = False
         for i in item:
             check = False
-            if isinstance(i, str):
+            if isinstance(i, IDType):
                 check = i in self.order
-            elif isinstance(i, Element):
+            elif isinstance(i, Observable):
                 check = i.ln_id in self.order
             if not check:
                 return False
         return check
 
-    def __list__(self) -> list[LnID]:
+    def __list__(self) -> list[IDType]:
         """Return a copy of the order."""
         return self.order[:]
 
@@ -127,11 +134,11 @@ class Progression(Element, Ordering):
         """Delete an item or slice of items from the progression."""
         del self.order[key]
 
-    def __iter__(self) -> Iterator[LnID]:
+    def __iter__(self) -> Iterator[IDType]:
         """Iterate over the items in the progression."""
         return iter(self.order)
 
-    def __next__(self) -> LnID:
+    def __next__(self) -> IDType:
         """Return the next item in the progression."""
         try:
             return next(iter(self.order))
@@ -155,7 +162,7 @@ class Progression(Element, Ordering):
         item_ = validate_order(item)
         self.order.extend(item_)
 
-    def pop(self, index: int = None, /) -> str:
+    def pop(self, index: int = None, /) -> IDType:
         """Remove and return an item from the progression.
 
         Args:
@@ -255,7 +262,7 @@ class Progression(Element, Ordering):
 
         raise ItemNotFoundError(f"{item}")
 
-    def popleft(self) -> str:
+    def popleft(self) -> IDType:
         """Remove and return the leftmost item from the progression.
 
         Returns:
@@ -371,7 +378,7 @@ class Progression(Element, Ordering):
         return hash(self.ln_id)
 
 
-def progression(
+def prog(
     order: ID.RefSeq = None,
     name: str = None,
     /,

@@ -2,9 +2,13 @@
 #
 # SPDX-License-Identifier: Apache-2.0
 
-from ..typing.pydantic_ import ConfigDict, Field, FieldInfo, field_validator
-from ..typing.typing_ import UNDEFINED, Any, Callable
-from .schema_model import SchemaModel, common_config
+from lionagi.libs.utils import is_same_dtype
+
+from ..typing._pydantic import ConfigDict, Field, FieldInfo, field_validator
+from ..typing._typing import UNDEFINED, Any, Callable, UndefinedType
+from .schema_model import SchemaModel
+
+__all__ = ("FieldModel",)
 
 
 class FieldModel(SchemaModel):
@@ -51,24 +55,34 @@ class FieldModel(SchemaModel):
     """
 
     model_config = ConfigDict(
-        extra="allow", validate_default=False, **common_config
+        extra="allow",
+        validate_default=False,
+        populate_by_name=True,
+        arbitrary_types_allowed=True,
+        use_enum_values=True,
     )
 
     # Field configuration attributes
     default: Any = UNDEFINED  # Default value
-    default_factory: Callable = UNDEFINED  # Factory function for default value
-    title: str = UNDEFINED  # Field title
-    description: str = UNDEFINED  # Field description
-    examples: list = UNDEFINED  # Example values
-    validators: list = UNDEFINED  # Validation functions
-    exclude: bool = UNDEFINED  # Exclude from serialization
-    deprecated: bool = UNDEFINED  # Mark as deprecated
-    frozen: bool = UNDEFINED  # Mark as immutable
-    alias: str = UNDEFINED  # Alternative field name
-    alias_priority: int = UNDEFINED  # Priority for alias resolution
+    default_factory: Callable | UndefinedType = (
+        UNDEFINED  # Factory function for default value
+    )
+    title: str | UndefinedType = UNDEFINED  # Field title
+    description: str | UndefinedType = UNDEFINED  # Field description
+    examples: list | UndefinedType = UNDEFINED  # Example values
+    validators: list | UndefinedType = UNDEFINED  # Validation functions
+    exclude: bool | UndefinedType = UNDEFINED  # Exclude from serialization
+    deprecated: bool | UndefinedType = UNDEFINED  # Mark as deprecated
+    frozen: bool | UndefinedType = UNDEFINED  # Mark as immutable
+    alias: str | UndefinedType = UNDEFINED  # Alternative field name
+    alias_priority: int | UndefinedType = (
+        UNDEFINED  # Priority for alias resolution
+    )
 
     # Core field attributes
-    name: str = Field(..., exclude=True)  # Field name (required)
+    name: str | UndefinedType = Field(
+        ..., exclude=True
+    )  # Field name (required)
     annotation: type | Any = Field(UNDEFINED, exclude=True)  # Type annotation
     validator: Callable | Any = Field(
         UNDEFINED, exclude=True
@@ -76,6 +90,18 @@ class FieldModel(SchemaModel):
     validator_kwargs: dict | Any = Field(
         default_factory=dict, exclude=True
     )  # Validator parameters
+
+    @field_validator("validators", mode="before")
+    def _validate_validators(cls, v) -> list[Callable]:
+        if v is None or v is UNDEFINED:
+            return []
+        if isinstance(v, Callable):
+            return [v]
+        if isinstance(v, list) and is_same_dtype(v, Callable):
+            return v
+        raise ValueError(
+            "Validators must be a list of functions or a function"
+        )
 
     @property
     def field_info(self) -> FieldInfo:
@@ -92,7 +118,7 @@ class FieldModel(SchemaModel):
         annotation = (
             self.annotation if self.annotation is not UNDEFINED else Any
         )
-        field_obj: FieldInfo = Field(**self.to_dict(True))  # type: ignore
+        field_obj: FieldInfo = Field(**self.to_dict())  # type: ignore
         field_obj.annotation = annotation
         return field_obj
 
@@ -117,6 +143,3 @@ class FieldModel(SchemaModel):
                 self.validator
             )
         }
-
-
-__all__ = ["FieldModel"]

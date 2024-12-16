@@ -3,7 +3,7 @@
 import pytest
 from pydantic import BaseModel, Field
 
-from lionagi.core.models import FieldModel, NewModelParams, OperableModel
+from lionagi.core.models import FieldModel, ModelParams, OperableModel
 from lionagi.protocols.operatives.operative import Operative
 
 
@@ -18,7 +18,7 @@ class SampleModel(BaseModel):
 class TestOperative:
     def test_initialization(self):
         """Test basic initialization of Operative."""
-        params = NewModelParams(base_type=SampleModel)
+        params = ModelParams(base_type=SampleModel)
         operative = Operative(request_params=params)
         assert operative.name == "SampleModel"
         assert operative.request_type is not None
@@ -26,13 +26,13 @@ class TestOperative:
 
     def test_custom_name(self):
         """Test Operative with custom name."""
-        params = NewModelParams(base_type=SampleModel)
+        params = ModelParams(base_type=SampleModel)
         operative = Operative(name="CustomName", request_params=params)
         assert operative.name == "CustomName"
 
     def test_response_type_creation(self):
         """Test creation of response type."""
-        params = NewModelParams(base_type=SampleModel)
+        params = ModelParams(base_type=SampleModel)
         operative = Operative(request_params=params)
 
         # Create response type with additional field
@@ -53,7 +53,7 @@ class TestOperative:
 
     def test_response_model_update_with_text(self):
         """Test updating response model with text input."""
-        params = NewModelParams(base_type=SampleModel)
+        params = ModelParams(base_type=SampleModel)
         operative = Operative(request_params=params)
 
         # Valid JSON text
@@ -73,7 +73,7 @@ class TestOperative:
 
     def test_response_model_update_with_data(self):
         """Test updating response model with dict data."""
-        params = NewModelParams(base_type=SampleModel)
+        params = ModelParams(base_type=SampleModel)
         operative = Operative(request_params=params)
 
         # First set initial model with valid JSON
@@ -91,7 +91,7 @@ class TestOperative:
 
     def test_validation_methods(self):
         """Test strict and force validation methods."""
-        params = NewModelParams(base_type=SampleModel)
+        params = ModelParams(base_type=SampleModel)
         operative = Operative(request_params=params)
 
         # Test strict validation
@@ -110,7 +110,7 @@ class TestOperative:
 
     def test_retry_behavior(self):
         """Test auto retry behavior for validation."""
-        params = NewModelParams(base_type=SampleModel)
+        params = ModelParams(base_type=SampleModel)
         operative = Operative(
             request_params=params, auto_retry_parse=True, max_retries=3
         )
@@ -127,7 +127,7 @@ class TestOperative:
 
     def test_list_response_handling(self):
         """Test handling of list responses."""
-        params = NewModelParams(base_type=SampleModel)
+        params = ModelParams(base_type=SampleModel)
         operative = Operative(request_params=params)
 
         # Test with list of valid items
@@ -141,7 +141,7 @@ class TestOperative:
 
     def test_error_cases(self):
         """Test error handling cases."""
-        params = NewModelParams(base_type=SampleModel)
+        params = ModelParams(base_type=SampleModel)
         operative = Operative(request_params=params)
 
         # Test with no input
@@ -162,7 +162,7 @@ class TestOperative:
         class ReducedModel(BaseModel):
             name: str
 
-        params = NewModelParams(base_type=ReducedModel)
+        params = ModelParams(base_type=ReducedModel)
         operative = Operative(request_params=params)
         operative.create_response_type()
 
@@ -171,7 +171,7 @@ class TestOperative:
 
     def test_field_descriptions(self):
         """Test field descriptions in response type."""
-        params = NewModelParams(base_type=SampleModel)
+        params = ModelParams(base_type=SampleModel)
         operative = Operative(request_params=params)
 
         # Create new response type with field descriptions

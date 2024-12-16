@@ -5,7 +5,6 @@
 import warnings
 from pathlib import Path
 
-import yaml
 from dotenv import load_dotenv
 from pydantic import (
     BaseModel,
@@ -32,6 +31,12 @@ path = Path(__file__).parent
 price_config_file_name = path / "groq_price_data.yaml"
 max_output_token_file_name = path / "groq_max_output_token_data.yaml"
 rate_limits_file_name = path / "groq_rate_limits.yaml"
+
+
+class _ModuleImportClass:
+    from lionagi.libs.package.imports import check_import
+
+    yaml = check_import("yaml", pip_name="pyyaml")
 
 
 class GroqModel(BaseModel):
@@ -67,7 +72,7 @@ class GroqModel(BaseModel):
         # Load rate limits from YAML
         try:
             with open(rate_limits_file_name) as file:
-                rate_limits = yaml.safe_load(file)
+                rate_limits = _ModuleImportClass.yaml.safe_load(file)
                 model_name = data.get("model")
                 model_limits = None
 
@@ -261,7 +266,9 @@ class GroqModel(BaseModel):
         if estimated_output_len == 0:
             try:
                 with open(max_output_token_file_name) as file:
-                    output_token_config = yaml.safe_load(file)
+                    output_token_config = _ModuleImportClass.yaml.safe_load(
+                        file
+                    )
                     estimated_output_len = output_token_config.get(
                         self.model, 2048
                     )  # Default to 2048
@@ -297,7 +304,7 @@ class GroqModel(BaseModel):
 
         try:
             with open(price_config_file_name) as file:
-                price_config = yaml.safe_load(file)
+                price_config = _ModuleImportClass.yaml.safe_load(file)
         except FileNotFoundError:
             raise ValueError(
                 f"Price config file not found: {price_config_file_name}"

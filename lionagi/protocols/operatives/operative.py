@@ -1,25 +1,13 @@
-"""
-Copyright 2024 HaiyangLi
-
-   Licensed under the Apache License, Version 2.0 (the "License");
-   you may not use this file except in compliance with the License.
-   You may obtain a copy of the License at
-
-       http://www.apache.org/licenses/LICENSE-2.0
-
-   Unless required by applicable law or agreed to in writing, software
-   distributed under the License is distributed on an "AS IS" BASIS,
-   WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-   See the License for the specific language governing permissions and
-   limitations under the License.
-"""
+# Copyright (c) 2023 - 2024, HaiyangLi <quantocean.li at gmail dot com>
+#
+# SPDX-License-Identifier: Apache-2.0
 
 from typing import Self
 
 from pydantic import BaseModel, Field, PrivateAttr, model_validator
 from pydantic.fields import FieldInfo
 
-from lionagi.core.models import FieldModel, NewModelParams, OperableModel
+from lionagi.core.models import FieldModel, ModelParams, OperableModel
 from lionagi.core.typing import UNDEFINED
 from lionagi.libs.parse import to_json, validate_keys
 
@@ -29,10 +17,10 @@ class Operative(OperableModel):
 
     name: str | None = None
 
-    request_params: NewModelParams | None = Field(default=None)
+    request_params: ModelParams | None = Field(default=None)
     request_type: type[BaseModel] | None = Field(default=None)
 
-    response_params: NewModelParams | None = Field(default=None)
+    response_params: ModelParams | None = Field(default=None)
     response_type: type[BaseModel] | None = Field(default=None)
     response_model: OperableModel | None = Field(default=None)
     response_str_dict: dict | str | None = Field(default=None)
@@ -140,7 +128,7 @@ class Operative(OperableModel):
 
     def create_response_type(
         self,
-        response_params: NewModelParams | None = None,
+        response_params: ModelParams | None = None,
         field_models: list[FieldModel] | None = None,
         parameter_fields: dict[str, FieldInfo] | None = None,
         exclude_fields: list[str] | None = None,
@@ -154,7 +142,7 @@ class Operative(OperableModel):
         """Creates a new response type based on the provided parameters.
 
         Args:
-            response_params (NewModelParams, optional): Parameters for the new response model.
+            response_params (ModelParams, optional): Parameters for the new response model.
             field_models (list[FieldModel], optional): List of field models.
             parameter_fields (dict[str, FieldInfo], optional): Dictionary of parameter fields.
             exclude_fields (list, optional): List of fields to exclude.
@@ -165,7 +153,7 @@ class Operative(OperableModel):
             frozen (bool, optional): Whether the model is frozen.
             validators (dict, optional): Dictionary of validators.
         """
-        self.response_params = response_params or NewModelParams(
+        self.response_params = response_params or ModelParams(
             parameter_fields=parameter_fields,
             field_models=field_models,
             exclude_fields=exclude_fields,

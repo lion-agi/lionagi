@@ -1,11 +1,59 @@
-import asyncio
 from collections.abc import AsyncGenerator, Callable
+from dataclasses import dataclass
 from typing import Any, TypeVar
+
+from lionagi.libs.constants import UNDEFINED
+from lionagi.libs.utils import DataClass
 
 from ...parse import to_list
 from .alcall import alcall
 
 T = TypeVar("T")
+
+
+@dataclass
+class BCallParams(DataClass):
+    function: Callable[..., T]
+    batch_size: int
+    num_retries: int = 0
+    initial_delay: float = 0
+    retry_delay: float = 0
+    backoff_factor: float = 1
+    retry_default: Any = UNDEFINED
+    retry_timeout: float | None = None
+    retry_timing: bool = False
+    verbose_retry: bool = True
+    error_msg: str | None = None
+    error_map: dict[type, Callable[[Exception], None]] | None = None
+    max_concurrent: int | None = None
+    throttle_period: float | None = None
+    flatten: bool = False
+    dropna: bool = False
+    unique: bool = False
+
+    async def __call__(self, input_, *args, **kwargs):
+        return await bcall(
+            input_,
+            self.function,
+            *args,
+            batch_size=self.batch_size,
+            num_retries=self.num_retries,
+            initial_delay=self.initial_delay,
+            retry_delay=self.retry_delay,
+            backoff_factor=self.backoff_factor,
+            default=self.retry_default,
+            timeout=self.retry_timeout,
+            timing=self.retry_timing,
+            verbose=self.verbose_retry,
+            error_msg=self.error_msg,
+            error_map=self.error_map,
+            max_concurrent=self.max_concurrent,
+            throttle_period=self.throttle_period,
+            flatten=self.flatten,
+            dropna=self.dropna,
+            unique=self.unique,
+            **kwargs,
+        )
 
 
 async def bcall(

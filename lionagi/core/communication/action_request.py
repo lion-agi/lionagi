@@ -4,7 +4,7 @@
 
 from typing_extensions import override
 
-from lionagi.core.typing import ID, Any, Callable, LnID, Note
+from lionagi.core.typing import ID, Any, Callable, IDType, Note
 from lionagi.libs.parse import to_dict
 from lionagi.libs.utils import copy
 
@@ -107,12 +107,12 @@ class ActionRequest(RoledMessage):
         )
 
     @property
-    def action_response_id(self) -> LnID | None:
+    def action_response_id(self) -> IDType | None:
         """
         Get the ID of the corresponding action response.
 
         Returns:
-            LnID | None: The ID of the action response, or None if not responded
+            IDType | None: The ID of the action response, or None if not responded
         """
         return self.content.get("action_response_id", None)
 

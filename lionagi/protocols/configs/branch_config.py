@@ -5,7 +5,7 @@
 from typing import Any, Literal
 
 from lionagi.core.models.schema_model import SchemaModel
-from lionagi.core.typing.pydantic_ import Field
+from lionagi.core.typing._pydantic import Field
 
 from .imodel_config import iModelConfig
 from .log_config import LogConfig

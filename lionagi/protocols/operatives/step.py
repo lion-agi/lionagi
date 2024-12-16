@@ -1,23 +1,11 @@
-"""
-Copyright 2024 HaiyangLi
-
-   Licensed under the Apache License, Version 2.0 (the "License");
-   you may not use this file except in compliance with the License.
-   You may obtain a copy of the License at
-
-       http://www.apache.org/licenses/LICENSE-2.0
-
-   Unless required by applicable law or agreed to in writing, software
-   distributed under the License is distributed on an "AS IS" BASIS,
-   WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-   See the License for the specific language governing permissions and
-   limitations under the License.
-"""
+# Copyright (c) 2023 - 2024, HaiyangLi <quantocean.li at gmail dot com>
+#
+# SPDX-License-Identifier: Apache-2.0
 
 from pydantic import BaseModel
 from pydantic.fields import FieldInfo
 
-from lionagi.core.typing import FieldModel, NewModelParams
+from lionagi.core.typing import FieldModel, ModelParams
 from lionagi.protocols.operatives.operative import Operative
 
 from .action import (
@@ -54,7 +42,7 @@ class Step:
         operative_name: str | None = None,
         reason: bool = False,
         actions: bool = False,
-        request_params: NewModelParams | None = None,
+        request_params: ModelParams | None = None,
         parameter_fields: dict[str, FieldInfo] | None = None,
         base_type: type[BaseModel] | None = None,
         field_models: list[FieldModel] | None = None,
@@ -72,7 +60,7 @@ class Step:
             operative_name (str, optional): Name of the operative.
             reason (bool, optional): Whether to include reason field.
             actions (bool, optional): Whether to include action fields.
-            request_params (NewModelParams, optional): Parameters for the new model.
+            request_params (ModelParams, optional): Parameters for the new model.
             parameter_fields (dict[str, FieldInfo], optional): Parameter fields for the model.
             base_type (type[BaseModel], optional): Base type for the model.
             field_models (list[FieldModel], optional): List of field models.
@@ -100,7 +88,7 @@ class Step:
                     ACTION_REQUIRED_FIELD,
                 ]
             )
-        request_params = request_params or NewModelParams(
+        request_params = request_params or ModelParams(
             parameter_fields=parameter_fields,
             base_type=base_type,
             field_models=field_models,
@@ -119,7 +107,7 @@ class Step:
         *,
         operative: Operative,
         additional_data: dict | None = None,
-        response_params: NewModelParams | None = None,
+        response_params: ModelParams | None = None,
         field_models: list[FieldModel] | None = None,
         frozen_response: bool = False,
         response_config_dict: dict | None = None,
@@ -131,7 +119,7 @@ class Step:
         Args:
             operative (Operative): The operative instance to update.
             additional_data (dict | None, optional): Additional data to include in the response.
-            response_params (NewModelParams | None, optional): Parameters for the response model.
+            response_params (ModelParams | None, optional): Parameters for the response model.
             field_models (list[FieldModel] | None, optional): List of field models.
             frozen_response (bool, optional): Whether the response model is frozen.
             response_config_dict (dict | None, optional): Configuration dictionary for the response.
@@ -162,7 +150,7 @@ class Step:
     @staticmethod
     def _create_response_type(
         operative: Operative,
-        response_params: NewModelParams | None = None,
+        response_params: ModelParams | None = None,
         response_validators: dict | None = None,
         frozen_response: bool = False,
         response_config_dict: dict | None = None,
@@ -174,7 +162,7 @@ class Step:
 
         Args:
             operative (Operative): The operative instance.
-            response_params (NewModelParams | None, optional): Parameters for the response model.
+            response_params (ModelParams | None, optional): Parameters for the response model.
             response_validators (dict | None, optional): Validators for the response model.
             frozen_response (bool, optional): Whether the response model is frozen.
             response_config_dict (dict | None, optional): Configuration dictionary for the response.

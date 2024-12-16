@@ -7,6 +7,7 @@ from collections.abc import Generator
 from typing import Any, TypeVar
 
 from lionagi.core.typing import ID, IDError
+from lionagi.core.typing._concepts import IDType, Observable
 
 from .element import Element
 
@@ -17,8 +18,10 @@ def to_list_type(value: Any, /) -> list[Any]:
     """Convert input to a list format"""
     if value is None:
         return []
+    if isinstance(value, IDType):
+        return [value]
     if isinstance(value, str):
-        return [value] if ID.is_id(value) else []
+        return ID.get_id(value) if ID.is_id(value) else []
     if isinstance(value, Element):
         return [value]
     if hasattr(value, "values") and callable(value.values):
@@ -35,8 +38,8 @@ def validate_order(value: Any, /) -> list[str]:
         result = []
         for item in to_list_type(value):
             if isinstance(item, str) and ID.is_id(item):
-                result.append(item)
-            elif isinstance(item, Element):
+                result.append(ID.get_id(item))
+            elif isinstance(item, Observable):
                 result.append(item.ln_id)
             else:
                 id_ = ID.get_id(item)

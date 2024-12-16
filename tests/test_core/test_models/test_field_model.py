@@ -139,7 +139,7 @@ class TestFieldModel:
             description="A test field",
         )
 
-        dict_repr = field.to_dict(True)
+        dict_repr = field.to_dict()
         assert isinstance(dict_repr, dict)
         assert dict_repr["default"] == "default_value"
         assert dict_repr["title"] == "Test Field"

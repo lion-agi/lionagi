@@ -4,6 +4,8 @@
 
 from datetime import datetime
 
+from pydantic import AliasChoices, field_serializer
+
 from lionagi.core._class_registry import LION_CLASS_REGISTRY, get_class
 from lionagi.core.typing import (
     ID,
@@ -12,8 +14,7 @@ from lionagi.core.typing import (
     ConfigDict,
     Field,
     IDError,
-    LnID,
-    Note,
+    IDType,
     Observable,
     TypeVar,
     field_validator,
@@ -48,25 +49,11 @@ class Element(BaseModel, Observable):
         - String formatting
 
     Attributes:
-        ln_id (LnID): Unique identifier for the element. Generated automatically
+        id (IDType): Unique identifier for the element. Generated automatically
             and immutable.
         timestamp (float): Creation timestamp as Unix timestamp. Generated
             automatically and immutable.
     """
-
-    ln_id: LnID = Field(
-        default_factory=ID.id,
-        title="Lion ID",
-        description="Unique identifier for the element",
-        frozen=True,
-    )
-
-    timestamp: float = Field(
-        default_factory=lambda: time(type_="timestamp"),
-        title="Creation Timestamp",
-        frozen=True,
-        alias="created",
-    )
 
     model_config = ConfigDict(
         extra="forbid",
@@ -74,6 +61,33 @@ class Element(BaseModel, Observable):
         use_enum_values=True,
         populate_by_name=True,
     )
+
+    ln_id: IDType = Field(
+        default_factory=ID.id,
+        title="Lion ID",
+        description="Unique identifier for the element",
+        frozen=True,
+    )
+
+    created_timestamp: float = Field(
+        default_factory=lambda: time(
+            tz=Settings.Config.TIMEZONE, type_="timestamp"
+        ),
+        title="Creation Datetime",
+        frozen=True,
+        alias=AliasChoices("created_at", "timestamp"),
+    )
+
+    @property
+    def created_datetime(self) -> datetime:
+        """Get the creation timestamp as a Unix timestamp.
+
+        Returns:
+            float: The creation timestamp.
+        """
+        return datetime.fromtimestamp(
+            self.created_timestamp, tz=Settings.Config.TIMEZONE
+        )
 
     @classmethod
     def class_name(cls) -> str:
@@ -89,41 +103,39 @@ class Element(BaseModel, Observable):
         super().__pydantic_init_subclass__(**kwargs)
         LION_CLASS_REGISTRY[cls.__name__] = cls
 
-    @property
-    def created_datetime(self) -> datetime:
-        """Get the creation datetime of the Element.
-
-        Converts the Unix timestamp to a timezone-aware datetime object using the
-        timezone specified in Settings.Config.TIMEZONE.
-
-        Returns:
-            datetime: A timezone-aware datetime object representing when the
-                Element was created.
-        """
-        return datetime.fromtimestamp(
-            self.timestamp, tz=Settings.Config.TIMEZONE
-        )
+    @field_serializer("ln_id")
+    def _serialize_id(self, value: IDType) -> str:
+        return str(self.ln_id)
 
     @field_validator("ln_id", mode="before")
-    def _validate_id(cls, value: ID.ID) -> str:
+    def _validate_id(cls, value: str | IDType) -> str:
         try:
             return ID.get_id(value)
         except Exception:
             raise IDError(f"Invalid lion id: {value}")
 
-    @field_validator("timestamp", mode="before")
+    @field_validator("created_timestamp", mode="before")
     def _validate_timestamp(cls, value: Any) -> float:
-        if isinstance(value, (int, float)):
-            return float(value)
         if isinstance(value, datetime):
             return value.timestamp()
-        try:
-            if isinstance(value, str):
+
+        if isinstance(value, int | float):
+            return value
+
+        if isinstance(value, str):
+            try:
+                return datetime.fromisoformat(value).timestamp()
+            except Exception as e:
                 try:
-                    return float(value)
+                    value = float(value)
                 except Exception:
-                    return datetime.fromisoformat(value).timestamp()
-            raise ValueError
+                    raise ValueError(
+                        f"Invalid datetime string format: {value}"
+                    ) from e
+
+        try:
+            return datetime.fromtimestamp(value, tz=Settings.Config.TIMEZONE)
+
         except Exception as e:
             raise ValueError(f"Invalid datetime string format: {value}") from e
 
@@ -170,8 +182,8 @@ class Element(BaseModel, Observable):
     def __str__(self) -> str:
         timestamp_str = self.created_datetime.isoformat(timespec="minutes")
         return (
-            f"{self.class_name()}(ln_id={self.ln_id[:6]}.., "
-            f"timestamp={timestamp_str})"
+            f"{self.class_name()}(ln_id={str(self.ln_id)[:6]}.., "
+            f"created_timestamp={timestamp_str})"
         )
 
     def __hash__(self) -> int:
@@ -182,14 +194,6 @@ class Element(BaseModel, Observable):
 
     def __len__(self) -> int:
         return 1
-
-    def to_note(self) -> Note:
-        """Convert Log to Note.
-
-        Returns:
-            Note representation of the log
-        """
-        return Note(**self.to_dict())
 
 
 __all__ = ["Element"]

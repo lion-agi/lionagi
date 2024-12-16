@@ -4,14 +4,20 @@ import os
 from io import BytesIO
 from typing import Literal
 
-import aiohttp
-import yaml
-from PIL import Image
 from pydantic import BaseModel, Field, field_validator
 
 image_token_config_file_name = os.path.join(
     os.path.dirname(__file__), "openai_image_token_data.yaml"
 )
+
+
+class _ModuelImportClass:
+
+    from lionagi.libs.package.imports import check_import
+
+    yaml = check_import("yaml", pip_name="pyyaml")
+    Image = check_import("PIL.Image", pip_name="Pillow")
+    aiohttp = check_import("aiohttp")
 
 
 class OpenAIImageTokenCalculator(BaseModel):
@@ -21,7 +27,7 @@ class OpenAIImageTokenCalculator(BaseModel):
     @classmethod
     def validate_model_image_function(cls, value: str):
         with open(image_token_config_file_name) as file:
-            token_config = yaml.safe_load(file)
+            token_config = _ModuelImportClass.yaml.safe_load(file)
 
         token_config = token_config.get(value, None)
 
@@ -36,16 +42,16 @@ class OpenAIImageTokenCalculator(BaseModel):
             image_base64 = url.split("data:image/jpeg;base64,")[1]
             image_base64.strip("{}")
             image_data = base64.b64decode(image_base64)
-            image = Image.open(BytesIO(image_data))
+            image = _ModuelImportClass.Image.open(BytesIO(image_data))
         else:
             # image url
-            async with aiohttp.ClientSession() as client:
+            async with _ModuelImportClass.aiohttp.ClientSession() as client:
                 async with client.get(url=url) as response:
                     response.raise_for_status()
 
                     content = await response.read()
 
-                    image = Image.open(BytesIO(content))
+                    image = _ModuelImportClass.Image.open(BytesIO(content))
 
         return image.size
 
@@ -58,7 +64,7 @@ class OpenAIImageTokenCalculator(BaseModel):
             )
 
         with open(image_token_config_file_name) as file:
-            token_config = yaml.safe_load(file)
+            token_config = _ModuelImportClass.yaml.safe_load(file)
 
         token_config = token_config.get(self.model, None)
 

@@ -3,7 +3,7 @@
 # SPDX-License-Identifier: Apache-2.0
 
 from ..models import *
-from .concepts import *
-from .id import *
-from .pydantic_ import *
-from .typing_ import *
+from ._concepts import *
+from ._id import *
+from ._pydantic import *
+from ._typing import *

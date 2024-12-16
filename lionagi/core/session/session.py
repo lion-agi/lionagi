@@ -8,7 +8,6 @@ import pandas as pd
 
 from lionagi.core.generic.types import Component, Pile, Progression
 from lionagi.core.typing import ID, Field, ItemNotFoundError, JsonValue
-from lionagi.integrations.litellm_.imodel import LiteiModel
 from lionagi.libs.parse import to_list
 from lionagi.service import iModel
 
@@ -39,7 +38,7 @@ class Session(Component):
         system_datetime: bool | str = None,
         user: ID.SenderRecipient = None,
         name: str | None = None,
-        imodel: iModel | LiteiModel | None = None,
+        imodel: iModel | None = None,
         messages: Pile[RoledMessage] = None,
         progress: Progression = None,
         tool_manager: ActionManager = None,

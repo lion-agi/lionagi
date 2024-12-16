@@ -8,8 +8,8 @@ from lionagi.core.typing import (
     Any,
     BaseModel,
     IDError,
+    IDType,
     Literal,
-    LnID,
     Note,
 )
 from lionagi.integrations.pydantic_ import break_down_pydantic_annotation
@@ -229,7 +229,7 @@ def prepare_instruction_content(
 
 def validate_sender_recipient(
     value: Any, /
-) -> LnID | Literal["system", "user", "N/A", "assistant"]:
+) -> IDType | Literal["system", "user", "N/A", "assistant"]:
     """
     Validate sender and recipient fields for mail-like communication.
 
@@ -237,7 +237,7 @@ def validate_sender_recipient(
         value: The value to validate
 
     Returns:
-        Union[LnID, Literal]: Valid sender/recipient value
+        Union[IDType, Literal]: Valid sender/recipient value
 
     Raises:
         ValueError: If value is not a valid sender or recipient

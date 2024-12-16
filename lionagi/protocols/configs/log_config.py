@@ -8,7 +8,7 @@ from typing import Any
 from pydantic import field_validator
 
 from lionagi.core.models.schema_model import SchemaModel
-from lionagi.core.typing.pydantic_ import Field
+from lionagi.core.typing._pydantic import Field
 
 
 class LogConfig(SchemaModel):

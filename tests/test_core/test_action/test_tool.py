@@ -107,7 +107,7 @@ def test_tool_str_representation():
     str_rep = str(tool)
     assert "Tool" in str_rep
     assert "ln_id" in str_rep
-    assert "timestamp" in str_rep
+    assert "created_timestamp" in str_rep
     assert "schema_" in str_rep
 
 

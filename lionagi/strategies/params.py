@@ -2,10 +2,13 @@ from typing import Any, Literal
 
 from pydantic import Field, field_validator, model_validator
 
-from lionagi.fields.instruct import INSTRUCT_FIELD_MODEL, Instruct
-from lionagi.libs.async_utils import RCallParams
-from lionagi.protocols.types import FieldModel, SchemaModel
-from lionagi.session.types import Branch, Session
+from lionagi.core.models.types import FieldModel, SchemaModel
+from lionagi.core.session.types import Branch, Session
+from lionagi.libs.func.types import RCallParams
+from lionagi.protocols.operatives.instruct import (
+    INSTRUCT_FIELD_MODEL,
+    Instruct,
+)
 
 
 class StrategyParams(SchemaModel):

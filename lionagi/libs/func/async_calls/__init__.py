@@ -2,11 +2,11 @@
 #
 # SPDX-License-Identifier: Apache-2.0
 
-from .alcall import alcall
-from .bcall import bcall
+from .alcall import ALCallParams, alcall
+from .bcall import BCallParams, bcall
 from .mcall import mcall
 from .pcall import pcall
-from .rcall import rcall
+from .rcall import RCallParams, rcall
 from .tcall import tcall
 from .ucall import ucall
 
@@ -18,4 +18,7 @@ __all__ = [
     "rcall",
     "tcall",
     "ucall",
+    "ALCallParams",
+    "BCallParams",
+    "RCallParams",
 ]

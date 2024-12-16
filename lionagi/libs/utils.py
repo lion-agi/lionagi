@@ -8,11 +8,22 @@ import random
 import subprocess
 import sys
 from collections.abc import Mapping, Sequence
+from dataclasses import asdict
 from datetime import datetime, timezone
 from hashlib import sha256
-from typing import Literal, TypeVar
+from typing import Literal, Self, TypeVar
 
 T = TypeVar("T")
+
+
+class DataClass:
+
+    def to_dict(self) -> dict:
+        return asdict(self)
+
+    @classmethod
+    def from_dict(cls, data: dict) -> Self:
+        return cls(**data)
 
 
 def unique_hash(n: int = 32) -> str:

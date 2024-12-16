@@ -5,8 +5,8 @@
 from lionagi.libs.parse import flatten, nget, ninsert, npop, nset, to_list
 from lionagi.libs.utils import copy
 
-from ..typing.pydantic_ import ConfigDict, Field, field_serializer
-from ..typing.typing_ import (
+from ..typing._pydantic import ConfigDict, Field, field_serializer
+from ..typing._typing import (
     UNDEFINED,
     Any,
     ItemsView,

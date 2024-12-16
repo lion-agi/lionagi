@@ -1,15 +1,14 @@
 from typing import ClassVar
 
-from pydantic import model_validator
+from pydantic import BaseModel, model_validator
 
-from lionagi.fields.instruct import Instruct, InstructResponse
+from lionagi.core.session.types import Branch, Session
+from lionagi.protocols.operatives.instruct import Instruct, InstructResponse
 
-from ..protocols.types import BaseLionModel
-from ..session.types import Branch, Session
 from .params import StrategyParams
 
 
-class StrategyExecutor(BaseLionModel):
+class StrategyExecutor(BaseModel):
     """Base class for different execution strategies.
 
     Each concrete executor should implement `execute()` to run instructions
