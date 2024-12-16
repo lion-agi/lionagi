@@ -19,14 +19,21 @@ jobs:
       uses: actions/setup-python@v5
       with:
         python-version: ${{ matrix.python-version }}
-    - name: Install Poetry
-      uses: snok/install-poetry@v1
-      with:
-        version: 1.8.2
+    
+    - name: Install uv
+      run: |
+        curl -LsSf https://astral.sh/uv/install.sh | sh
+        echo "$HOME/.cargo/bin" >> $GITHUB_PATH
+    
     - name: Install dependencies
-      run: poetry install --no-interaction --no-root
+      run: |
+        uv venv
+        uv build
+    
     - name: Run tests
-      run: poetry run pytest
+      run: |
+        source .venv/bin/activate
+        uv run pytest --asyncio-mode=auto --maxfail=1 --disable-warnings tests/
 
   deploy:
     needs: test
@@ -37,17 +44,22 @@ jobs:
       uses: actions/setup-python@v5
       with:
         python-version: "3.12"
-    - name: Install Poetry
-      uses: snok/install-poetry@v1
-      with:
-        version: 1.8.2
+    
+    - name: Install uv
+      run: |
+        curl -LsSf https://astral.sh/uv/install.sh | sh
+        echo "$HOME/.cargo/bin" >> $GITHUB_PATH
+    
     - name: Install dependencies
-      run: poetry install --no-interaction --no-root
+      run: |
+        uv venv
+        uv pip install twine
+    
     - name: Build package
-      run: poetry build
+      run: uv build
+    
     - name: Publish package to PyPI
       env:
-        PYPI_TOKEN: ${{ secrets.PYPI_API_KEY }}
-      run: poetry config pypi-token.pypi $PYPI_TOKEN && poetry publish
-
-# filepath: .github/workflows/release.yml
+        TWINE_USERNAME: __token__
+        TWINE_PASSWORD: ${{ secrets.PYPI_API_KEY }}
+      run: uv run twine upload dist/*
