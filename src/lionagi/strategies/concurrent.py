@@ -1,7 +1,7 @@
+from lionagi.fields.instruct import Instruct, InstructResponse
 from lionagi.session.types import Branch
 from lionagi.utils import alcall, to_list
 
-from ..operations.fields.instruct import Instruct, InstructResponse
 from .base import StrategyExecutor
 
 

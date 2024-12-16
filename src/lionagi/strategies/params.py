@@ -2,14 +2,13 @@ from typing import Any, Literal
 
 from pydantic import Field, field_validator, model_validator
 
-from ..libs.async_utils import RCallParams
-from ..operations.fields.instruct import INSTRUCT_MODEL_FIELD, Instruct
-from ..operations.models import FieldModel
-from ..protocols.types import BaseSchemaModel
-from ..session.types import Branch, Session
+from lionagi.fields.instruct import INSTRUCT_FIELD_MODEL, Instruct
+from lionagi.libs.async_utils import RCallParams
+from lionagi.protocols.types import FieldModel, SchemaModel
+from lionagi.session.types import Branch, Session
 
 
-class StrategyParams(BaseSchemaModel):
+class StrategyParams(SchemaModel):
     """Base parameters for execution strategies."""
 
     instruct: list[Instruct] | Instruct = Field(
@@ -34,7 +33,7 @@ class StrategyParams(BaseSchemaModel):
     )
     auto_run: bool = False
     auto_execute: bool = False
-    instruct_model_field: type[FieldModel] = INSTRUCT_MODEL_FIELD
+    instruct_model_field: type[FieldModel] = INSTRUCT_FIELD_MODEL
 
     @field_validator("branch_kwargs", mode="before")
     def _validate_branch_kwargs(cls, v: Any) -> dict:
