@@ -182,8 +182,8 @@ class Element(BaseModel, Observable):
     def __str__(self) -> str:
         timestamp_str = self.created_datetime.isoformat(timespec="minutes")
         return (
-            f"{self.class_name()}(id={str(self.ln_id)[:6]}.., "
-            f"timestamp={timestamp_str})"
+            f"{self.class_name()}(ln_id={str(self.ln_id)[:6]}.., "
+            f"created_timestamp={timestamp_str})"
         )
 
     def __hash__(self) -> int:

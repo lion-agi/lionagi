@@ -289,8 +289,8 @@ class Component(Element, OperableModel):
 
         output_str = (
             f"{self.__class__.__name__}("
-            f"id={str(self.ln_id)[:8]}..., "
-            f"timestamp={str(self.created_datetime)[:-6]}, "
+            f"ln_id={str(self.ln_id)[:8]}..., "
+            f"created_timestamp={str(self.created_datetime)[:-6]}, "
             f"content='{content_preview}', "
             f"metadata_keys={list(self.metadata.keys())}, "
         )
@@ -340,8 +340,8 @@ class Component(Element, OperableModel):
 
         repr_str = (
             f"{self.class_name()}("
-            f"id=IDType({str(self.ln_id)}), "
-            f"timestamp={str(self.created_datetime)[:-6]}, "
+            f"ln_id=IDType({str(self.ln_id)}), "
+            f"created_timestamp={str(self.created_datetime)[:-6]}, "
             f"content={content_repr}, "
             f"metadata={truncate_dict(self.metadata.content)}, "
         )

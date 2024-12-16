@@ -27,6 +27,7 @@ class IDType:
                 return cls(_id=_id)
             except Exception as e:
                 raise ValueError(f"Invalid IDType value: {value}") from e
+        raise ValueError(f"Invalid IDType value: {value}")
 
     def __str__(self):
         return str(self._id)
