@@ -1,3 +1,6 @@
+# Copyright (c) 2023 - 2024, HaiyangLi <quantocean.li at gmail dot com>
+#
+# SPDX-License-Identifier: Apache-2.0
 from .extend_df import extend_dataframe
 from .read import read_csv, read_json
 from .remove_rows import remove_rows
