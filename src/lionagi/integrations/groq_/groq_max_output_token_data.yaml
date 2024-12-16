@@ -1,0 +1,21 @@
+# Text Models
+gemma2-9b-it: 8192
+gemma-7b-it: 8192
+llama3-groq-70b-8192-tool-use-preview: 8192
+llama3-groq-8b-8192-tool-use-preview: 8192
+llama-3.1-70b-versatile: 32768
+llama-3.1-70b-specdec: 8192
+llama-3.1-8b-instant: 8192
+llama-3.2-1b-preview: 8192
+llama-3.2-3b-preview: 8192
+llama-3.2-11b-vision-preview: 8192
+llama-3.2-90b-vision-preview: 8192
+llama-guard-3-8b: 8192
+llama3-70b-8192: 8192
+llama3-8b-8192: 8192
+mixtral-8x7b-32768: 32768
+
+# Audio Models (25MB max file size)
+whisper-large-v3: 448
+whisper-large-v3-turbo: 448
+distil-whisper-large-v3-en: 448

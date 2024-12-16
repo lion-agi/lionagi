@@ -1,16 +1,10 @@
-# Copyright (c) 2023 - 2024, HaiyangLi <quantocean.li at gmail dot com>
-#
-# SPDX-License-Identifier: Apache-2.0
-
-from lionagi.fields.types import Instruct
-from lionagi.protocols.base import ID
-from lionagi.session.types import Branch, Session
+from lionagi.core.session.branch import Branch
+from lionagi.core.session.session import Session
+from lionagi.protocols.operatives.instruct import Instruct
 
 
 def prepare_session(
-    session: Session = None,
-    branch: ID[Branch].Ref = None,
-    branch_kwargs: dict = None,
+    session=None, branch=None, branch_kwargs=None
 ) -> tuple[Session, Branch]:
     if session is not None:
         if branch is not None:
@@ -28,7 +22,7 @@ def prepare_session(
     return session, branch
 
 
-def prepare_instruct(instruct: Instruct | dict, prompt: str) -> dict:
+def prepare_instruct(instruct: Instruct | dict, prompt: str):
     if isinstance(instruct, Instruct):
         instruct = instruct.to_dict()
     if not isinstance(instruct, dict):

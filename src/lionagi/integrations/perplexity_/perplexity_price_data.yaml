@@ -1,0 +1,10 @@
+model:
+  llama-3.1-sonar-small-128k-online:
+    input_tokens: 0.000001
+    output_tokens: 0.000002
+  llama-3.1-sonar-medium-128k-online:
+    input_tokens: 0.000002
+    output_tokens: 0.000004
+  llama-3.1-sonar-large-128k-online:
+    input_tokens: 0.000004
+    output_tokens: 0.000008

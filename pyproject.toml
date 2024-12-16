@@ -9,7 +9,7 @@ readme = "README.md"
 requires-python = ">=3.11"
 dependencies = [
     "jinja2>=3.1.4",
-    "lion-service>=1.1.1",
+    "litellm>=1.55.2",
     "pandas>=2.0.0",
     "python-dotenv>=1.0.1",
 ]
