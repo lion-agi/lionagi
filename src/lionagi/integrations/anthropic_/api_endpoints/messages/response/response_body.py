@@ -1,12 +1,10 @@
+# Copyright (c) 2023 - 2024, HaiyangLi <quantocean.li at gmail dot com>
+#
+# SPDX-License-Identifier: Apache-2.0
+
 from typing import Literal
 
-from pydantic import (
-    BaseModel,
-    ConfigDict,
-    Field,
-    field_serializer,
-    model_validator,
-)
+from pydantic import ConfigDict, Field, model_validator
 
 from ...data_models import AnthropicEndpointResponseBody
 from .content_models import ContentBlock
