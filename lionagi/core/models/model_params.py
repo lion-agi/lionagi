@@ -21,8 +21,10 @@ from ..typing.typing_ import Callable, Self
 from .field_model import FieldModel
 from .schema_model import SchemaModel
 
+__all__ = ("ModelParams",)
 
-class NewModelParams(SchemaModel):
+
+class ModelParams(SchemaModel):
     """Configuration class for dynamically creating new Pydantic models."""
 
     name: str | None = None
@@ -190,6 +192,3 @@ class NewModelParams(SchemaModel):
         if self.frozen:
             a.model_config["frozen"] = True
         return a
-
-
-__all__ = ["NewModelParams"]

@@ -13,7 +13,7 @@ from ..typing.pydantic_ import (
     field_validator,
 )
 from ..typing.typing_ import UNDEFINED, Any, TypeVar, override
-from .base import BaseAutoModel, common_config
+from .base import BaseAutoModel
 from .field_model import FieldModel
 
 FIELD_NAME = TypeVar("FIELD_NAME", bound=str)
@@ -55,7 +55,11 @@ class OperableModel(BaseAutoModel):
     """
 
     model_config = ConfigDict(
-        extra="forbid", validate_default=False, **common_config
+        extra="forbid",
+        validate_default=False,
+        populate_by_name=True,
+        arbitrary_types_allowed=True,
+        use_enum_values=True,
     )
 
     extra_fields: dict[str, Any] = Field(default_factory=dict)
