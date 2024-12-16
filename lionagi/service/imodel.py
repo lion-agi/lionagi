@@ -9,6 +9,7 @@ from lionagi.service.service_match_util import (
 
 
 class iModel:
+
     def __init__(
         self,
         provider: str | Service,
@@ -20,25 +21,34 @@ class iModel:
         interval_requests: int = None,
         **kwargs,
     ):
-
         if api_key is not None:
             api_key = api_key
         elif api_key_schema is not None:
             api_key = api_key_schema
 
-        if api_key is None:
-            if isinstance(provider, str):
+        if task == "chat":
+            match provider:
+                case "openai":
+                    task = "create_chat_completion"
+                case "anthropic":
+                    task = "create_message"
+                case "groq":
+                    task = "create_chat_completion"
+                case "perplexity":
+                    task = "create_chat_completion"
+
+        if isinstance(provider, str):
+            if api_key is None:
                 match provider:
                     case "openai":
                         api_key = "OPENAI_API_KEY"
                     case "anthropic":
                         api_key = "ANTHROPIC_API_KEY"
-                    case "grok":
-                        api_key = "GROK_API_KEY"
+                    case "groq":
+                        api_key = "GROQ_API_KEY"
                     case "perplexity":
-                        api_key = "PERPLEXITY_API_KEY"
+                        api_key = "PERPLEXIY_API_KEY"
 
-        if isinstance(provider, str):
             self.service = match_service(provider, api_key=api_key, **kwargs)
         elif isinstance(provider, Service):
             self.service = provider
@@ -80,6 +90,7 @@ class iModel:
         self.data_model = self.service.match_data_model(self.task)
 
     def parse_to_data_model(self, **kwargs):
+
         if kwargs.get("model") and self.model:
             if kwargs.get("model") != self.model:
                 raise ValueError(
@@ -105,6 +116,10 @@ class iModel:
 
     def list_tasks(self):
         return self.service.list_tasks()
+
+    @property
+    def allowed_roles(self):
+        return self.service.allowed_roles
 
 
 __all__ = ["iModel"]
