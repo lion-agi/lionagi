@@ -5,7 +5,6 @@ import logging
 from dotenv import load_dotenv
 
 from .core.session.types import Branch
-from .integrations.litellm_.imodel import LiteiModel
 from .protocols.operatives.step import Step
 from .service import iModel
 from .settings import Settings

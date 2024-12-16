@@ -1,4 +1,4 @@
-"""Tests for NewModelParams class."""
+"""Tests for ModelParams class."""
 
 import pytest
 from pydantic import BaseModel, ConfigDict, Field
@@ -6,8 +6,8 @@ from pydantic import BaseModel, ConfigDict, Field
 from lionagi.core.models import FieldModel, ModelParams, SchemaModel
 
 
-class TestNewModelParams:
-    """Test suite for NewModelParams class."""
+class TestModelParams:
+    """Test suite for ModelParams class."""
 
     def test_basic_model_creation(self):
         """Test basic model creation with minimal parameters."""

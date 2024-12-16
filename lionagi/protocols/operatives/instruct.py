@@ -1,3 +1,7 @@
+# Copyright (c) 2023 - 2024, HaiyangLi <quantocean.li at gmail dot com>
+#
+# SPDX-License-Identifier: Apache-2.0
+
 """Field definitions and validation for InstructModel components."""
 
 from typing import Any, ClassVar
@@ -169,7 +173,7 @@ class OperationInstruct(Instruct):
         return ACTIONS_FIELD.validator(cls, v)
 
 
-INSTRUCT_MODEL_FIELD = FieldModel(
+INSTRUCT_FIELD_MODEL = FieldModel(
     name="instruct_models",
     annotation=list[Instruct],
     default_factory=list,
@@ -191,6 +195,6 @@ __all__ = [
     "REASON_FIELD",
     "ACTIONS_FIELD",
     "Instruct",
-    "INSTRUCT_MODEL_FIELD",
+    "INSTRUCT_FIELD_MODEL",
     "InstructResponse",
 ]

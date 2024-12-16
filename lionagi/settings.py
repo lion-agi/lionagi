@@ -1,7 +1,7 @@
 from datetime import timezone
 from enum import Enum
 
-from lionagi.protocols.configs import (
+from lionagi.protocols.configs.types import (
     BranchConfig,
     LogConfig,
     MessageConfig,

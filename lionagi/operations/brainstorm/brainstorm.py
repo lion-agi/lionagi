@@ -9,7 +9,7 @@ from lionagi.core.typing import ID, Any, BaseModel
 from lionagi.libs.func import alcall
 from lionagi.libs.parse import to_flat_list
 from lionagi.protocols.operatives.instruct import (
-    INSTRUCT_MODEL_FIELD,
+    INSTRUCT_FIELD_MODEL,
     Instruct,
     InstructResponse,
 )
@@ -118,8 +118,8 @@ async def brainstorm(
         print(f"Starting brainstorming...")
 
     field_models: list = kwargs.get("field_models", [])
-    if INSTRUCT_MODEL_FIELD not in field_models:
-        field_models.append(INSTRUCT_MODEL_FIELD)
+    if INSTRUCT_FIELD_MODEL not in field_models:
+        field_models.append(INSTRUCT_FIELD_MODEL)
 
     kwargs["field_models"] = field_models
     session, branch = prepare_session(session, branch, branch_kwargs)

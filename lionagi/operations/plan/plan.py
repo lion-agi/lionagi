@@ -7,7 +7,7 @@ from lionagi.core.session.branch import Branch
 from lionagi.core.session.session import Session
 from lionagi.core.typing import ID, Any, BaseModel, Literal
 from lionagi.protocols.operatives.instruct import (
-    INSTRUCT_MODEL_FIELD,
+    INSTRUCT_FIELD_MODEL,
     Instruct,
     InstructResponse,
 )
@@ -95,8 +95,8 @@ async def plan(
         print(f"Planning execution with {num_steps} steps...")
 
     field_models: list = kwargs.get("field_models", [])
-    if INSTRUCT_MODEL_FIELD not in field_models:
-        field_models.append(INSTRUCT_MODEL_FIELD)
+    if INSTRUCT_FIELD_MODEL not in field_models:
+        field_models.append(INSTRUCT_FIELD_MODEL)
     kwargs["field_models"] = field_models
     session, branch = prepare_session(session, branch, branch_kwargs)
     execute_branch: Branch = session.split(branch)
