@@ -2,12 +2,6 @@
 #
 # SPDX-License-Identifier: Apache-2.0
 
-
-"""
-Core model classes providing serialization, validation, and auto-field capabilities.
-Integrates with Pydantic for robust data handling and validation.
-"""
-
 from __future__ import annotations
 
 from collections.abc import Callable, ItemsView, Iterator, ValuesView
