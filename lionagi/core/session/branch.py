@@ -5,12 +5,12 @@
 from pathlib import Path
 
 import pandas as pd
+from lion_service import iModel
 from pydantic import model_validator
 
 from lionagi.core.generic.types import Component, LogManager, Pile, Progression
 from lionagi.core.typing import ID
 from lionagi.protocols.operatives.instruct import Instruct, OperationInstruct
-from lionagi.service import iModel
 from lionagi.settings import Settings
 
 from ..action.action_manager import ActionManager

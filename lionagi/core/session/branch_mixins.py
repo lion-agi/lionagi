@@ -7,6 +7,7 @@ from abc import ABC
 from collections.abc import Callable
 from typing import Literal
 
+from lion_service import iModel
 from pydantic import JsonValue
 
 from lionagi.core.typing import (
@@ -25,7 +26,6 @@ from lionagi.protocols.operatives.types import (
     Operative,
     Step,
 )
-from lionagi.service import iModel
 
 from ..action.action_manager import FUNCTOOL, Tool
 from ..communication.types import (
