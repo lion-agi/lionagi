@@ -6,6 +6,15 @@ resolution-markers = [
 ]
 
 [[package]]
+name = "aiocache"
+version = "0.12.3"
+source = { registry = "https://pypi.org/simple" }
+sdist = { url = "https://files.pythonhosted.org/packages/7a/64/b945b8025a9d1e6e2138845f4022165d3b337f55f50984fbc6a4c0a1e355/aiocache-0.12.3.tar.gz", hash = "sha256:f528b27bf4d436b497a1d0d1a8f59a542c153ab1e37c3621713cb376d44c4713", size = 132196 }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/37/d7/15d67e05b235d1ed8c3ce61688fe4d84130e72af1657acadfaac3479f4cf/aiocache-0.12.3-py2.py3-none-any.whl", hash = "sha256:889086fc24710f431937b87ad3720a289f7fc31c4fd8b68e9f918b9bacd8270d", size = 28199 },
+]
+
+[[package]]
 name = "aiohappyeyeballs"
 version = "2.4.4"
 source = { registry = "https://pypi.org/simple" }
@@ -588,16 +597,45 @@ wheels = [
 ]
 
 [[package]]
+name = "lion-openai"
+version = "1.0.3"
+source = { registry = "https://pypi.org/simple" }
+dependencies = [
+    { name = "lion-service" },
+    { name = "pillow" },
+    { name = "pyyaml" },
+]
+sdist = { url = "https://files.pythonhosted.org/packages/59/c0/8b7cce7c84743671370b1f626bbdc7cce61eb6c34ad98f1118947a9cd36d/lion_openai-1.0.3.tar.gz", hash = "sha256:ed3680b9c0fe986f503253f8b12ec91981b46a836ae3c21ea8ebc0e948c4228c", size = 37700 }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/b8/52/f0e682b54d938c7a15d73df0fd22e327d4854bdb9d79b2dfb5175defc04c/lion_openai-1.0.3-py3-none-any.whl", hash = "sha256:2f13370e7f4a8e51a6dd7712d0f5c0372eb53c27e89565f1bb0dfade89bdb81a", size = 62125 },
+]
+
+[[package]]
+name = "lion-service"
+version = "1.2.0"
+source = { registry = "https://pypi.org/simple" }
+dependencies = [
+    { name = "aiocache" },
+    { name = "aiohttp" },
+    { name = "pydantic" },
+    { name = "tiktoken" },
+]
+sdist = { url = "https://files.pythonhosted.org/packages/67/85/a938c3cd88ca4715125b04b9e8cc43df94ba185e8026b924f975c84221cb/lion_service-1.2.0.tar.gz", hash = "sha256:830c9f200c6e2d6a3c838ec6dbdd5a0da8ff01cea3a2475d7868313d3dc417fb", size = 23502 }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/1c/60/5530762a16d8f6a66dc5627f00a7a70f08f9d3177f3525706c0285c4dfb1/lion_service-1.2.0-py3-none-any.whl", hash = "sha256:fd11036ff26c8b7490f2384a633347d3ea858929625612574c7af0cdedb7111c", size = 17385 },
+]
+
+[[package]]
 name = "lionagi"
-version = "0.5.2"
+version = "0.5.3"
 source = { editable = "." }
 dependencies = [
     { name = "aiohttp" },
     { name = "jinja2" },
+    { name = "lion-openai" },
     { name = "litellm" },
     { name = "pandas" },
     { name = "pillow" },
-    { name = "pydantic" },
     { name = "python-dotenv" },
 ]
 
@@ -614,10 +652,10 @@ dev = [
 requires-dist = [
     { name = "aiohttp", specifier = ">=3.11.10" },
     { name = "jinja2", specifier = ">=3.1.4" },
+    { name = "lion-openai", specifier = ">=1.0.3" },
     { name = "litellm", specifier = ">=1.55.3" },
     { name = "pandas", specifier = ">=2.0.0" },
     { name = "pillow", specifier = ">=11.0.0" },
-    { name = "pydantic", specifier = ">=2.10.3" },
     { name = "python-dotenv", specifier = ">=1.0.1" },
 ]
 
