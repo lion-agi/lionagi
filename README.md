@@ -107,7 +107,7 @@ pplx_small = iModel(
 b = await hunter.communicate(
     instruction="What makes a well-behaved dragon?",
     clear_messages=True,            # refresh the conversation
-    imodel=pplx_small,                  # use sonnet model
+    imodel=pplx_small,              # use perplexity model
 )
 
 print(b)
