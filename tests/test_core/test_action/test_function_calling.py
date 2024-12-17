@@ -3,7 +3,7 @@ from typing import Any
 
 import pytest
 
-from lionagi.core.action.base import EventStatus
+from lionagi.core.action.action import EventStatus
 from lionagi.core.action.function_calling import FunctionCalling
 from lionagi.core.action.tool import Tool
 from lionagi.core.typing import UNDEFINED

@@ -2,8 +2,8 @@ from typing import Any
 
 import pytest
 
-from lionagi.core.action.action_manager import ActionManager
 from lionagi.core.action.function_calling import FunctionCalling
+from lionagi.core.action.manager import ActionManager
 from lionagi.core.action.tool import Tool
 from lionagi.core.communication.action_request import ActionRequest
 from lionagi.protocols.operatives.action import ActionRequestModel

@@ -156,6 +156,10 @@ class RelationError(Exception):
         super().__init__(message)
 
 
+class Observer(ABC):
+    pass
+
+
 __all__ = [
     "Observable",
     "Container",
@@ -170,4 +174,5 @@ __all__ = [
     "Structure",
     "RelationError",
     "IDType",
+    "Observer",
 ]

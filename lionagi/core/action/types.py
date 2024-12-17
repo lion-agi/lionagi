@@ -2,9 +2,9 @@
 #
 # SPDX-License-Identifier: Apache-2.0
 
-from .action_manager import ActionManager
-from .base import ObservableAction
+from .action import ObservableAction
 from .function_calling import FunctionCalling
+from .manager import ActionManager
 from .tool import Tool, func_to_tool
 
 __all__ = (

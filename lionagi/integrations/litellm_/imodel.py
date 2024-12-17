@@ -17,7 +17,6 @@ class LiteiModel:
     from lionagi.libs.package.imports import check_import
 
     litellm = check_import("litellm")
-    litellm.drop_params = True
 
     def __init__(self, **kwargs):
         if "api_key" in kwargs:
@@ -31,6 +30,7 @@ class LiteiModel:
             except Exception:
                 pass
         self.kwargs = kwargs
+        self.litellm.drop_params = True
         self.acompletion = self.litellm.acompletion
 
     def to_dict(self) -> dict:
