@@ -9,7 +9,7 @@ import json
 import threading
 from collections.abc import AsyncIterator, Callable, Generator, Iterator
 from functools import wraps
-from typing import Any, Generic, Literal, Self, TypeVar
+from typing import Any, ClassVar, Generic, Literal, Self, TypeVar
 
 import pandas as pd
 from pydantic import ConfigDict, Field, field_serializer, model_validator
@@ -18,10 +18,16 @@ from pydantic.fields import FieldInfo
 from lionagi.errors import ItemExistsError, ItemNotFoundError
 from lionagi.utils import Undefined, lcall, to_list
 
+from .adapter import Adapter, AdapterRegistry, PileRegistry
 from .element import ID, Element, IDType, T, validate_order
 from .progression import Progression
 
 D = TypeVar("D")
+
+__all__ = (
+    "Pile",
+    "pile",
+)
 
 
 def validate_collection_item_type(
@@ -112,6 +118,8 @@ class Pile(Element, Generic[T]):
     item_type: type | None = Field(default=None, frozen=True)
     strict_type: bool = Field(default=False, frozen=True)
     progression: Progression = Field(default_factory=Progression)
+
+    _adapter_registry: ClassVar[AdapterRegistry] = PileRegistry
 
     def __pydantic_extra__(self) -> dict[str, FieldInfo]:
         return {
@@ -1011,6 +1019,38 @@ class Pile(Element, Generic[T]):
         if length == 1:
             return f"Pile({next(iter(self.collections.values())).__repr__()})"
         return repr(self.to_df())
+
+    @classmethod
+    def adapt_from(cls, obj: Any, obj_key: str, /, **kwargs: Any):
+        """Create from another format."""
+        kwargs["many"] = True
+        dict_ = cls._get_adapter_registry().adapt_from(
+            cls, obj, obj_key, **kwargs
+        )
+        if isinstance(dict_, list):
+            dict_ = {"pile_": dict_}
+        return cls.from_dict(dict_)
+
+    def adapt_to(self, obj_key: str, /, **kwargs: Any) -> Any:
+        """Convert to another format."""
+        kwargs["many"] = True
+        return self._get_adapter_registry().adapt_to(self, obj_key, **kwargs)
+
+    @classmethod
+    def list_adapters(cls):
+        """List available adapaters"""
+        return cls._get_adapter_registry().list_adapters()
+
+    @classmethod
+    def register_adapter(cls, adapter: type[Adapter]):
+        """Register new adapter."""
+        cls._get_adapter_registry().register(adapter)
+
+    @classmethod
+    def _get_adapter_registry(cls) -> AdapterRegistry:
+        if isinstance(cls._adapter_registry, type):
+            cls._adapter_registry = cls._adapter_registry()
+        return cls._adapter_registry
 
 
 def pile(
