@@ -1,3 +1,7 @@
+# Copyright (c) 2023 - 2024, HaiyangLi <quantocean.li at gmail dot com>
+#
+# SPDX-License-Identifier: Apache-2.0
+
 from __future__ import annotations
 
 import uuid
@@ -26,6 +30,8 @@ __all__ = (
     "validate_order",
     "T",
     "IDType",
+    "Communicatable",
+    "ID",
 )
 
 
@@ -241,6 +247,10 @@ class ID(Generic[T]):
         raise ValueError(
             "Item must be of type Element, str, a valid UUID4 or IDtype."
         )
+
+
+class Communicatable(ABC):
+    pass
 
 
 # File: lionagi/protocols/element.py
