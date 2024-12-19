@@ -526,6 +526,7 @@ name = "lionagi"
 version = "0.6.0"
 source = { editable = "." }
 dependencies = [
+    { name = "jinja2" },
     { name = "litellm" },
     { name = "pandas" },
     { name = "xmltodict" },
@@ -539,12 +540,10 @@ dev = [
     { name = "pytest" },
     { name = "pytest-asyncio" },
 ]
-parse = [
-    { name = "xmltodict" },
-]
 
 [package.metadata]
 requires-dist = [
+    { name = "jinja2", specifier = ">=3.1.4" },
     { name = "litellm", specifier = ">=1.55.4" },
     { name = "pandas", specifier = ">=2.2.3" },
     { name = "xmltodict", specifier = ">=0.14.2" },
@@ -558,7 +557,6 @@ dev = [
     { name = "pytest", specifier = ">=8.3.4" },
     { name = "pytest-asyncio", specifier = ">=0.25.0" },
 ]
-parse = [{ name = "xmltodict", specifier = ">=0.14.2" }]
 
 [[package]]
 name = "litellm"
