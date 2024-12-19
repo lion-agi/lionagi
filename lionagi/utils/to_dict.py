@@ -298,14 +298,8 @@ def _str_to_dict(
     if str_type == "xml":
         # Wrap in try-except to raise ValueError on parse errors
         try:
-            try:
-                import xmltodict
-            except ImportError as e:
-                raise ImportError(
-                    "XML parsing requires the 'xmltodict' package."
-                    "please intall using `pip install xmltodict`"
-                    "or use a custom parser."
-                ) from e
+            import xmltodict
+
             parsed = xmltodict.parse(input_)
         except Exception as e:
             raise ValueError(f"Invalid XML: {e}") from e

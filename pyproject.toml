@@ -10,6 +10,7 @@ requires-python = ">=3.11"
 dependencies = [
     "litellm>=1.55.4",
     "pandas>=2.2.3",
+    "xmltodict>=0.14.2",
 ]
 license = {file = "LICENSE"}
 classifiers=[
@@ -33,9 +34,6 @@ dev = [
     "pytest-asyncio>=0.25.0",
     "pytest>=8.3.4",
     "pre-commit>=4.0.1",
-]
-parse = [
-    "xmltodict>=0.14.2",
 ]
 
 

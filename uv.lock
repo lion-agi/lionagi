@@ -528,6 +528,7 @@ source = { editable = "." }
 dependencies = [
     { name = "litellm" },
     { name = "pandas" },
+    { name = "xmltodict" },
 ]
 
 [package.dev-dependencies]
@@ -546,6 +547,7 @@ parse = [
 requires-dist = [
     { name = "litellm", specifier = ">=1.55.4" },
     { name = "pandas", specifier = ">=2.2.3" },
+    { name = "xmltodict", specifier = ">=0.14.2" },
 ]
 
 [package.metadata.requires-dev]
