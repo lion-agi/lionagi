@@ -1,9 +1,15 @@
+# Copyright (c) 2023 - 2024, HaiyangLi <quantocean.li at gmail dot com>
+#
+# SPDX-License-Identifier: Apache-2.0
+
 from __future__ import annotations
 
+import contextlib
 import uuid
 from abc import ABC
 from collections.abc import Mapping, Sequence
 from datetime import datetime
+from enum import Enum
 from typing import Any, Generic, Self, TypeAlias, TypeVar
 from uuid import UUID, uuid4
 
@@ -26,6 +32,9 @@ __all__ = (
     "validate_order",
     "T",
     "IDType",
+    "Communicatable",
+    "ID",
+    "Sendable",
 )
 
 
@@ -224,6 +233,25 @@ def validate_order(order: Any) -> list[IDType]:
         raise ValueError("All items must be of type str, Element, or IDType.")
 
 
+class MessageRole(str, Enum):
+    """Message participant roles in conversations."""
+
+    SYSTEM = "system"
+    USER = "user"
+    ASSISTANT = "assistant"
+    UNSPECIFIED = "unspecified"
+
+
+class MessageFlag(str, Enum):
+    """Internal flags for message construction control."""
+
+    MESSAGE_CLONE = "MESSAGE_CLONE"
+
+
+class Communicatable(ABC):
+    pass
+
+
 class ID(Generic[T]):
 
     ID: TypeAlias = IDType
@@ -231,6 +259,7 @@ class ID(Generic[T]):
     Ref: TypeAlias = IDType | T | str  # type: ignore
     ItemSeq: TypeAlias = Sequence[T] | Collective[T]  # type: ignore
     RefSeq: TypeAlias = ItemSeq | Sequence[Ref] | Ordering[T]  # type: ignore
+    SenderRecipient: TypeAlias = IDType | MessageRole | MessageFlag | Communicatable  # type: ignore
 
     @staticmethod
     def get_id(item: T, /) -> IDType:
@@ -241,6 +270,23 @@ class ID(Generic[T]):
         raise ValueError(
             "Item must be of type Element, str, a valid UUID4 or IDtype."
         )
+
+
+class Sendable(ABC):
+    pass
+
+
+def validate_sender_recipient(value) -> ID.SenderRecipient:
+    """Validate and standardize sender/recipient identifiers."""
+    if isinstance(value, ID.SenderRecipient):
+        return value
+    with contextlib.suppress(ValueError):
+        return ID.get_id(value)
+    with contextlib.suppress(ValueError):
+        return MessageRole(value)
+    with contextlib.suppress(ValueError):
+        return MessageFlag(value)
+    raise ValueError(f"Invalid sender or recipient: {value}")
 
 
 # File: lionagi/protocols/element.py

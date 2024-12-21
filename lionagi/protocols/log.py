@@ -1,3 +1,7 @@
+# Copyright (c) 2023 - 2024, HaiyangLi <quantocean.li at gmail dot com>
+#
+# SPDX-License-Identifier: Apache-2.0
+
 from __future__ import annotations
 
 import atexit
@@ -75,16 +79,12 @@ class Log(Element):
         "log_class",
         "immutable",
     }
-    content: Element
+    content: Element | dict
     immutable: bool = Field(default=False, frozen=True)
 
     @field_serializer("content")
     def _serialize_content(self, content: Element) -> dict:
-        return content.to_dict()
-
-    @field_validator("content", mode="before")
-    def _validate_content(cls, value: dict) -> Element:
-        return Element.from_dict(value)
+        return content.to_dict() if isinstance(content, Element) else content
 
     def to_dict(self) -> dict:
         """Convert log to dictionary with standardized keys."""
@@ -112,7 +112,7 @@ class Log(Element):
         return super().__setattr__(name, value)
 
     @classmethod
-    def create(cls, content: Element, /) -> Log:
+    def create(cls, content: Element | dict, /) -> Log:
         """Create new log entry from element."""
         return cls(content=content)
 

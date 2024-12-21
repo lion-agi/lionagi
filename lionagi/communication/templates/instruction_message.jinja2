@@ -1,0 +1,47 @@
+{% raw %}
+Role: {{ role }}
+Sender: {{ sender }}
+Recipient: {{ recipient }}
+Timestamp: {{ timestamp }}
+ID: {{ id }}
+
+--- Task ---
+{% if content.guidance %}
+GUIDANCE:
+{{ content.guidance }}
+{% endif %}
+
+{% if content.instruction %}
+INSTRUCTION:
+{{ content.instruction }}
+{% endif %}
+
+{% if content.context %}
+CONTEXT:
+{% for c in content.context %}
+- {{ c }}
+{% endfor %}
+{% endif %}
+
+{% if content.request_response_format %}
+RESPONSE FORMAT:
+{{ content.request_response_format }}
+{% endif %}
+
+{% if content.plain_content %}
+PLAIN CONTENT:
+{{ content.plain_content }}
+{% endif %}
+
+{% if content.images %}
+IMAGES (detail={{ content.image_detail }}):
+{% for img in content.images %}
+- {{ img }}
+{% endfor %}
+{% endif %}
+
+{% if content.tool_schemas %}
+TOOL SCHEMAS:
+{{ content.tool_schemas }}
+{% endif %}
+{% endraw %}
