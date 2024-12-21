@@ -5,10 +5,17 @@
 import logging
 from abc import ABC
 from collections.abc import Callable
-from typing import Literal
+from typing import Any, List, Literal
 
 from pydantic import JsonValue
 
+from lionagi.core.action.action_manager import FUNCTOOL, Tool
+from lionagi.core.communication.types import (
+    ActionRequest,
+    ActionResponse,
+    AssistantResponse,
+    Instruction,
+)
 from lionagi.core.typing import (
     ID,
     UNDEFINED,
@@ -19,21 +26,21 @@ from lionagi.core.typing import (
 from lionagi.integrations.pydantic_ import break_down_pydantic_annotation
 from lionagi.libs.func.types import alcall
 from lionagi.libs.parse import to_json, validate_mapping
-from lionagi.protocols.operatives.types import (
+from lionagi.protocols.operatives import (
     ActionRequestModel,
     ActionResponseModel,
+    Instruct,
+    OperationInstruct,
+    OperationType,
     Operative,
     Step,
+    Task,
 )
 from lionagi.service import iModel
 
-from ..action.action_manager import FUNCTOOL, Tool
-from ..communication.types import (
-    ActionRequest,
-    ActionResponse,
-    AssistantResponse,
-    Instruction,
-)
+from ..strategies.controller import ExecutionController
+from ..strategies.strategy import Strategy
+from ..strategies.types import StrategyParams
 
 
 class BranchActionMixin(ABC):
@@ -542,3 +549,59 @@ class BranchOperationMixin(ABC):
                 return res.response
 
         return _d if _d else res.response
+
+    async def instruct(
+        self,
+        instruct: Instruct,
+        /,
+        **kwargs,
+    ) -> Any:
+        """
+        Execute an instruction within this branch.
+        Integrates with the strategy system by utilizing `StrategyOperative`.
+        """
+
+        config = {**instruct.to_dict(), **kwargs}
+        if any(i in config for i in OperationInstruct.reserved_kwargs):
+            return await self.operate(**config)
+        return await self.communicate(**config)
+
+    async def execute(
+        self,
+        instruct: list[Instruct],
+        session: Any,
+        strategy_params: StrategyParams = None,
+        initial_metrics: dict = None,
+    ):
+
+        # Initialize StrategyOperative if not present
+        if self.strategy_operative is None:
+            self.strategy_operative = Strategy(
+                name=(
+                    f"{self.name}-operative"
+                    if self.name
+                    else "default-operative"
+                )
+            )
+
+        # Add instruction as a task
+        for i in instruct:
+            self.strategy_operative.add_operation(
+                Task(payload=i.to_dict(), op_type=OperationType.INSTRUCT)
+            )
+
+        # Here, delegate execution to ExecutionController or a similar orchestrator
+        # Assuming ExecutionController is accessible here; adjust as necessary
+        controller = ExecutionController()
+
+        # Execute operative
+        result = await controller.execute_with_strategy(
+            operative=self.strategy_operative,
+            session=session,
+            branch=self,
+            strategy_params=strategy_params,
+            initial_metrics=initial_metrics,
+        )
+
+        self.msgs.logger.dump()
+        return result
