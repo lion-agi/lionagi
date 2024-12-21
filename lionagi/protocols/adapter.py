@@ -234,6 +234,14 @@ class CSVFileAdapter(Adapter):
         logging.info(f"Successfully saved data to {fp}")
 
 
+class ComponentRegistry(AdapterRegistry):
+    """Registry for component-specific adapters."""
+
+
+class PileRegistry(AdapterRegistry):
+    """Registry for pile-specific adapters."""
+
+
 ADAPTERS = {
     JsonAdapter,
     JsonFileAdapter,
@@ -243,16 +251,9 @@ ADAPTERS = {
 }
 
 
-class ComponentRegistry(AdapterRegistry):
-    """Registry for component-specific adapters."""
-
-    _adapters = {adapter.obj_key: adapter for adapter in ADAPTERS}
-
-
-class PileRegistry(AdapterRegistry):
-    """Registry for pile-specific adapters."""
-
-    _adapters = {adapter.obj_key: adapter for adapter in ADAPTERS}
+for i in ADAPTERS:
+    ComponentRegistry.register(i)
+    PileRegistry.register(i)
 
 
 # File: lionagi/protocols/adapter.py

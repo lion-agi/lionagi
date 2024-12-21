@@ -1,0 +1,12 @@
+{% raw %}
+Role: {{ role }}
+Sender: {{ sender }}
+Recipient: {{ recipient }}
+Timestamp: {{ timestamp }}
+ID: {{ id }}
+
+{% if content.system_datetime %}
+System datetime: {{ content.system_datetime }}
+{% endif %}
+{{ content.system }}
+{% endraw %}

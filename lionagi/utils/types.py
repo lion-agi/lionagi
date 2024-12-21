@@ -5,6 +5,7 @@
 from ._utils import Params, is_coro_func
 from .alcall import alcall
 from .bcall import bcall
+from .break_down_pydantic_annotation import break_down_pydantic_annotation
 from .copy_ import copy
 from .create_path import create_path
 from .fuzzy_parse_json import fuzzy_parse_json
@@ -48,4 +49,5 @@ __all__ = (
     "CreatePathParams",
     "is_coro_func",
     "create_path",
+    "break_down_pydantic_annotation",
 )
