@@ -5,9 +5,9 @@
 from pydantic import BaseModel
 from pydantic.fields import FieldInfo
 
-from lionagi.core.typing import FieldModel, ModelParams
-from lionagi.protocols.operatives.operative import Operative
+from lionagi.core.models import FieldModel, ModelParams
 
+from ..operatives.operative import Operative
 from .action import (
     ACTION_REQUESTS_FIELD,
     ACTION_REQUIRED_FIELD,
