@@ -8,9 +8,9 @@ from typing import Any
 
 from pydantic import BaseModel, Field
 
-from lionagi import Branch
 from lionagi.protocols.operatives.instruct import Instruct
 
+from ..session import Branch
 from .prompt import PROMPT
 from .utils import parse_selection, parse_to_representation
 
