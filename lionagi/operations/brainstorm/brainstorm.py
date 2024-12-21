@@ -3,10 +3,8 @@
 # SPDX-License-Identifier: Apache-2.0
 
 
-from lionagi.core.session.branch import Branch
-from lionagi.core.session.session import Session
 from lionagi.core.typing import ID, Any, BaseModel
-from lionagi.libs.func import alcall
+from lionagi.libs.func.types import alcall
 from lionagi.libs.parse import to_flat_list
 from lionagi.protocols.operatives.instruct import (
     INSTRUCT_FIELD_MODEL,
@@ -14,6 +12,7 @@ from lionagi.protocols.operatives.instruct import (
     InstructResponse,
 )
 
+from ..session.session import Branch, Session
 from ..utils import prepare_instruct, prepare_session
 from .prompt import PROMPT
 

@@ -11,6 +11,8 @@ from lionagi.core.models import FieldModel, ModelParams, OperableModel
 from lionagi.core.typing import UNDEFINED
 from lionagi.libs.parse import to_json, validate_keys
 
+from .tasks import Task
+
 
 class Operative(OperableModel):
     """Class representing an operative that handles request and response models for operations."""
@@ -24,6 +26,8 @@ class Operative(OperableModel):
     response_type: type[BaseModel] | None = Field(default=None)
     response_model: OperableModel | None = Field(default=None)
     response_str_dict: dict | str | None = Field(default=None)
+
+    instruct_models: list[Task] = []
 
     auto_retry_parse: bool = True
     max_retries: int = 3
@@ -168,3 +172,15 @@ class Operative(OperableModel):
             self.response_params._validators.update(validators)
 
         self.response_type = self.response_params.create_new_model()
+
+    def add_operation(self, task: Task) -> None:
+        """Adds a new operation (task) to this operative."""
+        self.instruct_models.append(task)
+
+    def clear_operations(self) -> None:
+        """Clears all operations."""
+        self.instruct_models.clear()
+
+    def list_operations(self) -> list[Task]:
+        """Returns the list of current operations."""
+        return self.instruct_models
