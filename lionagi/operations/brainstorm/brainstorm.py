@@ -2,6 +2,8 @@
 #
 # SPDX-License-Identifier: Apache-2.0
 
+import logging
+from typing import Literal
 
 from lionagi.core.session.branch import Branch
 from lionagi.core.session.session import Session
@@ -17,11 +19,39 @@ from lionagi.protocols.operatives.instruct import (
 from ..utils import prepare_instruct, prepare_session
 from .prompt import PROMPT
 
+# ---------------------------------------------------------------------
+# Data Models & Utilities
+# ---------------------------------------------------------------------
+
 
 class BrainstormOperation(BaseModel):
+    """
+    Container for the outcomes of a brainstorming session:
+      1. initial: the initial result of the 'brainstorm' prompt
+      2. brainstorm: the results of auto-run instructions (if auto_run = True)
+      3. explore: the results of exploring those instructions (if auto_explore = True)
+    """
+
     initial: Any
     brainstorm: list[Instruct] | None = None
     explore: list[InstructResponse] | None = None
+
+
+def chunked(iterable, n):
+    """
+    Yield successive n-sized chunks from an iterable.
+
+    Example:
+        >>> list(chunked([1,2,3,4,5], 2))
+        [[1,2],[3,4],[5]]
+    """
+    for i in range(0, len(iterable), n):
+        yield iterable[i : i + n]
+
+
+# ---------------------------------------------------------------------
+# Core Instruction Execution
+# ---------------------------------------------------------------------
 
 
 async def run_instruct(
@@ -32,53 +62,50 @@ async def run_instruct(
     verbose: bool = True,
     **kwargs: Any,
 ) -> Any:
-    """Execute an instruction within a brainstorming session.
-
-    Args:
-        ins: The instruction model to run.
-        session: The current session.
-        branch: The branch to operate on.
-        auto_run: Whether to automatically run nested instructions.
-        verbose: Whether to enable verbose output.
-        **kwargs: Additional keyword arguments.
-
-    Returns:
-        The result of the instruction execution.
+    """
+    Execute a single instruction within a brainstorming session.
+    Optionally auto-run any child instructions that result.
     """
 
-    async def run(ins_):
+    async def _run_child_instruction(child_ins: Instruct):
+        """
+        Helper for recursively running child instructions.
+        """
         if verbose:
-            msg_ = (
-                ins_.guidance[:100] + "..."
-                if len(ins_.guidance) > 100
-                else ins_.guidance
+            snippet = (
+                child_ins.guidance[:100] + "..."
+                if len(child_ins.guidance) > 100
+                else child_ins.guidance
             )
-            print(f"\n-----Running instruction-----\n{msg_}")
-        b_ = session.split(branch)
+            print(f"\n-----Running instruction-----\n{snippet}")
+        child_branch = session.split(branch)
         return await run_instruct(
-            ins_, session, b_, False, verbose=verbose, **kwargs
+            child_ins, session, child_branch, False, verbose=verbose, **kwargs
         )
 
+    # Prepare config for the branch operation
     config = {**ins.model_dump(), **kwargs}
-    res = await branch.operate(**config)
+    result = await branch.operate(**config)
     branch.msgs.logger.dump()
+
+    # Extract any newly generated instructions
     instructs = []
+    if hasattr(result, "instruct_models"):
+        instructs = result.instruct_models
 
-    if hasattr(res, "instruct_models"):
-        instructs = res.instruct_models
-
-    if auto_run is True and instructs:
-        ress = await alcall(instructs, run)
-        response_ = []
-        for res in ress:
-            if isinstance(res, list):
-                response_.extend(res)
+    # If we're allowed to auto-run child instructions, handle them
+    if auto_run and instructs:
+        child_results = await alcall(instructs, _run_child_instruction)
+        combined = []
+        for c in child_results:
+            if isinstance(c, list):
+                combined.extend(c)
             else:
-                response_.append(res)
-        response_.insert(0, res)
-        return response_
+                combined.append(c)
+        combined.insert(0, result)
+        return combined
 
-    return res
+    return result
 
 
 async def brainstorm(
@@ -89,116 +116,314 @@ async def brainstorm(
     auto_run: bool = True,
     auto_explore: bool = False,
     explore_kwargs: dict[str, Any] | None = None,
+    explore_strategy: Literal[
+        "concurrent",
+        "sequential",
+        "sequential_concurrent_chunk",
+        "concurrent_sequential_chunk",
+    ] = "concurrent",
     branch_kwargs: dict[str, Any] | None = None,
     return_session: bool = False,
     verbose: bool = False,
+    branch_as_default: bool = True,
     **kwargs: Any,
 ) -> Any:
-    """Perform a brainstorming session.
+    """
+    High-level function to perform a brainstorming session.
 
-    Args:
-        instruct: Instruction model or dictionary.
-        num_instruct: Number of instructions to generate.
-        session: Existing session or None to create a new one.
-        branch: Existing branch or reference.
-        auto_run: If True, automatically run generated instructions.
-        branch_kwargs: Additional arguments for branch creation.
-        return_session: If True, return the session with results.
-        verbose: Whether to enable verbose output.
-        **kwargs: Additional keyword arguments.
-
-    Returns:
-        The results of the brainstorming session, optionally with the session.
+    Steps:
+      1. Run the initial 'instruct' prompt to generate suggestions.
+      2. Optionally auto-run those suggestions (auto_run=True).
+      3. Optionally explore the resulting instructions (auto_explore=True)
+         using the chosen strategy (concurrent, sequential, etc.).
     """
 
+    # -----------------------------------------------------------------
+    # Basic Validations and Setup
+    # -----------------------------------------------------------------
     if auto_explore and not auto_run:
         raise ValueError("auto_explore requires auto_run to be True.")
 
     if verbose:
-        print(f"Starting brainstorming...")
+        print("Starting brainstorming...")
 
+    # Make sure the correct field model is present
     field_models: list = kwargs.get("field_models", [])
     if INSTRUCT_FIELD_MODEL not in field_models:
         field_models.append(INSTRUCT_FIELD_MODEL)
-
     kwargs["field_models"] = field_models
+
+    # Prepare session, branch, and the instruction
     session, branch = prepare_session(session, branch, branch_kwargs)
-    instruct = prepare_instruct(
-        instruct, PROMPT.format(num_instruct=num_instruct)
-    )
+    prompt_str = PROMPT.format(num_instruct=num_instruct)
+    instruct = prepare_instruct(instruct, prompt_str)
+
+    # -----------------------------------------------------------------
+    # 1. Initial Brainstorm
+    # -----------------------------------------------------------------
     res1 = await branch.operate(**instruct, **kwargs)
     out = BrainstormOperation(initial=res1)
 
     if verbose:
         print("Initial brainstorming complete.")
 
-    instructs = None
-
-    async def run(ins_):
+    # Helper to run single instructions from the 'brainstorm'
+    async def run_brainstorm_instruction(ins_):
         if verbose:
-            msg_ = (
+            snippet = (
                 ins_.guidance[:100] + "..."
                 if len(ins_.guidance) > 100
                 else ins_.guidance
             )
-            print(f"\n-----Running instruction-----\n{msg_}")
-        b_ = session.split(branch)
+            print(f"\n-----Running instruction-----\n{snippet}")
+        new_branch = session.split(branch)
         return await run_instruct(
-            ins_, session, b_, auto_run, verbose=verbose, **kwargs
+            ins_, session, new_branch, auto_run, verbose=verbose, **kwargs
         )
 
+    # -----------------------------------------------------------------
+    # 2. Auto-run child instructions if requested
+    # -----------------------------------------------------------------
     if not auto_run:
         if return_session:
             return out, session
         return out
 
+    # We run inside the context manager for branching
     async with session.branches:
         response_ = []
+
+        # If the initial result has instructions, run them
         if hasattr(res1, "instruct_models"):
             instructs: list[Instruct] = res1.instruct_models
-            ress = await alcall(instructs, run)
-            ress = to_flat_list(ress, dropna=True)
-
-            response_ = [
-                res if not isinstance(res, str | dict) else None
-                for res in ress
-            ]
-            response_ = to_flat_list(response_, unique=True, dropna=True)
-            out.brainstorm = (
-                response_ if isinstance(response_, list) else [response_]
+            brainstorm_results = await alcall(
+                instructs, run_brainstorm_instruction
             )
-            response_.insert(0, res1)
+            brainstorm_results = to_flat_list(brainstorm_results, dropna=True)
 
+            # Filter out plain str/dict responses, keep model-based
+            filtered = [
+                r if not isinstance(r, (str, dict)) else None
+                for r in brainstorm_results
+            ]
+            filtered = to_flat_list(filtered, unique=True, dropna=True)
+
+            out.brainstorm = (
+                filtered if isinstance(filtered, list) else [filtered]
+            )
+            # Insert the initial result at index 0 for reference
+            filtered.insert(0, res1)
+            response_ = filtered
+
+        # -----------------------------------------------------------------
+        # 3. Explore the results (if auto_explore = True)
+        # -----------------------------------------------------------------
         if response_ and auto_explore:
-
-            async def explore(ins_: Instruct):
-                if verbose:
-                    msg_ = (
-                        ins_.guidance[:100] + "..."
-                        if len(ins_.guidance) > 100
-                        else ins_.guidance
-                    )
-                    print(f"\n-----Exploring Idea-----\n{msg_}")
-                b_ = session.split(branch)
-                res = await b_.instruct(ins_, **(explore_kwargs or {}))
-                return InstructResponse(
-                    instruct=ins_,
-                    response=res,
-                )
-
-            response_ = to_flat_list(
+            # Gather all newly generated instructions
+            all_explore_instructs = to_flat_list(
                 [
-                    i.instruct_models
-                    for i in response_
-                    if hasattr(i, "instruct_models")
+                    r.instruct_models
+                    for r in response_
+                    if hasattr(r, "instruct_models")
                 ],
                 dropna=True,
                 unique=True,
             )
-            res_explore = await alcall(response_, explore)
-            out.explore = res_explore
 
+            # Decide how to explore based on the strategy
+            match explore_strategy:
+                # ---------------------------------------------------------
+                # Strategy A: CONCURRENT
+                # ---------------------------------------------------------
+                case "concurrent":
+
+                    async def explore_concurrently(ins_: Instruct):
+                        if verbose:
+                            snippet = (
+                                ins_.guidance[:100] + "..."
+                                if len(ins_.guidance) > 100
+                                else ins_.guidance
+                            )
+                            print(f"\n-----Exploring Idea-----\n{snippet}")
+                        new_branch = session.split(branch)
+                        resp = await new_branch.instruct(
+                            ins_, **(explore_kwargs or {})
+                        )
+                        return InstructResponse(instruct=ins_, response=resp)
+
+                    res_explore = await alcall(
+                        all_explore_instructs, explore_concurrently
+                    )
+                    out.explore = res_explore
+
+                    # Add messages for logging / auditing
+                    branch.msgs.add_message(
+                        instruction="\n".join(
+                            i.model_dump_json() for i in all_explore_instructs
+                        )
+                    )
+                    branch.msgs.add_message(
+                        assistant_response="\n".join(
+                            i.model_dump_json() for i in res_explore
+                        )
+                    )
+
+                # ---------------------------------------------------------
+                # Strategy B: SEQUENTIAL
+                # ---------------------------------------------------------
+                case "sequential":
+                    explore_results = []
+
+                    # Warn/log if a large number of instructions
+                    if len(all_explore_instructs) > 30:
+                        all_explore_instructs = all_explore_instructs[:30]
+                        logging.warning(
+                            "Maximum number of instructions for sequential exploration is 50. defaulting to 50."
+                        )
+                    if len(all_explore_instructs) > 10:
+                        logging.warning(
+                            "Large number of instructions for sequential exploration. This may take a while."
+                        )
+
+                    for i in all_explore_instructs:
+                        if verbose:
+                            snippet = (
+                                i.guidance[:100] + "..."
+                                if len(i.guidance) > 100
+                                else i.guidance
+                            )
+                            print(f"\n-----Exploring Idea-----\n{snippet}")
+                        seq_res = await branch.instruct(
+                            i, **(explore_kwargs or {})
+                        )
+                        explore_results.append(
+                            InstructResponse(instruct=i, response=seq_res)
+                        )
+
+                    out.explore = explore_results
+
+                # ---------------------------------------------------------
+                # Strategy C: SEQUENTIAL_CONCURRENT_CHUNK
+                # (chunks processed sequentially, each chunk in parallel)
+                # ---------------------------------------------------------
+                case "sequential_concurrent_chunk":
+                    chunk_size = (explore_kwargs or {}).get("chunk_size", 5)
+                    all_responses = []
+
+                    async def explore_concurrent_chunk(
+                        sub_instructs: list[Instruct], base_branch: Branch
+                    ):
+                        """
+                        Explore instructions in a single chunk concurrently.
+                        """
+                        if verbose:
+                            print(
+                                f"\n--- Exploring a chunk of size {len(sub_instructs)} ---\n"
+                            )
+
+                        async def _explore(ins_: Instruct):
+                            child_branch = session.split(base_branch)
+                            child_resp = await child_branch.instruct(
+                                ins_, **(explore_kwargs or {})
+                            )
+                            return InstructResponse(
+                                instruct=ins_, response=child_resp
+                            )
+
+                        # Run all instructions in the chunk concurrently
+                        res_chunk = await alcall(sub_instructs, _explore)
+
+                        # Log messages for debugging / auditing
+                        next_branch = session.split(base_branch)
+                        next_branch.msgs.add_message(
+                            instruction="\n".join(
+                                i.model_dump_json() for i in sub_instructs
+                            )
+                        )
+                        next_branch.msgs.add_message(
+                            assistant_response="\n".join(
+                                i.model_dump_json() for i in res_chunk
+                            )
+                        )
+                        return res_chunk, next_branch
+
+                    # Process each chunk sequentially
+                    for chunk in chunked(all_explore_instructs, chunk_size):
+                        chunk_result, branch = await explore_concurrent_chunk(
+                            chunk, branch
+                        )
+                        all_responses.extend(chunk_result)
+
+                    out.explore = all_responses
+
+                # ---------------------------------------------------------
+                # Strategy D: CONCURRENT_SEQUENTIAL_CHUNK
+                # (all chunks processed concurrently, each chunk sequentially)
+                # ---------------------------------------------------------
+                case "concurrent_sequential_chunk":
+                    chunk_size = (explore_kwargs or {}).get("chunk_size", 5)
+                    all_chunks = list(
+                        chunked(all_explore_instructs, chunk_size)
+                    )
+
+                    async def explore_chunk_sequentially(
+                        sub_instructs: list[Instruct],
+                    ):
+                        """
+                        Explore instructions in a single chunk, one at a time.
+                        """
+                        chunk_results = []
+                        local_branch = session.split(branch)
+
+                        for ins_ in sub_instructs:
+                            if verbose:
+                                snippet = (
+                                    ins_.guidance[:100] + "..."
+                                    if len(ins_.guidance) > 100
+                                    else ins_.guidance
+                                )
+                                print(
+                                    f"\n-----Exploring Idea (sequential in chunk)-----\n{snippet}"
+                                )
+
+                            seq_resp = await local_branch.instruct(
+                                ins_, **(explore_kwargs or {})
+                            )
+                            chunk_results.append(
+                                InstructResponse(
+                                    instruct=ins_, response=seq_resp
+                                )
+                            )
+
+                        return chunk_results
+
+                    # Run all chunks in parallel
+                    all_responses = await alcall(
+                        all_chunks,
+                        explore_chunk_sequentially,
+                        flatten=True,
+                        dropna=True,
+                    )
+                    out.explore = all_responses
+
+                    # Log final messages
+                    branch.msgs.add_message(
+                        instruction="\n".join(
+                            i.model_dump_json() for i in all_explore_instructs
+                        )
+                    )
+                    branch.msgs.add_message(
+                        assistant_response="\n".join(
+                            i.model_dump_json() for i in all_responses
+                        )
+                    )
+
+    if branch_as_default:
+        session.change_default_branch(branch)
+
+    # -----------------------------------------------------------------
+    # 4. Return Results
+    # -----------------------------------------------------------------
     if return_session:
         return out, session
-
     return out

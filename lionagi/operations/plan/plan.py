@@ -2,10 +2,11 @@
 #
 # SPDX-License-Identifier: Apache-2.0
 
-
 from lionagi.core.session.branch import Branch
 from lionagi.core.session.session import Session
 from lionagi.core.typing import ID, Any, BaseModel, Literal
+from lionagi.libs.func.types import alcall
+from lionagi.libs.parse import to_flat_list
 from lionagi.protocols.operatives.instruct import (
     INSTRUCT_FIELD_MODEL,
     Instruct,
@@ -15,11 +16,43 @@ from lionagi.protocols.operatives.instruct import (
 from ..utils import prepare_instruct, prepare_session
 from .prompt import EXPANSION_PROMPT, PLAN_PROMPT
 
+# ---------------------------------------------------------------------
+# Data Model
+# ---------------------------------------------------------------------
+
 
 class PlanOperation(BaseModel):
+    """
+    Stores all relevant outcomes for a multi-step Plan:
+      * initial: The result of the initial plan prompt
+      * plan: A list of plan steps (Instruct objects) generated from the initial planning
+      * execute: Any responses from executing those plan steps
+    """
+
     initial: Any
     plan: list[Instruct] | None = None
     execute: list[InstructResponse] | None = None
+
+
+# ---------------------------------------------------------------------
+# Utilities
+# ---------------------------------------------------------------------
+
+
+def chunked(iterable, n):
+    """
+    Yield successive n-sized chunks from an iterable.
+    Example:
+        >>> list(chunked([1,2,3,4,5], 2))
+        [[1,2],[3,4],[5]]
+    """
+    for i in range(0, len(iterable), n):
+        yield iterable[i : i + n]
+
+
+# ---------------------------------------------------------------------
+# Single-Step Runner
+# ---------------------------------------------------------------------
 
 
 async def run_step(
@@ -29,33 +62,41 @@ async def run_step(
     verbose: bool = True,
     **kwargs: Any,
 ) -> Any:
-    """Execute a single step of the plan.
+    """
+    Execute a single step of the plan with an 'expansion' or guidance prompt.
 
     Args:
         ins: The instruction model for the step.
-        session: The current session.
-        branch: The branch to operate on.
+        session: The current session context.
+        branch: The branch to operate on for this step.
         verbose: Whether to enable verbose output.
-        **kwargs: Additional keyword arguments.
+        **kwargs: Additional keyword arguments passed to the branch operation.
 
     Returns:
-        The result of the branch operation.
+        The result of the branch operation (which may contain more instructions).
     """
     if verbose:
-        instruction = (
+        snippet = (
             ins.instruction[:100] + "..."
             if len(ins.instruction) > 100
             else ins.instruction
         )
-        print(f"Further planning: {instruction}")
+        print(f"Further planning: {snippet}")
 
+    # Incorporate the EXPANSION_PROMPT into guidance
     config = {**ins.model_dump(), **kwargs}
-    guide = config.pop("guidance", "")
-    config["guidance"] = EXPANSION_PROMPT + "\n" + str(guide)
+    guidance_text = config.pop("guidance", "")
+    config["guidance"] = f"{EXPANSION_PROMPT}\n{guidance_text}"
 
-    res = await branch.operate(**config)
-    branch.msgs.logger.dump()
-    return res
+    # Run the step
+    result = await branch.operate(**config)
+    branch.msgs.logger.dump()  # Dump logs if needed
+    return result
+
+
+# ---------------------------------------------------------------------
+# Main Plan Function (with Multiple Execution Strategies)
+# ---------------------------------------------------------------------
 
 
 async def plan(
@@ -65,108 +106,280 @@ async def plan(
     branch: Branch | ID.Ref | None = None,
     auto_run: bool = True,
     auto_execute: bool = False,
-    execution_strategy: Literal["sequential"] = "sequential",
+    execution_strategy: Literal[
+        "sequential",
+        "concurrent",
+        "sequential_concurrent_chunk",
+        "concurrent_sequential_chunk",
+    ] = "sequential",
     execution_kwargs: dict[str, Any] | None = None,
     branch_kwargs: dict[str, Any] | None = None,
     return_session: bool = False,
     verbose: bool = True,
     **kwargs: Any,
-) -> PlanOperation | tuple[list[InstructResponse], Session]:
-    """Create and execute a multi-step plan.
+) -> PlanOperation | tuple[PlanOperation, Session]:
+    """
+    Create and optionally execute a multi-step plan with up to `num_steps`.
+
+    Steps:
+      1. Generate an initial plan with up to `num_steps`.
+      2. Optionally (auto_run=True) expand on each planned step
+         to refine or further clarify them.
+      3. Optionally (auto_execute=True) execute those refined steps
+         according to `execution_strategy`.
 
     Args:
-        instruct: Instruction model or dictionary.
-        num_steps: Number of steps in the plan.
-        session: Existing session or None to create a new one.
-        branch: Existing branch or reference.
-        auto_run: If True, automatically run the steps.
-        branch_kwargs: Additional keyword arguments for branch creation.
-        return_session: If True, return the session along with results.
-        verbose: Whether to enable verbose output.
-        **kwargs: Additional keyword arguments.
+        instruct: Initial instruction or a dict describing it.
+        num_steps: Maximum number of plan steps (must be <= 5).
+        session: An existing Session, or None to create a new one.
+        branch: An existing Branch, or None to create a new one.
+        auto_run: If True, automatically run the intermediate plan steps.
+        auto_execute: If True, automatically execute the fully refined steps.
+        execution_strategy:
+            - "sequential" (default) runs steps one by one
+            - "concurrent" runs all steps in parallel
+            - "sequential_concurrent_chunk" processes chunks sequentially, each chunk in parallel
+            - "concurrent_sequential_chunk" processes all chunks in parallel, each chunk sequentially
+        execution_kwargs: Extra kwargs used during execution calls.
+        branch_kwargs: Extra kwargs for branch/session creation.
+        return_session: Whether to return (PlanOperation, Session) instead of just PlanOperation.
+        verbose: If True, prints verbose logs.
+        **kwargs: Additional arguments for the initial plan operation.
 
     Returns:
-        Results of the plan execution, optionally with the session.
+        A PlanOperation object containing:
+            - initial plan
+            - (optional) plan expansions
+            - (optional) execution responses
+        Optionally returns the session as well, if `return_session=True`.
     """
+
+    # -----------------------------------------------------------------
+    # 0. Basic Validation & Setup
+    # -----------------------------------------------------------------
     if num_steps > 5:
         raise ValueError("Number of steps must be 5 or less")
 
     if verbose:
         print(f"Planning execution with {num_steps} steps...")
 
+    # Ensure the correct field model
     field_models: list = kwargs.get("field_models", [])
     if INSTRUCT_FIELD_MODEL not in field_models:
         field_models.append(INSTRUCT_FIELD_MODEL)
     kwargs["field_models"] = field_models
-    session, branch = prepare_session(session, branch, branch_kwargs)
-    execute_branch: Branch = session.split(branch)
-    instruct = prepare_instruct(
-        instruct, PLAN_PROMPT.format(num_steps=num_steps)
-    )
 
-    res1 = await branch.operate(**instruct, **kwargs)
-    out = PlanOperation(initial=res1)
+    # Prepare session/branch
+    session, branch = prepare_session(session, branch, branch_kwargs)
+    execute_branch: Branch = session.split(
+        branch
+    )  # a separate branch for execution
+
+    # -----------------------------------------------------------------
+    # 1. Run the Initial Plan Prompt
+    # -----------------------------------------------------------------
+    plan_prompt = PLAN_PROMPT.format(num_steps=num_steps)
+    instruct = prepare_instruct(instruct, plan_prompt)
+    initial_res = await branch.operate(**instruct, **kwargs)
+
+    # Wrap initial result in the PlanOperation
+    out = PlanOperation(initial=initial_res)
 
     if verbose:
         print("Initial planning complete. Starting step planning...")
 
+    # If we aren't auto-running the steps, just return the initial plan
     if not auto_run:
-        if return_session:
-            return res1, session
-        return res1
+        return (out, session) if return_session else out
 
+    # -----------------------------------------------------------------
+    # 2. Expand Each Step (auto_run=True)
+    # -----------------------------------------------------------------
     results = []
-    if hasattr(res1, "instruct_models"):
-        instructs: list[Instruct] = res1.instruct_models
-        for i, ins in enumerate(instructs, 1):
+    if hasattr(initial_res, "instruct_models"):
+        instructs: list[Instruct] = initial_res.instruct_models
+        for i, step_ins in enumerate(instructs, start=1):
             if verbose:
                 print(f"\n----- Planning step {i}/{len(instructs)} -----")
-            res = await run_step(
-                ins, session, branch, verbose=verbose, **kwargs
+            expanded_res = await run_step(
+                step_ins, session, branch, verbose=verbose, **kwargs
             )
-            results.append(res)
+            results.append(expanded_res)
 
         if verbose:
-            print("\nAll planning completed successfully!")
+            print("\nAll planning steps expanded/refined successfully!")
 
-    all_plans = []
-    for res in results:
-        if hasattr(res, "instruct_models"):
-            for i in res.instruct_models:
-                if i and i not in all_plans:
-                    all_plans.append(i)
-    out.plan = all_plans
+    # Gather all newly created plan instructions
+    refined_plans = []
+    for step_result in results:
+        if hasattr(step_result, "instruct_models"):
+            for model in step_result.instruct_models:
+                if model and model not in refined_plans:
+                    refined_plans.append(model)
 
+    out.plan = refined_plans
+
+    # -----------------------------------------------------------------
+    # 3. Execute the Plan Steps (auto_execute=True)
+    # -----------------------------------------------------------------
     if auto_execute:
         if verbose:
-            print("\nStarting execution of all steps...")
-        results = []
+            print("\nStarting execution of all plan steps...")
+
+        # We now handle multiple strategies:
         match execution_strategy:
+
+            # ---------------------------------------------------------
+            # Strategy A: SEQUENTIAL
+            # ---------------------------------------------------------
             case "sequential":
-                for i, ins in enumerate(all_plans, 1):
+                seq_results = []
+                for i, plan_step in enumerate(refined_plans, start=1):
+                    if verbose:
+                        snippet = (
+                            plan_step.instruction[:100] + "..."
+                            if len(plan_step.instruction) > 100
+                            else plan_step.instruction
+                        )
+                        print(
+                            f"\n------ Executing step {i}/{len(refined_plans)} ------"
+                        )
+                        print(f"Instruction: {snippet}")
+
+                    step_response = await execute_branch.instruct(
+                        plan_step, **(execution_kwargs or {})
+                    )
+                    seq_results.append(
+                        InstructResponse(
+                            instruct=plan_step, response=step_response
+                        )
+                    )
+
+                out.execute = seq_results
+                if verbose:
+                    print("\nAll steps executed successfully (sequential)!")
+
+            # ---------------------------------------------------------
+            # Strategy B: CONCURRENT
+            # ---------------------------------------------------------
+            case "concurrent":
+
+                async def execute_step_concurrently(plan_step: Instruct):
+                    if verbose:
+                        snippet = (
+                            plan_step.instruction[:100] + "..."
+                            if len(plan_step.instruction) > 100
+                            else plan_step.instruction
+                        )
+                        print(f"\n------ Executing step (concurrently) ------")
+                        print(f"Instruction: {snippet}")
+                    local_branch = session.split(execute_branch)
+                    resp = await local_branch.instruct(
+                        plan_step, **(execution_kwargs or {})
+                    )
+                    return InstructResponse(instruct=plan_step, response=resp)
+
+                # Launch all steps in parallel
+                concurrent_res = await alcall(
+                    refined_plans, execute_step_concurrently
+                )
+                out.execute = concurrent_res
+                if verbose:
+                    print("\nAll steps executed successfully (concurrent)!")
+
+            # ---------------------------------------------------------
+            # Strategy C: SEQUENTIAL_CONCURRENT_CHUNK
+            #   - process plan steps in chunks (one chunk after another),
+            #   - each chunk’s steps run in parallel.
+            # ---------------------------------------------------------
+            case "sequential_concurrent_chunk":
+                chunk_size = (execution_kwargs or {}).get("chunk_size", 5)
+                all_exec_responses = []
+
+                async def execute_chunk_concurrently(
+                    sub_steps: list[Instruct],
+                ):
                     if verbose:
                         print(
-                            f"\n------ Executing step {i}/{len(all_plans)} ------"
+                            f"\n--- Executing a chunk of size {len(sub_steps)} concurrently ---"
                         )
-                        msg = (
-                            ins.instruction[:100] + "..."
-                            if len(ins.instruction) > 100
-                            else ins.instruction
+
+                    async def _execute(plan_step: Instruct):
+                        local_branch = session.split(execute_branch)
+                        resp = await local_branch.instruct(
+                            plan_step, **(execution_kwargs or {})
                         )
-                        print(f"Instruction: {msg}")
-                    res = await execute_branch.instruct(
-                        ins, **(execution_kwargs or {})
-                    )
-                    res_ = InstructResponse(instruct=ins, response=res)
-                    results.append(res_)
-                out.execute = results
+                        return InstructResponse(
+                            instruct=plan_step, response=resp
+                        )
+
+                    # run each chunk in parallel
+                    return await alcall(sub_steps, _execute)
+
+                # process each chunk sequentially
+                for chunk in chunked(refined_plans, chunk_size):
+                    chunk_responses = await execute_chunk_concurrently(chunk)
+                    all_exec_responses.extend(chunk_responses)
+
+                out.execute = all_exec_responses
                 if verbose:
-                    print("\nAll steps executed successfully!")
+                    print(
+                        "\nAll steps executed successfully (sequential concurrent chunk)!"
+                    )
+
+            # ---------------------------------------------------------
+            # Strategy D: CONCURRENT_SEQUENTIAL_CHUNK
+            #   - split plan steps into chunks,
+            #   - run all chunks in parallel,
+            #   - but each chunk’s steps run sequentially.
+            # ---------------------------------------------------------
+            case "concurrent_sequential_chunk":
+                chunk_size = (execution_kwargs or {}).get("chunk_size", 5)
+                all_chunks = list(chunked(refined_plans, chunk_size))
+
+                async def execute_chunk_sequentially(
+                    sub_steps: list[Instruct],
+                ):
+                    chunk_result = []
+                    local_branch = session.split(execute_branch)
+                    for plan_step in sub_steps:
+                        if verbose:
+                            snippet = (
+                                plan_step.instruction[:100] + "..."
+                                if len(plan_step.instruction) > 100
+                                else plan_step.instruction
+                            )
+                            print(
+                                f"\n--- Executing step (sequential in chunk) ---\nInstruction: {snippet}"
+                            )
+                        resp = await local_branch.instruct(
+                            plan_step, **(execution_kwargs or {})
+                        )
+                        chunk_result.append(
+                            InstructResponse(instruct=plan_step, response=resp)
+                        )
+                    return chunk_result
+
+                # run all chunks in parallel, each chunk sequentially
+                parallel_chunk_results = await alcall(
+                    all_chunks,
+                    execute_chunk_sequentially,
+                    flatten=True,
+                    dropna=True,
+                )
+
+                out.execute = parallel_chunk_results
+                if verbose:
+                    print(
+                        "\nAll steps executed successfully (concurrent sequential chunk)!"
+                    )
+
             case _:
                 raise ValueError(
                     f"Invalid execution strategy: {execution_strategy}"
                 )
 
-    if return_session:
-        return out, session
-    return out
+    # -----------------------------------------------------------------
+    # 4. Final Return
+    # -----------------------------------------------------------------
+    return (out, session) if return_session else out

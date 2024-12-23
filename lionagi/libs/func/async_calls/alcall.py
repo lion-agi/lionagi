@@ -148,6 +148,13 @@ async def alcall(
                         ucall(func, i, **kwargs), retry_timeout
                     )
                     return index, result
+
+            except InterruptedError:
+                return index, None
+
+            except asyncio.CancelledError:
+                return index, None
+
             except TimeoutError as e:
                 raise TimeoutError(
                     f"{error_msg or ''} Timeout {retry_timeout} seconds "
