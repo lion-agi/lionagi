@@ -128,9 +128,9 @@ class Session(Component):
             branch: The branch to set as default or its identifier.
         """
         branch = self.branches[branch]
-        if branch and len(branch) == 1:
-            self.default_branch = branch
-        raise ValueError("Session can only have one default branch.")
+        if not isinstance(branch, Branch):
+            raise ValueError("Input value for branch is not a valid branch.")
+        self.default_branch = branch
 
     def to_df(self, branches: ID.RefSeq = None) -> pd.DataFrame:
         out = self.concat_messages(branches=branches)
