@@ -1,1 +1,8 @@
-PROMPT = """Perform a brainstorm session. Fill in {num_instruct} Instruct for the appropriate next step, we will run them separately and concurrently with same external context, but you should supplement each idea with certain amount of uniqueness while adhering to the guidelines and standards of the project. The Instruct should be concisely informational. If you think a particular step requries further extension, you should mention it in the instruct"""
+PROMPT = """Perform a brainstorm session. Generate {num_instruct} concise and distinct instructions (Instruct), each representing a potential next step. We will run them in parallel under the same context. Ensure each idea:
+
+1. Adheres to project guidelines and standards.
+2. Maintains a unique perspective or approach.
+3. Remains succinct yet sufficiently detailed.
+4. Flags any step that needs deeper expansion.
+
+Aim for clarity, practicality, and adherence to the project's core principles."""
