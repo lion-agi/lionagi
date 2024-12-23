@@ -9,6 +9,7 @@ from pydantic import model_validator
 
 from lionagi.core.generic.types import Component, LogManager, Pile, Progression
 from lionagi.core.typing import ID
+from lionagi.integrations.litellm_.imodel import LiteiModel
 from lionagi.protocols.operatives.instruct import Instruct, OperationInstruct
 from lionagi.service import iModel
 from lionagi.settings import Settings
@@ -24,8 +25,8 @@ class Branch(Component, BranchActionMixin, BranchOperationMixin):
     name: str | None = None
     msgs: MessageManager = None
     acts: ActionManager = None
-    imodel: iModel | None = None
-    parse_imodel: iModel | None = None
+    imodel: iModel | LiteiModel | None = None
+    parse_imodel: iModel | LiteiModel | None = None
 
     @model_validator(mode="before")
     def _validate_data(cls, data: dict) -> dict:
