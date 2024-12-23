@@ -4,7 +4,8 @@ import logging
 
 from dotenv import load_dotenv
 
-from .core.session.types import Branch
+from .core.session.types import Branch, Session
+from .integrations.litellm_.imodel import LiteiModel
 from .protocols.operatives.step import Step
 from .service import iModel
 from .settings import Settings
@@ -20,6 +21,8 @@ __all__ = [
     "LiteiModel",
     "Branch",
     "Step",
+    "Session",
+    "LiteiModel",
 ]
 
 logger = logging.getLogger(__name__)
