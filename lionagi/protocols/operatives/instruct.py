@@ -14,11 +14,8 @@ from lionagi.libs.parse import validate_boolean
 
 from .prompts import (
     actions_field_description,
-    context_examples,
     context_field_description,
-    guidance_examples,
     guidance_field_description,
-    instruction_examples,
     instruction_field_description,
     reason_field_description,
 )
@@ -62,7 +59,6 @@ INSTRUCTION_FIELD = FieldModel(
     default=None,
     title="Primary Instruction",
     description=instruction_field_description,
-    examples=instruction_examples,
     validator=validate_instruction,
     validator_kwargs={"mode": "before"},
 )
@@ -73,7 +69,6 @@ GUIDANCE_FIELD = FieldModel(
     default=None,
     title="Execution Guidance",
     description=guidance_field_description,
-    examples=guidance_examples,
 )
 
 CONTEXT_FIELD = FieldModel(
@@ -82,7 +77,6 @@ CONTEXT_FIELD = FieldModel(
     default=None,
     title="Task Context",
     description=context_field_description,
-    examples=context_examples,
 )
 
 REASON_FIELD = FieldModel(
