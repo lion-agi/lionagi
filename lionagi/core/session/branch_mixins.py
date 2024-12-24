@@ -33,6 +33,7 @@ from ..communication.types import (
     ActionResponse,
     AssistantResponse,
     Instruction,
+    RoledMessage,
 )
 
 
@@ -289,7 +290,35 @@ class BranchOperationMixin(ABC):
         )
 
         progress = progress or self.msgs.progress
-        messages = [self.msgs.messages[i] for i in progress]
+        messages: list[RoledMessage] = [
+            self.msgs.messages[i] for i in progress
+        ]
+
+        use_ins = None
+
+        if imodel.sequential_exchange:
+            use_ins = ins.model_copy()
+            self.msgs.concat_action_responses_to_instruction(use_ins)
+            messages = [
+                i.model_copy()
+                for i in messages
+                if not isinstance(i, ActionResponse | ActionRequest)
+            ]
+            if messages and len(messages) > 1:
+                _msgs = [messages[0]]
+
+                for i in messages[1:]:
+                    if isinstance(i, AssistantResponse):
+                        if isinstance(_msgs[-1], AssistantResponse):
+                            _msgs[-1].response = (
+                                f"{_msgs[-1].response}\n\n{i.response}"
+                            )
+                        else:
+                            _msgs.append(i)
+                    else:
+                        if isinstance(_msgs[-1], AssistantResponse):
+                            _msgs.append(i)
+                messages = _msgs
 
         if self.msgs.system and "system" not in imodel.allowed_roles:
             messages = [msg for msg in messages if msg.role != "system"]
@@ -312,9 +341,10 @@ class BranchOperationMixin(ABC):
                     first_instruction.guidance or ""
                 )
                 messages[0] = first_instruction
+                messages.append(use_ins or ins)
 
         else:
-            messages.append(ins)
+            messages.append(use_ins or ins)
 
         kwargs["messages"] = [i.chat_msg for i in messages]
         imodel = imodel or self.imodel
@@ -331,6 +361,7 @@ class BranchOperationMixin(ABC):
             sender=self,
             recipient=self.user,
         )
+
         return ins, res
 
     async def communicate(
@@ -398,8 +429,8 @@ class BranchOperationMixin(ABC):
             tool_schemas=tool_schemas,
             **kwargs,
         )
-        await self.msgs.a_add_message(instruction=ins)
-        await self.msgs.a_add_message(assistant_response=res)
+        self.msgs.add_message(instruction=ins)
+        self.msgs.add_message(assistant_response=res)
 
         action_request_models = None
         action_response_models = None
@@ -419,7 +450,7 @@ class BranchOperationMixin(ABC):
 
         if action_request_models and not action_response_models:
             for i in action_request_models:
-                await self.msgs.a_add_message(
+                self.msgs.add_message(
                     action_request_model=i,
                     sender=self,
                     recipient=None,
@@ -475,9 +506,12 @@ class BranchOperationMixin(ABC):
                     if _d and isinstance(_d, dict):
                         parse_success = True
                         if res not in self.msgs.messages:
-                            await self.msgs.a_add_message(
-                                assistant_response=res
-                            )
+                            if isinstance(
+                                self.msgs.messages[-1], AssistantResponse
+                            ):
+                                self.msgs.messages[-1].response = res.response
+                            else:
+                                self.msgs.add_message(assistant_response=res)
                         return _d
 
                 elif request_model:
@@ -495,9 +529,16 @@ class BranchOperationMixin(ABC):
                             _d = request_model.model_validate(_d)
                             parse_success = True
                             if res not in self.msgs.messages:
-                                await self.msgs.a_add_message(
-                                    assistant_response=res
-                                )
+                                if isinstance(
+                                    self.msgs.messages[-1], AssistantResponse
+                                ):
+                                    self.msgs.messages[-1].response = (
+                                        res.response
+                                    )
+                                else:
+                                    self.msgs.add_message(
+                                        assistant_response=res
+                                    )
                             return _d
                         except Exception as e:
                             logging.warning(
