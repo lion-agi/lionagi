@@ -146,6 +146,16 @@ class AssistantResponse(RoledMessage):
         """
         return copy(self.content["assistant_response"])
 
+    @response.setter
+    def response(self, value: str) -> None:
+        """
+        Set the assistant response content.
+
+        Args:
+            value: The new response content
+        """
+        self.content["assistant_response"] = value
+
     @property
     def model_response(self) -> dict | list[dict]:
         """

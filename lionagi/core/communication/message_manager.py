@@ -498,6 +498,19 @@ class MessageManager:
             ]
         )
 
+    def remove_last_instruction_tool_schemas(self) -> None:
+        id_ = self.last_instruction.ln_id
+        self.messages[id_].tool_schemas = None
+
+    def concat_recent_action_responses_to_instruction(
+        self, instruction: Instruction
+    ) -> None:
+        for i in reversed(self.messages.progress):
+            if isinstance(self.messages[i], ActionResponse):
+                instruction.context.append(self.messages[i].content.to_dict())
+            else:
+                break
+
     def to_chat_msgs(self, progress=None) -> list[dict]:
         """
         Convert messages to chat format.
