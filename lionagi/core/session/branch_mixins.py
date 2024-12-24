@@ -294,11 +294,8 @@ class BranchOperationMixin(ABC):
             self.msgs.messages[i] for i in progress
         ]
 
-        use_ins = None
-
         if imodel.sequential_exchange:
-            use_ins = ins.model_copy()
-            self.msgs.concat_action_responses_to_instruction(use_ins)
+            self.msgs.concat_action_responses_to_instruction(ins)
             messages = [
                 i.model_copy()
                 for i in messages
@@ -341,10 +338,10 @@ class BranchOperationMixin(ABC):
                     first_instruction.guidance or ""
                 )
                 messages[0] = first_instruction
-                messages.append(use_ins or ins)
+                messages.append(ins)
 
         else:
-            messages.append(use_ins or ins)
+            messages.append(ins)
 
         kwargs["messages"] = [i.chat_msg for i in messages]
         imodel = imodel or self.imodel
