@@ -115,3 +115,8 @@ class AnthropicService(Service):
     @property
     def allowed_roles(self):
         return ["user", "assistant"]
+
+    @property
+    def sequential_exchange(self):
+        """whether the service requires user/assistant exchange"""
+        return True

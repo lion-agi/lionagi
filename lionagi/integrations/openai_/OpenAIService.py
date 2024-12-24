@@ -424,3 +424,12 @@ class OpenAIService(Service):
             method="POST",
             content_type="application/json",
         )
+
+    @property
+    def allowed_roles(self):
+        return ["user", "assistant", "system"]
+
+    @property
+    def sequential_exchange(self):
+        """whether the service requires user/assistant exchange"""
+        return False
