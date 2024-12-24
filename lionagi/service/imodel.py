@@ -121,5 +121,10 @@ class iModel:
     def allowed_roles(self):
         return self.service.allowed_roles
 
+    @property
+    def sequential_exchange(self):
+        """whether the service requires user/assistant exchange"""
+        return self.service.sequential_exchange
+
 
 __all__ = ["iModel"]
