@@ -2,13 +2,14 @@
 #
 # SPDX-License-Identifier: Apache-2.0
 
+from collections.abc import Callable
 from functools import singledispatchmethod
+from typing import Any
 
-from lionagi.core.communication.action_request import ActionRequest
-from lionagi.core.generic.log_manager import LogManager
-from lionagi.core.typing import Any, Callable
-from lionagi.libs.parse.types import to_dict, to_list
-from lionagi.protocols.operatives.action import ActionRequestModel
+from lionagi.core.communication.types import ActionRequest
+from lionagi.core.generic.types import LogManager
+from lionagi.libs.parse import to_dict, to_list
+from lionagi.protocols.operatives.types import ActionRequestModel
 
 from .function_calling import FunctionCalling
 from .tool import Tool, func_to_tool

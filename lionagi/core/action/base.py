@@ -2,8 +2,12 @@
 #
 # SPDX-License-Identifier: Apache-2.0
 
+from enum import Enum
+from typing import Any, NoReturn, override
+
+from pydantic import PrivateAttr
+
 from lionagi.core.generic.types import Element, Log
-from lionagi.core.typing import Any, Enum, NoReturn, PrivateAttr, override
 from lionagi.settings import Settings, TimedFuncCallConfig
 
 
