@@ -2,22 +2,16 @@
 #
 # SPDX-License-Identifier: Apache-2.0
 
-from pydantic import field_serializer
+from typing import Any, ClassVar, TypeVar
+
+from pydantic import Field, field_serializer
+from pydantic.fields import FieldInfo
+from pydantic_core import PydanticUndefined
 from typing_extensions import override
 
 from lionagi.core._class_registry import get_class
-from lionagi.core.typing import (
-    UNDEFINED,
-    Any,
-    ClassVar,
-    Field,
-    FieldInfo,
-    FieldModel,
-    Note,
-    OperableModel,
-    PydanticUndefined,
-    TypeVar,
-)
+from lionagi.core.models.types import FieldModel, Note, OperableModel
+from lionagi.libs.constants import UNDEFINED
 from lionagi.libs.utils import copy, time
 from lionagi.protocols.adapters.adapter import Adapter, AdapterRegistry
 from lionagi.protocols.registries._component_registry import (

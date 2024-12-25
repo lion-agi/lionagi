@@ -3,22 +3,16 @@
 # SPDX-License-Identifier: Apache-2.0
 
 from collections import deque
+from typing import Any, Literal
 
-from lionagi.core.generic.pile import Pile
-from lionagi.core.typing import (
-    ID,
-    Any,
-    Field,
-    ItemExistsError,
-    Literal,
-    Note,
-    Relational,
-    RelationError,
-    field_serializer,
-)
+from pydantic import Field, field_serializer
+
+from lionagi.core.models.types import Note
+from lionagi.core.typing import ID, ItemExistsError, Relational, RelationError
 
 from .edge import Edge
 from .node import Node
+from .pile import Pile
 
 
 class Graph(Node):
@@ -272,7 +266,7 @@ class Graph(Node):
         from lionagi.libs.package.imports import check_import
 
         check_import("networkx")
-        from networkx import DiGraph
+        from networkx import DiGraph  # type: ignore
 
         g = DiGraph(**kwargs)
         for node in self.internal_nodes:
@@ -308,8 +302,8 @@ class Graph(Node):
 
         check_import("matplotlib")
         check_import("networkx")
-        import matplotlib.pyplot as plt
-        import networkx as nx
+        import matplotlib.pyplot as plt  # type: ignore
+        import networkx as nx  # type: ignore
 
         g = self.to_networkx(**kwargs)
         pos = nx.spring_layout(g)

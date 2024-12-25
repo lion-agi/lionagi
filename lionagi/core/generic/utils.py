@@ -6,8 +6,7 @@ from collections import deque
 from collections.abc import Generator
 from typing import Any, TypeVar
 
-from lionagi.core.typing import ID, IDError
-from lionagi.core.typing._concepts import IDType, Observable
+from lionagi.core.typing import ID, IDError, IDType, Observable
 
 from .element import Element
 

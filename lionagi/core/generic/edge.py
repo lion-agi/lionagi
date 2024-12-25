@@ -2,17 +2,12 @@
 #
 # SPDX-License-Identifier: Apache-2.0
 
-from lionagi.core.typing import (
-    ID,
-    Any,
-    BaseModel,
-    Condition,
-    ConfigDict,
-    Field,
-    Note,
-    Relational,
-    field_serializer,
-)
+from typing import Any
+
+from pydantic import BaseModel, ConfigDict, Field, field_serializer
+
+from lionagi.core.models.types import Note
+from lionagi.core.typing import ID, Condition, Relational
 
 from .element import Element
 
