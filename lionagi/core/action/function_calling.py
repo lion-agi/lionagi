@@ -3,9 +3,10 @@
 # SPDX-License-Identifier: Apache-2.0
 
 import asyncio
-from typing import Any, override
+from typing import Any
 
 from pydantic import Field, PrivateAttr
+from typing_extensions import override
 
 from lionagi.libs.func import CallDecorator as cd
 from lionagi.libs.func import tcall

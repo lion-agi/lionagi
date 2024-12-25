@@ -4,9 +4,10 @@
 
 import json
 from collections.abc import Callable
-from typing import Any, Literal, override
+from typing import Any, Literal
 
 from pydantic import Field, field_serializer, field_validator
+from typing_extensions import override
 
 from lionagi.core.generic.types import Element
 from lionagi.libs.parse import function_to_schema, to_list
