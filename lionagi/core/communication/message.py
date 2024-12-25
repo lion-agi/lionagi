@@ -3,19 +3,16 @@
 # SPDX-License-Identifier: Apache-2.0
 
 import inspect
+from enum import Enum
+from typing import Any
+
+from pydantic import Field, field_serializer, field_validator
+from typing_extensions import override
 
 from lionagi.core._class_registry import get_class
 from lionagi.core.generic.types import Component, Log
-from lionagi.core.typing import (
-    Any,
-    Communicatable,
-    Enum,
-    Field,
-    Note,
-    field_serializer,
-    field_validator,
-    override,
-)
+from lionagi.core.models.types import Note
+from lionagi.core.typing import Communicatable
 from lionagi.libs.utils import copy
 
 from .base_mail import BaseMail

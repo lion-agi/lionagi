@@ -2,8 +2,12 @@
 #
 # SPDX-License-Identifier: Apache-2.0
 
+from typing import Any
+
+from pydantic import Field, field_validator
+
 from lionagi.core.generic.types import Element
-from lionagi.core.typing import ID, Any, Communicatable, Field, field_validator
+from lionagi.core.typing import ID, Communicatable
 
 from .utils import validate_sender_recipient
 

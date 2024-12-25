@@ -2,7 +2,12 @@
 #
 # SPDX-License-Identifier: Apache-2.0
 
-from lionagi.core.typing import ID, Any, JsonValue, override
+from typing import Any
+
+from pydantic import JsonValue
+from typing_extensions import override
+
+from lionagi.core.typing import ID
 from lionagi.libs.parse import to_str
 
 from .message import MessageFlag, MessageRole, RoledMessage
