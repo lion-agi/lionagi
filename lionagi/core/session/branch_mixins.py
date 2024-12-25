@@ -295,12 +295,35 @@ class BranchOperationMixin(ABC):
         ]
 
         if imodel.sequential_exchange:
-            self.msgs.concat_recent_action_responses_to_instruction(ins)
-            messages = [
-                i.model_copy()
-                for i in messages
-                if not isinstance(i, ActionResponse | ActionRequest)
-            ]
+            _to_use = []
+            _action_responses: set[ActionResponse] = set()
+
+            for i in messages:
+                if isinstance(i, ActionResponse):
+                    _action_responses.add(i)
+                if isinstance(i, AssistantResponse):
+                    _to_use.append(i.model_copy())
+                if isinstance(i, Instruction):
+                    if _action_responses:
+                        j = i.model_copy()
+                        d_ = [k.content.to_dict() for k in _action_responses]
+                        for z in d_:
+                            if z not in j.context:
+                                j.context.append(z)
+
+                        _to_use.append(j)
+                        _action_responses = set()
+                    else:
+                        _to_use.append(i)
+
+            messages = _to_use
+            if _action_responses:
+                j = ins.model_copy()
+                d_ = [k.content.to_dict() for k in _action_responses]
+                for z in d_:
+                    if z not in j.context:
+                        j.context.append(z)
+
             if messages and len(messages) > 1:
                 _msgs = [messages[0]]
 
@@ -374,7 +397,6 @@ class BranchOperationMixin(ABC):
         imodel: iModel = None,
         images: list = None,
         image_detail: Literal["low", "high", "auto"] = None,
-        tools: str | FUNCTOOL | list[FUNCTOOL | str] | bool = None,
         num_parse_retries: int = 0,
         retry_imodel: iModel = None,
         retry_kwargs: dict = {},
@@ -383,7 +405,6 @@ class BranchOperationMixin(ABC):
         ] = "return_value",
         skip_validation: bool = False,
         clear_messages: bool = False,
-        invoke_action: bool = True,
         response_format: (
             type[BaseModel] | BaseModel
         ) = None,  # alias of request_model
@@ -408,10 +429,6 @@ class BranchOperationMixin(ABC):
             )
             num_parse_retries = 5
 
-        tool_schemas = None
-        if invoke_action and tools:
-            tool_schemas = self.get_tool_schema(tools)
-
         ins, res = await self._invoke_imodel(
             instruction=instruction,
             guidance=guidance,
@@ -423,35 +440,13 @@ class BranchOperationMixin(ABC):
             imodel=imodel,
             images=images,
             image_detail=image_detail,
-            tool_schemas=tool_schemas,
             **kwargs,
         )
         self.msgs.add_message(instruction=ins)
         self.msgs.add_message(assistant_response=res)
 
-        action_request_models = None
-        action_response_models = None
-
         if skip_validation:
             return res.response
-
-        if invoke_action and tools:
-            action_request_models = ActionRequestModel.create(res.response)
-
-        if action_request_models and invoke_action:
-            action_response_models = await alcall(
-                action_request_models,
-                self.invoke_action,
-                suppress_errors=True,
-            )
-
-        if action_request_models and not action_response_models:
-            for i in action_request_models:
-                self.msgs.add_message(
-                    action_request_model=i,
-                    sender=self,
-                    recipient=None,
-                )
 
         _d = None
         if request_fields is not None or request_model is not None:
