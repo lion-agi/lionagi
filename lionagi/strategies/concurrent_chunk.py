@@ -1,6 +1,6 @@
 from typing import ClassVar
 
-from lionagi.libs.func.types import bcall
+from lionagi.libs.func import bcall
 from lionagi.libs.parse.types import to_list
 from lionagi.protocols.operatives.instruct import Instruct, InstructResponse
 

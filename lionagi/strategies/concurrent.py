@@ -1,5 +1,5 @@
 from lionagi.core.session.types import Branch
-from lionagi.libs.func.types import alcall
+from lionagi.libs.func import alcall
 from lionagi.libs.parse.types import to_list
 from lionagi.protocols.operatives.instruct import Instruct, InstructResponse
 

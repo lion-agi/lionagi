@@ -2,7 +2,7 @@ import asyncio
 import unittest
 from unittest.mock import AsyncMock, patch
 
-from lionagi.libs.func.types import rcall
+from lionagi.libs.func import rcall
 
 
 async def async_func(x: int) -> int:

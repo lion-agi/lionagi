@@ -4,7 +4,7 @@ from pydantic import Field, field_validator, model_validator
 
 from lionagi.core.models.types import FieldModel, SchemaModel
 from lionagi.core.session.types import Branch, Session
-from lionagi.libs.func.types import RCallParams
+from lionagi.libs.func import RCallParams
 from lionagi.protocols.operatives.instruct import (
     INSTRUCT_FIELD_MODEL,
     Instruct,

@@ -4,7 +4,7 @@ from unittest.mock import AsyncMock, patch
 
 import pytest
 
-from lionagi.libs.func.types import tcall
+from lionagi.libs.func import tcall
 
 
 async def async_func(x: int) -> int:

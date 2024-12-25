@@ -1,7 +1,7 @@
 from pydantic import model_validator
 
 from lionagi.core.session.types import Branch, Session
-from lionagi.libs.func.types import alcall
+from lionagi.libs.func import alcall
 from lionagi.protocols.operatives.instruct import Instruct, InstructResponse
 
 from .base import StrategyExecutor

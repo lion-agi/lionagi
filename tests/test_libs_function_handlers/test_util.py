@@ -1,7 +1,7 @@
 import asyncio
 import unittest
 
-from lionagi.libs.func.types import (
+from lionagi.libs.func import (
     force_async,
     is_coroutine_func,
     max_concurrent,

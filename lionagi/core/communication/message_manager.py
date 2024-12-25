@@ -335,7 +335,7 @@ class MessageManager:
         action_request: ActionRequest | None = None,
         action_response: ActionResponse | Any = None,
         metadata: dict = None,
-        remove_tool_schema: bool = False,
+        remove_tool_schemas: bool = False,
     ) -> RoledMessage:
         """
         Add a message to the manager.
@@ -421,7 +421,7 @@ class MessageManager:
                 images=images,
                 image_detail=image_detail,
             )
-            if remove_tool_schema:
+            if remove_tool_schemas:
                 _msg.tool_schemas = None
 
         if metadata:
