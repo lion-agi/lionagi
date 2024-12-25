@@ -51,8 +51,11 @@ class AnthropicService(Service):
         # Map model versions to their base models for shared rate limiting
         shared_models = {
             "claude-3-opus-20240229": "claude-3-opus",
-            "claude-3-sonnet-20240229": "claude-3-sonnet",
-            "claude-3-haiku-20240307": "claude-3-haiku",
+            "claude-3-sonnet-20241022": "claude-3-sonnet",
+            "claude-3-haiku-20241022": "claude-3-haiku",
+            "claude-3-opus-latest": "claude-3-opus",
+            "claude-3-sonnet-latest": "claude-3-sonnet",
+            "claude-3-haiku-latest": "claude-3-haiku",
         }
 
         if anthropic_model.model in shared_models:

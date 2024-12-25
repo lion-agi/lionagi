@@ -2,6 +2,11 @@
 #
 # SPDX-License-Identifier: Apache-2.0
 
+claude-3-5-sonnet-20241022: 8192  # Latest model
+claude-3-5-haiku-20241022: 8192   # Latest model
 claude-3-opus-20240229: 4096
 claude-3-sonnet-20240229: 4096
 claude-3-haiku-20240307: 4096
+claude-2.1: 4096
+claude-2.0: 4096
+claude-instant-1.2: 4096
