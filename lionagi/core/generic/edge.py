@@ -89,7 +89,9 @@ class Edge(Element):
         if condition:
             self.properties.content["condition"] = condition
         if label:
-            self.properties.content["label"] = label
+            self.properties.content["label"] = (
+                [label] if not isinstance(label, list) else label
+            )
         for key, value in kwargs.items():
             self.properties.content[key] = value
 
@@ -109,6 +111,28 @@ class Edge(Element):
             The serialized properties.
         """
         return value.content
+
+    @property
+    def label(self) -> list[str]:
+        """
+        Get the label of the edge.
+
+        Returns:
+            list[str]: The label of the edge.
+        """
+        return self.properties.get("label", [])
+
+    @label.setter
+    def label(self, value: list[str]) -> None:
+        """
+        Set the label of the edge.
+
+        Args:
+            value: The new label for the edge.
+        """
+        if not isinstance(value, list):
+            value = [value]
+        self.properties.content["label"] = value
 
     async def check_condition(self, *args, **kwargs) -> bool:
         """

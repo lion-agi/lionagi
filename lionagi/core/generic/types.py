@@ -10,6 +10,8 @@ from lionagi.core.generic.pile import Pile
 from lionagi.core.generic.progression import Progression
 from lionagi.core.generic.utils import to_list_type
 
+from .graph import Edge, Graph, Node
+
 __all__ = [
     "Component",
     "Flow",
@@ -20,4 +22,6 @@ __all__ = [
     "to_list_type",
     "Element",
     "LogManager",
+    "Graph",
+    "Edge",
 ]
