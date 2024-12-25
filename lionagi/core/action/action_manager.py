@@ -253,6 +253,8 @@ class ActionManager:
             ValueError: If a specified tool is not registered.
             TypeError: If an unsupported tool type is provided.
         """
+        if isinstance(tools, list | tuple) and len(tools) == 1:
+            tools = tools[0]
         if isinstance(tools, bool):
             if tools:
                 tool_kwarg = {"tools": self.schema_list}

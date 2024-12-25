@@ -68,7 +68,7 @@ class MessageField(str, Enum):
     LION_CLASS = "lion_class"
     ROLE = "role"
     CONTENT = "content"
-    id = "id"
+    LN_ID = "ln_id"
     SENDER = "sender"
     RECIPIENT = "recipient"
     METADATA = "metadata"

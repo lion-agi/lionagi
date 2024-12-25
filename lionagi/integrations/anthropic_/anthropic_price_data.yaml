@@ -3,12 +3,32 @@
 # SPDX-License-Identifier: Apache-2.0
 
 model:
+  # Latest Models (3.5 series)
+  claude-3-5-sonnet-20241022:
+    input_tokens: 3.0
+    output_tokens: 15.0
+  claude-3-5-haiku-20241022:
+    input_tokens: 0.80
+    output_tokens: 4.0
+    
+  # Claude 3 Models
   claude-3-opus-20240229:
-    input_tokens: 0.000015
-    output_tokens: 0.000075
+    input_tokens: 15.0
+    output_tokens: 75.0
   claude-3-sonnet-20240229:
-    input_tokens: 0.000003
-    output_tokens: 0.000015
+    input_tokens: 3.0
+    output_tokens: 15.0
   claude-3-haiku-20240307:
-    input_tokens: 0.0000005
-    output_tokens: 0.0000025
+    input_tokens: 0.25
+    output_tokens: 1.25
+  
+  # Legacy Models
+  claude-2.1:
+    input_tokens: 8.0
+    output_tokens: 24.0
+  claude-2.0:
+    input_tokens: 8.0
+    output_tokens: 24.0
+  claude-instant-1.2:
+    input_tokens: 0.8
+    output_tokens: 2.4
