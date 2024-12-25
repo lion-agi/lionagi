@@ -150,6 +150,8 @@ class BranchOperationMixin(ABC):
         if auto_retry_parse is True:
             operative.auto_retry_parse = True
 
+        if actions:
+            tools = tools or True
         if invoke_actions and tools:
             tool_schemas = self.get_tool_schema(tools)
 

@@ -92,9 +92,11 @@ def format_text_item(item: Any) -> str:
     for j in item:
         if isinstance(j, dict):
             for k, v in j.items():
-                msg += f"- {k}: {v} \n\n"
+                if v is not None:
+                    msg += f"- {k}: {v} \n\n"
         else:
-            msg += f"{j}\n"
+            if j is not None:
+                msg += f"{j}\n"
     return msg
 
 
