@@ -56,6 +56,8 @@ class AnthropicService(Service):
             "claude-3-opus-latest": "claude-3-opus",
             "claude-3-sonnet-latest": "claude-3-sonnet",
             "claude-3-haiku-latest": "claude-3-haiku",
+            "claude-3-sonnet-20240229": "claude-3-sonnet",
+            "claude-3-haiku-20240307": "claude-3-haiku",
         }
 
         if anthropic_model.model in shared_models:
