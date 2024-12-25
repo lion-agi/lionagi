@@ -12,6 +12,13 @@ from typing_extensions import override
 from lionagi.core.generic.types import Element
 from lionagi.libs.parse import function_to_schema, to_list
 
+__all__ = (
+    "Tool",
+    "FuncTool",
+    "func_to_tool",
+    "ToolType",
+)
+
 
 class Tool(Element):
     """Represents a callable tool with pre/post-processing capabilities.
@@ -200,4 +207,7 @@ def func_to_tool(
     return tools
 
 
-__all__ = ["Tool", "func_to_tool"]
+FuncTool = Tool | Callable
+
+# Type definitions for tool registration and lookup
+ToolType = FuncTool | str | list[FuncTool | str] | dict[str, Any] | bool

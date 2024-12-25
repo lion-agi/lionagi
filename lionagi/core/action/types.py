@@ -5,7 +5,7 @@
 from .action_manager import ActionManager
 from .base import ObservableAction
 from .function_calling import FunctionCalling
-from .tool import Tool, func_to_tool
+from .tool import FuncTool, Tool, ToolType, func_to_tool
 
 __all__ = (
     "ObservableAction",
@@ -13,4 +13,6 @@ __all__ = (
     "Tool",
     "func_to_tool",
     "ActionManager",
+    "FuncTool",
+    "ToolType",
 )
