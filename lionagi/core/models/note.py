@@ -2,18 +2,16 @@
 #
 # SPDX-License-Identifier: Apache-2.0
 
+from collections.abc import ItemsView, Iterator, ValuesView
+from typing import Any
+
+from pydantic import ConfigDict, Field, field_serializer
+from typing_extensions import override
+
+from lionagi.libs.constants import UNDEFINED
 from lionagi.libs.parse import flatten, nget, ninsert, npop, nset, to_list
 from lionagi.libs.utils import copy
 
-from ..typing._pydantic import ConfigDict, Field, field_serializer
-from ..typing._typing import (
-    UNDEFINED,
-    Any,
-    ItemsView,
-    Iterator,
-    ValuesView,
-    override,
-)
 from .base import BaseAutoModel
 
 INDICE_TYPE = str | list[str | int]

@@ -2,7 +2,8 @@
 #
 # SPDX-License-Identifier: Apache-2.0
 
-from ..typing._pydantic import ConfigDict
+from pydantic import ConfigDict
+
 from .base import BaseAutoModel
 
 __all__ = ("SchemaModel",)
