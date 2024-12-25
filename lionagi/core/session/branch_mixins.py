@@ -276,7 +276,7 @@ class BranchOperationMixin(ABC):
         **kwargs,
     ) -> tuple[Instruction, AssistantResponse]:
 
-        ins = self.msgs.create_instruction(
+        ins: Instruction = self.msgs.create_instruction(
             instruction=instruction,
             guidance=guidance,
             context=context,
@@ -295,7 +295,7 @@ class BranchOperationMixin(ABC):
         ]
 
         if imodel.sequential_exchange:
-            self.msgs.concat_action_responses_to_instruction(ins)
+            self.msgs.concat_recent_action_responses_to_instruction(ins)
             messages = [
                 i.model_copy()
                 for i in messages
