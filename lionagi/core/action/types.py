@@ -2,15 +2,19 @@
 #
 # SPDX-License-Identifier: Apache-2.0
 
-from .action_manager import ActionManager
 from .base import ObservableAction
+from .constants import ActionFieldModels
 from .function_calling import FunctionCalling
-from .tool import Tool, func_to_tool
+from .manager import ActionManager
+from .tool import FuncTool, FuncToolRef, Tool, ToolRef
 
 __all__ = (
+    "ActionFieldModels",
+    "ActionManager",
     "ObservableAction",
     "FunctionCalling",
     "Tool",
-    "func_to_tool",
-    "ActionManager",
+    "FuncTool",
+    "FuncToolRef",
+    "ToolRef",
 )

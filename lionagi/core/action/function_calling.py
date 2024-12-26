@@ -12,6 +12,8 @@ from lionagi.settings import TimedFuncCallConfig
 from .base import EventStatus, ObservableAction
 from .tool import Tool
 
+__all__ = ("FunctionCalling",)
+
 
 class FunctionCalling(ObservableAction):
     """Represents an action that calls a function with specified arguments.
@@ -148,6 +150,3 @@ class FunctionCalling(ObservableAction):
             f"FunctionCalling(function={self.func_tool.function_name}, "
             f"arguments={self.arguments})"
         )
-
-
-__all__ = ["FunctionCalling"]

@@ -10,14 +10,10 @@ from lionagi.core.typing import Any, Callable
 from lionagi.libs.parse.types import to_dict, to_list
 
 from .function_calling import FunctionCalling
-from .models import ActionRequestModel
-from .tool import Tool, func_to_tool
+from .request_response_model import ActionRequestModel
+from .tool import FuncTool, FuncToolRef, Tool, ToolRef, func_to_tool
 
-# Type definitions for tool registration and lookup
-FUNCTOOL = Tool | Callable[..., Any]
-FINDABLE_TOOL = FUNCTOOL | str
-INPUTTABLE_TOOL = dict[str, Any] | bool | FINDABLE_TOOL
-TOOL_TYPE = FINDABLE_TOOL | list[FINDABLE_TOOL] | INPUTTABLE_TOOL
+__all__ = ("ActionManager",)
 
 
 class ActionManager:
@@ -53,7 +49,7 @@ class ActionManager:
         self.registry: dict[str, Tool] = registry or {}
         self.logger = logger or LogManager()
 
-    def __contains__(self, tool: FINDABLE_TOOL) -> bool:
+    def __contains__(self, tool: FuncToolRef) -> bool:
         """Check if a tool is registered in the registry.
 
         Supports checking by:
@@ -77,7 +73,7 @@ class ActionManager:
 
     def register_tool(
         self,
-        tool: FUNCTOOL,
+        tool: FuncTool,
         update: bool = False,
     ) -> None:
         """Register a single tool in the registry.
@@ -110,7 +106,7 @@ class ActionManager:
 
     def register_tools(
         self,
-        tools: list[FUNCTOOL] | FUNCTOOL,
+        tools: list[FuncTool] | FuncTool,
         update: bool = False,
     ) -> None:
         """Register multiple tools in the registry.
@@ -235,7 +231,7 @@ class ActionManager:
 
     def get_tool_schema(
         self,
-        tools: TOOL_TYPE = False,
+        tools: ToolRef = False,
         **kwargs: Any,
     ) -> dict[str, Any]:
         """Retrieve the schema for specific tools or all tools.

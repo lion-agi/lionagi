@@ -3,12 +3,21 @@
 # SPDX-License-Identifier: Apache-2.0
 
 import json
+from typing import TypeAlias
 
 from pydantic import field_serializer, field_validator
 
 from lionagi.core.generic.types import Element
 from lionagi.core.typing import Any, Callable, Field, Literal, override
 from lionagi.libs.parse import function_to_schema, to_list
+
+__all__ = (
+    "Tool",
+    "func_to_tool",
+    "FuncTool",
+    "FuncToolRef",
+    "ToolRef",
+)
 
 
 class Tool(Element):
@@ -198,4 +207,6 @@ def func_to_tool(
     return tools
 
 
-__all__ = ["Tool", "func_to_tool"]
+FuncTool: TypeAlias = Tool | Callable[..., Any]
+FuncToolRef: TypeAlias = FuncTool | str
+ToolRef: TypeAlias = FuncToolRef | list[FuncToolRef] | bool

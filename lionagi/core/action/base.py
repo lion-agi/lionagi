@@ -2,25 +2,12 @@
 #
 # SPDX-License-Identifier: Apache-2.0
 
+from lionagi.core.constants import EventStatus
 from lionagi.core.generic.types import Element, Log
-from lionagi.core.typing import Any, Enum, NoReturn, PrivateAttr, override
+from lionagi.core.typing import Any, NoReturn, PrivateAttr, override
 from lionagi.settings import Settings, TimedFuncCallConfig
 
-
-class EventStatus(str, Enum):
-    """Status states for tracking action execution progress.
-
-    Attributes:
-        PENDING: Initial state before execution starts
-        PROCESSING: Action is currently being executed
-        COMPLETED: Action completed successfully
-        FAILED: Action failed during execution
-    """
-
-    PENDING = "pending"
-    PROCESSING = "processing"
-    COMPLETED = "completed"
-    FAILED = "failed"
+__all__ = ("ObservableAction",)
 
 
 class ObservableAction(Element):
@@ -104,6 +91,3 @@ class ObservableAction(Element):
         raise NotImplementedError(
             "An event cannot be recreated. Once it's done, it's done."
         )
-
-
-__all__ = ["ObservableAction"]
