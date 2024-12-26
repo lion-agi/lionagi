@@ -3,7 +3,6 @@
 # SPDX-License-Identifier: Apache-2.0
 
 import json
-from datetime import datetime
 
 from pydantic import field_serializer, field_validator
 

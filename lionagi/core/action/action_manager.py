@@ -8,9 +8,9 @@ from lionagi.core.communication.action_request import ActionRequest
 from lionagi.core.generic.log_manager import LogManager
 from lionagi.core.typing import Any, Callable
 from lionagi.libs.parse.types import to_dict, to_list
-from lionagi.protocols.operatives.action import ActionRequestModel
 
 from .function_calling import FunctionCalling
+from .models import ActionRequestModel
 from .tool import Tool, func_to_tool
 
 # Type definitions for tool registration and lookup
