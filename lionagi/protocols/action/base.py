@@ -1,71 +1,101 @@
-from lionagi.core.models.types import FieldModel
+# Copyright (c) 2023 - 2024, HaiyangLi <quantocean.li at gmail dot com>
+#
+# SPDX-License-Identifier: Apache-2.0
+from typing import Any, NoReturn, override
 
-from .utils import (
-    validate_action_required,
-    validate_arguments,
-    validate_function_name,
-)
+from pydantic import PrivateAttr, model_validator
 
-function_field_description = (
-    "Name of the function to call from the provided `tool_schemas`. "
-    "If no `tool_schemas` exist, set to None or leave blank. "
-    "Never invent new function names outside what's given."
-)
+from lionagi.utils import DataClass, EventStatus, TCallParams, is_coro_func
 
-arguments_field_description = (
-    "Dictionary of arguments for the chosen function. "
-    "Use only argument names/types defined in `tool_schemas`. "
-    "Never introduce extra argument names."
-)
+from ..generic.element import Element
+from ..generic.log import Log
 
-action_required_field_description = (
-    "Whether this step strictly requires performing actions. "
-    "If true, the requests in `action_requests` must be fulfilled, "
-    "assuming `tool_schemas` are available. "
-    "If false or no `tool_schemas` exist, actions are optional."
-)
-
-action_requests_field_description = (
-    "List of actions to be executed when `action_required` is true. "
-    "Each action must align with the available `tool_schemas`. "
-    "Leave empty if no actions are needed."
-)
-
-__all__ = (
-    "FUNCTION_FIELD",
-    "ARGUMENTS_FIELD",
-    "ACTION_REQUIRED_FIELD",
-    "ACTION_REQUESTS_FIELD",
-)
+__all__ = ("ObservableAction",)
 
 
-FUNCTION_FIELD = FieldModel(
-    name="function",
-    default=None,
-    annotation=str | None,
-    title="Function",
-    description=function_field_description,
-    examples=["add", "multiply", "divide"],
-    validator=validate_function_name,
-)
+class Execution(DataClass):
 
-ARGUMENTS_FIELD = FieldModel(
-    name="arguments",
-    annotation=dict | None,
-    default_factory=dict,
-    title="Action Arguments",
-    description=arguments_field_description,
-    examples=[{"num1": 1, "num2": 2}, {"x": "hello", "y": "world"}],
-    validator=validate_arguments,
-    validator_kwargs={"mode": "before"},
-)
+    def __init__(
+        self,
+        status: EventStatus,
+        duration: float,
+        response: Any,
+        error: str | None = None,
+    ):
+        self.status = status
+        self.duration = duration
+        self.response = response
+        self.error = error
 
-ACTION_REQUIRED_FIELD = FieldModel(
-    name="action_required",
-    annotation=bool,
-    default=False,
-    title="Action Required",
-    description=action_required_field_description,
-    validator=validate_action_required,
-    validator_kwargs={"mode": "before"},
-)
+    __slots__ = ("status", "duration", "response", "error")
+
+    def __str__(self) -> str:
+        return f"Execution(status={self.status}, duration={self.duration}, response={self.response}, error={self.error})"
+
+    __repr__ = __str__
+
+
+class ObservableAction(Element):
+
+    status: EventStatus = EventStatus.PENDING
+    execution: Execution | None = None
+
+    @override
+    def __init__(
+        self, timed_config: dict | TimedFuncCallConfig | None, **kwargs: Any
+    ) -> None:
+        """Initialize an ObservableAction instance.
+
+        Args:
+            timed_config: Configuration for timed function execution.
+                If None, uses default config from Settings.
+                If dict, converts to TimedFuncCallConfig.
+            **kwargs: Additional keyword arguments passed to TimedFuncCallConfig
+                if timed_config is a dict.
+        """
+        super().__init__()
+        if timed_config is None:
+            self._timed_config = Settings.Config.TIMED_CALL
+
+        else:
+            if isinstance(timed_config, TimedFuncCallConfig):
+                timed_config = timed_config.to_dict()
+            if isinstance(timed_config, dict):
+                timed_config = {**timed_config, **kwargs}
+            timed_config = TimedFuncCallConfig(**timed_config)
+            self._timed_config = timed_config
+
+    def to_log(self) -> Log:
+        """Convert the action to a log entry.
+
+        Creates a structured log entry with execution details split into
+        content and loginfo sections. Content includes execution results,
+        while loginfo includes metadata and status information.
+
+        Returns:
+            Log: A log entry representing the action's execution state
+                and results.
+        """
+        dict_ = self.to_dict()
+        dict_["status"] = self.status.value
+        content = {k: dict_[k] for k in self._content_fields if k in dict_}
+        loginfo = {k: dict_[k] for k in dict_ if k not in self._content_fields}
+        return Log(content=content, loginfo=loginfo)
+
+    @classmethod
+    def from_dict(cls, data: dict, /, **kwargs: Any) -> NoReturn:
+        """Event cannot be re-created from dictionary.
+
+        This method is intentionally not implemented as actions represent
+        one-time events that should not be recreated from serialized state.
+
+        Args:
+            data: Dictionary of serialized action data
+            **kwargs: Additional keyword arguments
+
+        Raises:
+            NotImplementedError: Always raised as actions cannot be recreated
+        """
+        raise NotImplementedError(
+            "An event cannot be recreated. Once it's done, it's done."
+        )

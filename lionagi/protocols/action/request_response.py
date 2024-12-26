@@ -1,21 +1,23 @@
+from dataclasses import Field
 from typing import Any
 
 from pydantic import BaseModel, field_validator
 
-from lionagi.core.models.types import FieldModel
+from lionagi.core_.models.types import FieldModel
 from lionagi.libs.parse import to_dict
 
-from .base import (
+from .utils import (
     ARGUMENTS_FIELD,
     FUNCTION_FIELD,
     action_requests_field_description,
+    parse_action_request,
 )
-from .utils import parse_action_request
 
 __all__ = (
     "ActionRequestModel",
-    "ACTION_REQUEST_FIELD",
     "ACTION_REQUESTS_FIELD",
+    "ActionResponseModel",
+    "ACTION_RESPONSES_FIELD",
 )
 
 
@@ -44,18 +46,26 @@ class ActionRequestModel(BaseModel):
             return []
 
 
-ACTION_REQUEST_FIELD = FieldModel(
-    name="action_request",
-    annotation=ActionRequestModel | None,
-    default=None,
-    title="Action",
-    description="**do not fill**",
-)
-
 ACTION_REQUESTS_FIELD = FieldModel(
     name="action_requests",
     annotation=list[ActionRequestModel],
     default_factory=list,
     title="Actions",
     description=action_requests_field_description,
+)
+
+
+class ActionResponseModel(BaseModel):
+
+    function: str = Field(default_factory=str)
+    arguments: dict[str, Any] = Field(default_factory=dict)
+    output: Any = None
+
+
+ACTION_RESPONSES_FIELD = FieldModel(
+    name="action_responses",
+    annotation=list[ActionResponseModel],
+    default_factory=list,
+    title="Actions",
+    description="**do not fill**",
 )
