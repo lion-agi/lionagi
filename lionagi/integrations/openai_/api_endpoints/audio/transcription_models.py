@@ -1,4 +1,4 @@
-from typing import IO, List, Optional
+from typing import IO
 
 from pydantic import BaseModel, ConfigDict, Field, field_validator
 

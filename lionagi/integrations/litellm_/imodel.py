@@ -5,6 +5,10 @@
 import json
 import os
 
+import litellm
+
+litellm.drop_params = True
+
 RESERVED_PARAMS = [
     "invoke_action",
     "instruction",
@@ -13,11 +17,6 @@ RESERVED_PARAMS = [
 
 
 class LiteiModel:
-
-    from lionagi.libs.package.imports import check_import
-
-    litellm = check_import("litellm")
-    litellm.drop_params = True
 
     def __init__(self, **kwargs):
         if "api_key" in kwargs:
