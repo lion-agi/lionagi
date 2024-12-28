@@ -1,6 +1,6 @@
 from lionagi.core.session.branch import Branch
 from lionagi.core.session.session import Session
-from lionagi.protocols.operatives.instruct import Instruct
+from lionagi.protocols_.operatives.instruct import Instruct
 
 
 def prepare_session(

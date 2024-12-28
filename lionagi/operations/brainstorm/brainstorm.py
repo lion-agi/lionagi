@@ -10,8 +10,8 @@ from lionagi.core.session.session import Session
 from lionagi.core.typing import ID, Any, BaseModel
 from lionagi.libs.func.types import alcall
 from lionagi.libs.parse import to_flat_list
-from lionagi.protocols.operatives.instruct import (
-    INSTRUCT_FIELD_MODEL,
+from lionagi.protocols_.operatives.instruct import (
+    LIST_INSTRUCT_FIELD_MODEL,
     Instruct,
     InstructResponse,
 )
@@ -149,8 +149,8 @@ async def brainstorm(
 
     # Make sure the correct field model is present
     field_models: list = kwargs.get("field_models", [])
-    if INSTRUCT_FIELD_MODEL not in field_models:
-        field_models.append(INSTRUCT_FIELD_MODEL)
+    if LIST_INSTRUCT_FIELD_MODEL not in field_models:
+        field_models.append(LIST_INSTRUCT_FIELD_MODEL)
     kwargs["field_models"] = field_models
 
     # Prepare session, branch, and the instruction
