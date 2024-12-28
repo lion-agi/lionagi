@@ -16,3 +16,15 @@ class IDError(LionError):
 
 class RelationError(LionError):
     pass
+
+
+class RateLimitError(LionError):
+    pass
+
+
+class OperationError(LionError):
+    pass
+
+
+class ExecutionError(LionError):
+    pass

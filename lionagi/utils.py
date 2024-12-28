@@ -1883,7 +1883,7 @@ def get_bins(input_: list[str], upper: int) -> list[list[int]]:
 
 
 class RCallParams(CallParams):
-    func: Callable[..., T]
+    func: Any = None
     num_retries: int = 0
     initial_delay: float = 0
     retry_delay: float = 0
@@ -1893,10 +1893,13 @@ class RCallParams(CallParams):
     retry_timing: bool = False
     verbose_retry: bool = True
 
-    async def __call__(self, *args, **kwargs):
+    async def __call__(self, func=None):
+        if self.func is None and func is None:
+            raise ValueError("a sync/async func must be provided")
+
         return await rcall(
-            self.func,
-            *args,
+            func or self.func,
+            *self.args,
             num_retries=self.num_retries,
             initial_delay=self.initial_delay,
             retry_delay=self.retry_delay,
@@ -1905,7 +1908,7 @@ class RCallParams(CallParams):
             retry_timeout=self.retry_timeout,
             retry_timing=self.retry_timing,
             verbose_retry=self.verbose_retry,
-            **kwargs,
+            **self.kwargs,
         )
 
 
