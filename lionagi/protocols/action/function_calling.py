@@ -7,7 +7,7 @@ from typing import Any
 
 from pydantic import Field, model_validator
 
-from lionagi.utils import ALCallParams, is_coro_func
+from lionagi.utils import RCallParams, is_coro_func
 
 from ..generic.event import Event, EventStatus, Execution
 from .tool import Tool
@@ -17,14 +17,14 @@ class FunctionCalling(Event):
 
     func_tool: Tool = Field(default=..., exclude=True)
     arguments: dict[str, Any] | None = None
-    alcall_params: ALCallParams | None = Field(default=None, exclude=True)
+    rcall_params: RCallParams | None = Field(default=None, exclude=True)
 
     @property
     def function(self):
         return self.func_tool.function
 
     @model_validator(mode="before")
-    def _validate_alcall_params(cls, data: dict[str, Any]) -> dict[str, Any]:
+    def _validate_rcall_params(cls, data: dict[str, Any]) -> dict[str, Any]:
         arguments: dict[str, Any] = data.get("arguments", {})
         if not isinstance(arguments, dict):
             raise ValueError("arguments must be a dictionary")
@@ -42,17 +42,17 @@ class FunctionCalling(Event):
             ):
                 raise ValueError("arguments must match the function schema")
 
-        alcall_params = data.pop("alcall_params", None)
-        if alcall_params is not None:
-            if isinstance(alcall_params, dict):
-                alcall_params = ALCallParams(**alcall_params)
+        rcall_params = data.pop("rcall_params", None)
+        if rcall_params is not None:
+            if isinstance(rcall_params, dict):
+                rcall_params = RCallParams(**rcall_params)
         else:
-            alcall_params = ALCallParams()
+            rcall_params = RCallParams()
 
         return {
             "arguments": arguments,
             "func_tool": func_tool,
-            "alcall_params": alcall_params,
+            "rcall_params": rcall_params,
         }
 
     async def invoke(self) -> Any:
@@ -91,7 +91,7 @@ class FunctionCalling(Event):
             return response
 
         try:
-            response = await self.alcall_params(0, _inner)
+            response = await self.rcall_params(_inner)
             self.execution = Execution(
                 status=EventStatus.COMPLETED,
                 duration=asyncio.get_event_loop().time() - start,
@@ -123,3 +123,9 @@ class FunctionCalling(Event):
             f"FunctionCalling(function={self.func_tool.function}, "
             f"arguments={self.arguments})"
         )
+
+    def to_dict(self) -> dict:
+        dict_ = super().to_dict()
+        dict_["function"] = self.function
+        dict_["arguments"] = self.arguments
+        return dict_
