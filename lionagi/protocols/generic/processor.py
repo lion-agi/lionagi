@@ -7,6 +7,11 @@ from .element import ID
 from .event import Event, EventStatus, Observer
 from .pile import Pile, Progression
 
+__all__ = (
+    "Processor",
+    "Executor",
+)
+
 
 class Processor(DataClass, Observer):
     """should subclass to really use this"""

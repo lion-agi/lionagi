@@ -11,7 +11,7 @@ import pandas as pd
 from pydantic import ConfigDict, Field, field_serializer, model_validator
 from pydantic.fields import FieldInfo
 
-from lionagi.errors import ItemExistsError, ItemNotFoundError
+from lionagi._errors import ItemExistsError, ItemNotFoundError
 from lionagi.utils import UNDEFINED, lcall, to_list
 
 from ._id import ID, Collective, validate_order

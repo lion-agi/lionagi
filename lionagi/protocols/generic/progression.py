@@ -4,7 +4,7 @@ from typing import Any, Generic, Self
 
 from pydantic import Field, field_serializer, field_validator
 
-from lionagi.errors import ItemNotFoundError
+from lionagi._errors import ItemNotFoundError
 
 from ._id import ID, Ordering, validate_order
 from .element import E, Element, IDType

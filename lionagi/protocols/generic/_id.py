@@ -3,6 +3,8 @@ from abc import ABC
 from collections.abc import Mapping, Sequence
 from typing import Any, Generic, TypeAlias
 
+from lionagi._errors import IDError
+
 from .element import E, Element, IDType
 
 __all__ = (
@@ -10,6 +12,8 @@ __all__ = (
     "Ordering",
     "validate_order",
     "ID",
+    "IDType",
+    "IDError",
 )
 
 

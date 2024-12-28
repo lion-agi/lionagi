@@ -5,7 +5,7 @@ import logging
 from pathlib import Path
 from typing import Any, ClassVar
 
-from pydantic import Field, field_serializer, field_validator
+from pydantic import PrivateAttr, field_serializer, field_validator
 
 from lionagi.utils import Params, ToDictParams, create_path
 
@@ -73,18 +73,17 @@ class Log(Element):
         "log_id",
         "log_created_at",
         "log_class",
-        "immutable",
     }
-    content: Element
-    immutable: bool = Field(default=False, frozen=True)
+    content: dict[str, Any]
+    _immutable: bool = PrivateAttr(False)
 
     @field_serializer("content")
-    def _serialize_content(self, content: Element) -> dict:
-        return content.to_dict()
+    def _serialize_content(self, content: Element | dict) -> dict:
+        return _to_dict(content)
 
     @field_validator("content", mode="before")
     def _validate_content(cls, value: dict) -> Element:
-        return Element.from_dict(value)
+        return _to_dict(value)
 
     def to_dict(self) -> dict:
         """Convert log to dictionary with standardized keys."""
@@ -98,16 +97,17 @@ class Log(Element):
     def from_dict(cls, data: dict) -> Log:
         """Create log from dictionary with required keys."""
         if set(data.keys()) == cls.serialized_keys:
-            return Log(
+            self = Log(
                 content=data["content"],
                 id=data["log_id"],
                 created_at=data["log_created_at"],
-                immutable=data["immutable"],
             )
+            self._immutable = True
+
         raise ValueError("Invalid Log data, must come from Log.to_dict()")
 
     def __setattr__(self, name, value):
-        if self.immutable:
+        if self._immutable:
             raise AttributeError("immutable attribute is read-only")
         return super().__setattr__(name, value)
 

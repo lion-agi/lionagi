@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+from abc import ABC
 from datetime import datetime
 from typing import Any, Self, TypeVar
 from uuid import UUID, uuid4
@@ -15,6 +16,7 @@ from pydantic import (
 )
 
 from lionagi._class_registry import LION_CLASS_REGISTRY, get_class
+from lionagi.utils import UNDEFINED
 
 __all__ = ("Element", "IDType", "E")
 
@@ -54,7 +56,12 @@ class IDType:
     __slots__ = ("_id",)
 
 
-class Element(BaseModel):
+class Observable(ABC):
+
+    id: IDType
+
+
+class Element(BaseModel, Observable):
     """Base class for all uniquely identifiable and timestamped elements."""
 
     model_config = ConfigDict(
@@ -127,6 +134,11 @@ class Element(BaseModel):
     def to_dict(self) -> dict:
         dict_ = self.model_dump()
         dict_["lion_class"] = self.class_name()
+        dict_ = self.model_dump()
+        dict_["lion_class"] = self.class_name()
+        for k in list(dict_.keys()):
+            if dict_[k] is UNDEFINED:
+                dict_.pop(k)
         return dict_
 
     @classmethod
