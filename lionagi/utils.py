@@ -1,13 +1,11 @@
-import ast
 import asyncio
 import contextlib
 import copy as _copy
-import importlib.metadata
-import importlib.util
+import functools
 import json
 import logging
-import os
 import re
+import time
 import uuid
 from abc import ABC
 from collections.abc import (
@@ -17,7 +15,9 @@ from collections.abc import (
     Mapping,
     Sequence,
 )
+from concurrent.futures import ThreadPoolExecutor
 from datetime import datetime
+from decimal import Decimal
 from enum import Enum
 from functools import lru_cache
 from pathlib import Path
@@ -38,7 +38,7 @@ logger = logging.getLogger(
 __all__ = (
     "UndefinedType",
     "KeysDict",
-    "LionModel",
+    "HashableModel",
     "Params",
     "DataClass",
     "UNDEFINED",
@@ -55,15 +55,7 @@ __all__ = (
     "bcall",
     "tcall",
     "create_path",
-    "create_instruct_collection_model_params",
     "time",
-    "get_class_file_registry",
-    "get_class_objects",
-    "get_file_classes",
-    "is_same_dtype",
-    "get_class_file_registry",
-    "get_class_objects",
-    "get_file_classes",
     "fuzzy_parse_json",
     "fix_json_string",
     "ToListParams",
@@ -72,6 +64,17 @@ __all__ = (
     "BCallParams",
     "TCallParams",
     "CreatePathParams",
+    "get_bins",
+    "EventStatus",
+    "logger",
+    "throttle",
+    "max_concurrent",
+    "force_async",
+    "rcall",
+    "RCallParams",
+    "mcall",
+    "MCallParams",
+    "to_num",
 )
 
 
@@ -101,16 +104,33 @@ class KeysDict(TypedDict, total=False):
     key: Any  # Represents any key-type pair
 
 
-class LionModel(BaseModel):
+class HashableModel(BaseModel):
 
     def to_dict(self, **kwargs) -> dict:
         """provides interface, specific methods need to be implemented in subclass kwargs for pydantic model_dump"""
-        return self.model_dump(**kwargs)
+        return {
+            k: v
+            for k, v in self.model_dump(**kwargs).items()
+            if v is not UNDEFINED
+        }
 
     @classmethod
     def from_dict(cls, data: dict, **kwargs) -> Self:
         """provides interface, specific methods need to be implemented in subclass kwargs for pydantic model_validate"""
         return cls.model_validate(data, **kwargs)
+
+    def __hash__(self):
+        # Convert kwargs to a hashable format by serializing unhashable types
+        hashable_items = []
+        for k, v in self.to_dict().items():
+            if isinstance(v, (list, dict)):
+                # Convert unhashable types to JSON string for hashing
+                v = json.dumps(v, sort_keys=True)
+            elif not isinstance(v, (str, int, float, bool, type(None))):
+                # Convert other unhashable types to string representation
+                v = str(v)
+            hashable_items.append((k, v))
+        return hash(frozenset(hashable_items))
 
 
 class Params(BaseModel):
@@ -126,6 +146,22 @@ class Params(BaseModel):
 
 class DataClass(ABC):
     pass
+
+
+class EventStatus(str, Enum):
+    """Status states for tracking action execution progress.
+
+    Attributes:
+        PENDING: Initial state before execution starts
+        PROCESSING: Action is currently being executed
+        COMPLETED: Action completed successfully
+        FAILED: Action failed during execution
+    """
+
+    PENDING = "pending"
+    PROCESSING = "processing"
+    COMPLETED = "completed"
+    FAILED = "failed"
 
 
 # --- Create a global UNDEFINED object ---
@@ -169,47 +205,6 @@ def is_same_dtype(
         result = all(isinstance(e, dtype) for e in input_)
 
     return (result, dtype) if return_dtype else result
-
-
-def get_file_classes(file_path):
-    with open(file_path) as file:
-        file_content = file.read()
-
-    tree = ast.parse(file_content)
-
-    class_file_dict = {}
-    for node in tree.body:
-        if isinstance(node, ast.ClassDef):
-            class_file_dict[node.name] = file_path
-
-    return class_file_dict
-
-
-def get_class_file_registry(folder_path, pattern_list):
-    class_file_registry = {}
-    for root, _, files in os.walk(folder_path):
-        for file in files:
-            if file.endswith(".py"):
-                if any(pattern in root for pattern in pattern_list):
-                    class_file_dict = get_file_classes(
-                        os.path.join(root, file)
-                    )
-                    class_file_registry.update(class_file_dict)
-    return class_file_registry
-
-
-def get_class_objects(file_path):
-    class_objects = {}
-    spec = importlib.util.spec_from_file_location("module.name", file_path)
-    module = importlib.util.module_from_spec(spec)
-    spec.loader.exec_module(module)
-
-    for class_name in dir(module):
-        obj = getattr(module, class_name)
-        if isinstance(obj, type):
-            class_objects[class_name] = obj
-
-    return class_objects
 
 
 @lru_cache(maxsize=None)
@@ -1848,3 +1843,840 @@ def to_json(
         return [fuzzy_parse_json(m) for m in matches]
     else:
         return [json.loads(m) for m in matches]
+
+
+def get_bins(input_: list[str], upper: int) -> list[list[int]]:
+    """Organizes indices of strings into bins based on a cumulative upper limit.
+
+    Args:
+        input_ (List[str]): The list of strings to be binned.
+        upper (int): The cumulative length upper limit for each bin.
+
+    Returns:
+        List[List[int]]: A list of bins, each bin is a list of indices from the input list.
+    """
+    current = 0
+    bins = []
+    current_bin = []
+    for idx, item in enumerate(input_):
+        if current + len(item) < upper:
+            current_bin.append(idx)
+            current += len(item)
+        else:
+            bins.append(current_bin)
+            current_bin = [idx]
+            current = len(item)
+    if current_bin:
+        bins.append(current_bin)
+    return bins
+
+
+class RCallParams(CallParams):
+    func: Callable[..., T]
+    num_retries: int = 0
+    initial_delay: float = 0
+    retry_delay: float = 0
+    backoff_factor: float = 1
+    retry_default: Any = UNDEFINED
+    retry_timeout: float | None = None
+    retry_timing: bool = False
+    verbose_retry: bool = True
+
+    async def __call__(self, *args, **kwargs):
+        return await rcall(
+            self.func,
+            *args,
+            num_retries=self.num_retries,
+            initial_delay=self.initial_delay,
+            retry_delay=self.retry_delay,
+            backoff_factor=self.backoff_factor,
+            retry_default=self.retry_default,
+            retry_timeout=self.retry_timeout,
+            retry_timing=self.retry_timing,
+            verbose_retry=self.verbose_retry,
+            **kwargs,
+        )
+
+
+async def rcall(
+    func: Callable[..., T],
+    /,
+    *args: Any,
+    num_retries: int = 0,
+    initial_delay: float = 0,
+    retry_delay: float = 0,
+    backoff_factor: float = 1,
+    retry_default: Any = UNDEFINED,
+    retry_timeout: float | None = None,
+    retry_timing: bool = False,
+    verbose_retry: bool = True,
+    error_msg: str | None = None,
+    error_map: dict[type, Callable[[Exception], None]] | None = None,
+    **kwargs: Any,
+) -> T | tuple[T, float]:
+    """
+    Retry a function asynchronously with customizable options,
+    supporting both async and sync functions via asyncio.to_thread.
+
+    Args:
+        func: The function to execute (coroutine or regular).
+        *args: Positional arguments for the function.
+        num_retries: Number of retry attempts (default: 0).
+        initial_delay: Delay before first attempt (seconds).
+        retry_delay: Delay between retry attempts (seconds).
+        backoff_factor: Factor to increase delay after each retry.
+        retry_default: Value to return if all attempts fail (instead of raising).
+        retry_timeout: Timeout for each function execution (seconds).
+        retry_timing: If True, return execution duration as well.
+        verbose_retry: If True, print retry messages.
+        error_msg: Custom error message prefix for raised RuntimeError.
+        error_map: Dict mapping exception types to custom handlers.
+        **kwargs: Additional keyword arguments for the function.
+
+    Returns:
+        - T, or tuple[T, float] if retry_timing is True.
+        - retry_default if all retries fail and retry_default != UNDEFINED.
+
+    Raises:
+        RuntimeError: If function fails after all retries.
+        asyncio.TimeoutError: If execution exceeds retry_timeout (per attempt).
+    """
+
+    async def _run_func(
+        _func: Callable[..., T], *_fargs: Any, **_fkwargs: Any
+    ) -> T:
+        """Runs `_func` in the appropriate context: directly if async, or via `to_thread` if sync."""
+        if asyncio.iscoroutinefunction(_func):
+            return await _func(*_fargs, **_fkwargs)
+        else:
+            return await asyncio.to_thread(_func, *_fargs, **_fkwargs)
+
+    last_exception: Exception | None = None
+    await asyncio.sleep(initial_delay)
+
+    for attempt in range(num_retries + 1):
+        try:
+            if verbose_retry and attempt > 0:
+                print(
+                    f"Retry attempt {attempt}/{num_retries}: {error_msg or ''}"
+                )
+
+            start_time = time.perf_counter()
+
+            if retry_timeout is not None:
+                result = await asyncio.wait_for(
+                    _run_func(func, *args, **kwargs),
+                    timeout=retry_timeout,
+                )
+            else:
+                result = await _run_func(func, *args, **kwargs)
+
+            duration = time.perf_counter() - start_time
+            return (result, duration) if retry_timing else result
+
+        except Exception as e:
+            last_exception = e
+
+            # Invoke custom handler if one is defined for this exception type
+            if error_map and type(e) in error_map:
+                error_map[type(e)](e)
+
+            # If we still have retries left, wait and try again
+            if attempt < num_retries:
+                if verbose_retry:
+                    print(
+                        f"Attempt {attempt + 1} failed: {e}. "
+                        f"Will retry after {retry_delay:.2f}s..."
+                    )
+                await asyncio.sleep(retry_delay)
+                retry_delay *= backoff_factor
+            else:
+                # No retries left
+                break
+
+    # Exhausted all attempts
+    if retry_default is not UNDEFINED:
+        return retry_default
+    if last_exception is not None:
+        if error_msg and type(last_exception) in error_map:
+            return await custom_error_handler(last_exception, error_msg)
+
+        # Otherwise, raise a runtime error explaining the failure
+        raise RuntimeError(
+            f"{error_msg or ''} Operation failed after {num_retries + 1} attempts: {last_exception}"
+        ) from last_exception
+
+    # If no exception was captured but we didn't return, raise a generic error.
+    raise RuntimeError(
+        f"{error_msg or ''} Operation failed after {num_retries + 1} attempts."
+    )
+
+
+class Throttle:
+    """
+    Provide a throttling mechanism for function calls.
+
+    When used as a decorator, it ensures that the decorated function can only
+    be called once per specified period. Subsequent calls within this period
+    are delayed to enforce this constraint.
+
+    Attributes:
+        period: The minimum time period (in seconds) between successive calls.
+    """
+
+    def __init__(self, period: float) -> None:
+        """
+        Initialize a new instance of Throttle.
+
+        Args:
+            period: The minimum time period (in seconds) between
+                successive calls.
+        """
+        self.period = period
+        self.last_called = 0
+
+    def __call__(self, func: Callable[..., T]) -> Callable[..., T]:
+        """
+        Decorate a synchronous function with the throttling mechanism.
+
+        Args:
+            func: The synchronous function to be throttled.
+
+        Returns:
+            The throttled synchronous function.
+        """
+
+        @functools.wraps(func)
+        def wrapper(*args, **kwargs) -> Any:
+            elapsed = time() - self.last_called
+            if elapsed < self.period:
+                time.sleep(self.period - elapsed)
+            self.last_called = time()
+            return func(*args, **kwargs)
+
+        return wrapper
+
+    def __call_async__(
+        self, func: Callable[..., Callable[..., T]]
+    ) -> Callable[..., Callable[..., T]]:
+        """
+        Decorate an asynchronous function with the throttling mechanism.
+
+        Args:
+            func: The asynchronous function to be throttled.
+
+        Returns:
+            The throttled asynchronous function.
+        """
+
+        @functools.wraps(func)
+        async def wrapper(*args, **kwargs) -> Any:
+            elapsed = time() - self.last_called
+            if elapsed < self.period:
+                await asyncio.sleep(self.period - elapsed)
+            self.last_called = time()
+            return await func(*args, **kwargs)
+
+        return wrapper
+
+
+def force_async(fn: Callable[..., T]) -> Callable[..., Callable[..., T]]:
+    """
+    Convert a synchronous function to an asynchronous function
+    using a thread pool.
+
+    Args:
+        fn: The synchronous function to convert.
+
+    Returns:
+        The asynchronous version of the function.
+    """
+    pool = ThreadPoolExecutor()
+
+    @functools.wraps(fn)
+    def wrapper(*args, **kwargs):
+        future = pool.submit(fn, *args, **kwargs)
+        return asyncio.wrap_future(future)  # Make it awaitable
+
+    return wrapper
+
+
+def throttle(
+    func: Callable[..., T], period: float
+) -> Callable[..., Callable[..., T]]:
+    """
+    Throttle function execution to limit the rate of calls.
+
+    Args:
+        func: The function to throttle.
+        period: The minimum time interval between consecutive calls.
+
+    Returns:
+        The throttled function.
+    """
+    if not is_coro_func(func):
+        func = force_async(func)
+    throttle_instance = Throttle(period)
+
+    @functools.wraps(func)
+    async def wrapper(*args, **kwargs):
+        await throttle_instance(func)(*args, **kwargs)
+        return await func(*args, **kwargs)
+
+    return wrapper
+
+
+def max_concurrent(
+    func: Callable[..., T], limit: int
+) -> Callable[..., Callable[..., T]]:
+    """
+    Limit the concurrency of function execution using a semaphore.
+
+    Args:
+        func: The function to limit concurrency for.
+        limit: The maximum number of concurrent executions.
+
+    Returns:
+        The function wrapped with concurrency control.
+    """
+    if not is_coro_func(func):
+        func = force_async(func)
+    semaphore = asyncio.Semaphore(limit)
+
+    @functools.wraps(func)
+    async def wrapper(*args, **kwargs):
+        async with semaphore:
+            return await func(*args, **kwargs)
+
+    return wrapper
+
+
+class MCallParams(CallParams):
+    func: Any = None
+    explode: bool = False
+    num_retries: int = 0
+    initial_delay: float = 0
+    retry_delay: float = 0
+    backoff_factor: float = 1
+    retry_default: Any = UNDEFINED
+    retry_timeout: float | None = None
+    retry_timing: bool = False
+    max_concurrent: int | None = None
+    throttle_period: float | None = None
+    dropna: bool = False
+
+    async def __call__(self, input_, /, **kwargs):
+        return await mcall(
+            input_,
+            self.func,
+            explode=self.explode,
+            num_retries=self.num_retries,
+            initial_delay=self.initial_delay,
+            retry_delay=self.retry_delay,
+            backoff_factor=self.backoff_factor,
+            retry_default=self.retry_default,
+            retry_timeout=self.retry_timeout,
+            retry_timing=self.retry_timing,
+            max_concurrent=self.max_concurrent,
+            throttle_period=self.throttle_period,
+            dropna=self.dropna,
+            **kwargs,
+        )
+
+
+async def mcall(
+    input_: Any,
+    func: Callable[..., T] | Sequence[Callable[..., T]],
+    /,
+    *,
+    explode: bool = False,
+    num_retries: int = 0,
+    initial_delay: float = 0,
+    retry_delay: float = 0,
+    backoff_factor: float = 1,
+    retry_default: Any = UNDEFINED,
+    retry_timeout: float | None = None,
+    retry_timing: bool = False,
+    verbose_retry: bool = True,
+    error_msg: str | None = None,
+    error_map: dict[type, Callable[[Exception], None]] | None = None,
+    max_concurrent: int | None = None,
+    throttle_period: float | None = None,
+    dropna: bool = False,
+    **kwargs: Any,
+) -> list[T] | list[tuple[T, float]]:
+    """
+    Apply functions over inputs asynchronously with customizable options.
+
+    Args:
+        input_: The input data to be processed.
+        func: The function or sequence of functions to be applied.
+        explode: Whether to apply each function to all inputs.
+        retries: Number of retry attempts for each function call.
+        initial_delay: Initial delay before starting execution.
+        delay: Delay between retry attempts.
+        backoff_factor: Factor by which delay increases after each attempt.
+        default: Default value to return if all attempts fail.
+        timeout: Timeout for each function execution.
+        timing: Whether to return the execution duration.
+        verbose: Whether to print retry messages.
+        error_msg: Custom error message.
+        error_map: Dictionary mapping exception types to error handlers.
+        max_concurrent: Maximum number of concurrent executions.
+        throttle_period: Minimum time period between function executions.
+        dropna: Whether to drop None values from the output list.
+        **kwargs: Additional keyword arguments for the functions.
+
+    Returns:
+        List of results, optionally including execution durations if timing
+        is True.
+
+    Raises:
+        ValueError: If the length of inputs and functions don't match when
+            not exploding the function calls.
+    """
+    input_ = to_list(input_, flatten=False, dropna=False)
+    func = to_list(func, flatten=False, dropna=False)
+
+    if explode:
+        tasks = [
+            alcall(
+                input_,
+                f,
+                num_retries=num_retries,
+                initial_delay=initial_delay,
+                retry_delay=retry_delay,
+                backoff_factor=backoff_factor,
+                retry_default=retry_default,
+                retry_timeout=retry_timeout,
+                retry_timing=retry_timing,
+                verbose_retry=verbose_retry,
+                error_msg=error_msg,
+                error_map=error_map,
+                max_concurrent=max_concurrent,
+                throttle_period=throttle_period,
+                dropna=dropna,
+                **kwargs,
+            )
+            for f in func
+        ]
+        return await asyncio.gather(*tasks)
+    elif len(func) == 1:
+        tasks = [
+            rcall(
+                func[0],
+                inp,
+                num_retries=num_retries,
+                initial_delay=initial_delay,
+                retry_delay=retry_delay,
+                backoff_factor=backoff_factor,
+                retry_default=retry_default,
+                retry_timeout=retry_timeout,
+                retry_timing=retry_timing,
+                verbose_retry=verbose_retry,
+                error_msg=error_msg,
+                error_map=error_map,
+                **kwargs,
+            )
+            for inp in input_
+        ]
+        return await asyncio.gather(*tasks)
+
+    elif len(input_) == len(func):
+        tasks = [
+            rcall(
+                f,
+                inp,
+                num_retries=num_retries,
+                initial_delay=initial_delay,
+                retry_delay=retry_delay,
+                backoff_factor=backoff_factor,
+                retry_default=retry_default,
+                retry_timeout=retry_timeout,
+                retry_timing=retry_timing,
+                verbose_retry=verbose_retry,
+                error_msg=error_msg,
+                error_map=error_map,
+                **kwargs,
+            )
+            for inp, f in zip(input_, func)
+        ]
+        return await asyncio.gather(*tasks)
+    else:
+        raise ValueError(
+            "Inputs and functions must be the same length for map calling."
+        )
+
+
+# Type definitions
+NUM_TYPE_LITERAL = Literal["int", "float", "complex"]
+NUM_TYPES = type[int] | type[float] | type[complex] | NUM_TYPE_LITERAL
+NumericType = TypeVar("NumericType", int, float, complex)
+
+# Type mapping
+TYPE_MAP = {"int": int, "float": float, "complex": complex}
+
+# Regex patterns for different numeric formats
+PATTERNS = {
+    "scientific": r"[-+]?(?:\d*\.)?\d+[eE][-+]?\d+",
+    "complex_sci": r"[-+]?(?:\d*\.)?\d+(?:[eE][-+]?\d+)?[-+](?:\d*\.)?\d+(?:[eE][-+]?\d+)?[jJ]",
+    "complex": r"[-+]?(?:\d*\.)?\d+[-+](?:\d*\.)?\d+[jJ]",
+    "pure_imaginary": r"[-+]?(?:\d*\.)?\d*[jJ]",
+    "percentage": r"[-+]?(?:\d*\.)?\d+%",
+    "fraction": r"[-+]?\d+/\d+",
+    "decimal": r"[-+]?(?:\d*\.)?\d+",
+    "special": r"[-+]?(?:inf|infinity|nan)",
+}
+
+
+def to_num(
+    input_: Any,
+    /,
+    *,
+    upper_bound: int | float | None = None,
+    lower_bound: int | float | None = None,
+    num_type: NUM_TYPES = float,
+    precision: int | None = None,
+    num_count: int = 1,
+) -> int | float | complex | list[int | float | complex]:
+    """Convert input to numeric type(s) with validation and bounds checking.
+
+    Args:
+        input_value: The input to convert to number(s).
+        upper_bound: Maximum allowed value (inclusive).
+        lower_bound: Minimum allowed value (inclusive).
+        num_type: Target numeric type ('int', 'float', 'complex' or type objects).
+        precision: Number of decimal places for rounding (float only).
+        num_count: Number of numeric values to extract.
+
+    Returns:
+        Converted number(s). Single value if num_count=1, else list.
+
+    Raises:
+        ValueError: For invalid input or out of bounds values.
+        TypeError: For invalid input types or invalid type conversions.
+    """
+    # Validate input
+    if isinstance(input_, (list, tuple)):
+        raise TypeError("Input cannot be a sequence")
+
+    # Handle boolean input
+    if isinstance(input_, bool):
+        return validate_num_type(num_type)(input_)
+
+    # Handle direct numeric input
+    if isinstance(input_, (int, float, complex, Decimal)):
+        inferred_type = type(input_)
+        if isinstance(input_, Decimal):
+            inferred_type = float
+        value = float(input_) if not isinstance(input_, complex) else input_
+        value = apply_bounds(value, upper_bound, lower_bound)
+        value = apply_precision(value, precision)
+        return convert_type(value, validate_num_type(num_type), inferred_type)
+
+    # Convert input to string and extract numbers
+    input_str = str(input_)
+    number_matches = extract_numbers(input_str)
+
+    if not number_matches:
+        raise ValueError(f"No valid numbers found in: {input_str}")
+
+    # Process numbers
+    results = []
+    target_type = validate_num_type(num_type)
+
+    number_matches = (
+        number_matches[:num_count]
+        if num_count < len(number_matches)
+        else number_matches
+    )
+
+    for type_and_value in number_matches:
+        try:
+            # Infer appropriate type
+            inferred_type = infer_type(type_and_value)
+
+            # Parse to numeric value
+            value = parse_number(type_and_value)
+
+            # Apply bounds if not complex
+            value = apply_bounds(value, upper_bound, lower_bound)
+
+            # Apply precision
+            value = apply_precision(value, precision)
+
+            # Convert to target type if different from inferred
+            value = convert_type(value, target_type, inferred_type)
+
+            results.append(value)
+
+        except Exception as e:
+            if len(type_and_value) == 2:
+                raise type(e)(
+                    f"Error processing {type_and_value[1]}: {str(e)}"
+                )
+            raise type(e)(f"Error processing {type_and_value}: {str(e)}")
+
+    if results and num_count == 1:
+        return results[0]
+    return results
+
+
+def extract_numbers(text: str) -> list[tuple[str, str]]:
+    """Extract numeric values from text using ordered regex patterns.
+
+    Args:
+        text: The text to extract numbers from.
+
+    Returns:
+        List of tuples containing (pattern_type, matched_value).
+    """
+    combined_pattern = "|".join(PATTERNS.values())
+    matches = re.finditer(combined_pattern, text, re.IGNORECASE)
+    numbers = []
+
+    for match in matches:
+        value = match.group()
+        # Check which pattern matched
+        for pattern_name, pattern in PATTERNS.items():
+            if re.fullmatch(pattern, value, re.IGNORECASE):
+                numbers.append((pattern_name, value))
+                break
+
+    return numbers
+
+
+def validate_num_type(num_type: NUM_TYPES) -> type:
+    """Validate and normalize numeric type specification.
+
+    Args:
+        num_type: The numeric type to validate.
+
+    Returns:
+        The normalized Python type object.
+
+    Raises:
+        ValueError: If the type specification is invalid.
+    """
+    if isinstance(num_type, str):
+        if num_type not in TYPE_MAP:
+            raise ValueError(f"Invalid number type: {num_type}")
+        return TYPE_MAP[num_type]
+
+    if num_type not in (int, float, complex):
+        raise ValueError(f"Invalid number type: {num_type}")
+    return num_type
+
+
+def infer_type(value: tuple[str, str]) -> type:
+    """Infer appropriate numeric type from value.
+
+    Args:
+        value: Tuple of (pattern_type, matched_value).
+
+    Returns:
+        The inferred Python type.
+    """
+    pattern_type, _ = value
+    if pattern_type in ("complex", "complex_sci", "pure_imaginary"):
+        return complex
+    return float
+
+
+def convert_special(value: str) -> float:
+    """Convert special float values (inf, -inf, nan).
+
+    Args:
+        value: The string value to convert.
+
+    Returns:
+        The converted float value.
+    """
+    value = value.lower()
+    if "infinity" in value or "inf" in value:
+        return float("-inf") if value.startswith("-") else float("inf")
+    return float("nan")
+
+
+def convert_percentage(value: str) -> float:
+    """Convert percentage string to float.
+
+    Args:
+        value: The percentage string to convert.
+
+    Returns:
+        The converted float value.
+
+    Raises:
+        ValueError: If the percentage value is invalid.
+    """
+    try:
+        return float(value.rstrip("%")) / 100
+    except ValueError as e:
+        raise ValueError(f"Invalid percentage value: {value}") from e
+
+
+def convert_complex(value: str) -> complex:
+    """Convert complex number string to complex.
+
+    Args:
+        value: The complex number string to convert.
+
+    Returns:
+        The converted complex value.
+
+    Raises:
+        ValueError: If the complex number is invalid.
+    """
+    try:
+        # Handle pure imaginary numbers
+        if value.endswith("j") or value.endswith("J"):
+            if value in ("j", "J"):
+                return complex(0, 1)
+            if value in ("+j", "+J"):
+                return complex(0, 1)
+            if value in ("-j", "-J"):
+                return complex(0, -1)
+            if "+" not in value and "-" not in value[1:]:
+                # Pure imaginary number
+                imag = float(value[:-1] or "1")
+                return complex(0, imag)
+
+        return complex(value.replace(" ", ""))
+    except ValueError as e:
+        raise ValueError(f"Invalid complex number: {value}") from e
+
+
+def convert_type(
+    value: float | complex,
+    target_type: type,
+    inferred_type: type,
+) -> int | float | complex:
+    """Convert value to target type if specified, otherwise use inferred type.
+
+    Args:
+        value: The value to convert.
+        target_type: The requested target type.
+        inferred_type: The inferred type from the value.
+
+    Returns:
+        The converted value.
+
+    Raises:
+        TypeError: If the conversion is not possible.
+    """
+    try:
+        # If no specific type requested, use inferred type
+        if target_type is float and inferred_type is complex:
+            return value
+
+        # Handle explicit type conversions
+        if target_type is int and isinstance(value, complex):
+            raise TypeError("Cannot convert complex number to int")
+        return target_type(value)
+    except (ValueError, TypeError) as e:
+        raise TypeError(
+            f"Cannot convert {value} to {target_type.__name__}"
+        ) from e
+
+
+def apply_bounds(
+    value: float | complex,
+    upper_bound: float | None = None,
+    lower_bound: float | None = None,
+) -> float | complex:
+    """Apply bounds checking to numeric value.
+
+    Args:
+        value: The value to check.
+        upper_bound: Maximum allowed value (inclusive).
+        lower_bound: Minimum allowed value (inclusive).
+
+    Returns:
+        The validated value.
+
+    Raises:
+        ValueError: If the value is outside bounds.
+    """
+    if isinstance(value, complex):
+        return value
+
+    if upper_bound is not None and value > upper_bound:
+        raise ValueError(f"Value {value} exceeds upper bound {upper_bound}")
+    if lower_bound is not None and value < lower_bound:
+        raise ValueError(f"Value {value} below lower bound {lower_bound}")
+    return value
+
+
+def apply_precision(
+    value: float | complex,
+    precision: int | None,
+) -> float | complex:
+    """Apply precision rounding to numeric value.
+
+    Args:
+        value: The value to round.
+        precision: Number of decimal places.
+
+    Returns:
+        The rounded value.
+    """
+    if precision is None or isinstance(value, complex):
+        return value
+    if isinstance(value, float):
+        return round(value, precision)
+    return value
+
+
+def parse_number(type_and_value: tuple[str, str]) -> float | complex:
+    """Parse string to numeric value based on pattern type.
+
+    Args:
+        type_and_value: Tuple of (pattern_type, matched_value).
+
+    Returns:
+        The parsed numeric value.
+
+    Raises:
+        ValueError: If parsing fails.
+    """
+    num_type, value = type_and_value
+    value = value.strip()
+
+    try:
+        if num_type == "special":
+            return convert_special(value)
+
+        if num_type == "percentage":
+            return convert_percentage(value)
+
+        if num_type == "fraction":
+            if "/" not in value:
+                raise ValueError(f"Invalid fraction: {value}")
+            if value.count("/") > 1:
+                raise ValueError(f"Invalid fraction: {value}")
+            num, denom = value.split("/")
+            if not (num.strip("-").isdigit() and denom.isdigit()):
+                raise ValueError(f"Invalid fraction: {value}")
+            denom_val = float(denom)
+            if denom_val == 0:
+                raise ValueError("Division by zero")
+            return float(num) / denom_val
+        if num_type in ("complex", "complex_sci", "pure_imaginary"):
+            return convert_complex(value)
+        if num_type == "scientific":
+            if "e" not in value.lower():
+                raise ValueError(f"Invalid scientific notation: {value}")
+            parts = value.lower().split("e")
+            if len(parts) != 2:
+                raise ValueError(f"Invalid scientific notation: {value}")
+            if not (parts[1].lstrip("+-").isdigit()):
+                raise ValueError(f"Invalid scientific notation: {value}")
+            return float(value)
+        if num_type == "decimal":
+            return float(value)
+
+        raise ValueError(f"Unknown number type: {num_type}")
+    except Exception as e:
+        # Preserve the specific error type but wrap with more context
+        raise type(e)(f"Failed to parse {value} as {num_type}: {str(e)}")
