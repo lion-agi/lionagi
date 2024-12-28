@@ -1,6 +1,6 @@
 [project]
 name = "lionagi"
-version = "0.5.5"
+version = "0.6.0"
 description = "An AGentic Intelligence Operating System."
 authors = [
     { name = "HaiyangLi", email = "quantocean.li@gmail.com" },
@@ -11,6 +11,7 @@ dependencies = [
     "aiohttp>=3.11.10",
     "jinja2>=3.1.4",
     "litellm>=1.55.3",
+    "networkx>=3.4.2",
     "pandas>=2.0.0",
     "pillow>=11.0.0",
     "pydantic>=2.10.3",
