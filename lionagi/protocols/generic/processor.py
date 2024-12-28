@@ -158,7 +158,7 @@ class Executor(DataClass, Observer):
     def __init__(
         self,
         processor_config: dict[str, Any] = None,
-        strict_event_type: bool = True,
+        strict_event_type: bool = False,
     ):
         self.processor_config = processor_config or {}
         self.pending = Progression()
