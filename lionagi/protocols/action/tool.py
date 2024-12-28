@@ -2,14 +2,16 @@
 #
 # SPDX-License-Identifier: Apache-2.0
 
+import inspect
 import json
-from typing import TypeAlias
+from collections.abc import Callable
+from typing import Any, Self, TypeAlias, override
 
-from pydantic import field_serializer, field_validator
+from pydantic import Field, field_validator, model_validator
 
-from lionagi.core_.generic.types import Element
-from lionagi.core_.typing import Any, Callable, Field, Literal, override
-from lionagi.libs.parse import function_to_schema, to_list
+from lionagi.libs.schema import function_to_schema
+
+from ..generic.element import Element
 
 __all__ = (
     "Tool",
@@ -47,50 +49,29 @@ class Tool(Element):
         parser: Optional function to parse result to JSON format.
     """
 
-    function: Callable[..., Any] = Field(
-        ...,
-        description="The callable function of the tool.",
-    )
-    schema_: dict[str, Any] | None = Field(
-        default=None,
-        description="Schema of the function in OpenAI format.",
-    )
-    pre_processor: Callable[[Any], Any] | None = Field(
-        default=None,
-        description="Function to preprocess input arguments.",
-    )
-    pre_processor_kwargs: dict[str, Any] | None = Field(
-        default=None,
-        description="Keyword arguments for the pre-processor.",
-    )
-    post_processor: Callable[[Any], Any] | None = Field(
-        default=None,
-        description="Function to post-process the result.",
-    )
-    post_processor_kwargs: dict[str, Any] | None = Field(
-        default=None,
-        description="Keyword arguments for the post-processor.",
-    )
-    parser: Callable[[Any], Any] | None = Field(
-        default=None,
-        description="Function to parse result to JSON serializable format.",
-    )
+    func_callable: Callable[..., Any] = Field(..., exclude=True)
+    tool_schema: dict[str, Any] | None = None
+    preprocessor: Callable[[Any], Any] | None = Field(
+        None, exclude=True
+    )  # should in take arguments and return processed kwargs for the function, the function calling arguments should be first positional argument of the preprocessor
+    preprocessor_kwargs: dict[str, Any] | None = Field(None, exclude=True)
+    postprocessor: Callable[[Any], Any] | None = Field(
+        None, exclude=True
+    )  # should intake function output and return a processed output, the function output should be the first positional argument of the postprocessor
+    postprocessor_kwargs: dict[str, Any] | None = Field(None, exclude=True)
+    strict_func_call: bool = Field(False, exclude=False)
 
-    @override
-    def __init__(self, **data: Any) -> None:
-        """Initialize a Tool instance.
+    @model_validator(mode="after")
+    def validate_tool_schema(self) -> Self:
+        if self.tool_schema is None:
+            self.tool_schema = function_to_schema(self.func_callable)
+        if self.preprocessor is not None:
+            self.preprocessor_kwargs = self.preprocessor_kwargs or {}
+        if self.postprocessor is not None:
+            self.postprocessor_kwargs = self.postprocessor_kwargs or {}
+        return self
 
-        If schema_ is not provided, automatically generates it from the
-        function's signature and docstring.
-
-        Args:
-            **data: Keyword arguments to initialize the Tool instance.
-        """
-        super().__init__(**data)
-        if self.schema_ is None:
-            self.schema_ = function_to_schema(self.function)
-
-    @field_validator("function")
+    @field_validator("func_callable")
     def _validate_function(cls, v: Any) -> Callable[..., Any]:
         if not callable(v):
             raise ValueError("Function must be callable.")
@@ -98,43 +79,14 @@ class Tool(Element):
             raise ValueError("Function must have a name.")
         return v
 
-    @field_serializer(
-        "function",
-        "pre_processor",
-        "post_processor",
-        "parser",
-        "pre_processor_kwargs",
-        "post_processor_kwargs",
-    )
-    def serialize_field(self, v: Any) -> str | None:
-        """Serialize various fields of the Tool class.
-
-        Handles serialization of callable functions and dictionaries:
-        - Functions are serialized to their names
-        - Dictionaries are serialized to JSON strings
-        - Other values are returned as None
-
-        Args:
-            v: The value to serialize.
-
-        Returns:
-            str: Serialized representation of the value.
-            None: If value cannot be serialized.
-        """
-        if callable(v):
-            return v.__name__
-        elif isinstance(v, dict):
-            return json.dumps(v)
-        return None
-
     @property
-    def function_name(self) -> str:
+    def function(self) -> str:
         """Get the name of the function from the schema.
 
         Returns:
             str: The name of the function as defined in the schema.
         """
-        return self.schema_["function"]["name"]
+        return self.tool_schema["function"]["name"]
 
     @override
     def __str__(self) -> str:
@@ -146,65 +98,26 @@ class Tool(Element):
         Returns:
             str: A detailed string representation of the Tool.
         """
-        timestamp_str = self.created_datetime.strftime("%Y-%m-%d %H:%M:%S")
+        timestamp_str = self.created_at.strftime("%Y-%m-%d %H:%M:%S")
         return (
-            f"{self.class_name()}(ln_id={str(self.ln_id)[:6]}.., "
+            f"{self.class_name()}(id={str(self.id)[:6]}.., "
             f"created_timestamp={timestamp_str}), "
-            f"schema_={json.dumps(self.schema_, indent=4)}"
+            f"schema_={json.dumps(self.tool_schema, indent=4)}"
         )
 
+    @property
+    def required_fields(self) -> set[str]:
+        return set(self.tool_schema["function"]["required_fields"])
 
-def func_to_tool(
-    func_: Callable[..., Any] | list[Callable[..., Any]],
-    parser: Callable[[Any], Any] | list[Callable[[Any], Any]] | None = None,
-    docstring_style: Literal["google", "rest"] = "google",
-    **kwargs,
-) -> list[Tool]:
-    """Convert functions to Tool objects.
-
-    Helper function to create Tool instances from callable functions.
-    Supports both single functions and lists of functions, with optional
-    result parsers for each function.
-
-    Args:
-        func_: Single function or list of functions to convert.
-        parser: Optional parser(s) for function results. If provided for
-            multiple functions, must match length of func_ list.
-        docstring_style: Style of docstring parsing for schema generation.
-            Supports 'google' or 'rest' format.
-        **kwargs: Additional keyword arguments for Tool constructor.
-
-    Returns:
-        list[Tool]: List of Tool objects created from the functions.
-
-    Raises:
-        ValueError: If number of parsers doesn't match number of functions.
-
-    Example:
-        >>> def my_func(x: int) -> str:
-        ...     '''Convert int to string.'''
-        ...     return str(x)
-        >>> tools = func_to_tool(my_func)
-        >>> assert len(tools) == 1
-        >>> assert isinstance(tools[0], Tool)
-    """
-    funcs = to_list(func_)
-    parsers = to_list(parser)
-
-    if parser and len(funcs) != len(parsers):
-        raise ValueError("Length of parser must match length of func, ")
-
-    tools = []
-    for idx, func in enumerate(funcs):
-        tool = Tool(
-            function=func,
-            schema_=function_to_schema(func, style=docstring_style),
-            parser=parsers[idx] if parser else None,
-            **kwargs,
-        )
-        tools.append(tool)
-
-    return tools
+    @property
+    def minimum_acceptable_fields(self) -> set[str]:
+        return {
+            k
+            for k, v in inspect.signature(
+                self.func_callable
+            ).parameters.items()
+            if v.default == inspect.Parameter.empty
+        }
 
 
 FuncTool: TypeAlias = Tool | Callable[..., Any]

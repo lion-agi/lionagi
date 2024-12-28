@@ -2,38 +2,23 @@
 #
 # SPDX-License-Identifier: Apache-2.0
 
-from functools import singledispatchmethod
 
-from lionagi.core_.communication.action_request import ActionRequest
-from lionagi.core_.generic.log_manager import LogManager
-from lionagi.core_.typing import Any, Callable
-from lionagi.libs.parse.types import to_dict, to_list
+from collections.abc import Callable
+from typing import Any
 
+from lionagi.protocols.generic.event import Execution
+from lionagi.utils import EventStatus, to_list
+
+from ..generic.log import LogManager
+from ..messages.action_request import ActionRequest
 from .function_calling import FunctionCalling
 from .request_response_model import ActionRequestModel
-from .tool import FuncTool, FuncToolRef, Tool, ToolRef, func_to_tool
+from .tool import FuncTool, FuncToolRef, Tool, ToolRef
 
 __all__ = ("ActionManager",)
 
 
 class ActionManager:
-    """Manages registration and execution of tools.
-
-    The ActionManager serves as a central registry for tools, providing:
-    1. Tool registration and management
-    2. Function call matching to registered tools
-    3. Tool invocation with argument handling
-    4. Logging of tool execution
-
-    Tools can be registered either as Tool objects or as callable functions
-    (which are automatically converted to Tool objects). The manager supports
-    various formats for function calls and provides comprehensive logging
-    of tool execution.
-
-    Attributes:
-        registry (dict[str, Tool]): Dictionary mapping tool names to Tool objects.
-        logger (LogManager): Logger for tracking tool execution.
-    """
 
     def __init__(
         self, registry: dict[str, Tool] | None = None, logger=None
@@ -64,7 +49,7 @@ class ActionManager:
             bool: True if tool is registered, False otherwise.
         """
         if isinstance(tool, Tool):
-            return tool.function_name in self.registry
+            return tool.function in self.registry
         elif isinstance(tool, str):
             return tool in self.registry
         elif callable(tool):
@@ -92,17 +77,17 @@ class ActionManager:
         if not update and tool in self:
             name = None
             if isinstance(tool, Tool):
-                name = tool.function_name
+                name = tool.function
             elif callable(tool):
                 name = tool.__name__
             raise ValueError(f"Tool {name} is already registered.")
 
         if callable(tool):
-            tool = func_to_tool(tool)[0]
+            tool = Tool(func_callable=tool)
         if not isinstance(tool, Tool):
             raise TypeError("Please register a Tool object or callable.")
 
-        self.registry[tool.function_name] = tool
+        self.registry[tool.function] = tool
 
     def register_tools(
         self,
@@ -128,75 +113,22 @@ class ActionManager:
             for tool in to_list(tools_list, dropna=True, flatten=True)
         ]
 
-    @singledispatchmethod
-    def match_tool(self, func_call: Any) -> FunctionCalling:
-        """Match a function call to a registered tool.
-
-        This is a single dispatch method that handles different function
-        call formats. The base method handles unsupported types.
-
-        Args:
-            func_call: The function call specification.
-
-        Raises:
-            TypeError: If input type is not supported.
-        """
-        raise TypeError(f"Unsupported type {type(func_call)}")
-
-    @match_tool.register
-    def _(self, func_call: tuple) -> FunctionCalling:
-        if len(func_call) == 2:
-            function_name = func_call[0]
-            arguments = func_call[1]
-            tool = self.registry.get(function_name)
-            if not tool:
-                raise ValueError(f"Function {function_name} is not registered")
-            return FunctionCalling(func_tool=tool, arguments=arguments)
-        else:
-            raise ValueError(f"Invalid function call {func_call}")
-
-    @match_tool.register
-    def _(self, func_call: dict) -> FunctionCalling:
-        if len(func_call) == 2 and (
-            {
-                "function",
-                "arguments",
-            }
-            <= func_call.keys()
-        ):
-            function_name = func_call["function"]
-            tool = self.registry.get(function_name)
-            if not tool:
-                raise ValueError(f"Function {function_name} is not registered")
-            return FunctionCalling(
-                func_tool=tool,
-                arguments=func_call["arguments"],
-            )
-        raise ValueError(f"Invalid function call {func_call}")
-
-    @match_tool.register
-    def _(
-        self, func_call: ActionRequest | ActionRequestModel
+    def match_tool(
+        self, action_request: ActionRequest | ActionRequestModel
     ) -> FunctionCalling:
-        tool = self.registry.get(func_call.function)
+        if not isinstance(action_request, ActionRequest | ActionRequestModel):
+            raise TypeError(f"Unsupported type {type(action_request)}")
+
+        tool = self.registry.get(action_request.function, None)
         if not tool:
-            func_ = func_call.function
-            raise ValueError(f"Function {func_} is not registered.")
-        return FunctionCalling(func_tool=tool, arguments=func_call.arguments)
+            raise ValueError(
+                f"Function {action_request.function} is not registered."
+            )
+        return
 
-    @match_tool.register
-    def _(self, func_call: str) -> FunctionCalling:
-        _call = None
-        try:
-            _call = to_dict(func_call, str_type="json", fuzzy_parse=True)
-        except Exception as e:
-            raise ValueError(f"Invalid function call {func_call}") from e
-
-        if isinstance(_call, dict):
-            return self.match_tool(_call)
-        raise ValueError(f"Invalid function call {func_call}")
-
-    async def invoke(self, func_call: dict | str | ActionRequest) -> Any:
+    async def invoke(
+        self, func_call: ActionRequestModel | ActionRequest
+    ) -> Execution:
         """Invoke a tool based on the provided function call.
 
         1. Matches function call to registered tool
@@ -215,10 +147,18 @@ class ActionManager:
         Raises:
             ValueError: If function not registered or call format invalid.
         """
-        function_calling = self.match_tool(func_call)
-        result = await function_calling.invoke()
+        try:
+            function_calling = self.match_tool(func_call)
+        except ValueError as e:
+            return Execution(
+                status=EventStatus.FAILED,
+                error=str(e),
+                result=None,
+            )
+
+        await function_calling.invoke()
         await self.logger.alog(function_calling.to_log())
-        return result
+        return function_calling.execution
 
     @property
     def schema_list(self) -> list[dict[str, Any]]:
@@ -227,13 +167,9 @@ class ActionManager:
         Returns:
             List of OpenAI function schemas for all registered tools.
         """
-        return [tool.schema_ for tool in self.registry.values()]
+        return [tool.tool_schema for tool in self.registry.values()]
 
-    def get_tool_schema(
-        self,
-        tools: ToolRef = False,
-        **kwargs: Any,
-    ) -> dict[str, Any]:
+    def get_tool_schema(self, tools: ToolRef = False) -> list[dict]:
         """Retrieve the schema for specific tools or all tools.
 
         Args:
@@ -252,13 +188,11 @@ class ActionManager:
         if isinstance(tools, list | tuple) and len(tools) == 1:
             tools = tools[0]
         if isinstance(tools, bool):
-            if tools:
-                tool_kwarg = {"tools": self.schema_list}
-            else:
-                tool_kwarg = {}
+            if tools is True:
+                return self.schema_list
+            return []
         else:
-            tool_kwarg = {"tools": self._get_tool_schema(tools)}
-        return tool_kwarg | kwargs
+            return self._get_tool_schema(tools)
 
     def _get_tool_schema(
         self,
@@ -269,13 +203,13 @@ class ActionManager:
         if isinstance(tool, Callable):
             name = tool.__name__
             if name in self.registry:
-                return self.registry[name].schema_
+                return self.registry[name].tool_schema
             raise ValueError(f"Tool {name} is not registered.")
 
         elif isinstance(tool, Tool) or isinstance(tool, str):
-            name = tool.function_name if isinstance(tool, Tool) else tool
+            name = tool.function if isinstance(tool, Tool) else tool
             if name in self.registry:
-                return self.registry[name].schema_
+                return self.registry[name].tool_schema
             raise ValueError(f"Tool {name} is not registered.")
         elif isinstance(tool, list):
             return [self._get_tool_schema(t) for t in tool]

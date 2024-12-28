@@ -3,9 +3,9 @@ from typing import Any
 
 from pydantic import BaseModel, field_validator
 
-from lionagi.core_.models.types import FieldModel
-from lionagi.libs.parse import to_dict
+from lionagi.utils import to_dict
 
+from ..models.field_model import FieldModel
 from .utils import (
     ARGUMENTS_FIELD,
     FUNCTION_FIELD,

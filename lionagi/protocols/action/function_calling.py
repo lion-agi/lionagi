@@ -3,134 +3,107 @@
 # SPDX-License-Identifier: Apache-2.0
 
 import asyncio
+from typing import Any
 
-from lionagi.core_.typing import Any, Field, PrivateAttr, override
-from lionagi.libs.func.decorators import CallDecorator as cd
-from lionagi.libs.func.types import tcall
-from lionagi.settings import TimedFuncCallConfig
+from pydantic import Field, model_validator
 
-from .base import EventStatus, ObservableAction
+from lionagi.utils import ALCallParams, is_coro_func
+
+from ..generic.event import Event, EventStatus, Execution
 from .tool import Tool
 
-__all__ = ("FunctionCalling",)
 
+class FunctionCalling(Event):
 
-class FunctionCalling(ObservableAction):
-    """Represents an action that calls a function with specified arguments.
-
-    Encapsulates the complete function execution pipeline including:
-    1. Pre-processing of input arguments
-    2. Timed function execution
-    3. Post-processing of results
-    4. Optional result parsing
-    5. Error handling and status tracking
-
-    The execution is performed asynchronously and includes timing information
-    and comprehensive error handling. The execution status, timing, and any
-    errors are tracked and can be accessed after execution.
-
-    Attributes:
-        func_tool (Tool): Tool containing the function to be invoked and its
-            processing pipeline configuration.
-        arguments (dict[str, Any]): Arguments to pass to the function.
-        function (str): Name of the function being called (derived from tool).
-        _content_fields (list): Fields to include in log content section.
-    """
-
-    func_tool: Tool | None = Field(default=None, exclude=True)
-    _content_fields: list = PrivateAttr(
-        default=["execution_response", "arguments", "function"]
-    )
+    func_tool: Tool = Field(default=..., exclude=True)
     arguments: dict[str, Any] | None = None
-    function: str | None = None
+    alcall_params: ALCallParams | None = Field(default=None, exclude=True)
 
-    def __init__(
-        self,
-        func_tool: Tool,
-        arguments: dict[str, Any],
-        timed_config: dict | TimedFuncCallConfig = None,
-        **kwargs: Any,
-    ) -> None:
-        """Initialize a FunctionCalling instance.
+    @property
+    def function(self):
+        return self.func_tool.function
 
-        Args:
-            func_tool: Tool containing the function to invoke and its
-                processing pipeline configuration.
-            arguments: Arguments to pass to the function.
-            timed_config: Configuration for timing and retries.
-                If None, uses default config.
-            **kwargs: Additional keyword arguments for timed config.
-        """
-        super().__init__(timed_config=timed_config, **kwargs)
-        self.func_tool = func_tool
-        self.arguments = arguments or {}
-        self.function = self.func_tool.function_name
+    @model_validator(mode="before")
+    def _validate_alcall_params(cls, data: dict[str, Any]) -> dict[str, Any]:
+        arguments: dict[str, Any] = data.get("arguments", {})
+        if not isinstance(arguments, dict):
+            raise ValueError("arguments must be a dictionary")
 
-    @override
+        func_tool = data.get("func_tool", None)
+        if not isinstance(func_tool, Tool):
+            raise ValueError("func_tool must be an instance of Tool")
+
+        if func_tool.strict_func_call is True:
+            if not set(arguments.keys()) == func_tool.required_fields:
+                raise ValueError("arguments must match the function schema")
+        else:
+            if not func_tool.minimum_acceptable_fields.issubset(
+                set(arguments.keys())
+            ):
+                raise ValueError("arguments must match the function schema")
+
+        alcall_params = data.pop("alcall_params", None)
+        if alcall_params is not None:
+            if isinstance(alcall_params, dict):
+                alcall_params = ALCallParams(**alcall_params)
+        else:
+            alcall_params = ALCallParams()
+
+        return {
+            "arguments": arguments,
+            "func_tool": func_tool,
+            "alcall_params": alcall_params,
+        }
+
     async def invoke(self) -> Any:
-        """Asynchronously invokes the function with stored arguments.
-
-        Executes the complete function pipeline:
-        1. Pre-processes arguments using tool's pre_processor if defined
-        2. Executes function with timing and retry logic
-        3. Post-processes result using tool's post_processor if defined
-        4. Parses result using tool's parser if defined
-        5. Tracks execution status, timing, and any errors
-
-        Returns:
-            The final processed result of the function execution.
-            If execution fails, returns None and sets error information.
-
-        Note:
-            - All processing steps (pre/post/parse) are optional
-            - Timing information is stored in execution_time
-            - Errors are stored in execution_error
-            - Raw response is stored in execution_response
-            - Final status is stored in status
-        """
         start = asyncio.get_event_loop().time()
-        try:
-            # Create inner function with pre/post processing
-            @cd.pre_post_process(
-                preprocess=self.func_tool.pre_processor,
-                postprocess=self.func_tool.post_processor,
-                preprocess_kwargs=self.func_tool.pre_processor_kwargs or {},
-                postprocess_kwargs=self.func_tool.post_processor_kwargs or {},
-            )
-            async def _inner(**kwargs) -> Any:
-                """Inner function that handles the actual execution.
 
-                Applies timing and retry logic through tcall, and handles
-                special case of timing information in result tuple.
-                """
-                config = self._timed_config.to_dict()
-                result = await tcall(
-                    self.func_tool.function, **kwargs, **config
-                )
-                # Handle tuple result from tcall when retry_timing is True
-                if isinstance(result, tuple) and len(result) == 2:
-                    return result[0]  # Return just the result, not timing info
-                return result
+        async def _inner(i):
+            preprocessor = self.func_tool.preprocessor
+            arguments = self.arguments
 
-            # Execute function with pre/post processing
-            result = await _inner(**self.arguments)
-            self.execution_response = result
-            self.execution_time = asyncio.get_event_loop().time() - start
-            self.status = EventStatus.COMPLETED
-
-            # Apply parser if defined
-            if self.func_tool.parser is not None:
-                if asyncio.iscoroutinefunction(self.func_tool.parser):
-                    result = await self.func_tool.parser(result)
+            if preprocessor is not None:
+                if is_coro_func(preprocessor):
+                    arguments = await preprocessor(
+                        arguments, **self.func_tool.preprocessor_kwargs
+                    )
                 else:
-                    result = self.func_tool.parser(result)
-            return result
+                    arguments = preprocessor(
+                        arguments, **self.func_tool.preprocessor_kwargs
+                    )
 
+            response = None
+            if is_coro_func(self.func_tool.func_callable):
+                response = await self.func_tool.func_callable(**arguments)
+            else:
+                response = self.func_tool.func_callable(**arguments)
+
+            postprocessor = self.func_tool.postprocessor
+            if postprocessor is not None:
+                if is_coro_func(postprocessor):
+                    response = await postprocessor(
+                        response, **self.func_tool.postprocessor_kwargs
+                    )
+                else:
+                    response = postprocessor(
+                        response, **self.func_tool.postprocessor_kwargs
+                    )
+            return response
+
+        try:
+            response = await self.alcall_params(0, _inner)
+            self.execution = Execution(
+                status=EventStatus.COMPLETED,
+                duration=asyncio.get_event_loop().time() - start,
+                response=response,
+            )
         except Exception as e:
-            self.status = EventStatus.FAILED
-            self.execution_error = str(e)
-            self.execution_time = asyncio.get_event_loop().time() - start
-            return None
+            self.execution = Execution(
+                status=EventStatus.FAILED,
+                duration=asyncio.get_event_loop().time() - start,
+                response=None,
+                error=str(e),
+            )
 
     def __str__(self) -> str:
         """Returns a string representation of the function call.
@@ -138,7 +111,7 @@ class FunctionCalling(ObservableAction):
         Returns:
             A string in the format "function_name(arguments)".
         """
-        return f"{self.func_tool.function_name}({self.arguments})"
+        return f"{self.func_tool.function}({self.arguments})"
 
     def __repr__(self) -> str:
         """Returns a detailed string representation of the function call.
@@ -147,6 +120,6 @@ class FunctionCalling(ObservableAction):
             A string containing the class name and key attributes.
         """
         return (
-            f"FunctionCalling(function={self.func_tool.function_name}, "
+            f"FunctionCalling(function={self.func_tool.function}, "
             f"arguments={self.arguments})"
         )
