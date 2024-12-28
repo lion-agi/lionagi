@@ -9,8 +9,9 @@ from typing_extensions import override
 from lionagi.protocols.generic.element import IDType
 from lionagi.utils import copy
 
+from ..action import ActionResponseModel
 from .action_request import ActionRequest
-from .base import MessageRole
+from .base import MessageRole, SenderRecipient
 from .message import RoledMessage, Template, jinja_env
 
 
@@ -30,7 +31,7 @@ def prepare_action_response_content(
 
 class ActionResponse(RoledMessage):
 
-    template: Template | str = jinja_env.get_template("action_response.jinja")
+    template: Template | str = jinja_env.get_template("action_response.jinja2")
 
     @property
     def function(self) -> str:
@@ -87,13 +88,41 @@ class ActionResponse(RoledMessage):
     def create(
         cls,
         action_request: ActionRequest,
-        output: Any,
-    ):
-        return ActionRequest(
+        output: Any | None = None,
+        response_model: ActionResponseModel | None = None,
+        sender: SenderRecipient | None = None,
+        recipient: SenderRecipient | None = None,
+    ) -> "ActionResponse":
+
+        if response_model:
+            output = response_model.output
+
+        return ActionResponse(
             content=prepare_action_response_content(
-                action_request=action_request, output=output
+                action_request=response_model or action_request, output=output
             ),
             role=MessageRole.ACTION,
-            sender=action_request.recipient,
-            recipient=action_request.sender,
+            sender=sender or action_request.recipient,
+            recipient=recipient or action_request.sender,
+        )
+
+    def update(
+        self,
+        action_request: ActionRequest = None,
+        output: Any = None,
+        response_model: ActionResponseModel = None,
+        sender: SenderRecipient = None,
+        recipient: SenderRecipient = None,
+        template: Template | str | None = None,
+        **kwargs,
+    ):
+        if response_model:
+            output = response_model.output
+
+        if action_request:
+            self.content = prepare_action_response_content(
+                action_request=action_request, output=output or self.output
+            )
+        super().update(
+            sender=sender, recipient=recipient, template=template, **kwargs
         )

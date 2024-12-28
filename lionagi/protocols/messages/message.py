@@ -60,7 +60,7 @@ class RoledMessage(Node, Sendable):
                 or None if formatting fails.
         """
         try:
-            return self._format_content()
+            return {"role": str(self.role), "content": self.rendered}
         except Exception:
             return None
 
@@ -141,10 +141,14 @@ class RoledMessage(Node, Sendable):
         """
         return str(value)
 
-    def update(self, sender, recipient, **kwargs):
+    def update(self, sender, recipient, template, **kwargs):
         if sender:
             self.sender = validate_sender_recipient(sender)
         if recipient:
             self.recipient = validate_sender_recipient(recipient)
         if kwargs:
             self.content.update(kwargs)
+        if template:
+            if not isinstance(template, Template | str):
+                raise ValueError("Template must be a Jinja2 Template or str")
+            self.template = template

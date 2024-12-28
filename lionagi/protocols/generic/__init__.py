@@ -1,5 +1,5 @@
-from ._id import ID, Collective, IDType, Ordering
-from .element import E, Element
+from ._id import ID, Collective, IDError, IDType, Ordering
+from .element import E, Element, Observable
 from .event import Condition, Event, EventStatus, Execution, Observer
 from .log import Log, LogManager, LogManagerConfig
 from .node import Node
@@ -29,4 +29,6 @@ __all__ = (
     "LogManagerConfig",
     "Execution",
     "Node",
+    "IDError",
+    "Observable",
 )

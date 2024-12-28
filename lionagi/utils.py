@@ -20,15 +20,25 @@ from datetime import datetime
 from decimal import Decimal
 from enum import Enum
 from functools import lru_cache
+from inspect import isclass
 from pathlib import Path
-from typing import Any, Literal, Self, TypedDict, TypeVar, overload
+from typing import (
+    Any,
+    Literal,
+    Self,
+    TypedDict,
+    TypeVar,
+    get_args,
+    get_origin,
+    overload,
+)
 
 from pydantic import BaseModel, model_validator
 from pydantic_core import PydanticUndefinedType
 
 R = TypeVar("R")
 T = TypeVar("T")
-
+B = TypeVar("B", bound=BaseModel)
 
 logger = logging.getLogger(
     __name__, level=logging.INFO, format="%(asctime)s - %(message)s"
@@ -75,6 +85,7 @@ __all__ = (
     "mcall",
     "MCallParams",
     "to_num",
+    "breakdown_pydantic_annotation",
 )
 
 
@@ -2680,3 +2691,40 @@ def parse_number(type_and_value: tuple[str, str]) -> float | complex:
     except Exception as e:
         # Preserve the specific error type but wrap with more context
         raise type(e)(f"Failed to parse {value} as {num_type}: {str(e)}")
+
+
+def breakdown_pydantic_annotation(
+    model: type[B], max_depth: int | None = None, current_depth: int = 0
+) -> dict[str, Any]:
+
+    if not _is_pydantic_model(model):
+        raise TypeError("Input must be a Pydantic model")
+
+    if max_depth is not None and current_depth >= max_depth:
+        raise RecursionError("Maximum recursion depth reached")
+
+    out: dict[str, Any] = {}
+    for k, v in model.__annotations__.items():
+        origin = get_origin(v)
+        if _is_pydantic_model(v):
+            out[k] = breakdown_pydantic_annotation(
+                v, max_depth, current_depth + 1
+            )
+        elif origin is list:
+            args = get_args(v)
+            if args and _is_pydantic_model(args[0]):
+                out[k] = [
+                    breakdown_pydantic_annotation(
+                        args[0], max_depth, current_depth + 1
+                    )
+                ]
+            else:
+                out[k] = [args[0] if args else Any]
+        else:
+            out[k] = v
+
+    return out
+
+
+def _is_pydantic_model(x: Any) -> bool:
+    return isclass(x) and issubclass(x, BaseModel)

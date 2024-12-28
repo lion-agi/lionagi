@@ -5,14 +5,13 @@
 from collections.abc import Callable
 from typing import Any
 
-from typing_extensions import override
-
 from lionagi.protocols.action.tool import FuncToolRef, Tool
 from lionagi.utils import copy, to_dict
 
-from ..generic._id import ID, IDType
-from .base import MessageFlag, MessageRole, SenderRecipient
-from .message import RoledMessage, Template, jinja_env
+from ..action import ActionRequestModel
+from ..generic._id import IDType
+from .base import SenderRecipient
+from .message import MessageRole, RoledMessage, Template, jinja_env
 
 
 def prepare_action_request(
@@ -41,35 +40,8 @@ def prepare_action_request(
 class ActionRequest(RoledMessage):
 
     template: Template | str | None = jinja_env.get_template(
-        "action_request.jinja"
+        "action_request.jinja2"
     )
-
-    def update(
-        self,
-        function: FuncToolRef | None = None,
-        arguments: dict | None = None,
-        sender: SenderRecipient = None,
-        recipient: SenderRecipient = None,
-        action_response=None,
-        **kwargs,
-    ):
-        if isinstance(action_response, RoledMessage):
-            self.action_response_id = action_response.id
-
-        if any([function, arguments]):
-            self.content = prepare_action_request(
-                function or self.function, arguments or self.arguments
-            )
-        super().update(sender=sender, recipient=recipient, **kwargs)
-
-    def is_responded(self) -> bool:
-        """
-        Check if the action request has been responded to.
-
-        Returns:
-            bool: True if the request has a response, False otherwise
-        """
-        return self.action_response_id is not None
 
     @property
     def action_response_id(self) -> IDType | None:
@@ -124,10 +96,12 @@ class ActionRequest(RoledMessage):
     @classmethod
     def create(
         cls,
-        function: FuncToolRef,
-        arguments: dict,
-        sender: SenderRecipient,
-        recipient: SenderRecipient,
+        function: FuncToolRef | None = None,
+        arguments: dict | None = None,
+        sender: SenderRecipient | None = None,
+        recipient: SenderRecipient | None = None,
+        request_model: ActionRequestModel | None = None,
+        template: Template | str | None = None,
         **kwargs,
     ) -> "ActionRequest":
         """
@@ -142,6 +116,48 @@ class ActionRequest(RoledMessage):
         Returns:
             ActionRequest: The new instance
         """
+        if request_model:
+            function = request_model.function
+            arguments = request_model.arguments
         content = prepare_action_request(function, arguments)
         content.update(kwargs)
-        return cls(content=content, sender=sender, recipient=recipient)
+        params = {
+            "content": content,
+            "sender": sender,
+            "recipient": recipient,
+            "role": MessageRole.ACTION,
+        }
+        if template:
+            params["template"] = template
+        return ActionRequest(**params)
+
+    def update(
+        self,
+        function: FuncToolRef | None = None,
+        arguments: dict | None = None,
+        sender: SenderRecipient = None,
+        recipient: SenderRecipient = None,
+        action_response: "ActionResponse" = None,  # type: ignore
+        template: Template | str | None = None,
+        **kwargs,
+    ):
+        if isinstance(action_response, RoledMessage):
+            self.action_response_id = str(action_response.id)
+
+        if any([function, arguments]):
+            action_request = prepare_action_request(
+                function or self.function, arguments or self.arguments
+            )
+            self.content.update(action_request)
+        super().update(
+            sender=sender, recipient=recipient, template=template, **kwargs
+        )
+
+    def is_responded(self) -> bool:
+        """
+        Check if the action request has been responded to.
+
+        Returns:
+            bool: True if the request has a response, False otherwise
+        """
+        return self.action_response_id is not None

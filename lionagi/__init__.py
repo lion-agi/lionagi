@@ -4,10 +4,10 @@ import logging
 
 from dotenv import load_dotenv
 
-from .core.session.types import Branch, Session
 from .integrations.litellm_.imodel import LiteiModel
-from .protocols.operatives.step import Step
+from .operatives.step import Step
 from .service import iModel
+from .session.session import Branch, Session
 from .settings import Settings
 from .version import __version__
 

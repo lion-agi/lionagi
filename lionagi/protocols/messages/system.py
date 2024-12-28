@@ -8,7 +8,7 @@ from typing import NoReturn, Self
 from pydantic import JsonValue
 from typing_extensions import override
 
-from .base import SenderRecipient, validate_sender_recipient
+from .base import SenderRecipient
 from .message import MessageRole, RoledMessage, Template, jinja_env
 
 __all__ = ("System",)
@@ -41,7 +41,7 @@ def format_system_content(
 
 class System(RoledMessage):
 
-    template: str | Template | None = jinja_env.get_template("system.jinja")
+    template: str | Template | None = jinja_env.get_template("system.jinja2")
 
     @override
     @classmethod

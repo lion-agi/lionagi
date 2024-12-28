@@ -3,16 +3,19 @@
 # SPDX-License-Identifier: Apache-2.0
 
 
-from lionagi.core.typing import ID, Any, BaseModel, JsonValue, Note, override
-from lionagi.libs.parse import to_str
-from lionagi.libs.utils import copy, is_same_dtype
+from typing import Any
 
-from .message import MessageFlag, MessageRole, RoledMessage
+from pydantic import BaseModel
+
+from lionagi.utils import copy, is_same_dtype
+
+from .base import MessageRole, SenderRecipient
+from .message import MessageRole, RoledMessage, Template, jinja_env
 
 
 def prepare_assistant_response(
     assistant_response: BaseModel | list[BaseModel] | dict | str | Any, /
-) -> Note:
+) -> dict:
     """
     Prepare an assistant's response for storage and transmission.
 
@@ -28,7 +31,7 @@ def prepare_assistant_response(
         Note: Formatted response content
     """
     if assistant_response:
-        content = Note()
+        content = {}
         # Handle model.choices[0].message.content format
         if isinstance(assistant_response, BaseModel):
             content["assistant_response"] = (
@@ -74,68 +77,17 @@ def prepare_assistant_response(
         elif isinstance(assistant_response, str):
             content["assistant_response"] = assistant_response
         else:
-            content["assistant_response"] = to_str(assistant_response)
+            content["assistant_response"] = str(assistant_response)
         return content
     else:
-        return Note(assistant_response="")
+        return {"assistant_response": ""}
 
 
 class AssistantResponse(RoledMessage):
-    """
-    Represents a response from an assistant in the system.
 
-    This class handles responses from AI assistants, supporting both direct
-    text responses and structured model outputs. It provides access to both
-    the formatted response content and the underlying model data.
-
-    Example:
-        >>> response = AssistantResponse(
-        ...     assistant_response="The answer is 42",
-        ...     sender="assistant",
-        ...     recipient="user"
-        ... )
-        >>> print(response.response)
-        'The answer is 42'
-    """
-
-    @override
-    def __init__(
-        self,
-        assistant_response: BaseModel | JsonValue | MessageFlag,
-        sender: ID.Ref | MessageFlag,
-        recipient: ID.Ref | MessageFlag,
-        protected_init_params: dict | None = None,
-    ) -> None:
-        """
-        Initialize an AssistantResponse instance.
-
-        Args:
-            assistant_response: The content of the assistant's response
-            sender: The sender of the response
-            recipient: The recipient of the response
-            protected_init_params: Protected initialization parameters
-        """
-        message_flags = [assistant_response, sender, recipient]
-
-        if all(x == MessageFlag.MESSAGE_LOAD for x in message_flags):
-            protected_init_params = protected_init_params or {}
-            super().__init__(**protected_init_params)
-            return
-
-        if all(x == MessageFlag.MESSAGE_CLONE for x in message_flags):
-            super().__init__(role=MessageRole.ASSISTANT)
-            return
-
-        super().__init__(
-            role=MessageRole.ASSISTANT,
-            sender=sender or "N/A",
-            recipient=recipient,
-        )
-
-        content = prepare_assistant_response(assistant_response)
-        if "model_response" in content:
-            self.metadata["model_response"] = content.pop("model_response")
-        self.content = content
+    template: Template | str = jinja_env.get_template(
+        "assistant_response.jinja2"
+    )
 
     @property
     def response(self) -> str:
@@ -167,6 +119,43 @@ class AssistantResponse(RoledMessage):
         """
         return copy(self.metadata.get("model_response", {}))
 
-    @override
-    def _format_content(self) -> dict[str, str]:
-        return {"role": self.role.value, "content": self.response}
+    @classmethod
+    def create(
+        cls,
+        assistant_response: BaseModel | list[BaseModel] | dict | str | Any,
+        sender: SenderRecipient | None = None,
+        recipient: SenderRecipient | None = None,
+        template: Template | str | None = None,
+        **kwargs,
+    ):
+        content = prepare_assistant_response(assistant_response)
+        content.update(kwargs)
+        params = {
+            "content": content,
+            "role": MessageRole.ASSISTANT,
+        }
+        if sender:
+            params["sender"] = sender
+        if recipient:
+            params["recipient"] = recipient
+
+        if template:
+            params["template"] = template
+        return AssistantResponse(**params)
+
+    def update(
+        self,
+        assistant_response: (
+            BaseModel | list[BaseModel] | dict | str | Any
+        ) = None,
+        sender: SenderRecipient | None = None,
+        recipient: SenderRecipient | None = None,
+        template: Template | str | None = None,
+        **kwargs,
+    ):
+        if assistant_response:
+            content = prepare_assistant_response(assistant_response)
+            self.content.update(content)
+        super().update(
+            sender=sender, recipient=recipient, template=template, **kwargs
+        )
