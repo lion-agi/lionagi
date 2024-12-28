@@ -1,0 +1,7 @@
+{% for name, schema in tool_schemas.items() %}
+Tool: {{ name }}
+Schema:
+```json
+{{ schema | tojson(indent=2) }}
+
+{% endfor %}
