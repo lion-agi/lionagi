@@ -7,12 +7,12 @@ from typing import Any, Literal
 
 from pydantic import Field, field_serializer
 
-from lionagi.errors import ItemExistsError, RelationError
+from lionagi._errors import ItemExistsError, RelationError
 
 from ..generic._id import ID
+from ..generic.node import Node
 from ..generic.pile import Pile
 from .edge import Edge
-from .node import Node
 
 __all__ = ("Graph",)
 
@@ -106,8 +106,8 @@ class Graph(Node):
                     " not exist in the graph."
                 )
             self.internal_edges.insert(len(self.internal_edges), edge)
-            self.node_edge_mapping[edge.head]["out"][edge.ln_id] = edge.tail
-            self.node_edge_mapping[edge.tail]["in"][edge.ln_id] = edge.head
+            self.node_edge_mapping[edge.head]["out"][edge.id] = edge.tail
+            self.node_edge_mapping[edge.tail]["in"][edge.id] = edge.head
 
         except ItemExistsError as e:
             raise RelationError(f"Error adding node: {e}")
@@ -247,14 +247,14 @@ class Graph(Node):
         g = DiGraph(**kwargs)
         for node in self.internal_nodes:
             node_info = node.to_dict()
-            node_info.pop("ln_id")
+            node_info.pop("id")
             if hasattr(node, "name"):
                 node_info.update({"name": node.name})
-            g.add_node(str(node.ln_id), **node_info)
+            g.add_node(str(node.id), **node_info)
 
         for _edge in self.internal_edges:
             edge_info = _edge.to_dict()
-            edge_info.pop("ln_id")
+            edge_info.pop("id")
             if hasattr(_edge, "name"):
                 edge_info.update({"name": _edge.name})
             source_node_id = edge_info.pop("head")
@@ -324,7 +324,7 @@ class Graph(Node):
             check_dict[key] = 1
 
             # Use node_edge_mapping instead of relations
-            for edge_id in self.node_edge_mapping[key, "out"].keys():
+            for edge_id in self.node_edge_mapping[key]["out"].keys():
                 edge = self.internal_edges[edge_id]
                 check = visit(edge.tail)
                 if not check:
