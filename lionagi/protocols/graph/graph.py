@@ -10,9 +10,9 @@ from pydantic import Field, field_serializer
 from lionagi._errors import ItemExistsError, RelationError
 
 from ..generic._id import ID
-from ..generic.node import Node
 from ..generic.pile import Pile
 from .edge import Edge
+from .node import Node
 
 __all__ = ("Graph",)
 

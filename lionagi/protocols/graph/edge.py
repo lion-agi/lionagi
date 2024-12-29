@@ -9,7 +9,7 @@ from pydantic import BaseModel, ConfigDict, Field
 from ..generic._id import ID
 from ..generic.element import Element
 from ..generic.event import Condition
-from ..generic.node import Node
+from .node import Node
 
 __all__ = (
     "EdgeCondition",
