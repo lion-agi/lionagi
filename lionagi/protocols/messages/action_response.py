@@ -9,7 +9,7 @@ from typing_extensions import override
 from lionagi.protocols.generic.element import IDType
 from lionagi.utils import copy
 
-from ..action import ActionResponseModel
+from ..action.request_response_model import ActionResponseModel
 from .action_request import ActionRequest
 from .base import MessageRole, SenderRecipient
 from .message import RoledMessage, Template, jinja_env

@@ -1,34 +1,3 @@
-from ._id import ID, Collective, IDError, IDType, Ordering
-from .element import E, Element, Observable
-from .event import Condition, Event, EventStatus, Execution, Observer
-from .log import Log, LogManager, LogManagerConfig
-from .node import Node
-from .pile import Pile, pile
-from .processor import Executor, Processor
-from .progression import Progression, prog
-
-__all__ = (
-    "ID",
-    "IDType",
-    "Collective",
-    "Ordering",
-    "Element",
-    "E",
-    "Event",
-    "EventStatus",
-    "Observer",
-    "Condition",
-    "Pile",
-    "pile",
-    "Processor",
-    "Executor",
-    "Progression",
-    "prog",
-    "Log",
-    "LogManager",
-    "LogManagerConfig",
-    "Execution",
-    "Node",
-    "IDError",
-    "Observable",
-)
+# Copyright (c) 2023 - 2024, HaiyangLi <quantocean.li at gmail dot com>
+#
+# SPDX-License-Identifier: Apache-2.0

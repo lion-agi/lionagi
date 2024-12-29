@@ -8,7 +8,7 @@ from typing import Any
 from lionagi.protocols.action.tool import FuncToolRef, Tool
 from lionagi.utils import copy, to_dict
 
-from ..action import ActionRequestModel
+from ..action.request_response_model import ActionRequestModel
 from ..generic._id import IDType
 from .base import SenderRecipient
 from .message import MessageRole, RoledMessage, Template, jinja_env

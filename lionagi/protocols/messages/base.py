@@ -8,7 +8,8 @@ from typing import Any, TypeAlias
 
 from pydantic import BaseModel, Field, field_serializer
 
-from ..generic import ID, IDError, IDType, Observable
+from ..generic._id import ID, IDError, IDType
+from ..generic.element import Observable
 
 __all__ = (
     "Communicatable",

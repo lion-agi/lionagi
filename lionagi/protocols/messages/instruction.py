@@ -6,8 +6,7 @@ from typing import Any, Literal, override
 
 from pydantic import BaseModel, JsonValue
 
-from lionagi.integrations.pydantic_ import break_down_pydantic_annotation
-from lionagi.utils import UNDEFINED, copy
+from lionagi.utils import UNDEFINED, breakdown_pydantic_annotation, copy
 
 from ..generic._id import ID
 from ..generic.log import Log
@@ -181,7 +180,7 @@ def prepare_instruction_content(
 
     if request_model:
         out_["request_model"] = request_model
-        request_fields = break_down_pydantic_annotation(request_model)
+        request_fields = breakdown_pydantic_annotation(request_model)
         out_["context"].append(
             {"respond_schema_info": request_model.model_json_schema()}
         )
@@ -410,7 +409,7 @@ class Instruction(RoledMessage):
         self.extend_context(
             respond_schema_info=request_model.model_json_schema()
         )
-        self.request_fields = break_down_pydantic_annotation(request_model)
+        self.request_fields = breakdown_pydantic_annotation(request_model)
 
     def extend_images(
         self,
