@@ -2,16 +2,20 @@
 #
 # SPDX-License-Identifier: Apache-2.0
 
-from lionagi.core.session.branch import Branch
-from lionagi.core.session.session import Session
-from lionagi.core.typing import ID, Any, BaseModel, Literal
-from lionagi.libs.func.types import alcall
-from lionagi.libs.parse import to_flat_list
-from lionagi.protocols_.operatives.instruct import (
+
+from typing import Any, Literal
+
+from pydantic import BaseModel
+
+from lionagi.operatives.instruct.instruct import (
     LIST_INSTRUCT_FIELD_MODEL,
     Instruct,
     InstructResponse,
 )
+from lionagi.protocols.types import ID
+from lionagi.session.branch import Branch
+from lionagi.session.session import Session
+from lionagi.utils import alcall
 
 from ..utils import prepare_instruct, prepare_session
 from .prompt import EXPANSION_PROMPT, PLAN_PROMPT
