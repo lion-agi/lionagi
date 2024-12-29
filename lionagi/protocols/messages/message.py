@@ -13,7 +13,13 @@ from lionagi._class_registry import get_class
 
 from ..generic.log import Log
 from ..generic.node import Node
-from .base import MessageFlag, MessageRole, Sendable, validate_sender_recipient
+from .base import (
+    MessageFlag,
+    MessageRole,
+    Sendable,
+    SenderRecipient,
+    validate_sender_recipient,
+)
 
 template_path = Path(__file__).parent / "templates"
 jinja_env = Environment(loader=FileSystemLoader(template_path))
@@ -28,14 +34,30 @@ class RoledMessage(Node, Sendable):
         description="The content of the message.",
     )
 
-    role: MessageRole = Field(
+    role: MessageRole | None = Field(
+        None,
         description="The role of the message in the conversation.",
-        examples=["system", "user", "assistant"],
     )
 
     flag: MessageFlag | None = Field(None, exclude=True, frozen=True)
 
     template: str | Template | None = None
+
+    sender: SenderRecipient | None = Field(
+        default=MessageRole.UNSET,
+        title="Sender",
+        description="The ID of the sender node or a role.",
+    )
+
+    recipient: SenderRecipient | None = Field(
+        default=MessageRole.UNSET,
+        title="Recipient",
+        description="The ID of the recipient node or a role.",
+    )
+
+    @field_serializer("sender", "recipient")
+    def _serialize_sender_recipient(cls, value: SenderRecipient) -> str:
+        return str(value)
 
     @property
     def image_content(self) -> list[dict[str, Any]] | None:

@@ -23,14 +23,6 @@ __all__ = (
 
 
 class MessageRole(str, Enum):
-    """
-    Enum for possible roles a message can assume in a conversation.
-
-    These roles define the nature and purpose of messages in the system:
-    - SYSTEM: System-level messages providing context or instructions
-    - USER: Messages from users making requests or providing input
-    - ASSISTANT: Messages from AI assistants providing responses
-    """
 
     SYSTEM = "system"
     USER = "user"
@@ -40,13 +32,6 @@ class MessageRole(str, Enum):
 
 
 class MessageFlag(str, Enum):
-    """
-    Enum to signal special message construction modes.
-
-    These flags are used internally to control message instantiation:
-    - MESSAGE_CLONE: Signal to create a clone of an existing message
-    - MESSAGE_LOAD: Signal to load a message from stored data
-    """
 
     MESSAGE_CLONE = "MESSAGE_CLONE"
     MESSAGE_LOAD = "MESSAGE_LOAD"
@@ -63,26 +48,11 @@ class Communicatable(ABC):
         pass
 
 
-SenderRecipient: TypeAlias = ID.Ref | MessageRole | str
+SenderRecipient: TypeAlias = IDType | MessageRole | str
 
 
-class Sendable(BaseModel):
-
-    sender: SenderRecipient = Field(
-        default=MessageRole.UNSET,
-        title="Sender",
-        description="The ID of the sender node or a role.",
-    )
-
-    recipient: SenderRecipient = Field(
-        default=MessageRole.UNSET,
-        title="Recipient",
-        description="The ID of the recipient node or a role.",
-    )
-
-    @field_serializer("sender", "recipient")
-    def _serialize_sender_recipient(cls, value: SenderRecipient) -> str:
-        return str(value)
+class Sendable(ABC):
+    pass
 
 
 class MessageField(str, Enum):
@@ -101,18 +71,6 @@ MESSAGE_FIELDS = [i.value for i in MessageField.__members__.values()]
 
 
 def validate_sender_recipient(value: Any, /) -> SenderRecipient:
-    """
-    Validate sender and recipient fields for mail-like communication.
-
-    Args:
-        value: The value to validate
-
-    Returns:
-        Union[IDType, Literal]: Valid sender/recipient value
-
-    Raises:
-        ValueError: If value is not a valid sender or recipient
-    """
     if isinstance(value, MessageRole | MessageFlag):
         return value
 
@@ -125,7 +83,7 @@ def validate_sender_recipient(value: Any, /) -> SenderRecipient:
     if value is None:
         return MessageRole.UNSET
 
-    if value in ["system", "user", "unset", "assistant"]:
+    if value in ["system", "user", "unset", "assistant", "action"]:
         return MessageRole(value)
 
     if value in ["MESSAGE_CLONE", "MESSAGE_LOAD"]:

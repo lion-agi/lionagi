@@ -28,7 +28,7 @@ def format_system_content(
     Returns:
         Note: Formatted system content
     """
-    content: dict = {"system": system_message}
+    content: dict = {"system_message": system_message}
     if system_datetime:
         if isinstance(system_datetime, str):
             content["system_datetime"] = system_datetime
@@ -41,7 +41,9 @@ def format_system_content(
 
 class System(RoledMessage):
 
-    template: str | Template | None = jinja_env.get_template("system.jinja2")
+    template: str | Template | None = jinja_env.get_template(
+        "system_message.jinja2"
+    )
 
     @override
     @classmethod
@@ -49,6 +51,7 @@ class System(RoledMessage):
         cls,
         system_message="You are a helpful AI assistant. Let's think step by step.",
         system_datetime=None,
+        template=None,
         **kwargs,
     ) -> Self:
         """
@@ -65,7 +68,7 @@ class System(RoledMessage):
             system_datetime=system_datetime, system_message=system_message
         )
         content.update(kwargs)
-        return cls(role=MessageRole.SYSTEM, content=content)
+        return cls(role=MessageRole.SYSTEM, content=content, template=template)
 
     def update(
         self,

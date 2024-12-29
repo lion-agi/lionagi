@@ -41,7 +41,7 @@ class ActionResponse(RoledMessage):
         Returns:
             str: The name of the function that was executed
         """
-        return self.content.get("action_response").get("function")
+        return self.content.get("action_response", {}).get("function", None)
 
     @property
     def arguments(self) -> dict[str, Any]:
@@ -51,7 +51,7 @@ class ActionResponse(RoledMessage):
         Returns:
             dict[str, Any]: The arguments that were used
         """
-        return self.content.get("action_response").get("arguments")
+        return self.content.get("action_response", {}).get("arguments", {})
 
     @property
     def output(self) -> Any:
@@ -61,7 +61,7 @@ class ActionResponse(RoledMessage):
         Returns:
             Any: The result returned by the function
         """
-        return self.content.get("action_response").get("output")
+        return self.content.get("action_response", {}).get("output", None)
 
     @property
     def response(self) -> dict[str, Any]:
@@ -81,7 +81,7 @@ class ActionResponse(RoledMessage):
         Returns:
             ID[ActionRequest].ID | None: The ID of the original request
         """
-        return IDType.validate(self.content.get("action_request_id"))
+        return IDType.validate(self.content.get("action_request_id", {}))
 
     @override
     @classmethod

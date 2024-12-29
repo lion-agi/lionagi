@@ -11,7 +11,7 @@ from lionagi.utils import UNDEFINED, breakdown_pydantic_annotation, copy
 from ..generic._id import ID
 from ..generic.log import Log
 from .base import MessageFlag, MessageRole
-from .message import RoledMessage
+from .message import RoledMessage, SenderRecipient, Template, jinja_env
 
 
 def prepare_request_response_format(request_fields: dict) -> str:
@@ -97,9 +97,13 @@ def format_text_content(content: dict) -> str:
             "request_response_format",
             "tool_schemas",
         ]:
+            if k == "tool_schemas" and "tools" in v:
+                v = v["tools"]
+
             if k == "request_response_format":
                 k = "response format"
-            msg += f"## **Task {k}**\n{format_text_item(v)}\n\n"
+            msg += f"## - **{k}**\n{format_text_item(v)}\n\n"
+
     msg += "\n\n---\n"
     return msg
 
@@ -201,97 +205,51 @@ def prepare_instruction_content(
 
 
 class Instruction(RoledMessage):
-    """
-    Represents an instruction message in the system.
 
-    This class encapsulates various components of an instruction, including
-    the main instruction content, guidance, context, and request fields.
-    It supports both text and image content, and can handle structured
-    request specifications through Pydantic models.
+    @classmethod
+    def create(
+        cls,
+        instruction: JsonValue = None,
+        context: JsonValue = None,
+        guidance: JsonValue = None,
+        images: list = None,
+        sender: SenderRecipient = None,
+        recipient: SenderRecipient = None,
+        request_fields: JsonValue = None,
+        plain_content: JsonValue = None,
+        image_detail: Literal["low", "high", "auto"] = None,
+        request_model: BaseModel | type[BaseModel] = None,
+        response_format: BaseModel | type[BaseModel] = None,
+        tool_schemas: dict = None,
+    ):
 
-    Attributes:
-        instruction: The main instruction content
-        context: Additional context information
-        guidance: Optional guidance for instruction execution
-        images: Optional list of images
-        request_fields: Fields requested in the response
-        plain_content: Plain text content
-        image_detail: Level of detail for images
-        request_model: Optional Pydantic model for structured requests
-        tool_schemas: Optional tool schemas
-    """
-
-    @override
-    def __init__(
-        self,
-        instruction: JsonValue | MessageFlag,
-        context: JsonValue | MessageFlag = None,
-        guidance: JsonValue | MessageFlag = None,
-        images: list | MessageFlag = None,
-        sender: ID.Ref | MessageFlag = None,
-        recipient: ID.Ref | MessageFlag = None,
-        request_fields: JsonValue | MessageFlag = None,
-        plain_content: JsonValue | MessageFlag = None,
-        image_detail: Literal["low", "high", "auto"] | MessageFlag = None,
-        request_model: BaseModel | type[BaseModel] | MessageFlag = None,
-        tool_schemas: dict | None = None,
-        protected_init_params: dict | None = None,
-    ) -> None:
-        """
-        Initialize an Instruction instance.
-
-        Args:
-            instruction: The main instruction content
-            context: Additional context for the instruction
-            guidance: Guidance information
-            images: List of images
-            sender: The sender of the instruction
-            recipient: The recipient of the instruction
-            request_fields: Fields requested in the response
-            plain_content: Plain text content
-            image_detail: Level of detail for images
-            request_model: A Pydantic model for structured requests
-            tool_schemas: Tool schemas
-            protected_init_params: Protected initialization parameters
-        """
-        message_flags = [
-            instruction,
-            context,
-            guidance,
-            images,
-            sender,
-            recipient,
-            request_fields,
-            plain_content,
-            image_detail,
-            tool_schemas,
-            request_model,
-        ]
-
-        if all(x == MessageFlag.MESSAGE_LOAD for x in message_flags):
-            protected_init_params = protected_init_params or {}
-            super().__init__(**protected_init_params)
-            return
-
-        if all(x == MessageFlag.MESSAGE_CLONE for x in message_flags):
-            super().__init__(role=MessageRole.USER)
-            return
-
-        super().__init__(
+        if (
+            sum(
+                bool(i)
+                for i in [request_fields, request_model, response_format]
+            )
+            > 1
+        ):
+            raise ValueError(
+                "only one of request_fields or request_model can be provided"
+                "response_format is alias of request_model"
+            )
+        content = prepare_instruction_content(
+            guidance=guidance,
+            instruction=instruction,
+            context=context,
+            request_fields=request_fields,
+            plain_content=plain_content,
+            request_model=request_model or response_format,
+            images=images,
+            image_detail=image_detail,
+            tool_schemas=tool_schemas,
+        )
+        return cls(
             role=MessageRole.USER,
-            content=prepare_instruction_content(
-                guidance=guidance,
-                instruction=instruction,
-                context=context,
-                images=images,
-                request_fields=request_fields,
-                plain_content=plain_content,
-                image_detail=image_detail,
-                request_model=request_model,
-                tool_schemas=tool_schemas,
-            ),
-            sender=sender or "user",
-            recipient=recipient or "N/A",
+            content=content,
+            sender=sender,
+            recipient=recipient,
         )
 
     @property
@@ -513,19 +471,20 @@ class Instruction(RoledMessage):
         self.extend_context(*args, **kwargs)
 
     @override
-    def _format_content(self) -> dict[str, Any]:
+    @property
+    def rendered(self) -> dict[str, Any]:
         """Format the content of the instruction."""
-        content = self.content.to_dict()
+        content = copy(self.content)
         text_content = format_text_content(content)
         if "images" not in content:
-            return {"role": self.role.value, "content": text_content}
+            return text_content
+
         else:
-            content = format_image_content(
+            return format_image_content(
                 text_content=text_content,
                 images=self.images,
                 image_detail=self.image_detail,
             )
-            return {"role": self.role.value, "content": content}
 
     @override
     def to_log(self) -> Log:
@@ -539,11 +498,8 @@ class Instruction(RoledMessage):
             Log: A Log object representing the message.
         """
         dict_ = self.to_dict()
-        content = dict_.pop("content")
+        content: dict = dict_.pop("content")
         content.pop("request_model", None)
         content.pop("request_fields", None)
-        _log = Log(
-            content=content,
-            loginfo=dict_,
-        )
+        _log = Log(content=content)
         return _log

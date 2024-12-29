@@ -2,7 +2,6 @@
 #
 # SPDX-License-Identifier: Apache-2.0
 
-
 from typing import Any
 
 from pydantic import BaseModel
@@ -16,20 +15,6 @@ from .message import MessageRole, RoledMessage, Template, jinja_env
 def prepare_assistant_response(
     assistant_response: BaseModel | list[BaseModel] | dict | str | Any, /
 ) -> dict:
-    """
-    Prepare an assistant's response for storage and transmission.
-
-    This function handles various input formats including:
-    - Single model outputs (response.choices[0].message.content)
-    - Streaming responses (response[i].choices[0].delta.content)
-    - Direct content in dictionaries or strings
-
-    Args:
-        assistant_response: The response content in any supported format
-
-    Returns:
-        Note: Formatted response content
-    """
     if assistant_response:
         content = {}
         # Handle model.choices[0].message.content format

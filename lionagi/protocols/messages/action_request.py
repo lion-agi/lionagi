@@ -129,7 +129,7 @@ class ActionRequest(RoledMessage):
         }
         if template:
             params["template"] = template
-        return ActionRequest(**params)
+        return cls(**{k: v for k, v in params.items() if v is not None})
 
     def update(
         self,
