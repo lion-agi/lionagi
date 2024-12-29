@@ -8,9 +8,10 @@ from typing import Literal
 
 from pydantic import BaseModel, JsonValue
 
-from lionagi.libs.validate import fuzzy_validate_mapping
+from lionagi.libs.validate.fuzzy_validate_mapping import fuzzy_validate_mapping
 from lionagi.operatives.operative import Operative
 from lionagi.operatives.step import Step
+from lionagi.protocols.messages.base import SenderRecipient
 from lionagi.protocols.types import (
     ActionRequest,
     ActionResponse,
@@ -116,7 +117,7 @@ class BranchOperationMixin(ABC):
         images: list = None,
         image_detail: Literal["low", "high", "auto"] = None,
         max_retries: int = None,
-        retry_imodel: iModel = None,
+        parse_imodel: iModel = None,
         retry_kwargs: dict = {},
         auto_retry_parse: bool = True,
         field_models: list[FieldModel] | None = None,
@@ -129,7 +130,7 @@ class BranchOperationMixin(ABC):
         **kwargs,
     ) -> list | BaseModel | None | dict | str:
         imodel = imodel or self.imodel
-        retry_imodel = retry_imodel or imodel
+        parse_imodel = parse_imodel or imodel
 
         operative: Operative = Step.request_operative(
             request_params=request_params,
@@ -197,8 +198,6 @@ class BranchOperationMixin(ABC):
                 "messages": [instruct.chat_msg],
                 **retry_kwargs,
             }
-            if isinstance(parse_imodel, iModel):
-                api_request = parse_imodel.parse_to_data_model(**api_request)
 
             res1 = AssistantResponse(
                 sender=self,
@@ -305,7 +304,7 @@ class BranchOperationMixin(ABC):
                 if isinstance(i, Instruction):
                     if _action_responses:
                         j = i.model_copy()
-                        d_ = [k.content.to_dict() for k in _action_responses]
+                        d_ = [k.content for k in _action_responses]
                         for z in d_:
                             if z not in j.context:
                                 j.context.append(z)
@@ -318,7 +317,7 @@ class BranchOperationMixin(ABC):
             messages = _to_use
             if _action_responses:
                 j = ins.model_copy()
-                d_ = [k.content.to_dict() for k in _action_responses]
+                d_ = [k.content for k in _action_responses]
                 for z in d_:
                     if z not in j.context:
                         j.context.append(z)
@@ -340,7 +339,11 @@ class BranchOperationMixin(ABC):
                             _msgs.append(i)
                 messages = _msgs
 
-        if self.msgs.system and "system" not in imodel.allowed_roles:
+        if (
+            self.msgs.system
+            and hasattr(imodel, "allowed_roles")
+            and "system" not in imodel.allowed_roles
+        ):
             messages = [msg for msg in messages if msg.role != "system"]
             first_instruction = None
 
@@ -368,16 +371,9 @@ class BranchOperationMixin(ABC):
 
         kwargs["messages"] = [i.chat_msg for i in messages]
         imodel = imodel or self.imodel
-        api_response = None
-
-        if not hasattr(imodel, "parse_to_data_model"):
-            api_response = await imodel.invoke(**kwargs)
-        else:
-            data_model = imodel.parse_to_data_model(**kwargs)
-            api_response = await imodel.invoke(**data_model)
 
         res = AssistantResponse(
-            assistant_response=api_response,
+            assistant_response=await imodel.invoke(**kwargs),
             sender=self,
             recipient=self.user,
         )
@@ -389,8 +385,8 @@ class BranchOperationMixin(ABC):
         instruction: Instruction | JsonValue = None,
         guidance: JsonValue = None,
         context: JsonValue = None,
-        sender: ID.SenderRecipient = None,
-        recipient: ID.SenderRecipient = None,
+        sender: SenderRecipient = None,
+        recipient: SenderRecipient = None,
         progress: ID.IDSeq = None,
         request_model: type[BaseModel] | BaseModel = None,
         request_fields: dict | list[str] = None,
@@ -398,7 +394,7 @@ class BranchOperationMixin(ABC):
         images: list = None,
         image_detail: Literal["low", "high", "auto"] = None,
         num_parse_retries: int = 0,
-        retry_imodel: iModel = None,
+        parse_imodel: iModel = None,
         retry_kwargs: dict = {},
         handle_validation: Literal[
             "raise", "return_value", "return_none"
@@ -418,7 +414,7 @@ class BranchOperationMixin(ABC):
         request_model = request_model or response_format
 
         imodel = imodel or self.imodel
-        retry_imodel = retry_imodel or imodel
+        parse_imodel = parse_imodel or imodel
         if clear_messages:
             self.msgs.clear_messages()
 
@@ -486,7 +482,7 @@ class BranchOperationMixin(ABC):
                 if request_fields:
                     try:
                         _d = to_json(res.response)
-                        _d = validate_mapping(
+                        _d = fuzzy_validate_mapping(
                             _d,
                             request_fields,
                             handle_unmatched="force",
@@ -508,7 +504,7 @@ class BranchOperationMixin(ABC):
 
                 elif request_model:
                     _d = to_json(res.response)
-                    _d = validate_mapping(
+                    _d = fuzzy_validate_mapping(
                         _d,
                         breakdown_pydantic_annotation(request_model),
                         handle_unmatched="force",
@@ -541,7 +537,7 @@ class BranchOperationMixin(ABC):
                 if parse_success is False:
                     logging.warning(
                         "Failed to parse response into request "
-                        f"format, retrying... with {retry_imodel.model}"
+                        f"format, retrying... with {parse_imodel.model}"
                     )
                     _, res = await self._invoke_imodel(
                         instruction="reformat text into specified model",
@@ -549,7 +545,7 @@ class BranchOperationMixin(ABC):
                         request_model=request_model,
                         request_fields=request_fields,
                         progress=[],
-                        imodel=retry_imodel or imodel,
+                        imodel=parse_imodel or imodel,
                         **retry_kwargs,
                     )
                     num_parse_retries -= 1

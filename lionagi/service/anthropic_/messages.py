@@ -36,3 +36,7 @@ class AnthropicChatCompletionEndPoint(ChatCompletionEndPoint):
             "top_k",
         }
         return using
+
+    @property
+    def allowed_roles(self):
+        return ["user", "assistant"]

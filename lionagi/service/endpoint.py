@@ -135,3 +135,7 @@ class ChatCompletionEndPoint(EndPoint):
             params["extra_headers"] = headers
 
         return await acompletion(**params)
+
+    @property
+    def allowed_roles(self):
+        return ["system", "user", "assistant"]

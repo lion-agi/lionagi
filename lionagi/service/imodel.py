@@ -69,3 +69,9 @@ class iModel:
                 return self.executor.completed_events[api_call.id]
         except Exception:
             return None
+
+    @property
+    def allowed_roles(self):
+        if hasattr(self.endpoint, "allowed_roles"):
+            return self.endpoint.allowed_roles
+        return ["system", "user", "assistant"]

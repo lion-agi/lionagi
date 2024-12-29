@@ -34,6 +34,32 @@ API_RETRY_CONFIG = {
     "verbose_retry": True,
 }
 
+CHAT_IMODEL_CONFIG = {
+    "provider": "openai",
+    "model": "gpt-4o",
+    "base_url": "https://api.openai.com/v1",
+    "endpoint": "chat/completions",
+    "api_key": "OPENAI_API_KEY",
+    "queue_capacity": 100,
+    "capacity_refresh_time": 60,
+    "interval": None,
+    "limit_requests": None,
+    "limit_tokens": None,
+}
+
+PARSE_IMODEL_CONFIG = {
+    "provider": "openai",
+    "model": "gpt-4o-mini",
+    "base_url": "https://api.openai.com/v1",
+    "endpoint": "chat/completions",
+    "api_key": "OPENAI_API_KEY",
+    "queue_capacity": 100,
+    "capacity_refresh_time": 60,
+    "interval": None,
+    "limit_requests": None,
+    "limit_tokens": None,
+}
+
 
 class Settings:
 
@@ -44,3 +70,7 @@ class Settings:
     class API:
         CACHED_CONFIG: dict = CACHED_CONFIG
         RETRY_CONFIG: dict = API_RETRY_CONFIG
+
+    class iModel:
+        CHAT: dict = CHAT_IMODEL_CONFIG
+        PARSE: dict = PARSE_IMODEL_CONFIG

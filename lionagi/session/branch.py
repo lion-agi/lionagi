@@ -61,11 +61,11 @@ class Branch(Node, BranchActionMixin, BranchOperationMixin):
 
         imodel = data.pop(
             "imodel",
-            iModel(**Settings.iModel.CHAT.to_dict()),
+            iModel(**Settings.iModel.CHAT),
         )
         parse_imodel = data.pop(
             "parse_imodel",
-            iModel(**Settings.iModel.PARSE.to_dict()),
+            iModel(**Settings.iModel.PARSE),
         )
         out = {
             "user": user,

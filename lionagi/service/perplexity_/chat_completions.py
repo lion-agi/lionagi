@@ -27,3 +27,7 @@ class PerplexityChatCompletionEndPoint(ChatCompletionEndPoint):
             "frequency_penalty",
         }
         return using
+
+    @property
+    def allowed_roles(self):
+        return ["user", "assistant"]
