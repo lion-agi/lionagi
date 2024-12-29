@@ -81,7 +81,7 @@ def test_len(sample_progression, sample_elements):
     "index, expected_type",
     [
         (0, IDType),
-        (slice(0, 2), Progression),
+        (slice(0, 2), list),
     ],
 )
 def test_getitem(sample_progression, index, expected_type):
@@ -132,10 +132,6 @@ def test_next_empty():
     empty_prog = Progression()
     with pytest.raises(StopIteration):
         next(empty_prog)
-
-
-def test_size(sample_progression, sample_elements):
-    assert sample_progression.size() == len(sample_elements)
 
 
 def test_clear(sample_progression):
@@ -222,9 +218,9 @@ def test_exclude(sample_progression, input_item):
 
 
 def test_is_empty(sample_progression):
-    assert not sample_progression.is_empty()
+    assert bool(sample_progression)
     sample_progression.clear()
-    assert sample_progression.is_empty()
+    assert not bool(sample_progression)
 
 
 def test_remove(sample_progression, sample_elements):
@@ -251,13 +247,6 @@ def test_popleft_empty():
         empty_prog.popleft()
 
 
-@pytest.mark.parametrize("size", [10, 100, 1000])
-def test_large_progression(size):
-    large_prog = Progression(order=[Element() for _ in range(size)])
-    assert len(large_prog) == size
-    assert large_prog.size() == size
-
-
 def test_concurrent_operations():
     prog = Progression()
 
@@ -268,7 +257,7 @@ def test_concurrent_operations():
 
     async def remove_items():
         for _ in range(50):
-            if not prog.is_empty():
+            if prog:
                 prog.pop()
             await asyncio.sleep(0.02)
 

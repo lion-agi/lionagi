@@ -12,10 +12,10 @@ from functools import wraps
 from typing import Any, Generic, Literal, Self, TypeVar
 
 import pandas as pd
-from pydantic import ConfigDict, Field, field_serializer, model_validator
+from pydantic import Field, field_serializer, model_validator
 from pydantic.fields import FieldInfo
 
-from lionagi._errors import ItemExistsError, ItemNotFoundError
+from lionagi._errors import IDError, ItemExistsError, ItemNotFoundError
 from lionagi.utils import UNDEFINED, lcall, to_list
 
 from ._id import ID, Collective, validate_order
@@ -47,15 +47,13 @@ def validate_collection_item_type(
 
     if item_type is not None:
         if strict_type:
-            if any(type(item) != item_type for item in collections):
-                raise ValueError(
+            if any(type(i) not in {item_type} for i in collections):
+                raise TypeError(
                     f"All items must be exactly of type {item_type}."
                 )
         else:
             if any(not isinstance(item, item_type) for item in collections):
-                raise ValueError(
-                    f"All items must be instances of {item_type}."
-                )
+                raise TypeError(f"All items must be instances of {item_type}.")
 
     out = {}
     for i in collections:
@@ -107,8 +105,6 @@ class Pile(Element, Collective, Generic[E]):
         ...     await pile.aset(0, element4)
     """
 
-    model_config = ConfigDict(arbitrary_types_allowed=True)
-
     collections: dict[IDType, E] = Field(default_factory=dict)
     item_type: type | None = Field(default=None, frozen=True)
     strict_type: bool = Field(default=False, frozen=True)
@@ -147,9 +143,12 @@ class Pile(Element, Collective, Generic[E]):
 
         if "collections" in values:
             # Validate collections
-            params["collections"] = validate_collection_item_type(
-                values["collections"], **params
-            )
+            try:
+                params["collections"] = validate_collection_item_type(
+                    values["collections"], **params
+                )
+            except Exception as e:
+                raise ValueError(f"Invalid collection items: {e}") from e
 
         if "progression" not in values:
             # If no progression given, create from collections keys if collections present
@@ -160,13 +159,14 @@ class Pile(Element, Collective, Generic[E]):
             return params
 
         progression = values["progression"]
-        if not isinstance(progression, Progression):
-            progression = Progression(order=progression)
-        params["progression"] = progression
+        if isinstance(progression, Progression):
+            progression = progression.order
+
+        params["progression"] = Progression(order=progression)
 
         # Validate collections and progression consistency
-        if "collections" in params and "progression" in params:
-            if set(params["collections"].keys()) != set(
+        if "progression" in params:
+            if set(params.get("collections", {}).keys()) != set(
                 params["progression"].order
             ):
                 raise ValueError(
@@ -303,7 +303,7 @@ class Pile(Element, Collective, Generic[E]):
                     dropna=True,
                     unique_output=True,
                 )
-            except ValueError:
+            except IDError:
                 # If parsing failed, no such item
                 raise ItemNotFoundError(
                     f"Item with id {key} not found in the pile."
@@ -350,12 +350,10 @@ class Pile(Element, Collective, Generic[E]):
     def include(self, item: ID.ItemSeq) -> bool:
         """Include items without raising errors."""
         try:
-            # Check if all are Elements
-            items = to_list(item, flatten=True, dropna=True)
-            if any(not isinstance(x, Element) for x in items):
-                raise ValueError("All items must be Element instances.")
-            item_dict = {x.id: x for x in items} if items else {}
-        except ValueError:
+            item_dict = validate_collection_item_type(
+                item, self.item_type, self.strict_type
+            )
+        except Exception:
             return False
 
         if not item_dict:
@@ -412,6 +410,9 @@ class Pile(Element, Collective, Generic[E]):
             else:
                 item_ids = validate_order(item)
             out = []
+            item_ids = (
+                [item_ids] if not isinstance(item_ids, list) else item_ids
+            )
             for i in item_ids:
                 if i not in self.collections:
                     raise ItemNotFoundError(
@@ -491,7 +492,7 @@ class Pile(Element, Collective, Generic[E]):
 
     def values(self) -> Generator[E]:
         """Get ordered list of collection values."""
-        return (self.collections[i] for i in self.progression)
+        return (self.collections[i] for i in list(self.progression))
 
     def items(self) -> Generator[tuple[IDType, E]]:
         """Get collection items as key-value pairs."""
@@ -552,6 +553,25 @@ class Pile(Element, Collective, Generic[E]):
     async def aupdate(self, other: ID.ItemSeq | ID.Item):
         """Async update operation."""
         self._update(other)
+
+    async def __aiter__(self) -> AsyncIterator[E]:
+        """Async iterate over items."""
+        async with self.async_lock:
+            current_order = list(self.progression)
+
+        for key in current_order:
+            yield self.collections[key]
+            await asyncio.sleep(0)  # Yield control to the event loop
+
+    @async_synchronized
+    async def asetitem(
+        self,
+        key: ID.Ref | ID.RefSeq | int | slice,
+        item: ID.Item | ID.ItemSeq,
+        /,
+    ) -> None:
+        """Async set item(s)."""
+        self.set(key, item)
 
     class AsyncPileIterator:
         def __init__(self, pile: Pile):
@@ -986,12 +1006,17 @@ class Pile(Element, Collective, Generic[E]):
         Returns:
             New Pile instance.
         """
-        return Pile(
-            collections=collections,
-            item_type=item_type,
-            strict_type=strict_type,
-            progression=progression,
-        )
+        params = {}
+        if item_type is not None:
+            params["item_type"] = item_type
+        if strict_type is not False:
+            params["strict_type"] = strict_type
+        if progression is not None:
+            params["progression"] = progression
+        if collections:
+            params["collections"] = collections
+
+        return cls(**params)
 
     def __next__(self) -> E:
         """Get next item in iteration."""
@@ -1012,6 +1037,10 @@ class Pile(Element, Collective, Generic[E]):
         if length == 1:
             return f"Pile({next(iter(self.collections.values())).__repr__()})"
         return repr(self.to_df())
+
+    def __bool__(self) -> bool:
+        """Check if pile is empty."""
+        return bool(self.collections)
 
 
 def pile(

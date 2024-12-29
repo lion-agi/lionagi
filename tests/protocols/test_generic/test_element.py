@@ -13,7 +13,7 @@ def test_element_creation():
     """Test basic Element creation."""
     element = Element()
     assert element.id is not None
-    assert isinstance(element.created_timestamp, float)
+    assert isinstance(element.created_datetime.timestamp(), float)
     assert element.created_datetime is not None
     assert isinstance(element.created_datetime, datetime)
 
@@ -27,8 +27,8 @@ def test_element_with_invalid_id():
 def test_element_with_timestamp():
     """Test Element creation with timestamp."""
     timestamp = 1234567890.0
-    element = Element(created_timestamp=timestamp)
-    assert element.created_timestamp == timestamp
+    element = Element(created_at=timestamp)
+    assert element.created_datetime.timestamp() == timestamp
 
     # Compare with timezone-aware datetime
     expected_dt = datetime.fromtimestamp(
@@ -40,9 +40,9 @@ def test_element_with_timestamp():
 def test_element_with_datetime():
     """Test Element creation with datetime."""
     dt = datetime.now(tz=Settings.Config.TIMEZONE)
-    element = Element(created_timestamp=dt)
-    assert element.created_timestamp == dt.timestamp()
-    assert abs(element.created_timestamp - dt.timestamp()) < 0.001
+    element = Element(created_at=dt)
+    assert element.created_datetime.timestamp() == dt.timestamp()
+    assert abs(element.created_datetime.timestamp() - dt.timestamp()) < 0.001
 
 
 def test_element_to_dict():
@@ -51,7 +51,7 @@ def test_element_to_dict():
     dict_repr = element.to_dict()
     assert isinstance(dict_repr, dict)
     assert "id" in dict_repr
-    assert "created_timestamp" in dict_repr
+    assert "created_at" in dict_repr
     assert "lion_class" in dict_repr
     assert dict_repr["lion_class"] == "Element"
 
@@ -62,7 +62,10 @@ def test_element_from_dict():
     dict_repr = original.to_dict()
     recreated = Element.from_dict(dict_repr)
     assert recreated.id == original.id
-    assert recreated.created_timestamp == original.created_timestamp
+    assert (
+        recreated.created_datetime.timestamp()
+        == original.created_datetime.timestamp()
+    )
 
 
 def test_element_str_representation():
@@ -115,24 +118,24 @@ def test_element_class_name():
 def test_invalid_timestamp_formats():
     """Test Element creation with invalid timestamp formats."""
     with pytest.raises(ValueError):
-        Element(created_timestamp="not a timestamp")
+        Element(created_at="not a timestamp")
 
     with pytest.raises(ValueError):
-        Element(created_timestamp="2023-13-45")  # Invalid date
+        Element(created_at="2023-13-45")  # Invalid date
 
     with pytest.raises(ValueError):
-        Element(created_timestamp={})  # Invalid type
+        Element(created_at={})  # Invalid type
 
 
 def test_element_with_timezone():
     """Test Element creation with different timezone inputs."""
     # Test with UTC timestamp
-    element = Element(created_timestamp=datetime.now(timezone.utc))
+    element = Element(created_at=datetime.now(timezone.utc))
     assert element.created_datetime.tzinfo == Settings.Config.TIMEZONE
 
     # Test with local timestamp
     local_dt = datetime.now()
-    element = Element(created_timestamp=local_dt)
+    element = Element(created_at=local_dt)
     assert element.created_datetime.tzinfo == Settings.Config.TIMEZONE
 
     # Test with specific timezone
@@ -140,5 +143,5 @@ def test_element_with_timezone():
 
     est_tz = zoneinfo.ZoneInfo("America/New_York")
     est_dt = datetime.now(est_tz)
-    element = Element(created_timestamp=est_dt)
+    element = Element(created_at=est_dt)
     assert element.created_datetime.tzinfo == Settings.Config.TIMEZONE

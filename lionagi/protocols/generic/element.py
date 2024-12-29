@@ -20,9 +20,16 @@ from pydantic import (
 )
 
 from lionagi._class_registry import LION_CLASS_REGISTRY, get_class
-from lionagi.utils import UNDEFINED
+from lionagi._errors import IDError
+from lionagi.settings import Settings
+from lionagi.utils import UNDEFINED, time
 
-__all__ = ("Element", "IDType", "E")
+__all__ = (
+    "Element",
+    "IDType",
+    "E",
+    "Observable",
+)
 
 
 class IDType:
@@ -37,7 +44,7 @@ class IDType:
         try:
             return cls(id=UUID(str(value), version=4))
         except ValueError:
-            raise ValueError("Value must be a UUID4 or a valid UUID4 string.")
+            raise IDError("Invalid ID format.")
 
     @classmethod
     def create(cls) -> IDType:
@@ -77,7 +84,9 @@ class Element(BaseModel, Observable):
     )
 
     id: IDType = Field(default_factory=IDType.create)
-    created_at: datetime = Field(default_factory=datetime.now)
+    created_at: float = Field(
+        default_factory=time, description="Creation timestamp"
+    )
 
     @classmethod
     def __pydantic_init_subclass__(cls, **kwargs: Any) -> None:
@@ -94,16 +103,36 @@ class Element(BaseModel, Observable):
         """Avoid unnecessary parsing if already UUID4."""
         return IDType.validate(value)
 
-    @field_serializer("created_at")
-    def _serialize_created_at(self, created_at: datetime) -> str:
-        return created_at.isoformat()
-
     @field_validator("created_at", mode="before")
-    def _validate_created_at(cls, value: datetime | str) -> datetime:
-        """Skip parsing if it's already a datetime."""
+    def _validate_created_at(cls, value: Any) -> float:
         if isinstance(value, datetime):
+            return value.timestamp()
+
+        if isinstance(value, int | float):
             return value
-        return datetime.fromisoformat(value)
+
+        if isinstance(value, str):
+            try:
+                return datetime.fromisoformat(value).timestamp()
+            except Exception as e:
+                try:
+                    value = float(value)
+                except Exception:
+                    raise ValueError(
+                        f"Invalid datetime string format: {value}"
+                    ) from e
+
+        try:
+            return datetime.fromtimestamp(value, tz=Settings.Config.TIMEZONE)
+
+        except Exception as e:
+            raise ValueError(f"Invalid datetime string format: {value}") from e
+
+    @property
+    def created_datetime(self) -> datetime:
+        return datetime.fromtimestamp(
+            self.created_at, tz=Settings.Config.TIMEZONE
+        )
 
     @classmethod
     def class_name(cls) -> str:
@@ -154,6 +183,9 @@ class Element(BaseModel, Observable):
             if subcls.from_dict.__func__ != Element.from_dict.__func__:
                 return subcls.from_dict(dict_)
         return cls.model_validate(dict_)
+
+    def __hash__(self) -> int:
+        return hash(self.id)
 
 
 E = TypeVar("E", bound=Element)

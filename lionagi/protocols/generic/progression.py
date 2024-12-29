@@ -53,13 +53,19 @@ class Progression(Element, Ordering, Generic[E]):
 
     def __contains__(self, item: Any) -> bool:
         """Check if item(s) exist in progression."""
-        item_list = validate_order(item)
-        order_set = set(self.order)
-        return all(ref in order_set for ref in item_list)
+        try:
+            item_list = validate_order(item)
+            order_set = set(self.order)
+            return all(ref in order_set for ref in item_list)
+        except Exception:
+            return False
 
     def __getitem__(self, key: int | slice) -> IDType | list[IDType]:
         """Get item(s) at specified index or slice."""
-        return self.order[key]
+        try:
+            return self.order[key]
+        except Exception as e:
+            raise ItemNotFoundError(f"{key}") from e
 
     def __setitem__(self, key: int | slice, value: Any):
         """Set item(s) at specified index or slice."""
@@ -76,6 +82,10 @@ class Progression(Element, Ordering, Generic[E]):
     def __iter__(self) -> Any:
         """Iterate over items in progression."""
         return iter(self.order)
+
+    def __next__(self) -> IDType:
+        """Get next item in progression."""
+        return next(self.order)
 
     def include(self, item: Any, /) -> bool:
         """Add items to end of progression if not present.
@@ -129,11 +139,19 @@ class Progression(Element, Ordering, Generic[E]):
 
     def pop(self, index: int = -1) -> IDType:
         """Remove and return item at index (default last)."""
-        return self.order.pop(index)
+        try:
+            return self.order.pop(index)
+        except Exception as e:
+            raise ItemNotFoundError(f"{index}") from e
 
     def popleft(self) -> IDType:
         """Remove and return first item."""
-        return self.order.pop(0)
+        try:
+            return self.order.pop(0)
+        except Exception as e:
+            raise ItemNotFoundError(
+                "Cannot pop from empty progression."
+            ) from e
 
     def __reverse__(self) -> Progression:
         return self.__class__(order=list(reversed(self.order)), name=self.name)
@@ -156,7 +174,10 @@ class Progression(Element, Ordering, Generic[E]):
         Raises:
             ItemNotFoundError: If any item not found
         """
-        items = validate_order(item)
+        try:
+            items = validate_order(item)
+        except Exception as e:
+            raise ItemNotFoundError(f"{item}") from e
         if not items:
             return
 

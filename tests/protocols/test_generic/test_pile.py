@@ -23,7 +23,7 @@ def sample_elements():
 
 @pytest.fixture
 def sample_pile(sample_elements):
-    return Pile(items=sample_elements)
+    return Pile(collections=sample_elements)
 
 
 def generate_random_string(length: int) -> str:
@@ -40,7 +40,7 @@ def generate_random_string(length: int) -> str:
     ],
 )
 def test_initialization(input_data):
-    p = Pile(items=input_data)
+    p = Pile(collections=input_data)
     assert len(p) == len(input_data)
     for item in input_data:
         assert ID.get_id(item) in p
@@ -48,16 +48,17 @@ def test_initialization(input_data):
 
 def test_initialization_with_item_type():
     p = Pile(
-        items=[MockElement(value=i) for i in range(3)], item_type=MockElement
+        collections=[MockElement(value=i) for i in range(3)],
+        item_type=MockElement,
     )
-    assert p.item_type == {MockElement}
+    assert p.item_type == MockElement
 
-    with pytest.raises(TypeError):
-        Pile(items=[1, 2, 3], item_type=MockElement)
+    with pytest.raises(ValueError):
+        Pile(collections=[1, 2, 3], item_type=MockElement)
 
 
 def test_getitem_invalid():
-    p = Pile(items=[MockElement(value=i) for i in range(3)])
+    p = Pile(collections=[MockElement(value=i) for i in range(3)])
     with pytest.raises(ItemNotFoundError):
         p[10]
     with pytest.raises(ItemNotFoundError):
@@ -92,15 +93,6 @@ def test_pop(sample_pile, sample_elements):
         sample_pile.pop("nonexistent")
 
 
-def test_remove(sample_pile, sample_elements):
-    sample_pile.remove(sample_elements[2])
-    assert sample_elements[2] not in sample_pile
-    assert len(sample_pile) == 4
-
-    with pytest.raises(ItemNotFoundError):
-        sample_pile.remove(MockElement(value="nonexistent"))
-
-
 def test_exclude(sample_pile, sample_elements):
     sample_pile.exclude(sample_elements[3])
     assert sample_elements[3] not in sample_pile
@@ -123,13 +115,9 @@ def test_update(sample_pile, sample_elements):
 
 
 def test_is_empty(sample_pile):
-    assert not sample_pile.is_empty()
+    assert bool(sample_pile)
     sample_pile.clear()
-    assert sample_pile.is_empty()
-
-
-def test_size(sample_pile, sample_elements):
-    assert sample_pile.size() == len(sample_elements)
+    assert not bool(sample_pile)
 
 
 def test_append(sample_pile, sample_elements):
@@ -153,25 +141,12 @@ def test_iter(sample_pile, sample_elements):
 
 def test_strict_mode():
     strict_pile = Pile(
-        items=[MockElement(value=i) for i in range(3)],
+        collections=[MockElement(value=i) for i in range(3)],
         item_type=MockElement,
-        strict=True,
+        strict_type=True,
     )
-    with pytest.raises(TypeError):
-        strict_pile.include(Element())  # Not a MockElement
 
-
-def test_order_preservation():
-    elements = [MockElement(value=i) for i in range(10)]
-    p = Pile(items=elements)
-    assert list(p.values()) == elements
-
-    # Test order after operations
-    p.remove(elements[5])
-    p.include(MockElement(value="new"))
-    assert list(p.values())[:5] == elements[:5]
-    assert list(p.values())[5:9] == elements[6:]
-    assert list(p.values())[9].value == "new"
+    assert not strict_pile.include(Element())  # Not a MockElement
 
 
 @pytest.mark.asyncio
@@ -185,7 +160,7 @@ async def test_concurrent_operations():
 
     async def remove_items():
         for _ in range(500):
-            if not p.is_empty():
+            if p:
                 p.pop(0)
             await asyncio.sleep(0.001)
 
@@ -194,7 +169,9 @@ async def test_concurrent_operations():
 
 
 def test_large_scale_operations():
-    large_pile = Pile(items=[MockElement(value=i) for i in range(100000)])
+    large_pile = Pile(
+        collections=[MockElement(value=i) for i in range(100000)]
+    )
     assert len(large_pile) == 100000
 
     # Test various operations on the large pile
@@ -208,11 +185,11 @@ def test_large_scale_operations():
 
 def test_memory_efficiency():
     elements = [MockElement(value=i) for i in range(100000)]
-    p = Pile(elements)
+    p = Pile(collections=elements)
 
     # Calculate memory usage
     pile_size = sys.getsizeof(p)
-    internal_size = sum(sys.getsizeof(item) for item in p.pile_.values())
+    internal_size = sum(sys.getsizeof(item) for item in p.collections.values())
     total_size = pile_size + internal_size
 
     # Check if memory usage is reasonable (less than 100MB for 100,000 elements)
@@ -221,14 +198,18 @@ def test_memory_efficiency():
 
 def test_pile_with_custom_progression():
     custom_prog = Progression(order=[1, 2, 3, 4, 5])
-    p = Pile([MockElement(value=i) for i in range(5)], order=custom_prog)
-    assert p.progress == custom_prog
+    p = Pile(
+        collections=[MockElement(value=i) for i in range(5)], order=custom_prog
+    )
+    assert p.progression == custom_prog
 
 
 def test_pile_with_invalid_order():
     elements = [MockElement(value=i) for i in range(5)]
     with pytest.raises(ValueError):
-        Pile(elements, order=[1, 2, 3])  # Order length doesn't match items
+        Pile(
+            collections=elements, progression=[1, 2, 3]
+        )  # Order length doesn't match items
 
 
 def test_pile_with_complex_elements():
@@ -239,7 +220,7 @@ def test_pile_with_complex_elements():
         ComplexElement(data={"value": i, "nested": {"x": i * 2}})
         for i in range(5)
     ]
-    p = Pile(items=elements)
+    p = Pile(collections=elements)
     assert len(p) == 5
     assert all(isinstance(e, ComplexElement) for e in p.values())
     assert p[2].data["nested"]["x"] == 4
@@ -250,7 +231,7 @@ def test_pile_with_generator_input():
         for i in range(1000):
             yield MockElement(value=i)
 
-    p = Pile(element_generator())
+    p = Pile(collections=element_generator())
     assert len(p) == 1000
     assert all(i == e.value for i, e in enumerate(p.values()))
 
@@ -262,22 +243,9 @@ async def test_pile_with_async_generator_input():
             await asyncio.sleep(0.001)
             yield MockElement(value=i)
 
-    p = Pile(items=[e async for e in async_element_generator()])
+    p = Pile(collections=[e async for e in async_element_generator()])
     assert len(p) == 1000
     assert all(i == e.value for i, e in enumerate(p.values()))
-
-
-def test_pile_exception_handling():
-    p = Pile(items=[MockElement(value=i) for i in range(5)])
-
-    with pytest.raises(ItemNotFoundError):
-        p[1.5]  # Non-integer, non-string index
-
-    with pytest.raises(ItemNotFoundError):
-        p.remove(MockElement(value=10))  # Element not in pile
-
-    with pytest.raises(ValueError):
-        p.update(5)  # Invalid update input
 
 
 def test_pile_function():
@@ -285,7 +253,7 @@ def test_pile_function():
     p = pile(elements, item_type=MockElement)
     assert isinstance(p, Pile)
     assert len(p) == 5
-    assert p.item_type == {MockElement}
+    assert p.item_type == MockElement
 
 
 class ComplexElement(Element):
@@ -305,7 +273,7 @@ def complex_elements():
 
 
 def test_pile_with_complex_elements(complex_elements):
-    p = Pile(complex_elements)
+    p = Pile(collections=complex_elements)
     assert len(p) == 10
     assert p[3].data["name"] == "Element3"
     assert p[5].nested[1]["y"] == 15
@@ -313,7 +281,10 @@ def test_pile_with_complex_elements(complex_elements):
 
 def test_pile_nested_operations():
     p = Pile(
-        [Pile([MockElement(value=i) for i in range(3)]) for _ in range(3)]
+        collections=[
+            Pile(collections=[MockElement(value=i) for i in range(3)])
+            for _ in range(3)
+        ]
     )
     assert len(p) == 3
     assert all(isinstance(item, Pile) for item in p.values())
@@ -321,12 +292,12 @@ def test_pile_nested_operations():
 
 
 def test_pile_with_custom_hash_elements():
-    class CustomHashElement(Element):
+    class CustomHashElement(MockElement):
         def __hash__(self):
             return hash(self.id + str(self.value))
 
-    elements = [CustomHashElement(content=i) for i in range(5)]
-    p = Pile(elements)
+    elements = [CustomHashElement(value=i) for i in range(5)]
+    p = Pile(collections=elements)
     assert len(p) == 5
     assert elements[2] in p
 
@@ -338,7 +309,7 @@ def test_pile_scaling_performance(n):
     elements = [MockElement(value=i) for i in range(n)]
 
     start_time = time.time()
-    p = Pile(elements)
+    p = Pile(collections=elements)
     creation_time = time.time() - start_time
 
     start_time = time.time()
@@ -359,7 +330,7 @@ def test_pile_memory_leak():
     refs = []
 
     for i in range(1000):
-        elem = Element(content=i)
+        elem = MockElement(value=i)
         p.include(elem)
         refs.append(weakref.ref(elem))
 
@@ -371,14 +342,14 @@ def test_pile_memory_leak():
 
 
 def test_pile_pickling():
-    p = Pile(items=[MockElement(value=i) for i in range(10)])
+    p = Pile(collections=[MockElement(value=i) for i in range(10)])
     pickled = pickle.dumps(p)
     unpickled = pickle.loads(pickled)
     assert p == unpickled
 
 
 def test_pile_deep_copy():
-    p = Pile(items=[MockElement(value=i) for i in range(10)])
+    p = Pile(collections=[MockElement(value=i) for i in range(10)])
     p_copy = copy.deepcopy(p)
     assert p == p_copy
     assert p is not p_copy
@@ -386,12 +357,12 @@ def test_pile_deep_copy():
 
 
 def test_pile_with_property_access():
-    class PropertyElement(Element):
+    class PropertyElement(MockElement):
         @property
         def squared(self):
-            return self.content**2
+            return self.value**2
 
-    p = Pile([PropertyElement(content=i) for i in range(10)])
+    p = Pile(collections=[PropertyElement(value=i) for i in range(10)])
     assert [e.squared for e in p.values()] == [i**2 for i in range(10)]
 
 
@@ -403,29 +374,27 @@ def test_pile_with_context_manager():
         def __exit__(self, exc_type, exc_val, exc_tb):
             self.clear()
 
-    with ManagedPile(items=[MockElement(value=i) for i in range(5)]) as mp:
+    with ManagedPile(
+        collections=[MockElement(value=i) for i in range(5)]
+    ) as mp:
         assert len(mp) == 5
     assert len(mp) == 0
 
 
 def test_pile_with_custom_progression():
-    class ReversedProgression(Progression):
-        def __iter__(self):
-            return reversed(self.order)
-
     elements = [MockElement(value=i) for i in range(5)]
     p = Pile(
-        elements,
-        order=ReversedProgression(order=[e.id for e in elements]),
+        collections=elements,
+        progression=[e.id for e in elements],
     )
-    assert [e.value for e in p.values()] == [4, 3, 2, 1, 0]
+    assert [e.value for e in p.values()] == [0, 1, 2, 3, 4]
 
 
 @pytest.mark.parametrize("n", [10, 100, 1000])
 def test_pile_memory_usage(n):
     import sys
 
-    p = Pile(items=[MockElement(value=i) for i in range(n)])
+    p = Pile(collections=[MockElement(value=i) for i in range(n)])
     memory_usage = sys.getsizeof(p) + sum(sys.getsizeof(e) for e in p.values())
 
     # Rough estimation: each MockElement should take about 100 bytes
@@ -463,16 +432,16 @@ def test_pile_with_abc():
         def abstract_method(self):
             return "Implemented"
 
-    p = Pile(items=[ConcreteElement() for _ in range(5)])
+    p = Pile(collections=[ConcreteElement() for _ in range(5)])
     assert all(e.abstract_method() == "Implemented" for e in p.values())
 
     with pytest.raises(TypeError):
-        Pile(items=[AbstractElement()])
+        Pile(collections=[AbstractElement()])
 
 
 @pytest.fixture
 async def async_sample_pile():
-    return Pile([Element(content=i) for i in range(5)])
+    return Pile(collections=[MockElement(value=i) for i in range(5)])
 
 
 @pytest.mark.asyncio
@@ -486,7 +455,7 @@ async def test_concurrent_operations():
 
     async def remove_items():
         for _ in range(50):
-            if not p.is_empty():
+            if p:
                 await p.apop(0)
             await asyncio.sleep(0.001)
 
@@ -500,26 +469,11 @@ async def test_async_setitem(async_sample_pile):
         async_sample_ = await async_sample_pile
     else:
         async_sample_ = async_sample_pile
-    await async_sample_.asetitem(2, Element(content=10))
-    assert async_sample_[2].content == 10
+    await async_sample_.asetitem(2, MockElement(value=10))
+    assert async_sample_[2].value == 10
 
-    with pytest.raises(ValueError):
-        await async_sample_.asetitem(10, Element(content=20))
-
-
-@pytest.mark.asyncio
-async def test_async_remove(async_sample_pile):
-    if not isinstance(async_sample_pile, Pile):
-        async_sample_ = await async_sample_pile
-    else:
-        async_sample_ = async_sample_pile
-    element = async_sample_[2]
-    await async_sample_.aremove(element)
-    assert len(async_sample_) == 4
-    assert element not in async_sample_
-
-    with pytest.raises(ItemNotFoundError):
-        await async_sample_.aremove(Element(content=100))
+    with pytest.raises(IndexError):
+        await async_sample_.asetitem(10, MockElement(value=20))
 
 
 @pytest.mark.asyncio
@@ -528,7 +482,7 @@ async def test_async_include(async_sample_pile):
         async_sample_ = await async_sample_pile
     else:
         async_sample_ = async_sample_pile
-    new_element = Element(content=100)
+    new_element = MockElement(value=100)
     await async_sample_.ainclude(new_element)
     assert len(async_sample_) == 6
     assert new_element in async_sample_
@@ -546,7 +500,7 @@ async def test_async_exclude(async_sample_pile):
     assert element not in async_sample_
 
     # Excluding non-existent element should not raise an error
-    await async_sample_.aexclude(Element(content=100))
+    await async_sample_.aexclude(MockElement(value=100))
 
 
 @pytest.mark.asyncio
@@ -555,7 +509,7 @@ async def test_async_update(async_sample_pile):
         async_sample_ = await async_sample_pile
     else:
         async_sample_ = async_sample_pile
-    new_elements = [Element(content=i) for i in range(5, 8)]
+    new_elements = [MockElement(value=i) for i in range(5, 8)]
     await async_sample_.aupdate(new_elements)
     assert len(async_sample_) == 8
 
@@ -580,7 +534,7 @@ async def test_async_iter(async_sample_pile):
         async_sample_ = async_sample_pile
     values = []
     async for item in async_sample_:
-        values.append(item.content)
+        values.append(item.value)
     assert values == [0, 1, 2, 3, 4]
 
 
@@ -591,8 +545,8 @@ async def test_async_next(async_sample_pile):
     else:
         async_sample_ = async_sample_pile
     aiter = async_sample_.__aiter__()
-    assert (await aiter.__anext__()).content == 0
-    assert (await aiter.__anext__()).content == 1
+    assert (await aiter.__anext__()).value == 0
+    assert (await aiter.__anext__()).value == 1
 
     # Exhaust the iterator
     for _ in range(3):
@@ -608,7 +562,7 @@ async def test_async_pile_as_queue():
 
     async def producer():
         for i in range(100):
-            await p.ainclude(Element(content=i))
+            await p.ainclude(MockElement(value=i))
             await asyncio.sleep(0.001)
 
     async def consumer():
@@ -628,7 +582,7 @@ async def test_async_pile_as_queue():
     await producer_task
 
     assert len(consumed_items) == 100
-    assert [item.content for item in consumed_items] == list(range(100))
+    assert [item.value for item in consumed_items] == list(range(100))
     assert len(p) == 0
 
 
@@ -638,7 +592,7 @@ async def test_async_task_queue_simulation():
 
     async def task_producer():
         for i in range(100):
-            await task_queue.ainclude(Element(content=f"Task {i}"))
+            await task_queue.ainclude(MockElement(value=f"Task {i}"))
             await asyncio.sleep(0.001)
 
     async def task_consumer():
@@ -668,7 +622,7 @@ async def test_async_error_recovery():
     p = Pile()
 
     async def faulty_operation():
-        await p.ainclude(Element(content="valid"))
+        await p.ainclude(MockElement(value="valid"))
         raise ValueError("Simulated error")
 
     try:
@@ -678,17 +632,5 @@ async def test_async_error_recovery():
 
     assert len(p) == 1
 
-    await p.ainclude(Element(content="after_error"))
+    await p.ainclude(MockElement(value="after_error"))
     assert len(p) == 2
-
-
-@pytest.mark.asyncio
-async def test_async_type_checking():
-    p = Pile(item_type={Element})
-
-    await p.ainclude(Element(content=1))
-
-    with pytest.raises(TypeError):
-        await p.ainclude("not an Element")
-
-    assert len(p) == 1

@@ -109,3 +109,10 @@ class ID(Generic[E]):
         raise ValueError(
             "Item must be of type Element, str, a valid UUID4 or IDtype."
         )
+
+    @staticmethod
+    def is_id(item: Any, /) -> bool:
+        try:
+            return IDType.validate(item)
+        except Exception:
+            return False
