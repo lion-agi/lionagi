@@ -8,17 +8,14 @@ from typing import Any
 from pydantic import ConfigDict, Field, field_validator
 from pydantic.fields import FieldInfo
 
-from lionagi.utils import (
-    UNDEFINED,
-    HashableModel,
-    UndefinedType,
-    is_same_dtype,
-)
+from lionagi.utils import UNDEFINED, UndefinedType, is_same_dtype
+
+from .schema_model import SchemaModel
 
 __all__ = ("FieldModel",)
 
 
-class FieldModel(HashableModel):
+class FieldModel(SchemaModel):
     """Model for defining and managing field definitions.
 
     Provides a structured way to define fields with:
@@ -125,7 +122,7 @@ class FieldModel(HashableModel):
         annotation = (
             self.annotation if self.annotation is not UNDEFINED else Any
         )
-        field_obj: FieldInfo = Field(**self.to_dict())  # type: ignore
+        field_obj = Field(**self.to_dict())  # type: ignore
         field_obj.annotation = annotation
         return field_obj
 

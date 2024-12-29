@@ -7,7 +7,11 @@ from typing import Any, TypeAlias, override
 
 from pydantic import BaseModel, ConfigDict, Field, field_serializer
 
-from lionagi.libs.nested import flatten, nget, ninsert, npop, nset
+from lionagi.libs.nested.flatten import flatten
+from lionagi.libs.nested.nget import nget
+from lionagi.libs.nested.ninsert import ninsert
+from lionagi.libs.nested.npop import npop
+from lionagi.libs.nested.nset import nset
 from lionagi.utils import UNDEFINED, copy, to_list
 
 IndiceType: TypeAlias = str | list[str | int]

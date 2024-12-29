@@ -16,7 +16,7 @@ from pydantic import (
 )
 from pydantic.fields import FieldInfo
 
-from lionagi.libs.validate import validate_boolean
+from lionagi.libs.validate.validate_boolean import validate_boolean
 from lionagi.utils import copy
 
 from .field_model import FieldModel
