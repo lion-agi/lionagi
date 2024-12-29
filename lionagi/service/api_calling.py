@@ -1,3 +1,7 @@
+# Copyright (c) 2023 - 2024, HaiyangLi <quantocean.li at gmail dot com>
+#
+# SPDX-License-Identifier: Apache-2.0
+
 import asyncio
 import logging
 from typing import Any
@@ -7,7 +11,7 @@ from aiocache import cached
 from pydantic import Field, field_validator
 
 from .._errors import ExecutionError, RateLimitError
-from ..protocols.generic import Event, EventStatus, Execution
+from ..protocols.types import Event, EventStatus, Execution
 from ..settings import Settings
 from ..utils import RCallParams
 from .endpoint import EndPoint

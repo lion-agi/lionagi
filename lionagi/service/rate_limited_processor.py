@@ -1,10 +1,14 @@
+# Copyright (c) 2023 - 2024, HaiyangLi <quantocean.li at gmail dot com>
+#
+# SPDX-License-Identifier: Apache-2.0
+
 import asyncio
 import logging
 from typing import Self
 
 from typing_extensions import override
 
-from ..protocols.generic import Executor, Processor
+from ..protocols.types import Executor, Processor
 from .api_calling import APICalling
 
 __all__ = (
