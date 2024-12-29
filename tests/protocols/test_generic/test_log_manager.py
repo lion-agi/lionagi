@@ -166,7 +166,7 @@ async def test_log_manager_concurrent_logging():
 
     # Create unique logs for testing
     async def add_log(i):
-        log = Log(content={"message": "test message"})
+        log = Log(content={"message": f"message {i}"})
         await manager.alog(log)
         await asyncio.sleep(0.01)  # Small delay to ensure order
 

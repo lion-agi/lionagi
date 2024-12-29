@@ -76,7 +76,7 @@ class TestGraphTraversal:
         graph, nodes, _ = traversal_graph
         heads = graph.get_heads()
         assert len(heads) == 1
-        assert nodes[0].id in heads
+        assert nodes[0] in heads
 
     def test_get_predecessors(self, traversal_graph):
         """Test getting predecessor nodes"""
@@ -255,7 +255,7 @@ class TestGraphTraversalEdgeCases:
         # Should find both edges
         edges = graph.find_node_edge(node1, direction="out")
         assert len(edges) == 2
-        assert isinstance(edges, Pile)
+        assert isinstance(edges, list)
         assert all(
             edge.head == node1.id and edge.tail == node2.id for edge in edges
         )

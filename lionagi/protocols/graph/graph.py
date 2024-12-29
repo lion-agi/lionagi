@@ -32,11 +32,11 @@ class Graph(Node):
     """
 
     internal_nodes: Pile[Node] = Field(
-        default_factory=lambda: Pile({}, {Node}),
+        default_factory=lambda: Pile(item_type=Node),
         description="The internal nodes of the graph.",
     )
     internal_edges: Pile[Edge] = Field(
-        default_factory=lambda: Pile({}, {Edge}),
+        default_factory=lambda: Pile(item_type=Edge),
         description="The internal edges of the graph.",
     )
     node_edge_mapping: dict = Field(
@@ -135,7 +135,7 @@ class Graph(Node):
 
         out_edges: dict = self.node_edge_mapping[_id]["out"]
         for edge_id, node_id in out_edges.items():
-            self.node_edge_mapping[node_id, "in"].pop(edge_id)
+            self.node_edge_mapping[node_id]["in"].pop(edge_id)
             self.internal_edges.pop(edge_id)
 
         self.node_edge_mapping.pop(_id)

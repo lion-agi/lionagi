@@ -85,7 +85,7 @@ class Progression(Element, Ordering, Generic[E]):
 
     def __next__(self) -> IDType:
         """Get next item in progression."""
-        return next(self.order)
+        return next(iter(self))
 
     def include(self, item: Any, /) -> bool:
         """Add items to end of progression if not present.

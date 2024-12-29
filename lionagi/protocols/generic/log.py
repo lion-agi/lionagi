@@ -143,7 +143,7 @@ class LogManager:
     ) -> None:
         if isinstance(logs, Pile):
             logs = list(logs)
-        self.logs: Pile[Log] = Pile(collections=(logs or {}), item_type={Log})
+        self.logs: Pile[Log] = Pile(collections=(logs or {}), item_type=Log)
         self.persist_dir = persist_dir
         self.subfolder = subfolder
         self.file_prefix = file_prefix

@@ -3,7 +3,7 @@ import random
 
 import pytest
 
-from lionagi.protocols.graph.graph import Edge, Graph, RelationError
+from lionagi.protocols.graph.graph import Edge, Graph, Node, RelationError
 
 from .test_graph_base import create_test_node
 

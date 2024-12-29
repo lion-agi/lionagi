@@ -1,11 +1,12 @@
 import pytest
 
 from lionagi.protocols.graph.graph import Edge, Graph
+from lionagi.protocols.models.operable_model import OperableModel
 
 from .test_graph_base import TestNode
 
 
-class TypeANode(TestNode):
+class TypeANode(TestNode, OperableModel):
     """Test node type A"""
 
     def __init__(self, value: int):
@@ -13,7 +14,7 @@ class TypeANode(TestNode):
         self.add_field("value", value)
 
 
-class TypeBNode(TestNode):
+class TypeBNode(TestNode, OperableModel):
     """Test node type B"""
 
     def __init__(self, name: str):
@@ -202,7 +203,7 @@ class TestComplexTypes:
     def test_nested_type_node(self):
         """Test node with nested type structure"""
 
-        class NestedNode(TestNode):
+        class NestedNode(TestNode, OperableModel):
             def __init__(self, data: dict):
                 super().__init__()
                 self.add_field("data", data)
@@ -246,7 +247,7 @@ class TestComplexTypes:
     def test_inheritance_chain(self):
         """Test deep inheritance chain for nodes and edges"""
 
-        class BaseCustomNode(TestNode):
+        class BaseCustomNode(TestNode, OperableModel):
             def __init__(self):
                 super().__init__()
                 self.add_field("base_field", "base")
@@ -277,7 +278,7 @@ class TestComplexTypes:
         # Dynamically create node type
         dynamic_node_attrs = {"custom_field": "value", "number": 42}
 
-        class DynamicNode(TestNode):
+        class DynamicNode(TestNode, OperableModel):
             pass
 
         node = DynamicNode()

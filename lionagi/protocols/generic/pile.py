@@ -861,13 +861,16 @@ class Pile(Element, Collective, Generic[E]):
     ) -> pd.DataFrame:
         """kwargs for self.to_dict(), check pd.DataFrame.from_records for pd.DataFrame kwargs, check pydantic.BaseModel.model_dump() for self.to_dict() kwargs"""
         dicts_ = [i.to_dict(**kwargs) for i in self.values()]
+        params = {
+            "index": index,
+            "exclude": exclude,
+            "columns": columns,
+            "coerce_float": coerce_float,
+            "nrows": nrows,
+        }
+
         return pd.DataFrame.from_records(
-            dicts_,
-            index=index,
-            exclude=exclude,
-            columns=columns,
-            coerce_float=coerce_float,
-            nrows=nrows,
+            dicts_, **{k: v for k, v in params.items() if v is not ...}
         )
 
     def to_csv(
@@ -904,7 +907,10 @@ class Pile(Element, Collective, Generic[E]):
             verbose: Print confirmation message.
             Other arguments passed to pandas.DataFrame.to_csv().
         """
-        self.to_df().to_csv(**locals())
+        params = {k: v for k, v in locals().items() if v is not ...}
+        params.pop("self")
+        params.pop("verbose")
+        self.to_df().to_csv(**params)
         if verbose:
             print(f"Saved Pile to {path_or_buf}")
 

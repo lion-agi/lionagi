@@ -79,7 +79,7 @@ class TestEdgeBasics:
         assert edge.properties.get("weight") == 10
 
         # Remove property
-        edge.properties.pop(["weight"])
+        edge.properties.pop("weight")
         assert edge.properties.get("weight", None) is None
 
     def test_edge_validation(self, edge_test_graph):

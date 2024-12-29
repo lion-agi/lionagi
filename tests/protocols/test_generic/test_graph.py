@@ -149,7 +149,7 @@ class TestGraphTraversal:
         graph, nodes, _ = complex_graph
         heads = graph.get_heads()
         assert len(heads) == 1
-        assert nodes[0].id in heads
+        assert nodes[0] in heads
 
     def test_get_predecessors(self, complex_graph):
         """Test getting predecessor nodes"""

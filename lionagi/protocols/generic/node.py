@@ -33,6 +33,8 @@ class Relational(ABC):
 class Node(Element, Adaptable, Relational):
     """Base class for all nodes."""
 
+    content: Any = None
+
     metadata: dict = Field(default_factory=dict)
 
     embedding: list[float] | None = None
