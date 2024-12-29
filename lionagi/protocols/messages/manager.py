@@ -6,6 +6,7 @@ from typing import Any, Literal
 
 from pydantic import BaseModel, JsonValue
 
+from ..generic.concepts import Manager
 from ..generic.log import LogManager
 from ..generic.pile import Pile
 from ..generic.progression import Progression
@@ -19,7 +20,7 @@ from .system import System
 DEFAULT_SYSTEM = "You are a helpful AI assistant. Let's think step by step."
 
 
-class MessageManager:
+class MessageManager(Manager):
     """
     Manages messages within a communication system.
 

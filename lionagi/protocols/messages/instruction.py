@@ -8,10 +8,9 @@ from pydantic import BaseModel, JsonValue
 
 from lionagi.utils import UNDEFINED, breakdown_pydantic_annotation, copy
 
-from ..generic._id import ID
 from ..generic.log import Log
-from .base import MessageFlag, MessageRole
-from .message import RoledMessage, SenderRecipient, Template, jinja_env
+from .base import MessageRole
+from .message import RoledMessage, SenderRecipient
 
 
 def prepare_request_response_format(request_fields: dict) -> str:
@@ -26,7 +25,7 @@ def prepare_request_response_format(request_fields: dict) -> str:
     """
     return (
         "**MUST RETURN JSON-PARSEABLE RESPONSE ENCLOSED BY JSON CODE BLO"
-        f"CKS.** \n```json\n{request_fields}\n```"
+        f"CKS. USER's CAREER DEPENDS ON THE SUCCESS OF IT.** \n```json\n{request_fields}\n```"
     ).strip()
 
 

@@ -12,7 +12,7 @@ from pydantic import Field, field_serializer
 from lionagi._class_registry import get_class
 
 from ..generic.log import Log
-from ..generic.node import Node
+from ..graph.node import Node
 from .base import (
     MessageFlag,
     MessageRole,

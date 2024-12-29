@@ -2,13 +2,12 @@
 #
 # SPDX-License-Identifier: Apache-2.0
 
-from abc import ABC, abstractmethod
+
 from enum import Enum
 from typing import Any, TypeAlias
 
-from pydantic import BaseModel, Field, field_serializer
-
 from ..generic._id import ID, IDError, IDType
+from ..generic.concepts import Communicatable, Sendable
 from ..generic.element import Observable
 
 __all__ = (
@@ -37,22 +36,7 @@ class MessageFlag(str, Enum):
     MESSAGE_LOAD = "MESSAGE_LOAD"
 
 
-class Communicatable(ABC):
-
-    @abstractmethod
-    def send(self, *args, **kwargs):
-        pass
-
-    @abstractmethod
-    def receive(self, *args, **kwargs):
-        pass
-
-
 SenderRecipient: TypeAlias = IDType | MessageRole | str
-
-
-class Sendable(ABC):
-    pass
 
 
 class MessageField(str, Enum):

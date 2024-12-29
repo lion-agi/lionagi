@@ -61,10 +61,8 @@ def prepare_assistant_response(
             content["model_response"] = assistant_response
         elif isinstance(assistant_response, str):
             content["assistant_response"] = assistant_response
-            content["model_response"] = assistant_response
         else:
             content["assistant_response"] = str(assistant_response)
-            content["model_response"] = str(assistant_response)
         return content
     else:
         return {"assistant_response": ""}
