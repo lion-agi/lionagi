@@ -4,7 +4,7 @@ from lionagi.operatives.fields.reason_fields import (
     CONFIDENCE_SCORE_FIELD,
     validate_confidence_score,
 )
-from lionagi.operatives.reason import REASON_FIELD, Reason
+from lionagi.operatives.instruct.reason import REASON_FIELD, Reason
 
 
 class TestValidateConfidenceScore:

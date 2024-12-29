@@ -5,8 +5,8 @@
 from pydantic import BaseModel
 from pydantic.fields import FieldInfo
 
+from lionagi.operatives.instruct.reason import REASON_FIELD, Reason
 from lionagi.operatives.operative import Operative
-from lionagi.operatives.reason import REASON_FIELD, Reason
 from lionagi.protocols.types import (
     ACTION_REQUESTS_FIELD,
     ACTION_REQUIRED_FIELD,

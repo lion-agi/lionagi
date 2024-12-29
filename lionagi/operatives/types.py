@@ -2,7 +2,6 @@
 #
 # SPDX-License-Identifier: Apache-2.0
 
-from .fields.reason_fields import CONFIDENCE_SCORE_FIELD
 from .forms.base import BaseForm
 from .forms.form import Form
 from .forms.report import Report
@@ -20,8 +19,8 @@ from .instruct.instruct import (
     InstructResponse,
 )
 from .instruct.node import InstructNode
+from .instruct.reason import CONFIDENCE_SCORE_FIELD, REASON_FIELD, Reason
 from .operative import Operative
-from .reason import REASON_FIELD, Reason
 from .step import Step
 from .strategies.base import StrategyExecutor
 from .strategies.concurrent import ConcurrentExecutor
