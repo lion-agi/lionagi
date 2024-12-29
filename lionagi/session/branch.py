@@ -7,16 +7,20 @@ from pathlib import Path
 import pandas as pd
 from pydantic import model_validator
 
-from lionagi.integrations.litellm_.imodel import LiteiModel
-from lionagi.operatives.instruct import Instruct
-from lionagi.protocols.action import ActionManager
-from lionagi.protocols.generic import ID, Pile, Progression
-from lionagi.protocols.generic.node import Node
-from lionagi.protocols.messages import MESSAGE_FIELDS
+from lionagi.operatives.instruct.instruct import Instruct
+from lionagi.protocols.messages.base import MESSAGE_FIELDS
+from lionagi.protocols.types import (
+    ID,
+    ActionManager,
+    LogManager,
+    MessageManager,
+    Node,
+    Pile,
+    Progression,
+)
 from lionagi.service import iModel
 from lionagi.settings import Settings
 
-from ..communication.types import MESSAGE_FIELDS, MessageManager
 from .branch_mixins import BranchActionMixin, BranchOperationMixin
 
 
@@ -26,8 +30,8 @@ class Branch(Node, BranchActionMixin, BranchOperationMixin):
     name: str | None = None
     msgs: MessageManager = None
     acts: ActionManager = None
-    imodel: iModel | LiteiModel | None = None
-    parse_imodel: iModel | LiteiModel | None = None
+    imodel: iModel | None = None
+    parse_imodel: iModel | None = None
 
     @model_validator(mode="before")
     def _validate_data(cls, data: dict) -> dict:

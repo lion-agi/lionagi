@@ -8,21 +8,29 @@ from typing import Literal
 
 from pydantic import BaseModel, JsonValue
 
-from lionagi.integrations.pydantic_ import break_down_pydantic_annotation
 from lionagi.libs.validate import fuzzy_validate_mapping
 from lionagi.operatives.operative import Operative
 from lionagi.operatives.step import Step
-from lionagi.protocols.action import ActionResponseModel, FuncTool, ToolRef
-from lionagi.protocols.messages import (
+from lionagi.protocols.types import (
     ActionRequest,
     ActionResponse,
+    ActionResponseModel,
     AssistantResponse,
+    FieldModel,
+    FuncTool,
     Instruction,
+    ModelParams,
     RoledMessage,
+    ToolRef,
 )
-from lionagi.protocols.models import FieldModel, ModelParams
 from lionagi.service import iModel
-from lionagi.utils import ID, UNDEFINED, alcall, to_json
+from lionagi.utils import (
+    ID,
+    UNDEFINED,
+    alcall,
+    breakdown_pydantic_annotation,
+    to_json,
+)
 
 
 class BranchActionMixin(ABC):
@@ -449,7 +457,7 @@ class BranchOperationMixin(ABC):
                         _d = to_json(res.response)
                         _d = fuzzy_validate_mapping(
                             _d,
-                            break_down_pydantic_annotation(request_model),
+                            breakdown_pydantic_annotation(request_model),
                             handle_unmatched="force",
                             fill_value=UNDEFINED,
                         )
@@ -502,7 +510,7 @@ class BranchOperationMixin(ABC):
                     _d = to_json(res.response)
                     _d = validate_mapping(
                         _d,
-                        break_down_pydantic_annotation(request_model),
+                        breakdown_pydantic_annotation(request_model),
                         handle_unmatched="force",
                         fill_value=UNDEFINED,
                     )

@@ -5,19 +5,28 @@
 from collections.abc import Callable
 
 import pandas as pd
+from pydantic import Field, JsonValue
 
-from lionagi.core.generic.types import Component, Pile, Progression
-from lionagi.core.typing import ID, Field, ItemNotFoundError, JsonValue
-from lionagi.libs.parse import to_list
-from lionagi.service import iModel
+from lionagi.protocols.messages.base import MESSAGE_FIELDS
+from lionagi.protocols.types import (
+    ID,
+    ActionManager,
+    Node,
+    Pile,
+    Progression,
+    RoledMessage,
+    SenderRecipient,
+    System,
+    Tool,
+)
 
-from ..action.manager import ActionManager, Tool
-from ..communication.message import MESSAGE_FIELDS, RoledMessage
-from ..communication.system import System
+from .._errors import ItemNotFoundError
+from ..service.imodel import iModel
+from ..utils import to_list
 from .branch import Branch
 
 
-class Session(Component):
+class Session(Node):
     """
     Manages multiple conversation branches and mail transfer in a session.
 
@@ -34,9 +43,9 @@ class Session(Component):
     def new_branch(
         self,
         system: System | JsonValue = None,
-        system_sender: ID.SenderRecipient = None,
+        system_sender: SenderRecipient = None,
         system_datetime: bool | str = None,
-        user: ID.SenderRecipient = None,
+        user: SenderRecipient = None,
         name: str | None = None,
         imodel: iModel | None = None,
         messages: Pile[RoledMessage] = None,
