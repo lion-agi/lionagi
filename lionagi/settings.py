@@ -1,4 +1,4 @@
-from .utils import UNDEFINED
+from datetime import timezone
 
 CACHED_CONFIG = {
     "ttl": 300,
@@ -10,28 +10,6 @@ CACHED_CONFIG = {
     "plugins": None,
     "alias": None,
     "noself": lambda x: False,
-}
-
-ACTION_RETRY_CONFIG = {
-    "num_retries": 0,
-    "initial_delay": 0,
-    "retry_delay": 0,
-    "backoff_factor": 1,
-    "retry_default": UNDEFINED,
-    "retry_timeout": None,
-    "retry_timing": False,
-    "verbose_retry": True,
-}
-
-API_RETRY_CONFIG = {
-    "num_retries": 2,
-    "initial_delay": 0,
-    "retry_delay": 1,
-    "backoff_factor": 2,
-    "retry_default": UNDEFINED,
-    "retry_timeout": None,
-    "retry_timing": False,
-    "verbose_retry": True,
 }
 
 CHAT_IMODEL_CONFIG = {
@@ -63,13 +41,14 @@ PARSE_IMODEL_CONFIG = {
 
 class Settings:
 
+    class Config:
+        TIMEZONE: timezone = timezone.utc
+
     class Action:
         CACHED_CONFIG: dict = CACHED_CONFIG
-        RETRY_CONFIG: dict = ACTION_RETRY_CONFIG
 
     class API:
         CACHED_CONFIG: dict = CACHED_CONFIG
-        RETRY_CONFIG: dict = API_RETRY_CONFIG
 
     class iModel:
         CHAT: dict = CHAT_IMODEL_CONFIG

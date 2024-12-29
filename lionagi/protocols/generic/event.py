@@ -38,9 +38,9 @@ class Execution(DataClass):
 
     def __init__(
         self,
-        status: EventStatus,
-        duration: float,
-        response: Any,
+        duration: float = None,
+        response: Any = None,
+        status: EventStatus = EventStatus.PENDING,
         error: str | None = None,
     ):
         self.status = status
@@ -59,7 +59,15 @@ class Execution(DataClass):
 class Event(Element):
     """Base class for all events."""
 
-    execution: Execution | None = Field(None, exclude=True)
+    execution: Execution = Field(default_factory=Execution)
+
+    @property
+    def response(self) -> Any:
+        return self.execution.response
+
+    @response.setter
+    def response(self, value: Any) -> None:
+        self.execution.response = value
 
     @property
     def status(self) -> EventStatus:

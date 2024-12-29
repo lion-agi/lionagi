@@ -271,7 +271,7 @@ class PandasDataFrameAdapter(Adapter):
 class CSVFileAdapter(Adapter):
 
     obj_key = ".csv"
-    alias = (".csv", "csv_file")
+    alias = ("csv_file", "csv")
 
     @classmethod
     def from_obj(
@@ -309,7 +309,7 @@ class CSVFileAdapter(Adapter):
 class ExcelFileAdapter(Adapter):
 
     obj_key = ".xlsx"
-    alias = (".xlsx", "excel_file", "excel", "xlsx", "xls", ".xls")
+    alias = ("excel_file", "excel", "xlsx", "xls", ".xls")
 
     @classmethod
     def from_obj(
