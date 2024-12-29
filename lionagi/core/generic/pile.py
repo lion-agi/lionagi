@@ -7,26 +7,21 @@ import threading
 from collections.abc import AsyncIterator, Callable, Iterator, Sequence
 from functools import wraps
 from pathlib import Path
+from typing import Any, ClassVar, Generic, Self, TypeVar
 
 import pandas as pd
+from pydantic import Field, field_serializer
+from pydantic.fields import FieldInfo
 from typing_extensions import override
 
 from lionagi.core.typing import (
     ID,
-    UNDEFINED,
-    Any,
-    ClassVar,
-    Field,
-    FieldInfo,
-    Generic,
     ItemExistsError,
     ItemNotFoundError,
     Observable,
-    Self,
-    TypeVar,
-    field_serializer,
 )
 from lionagi.core.typing._concepts import IDType
+from lionagi.libs.constants import UNDEFINED
 from lionagi.libs.parse import is_same_dtype, to_list
 from lionagi.protocols.adapters.adapter import Adapter, AdapterRegistry
 from lionagi.protocols.registries._pile_registry import PileAdapterRegistry

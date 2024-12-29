@@ -2,8 +2,12 @@
 #
 # SPDX-License-Identifier: Apache-2.0
 
+from typing import Any, Literal
+
+from pydantic import BaseModel, JsonValue
+
 from lionagi.core.generic.types import LogManager, Pile, Progression
-from lionagi.core.typing import ID, Any, BaseModel, JsonValue, Literal
+from lionagi.core.typing import ID
 
 from .action_request import ActionRequest
 from .action_response import ActionResponse
@@ -331,6 +335,7 @@ class MessageManager:
         action_request: ActionRequest | None = None,
         action_response: ActionResponse | Any = None,
         metadata: dict = None,
+        remove_tool_schemas: bool = False,
     ) -> RoledMessage:
         """
         Add a message to the manager.
@@ -416,13 +421,16 @@ class MessageManager:
                 images=images,
                 image_detail=image_detail,
             )
+            if remove_tool_schemas:
+                _msg.tool_schemas = None
 
         if metadata:
             _msg.metadata.update(["extra"], metadata)
 
         if _msg in self.messages:
+            idx = self.messages.progress.index(_msg.ln_id)
             self.messages.exclude(_msg.ln_id)
-            self.messages.insert(0, _msg)
+            self.messages.insert(idx, _msg)
         else:
             self.messages.include(_msg)
 

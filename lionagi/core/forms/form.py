@@ -3,19 +3,15 @@
 # SPDX-License-Identifier: Apache-2.0
 
 import inspect
+from typing import Any, Literal, TypeVar
 
-from lionagi.core.typing import (
-    UNDEFINED,
-    Any,
-    Field,
-    FieldInfo,
-    Literal,
-    Note,
-    PydanticUndefined,
-    TypeVar,
-    model_validator,
-    override,
-)
+from pydantic import Field, model_validator
+from pydantic.fields import FieldInfo
+from pydantic_core import PydanticUndefined
+from typing_extensions import override
+
+from lionagi.core.models.types import Note
+from lionagi.libs.constants import UNDEFINED
 from lionagi.libs.utils import copy
 
 from .base import BaseForm

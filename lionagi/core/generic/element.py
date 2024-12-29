@@ -3,23 +3,20 @@
 # SPDX-License-Identifier: Apache-2.0
 
 from datetime import datetime
+from typing import Any, TypeVar
 
-from pydantic import AliasChoices, field_serializer
-
-from lionagi.core._class_registry import LION_CLASS_REGISTRY, get_class
-from lionagi.core.typing import (
-    ID,
-    Any,
+from pydantic import (
+    AliasChoices,
     BaseModel,
     ConfigDict,
     Field,
-    IDError,
-    IDType,
-    Observable,
-    TypeVar,
+    field_serializer,
     field_validator,
-    override,
 )
+from typing_extensions import override
+
+from lionagi.core._class_registry import LION_CLASS_REGISTRY, get_class
+from lionagi.core.typing import ID, IDError, IDType, Observable
 from lionagi.libs.utils import time
 from lionagi.settings import Settings
 

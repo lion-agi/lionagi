@@ -2,8 +2,10 @@
 #
 # SPDX-License-Identifier: Apache-2.0
 
+from pydantic import Field
+
 from lionagi.core.generic.types import Pile
-from lionagi.core.typing import UNDEFINED, Field
+from lionagi.libs.constants import UNDEFINED
 
 from .base import BaseForm
 from .form import Form

@@ -2,17 +2,16 @@
 #
 # SPDX-License-Identifier: Apache-2.0
 
+from typing import Any, TypeVar
+
+from pydantic import ConfigDict, Field, field_serializer, field_validator
+from pydantic.fields import FieldInfo
+from pydantic_core import PydanticUndefined
+from typing_extensions import override
+
+from lionagi.libs.constants import UNDEFINED
 from lionagi.libs.utils import is_same_dtype
 
-from ..typing._pydantic import (
-    ConfigDict,
-    Field,
-    FieldInfo,
-    PydanticUndefined,
-    field_serializer,
-    field_validator,
-)
-from ..typing._typing import UNDEFINED, Any, TypeVar, override
 from .base import BaseAutoModel
 from .field_model import FieldModel
 

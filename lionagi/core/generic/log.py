@@ -2,16 +2,14 @@
 #
 # SPDX-License-Identifier: Apache-2.0
 
-from lionagi.core.generic.element import Element
-from lionagi.core.typing import (
-    Any,
-    Field,
-    Note,
-    PrivateAttr,
-    Self,
-    field_serializer,
-)
+from typing import Any, Self
+
+from pydantic import Field, PrivateAttr, field_serializer
+
+from lionagi.core.models.types import Note
 from lionagi.libs.parse import to_dict
+
+from .element import Element
 
 
 class Log(Element):

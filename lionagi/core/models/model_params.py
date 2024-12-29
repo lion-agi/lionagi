@@ -3,21 +3,22 @@
 # SPDX-License-Identifier: Apache-2.0
 
 import inspect
+from collections.abc import Callable
+from typing import Self
 
-from pydantic import BaseModel
-
-from lionagi.libs.parse import validate_boolean
-from lionagi.libs.utils import copy
-
-from ..typing._pydantic import (
+from pydantic import (
+    BaseModel,
     Field,
-    FieldInfo,
     PrivateAttr,
     create_model,
     field_validator,
     model_validator,
 )
-from ..typing._typing import Callable, Self
+from pydantic.fields import FieldInfo
+
+from lionagi.libs.parse import validate_boolean
+from lionagi.libs.utils import copy
+
 from .field_model import FieldModel
 from .schema_model import SchemaModel
 

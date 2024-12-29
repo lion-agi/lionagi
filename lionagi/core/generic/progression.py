@@ -6,11 +6,16 @@ import contextlib
 from collections.abc import Iterator
 from typing import Any, Self
 
-from pydantic import field_serializer, field_validator
+from pydantic import Field, field_serializer, field_validator
 from typing_extensions import override
 
-from lionagi.core.typing import ID, Field, IDType, ItemNotFoundError, Ordering
-from lionagi.core.typing._concepts import Observable
+from lionagi.core.typing import (
+    ID,
+    IDType,
+    ItemNotFoundError,
+    Observable,
+    Ordering,
+)
 from lionagi.libs.parse import to_list
 
 from .element import Element

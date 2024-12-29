@@ -2,17 +2,14 @@
 #
 # SPDX-License-Identifier: Apache-2.0
 
-from lionagi.core.typing import (
-    ID,
-    UNDEFINED,
-    Any,
-    BaseModel,
-    IDError,
-    IDType,
-    Literal,
-    Note,
-)
+from typing import Any, Literal
+
+from pydantic import BaseModel
+
+from lionagi.core.models.types import Note
+from lionagi.core.typing import ID, IDError, IDType
 from lionagi.integrations.pydantic_ import break_down_pydantic_annotation
+from lionagi.libs.constants import UNDEFINED
 from lionagi.libs.utils import time
 
 DEFAULT_SYSTEM = "You are a helpful AI assistant. Let's think step by step."

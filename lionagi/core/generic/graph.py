@@ -3,22 +3,16 @@
 # SPDX-License-Identifier: Apache-2.0
 
 from collections import deque
+from typing import Any, Literal
 
-from lionagi.core.generic.pile import Pile
-from lionagi.core.typing import (
-    ID,
-    Any,
-    Field,
-    ItemExistsError,
-    Literal,
-    Note,
-    Relational,
-    RelationError,
-    field_serializer,
-)
+from pydantic import Field, field_serializer
+
+from lionagi.core.models.types import Note
+from lionagi.core.typing import ID, ItemExistsError, Relational, RelationError
 
 from .edge import Edge
 from .node import Node
+from .pile import Pile
 
 
 class Graph(Node):
@@ -168,7 +162,7 @@ class Graph(Node):
         node: Any,
         /,
         direction: Literal["both", "in", "out"] = "both",
-    ) -> Pile[Edge]:
+    ) -> list[Edge]:
         """
         Find edges connected to a node in a specific direction.
 
@@ -203,9 +197,9 @@ class Graph(Node):
             for edge_id in self.node_edge_mapping[_id, "out"].keys():
                 result.append(self.internal_edges[edge_id])
 
-        return self.internal_nodes.__class__(items=result, item_type={Edge})
+        return result
 
-    def get_heads(self) -> Pile:
+    def get_heads(self) -> list[Node]:
         """
         Get all head nodes in the graph.
 
@@ -219,12 +213,9 @@ class Graph(Node):
         for node_id in self.node_edge_mapping.keys():
             if self.node_edge_mapping[node_id, "in"] == {}:
                 result.append(self.internal_nodes[node_id])
+        return result
 
-        return self.internal_nodes.__class__(
-            items=result, item_type={Relational}
-        )
-
-    def get_predecessors(self, node: Relational, /) -> Pile:
+    def get_predecessors(self, node: Relational, /) -> list[Node]:
         """
         Get all predecessor nodes of a given node.
 
@@ -241,11 +232,9 @@ class Graph(Node):
         for edge in edges:
             node_id = edge.head
             result.append(self.internal_nodes[node_id])
-        return self.internal_nodes.__class__(
-            items=result, item_type={Relational}
-        )
+        return result
 
-    def get_successors(self, node: Relational, /) -> Pile:
+    def get_successors(self, node: Relational, /) -> list[Node]:
         """
         Get all successor nodes of a given node.
 
@@ -262,9 +251,7 @@ class Graph(Node):
         for edge in edges:
             node_id = edge.tail
             result.append(self.internal_nodes[node_id])
-        return self.internal_nodes.__class__(
-            items=result, item_type={Relational}
-        )
+        return result
 
     def to_networkx(self, **kwargs) -> Any:
         """Convert the graph to a NetworkX graph object."""
@@ -272,7 +259,7 @@ class Graph(Node):
         from lionagi.libs.package.imports import check_import
 
         check_import("networkx")
-        from networkx import DiGraph
+        from networkx import DiGraph  # type: ignore
 
         g = DiGraph(**kwargs)
         for node in self.internal_nodes:
@@ -308,8 +295,8 @@ class Graph(Node):
 
         check_import("matplotlib")
         check_import("networkx")
-        import matplotlib.pyplot as plt
-        import networkx as nx
+        import matplotlib.pyplot as plt  # type: ignore
+        import networkx as nx  # type: ignore
 
         g = self.to_networkx(**kwargs)
         pos = nx.spring_layout(g)
@@ -372,6 +359,11 @@ class Graph(Node):
 
     def __contains__(self, item: object) -> bool:
         return item in self.internal_nodes or item in self.internal_edges
+
+    def find_edge(self, head: Node, tail: Node) -> Edge | None:
+        if head not in self.internal_nodes or tail not in self.internal_nodes:
+            return None
+        return self.node_edge_mapping[head, "out"].get(ID.get_id(tail), None)
 
 
 __all__ = ["Graph"]

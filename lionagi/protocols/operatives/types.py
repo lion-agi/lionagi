@@ -3,7 +3,7 @@
 # SPDX-License-Identifier: Apache-2.0
 
 from .action import ActionRequestModel, ActionResponseModel
-from .instruct import Instruct
+from .instruct import Instruct, OperationInstruct
 from .operative import Operative
 from .reason import ReasonModel
 from .step import Step, StepModel
@@ -16,4 +16,5 @@ __all__: list[str] = [
     "StepModel",
     "Instruct",
     "ReasonModel",
+    "OperationInstruct",
 ]
