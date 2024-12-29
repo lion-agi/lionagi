@@ -1,8 +1,7 @@
 from typing import ClassVar
 
-from lionagi.libs.func.types import bcall
-from lionagi.libs.parse.types import to_list
-from lionagi.protocols_.operatives.instruct import Instruct, InstructResponse
+from lionagi.operatives.instruct.instruct import Instruct, InstructResponse
+from lionagi.utils import bcall, to_list
 
 from .concurrent import ConcurrentExecutor
 from .params import ChunkStrategyParams

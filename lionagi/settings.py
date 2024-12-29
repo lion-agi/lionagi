@@ -1,4 +1,4 @@
-from .utils import UNDEFINED, RCallParams
+from .utils import UNDEFINED
 
 CACHED_CONFIG = {
     "ttl": 300,

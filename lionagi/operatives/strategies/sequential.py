@@ -1,4 +1,4 @@
-from lionagi.fields.instruct import Instruct, InstructResponse
+from lionagi.operatives.instruct.instruct import Instruct, InstructResponse
 
 from .base import StrategyExecutor
 
