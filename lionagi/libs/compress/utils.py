@@ -1,13 +1,16 @@
+# Copyright (c) 2023 - 2024, HaiyangLi <quantocean.li at gmail dot com>
+#
+# SPDX-License-Identifier: Apache-2.0
+
 import asyncio
 
-from lionagi.integrations.litellm_.imodel import LiteiModel
 from lionagi.service.imodel import iModel
 
 from .models import PerplexityScores
 
 
 async def compute_perplexity(
-    imodel: iModel | LiteiModel,
+    imodel: iModel,
     initial_context: str = None,
     tokens: list[str] = None,
     system_msg: str = None,

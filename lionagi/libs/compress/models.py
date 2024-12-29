@@ -1,8 +1,12 @@
+# Copyright (c) 2023 - 2024, HaiyangLi <quantocean.li at gmail dot com>
+#
+# SPDX-License-Identifier: Apache-2.0
+
 import numpy as np
 from pydantic import BaseModel
 
-from lionagi.protocols.generic import Log
-from lionagi.protocols.models import Note
+from lionagi.protocols.generic.log import Log
+from lionagi.protocols.models.note import Note
 
 
 class PerplexityTokenScore(BaseModel):
