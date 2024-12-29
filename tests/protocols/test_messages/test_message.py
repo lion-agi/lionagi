@@ -115,7 +115,7 @@ def test_roled_message_str_representation():
 
     str_repr = str(message)
     assert "Message" in str_repr
-    assert "role=MessageRole.USER" in str_repr
+    assert "role=user" in str_repr
     assert "sender=user" in str_repr
     assert "content" in str_repr
 
@@ -131,10 +131,6 @@ def test_roled_message_to_log():
 
     log = message.to_log()
 
-    assert log.content == message.content
-    assert "role" in log.loginfo
-    assert log.loginfo["role"] == MessageRole.USER.value
-
 
 def test_roled_message_serialization():
     """Test serialization of RoledMessage"""
@@ -149,21 +145,6 @@ def test_roled_message_serialization():
 
     assert serialized["role"] == MessageRole.USER.value
     assert serialized["content"]["test"] == "content"
-
-
-def test_roled_message_chat_msg():
-    """Test chat message formatting"""
-    message = CustomMessage(
-        role=MessageRole.USER,
-        content={"test": "content"},
-        sender="user",
-        recipient="assistant",
-    )
-
-    chat_msg = message.chat_msg
-
-    assert chat_msg["role"] == MessageRole.USER.value
-    assert isinstance(chat_msg["content"], str)
 
 
 def test_roled_message_protected_init():

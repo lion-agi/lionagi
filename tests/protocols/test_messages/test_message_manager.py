@@ -35,7 +35,7 @@ def test_message_manager_initialization():
 
 def test_message_manager_with_system():
     """Test MessageManager with system message"""
-    system = System(system="Test system")
+    system = System.create(system_message="Test system")
     manager = MessageManager(system=system)
 
     assert manager.system == system
@@ -46,8 +46,8 @@ def test_message_manager_with_system():
 def test_set_system():
     """Test setting system message"""
     manager = MessageManager()
-    system1 = System(system="System 1")
-    system2 = System(system="System 2")
+    system1 = System.create(system_message="System 1")
+    system2 = System.create(system_message="System 2")
 
     manager.set_system(system1)
     assert manager.system == system1
@@ -107,7 +107,7 @@ def test_create_action_request():
 
 def test_create_action_response():
     """Test creating action response messages"""
-    request = ActionRequest(
+    request = ActionRequest.create(
         function="test", arguments={}, sender="user", recipient="system"
     )
     response = MessageManager.create_action_response(
@@ -143,7 +143,7 @@ def test_add_message(message_manager):
         arguments={},
         sender="user",
         recipient="system",
-        action_request=ActionRequest(
+        action_request=ActionRequest.create(
             function="test_function",
             arguments={},
             sender="user",
@@ -195,7 +195,7 @@ def test_message_collections(message_manager):
         arguments={},
         sender="user",
         recipient="system",
-        action_request=ActionRequest(
+        action_request=ActionRequest.create(
             function="test_function",
             arguments={},
             sender="user",

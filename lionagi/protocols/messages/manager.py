@@ -6,7 +6,6 @@ from typing import Any, Literal
 
 from pydantic import BaseModel, JsonValue
 
-from ..generic._id import ID
 from ..generic.log import LogManager
 from ..generic.pile import Pile
 from ..generic.progression import Progression
@@ -14,7 +13,7 @@ from .action_request import ActionRequest
 from .action_response import ActionResponse
 from .assistant_response import AssistantResponse
 from .instruction import Instruction
-from .message import RoledMessage
+from .message import RoledMessage, SenderRecipient
 from .system import System
 
 DEFAULT_SYSTEM = "You are a helpful AI assistant. Let's think step by step."
@@ -50,7 +49,7 @@ class MessageManager:
         """
         super().__init__()
         self.messages: Pile[RoledMessage] = Pile(
-            items=messages, item_type={RoledMessage}
+            collections=messages, item_type=RoledMessage
         )
         self.logger = logger or LogManager()
         self.system = system
@@ -97,8 +96,8 @@ class MessageManager:
     @staticmethod
     def create_instruction(
         *,
-        sender: ID.SenderRecipient = None,
-        recipient: ID.SenderRecipient = None,
+        sender: SenderRecipient = None,
+        recipient: SenderRecipient = None,
         instruction: Instruction | JsonValue = None,
         context: JsonValue = None,
         guidance: JsonValue = None,
@@ -148,7 +147,7 @@ class MessageManager:
                 instruction.recipient = recipient
             return instruction
         else:
-            return Instruction(
+            return Instruction.create(
                 sender=sender,
                 recipient=recipient,
                 instruction=instruction,
@@ -188,7 +187,7 @@ class MessageManager:
                 assistant_response.recipient = recipient
             return assistant_response
 
-        return AssistantResponse(
+        return AssistantResponse.create(
             assistant_response=assistant_response,
             sender=sender,
             recipient=recipient,
@@ -197,8 +196,8 @@ class MessageManager:
     @staticmethod
     def create_action_request(
         *,
-        sender: ID.SenderRecipient = None,
-        recipient: ID.SenderRecipient = None,
+        sender: SenderRecipient = None,
+        recipient: SenderRecipient = None,
         function: str = None,
         arguments: dict[str, Any] = None,
         action_request: ActionRequest | None = None,
@@ -230,7 +229,7 @@ class MessageManager:
                 action_request.recipient = recipient
             return action_request
 
-        return ActionRequest(
+        return ActionRequest.create(
             function=function,
             arguments=arguments,
             sender=sender,
@@ -273,7 +272,7 @@ class MessageManager:
                 )
                 return action_response
 
-        return ActionResponse(
+        return ActionResponse.create(
             action_request=action_request,
             output=action_response,
         )
@@ -308,7 +307,7 @@ class MessageManager:
             )
             return system
 
-        return System(
+        return System.create(
             system=system,
             sender=sender,
             recipient=recipient,
@@ -318,8 +317,8 @@ class MessageManager:
     def add_message(
         self,
         *,
-        sender: ID.SenderRecipient = None,
-        recipient: ID.SenderRecipient = None,
+        sender: SenderRecipient = None,
+        recipient: SenderRecipient = None,
         instruction: Instruction | JsonValue = None,
         context: JsonValue = None,
         guidance: JsonValue = None,
@@ -423,7 +422,8 @@ class MessageManager:
             )
 
         if metadata:
-            _msg.metadata.update(["extra"], metadata)
+            _msg.metadata.setdefault("extra", {})
+            _msg.metadata["extra"].update(metadata)
 
         if _msg in self.messages:
             self.messages.exclude(_msg.id)
@@ -448,14 +448,14 @@ class MessageManager:
     @property
     def last_response(self) -> AssistantResponse | None:
         """Get the last assistant response message."""
-        for i in reversed(self.messages.progress):
+        for i in reversed(self.messages.progression):
             if isinstance(self.messages[i], AssistantResponse):
                 return self.messages[i]
 
     @property
     def last_instruction(self) -> Instruction | None:
         """Get the last instruction message."""
-        for i in reversed(self.messages.progress):
+        for i in reversed(self.messages.progression):
             if isinstance(self.messages[i], Instruction):
                 return self.messages[i]
 
@@ -463,9 +463,9 @@ class MessageManager:
     def assistant_responses(self) -> Pile[AssistantResponse]:
         """Get all assistant response messages."""
         return Pile(
-            [
+            collections=[
                 self.messages[i]
-                for i in self.messages.progress
+                for i in self.messages.progression
                 if isinstance(self.messages[i], AssistantResponse)
             ]
         )
@@ -474,9 +474,9 @@ class MessageManager:
     def action_requests(self) -> Pile[ActionRequest]:
         """Get all action request messages."""
         return Pile(
-            [
+            collections=[
                 self.messages[i]
-                for i in self.messages.progress
+                for i in self.messages.progression
                 if isinstance(self.messages[i], ActionRequest)
             ]
         )
@@ -485,9 +485,9 @@ class MessageManager:
     def action_responses(self) -> Pile[ActionResponse]:
         """Get all action response messages."""
         return Pile(
-            [
+            collections=[
                 self.messages[i]
-                for i in self.messages.progress
+                for i in self.messages.progression
                 if isinstance(self.messages[i], ActionResponse)
             ]
         )
@@ -496,9 +496,9 @@ class MessageManager:
     def instructions(self) -> Pile[Instruction]:
         """Get all instruction messages."""
         return Pile(
-            [
+            collections=[
                 self.messages[i]
-                for i in self.messages.progress
+                for i in self.messages.progression
                 if isinstance(self.messages[i], Instruction)
             ]
         )
@@ -510,7 +510,7 @@ class MessageManager:
     def concat_recent_action_responses_to_instruction(
         self, instruction: Instruction
     ) -> None:
-        for i in reversed(self.messages.progress):
+        for i in reversed(self.messages.progression):
             if isinstance(self.messages[i], ActionResponse):
                 instruction.context.append(self.messages[i].content.to_dict())
             else:
@@ -541,8 +541,8 @@ class MessageManager:
             ) from e
 
     def __bool__(self):
-        return not self.messages.is_empty()
+        return bool(self.messages)
 
     def has_logs(self):
         """Check if there are any logs."""
-        return not self.logger.logs.is_empty()
+        return bool(self.logger.logs)

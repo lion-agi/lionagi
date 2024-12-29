@@ -129,12 +129,7 @@ class RoledMessage(Node, Sendable):
         instance = self.__class__(
             content=self.content,
             role=self.role if keep_role else MessageRole.UNSET,
-            metadata={
-                "clone_from": {
-                    "id": str(self.id),
-                    "created_at": self.created_at.isoformat(),
-                },
-            },
+            metadata={"clone_from": self},
             flag=MessageFlag.MESSAGE_CLONE,
         )
         return instance
@@ -164,6 +159,17 @@ class RoledMessage(Node, Sendable):
         """
         return str(value)
 
+    @field_serializer("metadata")
+    def _serialize_meta(self, value: dict):
+        if "clone_from" in value:
+            org = value["clone_from"]
+            if isinstance(org, RoledMessage):
+                value["clone_from"] = {
+                    "id": str(org.id),
+                    "created_at": org.created_datetime.isoformat(),
+                }
+        return value
+
     def update(self, sender, recipient, template, **kwargs):
         if sender:
             self.sender = validate_sender_recipient(sender)
@@ -175,3 +181,15 @@ class RoledMessage(Node, Sendable):
             if not isinstance(template, Template | str):
                 raise ValueError("Template must be a Jinja2 Template or str")
             self.template = template
+
+    def __str__(self) -> str:
+
+        content_preview = (
+            f"{str(self.content)[:75]}..."
+            if len(str(self.content)) > 75
+            else str(self.content)
+        )
+        return (
+            f"Message(role={self.role}, sender={self.sender}, "
+            f"content='{content_preview}')"
+        )

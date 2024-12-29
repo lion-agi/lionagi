@@ -160,4 +160,6 @@ class ActionRequest(RoledMessage):
         Returns:
             bool: True if the request has a response, False otherwise
         """
-        return self.action_response_id is not None
+        if self.action_response_id is not None:
+            return True
+        return False

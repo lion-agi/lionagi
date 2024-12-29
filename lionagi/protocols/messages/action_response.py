@@ -81,7 +81,7 @@ class ActionResponse(RoledMessage):
         Returns:
             ID[ActionRequest].ID | None: The ID of the original request
         """
-        return IDType.validate(self.content.get("action_request_id", {}))
+        return IDType.validate(self.content.get("action_request_id"))
 
     @override
     @classmethod
@@ -97,7 +97,7 @@ class ActionResponse(RoledMessage):
         if response_model:
             output = response_model.output
 
-        return ActionResponse(
+        instance = ActionResponse(
             content=prepare_action_response_content(
                 action_request=response_model or action_request, output=output
             ),
@@ -105,6 +105,8 @@ class ActionResponse(RoledMessage):
             sender=sender or action_request.recipient,
             recipient=recipient or action_request.sender,
         )
+        action_request.action_response_id = instance.id
+        return instance
 
     def update(
         self,
@@ -123,6 +125,7 @@ class ActionResponse(RoledMessage):
             self.content = prepare_action_response_content(
                 action_request=action_request, output=output or self.output
             )
+            action_request.action_response_id = self.id
         super().update(
             sender=sender, recipient=recipient, template=template, **kwargs
         )

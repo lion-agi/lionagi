@@ -5,7 +5,7 @@ from lionagi.protocols.messages.message import MessageRole
 
 def test_action_response_initialization():
     """Test basic initialization of ActionResponse"""
-    action_request = ActionRequest(
+    action_request = ActionRequest.create(
         function="test_function",
         arguments={"arg1": "value1"},
         sender="user",
@@ -13,9 +13,11 @@ def test_action_response_initialization():
     )
     output = {"result": "success"}
 
-    response = ActionResponse(action_request=action_request, output=output)
+    response = ActionResponse.create(
+        action_request=action_request, output=output
+    )
 
-    assert response.role == MessageRole.ASSISTANT
+    assert response.role == MessageRole.ACTION
     assert response.function == action_request.function
     assert response.arguments == action_request.arguments
     assert response.output == output
@@ -26,10 +28,10 @@ def test_action_response_initialization():
 
 def test_action_response_links_to_request():
     """Test that ActionResponse properly links to its ActionRequest"""
-    action_request = ActionRequest(
+    action_request = ActionRequest.create(
         function="test", arguments={}, sender="user", recipient="assistant"
     )
-    response = ActionResponse(action_request=action_request)
+    response = ActionResponse.create(action_request=action_request)
 
     assert action_request.is_responded
     assert action_request.action_response_id == response.id
@@ -37,33 +39,34 @@ def test_action_response_links_to_request():
 
 def test_action_response_content_format():
     """Test the format of action response content"""
-    action_request = ActionRequest(
+    action_request = ActionRequest.create(
         function="test",
         arguments={"arg": "value"},
         sender="user",
         recipient="assistant",
     )
     output = {"status": "complete"}
-    response = ActionResponse(action_request=action_request, output=output)
+    response = ActionResponse.create(
+        action_request=action_request, output=output
+    )
 
-    formatted = response._format_content()
-    assert formatted["role"] == MessageRole.ASSISTANT.value
-    assert isinstance(formatted["content"], dict)
-    assert formatted["content"]["function"] == "test"
-    assert formatted["content"]["arguments"] == {"arg": "value"}
-    assert formatted["content"]["output"] == output
+    formatted = response.chat_msg
+    assert formatted["role"] == MessageRole.ACTION.value
+    assert isinstance(formatted["content"], str)
 
 
 def test_action_response_properties():
     """Test various properties of ActionResponse"""
-    action_request = ActionRequest(
+    action_request = ActionRequest.create(
         function="test_function",
         arguments={"param": "value"},
         sender="user",
         recipient="assistant",
     )
     output = {"status": "success"}
-    response = ActionResponse(action_request=action_request, output=output)
+    response = ActionResponse.create(
+        action_request=action_request, output=output
+    )
 
     assert response.function == "test_function"
     assert response.arguments == {"param": "value"}
@@ -76,10 +79,10 @@ def test_action_response_properties():
 
 def test_action_response_clone():
     """Test cloning an ActionResponse"""
-    action_request = ActionRequest(
+    action_request = ActionRequest.create(
         function="test", arguments={}, sender="user", recipient="assistant"
     )
-    original = ActionResponse(
+    original = ActionResponse.create(
         action_request=action_request, output={"status": "success"}
     )
 
@@ -95,17 +98,17 @@ def test_action_response_clone():
 
 def test_action_response_str_representation():
     """Test string representation of ActionResponse"""
-    action_request = ActionRequest(
+    action_request = ActionRequest.create(
         function="test_function",
         arguments={},
         sender="user",
         recipient="assistant",
     )
-    response = ActionResponse(
+    response = ActionResponse.create(
         action_request=action_request, output={"status": "complete"}
     )
 
     str_repr = str(response)
     assert "Message" in str_repr
-    assert "role=MessageRole.ASSISTANT" in str_repr
+    assert "action" in str_repr
     assert "action_request_id" in str_repr

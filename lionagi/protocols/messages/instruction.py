@@ -255,13 +255,13 @@ class Instruction(RoledMessage):
     @property
     def guidance(self) -> str | None:
         """Get the guidance content of the instruction."""
-        return self.content.get(["guidance"], None)
+        return self.content.get("guidance", None)
 
     @guidance.setter
     def guidance(self, guidance: str) -> None:
         """Set the guidance content of the instruction."""
         if not isinstance(guidance, str):
-            guidance = to_str(guidance)
+            guidance = str(guidance)
         self.content["guidance"] = guidance
 
     @property
@@ -270,7 +270,7 @@ class Instruction(RoledMessage):
         if "plain_content" in self.content:
             return self.content["plain_content"]
         else:
-            return self.content.get(["instruction"], None)
+            return self.content.get("instruction", None)
 
     @instruction.setter
     def instruction(self, instruction: JsonValue) -> None:
@@ -280,7 +280,7 @@ class Instruction(RoledMessage):
     @property
     def context(self) -> JsonValue | None:
         """Get the context of the instruction."""
-        return self.content.get(["context"], None)
+        return self.content.get("context", None)
 
     @context.setter
     def context(self, context: JsonValue) -> None:
@@ -292,7 +292,7 @@ class Instruction(RoledMessage):
     @property
     def tool_schemas(self) -> JsonValue | None:
         """Get the schemas of the tools in the instruction."""
-        return self.content.get(["tool_schemas"], None)
+        return self.content.get("tool_schemas", None)
 
     @tool_schemas.setter
     def tool_schemas(self, tool_schemas: dict) -> None:
@@ -302,7 +302,7 @@ class Instruction(RoledMessage):
     @property
     def plain_content(self) -> str | None:
         """Get the plain text content of the instruction."""
-        return self.content.get(["plain_content"], None)
+        return self.content.get("plain_content", None)
 
     @plain_content.setter
     def plain_content(self, plain_content: str) -> None:
@@ -312,7 +312,7 @@ class Instruction(RoledMessage):
     @property
     def image_detail(self) -> Literal["low", "high", "auto"] | None:
         """Get the image detail level of the instruction."""
-        return self.content.get(["image_detail"], None)
+        return self.content.get("image_detail", None)
 
     @image_detail.setter
     def image_detail(
@@ -324,7 +324,7 @@ class Instruction(RoledMessage):
     @property
     def images(self) -> list:
         """Get the images associated with the instruction."""
-        return self.content.get(["images"], [])
+        return self.content.get("images", [])
 
     @images.setter
     def images(self, images: list) -> None:
@@ -336,7 +336,7 @@ class Instruction(RoledMessage):
     @property
     def request_fields(self) -> dict | None:
         """Get the requested fields in the instruction."""
-        return self.content.get(["request_fields"], None)
+        return self.content.get("request_fields", None)
 
     @request_fields.setter
     def request_fields(self, request_fields: dict) -> None:
@@ -349,7 +349,7 @@ class Instruction(RoledMessage):
     @property
     def request_model(self) -> type[BaseModel] | None:
         """Get the request model of the instruction."""
-        return self.content.get(["request_model"], None)
+        return self.content.get("request_model", None)
 
     @request_model.setter
     def request_model(self, request_model: type[BaseModel]) -> None:
@@ -382,7 +382,7 @@ class Instruction(RoledMessage):
             image_detail: Optional new image detail level
         """
         images = images if isinstance(images, list) else [images]
-        _ima: list = self.content.get(["images"], [])
+        _ima: list = self.content.get("images", [])
         _ima.extend(images)
         self.images = _ima
 

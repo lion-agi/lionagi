@@ -31,7 +31,7 @@ def test_format_system_content():
     # Without datetime
     content = format_system_content(None, message)
     assert isinstance(content, dict)
-    assert content["system"] == message
+    assert content["system_message"] == message
     assert "system_datetime" not in content
 
     # With datetime boolean
@@ -159,12 +159,12 @@ def test_prepare_instruction_content():
 def test_validate_sender_recipient(sample_element):
     """Test sender/recipient validation"""
     # Test valid system roles
-    valid_roles = ["system", "user", "assistant", "N/A"]
+    valid_roles = ["system", "user", "assistant", "unset", "action"]
     for role in valid_roles:
         assert validate_sender_recipient(role) == role
 
     # Test None value
-    assert validate_sender_recipient(None) == "N/A"
+    assert validate_sender_recipient(None) == "unset"
 
     # Test with valid Element instance
     assert validate_sender_recipient(sample_element) == sample_element.id

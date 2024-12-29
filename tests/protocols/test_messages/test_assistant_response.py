@@ -51,7 +51,7 @@ def create_mock_stream_response(content: str) -> list[MockModelResponse]:
 def test_assistant_response_initialization():
     """Test basic initialization of AssistantResponse"""
     content = "Test response"
-    response = AssistantResponse(
+    response = AssistantResponse.create(
         assistant_response=content, sender="assistant", recipient="user"
     )
 
@@ -66,7 +66,7 @@ def test_assistant_response_with_model_response():
     content = "Model generated response"
     model_response = create_mock_response(content)
 
-    response = AssistantResponse(
+    response = AssistantResponse.create(
         assistant_response=model_response, sender="assistant", recipient="user"
     )
 
@@ -81,7 +81,7 @@ def test_assistant_response_with_streaming():
     content = "Stream response"
     stream_responses = create_mock_stream_response(content)
 
-    response = AssistantResponse(
+    response = AssistantResponse.create(
         assistant_response=stream_responses,
         sender="assistant",
         recipient="user",
@@ -95,7 +95,7 @@ def test_assistant_response_with_streaming():
 def test_assistant_response_with_dict():
     """Test AssistantResponse with dictionary input"""
     content = {"content": "Dictionary response"}
-    response = AssistantResponse(
+    response = AssistantResponse.create(
         assistant_response=content, sender="assistant", recipient="user"
     )
 
@@ -104,7 +104,7 @@ def test_assistant_response_with_dict():
 
 def test_assistant_response_empty():
     """Test AssistantResponse with empty response"""
-    response = AssistantResponse(
+    response = AssistantResponse.create(
         assistant_response="", sender="assistant", recipient="user"
     )
 
@@ -114,18 +114,18 @@ def test_assistant_response_empty():
 def test_assistant_response_content_format():
     """Test the format of assistant response content"""
     content = "Test content"
-    response = AssistantResponse(
+    response = AssistantResponse.create(
         assistant_response=content, sender="assistant", recipient="user"
     )
 
-    formatted = response._format_content()
+    formatted = response.chat_msg
     assert formatted["role"] == MessageRole.ASSISTANT.value
-    assert formatted["content"] == content
+    assert content in formatted["content"]
 
 
 def test_assistant_response_clone():
     """Test cloning an AssistantResponse"""
-    original = AssistantResponse(
+    original = AssistantResponse.create(
         assistant_response="Test response",
         sender="assistant",
         recipient="user",
@@ -141,7 +141,7 @@ def test_assistant_response_clone():
 
 def test_assistant_response_str_representation():
     """Test string representation of AssistantResponse"""
-    response = AssistantResponse(
+    response = AssistantResponse.create(
         assistant_response="Test response",
         sender="assistant",
         recipient="user",
@@ -149,5 +149,5 @@ def test_assistant_response_str_representation():
 
     str_repr = str(response)
     assert "Message" in str_repr
-    assert "role=MessageRole.ASSISTANT" in str_repr
+    assert "role=assistant" in str_repr
     assert "Test response" in str_repr

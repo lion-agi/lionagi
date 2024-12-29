@@ -61,8 +61,10 @@ def prepare_assistant_response(
             content["model_response"] = assistant_response
         elif isinstance(assistant_response, str):
             content["assistant_response"] = assistant_response
+            content["model_response"] = assistant_response
         else:
             content["assistant_response"] = str(assistant_response)
+            content["model_response"] = str(assistant_response)
         return content
     else:
         return {"assistant_response": ""}
@@ -114,6 +116,7 @@ class AssistantResponse(RoledMessage):
         **kwargs,
     ):
         content = prepare_assistant_response(assistant_response)
+        model_response = content.pop("model_response", {})
         content.update(kwargs)
         params = {
             "content": content,
@@ -123,10 +126,11 @@ class AssistantResponse(RoledMessage):
             params["sender"] = sender
         if recipient:
             params["recipient"] = recipient
-
         if template:
             params["template"] = template
-        return AssistantResponse(**params)
+        if model_response:
+            params["metadata"] = {"model_response": model_response}
+        return cls(**params)
 
     def update(
         self,

@@ -51,6 +51,8 @@ class System(RoledMessage):
         cls,
         system_message="You are a helpful AI assistant. Let's think step by step.",
         system_datetime=None,
+        sender: SenderRecipient = None,
+        recipient: SenderRecipient = None,
         template=None,
         **kwargs,
     ) -> Self:
@@ -68,7 +70,15 @@ class System(RoledMessage):
             system_datetime=system_datetime, system_message=system_message
         )
         content.update(kwargs)
-        return cls(role=MessageRole.SYSTEM, content=content, template=template)
+        params = {}
+        params["role"] = MessageRole.SYSTEM
+        params["content"] = content
+        params["sender"] = sender or MessageRole.SYSTEM
+        params["recipient"] = recipient or MessageRole.ASSISTANT
+        if template:
+            params["template"] = template
+
+        return cls(**params)
 
     def update(
         self,
@@ -76,6 +86,7 @@ class System(RoledMessage):
         sender: SenderRecipient = None,
         recipient: SenderRecipient = None,
         system_datetime: bool | str = None,
+        template: Template | str | None = None,
         **kwargs,
     ) -> NoReturn:
         """
@@ -91,4 +102,6 @@ class System(RoledMessage):
             self.content = format_system_content(
                 system_datetime=system_datetime, system_message=system_message
             )
-        super().update(sender=sender, recipient=recipient, **kwargs)
+        super().update(
+            sender=sender, recipient=recipient, template=template, **kwargs
+        )
