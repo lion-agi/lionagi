@@ -21,7 +21,7 @@ class ConcurrentExecutor(StrategyExecutor):
             return await self.execute_instruct(ins_, b_, False, **kwargs)
 
         config = {**ins.model_dump(), **kwargs}
-        res = await branch.instruct(**config)
+        res = await branch._instruct(**config)
         branch.msgs.logger.dump()
         instructs = (
             res.instruct_models if hasattr(res, "instruct_models") else []
