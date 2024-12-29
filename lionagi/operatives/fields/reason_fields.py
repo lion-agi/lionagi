@@ -1,3 +1,4 @@
+from lionagi.protocols.models.field_model import FieldModel
 from lionagi.utils import to_num
 
 

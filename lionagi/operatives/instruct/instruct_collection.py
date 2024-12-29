@@ -2,7 +2,7 @@ from functools import lru_cache
 
 from pydantic import BaseModel
 
-from lionagi.core.models import ModelParams
+from lionagi.protocols.models.model_params import ModelParams
 
 from .instruct import INSTRUCT_FIELD, Instruct
 from .node import InstructNode

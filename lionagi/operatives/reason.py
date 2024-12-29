@@ -4,10 +4,8 @@
 
 from pydantic import BaseModel, field_validator
 
-from lionagi.core.models import FieldModel
-from lionagi.libs.parse import to_num
-
-from ..operatives.prompts import confidence_description
+from lionagi.operatives.fields.reason_fields import CONFIDENCE_SCORE_FIELD
+from lionagi.protocols.models.field_model import FieldModel
 
 
 class Reason(BaseModel):

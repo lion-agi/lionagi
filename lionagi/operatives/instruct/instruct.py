@@ -2,8 +2,8 @@ from typing import Any, ClassVar
 
 from pydantic import JsonValue, field_validator
 
-from lionagi.core.models import FieldModel, SchemaModel
-from lionagi.core.models.base import BaseAutoModel
+from lionagi.protocols.models.field_model import FieldModel
+from lionagi.utils import HashableModel
 
 from .base import (
     ACTIONS_FIELD,
@@ -17,10 +17,11 @@ __all__ = (
     "Instruct",
     "InstructResponse",
     "INSTRUCT_FIELD",
+    "LIST_INSTRUCT_FIELD_MODEL",
 )
 
 
-class Instruct(SchemaModel):
+class Instruct(HashableModel):
     """Model for defining instruction parameters and execution requirements.
 
     Attributes:
@@ -88,6 +89,13 @@ INSTRUCT_FIELD = FieldModel(
 )
 
 
-class InstructResponse(BaseAutoModel):
+class InstructResponse(HashableModel):
     instruct: Instruct
     response: Any | None = None
+
+
+LIST_INSTRUCT_FIELD_MODEL = FieldModel(
+    name="instruct_models",
+    annotation=list[Instruct] | None,
+    default=None,
+)

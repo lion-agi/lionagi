@@ -1,4 +1,4 @@
-from lionagi.core.generic.node import Node
+from lionagi.protocols.generic.node import Node
 
 from .instruct import INSTRUCT_FIELD, Instruct
 
