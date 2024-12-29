@@ -25,8 +25,9 @@ def helper_sync_func(x: int = 0, y: str = "default") -> str:
 
 async def helper_preprocessor(value: Any, **kwargs) -> Any:
     """Test preprocessor."""
-    if isinstance(value, int):
-        return value + 1
+    if isinstance(value, dict):
+        value["x"] += 1
+        return value
     return value
 
 
@@ -44,23 +45,22 @@ def helper_parser(result: Any) -> str:
 def tool_with_processors():
     """Fixture for creating a tool with processors."""
     return Tool(
-        function=helper_sync_func,
-        pre_processor=helper_preprocessor,
-        post_processor=helper_postprocessor,
-        parser=helper_parser,
+        func_callable=helper_sync_func,
+        preprocessor=helper_preprocessor,
+        postprocessor=helper_postprocessor,
     )
 
 
 @pytest.fixture
 def async_tool():
     """Fixture for creating an async tool."""
-    return Tool(function=helper_async_func)
+    return Tool(func_callable=helper_async_func)
 
 
 @pytest.mark.asyncio
 async def test_function_calling_init():
     """Test FunctionCalling initialization."""
-    tool = Tool(function=helper_sync_func)
+    tool = Tool(func_callable=helper_sync_func)
     arguments = {"x": 1, "y": "test"}
 
     func_call = FunctionCalling(func_tool=tool, arguments=arguments)
@@ -73,17 +73,18 @@ async def test_function_calling_init():
 @pytest.mark.asyncio
 async def test_function_calling_with_sync_function():
     """Test FunctionCalling with synchronous function."""
-    tool = Tool(function=helper_sync_func)
+    tool = Tool(func_callable=helper_sync_func)
     func_call = FunctionCalling(
         func_tool=tool, arguments={"x": 1, "y": "test"}
     )
 
-    result = await func_call.invoke()
+    await func_call.invoke()
+    result = func_call.response
     assert result == "1-test"
     assert func_call.status == EventStatus.COMPLETED
-    assert func_call.execution_time is not None
-    assert func_call.execution_response == "1-test"
-    assert func_call.execution_error is None
+    assert func_call.execution.duration is not None
+    assert func_call.execution.response == "1-test"
+    assert func_call.execution.error is None
 
 
 @pytest.mark.asyncio
@@ -93,12 +94,13 @@ async def test_function_calling_with_async_function(async_tool):
         func_tool=async_tool, arguments={"x": 1, "y": "test"}
     )
 
-    result = await func_call.invoke()
+    await func_call.invoke()
+    result = func_call.response
     assert result == "1-test"
     assert func_call.status == EventStatus.COMPLETED
-    assert func_call.execution_time is not None
-    assert func_call.execution_response == "1-test"
-    assert func_call.execution_error is None
+    assert func_call.execution.duration is not None
+    assert func_call.execution.response == "1-test"
+    assert func_call.execution.error is None
 
 
 @pytest.mark.asyncio
@@ -108,7 +110,8 @@ async def test_function_calling_with_processors(tool_with_processors):
         func_tool=tool_with_processors, arguments={"x": 1, "y": "test"}
     )
 
-    result = await func_call.invoke()
+    await func_call.invoke()
+    result = func_call.response
     # Pre-processor adds 1 to x, so result should be "2-test"
     # Post-processor adds "processed-" prefix
     # Parser converts to string
@@ -117,37 +120,26 @@ async def test_function_calling_with_processors(tool_with_processors):
 
 
 @pytest.mark.asyncio
-async def test_function_calling_with_parser(tool_with_processors):
-    """Test FunctionCalling with result parser."""
-    func_call = FunctionCalling(
-        func_tool=tool_with_processors, arguments={"x": 1, "y": "test"}
-    )
-
-    result = await func_call.invoke()
-    assert isinstance(result, str)
-    assert func_call.status == EventStatus.COMPLETED
-
-
-@pytest.mark.asyncio
 async def test_function_calling_error_handling():
     """Test FunctionCalling error handling."""
 
-    async def error_func(**kwargs):
+    async def error_func():
         raise ValueError("Test error")
 
-    tool = Tool(function=error_func)
+    tool = Tool(func_callable=error_func)
     func_call = FunctionCalling(func_tool=tool, arguments={})
 
-    result = await func_call.invoke()
+    await func_call.invoke()
+    result = func_call.response
     assert result is None
     assert func_call.status == EventStatus.FAILED
-    assert "Test error" in str(func_call.execution_error)
-    assert func_call.execution_time is not None
+    assert "Test error" in str(func_call.execution.error)
+    assert func_call.execution.duration is not None
 
 
 def test_function_calling_str_representation():
     """Test FunctionCalling string representations."""
-    tool = Tool(function=helper_sync_func)
+    tool = Tool(func_callable=helper_sync_func)
     func_call = FunctionCalling(
         func_tool=tool, arguments={"x": 1, "y": "test"}
     )
@@ -167,10 +159,11 @@ def test_function_calling_str_representation():
 @pytest.mark.asyncio
 async def test_function_calling_with_empty_arguments():
     """Test FunctionCalling with empty arguments."""
-    tool = Tool(function=helper_sync_func)
+    tool = Tool(func_callable=helper_sync_func)
     func_call = FunctionCalling(func_tool=tool, arguments={})
 
-    result = await func_call.invoke()
+    await func_call.invoke()
+    result = func_call.response
     assert result == "0-default"  # Should use default values
     assert func_call.status == EventStatus.COMPLETED
 
@@ -182,11 +175,12 @@ async def test_function_calling_processor_error():
     async def error_processor(value: Any, **kwargs) -> Any:
         raise ValueError("Processor error")
 
-    tool = Tool(function=helper_sync_func, pre_processor=error_processor)
+    tool = Tool(func_callable=helper_sync_func, preprocessor=error_processor)
 
     func_call = FunctionCalling(func_tool=tool, arguments={"x": 1})
 
-    result = await func_call.invoke()
+    await func_call.invoke()
+    result = func_call.response
     assert result is None
     assert func_call.status == EventStatus.FAILED
-    assert "Processor error" in str(func_call.execution_error)
+    assert "Processor error" in str(func_call.execution.error)

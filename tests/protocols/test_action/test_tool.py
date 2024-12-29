@@ -34,87 +34,82 @@ def example_parser(data: Any) -> str:
 # Actual test cases
 def test_tool_initialization():
     """Test Tool class initialization"""
-    tool = Tool(function=example_func)
-    assert callable(tool.function)
-    assert tool.function == example_func
-    assert tool.schema_ is not None
-    assert "function" in tool.schema_
-    assert tool.schema_["function"]["name"] == "example_func"
-    assert tool.pre_processor is None
-    assert tool.post_processor is None
-    assert tool.parser is None
+    tool = Tool(func_callable=example_func)
+    assert callable(tool.func_callable)
+    assert tool.func_callable == example_func
+    assert tool.tool_schema is not None
+    assert "function" in tool.tool_schema
+    assert tool.tool_schema["function"]["name"] == "example_func"
+    assert tool.preprocessor is None
+    assert tool.postprocessor is None
 
 
 def test_tool_with_processors():
     """Test Tool with pre/post processors"""
     tool = Tool(
-        function=example_func,
-        pre_processor=example_processor,
-        post_processor=example_processor,
-        parser=example_parser,
-        pre_processor_kwargs={"key": "value"},
-        post_processor_kwargs={"key": "value"},
+        func_callable=example_func,
+        preprocessor=example_processor,
+        postprocessor=example_processor,
+        preprocessor_kwargs={"key": "value"},
+        postprocessor_kwargs={"key": "value"},
     )
 
-    assert tool.pre_processor == example_processor
-    assert tool.post_processor == example_processor
-    assert tool.parser == example_parser
-    assert tool.pre_processor_kwargs == {"key": "value"}
-    assert tool.post_processor_kwargs == {"key": "value"}
+    assert tool.preprocessor == example_processor
+    assert tool.postprocessor == example_processor
+    assert tool.preprocessor_kwargs == {"key": "value"}
+    assert tool.postprocessor_kwargs == {"key": "value"}
 
 
 def test_tool_validation():
     """Test Tool validation"""
     # Test non-callable function
     with pytest.raises(ValueError):
-        Tool(function="not_callable")
+        Tool(func_callable="not_callable")
 
     # Test lambda function
     lambda_func = lambda x: x
-    tool = Tool(function=lambda_func)
-    assert tool.function.__name__ == "<lambda>"
+    tool = Tool(func_callable=lambda_func)
+    assert tool.func_callable.__name__ == "<lambda>"
 
 
 def test_tool_serialization():
     """Test Tool serialization"""
     tool = Tool(
-        function=example_func,
-        pre_processor=example_processor,
-        post_processor=example_processor,
-        parser=example_parser,
-        pre_processor_kwargs={"key": "value"},
-        post_processor_kwargs={"key": "value"},
+        func_callable=example_func,
+        preprocessor=example_processor,
+        postprocessor=example_processor,
+        preprocessor_kwargs={"key": "value"},
+        postprocessor_kwargs={"key": "value"},
     )
 
     serialized = tool.to_dict()
-    assert serialized["function"] == "example_func"
-    assert serialized["pre_processor"] == "example_processor"
-    assert serialized["post_processor"] == "example_processor"
-    assert serialized["parser"] == "example_parser"
-    assert json.loads(serialized["pre_processor_kwargs"]) == {"key": "value"}
-    assert json.loads(serialized["post_processor_kwargs"]) == {"key": "value"}
+    assert serialized["func_callable"] == "example_func"
+    assert serialized["preprocessor"] == "example_processor"
+    assert serialized["postprocessor"] == "example_processor"
+    assert json.loads(serialized["preprocessor_kwargs"]) == {"key": "value"}
+    assert json.loads(serialized["postprocessor_kwargs"]) == {"key": "value"}
 
 
 def test_tool_function_name():
     """Test Tool function_name property"""
-    tool = Tool(function=example_func)
-    assert tool.function_name == "example_func"
+    tool = Tool(func_callable=example_func)
+    assert tool.function == "example_func"
 
 
 def test_tool_str_representation():
     """Test Tool string representation"""
-    tool = Tool(function=example_func)
+    tool = Tool(func_callable=example_func)
     str_rep = str(tool)
     assert "Tool" in str_rep
     assert "id" in str_rep
     assert "created_timestamp" in str_rep
-    assert "schema_" in str_rep
+    assert "tool_schema" in str_rep
 
 
 def test_tool_schema_generation():
     """Test schema generation for Tool"""
-    tool = Tool(function=example_func)
-    schema = tool.schema_
+    tool = Tool(func_callable=example_func)
+    schema = tool.tool_schema
 
     assert "function" in schema
     assert "name" in schema["function"]

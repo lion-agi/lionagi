@@ -120,11 +120,13 @@ class ActionManager:
             raise TypeError(f"Unsupported type {type(action_request)}")
 
         tool = self.registry.get(action_request.function, None)
-        if not tool:
+        if not isinstance(tool, Tool):
             raise ValueError(
                 f"Function {action_request.function} is not registered."
             )
-        return
+        return FunctionCalling(
+            func_tool=tool, arguments=action_request.arguments
+        )
 
     async def invoke(
         self, func_call: ActionRequestModel | ActionRequest
@@ -169,7 +171,7 @@ class ActionManager:
         """
         return [tool.tool_schema for tool in self.registry.values()]
 
-    def get_tool_schema(self, tools: ToolRef = False) -> list[dict]:
+    def get_tool_schema(self, tools: ToolRef = False) -> dict:
         """Retrieve the schema for specific tools or all tools.
 
         Args:
@@ -189,10 +191,11 @@ class ActionManager:
             tools = tools[0]
         if isinstance(tools, bool):
             if tools is True:
-                return self.schema_list
+                return {"tools": self.schema_list}
             return []
         else:
-            return self._get_tool_schema(tools)
+            schemas = self._get_tool_schema(tools)
+            return {"tools": schemas}
 
     def _get_tool_schema(
         self,

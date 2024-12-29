@@ -7,9 +7,9 @@ import json
 from collections.abc import Callable
 from typing import Any, Self, TypeAlias, override
 
-from pydantic import Field, field_validator, model_validator
+from pydantic import Field, field_serializer, field_validator, model_validator
 
-from lionagi.libs.schema import function_to_schema
+from lionagi.libs.schema.function_to_schema import function_to_schema
 
 from ..generic.element import Element
 
@@ -49,26 +49,35 @@ class Tool(Element):
         parser: Optional function to parse result to JSON format.
     """
 
-    func_callable: Callable[..., Any] = Field(..., exclude=True)
+    func_callable: Callable[..., Any]
     tool_schema: dict[str, Any] | None = None
     preprocessor: Callable[[Any], Any] | None = Field(
-        None, exclude=True
+        None
     )  # should in take arguments and return processed kwargs for the function, the function calling arguments should be first positional argument of the preprocessor
-    preprocessor_kwargs: dict[str, Any] | None = Field(None, exclude=True)
+    preprocessor_kwargs: dict[str, Any] = Field(default_factory=dict)
     postprocessor: Callable[[Any], Any] | None = Field(
-        None, exclude=True
+        None
     )  # should intake function output and return a processed output, the function output should be the first positional argument of the postprocessor
-    postprocessor_kwargs: dict[str, Any] | None = Field(None, exclude=True)
-    strict_func_call: bool = Field(False, exclude=False)
+    postprocessor_kwargs: dict[str, Any] = Field(default_factory=dict)
+    strict_func_call: bool = Field(False, exclude=True)
+
+    @field_serializer("preprocessor_kwargs", "postprocessor_kwargs")
+    def _serialize_kwargs(self, v: Any) -> str:
+        try:
+            return json.dumps(v)
+        except TypeError:
+            return {}
+
+    @field_serializer("preprocessor", "postprocessor", "func_callable")
+    def _serialize_processor(self, v: Any) -> str:
+        if v is None:
+            return None
+        return v.__name__
 
     @model_validator(mode="after")
     def validate_tool_schema(self) -> Self:
         if self.tool_schema is None:
             self.tool_schema = function_to_schema(self.func_callable)
-        if self.preprocessor is not None:
-            self.preprocessor_kwargs = self.preprocessor_kwargs or {}
-        if self.postprocessor is not None:
-            self.postprocessor_kwargs = self.postprocessor_kwargs or {}
         return self
 
     @field_validator("func_callable")
@@ -98,11 +107,11 @@ class Tool(Element):
         Returns:
             str: A detailed string representation of the Tool.
         """
-        timestamp_str = self.created_at.strftime("%Y-%m-%d %H:%M:%S")
+        timestamp_str = self.created_datetime.strftime("%Y-%m-%d %H:%M:%S")
         return (
             f"{self.class_name()}(id={str(self.id)[:6]}.., "
             f"created_timestamp={timestamp_str}), "
-            f"schema_={json.dumps(self.tool_schema, indent=4)}"
+            f"tool_schema={json.dumps(self.tool_schema, indent=4)}"
         )
 
     @property
@@ -111,13 +120,21 @@ class Tool(Element):
 
     @property
     def minimum_acceptable_fields(self) -> set[str]:
-        return {
-            k
-            for k, v in inspect.signature(
-                self.func_callable
-            ).parameters.items()
-            if v.default == inspect.Parameter.empty
-        }
+        try:
+            a = {
+                k
+                for k, v in inspect.signature(
+                    self.func_callable
+                ).parameters.items()
+                if v.default == inspect.Parameter.empty
+            }
+            if "kwargs" in a:
+                a.remove("kwargs")
+            if "args" in a:
+                a.remove("args")
+            return a
+        except Exception:
+            return set()
 
 
 FuncTool: TypeAlias = Tool | Callable[..., Any]

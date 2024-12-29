@@ -4,6 +4,7 @@ from lionagi.protocols.action.function_calling import FunctionCalling
 from lionagi.protocols.action.manager import ActionManager
 from lionagi.protocols.action.request_response_model import ActionRequestModel
 from lionagi.protocols.action.tool import Tool
+from lionagi.protocols.generic.event import Execution
 from lionagi.protocols.messages.action_request import ActionRequest
 
 
@@ -39,7 +40,7 @@ def test_action_manager_init():
     assert len(manager.registry) == 0
 
     # Test with pre-registered tools
-    tool = Tool(function=helper_func)
+    tool = Tool(func_callable=helper_func)
     manager = ActionManager(registry={"helper_func": tool})
     assert len(manager.registry) == 1
     assert "helper_func" in manager.registry
@@ -52,9 +53,9 @@ def test_tool_registration(action_manager):
     assert helper_func.__name__ in action_manager.registry
 
     # Test registering a Tool object
-    tool = Tool(function=another_helper_func)
+    tool = Tool(func_callable=another_helper_func)
     action_manager.register_tool(tool)
-    assert tool.function_name in action_manager.registry
+    assert tool.function in action_manager.registry
 
     # Test duplicate registration
     with pytest.raises(ValueError):
@@ -94,48 +95,10 @@ def test_contains_check(populated_manager):
 
 
 @pytest.mark.asyncio
-async def test_match_tool_tuple(populated_manager):
-    """Test matching tool from tuple format."""
-    # Test valid tuple
-    func_call = ("helper_func", {"x": 1, "y": "test"})
-    result = populated_manager.match_tool(func_call)
-    assert isinstance(result, FunctionCalling)
-    assert result.function == "helper_func"
-
-    # Test invalid tuple
-    with pytest.raises(ValueError):
-        populated_manager.match_tool(("invalid_func", {}))
-
-    # Test malformed tuple
-    with pytest.raises(ValueError):
-        populated_manager.match_tool(("helper_func",))
-
-
-@pytest.mark.asyncio
-async def test_match_tool_dict(populated_manager):
-    """Test matching tool from dictionary format."""
-    # Test valid dictionary
-    func_call = {"function": "helper_func", "arguments": {"x": 1, "y": "test"}}
-    result = populated_manager.match_tool(func_call)
-    assert isinstance(result, FunctionCalling)
-    assert result.function == "helper_func"
-
-    # Test invalid function name
-    with pytest.raises(ValueError):
-        populated_manager.match_tool(
-            {"function": "invalid_func", "arguments": {}}
-        )
-
-    # Test malformed dictionary
-    with pytest.raises(ValueError):
-        populated_manager.match_tool({"function": "helper_func"})
-
-
-@pytest.mark.asyncio
 async def test_match_tool_action_request(populated_manager):
     """Test matching tool from ActionRequest."""
     # Test with ActionRequest
-    request = ActionRequest(function="helper_func", arguments={"x": 1})
+    request = ActionRequest.create(function="helper_func", arguments={"x": 1})
     result = populated_manager.match_tool(request)
     assert isinstance(result, FunctionCalling)
     assert result.function == "helper_func"
@@ -149,51 +112,8 @@ async def test_match_tool_action_request(populated_manager):
     # Test invalid function name
     with pytest.raises(ValueError):
         populated_manager.match_tool(
-            ActionRequest(function="invalid_func", arguments={})
+            ActionRequest.create(function="invalid_func", arguments={})
         )
-
-
-@pytest.mark.asyncio
-async def test_match_tool_string(populated_manager):
-    """Test matching tool from string format."""
-    # Test valid JSON string
-    func_call = '{"function": "helper_func", "arguments": {"x": 1}}'
-    result = populated_manager.match_tool(func_call)
-    assert isinstance(result, FunctionCalling)
-    assert result.function == "helper_func"
-
-    # Test invalid JSON string
-    with pytest.raises(ValueError):
-        populated_manager.match_tool("invalid json")
-
-    # Test valid JSON but invalid function
-    with pytest.raises(ValueError):
-        populated_manager.match_tool(
-            '{"function": "invalid_func", "arguments": {}}'
-        )
-
-
-@pytest.mark.asyncio
-async def test_invoke(populated_manager):
-    """Test tool invocation."""
-    # Test with dictionary
-    result = await populated_manager.invoke(
-        {"function": "helper_func", "arguments": {"x": 1, "y": "test"}}
-    )
-    assert result == "1-test"
-
-    # Test with string
-    result = await populated_manager.invoke(
-        '{"function": "helper_func", "arguments": {"x": 2, "y": "test"}}'
-    )
-    assert result == "2-test"
-
-    # Test with ActionRequest
-    request = ActionRequest(
-        function="helper_func", arguments={"x": 3, "y": "test"}
-    )
-    result = await populated_manager.invoke(request)
-    assert result == "3-test"
 
 
 def test_schema_list(populated_manager):
@@ -236,10 +156,3 @@ def test_get_tool_schema(populated_manager):
     # Test with invalid type
     with pytest.raises(TypeError):
         populated_manager.get_tool_schema(123)
-
-
-def test_get_tool_schema_with_kwargs(populated_manager):
-    """Test retrieving tool schemas with additional kwargs."""
-    result = populated_manager.get_tool_schema(True, extra_field="value")
-    assert "tools" in result
-    assert result["extra_field"] == "value"

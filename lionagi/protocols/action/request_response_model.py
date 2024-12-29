@@ -2,18 +2,19 @@
 #
 # SPDX-License-Identifier: Apache-2.0
 
-from dataclasses import Field
 from typing import Any
 
-from pydantic import BaseModel, field_validator
+from pydantic import BaseModel, Field, field_validator
 
-from lionagi.utils import to_dict
+from lionagi.utils import HashableModel, to_dict
 
 from ..models.field_model import FieldModel
 from .utils import (
     ARGUMENTS_FIELD,
     FUNCTION_FIELD,
     action_requests_field_description,
+    arguments_field_description,
+    function_field_description,
     parse_action_request,
 )
 
@@ -25,10 +26,19 @@ __all__ = (
 )
 
 
-class ActionRequestModel(BaseModel):
+class ActionRequestModel(HashableModel):
 
-    function: str | None = FUNCTION_FIELD.field_info
-    arguments: dict[str, Any] | None = ARGUMENTS_FIELD.field_info
+    function: str | None = Field(
+        None,
+        title="Function",
+        description=function_field_description,
+        examples=["multiply", "create_user"],
+    )
+    arguments: dict[str, Any] | None = Field(
+        None,
+        title="Arguments",
+        description=arguments_field_description,
+    )
 
     @field_validator("arguments", mode="before")
     def validate_arguments(cls, value: Any) -> dict[str, Any]:
@@ -38,6 +48,12 @@ class ActionRequestModel(BaseModel):
             recursive=True,
             recursive_python_only=False,
         )
+
+    @field_validator("function", mode="before")
+    def validate_function(cls, value: str) -> str:
+        if not isinstance(value, str):
+            return None
+        return value
 
     @classmethod
     def create(cls, content: str):
@@ -59,9 +75,9 @@ ACTION_REQUESTS_FIELD = FieldModel(
 )
 
 
-class ActionResponseModel(BaseModel):
+class ActionResponseModel(HashableModel):
 
-    function: str = Field(default_factory=str)
+    function: str = Field(..., title="Function")
     arguments: dict[str, Any] = Field(default_factory=dict)
     output: Any = None
 
