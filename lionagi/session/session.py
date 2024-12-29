@@ -11,6 +11,7 @@ from lionagi.protocols.messages.base import MESSAGE_FIELDS
 from lionagi.protocols.types import (
     ID,
     ActionManager,
+    Communicatable,
     Node,
     Pile,
     Progression,
@@ -26,7 +27,7 @@ from ..utils import to_list
 from .branch import Branch
 
 
-class Session(Node):
+class Session(Node, Communicatable):
     """
     Manages multiple conversation branches and mail transfer in a session.
 
