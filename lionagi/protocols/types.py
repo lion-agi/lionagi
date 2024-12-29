@@ -33,15 +33,17 @@ from .action.request_response_model import (
 )
 from .action.tool import FuncTool, FuncToolRef, Tool, ToolRef
 from .generic._id import ID, Collective, IDError, IDType, Ordering
+from .generic.concepts import Manager, Observer
 from .generic.element import E, Element, Observable
-from .generic.event import Condition, Event, EventStatus, Execution, Observer
+from .generic.event import Condition, Event, EventStatus, Execution
+from .generic.exchange import Exchange
 from .generic.log import Log, LogManager, LogManagerConfig
-from .generic.node import Node, Relational
 from .generic.pile import Pile, pile
 from .generic.processor import Executor, Processor
 from .generic.progression import Progression, prog
 from .graph.edge import Edge, EdgeCondition
 from .graph.graph import Graph
+from .graph.node import Node, Relational
 from .messages.action_request import ActionRequest
 from .messages.action_response import ActionResponse
 from .messages.assistant_response import AssistantResponse
@@ -126,4 +128,6 @@ __all__ = (
     "Communicatable",
     "Note",
     "SenderRecipient",
+    "Manager",
+    "Exchange",
 )

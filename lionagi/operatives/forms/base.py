@@ -7,7 +7,7 @@ from typing import Any, Literal
 from pydantic import Field, field_validator
 from pydantic_core import PydanticUndefined
 
-from lionagi.protocols.generic.node import Node
+from lionagi.protocols.graph.node import Node
 from lionagi.utils import UNDEFINED
 
 

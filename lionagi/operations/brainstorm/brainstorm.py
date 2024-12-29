@@ -252,7 +252,7 @@ async def brainstorm(
                             )
                             print(f"\n-----Exploring Idea-----\n{snippet}")
                         new_branch = session.split(branch)
-                        resp = await new_branch.instruct(
+                        resp = await new_branch._instruct(
                             ins_, **(explore_kwargs or {})
                         )
                         return InstructResponse(instruct=ins_, response=resp)
@@ -329,7 +329,7 @@ async def brainstorm(
 
                         async def _explore(ins_: Instruct):
                             child_branch = session.split(base_branch)
-                            child_resp = await child_branch.instruct(
+                            child_resp = await child_branch._instruct(
                                 ins_, **(explore_kwargs or {})
                             )
                             return InstructResponse(
@@ -392,7 +392,7 @@ async def brainstorm(
                                     f"\n-----Exploring Idea (sequential in chunk)-----\n{snippet}"
                                 )
 
-                            seq_resp = await local_branch.instruct(
+                            seq_resp = await local_branch._instruct(
                                 ins_, **(explore_kwargs or {})
                             )
                             chunk_results.append(
