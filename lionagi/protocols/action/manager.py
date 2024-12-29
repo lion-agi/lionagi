@@ -9,7 +9,8 @@ from typing import Any
 from lionagi.protocols.generic.event import Execution
 from lionagi.utils import EventStatus, to_list
 
-from ..generic.log import LogManager
+from ..generic.concepts import Manager
+from ..generic.log import Log
 from ..messages.action_request import ActionRequest
 from .function_calling import FunctionCalling
 from .request_response_model import ActionRequestModel
@@ -18,7 +19,7 @@ from .tool import FuncTool, FuncToolRef, Tool, ToolRef
 __all__ = ("ActionManager",)
 
 
-class ActionManager:
+class ActionManager(Manager):
 
     def __init__(
         self, registry: dict[str, Tool] | None = None, logger=None
@@ -32,7 +33,6 @@ class ActionManager:
                 If None, creates a new LogManager instance.
         """
         self.registry: dict[str, Tool] = registry or {}
-        self.logger = logger or LogManager()
 
     def __contains__(self, tool: FuncToolRef) -> bool:
         """Check if a tool is registered in the registry.
@@ -130,7 +130,7 @@ class ActionManager:
 
     async def invoke(
         self, func_call: ActionRequestModel | ActionRequest
-    ) -> Execution:
+    ) -> tuple[Execution, Log | None]:
         """Invoke a tool based on the provided function call.
 
         1. Matches function call to registered tool
@@ -152,15 +152,17 @@ class ActionManager:
         try:
             function_calling = self.match_tool(func_call)
         except ValueError as e:
-            return Execution(
-                status=EventStatus.FAILED,
-                error=str(e),
-                result=None,
+            return (
+                Execution(
+                    status=EventStatus.FAILED,
+                    error=str(e),
+                    result=None,
+                ),
+                None,
             )
 
         await function_calling.invoke()
-        await self.logger.alog(function_calling.to_log())
-        return function_calling.execution
+        return function_calling.execution, Log.create(function_calling)
 
     @property
     def schema_list(self) -> list[dict[str, Any]]:

@@ -4,14 +4,12 @@
 
 from typing import Any
 
-from pydantic import BaseModel, Field, field_validator
+from pydantic import Field, field_validator
 
 from lionagi.utils import HashableModel, to_dict
 
 from ..models.field_model import FieldModel
 from .utils import (
-    ARGUMENTS_FIELD,
-    FUNCTION_FIELD,
     action_requests_field_description,
     arguments_field_description,
     function_field_description,

@@ -5,7 +5,7 @@
 import asyncio
 from typing import Any, Self
 
-from pydantic import Field, field_validator, model_validator
+from pydantic import Field, model_validator
 
 from lionagi.utils import is_coro_func
 
