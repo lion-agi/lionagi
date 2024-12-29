@@ -3,34 +3,20 @@
 # SPDX-License-Identifier: Apache-2.0
 
 import uuid
-from abc import ABC
 from collections.abc import Mapping, Sequence
 from typing import Any, Generic, TypeAlias
 
 from lionagi._errors import IDError
 
+from .concepts import Collective, Ordering
 from .element import E, Element, IDType
 
 __all__ = (
-    "Collective",
-    "Ordering",
     "validate_order",
     "ID",
     "IDType",
     "IDError",
 )
-
-
-class Collective(ABC, Generic[E]):
-    """Abstract base class for collections of elements."""
-
-    pass
-
-
-class Ordering(ABC, Generic[E]):
-    """Abstract base class for defining element orderings."""
-
-    pass
 
 
 def validate_order(order: Any) -> list[IDType]:

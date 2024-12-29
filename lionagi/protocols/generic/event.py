@@ -13,18 +13,11 @@ from .element import Element
 from .log import Log
 
 __all__ = (
-    "Observer",
     "Event",
     "Condition",
     "Execution",
     "EventStatus",
 )
-
-
-class Observer(ABC):
-    """Base class for all observers."""
-
-    pass
 
 
 class Condition(ABC):

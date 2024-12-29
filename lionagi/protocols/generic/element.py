@@ -4,7 +4,6 @@
 
 from __future__ import annotations
 
-from abc import ABC
 from datetime import datetime
 from typing import Any, Self, TypeVar
 from uuid import UUID, uuid4
@@ -23,6 +22,8 @@ from lionagi._class_registry import LION_CLASS_REGISTRY, get_class
 from lionagi._errors import IDError
 from lionagi.settings import Settings
 from lionagi.utils import UNDEFINED, time
+
+from .concepts import Observable
 
 __all__ = (
     "Element",
@@ -65,11 +66,6 @@ class IDType:
         return hash(self._id)
 
     __slots__ = ("_id",)
-
-
-class Observable(ABC):
-
-    id: IDType
 
 
 class Element(BaseModel, Observable):

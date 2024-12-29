@@ -7,8 +7,9 @@ from typing import Any, ClassVar
 
 from lionagi.utils import DataClass
 
+from .concepts import Observer
 from .element import ID
-from .event import Event, EventStatus, Observer
+from .event import Event, EventStatus
 from .pile import Pile, Progression
 
 __all__ = (
@@ -17,7 +18,7 @@ __all__ = (
 )
 
 
-class Processor(DataClass, Observer):
+class Processor(Observer):
     """should subclass to really use this"""
 
     event_type: ClassVar[type[Event]]
@@ -27,6 +28,7 @@ class Processor(DataClass, Observer):
         queue_capacity: int,
         capacity_refresh_time: float,
     ):
+        super().__init__()
         if queue_capacity < 1:
             raise ValueError("Queue capacity must be greater than 0.")
         if capacity_refresh_time <= 0:
