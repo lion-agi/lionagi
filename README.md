@@ -312,7 +312,7 @@ Join our [Discord community](https://discord.gg/aqSJ2v46vu) to:
   author = {Haiyang Li},
   month = {12},
   year = {2023},
-  title = {LionAGI: Intelligent Integration Framework},
+  title = {LionAGI: Towards Automated General Intelligence},
   url = {https://github.com/lion-agi/lionagi},
 }
 ```
