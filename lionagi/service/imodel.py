@@ -75,23 +75,3 @@ class iModel:
         if hasattr(self.endpoint, "allowed_roles"):
             return self.endpoint.allowed_roles
         return ["system", "user", "assistant"]
-
-
-class iModelManager:
-
-    def __init__(self):
-        self.registry: dict[str, iModel] = {}
-
-    @property
-    def chat(self) -> iModel:
-        return self.registry.get("chat", None)
-
-    @property
-    def parse(self) -> iModel:
-        return self.registry.get("parse", None)
-
-    def register_imodel(self, name: str, model: iModel):
-        if isinstance(model, iModel):
-            self.registry[name] = model
-        else:
-            raise TypeError("Input model is not an instance of iModel")
