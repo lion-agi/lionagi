@@ -19,7 +19,13 @@ __all__ = (
 
 
 class Processor(Observer):
-    """should subclass to really use this"""
+    """Should subclass to really use this.
+
+    This class manages a queue of events and processes them up to a specified
+    capacity within a configured refresh time. Users should subclass this
+    class to provide custom logic for how events are processed or how
+    permissions are requested.
+    """
 
     event_type: ClassVar[type[Event]]
 
@@ -28,6 +34,16 @@ class Processor(Observer):
         queue_capacity: int,
         capacity_refresh_time: float,
     ):
+        """Initialize the processor.
+
+        Args:
+            queue_capacity (int):
+                The maximum number of events that can be processed in
+                one batch.
+            capacity_refresh_time (float):
+                The time interval (in seconds) after which the processor
+                capacity is reset.
+        """
         super().__init__()
         if queue_capacity < 1:
             raise ValueError("Queue capacity must be greater than 0.")
@@ -43,6 +59,7 @@ class Processor(Observer):
 
     @property
     def available_capacity(self) -> int:
+        """int: The current available processing capacity."""
         return self._available_capacity
 
     @available_capacity.setter
@@ -51,6 +68,7 @@ class Processor(Observer):
 
     @property
     def execution_mode(self) -> bool:
+        """bool: Indicates whether the processor is in execution mode."""
         return self._execution_mode
 
     @execution_mode.setter
@@ -58,94 +76,102 @@ class Processor(Observer):
         self._execution_mode = value
 
     async def enqueue(self, event: Event) -> None:
-        """
-        Enqueues an event to the processor queue.
+        """Enqueue an event to the processor queue.
 
         Args:
-            event: The event to be added to the queue.
+            event (Event):
+                The event to be added to the queue.
         """
         await self.queue.put(item=event)
 
     async def dequeue(self) -> Event:
-        """
-        Dequeues an event from the processor queue.
+        """Dequeue the next event from the processor queue.
 
         Returns:
-            The next event in the queue.
+            Event: The next event in the queue.
         """
         return await self.queue.get()
 
     async def join(self) -> None:
-        """Blocks until all items in the queue have been processed."""
+        """Block until all items in the queue have been processed."""
         await self.queue.join()
 
     async def stop(self) -> None:
-        """Signals the processor to stop processing actions."""
+        """Signal the processor to stop processing actions."""
         self._stop_event.set()
 
     async def start(self) -> None:
-        """Allows the processor to start or continue processing."""
+        """Allow the processor to start or continue processing."""
         self._stop_event.clear()
 
     def is_stopped(self) -> bool:
-        """
-        Indicates whether the processor has been stopped.
+        """Check if the processor has been stopped.
 
         Returns:
-            True if the processor has been stopped, otherwise False.
+            bool: True if the processor has been signaled to stop, False
+            otherwise.
         """
         return self._stop_event.is_set()
 
     @classmethod
     async def create(cls, **kwargs: Any) -> "Processor":
-        """
-        Class method to create an instance of the processor.
+        """Create a new instance of the processor.
 
         Args:
             **kwargs: Arguments passed to the processor constructor.
 
         Returns:
-            A new instance of the processor.
+            Processor: A new instance of the processor.
         """
         processor = cls(**kwargs)
         return processor
 
     async def process(self) -> None:
-        """
-        Processes the work items in the queue.
+        """Process the queued events up to the available capacity.
 
-        Processes items up to the available capacity. Each action is marked as
-        `PROCESSING` before execution. After processing, capacity is reset.
+        Events are marked as `PROCESSING` before being invoked. After
+        processing, the available capacity is reset to the original
+        queue capacity.
         """
         tasks = set()
-        prev, next = None, None
+        prev, next_event = None, None
 
         while self.available_capacity > 0 and self.queue.qsize() > 0:
             if prev and prev.status == EventStatus.PENDING:
-                next = prev
+                next_event = prev
                 await asyncio.sleep(self.capacity_refresh_time)
             else:
-                next: Event = await self.dequeue()
+                next_event = await self.dequeue()
 
-            if await self.request_permission(**next.request):
-                next.status = EventStatus.PROCESSING
-                task = asyncio.create_task(next.invoke())
+            if await self.request_permission(**next_event.request):
+                next_event.status = EventStatus.PROCESSING
+                task = asyncio.create_task(next_event.invoke())
                 tasks.add(task)
-            prev = next
+            prev = next_event
 
         if tasks:
             await asyncio.wait(tasks)
             self.available_capacity = self.queue_capacity
 
     async def request_permission(self, **kwargs: Any) -> bool:
+        """Request permission to process the event.
+
+        Subclasses can override this method to implement custom logic.
+
+        Args:
+            **kwargs (Any):
+                Additional parameters for permission logic.
+
+        Returns:
+            bool: True if permission is granted, False otherwise.
+        """
         return True
 
     async def execute(self) -> None:
-        """
-        Executes the processor, continuously processing actions until stopped.
+        """Continuously process events until stopped.
 
-        Runs in a loop, processing actions and respecting the refresh time
-        between cycles. Exits when signaled to stop.
+        This method runs in a loop, respecting the refresh time between cycles.
+        It exits the loop when the processor is signaled to stop.
         """
         self._execution_mode = True
         await self.start()
@@ -157,7 +183,11 @@ class Processor(Observer):
 
 
 class Executor(DataClass, Observer):
-    """should subclass to really use this"""
+    """Should subclass to really use this.
+
+    An executor that manages events through a processor, holding them in a
+    `Pile` until they can be forwarded for processing.
+    """
 
     processor_type: ClassVar[type[Processor]]
 
@@ -166,6 +196,16 @@ class Executor(DataClass, Observer):
         processor_config: dict[str, Any] = None,
         strict_event_type: bool = False,
     ):
+        """Initialize the Executor.
+
+        Args:
+            processor_config (dict[str, Any] | None):
+                Configuration dictionary passed to the processor upon
+                creation.
+            strict_event_type (bool, optional):
+                Whether to strictly enforce the event type constraint in
+                the pile.
+        """
         self.processor_config = processor_config or {}
         self.pending = Progression()
         self.processor = None
@@ -176,42 +216,44 @@ class Executor(DataClass, Observer):
 
     @property
     def event_type(self) -> type[Event]:
+        """type[Event]: The event type handled by the processor."""
         return self.processor_type.event_type
 
     @property
     def strict_event_type(self) -> bool:
+        """bool: Whether the pile enforces strict event type constraints."""
         return self.pile.strict_type
 
     async def forward(self) -> None:
-        """Forwards pending actions to the processor."""
+        """Forward all pending events to the processor."""
         while len(self.pending) > 0:
             action = self.pile[self.pending.popleft()]
             await self.processor.enqueue(action)
         await self.processor.process()
 
     async def start(self) -> None:
-        """Starts the event processor."""
+        """Start the event processor."""
         if not self.processor:
             await self._create_processor()
         await self.processor.start()
 
     async def stop(self) -> None:
-        """Stops the event processor."""
+        """Stop the event processor."""
         if self.processor:
             await self.processor.stop()
 
     async def _create_processor(self) -> None:
-        """Factory method the processor creation"""
+        """Create the processor using the configured processor type."""
         self.processor = await self.processor_type.create(
-            **self.processor_config,
+            **self.processor_config
         )
 
     async def append(self, event: Event) -> None:
-        """
-        Appends a new action to the executor.
+        """Append a new event to the executor.
 
         Args:
-            action (ObservableAction): The action to be added to the pile.
+            event (Event):
+                The event to be added to the pile and marked as pending.
         """
         async with self.pile:
             self.pile.include(event)
@@ -219,12 +261,7 @@ class Executor(DataClass, Observer):
 
     @property
     def completed_events(self) -> Pile[Event]:
-        """
-        Retrieves a pile of all completed actions.
-
-        Returns:
-            Pile: A collection of actions that have been completed.
-        """
+        """Pile[Event]: A pile of all completed events."""
         return Pile(
             collections=[
                 i for i in self.pile if i.status == EventStatus.COMPLETED
@@ -235,12 +272,7 @@ class Executor(DataClass, Observer):
 
     @property
     def pending_events(self) -> Pile[Event]:
-        """
-        Retrieves a pile of all pending actions.
-
-        Returns:
-            Pile: A collection of actions that are still pending.
-        """
+        """Pile[Event]: A pile of all pending events."""
         return Pile(
             collections=[
                 i for i in self.pile if i.status == EventStatus.PENDING
@@ -251,12 +283,7 @@ class Executor(DataClass, Observer):
 
     @property
     def failed_events(self) -> Pile[Event]:
-        """
-        Retrieves a pile of all failed actions.
-
-        Returns:
-            Pile: A collection of actions that have failed.
-        """
+        """Pile[Event]: A pile of all failed events."""
         return Pile(
             collections=[
                 i for i in self.pile if i.status == EventStatus.FAILED
@@ -266,5 +293,13 @@ class Executor(DataClass, Observer):
         )
 
     def __contains__(self, event: ID[Event].Ref) -> bool:
-        """Checks if an action is present in the pile."""
+        """Check if the event is present in the pile.
+
+        Args:
+            event (ID[Event].Ref):
+                A reference to an event.
+
+        Returns:
+            bool: True if the event is in the pile, False otherwise.
+        """
         return event in self.pile
