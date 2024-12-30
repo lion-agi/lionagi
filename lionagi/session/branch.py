@@ -4,18 +4,31 @@
 
 import logging
 from pathlib import Path
-from typing import Literal
+from typing import Any, Literal
 
 import pandas as pd
+from jinja2 import Template
 from pydantic import BaseModel, Field, JsonValue, PrivateAttr, model_validator
 
 from lionagi.libs.validate.fuzzy_validate_mapping import fuzzy_validate_mapping
 from lionagi.operatives.instruct.instruct import Instruct
-from lionagi.operatives.manager import OperativeManager
+
+# from lionagi.operatives.manager import OperativeManager
 from lionagi.operatives.operative import Operative
 from lionagi.operatives.step import Step
-from lionagi.protocols.generic.concepts import Communicatable, Obs, Relational
-from lionagi.protocols.messages.base import MESSAGE_FIELDS, SenderRecipient
+from lionagi.protocols.generic.concepts import (
+    Communicatable,
+    Observable,
+    Relational,
+)
+from lionagi.protocols.generic.element import IDType
+from lionagi.protocols.generic.log import LogManagerConfig
+from lionagi.protocols.messages.base import (
+    MESSAGE_FIELDS,
+    MessageRole,
+    SenderRecipient,
+)
+from lionagi.protocols.messages.system import System
 from lionagi.protocols.types import (
     ID,
     ActionManager,
@@ -34,22 +47,24 @@ from lionagi.protocols.types import (
     Node,
     Pile,
     Progression,
+    Relational,
     RoledMessage,
     SenderRecipient,
     ToolRef,
 )
-from lionagi.service.imodel import iModel, iModelManager
+from lionagi.service.imodel import iModel
+from lionagi.service.manager import iModelManager
 from lionagi.settings import Settings
 from lionagi.utils import (
-    ID,
     UNDEFINED,
     alcall,
     breakdown_pydantic_annotation,
+    time,
     to_json,
 )
 
 
-class Branch(Node, Communicatable, Relational):
+class Branch(Observable, Communicatable, Relational):
 
     user: SenderRecipient | None = Field(
         None,
@@ -70,8 +85,77 @@ class Branch(Node, Communicatable, Relational):
     _message_manager: MessageManager = PrivateAttr(None)
     _action_manager: ActionManager = PrivateAttr(None)
     _imodel_manager: iModelManager = PrivateAttr(None)
-    _operative_manager: OperativeManager = PrivateAttr(None)
+    # _operative_manager: OperativeManager = PrivateAttr(None)
     _log_manager: LogManager = PrivateAttr(None)
+
+    def __init__(
+        self,
+        *,
+        user: SenderRecipient = None,  # base_branch kwargs
+        name: str = None,
+        mailbox: Exchange = None,
+        messages: Pile[RoledMessage] = None,  # message manager kwargs
+        save_on_clear: bool = False,
+        system: System | JsonValue = None,
+        system_sender: SenderRecipient = None,
+        system_datetime: bool | str = None,
+        system_template: Template | str = None,
+        system_template_context: dict = None,
+        chat_model: iModel = None,  # imodel manager kwargs
+        parse_model: iModel = None,
+        imodel: iModel = None,  # deprecated, alias of chat_model
+        tools: FuncTool | list[FuncTool] = None,  # action manager kwargs
+        log_config: LogManagerConfig | dict = None,  # log manager kwargs
+        metadata: dict = None,  # basic Node kwargs
+        id: IDType = None,
+        created_at: float = None,
+    ):
+        super().__init__()
+        self.id = IDType.validate(id)
+        self.created_at: float = created_at or time(type_="timestamp")
+        self.metadata = metadata or {}
+        self.user = user
+        self.name = name
+        self.mailbox = mailbox or Exchange()
+
+        self._save_on_clear = save_on_clear
+        self._message_manager = MessageManager(messages=messages)
+
+        if any(
+            i is not None
+            for i in [system, system_sender, system_datetime, system_template]
+        ):
+
+            self._message_manager.add_message(
+                system=system,
+                system_datetime=system_datetime,
+                template=system_template,
+                template_context=system_template_context,
+                recipient=self.id,
+                sender=system_sender or self.user or MessageRole.SYSTEM,
+            )
+
+        chat_model = chat_model or imodel or iModel(**Settings.iModel.CHAT)
+        parse_model = parse_model or iModel(**Settings.iModel.PARSE)
+
+        self._imodel_manager = iModelManager(
+            chat=chat_model, parse=parse_model
+        )
+        self._action_manager = ActionManager(tools)
+
+        if log_config:
+            log_config = (
+                log_config
+                if isinstance(log_config, LogManagerConfig)
+                else LogManagerConfig(**log_config)
+            )
+            self._log_manager = LogManager.from_config(log_config)
+        else:
+            self._log_manager = LogManager(**Settings.Config.LOG)
+
+    @property
+    def system(self) -> System | None:
+        return self._message_manager.system
 
     @property
     def msgs(self):
@@ -85,9 +169,9 @@ class Branch(Node, Communicatable, Relational):
     def mdls(self):
         return self._imodel_manager
 
-    @property
-    def oprt(self):
-        return self._operative_manager
+    # @property
+    # def oprt(self):
+    #     return self._operative_manager
 
     @property
     def messages(self):
@@ -117,195 +201,9 @@ class Branch(Node, Communicatable, Relational):
     def tools(self):
         return self._action_manager.registry
 
-    def add_message(): ...
-
-    def register_tools(self): ...
-
-    def get_tool_schema(self): ...
-
-    def clone(): ...
-
-    async def aclone(self): ...
-
-    async def operate(self): ...
-
-    async def communicate(self): ...
-
-    async def invoke_action(self): ...
-
-    async def invoke_chat(self): ...
-
-    async def _instruct(self): ...
-
-    def dump_log(self): ...
-
-    def to_df(self): ...
-
-    def to_csv(self): ...
-
-    def to_json(self): ...
-
-    ##############
-
-    def dump_log(self, clear: bool = True, persist_path: str | Path = None):
-        self.msgs.logger.dump(clear, persist_path)
-        self._action_manager.logger.dump(clear, persist_path)
-
-    def to_df(self, *, progress: Progression = None) -> pd.DataFrame:
-        if progress is None:
-            progress = self.msgs.progress
-
-        msgs = [
-            self.msgs.messages[i] for i in progress if i in self.msgs.messages
-        ]
-        p = Pile(items=msgs)
-        return p.to_df(columns=MESSAGE_FIELDS)
-
-    @model_validator(mode="before")
-    def _validate_data(cls, data: dict) -> dict:
-
-        user = data.pop("user", None)
-        name = data.pop("name", None)
-        message_manager = data.pop("msgs", None)
-        if not message_manager:
-            message_manager = MessageManager(
-                messages=data.pop("messages", None),
-                logger=data.pop("logger", None),
-                system=data.pop("system", None),
-            )
-        if not message_manager.logger:
-            message_manager.logger = LogManager(
-                **Settings.Branch.BRANCH.message_log_config.to_dict()
-            )
-
-        acts = data.pop("acts", None)
-        if not acts:
-            acts = ActionManager()
-            acts.logger = LogManager(
-                **Settings.Branch.BRANCH.action_log_config.to_dict()
-            )
-        if "tools" in data:
-            acts.register_tools(data.pop("tools"))
-
-        imodel = data.pop(
-            "imodel",
-            iModel(**Settings.iModel.CHAT),
-        )
-        parse_imodel = data.pop(
-            "parse_imodel",
-            iModel(**Settings.iModel.PARSE),
-        )
-        out = {
-            "user": user,
-            "name": name,
-            "msgs": message_manager,
-            "acts": acts,
-            "imodel": imodel,
-            "parse_imodel": parse_imodel,
-            **data,
-        }
-        return out
-
     async def aclone(self, sender: ID.Ref = None) -> "Branch":
         async with self.msgs.messages:
             return self.clone(sender)
-
-    def clone(self, sender: ID.Ref = None) -> "Branch":
-        """
-        Split a branch, creating a new branch with the same messages and tools.
-
-        Args:
-            branch: The branch to split or its identifier.
-
-        Returns:
-            The newly created branch.
-        """
-        if sender is not None:
-            if not ID.is_id(sender):
-                raise ValueError(
-                    "Input value for branch.clone sender is not a valid sender"
-                )
-            sender = ID.get_id(sender)
-
-        system = self.msgs.system.clone() if self.msgs.system else None
-        tools = (
-            list(self._action_manager.registry.values())
-            if self._action_manager.registry
-            else None
-        )
-        branch_clone = Branch(
-            system=system,
-            user=self.user,
-            messages=[i.clone() for i in self.msgs.messages],
-            tools=tools,
-        )
-        for message in branch_clone.msgs.messages:
-            message.sender = sender or self.id
-            message.recipient = branch_clone.id
-        return branch_clone
-
-    async def _instruct(self, instruct: Instruct, /, **kwargs):
-        config = {**instruct.to_dict(), **kwargs}
-        if any(i in config for i in Instruct.reserved_kwargs):
-            return await self.operate(**config)
-        return await self.communicate(**config)
-
-    async def invoke_action(
-        self,
-        action_request: ActionRequest | BaseModel | dict,
-        suppress_errors: bool = False,
-    ) -> ActionResponse:
-        try:
-            func, args = None, None
-            if isinstance(action_request, BaseModel):
-                if hasattr(action_request, "function") and hasattr(
-                    action_request, "arguments"
-                ):
-                    func = action_request.function
-                    args = action_request.arguments
-            elif isinstance(action_request, dict):
-                if action_request.keys() >= {"function", "arguments"}:
-                    func = action_request["function"]
-                    args = action_request["arguments"]
-
-            result = await self._action_manager.invoke(action_request)
-            tool = self._action_manager.registry[action_request.function]
-
-            if not isinstance(action_request, ActionRequest):
-                action_request = await self.msgs.a_add_message(
-                    function=func,
-                    arguments=args,
-                    sender=self,
-                    recipient=tool,
-                )
-
-            await self.msgs.a_add_message(
-                action_request=action_request,
-                action_response=result,
-            )
-
-            return ActionResponseModel(
-                function=action_request.function,
-                arguments=action_request.arguments,
-                output=result,
-            )
-        except Exception as e:
-            if suppress_errors:
-                logging.error(f"Error invoking action: {e}")
-            else:
-                raise e
-
-    def get_tool_schema(
-        self,
-        tools: ToolRef,
-        auto_register: bool = True,
-    ) -> dict:
-        tools = tools if isinstance(tools, list) else [tools]
-        if auto_register:
-            for i in tools:
-                if isinstance(i, FuncTool) and i not in self._action_manager:
-                    self._action_manager.register_tools(i)
-        return self._action_manager.get_tool_schema(tools)
 
     async def operate(
         self,
@@ -467,130 +365,6 @@ class Branch(Node, Communicatable, Relational):
                 )
 
         return operative.response_model
-
-    async def _invoke_imodel(
-        self,
-        instruction=None,
-        guidance=None,
-        context=None,
-        sender=None,
-        recipient=None,
-        request_fields=None,
-        request_model: type[BaseModel] = None,
-        progress=None,
-        imodel: iModel = None,
-        tool_schemas=None,
-        images: list = None,
-        image_detail: Literal["low", "high", "auto"] = None,
-        **kwargs,
-    ) -> tuple[Instruction, AssistantResponse]:
-
-        ins: Instruction = self.msgs.create_instruction(
-            instruction=instruction,
-            guidance=guidance,
-            context=context,
-            sender=sender or self.user or "user",
-            recipient=recipient or self.id,
-            request_model=request_model,
-            request_fields=request_fields,
-            images=images,
-            image_detail=image_detail,
-            tool_schemas=tool_schemas,
-        )
-
-        progress = progress or self.msgs.progress
-        messages: list[RoledMessage] = [
-            self.msgs.messages[i] for i in progress
-        ]
-
-        use_ins = None
-        if imodel.sequential_exchange:
-            _to_use = []
-            _action_responses: set[ActionResponse] = set()
-
-            for i in messages:
-                if isinstance(i, ActionResponse):
-                    _action_responses.add(i)
-                if isinstance(i, AssistantResponse):
-                    _to_use.append(i.model_copy())
-                if isinstance(i, Instruction):
-                    if _action_responses:
-                        j = i.model_copy()
-                        d_ = [k.content for k in _action_responses]
-                        for z in d_:
-                            if z not in j.context:
-                                j.context.append(z)
-
-                        _to_use.append(j)
-                        _action_responses = set()
-                    else:
-                        _to_use.append(i)
-
-            messages = _to_use
-            if _action_responses:
-                j = ins.model_copy()
-                d_ = [k.content for k in _action_responses]
-                for z in d_:
-                    if z not in j.context:
-                        j.context.append(z)
-                use_ins = j
-
-            if messages and len(messages) > 1:
-                _msgs = [messages[0]]
-
-                for i in messages[1:]:
-                    if isinstance(i, AssistantResponse):
-                        if isinstance(_msgs[-1], AssistantResponse):
-                            _msgs[-1].response = (
-                                f"{_msgs[-1].response}\n\n{i.response}"
-                            )
-                        else:
-                            _msgs.append(i)
-                    else:
-                        if isinstance(_msgs[-1], AssistantResponse):
-                            _msgs.append(i)
-                messages = _msgs
-
-        if (
-            self.msgs.system
-            and hasattr(imodel, "allowed_roles")
-            and "system" not in imodel.allowed_roles
-        ):
-            messages = [msg for msg in messages if msg.role != "system"]
-            first_instruction = None
-
-            if len(messages) == 0:
-                first_instruction = ins.model_copy()
-                first_instruction.guidance = self.msgs.system.system_info + (
-                    first_instruction.guidance or ""
-                )
-                messages.append(first_instruction)
-            elif len(messages) >= 1:
-                first_instruction = messages[0]
-                if not isinstance(first_instruction, Instruction):
-                    raise ValueError(
-                        "First message in progress must be an Instruction or System"
-                    )
-                first_instruction = first_instruction.model_copy()
-                first_instruction.guidance = self.msgs.system.system_info + (
-                    first_instruction.guidance or ""
-                )
-                messages[0] = first_instruction
-                messages.append(use_ins or ins)
-
-        else:
-            messages.append(use_ins or ins)
-
-        kwargs["messages"] = [i.chat_msg for i in messages]
-        imodel = imodel or self.chat_model
-
-        res = AssistantResponse(
-            assistant_response=await imodel.invoke(**kwargs),
-            sender=self,
-            recipient=self.user,
-        )
-
-        return ins, res
 
     async def communicate(
         self,
@@ -783,3 +557,314 @@ class Branch(Node, Communicatable, Relational):
                 return res.response
 
         return _d if _d else res.response
+
+    async def invoke_action(
+        self,
+        action_request: ActionRequest | BaseModel | dict,
+        suppress_errors: bool = False,
+    ) -> ActionResponse:
+        try:
+            func, args = None, None
+            if isinstance(action_request, BaseModel):
+                if hasattr(action_request, "function") and hasattr(
+                    action_request, "arguments"
+                ):
+                    func = action_request.function
+                    args = action_request.arguments
+            elif isinstance(action_request, dict):
+                if action_request.keys() >= {"function", "arguments"}:
+                    func = action_request["function"]
+                    args = action_request["arguments"]
+
+            result = await self._action_manager.invoke(action_request)
+            tool = self._action_manager.registry[action_request.function]
+
+            if not isinstance(action_request, ActionRequest):
+                action_request = await self.msgs.a_add_message(
+                    function=func,
+                    arguments=args,
+                    sender=self,
+                    recipient=tool,
+                )
+
+            await self.msgs.a_add_message(
+                action_request=action_request,
+                action_response=result,
+            )
+
+            return ActionResponseModel(
+                function=action_request.function,
+                arguments=action_request.arguments,
+                output=result,
+            )
+        except Exception as e:
+            if suppress_errors:
+                logging.error(f"Error invoking action: {e}")
+            else:
+                raise e
+
+    async def invoke_chat(
+        self,
+        instruction=None,
+        guidance=None,
+        context=None,
+        sender=None,
+        recipient=None,
+        request_fields=None,
+        request_model: type[BaseModel] = None,
+        progress=None,
+        imodel: iModel = None,
+        tool_schemas=None,
+        images: list = None,
+        image_detail: Literal["low", "high", "auto"] = None,
+        **kwargs,
+    ) -> tuple[Instruction, AssistantResponse]:
+
+        ins: Instruction = self.msgs.create_instruction(
+            instruction=instruction,
+            guidance=guidance,
+            context=context,
+            sender=sender or self.user or "user",
+            recipient=recipient or self.id,
+            request_model=request_model,
+            request_fields=request_fields,
+            images=images,
+            image_detail=image_detail,
+            tool_schemas=tool_schemas,
+        )
+
+        progress = progress or self.msgs.progress
+        messages: list[RoledMessage] = [
+            self.msgs.messages[i] for i in progress
+        ]
+
+        use_ins = None
+        if imodel.sequential_exchange:
+            _to_use = []
+            _action_responses: set[ActionResponse] = set()
+
+            for i in messages:
+                if isinstance(i, ActionResponse):
+                    _action_responses.add(i)
+                if isinstance(i, AssistantResponse):
+                    _to_use.append(i.model_copy())
+                if isinstance(i, Instruction):
+                    if _action_responses:
+                        j = i.model_copy()
+                        d_ = [k.content for k in _action_responses]
+                        for z in d_:
+                            if z not in j.context:
+                                j.context.append(z)
+
+                        _to_use.append(j)
+                        _action_responses = set()
+                    else:
+                        _to_use.append(i)
+
+            messages = _to_use
+            if _action_responses:
+                j = ins.model_copy()
+                d_ = [k.content for k in _action_responses]
+                for z in d_:
+                    if z not in j.context:
+                        j.context.append(z)
+                use_ins = j
+
+            if messages and len(messages) > 1:
+                _msgs = [messages[0]]
+
+                for i in messages[1:]:
+                    if isinstance(i, AssistantResponse):
+                        if isinstance(_msgs[-1], AssistantResponse):
+                            _msgs[-1].response = (
+                                f"{_msgs[-1].response}\n\n{i.response}"
+                            )
+                        else:
+                            _msgs.append(i)
+                    else:
+                        if isinstance(_msgs[-1], AssistantResponse):
+                            _msgs.append(i)
+                messages = _msgs
+
+        if (
+            self.msgs.system
+            and hasattr(imodel, "allowed_roles")
+            and "system" not in imodel.allowed_roles
+        ):
+            messages = [msg for msg in messages if msg.role != "system"]
+            first_instruction = None
+
+            if len(messages) == 0:
+                first_instruction = ins.model_copy()
+                first_instruction.guidance = self.msgs.system.system_info + (
+                    first_instruction.guidance or ""
+                )
+                messages.append(first_instruction)
+            elif len(messages) >= 1:
+                first_instruction = messages[0]
+                if not isinstance(first_instruction, Instruction):
+                    raise ValueError(
+                        "First message in progress must be an Instruction or System"
+                    )
+                first_instruction = first_instruction.model_copy()
+                first_instruction.guidance = self.msgs.system.system_info + (
+                    first_instruction.guidance or ""
+                )
+                messages[0] = first_instruction
+                messages.append(use_ins or ins)
+
+        else:
+            messages.append(use_ins or ins)
+
+        kwargs["messages"] = [i.chat_msg for i in messages]
+        imodel = imodel or self.chat_model
+
+        res = AssistantResponse(
+            assistant_response=await imodel.invoke(**kwargs),
+            sender=self,
+            recipient=self.user,
+        )
+
+        return ins, res
+
+    def clone(self, sender: ID.Ref = None) -> "Branch":
+        """
+        Split a branch, creating a new branch with the same messages and tools.
+
+        Args:
+            branch: The branch to split or its identifier.
+
+        Returns:
+            The newly created branch.
+        """
+        if sender is not None:
+            if not ID.is_id(sender):
+                raise ValueError(
+                    "Input value for branch.clone sender is not a valid sender"
+                )
+            sender = ID.get_id(sender)
+
+        system = self.msgs.system.clone() if self.msgs.system else None
+        tools = (
+            list(self._action_manager.registry.values())
+            if self._action_manager.registry
+            else None
+        )
+        branch_clone = Branch(
+            system=system,
+            user=self.user,
+            messages=[i.clone() for i in self.msgs.messages],
+            tools=tools,
+        )
+        for message in branch_clone.msgs.messages:
+            message.sender = sender or self.id
+            message.recipient = branch_clone.id
+        return branch_clone
+
+    def to_df(self, *, progress: Progression = None) -> pd.DataFrame:
+        if progress is None:
+            progress = self.msgs.progress
+
+        msgs = [
+            self.msgs.messages[i] for i in progress if i in self.msgs.messages
+        ]
+        p = Pile(items=msgs)
+        return p.to_df(columns=MESSAGE_FIELDS)
+
+    async def _instruct(self, instruct: Instruct, /, **kwargs):
+        config = {**instruct.to_dict(), **kwargs}
+        if any(i in config for i in Instruct.reserved_kwargs):
+            return await self.operate(**config)
+        return await self.communicate(**config)
+
+    def send(
+        self,
+        recipient: ID,
+        category: str,
+        package: Any,
+        request_source: str,
+    ) -> None:
+        """
+        Sends a mail to a recipient.
+
+        Args:
+            recipient (str): The recipient's ID.
+            category (str): The category of the mail.
+            package (Any): The content of the mail.
+            request_source (str): The source of the request.
+        """
+        package = Package(
+            category=category,
+            package=package,
+            request_source=request_source,
+        )
+
+        mail = Mail(
+            sender=self.ln_id,
+            recipient=recipient,
+            package=package,
+        )
+        self.mailbox.include(mail, "out")
+
+    def receive(
+        self,
+        sender: ID,
+        message: bool = False,
+        tool: bool = False,
+        imodel: bool = False,
+    ) -> None:
+        """
+        Receives mail from a sender.
+
+        Args:
+            sender (str): The ID of the sender.
+            message (bool): Whether to process message mails.
+            tool (bool): Whether to process tool mails.
+            imodel (bool): Whether to process imodel mails.
+
+        Raises:
+            ValueError: If the sender does not exist or the mail category is
+            invalid.
+        """
+        skipped_requests = Progression()
+        if not isinstance(sender, str):
+            sender = sender.ln_id
+        if sender not in self.mailbox.pending_ins.keys():
+            raise ValueError(f"No package from {sender}")
+        while self.mailbox.pending_ins[sender].size() > 0:
+            mail_id = self.mailbox.pending_ins[sender].popleft()
+            mail: Mail = self.mailbox.pile_[mail_id]
+
+            if mail.category == "message" and message:
+                if not isinstance(mail.package.package, RoledMessage):
+                    raise ValueError("Invalid message format")
+                new_message = mail.package.package.clone()
+                new_message.sender = mail.sender
+                new_message.recipient = self.ln_id
+                self.messages.include(new_message)
+                self.mailbox.pile_.pop(mail_id)
+
+            elif mail.category == "tool" and tool:
+                if not isinstance(mail.package.package, Tool):
+                    raise ValueError("Invalid tools format")
+                self.tool_manager.register_tools(mail.package.package)
+                self.mailbox.pile_.pop(mail_id)
+
+            elif mail.category == "imodel" and imodel:
+                if not isinstance(mail.package.package, iModel):
+                    raise ValueError("Invalid iModel format")
+                self.imodel = mail.package.package
+                self.mailbox.pile_.pop(mail_id)
+
+            else:
+                skipped_requests.append(mail)
+
+        self.mailbox.pending_ins[sender] = skipped_requests
+
+        if self.mailbox.pending_ins[sender].size() == 0:
+            self.mailbox.pending_ins.pop(sender)
+
+    def receive_all(self) -> None:
+        """Receives mail from all senders."""
+        for key in list(self.mailbox.pending_ins.keys()):
+            self.receive(key)
