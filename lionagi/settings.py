@@ -38,11 +38,24 @@ PARSE_IMODEL_CONFIG = {
     "limit_tokens": None,
 }
 
+LOG_CONFIG = {
+    "persist_dir": "./data/logs",
+    "subfolder": None,
+    "capacity": 50,
+    "extension": ".json",
+    "use_timestamp": True,
+    "hash_digits": 5,
+    "file_prefix": "log",
+    "auto_save_on_exit": True,
+    "clear_after_dump": True,
+}
+
 
 class Settings:
 
     class Config:
         TIMEZONE: timezone = timezone.utc
+        LOG: dict = LOG_CONFIG
 
     class Action:
         CACHED_CONFIG: dict = CACHED_CONFIG

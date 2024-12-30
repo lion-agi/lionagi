@@ -27,7 +27,7 @@ class Sendable(ABC):
 
 
 class Observable(ABC):
-    id
+    pass
 
 
 class Communicatable(ABC):

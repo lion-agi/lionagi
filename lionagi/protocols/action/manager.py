@@ -21,18 +21,19 @@ __all__ = ("ActionManager",)
 
 class ActionManager(Manager):
 
-    def __init__(
-        self, registry: dict[str, Tool] | None = None, logger=None
-    ) -> None:
-        """Initialize the ActionManager instance.
+    def __init__(self, *args: FuncTool, **kwargs) -> None:
 
-        Args:
-            registry: Optional dictionary of pre-registered tools.
-                Keys are tool names, values are Tool objects.
-            logger: Optional logger for tracking tool execution.
-                If None, creates a new LogManager instance.
-        """
-        self.registry: dict[str, Tool] = registry or {}
+        super().__init__()
+        self.registry: dict[str, Tool] = {}
+
+        tools = []
+        if args:
+            tools.extend(to_list(args, dropna=True, flatten=True))
+        if kwargs:
+            tools.extend(
+                to_list(kwargs, dropna=True, flatten=True, use_values=True)
+            )
+        self.register_tools(tools, update=True)
 
     def __contains__(self, tool: FuncToolRef) -> bool:
         """Check if a tool is registered in the registry.
@@ -173,7 +174,12 @@ class ActionManager(Manager):
         """
         return [tool.tool_schema for tool in self.registry.values()]
 
-    def get_tool_schema(self, tools: ToolRef = False) -> dict:
+    def get_tool_schema(
+        self,
+        tools: ToolRef = False,
+        auto_register: bool = True,
+        update: bool = False,
+    ) -> dict:
         """Retrieve the schema for specific tools or all tools.
 
         Args:
@@ -196,20 +202,29 @@ class ActionManager(Manager):
                 return {"tools": self.schema_list}
             return []
         else:
-            schemas = self._get_tool_schema(tools)
+            schemas = self._get_tool_schema(
+                tools, auto_register=auto_register, update=update
+            )
             return {"tools": schemas}
 
     def _get_tool_schema(
         self,
         tool: Any,
+        auto_register: bool = True,
+        update: bool = False,
     ) -> dict[str, Any] | list[dict[str, Any]]:
         if isinstance(tool, dict):
             return tool
         if isinstance(tool, Callable):
             name = tool.__name__
-            if name in self.registry:
+            if name not in self.registry:
+                if auto_register:
+                    self.register_tool(tool, update=update)
+                else:
+                    raise ValueError(f"Tool {name} is not registered.")
+
+            else:
                 return self.registry[name].tool_schema
-            raise ValueError(f"Tool {name} is not registered.")
 
         elif isinstance(tool, Tool) or isinstance(tool, str):
             name = tool.function if isinstance(tool, Tool) else tool

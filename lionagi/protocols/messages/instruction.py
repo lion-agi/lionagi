@@ -209,6 +209,7 @@ class Instruction(RoledMessage):
     def create(
         cls,
         instruction: JsonValue = None,
+        *,
         context: JsonValue = None,
         guidance: JsonValue = None,
         images: list = None,
@@ -409,16 +410,19 @@ class Instruction(RoledMessage):
 
     def update(
         self,
-        *args,
+        *,
         guidance: JsonValue = None,
         instruction: JsonValue = None,
+        context: JsonValue = None,
         request_fields: JsonValue = None,
         plain_content: JsonValue = None,
         request_model: BaseModel | type[BaseModel] = None,
+        response_format: BaseModel | type[BaseModel] = None,
         images: str | list = None,
         image_detail: Literal["low", "high", "auto"] = None,
         tool_schemas: dict = None,
-        **kwargs,
+        sender: SenderRecipient = None,
+        recipient: SenderRecipient = None,
     ):
         """
         Update multiple aspects of the instruction.
@@ -438,6 +442,14 @@ class Instruction(RoledMessage):
         Raises:
             ValueError: If both request_model and request_fields are provided
         """
+        if response_format and request_model:
+            raise ValueError(
+                "only one of request_fields or request_model can be provided"
+                "response_format is alias of request_model"
+            )
+
+        request_model = request_model or response_format
+
         if request_model and request_fields:
             raise ValueError(
                 "You cannot pass both request_model and request_fields "
@@ -467,7 +479,14 @@ class Instruction(RoledMessage):
         if tool_schemas:
             self.tool_schemas = tool_schemas
 
-        self.extend_context(*args, **kwargs)
+        if sender:
+            self.sender = sender
+
+        if recipient:
+            self.recipient = recipient
+
+        if context:
+            self.extend_context(context)
 
     @override
     @property

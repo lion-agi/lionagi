@@ -42,7 +42,6 @@ class Graph(Node):
     node_edge_mapping: dict = Field(
         default_factory=dict,
         description="The mapping for node and edges for search",
-        exclude=True,
     )
 
     @field_serializer("internal_nodes", "internal_edges")

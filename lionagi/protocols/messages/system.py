@@ -3,7 +3,7 @@
 # SPDX-License-Identifier: Apache-2.0
 
 from datetime import datetime
-from typing import NoReturn, Self
+from typing import Any, NoReturn, Self
 
 from pydantic import JsonValue
 from typing_extensions import override
@@ -54,6 +54,7 @@ class System(RoledMessage):
         sender: SenderRecipient = None,
         recipient: SenderRecipient = None,
         template=None,
+        system: Any = None,
         **kwargs,
     ) -> Self:
         """
@@ -66,6 +67,13 @@ class System(RoledMessage):
         Returns:
             System: The new system message
         """
+        if system and system_message:
+            raise ValueError(
+                "Cannot provide both system and system_message arguments."
+                "as they are alias, and `system` is deprecated"
+            )
+        system_message = system_message or system
+
         content = format_system_content(
             system_datetime=system_datetime, system_message=system_message
         )

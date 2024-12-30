@@ -81,7 +81,8 @@ class Element(BaseModel, Observable):
 
     id: IDType = Field(default_factory=IDType.create)
     created_at: float = Field(
-        default_factory=time, description="Creation timestamp"
+        default_factory=lambda: time(type_="timestamp"),
+        description="Creation timestamp",
     )
 
     @classmethod
