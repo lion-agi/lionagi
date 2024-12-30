@@ -23,6 +23,7 @@ _to_dict: ToDictParams = ToDictParams(
     recursive_python_only=False,
     use_enum_values=True,
 )
+from .concepts import Manager
 
 __all__ = (
     "LogManagerConfig",
@@ -50,7 +51,7 @@ class LogManagerConfig(Params):
     subfolder: str | None = None
     file_prefix: str | None = None
     capacity: int | None = None
-    extension: str = ".csv"
+    extension: str = ".json"
     use_timestamp: bool = True
     hash_digits: int = 5
     auto_save_on_exit: bool = True
@@ -121,7 +122,7 @@ class Log(Element):
         return cls(content=content)
 
 
-class LogManager:
+class LogManager(Manager):
     """Manages collection and persistence of logs.
 
     Handles automatic log rotation, file persistence, and clean-up based on
@@ -141,6 +142,8 @@ class LogManager:
         auto_save_on_exit: bool = True,
         clear_after_dump: bool = True,
     ) -> None:
+        super().__init__()
+
         if isinstance(logs, Pile):
             logs = list(logs)
         self.logs: Pile[Log] = Pile(collections=(logs or {}), item_type=Log)
@@ -191,7 +194,13 @@ class LogManager:
 
         try:
             fp = persist_path or self._create_path()
-            self.logs.to_csv(fp)
+            if fp.suffix == ".json":
+                self.logs.to_json(fp)
+            elif fp.suffix == ".csv":
+                self.logs.to_csv(fp)
+            else:
+                raise ValueError(f"Unsupported file extension: {fp.suffix}")
+
             logging.info(f"Successfully dumped logs to {fp}")
 
             if self.clear_after_dump if clear is None else clear:
