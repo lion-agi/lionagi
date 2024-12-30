@@ -141,8 +141,14 @@ class ActionRequest(RoledMessage):
         template: Template | str | None = None,
         **kwargs,
     ):
-        if isinstance(action_response, RoledMessage):
-            self.action_response_id = str(action_response.id)
+        if self.is_responded():
+            raise ValueError("Cannot update a responded action request.")
+
+        if (
+            isinstance(action_response, RoledMessage)
+            and action_response.class_name() == "ActionResponse"
+        ):
+            self.action_response_id = action_response.id
 
         if any([function, arguments]):
             action_request = prepare_action_request(

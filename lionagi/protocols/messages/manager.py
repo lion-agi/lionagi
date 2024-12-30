@@ -4,10 +4,16 @@
 
 from typing import Any, Literal
 
+from jinja2 import Template
 from pydantic import BaseModel, JsonValue
 
+from lionagi.protocols.action.request_response_model import (
+    ActionRequestModel,
+    ActionResponseModel,
+)
+
 from ..generic.concepts import Manager
-from ..generic.log import LogManager
+from ..generic.log import Log
 from ..generic.pile import Pile
 from ..generic.progression import Progression
 from .action_request import ActionRequest
@@ -21,42 +27,29 @@ DEFAULT_SYSTEM = "You are a helpful AI assistant. Let's think step by step."
 
 
 class MessageManager(Manager):
-    """
-    Manages messages within a communication system.
-
-    This class provides functionality for creating, adding, and managing
-    different types of messages in a conversation. It maintains message
-    history, handles system messages, and provides access to specific
-    message types.
-
-    Attributes:
-        messages (Pile[RoledMessage]): Collection of messages
-        logger (LogManager): Logger for message history
-        system (System): System message setting context
-        save_on_clear (bool): Whether to save logs when clearing
-    """
 
     def __init__(
-        self, messages=None, logger=None, system=None, save_on_clear=True
+        self,
+        messages: list[RoledMessage] | None = None,
+        progression: Progression | None = None,
+        system: System | None = None,
     ):
-        """
-        Initialize a MessageManager instance.
-
-        Args:
-            messages: Initial list of messages
-            logger: Logger instance for message history
-            system: Initial system message
-            save_on_clear: Whether to save logs when clearing
-        """
         super().__init__()
         self.messages: Pile[RoledMessage] = Pile(
-            collections=messages, item_type=RoledMessage
+            collections=messages,
+            item_type=RoledMessage,
+            strict_type=False,
+            progression=progression,
         )
-        self.logger = logger or LogManager()
-        self.system = system
-        self.save_on_clear = save_on_clear
+        if not isinstance(system, System):
+            raise ValueError("System message must be a System instance.")
+        self.system = system  # system must be the first message
         if self.system:
             self.add_message(system=self.system)
+
+    @property
+    def progression(self) -> Progression:
+        return self.messages.progression
 
     def set_system(self, system: System) -> None:
         """
@@ -89,79 +82,31 @@ class MessageManager(Manager):
         async with self.messages:
             return self.add_message(**kwargs)
 
-    @property
-    def progress(self) -> Progression:
-        """Get the progression of messages."""
-        return Progression(order=list(self.messages))
-
     @staticmethod
     def create_instruction(
         *,
-        sender: SenderRecipient = None,
-        recipient: SenderRecipient = None,
-        instruction: Instruction | JsonValue = None,
+        instruction: JsonValue = None,
         context: JsonValue = None,
         guidance: JsonValue = None,
-        plain_content: str = None,
-        request_fields: list[str] | dict[str, Any] = None,
-        request_model: type[BaseModel] | BaseModel = None,
         images: list = None,
+        request_fields: JsonValue = None,
+        plain_content: JsonValue = None,
         image_detail: Literal["low", "high", "auto"] = None,
-        tool_schemas: dict | None = None,
-        **kwargs,
+        request_model: BaseModel | type[BaseModel] = None,
+        response_format: BaseModel | type[BaseModel] = None,
+        tool_schemas: dict = None,
+        sender: SenderRecipient = None,
+        recipient: SenderRecipient = None,
     ) -> Instruction:
-        """
-        Create an instruction message.
 
-        Args:
-            sender: Message sender
-            recipient: Message recipient
-            instruction: Instruction content
-            context: Additional context
-            guidance: Optional guidance
-            plain_content: Plain text content
-            request_fields: Fields to request
-            request_model: Pydantic model for requests
-            images: Optional images
-            image_detail: Image detail level
-            tool_schemas: Optional tool schemas
-            **kwargs: Additional parameters
+        params = {k: v for k, v in locals().items() if v is not None}
 
-        Returns:
-            Instruction: The created instruction
-        """
         if isinstance(instruction, Instruction):
-            instruction.update(
-                context,
-                guidance=guidance,
-                request_fields=request_fields,
-                plain_content=plain_content,
-                request_model=request_model,
-                images=images,
-                image_detail=image_detail,
-                tool_schemas=tool_schemas,
-                **kwargs,
-            )
-            if sender:
-                instruction.sender = sender
-            if recipient:
-                instruction.recipient = recipient
+            params.pop("instruction")
+            instruction.update(**params)
             return instruction
         else:
-            return Instruction.create(
-                sender=sender,
-                recipient=recipient,
-                instruction=instruction,
-                context=context,
-                guidance=guidance,
-                request_fields=request_fields,
-                request_model=request_model,
-                plain_content=plain_content,
-                images=images,
-                image_detail=image_detail,
-                tool_schemas=tool_schemas,
-                **kwargs,
-            )
+            return Instruction.create(**params)
 
     @staticmethod
     def create_assistant_response(
@@ -169,30 +114,20 @@ class MessageManager(Manager):
         sender: Any = None,
         recipient: Any = None,
         assistant_response: AssistantResponse | Any = None,
+        template: Template | str = None,
+        template_context: dict[str, Any] = None,
     ) -> AssistantResponse:
-        """
-        Create an assistant response message.
 
-        Args:
-            sender: Message sender
-            recipient: Message recipient
-            assistant_response: Response content
+        params = {k: v for k, v in locals().items() if v is not None}
+        template_context = params.pop("template_context") or {}
+        params.update(template_context)
 
-        Returns:
-            AssistantResponse: The created response
-        """
         if isinstance(assistant_response, AssistantResponse):
-            if sender:
-                assistant_response.sender = sender
-            if recipient:
-                assistant_response.recipient = recipient
+            params.pop("assistant_response")
+            assistant_response.update(**params)
             return assistant_response
 
-        return AssistantResponse.create(
-            assistant_response=assistant_response,
-            sender=sender,
-            recipient=recipient,
-        )
+        return AssistantResponse.create(**params)
 
     @staticmethod
     def create_action_request(
@@ -202,203 +137,178 @@ class MessageManager(Manager):
         function: str = None,
         arguments: dict[str, Any] = None,
         action_request: ActionRequest | None = None,
+        action_request_model: ActionRequestModel | None = None,
+        template: Template | str = None,
+        template_context: dict[str, Any] = None,
     ) -> ActionRequest:
-        """
-        Create an action request message.
 
-        Args:
-            sender: Message sender
-            recipient: Message recipient
-            function: Function to execute
-            arguments: Function arguments
-            action_request: Existing request to use
+        params = {
+            "sender": sender,
+            "recipient": recipient,
+            "function": function,
+            "arguments": arguments,
+            "template": template,
+            **(template_context or {}),
+        }
 
-        Returns:
-            ActionRequest: The created request
+        if action_request_model:
+            params["function"] = action_request_model.function
+            params["arguments"] = action_request_model.arguments
 
-        Raises:
-            ValueError: If action_request is not an ActionRequest instance
-        """
-        if action_request:
-            if not isinstance(action_request, ActionRequest):
-                raise ValueError(
-                    "Error: action request must be an instance of ActionRequest."
-                )
-            if sender:
-                action_request.sender = sender
-            if recipient:
-                action_request.recipient = recipient
+        if isinstance(action_request, ActionRequest):
+            action_request.update(**params)
             return action_request
 
-        return ActionRequest.create(
-            function=function,
-            arguments=arguments,
-            sender=sender,
-            recipient=recipient,
-        )
+        return ActionRequest.create(**params)
 
     @staticmethod
     def create_action_response(
         *,
         action_request: ActionRequest,
+        action_output: Any = None,
         action_response: ActionResponse | Any = None,
+        action_response_model: ActionResponseModel | None = None,
+        sender: SenderRecipient = None,
+        recipient: SenderRecipient = None,
+        template: Template | str = None,
+        template_context: dict[str, Any] = None,
     ) -> ActionResponse:
-        """
-        Create an action response message.
 
-        Args:
-            action_request: The corresponding action request
-            action_response: Response content
-
-        Returns:
-            ActionResponse: The created response
-
-        Raises:
-            ValueError: If action_request is invalid or already responded to
-        """
         if not isinstance(action_request, ActionRequest):
             raise ValueError(
                 "Error: please provide a corresponding action request for an "
                 "action response."
             )
 
-        if action_response:
-            if isinstance(action_response, ActionResponse):
-                if action_request.is_responded:
-                    raise ValueError(
-                        "Error: action request already has a response."
-                    )
-                action_request.content["action_response_id"] = (
-                    action_response.id
-                )
-                return action_response
+        params = {
+            "action_request": action_request,
+            "output": action_output,
+            "sender": sender,
+            "recipient": recipient,
+            "response_model": action_response_model,
+            "template": template,
+            **(template_context or {}),
+        }
 
-        return ActionResponse.create(
-            action_request=action_request,
-            output=action_response,
-        )
+        if isinstance(action_response, ActionResponse):
+            action_response.update(**params)
+            return action_response
+
+        return ActionResponse.create(**params)
 
     @staticmethod
     def create_system(
         *,
         system: Any = None,
+        system_datetime: bool | str = None,
         sender: Any = None,
         recipient: Any = None,
-        system_datetime: bool | str = None,
+        template: Template | str = None,
+        template_context: dict[str, Any] = None,
     ) -> System:
-        """
-        Create a system message.
-
-        Args:
-            system: System message content
-            sender: Message sender
-            recipient: Message recipient
-            system_datetime: Whether to include datetime
-
-        Returns:
-            System: The created system message
-        """
-        system = system or DEFAULT_SYSTEM
-
+        params = {
+            "system_datetime": system_datetime,
+            "sender": sender,
+            "recipient": recipient,
+            "template": template,
+            **(template_context or {}),
+        }
         if isinstance(system, System):
-            system.update(
-                sender=sender,
-                recipient=recipient,
-                system_datetime=system_datetime,
-            )
+            system.update(**params)
             return system
 
-        return System.create(
-            system=system,
-            sender=sender,
-            recipient=recipient,
-            system_datetime=system_datetime,
-        )
+        if system:
+            params["system_message"] = system
+
+        return System.create(**params)
 
     def add_message(
         self,
         *,
+        # common
         sender: SenderRecipient = None,
         recipient: SenderRecipient = None,
-        instruction: Instruction | JsonValue = None,
+        template: Template | str = None,
+        template_context: dict[str, Any] = None,
+        metadata: dict[str, Any] = None,
+        # instruction
+        instruction: JsonValue = None,
         context: JsonValue = None,
         guidance: JsonValue = None,
-        plain_content: str = None,
-        request_fields: list[str] | dict[str, Any] = None,
-        request_model: type[BaseModel] | BaseModel = None,
+        request_fields: JsonValue = None,
+        plain_content: JsonValue = None,
+        request_model: BaseModel | type[BaseModel] = None,
+        response_format: BaseModel | type[BaseModel] = None,
         images: list = None,
         image_detail: Literal["low", "high", "auto"] = None,
-        assistant_response: AssistantResponse | Any = None,
-        system: System | Any = None,
+        tool_schemas: dict = None,
+        # system
+        system: Any = None,
         system_datetime: bool | str = None,
-        function: str = None,
-        arguments: dict[str, Any] = None,
+        # assistant_response
+        assistant_response: AssistantResponse | Any = None,
+        # actions
+        action_function: str = None,
+        action_arguments: dict[str, Any] = None,
+        action_output: Any = None,
         action_request: ActionRequest | None = None,
+        action_request_model: ActionRequestModel | None = None,
         action_response: ActionResponse | Any = None,
-        metadata: dict = None,
-    ) -> RoledMessage:
-        """
-        Add a message to the manager.
+        action_response_model: ActionResponseModel | None = None,
+    ) -> tuple[RoledMessage, Log]:
 
-        This method creates and adds a message of the specified type. Only
-        one message type can be added at a time.
-
-        Args:
-            sender: Message sender
-            recipient: Message recipient
-            instruction: Instruction content
-            context: Additional context
-            guidance: Optional guidance
-            plain_content: Plain text content
-            request_fields: Fields to request
-            request_model: Pydantic model for requests
-            images: Optional images
-            image_detail: Image detail level
-            assistant_response: Assistant response content
-            system: System message content
-            system_datetime: Whether to include datetime
-            function: Function for action request
-            arguments: Arguments for action request
-            action_request: Action request
-            action_response: Action response
-            metadata: Additional metadata
-
-        Returns:
-            RoledMessage: The added message
-
-        Raises:
-            ValueError: If multiple message types are specified
-        """
         _msg = None
-        if sum(bool(x) for x in (instruction, assistant_response, system)) > 1:
+        if (
+            sum(
+                bool(x)
+                for x in (
+                    instruction,
+                    assistant_response,
+                    system,
+                    action_request,
+                )
+            )
+            > 1
+        ):
             raise ValueError("Only one message type can be added at a time.")
 
         if system:
             _msg = self.create_system(
                 system=system,
+                system_datetime=system_datetime,
                 sender=sender,
                 recipient=recipient,
-                system_datetime=system_datetime,
+                template=template,
+                template_context=template_context,
             )
             self.set_system(_msg)
 
-        elif action_response:
-            if not action_request:
-                raise ValueError(
-                    "Error: Action response must have an action request."
-                )
+        elif action_output:
             _msg = self.create_action_response(
                 action_request=action_request,
+                action_output=action_output,
                 action_response=action_response,
+                action_response_model=action_response_model,
+                sender=sender,
+                recipient=recipient,
+                template=template,
+                template_context=template_context,
             )
 
-        elif action_request or (function and arguments):
+        elif (
+            action_request
+            or action_request_model
+            or (action_function and action_arguments)
+        ):
             _msg = self.create_action_request(
                 sender=sender,
                 recipient=recipient,
-                function=function,
-                arguments=arguments,
+                function=action_function,
+                arguments=action_arguments,
                 action_request=action_request,
+                action_request_model=action_request_model,
+                template=template,
+                template_context=template_context,
             )
 
         elif assistant_response:
@@ -406,20 +316,24 @@ class MessageManager(Manager):
                 sender=sender,
                 recipient=recipient,
                 assistant_response=assistant_response,
+                template=template,
+                template_context=template_context,
             )
 
         else:
             _msg = self.create_instruction(
-                sender=sender,
-                recipient=recipient,
                 instruction=instruction,
                 context=context,
                 guidance=guidance,
-                plain_content=plain_content,
-                request_fields=request_fields,
-                request_model=request_model,
                 images=images,
+                request_fields=request_fields,
+                plain_content=plain_content,
                 image_detail=image_detail,
+                request_model=request_model,
+                response_format=response_format,
+                tool_schemas=tool_schemas,
+                sender=sender,
+                recipient=recipient,
             )
 
         if metadata:
@@ -427,24 +341,19 @@ class MessageManager(Manager):
             _msg.metadata["extra"].update(metadata)
 
         if _msg in self.messages:
+            idx = self.messages.progression.index(_msg.id)
             self.messages.exclude(_msg.id)
-            self.messages.insert(0, _msg)
+            self.messages.insert(idx, _msg)
         else:
             self.messages.include(_msg)
 
-        self.logger.log(_msg.to_log())
-        return _msg
+        return _msg, _msg.to_log()
 
-    def clear_messages(self) -> None:
-        """Clear all messages except the system message."""
-        if self.save_on_clear:
-            self.logger.dump(clear=True)
-
+    def clear_messages(self):
         self.messages.clear()
-        self.progress.clear()
         if self.system:
             self.messages.include(self.system)
-            self.progress.insert(0, self.system)
+            self.messages.insert(0, self.system)
 
     @property
     def last_response(self) -> AssistantResponse | None:
@@ -513,28 +422,17 @@ class MessageManager(Manager):
     ) -> None:
         for i in reversed(self.messages.progression):
             if isinstance(self.messages[i], ActionResponse):
-                instruction.context.append(self.messages[i].content.to_dict())
+                instruction.context.append(self.messages[i].content)
             else:
                 break
 
-    def to_chat_msgs(self, progress=None) -> list[dict]:
-        """
-        Convert messages to chat format.
-
-        Args:
-            progress: Optional specific progression to convert
-
-        Returns:
-            list[dict]: Messages in chat format
-
-        Raises:
-            ValueError: If requested messages are not in the message pile
-        """
-        if progress == []:
+    def to_chat_msgs(self, progression=None) -> list[dict]:
+        if progression == []:
             return []
         try:
             return [
-                self.messages[i].chat_msg for i in (progress or self.progress)
+                self.messages[i].chat_msg
+                for i in (progression or self.progression)
             ]
         except Exception as e:
             raise ValueError(
@@ -544,6 +442,5 @@ class MessageManager(Manager):
     def __bool__(self):
         return bool(self.messages)
 
-    def has_logs(self):
-        """Check if there are any logs."""
-        return bool(self.logger.logs)
+    def __contains__(self, message: RoledMessage) -> bool:
+        return message in self.messages
