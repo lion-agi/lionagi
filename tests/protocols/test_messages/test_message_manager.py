@@ -111,7 +111,7 @@ def test_create_action_response():
         function="test", arguments={}, sender="user", recipient="system"
     )
     response = MessageManager.create_action_response(
-        action_request=request, action_response={"result": "success"}
+        action_request=request, action_output={"result": "success"}
     )
 
     assert isinstance(response, ActionResponse)
