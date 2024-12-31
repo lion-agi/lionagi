@@ -86,11 +86,11 @@ class Collective(ABC, Generic[E]):
     """Base for collections of elements."""
 
     @abstractmethod
-    def include(self, *args, **kwargs):
+    def include(self, item, /):
         pass
 
     @abstractmethod
-    def exclude(self, *args, **kwargs):
+    def exclude(self, item, /):
         pass
 
 
@@ -98,11 +98,11 @@ class Ordering(ABC, Generic[E]):
     """Base for element orderings."""
 
     @abstractmethod
-    def include(self, *args, **kwargs):
+    def include(self, item, /):
         pass
 
     @abstractmethod
-    def exclude(self, *args, **kwargs):
+    def exclude(self, item, /):
         pass
 
 

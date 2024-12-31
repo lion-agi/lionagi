@@ -25,6 +25,12 @@ from .progression import Progression, validate_order
 E = TypeVar("E", bound=Element)
 
 
+__all__ = (
+    "Pile",
+    "pile",
+)
+
+
 def validate_collection_item_type(
     collections: Any,
     item_type: type[E] | None = None,
@@ -482,13 +488,16 @@ class Pile(Element, Adaptable, Collective[E], Generic[E]):
         strict_type = dict_.pop("strict_type", False)
         item_type = dict_.pop("item_type", None)
         if item_type:
-            item_type = get_class(item_type)
+            item_type: type[E] = get_class(item_type)
 
         collections = dict_.pop("collections", [])
         progression = dict_.pop("progression", {})
         items = []
         for c in collections:
-            items.append(Element.from_dict(c))
+            if item_type:
+                items.append(item_type.from_dict(c))
+            else:
+                items.append(Element.from_dict(c))
         prog = Progression.from_dict(progression)
         return cls(
             collections=items,

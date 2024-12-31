@@ -14,6 +14,12 @@ from .element import ID, Element, IDType, validate_order
 E = TypeVar("E", bound=Element)
 
 
+__all__ = (
+    "Progression",
+    "prog",
+)
+
+
 class Progression(Element, Ordering[E], Generic[E]):
     """
     An ordered sequence of `IDType` objects, with operations for
@@ -44,11 +50,6 @@ class Progression(Element, Ordering[E], Generic[E]):
         self.order: list[IDType] = []
         if order is not None:
             self.order = validate_order(order)
-
-    @classmethod
-    def create(cls, order: Any, name: str = None) -> Self:
-        """Shortcut to instantiate a Progression."""
-        return cls(order=order, name=name)
 
     def __len__(self) -> int:
         return len(self.order)
@@ -247,7 +248,7 @@ class Progression(Element, Ordering[E], Generic[E]):
 
 def prog(order: Any, name: str = None, /) -> Progression:
     """Convenience function to quickly create a new Progression."""
-    return Progression.create(order=order, name=name)
+    return Progression(order=order, name=name)
 
 
 # File: protocols/generic/progression.py
