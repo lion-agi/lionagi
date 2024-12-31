@@ -48,13 +48,13 @@ Response Format
 
 {# Append the built sections into text_block #}
 {% set text_block = text_block + self %}
-{% set content = content + [{“type”: “text”, “text”: text_block.strip()}] %}
+{% set content = content + [{"type": "text", "text": text_block.strip()}] %}
 {% endif %}
 
 {# If images are present, we append image_url items to content #}
 {% if images %}
 {% for img in images %}
-{% set content = content + [{“type”: “image_url”, “image_url”: {“url”: “data:image/jpeg;base64,” ~ img, “detail”: image_detail}}] %}
+{% set content = content + [{"type": "image_url", "image_url": {"url": "data:image/jpeg;base64," ~ img, "detail": image_detail}}] %}
 {% endfor %}
 {% endif %}
 
