@@ -148,8 +148,6 @@ class JsonAdapter(Adapter):
         """
         kwargs for json.loads
         """
-        if many:
-            return [json.loads(i, **kwargs) for i in obj]
         return json.loads(obj, **kwargs)
 
     @classmethod
@@ -168,7 +166,7 @@ class JsonAdapter(Adapter):
 class JsonFileAdapter(Adapter):
 
     obj_key = ".json"
-    obj_key = (".json", "json_file", "jsonl_file")
+    obj_key = (".json", "json_file", "jsonl_file", ".jsonl")
 
     @classmethod
     def from_obj(
@@ -189,15 +187,19 @@ class JsonFileAdapter(Adapter):
         subj: E | Iterable[E],
         *,
         many: bool = False,
+        serialization_kwargs: dict = {},
         fp: str | Path,
         **kwargs,
     ) -> None:
         """kwargs for json.dump"""
-        data = [i.to_dict() for i in subj] if many else subj.to_dict()
+        data = (
+            [i.to_dict(**serialization_kwargs) for i in subj]
+            if many
+            else subj.to_dict(**serialization_kwargs)
+        )
 
         with open(fp, "w") as f:
             json.dump(data, f, **kwargs)
-        logging.info(f"Successfully saved data to {fp}")
 
 
 class PandasSeriesAdapter(Adapter):
@@ -260,7 +262,7 @@ class PandasDataFrameAdapter(Adapter):
         out_ = []
         for i in subj:
             _dict = i.to_dict()
-            _dict["timestamp"] = i.created_at.timestamp()
+            _dict["timestamp"] = i.created_at
             out_.append(_dict)
         df = pd.DataFrame(out_, **kwargs)
         if "timestamp" in df.columns:
@@ -296,13 +298,16 @@ class CSVFileAdapter(Adapter):
         *,
         many: bool = False,
         fp: str | Path,
+        serialization_kwargs: dict = {},
         **kwargs,
     ) -> None:
         """kwargs for pd.DataFrame.to_csv"""
         kwargs["index"] = False
         subj = [subj] if isinstance(subj, E) else list(subj)
 
-        pd.DataFrame([i.to_dict() for i in subj]).to_csv(fp, **kwargs)
+        pd.DataFrame([i.to_dict(**serialization_kwargs) for i in subj]).to_csv(
+            fp, **kwargs
+        )
         logging.info(f"Successfully saved data to {fp}")
 
 

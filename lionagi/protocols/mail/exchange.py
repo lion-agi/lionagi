@@ -1,29 +1,28 @@
 import asyncio
-from collections import deque
 from typing import Any
 
 from lionagi.protocols.generic.element import IDType
 
-from ..generic._id import ID
-from ..generic.concepts import Communicatable, Manager, Observable
+from ..generic.concepts import Communicatable
+from ..generic.element import ID
 from ..generic.pile import Pile
 from .mail import Mail, Package, PackageCategory
 from .mailbox import Mailbox
 
 
-class Exchange(Manager):
+class Exchange:
 
     def __init__(self, sources: ID[Communicatable].ItemSeq = None):
         self.sources: Pile[Communicatable] = Pile(
             item_type=Communicatable, strict_type=False
         )
+        self.buffer: dict[IDType, list[Mail]] = {}
         self.mailboxes: dict[IDType, Mailbox] = {}
         if sources:
-            self.add_sources(sources)
-
+            self.add_source(sources)
         self._execute_stop: bool = False
 
-    def add_sources(self, sources: ID[Communicatable].ItemSeq):
+    def add_source(self, sources: ID[Communicatable].ItemSeq):
         if sources in self.sources:
             raise ValueError(
                 f"Source {sources} already exists in the mail manager."
@@ -31,9 +30,11 @@ class Exchange(Manager):
 
         self.sources.include(sources)
         for source in sources:
-            self.mailboxes[source.ln_id] = Mailbox()
+            self.mailboxes[source.id] = source.mailbox
+        self.buffer.update({source.id: [] for source in sources})
 
     def delete_source(self, sources: ID[Communicatable].ItemSeq):
+        """this will remove the source from the mail manager and all assosiated pending mails"""
         if not sources in self.sources:
             raise ValueError(
                 f"Source {sources} does not exist in the mail manager."
@@ -41,7 +42,8 @@ class Exchange(Manager):
 
         self.sources.exclude(sources)
         for source in sources:
-            self.mailboxes.pop(source.ln_id)
+            self.buffer.pop(source.id)
+            self.mailboxes.pop(source.id)
 
     @staticmethod
     def create_mail(
@@ -61,34 +63,38 @@ class Exchange(Manager):
         if sender not in self.sources:
             raise ValueError(f"Sender source {sender} does not exist.")
 
-        manager_sender_mailbox: Mailbox = self.mailboxes[sender]
         sender_mailbox: Mailbox = self.sources[sender].mailbox
 
         while sender_mailbox.pending_outs:
-            mail = sender_mailbox.pending_outs.popleft()
-            mail = sender_mailbox.pile_.pop(mail)
-            if mail.recipient not in self.sources:
-                rec_ = mail.recipient
-                raise ValueError(f"Recipient source {rec_} does not exist.")
+            mail_id = sender_mailbox.pending_outs.popleft()
+            mail: Mail = sender_mailbox.pile_.pop(mail_id)
+            self.buffer[mail.recipient].append(mail)
 
-            manager_sender_mailbox.append_out(mail)
-
-    def send(self, recipient: IDType[Communicatable]):
-        """send all pending mails in mail manager to a particular recipient"""
+    def deliver(self, recipient: IDType[Communicatable]):
         if recipient not in self.sources:
             raise ValueError(f"Recipient source {recipient} does not exist.")
-        manager_recipient_mailbox: Mailbox = self.mailboxes[recipient]
+
         recipient_mailbox: Mailbox = self.sources[recipient].mailbox
+
+        while self.buffer[recipient]:
+            mail = self.buffer[recipient].pop(0)
+            if mail.recipient != recipient:
+                raise ValueError(
+                    f"Mail recipient {mail.recipient} does not match recipient {recipient}"
+                )
+            if mail.sender not in self.sources:
+                raise ValueError(f"Mail sender {mail.sender} does not exist.")
+            recipient_mailbox.append_in(mail)
 
     def collect_all(self) -> None:
         """Collect mail from all sources."""
         for source in self.sources:
-            self.collect(sender=source.ln_id)
+            self.collect(sender=source.id)
 
-    def send_all(self) -> None:
+    def deliver_all(self) -> None:
         """Send mail to all recipients."""
         for source in self.sources:
-            self.send(recipient=source.ln_id)
+            self.deliver(recipient=source.id)
 
     async def execute(self, refresh_time: int = 1) -> None:
         """
@@ -101,7 +107,7 @@ class Exchange(Manager):
             refresh_time (int, optional): The time to wait between
                 each cycle in seconds. Defaults to 1.
         """
-        while not self.execute_stop:
+        while not self._execute_stop:
             self.collect_all()
-            self.send_all()
+            self.deliver_all()
             await asyncio.sleep(refresh_time)

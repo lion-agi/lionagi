@@ -6,13 +6,9 @@
 from enum import Enum
 from typing import Any, TypeAlias
 
-from ..generic._id import ID, IDError, IDType
-from ..generic.concepts import Communicatable, Sendable
-from ..generic.element import Observable
+from ..generic.element import ID, IDError, IDType, Observable
 
 __all__ = (
-    "Communicatable",
-    "Sendable",
     "MessageRole",
     "MessageFlag",
     "MessageField",

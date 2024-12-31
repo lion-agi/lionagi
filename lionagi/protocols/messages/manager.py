@@ -7,11 +7,6 @@ from typing import Any, Literal
 from jinja2 import Template
 from pydantic import BaseModel, JsonValue
 
-from lionagi.protocols.action.request_response_model import (
-    ActionRequestModel,
-    ActionResponseModel,
-)
-
 from ..generic.concepts import Manager
 from ..generic.log import Log
 from ..generic.pile import Pile
@@ -137,7 +132,6 @@ class MessageManager(Manager):
         function: str = None,
         arguments: dict[str, Any] = None,
         action_request: ActionRequest | None = None,
-        action_request_model: ActionRequestModel | None = None,
         template: Template | str = None,
         template_context: dict[str, Any] = None,
     ) -> ActionRequest:
@@ -151,10 +145,6 @@ class MessageManager(Manager):
             **(template_context or {}),
         }
 
-        if action_request_model:
-            params["function"] = action_request_model.function
-            params["arguments"] = action_request_model.arguments
-
         if isinstance(action_request, ActionRequest):
             action_request.update(**params)
             return action_request
@@ -167,7 +157,6 @@ class MessageManager(Manager):
         action_request: ActionRequest,
         action_output: Any = None,
         action_response: ActionResponse | Any = None,
-        action_response_model: ActionResponseModel | None = None,
         sender: SenderRecipient = None,
         recipient: SenderRecipient = None,
         template: Template | str = None,
@@ -185,7 +174,6 @@ class MessageManager(Manager):
             "output": action_output,
             "sender": sender,
             "recipient": recipient,
-            "response_model": action_response_model,
             "template": template,
             **(template_context or {}),
         }
@@ -252,9 +240,7 @@ class MessageManager(Manager):
         action_arguments: dict[str, Any] = None,
         action_output: Any = None,
         action_request: ActionRequest | None = None,
-        action_request_model: ActionRequestModel | None = None,
         action_response: ActionResponse | Any = None,
-        action_response_model: ActionResponseModel | None = None,
     ) -> tuple[RoledMessage, Log]:
 
         _msg = None
@@ -288,25 +274,19 @@ class MessageManager(Manager):
                 action_request=action_request,
                 action_output=action_output,
                 action_response=action_response,
-                action_response_model=action_response_model,
                 sender=sender,
                 recipient=recipient,
                 template=template,
                 template_context=template_context,
             )
 
-        elif (
-            action_request
-            or action_request_model
-            or (action_function and action_arguments)
-        ):
+        elif action_request or (action_function and action_arguments):
             _msg = self.create_action_request(
                 sender=sender,
                 recipient=recipient,
                 function=action_function,
                 arguments=action_arguments,
                 action_request=action_request,
-                action_request_model=action_request_model,
                 template=template,
                 template_context=template_context,
             )

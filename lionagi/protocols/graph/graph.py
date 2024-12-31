@@ -8,7 +8,8 @@ from typing import Any, Literal
 from lionagi._errors import ItemExistsError, RelationError
 from lionagi.protocols.generic.concepts import Relational
 
-from ..generic.element import ID
+from ..generic.concepts import Relational
+from ..generic.element import ID, Element
 from ..generic.pile import Pile
 from .edge import Edge
 from .node import Node
@@ -16,7 +17,7 @@ from .node import Node
 __all__ = ("Graph",)
 
 
-class Graph(Node):
+class Graph(Element, Relational):
     """
     Represents a graph structure containing nodes and edges, extending `Node`.
 
@@ -34,7 +35,6 @@ class Graph(Node):
         *,
         internal_nodes: Pile[Node] = None,
         internal_edges: Pile[Edge] = None,
-        node_edge_mapping: dict = None,
         **kwargs,
     ):
         """
@@ -63,7 +63,7 @@ class Graph(Node):
         self.internal_edges = internal_edges or Pile(
             item_type=Edge, strict_type=True
         )
-        self.node_edge_mapping = node_edge_mapping or {}
+        self.node_edge_mapping = {}
         if self.internal_nodes:
             for node in self.internal_nodes:
                 if node.id not in self.node_edge_mapping:

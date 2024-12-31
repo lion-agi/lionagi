@@ -24,9 +24,11 @@ class Mailbox:
         if item.sender not in self.pending_ins:
             self.pending_ins[item.sender] = Progression()
         self.pending_ins[item.sender].include(item)
+        self.pile_.include(item)
 
     def append_out(self, item: Mail, /):
         self.pending_outs.include(item)
+        self.pile_.include(item)
 
     def exclude(self, item: Mail, /):
         self.pile_.exclude(item)
