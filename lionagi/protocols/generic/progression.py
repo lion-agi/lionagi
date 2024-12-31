@@ -6,6 +6,8 @@ from __future__ import annotations
 
 from typing import Any, Generic, Self, TypeVar
 
+from pydantic import Field, field_serializer, field_validator
+
 from lionagi._errors import ItemNotFoundError
 
 from .._concepts import Ordering
@@ -21,35 +23,25 @@ __all__ = (
 
 
 class Progression(Element, Ordering[E], Generic[E]):
-    """
-    An ordered sequence of `IDType` objects, with operations for
-    adding, removing, and manipulating IDs in-place or via new Progression
-    instances.
 
-    Inherits from `Element` for an optional unique ID/timestamp, but does
-    *not* preserve `id` or `created_at` when creating new Progressions
-    through arithmetic-like methods (e.g., `__add__`, `__sub__`).
-    """
+    order: list[ID[E].ID] = Field(
+        default_factory=list,
+        title="Order",
+        description="A sequence of IDs representing the progression.",
+    )
+    name: str | None = Field(
+        None,
+        title="Name",
+        description="An optional human readable identifier for the progression.",
+    )
 
-    def __init__(
-        self, order: Any = None, name: str | None = None, **kwargs: Any
-    ):
-        """
-        Args:
-            order (Any):
-                A single item or sequence of items convertible to `list[IDType]`
-                via `validate_order`. May be an `Element`, `IDType`, or nested
-                collections thereof.
-            name (str | None):
-                Optional identifier for the progression.
-            **kwargs:
-                Forwarded to `Element.__init__` if needed (e.g., `id`, `created_at`).
-        """
-        super().__init__(**kwargs)
-        self.name = name
-        self.order: list[IDType] = []
-        if order is not None:
-            self.order = validate_order(order)
+    @field_validator("order", mode="before")
+    def _validate_ordering(cls, value: Any) -> list[IDType]:
+        return validate_order(value)
+
+    @field_serializer("order")
+    def _serialize_order(self, value: list[IDType]) -> list[str]:
+        return [str(x) for x in self.order]
 
     def __len__(self) -> int:
         return len(self.order)
@@ -67,17 +59,31 @@ class Progression(Element, Ordering[E], Generic[E]):
 
     def __getitem__(self, key: int | slice) -> IDType | list[IDType]:
         """Return one ID or a list of IDs at the given index or slice."""
+        if not isinstance(key, (int, slice)):
+            key_cls = key.__class__.__name__
+            raise TypeError(
+                f"indices must be integers or slices, not {key_cls}"
+            )
         try:
-            return self.order[key]
-        except Exception as e:
-            raise ItemNotFoundError(str(key)) from e
+            a = self.order[key]
+            if not a:
+                raise ItemNotFoundError(f"index {key} item not found")
+            if isinstance(key, slice):
+                return self.__class__(order=a)
+            else:
+                return a
+        except IndexError:
+            raise ItemNotFoundError(f"index {key} item not found")
 
     def __setitem__(self, key: int | slice, value: Any) -> None:
         refs = validate_order(value)
         if isinstance(key, slice):
             self.order[key] = refs
         else:
-            self.order[key] = refs[0]
+            try:
+                self.order[key] = refs[0]
+            except IndexError:
+                self.order.insert(key, refs[0])
 
     def __delitem__(self, key: int | slice) -> None:
         del self.order[key]
@@ -86,7 +92,11 @@ class Progression(Element, Ordering[E], Generic[E]):
         return iter(self.order)
 
     def __next__(self) -> IDType:
-        return next(iter(self.order))
+        """Return the next item in the progression."""
+        try:
+            return next(iter(self.order))
+        except StopIteration:
+            raise StopIteration("No more items in the progression")
 
     def __list__(self) -> list[IDType]:
         """Return a shallow copy of all IDs in the progression."""
@@ -130,8 +140,6 @@ class Progression(Element, Ordering[E], Generic[E]):
 
     def append(self, item: Any, /) -> None:
         """Append one or more IDs at the end."""
-        from .element import Element
-
         if isinstance(item, Element):
             self.order.append(item.id)
             return
@@ -205,10 +213,16 @@ class Progression(Element, Ordering[E], Generic[E]):
         self.remove(other)
         return self
 
-    def insert(self, index: int, item: Any) -> None:
-        """Insert new IDs at the given position."""
-        refs = validate_order(item)
-        self.order[index:index] = refs
+    def insert(self, index: int, item: ID.RefSeq, /) -> None:
+        """Insert an item at the specified index.
+
+        Args:
+            index: Position to insert at.
+            item: Item or sequence to insert.
+        """
+        item_ = validate_order(item)
+        for i in reversed(item_):
+            self.order.insert(index, ID.get_id(i))
 
     def __reverse__(self) -> Progression[E]:
         """Return a new reversed Progression."""
@@ -233,17 +247,6 @@ class Progression(Element, Ordering[E], Generic[E]):
 
     def __repr__(self) -> str:
         return f"Progression(name={self.name}, order={self.order})"
-
-    def to_dict(self) -> dict:
-        out = super().to_dict()
-        out["name"] = self.name
-        out["order"] = [str(x) for x in self.order]
-        return out
-
-    @classmethod
-    def from_dict(cls, dict_: dict) -> Progression:
-        dict_.pop("lion_class", None)
-        return cls(**dict_)
 
 
 def prog(order: Any, name: str = None, /) -> Progression:

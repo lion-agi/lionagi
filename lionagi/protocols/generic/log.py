@@ -5,7 +5,9 @@ from __future__ import annotations
 import atexit
 import logging
 from pathlib import Path
-from typing import Any, ClassVar
+from typing import Any
+
+from pydantic import PrivateAttr
 
 from lionagi.utils import create_path, to_dict
 
@@ -61,52 +63,14 @@ class Log(Element):
     as read-only.
     """
 
-    serialized_keys: ClassVar[set[str]] = {
-        "content",
-        "log_id",
-        "log_created_at",
-        "log_class",
-    }
-
-    def __init__(
-        self,
-        content: dict[str, Any],
-        **kwargs: Any,
-    ):
-        """
-        Args:
-            content: Dictionary representing the log content.
-            _immutable: Whether this log is read-only.
-            **kwargs: Passed to `Element.__init__` (e.g. id, created_at).
-        """
-        super().__init__(**kwargs)
-        self._immutable = False
-        self.content = content
+    content: dict[str, Any]
+    _immutable: bool = PrivateAttr(False)
 
     def __setattr__(self, name: str, value: Any) -> None:
         """Prevent mutation if log is immutable."""
         if getattr(self, "_immutable", False):
             raise AttributeError("This Log is immutable.")
         super().__setattr__(name, value)
-
-    def to_dict(self) -> dict[str, Any]:
-        """
-        Convert this log to a dictionary with standardized keys:
-          - 'log_class' for class name
-          - 'log_id' for ID
-          - 'log_created_at' for creation timestamp
-          - 'content' for the log payload
-        """
-        d = super().to_dict()
-        log_class = d.pop("lion_class", None)
-        log_id = d.pop("id", None)
-        log_created = d.pop("created_at", None)
-        return {
-            "log_class": log_class,
-            "log_id": log_id,
-            "log_created_at": log_created,
-            "content": self.content,
-        }
 
     @classmethod
     def from_dict(cls, data: dict[str, Any]) -> Log:
@@ -115,14 +79,9 @@ class Log(Element):
 
         The dictionary must contain keys in `serialized_keys`.
         """
-        if set(data.keys()) == cls.serialized_keys:
-            self = cls(
-                content=data["content"],
-                id=data["log_id"],
-                created_at=data["log_created_at"],
-            )
-            self._immutable = True
-        raise ValueError("Invalid Log data, must come from Log.to_dict()")
+        self = cls.model_validate(data)
+        self._immutable = True
+        return self
 
     @classmethod
     def create(cls, content: Element) -> Log:

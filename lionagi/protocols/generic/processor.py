@@ -1,4 +1,6 @@
-# File: processor.py
+# Copyright (c) 2023 - 2024, HaiyangLi <quantocean.li at gmail dot com>
+#
+# SPDX-License-Identifier: Apache-2.0
 
 import asyncio
 from typing import Any, ClassVar
@@ -269,3 +271,6 @@ class Executor(Observer):
     def __contains__(self, ref: ID[Event].Ref) -> bool:
         """Check if a given Event or event ID reference is in the pile."""
         return ref in self.pile
+
+
+# File: protocols/generic/processor.py

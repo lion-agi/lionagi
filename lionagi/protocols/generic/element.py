@@ -9,7 +9,16 @@ from datetime import datetime, timezone
 from typing import Any, Generic, TypeAlias, TypeVar
 from uuid import UUID, uuid4
 
-from lionagi._class_registry import get_class
+from pydantic import (
+    BaseModel,
+    ConfigDict,
+    Field,
+    field_serializer,
+    field_validator,
+)
+
+from lionagi.settings import Settings
+from lionagi.utils import UNDEFINED, content_to_sha256, time, to_dict
 
 from .._concepts import Collective, Observable, Ordering
 
@@ -62,18 +71,52 @@ class IDType:
         return hash(self._id)
 
 
-class Element(Observable):
+class Element(BaseModel, Observable):
     """Basic identifiable, timestamped element."""
 
-    def __init__(
-        self,
-        id: IDType | str | None = None,
-        created_at: float | datetime | None = None,
-    ):
-        self.id = IDType.create() if id is None else IDType.validate(id)
-        self.created_at = self._coerce_created_at(created_at)
+    model_config = ConfigDict(
+        arbitrary_types_allowed=True,
+        use_enum_values=True,
+        populate_by_name=True,
+        extra="forbid",
+    )
 
-    def _coerce_created_at(self, val: float | datetime | None) -> float:
+    id: IDType = Field(
+        default_factory=IDType.create,
+        title="ID",
+        description="Unique identifier for this element.",
+        frozen=True,
+    )
+    created_at: float = Field(
+        default_factory=lambda: time(
+            tz=Settings.Config.TIMEZONE, type_="timestamp"
+        ),
+        title="Creation Timestamp",
+        description="Timestamp of element creation.",
+        frozen=True,
+    )
+    metadata: dict = Field(
+        default_factory=dict,
+        title="Metadata",
+        description="Additional data for this element.",
+    )
+
+    @field_validator("metadata", mode="before")
+    def _validate_meta_integrity(cls, val: dict) -> dict:
+        if not val:
+            return {}
+        if not isinstance(val, dict):
+            val = to_dict(val, recursive=True, suppress=True)
+        if "lion_class" in val and val["lion_class"] != cls.class_name(
+            full=True
+        ):
+            raise ValueError("Metadata class mismatch.")
+        if not isinstance(val, dict):
+            raise ValueError("Invalid metadata.")
+        return val
+
+    @field_validator("created_at", mode="before")
+    def _coerce_created_at(cls, val: float | datetime | None) -> float:
         if val is None:
             return float(datetime.now(timezone.utc).timestamp())
         if isinstance(val, float):
@@ -84,6 +127,24 @@ class Element(Observable):
             return float(val)
         except Exception:
             raise ValueError(f"Invalid created_at: {val}")
+
+    @field_validator("id", mode="before")
+    def _ensure_idtype(cls, val: IDType | UUID | str) -> IDType:
+        return IDType.validate(val)
+
+    @field_serializer("id")
+    def _serialize_id_type(self, val: IDType) -> str:
+        return str(val)
+
+    @field_serializer("metadata")
+    def _serialize_metadata(self, val: dict) -> dict:
+        dict_ = val.copy()
+        dict_["lion_class"] = self.class_name(full=True)
+        return dict_
+
+    @property
+    def content_sha256(self) -> str:
+        return content_to_sha256(self)
 
     def __eq__(self, other: Any) -> bool:
         if not isinstance(other, Element):
@@ -97,28 +158,29 @@ class Element(Observable):
         return True
 
     @classmethod
-    def class_name(cls) -> str:
+    def class_name(cls, full: bool = False) -> str:
+        if full:
+            return str(cls).split("'")[1]
         return cls.__name__
 
     def to_dict(self) -> dict:
-        """
-        need to be json serializable
-        """
-        return {
-            "lion_class": self.class_name(),
-            "id": str(self.id),
-            "created_at": self.created_at,
-        }
+        dict_ = self.model_dump()
+        dict_["metadata"]["content_sha256"] = self.content_sha256
+        return {k: v for k, v in dict_.items() if v is not UNDEFINED}
 
     @classmethod
-    def from_dict(cls, dict_: dict) -> Element:
-        lion_class = dict_.pop("lion_class", None)
-        if lion_class and lion_class != cls.__name__:
-            subcls = get_class(lion_class)
-            # Only delegate if the subclass defines a custom from_dict
-            if subcls.from_dict.__func__ != Element.from_dict.__func__:
-                return subcls.from_dict(dict_)
-        return cls(**dict_)
+    def from_dict(cls, data: dict, /) -> Element:
+        metadata = data.pop("metadata", {})
+        if "lion_class" in metadata:
+            subcls = metadata.pop("lion_class")
+            if subcls != cls.class_name(full=True):
+                from lionagi.libs.package.imports import import_module
+
+                mod, imp = subcls.rsplit(".", 1)
+                subcls = import_module(mod, import_name=imp)
+                data["metadata"] = metadata
+                return subcls.from_dict(data)
+        return cls.model_validate(data)
 
 
 def validate_order(order: Any) -> list[IDType]:

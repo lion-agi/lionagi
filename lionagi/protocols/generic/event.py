@@ -5,6 +5,8 @@
 from enum import Enum
 from typing import Any
 
+from pydantic import Field, field_serializer
+
 from .element import Element
 
 __all__ = (
@@ -57,9 +59,16 @@ class Execution:
 class Event(Element):
     """Event extends Element with an execution state."""
 
-    def __init__(self, execution: Execution | None = None, **kwargs):
-        super().__init__(**kwargs)
-        self.execution = execution if execution else Execution()
+    execution: Execution | None = Field(default_factory=Execution)
+
+    @field_serializer("execution")
+    def _serialize_execution(self, val: Execution) -> dict:
+        return {
+            "status": str(val.status),
+            "duration": val.duration,
+            "response": val.response,
+            "error": val.error,
+        }
 
     @property
     def response(self) -> Any:
@@ -83,18 +92,6 @@ class Event(Element):
 
     async def invoke(self) -> None:
         raise NotImplementedError("Override in subclass.")
-
-    def to_dict(self) -> dict:
-        d = super().to_dict()
-        d.update(
-            {
-                "status": self.status.value,
-                "duration": self.execution.duration,
-                "response": self.execution.response,
-                "error": self.execution.error,
-            }
-        )
-        return d
 
     @classmethod
     def from_dict(cls, data: dict) -> "Event":

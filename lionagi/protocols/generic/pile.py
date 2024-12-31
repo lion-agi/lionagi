@@ -12,8 +12,9 @@ from pathlib import Path
 from typing import Any, ClassVar, Generic, Self, TypeVar
 
 import pandas as pd
+from pydantic import Field, field_serializer, field_validator, model_validator
+from pydantic.fields import FieldInfo
 
-from lionagi._class_registry import get_class
 from lionagi._errors import ItemExistsError, ItemNotFoundError
 from lionagi.utils import UNDEFINED, to_list
 
@@ -96,69 +97,106 @@ for adapter in DEFAULT_ADAPTERS:
 class Pile(Element, Adaptable, Collective[E], Generic[E]):
     """
     Thread-safe collection of Elements, keyed by ID, plus a `Progression`
-    for item ordering.
-
-    - `include` / `exclude` match `Progression` semantics:
-      - return bool indicating whether any items were actually added/removed
-      - ignore duplicates (in `include`) or missing items (in `exclude`)
-      - do not raise errors
-    - `append` / `remove` / `insert` are stricter:
-      - raise `ItemExistsError` or `ItemNotFoundError` if appropriate
+    for item ordering. Supports synchronous and asynchronous iteration.
+    `Pile` is treated as a collection of items.
     """
 
     adapter_registry: ClassVar[AdapterRegistry] = PileAdapterRegistry
 
-    def __init__(
-        self,
-        collections: Any = None,
-        item_type: type[E] | None = None,
-        strict_type: bool = False,
-        progression: Progression | list[IDType] | None = None,
-        **kwargs: Any,
-    ):
-        """
-        Args:
-            collections:
-                Initial items to store (list, set, single element, etc.).
-            item_type (type | None):
-                Optional type constraint for items.
-            strict_type (bool):
-                If True, items must match item_type exactly.
-            progression (Progression | list[IDType] | None):
-                If None, build from current dict keys. If a list, build a new
-                `Progression`. If a `Progression` object, use it as-is.
-            **kwargs:
-                Additional args forwarded to `Element.__init__` (e.g. 'id').
-        """
-        super().__init__(**kwargs)
-        self._lock = threading.Lock()
-        self._async_lock = asyncio.Lock()
+    collections: dict = Field(
+        default_factory=dict,
+        title="Collections",
+    )
+    item_type: type[E] | None = Field(
+        None,
+        title="Item Type",
+        description="Optional type constraint for items.",
+        frozen=True,
+    )
+    strict_type: bool = Field(
+        False,
+        title="Strict Type",
+        description="If True, items must match item_type exactly. (not even subclasses)",
+        frozen=True,
+    )
+    progression: Progression = Field(
+        default_factory=Progression,
+        title="Progression",
+        description="Ordering of items in the pile.",
+    )
 
-        self.item_type = item_type
-        self.strict_type = strict_type
+    @field_serializer("collections")
+    def _serialize_collections(self, value: dict) -> list[dict]:
+        return [x.to_dict() for x in self]
 
-        if collections is None:
-            self.collections: dict[IDType, E] = {}
-        else:
-            self.collections = validate_collection_item_type(
-                collections,
-                item_type=self.item_type,
-                strict_type=self.strict_type,
-            )
+    @field_serializer("progression")
+    def _serialize_progression(self, value: Progression) -> dict:
+        return value.to_dict()
 
-        if progression is None:
+    @field_serializer("item_type")
+    def _serialize_item_type(self, value: type[E] | None) -> str:
+        return value.class_name(full=True) if value else None
+
+    @field_validator("progression", mode="before")
+    def _validate_progression(cls, value: Progression) -> Progression:
+        return Progression(order=validate_order(value))
+
+    @field_validator("item_type", mode="before")
+    def _validate_item_type(cls, value: type[E] | None) -> type[E] | None:
+        if value is None:
+            return None
+        if isinstance(value, str):
+            from lionagi.libs.package.imports import import_module
+
+            mod, imp = value.rsplit(".", 1)
+            return import_module(mod, import_name=imp)
+        if isinstance(value, type) and issubclass(value, Element):
+            return value
+        raise ValueError("Item type must be a subclass of Element.")
+
+    @model_validator(mode="after")
+    def _validate_collections_item_type(self) -> Self:
+        self.collections = validate_collection_item_type(
+            self.collections,
+            item_type=self.item_type,
+            strict_type=self.strict_type,
+        )
+        if len(self.progression) == 0 and len(self.collections) > 0:
             self.progression = Progression(order=list(self.collections.keys()))
-        else:
-            if isinstance(progression, Progression):
-                self.progression = progression
-            else:
-                self.progression = Progression(order=progression)
+            return self
+
+        if len(self.collections) == len(self.progression):
             coll_ids = set(self.collections.keys())
             prog_ids = set(self.progression.order)
-            if coll_ids != prog_ids:
-                raise ValueError(
-                    "Collections and progression must have the same items."
-                )
+
+            if coll_ids == prog_ids:
+                return self
+
+        raise ValueError(
+            "Collections and progression must have the same number of items."
+        )
+
+    def __pydantic_extra__(self) -> dict[str, FieldInfo]:
+        return {
+            "_lock": Field(default_factory=threading.Lock),
+            "_async": Field(default_factory=asyncio.Lock),
+        }
+
+    def __pydantic_private__(self) -> dict[str, FieldInfo]:
+        return self.__pydantic_extra__()
+
+    def __getstate__(self):
+        """Prepare for pickling."""
+        state = self.__dict__.copy()
+        state["_lock"] = None
+        state["_async_lock"] = None
+        return state
+
+    def __setstate__(self, state):
+        """Restore after unpickling."""
+        self.__dict__.update(state)
+        self._lock = threading.Lock()
+        self._async_lock = asyncio.Lock()
 
     @property
     def lock(self) -> threading.Lock:
@@ -190,6 +228,29 @@ class Pile(Element, Adaptable, Collective[E], Generic[E]):
         for oid in current_order:
             yield self.collections[oid]
             await asyncio.sleep(0)
+
+    class AsyncPileIterator:
+        def __init__(self, pile: "Pile"):
+            self.pile = pile
+            self.index = 0
+
+        def __aiter__(self) -> AsyncIterator[E]:
+            return self
+
+        async def __anext__(self) -> E:
+            if self.index >= len(self.pile):
+                raise StopAsyncIteration
+            item = self.pile[self.pile.progress[self.index]]
+            self.index += 1
+            await asyncio.sleep(0)  # Yield control to the event loop
+            return item
+
+    async def __anext__(self) -> E:
+        """Async get next item."""
+        try:
+            return await anext(self.AsyncPileIterator(self))
+        except StopAsyncIteration:
+            raise StopAsyncIteration("End of pile")
 
     def include(self, item: Any, /) -> bool:
         """
@@ -473,40 +534,6 @@ class Pile(Element, Adaptable, Collective[E], Generic[E]):
 
     __str__ = __repr__
 
-    def to_dict(self) -> dict:
-        dict_ = super().to_dict()
-        dict_["collections"] = [x.to_dict() for x in self]
-        dict_["progression"] = self.progression.to_dict()
-        if self.item_type:
-            dict_["item_type"] = self.item_type.class_name()
-        if self.strict_type:
-            dict_["strict_type"] = self.strict_type
-        return dict_
-
-    @classmethod
-    def from_dict(cls, dict_: dict) -> Self:
-        strict_type = dict_.pop("strict_type", False)
-        item_type = dict_.pop("item_type", None)
-        if item_type:
-            item_type: type[E] = get_class(item_type)
-
-        collections = dict_.pop("collections", [])
-        progression = dict_.pop("progression", {})
-        items = []
-        for c in collections:
-            if item_type:
-                items.append(item_type.from_dict(c))
-            else:
-                items.append(Element.from_dict(c))
-        prog = Progression.from_dict(progression)
-        return cls(
-            collections=items,
-            item_type=item_type,
-            strict_type=strict_type,
-            progression=prog,
-            **dict_,
-        )
-
     async def __aenter__(self) -> Self:
         """Async context manager entry."""
         await self.async_lock.acquire()
@@ -520,6 +547,28 @@ class Pile(Element, Adaptable, Collective[E], Generic[E]):
     ) -> None:
         """Async context manager exit."""
         self.async_lock.release()
+
+    def update(self, other: Any, /) -> None:
+        others = validate_collection_item_type(
+            other, item_type=self.item_type, strict_type=self.strict_type
+        )
+        for i in others.keys():
+            if i in self.collections:
+                self.collections[i] = others[i]
+            else:
+                self.include(others[i])
+
+    def values(self) -> Iterator[E]:
+        """Iterate over items."""
+        return iter(self)
+
+    def keys(self) -> Iterator[IDType]:
+        """Iterate over item IDs."""
+        return iter(self.progression)
+
+    def items(self) -> Iterator[tuple[IDType, E]]:
+        """Iterate over (ID, item) pairs."""
+        return ((k, self.collections[k]) for k in self.progression)
 
 
 def pile(
