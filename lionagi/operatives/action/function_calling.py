@@ -3,27 +3,24 @@
 # SPDX-License-Identifier: Apache-2.0
 
 import asyncio
-from typing import Any, Self
-
-from pydantic import Field, model_validator
+from typing import Any
 
 from lionagi.utils import is_coro_func
 
-from ..generic.event import Event, EventStatus, Execution
+from ..generic.event import Event, EventStatus
 from .tool import Tool
 
 
 class FunctionCalling(Event):
 
-    func_tool: Tool = Field(default=..., exclude=True)
-    arguments: dict[str, Any] | None = None
-
-    @property
-    def function(self):
-        return self.func_tool.function
-
-    @model_validator(mode="after")
-    def _validate_function_call(self) -> Self:
+    def __init__(
+        self,
+        func_tool: Tool,
+        arguments: dict[str, Any],
+    ):
+        super().__init__()
+        self.func_tool = func_tool
+        self.arguments = arguments
         if self.func_tool.strict_func_call is True:
             if (
                 not set(self.arguments.keys())
@@ -36,23 +33,10 @@ class FunctionCalling(Event):
                 set(self.arguments.keys())
             ):
                 raise ValueError("arguments must match the function schema")
-        return self
 
-    @model_validator(mode="before")
-    def _validate_func_call(cls, data: dict[str, Any]) -> dict[str, Any]:
-        arguments: dict[str, Any] = data.get("arguments", {})
-        if not isinstance(arguments, dict):
-            raise ValueError("arguments must be a dictionary")
-
-        func_tool = data.get("func_tool", None)
-        if not isinstance(func_tool, Tool):
-            raise ValueError("func_tool must be an instance of Tool")
-
-        return {
-            "arguments": arguments,
-            "func_tool": func_tool,
-            "execution": data.get("execution", Execution()),
-        }
+    @property
+    def function(self):
+        return self.func_tool.function
 
     async def invoke(self) -> None:
         start = asyncio.get_event_loop().time()
@@ -123,7 +107,3 @@ class FunctionCalling(Event):
         dict_["function"] = self.function
         dict_["arguments"] = self.arguments
         return dict_
-
-    @property
-    def response(self):
-        return self.execution.response
