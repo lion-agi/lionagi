@@ -2,187 +2,103 @@
 #
 # SPDX-License-Identifier: Apache-2.0
 
-from abc import ABC
+from enum import Enum
 from typing import Any
 
-from pydantic import Field
-
-from lionagi.utils import DataClass, EventStatus
-
 from .element import Element
-from .log import Log
 
 __all__ = (
-    "Event",
-    "Condition",
-    "Execution",
     "EventStatus",
+    "Execution",
+    "Event",
 )
 
 
-class Condition(ABC):
-    """Base class for all conditions."""
+class EventStatus(str, Enum):
+    """Status states for tracking action execution progress.
 
-    async def apply(self, *args, **kwargs) -> bool:
-        """Apply the condition asynchronously.
-
-        This method must be implemented by subclasses. It should evaluate a
-        certain condition and return a boolean indicating whether the condition
-        is met.
-
-        Args:
-            *args: Additional positional arguments.
-            **kwargs: Additional keyword arguments.
-
-        Returns:
-            bool: True if the condition is satisfied, False otherwise.
-
-        Raises:
-            NotImplementedError: If not overridden by subclasses.
-        """
-        raise NotImplementedError
-
-
-class Execution(DataClass):
-    """Represents the execution state of an event.
-
-    This class holds details about the status, duration, response, and any
-    errors encountered during the event execution.
+    Attributes:
+        PENDING: Initial state before execution starts
+        PROCESSING: Action is currently being executed
+        COMPLETED: Action completed successfully
+        FAILED: Action failed during execution
     """
+
+    PENDING = "pending"
+    PROCESSING = "processing"
+    COMPLETED = "completed"
+    FAILED = "failed"
+
+
+class Execution:
+    """Execution state of an event."""
 
     __slots__ = ("status", "duration", "response", "error")
 
     def __init__(
         self,
-        duration: float = None,
+        duration: float | None = None,
         response: Any = None,
         status: EventStatus = EventStatus.PENDING,
         error: str | None = None,
     ):
-        """Initialize the Execution instance.
-
-        Args:
-            duration (float | None, optional):
-                The time duration of the event's execution.
-            response (Any, optional):
-                The response data associated with the event's execution.
-            status (EventStatus, optional):
-                The status of the execution. Defaults to EventStatus.PENDING.
-            error (str | None, optional):
-                Any error message or details if the execution fails or
-                encounters issues.
-        """
         self.status = status
         self.duration = duration
         self.response = response
         self.error = error
 
     def __str__(self) -> str:
-        """Return a user-friendly string representation of the execution.
-
-        Returns:
-            str: A summary of execution status, duration, response, and error.
-        """
         return (
             f"Execution(status={self.status}, duration={self.duration}, "
             f"response={self.response}, error={self.error})"
         )
 
-    __repr__ = __str__
-
 
 class Event(Element):
-    """Base class for all events.
+    """Event extends Element with an execution state."""
 
-    An event extends the basic `Element` with execution details and provides
-    properties to manage the event's status, response, and invocation logic.
-    """
-
-    execution: Execution = Field(default_factory=Execution)
+    def __init__(self, execution: Execution | None = None, **kwargs):
+        super().__init__(**kwargs)
+        self.execution = execution if execution else Execution()
 
     @property
     def response(self) -> Any:
-        """Any: Get or set the response associated with the event."""
         return self.execution.response
 
     @response.setter
-    def response(self, value: Any) -> None:
-        self.execution.response = value
+    def response(self, val: Any) -> None:
+        self.execution.response = val
 
     @property
     def status(self) -> EventStatus:
-        """EventStatus: Get or set the current status of the event."""
         return self.execution.status
 
     @status.setter
-    def status(self, value: EventStatus) -> None:
-        self.execution.status = value
+    def status(self, val: EventStatus) -> None:
+        self.execution.status = val
 
     @property
     def request(self) -> dict:
-        """dict: Return the request data associated with the event.
-
-        Subclasses can override this property to provide more specific
-        request data.
-        """
         return {}
 
     async def invoke(self) -> None:
-        """Invoke the event asynchronously.
-
-        Subclasses should implement the logic for how the event is triggered
-        or executed. By default, this raises a NotImplementedError.
-
-        Raises:
-            NotImplementedError: Always, unless overridden by subclasses.
-        """
-        raise NotImplementedError
+        raise NotImplementedError("Override in subclass.")
 
     def to_dict(self) -> dict:
-        """Convert the event into a dictionary.
-
-        The returned dictionary contains the ID, class name (for
-        round-trip deserialization), status, duration, response, and
-        any error message.
-
-        Returns:
-            dict: A dictionary representation of the event.
-        """
-        return {
-            "id": str(self.id),
-            "lion_class": self.class_name(),
-            "status": self.status.value,
-            "duration": self.execution.duration,
-            "response": self.execution.response,
-            "error": self.execution.error,
-        }
+        d = super().to_dict()
+        d.update(
+            {
+                "status": self.status.value,
+                "duration": self.execution.duration,
+                "response": self.execution.response,
+                "error": self.execution.error,
+            }
+        )
+        return d
 
     @classmethod
-    def from_dict(cls, data, **kwargs):
-        """Restore an event from a dictionary.
-
-        Events are not intended to be restored once completed, so this
-        method raises a NotImplementedError by default.
-
-        Args:
-            data (dict): The dictionary from which to reconstruct the event.
-            **kwargs: Additional keyword arguments.
-
-        Raises:
-            NotImplementedError:
-                Indicates that events cannot be recreated.
-        """
-        raise NotImplementedError(
-            "An event cannot be recreated. Once it's done, it's done."
-        )
-
-    def to_log(self) -> Log:
-        """Convert the event into a Log object.
-
-        Returns:
-            Log: A Log object containing the event as its content.
-        """
-        return Log(content=self)
+    def from_dict(cls, data: dict) -> "Event":
+        raise NotImplementedError("Cannot recreate an event once it's done.")
 
 
-# File: lionagi/protocols/generic/event.py
+# File: protocols/generic/event.py

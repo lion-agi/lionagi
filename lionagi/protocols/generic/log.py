@@ -1,6 +1,4 @@
-# Copyright (c) 2023 - 2024, HaiyangLi <quantocean.li at gmail dot com>
-#
-# SPDX-License-Identifier: Apache-2.0
+# File: log.py
 
 from __future__ import annotations
 
@@ -9,9 +7,7 @@ import logging
 from pathlib import Path
 from typing import Any, ClassVar
 
-from pydantic import PrivateAttr, field_serializer, field_validator
-
-from lionagi.utils import Params, ToDictParams, create_path
+from lionagi.utils import create_path, to_dict
 
 from .concepts import Manager
 from .element import Element
@@ -23,74 +19,46 @@ __all__ = (
     "LogManager",
 )
 
-_to_dict: ToDictParams = ToDictParams(
-    use_model_dump=True,
-    recursive=True,
-    max_recursive_depth=5,
-    recursive_python_only=False,
-    use_enum_values=True,
-)
 
-
-class LogManagerConfig(Params):
-    """Configuration class for log management.
-
-    Attributes:
-        persist_dir (str | Path):
-            Directory for log storage.
-        subfolder (str | None):
-            Optional subdirectory within `persist_dir`.
-        file_prefix (str | None):
-            Prefix for log filenames.
-        capacity (int | None):
-            Maximum number of logs before automatic dump.
-        extension (str):
-            File extension for log files.
-        use_timestamp (bool):
-            Whether to include a timestamp in filenames.
-        hash_digits (int):
-            Length of the random hash in filenames.
-        auto_save_on_exit (bool):
-            Whether to automatically save logs on program exit.
-        clear_after_dump (bool):
-            Whether to clear logs after saving.
+class LogManagerConfig:
+    """
+    Configuration for log management, controlling output paths,
+    file naming patterns, and capacity limits.
     """
 
-    persist_dir: str | Path = "./data/logs"
-    subfolder: str | None = None
-    file_prefix: str | None = None
-    capacity: int | None = None
-    extension: str = ".json"
-    use_timestamp: bool = True
-    hash_digits: int = 5
-    auto_save_on_exit: bool = True
-    clear_after_dump: bool = True
+    def __init__(
+        self,
+        persist_dir: str | Path = "./data/logs",
+        subfolder: str | None = None,
+        file_prefix: str | None = None,
+        capacity: int | None = None,
+        extension: str = ".json",
+        use_timestamp: bool = True,
+        hash_digits: int = 5,
+        auto_save_on_exit: bool = True,
+        clear_after_dump: bool = True,
+    ):
+        # Ensure extension starts with a dot
+        if not extension.startswith("."):
+            extension = "." + extension
 
-    @field_validator("extension", mode="before")
-    def ensure_extension_has_dot(cls, v: str) -> str:
-        """Ensure the file extension starts with a dot.
-
-        Args:
-            v (str):
-                The file extension to validate.
-
-        Returns:
-            str:
-                The validated file extension, guaranteed to start with a dot.
-        """
-        if not v.startswith("."):
-            return "." + v
-        return v
+        self.persist_dir = persist_dir
+        self.subfolder = subfolder
+        self.file_prefix = file_prefix
+        self.capacity = capacity
+        self.extension = extension
+        self.use_timestamp = use_timestamp
+        self.hash_digits = hash_digits
+        self.auto_save_on_exit = auto_save_on_exit
+        self.clear_after_dump = clear_after_dump
 
 
 class Log(Element):
-    """Immutable log entry containing arbitrary element data.
+    """
+    An immutable log entry that wraps a dictionary of content.
 
-    Attributes:
-        content (dict[str, Any]):
-            The element data to log, stored as a dictionary.
-        _immutable (bool):
-            Whether the log is immutable (read-only).
+    Once created or restored from a dictionary, the log is marked
+    as read-only.
     """
 
     serialized_keys: ClassVar[set[str]] = {
@@ -99,122 +67,88 @@ class Log(Element):
         "log_created_at",
         "log_class",
     }
-    content: dict[str, Any]
-    _immutable: bool = PrivateAttr(False)
 
-    @field_serializer("content")
-    def _serialize_content(self, content: Element | dict) -> dict:
-        """Serialize the content into a dictionary.
-
+    def __init__(
+        self,
+        content: dict[str, Any],
+        **kwargs: Any,
+    ):
+        """
         Args:
-            content (Element | dict):
-                The content to serialize. Can be an Element instance or
-                a dictionary.
-
-        Returns:
-            dict:
-                A serialized dictionary representation of the content.
+            content: Dictionary representing the log content.
+            _immutable: Whether this log is read-only.
+            **kwargs: Passed to `Element.__init__` (e.g. id, created_at).
         """
-        return _to_dict(content)
+        super().__init__(**kwargs)
+        self._immutable = False
+        self.content = content
 
-    @field_validator("content", mode="before")
-    def _validate_content(cls, value: dict) -> dict:
-        """Validate and convert the content into a dictionary.
+    def __setattr__(self, name: str, value: Any) -> None:
+        """Prevent mutation if log is immutable."""
+        if getattr(self, "_immutable", False):
+            raise AttributeError("This Log is immutable.")
+        super().__setattr__(name, value)
 
-        Args:
-            value (dict):
-                The raw content to validate.
-
-        Returns:
-            dict:
-                The converted dictionary representation of the content.
+    def to_dict(self) -> dict[str, Any]:
         """
-        return _to_dict(value)
-
-    def to_dict(self) -> dict:
-        """Convert the log into a dictionary with standardized keys.
-
-        Returns:
-            dict:
-                A dictionary containing the log data, with standardized
-                keys for `lion_class`, `log_id`, and `log_created_at`.
+        Convert this log to a dictionary with standardized keys:
+          - 'log_class' for class name
+          - 'log_id' for ID
+          - 'log_created_at' for creation timestamp
+          - 'content' for the log payload
         """
-        dict_ = super().to_dict()
-        dict_["log_class"] = dict_.pop("lion_class")
-        dict_["log_id"] = dict_.pop("id")
-        dict_["log_created_at"] = dict_.pop("created_at")
-        return _to_dict(dict_)
+        d = super().to_dict()
+        log_class = d.pop("lion_class", None)
+        log_id = d.pop("id", None)
+        log_created = d.pop("created_at", None)
+        return {
+            "log_class": log_class,
+            "log_id": log_id,
+            "log_created_at": log_created,
+            "content": self.content,
+        }
 
     @classmethod
-    def from_dict(cls, data: dict) -> Log:
-        """Create a Log instance from a dictionary.
+    def from_dict(cls, data: dict[str, Any]) -> Log:
+        """
+        Create a Log from a dictionary previously produced by `to_dict`.
 
-        Args:
-            data (dict):
-                A dictionary containing the log data.
-
-        Raises:
-            ValueError:
-                If the dictionary does not match the expected set of keys
-                generated by `Log.to_dict()`.
-
-        Returns:
-            Log:
-                A re-created Log instance, marked as immutable.
+        The dictionary must contain keys in `serialized_keys`.
         """
         if set(data.keys()) == cls.serialized_keys:
-            self = Log(
+            self = cls(
                 content=data["content"],
                 id=data["log_id"],
                 created_at=data["log_created_at"],
             )
             self._immutable = True
-            return self
-
         raise ValueError("Invalid Log data, must come from Log.to_dict()")
 
-    def __setattr__(self, name: str, value: Any) -> None:
-        """Prevent modification if the log is marked as immutable.
-
-        Args:
-            name (str):
-                The attribute name.
-            value (Any):
-                The attribute value to set.
-
-        Raises:
-            AttributeError:
-                If the log is marked immutable.
-        """
-        if self._immutable:
-            raise AttributeError("immutable attribute is read-only")
-        super().__setattr__(name, value)
-
     @classmethod
-    def create(cls, content: Element, /) -> Log:
-        """Create a new log entry from an element.
-
-        Args:
-            content (Element):
-                The Element to log.
-
-        Returns:
-            Log:
-                A new Log instance containing the serialized content.
+    def create(cls, content: Element) -> Log:
         """
-        return cls(content=content)
+        Create a new Log from an Element, storing a dict snapshot
+        of the element's data.
+        """
+        return cls(
+            content=to_dict(
+                content,
+                recursive=True,
+                recursive_python_only=False,
+                suppress=True,
+            )
+        )
 
 
 class LogManager(Manager):
-    """Manages the collection and persistence of logs.
-
-    This class handles automatic log rotation, file persistence, and cleanup
-    based on configured capacity and file path settings.
+    """
+    Manages a collection of logs, optionally auto-dumping them
+    to CSV or JSON when capacity is reached or at program exit.
     """
 
     def __init__(
         self,
-        logs: Pile[Log] = None,
+        logs: Any = None,
         persist_dir: str | Path | None = None,
         subfolder: str | None = None,
         file_prefix: str | None = None,
@@ -224,39 +158,33 @@ class LogManager(Manager):
         hash_digits: int = 5,
         auto_save_on_exit: bool = True,
         clear_after_dump: bool = True,
-    ) -> None:
-        """Initialize the LogManager instance.
-
+    ):
+        """
         Args:
-            logs (Pile[Log] | None):
-                An optional pile of Log instances to manage.
-            persist_dir (str | Path | None):
-                Directory in which to store log files. Defaults to
-                "./data/logs" if not provided.
-            subfolder (str | None):
-                Optional subdirectory within `persist_dir`.
-            file_prefix (str | None):
-                Prefix for log filenames.
-            capacity (int | None):
-                Maximum number of logs before automatic dump. If None,
-                capacity checks are disabled.
-            extension (str):
-                File extension for log files. Defaults to ".csv".
-            use_timestamp (bool):
-                Whether to include a timestamp in generated filenames.
-            hash_digits (int):
-                Length of the random hash used in generated filenames.
-            auto_save_on_exit (bool):
-                Whether to automatically save logs upon program exit.
-            clear_after_dump (bool):
-                Whether to clear logs after they are saved.
+            logs: Initial logs (list or Pile of Log objects).
+            persist_dir: Directory for log files (default "./data/logs").
+            subfolder: Subdirectory within `persist_dir`.
+            file_prefix: Filename prefix for log files.
+            capacity: Max number of logs before auto-dump. None = unlimited.
+            extension: File extension (".csv" or ".json").
+            use_timestamp: Whether to include timestamps in filenames.
+            hash_digits: Random hash length in filenames.
+            auto_save_on_exit: Auto-save logs at program exit.
+            clear_after_dump: Whether to clear logs after saving.
         """
         super().__init__()
-
+        if logs is None:
+            logs = []
+        # Convert logs to a list if it's already a Pile
         if isinstance(logs, Pile):
-            logs = list(logs)
-        self.logs: Pile[Log] = Pile(collections=(logs or {}), item_type=Log)
-        self.persist_dir = persist_dir
+            logs = logs.to_list()
+
+        self.logs: Pile[Log] = Pile(
+            collections=logs, item_type=Log, strict_type=True
+        )
+
+        # Store config
+        self.persist_dir = persist_dir or "./data/logs"
         self.subfolder = subfolder
         self.file_prefix = file_prefix
         self.capacity = capacity
@@ -265,119 +193,78 @@ class LogManager(Manager):
         self.hash_digits = hash_digits
         self.clear_after_dump = clear_after_dump
 
+        # Auto-dump on exit
         if auto_save_on_exit:
             atexit.register(self.save_at_exit)
 
-    async def alog(self, log_: Log, /) -> None:
-        """Add a log asynchronously, respecting capacity limits.
-
-        Args:
-            log_ (Log):
-                The log entry to be added to the manager.
+    def log(self, log_: Log) -> None:
         """
-        async with self.logs:
-            self.log(log_)
-
-    def log(self, log_: Log, /) -> None:
-        """Add a log synchronously, respecting capacity limits.
-
-        If the capacity is reached, automatically dump the logs. Any failure
-        during dumping is logged as an error.
-
-        Args:
-            log_ (Log):
-                The log entry to be added.
+        Add a log synchronously. If capacity is reached, auto-dump to file.
         """
         if self.capacity and len(self.logs) >= self.capacity:
             try:
                 self.dump(clear=self.clear_after_dump)
             except Exception as e:
                 logging.error(f"Failed to auto-dump logs: {e}")
+        self.logs.append(log_)
 
-        self.logs.include(log_)
-
-    async def adump(
-        self,
-        clear: bool | None = None,
-        persist_path: str | Path = None,
-    ) -> None:
-        """Dump logs to a file asynchronously.
-
-        Args:
-            clear (bool | None):
-                Whether to clear logs after dumping. If None, defaults
-                to `self.clear_after_dump`.
-            persist_path (str | Path | None):
-                Optional file path to dump logs. If not provided, it
-                will be auto-generated.
+    async def alog(self, log_: Log) -> None:
+        """
+        Add a log asynchronously. If capacity is reached, auto-dump to file.
         """
         async with self.logs:
-            self.dump(
-                clear=self.clear_after_dump if clear is None else clear,
-                persist_path=persist_path,
-            )
+            self.log(log_)
 
     def dump(
         self,
         clear: bool | None = None,
-        persist_path: str | Path = None,
+        persist_path: str | Path | None = None,
     ) -> None:
-        """Dump logs to a file.
-
-        Logs are written in a JSON or CSV format, determined by the file
-        extension. If the file extension is unsupported, a ValueError
-        is raised. Optionally clears logs after dumping if specified.
-
-        Args:
-            clear (bool | None):
-                Whether to clear logs after dumping. If None, defaults
-                to `self.clear_after_dump`.
-            persist_path (str | Path | None):
-                Optional file path to dump logs. If not provided, it
-                will be auto-generated.
-
-        Raises:
-            ValueError:
-                If the file extension is not supported.
-            Exception:
-                Propagates any file I/O errors encountered.
+        """
+        Dump the logs to a file (CSV or JSON). If file extension is
+        unsupported, raise ValueError. Optionally clear logs after.
         """
         if not self.logs:
-            logging.debug("No logs to dump")
+            logging.debug("No logs to dump.")
             return
 
+        fp = persist_path or self._create_path()
+        suffix = fp.suffix.lower()
         try:
-            fp = persist_path or self._create_path()
-            if fp.suffix == ".json":
-                self.logs.to_json(fp)
-            elif fp.suffix == ".csv":
-                self.logs.to_csv(fp)
+            if suffix == ".csv":
+                self.logs.to_csv_file(fp)
+            elif suffix == ".json":
+                self.logs.to_json_file(fp)
             else:
-                raise ValueError(f"Unsupported file extension: {fp.suffix}")
+                raise ValueError(f"Unsupported file extension: {suffix}")
 
-            logging.info(f"Successfully dumped logs to {fp}")
-
-            if self.clear_after_dump if clear is None else clear:
+            logging.info(f"Dumped logs to {fp}")
+            do_clear = self.clear_after_dump if clear is None else clear
+            if do_clear:
                 self.logs.clear()
         except Exception as e:
             logging.error(f"Failed to dump logs: {e}")
             raise
 
-    def _create_path(self) -> Path:
-        """Generate a file path based on the manager's configuration.
+    async def adump(
+        self,
+        clear: bool | None = None,
+        persist_path: str | Path | None = None,
+    ) -> None:
+        """Asynchronously dump the logs to a file."""
+        async with self.logs:
+            self.dump(clear=clear, persist_path=persist_path)
 
-        Returns:
-            Path:
-                The fully resolved file path for the log file.
+    def _create_path(self) -> Path:
         """
-        persist_apth = self.persist_dir or "./data/logs"
-        dir_path = (
-            f"{persist_apth}/{self.subfolder}"
-            if self.subfolder
-            else persist_apth
-        )
+        Build a file path from the manager's config using
+        `create_path`.
+        """
+        path_str = str(self.persist_dir)
+        if self.subfolder:
+            path_str = f"{path_str}/{self.subfolder}"
         return create_path(
-            directory=dir_path,
+            directory=path_str,
             filename=self.file_prefix or "",
             extension=self.extension,
             timestamp=self.use_timestamp,
@@ -385,7 +272,7 @@ class LogManager(Manager):
         )
 
     def save_at_exit(self) -> None:
-        """Save any remaining logs when the program exits."""
+        """Dump logs on program exit."""
         if self.logs:
             try:
                 self.dump(clear=self.clear_after_dump)
@@ -394,22 +281,10 @@ class LogManager(Manager):
 
     @classmethod
     def from_config(
-        cls,
-        config: LogManagerConfig,
-        logs: Any = None,
+        cls, config: LogManagerConfig, logs: Any = None
     ) -> LogManager:
-        """Create a LogManager from a LogManagerConfig object.
-
-        Args:
-            config (LogManagerConfig):
-                The configuration object for the log manager.
-            logs (Any):
-                An optional iterable or Pile of Log objects to manage.
-
-        Returns:
-            LogManager:
-                A new instance of LogManager configured according to
-                `config`.
+        """
+        Construct a LogManager from a LogManagerConfig.
         """
         return cls(
             logs=logs,
@@ -423,6 +298,3 @@ class LogManager(Manager):
             auto_save_on_exit=config.auto_save_on_exit,
             clear_after_dump=config.clear_after_dump,
         )
-
-
-# File: lionagi/protocols/generic/log.py

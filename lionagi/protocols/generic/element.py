@@ -4,14 +4,14 @@
 
 from __future__ import annotations
 
-from collections.abc import Mapping
+from collections.abc import Mapping, Sequence
 from datetime import datetime, timezone
-from typing import Any, Generic, TypeVar, Union
+from typing import Any, Generic, TypeAlias, TypeVar
 from uuid import UUID, uuid4
 
 from lionagi._class_registry import get_class
 
-from .concepts import Observable
+from .concepts import Collective, Observable, Ordering
 
 __all__ = (
     "IDError",
@@ -163,6 +163,12 @@ E = TypeVar("E", bound=Element)
 
 class ID(Generic[E]):
     """Utility for working with IDType."""
+
+    ID: TypeAlias = IDType
+    Item: TypeAlias = E | Element  # type: ignore
+    Ref: TypeAlias = IDType | E | str  # type: ignore
+    ItemSeq: TypeAlias = Sequence[E] | Collective[E]  # type: ignore
+    RefSeq: TypeAlias = ItemSeq | Sequence[Ref] | Ordering[E]  # type: ignore
 
     @staticmethod
     def get_id(item: E) -> IDType:
