@@ -47,8 +47,8 @@ class Exchange:
 
     @staticmethod
     def create_mail(
-        sender: IDType[Communicatable],
-        recipient: IDType[Communicatable],
+        sender: ID[Communicatable],
+        recipient: ID[Communicatable],
         category: PackageCategory | str,
         item: Any,
         request_source: Any = None,
@@ -58,7 +58,7 @@ class Exchange:
         )
         return Mail(sender=sender, recipient=recipient, package=package)
 
-    def collect(self, sender: IDType[Communicatable]):
+    def collect(self, sender: ID[Communicatable]):
         """collect all mails from a particular sender"""
         if sender not in self.sources:
             raise ValueError(f"Sender source {sender} does not exist.")
@@ -66,11 +66,10 @@ class Exchange:
         sender_mailbox: Mailbox = self.sources[sender].mailbox
 
         while sender_mailbox.pending_outs:
-            mail_id = sender_mailbox.pending_outs.popleft()
-            mail: Mail = sender_mailbox.pile_.pop(mail_id)
+            mail: Mail = sender_mailbox.pile_.popleft()
             self.buffer[mail.recipient].append(mail)
 
-    def deliver(self, recipient: IDType[Communicatable]):
+    def deliver(self, recipient: ID[Communicatable]):
         if recipient not in self.sources:
             raise ValueError(f"Recipient source {recipient} does not exist.")
 

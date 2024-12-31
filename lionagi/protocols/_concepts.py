@@ -42,20 +42,17 @@ class Relational(ABC):
 class Sendable(ABC):
     """Sendable entities must define 'sender' and 'recipient'."""
 
-    sender = None
-    recipient = None
+    pass
 
 
 class Observable(ABC):
     """Observable entities must define 'id'."""
 
-    id = None
+    pass
 
 
 class Communicatable(Observable):
     """Communicatable must define 'mailbox' and send/receive methods."""
-
-    mailbox = None
 
     @abstractmethod
     def send(self, *args, **kwargs):

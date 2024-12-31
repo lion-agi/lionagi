@@ -1,8 +1,7 @@
 from enum import Enum
 from typing import Any
 
-from lionagi.protocols.generic._id import ID
-from lionagi.protocols.generic.element import IDType
+from lionagi.protocols.generic.element import ID, IDType
 from lionagi.utils import time
 
 from .._concepts import Communicatable, Observable

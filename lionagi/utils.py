@@ -2,6 +2,7 @@ import asyncio
 import contextlib
 import copy as _copy
 import functools
+import hashlib
 import json
 import logging
 import re
@@ -83,8 +84,6 @@ __all__ = (
     "throttle",
     "max_concurrent",
     "force_async",
-    "rcall",
-    "RCallParams",
     "mcall",
     "MCallParams",
     "to_num",
@@ -163,22 +162,6 @@ class DataClass(ABC):
     pass
 
 
-class EventStatus(str, Enum):
-    """Status states for tracking action execution progress.
-
-    Attributes:
-        PENDING: Initial state before execution starts
-        PROCESSING: Action is currently being executed
-        COMPLETED: Action completed successfully
-        FAILED: Action failed during execution
-    """
-
-    PENDING = "pending"
-    PROCESSING = "processing"
-    COMPLETED = "completed"
-    FAILED = "failed"
-
-
 # --- Create a global UNDEFINED object ---
 UNDEFINED = UndefinedType()
 
@@ -239,6 +222,18 @@ def time(
         f"Invalid value <{type_}> for `type_`, must be"
         " one of 'timestamp', 'datetime', 'iso', or 'custom'."
     )
+
+
+def content_to_sha256(input: BaseModel) -> str:
+    """
+    Converts a Python dictionary to a SHA-256 hash (hex format).
+    """
+    input_dict = input.model_dump()
+    input_dict.pop("metadata", None)
+    json_str = json.dumps(input_dict, sort_keys=True)
+    sha_hash = hashlib.sha256(json_str.encode("utf-8"))
+
+    return sha_hash.hexdigest()
 
 
 def copy(obj: T, /, *, deep: bool = True, num: int = 1) -> T | list[T]:
@@ -1943,150 +1938,6 @@ def get_bins(input_: list[str], upper: int) -> list[list[int]]:
     return bins
 
 
-class RCallParams(CallParams):
-    func: Any = None
-    num_retries: int = 0
-    initial_delay: float = 0
-    retry_delay: float = 0
-    backoff_factor: float = 1
-    retry_default: Any = UNDEFINED
-    retry_timeout: float | None = None
-    retry_timing: bool = False
-    verbose_retry: bool = True
-
-    async def __call__(self, func=None):
-        if self.func is None and func is None:
-            raise ValueError("a sync/async func must be provided")
-
-        return await rcall(
-            func or self.func,
-            *self.args,
-            num_retries=self.num_retries,
-            initial_delay=self.initial_delay,
-            retry_delay=self.retry_delay,
-            backoff_factor=self.backoff_factor,
-            retry_default=self.retry_default,
-            retry_timeout=self.retry_timeout,
-            retry_timing=self.retry_timing,
-            verbose_retry=self.verbose_retry,
-            **self.kwargs,
-        )
-
-
-async def rcall(
-    func: Callable[..., T],
-    /,
-    *args: Any,
-    num_retries: int = 0,
-    initial_delay: float = 0,
-    retry_delay: float = 0,
-    backoff_factor: float = 1,
-    retry_default: Any = UNDEFINED,
-    retry_timeout: float | None = None,
-    retry_timing: bool = False,
-    verbose_retry: bool = True,
-    error_msg: str | None = None,
-    error_map: dict[type, Callable[[Exception], None]] | None = None,
-    **kwargs: Any,
-) -> T | tuple[T, float]:
-    """
-    Retry a function asynchronously with customizable options,
-    supporting both async and sync functions via asyncio.to_thread.
-
-    Args:
-        func: The function to execute (coroutine or regular).
-        *args: Positional arguments for the function.
-        num_retries: Number of retry attempts (default: 0).
-        initial_delay: Delay before first attempt (seconds).
-        retry_delay: Delay between retry attempts (seconds).
-        backoff_factor: Factor to increase delay after each retry.
-        retry_default: Value to return if all attempts fail (instead of raising).
-        retry_timeout: Timeout for each function execution (seconds).
-        retry_timing: If True, return execution duration as well.
-        verbose_retry: If True, print retry messages.
-        error_msg: Custom error message prefix for raised RuntimeError.
-        error_map: Dict mapping exception types to custom handlers.
-        **kwargs: Additional keyword arguments for the function.
-
-    Returns:
-        - T, or tuple[T, float] if retry_timing is True.
-        - retry_default if all retries fail and retry_default != UNDEFINED.
-
-    Raises:
-        RuntimeError: If function fails after all retries.
-        asyncio.TimeoutError: If execution exceeds retry_timeout (per attempt).
-    """
-
-    async def _run_func(
-        _func: Callable[..., T], *_fargs: Any, **_fkwargs: Any
-    ) -> T:
-        """Runs `_func` in the appropriate context: directly if async, or via `to_thread` if sync."""
-        if asyncio.iscoroutinefunction(_func):
-            return await _func(*_fargs, **_fkwargs)
-        else:
-            return await asyncio.to_thread(_func, *_fargs, **_fkwargs)
-
-    last_exception: Exception | None = None
-    await asyncio.sleep(initial_delay)
-
-    for attempt in range(num_retries + 1):
-        try:
-            if verbose_retry and attempt > 0:
-                print(
-                    f"Retry attempt {attempt}/{num_retries}: {error_msg or ''}"
-                )
-
-            start_time = time.perf_counter()
-
-            if retry_timeout is not None:
-                result = await asyncio.wait_for(
-                    _run_func(func, *args, **kwargs),
-                    timeout=retry_timeout,
-                )
-            else:
-                result = await _run_func(func, *args, **kwargs)
-
-            duration = time.perf_counter() - start_time
-            return (result, duration) if retry_timing else result
-
-        except Exception as e:
-            last_exception = e
-
-            # Invoke custom handler if one is defined for this exception type
-            if error_map and type(e) in error_map:
-                error_map[type(e)](e)
-
-            # If we still have retries left, wait and try again
-            if attempt < num_retries:
-                if verbose_retry:
-                    print(
-                        f"Attempt {attempt + 1} failed: {e}. "
-                        f"Will retry after {retry_delay:.2f}s..."
-                    )
-                await asyncio.sleep(retry_delay)
-                retry_delay *= backoff_factor
-            else:
-                # No retries left
-                break
-
-    # Exhausted all attempts
-    if retry_default is not UNDEFINED:
-        return retry_default
-    if last_exception is not None:
-        if error_msg and type(last_exception) in error_map:
-            return await custom_error_handler(last_exception, error_msg)
-
-        # Otherwise, raise a runtime error explaining the failure
-        raise RuntimeError(
-            f"{error_msg or ''} Operation failed after {num_retries + 1} attempts: {last_exception}"
-        ) from last_exception
-
-    # If no exception was captured but we didn't return, raise a generic error.
-    raise RuntimeError(
-        f"{error_msg or ''} Operation failed after {num_retries + 1} attempts."
-    )
-
-
 class Throttle:
     """
     Provide a throttling mechanism for function calls.
@@ -2224,163 +2075,6 @@ def max_concurrent(
             return await func(*args, **kwargs)
 
     return wrapper
-
-
-class MCallParams(CallParams):
-    func: Any = None
-    explode: bool = False
-    num_retries: int = 0
-    initial_delay: float = 0
-    retry_delay: float = 0
-    backoff_factor: float = 1
-    retry_default: Any = UNDEFINED
-    retry_timeout: float | None = None
-    retry_timing: bool = False
-    max_concurrent: int | None = None
-    throttle_period: float | None = None
-    dropna: bool = False
-
-    async def __call__(self, input_, /, **kwargs):
-        return await mcall(
-            input_,
-            self.func,
-            explode=self.explode,
-            num_retries=self.num_retries,
-            initial_delay=self.initial_delay,
-            retry_delay=self.retry_delay,
-            backoff_factor=self.backoff_factor,
-            retry_default=self.retry_default,
-            retry_timeout=self.retry_timeout,
-            retry_timing=self.retry_timing,
-            max_concurrent=self.max_concurrent,
-            throttle_period=self.throttle_period,
-            dropna=self.dropna,
-            **kwargs,
-        )
-
-
-async def mcall(
-    input_: Any,
-    func: Callable[..., T] | Sequence[Callable[..., T]],
-    /,
-    *,
-    explode: bool = False,
-    num_retries: int = 0,
-    initial_delay: float = 0,
-    retry_delay: float = 0,
-    backoff_factor: float = 1,
-    retry_default: Any = UNDEFINED,
-    retry_timeout: float | None = None,
-    retry_timing: bool = False,
-    verbose_retry: bool = True,
-    error_msg: str | None = None,
-    error_map: dict[type, Callable[[Exception], None]] | None = None,
-    max_concurrent: int | None = None,
-    throttle_period: float | None = None,
-    dropna: bool = False,
-    **kwargs: Any,
-) -> list[T] | list[tuple[T, float]]:
-    """
-    Apply functions over inputs asynchronously with customizable options.
-
-    Args:
-        input_: The input data to be processed.
-        func: The function or sequence of functions to be applied.
-        explode: Whether to apply each function to all inputs.
-        retries: Number of retry attempts for each function call.
-        initial_delay: Initial delay before starting execution.
-        delay: Delay between retry attempts.
-        backoff_factor: Factor by which delay increases after each attempt.
-        default: Default value to return if all attempts fail.
-        timeout: Timeout for each function execution.
-        timing: Whether to return the execution duration.
-        verbose: Whether to print retry messages.
-        error_msg: Custom error message.
-        error_map: Dictionary mapping exception types to error handlers.
-        max_concurrent: Maximum number of concurrent executions.
-        throttle_period: Minimum time period between function executions.
-        dropna: Whether to drop None values from the output list.
-        **kwargs: Additional keyword arguments for the functions.
-
-    Returns:
-        List of results, optionally including execution durations if timing
-        is True.
-
-    Raises:
-        ValueError: If the length of inputs and functions don't match when
-            not exploding the function calls.
-    """
-    input_ = to_list(input_, flatten=False, dropna=False)
-    func = to_list(func, flatten=False, dropna=False)
-
-    if explode:
-        tasks = [
-            alcall(
-                input_,
-                f,
-                num_retries=num_retries,
-                initial_delay=initial_delay,
-                retry_delay=retry_delay,
-                backoff_factor=backoff_factor,
-                retry_default=retry_default,
-                retry_timeout=retry_timeout,
-                retry_timing=retry_timing,
-                verbose_retry=verbose_retry,
-                error_msg=error_msg,
-                error_map=error_map,
-                max_concurrent=max_concurrent,
-                throttle_period=throttle_period,
-                dropna=dropna,
-                **kwargs,
-            )
-            for f in func
-        ]
-        return await asyncio.gather(*tasks)
-    elif len(func) == 1:
-        tasks = [
-            rcall(
-                func[0],
-                inp,
-                num_retries=num_retries,
-                initial_delay=initial_delay,
-                retry_delay=retry_delay,
-                backoff_factor=backoff_factor,
-                retry_default=retry_default,
-                retry_timeout=retry_timeout,
-                retry_timing=retry_timing,
-                verbose_retry=verbose_retry,
-                error_msg=error_msg,
-                error_map=error_map,
-                **kwargs,
-            )
-            for inp in input_
-        ]
-        return await asyncio.gather(*tasks)
-
-    elif len(input_) == len(func):
-        tasks = [
-            rcall(
-                f,
-                inp,
-                num_retries=num_retries,
-                initial_delay=initial_delay,
-                retry_delay=retry_delay,
-                backoff_factor=backoff_factor,
-                retry_default=retry_default,
-                retry_timeout=retry_timeout,
-                retry_timing=retry_timing,
-                verbose_retry=verbose_retry,
-                error_msg=error_msg,
-                error_map=error_map,
-                **kwargs,
-            )
-            for inp, f in zip(input_, func)
-        ]
-        return await asyncio.gather(*tasks)
-    else:
-        raise ValueError(
-            "Inputs and functions must be the same length for map calling."
-        )
 
 
 # Type definitions

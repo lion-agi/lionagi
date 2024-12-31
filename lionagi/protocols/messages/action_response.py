@@ -9,7 +9,6 @@ from typing_extensions import override
 from lionagi.protocols.generic.element import IDType
 from lionagi.utils import copy
 
-from ..action.request_response_model import ActionResponseModel
 from .action_request import ActionRequest
 from .base import MessageRole, SenderRecipient
 from .message import RoledMessage, Template, jinja_env
@@ -89,7 +88,7 @@ class ActionResponse(RoledMessage):
         cls,
         action_request: ActionRequest,
         output: Any | None = None,
-        response_model: ActionResponseModel | None = None,
+        response_model=None,
         sender: SenderRecipient | None = None,
         recipient: SenderRecipient | None = None,
     ) -> "ActionResponse":
@@ -112,7 +111,7 @@ class ActionResponse(RoledMessage):
         self,
         action_request: ActionRequest = None,
         output: Any = None,
-        response_model: ActionResponseModel = None,
+        response_model=None,
         sender: SenderRecipient = None,
         recipient: SenderRecipient = None,
         template: Template | str | None = None,

@@ -12,7 +12,6 @@ LION_CLASS_REGISTRY: dict[str, type[T]] = {}
 LION_CLASS_FILE_REGISTRY: dict[str, str] = {}
 
 pattern_list = [
-    "lionagi/protocols/action",
     "lionagi/protocols/generic",
     "lionagi/protocols/graph",
     "lionagi/protocols/messages",

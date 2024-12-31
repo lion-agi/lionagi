@@ -5,11 +5,9 @@
 from collections.abc import Callable
 from typing import Any
 
-from lionagi.protocols.action.tool import FuncToolRef, Tool
 from lionagi.utils import copy, to_dict
 
-from ..action.request_response_model import ActionRequestModel
-from ..generic._id import IDType
+from ..generic.element import IDType
 from .base import SenderRecipient
 from .message import MessageRole, RoledMessage, Template, jinja_env
 
@@ -21,7 +19,7 @@ def prepare_action_request(
 
     if isinstance(function, Callable):
         function = function.__name__
-    if isinstance(function, Tool):
+    if hasattr(function, "function"):
         function = function.function
     if not isinstance(function, str):
         raise ValueError("Function must be a string or callable.")
@@ -96,11 +94,10 @@ class ActionRequest(RoledMessage):
     @classmethod
     def create(
         cls,
-        function: FuncToolRef | None = None,
+        function=None,
         arguments: dict | None = None,
         sender: SenderRecipient | None = None,
         recipient: SenderRecipient | None = None,
-        request_model: ActionRequestModel | None = None,
         template: Template | str | None = None,
         **kwargs,
     ) -> "ActionRequest":
@@ -116,9 +113,6 @@ class ActionRequest(RoledMessage):
         Returns:
             ActionRequest: The new instance
         """
-        if request_model:
-            function = request_model.function
-            arguments = request_model.arguments
         content = prepare_action_request(function, arguments)
         content.update(kwargs)
         params = {
@@ -133,7 +127,7 @@ class ActionRequest(RoledMessage):
 
     def update(
         self,
-        function: FuncToolRef | None = None,
+        function: str = None,
         arguments: dict | None = None,
         sender: SenderRecipient = None,
         recipient: SenderRecipient = None,

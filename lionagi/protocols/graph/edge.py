@@ -4,8 +4,12 @@
 
 from typing import Any
 
-from .._concepts import Condition, Relational
-from ..generic.element import ID, Element
+from pydantic import Field, field_serializer, field_validator
+
+from lionagi.utils import is_same_dtype
+
+from .._concepts import Condition
+from ..generic.element import ID, Element, IDType
 
 __all__ = (
     "EdgeCondition",
@@ -40,40 +44,21 @@ class Edge(Element):
     metadata, etc., may be stored in `properties`.
     """
 
-    def __init__(
-        self,
-        head: ID[Relational].Ref,
-        tail: ID[Relational].Ref,
-        condition: EdgeCondition | None = None,
-        label: list[str] | None = None,
-        **kwargs: Any,
-    ):
-        """
-        Args:
-            head (ID[Node].Ref):
-                A reference (ID, Node, or string) to the head node.
-            tail (ID[Node].Ref):
-                A reference to the tail node.
-            condition (EdgeCondition | None):
-                Optional condition controlling edge traversal.
-            label (list[str] | None):
-                Optional list of labels describing the edge.
-            **kwargs:
-                Additional properties stored in `self.properties`.
-        """
-        super().__init__()
-        self.head = ID.get_id(head)
-        self.tail = ID.get_id(tail)
-        self.properties: dict[str, Any] = {}
+    head: IDType
+    tail: IDType
+    properties: dict[str, Any] = Field(
+        default_factory=dict,
+        title="Properties",
+        description="Custom properties associated with this edge.",
+    )
 
-        if condition:
-            self.condition = condition
+    @field_serializer("head", "tail")
+    def _serialize_id(self, value: IDType) -> str:
+        return str(value)
 
-        if label:
-            self.label = [label] if not isinstance(label, list) else label
-
-        for k, v in kwargs.items():
-            self.properties[k] = v
+    @field_validator("head", "tail", mode="before")
+    def _validate_id(cls, value: str) -> IDType:
+        return ID.get_id(value)
 
     @property
     def label(self) -> list[str] | None:
@@ -91,9 +76,16 @@ class Edge(Element):
 
     @label.setter
     def label(self, value: list[str] | None) -> None:
-        if not isinstance(value, list):
-            raise ValueError("Label must be a list of strings.")
-        self.properties["label"] = value
+        if not value:
+            self.properties["label"] = []
+            return
+        if isinstance(value, str):
+            self.properties["label"] = [value]
+            return
+        if isinstance(value, list) and is_same_dtype(value, str):
+            self.properties["label"] = value
+            return
+        raise ValueError("Label must be a string or a list of strings.")
 
     async def check_condition(self, *args, **kwargs) -> bool:
         """

@@ -8,7 +8,7 @@ from typing import Any, Literal
 
 import pandas as pd
 from jinja2 import Template
-from pydantic import BaseModel, Field, JsonValue, PrivateAttr, model_validator
+from pydantic import BaseModel, Field, JsonValue, PrivateAttr
 
 from lionagi.libs.validate.fuzzy_validate_mapping import fuzzy_validate_mapping
 from lionagi.operatives.instruct.instruct import Instruct
@@ -16,13 +16,11 @@ from lionagi.operatives.instruct.instruct import Instruct
 # from lionagi.operatives.manager import OperativeManager
 from lionagi.operatives.operative import Operative
 from lionagi.operatives.step import Step
-from lionagi.protocols.generic.concepts import (
-    Communicatable,
-    Observable,
-    Relational,
-)
+from lionagi.protocols._concepts import Communicatable, Observable, Relational
 from lionagi.protocols.generic.element import IDType
 from lionagi.protocols.generic.log import LogManagerConfig
+from lionagi.protocols.mail.exchange import Exchange, Mail, Mailbox, Package
+from lionagi.protocols.mail.package import PackageCategory
 from lionagi.protocols.messages.base import (
     MESSAGE_FIELDS,
     MessageRole,
@@ -31,26 +29,18 @@ from lionagi.protocols.messages.base import (
 from lionagi.protocols.messages.system import System
 from lionagi.protocols.types import (
     ID,
-    ActionManager,
     ActionRequest,
     ActionResponse,
-    ActionResponseModel,
     AssistantResponse,
     Communicatable,
-    Exchange,
-    FieldModel,
-    FuncTool,
     Instruction,
     LogManager,
     MessageManager,
-    ModelParams,
-    Node,
     Pile,
     Progression,
     Relational,
     RoledMessage,
     SenderRecipient,
-    ToolRef,
 )
 from lionagi.service.imodel import iModel
 from lionagi.service.manager import iModelManager
@@ -80,7 +70,7 @@ class Branch(Observable, Communicatable, Relational):
         description="A human readable name of the branch, if any.",
     )
 
-    mailbox: Exchange = Field(None)
+    mailbox: Mailbox = Field(None)
 
     _message_manager: MessageManager = PrivateAttr(None)
     _action_manager: ActionManager = PrivateAttr(None)
@@ -779,20 +769,11 @@ class Branch(Observable, Communicatable, Relational):
 
     def send(
         self,
-        recipient: ID,
-        category: str,
+        recipient: IDType,
+        category: PackageCategory | None,
         package: Any,
-        request_source: str,
+        request_source: IDType | None = None,
     ) -> None:
-        """
-        Sends a mail to a recipient.
-
-        Args:
-            recipient (str): The recipient's ID.
-            category (str): The category of the mail.
-            package (Any): The content of the mail.
-            request_source (str): The source of the request.
-        """
         package = Package(
             category=category,
             package=package,
@@ -800,11 +781,11 @@ class Branch(Observable, Communicatable, Relational):
         )
 
         mail = Mail(
-            sender=self.ln_id,
+            sender=self.id,
             recipient=recipient,
             package=package,
         )
-        self.mailbox.include(mail, "out")
+        self.mailbox.append_out(mail)
 
     def receive(
         self,
@@ -828,7 +809,7 @@ class Branch(Observable, Communicatable, Relational):
         """
         skipped_requests = Progression()
         if not isinstance(sender, str):
-            sender = sender.ln_id
+            sender = sender.id
         if sender not in self.mailbox.pending_ins.keys():
             raise ValueError(f"No package from {sender}")
         while self.mailbox.pending_ins[sender].size() > 0:
@@ -836,24 +817,24 @@ class Branch(Observable, Communicatable, Relational):
             mail: Mail = self.mailbox.pile_[mail_id]
 
             if mail.category == "message" and message:
-                if not isinstance(mail.package.package, RoledMessage):
+                if not isinstance(mail.package.item, RoledMessage):
                     raise ValueError("Invalid message format")
-                new_message = mail.package.package.clone()
+                new_message = mail.package.item.clone()
                 new_message.sender = mail.sender
-                new_message.recipient = self.ln_id
+                new_message.recipient = self.id
                 self.messages.include(new_message)
                 self.mailbox.pile_.pop(mail_id)
 
             elif mail.category == "tool" and tool:
                 if not isinstance(mail.package.package, Tool):
                     raise ValueError("Invalid tools format")
-                self.tool_manager.register_tools(mail.package.package)
+                self.tool_manager.register_tools(mail.package.item)
                 self.mailbox.pile_.pop(mail_id)
 
             elif mail.category == "imodel" and imodel:
-                if not isinstance(mail.package.package, iModel):
+                if not isinstance(mail.package.item, iModel):
                     raise ValueError("Invalid iModel format")
-                self.imodel = mail.package.package
+                self.imodel = mail.package.item
                 self.mailbox.pile_.pop(mail_id)
 
             else:
@@ -861,7 +842,7 @@ class Branch(Observable, Communicatable, Relational):
 
         self.mailbox.pending_ins[sender] = skipped_requests
 
-        if self.mailbox.pending_ins[sender].size() == 0:
+        if len(self.mailbox.pending_ins[sender]) == 0:
             self.mailbox.pending_ins.pop(sender)
 
     def receive_all(self) -> None:

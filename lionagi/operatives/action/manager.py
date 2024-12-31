@@ -7,12 +7,9 @@ from collections.abc import Callable
 from typing import Any
 
 from lionagi.protocols.generic.event import Execution
+from lionagi.protocols.types import ActionRequest, EventStatus, Log, Manager
 from lionagi.utils import to_list
 
-from ..generic.concepts import Manager
-from ..generic.event import EventStatus
-from ..generic.log import Log
-from ..messages.action_request import ActionRequest
 from .function_calling import FunctionCalling
 from .request_response_model import ActionRequestModel
 from .tool import FuncTool, FuncToolRef, Tool, ToolRef

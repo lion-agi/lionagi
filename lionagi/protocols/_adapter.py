@@ -80,12 +80,6 @@ class AdapterRegistry:
         else:
             cls._adapters[adapter.obj_key] = adapter
 
-        for i in adapter.alias:
-            if i in cls._adapters:
-                raise ValueError(f"Adapter alias {i} already in use.")
-            else:
-                cls._adapters[i] = adapter.obj_key
-
     @classmethod
     def get(cls, obj_key: type | str, /) -> Adapter:
         try:
@@ -134,7 +128,6 @@ class AdapterRegistry:
 class JsonAdapter(Adapter):
 
     obj_key = "json"
-    alias = ("json_str", "json_string")
 
     @classmethod
     def from_obj(
@@ -166,7 +159,6 @@ class JsonAdapter(Adapter):
 class JsonFileAdapter(Adapter):
 
     obj_key = ".json"
-    obj_key = (".json", "json_file", "jsonl_file", ".jsonl")
 
     @classmethod
     def from_obj(
@@ -205,7 +197,6 @@ class JsonFileAdapter(Adapter):
 class PandasSeriesAdapter(Adapter):
 
     obj_key = "pd_series"
-    alias = ("pandas_series", "pd.series")
 
     @classmethod
     def from_obj(
@@ -237,7 +228,6 @@ class PandasSeriesAdapter(Adapter):
 class PandasDataFrameAdapter(Adapter):
 
     obj_key = "pd_dataframe"
-    alias = ("pandas_dataframe", "pd.DataFrame")
 
     @classmethod
     def from_obj(
@@ -273,7 +263,6 @@ class PandasDataFrameAdapter(Adapter):
 class CSVFileAdapter(Adapter):
 
     obj_key = ".csv"
-    alias = ("csv_file", "csv")
 
     @classmethod
     def from_obj(
@@ -314,7 +303,6 @@ class CSVFileAdapter(Adapter):
 class ExcelFileAdapter(Adapter):
 
     obj_key = ".xlsx"
-    alias = ("excel_file", "excel", "xlsx", "xls", ".xls")
 
     @classmethod
     def from_obj(

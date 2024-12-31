@@ -5,8 +5,8 @@
 import numpy as np
 from pydantic import BaseModel
 
+from lionagi.operatives.models.note import Note
 from lionagi.protocols.generic.log import Log
-from lionagi.protocols.models.note import Note
 
 
 class PerplexityTokenScore(BaseModel):

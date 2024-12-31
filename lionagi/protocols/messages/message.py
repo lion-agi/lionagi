@@ -159,17 +159,6 @@ class RoledMessage(Node, Sendable):
         """
         return str(value)
 
-    @field_serializer("metadata")
-    def _serialize_meta(self, value: dict):
-        if "clone_from" in value:
-            org = value["clone_from"]
-            if isinstance(org, RoledMessage):
-                value["clone_from"] = {
-                    "id": str(org.id),
-                    "created_at": org.created_datetime.isoformat(),
-                }
-        return value
-
     def update(self, sender, recipient, template, **kwargs):
         if sender:
             self.sender = validate_sender_recipient(sender)

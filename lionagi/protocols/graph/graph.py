@@ -3,7 +3,9 @@
 # SPDX-License-Identifier: Apache-2.0
 
 from collections import deque
-from typing import Any, Literal
+from typing import Any, Literal, Self
+
+from pydantic import Field, model_validator
 
 from lionagi._errors import ItemExistsError, RelationError
 from lionagi.protocols._concepts import Relational
@@ -18,51 +20,21 @@ __all__ = ("Graph",)
 
 
 class Graph(Element, Relational):
-    """
-    Represents a graph structure containing nodes and edges, extending `Node`.
 
-    Attributes:
-        internal_nodes (Pile[Node]):
-            The internal nodes of the graph.
-        internal_edges (Pile[Edge]):
-            The internal edges of the graph.
-        node_edge_mapping (dict):
-            A mapping of node ID -> {"in": {}, "out": {}} for graph traversal.
-    """
+    internal_nodes: Pile[Node] = Field(
+        default_factory=lambda: Pile(item_type=Node, strict_type=False),
+        title="Internal Nodes",
+        description="A collection of nodes in the graph.",
+    )
+    internal_edges: Pile[Edge] = Field(
+        default_factory=lambda: Pile(item_type=Edge, strict_type=True),
+        title="Internal Edges",
+        description="A collection of edges in the graph.",
+    )
+    node_edge_mapping: dict = Field(default_factory=dict, exclude=True)
 
-    def __init__(
-        self,
-        *,
-        internal_nodes: Pile[Node] = None,
-        internal_edges: Pile[Edge] = None,
-        **kwargs,
-    ):
-        """
-        Initialize a Graph, storing nodes, edges, and a node-edge mapping. Also
-        forward any additional Node constructor arguments (e.g. content, metadata)
-        to the Node base class.
-
-        Args:
-            internal_nodes (Pile[Node] | None):
-                A pile of Node objects. If None, creates a new empty one.
-            internal_edges (Pile[Edge] | None):
-                A pile of Edge objects. If None, creates a new empty one.
-            node_edge_mapping (dict | None):
-                A dictionary mapping node IDs to in/out edges. If None, uses an empty dict.
-            **kwargs:
-                Additional arguments passed to the base `Node` constructor, like:
-                - content
-                - metadata
-                - embedding
-                - id, created_at
-        """
-        super().__init__(**kwargs)
-        self.internal_nodes = internal_nodes or Pile(
-            item_type=Node, strict_type=False
-        )
-        self.internal_edges = internal_edges or Pile(
-            item_type=Edge, strict_type=True
-        )
+    @model_validator(mode="after")
+    def _validate_node_mapping(self) -> Self:
         self.node_edge_mapping = {}
         if self.internal_nodes:
             for node in self.internal_nodes:
@@ -73,6 +45,7 @@ class Graph(Element, Relational):
             for edge in self.internal_edges:
                 self.node_edge_mapping[edge.head]["out"][edge.id] = edge.tail
                 self.node_edge_mapping[edge.tail]["in"][edge.id] = edge.head
+        return self
 
     def add_node(self, node: Relational) -> None:
         """Add a node to the graph."""
@@ -315,31 +288,3 @@ class Graph(Element, Relational):
 
     def __contains__(self, item: object) -> bool:
         return item in self.internal_nodes or item in self.internal_edges
-
-    def to_dict(self) -> dict[str, Any]:
-        dict_ = super().to_dict()
-        dict_["internal_nodes"] = self.internal_nodes.to_dict()
-        dict_["internal_edges"] = self.internal_edges.to_dict()
-        return dict_
-
-    @classmethod
-    def from_dict(cls, data: dict[str, Any]) -> "Graph":
-        """
-        Deserialize a Graph from a dictionary.
-
-        Args:
-            data (dict): The dictionary representing a graph.
-
-        Returns:
-            Graph: An instance of Graph.
-        """
-        internal_nodes = Pile.from_dict(data.pop("internal_nodes", {}))
-        internal_edges = Pile.from_dict(data.pop("internal_edges", {}))
-        data.pop("node_edge_mapping", None)
-        data.pop("lion_class", None)
-
-        return cls(
-            internal_nodes=internal_nodes,
-            internal_edges=internal_edges,
-            **data,
-        )

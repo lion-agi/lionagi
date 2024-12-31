@@ -3,24 +3,23 @@
 # SPDX-License-Identifier: Apache-2.0
 
 import asyncio
-from typing import Any
+from typing import Any, Self
 
+from pydantic import Field, model_validator
+
+from lionagi.protocols.generic.event import Event, EventStatus
 from lionagi.utils import is_coro_func
 
-from ..generic.event import Event, EventStatus
 from .tool import Tool
 
 
 class FunctionCalling(Event):
 
-    def __init__(
-        self,
-        func_tool: Tool,
-        arguments: dict[str, Any],
-    ):
-        super().__init__()
-        self.func_tool = func_tool
-        self.arguments = arguments
+    func_tool: Tool = Field(exclude=True)
+    arguments: dict[str, Any]
+
+    @model_validator(mode="after")
+    def _validate_strict_tool(self) -> Self:
         if self.func_tool.strict_func_call is True:
             if (
                 not set(self.arguments.keys())
@@ -33,6 +32,7 @@ class FunctionCalling(Event):
                 set(self.arguments.keys())
             ):
                 raise ValueError("arguments must match the function schema")
+        return self
 
     @property
     def function(self):

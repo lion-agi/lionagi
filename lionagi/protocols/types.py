@@ -35,6 +35,7 @@ from .messages.manager import (
     ActionResponse,
     AssistantResponse,
     Instruction,
+    MessageManager,
     RoledMessage,
     SenderRecipient,
     System,
@@ -91,4 +92,5 @@ __all__ = (
     "Adapter",
     "AdapterRegistry",
     "Adaptable",
+    "MessageManager",
 )

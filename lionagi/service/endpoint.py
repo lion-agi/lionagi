@@ -5,15 +5,15 @@
 import asyncio
 import logging
 from abc import ABC
-from typing import Any, Literal
+from typing import Literal
 
 import aiohttp
 import litellm
 from aiocache import cached
-from pydantic import BaseModel, Field, field_validator
+from pydantic import BaseModel, Field
 
 from .._errors import ExecutionError, RateLimitError
-from ..protocols.types import Event, EventStatus, Execution
+from ..protocols.types import Event, EventStatus
 from ..settings import Settings
 from .token_calculator import TokenCalculator
 
@@ -113,53 +113,53 @@ class APICalling(Event):
             return self.endpoint.calculate_tokens(self.payload)
         return None
 
+    async def _inner(self, **kwargs):
+        if not self.endpoint.required_kwargs.issubset(
+            set(self.payload.keys())
+        ):
+            raise ValueError(
+                f"Required kwargs not fully provided: {self.endpoint.required_kwargs}"
+            )
+
+        for k in list(self.payload.keys()):
+            if k not in self.endpoint.acceptable_kwargs:
+                self.payload.pop(k)
+
+        async with aiohttp.ClientSession() as session:
+            try:
+                if (
+                    _m := getattr(session, self.endpoint.method, None)
+                ) is not None:
+                    async with _m(
+                        self.endpoint.full_url, **kwargs
+                    ) as response:
+                        response_json = await response.json()
+                        if "error" not in response_json:
+                            return response_json
+                        if "Rate limit" in response_json["error"].get(
+                            "message", ""
+                        ):
+                            await asyncio.sleep(5)
+                            raise RateLimitError(
+                                f"Rate limit exceeded. Error: {response_json['error']}"
+                            )
+                        raise ExecutionError(
+                            "API call failed with error: ",
+                            response_json["error"],
+                        )
+                else:
+                    raise ValueError(f"Invalid HTTP method: {self.method}")
+            except aiohttp.ClientError as e:
+                logging.error(f"API call to {self.full_url} failed: {e}")
+                return None
+
+    @cached(**Settings.Action.CACHED_CONFIG)
+    async def _cached_inner(self, **kwargs):
+        return await self._inner(**kwargs)
+
     async def invoke(self):
         start = asyncio.get_event_loop().time()
         kwargs = {"headers": self.headers, "json": self.payload}
-
-        async def _inner():
-            if not self.endpoint.required_kwargs.issubset(
-                set(self.payload.keys())
-            ):
-                raise ValueError(
-                    f"Required kwargs not fully provided: {self.endpoint.required_kwargs}"
-                )
-
-            for k in list(self.payload.keys()):
-                if k not in self.endpoint.acceptable_kwargs:
-                    self.payload.pop(k)
-
-            async with aiohttp.ClientSession() as session:
-                try:
-                    if (
-                        _m := getattr(session, self.endpoint.method, None)
-                    ) is not None:
-                        async with _m(
-                            self.endpoint.full_url, **kwargs
-                        ) as response:
-                            response_json = await response.json()
-                            if "error" not in response_json:
-                                return response_json
-                            if "Rate limit" in response_json["error"].get(
-                                "message", ""
-                            ):
-                                await asyncio.sleep(5)
-                                raise RateLimitError(
-                                    f"Rate limit exceeded. Error: {response_json['error']}"
-                                )
-                            raise ExecutionError(
-                                "API call failed with error: ",
-                                response_json["error"],
-                            )
-                    else:
-                        raise ValueError(f"Invalid HTTP method: {self.method}")
-                except aiohttp.ClientError as e:
-                    logging.error(f"API call to {self.full_url} failed: {e}")
-                    return None
-
-        @cached(**Settings.Action.CACHED_CONFIG)
-        async def _cached_inner():
-            return await _inner()
 
         try:
             response = None
@@ -171,22 +171,21 @@ class APICalling(Event):
                 )
             else:
                 if self.cached:
-                    response = await _cached_inner()
+                    response = await self._cached_inner(**kwargs)
                 else:
-                    response = await _inner()
-            self.execution = Execution(
-                status=EventStatus.COMPLETED,
-                duration=asyncio.get_event_loop().time() - start,
-                response=response,
-            )
+                    response = await self._inner(**kwargs)
+
+            self.execution.duration = asyncio.get_event_loop().time() - start
+            self.execution.response = response
+            self.execution.status = EventStatus.COMPLETED
         except Exception as e:
-            self.execution = Execution(
-                status=EventStatus.FAILED,
-                duration=asyncio.get_event_loop().time() - start,
-                response=None,
-                error=str(e),
-            )
+            self.execution.duration = asyncio.get_event_loop().time() - start
+            self.execution.error = str(e)
+            self.execution.status = EventStatus.FAILED
             logging.error(f"API call to {self.endpoint.full_url} failed: {e}")
+
+    # async def stream():
+    #     ...
 
     def __str__(self) -> str:
         return f"APICalling(id={self.id}, status={self.status}, duration={self.execution.duration}, response={self.execution.response}, error={self.execution.error})"

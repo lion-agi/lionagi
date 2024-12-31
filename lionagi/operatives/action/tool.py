@@ -4,11 +4,12 @@
 
 import inspect
 from collections.abc import Callable
-from typing import Any, TypeAlias
+from typing import Any, Self, TypeAlias
+
+from pydantic import Field, field_validator, model_validator
 
 from lionagi.libs.schema.function_to_schema import function_to_schema
-
-from ..generic.element import Element
+from lionagi.protocols.types import Element
 
 __all__ = (
     "Tool",
@@ -21,33 +22,31 @@ __all__ = (
 
 class Tool(Element):
 
-    def __init__(
-        self,
-        func_callable: Callable[..., Any],
-        tool_schema: dict[str, Any] | None = None,
-        preprocessor: Callable[[Any], Any] | None = None,
-        preprocessor_kwargs: dict[str, Any] = {},
-        postprocessor: Callable[[Any], Any] | None = None,
-        postprocessor_kwargs: dict[str, Any] = {},
-        strict_func_call: bool = False,
-    ):
-        if not callable(func_callable):
+    func_callable: Callable[..., Any] = Field(exclude=True)
+    tool_schema: dict[str, Any] | None = None
+    preprocessor: Callable[[Any], Any] | None = Field(None, exclude=True)
+    preprocessor_kwargs: dict[str, Any] = Field(
+        default_factory=dict, exclude=True
+    )
+    postprocessor: Callable[[Any], Any] | None = Field(None, exclude=True)
+    postprocessor_kwargs: dict[str, Any] = Field(
+        default_factory=dict, exclude=True
+    )
+    strict_func_call: bool = False
+
+    @field_validator("func_callable", mode="before")
+    def validate_func_callable(cls, value: Any) -> Callable[..., Any]:
+        if not callable(value):
             raise ValueError("Function must be callable.")
-        if not hasattr(func_callable, "__name__"):
+        if not hasattr(value, "__name__"):
             raise ValueError("Function must have a name.")
+        return value
 
-        super().__init__()
-
-        self.func_callable = func_callable
-        self.tool_schema = tool_schema
-        self.preprocessor = preprocessor
-        self.preprocessor_kwargs = preprocessor_kwargs
-        self.postprocessor = postprocessor
-        self.postprocessor_kwargs = postprocessor_kwargs
-        self.strict_func_call = strict_func_call
-
+    @model_validator(mode="after")
+    def validate_tool_schema(self) -> Self:
         if self.tool_schema is None:
             self.tool_schema = function_to_schema(self.func_callable)
+        return self
 
     @property
     def function(self) -> str:
@@ -83,6 +82,11 @@ class Tool(Element):
     @classmethod
     def from_dict(cls, data: dict[str, Any]):
         raise NotImplementedError("Tool.from_dict is not implemented.")
+
+    def to_dict(self) -> dict[str, Any]:
+        dict_ = super().to_dict()
+        dict_["function"] = self.function
+        return dict_
 
 
 FuncTool: TypeAlias = Tool | Callable[..., Any]
