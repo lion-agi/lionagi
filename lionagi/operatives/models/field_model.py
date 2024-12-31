@@ -2,10 +2,14 @@
 #
 # SPDX-License-Identifier: Apache-2.0
 
-from lionagi.libs.utils import is_same_dtype
+from collections.abc import Callable
+from typing import Any
 
-from ..typing._pydantic import ConfigDict, Field, FieldInfo, field_validator
-from ..typing._typing import UNDEFINED, Any, Callable, UndefinedType
+from pydantic import ConfigDict, Field, field_validator
+from pydantic.fields import FieldInfo
+
+from lionagi.utils import UNDEFINED, UndefinedType, is_same_dtype
+
 from .schema_model import SchemaModel
 
 __all__ = ("FieldModel",)
@@ -27,7 +31,7 @@ class FieldModel(SchemaModel):
             annotation=int,
             default=0,
             description="User age in years",
-            validator=lambda v: v if v >= 0 else 0
+            validator=lambda cls, v: v if v >= 0 else 0
         )
         ```
 
@@ -118,7 +122,7 @@ class FieldModel(SchemaModel):
         annotation = (
             self.annotation if self.annotation is not UNDEFINED else Any
         )
-        field_obj: FieldInfo = Field(**self.to_dict())  # type: ignore
+        field_obj = Field(**self.to_dict())  # type: ignore
         field_obj.annotation = annotation
         return field_obj
 

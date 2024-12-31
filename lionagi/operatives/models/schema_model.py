@@ -2,13 +2,14 @@
 #
 # SPDX-License-Identifier: Apache-2.0
 
-from ..typing._pydantic import ConfigDict
-from .base import BaseAutoModel
+from pydantic import ConfigDict
+
+from lionagi.utils import HashableModel
 
 __all__ = ("SchemaModel",)
 
 
-class SchemaModel(BaseAutoModel):
+class SchemaModel(HashableModel):
 
     model_config = ConfigDict(
         extra="forbid",

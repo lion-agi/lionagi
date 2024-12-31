@@ -2,24 +2,22 @@
 #
 # SPDX-License-Identifier: Apache-2.0
 
-from lionagi.libs.utils import is_same_dtype
+from typing import Any, TypeVar, override
 
-from ..typing._pydantic import (
-    ConfigDict,
-    Field,
-    FieldInfo,
-    PydanticUndefined,
-    field_serializer,
-    field_validator,
-)
-from ..typing._typing import UNDEFINED, Any, TypeVar, override
-from .base import BaseAutoModel
+from pydantic import ConfigDict, Field, field_serializer, field_validator
+from pydantic.fields import FieldInfo
+
+from lionagi.utils import UNDEFINED, HashableModel, is_same_dtype
+
 from .field_model import FieldModel
 
-FIELD_NAME = TypeVar("FIELD_NAME", bound=str)
+FieldName = TypeVar("FieldName", bound=str)
 
 
-class OperableModel(BaseAutoModel):
+__all__ = ("OperableModel",)
+
+
+class OperableModel(HashableModel):
     """Model class supporting dynamic field management and operations.
 
     Provides:
@@ -81,7 +79,7 @@ class OperableModel(BaseAutoModel):
         output_dict = {}
         for k in value.keys():
             k_value = self.__dict__.get(k)
-            if isinstance(k_value, BaseAutoModel):
+            if hasattr(k_value, "to_dict"):
                 k_value = k_value.to_dict()
             output_dict[k] = k_value
         return output_dict
@@ -169,7 +167,7 @@ class OperableModel(BaseAutoModel):
 
     def add_field(
         self,
-        field_name: FIELD_NAME,
+        field_name: FieldName,
         /,
         value: Any = UNDEFINED,
         annotation: type = UNDEFINED,
@@ -204,7 +202,7 @@ class OperableModel(BaseAutoModel):
 
     def update_field(
         self,
-        field_name: FIELD_NAME,
+        field_name: FieldName,
         /,
         value: Any = UNDEFINED,
         annotation: type = UNDEFINED,
@@ -284,7 +282,7 @@ class OperableModel(BaseAutoModel):
 
     def field_setattr(
         self,
-        field_name: FIELD_NAME,
+        field_name: FieldName,
         attr: str,
         value: Any,
         /,
@@ -312,7 +310,7 @@ class OperableModel(BaseAutoModel):
 
     def field_hasattr(
         self,
-        field_name: FIELD_NAME,
+        field_name: FieldName,
         attr: str,
         /,
     ) -> bool:
@@ -342,7 +340,7 @@ class OperableModel(BaseAutoModel):
 
     def field_getattr(
         self,
-        field_name: FIELD_NAME,
+        field_name: FieldName,
         attr: str,
         default: Any = UNDEFINED,
         /,
@@ -388,9 +386,3 @@ class OperableModel(BaseAutoModel):
             raise AttributeError(
                 f"field {field_name} has no attribute {attr}",
             )
-
-
-__all__ = [
-    "OperableModel",
-    "FIELD_NAME",
-]

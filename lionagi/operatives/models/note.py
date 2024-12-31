@@ -2,24 +2,22 @@
 #
 # SPDX-License-Identifier: Apache-2.0
 
-from lionagi.libs.parse import flatten, nget, ninsert, npop, nset, to_list
-from lionagi.libs.utils import copy
+from collections.abc import ItemsView, Iterator, ValuesView
+from typing import Any, TypeAlias, override
 
-from ..typing._pydantic import ConfigDict, Field, field_serializer
-from ..typing._typing import (
-    UNDEFINED,
-    Any,
-    ItemsView,
-    Iterator,
-    ValuesView,
-    override,
-)
-from .base import BaseAutoModel
+from pydantic import BaseModel, ConfigDict, Field, field_serializer
 
-INDICE_TYPE = str | list[str | int]
+from lionagi.libs.nested.flatten import flatten
+from lionagi.libs.nested.nget import nget
+from lionagi.libs.nested.ninsert import ninsert
+from lionagi.libs.nested.npop import npop
+from lionagi.libs.nested.nset import nset
+from lionagi.utils import UNDEFINED, copy, to_list
+
+IndiceType: TypeAlias = str | list[str | int]
 
 
-class Note(BaseAutoModel):
+class Note(BaseModel):
     """Container for managing nested dictionary data structures.
 
     Provides:
@@ -98,7 +96,7 @@ class Note(BaseAutoModel):
 
     def pop(
         self,
-        indices: INDICE_TYPE,
+        indices: IndiceType,
         /,
         default: Any = UNDEFINED,
     ) -> Any:
@@ -117,7 +115,7 @@ class Note(BaseAutoModel):
         indices = to_list(indices, flatten=True, dropna=True)
         return npop(self.content, indices, default)
 
-    def insert(self, indices: INDICE_TYPE, value: Any, /) -> None:
+    def insert(self, indices: IndiceType, value: Any, /) -> None:
         """Insert value into nested structure at specified indices.
 
         Args:
@@ -127,7 +125,7 @@ class Note(BaseAutoModel):
         indices = to_list(indices, flatten=True, dropna=True)
         ninsert(self.content, indices, value)
 
-    def set(self, indices: INDICE_TYPE, value: Any, /) -> None:
+    def set(self, indices: IndiceType, value: Any, /) -> None:
         """Set value in nested structure at specified indices.
 
         Args:
@@ -142,7 +140,7 @@ class Note(BaseAutoModel):
 
     def get(
         self,
-        indices: INDICE_TYPE,
+        indices: IndiceType,
         /,
         default: Any = UNDEFINED,
     ) -> Any:
@@ -215,7 +213,7 @@ class Note(BaseAutoModel):
 
     def update(
         self,
-        indices: INDICE_TYPE,
+        indices: IndiceType,
         value: Any,
     ) -> None:
         """Update nested structure at specified indices.
@@ -267,7 +265,7 @@ class Note(BaseAutoModel):
         """
         return cls(**kwargs)
 
-    def __contains__(self, indices: INDICE_TYPE) -> bool:
+    def __contains__(self, indices: IndiceType) -> bool:
         """Check if indices exist in content.
 
         Args:
@@ -320,7 +318,7 @@ class Note(BaseAutoModel):
         """
         return repr(self.content)
 
-    def __getitem__(self, indices: INDICE_TYPE) -> Any:
+    def __getitem__(self, indices: IndiceType) -> Any:
         """Get item using index notation.
 
         Args:
@@ -335,7 +333,7 @@ class Note(BaseAutoModel):
         indices = to_list(indices, flatten=True, dropna=True)
         return self.get(indices)
 
-    def __setitem__(self, indices: INDICE_TYPE, value: Any) -> None:
+    def __setitem__(self, indices: IndiceType, value: Any) -> None:
         """Set item using index notation.
 
         Args:
@@ -343,9 +341,3 @@ class Note(BaseAutoModel):
             value: Value to set
         """
         self.set(indices, value)
-
-
-__all__ = [
-    "Note",
-    "INDICE_TYPE",
-]
