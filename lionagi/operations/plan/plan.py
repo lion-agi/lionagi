@@ -2,16 +2,20 @@
 #
 # SPDX-License-Identifier: Apache-2.0
 
-from lionagi.core.session.branch import Branch
-from lionagi.core.session.session import Session
-from lionagi.core.typing import ID, Any, BaseModel, Literal
-from lionagi.libs.func.types import alcall
-from lionagi.libs.parse import to_flat_list
-from lionagi.protocols.operatives.instruct import (
-    INSTRUCT_FIELD_MODEL,
+
+from typing import Any, Literal
+
+from pydantic import BaseModel
+
+from lionagi.operatives.instruct.instruct import (
+    LIST_INSTRUCT_FIELD_MODEL,
     Instruct,
     InstructResponse,
 )
+from lionagi.protocols.types import ID
+from lionagi.session.branch import Branch
+from lionagi.session.session import Session
+from lionagi.utils import alcall
 
 from ..utils import prepare_instruct, prepare_session
 from .prompt import EXPANSION_PROMPT, PLAN_PROMPT
@@ -165,8 +169,8 @@ async def plan(
 
     # Ensure the correct field model
     field_models: list = kwargs.get("field_models", [])
-    if INSTRUCT_FIELD_MODEL not in field_models:
-        field_models.append(INSTRUCT_FIELD_MODEL)
+    if LIST_INSTRUCT_FIELD_MODEL not in field_models:
+        field_models.append(LIST_INSTRUCT_FIELD_MODEL)
     kwargs["field_models"] = field_models
 
     # Prepare session/branch
@@ -246,7 +250,7 @@ async def plan(
                         )
                         print(f"Instruction: {snippet}")
 
-                    step_response = await execute_branch.instruct(
+                    step_response = await execute_branch._instruct(
                         plan_step, **(execution_kwargs or {})
                     )
                     seq_results.append(
@@ -274,7 +278,7 @@ async def plan(
                         print(f"\n------ Executing step (concurrently) ------")
                         print(f"Instruction: {snippet}")
                     local_branch = session.split(execute_branch)
-                    resp = await local_branch.instruct(
+                    resp = await local_branch._instruct(
                         plan_step, **(execution_kwargs or {})
                     )
                     return InstructResponse(instruct=plan_step, response=resp)
@@ -306,7 +310,7 @@ async def plan(
 
                     async def _execute(plan_step: Instruct):
                         local_branch = session.split(execute_branch)
-                        resp = await local_branch.instruct(
+                        resp = await local_branch._instruct(
                             plan_step, **(execution_kwargs or {})
                         )
                         return InstructResponse(
@@ -352,7 +356,7 @@ async def plan(
                             print(
                                 f"\n--- Executing step (sequential in chunk) ---\nInstruction: {snippet}"
                             )
-                        resp = await local_branch.instruct(
+                        resp = await local_branch._instruct(
                             plan_step, **(execution_kwargs or {})
                         )
                         chunk_result.append(
