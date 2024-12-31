@@ -8,152 +8,102 @@ from typing import Generic, TypeVar
 E = TypeVar("E")
 
 
-class Observer(ABC):
-    """Base class for all observers.
+__all__ = (
+    "Observer",
+    "Manager",
+    "Relational",
+    "Sendable",
+    "Observable",
+    "Communicatable",
+    "Condition",
+    "Collective",
+    "Ordering",
+)
 
-    This abstract class should be inherited by any observer-like objects.
-    """
+
+class Observer(ABC):
+    """Base for all observers."""
+
+    pass
 
 
 class Manager(Observer):
-    """Base class for all managers.
+    """Base for all managers."""
 
-    This class extends the Observer base class and can be used to manage
-    or oversee other objects or processes.
-    """
+    pass
 
 
 class Relational(ABC):
-    """Base class for objects that can be connected on a graph.
+    """Base for graph-connectable objects."""
 
-    This abstract class indicates that subclasses may form links or
-    relationships in a graph structure.
-    """
+    pass
 
 
 class Sendable(ABC):
-    """Base class for sendable entities.
-
-    Subclasses must define 'sender' and 'recipient' attributes.
-    """
+    """Sendable entities must define 'sender' and 'recipient'."""
 
     sender = None
     recipient = None
 
 
 class Observable(ABC):
-    """Base class for observable entities.
-
-    Subclasses must define an 'id' attribute.
-    """
+    """Observable entities must define 'id'."""
 
     id = None
 
 
 class Communicatable(Observable):
-    """Base class for communicatable objects.
-
-    This class extends Observable and requires subclasses to define a
-    'mailbox' attribute. Subclasses must implement the abstract methods
-    for sending and receiving (both synchronous and asynchronous).
-    """
+    """Communicatable must define 'mailbox' and send/receive methods."""
 
     mailbox = None
 
     @abstractmethod
     def send(self, *args, **kwargs):
-        """Send a message synchronously.
-
-        Args:
-            *args: Positional arguments.
-            **kwargs: Keyword arguments.
-        """
         pass
 
     @abstractmethod
     def receive(self, *args, **kwargs):
-        """Receive a message synchronously.
-
-        Args:
-            *args: Positional arguments.
-            **kwargs: Keyword arguments.
-        """
         pass
 
     @abstractmethod
     def asend(self, *args, **kwargs):
-        """Send a message asynchronously.
-
-        Args:
-            *args: Positional arguments.
-            **kwargs: Keyword arguments.
-        """
         pass
 
     @abstractmethod
     def areceive(self, *args, **kwargs):
-        """Receive a message asynchronously.
+        pass
 
-        Args:
-            *args: Positional arguments.
-            **kwargs: Keyword arguments.
-        """
+
+class Condition(ABC):
+    """Base for conditions."""
+
+    @abstractmethod
+    async def apply(self, *args, **kwargs) -> bool:
         pass
 
 
 class Collective(ABC, Generic[E]):
-    """Abstract base class for collections of elements.
-
-    Subclasses must implement methods for including and excluding elements.
-    """
+    """Base for collections of elements."""
 
     @abstractmethod
     def include(self, *args, **kwargs):
-        """Include elements into the collection.
-
-        Args:
-            *args: Positional arguments for inclusion logic.
-            **kwargs: Keyword arguments for inclusion logic.
-        """
         pass
 
     @abstractmethod
     def exclude(self, *args, **kwargs):
-        """Exclude elements from the collection.
-
-        Args:
-            *args: Positional arguments for exclusion logic.
-            **kwargs: Keyword arguments for exclusion logic.
-        """
         pass
 
 
 class Ordering(ABC, Generic[E]):
-    """Abstract base class for defining element orderings.
-
-    Subclasses must implement methods for including and excluding elements
-    in an ordered sequence.
-    """
+    """Base for element orderings."""
 
     @abstractmethod
     def include(self, *args, **kwargs):
-        """Include elements into the ordering.
-
-        Args:
-            *args: Positional arguments for inclusion logic.
-            **kwargs: Keyword arguments for inclusion logic.
-        """
         pass
 
     @abstractmethod
     def exclude(self, *args, **kwargs):
-        """Exclude elements from the ordering.
-
-        Args:
-            *args: Positional arguments for exclusion logic.
-            **kwargs: Keyword arguments for exclusion logic.
-        """
         pass
 
 
-# File: lionagi/protocols/generic/concepts.py
+# File: protocols/generic/concepts.py
