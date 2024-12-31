@@ -4,10 +4,8 @@
 
 from pydantic import BaseModel, field_validator
 
-from lionagi.core.models import FieldModel
-from lionagi.libs.parse import to_num
-
-from .prompts import confidence_description
+from lionagi.protocols.models.field_model import FieldModel
+from lionagi.utils import to_num
 
 
 def validate_confidence_score(cls, value) -> float:
@@ -23,6 +21,15 @@ def validate_confidence_score(cls, value) -> float:
         return -1
 
 
+confidence_description = (
+    "Numeric confidence score (0.0 to 1.0, up to three decimals) indicating "
+    "how well you've met user expectations. Use this guide:\n"
+    "  • 1.0: Highly confident\n"
+    "  • 0.8-1.0: Reasonably sure\n"
+    "  • 0.5-0.8: Re-check or refine\n"
+    "  • 0.0-0.5: Off track"
+)
+
 CONFIDENCE_SCORE_FIELD = FieldModel(
     name="confidence_score",
     annotation=float | None,
@@ -35,7 +42,7 @@ CONFIDENCE_SCORE_FIELD = FieldModel(
 )
 
 
-class ReasonModel(BaseModel):
+class Reason(BaseModel):
 
     title: str | None = None
     content: str | None = None
@@ -50,11 +57,11 @@ class ReasonModel(BaseModel):
 
 REASON_FIELD = FieldModel(
     name="reason",
-    annotation=ReasonModel | None,
+    annotation=Reason | None,
     default=None,
     title="Reason",
     description="**Provide a concise reason for the decision made.**",
 )
 
 
-__all__ = ["ReasonModel"]
+__all__ = ["Reason"]

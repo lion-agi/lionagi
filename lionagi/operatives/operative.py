@@ -7,9 +7,11 @@ from typing import Self
 from pydantic import BaseModel, Field, PrivateAttr, model_validator
 from pydantic.fields import FieldInfo
 
-from lionagi.core.models import FieldModel, ModelParams, OperableModel
-from lionagi.core.typing import UNDEFINED
-from lionagi.libs.parse import to_json, validate_keys
+from lionagi.libs.validate import fuzzy_match_keys
+from lionagi.protocols.models.field_model import FieldModel
+from lionagi.protocols.models.model_params import ModelParams
+from lionagi.protocols.models.operable_model import OperableModel
+from lionagi.utils import UNDEFINED, to_json
 
 
 class Operative(OperableModel):
@@ -51,7 +53,7 @@ class Operative(OperableModel):
         if isinstance(d_, list | tuple) and len(d_) == 1:
             d_ = d_[0]
         try:
-            d_ = validate_keys(
+            d_ = fuzzy_match_keys(
                 d_, self.request_type.model_fields, handle_unmatched="raise"
             )
             d_ = {k: v for k, v in d_.items() if v != UNDEFINED}
@@ -72,7 +74,7 @@ class Operative(OperableModel):
             d_ = to_json(text, fuzzy_parse=True)
             if isinstance(d_, list | tuple) and len(d_) == 1:
                 d_ = d_[0]
-            d_ = validate_keys(
+            d_ = fuzzy_match_keys(
                 d_, self.request_type.model_fields, handle_unmatched="force"
             )
             d_ = {k: v for k, v in d_.items() if v != UNDEFINED}

@@ -5,17 +5,17 @@
 from pydantic import BaseModel
 from pydantic.fields import FieldInfo
 
-from lionagi.core.typing import FieldModel, ModelParams
-from lionagi.protocols.operatives.operative import Operative
-
-from .action import (
+from lionagi.operatives.instruct.reason import REASON_FIELD, Reason
+from lionagi.operatives.operative import Operative
+from lionagi.protocols.types import (
     ACTION_REQUESTS_FIELD,
     ACTION_REQUIRED_FIELD,
     ACTION_RESPONSES_FIELD,
     ActionRequestModel,
     ActionResponseModel,
+    FieldModel,
+    ModelParams,
 )
-from .reason import REASON_FIELD, ReasonModel
 
 
 class StepModel(BaseModel):
@@ -23,7 +23,7 @@ class StepModel(BaseModel):
 
     title: str
     description: str
-    reason: ReasonModel | None = REASON_FIELD.field_info
+    reason: Reason | None = REASON_FIELD.field_info
     action_requests: list[ActionRequestModel] = (
         ACTION_REQUESTS_FIELD.field_info
     )
