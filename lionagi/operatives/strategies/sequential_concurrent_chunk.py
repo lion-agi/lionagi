@@ -1,19 +1,22 @@
 from pydantic import model_validator
 
-from lionagi.fields.instruct import Instruct, InstructResponse
-from lionagi.session.types import Branch, Session
+from lionagi.operatives.instruct.instruct import Instruct, InstructResponse
+from lionagi.operatives.strategies.params import HybridStrategyParams
+from lionagi.session.session import Branch, Session
+from lionagi.utils import alcall
 
 from .base import StrategyExecutor
-from .params import ChunkStrategyParams
+from .params import HybridStrategyParams
 
 
-class SequentialChunkExecutor(StrategyExecutor):
-    """Executor for sequential chunked instruction processing.
-
-    Splits instructions into chunks and processes each chunk one by one.
+class SequentialConcurrentChunkExecutor(StrategyExecutor):
+    """Sequential-concurrent chunked executor:
+    1. Splits instructions into chunks
+    2. Processes chunks sequentially
+    3. Within each chunk, processes instructions concurrently
     """
 
-    params: ChunkStrategyParams
+    params: HybridStrategyParams
     session: Session
     branch: Branch
 
@@ -21,13 +24,19 @@ class SequentialChunkExecutor(StrategyExecutor):
     def validate_execution_config(cls, values: dict) -> dict:
         params = values.get("params", None)
         if params is None:
-            params = ChunkStrategyParams(**values)
+            params = HybridStrategyParams(**values)
+
+        if (
+            params.outer_mode != "sequential"
+            or params.inner_mode != "concurrent"
+        ):
+            raise ValueError(
+                "Requires outer_mode='sequential' and inner_mode='concurrent'"
+            )
 
         session = values.get("session", params.session)
         if not session:
-            raise ValueError(
-                "Session is required for sequential chunk execution"
-            )
+            raise ValueError("Session is required")
 
         branch = values.get("branch", params.branch)
         if isinstance(branch, Branch):
@@ -51,22 +60,25 @@ class SequentialChunkExecutor(StrategyExecutor):
                 if len(ins_.instruction) > 100
                 else ins_.instruction
             )
-            if idx and ttl:
-                print(f"\n-----Executing Instruct {idx}/{ttl}-----\n{msg_}")
-            else:
-                print(f"\n-----Executing Instruct-----\n{msg_}")
+            print(
+                f"\n-----Executing Instruct {idx}/{ttl}-----\n{msg_}"
+                if ttl
+                else f"\n-----Executing Instruct {idx}-----\n{msg_}"
+            )
 
-        res = await self.branch.instruct(ins_, **self.params.execute_kwargs)
+        branch = self.session.split(self.branch)
+        res = await branch._instruct(ins_, **self.params.execute_kwargs)
         return InstructResponse(instruct=ins_, response=res)
 
     async def _execute_chunk(
         self, chunk: list[tuple[Instruct, int, int]]
     ) -> list[InstructResponse]:
-        responses = []
-        for ins_, idx, ttl in chunk:
-            res = await self._execute_single(ins_, idx, ttl)
-            responses.append(res)
-        return responses
+        # Each chunk concurrently
+        return await alcall(
+            chunk,
+            self._execute_single,
+            max_workers=self.params.inner_max_workers,
+        )
 
     async def execute(self) -> list[InstructResponse]:
         instructions = self.params.instruct

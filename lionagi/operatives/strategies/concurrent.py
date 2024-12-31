@@ -1,7 +1,6 @@
-from lionagi.core.session.types import Branch
-from lionagi.libs.func.types import alcall
-from lionagi.libs.parse.types import to_list
-from lionagi.protocols.operatives.instruct import Instruct, InstructResponse
+from lionagi.operatives.instruct.instruct import Instruct, InstructResponse
+from lionagi.session.session import Branch
+from lionagi.utils import alcall, to_list
 
 from .base import StrategyExecutor
 
@@ -22,7 +21,7 @@ class ConcurrentExecutor(StrategyExecutor):
             return await self.execute_instruct(ins_, b_, False, **kwargs)
 
         config = {**ins.model_dump(), **kwargs}
-        res = await branch.instruct(**config)
+        res = await branch._instruct(**config)
         branch.msgs.logger.dump()
         instructs = (
             res.instruct_models if hasattr(res, "instruct_models") else []

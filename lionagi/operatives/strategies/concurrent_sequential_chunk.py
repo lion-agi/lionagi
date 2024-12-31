@@ -1,18 +1,18 @@
 from pydantic import model_validator
 
-from lionagi.fields.instruct import Instruct, InstructResponse
-from lionagi.session.types import Branch, Session
+from lionagi.operatives.instruct.instruct import Instruct, InstructResponse
+from lionagi.session.session import Branch, Session
+from lionagi.utils import alcall
 
-from ..libs.async_utils import alcall
 from .base import StrategyExecutor
 from .params import HybridStrategyParams
 
 
-class SequentialConcurrentChunkExecutor(StrategyExecutor):
-    """Sequential-concurrent chunked executor:
+class ConcurrentSequentialChunkExecutor(StrategyExecutor):
+    """Concurrent-sequential chunked executor:
     1. Splits instructions into chunks
-    2. Processes chunks sequentially
-    3. Within each chunk, processes instructions concurrently
+    2. Processes chunks concurrently
+    3. Processes each instruction within a chunk sequentially.
     """
 
     params: HybridStrategyParams
@@ -26,17 +26,16 @@ class SequentialConcurrentChunkExecutor(StrategyExecutor):
             params = HybridStrategyParams(**values)
 
         if (
-            params.outer_mode != "sequential"
-            or params.inner_mode != "concurrent"
+            params.outer_mode != "concurrent"
+            or params.inner_mode != "sequential"
         ):
             raise ValueError(
-                "Requires outer_mode='sequential' and inner_mode='concurrent'"
+                "Requires outer_mode='concurrent' and inner_mode='sequential'"
             )
 
         session = values.get("session", params.session)
         if not session:
             raise ValueError("Session is required")
-
         branch = values.get("branch", params.branch)
         if isinstance(branch, Branch):
             if branch not in session.branches:
@@ -65,19 +64,19 @@ class SequentialConcurrentChunkExecutor(StrategyExecutor):
                 else f"\n-----Executing Instruct {idx}-----\n{msg_}"
             )
 
-        branch = self.session.split(self.branch)
-        res = await branch.instruct(ins_, **self.params.execute_kwargs)
+        res = await self.branch._instruct(ins_, **self.params.execute_kwargs)
         return InstructResponse(instruct=ins_, response=res)
 
     async def _execute_chunk(
         self, chunk: list[tuple[Instruct, int, int]]
     ) -> list[InstructResponse]:
-        # Each chunk concurrently
-        return await alcall(
-            chunk,
-            self._execute_single,
-            max_workers=self.params.inner_max_workers,
-        )
+        # Each chunk sequential
+        branch = self.session.split(self.branch)
+        responses = []
+        for ins_, idx, ttl in chunk:
+            r = await self._execute_single(ins_, idx, ttl)
+            responses.append(r)
+        return responses
 
     async def execute(self) -> list[InstructResponse]:
         instructions = self.params.instruct
@@ -88,13 +87,18 @@ class SequentialConcurrentChunkExecutor(StrategyExecutor):
             chunk = [(ins, i + 1, total) for i, ins in enumerate(instructions)]
             return await self._execute_chunk(chunk)
 
-        responses = []
+        chunks = []
         for start in range(0, total, chunk_size):
             end = min(start + chunk_size, total)
             chunk = [
                 (instructions[i], i + 1, total) for i in range(start, end)
             ]
-            chunk_responses = await self._execute_chunk(chunk)
-            responses.extend(chunk_responses)
+            chunks.append(chunk)
 
+        chunk_responses = await alcall(
+            chunks, self._execute_chunk, max_workers=self.params.max_workers
+        )
+        responses = []
+        for c in chunk_responses:
+            responses.extend(c)
         return responses
