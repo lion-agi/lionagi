@@ -6,6 +6,15 @@ resolution-markers = [
 ]
 
 [[package]]
+name = "aiocache"
+version = "0.12.3"
+source = { registry = "https://pypi.org/simple" }
+sdist = { url = "https://files.pythonhosted.org/packages/7a/64/b945b8025a9d1e6e2138845f4022165d3b337f55f50984fbc6a4c0a1e355/aiocache-0.12.3.tar.gz", hash = "sha256:f528b27bf4d436b497a1d0d1a8f59a542c153ab1e37c3621713cb376d44c4713", size = 132196 }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/37/d7/15d67e05b235d1ed8c3ce61688fe4d84130e72af1657acadfaac3479f4cf/aiocache-0.12.3-py2.py3-none-any.whl", hash = "sha256:889086fc24710f431937b87ad3720a289f7fc31c4fd8b68e9f918b9bacd8270d", size = 28199 },
+]
+
+[[package]]
 name = "aiohappyeyeballs"
 version = "2.4.4"
 source = { registry = "https://pypi.org/simple" }
@@ -583,9 +592,10 @@ wheels = [
 
 [[package]]
 name = "lionagi"
-version = "0.5.5"
+version = "0.6.0"
 source = { editable = "." }
 dependencies = [
+    { name = "aiocache" },
     { name = "aiohttp" },
     { name = "jinja2" },
     { name = "litellm" },
@@ -606,6 +616,7 @@ dev = [
 
 [package.metadata]
 requires-dist = [
+    { name = "aiocache", specifier = ">=0.12.3" },
     { name = "aiohttp", specifier = ">=3.11.10" },
     { name = "jinja2", specifier = ">=3.1.4" },
     { name = "litellm", specifier = ">=1.55.3" },
@@ -626,7 +637,7 @@ dev = [
 
 [[package]]
 name = "litellm"
-version = "1.55.11"
+version = "1.55.12"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "aiohttp" },
@@ -641,9 +652,9 @@ dependencies = [
     { name = "tiktoken" },
     { name = "tokenizers" },
 ]
-sdist = { url = "https://files.pythonhosted.org/packages/82/09/347533465a145359b909dc262356960b1c70c892f181b1c0ee8fed947b67/litellm-1.55.11.tar.gz", hash = "sha256:f2a90a157ba93797c86deb9b41b9f34a47714a9e04118fc2da7886f3c5581bfc", size = 6207717 }
+sdist = { url = "https://files.pythonhosted.org/packages/50/0e/1704168f8f658df61fbfdc0fa5d8a9ce8350616dc74b4481da2284a8f4c9/litellm-1.55.12.tar.gz", hash = "sha256:6d93025ebf29ae3d6929a90c44d648ba6804fdbc1bb1c3a72d7dddd08f6229dc", size = 6209840 }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/fd/55/8d10bd070cdd2978e4066a1578fb1cd7269d25fb74db3a2867839ac195b0/litellm-1.55.11-py3-none-any.whl", hash = "sha256:1631f060cd625cd1097c5383c71693f4b9b95a8e761b726d4863a9c325a2fa50", size = 6484499 },
+    { url = "https://files.pythonhosted.org/packages/30/5a/f3b621795e2288d8dc3d663a0db030700ee6cc127a6bb1ccc55ace061fbb/litellm-1.55.12-py3-none-any.whl", hash = "sha256:d034c3d6cdd5b8dd2c56f1100eb14f41f920b7673ac943d38fb2d7155ae5774b", size = 6488096 },
 ]
 
 [[package]]

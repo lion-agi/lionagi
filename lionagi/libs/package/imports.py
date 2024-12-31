@@ -1,10 +1,14 @@
+# Copyright (c) 2023 - 2024, HaiyangLi <quantocean.li at gmail dot com>
+#
+# SPDX-License-Identifier: Apache-2.0
+
 import importlib.metadata
 import importlib.util
 import logging
 import subprocess
 from typing import Any
 
-from ..utils import run_pip_command
+from lionagi.utils import run_package_manager_command
 
 
 def check_import(
@@ -135,7 +139,7 @@ def install_import(
     except ImportError:
         logging.info(f"Installing {pip_name}...")
         try:
-            run_pip_command(["install", pip_name])
+            run_package_manager_command(["install", pip_name])
             return import_module(
                 package_name=package_name,
                 module_name=module_name,
