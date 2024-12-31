@@ -5,11 +5,10 @@
 from collections import deque
 from typing import Any, Literal
 
-from pydantic import Field, field_serializer
-
 from lionagi._errors import ItemExistsError, RelationError
+from lionagi.protocols.generic.concepts import Relational
 
-from ..generic._id import ID
+from ..generic.element import ID
 from ..generic.pile import Pile
 from .edge import Edge
 from .node import Node
@@ -19,95 +18,92 @@ __all__ = ("Graph",)
 
 class Graph(Node):
     """
-    Represents a graph structure containing nodes and edges.
-
-    This class models a graph with internal nodes and edges, providing
-    methods for graph manipulation and analysis.
+    Represents a graph structure containing nodes and edges, extending `Node`.
 
     Attributes:
-        internal_nodes (Pile): The internal nodes of the graph.
-        internal_edges (Pile): The internal edges of the graph.
-        node_edge_mapping (Note): The mapping of nodes to edges for
-                search purposes.
+        internal_nodes (Pile[Node]):
+            The internal nodes of the graph.
+        internal_edges (Pile[Edge]):
+            The internal edges of the graph.
+        node_edge_mapping (dict):
+            A mapping of node ID -> {"in": {}, "out": {}} for graph traversal.
     """
 
-    internal_nodes: Pile[Node] = Field(
-        default_factory=lambda: Pile(item_type=Node),
-        description="The internal nodes of the graph.",
-    )
-    internal_edges: Pile[Edge] = Field(
-        default_factory=lambda: Pile(item_type=Edge),
-        description="The internal edges of the graph.",
-    )
-    node_edge_mapping: dict = Field(
-        default_factory=dict,
-        description="The mapping for node and edges for search",
-    )
-
-    @field_serializer("internal_nodes", "internal_edges")
-    def _serialize_internal_piles(self, value: Pile) -> Any:
+    def __init__(
+        self,
+        *,
+        internal_nodes: Pile[Node] = None,
+        internal_edges: Pile[Edge] = None,
+        node_edge_mapping: dict = None,
+        **kwargs,
+    ):
         """
-        Serialize the internal nodes and edges.
+        Initialize a Graph, storing nodes, edges, and a node-edge mapping. Also
+        forward any additional Node constructor arguments (e.g. content, metadata)
+        to the Node base class.
 
         Args:
-            value: The Pile of internal nodes or edges to serialize.
-
-        Returns:
-            Serialized representation of the Pile.
+            internal_nodes (Pile[Node] | None):
+                A pile of Node objects. If None, creates a new empty one.
+            internal_edges (Pile[Edge] | None):
+                A pile of Edge objects. If None, creates a new empty one.
+            node_edge_mapping (dict | None):
+                A dictionary mapping node IDs to in/out edges. If None, uses an empty dict.
+            **kwargs:
+                Additional arguments passed to the base `Node` constructor, like:
+                - content
+                - metadata
+                - embedding
+                - id, created_at
         """
-        value = value.to_dict()
-        value = value["collections"]
-        return value
+        super().__init__(**kwargs)
+        self.internal_nodes = internal_nodes or Pile(
+            item_type=Node, strict_type=False
+        )
+        self.internal_edges = internal_edges or Pile(
+            item_type=Edge, strict_type=True
+        )
+        self.node_edge_mapping = node_edge_mapping or {}
+        if self.internal_nodes:
+            for node in self.internal_nodes:
+                if node.id not in self.node_edge_mapping:
+                    self.node_edge_mapping[node.id] = {"in": {}, "out": {}}
 
-    def add_node(self, node: Node) -> None:
-        """
-        Add a node to the graph.
+        if self.internal_edges:
+            for edge in self.internal_edges:
+                self.node_edge_mapping[edge.head]["out"][edge.id] = edge.tail
+                self.node_edge_mapping[edge.tail]["in"][edge.id] = edge.head
 
-        Args:
-            node (Node): The node to add.
-
-        Raises:
-            RelationError: If the node already exists in the graph or
-                if the node type is invalid.
-        """
+    def add_node(self, node: Relational) -> None:
+        """Add a node to the graph."""
+        if not isinstance(node, Relational):
+            raise RelationError(
+                "Failed to add node: Invalid node type: "
+                "not a <Relational> entity."
+            )
+        _id = ID.get_id(node)
         try:
-            if not isinstance(node, Node):
-                raise RelationError(
-                    "Failed to add node: Invalid node type: "
-                    "not a <Relational> entity."
-                )
-            _id = ID.get_id(node)
             self.internal_nodes.insert(len(self.internal_nodes), node)
             self.node_edge_mapping[_id] = {"in": {}, "out": {}}
         except ItemExistsError as e:
             raise RelationError(f"Error adding node: {e}")
 
     def add_edge(self, edge: Edge, /) -> None:
-        """
-        Add an edge to the graph.
-
-        Args:
-            edge (Edge): The edge to add.
-
-        Raises:
-            RelationError: If the edge already exists in the graph or
-                if either the head or tail node does not exist in the graph.
-        """
+        """Add an edge to the graph, linking two existing nodes."""
+        if not isinstance(edge, Edge):
+            raise RelationError("Failed to add edge: Invalid edge type.")
+        if (
+            edge.head not in self.internal_nodes
+            or edge.tail not in self.internal_nodes
+        ):
+            raise RelationError(
+                "Failed to add edge: Either edge head or tail node does"
+                " not exist in the graph."
+            )
         try:
-            if not isinstance(edge, Edge):
-                raise RelationError("Failed to add edge: Invalid edge type.")
-            if (
-                edge.head not in self.internal_nodes
-                or edge.tail not in self.internal_nodes
-            ):
-                raise RelationError(
-                    "Failed to add edge: Either edge head or tail node does"
-                    " not exist in the graph."
-                )
             self.internal_edges.insert(len(self.internal_edges), edge)
             self.node_edge_mapping[edge.head]["out"][edge.id] = edge.tail
             self.node_edge_mapping[edge.tail]["in"][edge.id] = edge.head
-
         except ItemExistsError as e:
             raise RelationError(f"Error adding node: {e}")
 
@@ -166,6 +162,20 @@ class Graph(Node):
         /,
         direction: Literal["both", "in", "out"] = "both",
     ) -> list[Edge]:
+        """
+        Find edges associated with a node by direction (in, out, or both).
+
+        Args:
+            node (ID[Node].Ref): The node or node ID.
+            direction: 'in', 'out', or 'both' to filter the edges.
+
+        Returns:
+            list[Edge]: The matching edges.
+
+        Raises:
+            ValueError: If direction is invalid.
+            RelationError: If node is not in the graph.
+        """
         if direction not in {"both", "in", "out"}:
             raise ValueError("The direction should be 'both', 'in', or 'out'.")
 
@@ -174,27 +184,18 @@ class Graph(Node):
             raise RelationError(f"Node {node} not found in the graph nodes.")
 
         result = []
-
-        if direction in {"in", "both"}:
-            for edge_id in self.node_edge_mapping[_id]["in"].keys():
+        if direction in {"both", "in"}:
+            for edge_id in self.node_edge_mapping[_id]["in"]:
                 result.append(self.internal_edges[edge_id])
 
-        if direction in {"out", "both"}:
-            for edge_id in self.node_edge_mapping[_id]["out"].keys():
+        if direction in {"both", "out"}:
+            for edge_id in self.node_edge_mapping[_id]["out"]:
                 result.append(self.internal_edges[edge_id])
 
         return result
 
     def get_heads(self) -> list[Node]:
-        """
-        Get all head nodes in the graph.
-
-        Head nodes are nodes with no incoming edges.
-
-        Returns:
-            Pile: A Pile containing all head nodes.
-        """
-
+        """Return nodes with no incoming edges (head nodes)."""
         result = []
         for node_id in self.node_edge_mapping.keys():
             if self.node_edge_mapping[node_id]["in"] == {}:
@@ -202,22 +203,11 @@ class Graph(Node):
         return result
 
     def get_predecessors(self, node: Node, /) -> list[Node]:
-        """
-        Get all predecessor nodes of a given node.
-
-        Predecessors are nodes that have outgoing edges to the given node.
-
-        Args:
-            node (Node): The node to find predecessors for.
-
-        Returns:
-            Pile: A Pile containing all predecessor nodes.
-        """
+        """Return all nodes that have outbound edges to the given node."""
         edges = self.find_node_edge(node, direction="in")
         result = []
         for edge in edges:
-            node_id = edge.head
-            result.append(self.internal_nodes[node_id])
+            result.append(self.internal_nodes[edge.head])
         return result
 
     def get_successors(self, node: Node, /) -> list[Node]:
@@ -235,30 +225,30 @@ class Graph(Node):
         edges = self.find_node_edge(node, direction="out")
         result = []
         for edge in edges:
-            node_id = edge.tail
-            result.append(self.internal_nodes[node_id])
+            result.append(self.internal_nodes[edge.tail])
         return result
 
     def to_networkx(self, **kwargs) -> Any:
         """Convert the graph to a NetworkX graph object."""
-        from networkx import DiGraph
+        try:
+            import networkx as nx  # type: ignore
+        except ImportError:
+            raise ImportError(
+                "NetworkX is not installed. Please install it with `pip install networkx`."
+            )
 
-        g = DiGraph(**kwargs)
+        g = nx.DiGraph(**kwargs)
         for node in self.internal_nodes:
             node_info = node.to_dict()
             node_info.pop("id")
-            if hasattr(node, "name"):
-                node_info.update({"name": node.name})
             g.add_node(str(node.id), **node_info)
 
         for _edge in self.internal_edges:
             edge_info = _edge.to_dict()
             edge_info.pop("id")
-            if hasattr(_edge, "name"):
-                edge_info.update({"name": _edge.name})
             source_node_id = edge_info.pop("head")
             target_node_id = edge_info.pop("tail")
-            g.add_edge(str(source_node_id), target_node_id, **edge_info)
+            g.add_edge(str(source_node_id), str(target_node_id), **edge_info)
 
         return g
 
@@ -273,71 +263,83 @@ class Graph(Node):
 
         try:
             import matplotlib.pyplot as plt  # type: ignore
+            import networkx as nx  # type: ignore
         except ImportError:
             raise ImportError(
                 "Failed to import Matplotlib. Please install the package with `pip install matplotlib`"
             )
-
-        import networkx as nx
 
         g = self.to_networkx(**kwargs)
         pos = nx.spring_layout(g)
         nx.draw(
             g,
             pos,
-            edge_color="black",
-            width=1,
-            linewidths=1,
-            node_size=500,
-            node_color="orange",
-            alpha=0.9,
             labels=nx.get_node_attributes(g, node_label),
             **draw_kwargs,
         )
 
-        labels = nx.get_edge_attributes(g, edge_label)
-        labels = {k: v for k, v in labels.items() if v}
-
-        if labels:
-            nx.draw_networkx_edge_labels(
-                g, pos, edge_labels=labels, font_color="purple"
-            )
+        edge_labels = nx.get_edge_attributes(g, edge_label)
+        if edge_labels:
+            nx.draw_networkx_edge_labels(g, pos, edge_labels=edge_labels)
 
         plt.axis("off")
         plt.show()
 
     def is_acyclic(self) -> bool:
         """Check if the graph is acyclic (contains no cycles)."""
-        node_ids = list(self.internal_nodes.keys())
+        node_ids = list(self.internal_nodes.progression)
         check_deque = deque(node_ids)
-        check_dict = {
-            key: 0 for key in node_ids
-        }  # 0: not visited, 1: temp, 2: perm
 
-        def visit(key):
-            if check_dict[key] == 2:
+        # 0: unvisited, 1: visiting, 2: visited
+        check_dict = {nid: 0 for nid in node_ids}
+
+        def visit(nid):
+            if check_dict[nid] == 2:
                 return True
-            elif check_dict[key] == 1:
+            elif check_dict[nid] == 1:
                 return False
 
-            check_dict[key] = 1
-
-            # Use node_edge_mapping instead of relations
-            for edge_id in self.node_edge_mapping[key]["out"].keys():
-                edge = self.internal_edges[edge_id]
-                check = visit(edge.tail)
-                if not check:
+            check_dict[nid] = 1
+            for edge_id in self.node_edge_mapping[nid]["out"]:
+                edge: Edge = self.internal_edges[edge_id]
+                if not visit(edge.tail):
                     return False
-
-            check_dict[key] = 2
+            check_dict[nid] = 2
             return True
 
         while check_deque:
             key = check_deque.pop()
-            check = visit(key)
-            if not check:
+            if not visit(key):
                 return False
         return True
 
     def __contains__(self, item: object) -> bool:
         return item in self.internal_nodes or item in self.internal_edges
+
+    def to_dict(self) -> dict[str, Any]:
+        dict_ = super().to_dict()
+        dict_["internal_nodes"] = self.internal_nodes.to_dict()
+        dict_["internal_edges"] = self.internal_edges.to_dict()
+        return dict_
+
+    @classmethod
+    def from_dict(cls, data: dict[str, Any]) -> "Graph":
+        """
+        Deserialize a Graph from a dictionary.
+
+        Args:
+            data (dict): The dictionary representing a graph.
+
+        Returns:
+            Graph: An instance of Graph.
+        """
+        internal_nodes = Pile.from_dict(data.pop("internal_nodes", {}))
+        internal_edges = Pile.from_dict(data.pop("internal_edges", {}))
+        data.pop("node_edge_mapping", None)
+        data.pop("lion_class", None)
+
+        return cls(
+            internal_nodes=internal_nodes,
+            internal_edges=internal_edges,
+            **data,
+        )

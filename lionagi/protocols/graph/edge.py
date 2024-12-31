@@ -4,12 +4,8 @@
 
 from typing import Any
 
-from pydantic import BaseModel, ConfigDict, Field
-
-from ..generic._id import ID
-from ..generic.element import Element
-from ..generic.event import Condition
-from .node import Node
+from ..generic.concepts import Condition, Relational
+from ..generic.element import ID, Element
 
 __all__ = (
     "EdgeCondition",
@@ -17,114 +13,108 @@ __all__ = (
 )
 
 
-class EdgeCondition(BaseModel, Condition):
-    """Represents a condition associated with an edge in the Lion framework.
-
-    This class combines Condition characteristics with Pydantic's
-    BaseModel for robust data validation and serialization.
-
-    Attributes:
-        source (Any): The source for condition evaluation.
+class EdgeCondition(Condition):
+    """
+    Represents a condition associated with an Edge. Subclasses must
+    implement `apply` to determine whether the edge is traversable.
     """
 
-    source: Any = Field(
-        default=None,
-        title="Source",
-        description="The source for condition evaluation",
-    )
+    def __init__(self, source: Any = None):
+        self.source = source
 
-    model_config = ConfigDict(
-        extra="allow",
-        arbitrary_types_allowed=True,
-    )
+    async def apply(self, *args, **kwargs) -> bool:
+        """
+        Evaluate this condition asynchronously. By default, raises
+        NotImplementedError. Override in subclasses.
+
+        Returns:
+            bool: True if condition is met, else False.
+        """
+        raise NotImplementedError("Subclasses must implement `apply`.")
 
 
 class Edge(Element):
     """
-    Represents an edge in a graph structure.
-
-    An edge connects a head node to a tail node and can store additional
-    properties such as conditions and labels. It is used to model relationship
-    between nodes in graph-based data structures.
-
-    Attributes:
-        properties (Note): Stores additional properties of the edge. This can
-            include conditions that must be met for the edge to be traversed
-            and labels that describe the edge.
-        head (str): The ID of the head node in the graph.
-        tail (str): The ID of the tail node in the graph.
+    An edge in a graph, connecting a head Node to a tail Node. Optional
+    EdgeCondition can control traversal. Additional properties like labels,
+    metadata, etc., may be stored in `properties`.
     """
-
-    properties: dict = Field(default_factory=dict)
-    head: ID[Node].ID
-    tail: ID[Node].ID
 
     def __init__(
         self,
-        head: ID[Node].Ref,
-        tail: ID[Node].Ref,
+        head: ID[Relational].Ref,
+        tail: ID[Relational].Ref,
         condition: EdgeCondition | None = None,
         label: list[str] | None = None,
-        **kwargs,
+        **kwargs: Any,
     ):
-        head = ID.get_id(head)
-        tail = ID.get_id(tail)
+        """
+        Args:
+            head (ID[Node].Ref):
+                A reference (ID, Node, or string) to the head node.
+            tail (ID[Node].Ref):
+                A reference to the tail node.
+            condition (EdgeCondition | None):
+                Optional condition controlling edge traversal.
+            label (list[str] | None):
+                Optional list of labels describing the edge.
+            **kwargs:
+                Additional properties stored in `self.properties`.
+        """
+        super().__init__()
+        self.head = ID.get_id(head)
+        self.tail = ID.get_id(tail)
+        self.properties: dict[str, Any] = {}
 
-        super().__init__(head=head, tail=tail)
-
-        # Initialize properties
         if condition:
-            self.properties["condition"] = condition
+            self.condition = condition
+
         if label:
-            self.properties["label"] = label
-        for key, value in kwargs.items():
-            self.properties[key] = value
+            self.label = [label] if not isinstance(label, list) else label
+
+        for k, v in kwargs.items():
+            self.properties[k] = v
+
+    @property
+    def label(self) -> list[str] | None:
+        return self.properties.get("label", None)
+
+    @property
+    def condition(self) -> EdgeCondition | None:
+        return self.properties.get("condition", None)
+
+    @condition.setter
+    def condition(self, value: EdgeCondition | None) -> None:
+        if not isinstance(value, EdgeCondition):
+            raise ValueError("Condition must be an instance of EdgeCondition.")
+        self.properties["condition"] = value
+
+    @label.setter
+    def label(self, value: list[str] | None) -> None:
+        if not isinstance(value, list):
+            raise ValueError("Label must be a list of strings.")
+        self.properties["label"] = value
 
     async def check_condition(self, *args, **kwargs) -> bool:
         """
-        Check if the edge's condition is satisfied.
-
-        This method checks whether the edge can be traversed by evaluating its
-        condition. If no condition is specified, the edge is considered
-        traversable by default.
-
-        Args:
-            *args: Variable length argument list.
-            **kwargs: Arbitrary keyword arguments.
+        Check if this edge can be traversed, by evaluating any assigned condition.
 
         Returns:
-            bool: True if the condition is satisfied or if no condition exists,
-                  False otherwise.
+            bool: True if condition is met or if no condition exists.
         """
-        condition: EdgeCondition | None = self.properties.get(
-            "condition", None
-        )
-        if condition:
-            return await condition.apply(*args, **kwargs)
-        return True  # If no condition exists, the edge is always traversable
+        if self.condition:
+            return await self.condition.apply(*args, **kwargs)
+        return True
 
     def update_property(self, key: str, value: Any) -> None:
-        """
-        Update a property value directly.
-
-        Args:
-            key: The property key to update.
-            value: The new value for the property.
-        """
+        """Update or add a custom property in `self.properties`."""
         self.properties[key] = value
 
-    def update_condition_source(self, source: dict) -> None:
-        """
-        Update the condition source.
-
-        Args:
-            source: The new source dictionary for the condition.
-        """
-        condition: EdgeCondition | None = self.properties.get(
-            "condition", None
-        )
-        if condition:
-            condition.source = source
+    def update_condition_source(self, source: Any) -> None:
+        """Update the `.source` attribute in the assigned EdgeCondition, if any."""
+        cond: EdgeCondition | None = self.properties.get("condition", None)
+        if cond:
+            cond.source = source
 
 
-__all__ = ["Edge"]
+# File: protocols/graph/edge.py
