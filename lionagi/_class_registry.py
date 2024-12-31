@@ -2,22 +2,52 @@
 #
 # SPDX-License-Identifier: Apache-2.0
 
+import ast
+import importlib.util
 import os
 from typing import TypeVar
-
-from lionagi.libs.utils import get_class_file_registry, get_class_objects
 
 T = TypeVar("T")
 LION_CLASS_REGISTRY: dict[str, type[T]] = {}
 LION_CLASS_FILE_REGISTRY: dict[str, str] = {}
 
 pattern_list = [
-    "lionagi/core/generic",
-    "lionagi/core/communication",
-    "lionagi/core/action",
-    "lionagi/core/session",
-    "lionagi/core/forms",
+    "lionagi/protocols/generic",
+    "lionagi/protocols/graph",
+    "lionagi/protocols/messages",
 ]
+
+__all__ = (
+    "get_class",
+    "LION_CLASS_REGISTRY",
+)
+
+
+def get_file_classes(file_path):
+    with open(file_path) as file:
+        file_content = file.read()
+
+    tree = ast.parse(file_content)
+
+    class_file_dict = {}
+    for node in tree.body:
+        if isinstance(node, ast.ClassDef):
+            class_file_dict[node.name] = file_path
+
+    return class_file_dict
+
+
+def get_class_file_registry(folder_path, pattern_list):
+    class_file_registry = {}
+    for root, _, files in os.walk(folder_path):
+        for file in files:
+            if file.endswith(".py"):
+                if any(pattern in root for pattern in pattern_list):
+                    class_file_dict = get_file_classes(
+                        os.path.join(root, file)
+                    )
+                    class_file_registry.update(class_file_dict)
+    return class_file_registry
 
 
 if not LION_CLASS_FILE_REGISTRY:
@@ -27,6 +57,20 @@ if not LION_CLASS_FILE_REGISTRY:
     LION_CLASS_FILE_REGISTRY = get_class_file_registry(
         script_dir, pattern_list
     )
+
+
+def get_class_objects(file_path):
+    class_objects = {}
+    spec = importlib.util.spec_from_file_location("module.name", file_path)
+    module = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(module)
+
+    for class_name in dir(module):
+        obj = getattr(module, class_name)
+        if isinstance(obj, type):
+            class_objects[class_name] = obj
+
+    return class_objects
 
 
 def get_class(class_name: str) -> type:
@@ -64,6 +108,3 @@ def get_class(class_name: str) -> type:
         return found_class_dict[class_name]
     except Exception as e:
         raise ValueError(f"Unable to find class {class_name}: {e}")
-
-
-# File: lionagi/core/util/class_registry_util.py
