@@ -1,3 +1,7 @@
+# Copyright (c) 2023 - 2024, HaiyangLi <quantocean.li at gmail dot com>
+#
+# SPDX-License-Identifier: Apache-2.0
+
 from collections.abc import Callable
 from pathlib import Path
 from typing import Any, Literal
@@ -42,47 +46,6 @@ class ChunkContentParams(BaseModel):
     return_tokens: bool = Field(
         default=False,
         description="If True, return chunks as token lists; if False, return as joined strings",
-    )
-
-
-class CreatePathParams(BaseModel):
-    """Parameters for creating file paths with various options.
-
-    This model defines parameters used by the create_path function to generate
-    file paths with support for timestamps, random hashes, and existence checks.
-    """
-
-    directory: Path | str = Field(
-        description="Directory where the file will be created"
-    )
-    filename: str = Field(description="Base name of the file to create")
-    extension: str | None = Field(
-        default=None,
-        description="File extension (with or without leading dot)",
-    )
-    timestamp: bool = Field(
-        default=False, description="If True, adds a timestamp to the filename"
-    )
-    dir_exist_ok: bool = Field(
-        default=True,
-        description="If True, doesn't raise an error if the directory exists",
-    )
-    file_exist_ok: bool = Field(
-        default=False,
-        description="If True, allows overwriting of existing files",
-    )
-    time_prefix: bool = Field(
-        default=False,
-        description="If True, adds timestamp as prefix instead of suffix",
-    )
-    timestamp_format: str | None = Field(
-        default=None,
-        description="Custom format for the timestamp (strftime format)",
-    )
-    random_hash_digits: int = Field(
-        default=0,
-        ge=0,
-        description="Number of random hash digits to append to filename",
     )
 
 

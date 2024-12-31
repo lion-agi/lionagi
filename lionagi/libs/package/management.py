@@ -2,7 +2,7 @@ import importlib.metadata
 import logging
 import subprocess
 
-from ..utils import run_pip_command
+from lionagi.utils import run_package_manager_command
 
 
 def list_installed_packages() -> list[str]:
@@ -33,7 +33,7 @@ def uninstall_package(package_name: str) -> None:
         subprocess.CalledProcessError: If the uninstallation fails.
     """
     try:
-        run_pip_command(["uninstall", package_name, "-y"])
+        run_package_manager_command(["uninstall", package_name, "-y"])
         logging.info(f"Successfully uninstalled {package_name}.")
     except subprocess.CalledProcessError as e:
         logging.error(f"Failed to uninstall {package_name}. Error: {e}")
@@ -51,7 +51,7 @@ def update_package(package_name: str) -> None:
         subprocess.CalledProcessError: If the update fails.
     """
     try:
-        run_pip_command(["install", "--upgrade", package_name])
+        run_package_manager_command(["install", "--upgrade", package_name])
         logging.info(f"Successfully updated {package_name}.")
     except subprocess.CalledProcessError as e:
         logging.error(f"Failed to update {package_name}. Error: {e}")
