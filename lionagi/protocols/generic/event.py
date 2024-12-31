@@ -59,7 +59,7 @@ class Execution:
 class Event(Element):
     """Event extends Element with an execution state."""
 
-    execution: Execution | None = Field(default_factory=Execution)
+    execution: Execution = Field(default_factory=Execution)
 
     @field_serializer("execution")
     def _serialize_execution(self, val: Execution) -> dict:

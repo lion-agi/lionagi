@@ -17,6 +17,7 @@ from pydantic import (
     field_validator,
 )
 
+from lionagi._class_registry import get_class
 from lionagi.settings import Settings
 from lionagi.utils import UNDEFINED, content_to_sha256, time, to_dict
 
@@ -174,12 +175,19 @@ class Element(BaseModel, Observable):
         if "lion_class" in metadata:
             subcls = metadata.pop("lion_class")
             if subcls != cls.class_name(full=True):
-                from lionagi.libs.package.imports import import_module
+                try:
+                    subcls = get_class(subcls.split(".")[-1])
+                    if hasattr(subcls, "from_dict") and subcls is not cls:
+                        return subcls.from_dict(data)
 
-                mod, imp = subcls.rsplit(".", 1)
-                subcls = import_module(mod, import_name=imp)
-                data["metadata"] = metadata
-                return subcls.from_dict(data)
+                except Exception:
+                    from lionagi.libs.package.imports import import_module
+
+                    mod, imp = subcls.rsplit(".", 1)
+                    subcls = import_module(mod, import_name=imp)
+                    data["metadata"] = metadata
+                    if hasattr(subcls, "from_dict") and subcls is not cls:
+                        return subcls.from_dict(data)
         return cls.model_validate(data)
 
 

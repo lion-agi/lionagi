@@ -202,7 +202,8 @@ class Executor(Observer):
         then call processor.process() for immediate handling.
         """
         while len(self.pending) > 0:
-            event = self.pile.popleft()
+            id_ = self.pending.popleft()
+            event = self.pile[id_]
             await self.processor.enqueue(event)
 
         await self.processor.process()
