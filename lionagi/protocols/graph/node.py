@@ -10,7 +10,7 @@ from typing import Any, ClassVar
 from lionagi._class_registry import LION_CLASS_REGISTRY, get_class
 
 from .._adapter import DEFAULT_ADAPTERS, Adaptable, AdapterRegistry
-from ..generic.concepts import Relational
+from .._concepts import Relational
 from ..generic.element import Element
 
 __all__ = ("Node",)

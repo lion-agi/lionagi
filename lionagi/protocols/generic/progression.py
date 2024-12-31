@@ -8,7 +8,7 @@ from typing import Any, Generic, Self, TypeVar
 
 from lionagi._errors import ItemNotFoundError
 
-from .concepts import Ordering
+from .._concepts import Ordering
 from .element import ID, Element, IDType, validate_order
 
 E = TypeVar("E", bound=Element)

@@ -5,7 +5,7 @@ from lionagi.protocols.generic._id import ID
 from lionagi.protocols.generic.element import IDType
 from lionagi.utils import time
 
-from ..generic.concepts import Communicatable, Observable
+from .._concepts import Communicatable, Observable
 
 
 class PackageCategory(str, Enum):

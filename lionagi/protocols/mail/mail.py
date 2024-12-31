@@ -1,4 +1,4 @@
-from ..generic.concepts import Sendable
+from .._concepts import Sendable
 from ..messages.base import IDType
 from .package import Package, PackageCategory
 

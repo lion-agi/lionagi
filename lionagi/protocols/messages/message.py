@@ -11,7 +11,7 @@ from pydantic import Field, field_serializer
 
 from lionagi._class_registry import get_class
 
-from ..generic.concepts import Sendable
+from .._concepts import Sendable
 from ..generic.log import Log
 from ..graph.node import Node
 from .base import (

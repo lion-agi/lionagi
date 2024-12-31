@@ -6,9 +6,9 @@ from collections import deque
 from typing import Any, Literal
 
 from lionagi._errors import ItemExistsError, RelationError
-from lionagi.protocols.generic.concepts import Relational
+from lionagi.protocols._concepts import Relational
 
-from ..generic.concepts import Relational
+from .._concepts import Relational
 from ..generic.element import ID, Element
 from ..generic.pile import Pile
 from .edge import Edge

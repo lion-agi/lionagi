@@ -7,7 +7,7 @@ from typing import Any, Literal
 from jinja2 import Template
 from pydantic import BaseModel, JsonValue
 
-from ..generic.concepts import Manager
+from .._concepts import Manager
 from ..generic.log import Log
 from ..generic.pile import Pile
 from ..generic.progression import Progression

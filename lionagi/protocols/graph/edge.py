@@ -4,7 +4,7 @@
 
 from typing import Any
 
-from ..generic.concepts import Condition, Relational
+from .._concepts import Condition, Relational
 from ..generic.element import ID, Element
 
 __all__ = (

@@ -18,7 +18,7 @@ from lionagi._errors import ItemExistsError, ItemNotFoundError
 from lionagi.utils import UNDEFINED, to_list
 
 from .._adapter import DEFAULT_ADAPTERS, Adaptable, AdapterRegistry
-from .concepts import Collective
+from .._concepts import Collective
 from .element import Element, IDType
 from .progression import Progression, validate_order
 

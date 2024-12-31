@@ -3,7 +3,7 @@
 import asyncio
 from typing import Any, ClassVar
 
-from .concepts import Observer
+from .._concepts import Observer
 from .element import ID
 from .event import Event, EventStatus
 from .pile import Pile

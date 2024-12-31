@@ -11,7 +11,7 @@ from uuid import UUID, uuid4
 
 from lionagi._class_registry import get_class
 
-from .concepts import Collective, Observable, Ordering
+from .._concepts import Collective, Observable, Ordering
 
 __all__ = (
     "IDError",

@@ -9,7 +9,7 @@ from typing import Any, ClassVar
 
 from lionagi.utils import create_path, to_dict
 
-from .concepts import Manager
+from .._concepts import Manager
 from .element import Element
 from .pile import Pile
 

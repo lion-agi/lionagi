@@ -3,7 +3,7 @@
 # SPDX-License-Identifier: Apache-2.0
 
 from ._adapter import Adaptable, Adapter, AdapterRegistry
-from .generic.concepts import (
+from ._concepts import (
     Collective,
     Communicatable,
     Condition,

@@ -3,7 +3,7 @@ from typing import Any
 
 from lionagi.protocols.generic.element import IDType
 
-from ..generic.concepts import Communicatable
+from .._concepts import Communicatable
 from ..generic.element import ID
 from ..generic.pile import Pile
 from .mail import Mail, Package, PackageCategory
