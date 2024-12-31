@@ -1,130 +1,80 @@
-import warnings
+# Copyright (c) 2023 - 2024, HaiyangLi <quantocean.li at gmail dot com>
+#
+# SPDX-License-Identifier: Apache-2.0
 
-from lionagi.service.service import Service
-from lionagi.service.service_match_util import (
-    match_parameters,
-    match_service,
-    match_task_method,
-)
+import os
+
+from lionagi.service.endpoint import APICalling, EndPoint
+
+from .match_endpoint import match_endpoint
+from .rate_limited_processor import RateLimitedAPIExecutor
 
 
 class iModel:
 
     def __init__(
         self,
-        provider: str | Service,
-        task: str = "chat",
-        model: str = None,
+        provider: str = None,
+        base_url: str = None,
+        endpoint: str | EndPoint = "chat",
+        endpoint_params: list[str] | None = None,
         api_key: str = None,
-        api_key_schema: str = None,
-        interval_tokens: int = None,
-        interval_requests: int = None,
+        queue_capacity: int = 100,
+        capacity_refresh_time: float = 60,
+        interval: float | None = None,
+        limit_requests: int = None,
+        limit_tokens: int = None,
+        invoke_with_endpoint: bool = True,
         **kwargs,
     ):
-        if api_key is not None:
-            api_key = api_key
-        elif api_key_schema is not None:
-            api_key = api_key_schema
+        api_key = os.getenv(api_key, None) or api_key
+        kwargs["api_key"] = api_key
+        model = kwargs.get("model", None)
+        if model:
+            if not provider:
+                if "/" in model:
+                    provider = model.split("/")[0]
+                    model = model.replace(provider + "/", "")
+                    kwargs["model"] = model
+                else:
+                    raise ValueError("Provider must be provided")
 
-        if task == "chat":
-            match provider:
-                case "openai":
-                    task = "create_chat_completion"
-                case "anthropic":
-                    task = "create_message"
-                case "groq":
-                    task = "create_chat_completion"
-                case "perplexity":
-                    task = "create_chat_completion"
-
-        if isinstance(provider, str):
-            if api_key is None:
-                match provider:
-                    case "openai":
-                        api_key = "OPENAI_API_KEY"
-                    case "anthropic":
-                        api_key = "ANTHROPIC_API_KEY"
-                    case "groq":
-                        api_key = "GROQ_API_KEY"
-                    case "perplexity":
-                        api_key = "PERPLEXIY_API_KEY"
-
-            self.service = match_service(provider, api_key=api_key, **kwargs)
-        elif isinstance(provider, Service):
-            self.service = provider
-            if api_key:
-                warnings.warn(
-                    "A Service instance was provided along with api key info."
-                    "The the separately provided api_key or api_key_schema will be ignored."
-                )
+        if isinstance(endpoint, EndPoint):
+            self.endpoint = endpoint
         else:
-            raise ValueError(
-                "Invalid provider. Please provide a valid provider name or valid service object."
+            self.endpoint = match_endpoint(
+                provider=provider,
+                base_url=base_url,
+                endpoint=endpoint,
+                endpoint_params=endpoint_params,
             )
 
-        task_method_list = match_task_method(task, self.service)
-        if len(task_method_list) == 0:
-            raise ValueError(
-                "No matching task found. "
-                "Please refer to the service provider's API to provide a valid task."
-            )
-        if len(task_method_list) > 1:
-            raise ValueError(
-                f"Multiple possible tasks found. Please specify: {task_method_list}"
-            )
-        self.task = task_method_list[0]
-        task_method = getattr(self.service, task_method_list[0])
-        task_params = match_parameters(
-            task_method, model, interval_tokens, interval_requests
+        self.endpoint.is_invokeable = invoke_with_endpoint
+        self.kwargs = kwargs
+        self.executor = RateLimitedAPIExecutor(
+            queue_capacity=queue_capacity,
+            capacity_refresh_time=capacity_refresh_time,
+            interval=interval,
+            limit_requests=limit_requests,
+            limit_tokens=limit_tokens,
         )
+
+    async def invoke(self, **kwargs) -> APICalling | None:
         try:
-            self.request_model = task_method(**task_params)
+            kwargs.update(self.kwargs)
+            api_call = self.endpoint.create_api_calling(**kwargs)
+            if self.executor.processor is None:
+                await self.executor.start()
+
+            await self.executor.append(api_call)
+            await self.executor.forward()
+            if api_call.id in self.executor.completed_events:
+                return self.executor.completed_events[api_call.id]
         except Exception as e:
-            raise ValueError(
-                f"{self.task} requires the following to be provided as input: {e}."
-            )
-
-        self.model = model
-        self.configs = kwargs
-
-        self.data_model = self.service.match_data_model(self.task)
-
-    def parse_to_data_model(self, **kwargs):
-
-        if kwargs.get("model") and self.model:
-            if kwargs.get("model") != self.model:
-                raise ValueError(
-                    f"Models are inconsistent. This iModel is for {self.model}"
-                )
-
-        output = {}
-        for invoke_param, data_model in self.data_model.items():
-            data_model_dict = {}
-            if "model" in data_model.model_fields:
-                data_model_dict["model"] = self.model
-            for key in self.configs:
-                if key in data_model.model_fields:
-                    data_model_dict[key] = self.configs[key]
-            for key in kwargs:
-                if key in data_model.model_fields:
-                    data_model_dict[key] = kwargs[key]
-            output[invoke_param] = data_model(**data_model_dict)
-        return output
-
-    async def invoke(self, **kwargs):
-        return await self.request_model.invoke(**kwargs)
-
-    def list_tasks(self):
-        return self.service.list_tasks()
+            raise ValueError(f"Failed to invoke API call: {e}")
 
     @property
     def allowed_roles(self):
-        return self.service.allowed_roles
-
-    @property
-    def sequential_exchange(self):
-        """whether the service requires user/assistant exchange"""
-        return self.service.sequential_exchange
-
-
-__all__ = ["iModel"]
+        if hasattr(self.endpoint, "allowed_roles"):
+            return self.endpoint.allowed_roles
+        return ["system", "user", "assistant"]
