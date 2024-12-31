@@ -4,8 +4,7 @@
 
 import os
 
-from lionagi.service.api_calling import APICalling
-from lionagi.service.endpoint import EndPoint
+from lionagi.service.endpoint import APICalling, EndPoint
 
 from .match_endpoint import match_endpoint
 from .rate_limited_processor import RateLimitedAPIExecutor
@@ -17,7 +16,7 @@ class iModel:
         self,
         provider: str = None,
         base_url: str = None,
-        endpoint: str | EndPoint = None,
+        endpoint: str | EndPoint = "chat",
         endpoint_params: list[str] | None = None,
         api_key: str = None,
         queue_capacity: int = 100,
@@ -25,6 +24,7 @@ class iModel:
         interval: float | None = None,
         limit_requests: int = None,
         limit_tokens: int = None,
+        invoke_with_endpoint: bool = True,
         **kwargs,
     ):
         api_key = os.getenv(api_key, None) or api_key
@@ -48,6 +48,8 @@ class iModel:
                 endpoint=endpoint,
                 endpoint_params=endpoint_params,
             )
+
+        self.endpoint.is_invokeable = invoke_with_endpoint
         self.kwargs = kwargs
         self.executor = RateLimitedAPIExecutor(
             queue_capacity=queue_capacity,
@@ -59,6 +61,7 @@ class iModel:
 
     async def invoke(self, **kwargs) -> APICalling | None:
         try:
+            kwargs.update(self.kwargs)
             api_call = self.endpoint.create_api_calling(**kwargs)
             if self.executor.processor is None:
                 await self.executor.start()
@@ -67,8 +70,8 @@ class iModel:
             await self.executor.forward()
             if api_call.id in self.executor.completed_events:
                 return self.executor.completed_events[api_call.id]
-        except Exception:
-            return None
+        except Exception as e:
+            raise ValueError(f"Failed to invoke API call: {e}")
 
     @property
     def allowed_roles(self):

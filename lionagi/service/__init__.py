@@ -2,8 +2,7 @@
 #
 # SPDX-License-Identifier: Apache-2.0
 
-from .api_calling import APICalling
-from .endpoint import EndPoint
+from .endpoint import APICalling, EndPoint
 from .imodel import iModel
 from .rate_limited_processor import (
     RateLimitedAPIExecutor,

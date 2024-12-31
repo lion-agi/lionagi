@@ -9,7 +9,7 @@ from typing import Self
 from typing_extensions import override
 
 from ..protocols.types import Executor, Processor
-from .api_calling import APICalling
+from .endpoint import APICalling
 
 __all__ = (
     "RateLimitedAPIProcessor",
