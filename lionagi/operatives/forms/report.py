@@ -2,8 +2,10 @@
 #
 # SPDX-License-Identifier: Apache-2.0
 
-from lionagi.core.generic.types import Pile
-from lionagi.core.typing import UNDEFINED, Field
+from pydantic import Field
+
+from lionagi.protocols.generic.pile import Pile
+from lionagi.utils import UNDEFINED
 
 from .base import BaseForm
 from .form import Form
@@ -221,7 +223,7 @@ class Report(BaseForm):
                 )
 
         self.completed_tasks.include(form)
-        self.completed_task_assignments[form.ln_id] = form.assignment
+        self.completed_task_assignments[form.id] = form.assignment
 
         if update_results:
             for i in form.request_fields:

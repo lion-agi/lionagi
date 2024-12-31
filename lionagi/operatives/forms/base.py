@@ -2,13 +2,16 @@
 #
 # SPDX-License-Identifier: Apache-2.0
 
-from pydantic import field_validator
+from typing import Any, Literal
 
-from ..generic.types import Component
-from ..typing import UNDEFINED, Any, Field, Literal, PydanticUndefined
+from pydantic import Field, field_validator
+from pydantic_core import PydanticUndefined
+
+from lionagi.protocols.graph.node import Node
+from lionagi.utils import UNDEFINED
 
 
-class BaseForm(Component):
+class BaseForm(Node):
     """Base form class providing core functionality for form handling.
 
     This class serves as a foundation for creating custom forms within the
