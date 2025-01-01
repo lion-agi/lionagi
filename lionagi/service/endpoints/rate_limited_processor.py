@@ -8,8 +8,8 @@ from typing import Self
 
 from typing_extensions import override
 
-from ..protocols.types import Executor, Processor
-from .endpoint import APICalling
+from ...protocols.types import Executor, Processor
+from .base import APICalling
 
 __all__ = (
     "RateLimitedAPIProcessor",

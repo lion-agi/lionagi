@@ -2,19 +2,13 @@
 #
 # SPDX-License-Identifier: Apache-2.0
 
-from .endpoint import APICalling, EndPoint
+from .endpoints.base import APICalling, EndPoint
 from .imodel import iModel
-from .rate_limited_processor import (
-    RateLimitedAPIExecutor,
-    RateLimitedAPIProcessor,
-)
-from .token_calculator import TokenCalculator
+from .manager import iModelManager
 
 __all__ = (
     "iModel",
-    "APICalling",
+    "iModelManager",
     "EndPoint",
-    "RateLimitedAPIExecutor",
-    "RateLimitedAPIProcessor",
-    "TokenCalculator",
+    "APICalling",
 )

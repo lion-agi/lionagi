@@ -2,7 +2,36 @@
 #
 # SPDX-License-Identifier: Apache-2.0
 
-from ..endpoint import ChatCompletionEndPoint
+from lionagi.service.endpoints.chat_completion import ChatCompletionEndPoint
+
+CHAT_COMPLETION_CONFIG = {
+    "provider": "anthropic",
+    "endpoint": "messages",
+    "method": "post",
+    "requires_tokens": True,
+    "openai_compatible": False,
+    "is_invokeable": True,
+    "is_streamable": True,
+    "base_url": "https://api.anthropic.com/v1",
+    "api_version": "2023-06-01",
+    "required_kwargs": {
+        "messages",
+        "model",
+        "max_tokens",
+    },
+    "optional_kwargs": {
+        "metadata",
+        "stop_sequences",
+        "stream",
+        "system",
+        "temperature",
+        "tool_choice",
+        "tools",
+        "top_p",
+        "top_k",
+    },
+    "allowed_roles": ["user", "assistant"],
+}
 
 
 class AnthropicChatCompletionEndPoint(ChatCompletionEndPoint):
@@ -10,41 +39,8 @@ class AnthropicChatCompletionEndPoint(ChatCompletionEndPoint):
     Documentation: https://docs.anthropic.com/en/api/
     """
 
-    api_version: str = "2023-06-01"
-    provider: str = "anthropic"
-    base_url: str = "https://api.anthropic.com/v1"
-    endpoint: str = "messages"
-
-    @property
-    def openai_compatible(self) -> bool:
-        return False
-
-    @property
-    def required_kwargs(self) -> set[str]:
-        return {
-            "messages",
-            "model",
-            "max_tokens",
-        }
-
-    @property
-    def optional_kwargs(self) -> set[str]:
-        using = {
-            "metadata",
-            "stop_sequences",
-            "stream",
-            "system",
-            "temperature",
-            "tool_choice",
-            "tools",
-            "top_p",
-            "top_k",
-        }
-        return using
-
-    @property
-    def allowed_roles(self):
-        return ["user", "assistant"]
+    def __init__(self, config: dict = CHAT_COMPLETION_CONFIG):
+        super().__init__(config)
 
     def create_payload(self, **kwargs) -> dict:
         payload = {}
@@ -56,7 +52,7 @@ class AnthropicChatCompletionEndPoint(ChatCompletionEndPoint):
         if "api_key" in kwargs:
             headers["x-api-key"] = kwargs["api_key"]
         headers["anthropic-version"] = kwargs.pop(
-            "api_version", self.api_version
+            "api_version", self.config.api_version
         )
         if "content-type" not in kwargs:
             headers["content-type"] = "application/json"

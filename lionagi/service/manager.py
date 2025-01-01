@@ -1,7 +1,7 @@
 from lionagi.utils import is_same_dtype
 
 from ..protocols._concepts import Manager
-from .endpoint import ChatCompletionEndPoint
+from .endpoints.chat_completion import ChatCompletionEndPoint
 from .imodel import iModel
 
 

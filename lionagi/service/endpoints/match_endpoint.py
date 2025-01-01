@@ -2,7 +2,7 @@
 #
 # SPDX-License-Identifier: Apache-2.0
 
-from .endpoint import EndPoint
+from .chat_completion import EndPoint
 
 
 def match_endpoint(
@@ -15,28 +15,40 @@ def match_endpoint(
         raise ValueError(
             "Invalid endpoint, must be one of 'chat/completions' (openai compatible), 'chat' (an alias), 'messages' (anthropic), other endpoints are not supported yet"
         )
+    from ..providers.openai_.chat_completions import (
+        OpenAIChatCompletionEndPoint,
+    )
 
     if provider == "openai":
-        from .openai_.chat_completions import OpenAIChatCompletionEndPoint
-
         return OpenAIChatCompletionEndPoint()
 
     if provider == "anthropic":
-        from .anthropic_.messages import AnthropicChatCompletionEndPoint
+        from ..providers.anthropic_.messages import (
+            AnthropicChatCompletionEndPoint,
+        )
 
         return AnthropicChatCompletionEndPoint()
 
     if provider == "groq":
-        from .groq_.chat_completions import GroqChatCompletionEndPoint
+        from ..providers.groq_.chat_completions import (
+            GroqChatCompletionEndPoint,
+        )
 
         return GroqChatCompletionEndPoint()
 
     if provider == "perplexity":
-        from .perplexity_.chat_completions import (
+        from ..providers.perplexity_.chat_completions import (
             PerplexityChatCompletionEndPoint,
         )
 
         return PerplexityChatCompletionEndPoint()
+
+    if provider == "openrouter":
+        from ..providers.openrouter_.chat_completions import (
+            OpenRouterChatCompletionEndPoint,
+        )
+
+        return OpenRouterChatCompletionEndPoint()
 
     return OpenAIChatCompletionEndPoint(
         provider=provider,

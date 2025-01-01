@@ -4,10 +4,9 @@
 
 import os
 
-from lionagi.service.endpoint import APICalling, EndPoint
-
-from .match_endpoint import match_endpoint
-from .rate_limited_processor import RateLimitedAPIExecutor
+from .endpoints.base import APICalling, EndPoint
+from .endpoints.match_endpoint import match_endpoint
+from .endpoints.rate_limited_processor import RateLimitedAPIExecutor
 
 
 class iModel:
@@ -49,7 +48,7 @@ class iModel:
                 endpoint_params=endpoint_params,
             )
 
-        self.endpoint.is_invokeable = invoke_with_endpoint
+        self.should_invoke_endpoint = invoke_with_endpoint
         self.kwargs = kwargs
         self.executor = RateLimitedAPIExecutor(
             queue_capacity=queue_capacity,
@@ -59,17 +58,42 @@ class iModel:
             limit_tokens=limit_tokens,
         )
 
+    def create_api_calling(self, **kwargs) -> APICalling:
+        kwargs.update(self.kwargs)
+        payload = self.endpoint.create_payload(**kwargs)
+        return APICalling(
+            payload=payload["payload"],
+            headers=payload["headers"],
+            endpoint=self.endpoint,
+            is_cached=payload.get("is_cached", False),
+            should_invoke_endpoint=self.should_invoke_endpoint,
+        )
+
+    async def process_chunk(self, chunk):
+        pass
+
+    async def stream(self, **kwargs) -> APICalling | None:
+        try:
+            api_call = self.create_api_calling(**kwargs)
+            async for i in api_call.stream():
+                await self.process_chunk(i)
+            return api_call
+        except Exception as e:
+            raise ValueError(f"Failed to stream API call: {e}")
+
     async def invoke(self, **kwargs) -> APICalling | None:
         try:
-            kwargs.update(self.kwargs)
-            api_call = self.endpoint.create_api_calling(**kwargs)
-            if self.executor.processor is None:
+            api_call = self.create_api_calling(**kwargs)
+            if (
+                self.executor.processor is None
+                or self.executor.processor.is_stopped()
+            ):
                 await self.executor.start()
 
             await self.executor.append(api_call)
             await self.executor.forward()
             if api_call.id in self.executor.completed_events:
-                return self.executor.completed_events[api_call.id]
+                return self.executor.pile.pop(api_call.id)
         except Exception as e:
             raise ValueError(f"Failed to invoke API call: {e}")
 
