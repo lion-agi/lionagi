@@ -6,10 +6,12 @@ from __future__ import annotations
 
 import asyncio
 import json
+import logging
 import threading
 from collections.abc import AsyncIterator, Callable, Generator, Iterator
 from functools import wraps
-from typing import Any, Generic, Literal, Self, TypeVar
+from pathlib import Path
+from typing import Any, ClassVar, Generic, Self, TypeVar
 
 import pandas as pd
 from pydantic import Field, field_serializer, model_validator
@@ -18,6 +20,7 @@ from pydantic.fields import FieldInfo
 from lionagi._errors import IDError, ItemExistsError, ItemNotFoundError
 from lionagi.utils import UNDEFINED, lcall, to_list
 
+from .._adapter import DEFAULT_ADAPTERS, Adaptable, AdapterRegistry
 from .element import ID, Collective, E, Element, IDType, validate_order
 from .progression import Progression
 
@@ -85,7 +88,15 @@ def async_synchronized(func: Callable):
     return wrapper
 
 
-class Pile(Element, Collective, Generic[E]):
+class PileAdapterRegistry(AdapterRegistry):
+    """Registry for Pile adapters."""
+
+
+for adapter in DEFAULT_ADAPTERS:
+    PileAdapterRegistry.register(adapter)
+
+
+class Pile(Element, Adaptable, Collective[E], Generic[E]):
     """A thread-safe collection of Elements with ordered progression.
 
     Manages a collection of Elements with support for synchronous and asynchronous
@@ -103,6 +114,8 @@ class Pile(Element, Collective, Generic[E]):
         >>> async with pile:
         ...     await pile.aset(0, element4)
     """
+
+    adapter_registry: ClassVar[AdapterRegistry] = PileAdapterRegistry
 
     collections: dict[IDType, E] = Field(default_factory=dict)
     item_type: type | None = Field(default=None, frozen=True)
@@ -851,146 +864,116 @@ class Pile(Element, Collective, Generic[E]):
     def to_df(
         self,
         *,
-        index=...,
-        exclude=...,
-        columns=...,
-        coerce_float=...,
-        nrows=...,
+        columns: list[str] | None = None,
         **kwargs,
     ) -> pd.DataFrame:
-        """kwargs for self.to_dict(), check pd.DataFrame.from_records for pd.DataFrame kwargs, check pydantic.BaseModel.model_dump() for self.to_dict() kwargs"""
-        dicts_ = [i.to_dict(**kwargs) for i in self.values()]
-        params = {
-            "index": index,
-            "exclude": exclude,
-            "columns": columns,
-            "coerce_float": coerce_float,
-            "nrows": nrows,
-        }
-
-        return pd.DataFrame.from_records(
-            dicts_, **{k: v for k, v in params.items() if v is not ...}
-        )
-
-    def to_csv(
-        self,
-        path_or_buf,
-        /,
-        *,
-        verbose=False,
-        sep=...,
-        na_rep=...,
-        float_format=...,
-        columns=...,
-        header=...,
-        index: bool = ...,
-        index_label: str | list | Literal[False] | None = ...,
-        mode=...,
-        encoding: str | None = ...,
-        compression=...,
-        quoting=...,
-        quotechar: str = ...,
-        lineterminator: str | None = ...,
-        chunksize: int | None = ...,
-        date_format: str | None = ...,
-        doublequote: bool = ...,
-        escapechar: str | None = ...,
-        decimal: str = ...,
-        errors: str = ...,
-        storage_options=...,
-    ):
-        """Export collection to CSV file.
-
-        Args:
-            path_or_buf: File path or buffer to write to.
-            verbose: Print confirmation message.
-            Other arguments passed to pandas.DataFrame.to_csv().
         """
-        params = {k: v for k, v in locals().items() if v is not ...}
-        params.pop("self")
-        params.pop("verbose")
-        self.to_df().to_csv(**params)
-        if verbose:
-            print(f"Saved Pile to {path_or_buf}")
-
-    def to_json(
-        self,
-        path_or_buf,
-        *,
-        use_pd: bool = False,
-        mode="w",
-        verbose=False,
-        **kwargs,
-    ):
-        """Export collection to JSON file.
-
-        Args:
-            path_or_buf: File path or buffer to write to.
-            use_pd: Use pandas JSON export if True.
-            mode: File open mode.
-            verbose: Print confirmation message.
-            **kwargs: Additional arguments for json.dump() or DataFrame.to_json().
+        Convert items to a DataFrame, optionally specifying columns, etc.
         """
+        data = [x.to_dict() for x in self]
+        df = pd.DataFrame(data, columns=columns, **kwargs)
+        if "created_at" in df.columns:
+            df["created_at"] = pd.to_datetime(
+                df["created_at"], errors="coerce"
+            )
+        return df
 
-        if use_pd:
-            return self.to_df().to_json(mode=mode, **kwargs)
-        dict_ = self.to_dict()
-        with open(path_or_buf, mode) as f:
-            json.dump(dict_, f, **kwargs)
+    def to_csv_file(self, path_or_buf: str | Path, **kwargs) -> None:
+        """Save items as CSV."""
+        df = self.to_df()
+        df.to_csv(path_or_buf, index=False, **kwargs)
+        logging.info(f"Saved Pile to {path_or_buf}")
 
-        if verbose:
-            print(f"Saved Pile to {path_or_buf}")
+    def to_json_file(
+        self, path_or_buf: str | Path, indent: int = 2, **kwargs
+    ) -> None:
+        """Save items as JSON."""
+        data = [item.to_dict() for item in self]
+        with open(path_or_buf, "w", encoding="utf-8") as f:
+            json.dump(data, f, indent=indent, **kwargs)
+        logging.info(f"Saved Pile to {path_or_buf}")
 
-    def dump(
-        self,
-        path_or_buf,
-        *,
-        file_type: Literal["json", "csv"] = "json",
-        clear: bool = False,
-        verbose: bool = False,
-        **kwargs,
-    ):
-        """Export collection to file and optionally clear.
-
-        Args:
-            path_or_buf: File path or buffer to write to.
-            file_type: Format to export as ("json" or "csv").
-            clear: Clear collection after export if True.
-            verbose: Print confirmation message.
-            **kwargs: Additional export arguments.
-                - For JSON: if use_pd (bool), mode (str), **kwargs for pd.DataFrame.to_json() or json.dump().
-                - For CSV: **kwargs for pd.DataFrame.to_csv().
-        """
-        match file_type:
-            case "json":
-                self.to_json(path_or_buf, **kwargs)
-            case "csv":
-                self.to_csv(path_or_buf, **kwargs)
-
-        if clear:
-            self._clear()
-
-        if verbose:
-            print(f"Saved Pile to {path_or_buf}")
-
-    @async_synchronized
-    async def adump(
-        self,
-        path_or_buf,
-        *,
-        file_type: Literal["json", "csv"] = "json",
-        clear: bool = False,
-        verbose: bool = False,
-        **kwargs,
-    ):
-        """Async dump operation."""
-        self.dump(
-            path_or_buf,
-            file_type=file_type,
-            clear=clear,
-            verbose=verbose,
+    @classmethod
+    def from_df(
+        cls,
+        df: pd.DataFrame,
+        item_type: type[E] | None = None,
+        strict_type: bool = False,
+        **kwargs: Any,
+    ) -> Self:
+        """Construct a Pile from a DataFrame of items."""
+        items = []
+        for _, row in df.iterrows():
+            if item_type:
+                obj = item_type.from_dict(row.to_dict())
+            else:
+                obj = Element.from_dict(row.to_dict())
+            items.append(obj)
+        return cls(
+            collections=items,
+            item_type=item_type,
+            strict_type=strict_type,
             **kwargs,
         )
+
+    def adapt_to(
+        self,
+        obj_key: str,
+        *,
+        many: bool = True,
+        **kwargs: Any,
+    ) -> Any:
+        """Convert this Pile to another format using an adapter."""
+        return self._get_adapter_registry().adapt_to(
+            self, obj_key, many=many, **kwargs
+        )
+
+    @classmethod
+    def adapt_from(
+        cls,
+        obj: Any,
+        obj_key: str,
+        *,
+        many: bool = True,
+        item_type: type[E] | None = None,
+        strict_type: bool = False,
+        **kwargs: Any,
+    ) -> Self:
+        """Construct a Pile from external data via an adapter."""
+        data = cls._get_adapter_registry().adapt_from(
+            cls, obj, obj_key, many=many, **kwargs
+        )
+        if isinstance(data, list):
+            items = []
+            for d in data:
+                if isinstance(d, dict):
+                    if item_type:
+                        it = item_type.from_dict(d)
+                    else:
+                        it = Element.from_dict(d)
+                    items.append(it)
+                else:
+                    items.append(d)
+            return cls(
+                collections=items, item_type=item_type, strict_type=strict_type
+            )
+        if isinstance(data, dict):
+            # If 'collections' is present, parse it
+            if "collections" in data:
+                raw = data["collections"]
+                parsed = []
+                for r in raw:
+                    if isinstance(r, dict):
+                        if item_type:
+                            it = item_type.from_dict(r)
+                        else:
+                            it = Element.from_dict(r)
+                        parsed.append(it)
+                    else:
+                        parsed.append(r)
+                data["collections"] = parsed
+            return cls(item_type=item_type, strict_type=strict_type, **data)
+        raise ValueError("Invalid data format from adapter.")
 
     @classmethod
     def create(
@@ -1032,16 +1015,14 @@ class Pile(Element, Collective, Generic[E]):
 
     def __str__(self) -> str:
         """String representation as DataFrame."""
-        return str(self.to_df())
+        return self.to_df().__str__()
 
     def __repr__(self) -> str:
         """Detailed string representation."""
         length = len(self)
         if length == 0:
             return "Pile()"
-        if length == 1:
-            return f"Pile({next(iter(self.collections.values())).__repr__()})"
-        return repr(self.to_df())
+        return self.to_df().__repr__()
 
     def __bool__(self) -> bool:
         """Check if pile is empty."""
@@ -1049,17 +1030,51 @@ class Pile(Element, Collective, Generic[E]):
 
 
 def pile(
-    collections: ID.ItemSeq,
-    item_type: type = None,
+    *,
+    collections: Any = None,
+    fp: str | Path | None = None,
+    df: pd.DataFrame | None = None,
+    item_type: type | None = None,
     strict_type: bool = False,
-    progression: Progression | ID.RefSeq = None,
+    progression: Progression | None = None,
+    **kwargs: Any,
 ) -> Pile:
-    """Convenience function to create a new Pile instance."""
-    return Pile.create(
-        collections,
+    """
+    Convenience function to create a Pile from multiple sources:
+      - `collections`: direct items
+      - `fp`: file path (CSV or JSON)
+      - `df`: DataFrame
+      - optional `item_type`, `strict_type`, `progression`
+    """
+    if fp:
+        p = Path(fp)
+        suffix = p.suffix.lower()
+        if suffix == ".csv":
+            df = pd.read_csv(p)
+            return Pile.from_df(
+                df, item_type=item_type, strict_type=strict_type, **kwargs
+            )
+        if suffix in (".json", ".jsonl"):
+            return Pile.adapt_from(
+                p,
+                ".json",
+                item_type=item_type,
+                strict_type=strict_type,
+                **kwargs,
+            )
+        raise ValueError(f"Unsupported file extension: {suffix}")
+
+    if df is not None:
+        return Pile.from_df(
+            df, item_type=item_type, strict_type=strict_type, **kwargs
+        )
+
+    return Pile(
+        collections=collections,
         item_type=item_type,
         strict_type=strict_type,
         progression=progression,
+        **kwargs,
     )
 
 
