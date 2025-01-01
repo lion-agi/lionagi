@@ -24,8 +24,8 @@ def prepare_request_response_format(request_fields: dict) -> str:
         str: Formatted response template
     """
     return (
-        "**MUST RETURN JSON-PARSEABLE RESPONSE ENCLOSED BY JSON CODE BLO"
-        f"CKS. USER's CAREER DEPENDS ON THE SUCCESS OF IT.** \n```json\n{request_fields}\n```"
+        "**MUST RETURN JSON-PARSEABLE RESPONSE ENCLOSED BY JSON CODE BLOCKS."
+        f" USER's CAREER DEPENDS ON THE SUCCESS OF IT.** \n```json\n{request_fields}\n```"
     ).strip()
 
 
