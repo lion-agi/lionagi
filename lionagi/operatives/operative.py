@@ -2,107 +2,91 @@
 #
 # SPDX-License-Identifier: Apache-2.0
 
-from typing import Any, Literal
+from typing import Self
 
-from pydantic import BaseModel
+from pydantic import BaseModel, Field, PrivateAttr, model_validator
 from pydantic.fields import FieldInfo
 
-from lionagi.libs.validate.fuzzy_validate_mapping import fuzzy_validate_mapping
-from lionagi.utils import UNDEFINED
+from lionagi.libs.validate.fuzzy_match_keys import fuzzy_match_keys
+from lionagi.utils import UNDEFINED, to_json
 
-from .models.field_model import FieldModel
-from .models.model_params import ModelParams
+from .models.model_params import FieldModel, ModelParams
+from .models.operable_model import OperableModel
 
 
-class Operative:
+class Operative(OperableModel):
+    """Class representing an operative that handles request and response models for operations."""
 
-    def __init__(
-        self,
-        name: str | None = None,
-        request_params: ModelParams | None = None,
-        response_params: ModelParams | None = None,
-        max_retries: int = 3,
-    ):
-        self.request_params = request_params
-        self.response_params = response_params
-        self.request_type = None
-        self.response_type = None
-        self.max_retries = max_retries
-        self.name = name
+    name: str | None = None
+
+    request_params: ModelParams | None = Field(default=None)
+    request_type: type[BaseModel] | None = Field(default=None)
+
+    response_params: ModelParams | None = Field(default=None)
+    response_type: type[BaseModel] | None = Field(default=None)
+    response_model: OperableModel | None = Field(default=None)
+    response_str_dict: dict | str | None = Field(default=None)
+
+    auto_retry_parse: bool = True
+    max_retries: int = 3
+    _should_retry: bool = PrivateAttr(default=None)
+
+    @model_validator(mode="after")
+    def _validate(self) -> Self:
+        """Validates the operative instance after initialization."""
         if self.request_type is None:
             self.request_type = self.request_params.create_new_model()
         if self.name is None:
             self.name = self.request_params.name or self.request_type.__name__
-        self.response_model = None
-        self.response_str_dict = None
+        return self
 
-    def create_response_type(
-        self,
-        response_params: ModelParams | None = None,
-        field_models: list[FieldModel] | None = None,
-        parameter_fields: dict[str, FieldInfo] | None = None,
-        exclude_fields: list[str] | None = None,
-        field_descriptions: dict[str, str] | None = None,
-        inherit_base: bool = True,
-        config_dict: dict | None = None,
-        doc: str | None = None,
-        frozen: bool = False,
-        validators: dict | None = None,
-    ) -> None:
-        self.response_params = response_params or ModelParams(
-            parameter_fields=parameter_fields,
-            field_models=field_models,
-            exclude_fields=exclude_fields,
-            field_descriptions=field_descriptions,
-            inherit_base=inherit_base,
-            config_dict=config_dict,
-            doc=doc,
-            frozen=frozen,
-            base_type=self.request_params.base_type,
-        )
-        if validators and isinstance(validators, dict):
-            self.response_params._validators.update(validators)
+    def raise_validate_pydantic(self, text: str) -> None:
+        """Validates and updates the response model using strict matching.
 
-        self.response_type = self.response_params.create_new_model()
+        Args:
+            text (str): The text to validate and parse into the response model.
 
-    def fuzzy_validate_pydantic(
-        self,
-        text: str,
-        similarity_algo="jaro_winkler",
-        similarity_threshold: float = 0.85,
-        fuzzy_match: bool = True,
-        handle_unmatched: Literal[
-            "ignore", "raise", "remove", "fill", "force"
-        ] = "force",
-        fill_value: Any = UNDEFINED,
-        fill_mapping: dict[str, Any] | None = None,
-        strict: bool = False,
-        suppress_conversion_errors: bool = False,
-    ) -> None:
-        d_ = fuzzy_validate_mapping(
-            text,
-            self.request_type.model_fields,
-            similarity_algo=similarity_algo,
-            similarity_threshold=similarity_threshold,
-            fuzzy_match=fuzzy_match,
-            handle_unmatched=handle_unmatched,
-            fill_value=fill_value,
-            fill_mapping=fill_mapping,
-            strict=strict,
-            suppress_conversion_errors=suppress_conversion_errors,
-        )
-        d_ = {k: v for k, v in d_.items() if v != UNDEFINED}
+        Raises:
+            Exception: If the validation fails.
+        """
+        d_ = to_json(text, fuzzy_parse=True)
+        if isinstance(d_, list | tuple) and len(d_) == 1:
+            d_ = d_[0]
         try:
-            return self.request_type.model_validate(d_)
+            d_ = fuzzy_match_keys(
+                d_, self.request_type.model_fields, handle_unmatched="raise"
+            )
+            d_ = {k: v for k, v in d_.items() if v != UNDEFINED}
+            self.response_model = self.request_type.model_validate(d_)
+            self._should_retry = False
         except Exception:
-            return d_
+            self.response_str_dict = d_
+            self._should_retry = True
+
+    def force_validate_pydantic(self, text: str):
+        """Forcibly validates and updates the response model, allowing unmatched fields.
+
+        Args:
+            text (str): The text to validate and parse into the response model.
+        """
+        d_ = text
+        try:
+            d_ = to_json(text, fuzzy_parse=True)
+            if isinstance(d_, list | tuple) and len(d_) == 1:
+                d_ = d_[0]
+            d_ = fuzzy_match_keys(
+                d_, self.request_type.model_fields, handle_unmatched="force"
+            )
+            d_ = {k: v for k, v in d_.items() if v != UNDEFINED}
+            self.response_model = self.request_type.model_validate(d_)
+            self._should_retry = False
+        except Exception:
+            self.response_str_dict = d_
+            self.response_model = None
+            self._should_retry = True
 
     def update_response_model(
-        self,
-        text: str | None = None,
-        data: dict | None = None,
-        response_model: BaseModel | None = None,
-        **kwargs,
+        self, text: str | None = None, data: dict | None = None
     ) -> BaseModel | dict | str | None:
         """Updates the response model based on the provided text or data.
 
@@ -120,16 +104,20 @@ class Operative:
             raise ValueError("Either text or data must be provided.")
 
         if text:
-            return self.fuzzy_validate_pydantic(text, **kwargs)
+            self.response_str_dict = text
+            try:
+                self.raise_validate_pydantic(text)
+            except Exception:
+                self.force_validate_pydantic(text)
 
         if data and self.response_type:
-            if not response_model:
-                raise ValueError("Response model must be provided.")
-            d_ = response_model.model_dump()
+            d_ = self.response_model.model_dump()
             d_.update(data)
-            response_model = self.response_type.model_validate(d_)
+            self.response_model = self.response_type.model_validate(d_)
 
-        if not response_model and isinstance(self.response_str_dict, list):
+        if not self.response_model and isinstance(
+            self.response_str_dict, list
+        ):
             try:
                 self.response_model = [
                     self.request_type.model_validate(d_)
@@ -139,3 +127,46 @@ class Operative:
                 pass
 
         return self.response_model or self.response_str_dict
+
+    def create_response_type(
+        self,
+        response_params: ModelParams | None = None,
+        field_models: list[FieldModel] | None = None,
+        parameter_fields: dict[str, FieldInfo] | None = None,
+        exclude_fields: list[str] | None = None,
+        field_descriptions: dict[str, str] | None = None,
+        inherit_base: bool = True,
+        config_dict: dict | None = None,
+        doc: str | None = None,
+        frozen: bool = False,
+        validators: dict | None = None,
+    ) -> None:
+        """Creates a new response type based on the provided parameters.
+
+        Args:
+            response_params (ModelParams, optional): Parameters for the new response model.
+            field_models (list[FieldModel], optional): List of field models.
+            parameter_fields (dict[str, FieldInfo], optional): Dictionary of parameter fields.
+            exclude_fields (list, optional): List of fields to exclude.
+            field_descriptions (dict, optional): Dictionary of field descriptions.
+            inherit_base (bool, optional): Whether to inherit the base model.
+            config_dict (dict | None, optional): Configuration dictionary.
+            doc (str | None, optional): Documentation string.
+            frozen (bool, optional): Whether the model is frozen.
+            validators (dict, optional): Dictionary of validators.
+        """
+        self.response_params = response_params or ModelParams(
+            parameter_fields=parameter_fields,
+            field_models=field_models,
+            exclude_fields=exclude_fields,
+            field_descriptions=field_descriptions,
+            inherit_base=inherit_base,
+            config_dict=config_dict,
+            doc=doc,
+            frozen=frozen,
+            base_type=self.request_params.base_type,
+        )
+        if validators and isinstance(validators, dict):
+            self.response_params._validators.update(validators)
+
+        self.response_type = self.response_params.create_new_model()

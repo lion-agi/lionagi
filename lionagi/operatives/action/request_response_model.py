@@ -75,7 +75,7 @@ ACTION_REQUESTS_FIELD = FieldModel(
 
 class ActionResponseModel(HashableModel):
 
-    function: str = Field(..., title="Function")
+    function: str = Field(default_factory=str, title="Function")
     arguments: dict[str, Any] = Field(default_factory=dict)
     output: Any = None
 

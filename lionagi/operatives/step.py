@@ -2,7 +2,7 @@
 #
 # SPDX-License-Identifier: Apache-2.0
 
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
 from pydantic.fields import FieldInfo
 
 from lionagi.operatives.instruct.reason import REASON_FIELD, Reason
@@ -24,13 +24,13 @@ class StepModel(BaseModel):
 
     title: str
     description: str
-    reason: Reason | None = REASON_FIELD.field_info
-    action_requests: list[ActionRequestModel] = (
-        ACTION_REQUESTS_FIELD.field_info
+    reason: Reason | None = Field(**REASON_FIELD.to_dict())
+    action_requests: list[ActionRequestModel] = Field(
+        **ACTION_REQUESTS_FIELD.to_dict()
     )
-    action_required: bool = ACTION_REQUIRED_FIELD.field_info
-    action_responses: list[ActionResponseModel] = (
-        ACTION_RESPONSES_FIELD.field_info
+    action_required: bool = Field(**ACTION_REQUIRED_FIELD.to_dict())
+    action_responses: list[ActionResponseModel] = Field(
+        **ACTION_RESPONSES_FIELD.to_dict()
     )
 
 

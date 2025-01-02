@@ -4,7 +4,7 @@
 
 from pydantic import JsonValue
 
-from lionagi.libs.validate import validate_boolean
+from lionagi.libs.validate.validate_boolean import validate_boolean
 
 from ..models.field_model import FieldModel
 from .prompts import (
