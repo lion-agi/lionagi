@@ -8,67 +8,42 @@ import asyncio
 import json
 import logging
 import threading
-from collections.abc import AsyncIterator, Callable, Generator, Iterator
+from collections import deque
+from collections.abc import (
+    AsyncIterator,
+    Callable,
+    Generator,
+    Iterator,
+    Sequence,
+)
 from functools import wraps
 from pathlib import Path
 from typing import Any, ClassVar, Generic, Self, TypeVar
 
 import pandas as pd
-from pydantic import Field, field_serializer, model_validator
+from pydantic import Field, field_serializer
 from pydantic.fields import FieldInfo
+from typing_extensions import override
 
-from lionagi._errors import IDError, ItemExistsError, ItemNotFoundError
-from lionagi.utils import UNDEFINED, lcall, to_list
+from lionagi._errors import ItemExistsError, ItemNotFoundError
+from lionagi.utils import UNDEFINED, is_same_dtype, to_list
 
-from .._adapter import DEFAULT_ADAPTERS, Adaptable, AdapterRegistry
+from .._adapter import DEFAULT_ADAPTERS, Adaptable, Adapter, AdapterRegistry
+from .._concepts import Observable
 from .element import ID, Collective, E, Element, IDType, validate_order
 from .progression import Progression
 
 D = TypeVar("D")
+T = TypeVar("T", bound=E)
 
 
-def validate_collection_item_type(
-    collections: Any, item_type: type = None, strict_type: bool = None
-) -> dict[IDType, Element]:
-    """Validate and convert collections to a dictionary of Elements.
-
-    Args:
-        collections: Items to validate and convert.
-        item_type: Expected type of items if any.
-        strict_type: Whether to enforce exact type matching.
-
-    Returns:
-        Dictionary mapping IDs to validated Elements.
-
-    Raises:
-        ValueError: If items don't meet type requirements.
-    """
-    collections = to_list(
-        collections, flatten=True, dropna=True, use_values=True
-    )
-
-    if item_type is not None:
-        if strict_type:
-            if any(type(i) not in {item_type} for i in collections):
-                raise TypeError(
-                    f"All items must be exactly of type {item_type}."
-                )
-        else:
-            if any(not isinstance(item, item_type) for item in collections):
-                raise TypeError(f"All items must be instances of {item_type}.")
-
-    out = {}
-    for i in collections:
-        if isinstance(i, Element):
-            out[i.id] = i
-        else:
-            raise ValueError("All items must be Element instances.")
-    return out
+__all__ = (
+    "Pile",
+    "pile",
+)
 
 
 def synchronized(func: Callable):
-    """Decorator for thread-safe synchronous methods."""
-
     @wraps(func)
     def wrapper(self: Pile, *args, **kwargs):
         with self.lock:
@@ -78,8 +53,6 @@ def synchronized(func: Callable):
 
 
 def async_synchronized(func: Callable):
-    """Decorator for thread-safe asynchronous methods."""
-
     @wraps(func)
     async def wrapper(self: Pile, *args, **kwargs):
         async with self.async_lock:
@@ -89,641 +62,375 @@ def async_synchronized(func: Callable):
 
 
 class PileAdapterRegistry(AdapterRegistry):
-    """Registry for Pile adapters."""
+    pass
 
 
-for adapter in DEFAULT_ADAPTERS:
-    PileAdapterRegistry.register(adapter)
+for i in DEFAULT_ADAPTERS:
+    PileAdapterRegistry.register(i)
 
 
 class Pile(Element, Adaptable, Collective[E], Generic[E]):
-    """A thread-safe collection of Elements with ordered progression.
+    """Thread-safe async-compatible, ordered collection of elements.
 
-    Manages a collection of Elements with support for synchronous and asynchronous
-    operations, type validation, and ordered progression tracking.
+    The Pile class provides a thread-safe, async-compatible collection with:
+    - Type validation and enforcement
+    - Order preservation
+    - Format adapters (JSON, CSV, Excel)
+    - Memory efficient storage
 
     Attributes:
-        collections: Dictionary mapping IDs to Elements.
-        item_type: Optional type constraint for stored items.
-        strict_type: Whether to enforce exact type matching.
-        progression: Tracks order of items in collection.
-
-    Example:
-        >>> pile = Pile(collections=[element1, element2])
-        >>> pile.append(element3)
-        >>> async with pile:
-        ...     await pile.aset(0, element4)
+        pile_ (dict[str, T]): Internal storage mapping IDs to elements
+        item_type (set[type[T]] | None): Allowed element types
+        progress (Progression): Order tracking
+        strict_type (bool): Whether to enforce strict type checking
     """
 
-    adapter_registry: ClassVar[AdapterRegistry] = PileAdapterRegistry
+    pile_: dict[IDType, T] = Field(default_factory=dict)
+    item_type: set | None = Field(
+        default=None,
+        description="Set of allowed types for items in the pile.",
+        exclude=True,
+    )
+    progress: Progression = Field(
+        default_factory=Progression,
+        description="Progression specifying the order of items in the pile.",
+        exclude=True,
+    )
+    strict_type: bool = Field(
+        default=False,
+        description="Specify if enforce a strict type check",
+        frozen=True,
+    )
 
-    collections: dict[IDType, E] = Field(default_factory=dict)
-    item_type: type | None = Field(default=None, frozen=True)
-    strict_type: bool = Field(default=False, frozen=True)
-    progression: Progression = Field(default_factory=Progression)
+    _adapter_registry: ClassVar[AdapterRegistry] = PileAdapterRegistry
 
     def __pydantic_extra__(self) -> dict[str, FieldInfo]:
         return {
             "_lock": Field(default_factory=threading.Lock),
-            "_async_lock": Field(default_factory=asyncio.Lock),
+            "_async": Field(default_factory=asyncio.Lock),
         }
 
     def __pydantic_private__(self) -> dict[str, FieldInfo]:
         return self.__pydantic_extra__()
 
-    @property
-    def name(self) -> str:
-        return self.progression.name
+    @override
+    def __init__(
+        self,
+        items: ID.ItemSeq = None,
+        item_type: set[type[T]] = None,
+        order: ID.RefSeq = None,
+        strict_type: bool = False,
+        **kwargs,
+    ) -> None:
+        """Initialize a Pile instance.
 
-    @name.setter
-    def name(self, value: str):
-        self.progression.name = value
+        Args:
+            items: Initial items for the pile.
+            item_type: Allowed types for items in the pile.
+            order: Initial order of items (as Progression).
+            strict_type: If True, enforce strict type checking.
+        """
+        _config = {}
+        if "id" in kwargs:
+            _config["id"] = kwargs["id"]
+        if "created_timestamp" in kwargs:
+            _config["created_timestamp"] = kwargs["created_timestamp"]
 
-    @model_validator(mode="before")
-    def _validate_item_type(cls, values: dict) -> dict:
-        """Validate item types and ensure collection-progression consistency."""
-        params = {}
-        if "item_type" in values:
-            if not isinstance(values["item_type"], type):
-                raise ValueError("item_type must be a type.")
-            params["item_type"] = values["item_type"]
+        super().__init__(strict_type=strict_type, **_config)
+        self.item_type = self._validate_item_type(item_type)
+        self.pile_ = self._validate_pile(items or kwargs.get("pile_", {}))
+        self.progress = self._validate_order(order)
 
-        if "strict_type" in values:
-            if not isinstance(values["strict_type"], bool):
-                raise ValueError("strict_type must be a boolean.")
-            params["strict_type"] = values["strict_type"]
+    # Sync Interface methods
+    @override
+    @classmethod
+    def from_dict(
+        cls,
+        data: dict[str, Any],
+        /,
+    ) -> Pile:
+        """Create a Pile instance from a dictionary.
 
-        if "collections" in values:
-            # Validate collections
-            try:
-                params["collections"] = validate_collection_item_type(
-                    values["collections"], **params
-                )
-            except Exception as e:
-                raise ValueError(f"Invalid collection items: {e}") from e
+        Args:
+            data: A dictionary containing Pile data.
 
-        if "progression" not in values:
-            # If no progression given, create from collections keys if collections present
-            if "collections" in params:
-                params["progression"] = Progression(
-                    order=list(params["collections"].keys())
-                )
-            return params
+        Returns:
+            A new Pile instance created from the provided data.
 
-        progression = values["progression"]
-        if isinstance(progression, Progression):
-            progression = progression.order
+        Raises:
+            ValueError: If the dictionary format is invalid.
+        """
+        items = data.pop("pile_", [])
+        items = [Element.from_dict(i) for i in items]
+        return cls(items=items, **data)
 
-        params["progression"] = Progression(order=progression)
+    def __setitem__(
+        self,
+        key: ID.Ref | ID.RefSeq | int | slice,
+        item: ID.ItemSeq | ID.Item,
+    ) -> None:
+        """Set an item or items in the Pile.
 
-        # Validate collections and progression consistency
-        if "progression" in params:
-            if set(params.get("collections", {}).keys()) != set(
-                params["progression"].order
-            ):
-                raise ValueError(
-                    "Collections and progression must have the same items."
-                )
-        return params
+        Args:
+            key: The key to set (index, ID, or slice).
+            item: The item(s) to set.
 
-    @field_serializer("collections")
-    def _serialize_collections(
-        self, collections: dict[IDType, E]
-    ) -> dict[str, dict]:
-        # Keys are IDType; convert to str for serialization
-        return {str(k): v.to_dict() for k, v in collections.items()}
-
-    @field_serializer("progression")
-    def _serialize_progression(self, progression: Progression) -> list[str]:
-        return [str(item) for item in progression.order]
-
-    def __contains__(self, item: ID.RefSeq) -> bool:
-        """Check if item(s) exist in collection."""
-        get_id = ID.get_id
-        items = to_list(item, flatten=True, dropna=True, use_values=True)
-        for i in items:
-            try:
-                item_id = get_id(i)
-                if item_id not in self.collections:
-                    return False
-            except:
-                return False
-        return True
-
-    def __setitem__(self, key: ID.RefSeq | int | slice, value: ID.ItemSeq):
-        """Set item(s) at specified key/index."""
-        item_dict = validate_collection_item_type(
-            value, self.item_type, self.strict_type
-        )
-        new_ids = list(item_dict.keys())
-
-        if isinstance(key, int):
-            if key < 0:
-                key = len(self.progression) + key
-            if key < 0 or key > len(self.progression):
-                raise IndexError("Index out of range.")
-
-            if key == len(self.progression):
-                self.progression.insert(key, new_ids)
-                self.collections.update(item_dict)
-            else:
-                delete_order = self.progression[key]
-                if any(i in self.collections for i in new_ids):
-                    for i in new_ids:
-                        if i in self.collections and i not in to_list(
-                            delete_order, flatten=True
-                        ):
-                            raise ItemExistsError(
-                                "Item already exists in the pile."
-                            )
-                self.progression[key] = new_ids
-                for old_id in to_list(delete_order, flatten=True):
-                    self.collections.pop(old_id, None)
-                self.collections.update(item_dict)
-
-        elif isinstance(key, slice):
-            # Slices never IndexError, out-of-range slice returns empty
-            # Check existence for new items
-            slice_items = self.progression[key]  # current items in that slice
-            for i in new_ids:
-                if i in self.collections and i not in to_list(
-                    slice_items, flatten=True
-                ):
-                    raise ItemExistsError("Item already exists in the pile.")
-            self.progression[key] = new_ids
-            for old_id in to_list(slice_items, flatten=True):
-                self.collections.pop(old_id, None)
-            self.collections.update(item_dict)
-
-        else:
-            # Key is refs
-            processed_key = lcall(
-                key,
-                ID.get_id,
-                sanitize_input=True,
-                flatten=True,
-                dropna=True,
-                unique_output=True,
-            )
-            if len(processed_key) != len(item_dict) or any(
-                i not in item_dict for i in processed_key
-            ):
-                raise KeyError(
-                    f"Invalid key {processed_key}. Key and item do not match."
-                )
-
-            # Check existence
-            for i in new_ids:
-                if i not in processed_key and i in self.collections:
-                    raise ItemExistsError("Item already exists in the pile.")
-
-            self.progression.include(processed_key)
-            self.collections.update(item_dict)
-
-    @synchronized
-    def set(self, key: ID.RefSeq | int | slice, value: ID.ItemSeq):
-        """Thread-safe set operation."""
-        self[key] = value
-
-    @async_synchronized
-    async def aset(self, key: ID.RefSeq | int | slice, value: ID.ItemSeq):
-        """Async thread-safe set operation."""
-        self[key] = value
-
-    def __getitem__(self, key: ID.RefSeq | int | slice) -> ID.ItemSeq:
-        """Get item(s) by key/index."""
-        try:
-            if isinstance(key, (int, slice)):
-                result_ids = self.progression[key]
-                if not isinstance(result_ids, list):
-                    result_ids = [result_ids]
-                return (
-                    self.collections[result_ids[0]]
-                    if len(result_ids) == 1
-                    else [self.collections[i] for i in result_ids]
-                )
-
-            # If key is not int or slice, treat as refs
-            # Convert key to IDs
-            out_ids = []
-            try:
-                out_ids = lcall(
-                    key,
-                    ID.get_id,
-                    sanitize_input=True,
-                    flatten=True,
-                    dropna=True,
-                    unique_output=True,
-                )
-            except IDError:
-                # If parsing failed, no such item
-                raise ItemNotFoundError(
-                    f"Item with id {key} not found in the pile."
-                )
-
-            out_items = []
-            for oid in out_ids:
-                if oid not in self.collections:
-                    raise ItemNotFoundError(
-                        f"Item with id {oid} not found in the pile."
-                    )
-                out_items.append(self.collections[oid])
-            return out_items[0] if len(out_items) == 1 else out_items
-        except (KeyError, IndexError):
-            raise ItemNotFoundError(
-                f"Item with id {key} not found in the pile."
-            )
-
-    def _get(
-        self, key: ID.RefSeq | int | slice, default: D = UNDEFINED
-    ) -> E | D | list[E]:
-        """Internal get implementation with default value handling."""
-        try:
-            return self[key]
-        except ItemNotFoundError:
-            if default is not UNDEFINED:
-                return default
-            raise
-
-    @synchronized
-    def get(
-        self, key: ID.RefSeq | int | slice, default: D = UNDEFINED
-    ) -> E | D | list[E]:
-        """Thread-safe get operation with default value."""
-        return self._get(key, default)
-
-    @async_synchronized
-    async def aget(
-        self, key: ID.RefSeq | int | slice, default: D = UNDEFINED
-    ) -> E | D | list[E]:
-        """Async thread-safe get operation with default value."""
-        return self._get(key, default)
-
-    def include(self, item: ID.ItemSeq) -> bool:
-        """Include items without raising errors."""
-        try:
-            item_dict = validate_collection_item_type(
-                item, self.item_type, self.strict_type
-            )
-        except Exception:
-            return False
-
-        if not item_dict:
-            return True
-        self.progression.include(list(item_dict.keys()))
-        self.collections.update(item_dict)
-        return True
-
-    @async_synchronized
-    async def ainclude(self, item: ID.ItemSeq) -> bool:
-        """Async thread-safe include operation."""
-        return self.include(item)
-
-    def _append(self, item: ID.ItemSeq):
-        """will raise value error, if any item is not an Element"""
-        item_dict = validate_collection_item_type(
-            item, self.item_type, self.strict_type
-        )
-        if any(i in self.collections for i in item_dict):
-            raise ItemExistsError("Item already exists in the pile.")
-        self.progression.append(list(item_dict.keys()))
-        self.collections.update(item_dict)
-
-    @synchronized
-    def append(self, item: ID.ItemSeq):
-        """Thread-safe append operation."""
-        self._append(item)
-
-    def exclude(self, item: ID.RefSeq) -> bool:
-        """Exclude items without raising errors."""
-        try:
-            item_ids = validate_order(item)
-        except ValueError:
-            return False
-        if not item_ids:
-            return True
-        for i in item_ids:
-            if i in self.collections:
-                self.collections.pop(i, None)
-                self.progression.exclude(i)
-        return True
-
-    @async_synchronized
-    async def aexclude(self, item: ID.RefSeq) -> bool:
-        """Async thread-safe exclude operation."""
-        return self.exclude(item)
-
-    def _pop(self, item: ID.RefSeq, default: D = UNDEFINED) -> E | list[E] | D:
-        """Internal pop implementation."""
-        try:
-            item_ids = []
-            if isinstance(item, (int, slice)):
-                item_ids = self.progression[item]
-            else:
-                item_ids = validate_order(item)
-            out = []
-            item_ids = (
-                [item_ids] if not isinstance(item_ids, list) else item_ids
-            )
-            for i in item_ids:
-                if i not in self.collections:
-                    raise ItemNotFoundError(
-                        f"Item with id {i} not found in the pile."
-                    )
-                out.append(self.collections.pop(i))
-                self.progression.exclude(i)
-            return out[0] if len(out) == 1 else out
-        except Exception as e:
-            if default is not UNDEFINED:
-                return default
-            raise ItemNotFoundError(
-                f"Item with id {item} not found in the pile."
-            ) from e
-
-    @synchronized
-    def popleft(self) -> E:
-        """Thread-safe pop operation."""
-        return self._pop(self.progression.popleft())
-
-    @async_synchronized
-    async def apopleft(self) -> E:
-        return self._pop(self.progression.popleft())
+        Raises:
+            TypeError: If item type not allowed.
+            KeyError: If key invalid.
+        """
+        self._setitem(key, item)
 
     @synchronized
     def pop(
-        self, item: ID.RefSeq = 0, default: D = UNDEFINED
-    ) -> E | list[E] | D:
-        """Thread-safe pop operation."""
-        return self._pop(item, default)
+        self,
+        key: ID.Ref | ID.RefSeq | int | slice,
+        default: D = UNDEFINED,
+        /,
+    ) -> T | Pile | D:
+        """Remove and return item(s) from the Pile.
 
-    @async_synchronized
-    async def apop(
-        self, item: ID.RefSeq = 0, default: D = UNDEFINED
-    ) -> E | list[E] | D:
-        """Async thread-safe pop operation."""
-        return self._pop(item, default)
+        Args:
+            key: Key of item(s) to remove.
+            default: Value if key not found.
 
-    def __getstate__(self):
-        """Get state for pickling."""
-        state = self.__dict__.copy()
-        state["_lock"] = None
-        state["_async_lock"] = None
-        return state
+        Returns:
+            Removed item(s) or default.
 
-    def __setstate__(self, state):
-        """Set state for unpickling."""
-        self.__dict__.update(state)
-        self._lock = threading.Lock()
-        self._async_lock = asyncio.Lock()
+        Raises:
+            KeyError: If key not found and no default.
+        """
+        return self._pop(key, default)
 
-    @property
-    def lock(self) -> threading.Lock:
-        """Thread lock for synchronization."""
-        if not hasattr(self, "_lock") or self._lock is None:
-            self._lock = threading.Lock()
-        return self._lock
+    def remove(
+        self,
+        item: T,
+        /,
+    ) -> None:
+        """Remove a specific item from the Pile.
 
-    @property
-    def async_lock(self) -> asyncio.Lock:
-        """Async lock for synchronization."""
-        if not hasattr(self, "_async_lock") or self._async_lock is None:
-            self._async_lock = asyncio.Lock()
-        return self._async_lock
+        Args:
+            item: Item to remove.
 
-    def __iter__(self) -> Iterator[E]:
-        """Iterate over items safely."""
-        with self.lock:
-            current_order = list(self.progression)
+        Raises:
+            ValueError: If item not found.
+        """
+        self._remove(item)
 
-        for key in current_order:
-            yield self.collections[key]
+    def include(
+        self,
+        item: ID.ItemSeq | ID.Item,
+        /,
+    ) -> None:
+        """Include item(s) if not present.
 
-    def keys(self) -> Generator[IDType]:
-        """Get ordered list of collection keys."""
-        return (i for i in self.progression.order[:])
+        Args:
+            item: Item(s) to include.
 
-    def values(self) -> Generator[E]:
-        """Get ordered list of collection values."""
-        return (self.collections[i] for i in list(self.progression))
+        Raises:
+            TypeError: If item type not allowed.
+        """
+        self._include(item)
 
-    def items(self) -> Generator[tuple[IDType, E]]:
-        """Get collection items as key-value pairs."""
-        return ((i, self.collections[i]) for i in self.progression)
+    def exclude(
+        self,
+        item: ID.ItemSeq | ID.Item,
+        /,
+    ) -> None:
+        """Exclude item(s) if present.
+
+        Args:
+            item: Item(s) to exclude.
+        """
+        self._exclude(item)
 
     @synchronized
-    def insert(self, index: int, item: ID.Item):
-        """Insert item at specified index without replacing existing items.
+    def clear(self) -> None:
+        """Remove all items."""
+        self._clear()
+
+    def update(
+        self,
+        other: ID.Item | ID.ItemSeq,
+        /,
+    ) -> None:
+        """Update with items from another source.
+
+        Args:
+            other: Items to update from.
+
+        Raises:
+            TypeError: If item types not allowed.
+        """
+        self._update(other)
+
+    @synchronized
+    def insert(self, index: int, item: T, /) -> None:
+        """Insert item at position.
 
         Args:
             index: Position to insert at.
-            item: Item(s) to insert.
+            item: Item to insert.
 
         Raises:
-            ItemExistsError: If item already exists in collection.
+            IndexError: If index out of range.
+            TypeError: If item type not allowed.
         """
-        item_dict = validate_collection_item_type(
-            item, self.item_type, self.strict_type
-        )
-        for i in item_dict:
-            if i in self.progression:
-                raise ItemExistsError(f"item {i} already exists in the pile")
-        self.progression.insert(index, list(item_dict.keys()))
-        self.collections.update(item_dict)
-
-    def _clear(self):
-        self.collections.clear()
-        self.progression.clear()
+        self._insert(index, item)
 
     @synchronized
-    def clear(self):
-        """Remove all items from collection."""
-        self._clear()
+    def append(self, item: T, /) -> None:
+        """Append item to end (alias for include).
 
-    @async_synchronized
-    async def aclear(self):
-        """Async clear operation."""
-        self._clear()
+        Args:
+            item: Item to append.
 
-    def _update(self, other: ID.ItemSeq | ID.Item):
-        # Update or include new items
-        items = to_list(other, flatten=True, dropna=True, use_values=True)
-        # must be Elements
-        if any(not isinstance(x, Element) for x in items):
-            raise ValueError("All items must be Element instances.")
-        others = {x.id: x for x in items}
-        for i, val in others.items():
-            if i in self.collections:
-                self.collections[i] = val
-            else:
-                self.include(val)
+        Raises:
+            TypeError: If item type not allowed.
+        """
+        self.update(item)
 
-    def update(self, other: ID.ItemSeq | ID.Item):
-        """Update existing items or include new ones."""
-        self._update(other)
-
-    @async_synchronized
-    async def aupdate(self, other: ID.ItemSeq | ID.Item):
-        """Async update operation."""
-        self._update(other)
-
-    async def __aiter__(self) -> AsyncIterator[E]:
-        """Async iterate over items."""
-        async with self.async_lock:
-            current_order = list(self.progression)
-
-        for key in current_order:
-            yield self.collections[key]
-            await asyncio.sleep(0)  # Yield control to the event loop
-
-    @async_synchronized
-    async def asetitem(
+    @synchronized
+    def get(
         self,
         key: ID.Ref | ID.RefSeq | int | slice,
-        item: ID.Item | ID.ItemSeq,
+        default: D = UNDEFINED,
         /,
-    ) -> None:
-        """Async set item(s)."""
-        self.set(key, item)
+    ) -> T | Pile | D:
+        """Get item(s) by key with default.
 
-    class AsyncPileIterator:
-        def __init__(self, pile: Pile):
-            self.pile = pile
-            self.index = 0
+        Args:
+            key: Key to get items by.
+            default: Value if not found.
 
-        def __aiter__(self) -> AsyncIterator[E]:
-            return self
+        Returns:
+            Item(s) or default.
+        """
+        return self._get(key, default)
 
-        async def __anext__(self) -> E:
-            if self.index >= len(self.pile):
-                raise StopAsyncIteration
-            item_id = self.pile.progression[self.index]
-            item = self.pile.collections[item_id]
-            self.index += 1
-            await asyncio.sleep(0)
-            return item
+    def keys(self) -> Sequence[str]:
+        """Get all Lion IDs in order."""
+        return list(self.progress)
 
-    async def __aenter__(self) -> Self:
-        """Async context manager entry."""
-        await self.async_lock.acquire()
-        return self
+    def values(self) -> Sequence[T]:
+        """Get all items in order."""
+        return [self.pile_[key] for key in self.progress]
 
-    async def __aexit__(
-        self,
-        exc_type: type[BaseException] | None,
-        exc_val: BaseException | None,
-        exc_tb: Any,
-    ) -> None:
-        """Async context manager exit."""
-        self.async_lock.release()
+    def items(self) -> Sequence[tuple[IDType, T]]:
+        """Get all (ID, item) pairs in order."""
+        return [(key, self.pile_[key]) for key in self.progress]
+
+    def is_empty(self) -> bool:
+        """Check if empty."""
+        return len(self.progress) == 0
+
+    def size(self) -> int:
+        """Get number of items."""
+        return len(self.progress)
+
+    def __iter__(self) -> Iterator[T]:
+        """Iterate over items safely."""
+        with self.lock:
+            current_order = list(self.progress)
+
+        for key in current_order:
+            yield self.pile_[key]
+
+    def __next__(self) -> T:
+        """Get next item."""
+        try:
+            return next(iter(self))
+        except StopIteration:
+            raise StopIteration("End of pile")
+
+    def __getitem__(
+        self, key: ID.Ref | ID.RefSeq | int | slice
+    ) -> Any | list | T:
+        """Get item(s) by key.
+
+        Args:
+            key: Key to get items by.
+
+        Returns:
+            Item(s) or sliced Pile.
+
+        Raises:
+            KeyError: If key not found.
+        """
+        return self._getitem(key)
+
+    def __contains__(self, item: ID.RefSeq | ID.Ref) -> bool:
+        """Check if item exists."""
+        return item in self.progress
 
     def __len__(self) -> int:
-        """Get collection size."""
-        return len(self.collections)
+        """Get number of items."""
+        return len(self.pile_)
 
-    def __list__(self) -> list[E]:
-        return list(self.values())
+    @override
+    def __bool__(self) -> bool:
+        """Check if not empty."""
+        return not self.is_empty()
 
-    def __or__(self, other: Pile) -> Pile:
-        """Create a new Pile containing items from both piles (union).
-
-        Returns items present in either current pile or other pile.
-        Original piles remain unchanged.
-
-        Args:
-            other: Pile to union with.
-
-        Returns:
-            Pile: New pile containing all items from both piles.
-
-        Raises:
-            ValueError: If other is not a Pile or items don't match item_type.
-
-        Example:
-            >>> pile1 = Pile([item1, item2])
-            >>> pile2 = Pile([item2, item3])
-            >>> result = pile1 | pile2  # Contains item1, item2, item3
-        """
-        if not isinstance(other, Pile):
-            raise ValueError("Only Pile instances can be unioned.")
-        if self.item_type and any(
-            not isinstance(x, self.item_type) for x in other
-        ):
-            raise ValueError(
-                "All items must be exactly of type {self.item_type}."
-            )
-        result = self.__class__(
-            collections=self.collections,
-            item_type=self.item_type,
-            strict_type=self.strict_type,
-            progression=self.progression,
-        )
-        result._update(other)
-        return result
+    def __list__(self) -> list[T]:
+        """Convert to list."""
+        return self.values()
 
     def __ior__(self, other: Pile) -> Self:
-        """Add all items from other pile into this pile (in-place union).
-
-        Updates current pile with items from other pile. Other pile
-        remains unchanged.
-
-        Args:
-            other: Pile to union with.
-
-        Returns:
-            Self: Updated current pile with items from both piles.
-
-        Raises:
-            ValueError: If other is not a Pile or items don't match item_type.
-
-        Example:
-            >>> pile1 = Pile([item1, item2])
-            >>> pile2 = Pile([item2, item3])
-            >>> pile1 |= pile2  # pile1 now contains item1, item2, item3
-        """
+        """In-place union."""
         if not isinstance(other, Pile):
-            raise ValueError("Only Pile instances can be unioned.")
-        if self.item_type and any(
-            not isinstance(x, self.item_type) for x in other
-        ):
-            raise ValueError(
-                "All items must be exactly of type {self.item_type}."
+            raise TypeError(
+                "Invalid type for Pile operation.",
+                expected_type=Pile,
+                actual_type=type(other),
             )
-        other = validate_collection_item_type(
-            other, self.item_type, self.strict_type
+        other = self._validate_pile(list(other))
+        self.include(other)
+        return self
+
+    def __or__(self, other: Pile) -> Pile:
+        """Union."""
+        if not isinstance(other, Pile):
+            raise TypeError(
+                "Invalid type for Pile operation.",
+                expected_type=Pile,
+                actual_type=type(other),
+            )
+
+        result = self.__class__(
+            items=self.values(),
+            item_type=self.item_type,
+            order=self.progress,
         )
-        self._update(other)
+        result.include(list(other))
+        return result
+
+    def __ixor__(self, other: Pile) -> Self:
+        """In-place symmetric difference."""
+        if not isinstance(other, Pile):
+            raise TypeError(
+                "Invalid type for Pile operation.",
+                expected_type=Pile,
+                actual_type=type(other),
+            )
+
+        to_exclude = []
+        for i in other:
+            if i in self:
+                to_exclude.append(i)
+
+        other = [i for i in other if i not in to_exclude]
+        self.exclude(to_exclude)
+        self.include(other)
         return self
 
     def __xor__(self, other: Pile) -> Pile:
-        """Create new Pile with items in either pile but not both (symmetric difference).
-
-        Returns items that are present in only one of the piles, excluding items
-        present in both. Original piles remain unchanged.
-
-        Args:
-            other: Pile to compute symmetric difference with.
-
-        Returns:
-            Pile: New pile containing items unique to each pile.
-
-        Raises:
-            ValueError: If other is not a Pile or items don't match item_type.
-
-        Example:
-            >>> pile1 = Pile([item1, item2])
-            >>> pile2 = Pile([item2, item3])
-            >>> result = pile1 ^ pile2  # Contains only item1, item3
-        """
+        """Symmetric difference."""
         if not isinstance(other, Pile):
-            raise ValueError(
-                "Only Pile instances can be symmetric differenced."
-            )
-        if self.item_type:
-            other = validate_collection_item_type(
-                list(other), self.item_type, self.strict_type
-            )
-            raise ValueError(
-                "All items must be exactly of type {self.item_type}."
+            raise TypeError(
+                "Invalid type for Pile operation.",
+                expected_type=Pile,
+                actual_type=type(other),
             )
 
         to_exclude = []
@@ -736,83 +443,18 @@ class Pile(Element, Adaptable, Collective[E], Generic[E]):
         ]
 
         result = self.__class__(
-            collections=values,
+            items=values,
             item_type=self.item_type,
-            strict_type=self.strict_type,
         )
         return result
 
-    def __ixor__(self, other: Pile) -> Self:
-        """Update pile with items in either pile but not both (in-place symmetric difference).
-
-        Modifies current pile to contain only items unique to each pile,
-        removing items present in both. Other pile remains unchanged.
-
-        Args:
-            other: Pile to compute symmetric difference with.
-
-        Returns:
-            Self: Updated current pile with symmetric difference result.
-
-        Raises:
-            ValueError: If other is not a Pile or items don't match item_type.
-
-        Example:
-            >>> pile1 = Pile([item1, item2])
-            >>> pile2 = Pile([item2, item3])
-            >>> pile1 ^= pile2  # pile1 now contains only item1, item3
-        """
-        if not isinstance(other, Pile):
-            raise ValueError(
-                "Only Pile instances can be symmetric differenced."
-            )
-
-        if self.item_type and any(
-            not isinstance(x, self.item_type) for x in other
-        ):
-            raise ValueError(
-                "All items must be exactly of type {self.item_type}."
-            )
-        to_exclude = []
-        for i in other:
-            if i in self:
-                to_exclude.append(i)
-
-        other = [i for i in other if i not in to_exclude]
-        self.exclude(to_exclude)
-        self.include(other)
-        return self
-
     def __iand__(self, other: Pile) -> Self:
-        """Update pile to keep only items present in both piles (in-place intersection).
-
-        Modifies current pile to contain only items that exist in both piles.
-        Other pile remains unchanged.
-
-        Args:
-            other: Pile to intersect with.
-
-        Returns:
-            Self: Updated current pile with intersection result.
-
-        Raises:
-            ValueError: If other is not a Pile or items don't match item_type.
-
-        Example:
-            >>> pile1 = Pile([item1, item2])
-            >>> pile2 = Pile([item2, item3])
-            >>> pile1 &= pile2  # pile1 now contains only item2
-        """
+        """In-place intersection."""
         if not isinstance(other, Pile):
-            raise ValueError(
-                "Only Pile instances can be symmetric differenced."
-            )
-
-        if self.item_type and any(
-            not isinstance(x, self.item_type) for x in other
-        ):
-            raise ValueError(
-                "All items must be exactly of type {self.item_type}."
+            raise TypeError(
+                "Invalid type for Pile operation.",
+                expected_type=Pile,
+                actual_type=type(other),
             )
 
         to_exclude = []
@@ -823,259 +465,604 @@ class Pile(Element, Adaptable, Collective[E], Generic[E]):
         return self
 
     def __and__(self, other: Pile) -> Pile:
-        """Create new Pile containing items present in both piles (intersection).
-
-        Returns only items that exist in both the current pile and other pile.
-        Original piles remain unchanged.
-
-        Args:
-            other: Pile to intersect with.
-
-        Returns:
-            Pile: New pile containing only items present in both piles.
-
-        Raises:
-            ValueError: If other is not a Pile or items don't match item_type.
-
-        Example:
-            >>> pile1 = Pile([item1, item2])
-            >>> pile2 = Pile([item2, item3])
-            >>> result = pile1 & pile2  # Contains only item2
-        """
+        """Intersection."""
         if not isinstance(other, Pile):
-            raise ValueError(
-                "Only Pile instances can be symmetric differenced."
-            )
-
-        if self.item_type and any(
-            not isinstance(x, self.item_type) for x in other
-        ):
-            raise ValueError(
-                "All items must be exactly of type {self.item_type}."
+            raise TypeError(
+                "Invalid type for Pile operation.",
+                expected_type=Pile,
+                actual_type=type(other),
             )
 
         values = [i for i in self if i in other]
         return self.__class__(
-            collections=values,
+            items=values,
             item_type=self.item_type,
-            strict_type=self.strict_type,
         )
 
-    def to_df(
-        self,
-        *,
-        columns: list[str] | None = None,
-        **kwargs,
-    ) -> pd.DataFrame:
-        """
-        Convert items to a DataFrame, optionally specifying columns, etc.
-        """
-        data = [x.to_dict() for x in self]
-        df = pd.DataFrame(data, columns=columns, **kwargs)
-        if "created_at" in df.columns:
-            df["created_at"] = pd.to_datetime(
-                df["created_at"], errors="coerce"
-            )
-        return df
-
-    def to_csv_file(self, path_or_buf: str | Path, **kwargs) -> None:
-        """Save items as CSV."""
-        df = self.to_df()
-        df.to_csv(path_or_buf, index=False, **kwargs)
-        logging.info(f"Saved Pile to {path_or_buf}")
-
-    def to_json_file(
-        self, path_or_buf: str | Path, indent: int = 2, **kwargs
-    ) -> None:
-        """Save items as JSON."""
-        data = [item.to_dict() for item in self]
-        with open(path_or_buf, "w", encoding="utf-8") as f:
-            json.dump(data, f, indent=indent, **kwargs)
-        logging.info(f"Saved Pile to {path_or_buf}")
-
-    @classmethod
-    def from_df(
-        cls,
-        df: pd.DataFrame,
-        item_type: type[E] | None = None,
-        strict_type: bool = False,
-        **kwargs: Any,
-    ) -> Self:
-        """Construct a Pile from a DataFrame of items."""
-        items = []
-        for _, row in df.iterrows():
-            if item_type:
-                obj = item_type.from_dict(row.to_dict())
-            else:
-                obj = Element.from_dict(row.to_dict())
-            items.append(obj)
-        return cls(
-            collections=items,
-            item_type=item_type,
-            strict_type=strict_type,
-            **kwargs,
-        )
-
-    def adapt_to(
-        self,
-        obj_key: str,
-        *,
-        many: bool = True,
-        **kwargs: Any,
-    ) -> Any:
-        """Convert this Pile to another format using an adapter."""
-        return self._get_adapter_registry().adapt_to(
-            self, obj_key, many=many, **kwargs
-        )
-
-    @classmethod
-    def adapt_from(
-        cls,
-        obj: Any,
-        obj_key: str,
-        *,
-        many: bool = True,
-        item_type: type[E] | None = None,
-        strict_type: bool = False,
-        **kwargs: Any,
-    ) -> Self:
-        """Construct a Pile from external data via an adapter."""
-        data = cls._get_adapter_registry().adapt_from(
-            cls, obj, obj_key, many=many, **kwargs
-        )
-        if isinstance(data, list):
-            items = []
-            for d in data:
-                if isinstance(d, dict):
-                    if item_type:
-                        it = item_type.from_dict(d)
-                    else:
-                        it = Element.from_dict(d)
-                    items.append(it)
-                else:
-                    items.append(d)
-            return cls(
-                collections=items, item_type=item_type, strict_type=strict_type
-            )
-        if isinstance(data, dict):
-            # If 'collections' is present, parse it
-            if "collections" in data:
-                raw = data["collections"]
-                parsed = []
-                for r in raw:
-                    if isinstance(r, dict):
-                        if item_type:
-                            it = item_type.from_dict(r)
-                        else:
-                            it = Element.from_dict(r)
-                        parsed.append(it)
-                    else:
-                        parsed.append(r)
-                data["collections"] = parsed
-            return cls(item_type=item_type, strict_type=strict_type, **data)
-        raise ValueError("Invalid data format from adapter.")
-
-    @classmethod
-    def create(
-        cls,
-        collections: ID.ItemSeq,
-        item_type: type = None,
-        strict_type: bool = False,
-        progression: Progression | ID.RefSeq = None,
-    ) -> Self:
-        """Create new Pile instance.
-
-        Args:
-            collections: Initial items.
-            item_type: Type constraint for items.
-            strict_type: Enforce exact type matching.
-            progression: Custom item ordering.
-
-        Returns:
-            New Pile instance.
-        """
-        params = {}
-        if item_type is not None:
-            params["item_type"] = item_type
-        if strict_type is not False:
-            params["strict_type"] = strict_type
-        if progression is not None:
-            params["progression"] = progression
-        if collections:
-            params["collections"] = collections
-
-        return cls(**params)
-
-    def __next__(self) -> E:
-        """Get next item in iteration."""
-        try:
-            return next(iter(self))
-        except StopIteration:
-            raise StopIteration("End of pile")
-
+    @override
     def __str__(self) -> str:
-        """String representation as DataFrame."""
-        return self.to_df().__str__()
+        """Simple string representation."""
+        return f"Pile({len(self)})"
 
+    @override
     def __repr__(self) -> str:
         """Detailed string representation."""
         length = len(self)
         if length == 0:
             return "Pile()"
-        return self.to_df().__repr__()
+        elif length == 1:
+            return f"Pile({next(iter(self.pile_.values())).__repr__()})"
+        else:
+            return f"Pile({length})"
 
-    def __bool__(self) -> bool:
-        """Check if pile is empty."""
-        return bool(self.collections)
+    def __getstate__(self):
+        """Prepare for pickling."""
+        state = self.__dict__.copy()
+        state["_lock"] = None
+        state["_async_lock"] = None
+        return state
+
+    def __setstate__(self, state):
+        """Restore after unpickling."""
+        self.__dict__.update(state)
+        self._lock = threading.Lock()
+        self._async_lock = asyncio.Lock()
+
+    @property
+    def lock(self):
+        """Thread lock."""
+        if not hasattr(self, "_lock") or self._lock is None:
+            self._lock = threading.Lock()
+        return self._lock
+
+    @property
+    def async_lock(self):
+        """Async lock."""
+        if not hasattr(self, "_async_lock") or self._async_lock is None:
+            self._async_lock = asyncio.Lock()
+        return self._async_lock
+
+    # Async Interface methods
+    @async_synchronized
+    async def asetitem(
+        self,
+        key: ID.Ref | ID.RefSeq | int | slice,
+        item: ID.Item | ID.ItemSeq,
+        /,
+    ) -> None:
+        """Async set item(s)."""
+        self._setitem(key, item)
+
+    @async_synchronized
+    async def apop(
+        self,
+        key: ID.Ref | ID.RefSeq | int | slice,
+        default: Any = UNDEFINED,
+        /,
+    ):
+        """Async remove and return item(s)."""
+        return self._pop(key, default)
+
+    @async_synchronized
+    async def aremove(
+        self,
+        item: ID.Ref | ID.RefSeq,
+        /,
+    ) -> None:
+        """Async remove item."""
+        self._remove(item)
+
+    @async_synchronized
+    async def ainclude(
+        self,
+        item: ID.ItemSeq | ID.Item,
+        /,
+    ) -> None:
+        """Async include item(s)."""
+        self._include(item)
+        if item not in self:
+            raise TypeError(f"Item {item} is not of allowed types")
+
+    @async_synchronized
+    async def aexclude(
+        self,
+        item: ID.Ref | ID.RefSeq,
+        /,
+    ) -> None:
+        """Async exclude item(s)."""
+        self._exclude(item)
+
+    @async_synchronized
+    async def aclear(self) -> None:
+        """Async clear all items."""
+        self._clear()
+
+    @async_synchronized
+    async def aupdate(
+        self,
+        other: ID.ItemSeq | ID.Item,
+        /,
+    ) -> None:
+        """Async update with items."""
+        self._update(other)
+
+    @async_synchronized
+    async def aget(
+        self,
+        key: Any,
+        default=UNDEFINED,
+        /,
+    ) -> list | Any | T:
+        """Async get item(s)."""
+        return self._get(key, default)
+
+    async def __aiter__(self) -> AsyncIterator[T]:
+        """Async iterate over items."""
+        async with self.async_lock:
+            current_order = list(self.progress)
+
+        for key in current_order:
+            yield self.pile_[key]
+            await asyncio.sleep(0)  # Yield control to the event loop
+
+    async def __anext__(self) -> T:
+        """Async get next item."""
+        try:
+            return await anext(self.AsyncPileIterator(self))
+        except StopAsyncIteration:
+            raise StopAsyncIteration("End of pile")
+
+    # private methods
+    def _getitem(self, key: Any) -> Any | list | T:
+        if key is None:
+            raise ValueError("getitem key not provided.")
+
+        if isinstance(key, int | slice):
+            try:
+                result_ids = self.progress[key]
+                result_ids = (
+                    [result_ids]
+                    if not isinstance(result_ids, list)
+                    else result_ids
+                )
+                result = []
+                for i in result_ids:
+                    result.append(self.pile_[i])
+                return result[0] if len(result) == 1 else result
+            except Exception as e:
+                raise ItemNotFoundError(f"index {key}. Error: {e}")
+
+        elif isinstance(key, IDType):
+            try:
+                return self.pile_[key]
+            except Exception as e:
+                raise ItemNotFoundError(f"key {key}. Error: {e}")
+
+        else:
+            key = to_list_type(key)
+            result = []
+            try:
+                for k in key:
+                    result_id = ID.get_id(k)
+                    result.append(self.pile_[result_id])
+
+                if len(result) == 0:
+                    raise ItemNotFoundError(f"key {key} item not found")
+                if len(result) == 1:
+                    return result[0]
+                return result
+            except Exception as e:
+                raise ItemNotFoundError(f"Key {key}. Error:{e}")
+
+    def _setitem(
+        self,
+        key: ID.Ref | ID.RefSeq | int | slice,
+        item: ID.Item | ID.ItemSeq,
+    ) -> None:
+        item_dict = self._validate_pile(item)
+
+        item_order = []
+        for i in item_dict.keys():
+            if i in self.progress:
+                raise ItemExistsError(f"item {i} already exists in the pile")
+            item_order.append(i)
+        if isinstance(key, int | slice):
+            try:
+                delete_order = (
+                    list(self.progress[key])
+                    if isinstance(self.progress[key], Progression)
+                    else [self.progress[key]]
+                )
+                self.progress[key] = item_order
+                for i in to_list(delete_order, flatten=True):
+                    self.pile_.pop(i)
+                self.pile_.update(item_dict)
+            except Exception as e:
+                raise ValueError(f"Failed to set pile. Error: {e}")
+        else:
+            key = to_list_type(key)
+            if isinstance(key[0], list):
+                key = to_list(key, flatten=True, dropna=True)
+            if len(key) != len(item_order):
+                raise KeyError(
+                    f"Invalid key {key}. Key and item does not match.",
+                )
+            for k in key:
+                id_ = ID.get_id(k)
+                if id_ not in item_order:
+                    raise KeyError(
+                        f"Invalid key {id_}. Key and item does not match.",
+                    )
+            self.progress += key
+            self.pile_.update(item_dict)
+
+    def _get(self, key: Any, default: D = UNDEFINED) -> T | Pile | D:
+        if isinstance(key, int | slice):
+            try:
+                return self[key]
+            except Exception as e:
+                if default is UNDEFINED:
+                    raise ItemNotFoundError(f"Item not found. Error: {e}")
+                return default
+        else:
+            check = None
+            if isinstance(key, list):
+                check = True
+                for i in key:
+                    if type(i) is not int:
+                        check = False
+                        break
+            try:
+                if not check:
+                    key = validate_order(key)
+                result = []
+                for k in key:
+                    result.append(self[k])
+                if len(result) == 0:
+                    raise ItemNotFoundError(f"key {key} item not found")
+                if len(result) == 1:
+                    return result[0]
+                return result
+
+            except Exception as e:
+                if default is UNDEFINED:
+                    raise ItemNotFoundError(f"Item not found. Error: {e}")
+                return default
+
+    def _pop(
+        self,
+        key: ID.Ref | ID.RefSeq | int | slice,
+        default: D = UNDEFINED,
+    ) -> T | Pile | D:
+        if isinstance(key, int | slice):
+            try:
+                pops = self.progress[key]
+                pops = [pops] if isinstance(pops, IDType) else pops
+                result = []
+                for i in pops:
+                    self.progress.remove(i)
+                    result.append(self.pile_.pop(i))
+                result = (
+                    self.__class__(items=result, item_type=self.item_type)
+                    if len(result) > 1
+                    else result[0]
+                )
+                return result
+            except Exception as e:
+                if default is UNDEFINED:
+                    raise ItemNotFoundError(f"Item not found. Error: {e}")
+                return default
+        else:
+            try:
+                key = validate_order(key)
+                result = []
+                for k in key:
+                    self.progress.remove(k)
+                    result.append(self.pile_.pop(k))
+                if len(result) == 0:
+                    raise ItemNotFoundError(f"key {key} item not found")
+                elif len(result) == 1:
+                    return result[0]
+                return result
+            except Exception as e:
+                if default is UNDEFINED:
+                    raise ItemNotFoundError(f"Item not found. Error: {e}")
+                return default
+
+    def _remove(self, item: ID.Ref | ID.RefSeq):
+        if isinstance(item, int | slice):
+            raise TypeError(
+                "Invalid item type for remove, should be ID or Item(s)"
+            )
+        if item in self:
+            self.pop(item)
+            return
+        raise ItemNotFoundError(f"{item}")
+
+    def _include(self, item: ID.ItemSeq | ID.Item):
+        item_dict = self._validate_pile(item)
+
+        item_order = []
+        for i in item_dict.keys():
+            if i not in self.progress:
+                item_order.append(i)
+
+        self.progress.append(item_order)
+        self.pile_.update(item_dict)
+
+    def _exclude(self, item: ID.Ref | ID.RefSeq):
+        item = to_list_type(item)
+        exclude_list = []
+        for i in item:
+            if i in self:
+                exclude_list.append(i)
+        if exclude_list:
+            self.pop(exclude_list)
+
+    def _clear(self) -> None:
+        self.pile_.clear()
+        self.progress.clear()
+
+    def _update(self, other: ID.ItemSeq | ID.Item):
+        others = self._validate_pile(other)
+        for i in others.keys():
+            if i in self.pile_:
+                self.pile_[i] = others[i]
+            else:
+                self.include(others[i])
+
+    def _validate_item_type(self, value) -> set[type[T]] | None:
+        if value is None:
+            return None
+
+        value = to_list_type(value)
+
+        for i in value:
+            if not issubclass(i, Observable):
+                raise TypeError(
+                    message="Item type must be a subclass of T.",
+                    expected_type=T,
+                    actual_type=type(i),
+                )
+
+        if len(value) != len(set(value)):
+            raise ValueError(
+                "Detected duplicated item types in item_type.",
+            )
+
+        if len(value) > 0:
+            return set(value)
+
+    def _validate_pile(self, value: Any) -> dict[str, T]:
+        if not value:
+            return {}
+
+        value = to_list_type(value)
+
+        result = {}
+        for i in value:
+            if self.item_type:
+                if self.strict_type:
+                    if type(i) not in self.item_type:
+                        raise TypeError(
+                            message="Invalid item type in pile."
+                            f" Expected {self.item_type}",
+                        )
+                else:
+                    if not any(issubclass(type(i), t) for t in self.item_type):
+                        raise TypeError(
+                            "Invalid item type in pile. Expected "
+                            f"{self.item_type} or the subclasses",
+                        )
+            else:
+                if not isinstance(i, Observable):
+                    raise ValueError(f"Invalid pile item {i}")
+
+            result[i.id] = i
+
+        return result
+
+    def _validate_order(self, value: Any) -> Progression:
+        if not value:
+            return self.progress.__class__(order=list(self.pile_.keys()))
+
+        if isinstance(value, Progression):
+            value = list(value)
+        else:
+            value = to_list_type(value)
+
+        value_set = set(value)
+        if len(value_set) != len(value):
+            raise ValueError("There are duplicate elements in the order")
+        if len(value_set) != len(self.pile_.keys()):
+            raise ValueError(
+                "The length of the order does not match the length of the pile"
+            )
+
+        for i in value_set:
+            if ID.get_id(i) not in self.pile_.keys():
+                raise ValueError(
+                    f"The order does not match the pile. {i} not found"
+                )
+
+        return self.progress.__class__(order=value)
+
+    def _insert(self, index: int, item: ID.Item):
+        item_dict = self._validate_pile(item)
+
+        item_order = []
+        for i in item_dict.keys():
+            if i in self.progress:
+                raise ItemExistsError(f"item {i} already exists in the pile")
+            item_order.append(i)
+        self.progress.insert(index, item_order)
+        self.pile_.update(item_dict)
+
+    @field_serializer("pile_")
+    def _(self, value: dict[str, T]):
+        return [i.to_dict() for i in value.values()]
+
+    class AsyncPileIterator:
+        def __init__(self, pile: Pile):
+            self.pile = pile
+            self.index = 0
+
+        def __aiter__(self) -> AsyncIterator[T]:
+            return self
+
+        async def __anext__(self) -> T:
+            if self.index >= len(self.pile):
+                raise StopAsyncIteration
+            item = self.pile[self.pile.progress[self.index]]
+            self.index += 1
+            await asyncio.sleep(0)  # Yield control to the event loop
+            return item
+
+    async def __aenter__(self) -> Self:
+        """Enter async context."""
+        await self.async_lock.acquire()
+        return self
+
+    async def __aexit__(
+        self,
+        exc_type: type[BaseException] | None,
+        exc_val: BaseException | None,
+        exc_tb: Any,
+    ) -> None:
+        """Exit async context."""
+        self.async_lock.release()
+
+    def is_homogenous(self) -> bool:
+        """Check if all items are same type."""
+        return len(self.pile_) < 2 or all(is_same_dtype(self.pile_.values()))
+
+    def adapt_to(self, obj_key: str, /, **kwargs: Any) -> Any:
+        """Convert to another format."""
+        kwargs["many"] = True
+        return self._get_adapter_registry().adapt_to(self, obj_key, **kwargs)
+
+    @classmethod
+    def list_adapters(cls):
+        """List available adapters."""
+        return cls._get_adapter_registry().list_adapters()
+
+    @classmethod
+    def register_adapter(cls, adapter: type[Adapter]):
+        """Register new adapter."""
+        cls._get_adapter_registry().register(adapter)
+
+    @classmethod
+    def _get_adapter_registry(cls) -> AdapterRegistry:
+        if isinstance(cls._adapter_registry, type):
+            cls._adapter_registry = cls._adapter_registry()
+        return cls._adapter_registry
+
+    @classmethod
+    def adapt_from(cls, obj: Any, obj_key: str, /, **kwargs: Any):
+        """Create from another format."""
+        dict_ = cls._get_adapter_registry().adapt_from(
+            cls, obj, obj_key, **kwargs
+        )
+        if isinstance(dict_, list):
+            dict_ = {"pile_": dict_}
+        return cls.from_dict(dict_)
+
+    def to_df(
+        self,
+        columns: list[str] | None = None,
+        **kwargs: Any,
+    ) -> pd.DataFrame:
+        """Convert to DataFrame."""
+        return self.adapt_to("pd_dataframe", columns=columns, **kwargs)
+
+    def to_csv_file(self, fp: str | Path, **kwargs: Any) -> None:
+        """Save to CSV file."""
+        self.adapt_to(".csv", fp=fp, **kwargs)
+
+    def to_json_file(
+        self,
+        path_or_buf,
+        *,
+        use_pd: bool = False,
+        mode="w",
+        verbose=False,
+        **kwargs,
+    ):
+        """Export collection to JSON file.
+
+        Args:
+            path_or_buf: File path or buffer to write to.
+            use_pd: Use pandas JSON export if True.
+            mode: File open mode.
+            verbose: Print confirmation message.
+            **kwargs: Additional arguments for json.dump() or DataFrame.to_json().
+        """
+
+        if use_pd:
+            return self.to_df().to_json(mode=mode, **kwargs)
+        dict_ = self.to_dict()
+        with open(path_or_buf, mode) as f:
+            json.dump(dict_, f, **kwargs)
+
+        if verbose:
+            print(f"Saved Pile to {path_or_buf}")
 
 
 def pile(
-    *,
-    collections: Any = None,
-    fp: str | Path | None = None,
-    df: pd.DataFrame | None = None,
-    item_type: type | None = None,
+    items: Any = None,
+    /,
+    item_type: type[T] | set[type[T]] | None = None,
+    order: list[str] | None = None,
     strict_type: bool = False,
-    progression: Progression | None = None,
-    **kwargs: Any,
+    df: pd.DataFrame | None = None,  # priority 1
+    fp: str | Path | None = None,  # priority 2
+    **kwargs,
 ) -> Pile:
-    """
-    Convenience function to create a Pile from multiple sources:
-      - `collections`: direct items
-      - `fp`: file path (CSV or JSON)
-      - `df`: DataFrame
-      - optional `item_type`, `strict_type`, `progression`
-    """
-    if fp:
-        p = Path(fp)
-        suffix = p.suffix.lower()
-        if suffix == ".csv":
-            df = pd.read_csv(p)
-            return Pile.from_df(
-                df, item_type=item_type, strict_type=strict_type, **kwargs
-            )
-        if suffix in (".json", ".jsonl"):
-            return Pile.adapt_from(
-                p,
-                ".json",
-                item_type=item_type,
-                strict_type=strict_type,
-                **kwargs,
-            )
-        raise ValueError(f"Unsupported file extension: {suffix}")
+    """Create a new Pile instance.
 
-    if df is not None:
-        return Pile.from_df(
-            df, item_type=item_type, strict_type=strict_type, **kwargs
-        )
+    Args:
+        items: Initial items for the pile.
+        item_type: Allowed types for items in the pile.
+        order: Initial order of items.
+        strict: If True, enforce strict type checking.
+
+    Returns:
+        Pile: A new Pile instance.
+    """
+
+    if df:
+        return Pile.adapt_from(df, "pd_dataframe", **kwargs)
+
+    if fp:
+        fp = Path(fp)
+        if fp.suffix == ".csv":
+            return Pile.adapt_from(fp, ".csv", **kwargs)
+        if fp.suffix == ".xlsx":
+            return Pile.adapt_from(fp, ".xlsx", **kwargs)
+        if fp.suffix == ".json":
+            return Pile.adapt_from(fp, ".json", **kwargs)
 
     return Pile(
-        collections=collections,
+        items,
         item_type=item_type,
-        strict_type=strict_type,
-        progression=progression,
+        order=order,
+        strict=strict_type,
         **kwargs,
     )
 
 
-# File: lionagi/protocols/pile.py
+def to_list_type(value: Any, /) -> list[Any]:
+    """Convert input to a list format"""
+    if value is None:
+        return []
+    if isinstance(value, IDType):
+        return [value]
+    if isinstance(value, str):
+        return ID.get_id(value) if ID.is_id(value) else []
+    if isinstance(value, Element):
+        return [value]
+    if hasattr(value, "values") and callable(value.values):
+        return list(value.values())
+    if isinstance(value, list | tuple | set | deque | Generator):
+        return list(value)
+    return [value]

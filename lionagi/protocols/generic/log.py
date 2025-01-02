@@ -9,7 +9,7 @@ import logging
 from pathlib import Path
 from typing import Any
 
-from pydantic import PrivateAttr
+from pydantic import BaseModel, Field, PrivateAttr, field_validator
 
 from lionagi.utils import create_path, to_dict
 
@@ -24,37 +24,33 @@ __all__ = (
 )
 
 
-class LogManagerConfig:
-    """
-    Configuration for log management, controlling output paths,
-    file naming patterns, and capacity limits.
-    """
+class LogManagerConfig(BaseModel):
+    persist_dir: str | Path = "./data/logs"
+    subfolder: str | None = None
+    file_prefix: str | None = None
+    capacity: int | None = None
+    extension: str = ".json"
+    use_timestamp: bool = True
+    hash_digits: int | None = Field(5, ge=0, le=10)
+    auto_save_on_exit: bool = True
+    clear_after_dump: bool = True
 
-    def __init__(
-        self,
-        persist_dir: str | Path = "./data/logs",
-        subfolder: str | None = None,
-        file_prefix: str | None = None,
-        capacity: int | None = None,
-        extension: str = ".json",
-        use_timestamp: bool = True,
-        hash_digits: int = 5,
-        auto_save_on_exit: bool = True,
-        clear_after_dump: bool = True,
-    ):
-        # Ensure extension starts with a dot
-        if not extension.startswith("."):
-            extension = "." + extension
+    @field_validator("capacity", "hash_digits", mode="before")
+    def _validate_non_negative(cls, value):
+        if value is not None:
+            if not isinstance(value, int) or value < 0:
+                raise ValueError(
+                    "Capacity and hash_digits must be non-negative."
+                )
+        return value
 
-        self.persist_dir = persist_dir
-        self.subfolder = subfolder
-        self.file_prefix = file_prefix
-        self.capacity = capacity
-        self.extension = extension
-        self.use_timestamp = use_timestamp
-        self.hash_digits = hash_digits
-        self.auto_save_on_exit = auto_save_on_exit
-        self.clear_after_dump = clear_after_dump
+    @field_validator("extension")
+    def _ensure_dot_extension(cls, value):
+        if not value.startswith("."):
+            return "." + value
+        if value not in {".csv", ".json", ".jsonl"}:
+            raise ValueError("Extension must be '.csv', '.json' or '.jsonl'.")
+        return value
 
 
 class Log(Element):
@@ -86,20 +82,23 @@ class Log(Element):
         return self
 
     @classmethod
-    def create(cls, content: Element) -> Log:
+    def create(cls, content: Element | dict) -> Log:
         """
         Create a new Log from an Element, storing a dict snapshot
         of the element's data.
         """
-        return cls(
-            content=to_dict(
-                content,
-                recursive=True,
-                recursive_python_only=False,
-                suppress=True,
-                max_recursive_depth=5,
+        if hasattr(content, "to_dict"):
+            content = content.to_dict()
+        else:
+            content = to_dict(content, recursive=True, suppress=True)
+
+        if content is {}:
+            logging.warning(
+                "No content to log, or original data was of invalid type. Making an empty log..."
             )
-        )
+            return cls(content={"error": "No content to log."})
+
+        return cls(content=content)
 
 
 class LogManager(Manager):
@@ -110,16 +109,10 @@ class LogManager(Manager):
 
     def __init__(
         self,
+        *,
         logs: Any = None,
-        persist_dir: str | Path | None = None,
-        subfolder: str | None = None,
-        file_prefix: str | None = None,
-        capacity: int | None = None,
-        extension: str = ".csv",
-        use_timestamp: bool = True,
-        hash_digits: int = 5,
-        auto_save_on_exit: bool = True,
-        clear_after_dump: bool = True,
+        _config: LogManagerConfig = None,
+        **kwargs,
     ):
         """
         Args:
@@ -134,41 +127,26 @@ class LogManager(Manager):
             auto_save_on_exit: Auto-save logs at program exit.
             clear_after_dump: Whether to clear logs after saving.
         """
-        super().__init__()
-        if logs is None:
-            logs = []
-        # Convert logs to a list if it's already a Pile
-        if isinstance(logs, Pile):
-            logs = logs.to_list()
+        if _config is None:
+            _config = LogManagerConfig(**kwargs)
 
-        self.logs: Pile[Log] = Pile(
-            collections=logs, item_type=Log, strict_type=True
-        )
-
-        # Store config
-        self.persist_dir = persist_dir or "./data/logs"
-        self.subfolder = subfolder
-        self.file_prefix = file_prefix
-        self.capacity = capacity
-        self.extension = extension
-        self.use_timestamp = use_timestamp
-        self.hash_digits = hash_digits
-        self.clear_after_dump = clear_after_dump
+        self.logs = Pile(collections=logs, item_type=Log, strict_type=True)
+        self._config = _config
 
         # Auto-dump on exit
-        if auto_save_on_exit:
+        if self._config.auto_save_on_exit:
             atexit.register(self.save_at_exit)
 
     def log(self, log_: Log) -> None:
         """
         Add a log synchronously. If capacity is reached, auto-dump to file.
         """
-        if self.capacity and len(self.logs) >= self.capacity:
+        if self._config.capacity and len(self.logs) >= self._config.capacity:
             try:
-                self.dump(clear=self.clear_after_dump)
+                self.dump(clear=self._config.clear_after_dump)
             except Exception as e:
                 logging.error(f"Failed to auto-dump logs: {e}")
-        self.logs.append(log_)
+        self.logs.include(log_)
 
     async def alog(self, log_: Log) -> None:
         """
@@ -201,7 +179,9 @@ class LogManager(Manager):
                 raise ValueError(f"Unsupported file extension: {suffix}")
 
             logging.info(f"Dumped logs to {fp}")
-            do_clear = self.clear_after_dump if clear is None else clear
+            do_clear = (
+                self._config.clear_after_dump if clear is None else clear
+            )
             if do_clear:
                 self.logs.clear()
         except Exception as e:
@@ -222,22 +202,22 @@ class LogManager(Manager):
         Build a file path from the manager's config using
         `create_path`.
         """
-        path_str = str(self.persist_dir)
-        if self.subfolder:
-            path_str = f"{path_str}/{self.subfolder}"
+        path_str = str(self._config.persist_dir)
+        if self._config.subfolder:
+            path_str = f"{path_str}/{self._config.subfolder}"
         return create_path(
             directory=path_str,
-            filename=self.file_prefix or "",
-            extension=self.extension,
-            timestamp=self.use_timestamp,
-            random_hash_digits=self.hash_digits,
+            filename=self._config.file_prefix or "",
+            extension=self._config.extension,
+            timestamp=self._config.use_timestamp,
+            random_hash_digits=self._config.hash_digits,
         )
 
     def save_at_exit(self) -> None:
         """Dump logs on program exit."""
         if self.logs:
             try:
-                self.dump(clear=self.clear_after_dump)
+                self.dump(clear=self._config.clear_after_dump)
             except Exception as e:
                 logging.error(f"Failed to save logs on exit: {e}")
 
@@ -248,18 +228,7 @@ class LogManager(Manager):
         """
         Construct a LogManager from a LogManagerConfig.
         """
-        return cls(
-            logs=logs,
-            persist_dir=config.persist_dir,
-            subfolder=config.subfolder,
-            file_prefix=config.file_prefix,
-            capacity=config.capacity,
-            extension=config.extension,
-            use_timestamp=config.use_timestamp,
-            hash_digits=config.hash_digits,
-            auto_save_on_exit=config.auto_save_on_exit,
-            clear_after_dump=config.clear_after_dump,
-        )
+        return cls(_config=config, logs=logs)
 
 
 # File: lionagi/protocols/generic/log.py
