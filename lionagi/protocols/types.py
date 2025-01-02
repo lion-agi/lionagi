@@ -2,7 +2,7 @@
 #
 # SPDX-License-Identifier: Apache-2.0
 
-from ._adapter import Adaptable, Adapter, AdapterRegistry
+from ._adapter import Adapter, AdapterRegistry
 from ._concepts import (
     Collective,
     Communicatable,
@@ -91,6 +91,5 @@ __all__ = (
     "validate_sender_recipient",
     "Adapter",
     "AdapterRegistry",
-    "Adaptable",
     "MessageManager",
 )

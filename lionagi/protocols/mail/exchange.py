@@ -18,7 +18,7 @@ class Exchange:
 
     def __init__(self, sources: ID[Communicatable].ItemSeq = None):
         self.sources: Pile[Communicatable] = Pile(
-            item_type=Communicatable, strict_type=False
+            item_type={Communicatable}, strict_type=False
         )
         self.buffer: dict[IDType, list[Mail]] = {}
         self.mailboxes: dict[IDType, Mailbox] = {}

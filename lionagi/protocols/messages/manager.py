@@ -32,11 +32,11 @@ class MessageManager(Manager):
         super().__init__()
         self.messages: Pile[RoledMessage] = Pile(
             collections=messages,
-            item_type=RoledMessage,
+            item_type={RoledMessage},
             strict_type=False,
             progression=progression,
         )
-        if not isinstance(system, System):
+        if system and not isinstance(system, System):
             raise ValueError("System message must be a System instance.")
         self.system = system  # system must be the first message
         if self.system:
@@ -114,7 +114,7 @@ class MessageManager(Manager):
     ) -> AssistantResponse:
 
         params = {k: v for k, v in locals().items() if v is not None}
-        template_context = params.pop("template_context") or {}
+        template_context = params.pop("template_context", {})
         params.update(template_context)
 
         if isinstance(assistant_response, AssistantResponse):
@@ -327,7 +327,7 @@ class MessageManager(Manager):
         else:
             self.messages.include(_msg)
 
-        return _msg, _msg.to_log()
+        return _msg
 
     def clear_messages(self):
         self.messages.clear()

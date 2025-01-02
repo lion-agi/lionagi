@@ -2,23 +2,24 @@
 #
 # SPDX-License-Identifier: Apache-2.0
 
+
+from pydantic import field_validator
+
 from .._concepts import Sendable
+from ..generic.element import Element
 from ..messages.base import IDType
 from .package import Package, PackageCategory
 
 
-class Mail(Sendable):
+class Mail(Element, Sendable):
 
-    def __init__(
-        self,
-        sender: IDType,
-        recipient: IDType,
-        package: Package,
-    ):
-        super().__init__()
-        self.sender = IDType.validate(sender)
-        self.recipient = IDType.validate(recipient)
-        self.package = package
+    sender: IDType
+    recipient: IDType
+    package: Package
+
+    @field_validator("sender", "recipient")
+    def _validate_sender_recipient(cls, value):
+        return IDType.validate(value)
 
     @property
     def category(self) -> PackageCategory:
