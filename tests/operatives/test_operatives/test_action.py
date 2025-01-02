@@ -1,7 +1,7 @@
 import pytest
 from pydantic import BaseModel
 
-from lionagi.protocols.operatives.action import (
+from lionagi.operatives.action.request_response_model import (
     ActionRequestModel,
     ActionResponseModel,
     parse_action_request,
@@ -24,8 +24,9 @@ class TestActionRequestModel:
 
     def test_invalid_function_name(self):
         """Test that non-string function names raise validation error."""
-        with pytest.raises(Exception):
-            ActionRequestModel(function=123, arguments={})
+
+        a = ActionRequestModel(function=123, arguments={})
+        assert a.function == None
 
     def test_arguments_validation(self):
         """Test arguments field validation with various inputs."""

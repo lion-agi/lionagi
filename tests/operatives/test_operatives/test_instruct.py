@@ -3,17 +3,16 @@
 import pytest
 from pydantic import JsonValue, ValidationError
 
-from lionagi.protocols.operatives.instruct import (
+from lionagi.operatives.instruct.base import (
     ACTIONS_FIELD,
     CONTEXT_FIELD,
     GUIDANCE_FIELD,
     INSTRUCTION_FIELD,
     REASON_FIELD,
-    Instruct,
-    OperationInstruct,
     validate_boolean_field,
     validate_instruction,
 )
+from lionagi.operatives.instruct.instruct import Instruct
 
 
 class TestValidators:
@@ -121,7 +120,7 @@ class TestInstructModel:
 class TestOperationInstructModel:
     def test_default_values(self):
         """Test OperationInstruct model default values."""
-        model = OperationInstruct()
+        model = Instruct()
         assert model.instruction is None
         assert model.reason is False
         assert model.actions is False
@@ -129,24 +128,24 @@ class TestOperationInstructModel:
     def test_with_instruct(self):
         """Test OperationInstruct model with Instruct object."""
         instruct = Instruct(instruction="test instruction")
-        model = OperationInstruct(**instruct.model_dump())
+        model = Instruct(**instruct.model_dump())
         assert model.instruction == instruct.instruction
         assert model.instruction == "test instruction"
 
     def test_boolean_fields(self):
         """Test OperationInstruct model boolean fields."""
         # Test with explicit boolean values
-        model = OperationInstruct(reason=True, actions=True)
+        model = Instruct(reason=True, actions=True)
         assert model.reason is True
         assert model.actions is True
 
         # Test with string values
-        model = OperationInstruct(reason="true", actions="false")
+        model = Instruct(reason="true", actions="false")
         assert model.reason is True
         assert model.actions is False
 
         # Test with numeric values
-        model = OperationInstruct(reason=1, actions=0)
+        model = Instruct(reason=1, actions=0)
         assert model.reason is True
         assert model.actions is False
 
@@ -156,10 +155,11 @@ class TestOperationInstructModel:
             instruction="test instruction",
             guidance={"method": "test_method"},
             context={"env": "test_env"},
+            reason=True,
+            actions=True,
         )
-        model = OperationInstruct(
-            **instruct.model_dump(), reason=True, actions=True
-        )
+
+        model = Instruct(**instruct.model_dump())
         assert model.instruction == instruct.instruction
         assert model.reason is True
         assert model.actions is True

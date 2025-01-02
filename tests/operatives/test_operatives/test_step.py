@@ -3,16 +3,16 @@
 import pytest
 from pydantic import BaseModel
 
-from lionagi.core.typing import ModelParams
-from lionagi.protocols.operatives.action import (
+from lionagi.operatives.action.request_response_model import (
     ACTION_REQUESTS_FIELD,
-    ACTION_REQUIRED_FIELD,
     ACTION_RESPONSES_FIELD,
     ActionRequestModel,
     ActionResponseModel,
 )
-from lionagi.protocols.operatives.reason import ReasonModel
-from lionagi.protocols.operatives.step import Step, StepModel
+from lionagi.operatives.action.utils import ACTION_REQUIRED_FIELD
+from lionagi.operatives.instruct.reason import Reason
+from lionagi.operatives.step import Step, StepModel
+from lionagi.operatives.types import ModelParams
 
 
 class SampleModel(BaseModel):
@@ -28,6 +28,7 @@ class TestStepModel:
         step = StepModel(
             title="Test Step",
             description="Test step description",
+            reason=None,
             action_requests=[],
             action_required=False,
             action_responses=[],
@@ -41,7 +42,7 @@ class TestStepModel:
 
     def test_step_with_reason(self):
         """Test StepModel with reason."""
-        reason = ReasonModel(
+        reason = Reason(
             title="Test Reason",
             content="Test reason content",
             confidence_score=0.85,
@@ -71,6 +72,7 @@ class TestStepModel:
         step = StepModel(
             title="Test Step",
             description="Test step description",
+            reason=None,
             action_requests=[action_request],
             action_required=True,
             action_responses=[action_response],
@@ -99,7 +101,7 @@ class TestStep:
         )
         assert "reason" in operative.request_type.model_fields
         assert operative.request_type.model_fields["reason"].annotation == (
-            ReasonModel | None
+            Reason | None
         )
 
     def test_request_operative_with_actions(self):

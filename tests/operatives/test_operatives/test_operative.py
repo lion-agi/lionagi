@@ -3,8 +3,9 @@
 import pytest
 from pydantic import BaseModel, Field
 
-from lionagi.core.models import FieldModel, ModelParams, OperableModel
-from lionagi.protocols.operatives.operative import Operative
+from lionagi.operatives.models.field_model import FieldModel
+from lionagi.operatives.models.model_params import ModelParams
+from lionagi.operatives.operative import Operative
 
 
 # Define test model outside test class to avoid pytest collection warning
@@ -77,7 +78,9 @@ class TestOperative:
         operative = Operative(request_params=params)
 
         # First set initial model with valid JSON
-        operative.update_response_model(text='{"name": "test", "value": 42}')
+        response_model = operative.update_response_model(
+            text='{"name": "test", "value": 42}'
+        )
 
         # Create response type to enable model updates
         operative.create_response_type()

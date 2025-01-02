@@ -3,12 +3,13 @@
 import pytest
 from pydantic import ValidationError
 
-from lionagi.protocols.operatives.reason import (
+from lionagi.operatives.instruct.reason import (
     CONFIDENCE_SCORE_FIELD,
     REASON_FIELD,
-    ReasonModel,
+    Reason,
     validate_confidence_score,
 )
+from lionagi.utils import UNDEFINED
 
 
 class TestValidateConfidenceScore:
@@ -50,32 +51,32 @@ class TestValidateConfidenceScore:
             assert validate_confidence_score(None, input_val) == expected
 
 
-class TestReasonModel:
+class TestReason:
     def test_default_values(self):
-        """Test default values for ReasonModel."""
-        model = ReasonModel()
+        """Test default values for Reason."""
+        model = Reason()
         assert model.title is None
         assert model.content is None
         assert model.confidence_score is None
 
     def test_valid_values(self):
-        """Test ReasonModel with valid values."""
+        """Test Reason with valid values."""
         data = {
             "title": "Test Reason",
             "content": "This is a test reason content",
             "confidence_score": 0.85,
         }
-        model = ReasonModel(**data)
+        model = Reason(**data)
         assert model.title == data["title"]
         assert model.content == data["content"]
         assert model.confidence_score == data["confidence_score"]
 
     def test_confidence_score_validation(self):
-        """Test confidence score validation in ReasonModel."""
+        """Test confidence score validation in Reason."""
         # Valid cases
         valid_scores = [0.5, 1.0, 0.0, "0.75"]
         for score in valid_scores:
-            model = ReasonModel(confidence_score=score)
+            model = Reason(confidence_score=score)
             assert isinstance(model.confidence_score, float)
             assert 0 <= model.confidence_score <= 1
 
@@ -83,25 +84,25 @@ class TestReasonModel:
         invalid_scores = [-1, 1.5, "invalid", None]
         for score in invalid_scores:
             if score is not None:  # None is allowed as it's the default
-                model = ReasonModel(confidence_score=score)
+                model = Reason(confidence_score=score)
                 assert model.confidence_score == -1
 
     def test_partial_initialization(self):
-        """Test ReasonModel with partial field initialization."""
+        """Test Reason with partial field initialization."""
         # Only title
-        model = ReasonModel(title="Test")
+        model = Reason(title="Test")
         assert model.title == "Test"
         assert model.content is None
         assert model.confidence_score is None
 
         # Only content
-        model = ReasonModel(content="Test content")
+        model = Reason(content="Test content")
         assert model.title is None
         assert model.content == "Test content"
         assert model.confidence_score is None
 
         # Only confidence_score
-        model = ReasonModel(confidence_score=0.75)
+        model = Reason(confidence_score=0.75)
         assert model.title is None
         assert model.content is None
         assert model.confidence_score == 0.75
@@ -119,6 +120,6 @@ class TestFieldModels:
     def test_reason_field(self):
         """Test REASON_FIELD configuration."""
         assert REASON_FIELD.name == "reason"
-        assert REASON_FIELD.annotation == (ReasonModel | None)
-        assert REASON_FIELD.default is None
+        assert REASON_FIELD.annotation == (Reason | None)
+        assert REASON_FIELD.default is UNDEFINED
         assert REASON_FIELD.title == "Reason"

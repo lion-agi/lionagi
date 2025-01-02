@@ -3,7 +3,8 @@
 import pytest
 from pydantic import Field
 
-from lionagi.core.models import OperableModel, SchemaModel
+from lionagi.operatives.models.operable_model import OperableModel
+from lionagi.operatives.models.schema_model import SchemaModel
 
 
 class TestOperableModel:

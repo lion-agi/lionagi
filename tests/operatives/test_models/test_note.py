@@ -2,8 +2,8 @@
 
 import pytest
 
-from lionagi.core.models import Note
-from lionagi.libs.constants import UNDEFINED
+from lionagi.operatives.models.note import Note
+from lionagi.utils import UNDEFINED
 
 
 class TestNote:

@@ -2,7 +2,7 @@
 
 from pydantic.fields import FieldInfo
 
-from lionagi.core.models import FieldModel
+from lionagi.operatives.models.field_model import FieldModel
 
 
 class TestFieldModel:

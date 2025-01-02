@@ -3,8 +3,8 @@
 import pytest
 from pydantic import Field
 
-from lionagi.core.models import SchemaModel
-from lionagi.libs.constants import UNDEFINED
+from lionagi.operatives.models.schema_model import SchemaModel
+from lionagi.utils import UNDEFINED
 
 
 class TestSchemaModel:
