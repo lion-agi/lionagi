@@ -7,7 +7,7 @@ from typing import Any
 
 from pydantic import BaseModel
 
-from lionagi.libs.validate import validate_boolean
+from lionagi.libs.validate.validate_boolean import validate_boolean
 from lionagi.utils import to_dict, to_json
 
 from ..models.field_model import FieldModel

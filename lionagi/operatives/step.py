@@ -7,15 +7,16 @@ from pydantic.fields import FieldInfo
 
 from lionagi.operatives.instruct.reason import REASON_FIELD, Reason
 from lionagi.operatives.operative import Operative
-from lionagi.protocols.types import (
+
+from .action.request_response_model import (
     ACTION_REQUESTS_FIELD,
-    ACTION_REQUIRED_FIELD,
     ACTION_RESPONSES_FIELD,
     ActionRequestModel,
     ActionResponseModel,
-    FieldModel,
-    ModelParams,
 )
+from .action.utils import ACTION_REQUIRED_FIELD
+from .models.field_model import FieldModel
+from .models.model_params import ModelParams
 
 
 class StepModel(BaseModel):

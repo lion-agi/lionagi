@@ -7,7 +7,7 @@ from typing import Any, Self
 
 from pydantic import Field, model_validator
 
-from lionagi.protocols.generic.event import Event, EventStatus
+from lionagi.protocols.types import Event, EventStatus
 from lionagi.utils import is_coro_func
 
 from .tool import Tool

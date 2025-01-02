@@ -10,9 +10,9 @@ from pydantic.fields import FieldInfo
 from pydantic_core import PydanticUndefined
 from typing_extensions import override
 
-from lionagi.protocols.models.note import Note
 from lionagi.utils import UNDEFINED, copy
 
+from ..models.note import Note
 from .base import BaseForm
 from .utils import get_input_output_fields
 

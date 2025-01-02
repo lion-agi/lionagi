@@ -6,8 +6,13 @@
 from collections.abc import Callable
 from typing import Any
 
-from lionagi.protocols.generic.event import Execution
-from lionagi.protocols.types import ActionRequest, EventStatus, Log, Manager
+from lionagi.protocols.types import (
+    ActionRequest,
+    EventStatus,
+    Execution,
+    Log,
+    Manager,
+)
 from lionagi.utils import to_list
 
 from .function_calling import FunctionCalling
@@ -161,7 +166,7 @@ class ActionManager(Manager):
             )
 
         await function_calling.invoke()
-        return function_calling.execution, Log.create(function_calling)
+        return function_calling
 
     @property
     def schema_list(self) -> list[dict[str, Any]]:

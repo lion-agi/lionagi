@@ -1,8 +1,12 @@
+# Copyright (c) 2023 - 2024, HaiyangLi <quantocean.li at gmail dot com>
+#
+# SPDX-License-Identifier: Apache-2.0
+
 from pydantic import JsonValue
 
 from lionagi.libs.validate import validate_boolean
-from lionagi.protocols.models.field_model import FieldModel
 
+from ..models.field_model import FieldModel
 from .prompts import (
     actions_field_description,
     context_field_description,

@@ -1,10 +1,14 @@
+# Copyright (c) 2023 - 2024, HaiyangLi <quantocean.li at gmail dot com>
+#
+# SPDX-License-Identifier: Apache-2.0
+
 from typing import Any, ClassVar
 
 from pydantic import JsonValue, field_validator
 
-from lionagi.protocols.models.field_model import FieldModel
 from lionagi.utils import HashableModel
 
+from ..models.field_model import FieldModel
 from .base import (
     ACTIONS_FIELD,
     CONTEXT_FIELD,

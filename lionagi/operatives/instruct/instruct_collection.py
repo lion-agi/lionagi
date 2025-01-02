@@ -1,9 +1,12 @@
+# Copyright (c) 2023 - 2024, HaiyangLi <quantocean.li at gmail dot com>
+#
+# SPDX-License-Identifier: Apache-2.0
+
 from functools import lru_cache
 
 from pydantic import BaseModel
 
-from lionagi.protocols.models.model_params import ModelParams
-
+from ..models.model_params import ModelParams
 from .instruct import INSTRUCT_FIELD, Instruct
 from .node import InstructNode
 
