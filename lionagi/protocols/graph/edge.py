@@ -4,11 +4,17 @@
 
 from typing import Any
 
-from pydantic import Field, field_serializer, field_validator
+from pydantic import (
+    BaseModel,
+    ConfigDict,
+    Field,
+    field_serializer,
+    field_validator,
+)
 
 from lionagi.utils import is_same_dtype
 
-from .._concepts import Condition
+from .._concepts import Condition, Relational
 from ..generic.element import ID, Element, IDType
 
 __all__ = (
@@ -17,24 +23,26 @@ __all__ = (
 )
 
 
-class EdgeCondition(Condition):
+class EdgeCondition(BaseModel, Condition):
+    """Represents a condition associated with an edge in the Lion framework.
+
+    This class combines Condition characteristics with Pydantic's
+    BaseModel for robust data validation and serialization.
+
+    Attributes:
+        source (Any): The source for condition evaluation.
     """
-    Represents a condition associated with an Edge. Subclasses must
-    implement `apply` to determine whether the edge is traversable.
-    """
 
-    def __init__(self, source: Any = None):
-        self.source = source
+    source: Any = Field(
+        default=None,
+        title="Source",
+        description="The source for condition evaluation",
+    )
 
-    async def apply(self, *args, **kwargs) -> bool:
-        """
-        Evaluate this condition asynchronously. By default, raises
-        NotImplementedError. Override in subclasses.
-
-        Returns:
-            bool: True if condition is met, else False.
-        """
-        raise NotImplementedError("Subclasses must implement `apply`.")
+    model_config = ConfigDict(
+        extra="allow",
+        arbitrary_types_allowed=True,
+    )
 
 
 class Edge(Element):
@@ -51,6 +59,52 @@ class Edge(Element):
         title="Properties",
         description="Custom properties associated with this edge.",
     )
+
+    def __init__(
+        self,
+        head: ID[Relational].Ref,
+        tail: ID[Relational].Ref,
+        condition: EdgeCondition | None = None,
+        label: list[str] | None = None,
+        **kwargs,
+    ):
+        """
+        Initialize an Edge.
+
+        This constructor sets up an edge by linking a head node to a tail node,
+        with optional conditions and labels. Additional properties can also be
+        provided via keyword arguments.
+
+        Args:
+            head (Relational | str): The head node or its ID. This is the
+                starting point of the edge.
+            tail (Relational | str): The tail node or its ID. This is the end
+                point of the edge.
+            condition (EdgeCondition | None): An optional condition that must
+                be satisfied for the edge to be traversed.
+            label (list[str] | None): An optional list of labels that describe
+                the edge.
+            kwargs: Optional additional properties for the edge.
+        """
+        head = ID.get_id(head)
+        tail = ID.get_id(tail)
+        if condition:
+            if not isinstance(condition, EdgeCondition):
+                raise ValueError(
+                    "Condition must be an instance of EdgeCondition."
+                )
+            kwargs["condition"] = condition
+        if label:
+            if isinstance(label, str):
+                kwargs["label"] = [label]
+            elif isinstance(label, list) and is_same_dtype(label, str):
+                kwargs["label"] = label
+            else:
+                raise ValueError(
+                    "Label must be a string or a list of strings."
+                )
+
+        super().__init__(head=head, tail=tail, properties=kwargs)
 
     @field_serializer("head", "tail")
     def _serialize_id(self, value: IDType) -> str:

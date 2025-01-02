@@ -22,12 +22,12 @@ __all__ = ("Graph",)
 class Graph(Element, Relational):
 
     internal_nodes: Pile[Node] = Field(
-        default_factory=lambda: Pile(item_type=Node, strict_type=False),
+        default_factory=lambda: Pile(item_type={Node}, strict_type=False),
         title="Internal Nodes",
         description="A collection of nodes in the graph.",
     )
     internal_edges: Pile[Edge] = Field(
-        default_factory=lambda: Pile(item_type=Edge, strict_type=True),
+        default_factory=lambda: Pile(item_type={Edge}, strict_type=False),
         title="Internal Edges",
         description="A collection of edges in the graph.",
     )
@@ -165,25 +165,25 @@ class Graph(Element, Relational):
             for edge_id in self.node_edge_mapping[_id]["out"]:
                 result.append(self.internal_edges[edge_id])
 
-        return result
+        return Pile(result, item_type={Edge}, strict_type=False)
 
-    def get_heads(self) -> list[Node]:
+    def get_heads(self) -> Pile[Node]:
         """Return nodes with no incoming edges (head nodes)."""
         result = []
         for node_id in self.node_edge_mapping.keys():
             if self.node_edge_mapping[node_id]["in"] == {}:
                 result.append(self.internal_nodes[node_id])
-        return result
+        return Pile(result, item_type={Node}, strict_type=False)
 
-    def get_predecessors(self, node: Node, /) -> list[Node]:
+    def get_predecessors(self, node: Node, /) -> Pile[Node]:
         """Return all nodes that have outbound edges to the given node."""
         edges = self.find_node_edge(node, direction="in")
         result = []
         for edge in edges:
             result.append(self.internal_nodes[edge.head])
-        return result
+        return Pile(result, item_type={Node}, strict_type=False)
 
-    def get_successors(self, node: Node, /) -> list[Node]:
+    def get_successors(self, node: Node, /) -> Pile[Node]:
         """
         Get all successor nodes of a given node.
 
@@ -199,7 +199,7 @@ class Graph(Element, Relational):
         result = []
         for edge in edges:
             result.append(self.internal_nodes[edge.tail])
-        return result
+        return Pile(result, item_type={Node}, strict_type=False)
 
     def to_networkx(self, **kwargs) -> Any:
         """Convert the graph to a NetworkX graph object."""

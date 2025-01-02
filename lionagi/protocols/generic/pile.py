@@ -6,7 +6,6 @@ from __future__ import annotations
 
 import asyncio
 import json
-import logging
 import threading
 from collections import deque
 from collections.abc import (
@@ -85,13 +84,13 @@ class Pile(Element, Adaptable, Collective[E], Generic[E]):
         strict_type (bool): Whether to enforce strict type checking
     """
 
-    pile_: dict[IDType, T] = Field(default_factory=dict)
+    collections: dict[IDType, T] = Field(default_factory=dict)
     item_type: set | None = Field(
         default=None,
         description="Set of allowed types for items in the pile.",
         exclude=True,
     )
-    progress: Progression = Field(
+    progression: Progression = Field(
         default_factory=Progression,
         description="Progression specifying the order of items in the pile.",
         exclude=True,
@@ -116,7 +115,7 @@ class Pile(Element, Adaptable, Collective[E], Generic[E]):
     @override
     def __init__(
         self,
-        items: ID.ItemSeq = None,
+        collections: ID.ItemSeq = None,
         item_type: set[type[T]] = None,
         order: ID.RefSeq = None,
         strict_type: bool = False,
@@ -138,8 +137,10 @@ class Pile(Element, Adaptable, Collective[E], Generic[E]):
 
         super().__init__(strict_type=strict_type, **_config)
         self.item_type = self._validate_item_type(item_type)
-        self.pile_ = self._validate_pile(items or kwargs.get("pile_", {}))
-        self.progress = self._validate_order(order)
+        self.collections = self._validate_pile(
+            collections or kwargs.get("collections", {})
+        )
+        self.progression = self._validate_order(order)
 
     # Sync Interface methods
     @override
@@ -160,7 +161,7 @@ class Pile(Element, Adaptable, Collective[E], Generic[E]):
         Raises:
             ValueError: If the dictionary format is invalid.
         """
-        items = data.pop("pile_", [])
+        items = data.pop("collections", [])
         items = [Element.from_dict(i) for i in items]
         return cls(items=items, **data)
 
@@ -310,31 +311,31 @@ class Pile(Element, Adaptable, Collective[E], Generic[E]):
 
     def keys(self) -> Sequence[str]:
         """Get all Lion IDs in order."""
-        return list(self.progress)
+        return list(self.progression)
 
     def values(self) -> Sequence[T]:
         """Get all items in order."""
-        return [self.pile_[key] for key in self.progress]
+        return [self.collections[key] for key in self.progression]
 
     def items(self) -> Sequence[tuple[IDType, T]]:
         """Get all (ID, item) pairs in order."""
-        return [(key, self.pile_[key]) for key in self.progress]
+        return [(key, self.collections[key]) for key in self.progression]
 
     def is_empty(self) -> bool:
         """Check if empty."""
-        return len(self.progress) == 0
+        return len(self.progression) == 0
 
     def size(self) -> int:
         """Get number of items."""
-        return len(self.progress)
+        return len(self.progression)
 
     def __iter__(self) -> Iterator[T]:
         """Iterate over items safely."""
         with self.lock:
-            current_order = list(self.progress)
+            current_order = list(self.progression)
 
         for key in current_order:
-            yield self.pile_[key]
+            yield self.collections[key]
 
     def __next__(self) -> T:
         """Get next item."""
@@ -361,11 +362,11 @@ class Pile(Element, Adaptable, Collective[E], Generic[E]):
 
     def __contains__(self, item: ID.RefSeq | ID.Ref) -> bool:
         """Check if item exists."""
-        return item in self.progress
+        return item in self.progression
 
     def __len__(self) -> int:
         """Get number of items."""
-        return len(self.pile_)
+        return len(self.collections)
 
     @override
     def __bool__(self) -> bool:
@@ -400,7 +401,7 @@ class Pile(Element, Adaptable, Collective[E], Generic[E]):
         result = self.__class__(
             items=self.values(),
             item_type=self.item_type,
-            order=self.progress,
+            order=self.progression,
         )
         result.include(list(other))
         return result
@@ -491,7 +492,7 @@ class Pile(Element, Adaptable, Collective[E], Generic[E]):
         if length == 0:
             return "Pile()"
         elif length == 1:
-            return f"Pile({next(iter(self.pile_.values())).__repr__()})"
+            return f"Pile({next(iter(self.collections.values())).__repr__()})"
         else:
             return f"Pile({length})"
 
@@ -599,10 +600,10 @@ class Pile(Element, Adaptable, Collective[E], Generic[E]):
     async def __aiter__(self) -> AsyncIterator[T]:
         """Async iterate over items."""
         async with self.async_lock:
-            current_order = list(self.progress)
+            current_order = list(self.progression)
 
         for key in current_order:
-            yield self.pile_[key]
+            yield self.collections[key]
             await asyncio.sleep(0)  # Yield control to the event loop
 
     async def __anext__(self) -> T:
@@ -619,7 +620,7 @@ class Pile(Element, Adaptable, Collective[E], Generic[E]):
 
         if isinstance(key, int | slice):
             try:
-                result_ids = self.progress[key]
+                result_ids = self.progression[key]
                 result_ids = (
                     [result_ids]
                     if not isinstance(result_ids, list)
@@ -627,14 +628,14 @@ class Pile(Element, Adaptable, Collective[E], Generic[E]):
                 )
                 result = []
                 for i in result_ids:
-                    result.append(self.pile_[i])
+                    result.append(self.collections[i])
                 return result[0] if len(result) == 1 else result
             except Exception as e:
                 raise ItemNotFoundError(f"index {key}. Error: {e}")
 
         elif isinstance(key, IDType):
             try:
-                return self.pile_[key]
+                return self.collections[key]
             except Exception as e:
                 raise ItemNotFoundError(f"key {key}. Error: {e}")
 
@@ -644,7 +645,7 @@ class Pile(Element, Adaptable, Collective[E], Generic[E]):
             try:
                 for k in key:
                     result_id = ID.get_id(k)
-                    result.append(self.pile_[result_id])
+                    result.append(self.collections[result_id])
 
                 if len(result) == 0:
                     raise ItemNotFoundError(f"key {key} item not found")
@@ -663,20 +664,20 @@ class Pile(Element, Adaptable, Collective[E], Generic[E]):
 
         item_order = []
         for i in item_dict.keys():
-            if i in self.progress:
+            if i in self.progression:
                 raise ItemExistsError(f"item {i} already exists in the pile")
             item_order.append(i)
         if isinstance(key, int | slice):
             try:
                 delete_order = (
-                    list(self.progress[key])
-                    if isinstance(self.progress[key], Progression)
-                    else [self.progress[key]]
+                    list(self.progression[key])
+                    if isinstance(self.progression[key], Progression)
+                    else [self.progression[key]]
                 )
-                self.progress[key] = item_order
+                self.progression[key] = item_order
                 for i in to_list(delete_order, flatten=True):
-                    self.pile_.pop(i)
-                self.pile_.update(item_dict)
+                    self.collections.pop(i)
+                self.collections.update(item_dict)
             except Exception as e:
                 raise ValueError(f"Failed to set pile. Error: {e}")
         else:
@@ -693,8 +694,8 @@ class Pile(Element, Adaptable, Collective[E], Generic[E]):
                     raise KeyError(
                         f"Invalid key {id_}. Key and item does not match.",
                     )
-            self.progress += key
-            self.pile_.update(item_dict)
+            self.progression += key
+            self.collections.update(item_dict)
 
     def _get(self, key: Any, default: D = UNDEFINED) -> T | Pile | D:
         if isinstance(key, int | slice):
@@ -736,12 +737,12 @@ class Pile(Element, Adaptable, Collective[E], Generic[E]):
     ) -> T | Pile | D:
         if isinstance(key, int | slice):
             try:
-                pops = self.progress[key]
+                pops = self.progression[key]
                 pops = [pops] if isinstance(pops, IDType) else pops
                 result = []
                 for i in pops:
-                    self.progress.remove(i)
-                    result.append(self.pile_.pop(i))
+                    self.progression.remove(i)
+                    result.append(self.collections.pop(i))
                 result = (
                     self.__class__(items=result, item_type=self.item_type)
                     if len(result) > 1
@@ -757,8 +758,8 @@ class Pile(Element, Adaptable, Collective[E], Generic[E]):
                 key = validate_order(key)
                 result = []
                 for k in key:
-                    self.progress.remove(k)
-                    result.append(self.pile_.pop(k))
+                    self.progression.remove(k)
+                    result.append(self.collections.pop(k))
                 if len(result) == 0:
                     raise ItemNotFoundError(f"key {key} item not found")
                 elif len(result) == 1:
@@ -784,11 +785,11 @@ class Pile(Element, Adaptable, Collective[E], Generic[E]):
 
         item_order = []
         for i in item_dict.keys():
-            if i not in self.progress:
+            if i not in self.progression:
                 item_order.append(i)
 
-        self.progress.append(item_order)
-        self.pile_.update(item_dict)
+        self.progression.append(item_order)
+        self.collections.update(item_dict)
 
     def _exclude(self, item: ID.Ref | ID.RefSeq):
         item = to_list_type(item)
@@ -800,14 +801,14 @@ class Pile(Element, Adaptable, Collective[E], Generic[E]):
             self.pop(exclude_list)
 
     def _clear(self) -> None:
-        self.pile_.clear()
-        self.progress.clear()
+        self.collections.clear()
+        self.progression.clear()
 
     def _update(self, other: ID.ItemSeq | ID.Item):
         others = self._validate_pile(other)
         for i in others.keys():
-            if i in self.pile_:
-                self.pile_[i] = others[i]
+            if i in self.collections:
+                self.collections[i] = others[i]
             else:
                 self.include(others[i])
 
@@ -864,7 +865,9 @@ class Pile(Element, Adaptable, Collective[E], Generic[E]):
 
     def _validate_order(self, value: Any) -> Progression:
         if not value:
-            return self.progress.__class__(order=list(self.pile_.keys()))
+            return self.progression.__class__(
+                order=list(self.collections.keys())
+            )
 
         if isinstance(value, Progression):
             value = list(value)
@@ -874,31 +877,31 @@ class Pile(Element, Adaptable, Collective[E], Generic[E]):
         value_set = set(value)
         if len(value_set) != len(value):
             raise ValueError("There are duplicate elements in the order")
-        if len(value_set) != len(self.pile_.keys()):
+        if len(value_set) != len(self.collections.keys()):
             raise ValueError(
                 "The length of the order does not match the length of the pile"
             )
 
         for i in value_set:
-            if ID.get_id(i) not in self.pile_.keys():
+            if ID.get_id(i) not in self.collections.keys():
                 raise ValueError(
                     f"The order does not match the pile. {i} not found"
                 )
 
-        return self.progress.__class__(order=value)
+        return self.progression.__class__(order=value)
 
     def _insert(self, index: int, item: ID.Item):
         item_dict = self._validate_pile(item)
 
         item_order = []
         for i in item_dict.keys():
-            if i in self.progress:
+            if i in self.progression:
                 raise ItemExistsError(f"item {i} already exists in the pile")
             item_order.append(i)
-        self.progress.insert(index, item_order)
-        self.pile_.update(item_dict)
+        self.progression.insert(index, item_order)
+        self.collections.update(item_dict)
 
-    @field_serializer("pile_")
+    @field_serializer("collections")
     def _(self, value: dict[str, T]):
         return [i.to_dict() for i in value.values()]
 
@@ -913,7 +916,7 @@ class Pile(Element, Adaptable, Collective[E], Generic[E]):
         async def __anext__(self) -> T:
             if self.index >= len(self.pile):
                 raise StopAsyncIteration
-            item = self.pile[self.pile.progress[self.index]]
+            item = self.pile[self.pile.progression[self.index]]
             self.index += 1
             await asyncio.sleep(0)  # Yield control to the event loop
             return item
@@ -934,7 +937,9 @@ class Pile(Element, Adaptable, Collective[E], Generic[E]):
 
     def is_homogenous(self) -> bool:
         """Check if all items are same type."""
-        return len(self.pile_) < 2 or all(is_same_dtype(self.pile_.values()))
+        return len(self.collections) < 2 or all(
+            is_same_dtype(self.collections.values())
+        )
 
     def adapt_to(self, obj_key: str, /, **kwargs: Any) -> Any:
         """Convert to another format."""
@@ -964,7 +969,7 @@ class Pile(Element, Adaptable, Collective[E], Generic[E]):
             cls, obj, obj_key, **kwargs
         )
         if isinstance(dict_, list):
-            dict_ = {"pile_": dict_}
+            dict_ = {"collections": dict_}
         return cls.from_dict(dict_)
 
     def to_df(
