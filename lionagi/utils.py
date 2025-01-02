@@ -224,18 +224,6 @@ def time(
     )
 
 
-def content_to_sha256(input: BaseModel) -> str:
-    """
-    Converts a Python dictionary to a SHA-256 hash (hex format).
-    """
-    input_dict = input.model_dump()
-    input_dict.pop("metadata", None)
-    json_str = json.dumps(input_dict, sort_keys=True)
-    sha_hash = hashlib.sha256(json_str.encode("utf-8"))
-
-    return sha_hash.hexdigest()
-
-
 def copy(obj: T, /, *, deep: bool = True, num: int = 1) -> T | list[T]:
     if num < 1:
         raise ValueError("Number of copies must be at least 1")
