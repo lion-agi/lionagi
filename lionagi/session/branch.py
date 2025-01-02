@@ -3,7 +3,6 @@
 # SPDX-License-Identifier: Apache-2.0
 
 import logging
-from pathlib import Path
 from typing import Any, Literal
 
 import pandas as pd
@@ -11,50 +10,50 @@ from jinja2 import Template
 from pydantic import BaseModel, Field, JsonValue, PrivateAttr
 
 from lionagi.libs.validate.fuzzy_validate_mapping import fuzzy_validate_mapping
-from lionagi.operatives.instruct.instruct import Instruct
-
-# from lionagi.operatives.manager import OperativeManager
-from lionagi.operatives.operative import Operative
-from lionagi.operatives.step import Step
-from lionagi.protocols._concepts import Communicatable, Observable, Relational
-from lionagi.protocols.generic.element import IDType
-from lionagi.protocols.generic.log import LogManagerConfig
-from lionagi.protocols.mail.exchange import Exchange, Mail, Mailbox, Package
-from lionagi.protocols.mail.package import PackageCategory
-from lionagi.protocols.messages.base import (
-    MESSAGE_FIELDS,
-    MessageRole,
-    SenderRecipient,
+from lionagi.operatives.action.function_calling import FunctionCalling
+from lionagi.operatives.types import (
+    ActionManager,
+    ActionResponseModel,
+    FuncTool,
+    Instruct,
+    Operative,
+    Step,
+    Tool,
+    ToolRef,
 )
-from lionagi.protocols.messages.system import System
+from lionagi.protocols.generic.log import Log
 from lionagi.protocols.types import (
     ID,
+    MESSAGE_FIELDS,
     ActionRequest,
     ActionResponse,
     AssistantResponse,
     Communicatable,
+    Element,
+    IDType,
     Instruction,
     LogManager,
+    LogManagerConfig,
+    Mail,
+    Mailbox,
     MessageManager,
+    MessageRole,
+    Package,
+    PackageCategory,
     Pile,
     Progression,
     Relational,
     RoledMessage,
     SenderRecipient,
+    System,
 )
 from lionagi.service.imodel import iModel
 from lionagi.service.manager import iModelManager
 from lionagi.settings import Settings
-from lionagi.utils import (
-    UNDEFINED,
-    alcall,
-    breakdown_pydantic_annotation,
-    time,
-    to_json,
-)
+from lionagi.utils import UNDEFINED, alcall, breakdown_pydantic_annotation
 
 
-class Branch(Observable, Communicatable, Relational):
+class Branch(Element, Communicatable, Relational):
 
     user: SenderRecipient | None = Field(
         None,
@@ -70,47 +69,35 @@ class Branch(Observable, Communicatable, Relational):
         description="A human readable name of the branch, if any.",
     )
 
-    mailbox: Mailbox = Field(None)
+    mailbox: Mailbox = Field(default_factory=Mailbox, exclude=True)
 
-    _message_manager: MessageManager = PrivateAttr(None)
-    _action_manager: ActionManager = PrivateAttr(None)
-    _imodel_manager: iModelManager = PrivateAttr(None)
-    # _operative_manager: OperativeManager = PrivateAttr(None)
-    _log_manager: LogManager = PrivateAttr(None)
+    _message_manager: MessageManager | None = PrivateAttr(None)
+    _action_manager: ActionManager | None = PrivateAttr(None)
+    _imodel_manager: iModelManager | None = PrivateAttr(None)
+    _log_manager: LogManager | None = PrivateAttr(None)
 
     def __init__(
         self,
         *,
-        user: SenderRecipient = None,  # base_branch kwargs
-        name: str = None,
-        mailbox: Exchange = None,
+        user: SenderRecipient = None,
+        name: str | None = None,
         messages: Pile[RoledMessage] = None,  # message manager kwargs
-        save_on_clear: bool = False,
         system: System | JsonValue = None,
         system_sender: SenderRecipient = None,
-        system_datetime: bool | str = None,
-        system_template: Template | str = None,
-        system_template_context: dict = None,
         chat_model: iModel = None,  # imodel manager kwargs
         parse_model: iModel = None,
         imodel: iModel = None,  # deprecated, alias of chat_model
         tools: FuncTool | list[FuncTool] = None,  # action manager kwargs
         log_config: LogManagerConfig | dict = None,  # log manager kwargs
-        metadata: dict = None,  # basic Node kwargs
-        id: IDType = None,
-        created_at: float = None,
+        system_datetime: bool | str = None,
+        system_template: Template | str = None,
+        system_template_context: dict = None,
+        **kwargs,
     ):
-        super().__init__()
-        self.id = IDType.validate(id)
-        self.created_at: float = created_at or time(type_="timestamp")
-        self.metadata = metadata or {}
-        self.user = user
-        self.name = name
-        self.mailbox = mailbox or Exchange()
 
-        self._save_on_clear = save_on_clear
+        super().__init__(user=user, name=name, **kwargs)
+
         self._message_manager = MessageManager(messages=messages)
-
         if any(
             i is not None
             for i in [system, system_sender, system_datetime, system_template]
@@ -197,70 +184,49 @@ class Branch(Observable, Communicatable, Relational):
 
     async def operate(
         self,
+        instruct: Instruct,
         *,
-        instruction=None,
-        guidance=None,
-        context=None,
-        sender=None,
-        recipient=None,
-        operative_model: type[BaseModel] = None,
-        progress=None,
-        imodel: iModel = None,
-        reason: bool = False,
-        actions: bool = False,
-        exclude_fields: list | dict | None = None,
-        handle_validation: Literal[
-            "raise", "return_value", "return_none"
-        ] = "return_value",
+        sender: SenderRecipient = None,
+        recipient: SenderRecipient = None,
+        progression: Progression = None,
+        imodel: iModel = None,  # deprecated, alias of chat_model
+        chat_model: iModel = None,
         invoke_actions: bool = True,
-        tool_schemas=None,
+        tool_schemas: list[dict] = None,
         images: list = None,
         image_detail: Literal["low", "high", "auto"] = None,
-        max_retries: int = None,
-        parse_imodel: iModel = None,
-        retry_kwargs: dict = {},
-        auto_retry_parse: bool = True,
-        field_models: list[FieldModel] | None = None,
+        parse_model: iModel = None,
         skip_validation: bool = False,
         tools: ToolRef = None,
-        request_params: ModelParams = None,
-        request_param_kwargs: dict = {},
-        response_params: ModelParams = None,
-        response_param_kwargs: dict = {},
+        operative: Operative = None,
+        response_format: type[
+            BaseModel
+        ] = None,  # alias of operative.request_type
+        fuzzy_match_kwargs: dict = None,
+        operative_kwargs: dict = None,
         **kwargs,
     ) -> list | BaseModel | None | dict | str:
-        imodel = imodel or self.chat_model
-        parse_imodel = parse_imodel or imodel
 
-        operative: Operative = Step.request_operative(
-            request_params=request_params,
-            reason=reason,
-            actions=actions,
-            exclude_fields=exclude_fields,
-            base_type=operative_model,
-            field_models=field_models,
-            **request_param_kwargs,
-        )
-        if isinstance(max_retries, int) and max_retries > 0:
-            operative.max_retries = max_retries
+        chat_model = chat_model or imodel or self.chat_model
+        parse_model = parse_model or chat_model
 
-        if auto_retry_parse is True:
-            operative.auto_retry_parse = True
+        if operative is None:
+            operative_kwargs = operative_kwargs or {}
+            operative_kwargs["base_type"] = response_format
+            operative = Step.request_operative(**operative_kwargs)
 
-        if actions:
-            tools = tools or True
         if invoke_actions and tools:
-            tool_schemas = self.get_tool_schema(tools)
+            tool_schemas = self.acts.get_tool_schema(tools)
 
-        ins, res = await self._invoke_imodel(
-            instruction=instruction,
-            guidance=guidance,
-            context=context,
+        ins, res = await self.invoke_chat(
+            instruction=instruct.instruction,
+            guidance=instruct.guidance,
+            context=instruct.context,
             sender=sender,
             recipient=recipient,
-            request_model=operative.request_type,
-            progress=progress,
-            imodel=imodel,
+            request_model=response_format or operative.request_type,
+            progression=progression,
+            imodel=chat_model,
             images=images,
             image_detail=image_detail,
             tool_schemas=tool_schemas,
@@ -274,87 +240,106 @@ class Branch(Observable, Communicatable, Relational):
             return operative.response_str_dict
 
         response_model = operative.update_response_model(res.response)
-        max_retries = operative.max_retries
 
-        num_try = 0
-        parse_imodel = self.parse_model or imodel or self.chat_model
-        while (
-            operative._should_retry
-            and isinstance(response_model, str | dict)
-            and num_try < max_retries
-        ):
-            num_try += 1
-            if operative.auto_retry_parse:
-                instruct = Instruction(
-                    instruction="reformat text into specified model",
-                    guidance="follow the required response format, using the model schema as a guide",
-                    context=[{"text_to_format": res.response}],
-                    request_model=operative.request_type,
-                    sender=self.user,
-                    recipient=self,
-                )
-
-            api_request = {
-                "messages": [instruct.chat_msg],
-                **retry_kwargs,
-            }
-
-            res1 = AssistantResponse(
-                sender=self,
-                recipient=self.user,
-                assistant_response=await parse_imodel.invoke(**api_request),
+        if not isinstance(response_model, BaseModel):
+            response_model = await self.parse(
+                text=res.response,
+                request_type=operative.request_type,
+                max_retries=operative.max_retries,
+                handle_validation="return_value",
+                **(fuzzy_match_kwargs or {}),
             )
-            response_model = operative.update_response_model(res1.response)
+            response_model = operative.update_response_model(response_model)
 
-        if isinstance(response_model, dict | str):
-            if handle_validation == "raise":
-                raise ValueError(
-                    "Operative model validation failed. iModel response"
-                    " not parsed into operative model:"
-                    f" {operative.name}"
-                )
-            if handle_validation == "return_none":
-                return None
-            if handle_validation == "return_value":
-                return response_model
+        if not invoke_actions:
+            return operative
 
         if (
-            invoke_actions is True
-            and getattr(response_model, "action_required", None) is True
+            getattr(response_model, "action_required", None) is True
             and getattr(response_model, "action_requests", None) is not None
         ):
             action_response_models = await alcall(
                 response_model.action_requests,
                 self.invoke_action,
-                suppress_errors=True,
             )
-            action_response_models = [
-                i.model_dump() for i in action_response_models if i
-            ]
-            operative = Step.respond_operative(
-                response_params=response_params,
-                operative=operative,
-                additional_data={"action_responses": action_response_models},
-                **response_param_kwargs,
+            response_model = operative.update_response_model(
+                data={"action_responses": action_response_models},
+                response_model=response_model,
             )
-            response_model = operative.response_model
-        elif (
-            hasattr(response_model, "action_requests")
-            and response_model.action_requests
-        ):
-            for i in response_model.action_requests:
-                act_req = ActionRequest(
-                    function=i.function,
-                    arguments=i.arguments,
-                    sender=self,
-                )
-                self.msgs.add_message(
-                    action_request=act_req,
-                    sender=act_req.sender,
-                    recipient=None,
-                )
 
-        return operative.response_model
+        return response_model
+
+    async def parse(
+        self,
+        text: str,
+        handle_validation: Literal[
+            "raise", "return_value", "return_none"
+        ] = "return_value",
+        max_retries: int = 3,
+        request_type: type[BaseModel] = None,
+        operative: Operative = None,
+        similarity_algo="jaro_winkler",
+        similarity_threshold: float = 0.85,
+        fuzzy_match: bool = True,
+        handle_unmatched: Literal[
+            "ignore", "raise", "remove", "fill", "force"
+        ] = "force",
+        fill_value: Any = None,
+        fill_mapping: dict[str, Any] | None = None,
+        strict: bool = False,
+        suppress_conversion_errors: bool = False,
+    ):
+        _should_try = True
+        num_try = 0
+        response_model = text
+        if operative is not None:
+            max_retries = operative.max_retries
+            request_type = operative.request_type
+
+        while (
+            _should_try
+            and num_try < max_retries
+            and not isinstance(response_model, BaseModel)
+        ):
+            num_try += 1
+            _, res = await self.invoke_chat(
+                instruction="reformat text into specified model",
+                guidane="follow the required response format, using the model schema as a guide",
+                context=[{"text_to_format": text}],
+                request_model=request_type,
+                sender=self.user,
+                recipient=self.id,
+                imodel=self.parse_model,
+            )
+            if operative is not None:
+                response_model = operative.update_response_model(res.response)
+            else:
+                response_model = fuzzy_validate_mapping(
+                    res.response,
+                    breakdown_pydantic_annotation(request_type),
+                    similarity_algo=similarity_algo,
+                    similarity_threshold=similarity_threshold,
+                    fuzzy_match=fuzzy_match,
+                    handle_unmatched=handle_unmatched,
+                    fill_value=fill_value,
+                    fill_mapping=fill_mapping,
+                    strict=strict,
+                    suppress_conversion_errors=suppress_conversion_errors,
+                )
+                response_model = request_type.model_validate(response_model)
+
+        if not isinstance(response_model, BaseModel):
+            match handle_validation:
+                case "return_value":
+                    return response_model
+                case "return_none":
+                    return None
+                case "raise":
+                    raise ValueError(
+                        "Failed to parse response into request format"
+                    )
+
+        return response_model
 
     async def communicate(
         self,
@@ -363,23 +348,19 @@ class Branch(Observable, Communicatable, Relational):
         context: JsonValue = None,
         sender: SenderRecipient = None,
         recipient: SenderRecipient = None,
-        progress: ID.IDSeq = None,
-        request_model: type[BaseModel] | BaseModel = None,
+        progression: ID.IDSeq = None,
+        request_model: type[BaseModel] | BaseModel | None = None,
+        response_format: type[BaseModel] = None,
         request_fields: dict | list[str] = None,
-        imodel: iModel = None,
+        imodel: iModel = None,  # alias of chat_model
+        chat_model: iModel = None,
+        parse_model: iModel = None,
+        skip_validation: bool = False,
         images: list = None,
         image_detail: Literal["low", "high", "auto"] = None,
-        num_parse_retries: int = 0,
-        parse_imodel: iModel = None,
-        retry_kwargs: dict = {},
-        handle_validation: Literal[
-            "raise", "return_value", "return_none"
-        ] = "return_value",
-        skip_validation: bool = False,
+        num_parse_retries: int = 3,
+        fuzzy_match_kwargs: dict = None,
         clear_messages: bool = False,
-        response_format: (
-            type[BaseModel] | BaseModel
-        ) = None,  # alias of request_model
         **kwargs,
     ):
         if response_format and request_model:
@@ -387,10 +368,10 @@ class Branch(Observable, Communicatable, Relational):
                 "Cannot specify both response_format and request_model"
                 "as they are aliases for the same parameter."
             )
-        request_model = request_model or response_format
+        request_model = response_format or request_model
+        imodel = imodel or chat_model or self.chat_model
+        parse_model = parse_model or self.parse_model
 
-        imodel = imodel or self.chat_model
-        parse_imodel = parse_imodel or imodel
         if clear_messages:
             self.msgs.clear_messages()
 
@@ -401,14 +382,14 @@ class Branch(Observable, Communicatable, Relational):
             )
             num_parse_retries = 5
 
-        ins, res = await self._invoke_imodel(
+        ins, res = await self.invoke_chat(
             instruction=instruction,
             guidance=guidance,
             context=context,
             sender=sender,
             recipient=recipient,
             request_model=request_model,
-            progress=progress,
+            progression=progression,
             imodel=imodel,
             images=images,
             image_detail=image_detail,
@@ -420,133 +401,24 @@ class Branch(Observable, Communicatable, Relational):
         if skip_validation:
             return res.response
 
-        _d = None
-        if request_fields is not None or request_model is not None:
-            parse_success = None
-            try:
-                if request_model:
-                    try:
-                        _d = to_json(res.response)
-                        _d = fuzzy_validate_mapping(
-                            _d,
-                            breakdown_pydantic_annotation(request_model),
-                            handle_unmatched="force",
-                            fill_value=UNDEFINED,
-                        )
-                        _d = {k: v for k, v in _d.items() if v != UNDEFINED}
-                        return request_model.model_validate(_d)
-                    except Exception:
-                        pass
-                elif request_fields:
-                    try:
-                        _d = to_json(res.response)
-                        _d = fuzzy_validate_mapping(
-                            _d,
-                            request_fields,
-                            handle_unmatched="force",
-                            fill_value=UNDEFINED,
-                        )
-                        _d = {k: v for k, v in _d.items() if v != UNDEFINED}
-                        return _d
-                    except Exception:
-                        pass
-            except Exception:
-                parse_success = False
-                pass
+        if request_model is not None:
+            return await self.parse(
+                text=res.response,
+                request_type=request_model,
+                max_retries=num_parse_retries,
+                **(fuzzy_match_kwargs or {}),
+            )
 
-            while parse_success is False and num_parse_retries > 0:
-                if request_fields:
-                    try:
-                        _d = to_json(res.response)
-                        _d = fuzzy_validate_mapping(
-                            _d,
-                            request_fields,
-                            handle_unmatched="force",
-                            fill_value=UNDEFINED,
-                        )
-                        _d = {k: v for k, v in _d.items() if v != UNDEFINED}
-                    except Exception:
-                        pass
-                    if _d and isinstance(_d, dict):
-                        parse_success = True
-                        if res not in self.msgs.messages:
-                            if isinstance(
-                                self.msgs.messages[-1], AssistantResponse
-                            ):
-                                self.msgs.messages[-1].response = res.response
-                            else:
-                                self.msgs.add_message(assistant_response=res)
-                        return _d
+        if request_fields is not None:
+            _d = fuzzy_validate_mapping(
+                res.response,
+                request_fields,
+                handle_unmatched="force",
+                fill_value=UNDEFINED,
+            )
+            return {k: v for k, v in _d.items() if v != UNDEFINED}
 
-                elif request_model:
-                    _d = to_json(res.response)
-                    _d = fuzzy_validate_mapping(
-                        _d,
-                        breakdown_pydantic_annotation(request_model),
-                        handle_unmatched="force",
-                        fill_value=UNDEFINED,
-                    )
-
-                    _d = {k: v for k, v in _d.items() if v != UNDEFINED}
-                    if _d and isinstance(_d, dict):
-                        try:
-                            _d = request_model.model_validate(_d)
-                            parse_success = True
-                            if res not in self.msgs.messages:
-                                if isinstance(
-                                    self.msgs.messages[-1], AssistantResponse
-                                ):
-                                    self.msgs.messages[-1].response = (
-                                        res.response
-                                    )
-                                else:
-                                    self.msgs.add_message(
-                                        assistant_response=res
-                                    )
-                            return _d
-                        except Exception as e:
-                            logging.warning(
-                                "Failed to parse model response into "
-                                f"pydantic model: {e}"
-                            )
-
-                if parse_success is False:
-                    logging.warning(
-                        "Failed to parse response into request "
-                        f"format, retrying... with {parse_imodel.model}"
-                    )
-                    _, res = await self._invoke_imodel(
-                        instruction="reformat text into specified model",
-                        context=res.response,
-                        request_model=request_model,
-                        request_fields=request_fields,
-                        progress=[],
-                        imodel=parse_imodel or imodel,
-                        **retry_kwargs,
-                    )
-                    num_parse_retries -= 1
-
-        if request_fields and not isinstance(_d, dict):
-            if handle_validation == "raise":
-                raise ValueError(
-                    "Failed to parse response into request format"
-                )
-            if handle_validation == "return_none":
-                return None
-            if handle_validation == "return_value":
-                return res.response
-
-        if request_model and not isinstance(_d, BaseModel):
-            if handle_validation == "raise":
-                raise ValueError(
-                    "Failed to parse response into request format"
-                )
-            if handle_validation == "return_none":
-                return None
-            if handle_validation == "return_value":
-                return res.response
-
-        return _d if _d else res.response
+        return res.response
 
     async def invoke_action(
         self,
@@ -566,26 +438,30 @@ class Branch(Observable, Communicatable, Relational):
                     func = action_request["function"]
                     args = action_request["arguments"]
 
-            result = await self._action_manager.invoke(action_request)
+            func_call: FunctionCalling = await self._action_manager.invoke(
+                action_request
+            )
+            self._log_manager.log(Log.create(func_call))
             tool = self._action_manager.registry[action_request.function]
 
             if not isinstance(action_request, ActionRequest):
-                action_request = await self.msgs.a_add_message(
+                action_request = ActionRequest.create(
                     function=func,
                     arguments=args,
-                    sender=self,
-                    recipient=tool,
+                    sender=self.id,
+                    recipient=tool.id,
                 )
+                await self.msgs.a_add_message(action_request=action_request)
 
             await self.msgs.a_add_message(
                 action_request=action_request,
-                action_response=result,
+                action_response=func_call.response,
             )
 
             return ActionResponseModel(
                 function=action_request.function,
                 arguments=action_request.arguments,
-                output=result,
+                output=func_call,
             )
         except Exception as e:
             if suppress_errors:
@@ -602,7 +478,7 @@ class Branch(Observable, Communicatable, Relational):
         recipient=None,
         request_fields=None,
         request_model: type[BaseModel] = None,
-        progress=None,
+        progression=None,
         imodel: iModel = None,
         tool_schemas=None,
         images: list = None,
@@ -623,70 +499,65 @@ class Branch(Observable, Communicatable, Relational):
             tool_schemas=tool_schemas,
         )
 
-        progress = progress or self.msgs.progress
+        progression = progression or self.msgs.progression
         messages: list[RoledMessage] = [
-            self.msgs.messages[i] for i in progress
+            self.msgs.messages[i] for i in progression
         ]
 
         use_ins = None
-        if imodel.sequential_exchange:
-            _to_use = []
-            _action_responses: set[ActionResponse] = set()
+        _to_use = []
+        _action_responses: set[ActionResponse] = set()
 
-            for i in messages:
-                if isinstance(i, ActionResponse):
-                    _action_responses.add(i)
+        for i in messages:
+            if isinstance(i, ActionResponse):
+                _action_responses.add(i)
+            if isinstance(i, AssistantResponse):
+                _to_use.append(i.model_copy())
+            if isinstance(i, Instruction):
+                if _action_responses:
+                    j = i.model_copy()
+                    d_ = [k.content for k in _action_responses]
+                    for z in d_:
+                        if z not in j.context:
+                            j.context.append(z)
+
+                    _to_use.append(j)
+                    _action_responses = set()
+                else:
+                    _to_use.append(i)
+
+        messages = _to_use
+        if _action_responses:
+            j = ins.model_copy()
+            d_ = [k.content for k in _action_responses]
+            for z in d_:
+                if z not in j.context:
+                    j.context.append(z)
+            use_ins = j
+
+        if messages and len(messages) > 1:
+            _msgs = [messages[0]]
+
+            for i in messages[1:]:
                 if isinstance(i, AssistantResponse):
-                    _to_use.append(i.model_copy())
-                if isinstance(i, Instruction):
-                    if _action_responses:
-                        j = i.model_copy()
-                        d_ = [k.content for k in _action_responses]
-                        for z in d_:
-                            if z not in j.context:
-                                j.context.append(z)
-
-                        _to_use.append(j)
-                        _action_responses = set()
+                    if isinstance(_msgs[-1], AssistantResponse):
+                        _msgs[-1].response = (
+                            f"{_msgs[-1].response}\n\n{i.response}"
+                        )
                     else:
-                        _to_use.append(i)
+                        _msgs.append(i)
+                else:
+                    if isinstance(_msgs[-1], AssistantResponse):
+                        _msgs.append(i)
+            messages = _msgs
 
-            messages = _to_use
-            if _action_responses:
-                j = ins.model_copy()
-                d_ = [k.content for k in _action_responses]
-                for z in d_:
-                    if z not in j.context:
-                        j.context.append(z)
-                use_ins = j
-
-            if messages and len(messages) > 1:
-                _msgs = [messages[0]]
-
-                for i in messages[1:]:
-                    if isinstance(i, AssistantResponse):
-                        if isinstance(_msgs[-1], AssistantResponse):
-                            _msgs[-1].response = (
-                                f"{_msgs[-1].response}\n\n{i.response}"
-                            )
-                        else:
-                            _msgs.append(i)
-                    else:
-                        if isinstance(_msgs[-1], AssistantResponse):
-                            _msgs.append(i)
-                messages = _msgs
-
-        if (
-            self.msgs.system
-            and hasattr(imodel, "allowed_roles")
-            and "system" not in imodel.allowed_roles
-        ):
+        if self.msgs.system:
             messages = [msg for msg in messages if msg.role != "system"]
             first_instruction = None
 
             if len(messages) == 0:
                 first_instruction = ins.model_copy()
-                first_instruction.guidance = self.msgs.system.system_info + (
+                first_instruction.guidance = self.msgs.system.rendered + (
                     first_instruction.guidance or ""
                 )
                 messages.append(first_instruction)
@@ -697,7 +568,7 @@ class Branch(Observable, Communicatable, Relational):
                         "First message in progress must be an Instruction or System"
                     )
                 first_instruction = first_instruction.model_copy()
-                first_instruction.guidance = self.msgs.system.system_info + (
+                first_instruction.guidance = self.msgs.system.rendered + (
                     first_instruction.guidance or ""
                 )
                 messages[0] = first_instruction
@@ -709,9 +580,12 @@ class Branch(Observable, Communicatable, Relational):
         kwargs["messages"] = [i.chat_msg for i in messages]
         imodel = imodel or self.chat_model
 
-        res = AssistantResponse(
-            assistant_response=await imodel.invoke(**kwargs),
-            sender=self,
+        api_call = await imodel.invoke(**kwargs)
+        self._log_manager.log(Log.create(api_call))
+
+        res = AssistantResponse.create(
+            assistant_response=api_call.response,
+            sender=self.id,
             recipient=self.user,
         )
 
@@ -751,14 +625,16 @@ class Branch(Observable, Communicatable, Relational):
             message.recipient = branch_clone.id
         return branch_clone
 
-    def to_df(self, *, progress: Progression = None) -> pd.DataFrame:
-        if progress is None:
-            progress = self.msgs.progress
+    def to_df(self, *, progression: Progression = None) -> pd.DataFrame:
+        if progression is None:
+            progression = self.msgs.progression
 
         msgs = [
-            self.msgs.messages[i] for i in progress if i in self.msgs.messages
+            self.msgs.messages[i]
+            for i in progression
+            if i in self.msgs.messages
         ]
-        p = Pile(items=msgs)
+        p = Pile(collections=msgs)
         return p.to_df(columns=MESSAGE_FIELDS)
 
     async def _instruct(self, instruct: Instruct, /, **kwargs):
@@ -789,7 +665,7 @@ class Branch(Observable, Communicatable, Relational):
 
     def receive(
         self,
-        sender: ID,
+        sender: IDType,
         message: bool = False,
         tool: bool = False,
         imodel: bool = False,
@@ -812,7 +688,7 @@ class Branch(Observable, Communicatable, Relational):
             sender = sender.id
         if sender not in self.mailbox.pending_ins.keys():
             raise ValueError(f"No package from {sender}")
-        while self.mailbox.pending_ins[sender].size() > 0:
+        while self.mailbox.pending_ins[sender]:
             mail_id = self.mailbox.pending_ins[sender].popleft()
             mail: Mail = self.mailbox.pile_[mail_id]
 
@@ -828,13 +704,15 @@ class Branch(Observable, Communicatable, Relational):
             elif mail.category == "tool" and tool:
                 if not isinstance(mail.package.package, Tool):
                     raise ValueError("Invalid tools format")
-                self.tool_manager.register_tools(mail.package.item)
+                self._action_manager.register_tools(mail.package.item)
                 self.mailbox.pile_.pop(mail_id)
 
             elif mail.category == "imodel" and imodel:
                 if not isinstance(mail.package.item, iModel):
                     raise ValueError("Invalid iModel format")
-                self.imodel = mail.package.item
+                self._imodel_manager.register_imodel(
+                    imodel.name or "chat", mail.package.item
+                )
                 self.mailbox.pile_.pop(mail_id)
 
             else:
@@ -844,6 +722,26 @@ class Branch(Observable, Communicatable, Relational):
 
         if len(self.mailbox.pending_ins[sender]) == 0:
             self.mailbox.pending_ins.pop(sender)
+
+    async def asend(
+        self,
+        recipient: IDType,
+        category: PackageCategory | None,
+        package: Any,
+        request_source: IDType | None = None,
+    ):
+        async with self.mailbox.pile_:
+            self.send(recipient, category, package, request_source)
+
+    async def areceive(
+        self,
+        sender: IDType,
+        message: bool = False,
+        tool: bool = False,
+        imodel: bool = False,
+    ):
+        async with self.mailbox.pile_:
+            self.receive(sender, message, tool, imodel)
 
     def receive_all(self) -> None:
         """Receives mail from all senders."""
