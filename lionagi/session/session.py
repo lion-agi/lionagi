@@ -7,10 +7,10 @@ from collections.abc import Callable
 import pandas as pd
 from pydantic import Field, JsonValue
 
-from lionagi.protocols.messages.base import MESSAGE_FIELDS
+from lionagi.operatives.types import ActionManager, Tool
 from lionagi.protocols.types import (
     ID,
-    ActionManager,
+    MESSAGE_FIELDS,
     Communicatable,
     Node,
     Pile,
@@ -18,7 +18,6 @@ from lionagi.protocols.types import (
     RoledMessage,
     SenderRecipient,
     System,
-    Tool,
 )
 
 from .._errors import ItemNotFoundError
@@ -154,7 +153,7 @@ class Session(Node, Communicatable):
         if isinstance(branches, dict):
             branches = to_list(branches, use_values=True)
 
-        out = Pile(item_type={RoledMessage})
+        out = Pile(item_type=RoledMessage)
         for i in branches:
             if i not in self.branches:
                 _msg = str(i)
