@@ -1,8 +1,8 @@
 import pytest
 from pydantic import Field
 
-from lionagi.core.forms.form import Form
-from lionagi.core.typing import UNDEFINED
+from lionagi.operatives.forms.form import Form
+from lionagi.utils import UNDEFINED
 
 
 class SimpleTaskForm(Form):

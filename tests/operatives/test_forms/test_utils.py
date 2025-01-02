@@ -1,6 +1,9 @@
 import pytest
 
-from lionagi.core.forms.utils import RESTRICTED_FIELDS, get_input_output_fields
+from lionagi.operatives.forms.utils import (
+    RESTRICTED_FIELDS,
+    get_input_output_fields,
+)
 
 
 def test_restricted_fields():

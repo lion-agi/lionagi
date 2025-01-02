@@ -1,10 +1,9 @@
 import pytest
 from pydantic import Field
 
-from lionagi.core.forms.form import Form
-from lionagi.core.forms.report import Report
-from lionagi.core.generic.types import Pile
-from lionagi.core.typing import UNDEFINED
+from lionagi.operatives.types import Form, Report
+from lionagi.protocols.types import Pile
+from lionagi.utils import UNDEFINED
 
 
 class SimpleReport(Report):
@@ -103,7 +102,7 @@ def test_save_completed_form():
     form.field2 = 42
     report.save_completed_form(form)
     assert form in report.completed_tasks
-    assert form.ln_id in report.completed_task_assignments
+    assert form.id in report.completed_task_assignments
 
     # Test updating results
     report.field2 = None  # Reset field
