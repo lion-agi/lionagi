@@ -7,6 +7,11 @@ from lionagi.service.endpoints.chat_completion import ChatCompletionEndPoint
 CHAT_COMPLETION_CONFIG = {
     "provider": "groq",
     "base_url": "https://api.groq.com/openai/v1",
+    "endpoint": "chat/completions",
+    "method": "post",
+    "openai_compatible": True,
+    "is_invokeable": True,
+    "requires_tokens": True,
     "is_streamable": True,
     "required_kwargs": {
         "messages",

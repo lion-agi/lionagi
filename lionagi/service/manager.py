@@ -9,6 +9,8 @@ class iModelManager(Manager):
 
     def __init__(self, *args: iModel, **kwargs):
         super().__init__()
+
+        self.registry: dict[str, iModel] = {}
         if args:
             if not is_same_dtype(args, iModel):
                 raise TypeError("Input models are not instances of iModel")
@@ -18,8 +20,6 @@ class iModelManager(Manager):
         if kwargs:
             for name, model in kwargs.items():
                 self.register_imodel(name, model)
-
-        self.registry: dict[str, iModel] = {}
 
     @property
     def chat(self) -> iModel | None:

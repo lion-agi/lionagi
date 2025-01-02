@@ -105,6 +105,12 @@ class EndPoint(ABC):
         return self.config.allowed_roles
 
     @property
+    def sequential_exchange(self) -> bool:
+        if self.allowed_roles:
+            return len(self.allowed_roles) == 2
+        return False
+
+    @property
     def roled(self) -> bool:
         return self.allowed_roles is not None
 

@@ -26,6 +26,19 @@ class iModel:
         invoke_with_endpoint: bool = True,
         **kwargs,
     ):
+        if api_key is None:
+            match provider:
+                case "openai":
+                    api_key = "OPENAI_API_KEY"
+                case "anthropic":
+                    api_key = "ANTHROPIC_API_KEY"
+                case "openrouter":
+                    api_key = "OPENROUTER_API_KEY"
+                case "perplexity":
+                    api_key = "PERPLEXITY_API_KEY"
+                case "groq":
+                    api_key = "GROQ_API_KEY"
+
         api_key = os.getenv(api_key, None) or api_key
         kwargs["api_key"] = api_key
         model = kwargs.get("model", None)
@@ -102,3 +115,7 @@ class iModel:
         if hasattr(self.endpoint, "allowed_roles"):
             return self.endpoint.allowed_roles
         return ["system", "user", "assistant"]
+
+    @property
+    def sequential_exchange(self):
+        return self.endpoint.sequential_exchange
