@@ -10,8 +10,10 @@ from pydantic_core import PydanticUndefined
 from lionagi.protocols.types import Node
 from lionagi.utils import UNDEFINED
 
+from ..models.operable_model import OperableModel
 
-class BaseForm(Node):
+
+class BaseForm(Node, OperableModel):
     """Base form class providing core functionality for form handling.
 
     This class serves as a foundation for creating custom forms within the
