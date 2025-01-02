@@ -1,16 +1,15 @@
 import pytest
 from pydantic import BaseModel
 
-from lionagi.core.communication.message import MessageRole
-from lionagi.core.communication.types import (
+from lionagi.protocols.types import (
     ActionRequest,
     ActionResponse,
     AssistantResponse,
     Instruction,
     MessageManager,
+    Pile,
     System,
 )
-from lionagi.core.generic.types import Pile
 
 
 class RequestModel(BaseModel):
@@ -31,12 +30,11 @@ def test_message_manager_initialization():
     manager = MessageManager()
     assert isinstance(manager.messages, Pile)
     assert not manager.messages
-    assert manager.save_on_clear
 
 
 def test_message_manager_with_system():
     """Test MessageManager with system message"""
-    system = System(system="Test system")
+    system = System.create(system_message="Test system")
     manager = MessageManager(system=system)
 
     assert manager.system == system
@@ -47,8 +45,8 @@ def test_message_manager_with_system():
 def test_set_system():
     """Test setting system message"""
     manager = MessageManager()
-    system1 = System(system="System 1")
-    system2 = System(system="System 2")
+    system1 = System.create(system_message="System 1")
+    system2 = System.create(system_message="System 2")
 
     manager.set_system(system1)
     assert manager.system == system1
@@ -108,11 +106,11 @@ def test_create_action_request():
 
 def test_create_action_response():
     """Test creating action response messages"""
-    request = ActionRequest(
+    request = ActionRequest.create(
         function="test", arguments={}, sender="user", recipient="system"
     )
     response = MessageManager.create_action_response(
-        action_request=request, action_response={"result": "success"}
+        action_request=request, action_output={"result": "success"}
     )
 
     assert isinstance(response, ActionResponse)
@@ -140,11 +138,11 @@ def test_add_message(message_manager):
 
     # Add action request
     request = message_manager.add_message(
-        function="test_function",
-        arguments={},
+        action_function="test_function",
+        action_arguments={},
         sender="user",
         recipient="system",
-        action_request=ActionRequest(
+        action_request=ActionRequest.create(
             function="test_function",
             arguments={},
             sender="user",
@@ -192,11 +190,11 @@ def test_message_collections(message_manager):
         recipient="user",
     )
     request = message_manager.add_message(
-        function="test_function",
-        arguments={},
+        action_function="test_function",
+        action_arguments={},
         sender="user",
         recipient="system",
-        action_request=ActionRequest(
+        action_request=ActionRequest.create(
             function="test_function",
             arguments={},
             sender="user",
@@ -246,18 +244,6 @@ def test_message_manager_with_request_model(message_manager):
     assert "age" in instruction.request_fields
 
 
-def test_message_manager_bool_and_logs(message_manager):
-    """Test boolean operations and log checking"""
-    assert not bool(message_manager)  # Empty manager
-    assert not message_manager.has_logs()
-
-    message_manager.add_message(
-        instruction="Test", sender="user", recipient="assistant"
-    )
-    assert bool(message_manager)  # Non-empty manager
-    assert message_manager.has_logs()
-
-
 def test_invalid_message_combinations(message_manager):
     """Test invalid message combinations"""
     with pytest.raises(ValueError):
@@ -278,8 +264,8 @@ def test_message_manager_progress(message_manager):
         assistant_response="Second", sender="assistant", recipient="user"
     )
 
-    progress = message_manager.progress
-    assert list(progress) == [msg1.ln_id, msg2.ln_id]
+    progress = message_manager.progression
+    assert list(progress) == [msg1.id, msg2.id]
 
 
 def test_message_manager_metadata(message_manager):

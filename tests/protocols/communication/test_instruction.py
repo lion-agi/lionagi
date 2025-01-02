@@ -1,9 +1,7 @@
 import pytest
 from pydantic import BaseModel
 
-from lionagi.core.communication.message import MessageRole
-from lionagi.core.communication.types import Instruction
-from lionagi.core.typing import Note
+from lionagi.protocols.types import Instruction, MessageRole
 
 
 class RequestModel(BaseModel):
@@ -16,7 +14,7 @@ class RequestModel(BaseModel):
 
 def test_instruction_basic_initialization():
     """Test basic initialization of Instruction"""
-    instruction = Instruction(
+    instruction = Instruction.create(
         instruction="Test instruction", sender="user", recipient="assistant"
     )
 
@@ -29,7 +27,7 @@ def test_instruction_basic_initialization():
 def test_instruction_with_context():
     """Test Instruction with context"""
     context = {"key": "value"}
-    instruction = Instruction(
+    instruction = Instruction.create(
         instruction="Test",
         context=context,
         sender="user",
@@ -44,7 +42,7 @@ def test_instruction_with_context():
 def test_instruction_with_guidance():
     """Test Instruction with guidance"""
     guidance = "Test guidance"
-    instruction = Instruction(
+    instruction = Instruction.create(
         instruction="Test",
         guidance=guidance,
         sender="user",
@@ -59,7 +57,7 @@ def test_instruction_with_guidance():
 def test_instruction_with_request_fields():
     """Test Instruction with request fields"""
     fields = {"field1": "type1", "field2": "type2"}
-    instruction = Instruction(
+    instruction = Instruction.create(
         instruction="Test",
         request_fields=fields,
         sender="user",
@@ -72,7 +70,7 @@ def test_instruction_with_request_fields():
 
 def test_instruction_with_request_model():
     """Test Instruction with request model"""
-    instruction = Instruction(
+    instruction = Instruction.create(
         instruction="Test",
         request_model=RequestModel,
         sender="user",
@@ -88,7 +86,7 @@ def test_instruction_with_request_model():
 def test_instruction_with_images():
     """Test Instruction with images"""
     images = ["image1", "image2"]
-    instruction = Instruction(
+    instruction = Instruction.create(
         instruction="Test",
         images=images,
         image_detail="low",
@@ -108,7 +106,7 @@ def test_instruction_with_images():
 def test_instruction_with_plain_content():
     """Test Instruction with plain content"""
     content = "Plain text content"
-    instruction = Instruction(
+    instruction = Instruction.create(
         instruction="Test",
         plain_content=content,
         sender="user",
@@ -122,7 +120,7 @@ def test_instruction_with_plain_content():
 
 def test_instruction_update():
     """Test Instruction update method"""
-    instruction = Instruction(
+    instruction = Instruction.create(
         instruction="Initial", sender="user", recipient="assistant"
     )
 
@@ -139,7 +137,7 @@ def test_instruction_update():
 
 def test_instruction_content_format():
     """Test Instruction content formatting"""
-    instruction = Instruction(
+    instruction = Instruction.create(
         instruction="Test instruction",
         guidance="Test guidance",
         context={"context": "value"},
@@ -147,7 +145,7 @@ def test_instruction_content_format():
         recipient="assistant",
     )
 
-    formatted = instruction._format_content()
+    formatted = instruction.chat_msg
     assert formatted["role"] == MessageRole.USER.value
     assert isinstance(formatted["content"], str)
     assert "Test instruction" in formatted["content"]
@@ -161,7 +159,7 @@ def test_instruction_with_tool_schemas():
         "tool1": {"type": "object", "properties": {}},
         "tool2": {"type": "object", "properties": {}},
     }
-    instruction = Instruction(
+    instruction = Instruction.create(
         instruction="Test",
         tool_schemas=schemas,
         sender="user",
@@ -173,7 +171,7 @@ def test_instruction_with_tool_schemas():
 
 def test_instruction_clone():
     """Test cloning an Instruction"""
-    original = Instruction(
+    original = Instruction.create(
         instruction="Test instruction",
         guidance="Test guidance",
         context={"test": "context"},
@@ -195,7 +193,7 @@ def test_instruction_validation():
     """Test Instruction validation"""
     # Test that request_model and request_fields cannot be used together
     with pytest.raises(ValueError):
-        Instruction(
+        Instruction.create(
             instruction="Test",
             request_model=RequestModel,
             request_fields={"field": "type"},
@@ -206,7 +204,7 @@ def test_instruction_validation():
 
 def test_instruction_str_representation():
     """Test string representation of Instruction"""
-    instruction = Instruction(
+    instruction = Instruction.create(
         instruction="Test instruction",
         guidance="Test guidance",
         sender="user",
@@ -215,5 +213,5 @@ def test_instruction_str_representation():
 
     str_repr = str(instruction)
     assert "Message" in str_repr
-    assert "role=MessageRole.USER" in str_repr
+    assert "role=user" in str_repr
     assert instruction.instruction in instruction.content["instruction"]

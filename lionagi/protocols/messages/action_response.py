@@ -30,7 +30,9 @@ def prepare_action_response_content(
 
 class ActionResponse(RoledMessage):
 
-    template: Template | str = jinja_env.get_template("action_response.jinja2")
+    template: Template | str | None = jinja_env.get_template(
+        "action_response.jinja2"
+    )
 
     @property
     def function(self) -> str:

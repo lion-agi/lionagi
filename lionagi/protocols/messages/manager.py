@@ -159,8 +159,6 @@ class MessageManager(Manager):
         action_response: ActionResponse | Any = None,
         sender: SenderRecipient = None,
         recipient: SenderRecipient = None,
-        template: Template | str = None,
-        template_context: dict[str, Any] = None,
     ) -> ActionResponse:
 
         if not isinstance(action_request, ActionRequest):
@@ -174,8 +172,6 @@ class MessageManager(Manager):
             "output": action_output,
             "sender": sender,
             "recipient": recipient,
-            "template": template,
-            **(template_context or {}),
         }
 
         if isinstance(action_response, ActionResponse):
@@ -276,8 +272,6 @@ class MessageManager(Manager):
                 action_response=action_response,
                 sender=sender,
                 recipient=recipient,
-                template=template,
-                template_context=template_context,
             )
 
         elif action_request or (action_function and action_arguments):

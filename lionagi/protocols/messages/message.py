@@ -109,12 +109,9 @@ class RoledMessage(Node, Sendable):
             if "lion_class" in dict_:
                 cls = get_class(dict_.pop("lion_class"))
                 dict_["flag"] = MessageFlag.MESSAGE_LOAD
-                return cls(**dict_)
+            return cls(**dict_)
         except Exception as e:
             raise ValueError(f"Invalid RoledMessage data: {e}")
-        raise ValueError(
-            "Invalid RoledMessage data, must come from RoledMessage.to_dict()"
-        )
 
     def is_clone(self) -> bool:
         """

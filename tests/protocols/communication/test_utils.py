@@ -1,19 +1,17 @@
 import pytest
 from pydantic import BaseModel
 
-from lionagi.core.communication.utils import (
-    DEFAULT_SYSTEM,
+from lionagi.protocols.generic.element import Element
+from lionagi.protocols.messages.base import validate_sender_recipient
+from lionagi.protocols.messages.instruction import (
     format_image_content,
     format_image_item,
-    format_system_content,
     format_text_content,
     format_text_item,
     prepare_instruction_content,
     prepare_request_response_format,
-    validate_sender_recipient,
 )
-from lionagi.core.generic.types import Element
-from lionagi.core.typing import ID, Note
+from lionagi.protocols.messages.system import format_system_content
 
 
 @pytest.fixture
@@ -32,8 +30,8 @@ def test_format_system_content():
 
     # Without datetime
     content = format_system_content(None, message)
-    assert isinstance(content, Note)
-    assert content["system"] == message
+    assert isinstance(content, dict)
+    assert content["system_message"] == message
     assert "system_datetime" not in content
 
     # With datetime boolean
@@ -130,7 +128,7 @@ def test_prepare_instruction_content():
         context={"test": "context"},
     )
 
-    assert isinstance(result, Note)
+    assert isinstance(result, dict)
     assert result["guidance"] == "Test guidance"
     assert result["instruction"] == "Test instruction"
     assert {"test": "context"} in result["context"]
@@ -161,15 +159,15 @@ def test_prepare_instruction_content():
 def test_validate_sender_recipient(sample_element):
     """Test sender/recipient validation"""
     # Test valid system roles
-    valid_roles = ["system", "user", "assistant", "N/A"]
+    valid_roles = ["system", "user", "assistant", "action", "unset"]
     for role in valid_roles:
         assert validate_sender_recipient(role) == role
 
     # Test None value
-    assert validate_sender_recipient(None) == "N/A"
+    assert validate_sender_recipient(None) == "unset"
 
     # Test with valid Element instance
-    assert validate_sender_recipient(sample_element) == sample_element.ln_id
+    assert validate_sender_recipient(sample_element) == sample_element.id
 
     # Test invalid values
     with pytest.raises(ValueError):
@@ -177,10 +175,3 @@ def test_validate_sender_recipient(sample_element):
 
     with pytest.raises(ValueError):
         validate_sender_recipient({"invalid": "type"})
-
-
-def test_default_system():
-    """Test default system message constant"""
-    assert isinstance(DEFAULT_SYSTEM, str)
-    assert "helpful AI assistant" in DEFAULT_SYSTEM
-    assert "step by step" in DEFAULT_SYSTEM
