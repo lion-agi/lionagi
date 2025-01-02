@@ -27,7 +27,7 @@ from typing_extensions import override
 from lionagi._errors import ItemExistsError, ItemNotFoundError
 from lionagi.utils import UNDEFINED, is_same_dtype, to_list
 
-from .._adapter import DEFAULT_ADAPTERS, Adaptable, Adapter, AdapterRegistry
+from .._adapter import Adapter, AdapterRegistry, PileAdapterRegistry
 from .._concepts import Observable
 from .element import ID, Collective, E, Element, IDType, validate_order
 from .progression import Progression
@@ -60,15 +60,7 @@ def async_synchronized(func: Callable):
     return wrapper
 
 
-class PileAdapterRegistry(AdapterRegistry):
-    pass
-
-
-for i in DEFAULT_ADAPTERS:
-    PileAdapterRegistry.register(i)
-
-
-class Pile(Element, Adaptable, Collective[E], Generic[E]):
+class Pile(Element, Collective[E], Generic[E]):
     """Thread-safe async-compatible, ordered collection of elements.
 
     The Pile class provides a thread-safe, async-compatible collection with:
@@ -132,8 +124,8 @@ class Pile(Element, Adaptable, Collective[E], Generic[E]):
         _config = {}
         if "id" in kwargs:
             _config["id"] = kwargs["id"]
-        if "created_timestamp" in kwargs:
-            _config["created_timestamp"] = kwargs["created_timestamp"]
+        if "created_at" in kwargs:
+            _config["created_at"] = kwargs["created_at"]
 
         super().__init__(strict_type=strict_type, **_config)
         self.item_type = self._validate_item_type(item_type)
@@ -381,9 +373,7 @@ class Pile(Element, Adaptable, Collective[E], Generic[E]):
         """In-place union."""
         if not isinstance(other, Pile):
             raise TypeError(
-                "Invalid type for Pile operation.",
-                expected_type=Pile,
-                actual_type=type(other),
+                f"Invalid type for Pile operation. expected <Pile>, got {type(other)}"
             )
         other = self._validate_pile(list(other))
         self.include(other)
@@ -393,9 +383,7 @@ class Pile(Element, Adaptable, Collective[E], Generic[E]):
         """Union."""
         if not isinstance(other, Pile):
             raise TypeError(
-                "Invalid type for Pile operation.",
-                expected_type=Pile,
-                actual_type=type(other),
+                f"Invalid type for Pile operation. expected <Pile>, got {type(other)}"
             )
 
         result = self.__class__(
@@ -410,9 +398,7 @@ class Pile(Element, Adaptable, Collective[E], Generic[E]):
         """In-place symmetric difference."""
         if not isinstance(other, Pile):
             raise TypeError(
-                "Invalid type for Pile operation.",
-                expected_type=Pile,
-                actual_type=type(other),
+                f"Invalid type for Pile operation. expected <Pile>, got {type(other)}"
             )
 
         to_exclude = []
@@ -429,9 +415,7 @@ class Pile(Element, Adaptable, Collective[E], Generic[E]):
         """Symmetric difference."""
         if not isinstance(other, Pile):
             raise TypeError(
-                "Invalid type for Pile operation.",
-                expected_type=Pile,
-                actual_type=type(other),
+                f"Invalid type for Pile operation. expected <Pile>, got {type(other)}"
             )
 
         to_exclude = []
@@ -453,9 +437,7 @@ class Pile(Element, Adaptable, Collective[E], Generic[E]):
         """In-place intersection."""
         if not isinstance(other, Pile):
             raise TypeError(
-                "Invalid type for Pile operation.",
-                expected_type=Pile,
-                actual_type=type(other),
+                f"Invalid type for Pile operation. expected <Pile>, got {type(other)}"
             )
 
         to_exclude = []
@@ -469,9 +451,7 @@ class Pile(Element, Adaptable, Collective[E], Generic[E]):
         """Intersection."""
         if not isinstance(other, Pile):
             raise TypeError(
-                "Invalid type for Pile operation.",
-                expected_type=Pile,
-                actual_type=type(other),
+                f"Invalid type for Pile operation. expected <Pile>, got {type(other)}"
             )
 
         values = [i for i in self if i in other]
@@ -821,9 +801,7 @@ class Pile(Element, Adaptable, Collective[E], Generic[E]):
         for i in value:
             if not issubclass(i, Observable):
                 raise TypeError(
-                    message="Item type must be a subclass of T.",
-                    expected_type=T,
-                    actual_type=type(i),
+                    f"Item type must be a subclass of Observable. Got {i}"
                 )
 
         if len(value) != len(set(value)):
@@ -846,7 +824,7 @@ class Pile(Element, Adaptable, Collective[E], Generic[E]):
                 if self.strict_type:
                     if type(i) not in self.item_type:
                         raise TypeError(
-                            message="Invalid item type in pile."
+                            "Invalid item type in pile."
                             f" Expected {self.item_type}",
                         )
                 else:

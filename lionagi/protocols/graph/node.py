@@ -9,22 +9,14 @@ from pydantic import field_validator
 
 from lionagi._class_registry import LION_CLASS_REGISTRY
 
-from .._adapter import DEFAULT_ADAPTERS, Adaptable, AdapterRegistry
+from .._adapter import AdapterRegistry, NodeAdapterRegistry
 from .._concepts import Relational
 from ..generic.element import Element
 
 __all__ = ("Node",)
 
 
-class NodeAdapterRegistry(AdapterRegistry):
-    """Registry for Node-specific adapters."""
-
-
-for adapter in DEFAULT_ADAPTERS:
-    NodeAdapterRegistry.register(adapter)
-
-
-class Node(Element, Adaptable, Relational):
+class Node(Element, Relational):
     """
     A base class for all Nodes in a graph, storing:
       - Arbitrary content
@@ -33,7 +25,7 @@ class Node(Element, Adaptable, Relational):
       - Automatic subclass registration
     """
 
-    adapter_registry: ClassVar[AdapterRegistry] = NodeAdapterRegistry
+    _adapter_registry: ClassVar[AdapterRegistry] = NodeAdapterRegistry
 
     content: Any = None
     embedding: list[float] | None = None
@@ -98,6 +90,20 @@ class Node(Element, Adaptable, Relational):
         if isinstance(result, list):
             result = result[0]
         return cls.from_dict(result)
+
+    @classmethod
+    def _get_adapter_registry(cls) -> AdapterRegistry:
+        if isinstance(cls._adapter_registry, type):
+            cls._adapter_registry = cls._adapter_registry()
+        return cls._adapter_registry
+
+    @classmethod
+    def register_adapter(cls, adapter: Any) -> None:
+        cls._get_adapter_registry().register(adapter)
+
+    @classmethod
+    def list_adapters(cls) -> list[str]:
+        return cls._get_adapter_registry().list_adapters()
 
 
 # File: protocols/graph/node.py
