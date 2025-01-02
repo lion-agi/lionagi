@@ -565,7 +565,7 @@ class Branch(Element, Communicatable, Relational):
                 first_instruction = messages[0]
                 if not isinstance(first_instruction, Instruction):
                     raise ValueError(
-                        "First message in progress must be an Instruction or System"
+                        "First message in progression must be an Instruction or System"
                     )
                 first_instruction = first_instruction.model_copy()
                 first_instruction.guidance = self.msgs.system.rendered + (

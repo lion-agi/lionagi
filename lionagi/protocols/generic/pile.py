@@ -921,7 +921,6 @@ class Pile(Element, Collective[E], Generic[E]):
 
     def adapt_to(self, obj_key: str, /, **kwargs: Any) -> Any:
         """Convert to another format."""
-        kwargs["many"] = True
         return self._get_adapter_registry().adapt_to(self, obj_key, **kwargs)
 
     @classmethod
