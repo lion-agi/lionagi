@@ -1,0 +1,61 @@
+{%- set content = [] -%}
+
+{# If plain_content is provided, we use it directly. Otherwise, we build a text block from guidance, instruction, context, etc. #}
+{% if plain_content %}
+{% set content = content + [{"type": "text", "text": plain_content}] %}
+{% else %}
+{# Build a text block from the available sections #}
+{% set text_block = "" %}
+
+{% if guidance %}
+## Guidance
+{{ guidance }}
+
+{% endif %}
+
+{% if instruction %}
+## Instruction
+{{ instruction }}
+
+{% endif %}
+
+{% if context %}
+## Context
+{% for item in context %}
+- {{ item }}
+{% endfor %}
+{% endif %}
+
+{% if tool_schemas %}
+## Tool Schemas
+{% include "tool_schemas.jinja2" %}
+{% endif %}
+
+{% if request_fields %}
+## Requested Fields
+Please return a JSON object with the following fields:
+```json
+{{ request_fields | tojson(indent=2) }}
+
+{% endif %}
+
+{% if request_response_format %}
+
+Response Format
+
+{{ request_response_format }}
+{% endif %}
+
+{# Append the built sections into text_block #}
+{% set text_block = text_block + self %}
+{% set content = content + [{"type": "text", "text": text_block.strip()}] %}
+{% endif %}
+
+{# If images are present, we append image_url items to content #}
+{% if images %}
+{% for img in images %}
+{% set content = content + [{"type": "image_url", "image_url": {"url": "data:image/jpeg;base64," ~ img, "detail": image_detail}}] %}
+{% endfor %}
+{% endif %}
+
+{{ content | tojson(indent=2) }}

@@ -1,16 +1,14 @@
-from lionagi.integrations.litellm_.imodel import LiteiModel
+# Copyright (c) 2023 - 2024, HaiyangLi <quantocean.li at gmail dot com>
+#
+# SPDX-License-Identifier: Apache-2.0
 
+from .endpoints.base import APICalling, EndPoint
 from .imodel import iModel
-from .rate_limiter import RateLimiter, RateLimitError
-from .service import Service, register_service
-from .service_util import invoke_retry
+from .manager import iModelManager
 
-__all__ = [
-    "Service",
-    "register_service",
-    "RateLimiter",
-    "RateLimitError",
-    "invoke_retry",
+__all__ = (
     "iModel",
-    "LiteiModel",
-]
+    "iModelManager",
+    "EndPoint",
+    "APICalling",
+)

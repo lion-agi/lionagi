@@ -3,18 +3,19 @@
 # SPDX-License-Identifier: Apache-2.0
 
 import logging
-from typing import Literal
+from typing import Any, Literal
 
-from lionagi.core.session.branch import Branch
-from lionagi.core.session.session import Session
-from lionagi.core.typing import ID, Any, BaseModel
-from lionagi.libs.func.types import alcall
-from lionagi.libs.parse import to_flat_list
-from lionagi.protocols.operatives.instruct import (
-    INSTRUCT_FIELD_MODEL,
+from pydantic import BaseModel
+
+from lionagi.operatives.instruct.instruct import (
+    LIST_INSTRUCT_FIELD_MODEL,
     Instruct,
     InstructResponse,
 )
+from lionagi.protocols.generic._id import ID
+from lionagi.session.branch import Branch
+from lionagi.session.session import Session
+from lionagi.utils import alcall, to_list
 
 from ..utils import prepare_instruct, prepare_session
 from .prompt import PROMPT
@@ -149,8 +150,8 @@ async def brainstorm(
 
     # Make sure the correct field model is present
     field_models: list = kwargs.get("field_models", [])
-    if INSTRUCT_FIELD_MODEL not in field_models:
-        field_models.append(INSTRUCT_FIELD_MODEL)
+    if LIST_INSTRUCT_FIELD_MODEL not in field_models:
+        field_models.append(LIST_INSTRUCT_FIELD_MODEL)
     kwargs["field_models"] = field_models
 
     # Prepare session, branch, and the instruction
@@ -199,14 +200,18 @@ async def brainstorm(
             brainstorm_results = await alcall(
                 instructs, run_brainstorm_instruction
             )
-            brainstorm_results = to_flat_list(brainstorm_results, dropna=True)
+            brainstorm_results = to_list(
+                brainstorm_results, dropna=True, flatten=True
+            )
 
             # Filter out plain str/dict responses, keep model-based
             filtered = [
                 r if not isinstance(r, (str, dict)) else None
                 for r in brainstorm_results
             ]
-            filtered = to_flat_list(filtered, unique=True, dropna=True)
+            filtered = to_list(
+                filtered, unique=True, dropna=True, flatten=True
+            )
 
             out.brainstorm = (
                 filtered if isinstance(filtered, list) else [filtered]
@@ -220,7 +225,7 @@ async def brainstorm(
         # -----------------------------------------------------------------
         if response_ and auto_explore:
             # Gather all newly generated instructions
-            all_explore_instructs = to_flat_list(
+            all_explore_instructs = to_list(
                 [
                     r.instruct_models
                     for r in response_
@@ -228,6 +233,7 @@ async def brainstorm(
                 ],
                 dropna=True,
                 unique=True,
+                flatten=True,
             )
 
             # Decide how to explore based on the strategy
@@ -246,7 +252,7 @@ async def brainstorm(
                             )
                             print(f"\n-----Exploring Idea-----\n{snippet}")
                         new_branch = session.split(branch)
-                        resp = await new_branch.instruct(
+                        resp = await new_branch._instruct(
                             ins_, **(explore_kwargs or {})
                         )
                         return InstructResponse(instruct=ins_, response=resp)
@@ -323,7 +329,7 @@ async def brainstorm(
 
                         async def _explore(ins_: Instruct):
                             child_branch = session.split(base_branch)
-                            child_resp = await child_branch.instruct(
+                            child_resp = await child_branch._instruct(
                                 ins_, **(explore_kwargs or {})
                             )
                             return InstructResponse(
@@ -386,7 +392,7 @@ async def brainstorm(
                                     f"\n-----Exploring Idea (sequential in chunk)-----\n{snippet}"
                                 )
 
-                            seq_resp = await local_branch.instruct(
+                            seq_resp = await local_branch._instruct(
                                 ins_, **(explore_kwargs or {})
                             )
                             chunk_results.append(

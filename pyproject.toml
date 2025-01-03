@@ -1,6 +1,6 @@
 [project]
 name = "lionagi"
-version = "0.5.5"
+version = "0.6.0"
 description = "An AGentic Intelligence Operating System."
 authors = [
     { name = "HaiyangLi", email = "quantocean.li@gmail.com" },
@@ -8,12 +8,13 @@ authors = [
 readme = "README.md"
 requires-python = ">=3.11"
 dependencies = [
-    "aiohttp>=3.11.10",
-    "jinja2>=3.1.4",
+    "aiocache>=0.12.0",
+    "aiohttp>=3.11.0",
+    "jinja2>=3.1.0",
     "litellm>=1.55.3",
     "pandas>=2.0.0",
     "pillow>=11.0.0",
-    "pydantic>=2.10.3",
+    "pydantic>=2.0.0",
     "python-dotenv>=1.0.1",
 ]
 license = {file = "LICENSE"}
