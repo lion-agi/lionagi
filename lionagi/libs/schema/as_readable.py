@@ -4,7 +4,7 @@ from typing import Any
 from lionagi.utils import to_dict
 
 
-def _as_readable_json(input_: Any, /, **kwargs) -> str:
+def as_readable_json(input_: Any, /, **kwargs) -> str:
     """Convert input to a human-readable JSON string.
 
     Args:
@@ -75,7 +75,7 @@ def _as_readable_json(input_: Any, /, **kwargs) -> str:
                 },
             )
 
-        return dict_, json_kwargs
+        return json.dumps(dict_, **json_kwargs)
 
     except Exception as e:
         raise ValueError(
@@ -95,11 +95,9 @@ def as_readable(input_: Any, /, *, md: bool = False, **kwargs) -> str:
         Formatted string representation
     """
     try:
-        result, json_kwargs = _as_readable_json(input_, **kwargs)
-        if isinstance(result, dict):
-            result = json.dumps(result, **json_kwargs)
-            if md:
-                return f"```json\n{result}\n```"
+        result = as_readable_json(input_, **kwargs)
+        if md:
+            return f"```json\n{result}\n```"
         return result
 
     except Exception:

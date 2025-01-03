@@ -2,7 +2,6 @@ import asyncio
 import contextlib
 import copy as _copy
 import functools
-import hashlib
 import json
 import logging
 import re
@@ -11,6 +10,7 @@ import subprocess
 import sys
 import time as t_
 import uuid
+import xml.etree.ElementTree as ET
 from abc import ABC
 from collections.abc import (
     AsyncGenerator,
@@ -23,7 +23,7 @@ from concurrent.futures import ThreadPoolExecutor
 from datetime import datetime, timezone
 from decimal import Decimal
 from enum import Enum
-from functools import lru_cache
+from functools import lru_cache, partial
 from inspect import isclass
 from pathlib import Path
 from typing import (
@@ -67,7 +67,6 @@ __all__ = (
     "lcall",
     "alcall",
     "bcall",
-    "tcall",
     "create_path",
     "time",
     "fuzzy_parse_json",
@@ -76,7 +75,6 @@ __all__ = (
     "LCallParams",
     "ALCallParams",
     "BCallParams",
-    "TCallParams",
     "CreatePathParams",
     "get_bins",
     "EventStatus",
@@ -84,8 +82,6 @@ __all__ = (
     "throttle",
     "max_concurrent",
     "force_async",
-    "mcall",
-    "MCallParams",
     "to_num",
     "breakdown_pydantic_annotation",
     "run_package_manager_command",
@@ -959,139 +955,6 @@ class BCallParams(CallParams):
         )
 
 
-async def tcall(
-    func: Callable[..., T],
-    /,
-    *args: Any,
-    initial_delay: float = 0,
-    timing: bool = False,
-    timeout: float | None = None,
-    default: Any = UNDEFINED,
-    error_msg: str | None = None,
-    error_map: dict[type, Callable[[Exception], None]] | None = None,
-    **kwargs: Any,
-) -> T | tuple[T, float]:
-    """Execute a function asynchronously with timing and error handling.
-
-    Executes a synchronous or asynchronous function with optional timing,
-    timeout, and error handling capabilities. Can delay execution and provide
-    detailed error feedback.
-
-    Args:
-        func: Function or coroutine to execute.
-        *args: Positional arguments passed to func.
-        initial_delay: Seconds to wait before execution. Defaults to 0.
-        timing: If True, returns tuple of (result, duration). Defaults to False.
-        timeout: Maximum seconds to wait for completion. None for no timeout.
-        default: Value returned on error if provided, otherwise error is raised.
-        error_msg: Optional prefix for error messages.
-        error_map: Dict mapping exception types to handler functions.
-        **kwargs: Keyword arguments passed to func.
-
-    Returns:
-        If timing=False:
-            Result of func execution or default value on error
-        If timing=True:
-            Tuple of (result, duration_in_seconds)
-
-    Raises:
-        asyncio.TimeoutError: If execution exceeds timeout and no default set.
-        RuntimeError: If execution fails and no default or handler exists.
-
-    Examples:
-        >>> async def example():
-        ...     result = await tcall(
-        ...         slow_function,
-        ...         timeout=5,
-        ...         default="timeout",
-        ...         timing=True
-        ...     )
-        ...     print(result)  # ("result", 1.234) or ("timeout", 5.0)
-    """
-    loop = asyncio.get_running_loop()
-    start = loop.time()
-
-    def finalize(result: Any) -> Any:
-        """Wrap result with timing information if requested."""
-        if timing:
-            duration = loop.time() - start
-            return (result, duration)
-        return result
-
-    try:
-        if initial_delay > 0:
-            await asyncio.sleep(initial_delay)
-
-        if is_coro_func(func):
-            # Handle coroutine function
-            if timeout is not None:
-                result = await asyncio.wait_for(
-                    func(*args, **kwargs), timeout=timeout
-                )
-            else:
-                result = await func(*args, **kwargs)
-        else:
-            # Handle synchronous function
-            if timeout is not None:
-                coro = asyncio.to_thread(func, *args, **kwargs)
-                result = await asyncio.wait_for(coro, timeout=timeout)
-            else:
-                result = func(*args, **kwargs)
-
-        return finalize(result)
-
-    except TimeoutError as e:
-        if default is not UNDEFINED:
-            return finalize(result=default)
-        msg = f"{error_msg or ''} Timeout {timeout} seconds exceeded".strip()
-        raise TimeoutError(msg) from e
-
-    except Exception as e:
-        if error_map is not None:
-            handler = error_map.get(type(e))
-            if handler:
-                handler(e)
-                return finalize(None)
-
-        if default is not UNDEFINED:
-            return finalize(default)
-
-        msg = (
-            f"{error_msg} Error: {e}"
-            if error_msg
-            else f"An error occurred in async execution: {e}"
-        )
-        raise RuntimeError(msg) from e
-
-
-class TCallParams(CallParams):
-    func: Any = None
-    timeout: float | None = None
-    default: Any = UNDEFINED
-    timing: bool = False
-    error_msg: str = ""
-    initial_delay: float = 0
-    error_map: dict = None
-
-    async def __call__(self, func=None):
-        if self.func is None and func is None:
-            raise ValueError("a sync/async func must be provided")
-        return await tcall(
-            func or self.func,
-            *self.args,
-            timeout=self.timeout,
-            default=self.default,
-            timing=self.timing,
-            error_msg=self.error_msg,
-            initial_delay=self.initial_delay,
-            error_map=self.error_map,
-            **self.kwargs,
-        )
-
-
-# --- Path and File Operations ---
-
-
 def create_path(
     directory: Path | str,
     filename: str,
@@ -1363,42 +1226,147 @@ def fix_json_string(str_to_parse: str, /) -> str:
     return str_to_parse
 
 
-@overload
-def to_dict(
-    input_: Any,
-    /,
-    *,
-    use_model_dump: bool = True,
-    fuzzy_parse: bool = False,
-    suppress: bool = False,
-    str_type: Literal["json", "xml"] | None = "json",
-    parser: Callable[[str], Any] | None = None,
-    recursive: Literal[False] = False,
-    max_recursive_depth: int | None = None,
-    recursive_python_only: bool = True,
-    use_enum_values: bool = False,
-    remove_root: bool = False,
-    root_tag: str = "root",
-) -> dict[str, Any]: ...
+class XMLParser:
+    def __init__(self, xml_string: str):
+        self.xml_string = xml_string.strip()
+        self.index = 0
+
+    def parse(self) -> dict[str, Any]:
+        """Parse the XML string and return the root element as a dictionary."""
+        return self._parse_element()
+
+    def _parse_element(self) -> dict[str, Any]:
+        """Parse a single XML element and its children."""
+        self._skip_whitespace()
+        if self.xml_string[self.index] != "<":
+            raise ValueError(
+                f"Expected '<', found '{self.xml_string[self.index]}'"
+            )
+
+        tag, attributes = self._parse_opening_tag()
+        children: dict[str, str | list | dict] = {}
+        text = ""
+
+        while self.index < len(self.xml_string):
+            self._skip_whitespace()
+            if self.xml_string.startswith("</", self.index):
+                closing_tag = self._parse_closing_tag()
+                if closing_tag != tag:
+                    raise ValueError(
+                        f"Mismatched tags: '{tag}' and '{closing_tag}'"
+                    )
+                break
+            elif self.xml_string.startswith("<", self.index):
+                child = self._parse_element()
+                child_tag, child_data = next(iter(child.items()))
+                if child_tag in children:
+                    if not isinstance(children[child_tag], list):
+                        children[child_tag] = [children[child_tag]]
+                    children[child_tag].append(child_data)
+                else:
+                    children[child_tag] = child_data
+            else:
+                text += self._parse_text()
+
+        result: dict[str, Any] = {}
+        if attributes:
+            result["@attributes"] = attributes
+        if children:
+            result.update(children)
+        elif text.strip():
+            result = text.strip()
+
+        return {tag: result}
+
+    def _parse_opening_tag(self) -> tuple[str, dict[str, str]]:
+        """Parse an opening XML tag and its attributes."""
+        match = re.match(
+            r'<(\w+)((?:\s+\w+="[^"]*")*)\s*/?>',
+            self.xml_string[self.index :],  # noqa
+        )
+        if not match:
+            raise ValueError("Invalid opening tag")
+        self.index += match.end()
+        tag = match.group(1)
+        attributes = dict(re.findall(r'(\w+)="([^"]*)"', match.group(2)))
+        return tag, attributes
+
+    def _parse_closing_tag(self) -> str:
+        """Parse a closing XML tag."""
+        match = re.match(r"</(\w+)>", self.xml_string[self.index :])  # noqa
+        if not match:
+            raise ValueError("Invalid closing tag")
+        self.index += match.end()
+        return match.group(1)
+
+    def _parse_text(self) -> str:
+        """Parse text content between XML tags."""
+        start = self.index
+        while (
+            self.index < len(self.xml_string)
+            and self.xml_string[self.index] != "<"
+        ):
+            self.index += 1
+        return self.xml_string[start : self.index]  # noqa
+
+    def _skip_whitespace(self) -> None:
+        """Skip any whitespace characters at the current parsing position."""
+        p_ = len(self.xml_string[self.index :])  # noqa
+        m_ = len(self.xml_string[self.index :].lstrip())  # noqa
+
+        self.index += p_ - m_
 
 
-@overload
-def to_dict(
-    input_: Any,
+def xml_to_dict(
+    xml_string: str,
     /,
-    *,
-    use_model_dump: bool = True,
-    fuzzy_parse: bool = False,
-    suppress: bool = False,
-    str_type: Literal["json", "xml"] | None = "json",
-    parser: Callable[[str], Any] | None = None,
-    recursive: Literal[True],
-    max_recursive_depth: int | None = None,
-    recursive_python_only: bool = True,
-    use_enum_values: bool = False,
-    remove_root: bool = False,
-    root_tag: str = "root",
-) -> Any: ...
+    suppress=False,
+    remove_root: bool = True,
+    root_tag: str = None,
+) -> dict[str, Any]:
+    """
+    Parse an XML string into a nested dictionary structure.
+
+    This function converts an XML string into a dictionary where:
+    - Element tags become dictionary keys
+    - Text content is assigned directly to the tag key if there are no children
+    - Attributes are stored in a '@attributes' key
+    - Multiple child elements with the same tag are stored as lists
+
+    Args:
+        xml_string: The XML string to parse.
+
+    Returns:
+        A dictionary representation of the XML structure.
+
+    Raises:
+        ValueError: If the XML is malformed or parsing fails.
+    """
+    try:
+        a = XMLParser(xml_string).parse()
+        if remove_root and (root_tag or "root") in a:
+            a = a[root_tag or "root"]
+        return a
+    except ValueError as e:
+        if not suppress:
+            raise e
+
+
+def dict_to_xml(data: dict, /, root_tag: str = "root") -> str:
+
+    root = ET.Element(root_tag)
+
+    def convert(dict_obj: dict, parent: Any) -> None:
+        for key, val in dict_obj.items():
+            if isinstance(val, dict):
+                element = ET.SubElement(parent, key)
+                convert(dict_obj=val, parent=element)
+            else:
+                element = ET.SubElement(parent, key)
+                element.text = str(object=val)
+
+    convert(dict_obj=data, parent=root)
+    return ET.tostring(root, encoding="unicode")
 
 
 def to_dict(
@@ -1411,12 +1379,42 @@ def to_dict(
     str_type: Literal["json", "xml"] | None = "json",
     parser: Callable[[str], Any] | None = None,
     recursive: bool = False,
-    max_recursive_depth: int | None = None,
+    max_recursive_depth: int = None,
     recursive_python_only: bool = True,
     use_enum_values: bool = False,
-    remove_root: bool = False,
-    root_tag: str = "root",
-) -> Any:
+    **kwargs: Any,
+) -> dict[str, Any]:
+    """
+    Convert various input types to a dictionary, with optional recursive processing.
+
+    Args:
+        input_: The input to convert.
+        use_model_dump: Use model_dump() for Pydantic models if available.
+        fuzzy_parse: Use fuzzy parsing for string inputs.
+        suppress: Return empty dict on errors if True.
+        str_type: Input string type ("json" or "xml").
+        parser: Custom parser function for string inputs.
+        recursive: Enable recursive conversion of nested structures.
+        max_recursive_depth: Maximum recursion depth (default 5, max 10).
+        recursive_python_only: If False, attempts to convert custom types recursively.
+        use_enum_values: Use enum values instead of names.
+        **kwargs: Additional arguments for parsing functions.
+
+    Returns:
+        dict[str, Any]: A dictionary derived from the input.
+
+    Raises:
+        ValueError: If parsing fails and suppress is False.
+
+    Examples:
+        >>> to_dict({"a": 1, "b": [2, 3]})
+        {'a': 1, 'b': [2, 3]}
+        >>> to_dict('{"x": 10}', str_type="json")
+        {'x': 10}
+        >>> to_dict({"a": {"b": {"c": 1}}}, recursive=True, max_recursive_depth=2)
+        {'a': {'b': {'c': 1}}}
+    """
+
     try:
         if recursive:
             return recursive_to_dict(
@@ -1426,61 +1424,55 @@ def to_dict(
                 str_type=str_type,
                 parser=parser,
                 max_recursive_depth=max_recursive_depth,
-                recursive_python_only=recursive_python_only,
+                recursive_custom_types=not recursive_python_only,
                 use_enum_values=use_enum_values,
-                remove_root=remove_root,
-                root_tag=root_tag,
+                **kwargs,
             )
+
         return _to_dict(
             input_,
             fuzzy_parse=fuzzy_parse,
-            str_type=str_type,
             parser=parser,
+            str_type=str_type,
             use_model_dump=use_model_dump,
             use_enum_values=use_enum_values,
-            remove_root=remove_root,
-            root_tag=root_tag,
+            **kwargs,
         )
-    except Exception:
-        if suppress:
+    except Exception as e:
+        if suppress or input_ == "":
             return {}
-        # Removed `or input_ == ""` so empty string raises ValueError
-        raise
+        raise e
 
 
 def recursive_to_dict(
     input_: Any,
     /,
     *,
-    use_model_dump: bool,
-    fuzzy_parse: bool,
-    str_type: Literal["json", "xml"] | None,
-    parser: Callable[[str], Any] | None,
-    max_recursive_depth: int | None,
-    recursive_python_only: bool,
-    use_enum_values: bool,
-    remove_root: bool,
-    root_tag: str,
+    max_recursive_depth: int = None,
+    recursive_custom_types: bool = False,
+    **kwargs: Any,
 ) -> Any:
-    if max_recursive_depth is None:
+
+    if not isinstance(max_recursive_depth, int):
         max_recursive_depth = 5
-    if max_recursive_depth < 0:
-        raise ValueError("max_recursive_depth must be a non-negative integer")
-    if max_recursive_depth > 10:
-        raise ValueError("max_recursive_depth must be <= 10")
+    else:
+        if max_recursive_depth < 0:
+            raise ValueError(
+                "max_recursive_depth must be a non-negative integer"
+            )
+        if max_recursive_depth == 0:
+            return input_
+        if max_recursive_depth > 10:
+            raise ValueError(
+                "max_recursive_depth must be less than or equal to 10"
+            )
 
     return _recur_to_dict(
         input_,
         max_recursive_depth=max_recursive_depth,
         current_depth=0,
-        recursive_custom_types=not recursive_python_only,
-        use_model_dump=use_model_dump,
-        fuzzy_parse=fuzzy_parse,
-        str_type=str_type,
-        parser=parser,
-        use_enum_values=use_enum_values,
-        remove_root=remove_root,
-        root_tag=root_tag,
+        recursive_custom_types=recursive_custom_types,
+        **kwargs,
     )
 
 
@@ -1489,279 +1481,180 @@ def _recur_to_dict(
     /,
     *,
     max_recursive_depth: int,
-    current_depth: int,
-    recursive_custom_types: bool,
-    use_model_dump: bool,
-    fuzzy_parse: bool,
-    str_type: Literal["json", "xml"] | None,
-    parser: Callable[[str], Any] | None,
-    use_enum_values: bool,
-    remove_root: bool,
-    root_tag: str,
+    current_depth: int = 0,
+    recursive_custom_types: bool = False,
+    **kwargs: Any,
 ) -> Any:
+
     if current_depth >= max_recursive_depth:
         return input_
 
     if isinstance(input_, str):
         try:
-            parsed = _to_dict(
-                input_,
-                fuzzy_parse=fuzzy_parse,
-                str_type=str_type,
-                parser=parser,
-                use_model_dump=use_model_dump,
-                use_enum_values=use_enum_values,
-                remove_root=remove_root,
-                root_tag=root_tag,
-            )
+            # Attempt to parse the string
+            parsed = _to_dict(input_, **kwargs)
+            # Recursively process the parsed result
             return _recur_to_dict(
                 parsed,
                 max_recursive_depth=max_recursive_depth,
                 current_depth=current_depth + 1,
                 recursive_custom_types=recursive_custom_types,
-                use_model_dump=use_model_dump,
-                fuzzy_parse=fuzzy_parse,
-                str_type=str_type,
-                parser=parser,
-                use_enum_values=use_enum_values,
-                remove_root=remove_root,
-                root_tag=root_tag,
+                **kwargs,
             )
         except Exception:
+            # Return the original string if parsing fails
             return input_
 
     elif isinstance(input_, dict):
+        # Recursively process dictionary values
         return {
-            k: _recur_to_dict(
-                v,
+            key: _recur_to_dict(
+                value,
                 max_recursive_depth=max_recursive_depth,
                 current_depth=current_depth + 1,
                 recursive_custom_types=recursive_custom_types,
-                use_model_dump=use_model_dump,
-                fuzzy_parse=fuzzy_parse,
-                str_type=str_type,
-                parser=parser,
-                use_enum_values=use_enum_values,
-                remove_root=remove_root,
-                root_tag=root_tag,
+                **kwargs,
             )
-            for k, v in input_.items()
+            for key, value in input_.items()
         }
 
     elif isinstance(input_, (list, tuple, set)):
+        # Recursively process list or tuple elements
         processed = [
             _recur_to_dict(
-                e,
+                element,
                 max_recursive_depth=max_recursive_depth,
                 current_depth=current_depth + 1,
                 recursive_custom_types=recursive_custom_types,
-                use_model_dump=use_model_dump,
-                fuzzy_parse=fuzzy_parse,
-                str_type=str_type,
-                parser=parser,
-                use_enum_values=use_enum_values,
-                remove_root=remove_root,
-                root_tag=root_tag,
+                **kwargs,
             )
-            for e in input_
+            for element in input_
         ]
         return type(input_)(processed)
 
     elif isinstance(input_, type) and issubclass(input_, Enum):
         try:
-            obj_dict = _to_dict(
-                input_,
-                fuzzy_parse=fuzzy_parse,
-                str_type=str_type,
-                parser=parser,
-                use_model_dump=use_model_dump,
-                use_enum_values=use_enum_values,
-                remove_root=remove_root,
-                root_tag=root_tag,
-            )
+            obj_dict = _to_dict(input_, **kwargs)
             return _recur_to_dict(
                 obj_dict,
                 max_recursive_depth=max_recursive_depth,
                 current_depth=current_depth + 1,
-                recursive_custom_types=recursive_custom_types,
-                use_model_dump=use_model_dump,
-                fuzzy_parse=fuzzy_parse,
-                str_type=str_type,
-                parser=parser,
-                use_enum_values=use_enum_values,
-                remove_root=remove_root,
-                root_tag=root_tag,
+                **kwargs,
             )
         except Exception:
             return input_
 
     elif recursive_custom_types:
+        # Process custom classes if enabled
         try:
-            obj_dict = _to_dict(
-                input_,
-                fuzzy_parse=fuzzy_parse,
-                str_type=str_type,
-                parser=parser,
-                use_model_dump=use_model_dump,
-                use_enum_values=use_enum_values,
-                remove_root=remove_root,
-                root_tag=root_tag,
-            )
+            obj_dict = _to_dict(input_, **kwargs)
             return _recur_to_dict(
                 obj_dict,
                 max_recursive_depth=max_recursive_depth,
                 current_depth=current_depth + 1,
                 recursive_custom_types=recursive_custom_types,
-                use_model_dump=use_model_dump,
-                fuzzy_parse=fuzzy_parse,
-                str_type=str_type,
-                parser=parser,
-                use_enum_values=use_enum_values,
-                remove_root=remove_root,
-                root_tag=root_tag,
+                **kwargs,
             )
         except Exception:
             return input_
 
-    return input_
+    else:
+        # Return the input as is for other data types
+        return input_
 
 
-def _enum_to_dict(input_: type[Enum], /, use_enum_values: bool) -> dict:
-    members = dict(input_.__members__)
-    return {
-        k: (v.value if use_enum_values else v.name) for k, v in members.items()
-    }
+def _enum_to_dict(input_, /, use_enum_values: bool = True):
+    dict_ = dict(input_.__members__).copy()
+    if use_enum_values:
+        return {key: value.value for key, value in dict_.items()}
+    return dict_
 
 
 def _str_to_dict(
     input_: str,
     /,
-    *,
-    fuzzy_parse: bool,
-    str_type: Literal["json", "xml"] | None,
-    parser: Callable[[str], Any] | None,
-    remove_root: bool,
-    root_tag: str,
-) -> dict[str, Any]:
-    if parser:
-        return parser(input_)
-
-    if str_type == "xml":
-        # Wrap in try-except to raise ValueError on parse errors
-        try:
-            import xmltodict  # type: ignore
-
-            parsed = xmltodict.parse(input_)
-        except ImportError as e:
-            raise ImportError(
-                "xmltodict is required for XML parsing. Install with: pip install xmltodict"
+    fuzzy_parse: bool = False,
+    str_type: Literal["json", "xml"] | None = "json",
+    parser: Callable[[str], Any] | None = None,
+    remove_root: bool = False,
+    root_tag: str = "root",
+    **kwargs: Any,
+):
+    """
+    kwargs for parser
+    """
+    if not parser:
+        if str_type == "xml" and not parser:
+            parser = partial(
+                xml_to_dict, remove_root=remove_root, root_tag=root_tag
             )
-        except Exception as e:
-            raise ValueError(f"Invalid XML: {e}") from e
 
-        if remove_root and isinstance(parsed, dict) and len(parsed) == 1:
-            parsed = next(iter(parsed.values()))
-            if not isinstance(parsed, dict):
-                parsed = {"value": parsed}
+        elif fuzzy_parse:
+            parser = fuzzy_parse_json
         else:
-            if root_tag != "root":
-                if isinstance(parsed, dict) and len(parsed) == 1:
-                    old_root_key = next(iter(parsed.keys()))
-                    contents = parsed[old_root_key]
-                    parsed = {root_tag: contents}
-                else:
-                    parsed = {root_tag: parsed}
+            parser = json.loads
 
-        if not isinstance(parsed, dict):
-            parsed = {"value": parsed}
-        return parsed
-
-    # JSON
-    if fuzzy_parse:
-        return fuzzy_parse_json(input_)
-    try:
-        return json.loads(input_)
-    except json.JSONDecodeError as e:
-        raise ValueError(f"Invalid JSON: {e}") from e
+    return parser(input_, **kwargs)
 
 
-def _na_to_dict(input_: Any) -> dict[str, Any]:
-    # Handle PydanticUndefinedType specifically
-    if input_ is PydanticUndefinedType:
-        return {}
-    if isinstance(input_, (type(None), UndefinedType, PydanticUndefinedType)):
-        return {}
+def _na_to_dict(input_: type[None] | UndefinedType | PydanticUndefinedType, /):
     return {}
 
 
-def _model_to_dict(
-    input_: Any,
-    /,
-    *,
-    use_model_dump: bool,
-) -> dict[str, Any]:
-    # If input is a BaseModel
-    if isinstance(input_, BaseModel):
-        if use_model_dump and hasattr(input_, "model_dump"):
-            return input_.model_dump()
+def _model_to_dict(input_: Any, /, use_model_dump=True, **kwargs):
+    """
+    kwargs: built-in serialization methods kwargs
+    accepted built-in serialization methods:
+        - mdoel_dump
+        - to_dict
+        - to_json
+        - dict
+        - json
+    """
 
-        methods = ("to_dict", "to_json", "json", "dict", "model_dump")
-        for method in methods:
-            if hasattr(input_, method):
-                result = getattr(input_, method)()
-                return (
-                    json.loads(result) if isinstance(result, str) else result
-                )
+    if use_model_dump and hasattr(input_, "model_dump"):
+        return input_.model_dump(**kwargs)
 
-        if hasattr(input_, "__dict__"):
-            return dict(input_.__dict__)
+    methods = (
+        "to_dict",
+        "to_json",
+        "json",
+        "dict",
+    )
+    for method in methods:
+        if hasattr(input_, method):
+            result = getattr(input_, method)(**kwargs)
+            return json.loads(result) if isinstance(result, str) else result
 
-        try:
-            return dict(input_)
-        except Exception as e:
-            raise ValueError(f"Unable to convert input to dictionary: {e}")
-    else:
-        # Non-BaseModel objects that reach here
-        # Distinguish between Sequence and Iterable
-        if isinstance(input_, Sequence) and not isinstance(input_, str):
-            # If it's a sequence (like a list), we wouldn't be here,
-            # because lists handled in _to_dict before calling _model_to_dict
-            pass
+    if hasattr(input_, "__dict__"):
+        return input_.__dict__
 
-        # If it's not a BaseModel and not a Sequence,
-        # it might be a generator or custom object
-        # Try directly:
-        try:
-            return dict(input_)
-        except TypeError:
-            # Not directly dict-able
-            # If it's iterable but not a sequence, handle as iterable:
-            if isinstance(input_, Iterable) and not isinstance(
-                input_, Sequence
-            ):
-                return _iterable_to_dict(input_)
-            raise ValueError("Unable to convert input to dictionary")
+    try:
+        return dict(input_)
+    except Exception as e:
+        raise ValueError(f"Unable to convert input to dictionary: {e}")
 
 
-def _set_to_dict(input_: set, /) -> dict[str, Any]:
-    return {str(v): v for v in input_}
+def _set_to_dict(input_: set, /) -> dict:
+    return {v: v for v in input_}
 
 
-def _iterable_to_dict(input_: Iterable, /) -> dict[str, Any]:
-    return {str(idx): v for idx, v in enumerate(input_)}
+def _iterable_to_dict(input_: Iterable, /) -> dict:
+    return {idx: v for idx, v in enumerate(input_)}
 
 
 def _to_dict(
     input_: Any,
     /,
     *,
-    fuzzy_parse: bool,
-    str_type: Literal["json", "xml"] | None,
-    parser: Callable[[str], Any] | None,
-    use_model_dump: bool,
-    use_enum_values: bool,
-    remove_root: bool,
-    root_tag: str,
+    fuzzy_parse: bool = False,
+    str_type: Literal["json", "xml"] | None = "json",
+    parser: Callable[[str], Any] | None = None,
+    remove_root: bool = False,
+    root_tag: str = "root",
+    use_model_dump: bool = True,
+    use_enum_values: bool = True,
+    **kwargs: Any,
 ) -> dict[str, Any]:
 
     if isinstance(input_, set):
@@ -1773,10 +1666,7 @@ def _to_dict(
     if isinstance(input_, Mapping):
         return dict(input_)
 
-    if input_ is PydanticUndefinedType:
-        return {}
-
-    if isinstance(input_, (type(None), UndefinedType, PydanticUndefinedType)):
+    if isinstance(input_, type(None) | UndefinedType | PydanticUndefinedType):
         return _na_to_dict(input_)
 
     if isinstance(input_, str):
@@ -1787,60 +1677,16 @@ def _to_dict(
             parser=parser,
             remove_root=remove_root,
             root_tag=root_tag,
+            **kwargs,
         )
 
-    if isinstance(input_, BaseModel):
-        return _model_to_dict(input_, use_model_dump=use_model_dump)
-
-    # If not BaseModel and not a str
-    if isinstance(input_, Sequence) and not isinstance(input_, str):
-        # Sequence like list/tuple handled already
-        # If we get here, it's likely a custom object not handled before
-        # We do last fallback:
-        try:
-            return dict(input_)
-        except Exception:
-            # If fails, it's not a dict-convertible sequence, treat as iterable:
-            return _iterable_to_dict(input_)
+    if isinstance(input_, BaseModel) or not isinstance(input_, Sequence):
+        return _model_to_dict(input_, use_model_dump=use_model_dump, **kwargs)
 
     if isinstance(input_, Iterable):
         return _iterable_to_dict(input_)
 
-    # last fallback
-    try:
-        return dict(input_)
-    except Exception as e:
-        raise ValueError(f"Unable to convert input to dictionary: {e}")
-
-
-class ToDictParams(Params):
-    use_model_dump: bool = True
-    fuzzy_parse: bool = False
-    suppress: bool = False
-    str_type: Literal["json", "xml"] | None = "json"
-    parser: Callable[[str], Any] | None = None
-    recursive: bool = False
-    max_recursive_depth: int | None = None
-    recursive_python_only: bool = True
-    use_enum_values: bool = False
-    remove_root: bool = False
-    root_tag: str = "root"
-
-    def __call__(self, input_, /):
-        return to_dict(
-            input_,
-            use_model_dump=self.use_model_dump,
-            fuzzy_parse=self.fuzzy_parse,
-            suppress=self.suppress,
-            str_type=self.str_type,
-            parser=self.parser,
-            recursive=self.recursive,
-            max_recursive_depth=self.max_recursive_depth,
-            recursive_python_only=self.recursive_python_only,
-            use_enum_values=self.use_enum_values,
-            remove_root=self.remove_root,
-            root_tag=self.root_tag,
-        )
+    return dict(input_)
 
 
 # Precompile the regex for extracting JSON code blocks
