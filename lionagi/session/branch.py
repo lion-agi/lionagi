@@ -10,10 +10,10 @@ from jinja2 import Template
 from pydantic import BaseModel, Field, JsonValue, PrivateAttr
 
 from lionagi.libs.validate.fuzzy_validate_mapping import fuzzy_validate_mapping
-from lionagi.operatives.action.function_calling import FunctionCalling
 from lionagi.operatives.types import (
     ActionManager,
     ActionResponseModel,
+    FunctionCalling,
     FuncTool,
     Instruct,
     Operative,
@@ -21,7 +21,6 @@ from lionagi.operatives.types import (
     Tool,
     ToolRef,
 )
-from lionagi.protocols.generic.log import Log
 from lionagi.protocols.types import (
     ID,
     MESSAGE_FIELDS,
@@ -32,6 +31,7 @@ from lionagi.protocols.types import (
     Element,
     IDType,
     Instruction,
+    Log,
     LogManager,
     LogManagerConfig,
     Mail,
@@ -47,13 +47,30 @@ from lionagi.protocols.types import (
     SenderRecipient,
     System,
 )
-from lionagi.service.imodel import iModel
-from lionagi.service.manager import iModelManager
+from lionagi.service import iModel, iModelManager
 from lionagi.settings import Settings
 from lionagi.utils import UNDEFINED, alcall, breakdown_pydantic_annotation
 
+__all__ = ("Branch",)
+
 
 class Branch(Element, Communicatable, Relational):
+    """Manages a conversation 'branch' with messages, tools, and iModels.
+
+    The Branch class orchestrates message handling, model invocation,
+    action (tool) execution, logging, and mailbox-based communication.
+    It maintains references to a MessageManager, ActionManager, iModelManager,
+    and a LogManager, providing high-level methods for combined operations.
+
+    Attributes:
+        user (SenderRecipient | None):
+            The user or sender of this branch context (e.g., a session object).
+        name (str | None):
+            A human-readable name for this branch.
+        mailbox (Mailbox):
+            A mailbox for sending and receiving `Package`s to/from other
+            branches or components.
+    """
 
     user: SenderRecipient | None = Field(
         None,
@@ -94,7 +111,38 @@ class Branch(Element, Communicatable, Relational):
         system_template_context: dict = None,
         **kwargs,
     ):
+        """Initializes a Branch with references to managers and mailbox.
 
+        Args:
+            user (SenderRecipient, optional):
+                The user or sender of the branch context.
+            name (str | None, optional):
+                A human-readable name for this branch.
+            messages (Pile[RoledMessage], optional):
+                Initial messages to seed the MessageManager.
+            system (System | JsonValue, optional):
+                A system message or data to configure system role.
+            system_sender (SenderRecipient, optional):
+                Sender to assign if the system message is added.
+            chat_model (iModel, optional):
+                The chat model used by iModelManager (if not provided,
+                falls back to defaults).
+            parse_model (iModel, optional):
+                The parse model used by iModelManager.
+            imodel (iModel, optional):
+                Deprecated. Alias for chat_model.
+            tools (FuncTool | list[FuncTool], optional):
+                Tools for the ActionManager.
+            log_config (LogManagerConfig | dict, optional):
+                Configuration for the LogManager.
+            system_datetime (bool | str, optional):
+                Whether to include timestamps in system messages.
+            system_template (Template | str, optional):
+                A Jinja2 template or template string for system messages.
+            system_template_context (dict, optional):
+                Context variables for the system template.
+            **kwargs: Additional parameters passed to the Element parent init.
+        """
         super().__init__(user=user, name=name, **kwargs)
 
         self._message_manager = MessageManager(messages=messages)
@@ -132,53 +180,77 @@ class Branch(Element, Communicatable, Relational):
 
     @property
     def system(self) -> System | None:
+        """System | None: The system message or configuration."""
         return self._message_manager.system
 
     @property
-    def msgs(self):
+    def msgs(self) -> MessageManager:
+        """MessageManager: Manages the conversation messages."""
         return self._message_manager
 
     @property
-    def acts(self):
+    def acts(self) -> ActionManager:
+        """ActionManager: Manages available tools (actions)."""
         return self._action_manager
 
     @property
-    def mdls(self):
+    def mdls(self) -> iModelManager:
+        """iModelManager: Manages chat and parse models."""
         return self._imodel_manager
 
-    # @property
-    # def oprt(self):
-    #     return self._operative_manager
-
     @property
-    def messages(self):
+    def messages(self) -> Pile[RoledMessage]:
+        """Pile[RoledMessage]: The collection of messages in this branch."""
         return self._message_manager.messages
 
     @property
-    def logs(self):
+    def logs(self) -> Pile[Log]:
+        """Pile[Log]: The collection of log entries for this branch."""
         return self._log_manager.logs
 
     @property
     def chat_model(self) -> iModel:
+        """iModel: The primary (chat) model in the iModelManager."""
         return self._imodel_manager.chat
 
     @chat_model.setter
-    def chat_model(self, value: iModel):
+    def chat_model(self, value: iModel) -> None:
+        """Sets the chat model in the iModelManager.
+
+        Args:
+            value (iModel): The new chat model.
+        """
         self._imodel_manager.register_imodel("chat", value)
 
     @property
     def parse_model(self) -> iModel:
+        """iModel: The parsing model in the iModelManager."""
         return self._imodel_manager.parse
 
     @parse_model.setter
-    def parse_model(self, value: iModel):
+    def parse_model(self, value: iModel) -> None:
+        """Sets the parse model in the iModelManager.
+
+        Args:
+            value (iModel): The new parse model.
+        """
         self._imodel_manager.register_imodel("parse", value)
 
     @property
-    def tools(self):
+    def tools(self) -> dict[str, Tool]:
+        """dict[str, Tool]: All tools registered in the ActionManager."""
         return self._action_manager.registry
 
     async def aclone(self, sender: ID.Ref = None) -> "Branch":
+        """Asynchronous clone of this Branch.
+
+        Args:
+            sender (ID.Ref, optional):
+                If provided, sets this sender ID on all cloned messages.
+
+        Returns:
+            Branch: A new branch instance with cloned messages.
+        """
         async with self.msgs.messages:
             return self.clone(sender)
 
@@ -206,7 +278,54 @@ class Branch(Element, Communicatable, Relational):
         operative_kwargs: dict = None,
         **kwargs,
     ) -> list | BaseModel | None | dict | str:
+        """Orchestrates an 'operate' flow with optional tool invocation.
 
+        This method creates or updates an Operative, sends an instruction
+        to the chat model, optionally parses the response, and invokes
+        requested tools if `invoke_actions` is True.
+
+        Args:
+            instruct (Instruct):
+                The instruction containing context, guidance, etc.
+            sender (SenderRecipient, optional):
+                The sender of this operation.
+            recipient (SenderRecipient, optional):
+                The recipient of this operation.
+            progression (Progression, optional):
+                Specific progression of messages to use.
+            imodel (iModel, optional):
+                Deprecated, alias for chat_model.
+            chat_model (iModel, optional):
+                The chat model to invoke.
+            invoke_actions (bool, optional):
+                Whether to call requested tools (actions).
+            tool_schemas (list[dict], optional):
+                Overridden schemas for the tools to be used.
+            images (list, optional):
+                Additional images for the model context.
+            image_detail (Literal["low", "high", "auto"], optional):
+                The level of detail for images, if relevant.
+            parse_model (iModel, optional):
+                The parse model for validating or refining responses.
+            skip_validation (bool, optional):
+                If True, skip post-response validation steps.
+            tools (ToolRef, optional):
+                Specific tools to make available if `invoke_actions` is True.
+            operative (Operative, optional):
+                The operative describing how to handle the response.
+            response_format (type[BaseModel], optional):
+                An expected response schema (alias of `operative.request_type`).
+            fuzzy_match_kwargs (dict, optional):
+                Settings for fuzzy validation if used.
+            operative_kwargs (dict, optional):
+                Additional arguments for creating an Operative if none is given.
+            **kwargs: Additional arguments passed to the model invocation.
+
+        Returns:
+            list | BaseModel | None | dict | str:
+                The final parsed response, or an Operative object, or the
+                string/dict if skipping validation or no tools needed.
+        """
         chat_model = chat_model or imodel or self.chat_model
         parse_model = parse_model or chat_model
 
@@ -289,6 +408,42 @@ class Branch(Element, Communicatable, Relational):
         strict: bool = False,
         suppress_conversion_errors: bool = False,
     ):
+        """Attempts to parse text into a structured Pydantic model.
+
+        Uses optional fuzzy matching to handle partial or unclear fields.
+
+        Args:
+            text (str): The raw text to parse.
+            handle_validation (Literal["raise","return_value","return_none"]):
+                What to do if parsing fails. Defaults to "return_value".
+            max_retries (int):
+                How many times to retry parsing if it fails.
+            request_type (type[BaseModel], optional):
+                The Pydantic model to parse into.
+            operative (Operative, optional):
+                If provided, uses its model and max_retries setting.
+            similarity_algo (str):
+                The similarity algorithm for fuzzy field matching.
+            similarity_threshold (float):
+                A threshold for fuzzy matching (0.0 - 1.0).
+            fuzzy_match (bool):
+                If True, tries to match unrecognized keys to known ones.
+            handle_unmatched (Literal["ignore","raise","remove","fill","force"]):
+                How to handle unmatched fields.
+            fill_value (Any):
+                A default value used when fill is needed.
+            fill_mapping (dict[str, Any] | None):
+                A mapping from field -> fill value override.
+            strict (bool):
+                If True, raises errors on ambiguous fields or data types.
+            suppress_conversion_errors (bool):
+                If True, logs or ignores errors during data conversion.
+
+        Returns:
+            BaseModel | Any | None:
+                The parsed model instance, or a dict/string/None depending
+                on the handling mode.
+        """
         _should_try = True
         num_try = 0
         response_model = text
@@ -363,6 +518,56 @@ class Branch(Element, Communicatable, Relational):
         clear_messages: bool = False,
         **kwargs,
     ):
+        """Handles a general 'communicate' flow without tool invocation.
+
+        Sends messages to the model, optionally parses the response, and
+        can handle simpler field-level validation.
+
+        Args:
+            instruction (Instruction | JsonValue, optional):
+                The main user query or context.
+            guidance (JsonValue, optional):
+                Additional LLM instructions.
+            context (JsonValue, optional):
+                Context data to pass to the LLM.
+            sender (SenderRecipient, optional):
+                The sender of this message.
+            recipient (SenderRecipient, optional):
+                The recipient of this message.
+            progression (ID.IDSeq, optional):
+                A custom progression of conversation messages.
+            request_model (type[BaseModel] | BaseModel | None, optional):
+                Model for structured responses.
+            response_format (type[BaseModel], optional):
+                Alias for request_model if both are not given simultaneously.
+            request_fields (dict | list[str], optional):
+                Simpler field-level mapping if no model is used.
+            imodel (iModel, optional):
+                Deprecated, alias for chat_model.
+            chat_model (iModel, optional):
+                Model used for the conversation.
+            parse_model (iModel, optional):
+                Model used for any parsing operation.
+            skip_validation (bool, optional):
+                If True, returns the raw response without further checks.
+            images (list, optional):
+                Additional images if relevant to the LLM context.
+            image_detail (Literal["low","high","auto"], optional):
+                Level of image detail if used.
+            num_parse_retries (int, optional):
+                Max times to retry parsing on failure (capped at 5).
+            fuzzy_match_kwargs (dict, optional):
+                Settings passed to the fuzzy validation function.
+            clear_messages (bool, optional):
+                If True, clears previously stored messages.
+            **kwargs:
+                Additional arguments for the LLM call.
+
+        Returns:
+            Any:
+                The raw string, a validated Pydantic model, or a dict
+                of requested fields, depending on the parameters.
+        """
         if response_format and request_model:
             raise ValueError(
                 "Cannot specify both response_format and request_model"
@@ -425,6 +630,17 @@ class Branch(Element, Communicatable, Relational):
         action_request: ActionRequest | BaseModel | dict,
         suppress_errors: bool = False,
     ) -> ActionResponse:
+        """Invokes a tool (action) asynchronously.
+
+        Args:
+            action_request (ActionRequest | BaseModel | dict):
+                Contains the function name (`function`) and arguments.
+            suppress_errors (bool, optional):
+                If True, logs errors instead of raising.
+
+        Returns:
+            ActionResponse: The result of the tool call.
+        """
         try:
             func, args = None, None
             if isinstance(action_request, BaseModel):
@@ -485,7 +701,46 @@ class Branch(Element, Communicatable, Relational):
         image_detail: Literal["low", "high", "auto"] = None,
         **kwargs,
     ) -> tuple[Instruction, AssistantResponse]:
+        """Invokes the chat model with the current conversation history.
 
+        This method constructs a sequence of messages from the stored
+        progression, merges any pending action responses into the context,
+        and calls the model. The result is then wrapped in an
+        AssistantResponse.
+
+        Args:
+            instruction (Any):
+                The main user instruction text or structured data.
+            guidance (Any):
+                Additional system or user guidance.
+            context (Any):
+                Context data to pass to the model.
+            sender (Any):
+                The user or entity sending this message.
+            recipient (Any):
+                The intended recipient of this message (default is self.id).
+            request_fields (Any):
+                A set of fields for partial validation (rarely used).
+            request_model (type[BaseModel], optional):
+                A specific Pydantic model to request from the LLM.
+            progression (Any):
+                The conversation flow or message ordering.
+            imodel (iModel, optional):
+                The chat model to use.
+            tool_schemas (Any, optional):
+                Additional schemas to pass if tools are invoked.
+            images (list, optional):
+                Optional list of images.
+            image_detail (Literal["low","high","auto"], optional):
+                The level of detail for images, if relevant.
+            **kwargs:
+                Additional model invocation parameters.
+
+        Returns:
+            tuple[Instruction, AssistantResponse]:
+                The instruction object (with context) and the final
+                AssistantResponse from the model call.
+        """
         ins: Instruction = self.msgs.create_instruction(
             instruction=instruction,
             guidance=guidance,
@@ -592,14 +847,15 @@ class Branch(Element, Communicatable, Relational):
         return ins, res
 
     def clone(self, sender: ID.Ref = None) -> "Branch":
-        """
-        Split a branch, creating a new branch with the same messages and tools.
+        """Clones this Branch, creating a new instance with the same data.
 
         Args:
-            branch: The branch to split or its identifier.
+            sender (ID.Ref, optional):
+                If provided, sets this sender ID on the cloned messages.
+                Otherwise, uses self.id.
 
         Returns:
-            The newly created branch.
+            Branch: A new branch with cloned messages and the same tools.
         """
         if sender is not None:
             if not ID.is_id(sender):
@@ -626,6 +882,18 @@ class Branch(Element, Communicatable, Relational):
         return branch_clone
 
     def to_df(self, *, progression: Progression = None) -> pd.DataFrame:
+        """Converts messages in the branch to a Pandas DataFrame.
+
+        Args:
+            progression (Progression, optional):
+                A custom progression of messages to include. If None, uses
+                the existing stored progression.
+
+        Returns:
+            pd.DataFrame:
+                A DataFrame containing message data for easy inspection
+                or serialization.
+        """
         if progression is None:
             progression = self.msgs.progression
 
@@ -637,7 +905,22 @@ class Branch(Element, Communicatable, Relational):
         p = Pile(collections=msgs)
         return p.to_df(columns=MESSAGE_FIELDS)
 
-    async def _instruct(self, instruct: Instruct, /, **kwargs):
+    async def _instruct(self, instruct: Instruct, /, **kwargs) -> Any:
+        """Convenience method for handling an 'Instruct'.
+
+        Checks if the instruct uses reserved kwargs for an 'operate' flow
+        (e.g., actions and a response format). Otherwise, falls back to a
+        simpler 'communicate' flow.
+
+        Args:
+            instruct (Instruct):
+                The instruction context and guidance.
+            **kwargs:
+                Additional arguments for operate or communicate.
+
+        Returns:
+            Any: The result of the chosen flow, e.g., a validated response.
+        """
         config = {**instruct.to_dict(), **kwargs}
         if any(i in config for i in Instruct.reserved_kwargs):
             return await self.operate(**config)
@@ -650,6 +933,18 @@ class Branch(Element, Communicatable, Relational):
         package: Any,
         request_source: IDType | None = None,
     ) -> None:
+        """Sends a package (wrapped in Mail) to a specific recipient.
+
+        Args:
+            recipient (IDType):
+                The ID of the recipient entity.
+            category (PackageCategory | None):
+                The category of the package (e.g., 'message', 'tool', etc.).
+            package (Any):
+                The payload to send (could be a message, tool, model, etc.).
+            request_source (IDType | None):
+                The ID that requested this send (if any).
+        """
         package = Package(
             category=category,
             package=package,
@@ -670,18 +965,22 @@ class Branch(Element, Communicatable, Relational):
         tool: bool = False,
         imodel: bool = False,
     ) -> None:
-        """
-        Receives mail from a sender.
+        """Retrieves mail from a sender, processing it if enabled by parameters.
 
         Args:
-            sender (str): The ID of the sender.
-            message (bool): Whether to process message mails.
-            tool (bool): Whether to process tool mails.
-            imodel (bool): Whether to process imodel mails.
+            sender (IDType):
+                The ID of the sender.
+            message (bool):
+                If True, processes mails categorized as "message".
+            tool (bool):
+                If True, processes mails categorized as "tool".
+            imodel (bool):
+                If True, processes mails categorized as "imodel".
 
         Raises:
-            ValueError: If the sender does not exist or the mail category is
-            invalid.
+            ValueError:
+                If the sender doesn't exist or if the mail category is invalid
+                for the chosen processing options.
         """
         skipped_requests = Progression()
         if not isinstance(sender, str):
@@ -730,6 +1029,14 @@ class Branch(Element, Communicatable, Relational):
         package: Any,
         request_source: IDType | None = None,
     ):
+        """Asynchronous version of send().
+
+        Args:
+            recipient (IDType): The ID of the recipient.
+            category (PackageCategory | None): The category of the package.
+            package (Any): The item(s) to send.
+            request_source (IDType | None): The origin of this request.
+        """
         async with self.mailbox.pile_:
             self.send(recipient, category, package, request_source)
 
@@ -739,7 +1046,15 @@ class Branch(Element, Communicatable, Relational):
         message: bool = False,
         tool: bool = False,
         imodel: bool = False,
-    ):
+    ) -> None:
+        """Asynchronous version of receive().
+
+        Args:
+            sender (IDType): The sender's ID.
+            message (bool): Whether to process message packages.
+            tool (bool): Whether to process tool packages.
+            imodel (bool): Whether to process iModel packages.
+        """
         async with self.mailbox.pile_:
             self.receive(sender, message, tool, imodel)
 
@@ -747,3 +1062,6 @@ class Branch(Element, Communicatable, Relational):
         """Receives mail from all senders."""
         for key in list(self.mailbox.pending_ins.keys()):
             self.receive(key)
+
+
+# File: lionagi/session/branch.py
