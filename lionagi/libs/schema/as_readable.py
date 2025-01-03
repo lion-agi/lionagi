@@ -101,4 +101,6 @@ def as_readable(input_: Any, /, *, md: bool = False, **kwargs) -> str:
         return result
 
     except Exception:
+        if md:
+            return f"```json\n{str(input_)}\n```"
         return str(input_)
