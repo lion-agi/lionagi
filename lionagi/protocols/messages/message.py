@@ -12,6 +12,7 @@ from pydantic import Field, field_serializer
 from lionagi._class_registry import get_class
 
 from .._concepts import Sendable
+from ..generic.element import Element, IDType
 from ..generic.log import Log
 from ..graph.node import Node
 from .base import (
@@ -56,7 +57,15 @@ class RoledMessage(Node, Sendable):
     )
 
     @field_serializer("sender", "recipient")
-    def _serialize_sender_recipient(cls, value: SenderRecipient) -> str:
+    def _serialize_sender_recipient(self, value: SenderRecipient) -> str:
+        if isinstance(value, str):
+            return value
+        if isinstance(value, MessageRole | MessageFlag):
+            return value.value
+        if isinstance(value, Element):
+            return str(value.id)
+        if isinstance(value, IDType):
+            return str(value)
         return str(value)
 
     @property

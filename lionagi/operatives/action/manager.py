@@ -134,7 +134,7 @@ class ActionManager(Manager):
 
     async def invoke(
         self, func_call: ActionRequestModel | ActionRequest
-    ) -> tuple[Execution, Log | None]:
+    ) -> FunctionCalling | Execution | None:
         """Invoke a tool based on the provided function call.
 
         1. Matches function call to registered tool
@@ -156,15 +156,13 @@ class ActionManager(Manager):
         try:
             function_calling = self.match_tool(func_call)
         except ValueError as e:
-            return (
-                Execution(
-                    status=EventStatus.FAILED,
-                    error=str(e),
-                    result=None,
-                ),
-                None,
+            return Log(
+                content={
+                    "event_type": "function_call",
+                    "status": EventStatus.FAILED,
+                    "error": str(e),
+                }
             )
-
         await function_calling.invoke()
         return function_calling
 

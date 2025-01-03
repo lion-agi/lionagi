@@ -276,6 +276,7 @@ class Branch(Element, Communicatable, Relational):
         ] = None,  # alias of operative.request_type
         fuzzy_match_kwargs: dict = None,
         operative_kwargs: dict = None,
+        return_operative: bool = False,
         **kwargs,
     ) -> list | BaseModel | None | dict | str:
         """Orchestrates an 'operate' flow with optional tool invocation.
@@ -331,6 +332,10 @@ class Branch(Element, Communicatable, Relational):
 
         if operative is None:
             operative_kwargs = operative_kwargs or {}
+            if instruct.reason or instruct.actions:
+                operative_kwargs["reason"] = instruct.reason
+                operative_kwargs["actions"] = instruct.actions
+
             operative_kwargs["base_type"] = response_format
             operative = Step.request_operative(**operative_kwargs)
 
@@ -343,7 +348,7 @@ class Branch(Element, Communicatable, Relational):
             context=instruct.context,
             sender=sender,
             recipient=recipient,
-            request_model=response_format or operative.request_type,
+            request_model=operative.request_type,
             progression=progression,
             imodel=chat_model,
             images=images,
@@ -356,6 +361,8 @@ class Branch(Element, Communicatable, Relational):
 
         operative.response_str_dict = res.response
         if skip_validation:
+            if return_operative:
+                return operative
             return operative.response_str_dict
 
         response_model = operative.update_response_model(res.response)
@@ -381,12 +388,16 @@ class Branch(Element, Communicatable, Relational):
                 response_model.action_requests,
                 self.invoke_action,
             )
-            response_model = operative.update_response_model(
-                data={"action_responses": action_response_models},
-                response_model=response_model,
+            operative.update_response_model(
+                data={
+                    "action_responses": [
+                        i for i in action_response_models if i is not None
+                    ]
+                },
             )
-
-        return response_model
+        if return_operative:
+            return operative
+        return operative.response_model
 
     async def parse(
         self,
@@ -657,28 +668,32 @@ class Branch(Element, Communicatable, Relational):
             func_call: FunctionCalling = await self._action_manager.invoke(
                 action_request
             )
-            self._log_manager.log(Log.create(func_call))
-            tool = self._action_manager.registry[action_request.function]
+            if isinstance(func_call, FunctionCalling):
+                self._log_manager.log(Log.create(func_call))
 
-            if not isinstance(action_request, ActionRequest):
-                action_request = ActionRequest.create(
-                    function=func,
-                    arguments=args,
-                    sender=self.id,
-                    recipient=tool.id,
+                if not isinstance(action_request, ActionRequest):
+                    action_request = ActionRequest.create(
+                        function=func,
+                        arguments=args,
+                        sender=self.id,
+                        recipient=func_call.func_tool.id,
+                    )
+                    self.msgs.add_message(action_request=action_request)
+
+                self.msgs.add_message(
+                    action_request=action_request,
+                    action_output=func_call.response,
                 )
-                await self.msgs.a_add_message(action_request=action_request)
 
-            await self.msgs.a_add_message(
-                action_request=action_request,
-                action_response=func_call.response,
-            )
+                return ActionResponseModel(
+                    function=action_request.function,
+                    arguments=action_request.arguments,
+                    output=func_call,
+                )
+            if isinstance(func_call, Log):
+                self._log_manager.log(func_call)
+                return None
 
-            return ActionResponseModel(
-                function=action_request.function,
-                arguments=action_request.arguments,
-                output=func_call,
-            )
         except Exception as e:
             if suppress_errors:
                 logging.error(f"Error invoking action: {e}")

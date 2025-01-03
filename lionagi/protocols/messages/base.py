@@ -37,8 +37,7 @@ SenderRecipient: TypeAlias = IDType | MessageRole | str
 
 class MessageField(str, Enum):
 
-    TIMESTAMP = "timestamp"
-    LION_CLASS = "lion_class"
+    CREATED_AT = "created_at"
     ROLE = "role"
     CONTENT = "content"
     ID = "id"

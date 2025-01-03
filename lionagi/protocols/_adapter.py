@@ -1,8 +1,10 @@
 # Copyright (c) 2023 - 2024, HaiyangLi <quantocean.li at gmail dot com>
 #
 # SPDX-License-Identifier: Apache-2.0
+
 import json
 import logging
+from datetime import datetime
 from pathlib import Path
 from typing import Any, Protocol, TypeVar, runtime_checkable
 
@@ -144,11 +146,11 @@ class PandasDataFrameAdapter(Adapter):
         out_ = []
         for i in subj:
             _dict = i.to_dict()
-            _dict["timestamp"] = i.created_datetime
+            _dict["created_at"] = datetime.fromtimestamp(_dict["created_at"])
             out_.append(_dict)
         df = pd.DataFrame(out_, **kwargs)
-        if "timestamp" in df.columns:
-            df["timestamp"] = pd.to_datetime(df["timestamp"])
+        if "created_at" in df.columns:
+            df["created_at"] = pd.to_datetime(df["created_at"])
         return df
 
 
