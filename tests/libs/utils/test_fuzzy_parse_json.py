@@ -2,7 +2,7 @@
 
 import pytest
 
-from lionagi.libs.parse import fix_json_string, fuzzy_parse_json
+from lionagi.utils import fix_json_string, fuzzy_parse_json
 
 
 def test_fuzzy_parse_json_basic():

@@ -6,7 +6,7 @@ including edge cases, special characters, and Unicode handling.
 
 import pytest
 
-from lionagi.libs.string_similarity import (
+from lionagi.libs.validate.string_similarity import (
     SIMILARITY_ALGO_MAP,
     cosine_similarity,
     hamming_similarity,

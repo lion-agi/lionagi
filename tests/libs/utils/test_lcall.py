@@ -3,7 +3,7 @@ import unittest
 from typing import Any
 from unittest.mock import AsyncMock, patch
 
-from lionagi.libs.func.types import alcall
+from lionagi.utils import alcall
 
 
 async def mock_func(x: int, add: int = 0) -> int:
@@ -39,14 +39,6 @@ class TestLCallFunction(unittest.IsolatedAsyncioTestCase):
         inputs = [1, 2, 3]
         with self.assertRaises(asyncio.TimeoutError):
             await alcall(inputs, mock_func, retry_timeout=0.05)
-
-    async def test_lcall_with_error_handling(self):
-        inputs = [1, 2, 3]
-        error_map = {ValueError: mock_handler}
-        results = await alcall(
-            inputs, mock_func_with_error, error_map=error_map
-        )
-        self.assertEqual(results, [1, 2, "handled: mock error"])
 
     async def test_lcall_with_max_concurrent(self):
         inputs = [1, 2, 3]

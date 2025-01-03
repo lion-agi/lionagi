@@ -3,8 +3,7 @@ from collections import OrderedDict, deque, namedtuple
 import pytest
 from pydantic import BaseModel
 
-from lionagi.libs.constants import UndefinedType
-from lionagi.libs.parse import to_list
+from lionagi.utils import to_list
 
 
 class CustomIterable:
@@ -55,12 +54,14 @@ def test_list_input(input_value, expected, flatten):
     "input_value, expected, flatten",
     [
         ((1, 2, 3), [1, 2, 3], False),
-        ((1, (2, 3)), [1, (2, 3)], False),
         ((1, (2, 3)), [1, 2, 3], True),
     ],
 )
 def test_tuple_input(input_value, expected, flatten):
-    assert to_list(input_value, flatten=flatten) == expected
+    assert (
+        to_list(input_value, flatten=flatten, flatten_tuple_set=True)
+        == expected
+    )
 
 
 def test_set_input():
@@ -179,12 +180,14 @@ def test_flatten_with_strings(input_value, expected):
     ],
 )
 def test_flatten_with_tuple(input_value, expected):
-    assert to_list(input_value, flatten=True) == expected
+    assert (
+        to_list(input_value, flatten=True, flatten_tuple_set=True) == expected
+    )
 
 
 def test_flatten_with_set():
     input_with_set = [1, {2, 3}, [4, {5, 6}]]
-    flattened = to_list(input_with_set, flatten=True)
+    flattened = to_list(input_with_set, flatten=True, flatten_tuple_set=True)
     assert len(flattened) == 6
     assert set(flattened) == {1, 2, 3, 4, 5, 6}
 

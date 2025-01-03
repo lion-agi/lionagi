@@ -5,7 +5,7 @@ from typing import Any
 import pytest
 from pydantic import BaseModel
 
-from lionagi.libs.parse import validate_mapping
+from lionagi.libs.validate.fuzzy_validate_mapping import fuzzy_validate_mapping
 
 
 class TestValidateMapping:
@@ -14,26 +14,26 @@ class TestValidateMapping:
     def test_basic_dictionary_input(self):
         """Test basic dictionary input."""
         test_dict = {"name": "John", "age": 30}
-        result = validate_mapping(test_dict, ["name", "age"])
+        result = fuzzy_validate_mapping(test_dict, ["name", "age"])
         assert result == test_dict
 
     def test_string_inputs(self):
         """Test string input parsing."""
         # JSON string
         json_input = '{"name": "John", "age": 30}'
-        result = validate_mapping(json_input, ["name", "age"])
+        result = fuzzy_validate_mapping(json_input, ["name", "age"])
         assert result == {"name": "John", "age": 30}
 
         # JSON with single quotes
         single_quote = "{'name': 'John', 'age': 30}"
-        result = validate_mapping(single_quote, ["name", "age"])
+        result = fuzzy_validate_mapping(single_quote, ["name", "age"])
         assert result == {"name": "John", "age": 30}
 
         # JSON in code block
         code_block = """```json
         {"name": "John", "age": 30}
         ```"""
-        result = validate_mapping(code_block, ["name", "age"])
+        result = fuzzy_validate_mapping(code_block, ["name", "age"])
         assert result == {"name": "John", "age": 30}
 
     def test_type_conversion(self):
@@ -44,7 +44,7 @@ class TestValidateMapping:
             age: int
 
         user = UserModel(name="John", age=30)
-        result = validate_mapping(user, ["name", "age"])
+        result = fuzzy_validate_mapping(user, ["name", "age"])
         assert result == {"name": "John", "age": 30}
 
     @pytest.mark.parametrize(
@@ -59,7 +59,7 @@ class TestValidateMapping:
     def test_handle_unmatched_modes(self, handle_unmatched, expected_keys):
         """Test different handle_unmatched modes."""
         input_dict = {"name": "John", "extra": "value"}
-        result = validate_mapping(
+        result = fuzzy_validate_mapping(
             input_dict,
             ["name", "age"],
             handle_unmatched=handle_unmatched,
@@ -70,7 +70,7 @@ class TestValidateMapping:
     def test_handle_unmatched_raise(self):
         """Test raise mode for unmatched keys."""
         with pytest.raises(ValueError):
-            validate_mapping(
+            fuzzy_validate_mapping(
                 {"name": "John", "extra": "value"},
                 ["name"],
                 handle_unmatched="raise",
@@ -81,7 +81,7 @@ class TestValidateMapping:
         input_dict = {"name": "John"}
         fill_mapping = {"age": 30, "email": "test@example.com"}
 
-        result = validate_mapping(
+        result = fuzzy_validate_mapping(
             input_dict,
             ["name", "age", "email"],
             handle_unmatched="fill",
@@ -102,7 +102,7 @@ class TestValidateMapping:
     )
     def test_similarity_thresholds(self, threshold, expected_match):
         """Test different similarity thresholds."""
-        result = validate_mapping(
+        result = fuzzy_validate_mapping(
             {"user_name": "John"},
             ["username"],
             similarity_threshold=threshold,
@@ -118,16 +118,16 @@ class TestValidateMapping:
 
         # None input
         with pytest.raises(TypeError):
-            validate_mapping(None, ["key"])
+            fuzzy_validate_mapping(None, ["key"])
 
         # Empty input with strict mode
         with pytest.raises(ValueError):
-            validate_mapping({}, ["required_key"], strict=True)
+            fuzzy_validate_mapping({}, ["required_key"], strict=True)
 
     def test_strict_mode(self):
         """Test strict mode validation."""
         with pytest.raises(ValueError):
-            validate_mapping(
+            fuzzy_validate_mapping(
                 {"name": "John"}, ["name", "required_field"], strict=True
             )
 
@@ -137,7 +137,7 @@ class TestValidateMapping:
         def case_insensitive_match(s1: str, s2: str) -> float:
             return 1.0 if s1.lower() == s2.lower() else 0.0
 
-        result = validate_mapping(
+        result = fuzzy_validate_mapping(
             {"USER_NAME": "John"},
             ["username"],
             similarity_algo=case_insensitive_match,
@@ -148,7 +148,7 @@ class TestValidateMapping:
     def test_suppress_conversion_errors(self):
         """Test error suppression."""
         # Should return empty dict with suppress_conversion_errors
-        result = validate_mapping(
+        result = fuzzy_validate_mapping(
             object(),
             ["key"],
             suppress_conversion_errors=True,

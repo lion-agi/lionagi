@@ -1,7 +1,7 @@
 import pytest
 
-from lionagi.libs.constants import UNDEFINED
-from lionagi.libs.parse import npop
+from lionagi.libs.nested.npop import npop
+from lionagi.utils import UNDEFINED
 
 
 @pytest.mark.parametrize(

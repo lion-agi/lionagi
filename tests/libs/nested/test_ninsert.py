@@ -1,6 +1,6 @@
 import pytest
 
-from lionagi.libs.parse import ninsert
+from lionagi.libs.nested.ninsert import ninsert
 
 
 @pytest.mark.parametrize(

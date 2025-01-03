@@ -4,11 +4,11 @@ from typing import Any
 
 import pytest
 
-from lionagi.libs.parse import validate_keys
+from lionagi.libs.validate.fuzzy_match_keys import fuzzy_match_keys
 
 
 class TestValidateKeys:
-    """Comprehensive tests for validate_keys function."""
+    """Comprehensive tests for fuzzy_match_keys function."""
 
     def test_basic_functionality(self):
         """Test basic functionality with default parameters."""
@@ -18,7 +18,7 @@ class TestValidateKeys:
         }
         expected = ["username", "email_address"]
 
-        result = validate_keys(test_dict, expected)
+        result = fuzzy_match_keys(test_dict, expected)
         # With default settings, original keys should be preserved
         assert "username" in result
         assert "email_address" in result
@@ -30,16 +30,16 @@ class TestValidateKeys:
             "email_address": "john@example.com",
         }
         expected = ["username", "email_address"]
-        result = validate_keys(exact_dict, expected)
+        result = fuzzy_match_keys(exact_dict, expected)
         assert result == exact_dict
 
     def test_empty_inputs(self):
         """Test empty input scenarios."""
         # Empty dictionary
-        assert validate_keys({}, []) == {}
+        assert fuzzy_match_keys({}, []) == {}
 
         # Empty expected keys
-        result = validate_keys({"a": 1}, [])
+        result = fuzzy_match_keys({"a": 1}, [])
         assert result == {"a": 1}
 
     def test_fuzzy_matching(self):
@@ -48,7 +48,7 @@ class TestValidateKeys:
         expected = ["username", "email_address"]
 
         # Test with fuzzy matching enabled and remove unmatched
-        result = validate_keys(
+        result = fuzzy_match_keys(
             test_dict,
             expected,
             fuzzy_match=True,
@@ -61,7 +61,9 @@ class TestValidateKeys:
         assert "emailAddress" not in result
 
         # Test with fuzzy matching disabled
-        result_no_fuzzy = validate_keys(test_dict, expected, fuzzy_match=False)
+        result_no_fuzzy = fuzzy_match_keys(
+            test_dict, expected, fuzzy_match=False
+        )
         assert "user_name" in result_no_fuzzy
         assert "emailAddress" in result_no_fuzzy
 
@@ -72,23 +74,23 @@ class TestValidateKeys:
 
         # Test raise mode
         with pytest.raises(ValueError):
-            validate_keys(test_dict, expected, handle_unmatched="raise")
+            fuzzy_match_keys(test_dict, expected, handle_unmatched="raise")
 
         # Test remove mode
-        result_remove = validate_keys(
+        result_remove = fuzzy_match_keys(
             test_dict, expected, handle_unmatched="remove"
         )
         assert "extra" not in result_remove
 
         # Test fill mode
-        result_fill = validate_keys(
+        result_fill = fuzzy_match_keys(
             test_dict, expected, handle_unmatched="fill", fill_value="default"
         )
         assert "extra" in result_fill
         assert "username" in result_fill
 
         # Test force mode
-        result_force = validate_keys(
+        result_force = fuzzy_match_keys(
             test_dict, expected, handle_unmatched="force", fill_value="default"
         )
         assert "extra" not in result_force
@@ -100,9 +102,9 @@ class TestValidateKeys:
         expected = ["partial", "missing"]
 
         with pytest.raises(ValueError):
-            validate_keys(test_dict, expected, strict=True)
+            fuzzy_match_keys(test_dict, expected, strict=True)
 
-        result = validate_keys(test_dict, expected, strict=False)
+        result = fuzzy_match_keys(test_dict, expected, strict=False)
         assert "partial" in result
 
     def test_edge_cases_and_invalid_inputs(self):
@@ -112,19 +114,19 @@ class TestValidateKeys:
 
         # Invalid similarity threshold
         with pytest.raises(ValueError):
-            validate_keys(valid_dict, valid_keys, similarity_threshold=1.5)
+            fuzzy_match_keys(valid_dict, valid_keys, similarity_threshold=1.5)
 
         # None input dictionary
         with pytest.raises(TypeError):
-            validate_keys(None, valid_keys)
+            fuzzy_match_keys(None, valid_keys)
 
         # None keys
         with pytest.raises(TypeError):
-            validate_keys(valid_dict, None)
+            fuzzy_match_keys(valid_dict, None)
 
         # Invalid similarity algorithm
         with pytest.raises(ValueError):
-            validate_keys(valid_dict, valid_keys, similarity_algo="invalid")
+            fuzzy_match_keys(valid_dict, valid_keys, similarity_algo="invalid")
 
     def test_fill_value_and_mapping(self):
         """Test fill value and mapping functionality."""
@@ -132,7 +134,7 @@ class TestValidateKeys:
         expected = ["existing", "missing1", "missing2"]
         fill_mapping = {"missing1": "custom1", "missing2": "custom2"}
 
-        result = validate_keys(
+        result = fuzzy_match_keys(
             test_dict,
             expected,
             handle_unmatched="fill",
@@ -150,7 +152,7 @@ class TestValidateKeys:
         test_dict = {"User_Name": "John"}
         expected = ["user_name"]
 
-        result = validate_keys(
+        result = fuzzy_match_keys(
             test_dict,
             expected,
             similarity_algo=custom_similarity,

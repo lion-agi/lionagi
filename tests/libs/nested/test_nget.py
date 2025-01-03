@@ -1,6 +1,6 @@
 import pytest
 
-from lionagi.libs.parse import nget
+from lionagi.libs.nested.nget import nget
 
 
 @pytest.mark.parametrize(

@@ -4,14 +4,14 @@ import json
 
 import pytest
 
-from lionagi.libs.parse.json.as_readable import as_readable_json
+from lionagi.libs.schema.as_readable import as_readable
 
 
 # Updated test for list handling
-def test_as_readable_json_list():
+def test_as_readable_list():
     """Test list conversion."""
     data = [{"a": 1}, {"b": 2}]
-    result = as_readable_json(data)
+    result = as_readable(data)
 
     # Each item should be on a new line with blank line between
     items = result.strip().split("\n\n")
@@ -24,37 +24,37 @@ def test_as_readable_json_list():
 
 
 # Updated empty input test
-def test_as_readable_json_empty():
+def test_as_readable_empty():
     """Test empty input handling."""
     # Empty dict returns empty object
-    assert as_readable_json({}) == "{}"
+    assert as_readable({}) == "{}"
     # Empty list returns empty string
-    assert as_readable_json([]) == ""
+    assert as_readable([]) == ""
     # None returns empty object
-    assert as_readable_json(None) == "{}"
+    assert as_readable(None) == "{}"
 
 
 # Updated Unicode handling test
-def test_as_readable_json_kwargs():
+def test_as_readable_kwargs():
     """Test handling of additional kwargs."""
     data = {"name": "测试"}  # Chinese characters
 
     # Test ASCII encoding
-    result = as_readable_json(data, ensure_ascii=True)
+    result = as_readable(data, ensure_ascii=True)
     assert "\\u" in result  # Should contain Unicode escapes
 
     # Test native character output
-    result = as_readable_json(data, ensure_ascii=False)
+    result = as_readable(data, ensure_ascii=False)
     assert "测试" in result  # Should contain actual characters
 
 
 # Additional test for custom kwarg handling
-def test_as_readable_json_custom_kwargs():
+def test_as_readable_custom_kwargs():
     """Test passing custom kwargs to JSON encoder."""
     data = {"name": "test"}
 
     # Test custom indentation
-    result = as_readable_json(data, indent=2)
+    result = as_readable(data, indent=2)
     assert "  " in result  # Should use 2-space indent
 
 

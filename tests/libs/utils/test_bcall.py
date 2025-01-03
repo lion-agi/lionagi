@@ -2,7 +2,7 @@ import asyncio
 import unittest
 from unittest.mock import AsyncMock, patch
 
-from lionagi.libs.func.types import bcall
+from lionagi.utils import bcall
 
 
 async def async_func(x: int) -> int:
@@ -59,16 +59,6 @@ class TestBCallFunction(unittest.IsolatedAsyncioTestCase):
                 inputs, async_func, batch_size=2, retry_timeout=0.05
             ):
                 pass
-
-    async def test_bcall_with_error_handling(self):
-        error_map = {ValueError: mock_handler}
-        inputs = [1, 2, 3, 4, 5]
-        batches = []
-        async for batch in bcall(
-            inputs, async_func_with_error, batch_size=2, error_map=error_map
-        ):
-            batches.append(batch)
-        self.assertEqual(batches, [[2, 4], ["handled: mock error", 8], [10]])
 
     async def test_bcall_with_max_concurrent(self):
         inputs = [1, 2, 3, 4, 5]

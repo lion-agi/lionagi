@@ -1,6 +1,6 @@
 import pytest
 
-from lionagi.libs.parse import nfilter
+from lionagi.libs.nested.nfilter import nfilter
 
 
 @pytest.mark.parametrize(

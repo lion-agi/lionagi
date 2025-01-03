@@ -5,7 +5,7 @@ import pytest
 from pydantic import BaseModel
 
 # Import the functions to be tested
-from lionagi.libs.parse import to_dict
+from lionagi.utils import to_dict
 
 
 # Mock classes and functions for testing
