@@ -10,6 +10,27 @@ from .endpoints.rate_limited_processor import RateLimitedAPIExecutor
 
 
 class iModel:
+    """Manages API calls for a specific provider with optional rate-limiting.
+
+    The iModel class encapsulates a specific endpoint configuration (e.g.,
+    chat or completion endpoints). It determines and sets the necessary
+    API key based on the provider and uses a RateLimitedAPIExecutor to
+    handle queuing and throttling requests.
+
+    Attributes:
+        endpoint (EndPoint):
+            The chosen endpoint object (constructed via `match_endpoint` if
+            none is provided).
+        should_invoke_endpoint (bool):
+            If True, the endpoint is called for real. If False, calls might
+            be mocked or cached.
+        kwargs (dict):
+            Any additional keyword arguments passed to initialize and
+            configure the iModel (e.g., `model`, `api_key`).
+        executor (RateLimitedAPIExecutor):
+            The rate-limited executor that queues and runs API calls in a
+            controlled fashion.
+    """
 
     def __init__(
         self,
@@ -25,7 +46,42 @@ class iModel:
         limit_tokens: int = None,
         invoke_with_endpoint: bool = True,
         **kwargs,
-    ):
+    ) -> None:
+        """Initializes the iModel instance.
+
+        Args:
+            provider (str, optional):
+                Name of the provider (e.g., 'openai', 'anthropic').
+            base_url (str, optional):
+                Base URL for the API (if a custom endpoint is needed).
+            endpoint (str | EndPoint, optional):
+                Either a string representing the endpoint type (e.g., 'chat')
+                or an `EndPoint` instance.
+            endpoint_params (list[str] | None, optional):
+                Additional parameters for the endpoint (e.g., 'v1' or other).
+            api_key (str, optional):
+                An explicit API key. If not given, tries to load one from
+                environment variables based on the provider.
+            queue_capacity (int, optional):
+                Maximum number of requests allowed in the queue before
+                executing them.
+            capacity_refresh_time (float, optional):
+                Time interval (in seconds) after which the queue capacity
+                is refreshed.
+            interval (float | None, optional):
+                Interval in seconds to check or process requests in
+                the queue. If None, defaults to capacity_refresh_time.
+            limit_requests (int | None, optional):
+                Maximum number of requests allowed per cycle, if any.
+            limit_tokens (int | None, optional):
+                Maximum number of tokens allowed per cycle, if any.
+            invoke_with_endpoint (bool, optional):
+                If True, the endpoint is actually invoked. If False,
+                calls might be mocked or cached.
+            **kwargs:
+                Additional keyword arguments, such as `model`, or any other
+                provider-specific fields.
+        """
         if api_key is None:
             match provider:
                 case "openai":
@@ -72,6 +128,18 @@ class iModel:
         )
 
     def create_api_calling(self, **kwargs) -> APICalling:
+        """Constructs an `APICalling` object from endpoint-specific payload.
+
+        Args:
+            **kwargs:
+                Additional arguments used to generate the payload (merged
+                with self.kwargs).
+
+        Returns:
+            APICalling:
+                An `APICalling` instance with the constructed payload,
+                headers, and the selected endpoint.
+        """
         kwargs.update(self.kwargs)
         payload = self.endpoint.create_payload(**kwargs)
         return APICalling(
@@ -82,11 +150,32 @@ class iModel:
             should_invoke_endpoint=self.should_invoke_endpoint,
         )
 
-    async def process_chunk(self, chunk):
+    async def process_chunk(self, chunk) -> None:
+        """Processes a chunk of streaming data.
+
+        Override this method in subclasses if you need custom handling
+        of streaming responses from the API.
+
+        Args:
+            chunk:
+                A portion of the streamed data returned by the API.
+        """
         pass
 
     async def stream(self, **kwargs) -> APICalling | None:
+        """Performs a streaming API call with the given arguments.
+
+        Args:
+            **kwargs:
+                Arguments for the request, merged with self.kwargs.
+
+        Returns:
+            `APICalling` | None:
+                An APICalling instance upon success, or None if something
+                goes wrong.
+        """
         try:
+            kwargs["stream"] = True
             api_call = self.create_api_calling(**kwargs)
             async for i in api_call.stream():
                 await self.process_chunk(i)
@@ -95,7 +184,23 @@ class iModel:
             raise ValueError(f"Failed to stream API call: {e}")
 
     async def invoke(self, **kwargs) -> APICalling | None:
+        """Invokes a rate-limited API call with the given arguments.
+
+        Args:
+            **kwargs:
+                Arguments for the request, merged with self.kwargs.
+
+        Returns:
+            APICalling | None:
+                The `APICalling` object if successfully invoked and
+                completed; otherwise None.
+
+        Raises:
+            ValueError:
+                If the call fails or if an error occurs during invocation.
+        """
         try:
+            kwargs.pop("stream", None)
             api_call = self.create_api_calling(**kwargs)
             if (
                 self.executor.processor is None
@@ -111,11 +216,23 @@ class iModel:
             raise ValueError(f"Failed to invoke API call: {e}")
 
     @property
-    def allowed_roles(self):
+    def allowed_roles(self) -> set[str]:
+        """list[str]: Roles that are permissible for this endpoint.
+
+        Returns:
+            If the endpoint has an `allowed_roles` attribute, returns that;
+            otherwise, defaults to `{"system", "user", "assistant"}`.
+        """
         if hasattr(self.endpoint, "allowed_roles"):
             return self.endpoint.allowed_roles
-        return ["system", "user", "assistant"]
+        return {"system", "user", "assistant"}
 
     @property
-    def sequential_exchange(self):
+    def sequential_exchange(self) -> bool:
+        """bool: Indicates whether requests must occur in a strict sequence.
+
+        Returns:
+            True if the endpoint requires sequential handling of
+            messages; False otherwise.
+        """
         return self.endpoint.sequential_exchange
