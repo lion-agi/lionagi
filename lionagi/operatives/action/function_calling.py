@@ -14,9 +14,21 @@ from .tool import Tool
 
 
 class FunctionCalling(Event):
+    """Handles asynchronous function execution with pre/post processing.
 
-    func_tool: Tool = Field(exclude=True)
-    arguments: dict[str, Any]
+    This class manages function calls with optional preprocessing and
+    postprocessing, handling both synchronous and asynchronous functions.
+    """
+
+    func_tool: Tool = Field(
+        ...,
+        description="Tool instance containing the function to be called",
+        exclude=True,
+    )
+
+    arguments: dict[str, Any] = Field(
+        ..., description="Dictionary of arguments to pass to the function"
+    )
 
     @model_validator(mode="after")
     def _validate_strict_tool(self) -> Self:
@@ -39,6 +51,11 @@ class FunctionCalling(Event):
         return self.func_tool.function
 
     async def invoke(self) -> None:
+        """Execute the function call with pre/post processing.
+
+        Handles both synchronous and asynchronous functions, including optional
+        preprocessing of arguments and postprocessing of results.
+        """
         start = asyncio.get_event_loop().time()
 
         async def _preprocess(kwargs):
@@ -59,7 +76,12 @@ class FunctionCalling(Event):
                 arg, **self.func_tool.postprocessor_kwargs
             )
 
-        async def _inner():
+        async def _inner() -> Any:
+            """Execute the function with pre/post processing.
+
+            Returns:
+                Function execution result after processing.
+            """
             response = None
             if self.func_tool.preprocessor:
                 self.arguments = await _preprocess(self.arguments)
@@ -102,7 +124,12 @@ class FunctionCalling(Event):
             f"arguments={self.arguments})"
         )
 
-    def to_dict(self) -> dict:
+    def to_dict(self) -> dict[str, Any]:
+        """Convert instance to dictionary.
+
+        Returns:
+            dict[str, Any]: Dictionary representation of the instance.
+        """
         dict_ = super().to_dict()
         dict_["function"] = self.function
         dict_["arguments"] = self.arguments

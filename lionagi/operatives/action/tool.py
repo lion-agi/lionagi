@@ -21,21 +21,54 @@ __all__ = (
 
 
 class Tool(Element):
+    """A class for handling function calls with schema validation and processing.
 
-    func_callable: Callable[..., Any] = Field(exclude=True)
-    tool_schema: dict[str, Any] | None = None
-    preprocessor: Callable[[Any], Any] | None = Field(None, exclude=True)
+    This class wraps callable objects with optional pre and post processing,
+    schema validation, and provides utility methods for function inspection.
+    """
+
+    func_callable: Callable[..., Any] = Field(
+        ...,  # ... indicates required field
+        description="The callable function to be wrapped by the tool",
+        exclude=True,
+    )
+
+    tool_schema: dict[str, Any] | None = Field(
+        default=None,
+        description="Schema describing the function's parameters and structure",
+    )
+
+    preprocessor: Callable[[Any], Any] | None = Field(
+        default=None,
+        description="Optional function for preprocessing inputs before execution",
+        exclude=True,
+    )
+
     preprocessor_kwargs: dict[str, Any] = Field(
-        default_factory=dict, exclude=True
+        default_factory=dict,
+        description="Keyword arguments passed to the preprocessor function",
+        exclude=True,
     )
-    postprocessor: Callable[[Any], Any] | None = Field(None, exclude=True)
+
+    postprocessor: Callable[[Any], Any] | None = Field(
+        default=None,
+        description="Optional function for postprocessing outputs after execution",
+        exclude=True,
+    )
+
     postprocessor_kwargs: dict[str, Any] = Field(
-        default_factory=dict, exclude=True
+        default_factory=dict,
+        description="Keyword arguments passed to the postprocessor function",
+        exclude=True,
     )
-    strict_func_call: bool = False
+
+    strict_func_call: bool = Field(
+        default=False,
+        description="Whether to enforce strict validation of function parameters",
+    )
 
     @field_validator("func_callable", mode="before")
-    def validate_func_callable(cls, value: Any) -> Callable[..., Any]:
+    def _validate_func_callable(cls, value: Any) -> Callable[..., Any]:
         if not callable(value):
             raise ValueError("Function must be callable.")
         if not hasattr(value, "__name__"):
@@ -43,7 +76,7 @@ class Tool(Element):
         return value
 
     @model_validator(mode="after")
-    def validate_tool_schema(self) -> Self:
+    def _validate_tool_schema(self) -> Self:
         if self.tool_schema is None:
             self.tool_schema = function_to_schema(self.func_callable)
         return self
@@ -59,10 +92,20 @@ class Tool(Element):
 
     @property
     def required_fields(self) -> set[str]:
-        return set(self.tool_schema["function"]["required_fields"])
+        """Get the required fields from the schema.
+
+        Returns:
+            set[str]: Set of required field names.
+        """
+        return set(self.tool_schema["function"]["parameters"]["required"])
 
     @property
     def minimum_acceptable_fields(self) -> set[str]:
+        """Get the minimum required fields from function signature.
+
+        Returns:
+            set[str]: Set of minimum required field names.
+        """
         try:
             a = {
                 k
@@ -84,6 +127,11 @@ class Tool(Element):
         raise NotImplementedError("Tool.from_dict is not implemented.")
 
     def to_dict(self) -> dict[str, Any]:
+        """Convert Tool instance to dictionary.
+
+        Returns:
+            dict[str, Any]: Dictionary representation of the Tool.
+        """
         dict_ = super().to_dict()
         dict_["function"] = self.function
         return dict_

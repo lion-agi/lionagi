@@ -8,7 +8,7 @@ from typing import Any
 from pydantic import BaseModel
 
 from lionagi.libs.validate.validate_boolean import validate_boolean
-from lionagi.utils import to_dict, to_json
+from lionagi.utils import to_dict, to_json, to_list
 
 from ..models.field_model import FieldModel
 
@@ -55,12 +55,13 @@ def parse_action_request(content: str | dict) -> list[dict]:
 
     elif isinstance(content, str):
         json_blocks = to_json(content, fuzzy_parse=True)
-        print(json_blocks)
         if not json_blocks:
             pattern2 = r"```python\s*(.*?)\s*```"
             _d = re.findall(pattern2, content, re.DOTALL)
-            json_blocks = [to_dict(match, fuzzy_parse=True) for match in _d]
-            json_blocks = [i for i in json_blocks if i]
+            json_blocks = [to_json(match, fuzzy_parse=True) for match in _d]
+            json_blocks = to_list(json_blocks, dropna=True)
+
+        print(json_blocks)
 
     elif content and isinstance(content, dict):
         json_blocks = [content]
@@ -71,12 +72,11 @@ def parse_action_request(content: str | dict) -> list[dict]:
     out = []
 
     for i in json_blocks:
-        print(i)
         j = {}
         if isinstance(i, dict):
             if "function" in i and isinstance(i["function"], dict):
                 if "name" in i["function"]:
-                    i = i["function"]
+                    i["function"] = i["function"]["name"]
             for k, v in i.items():
                 k = (
                     k.replace("action_", "")
@@ -85,7 +85,7 @@ def parse_action_request(content: str | dict) -> list[dict]:
                 )
                 if k in ["name", "function", "recipient"]:
                     j["function"] = v
-                elif k in ["parameter", "argument", "arg"]:
+                elif k in ["parameter", "argument", "arg", "param"]:
                     j["arguments"] = to_dict(
                         v, str_type="json", fuzzy_parse=True, suppress=True
                     )

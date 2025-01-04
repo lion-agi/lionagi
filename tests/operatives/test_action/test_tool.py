@@ -112,3 +112,84 @@ def test_tool_tool_schemageneration():
     assert (
         "y" in params["required"]
     )  # Even parameters with defaults are marked as required
+
+
+def test_tool_required_fields():
+    """Test the required_fields property of Tool."""
+
+    def func_without_defaults(a, b, c):
+        return a + b + c  # type: ignore
+
+    tool = Tool(func_callable=func_without_defaults)
+    # required_fields as derived from the tool schema. For OpenAI, typically all function parameters are "required".
+    # Validate that the function schema's `required` matches the property.
+    assert tool.required_fields == {
+        "a",
+        "b",
+        "c",
+    }, f"Expected all params 'a', 'b', 'c' to be required, got {tool.required_fields}"
+
+
+def test_tool_minimum_acceptable_fields():
+    """Test the minimum_acceptable_fields property of Tool."""
+
+    def func_mixed_args(x, y="default", *args, **kwargs):
+        return x + 1  # type: ignore
+
+    tool = Tool(func_callable=func_mixed_args)
+    # Only "x" has no default in the signature (others are either defaulted or *args/**kwargs).
+    assert tool.minimum_acceptable_fields == {
+        "x"
+    }, f"Expected only 'x' to be the minimum required, got {tool.minimum_acceptable_fields}"
+
+
+def test_tool_strict_func_call():
+    """Test that the Tool class can set and retrieve the strict_func_call flag."""
+
+    def sample_func(a: int) -> int:
+        return a + 1
+
+    tool = Tool(func_callable=sample_func, strict_func_call=True)
+    assert (
+        tool.strict_func_call is True
+    ), "strict_func_call should be set to True."
+
+    # Change strict_func_call
+    tool.strict_func_call = False
+    assert (
+        tool.strict_func_call is False
+    ), "strict_func_call should now be False."
+
+
+def test_tool_to_dict():
+    """Test the to_dict() method of Tool."""
+
+    def sample_func(a: int, b: int = 0) -> int:
+        return a + b
+
+    tool = Tool(func_callable=sample_func)
+    serialized = tool.to_dict()
+
+    # Basic checks on the serialized dict
+    assert (
+        "function" in serialized
+    ), "Serialized dict should contain 'function' key."
+    assert (
+        serialized["function"] == "sample_func"
+    ), f"Expected function name 'sample_func', got {serialized['function']}"
+    assert (
+        "id" in serialized
+    ), "The base Element fields (id, etc.) should be in the dict."
+    assert (
+        "created_at" in serialized
+    ), "The base Element fields (created_at, etc.) should be in the dict."
+    # Make sure excluded fields are not serialized
+    assert (
+        "func_callable" not in serialized
+    ), "func_callable should be excluded from the dict."
+
+
+def test_tool_from_dict_not_implemented():
+    """Test that Tool.from_dict() raises NotImplementedError."""
+    with pytest.raises(NotImplementedError):
+        Tool.from_dict({"fake": "data"})

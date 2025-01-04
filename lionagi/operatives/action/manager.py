@@ -3,7 +3,6 @@
 # SPDX-License-Identifier: Apache-2.0
 
 
-from collections.abc import Callable
 from typing import Any
 
 from lionagi.protocols.types import (
@@ -216,16 +215,14 @@ class ActionManager(Manager):
     ) -> dict[str, Any] | list[dict[str, Any]]:
         if isinstance(tool, dict):
             return tool
-        if isinstance(tool, Callable):
+        if callable(tool):
             name = tool.__name__
             if name not in self.registry:
                 if auto_register:
                     self.register_tool(tool, update=update)
                 else:
                     raise ValueError(f"Tool {name} is not registered.")
-
-            else:
-                return self.registry[name].tool_schema
+            return self.registry[name].tool_schema
 
         elif isinstance(tool, Tool) or isinstance(tool, str):
             name = tool.function if isinstance(tool, Tool) else tool
@@ -233,7 +230,10 @@ class ActionManager(Manager):
                 return self.registry[name].tool_schema
             raise ValueError(f"Tool {name} is not registered.")
         elif isinstance(tool, list):
-            return [self._get_tool_schema(t) for t in tool]
+            return [
+                self._get_tool_schema(t, auto_register=auto_register)
+                for t in tool
+            ]
         raise TypeError(f"Unsupported type {type(tool)}")
 
 
