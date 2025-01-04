@@ -72,12 +72,12 @@ def test_instruction_with_request_model():
     """Test Instruction with request model"""
     instruction = Instruction.create(
         instruction="Test",
-        request_model=RequestModel,
+        response_format=RequestModel,
         sender="user",
         recipient="assistant",
     )
 
-    assert instruction.request_model == RequestModel
+    assert instruction.response_format == RequestModel
     assert instruction.request_fields
     assert "name" in instruction.request_fields
     assert "age" in instruction.request_fields
@@ -195,7 +195,7 @@ def test_instruction_validation():
     with pytest.raises(ValueError):
         Instruction.create(
             instruction="Test",
-            request_model=RequestModel,
+            response_format=RequestModel,
             request_fields={"field": "type"},
             sender="user",
             recipient="assistant",

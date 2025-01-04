@@ -234,12 +234,12 @@ def test_message_manager_with_request_model(message_manager):
     """Test message manager with request model"""
     instruction = message_manager.add_message(
         instruction="Test",
-        request_model=RequestModel,
+        response_format=RequestModel,
         sender="user",
         recipient="assistant",
     )
 
-    assert instruction.request_model == RequestModel
+    assert instruction.response_format == RequestModel
     assert "name" in instruction.request_fields
     assert "age" in instruction.request_fields
 

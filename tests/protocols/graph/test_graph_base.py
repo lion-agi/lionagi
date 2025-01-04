@@ -17,6 +17,7 @@ class TestNode(Node):
     model_config = ConfigDict(
         extra="allow",
         arbitrary_types_allowed=True,
+        populate_by_name=True,
     )
 
     def add_relation(self, edge, direction: str) -> None:

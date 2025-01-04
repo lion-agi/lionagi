@@ -23,8 +23,7 @@ class WeightedEdge(Edge):
     """Test weighted edge type"""
 
     def __init__(self, head, tail, weight: float):
-        super().__init__(head=head, tail=tail)
-        self.update_property("weight", weight)
+        super().__init__(head=head, tail=tail, weight=weight)
 
     @property
     def weight(self) -> float:
