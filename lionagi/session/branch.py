@@ -10,6 +10,8 @@ from jinja2 import Template
 from pydantic import BaseModel, Field, JsonValue, PrivateAttr
 
 from lionagi.libs.validate.fuzzy_validate_mapping import fuzzy_validate_mapping
+from lionagi.operatives.models.field_model import FieldModel
+from lionagi.operatives.models.model_params import ModelParams
 from lionagi.operatives.types import (
     ActionManager,
     ActionResponseModel,
@@ -49,7 +51,12 @@ from lionagi.protocols.types import (
 )
 from lionagi.service import iModel, iModelManager
 from lionagi.settings import Settings
-from lionagi.utils import UNDEFINED, alcall, breakdown_pydantic_annotation
+from lionagi.utils import (
+    UNDEFINED,
+    alcall,
+    breakdown_pydantic_annotation,
+    copy,
+)
 
 __all__ = ("Branch",)
 
@@ -256,8 +263,11 @@ class Branch(Element, Communicatable, Relational):
 
     async def operate(
         self,
-        instruct: Instruct,
         *,
+        instruct: Instruct = None,
+        instruction: Instruction | JsonValue = None,
+        guidance: JsonValue = None,
+        context: JsonValue = None,
         sender: SenderRecipient = None,
         recipient: SenderRecipient = None,
         progression: Progression = None,
@@ -274,9 +284,19 @@ class Branch(Element, Communicatable, Relational):
         response_format: type[
             BaseModel
         ] = None,  # alias of operative.request_type
-        fuzzy_match_kwargs: dict = None,
-        operative_kwargs: dict = None,
         return_operative: bool = False,
+        actions: bool = False,
+        reason: bool = False,
+        action_kwargs: dict = None,
+        field_models: list[FieldModel] = None,
+        exclude_fields: list | dict | None = None,
+        request_params: ModelParams = None,
+        request_param_kwargs: dict = None,
+        response_params: ModelParams = None,
+        response_param_kwargs: dict = None,
+        handle_validation: Literal[
+            "raise", "return_value", "return_none"
+        ] = "return_value",
         **kwargs,
     ) -> list | BaseModel | None | dict | str:
         """Orchestrates an 'operate' flow with optional tool invocation.
@@ -330,15 +350,31 @@ class Branch(Element, Communicatable, Relational):
         chat_model = chat_model or imodel or self.chat_model
         parse_model = parse_model or chat_model
 
-        if operative is None:
-            operative_kwargs = operative_kwargs or {}
-            if instruct.reason or instruct.actions:
-                operative_kwargs["reason"] = instruct.reason
-                operative_kwargs["actions"] = instruct.actions
+        if isinstance(instruct, dict):
+            instruct = Instruct(**instruct)
 
-            operative_kwargs["base_type"] = response_format
-            operative = Step.request_operative(**operative_kwargs)
+        instruct = instruct or Instruct(
+            instruction=instruction,
+            guidance=guidance,
+            context=context,
+        )
 
+        if reason:
+            instruct.reason = True
+        if actions:
+            instruct.actions = True
+
+        operative: Operative = Step.request_operative(
+            request_params=request_params,
+            reason=instruct.reason,
+            actions=instruct.actions,
+            exclude_fields=exclude_fields,
+            base_type=response_format,
+            field_models=field_models,
+            **(request_param_kwargs or {}),
+        )
+        if instruct.actions:
+            tools = tools or True
         if invoke_actions and tools:
             tool_schemas = self.acts.get_tool_schema(tools)
 
@@ -373,31 +409,40 @@ class Branch(Element, Communicatable, Relational):
                 request_type=operative.request_type,
                 max_retries=operative.max_retries,
                 handle_validation="return_value",
-                **(fuzzy_match_kwargs or {}),
             )
-            response_model = operative.update_response_model(response_model)
+            operative.response_model = operative.update_response_model(
+                response_model
+            )
+
+        if not isinstance(response_model, BaseModel):
+            match handle_validation:
+                case "return_value":
+                    return response_model
+                case "return_none":
+                    return None
+                case "raise":
+                    raise ValueError(
+                        "Failed to parse response into request format"
+                    )
 
         if not invoke_actions:
-            return operative
+            return operative if return_operative else operative.response_model
 
         if (
             getattr(response_model, "action_required", None) is True
             and getattr(response_model, "action_requests", None) is not None
         ):
-            action_response_models = await alcall(
+            action_response_models = await self.invoke_action(
                 response_model.action_requests,
-                self.invoke_action,
+                **(action_kwargs or {}),
             )
-            operative.update_response_model(
-                data={
-                    "action_responses": [
-                        i for i in action_response_models if i is not None
-                    ]
-                },
+            operative = Step.respond_operative(
+                response_params=response_params,
+                operative=operative,
+                additional_data={"action_responses": action_response_models},
+                **(response_param_kwargs or {}),
             )
-        if return_operative:
-            return operative
-        return operative.response_model
+        return operative if return_operative else operative.response_model
 
     async def parse(
         self,
@@ -638,6 +683,36 @@ class Branch(Element, Communicatable, Relational):
 
     async def invoke_action(
         self,
+        action_request: list | ActionRequest | BaseModel | dict,
+        /,
+        suppress_errors: bool = False,
+        sanitize_input: bool = False,
+        unique_input: bool = False,
+        num_retries: int = 0,
+        initial_delay: float = 0,
+        retry_delay: float = 0,
+        backoff_factor: float = 1,
+        retry_default: Any = UNDEFINED,
+        retry_timeout: float | None = None,
+        retry_timing: bool = False,
+        max_concurrent: int | None = None,
+        throttle_period: float | None = None,
+        flatten: bool = False,
+        dropna: bool = False,
+        unique_output: bool = False,
+        flatten_tuple_set: bool = False,
+    ):
+        params = locals()
+        params.pop("self")
+        params.pop("action_request")
+        return await alcall(
+            action_request,
+            self._invoke_action,
+            **params,
+        )
+
+    async def _invoke_action(
+        self,
         action_request: ActionRequest | BaseModel | dict,
         suppress_errors: bool = False,
     ) -> ActionResponse:
@@ -688,7 +763,7 @@ class Branch(Element, Communicatable, Relational):
                 return ActionResponseModel(
                     function=action_request.function,
                     arguments=action_request.arguments,
-                    output=func_call,
+                    output=func_call.response,
                 )
             if isinstance(func_call, Log):
                 self._log_manager.log(func_call)
@@ -782,10 +857,27 @@ class Branch(Element, Communicatable, Relational):
             if isinstance(i, ActionResponse):
                 _action_responses.add(i)
             if isinstance(i, AssistantResponse):
-                _to_use.append(i.model_copy())
+                j = AssistantResponse(
+                    role=i.role,
+                    content=copy(i.content),
+                    sender=i.sender,
+                    recipient=i.recipient,
+                    template=i.template,
+                )
+                _to_use.append(j)
             if isinstance(i, Instruction):
+                j = Instruction(
+                    role=i.role,
+                    content=copy(i.content),
+                    sender=i.sender,
+                    recipient=i.recipient,
+                    template=i.template,
+                )
+                j.tool_schemas = None
+                j.respond_schema_info = None
+                j.request_response_format = None
+
                 if _action_responses:
-                    j = i.model_copy()
                     d_ = [k.content for k in _action_responses]
                     for z in d_:
                         if z not in j.context:
@@ -794,7 +886,7 @@ class Branch(Element, Communicatable, Relational):
                     _to_use.append(j)
                     _action_responses = set()
                 else:
-                    _to_use.append(i)
+                    _to_use.append(j)
 
         messages = _to_use
         if _action_responses:
@@ -821,7 +913,7 @@ class Branch(Element, Communicatable, Relational):
                         _msgs.append(i)
             messages = _msgs
 
-        if self.msgs.system:
+        if self.msgs.system and imodel.sequential_exchange:
             messages = [msg for msg in messages if msg.role != "system"]
             first_instruction = None
 
