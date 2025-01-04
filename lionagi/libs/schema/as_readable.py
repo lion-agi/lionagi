@@ -22,7 +22,7 @@ def as_readable_json(input_: Any, /, **kwargs) -> str:
         "use_model_dump": True,
         "fuzzy_parse": True,
         "recursive": True,
-        "recursive_python_only": True,
+        "recursive_python_only": False,
         "max_recursive_depth": 5,
     }
     to_dict_kwargs.update(kwargs)
@@ -42,7 +42,7 @@ def as_readable_json(input_: Any, /, **kwargs) -> str:
                 items.append(
                     json.dumps(
                         dict_,
-                        indent=4,
+                        indent=2,
                         ensure_ascii=False,
                         default=lambda o: to_dict(o),
                     )
@@ -54,7 +54,7 @@ def as_readable_json(input_: Any, /, **kwargs) -> str:
 
         # Extract json.dumps kwargs from input kwargs
         json_kwargs = {
-            "indent": 4,
+            "indent": 2,
             "ensure_ascii": kwargs.get("ensure_ascii", False),
             "default": lambda o: to_dict(o),
         }
