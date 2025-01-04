@@ -117,6 +117,6 @@ class TestFieldModels:
     def test_reason_field(self):
         """Test REASON_FIELD configuration."""
         assert REASON_FIELD.name == "reason"
-        assert REASON_FIELD.annotation == Reason
+        assert REASON_FIELD.annotation == Reason | None
         assert REASON_FIELD.default is UNDEFINED
         assert REASON_FIELD.title == "Reason"
