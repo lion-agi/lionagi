@@ -1,7 +1,11 @@
+# Copyright (c) 2023 - 2024, HaiyangLi <quantocean.li at gmail dot com>
+#
+# SPDX-License-Identifier: Apache-2.0
+
 from pydantic import model_validator
 
+from lionagi.operations.strategies.params import HybridStrategyParams
 from lionagi.operatives.instruct.instruct import Instruct, InstructResponse
-from lionagi.operatives.strategies.params import HybridStrategyParams
 from lionagi.session.session import Branch, Session
 from lionagi.utils import alcall
 

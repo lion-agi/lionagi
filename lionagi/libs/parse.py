@@ -2,7 +2,6 @@
 #
 # SPDX-License-Identifier: Apache-2.0
 
-
 from lionagi.libs.schema.as_readable import as_readable
 from lionagi.libs.schema.extract_code_block import extract_code_block
 from lionagi.libs.schema.function_to_schema import function_to_schema

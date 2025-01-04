@@ -2,7 +2,6 @@
 #
 # SPDX-License-Identifier: Apache-2.0
 
-
 from collections.abc import Callable, Sequence
 from typing import Any, Literal
 

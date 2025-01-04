@@ -2,7 +2,6 @@
 #
 # SPDX-License-Identifier: Apache-2.0
 
-
 from pydantic import field_validator
 
 from .._concepts import Sendable

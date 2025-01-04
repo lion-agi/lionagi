@@ -12,7 +12,7 @@ from lionagi.operatives.instruct.instruct import (
     Instruct,
     InstructResponse,
 )
-from lionagi.protocols.generic._id import ID
+from lionagi.protocols.generic.element import ID
 from lionagi.session.branch import Branch
 from lionagi.session.session import Session
 from lionagi.utils import alcall, to_list

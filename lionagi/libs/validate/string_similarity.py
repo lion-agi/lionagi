@@ -2,9 +2,6 @@
 #
 # SPDX-License-Identifier: Apache-2.0
 
-
-"""String similarity calculation algorithms."""
-
 from collections.abc import Callable, Sequence
 from dataclasses import dataclass
 from difflib import SequenceMatcher

@@ -1,6 +1,9 @@
-from lionagi.core.session.branch import Branch
-from lionagi.core.session.session import Session
-from lionagi.protocols_.operatives.instruct import Instruct
+# Copyright (c) 2023 - 2024, HaiyangLi <quantocean.li at gmail dot com>
+#
+# SPDX-License-Identifier: Apache-2.0
+
+from lionagi.operatives.types import Instruct
+from lionagi.session.session import Branch, Session
 
 
 def prepare_session(

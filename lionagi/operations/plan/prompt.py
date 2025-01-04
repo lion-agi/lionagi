@@ -1,3 +1,7 @@
+# Copyright (c) 2023 - 2024, HaiyangLi <quantocean.li at gmail dot com>
+#
+# SPDX-License-Identifier: Apache-2.0
+
 PLAN_PROMPT = """
 Develop a high-level plan containing {num_steps} distinct steps. Each step must:
 1. Represent a clear milestone or phase.
