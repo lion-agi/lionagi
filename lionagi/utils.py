@@ -1417,7 +1417,7 @@ def to_dict(
 
     try:
         if recursive:
-            return recursive_to_dict(
+            input_ = recursive_to_dict(
                 input_,
                 use_model_dump=use_model_dump,
                 fuzzy_parse=fuzzy_parse,

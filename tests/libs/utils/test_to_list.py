@@ -20,7 +20,7 @@ class CustomMapping:
 
 
 class TestModel(BaseModel):
-    field: str = "value"
+    field_: str = "value"
 
 
 @pytest.mark.parametrize(
