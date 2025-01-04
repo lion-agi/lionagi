@@ -244,20 +244,6 @@ class Element(BaseModel, Observable):
         """
         return str(val)
 
-    @field_serializer("metadata")
-    def _serialize_metadata(self, val: dict) -> dict:
-        """Serializes metadata and adds 'lion_class' to the dictionary.
-
-        Args:
-            val (dict): The metadata dictionary.
-
-        Returns:
-            dict: The updated metadata with 'lion_class' attached.
-        """
-        dict_ = val.copy()
-        dict_["lion_class"] = self.class_name(full=True)
-        return dict_
-
     def __eq__(self, other: Any) -> bool:
         """Compares two Element instances by their ID.
 
@@ -308,6 +294,7 @@ class Element(BaseModel, Observable):
             dict: The dictionary representation of this Element.
         """
         dict_ = self.model_dump()
+        dict_["metadata"].update({"lion_class": self.class_name(full=True)})
         return {k: v for k, v in dict_.items() if v is not UNDEFINED}
 
     @classmethod

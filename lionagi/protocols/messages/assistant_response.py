@@ -119,11 +119,10 @@ class AssistantResponse(RoledMessage):
         params = {
             "content": content,
             "role": MessageRole.ASSISTANT,
+            "recipient": recipient or MessageRole.USER,
         }
         if sender:
             params["sender"] = sender
-        if recipient:
-            params["recipient"] = recipient
         if template:
             params["template"] = template
         if model_response:

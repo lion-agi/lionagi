@@ -4,11 +4,10 @@
 
 from typing import Any, Literal, override
 
-from pydantic import BaseModel, JsonValue
+from pydantic import BaseModel, JsonValue, field_serializer
 
 from lionagi.utils import UNDEFINED, breakdown_pydantic_annotation, copy
 
-from ..generic.log import Log
 from .base import MessageRole
 from .message import RoledMessage, SenderRecipient
 
@@ -88,22 +87,52 @@ def format_text_content(content: dict) -> str:
         return content["plain_content"]
 
     msg = "\n---\n # Task\n"
-    for k, v in content.items():
-        if k in [
-            "guidance",
-            "instruction",
-            "context",
-            "request_response_format",
-            "tool_schemas",
-        ]:
-            if k == "tool_schemas" and "tools" in v:
-                v = v["tools"]
+
+    for k in [
+        "guidance",
+        "instruction",
+        "context",
+        "tool_schemas",
+        "respond_schema_info",
+        "request_response_format",
+    ]:
+        if k in content:
+            v = content[k]
+
+            if k == "tool_schemas":
+                if "tools" in v:
+                    v = v["tools"]
+
+                if isinstance(v, list):
+                    z = []
+                    for idx, z_ in enumerate(v):
+                        if isinstance(z_, dict) and "function" in z_:
+                            z.append({f"Tool {idx+1}": z_["function"]})
+                    v = z
 
             if k == "request_response_format":
                 k = "response format"
-            msg += f"## - **{k}**\n{format_text_item(v)}\n\n"
 
-    msg += "\n\n---\n"
+            if v not in [None, [], {}, UNDEFINED]:
+                if isinstance(v, list):
+                    msg += f"## - **{k}**\n"
+                    for i in v:
+                        if (
+                            len(format_text_item(v).replace("\n", "").strip())
+                            > 0
+                        ):
+                            msg += format_text_item(i).strip()
+                    msg += "\n"
+                else:
+                    if len(format_text_item(v).replace("\n", "").strip()) > 0:
+                        msg += (
+                            f"## - **{k}**\n{format_text_item(v).strip()}\n\n"
+                        )
+
+    if not msg.endswith("\n\n"):
+        msg += "\n\n---\n"
+    else:
+        msg += "---\n"
     return msg
 
 
@@ -184,9 +213,7 @@ def prepare_instruction_content(
     if request_model:
         out_["request_model"] = request_model
         request_fields = breakdown_pydantic_annotation(request_model)
-        out_["context"].append(
-            {"respond_schema_info": request_model.model_json_schema()}
-        )
+        out_["respond_schema_info"] = request_model.model_json_schema()
 
     if request_fields:
         _fields = request_fields if isinstance(request_fields, dict) else {}
@@ -260,6 +287,10 @@ class Instruction(RoledMessage):
     @guidance.setter
     def guidance(self, guidance: str) -> None:
         """Set the guidance content of the instruction."""
+        if guidance is None:
+            self.content.pop("guidance", None)
+            return
+
         if not isinstance(guidance, str):
             guidance = str(guidance)
         self.content["guidance"] = guidance
@@ -275,6 +306,10 @@ class Instruction(RoledMessage):
     @instruction.setter
     def instruction(self, instruction: JsonValue) -> None:
         """Set the main instruction content."""
+        if instruction is None:
+            self.content.pop("instruction", None)
+            return
+
         self.content["instruction"] = instruction
 
     @property
@@ -285,6 +320,10 @@ class Instruction(RoledMessage):
     @context.setter
     def context(self, context: JsonValue) -> None:
         """Set the context of the instruction."""
+        if context is None:
+            self.content["context"] = []
+            return
+
         if not isinstance(context, list):
             context = [context]
         self.content["context"] = context
@@ -297,6 +336,10 @@ class Instruction(RoledMessage):
     @tool_schemas.setter
     def tool_schemas(self, tool_schemas: dict) -> None:
         """Set the schemas of the tools in the instruction."""
+        if not tool_schemas:
+            self.content.pop("tool_schemas", None)
+            return
+
         self.content["tool_schemas"] = tool_schemas
 
     @property
@@ -347,12 +390,12 @@ class Instruction(RoledMessage):
         )
 
     @property
-    def request_model(self) -> type[BaseModel] | None:
+    def response_format(self) -> type[BaseModel] | None:
         """Get the request model of the instruction."""
         return self.content.get("request_model", None)
 
-    @request_model.setter
-    def request_model(self, request_model: type[BaseModel]) -> None:
+    @response_format.setter
+    def response_format(self, request_model: type[BaseModel]) -> None:
         """
         Set the request model of the instruction.
 
@@ -368,6 +411,32 @@ class Instruction(RoledMessage):
             respond_schema_info=request_model.model_json_schema()
         )
         self.request_fields = breakdown_pydantic_annotation(request_model)
+
+    @property
+    def respond_schema_info(self) -> dict | None:
+        """Get the response schema information."""
+        return self.content.get("respond_schema_info", None)
+
+    @respond_schema_info.setter
+    def respond_schema_info(self, respond_schema_info: dict) -> None:
+        """Set the response schema information."""
+        if respond_schema_info is None:
+            self.content.pop("respond_schema_info", None)
+        else:
+            self.content["respond_schema_info"] = respond_schema_info
+
+    @property
+    def request_response_format(self) -> str | None:
+        """Get the request response format."""
+        return self.content.get("request_response_format", None)
+
+    @request_response_format.setter
+    def request_response_format(self, request_response_format: str) -> None:
+        """Set the request response format."""
+        if not request_response_format:
+            self.content.pop("request_response_format", None)
+        else:
+            self.content["request_response_format"] = request_response_format
 
     def extend_images(
         self,
@@ -468,7 +537,7 @@ class Instruction(RoledMessage):
             self.request_fields = request_fields
 
         if request_model:
-            self.request_model = request_model
+            self.response_format = request_model
 
         if images:
             self.images = images
@@ -504,20 +573,10 @@ class Instruction(RoledMessage):
                 image_detail=self.image_detail,
             )
 
-    @override
-    def to_log(self) -> Log:
-        """
-        Convert the message to a Log object.
+    @field_serializer("content")
+    def _serialize_content(self, values) -> dict:
+        """Serialize the content of the instruction."""
+        values.pop("request_model", None)
+        values.pop("request_fields", None)
 
-        Creates a Log instance containing the message content and additional
-        information as loginfo.
-
-        Returns:
-            Log: A Log object representing the message.
-        """
-        dict_ = self.to_dict()
-        content: dict = dict_.pop("content")
-        content.pop("request_model", None)
-        content.pop("request_fields", None)
-        _log = Log(content=content)
-        return _log
+        return values

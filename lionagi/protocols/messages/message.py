@@ -9,8 +9,6 @@ from typing import Any
 from jinja2 import Environment, FileSystemLoader, Template
 from pydantic import Field, field_serializer
 
-from lionagi._class_registry import get_class
-
 from .._concepts import Sendable
 from ..generic.element import Element, IDType
 from ..generic.log import Log
@@ -58,10 +56,10 @@ class RoledMessage(Node, Sendable):
 
     @field_serializer("sender", "recipient")
     def _serialize_sender_recipient(self, value: SenderRecipient) -> str:
-        if isinstance(value, str):
-            return value
         if isinstance(value, MessageRole | MessageFlag):
             return value.value
+        if isinstance(value, str):
+            return value
         if isinstance(value, Element):
             return str(value.id)
         if isinstance(value, IDType):
@@ -115,9 +113,7 @@ class RoledMessage(Node, Sendable):
     @classmethod
     def from_dict(cls, dict_: dict):
         try:
-            if "lion_class" in dict_:
-                cls = get_class(dict_.pop("lion_class"))
-                dict_["flag"] = MessageFlag.MESSAGE_LOAD
+            dict_["flag"] = MessageFlag.MESSAGE_LOAD
             return cls(**dict_)
         except Exception as e:
             raise ValueError(f"Invalid RoledMessage data: {e}")
@@ -163,7 +159,34 @@ class RoledMessage(Node, Sendable):
         Returns:
             str: The string value of the role
         """
+        if isinstance(value, MessageRole):
+            return value.value
         return str(value)
+
+    @field_serializer("metadata")
+    def _serialize_metadata(self, value: dict):
+        if "clone_from" in value:
+            origin_obj: RoledMessage = value.pop("clone_from")
+            origin_info = origin_obj.to_dict()
+            value["clone_from_info"] = {
+                "clone_from_info": {
+                    "original_id": origin_info["id"],
+                    "original_created_at": origin_info["created_at"],
+                    "original_sender": origin_info["sender"],
+                    "original_recipient": origin_info["recipient"],
+                    "original_lion_class": origin_info["metadata"][
+                        "lion_class"
+                    ],
+                    "original_role": origin_info["role"],
+                }
+            }
+        return value
+
+    @field_serializer("template")
+    def _serialize_template(self, value: Template | str):
+        if isinstance(value, Template):
+            return None
+        return value
 
     def update(self, sender, recipient, template, **kwargs):
         if sender:
