@@ -135,16 +135,22 @@ class HashableModel(BaseModel):
 
     def __hash__(self):
         # Convert kwargs to a hashable format by serializing unhashable types
-        hashable_items = []
-        for k, v in self.to_dict().items():
-            if isinstance(v, (list, dict)):
-                # Convert unhashable types to JSON string for hashing
-                v = json.dumps(v, sort_keys=True)
-            elif not isinstance(v, (str, int, float, bool, type(None))):
-                # Convert other unhashable types to string representation
-                v = str(v)
-            hashable_items.append((k, v))
-        return hash(frozenset(hashable_items))
+        return hash_dict(self.to_dict())
+
+
+def hash_dict(data) -> int:
+    hashable_items = []
+    if isinstance(data, BaseModel):
+        data = data.model_dump()
+    for k, v in data.items():
+        if isinstance(v, (list, dict)):
+            # Convert unhashable types to JSON string for hashing
+            v = json.dumps(v, sort_keys=True)
+        elif not isinstance(v, (str, int, float, bool, type(None))):
+            # Convert other unhashable types to string representation
+            v = str(v)
+        hashable_items.append((k, v))
+    return hash(frozenset(hashable_items))
 
 
 class Params(BaseModel):
@@ -455,7 +461,25 @@ def to_list(
 
     if unique:
         seen = set()
-        return [x for x in processed if not (x in seen or seen.add(x))]
+        out = []
+        try:
+            return [x for x in processed if not (x in seen or seen.add(x))]
+        except TypeError:
+            for i in processed:
+                hash_value = None
+                try:
+                    hash_value = hash(i)
+                except TypeError:
+                    if isinstance(i, (BaseModel, Mapping)):
+                        hash_value = hash_dict(i)
+                    else:
+                        raise ValueError(
+                            "Unhashable type encountered in list unique value processing."
+                        )
+                if hash_value not in seen:
+                    seen.add(hash_value)
+                    out.append(i)
+            return out
 
     return processed
 
@@ -766,6 +790,9 @@ async def alcall(
                     return index, result, end_time - start_time
                 else:
                     return index, result
+            except asyncio.CancelledError as e:
+                raise e
+
             except Exception:
                 attempts += 1
                 if attempts <= num_retries:

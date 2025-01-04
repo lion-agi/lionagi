@@ -87,7 +87,7 @@ async def run_instruct(
     # Prepare config for the branch operation
     config = {**ins.model_dump(), **kwargs}
     result = await branch.operate(**config)
-    branch.msgs.logger.dump()
+    branch._log_manager.dump()
 
     # Extract any newly generated instructions
     instructs = []
@@ -127,6 +127,7 @@ async def brainstorm(
     return_session: bool = False,
     verbose: bool = False,
     branch_as_default: bool = True,
+    operative_model: type[BaseModel] | None = None,
     **kwargs: Any,
 ) -> Any:
     """
@@ -138,6 +139,13 @@ async def brainstorm(
       3. Optionally explore the resulting instructions (auto_explore=True)
          using the chosen strategy (concurrent, sequential, etc.).
     """
+    if operative_model:
+        logging.warning(
+            "The 'operative_model' parameter is deprecated and will be removed in a future version.use 'response_format' instead."
+        )
+        kwargs["response_format"] = kwargs.get(
+            "response_format", operative_model
+        )
 
     # -----------------------------------------------------------------
     # Basic Validations and Setup
@@ -299,7 +307,7 @@ async def brainstorm(
                                 else i.guidance
                             )
                             print(f"\n-----Exploring Idea-----\n{snippet}")
-                        seq_res = await branch.instruct(
+                        seq_res = await branch._instruct(
                             i, **(explore_kwargs or {})
                         )
                         explore_results.append(

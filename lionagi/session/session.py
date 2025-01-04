@@ -55,7 +55,10 @@ class Session(Node, Communicatable, Relational):
 
     @model_validator(mode="after")
     def _add_mail_sources(self) -> Self:
-        self.mail_manager.add_sources(self.branches)
+        if self.default_branch not in self.branches:
+            self.branches.include(self.default_branch)
+        if self.branches:
+            self.mail_manager.add_sources(self.branches)
         return self
 
     def new_branch(

@@ -1042,8 +1042,12 @@ class Branch(Element, Communicatable, Relational):
             Any: The result of the chosen flow, e.g., a validated response.
         """
         config = {**instruct.to_dict(), **kwargs}
-        if any(i in config for i in Instruct.reserved_kwargs):
-            return await self.operate(**config)
+        if any(i in config and config[i] for i in Instruct.reserved_kwargs):
+            if "response_format" in config or "request_model" in config:
+                return await self.operate(**config)
+            for i in Instruct.reserved_kwargs:
+                config.pop(i, None)
+
         return await self.communicate(**config)
 
     def send(

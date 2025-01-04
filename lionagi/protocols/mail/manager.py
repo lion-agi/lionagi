@@ -53,7 +53,7 @@ class MailManager(Manager):
             sources = to_list_type(sources)
             self.sources.include(sources)
             for item in sources:
-                self.mails[item.ln_id] = {}
+                self.mails[item.id] = {}
         except Exception as e:
             raise ValueError("Failed to add source.") from e
 
@@ -141,12 +141,12 @@ class MailManager(Manager):
     def collect_all(self) -> None:
         """Collect mail from all sources."""
         for source in self.sources:
-            self.collect(sender=source.ln_id)
+            self.collect(sender=source.id)
 
     def send_all(self) -> None:
         """Send mail to all recipients."""
         for source in self.sources:
-            self.send(recipient=source.ln_id)
+            self.send(recipient=source.id)
 
     async def execute(self, refresh_time: int = 1) -> None:
         """
