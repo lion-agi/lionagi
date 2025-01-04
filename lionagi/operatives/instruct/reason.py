@@ -58,7 +58,7 @@ class Reason(BaseModel):
 
 REASON_FIELD = FieldModel(
     name="reason",
-    annotation=Reason | None,
+    annotation=Reason,
     title="Reason",
     description="**Provide a concise reason for the decision made.**",
 )

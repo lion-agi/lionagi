@@ -8,13 +8,13 @@ from pydantic import BaseModel, Field, PrivateAttr, model_validator
 from pydantic.fields import FieldInfo
 
 from lionagi.libs.validate.fuzzy_match_keys import fuzzy_match_keys
+from lionagi.operatives.models.schema_model import SchemaModel
 from lionagi.utils import UNDEFINED, to_json
 
 from .models.model_params import FieldModel, ModelParams
-from .models.operable_model import OperableModel
 
 
-class Operative(OperableModel):
+class Operative(SchemaModel):
     """Class representing an operative that handles request and response models for operations."""
 
     name: str | None = None
@@ -24,11 +24,12 @@ class Operative(OperableModel):
 
     response_params: ModelParams | None = Field(default=None)
     response_type: type[BaseModel] | None = Field(default=None)
-    response_model: OperableModel | None = Field(default=None)
+    response_model: BaseModel | None = Field(default=None)
     response_str_dict: dict | str | None = Field(default=None)
 
     auto_retry_parse: bool = True
     max_retries: int = 3
+    parse_kwargs: dict | None = None
     _should_retry: bool = PrivateAttr(default=None)
 
     @model_validator(mode="after")

@@ -40,6 +40,7 @@ class Step:
     @staticmethod
     def request_operative(
         *,
+        operative: Operative = None,
         operative_name: str | None = None,
         reason: bool = False,
         actions: bool = False,
@@ -54,6 +55,9 @@ class Step:
         config_dict: dict | None = None,
         doc: str | None = None,
         frozen: bool = False,
+        max_retries: int = None,
+        auto_retry_parse: bool = True,
+        parse_kwargs: dict | None = None,
     ) -> Operative:
         """Creates an Operative instance configured for request handling.
 
@@ -72,36 +76,61 @@ class Step:
             config_dict (dict | None, optional): Configuration dictionary.
             doc (str | None, optional): Documentation string.
             frozen (bool, optional): Whether the model is frozen.
+            max_retries (int, optional): Maximum number of retries.
 
         Returns:
             Operative: The configured operative instance.
         """
 
+        params = {}
+        if operative:
+            params = operative.model_dump()
+            request_params = operative.request_params.model_dump()
+            field_models = request_params.field_models
+
         field_models = field_models or []
         exclude_fields = exclude_fields or []
         field_descriptions = field_descriptions or {}
-        if reason:
+        if reason and REASON_FIELD not in field_models:
             field_models.append(REASON_FIELD)
-        if actions:
+        if actions and ACTION_REQUESTS_FIELD not in field_models:
             field_models.extend(
                 [
                     ACTION_REQUESTS_FIELD,
                     ACTION_REQUIRED_FIELD,
                 ]
             )
-        request_params = request_params or ModelParams(
-            parameter_fields=parameter_fields,
-            base_type=base_type,
-            field_models=field_models,
-            exclude_fields=exclude_fields,
-            name=new_model_name,
-            field_descriptions=field_descriptions,
-            inherit_base=inherit_base,
-            config_dict=config_dict,
-            doc=doc,
-            frozen=frozen,
+
+        if isinstance(request_params, ModelParams):
+            request_params = request_params.model_dump()
+
+        request_params = request_params or {}
+        request_params_fields = {
+            "parameter_fields": parameter_fields,
+            "field_models": field_models,
+            "exclude_fields": exclude_fields,
+            "field_descriptions": field_descriptions,
+            "inherit_base": inherit_base,
+            "config_dict": config_dict,
+            "doc": doc,
+            "frozen": frozen,
+            "base_type": base_type,
+            "name": new_model_name,
+        }
+        request_params.update(
+            {k: v for k, v in request_params_fields.items() if v is not None}
         )
-        return Operative(name=operative_name, request_params=request_params)
+        request_params = ModelParams(**request_params)
+        if max_retries:
+            params["max_retries"] = max_retries
+        if operative_name:
+            params["name"] = operative_name
+        if isinstance(auto_retry_parse, bool):
+            params["auto_retry_parse"] = auto_retry_parse
+        if parse_kwargs:
+            params["parse_kwargs"] = parse_kwargs
+        params["request_params"] = request_params
+        return Operative(**params)
 
     @staticmethod
     def respond_operative(
@@ -133,6 +162,17 @@ class Step:
 
         additional_data = additional_data or {}
         field_models = field_models or []
+        if hasattr(operative.response_model, "action_required"):
+            field_models.extend(
+                [
+                    ACTION_RESPONSES_FIELD,
+                    ACTION_REQUIRED_FIELD,
+                    ACTION_REQUESTS_FIELD,
+                ]
+            )
+        if "reason" in operative.response_model.model_fields:
+            field_models.extend([REASON_FIELD])
+
         operative = Step._create_response_type(
             operative=operative,
             response_params=response_params,
