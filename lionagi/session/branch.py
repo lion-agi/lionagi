@@ -762,6 +762,8 @@ class Branch(Element, Communicatable, Relational):
                         sender=self.id,
                         recipient=func_call.func_tool.id,
                     )
+
+                if action_request not in self.messages:
                     self.msgs.add_message(action_request=action_request)
 
                 self.msgs.add_message(
@@ -1063,7 +1065,7 @@ class Branch(Element, Communicatable, Relational):
         """
         package = Package(
             category=category,
-            package=package,
+            item=package,
             request_source=request_source,
         )
 
@@ -1099,8 +1101,7 @@ class Branch(Element, Communicatable, Relational):
                 for the chosen processing options.
         """
         skipped_requests = Progression()
-        if not isinstance(sender, str):
-            sender = sender.id
+        sender = ID.get_id(sender)
         if sender not in self.mailbox.pending_ins.keys():
             raise ValueError(f"No package from {sender}")
         while self.mailbox.pending_ins[sender]:
@@ -1113,7 +1114,7 @@ class Branch(Element, Communicatable, Relational):
                 new_message = mail.package.item.clone()
                 new_message.sender = mail.sender
                 new_message.recipient = self.id
-                self.messages.include(new_message)
+                self.msgs.messages.include(new_message)
                 self.mailbox.pile_.pop(mail_id)
 
             elif mail.category == "tool" and tool:

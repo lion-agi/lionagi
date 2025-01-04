@@ -709,13 +709,17 @@ async def alcall(
     else:
         if not isinstance(input_, list):
             # Attempt to iterate
-            try:
-                iter(input_)
-                # It's iterable (tuple), convert to list of its contents
-                input_ = list(input_)
-            except TypeError:
-                # Not iterable, just wrap in a list
+            if isinstance(input_, BaseModel):
+                # Pydantic model, convert to list
                 input_ = [input_]
+            else:
+                try:
+                    iter(input_)
+                    # It's iterable (tuple), convert to list of its contents
+                    input_ = list(input_)
+                except TypeError:
+                    # Not iterable, just wrap in a list
+                    input_ = [input_]
 
     # Optional initial delay before processing
     if initial_delay:
