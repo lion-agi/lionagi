@@ -186,13 +186,12 @@ class TestModelParams:
             parameter_fields={"field1": a},
             doc=doc,
         )
-
         model_class = params.create_new_model()
         assert model_class.__doc__ == doc
 
     def test_frozen_model(self):
         """Test frozen model creation."""
-        a = Field(annotation=str, default="test")
+        a: str = Field(default="test")
         a.annotation = str
         params = ModelParams(
             name="TestModel",
@@ -268,3 +267,197 @@ class TestModelParams:
                 name="TestModel",
                 parameter_fields={"field": "not a field info"},
             )
+
+
+@pytest.mark.parametrize("empty_value", [None, {}, []])
+def test_empty_parameter_fields(empty_value):
+    """
+    Test behavior when parameter_fields is empty or None.
+    Expect no fields aside from what might come from the base model or field_models.
+    """
+    params = ModelParams(
+        name="EmptyParams",
+        parameter_fields=empty_value,  # Could be None, {}, or []
+    )
+    model_class = params.create_new_model()
+    # If there's no base_type or field_models, the model should effectively have no fields
+    assert (
+        len(model_class.model_fields) == 0
+    ), "Expected no fields in the newly created model when parameter_fields is empty."
+
+
+def test_empty_field_models():
+    """
+    Test behavior when field_models is an empty list.
+    This means only the fields from parameter_fields or base_type are used.
+    """
+    param_field = Field(default=123)
+    param_field.annotation = int
+
+    params = ModelParams(
+        name="EmptyFieldModels",
+        field_models=[],  # explicitly empty
+        parameter_fields={"param_field": param_field},
+    )
+    model_class = params.create_new_model()
+    instance = model_class()
+    assert instance.param_field == 123
+
+
+@pytest.mark.parametrize(
+    "exclude_value", [{"ex_field": True}, {"a", "b"}, ("x", "y")]
+)
+def test_exclude_fields_various_collections(exclude_value):
+    """
+    Test passing exclude_fields as a dict, set, or tuple.
+    The code should convert it into a list of strings and exclude those fields.
+    """
+
+    class BaseWithTwoFields(BaseModel):
+        a: int = 1
+        b: int = 2
+        ex_field: str = "excluded"
+
+    params = ModelParams(
+        name="ExclusionModel",
+        base_type=BaseWithTwoFields,
+        exclude_fields=exclude_value,  # Could be dict, set, or tuple
+        inherit_base=True,
+    )
+    model_class = params.create_new_model()
+    instance = model_class()
+
+    # whichever are listed in exclude_value should not exist
+    for field_name in exclude_value:
+        # If it was a dict, we extracted keys
+        # so field_name will be a string
+        assert not hasattr(
+            instance, field_name
+        ), f"Field '{field_name}' should have been excluded."
+
+
+def test_partial_overlap_field_descriptions():
+    """
+    Test that only matching field names in field_descriptions get updated,
+    and other fields remain untouched.
+    """
+    field_models = [
+        FieldModel(name="desc_field", annotation=str, default="desc"),
+        FieldModel(name="no_desc_field", annotation=int, default=123),
+    ]
+
+    params = ModelParams(
+        name="PartialDescModel",
+        field_models=field_models,
+        field_descriptions={"desc_field": "Updated description"},
+    )
+    model_class = params.create_new_model()
+    assert (
+        model_class.model_fields["desc_field"].description
+        == "Updated description"
+    )
+    # The other field should not have any description
+    assert not model_class.model_fields["no_desc_field"].description
+
+
+def test_no_name_falls_back_to_base_type_name():
+    """
+    If 'name' is not specified, it should fall back to the base_type's __name__.
+    """
+
+    class MyBaseModel(BaseModel):
+        some_field: str = "base"
+
+    params = ModelParams(base_type=MyBaseModel, inherit_base=True)
+    model_class = params.create_new_model()
+
+    # Should derive the name from MyBaseModel
+    # e.g., MyBaseModel, unless that logic is overridden
+    # We'll just check that the string matches or at least contains 'MyBaseModel'
+    assert "MyBaseModel" in model_class.__name__
+
+
+def test_base_type_instance_instead_of_class():
+    """
+    If base_type is an instance of BaseModel, we convert it to its class.
+    """
+
+    class MyInstanceBase(BaseModel):
+        base_field: str = "hello"
+
+    base_instance = MyInstanceBase()
+    params = ModelParams(base_type=base_instance)
+    model_class = params.create_new_model()
+
+    # Should function like inheriting from MyInstanceBase
+    instance = model_class()
+    assert instance.base_field == "hello"
+
+
+def test_conflict_between_field_models():
+    """
+    If two FieldModel objects share the same name but different defaults,
+    the last one in the list should take precedence.
+    """
+    f1 = FieldModel(name="conflict_field", annotation=str, default="first")
+    f2 = FieldModel(name="conflict_field", annotation=str, default="second")
+    params = ModelParams(field_models=[f1, f2])
+    model_class = params.create_new_model()
+    instance = model_class()
+    # 'second' should override 'first'
+    assert instance.conflict_field == "second"
+
+
+def test_conflict_between_parameter_fields_and_field_model():
+    """
+    If parameter_fields and field_models have the same name,
+    the FieldModel typically overwrites the parameter_fields entry
+    because it's updated in validate_param_model() last.
+    """
+    pf = Field(default="pf")
+    pf.annotation = str
+
+    fm = FieldModel(name="shared_field", annotation=str, default="fm")
+    params = ModelParams(
+        parameter_fields={"shared_field": pf},
+        field_models=[fm],
+    )
+    model_class = params.create_new_model()
+    instance = model_class()
+    # Should be "fm", since field_models update after parameter_fields
+    assert instance.shared_field == "fm"
+
+
+def test_multiple_field_models_same_name_order():
+    """
+    Demonstrate that if multiple FieldModels share the same name in the list,
+    the last one always wins.
+    """
+    fm1 = FieldModel(name="dup", annotation=int, default=10)
+    fm2 = FieldModel(name="dup", annotation=int, default=20)
+    fm3 = FieldModel(name="dup", annotation=int, default=30)
+
+    params = ModelParams(field_models=[fm1, fm2, fm3])
+    model_class = params.create_new_model()
+    instance = model_class()
+    assert instance.dup == 30, "The last FieldModel's default should be used."
+
+
+def test_extend_use_keys_after_validation():
+    """
+    Test that if _use_keys is updated, we only include the fields present in parameter_fields or field_models.
+    This is a lower-level test, but helps confirm the final set of keys used.
+    """
+    pf = Field(default=0)
+    pf.annotation = int
+
+    params = ModelParams(parameter_fields={"test_field": pf})
+    # Manually add a key that doesn't exist in parameter_fields
+    params._use_keys.add("non_existent")
+    model_class = params.create_new_model()
+
+    # Only 'test_field' should appear
+    assert "test_field" in model_class.model_fields
+    assert (
+        "non_existent" not in model_class.model_fields
+    ), "Keys not present in parameter_fields/field_models should not appear in the final model."

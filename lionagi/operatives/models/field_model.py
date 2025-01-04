@@ -3,12 +3,12 @@
 # SPDX-License-Identifier: Apache-2.0
 
 from collections.abc import Callable
-from typing import Any
+from typing import Any, Self
 
-from pydantic import ConfigDict, Field, field_validator
+from pydantic import ConfigDict, Field, field_validator, model_validator
 from pydantic.fields import FieldInfo
 
-from lionagi.utils import UNDEFINED, UndefinedType, is_same_dtype
+from lionagi.utils import UNDEFINED, UndefinedType
 
 from .schema_model import SchemaModel
 
@@ -16,46 +16,36 @@ __all__ = ("FieldModel",)
 
 
 class FieldModel(SchemaModel):
-    """Model for defining and managing field definitions.
+    """Model for defining and configuring Pydantic field attributes.
 
-    Provides a structured way to define fields with:
-    - Type annotations and validation
-    - Default values and factories
-    - Documentation and metadata
-    - Serialization options
-
-    Example:
-        ```python
-        field = FieldModel(
-            name="age",
-            annotation=int,
-            default=0,
-            description="User age in years",
-            validator=lambda cls, v: v if v >= 0 else 0
-        )
-        ```
+    This class provides a structured way to define fields with comprehensive
+    configuration options including type validation, default values, documentation,
+    and validation rules.
 
     Attributes:
-        default: Default field value
-        default_factory: Function to generate default value
-        title: Field title for documentation
-        description: Field description
-        examples: Example values
-        validators: Validation functions
-        exclude: Exclude from serialization
-        deprecated: Mark as deprecated
-        frozen: Mark as immutable
-        alias: Alternative field name
-        alias_priority: Priority for alias resolution
-        name: Field name (required)
-        annotation: Type annotation
-        validator: Validation function
-        validator_kwargs: Validator parameters
+        name (str): Required field identifier.
+        annotation (type | Any): Field type annotation, defaults to Any.
+        default (Any): Default value for the field.
+        default_factory (Callable): Function to generate default values.
+        validator (Callable): Optional validation function.
+        validator_kwargs (dict): Parameters for validator configuration.
+        title (str): Human-readable field title.
+        description (str): Detailed field description.
+        examples (list): Example values for documentation.
+        exclude (bool): Whether to exclude from serialization.
+        deprecated (bool): Whether the field is deprecated.
+        frozen (bool): Whether the field is immutable.
+        alias (str): Alternative field name.
+        alias_priority (int): Priority for alias resolution.
 
-    Notes:
-        - All attributes except 'name' can be UNDEFINED
-        - validator_kwargs are passed to field_validator decorator
-        - Cannot have both default and default_factory
+    Example:
+        >>> field = FieldModel(
+        ...     name="age",
+        ...     annotation=int,
+        ...     default=0,
+        ...     description="User age in years",
+        ...     validator=lambda cls, v: v if v >= 0 else 0
+        ... )
     """
 
     model_config = ConfigDict(
@@ -66,58 +56,104 @@ class FieldModel(SchemaModel):
         use_enum_values=True,
     )
 
-    # Field configuration attributes
-    default: Any = UNDEFINED  # Default value
-    default_factory: Callable | UndefinedType = (
-        UNDEFINED  # Factory function for default value
-    )
-    title: str | UndefinedType = UNDEFINED  # Field title
-    description: str | UndefinedType = UNDEFINED  # Field description
-    examples: list | UndefinedType = UNDEFINED  # Example values
-    validators: list | UndefinedType = UNDEFINED  # Validation functions
-    exclude: bool | UndefinedType = UNDEFINED  # Exclude from serialization
-    deprecated: bool | UndefinedType = UNDEFINED  # Mark as deprecated
-    frozen: bool | UndefinedType = UNDEFINED  # Mark as immutable
-    alias: str | UndefinedType = UNDEFINED  # Alternative field name
-    alias_priority: int | UndefinedType = (
-        UNDEFINED  # Priority for alias resolution
-    )
-
-    # Core field attributes
+    # Required core attributes
     name: str | UndefinedType = Field(
-        ..., exclude=True
-    )  # Field name (required)
-    annotation: type | Any = Field(UNDEFINED, exclude=True)  # Type annotation
-    validator: Callable | Any = Field(
-        UNDEFINED, exclude=True
-    )  # Validation function
-    validator_kwargs: dict | Any = Field(
-        default_factory=dict, exclude=True
-    )  # Validator parameters
+        ...,
+        description="Field identifier, used as attribute name",
+        exclude=True,
+    )
 
-    @field_validator("validators", mode="before")
-    def _validate_validators(cls, v) -> list[Callable]:
-        if v is None or v is UNDEFINED:
-            return []
-        if isinstance(v, Callable):
-            return [v]
-        if isinstance(v, list) and is_same_dtype(v, Callable):
-            return v
-        raise ValueError(
-            "Validators must be a list of functions or a function"
-        )
+    annotation: type | Any = Field(
+        default=UNDEFINED,
+        description="Type annotation for the field",
+        exclude=True,
+    )
+
+    validator: Callable | Any = Field(
+        default=UNDEFINED,
+        description="Optional validation function",
+        exclude=True,
+    )
+
+    validator_kwargs: dict | None = Field(
+        default_factory=dict,
+        description="Configuration for validator decorator",
+        exclude=True,
+    )
+
+    # Field configuration
+    default: Any = Field(
+        default=UNDEFINED, description="Default value for the field"
+    )
+
+    default_factory: Callable | UndefinedType = Field(
+        default=UNDEFINED, description="Function to generate default values"
+    )
+
+    title: str | UndefinedType = Field(
+        default=UNDEFINED, description="Human-readable field title"
+    )
+
+    description: str | UndefinedType = Field(
+        default=UNDEFINED, description="Detailed field description"
+    )
+
+    examples: list | UndefinedType = Field(
+        default=UNDEFINED, description="Example values for documentation"
+    )
+
+    exclude: bool | UndefinedType = Field(
+        default=UNDEFINED, description="Whether to exclude from serialization"
+    )
+
+    deprecated: bool | UndefinedType = Field(
+        default=UNDEFINED, description="Whether the field is deprecated"
+    )
+
+    frozen: bool | UndefinedType = Field(
+        default=UNDEFINED, description="Whether the field is immutable"
+    )
+
+    alias: str | UndefinedType = Field(
+        default=UNDEFINED, description="Alternative field name"
+    )
+
+    alias_priority: int | UndefinedType = Field(
+        default=UNDEFINED, description="Priority for alias resolution"
+    )
+
+    @field_validator("validator_kwargs", mode="before")
+    def _validate_validator_kwargs(cls, value):
+        """Validate validator kwargs."""
+        if value in [None, UNDEFINED, []]:
+            return {}
+        if not isinstance(value, dict):
+            raise ValueError("Validator kwargs must be a dictionary")
+        return value
+
+    @field_validator("validator", mode="before")
+    def _validate_field_validator(cls, value) -> Callable | Any:
+        """Validate field validator function.
+
+        Args:
+            value: Validator function to check.
+
+        Returns:
+            Callable | Any: Validated validator function.
+
+        Raises:
+            ValueError: If validator is not callable.
+        """
+        if value is not UNDEFINED and not callable(value):
+            raise ValueError("Validator must be a callable function")
+        return value
 
     @property
     def field_info(self) -> FieldInfo:
-        """Generate Pydantic FieldInfo object from field configuration.
+        """Generate Pydantic FieldInfo from current configuration.
 
         Returns:
-            FieldInfo object with all configured attributes
-
-        Notes:
-            - Uses clean dict to exclude UNDEFINED values
-            - Sets annotation to Any if not specified
-            - Preserves all metadata in field_info
+            FieldInfo: Configured field information object.
         """
         annotation = (
             self.annotation if self.annotation is not UNDEFINED else Any
@@ -128,16 +164,10 @@ class FieldModel(SchemaModel):
 
     @property
     def field_validator(self) -> dict[str, Callable] | None:
-        """Generate field validator configuration.
+        """Create field validator configuration.
 
         Returns:
-            Dictionary mapping validator name to function,
-            or None if no validator defined
-
-        Notes:
-            - Validator name is f"{field_name}_validator"
-            - Uses validator_kwargs if provided
-            - Returns None if validator is UNDEFINED
+            dict[str, Callable] | None: Validator configuration if defined.
         """
         if self.validator is UNDEFINED:
             return None
@@ -147,3 +177,20 @@ class FieldModel(SchemaModel):
                 self.validator
             )
         }
+
+    @model_validator(mode="after")
+    def _validate_defaults(self) -> Self:
+        """Ensure default value configuration is valid.
+
+        Returns:
+            Self: Validated instance.
+
+        Raises:
+            ValueError: If both default and default_factory are set.
+        """
+        if (
+            self.default is not UNDEFINED
+            and self.default_factory is not UNDEFINED
+        ):
+            raise ValueError("Cannot have both default and default_factory")
+        return self

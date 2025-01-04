@@ -1,5 +1,6 @@
 """Tests for FieldModel class."""
 
+import pytest
 from pydantic.fields import FieldInfo
 
 from lionagi.operatives.models.field_model import FieldModel
@@ -184,3 +185,81 @@ class TestFieldModel:
 
         field_info = field.field_info
         assert field_info.description == "Test description"
+
+
+def test_both_default_and_default_factory():
+    """
+    Test that defining both `default` and `default_factory` at the same time
+    raises an error or is otherwise disallowed.
+    """
+
+    def factory_func():
+        return "factory_value"
+
+    with pytest.raises(
+        ValueError, match="Cannot have both default and default_factory"
+    ):
+        FieldModel(
+            name="conflicting_field",
+            default="some_value",
+            default_factory=factory_func,
+        )
+
+
+@pytest.mark.parametrize("invalid_value", [123, [lambda x: x, 123], object()])
+def test_invalid_validators_argument(invalid_value):
+    """
+    Test passing an invalid type or structure to `validators`.
+    Must raise ValueError stating "Validators must be a list of functions or a function".
+    """
+    with pytest.raises(
+        ValueError, match="Validator must be a callable function"
+    ):
+        FieldModel(name="bad_validators", validator=invalid_value)
+
+
+def test_exclude_field_behavior():
+    """
+    Test that if `exclude=True` is set, the FieldInfo reflects that field should be excluded
+    from serialization.
+    """
+    field = FieldModel(name="excluded_field", exclude=True)
+    info = field.field_info
+    assert (
+        info.exclude is True
+    ), "Expected the field's FieldInfo to have exclude=True"
+
+
+@pytest.mark.parametrize(
+    "annotation, default_value",
+    [
+        (int, "not_an_int"),
+        (str, 123),
+        (
+            list[int],
+            ["1", 2, 3],
+        ),  # The first element is a string instead of int
+    ],
+)
+def test_type_mismatch_between_annotation_and_default(
+    annotation, default_value
+):
+    """
+    Test providing a default value that doesn't match the annotation type
+    (e.g., str default for an int annotation).
+    Depending on usage, you might want to allow or disallow this scenario.
+    For demonstration, we expect Pydantic won't error at FieldModel creation time,
+    but it may cause an error once integrated in an actual Pydantic model.
+    We'll simply confirm the mismatch is stored or accepted at this step.
+    """
+    field = FieldModel(
+        name="mismatch_field", annotation=annotation, default=default_value
+    )
+    info = field.field_info
+    # The FieldInfo has the mismatch, but Pydantic doesn't strictly validate here in FieldModel alone.
+    # You might consider implementing your own check if you want to raise an error now.
+    assert info.annotation == annotation
+    assert info.default == default_value
+
+    # If you want to raise an error now, you'd do so in a custom validator here,
+    # e.g., if "not isinstance(default_value, annotation)" then error.

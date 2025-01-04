@@ -1,5 +1,7 @@
 """Tests for SchemaModel class."""
 
+from typing import Any
+
 import pytest
 from pydantic import Field
 
@@ -54,7 +56,7 @@ class TestSchemaModel:
 
         class TestSchema(SchemaModel):
             field1: str
-            field2: str = Field(default=UNDEFINED)
+            field2: str | Any = Field(default=UNDEFINED)
 
         model = TestSchema(field1="test")
         result = model.to_dict()
