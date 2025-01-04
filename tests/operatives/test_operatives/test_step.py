@@ -100,8 +100,8 @@ class TestStep:
             operative_name="test_operative", reason=True, base_type=SampleModel
         )
         assert "reason" in operative.request_type.model_fields
-        assert operative.request_type.model_fields["reason"].annotation == (
-            Reason | None
+        assert (
+            operative.request_type.model_fields["reason"].annotation == Reason
         )
 
     def test_request_operative_with_actions(self):

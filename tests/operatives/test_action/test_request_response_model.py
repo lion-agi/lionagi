@@ -6,8 +6,8 @@ from lionagi.operatives.action.utils import (
     ARGUMENTS_FIELD,
     FUNCTION_FIELD,
     parse_action_request,
-    validate_action_required,
     validate_arguments,
+    validate_boolean_field,
     validate_function_name,
 )
 
@@ -145,18 +145,18 @@ def test_validate_arguments():
     assert validate_arguments(None, invalid_str) == {}
 
 
-def test_validate_action_required():
-    """Test that validate_action_required returns a boolean, with default=False on error."""
+def test_validate_boolean_field():
+    """Test that validate_boolean_field returns a boolean, with default=False on error."""
     # True-like values
     for val in [True, "true", "on", 1]:
-        assert validate_action_required(None, val) is True
+        assert validate_boolean_field(None, val, False) is True
 
     # False-like values
     for val in [False, "false", "off", 0]:
-        assert validate_action_required(None, val) is False
+        assert validate_boolean_field(None, val, False) is False
 
     # Garbage input
-    assert validate_action_required(None, "??") is False
+    assert validate_boolean_field(None, "??", False) is False
 
 
 #######################################

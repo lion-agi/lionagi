@@ -16,7 +16,14 @@ from pydantic import (
 )
 from pydantic.fields import FieldInfo
 
-from lionagi.libs.validate.validate_boolean import validate_boolean
+from lionagi.libs.validate.common_field_validators import (
+    validate_boolean_field,
+    validate_list_dict_str_keys,
+    validate_model_to_type,
+    validate_nullable_string_field,
+    validate_same_dtype_flat_list,
+    validate_str_str_dict,
+)
 from lionagi.utils import copy
 
 from .field_model import FieldModel
@@ -147,13 +154,7 @@ class ModelParams(SchemaModel):
         Raises:
             ValueError: If base type is invalid.
         """
-        if value is None:
-            return BaseModel
-        if isinstance(value, type) and issubclass(value, BaseModel):
-            return value
-        if isinstance(value, BaseModel):
-            return value.__class__
-        raise ValueError("Base must be a BaseModel subclass or instance.")
+        return validate_model_to_type(cls, value)
 
     @field_validator("exclude_fields", mode="before")
     def _validate_fields(cls, value) -> list[str]:
@@ -168,17 +169,7 @@ class ModelParams(SchemaModel):
         Raises:
             ValueError: If field names are invalid.
         """
-        if value is None:
-            return []
-        if isinstance(value, dict):
-            value = list(value.keys())
-        if isinstance(value, set | tuple):
-            value = list(value)
-        if isinstance(value, list):
-            if not all(isinstance(i, str) for i in value):
-                raise ValueError("Field names must be strings.")
-            return copy(value)
-        raise ValueError("Fields must be a list, set, or dictionary.")
+        return validate_list_dict_str_keys(cls, value)
 
     @field_validator("field_descriptions", mode="before")
     def _validate_field_descriptions(cls, value) -> dict[str, str]:
@@ -193,16 +184,7 @@ class ModelParams(SchemaModel):
         Raises:
             ValueError: If descriptions are invalid.
         """
-        if value is None:
-            return {}
-        if not isinstance(value, dict):
-            raise ValueError("Field descriptions must be a dictionary.")
-        for k, v in value.items():
-            if not isinstance(k, str):
-                raise ValueError("Field names must be strings.")
-            if not isinstance(v, str):
-                raise ValueError("Field descriptions must be strings.")
-        return value
+        return validate_str_str_dict(cls, value)
 
     @field_validator("inherit_base", mode="before")
     def _validate_inherit_base(cls, value) -> bool:
@@ -214,10 +196,7 @@ class ModelParams(SchemaModel):
         Returns:
             bool: Validated inherit_base value.
         """
-        try:
-            return validate_boolean(value)
-        except Exception:
-            return True
+        return validate_boolean_field(cls, value, default=True)
 
     @field_validator("name", mode="before")
     def _validate_name(cls, value) -> str | None:
@@ -232,11 +211,7 @@ class ModelParams(SchemaModel):
         Raises:
             ValueError: If name is invalid.
         """
-        if value is None:
-            return None
-        if not isinstance(value, str):
-            raise ValueError("Name must be a string.")
-        return value
+        return validate_nullable_string_field(cls, value, field_name="Name")
 
     @field_validator("field_models", mode="before")
     def _validate_field_models(cls, value) -> list[FieldModel]:
@@ -251,12 +226,8 @@ class ModelParams(SchemaModel):
         Raises:
             ValueError: If field models are invalid.
         """
-        if value is None:
-            return []
-        value = [value] if not isinstance(value, list) else value
-        if not all(isinstance(i, FieldModel) for i in value):
-            raise ValueError("Field models must be FieldModel objects.")
-        return value
+
+        return validate_same_dtype_flat_list(cls, value, FieldModel)
 
     @model_validator(mode="after")
     def validate_param_model(self) -> Self:

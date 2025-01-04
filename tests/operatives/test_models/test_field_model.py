@@ -212,9 +212,7 @@ def test_invalid_validators_argument(invalid_value):
     Test passing an invalid type or structure to `validators`.
     Must raise ValueError stating "Validators must be a list of functions or a function".
     """
-    with pytest.raises(
-        ValueError, match="Validator must be a callable function"
-    ):
+    with pytest.raises(ValueError):
         FieldModel(name="bad_validators", validator=invalid_value)
 
 

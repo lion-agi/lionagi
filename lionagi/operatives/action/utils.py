@@ -7,7 +7,10 @@ from typing import Any
 
 from pydantic import BaseModel
 
-from lionagi.libs.validate.validate_boolean import validate_boolean
+from lionagi.libs.validate.common_field_validators import (
+    validate_boolean_field,
+    validate_nullable_string_field,
+)
 from lionagi.utils import to_dict, to_json, to_list
 
 from ..models.field_model import FieldModel
@@ -100,9 +103,7 @@ def parse_action_request(content: str | dict) -> list[dict]:
 
 
 def validate_function_name(cls, value: Any) -> str | None:
-    if not isinstance(value, str):
-        return None
-    return value
+    return validate_nullable_string_field(cls, value, strict=False)
 
 
 def validate_arguments(cls, value: Any) -> dict:
@@ -112,13 +113,6 @@ def validate_arguments(cls, value: Any) -> dict:
         suppress=True,
         recursive=True,
     )
-
-
-def validate_action_required(cls, value) -> bool:
-    try:
-        return validate_boolean(value)
-    except Exception:
-        return False
 
 
 FUNCTION_FIELD = FieldModel(
@@ -148,6 +142,6 @@ ACTION_REQUIRED_FIELD = FieldModel(
     default=False,
     title="Action Required",
     description=action_required_field_description,
-    validator=validate_action_required,
+    validator=lambda cls, v: validate_boolean_field(cls, v, False),
     validator_kwargs={"mode": "before"},
 )

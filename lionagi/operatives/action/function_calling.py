@@ -97,12 +97,12 @@ class FunctionCalling(Event):
 
         try:
             response = await _inner()
-            self.execution.status = EventStatus.COMPLETED
             self.execution.duration = asyncio.get_event_loop().time() - start
+            self.execution.status = EventStatus.COMPLETED
             self.execution.response = response
         except Exception as e:
-            self.execution.status = EventStatus.FAILED
             self.execution.duration = asyncio.get_event_loop().time() - start
+            self.execution.status = EventStatus.FAILED
             self.execution.error = str(e)
 
     def __str__(self) -> str:

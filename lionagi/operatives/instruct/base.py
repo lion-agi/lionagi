@@ -4,7 +4,10 @@
 
 from pydantic import JsonValue
 
-from lionagi.libs.validate.validate_boolean import validate_boolean
+from lionagi.libs.validate.common_field_validators import (
+    validate_boolean_field,
+    validate_nullable_jsonvalue_field,
+)
 
 from ..models.field_model import FieldModel
 from .prompts import (
@@ -24,37 +27,6 @@ __all__ = (
 )
 
 
-def validate_instruction(cls, value) -> JsonValue | None:
-    """Validates that the instruction is not empty or None and is in the correct format.
-
-    Args:
-        cls: The validator class method.
-        value (JsonValue | None): The instruction value to validate.
-
-    Returns:
-        JsonValue | None: The validated instruction or None if invalid.
-    """
-    if value is None or (isinstance(value, str) and not value.strip()):
-        return None
-    return value
-
-
-def validate_boolean_field(cls, value) -> bool | None:
-    """Validates boolean fields, allowing for flexible input formats.
-
-    Args:
-        cls: The validator class method.
-        value: The value to validate as boolean.
-
-    Returns:
-        bool | None: The validated boolean value or None if invalid.
-    """
-    try:
-        return validate_boolean(value)
-    except Exception:
-        return None
-
-
 # Field Models
 INSTRUCTION_FIELD = FieldModel(
     name="instruction",
@@ -62,7 +34,7 @@ INSTRUCTION_FIELD = FieldModel(
     default=None,
     title="Primary Instruction",
     description=instruction_field_description,
-    validator=validate_instruction,
+    validator=validate_nullable_jsonvalue_field,
     validator_kwargs={"mode": "before"},
 )
 
@@ -88,7 +60,9 @@ REASON_FIELD = FieldModel(
     default=False,
     title="Include Reasoning",
     description=reason_field_description,
-    validator=validate_boolean_field,
+    validator=lambda cls, value: validate_boolean_field(
+        cls, value, default=False
+    ),
     validator_kwargs={"mode": "before"},
 )
 
@@ -98,6 +72,8 @@ ACTIONS_FIELD = FieldModel(
     default=False,
     title="Require Actions",
     description=actions_field_description,
-    validator=validate_boolean_field,
+    validator=lambda cls, value: validate_boolean_field(
+        cls, value, default=False
+    ),
     validator_kwargs={"mode": "before"},
 )

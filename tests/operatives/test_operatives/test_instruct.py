@@ -1,7 +1,6 @@
 """Tests for the instruct module."""
 
-import pytest
-from pydantic import JsonValue, ValidationError
+from pydantic import JsonValue
 
 from lionagi.operatives.instruct.base import (
     ACTIONS_FIELD,
@@ -10,29 +9,31 @@ from lionagi.operatives.instruct.base import (
     INSTRUCTION_FIELD,
     REASON_FIELD,
     validate_boolean_field,
-    validate_instruction,
+    validate_nullable_jsonvalue_field,
 )
 from lionagi.operatives.instruct.instruct import Instruct
 
 
 class TestValidators:
-    def test_validate_instruction(self):
+    def test_validate_nullable_jsonvalue_field(self):
         """Test instruction validator with various inputs."""
         # Valid cases
         assert (
-            validate_instruction(None, "test instruction")
+            validate_nullable_jsonvalue_field(None, "test instruction")
             == "test instruction"
         )
-        assert validate_instruction(None, {"key": "value"}) == {"key": "value"}
-        assert validate_instruction(None, ["item1", "item2"]) == [
+        assert validate_nullable_jsonvalue_field(None, {"key": "value"}) == {
+            "key": "value"
+        }
+        assert validate_nullable_jsonvalue_field(None, ["item1", "item2"]) == [
             "item1",
             "item2",
         ]
 
         # Invalid cases
-        assert validate_instruction(None, None) is None
-        assert validate_instruction(None, "") is None
-        assert validate_instruction(None, "   ") is None
+        assert validate_nullable_jsonvalue_field(None, None) is None
+        assert validate_nullable_jsonvalue_field(None, "") is None
+        assert validate_nullable_jsonvalue_field(None, "   ") is None
 
     def test_validate_boolean_field(self):
         """Test boolean field validator with various inputs."""
@@ -171,7 +172,7 @@ class TestFieldModels:
         assert INSTRUCTION_FIELD.name == "instruction"
         assert INSTRUCTION_FIELD.annotation == (JsonValue | None)
         assert INSTRUCTION_FIELD.default is None
-        assert INSTRUCTION_FIELD.validator == validate_instruction
+        assert INSTRUCTION_FIELD.validator == validate_nullable_jsonvalue_field
 
     def test_guidance_field(self):
         """Test GUIDANCE_FIELD configuration."""
@@ -190,11 +191,9 @@ class TestFieldModels:
         assert REASON_FIELD.name == "reason"
         assert REASON_FIELD.annotation == bool
         assert REASON_FIELD.default is False
-        assert REASON_FIELD.validator == validate_boolean_field
 
     def test_actions_field(self):
         """Test ACTIONS_FIELD configuration."""
         assert ACTIONS_FIELD.name == "actions"
         assert ACTIONS_FIELD.annotation == bool
         assert ACTIONS_FIELD.default is False
-        assert ACTIONS_FIELD.validator == validate_boolean_field

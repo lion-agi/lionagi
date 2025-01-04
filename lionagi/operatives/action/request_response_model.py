@@ -6,6 +6,9 @@ from typing import Any
 
 from pydantic import Field, field_validator
 
+from lionagi.libs.validate.common_field_validators import (
+    validate_nullable_string_field,
+)
 from lionagi.utils import HashableModel, to_dict
 
 from ..models.field_model import FieldModel
@@ -49,9 +52,7 @@ class ActionRequestModel(HashableModel):
 
     @field_validator("function", mode="before")
     def validate_function(cls, value: str) -> str:
-        if not isinstance(value, str):
-            return None
-        return value
+        return validate_nullable_string_field(cls, value, "function", False)
 
     @classmethod
     def create(cls, content: str):

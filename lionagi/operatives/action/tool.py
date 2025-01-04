@@ -9,6 +9,7 @@ from typing import Any, Self, TypeAlias
 from pydantic import Field, field_validator, model_validator
 
 from lionagi.libs.schema.function_to_schema import function_to_schema
+from lionagi.libs.validate.common_field_validators import validate_callable
 from lionagi.protocols.types import Element
 
 __all__ = (
@@ -69,11 +70,9 @@ class Tool(Element):
 
     @field_validator("func_callable", mode="before")
     def _validate_func_callable(cls, value: Any) -> Callable[..., Any]:
-        if not callable(value):
-            raise ValueError("Function must be callable.")
-        if not hasattr(value, "__name__"):
-            raise ValueError("Function must have a name.")
-        return value
+        return validate_callable(
+            cls, value, undefind_able=False, check_name=True
+        )
 
     @model_validator(mode="after")
     def _validate_tool_schema(self) -> Self:

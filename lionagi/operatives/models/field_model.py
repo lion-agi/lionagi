@@ -8,6 +8,10 @@ from typing import Any, Self
 from pydantic import ConfigDict, Field, field_validator, model_validator
 from pydantic.fields import FieldInfo
 
+from lionagi.libs.validate.common_field_validators import (
+    validate_callable,
+    validate_dict_kwargs_params,
+)
 from lionagi.utils import UNDEFINED, UndefinedType
 
 from .schema_model import SchemaModel
@@ -125,11 +129,7 @@ class FieldModel(SchemaModel):
     @field_validator("validator_kwargs", mode="before")
     def _validate_validator_kwargs(cls, value):
         """Validate validator kwargs."""
-        if value in [None, UNDEFINED, []]:
-            return {}
-        if not isinstance(value, dict):
-            raise ValueError("Validator kwargs must be a dictionary")
-        return value
+        return validate_dict_kwargs_params(cls, value)
 
     @field_validator("validator", mode="before")
     def _validate_field_validator(cls, value) -> Callable | Any:
@@ -144,9 +144,7 @@ class FieldModel(SchemaModel):
         Raises:
             ValueError: If validator is not callable.
         """
-        if value is not UNDEFINED and not callable(value):
-            raise ValueError("Validator must be a callable function")
-        return value
+        return validate_callable(cls, value)
 
     @property
     def field_info(self) -> FieldInfo:
