@@ -307,6 +307,8 @@ class Branch(Element, Communicatable, Relational):
         handle_validation: Literal[
             "raise", "return_value", "return_none"
         ] = "return_value",
+        operative_model: type[BaseModel] = None,
+        request_model: type[BaseModel] = None,
         **kwargs,
     ) -> list | BaseModel | None | dict | str:
         """Orchestrates an 'operate' flow with optional tool invocation.
@@ -357,6 +359,22 @@ class Branch(Element, Communicatable, Relational):
                 The final parsed response, or an Operative object, or the
                 string/dict if skipping validation or no tools needed.
         """
+        if operative_model:
+            logging.warning(
+                "operative_model is deprecated. Use response_format instead."
+            )
+        if (
+            (operative_model and response_format)
+            or (operative_model and request_model)
+            or (response_format and request_model)
+        ):
+            raise ValueError(
+                "Cannot specify both operative_model and response_format"
+                "or operative_model and request_model as they are aliases"
+                "for the same parameter."
+            )
+
+        response_format = response_format or operative_model or request_model
         chat_model = chat_model or imodel or self.chat_model
         parse_model = parse_model or chat_model
 
@@ -582,6 +600,7 @@ class Branch(Element, Communicatable, Relational):
         num_parse_retries: int = 3,
         fuzzy_match_kwargs: dict = None,
         clear_messages: bool = False,
+        operative_model: type[BaseModel] = None,
         **kwargs,
     ):
         """Handles a general 'communicate' flow without tool invocation.
@@ -634,12 +653,23 @@ class Branch(Element, Communicatable, Relational):
                 The raw string, a validated Pydantic model, or a dict
                 of requested fields, depending on the parameters.
         """
-        if response_format and request_model:
-            raise ValueError(
-                "Cannot specify both response_format and request_model"
-                "as they are aliases for the same parameter."
+        if operative_model:
+            logging.warning(
+                "operative_model is deprecated. Use response_format instead."
             )
-        response_format = response_format or request_model
+        if (
+            (operative_model and response_format)
+            or (operative_model and request_model)
+            or (response_format and request_model)
+        ):
+            raise ValueError(
+                "Cannot specify both operative_model and response_format"
+                "or operative_model and request_model as they are aliases"
+                "for the same parameter."
+            )
+
+        response_format = response_format or operative_model or request_model
+
         imodel = imodel or chat_model or self.chat_model
         parse_model = parse_model or self.parse_model
 

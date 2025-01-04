@@ -8,10 +8,13 @@ from lionagi.service.imodel import iModel
 from lionagi.session.session import Branch, Session
 from lionagi.version import __version__
 
+LiteiModel = iModel
+
 __all__ = (
     "Session",
     "Branch",
     "iModel",
+    "LiteiModel",
     "types",
     "ops_types",
     "__version__",

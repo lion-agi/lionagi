@@ -336,7 +336,6 @@ class MessageManager(Manager):
     def clear_messages(self):
         self.messages.clear()
         if self.system:
-            self.messages.include(self.system)
             self.messages.insert(0, self.system)
 
     @property
