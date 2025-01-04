@@ -1,3 +1,7 @@
+# Copyright (c) 2023 - 2024, HaiyangLi <quantocean.li at gmail dot com>
+#
+# SPDX-License-Identifier: Apache-2.0
+
 PROMPT = """Perform a brainstorm session. Generate {num_instruct} concise and distinct instructions (Instruct), each representing a potential next step. We will run them in parallel under the same context. Ensure each idea:
 
 1. Adheres to project guidelines and standards.

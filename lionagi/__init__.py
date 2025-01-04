@@ -1,29 +1,21 @@
-"""The LION framework."""
+# Copyright (c) 2023 - 2024, HaiyangLi <quantocean.li at gmail dot com>
+#
+# SPDX-License-Identifier: Apache-2.0
 
-import logging
+from lionagi.operatives import types as ops_types
+from lionagi.protocols import types as types
+from lionagi.service.imodel import iModel
+from lionagi.session.session import Branch, Session
+from lionagi.version import __version__
 
-from dotenv import load_dotenv
+LiteiModel = iModel
 
-from .core.session.types import Branch, Session
-from .integrations.litellm_.imodel import LiteiModel
-from .protocols.operatives.step import Step
-from .service import iModel
-from .settings import Settings
-from .version import __version__
-
-load_dotenv()
-
-
-__all__ = [
-    "Settings",
-    "__version__",
+__all__ = (
+    "Session",
+    "Branch",
     "iModel",
     "LiteiModel",
-    "Branch",
-    "Step",
-    "Session",
-    "LiteiModel",
-]
-
-logger = logging.getLogger(__name__)
-logger.setLevel(logging.INFO)
+    "types",
+    "ops_types",
+    "__version__",
+)

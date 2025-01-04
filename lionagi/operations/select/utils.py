@@ -2,14 +2,14 @@
 #
 # SPDX-License-Identifier: Apache-2.0
 
-
 import inspect
 from enum import Enum
 from typing import Any
 
-from lionagi.core.typing import BaseModel, JsonValue
-from lionagi.libs.parse import is_same_dtype
-from lionagi.libs.string_similarity import string_similarity
+from pydantic import BaseModel, JsonValue
+
+from lionagi.libs.validate.string_similarity import string_similarity
+from lionagi.utils import is_same_dtype
 
 
 def parse_to_representation(
