@@ -38,6 +38,7 @@ from lionagi.protocols.types import (
     LogManagerConfig,
     Mail,
     Mailbox,
+    MessageFlag,
     MessageManager,
     MessageRole,
     Package,
@@ -993,6 +994,7 @@ class Branch(Element, Communicatable, Relational):
             user=self.user,
             messages=[i.clone() for i in self.msgs.messages],
             tools=tools,
+            metadata={"clone_from": self},
         )
         for message in branch_clone.msgs.messages:
             message.sender = sender or self.id
@@ -1181,6 +1183,22 @@ class Branch(Element, Communicatable, Relational):
             self.receive(key)
 
     def to_dict(self):
+        meta = {}
+        if "clone_from" in self.metadata:
+
+            meta["clone_from"] = {
+                "id": str(self.metadata["clone_from"].id),
+                "user": str(self.metadata["clone_from"].user),
+                "created_at": self.metadata["clone_from"].created_at,
+                "progression": [
+                    str(i)
+                    for i in self.metadata["clone_from"].msgs.progression
+                ],
+            }
+        meta.update(
+            copy({k: v for k, v in self.metadata.items() if k != "clone_from"})
+        )
+
         dict_ = super().to_dict()
         dict_["messages"] = self.messages.to_dict()
         dict_["logs"] = self.logs.to_dict()
@@ -1189,6 +1207,8 @@ class Branch(Element, Communicatable, Relational):
         if self.system:
             dict_["system"] = self.system.to_dict()
         dict_["log_config"] = self._log_manager._config.model_dump()
+        dict_["metadata"] = meta
+
         return dict_
 
     @classmethod
@@ -1210,6 +1230,24 @@ class Branch(Element, Communicatable, Relational):
 
         params.update(dict_)
         return cls(**{k: v for k, v in params.items() if v is not UNDEFINED})
+
+    def receive_all(self) -> None:
+        """Receives mail from all senders."""
+        for key in self.mailbox.pending_ins:
+            self.receive(key)
+
+    def flagged_messages(
+        self,
+        include_clone: bool = False,
+        include_load: bool = False,
+    ) -> None:
+        flags = []
+        if include_clone:
+            flags.append(MessageFlag.MESSAGE_CLONE)
+        if include_load:
+            flags.append(MessageFlag.MESSAGE_LOAD)
+        out = [i for i in self.messages if i._flag in flags]
+        return Pile(collections=out, item_type=RoledMessage, strict_type=False)
 
 
 # File: lionagi/session/branch.py

@@ -998,10 +998,10 @@ class Pile(Element, Collective[E], Generic[E]):
 
 
 def pile(
-    items: Any = None,
+    collections: Any = None,
     /,
     item_type: type[T] | set[type[T]] | None = None,
-    order: list[str] | None = None,
+    progression: list[str] | None = None,
     strict_type: bool = False,
     df: pd.DataFrame | None = None,  # priority 1
     fp: str | Path | None = None,  # priority 2
@@ -1028,13 +1028,13 @@ def pile(
             return Pile.adapt_from(fp, ".csv", **kwargs)
         if fp.suffix == ".xlsx":
             return Pile.adapt_from(fp, ".xlsx", **kwargs)
-        if fp.suffix == ".json":
+        if fp.suffix in [".json", ".jsonl"]:
             return Pile.adapt_from(fp, ".json", **kwargs)
 
     return Pile(
-        items,
+        collections,
         item_type=item_type,
-        order=order,
+        order=progression,
         strict=strict_type,
         **kwargs,
     )

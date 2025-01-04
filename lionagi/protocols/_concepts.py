@@ -58,18 +58,6 @@ class Communicatable(Observable):
     def send(self, *args, **kwargs):
         pass
 
-    @abstractmethod
-    def receive(self, *args, **kwargs):
-        pass
-
-    @abstractmethod
-    def asend(self, *args, **kwargs):
-        pass
-
-    @abstractmethod
-    def areceive(self, *args, **kwargs):
-        pass
-
 
 class Condition(ABC):
     """Base for conditions."""

@@ -485,6 +485,7 @@ def lcall(
     dropna: bool = False,
     unique_output: bool = False,
     flatten_tuple_set: bool = False,
+    use_input_values: bool = False,
     **kwargs: Any,
 ) -> list[R]:
     """Apply function to each element in input list with optional processing.
@@ -539,6 +540,7 @@ def lcall(
             dropna=True,
             unique=unique_input,
             flatten_tuple_set=flatten_tuple_set,
+            use_values=use_input_values,
         )
     else:
         if not isinstance(input_, list):

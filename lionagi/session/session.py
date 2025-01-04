@@ -3,11 +3,16 @@
 # SPDX-License-Identifier: Apache-2.0
 
 from collections.abc import Callable
+from functools import partial
+from typing import Self
 
 import pandas as pd
-from pydantic import Field, JsonValue
+from pydantic import Field, JsonValue, model_validator
 
 from lionagi.operatives.types import ActionManager, Tool
+from lionagi.protocols.mail.exchange import Exchange
+from lionagi.protocols.mail.manager import MailManager
+from lionagi.protocols.messages.base import MessageFlag
 from lionagi.protocols.types import (
     ID,
     MESSAGE_FIELDS,
@@ -19,12 +24,15 @@ from lionagi.protocols.types import (
     RoledMessage,
     SenderRecipient,
     System,
+    pile,
 )
 
 from .._errors import ItemNotFoundError
 from ..service.imodel import iModel
-from ..utils import to_list
+from ..utils import lcall
 from .branch import Branch
+
+msg_pile = partial(pile, item_type={RoledMessage}, strict_type=False)
 
 
 class Session(Node, Communicatable, Relational):
@@ -38,8 +46,17 @@ class Session(Node, Communicatable, Relational):
         mail_manager (MailManager | None): Manages mail operations.
     """
 
-    branches: Pile = Field(default_factory=Pile)
+    branches: Pile[Branch] = Field(default_factory=pile)
     default_branch: Branch = Field(default_factory=Branch, exclude=True)
+    mail_transfer: Exchange = Field(default_factory=Exchange)
+    mail_manager: MailManager = Field(
+        default_factory=MailManager, exclude=True
+    )
+
+    @model_validator(mode="after")
+    def _add_mail_sources(self) -> Self:
+        self.mail_manager.add_sources(self.branches)
+        return self
 
     def new_branch(
         self,
@@ -71,6 +88,7 @@ class Session(Node, Communicatable, Relational):
         branch = Branch(**kwargs)
 
         self.branches.include(branch)
+        self.mail_manager.add_sources(branch)
         if self.default_branch is None:
             self.default_branch = branch
         return branch
@@ -92,9 +110,10 @@ class Session(Node, Communicatable, Relational):
         branch: Branch = self.branches[branch]
 
         self.branches.exclude(branch)
+        self.mail_manager.delete_source(branch.id)
 
         if self.default_branch.id == branch.id:
-            if self.branches.is_empty():
+            if not self.branches:
                 self.default_branch = None
             else:
                 self.default_branch = self.branches[0]
@@ -142,31 +161,132 @@ class Session(Node, Communicatable, Relational):
             raise ValueError("Input value for branch is not a valid branch.")
         self.default_branch = branch
 
-    def to_df(self, branches: ID.RefSeq = None) -> pd.DataFrame:
-        out = self.concat_messages(branches=branches)
+    def to_df(
+        self,
+        branches: ID.RefSeq = None,
+        exclude_clone: bool = False,
+        exlcude_load: bool = False,
+    ) -> pd.DataFrame:
+        out = self.concat_messages(
+            branches=branches,
+            exclude_clone=exclude_clone,
+            exclude_load=exlcude_load,
+        )
         return out.to_df(columns=MESSAGE_FIELDS)
 
     def concat_messages(
-        self, branches: ID.RefSeq = None
+        self,
+        branches: ID.RefSeq = None,
+        exclude_clone: bool = False,
+        exclude_load: bool = False,
     ) -> Pile[RoledMessage]:
         if not branches:
             branches = self.branches
-        if isinstance(branches, dict):
-            branches = to_list(branches, use_values=True)
 
-        out = Pile(item_type=RoledMessage)
-        for i in branches:
-            if i not in self.branches:
-                _msg = str(i)
-                _msg = _msg[:50] if len(_msg) > 50 else _msg
-                raise ItemNotFoundError(
-                    f"Branch <{_msg}> was not found in the session."
+        if any(i not in self.branches for i in branches):
+            raise ValueError("Branch does not exist.")
+
+        exclude_flag = []
+        if exclude_clone:
+            exclude_flag.append(MessageFlag.MESSAGE_CLONE)
+        if exclude_load:
+            exclude_flag.append(MessageFlag.MESSAGE_LOAD)
+
+        messages = lcall(
+            branches,
+            lambda x: [
+                i for i in self.branches[x].messages if i not in exclude_flag
+            ],
+            sanitize_input=True,
+            flatten=True,
+            unique_input=True,
+            unique_output=True,
+        )
+        return msg_pile(messages)
+
+    def to_df(
+        self,
+        branches: ID.RefSeq = None,
+        exclude_clone: bool = False,
+        exclude_load: bool = False,
+    ) -> pd.DataFrame:
+        out = self.concat_messages(
+            branches=branches,
+            exclude_clone=exclude_clone,
+            exclude_load=exclude_load,
+        )
+        return out.to_df(columns=MESSAGE_FIELDS)
+
+    def send(self, to_: ID.RefSeq = None):
+        """
+        Send mail to specified branches.
+
+        Args:
+            to_: The branches to send mail to. If None, send to all.
+
+        Raises:
+            ValueError: If mail sending fails.
+        """
+        if to_ is None:
+            self.mail_manager.send_all()
+        else:
+            try:
+                lcall(
+                    to_,
+                    lambda x: self.mail_manager.send(ID.get_id(x)),
+                    sanitize_input=True,
+                    unique_input=True,
+                    use_input_values=True,
                 )
+            except Exception as e:
+                raise ValueError(f"Failed to send mail. Error: {e}")
 
-            b: Branch = self.branches[i]
-            out |= b.msgs.messages
+    async def acollect_send_all(self, receive_all: bool = False):
+        """
+        Collect and send mail for all branches, optionally receiving all mail.
 
-        return out
+        Args:
+            receive_all: If True, receive all mail for all branches.
+        """
+        async with self.mail_manager.sources:
+            self.collect_send_all(receive_all)
+
+    def collect_send_all(self, receive_all: bool = False):
+        """
+        Collect and send mail for all branches, optionally receiving all mail.
+
+        Args:
+            receive_all: If True, receive all mail for all branches.
+        """
+        self.collect()
+        self.send()
+        if receive_all:
+            lcall(self.branches, lambda x: x.receive_all())
+
+    def collect(self, from_: ID.RefSeq = None):
+        """
+        Collect mail from specified branches.
+
+        Args:
+            from_: The branches to collect mail from. If None, collect
+                from all.
+
+        Raises:
+            ValueError: If mail collection fails.
+        """
+        if from_ is None:
+            self.mail_manager.collect_all()
+        else:
+            try:
+                lcall(
+                    from_,
+                    lambda x: self.mail_manager.collect(ID.get_id(x)),
+                    sanitize_input=True,
+                    unique_input=True,
+                    use_input_values=True,
+                )
+            except Exception as e:
+                raise ValueError(f"Failed to collect mail. Error: {e}")
 
 
 __all__ = ["Session"]
