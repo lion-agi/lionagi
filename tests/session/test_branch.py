@@ -336,7 +336,7 @@ def test_send_and_receive_sync(branch_with_mock_imodel: Branch):
     branch_with_mock_imodel.send(
         recipient=target_branch.id,
         category=PackageCategory.MESSAGE,
-        package=msg,
+        item=msg,
     )
     # Mail in out_queue
     assert len(branch_with_mock_imodel.mailbox.pending_outs) == 1

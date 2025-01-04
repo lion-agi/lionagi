@@ -393,7 +393,7 @@ class Branch(Element, Communicatable, Relational):
             context=instruct.context,
             sender=sender,
             recipient=recipient,
-            request_model=operative.request_type,
+            response_format=operative.request_type,
             progression=progression,
             imodel=chat_model,
             images=images,
@@ -526,7 +526,7 @@ class Branch(Element, Communicatable, Relational):
                 instruction="reformat text into specified model",
                 guidane="follow the required response format, using the model schema as a guide",
                 context=[{"text_to_format": text}],
-                request_model=request_type,
+                response_format=request_type,
                 sender=self.user,
                 recipient=self.id,
                 imodel=self.parse_model,
@@ -638,7 +638,7 @@ class Branch(Element, Communicatable, Relational):
                 "Cannot specify both response_format and request_model"
                 "as they are aliases for the same parameter."
             )
-        request_model = response_format or request_model
+        response_format = response_format or request_model
         imodel = imodel or chat_model or self.chat_model
         parse_model = parse_model or self.parse_model
 
@@ -658,7 +658,7 @@ class Branch(Element, Communicatable, Relational):
             context=context,
             sender=sender,
             recipient=recipient,
-            request_model=request_model,
+            response_format=response_format,
             progression=progression,
             imodel=imodel,
             images=images,
@@ -671,10 +671,10 @@ class Branch(Element, Communicatable, Relational):
         if skip_validation:
             return res.response
 
-        if request_model is not None:
+        if response_format is not None:
             return await self.parse(
                 text=res.response,
-                request_type=request_model,
+                request_type=response_format,
                 max_retries=num_parse_retries,
                 **(fuzzy_match_kwargs or {}),
             )
@@ -794,7 +794,7 @@ class Branch(Element, Communicatable, Relational):
         sender=None,
         recipient=None,
         request_fields=None,
-        request_model: type[BaseModel] = None,
+        response_format: type[BaseModel] = None,
         progression=None,
         imodel: iModel = None,
         tool_schemas=None,
@@ -848,7 +848,7 @@ class Branch(Element, Communicatable, Relational):
             context=context,
             sender=sender or self.user or "user",
             recipient=recipient or self.id,
-            request_model=request_model,
+            response_format=response_format,
             request_fields=request_fields,
             images=images,
             image_detail=image_detail,
@@ -1048,7 +1048,7 @@ class Branch(Element, Communicatable, Relational):
         self,
         recipient: IDType,
         category: PackageCategory | None,
-        package: Any,
+        item: Any,
         request_source: IDType | None = None,
     ) -> None:
         """Sends a package (wrapped in Mail) to a specific recipient.
@@ -1065,7 +1065,7 @@ class Branch(Element, Communicatable, Relational):
         """
         package = Package(
             category=category,
-            item=package,
+            item=item,
             request_source=request_source,
         )
 
