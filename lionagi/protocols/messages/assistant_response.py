@@ -70,7 +70,7 @@ def prepare_assistant_response(
 
 class AssistantResponse(RoledMessage):
 
-    template: Template | str = jinja_env.get_template(
+    template: Template | str | None = jinja_env.get_template(
         "assistant_response.jinja2"
     )
 

@@ -130,7 +130,10 @@ class LogManager(Manager):
         if _config is None:
             _config = LogManagerConfig(**kwargs)
 
-        self.logs = Pile(collections=logs, item_type=Log, strict_type=True)
+        if isinstance(logs, dict):
+            self.logs = Pile.from_dict(logs)
+        else:
+            self.logs = Pile(collections=logs, item_type=Log, strict_type=True)
         self._config = _config
 
         # Auto-dump on exit

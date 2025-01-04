@@ -64,7 +64,7 @@ class EndpointConfig(BaseModel):
     provider: str | None = None
     base_url: str | None = None
     endpoint: str
-    endpoint_params: dict = None
+    endpoint_params: dict | None = None
     method: Literal["get", "post", "put", "delete"] = Field("post")
     openai_compatible: bool = False
     required_kwargs: set[str] = Field(default_factory=set)
@@ -93,6 +93,11 @@ class EndPoint(ABC):
             config (dict): Configuration data that matches the EndpointConfig
                 schema.
         """
+        self.config = EndpointConfig(**config)
+
+    def update_config(self, **kwargs):
+        config = self.config.model_dump()
+        config.update(kwargs)
         self.config = EndpointConfig(**config)
 
     @property

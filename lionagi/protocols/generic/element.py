@@ -313,7 +313,7 @@ class Element(BaseModel, Observable):
         metadata = data.pop("metadata", {})
         if "lion_class" in metadata:
             subcls: str = metadata.pop("lion_class")
-            if subcls != cls.class_name(full=True):
+            if subcls != Element.class_name(full=True):
                 try:
                     # Attempt dynamic lookup by registry
                     subcls_type: type[Element] = get_class(

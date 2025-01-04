@@ -116,6 +116,7 @@ class Branch(Element, Communicatable, Relational):
         system_datetime: bool | str = None,
         system_template: Template | str = None,
         system_template_context: dict = None,
+        logs: Pile[Log] = None,
         **kwargs,
     ):
         """Initializes a Branch with references to managers and mailbox.
@@ -167,8 +168,16 @@ class Branch(Element, Communicatable, Relational):
                 sender=system_sender or self.user or MessageRole.SYSTEM,
             )
 
-        chat_model = chat_model or imodel or iModel(**Settings.iModel.CHAT)
-        parse_model = parse_model or iModel(**Settings.iModel.PARSE)
+        chat_model = chat_model or imodel
+        if not chat_model:
+            chat_model = iModel(**Settings.iModel.CHAT)
+        if not parse_model:
+            parse_model = iModel(**Settings.iModel.PARSE)
+
+        if isinstance(chat_model, dict):
+            chat_model = iModel.from_dict(chat_model)
+        if isinstance(parse_model, dict):
+            parse_model = iModel.from_dict(parse_model)
 
         self._imodel_manager = iModelManager(
             chat=chat_model, parse=parse_model
@@ -181,9 +190,9 @@ class Branch(Element, Communicatable, Relational):
                 if isinstance(log_config, LogManagerConfig)
                 else LogManagerConfig(**log_config)
             )
-            self._log_manager = LogManager.from_config(log_config)
+            self._log_manager = LogManager.from_config(log_config, logs=logs)
         else:
-            self._log_manager = LogManager(**Settings.Config.LOG)
+            self._log_manager = LogManager(**Settings.Config.LOG, logs=logs)
 
     @property
     def system(self) -> System | None:
@@ -697,8 +706,8 @@ class Branch(Element, Communicatable, Relational):
         retry_timing: bool = False,
         max_concurrent: int | None = None,
         throttle_period: float | None = None,
-        flatten: bool = False,
-        dropna: bool = False,
+        flatten: bool = True,
+        dropna: bool = True,
         unique_output: bool = False,
         flatten_tuple_set: bool = False,
     ):
@@ -1108,7 +1117,7 @@ class Branch(Element, Communicatable, Relational):
                 self.mailbox.pile_.pop(mail_id)
 
             elif mail.category == "tool" and tool:
-                if not isinstance(mail.package.package, Tool):
+                if not isinstance(mail.package.item, Tool):
                     raise ValueError("Invalid tools format")
                 self._action_manager.register_tools(mail.package.item)
                 self.mailbox.pile_.pop(mail_id)
@@ -1169,6 +1178,37 @@ class Branch(Element, Communicatable, Relational):
         """Receives mail from all senders."""
         for key in list(self.mailbox.pending_ins.keys()):
             self.receive(key)
+
+    def to_dict(self):
+        dict_ = super().to_dict()
+        dict_["messages"] = self.messages.to_dict()
+        dict_["logs"] = self.logs.to_dict()
+        dict_["chat_model"] = self.chat_model.to_dict()
+        dict_["parse_model"] = self.parse_model.to_dict()
+        if self.system:
+            dict_["system"] = self.system.to_dict()
+        dict_["log_config"] = self._log_manager._config.model_dump()
+        return dict_
+
+    @classmethod
+    def from_dict(cls, data: dict):
+        dict_ = {
+            "messages": data.pop("messages", UNDEFINED),
+            "logs": data.pop("logs", UNDEFINED),
+            "chat_model": data.pop("chat_model", UNDEFINED),
+            "parse_model": data.pop("parse_model", UNDEFINED),
+            "system": data.pop("system", UNDEFINED),
+            "log_config": data.pop("log_config", UNDEFINED),
+        }
+        params = {}
+        for k, v in data.items():
+            if isinstance(v, dict) and "id" in v:
+                params.update(v)
+            else:
+                params[k] = v
+
+        params.update(dict_)
+        return cls(**{k: v for k, v in params.items() if v is not UNDEFINED})
 
 
 # File: lionagi/session/branch.py

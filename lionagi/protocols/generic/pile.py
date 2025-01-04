@@ -129,6 +129,10 @@ class Pile(Element, Collective[E], Generic[E]):
 
         super().__init__(strict_type=strict_type, **_config)
         self.item_type = self._validate_item_type(item_type)
+
+        if isinstance(collections, list) and is_same_dtype(collections, dict):
+            collections = [Element.from_dict(i) for i in collections]
+
         self.collections = self._validate_pile(
             collections or kwargs.get("collections", {})
         )
@@ -155,7 +159,7 @@ class Pile(Element, Collective[E], Generic[E]):
         """
         items = data.pop("collections", [])
         items = [Element.from_dict(i) for i in items]
-        return cls(items=items, **data)
+        return cls(collections=items, **data)
 
     def __setitem__(
         self,
@@ -820,6 +824,9 @@ class Pile(Element, Collective[E], Generic[E]):
 
         result = {}
         for i in value:
+            if isinstance(i, dict):
+                i = Element.from_dict(i)
+
             if self.item_type:
                 if self.strict_type:
                     if type(i) not in self.item_type:

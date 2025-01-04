@@ -7,7 +7,7 @@ from pathlib import Path
 from typing import Any
 
 from jinja2 import Environment, FileSystemLoader, Template
-from pydantic import Field, field_serializer
+from pydantic import Field, PrivateAttr, field_serializer
 
 from .._concepts import Sendable
 from ..generic.element import Element, IDType
@@ -38,7 +38,7 @@ class RoledMessage(Node, Sendable):
         description="The role of the message in the conversation.",
     )
 
-    flag: MessageFlag | None = Field(None, exclude=True, frozen=True)
+    _flag: MessageFlag | None = PrivateAttr(None)
 
     template: str | Template | None = None
 
@@ -113,8 +113,11 @@ class RoledMessage(Node, Sendable):
     @classmethod
     def from_dict(cls, dict_: dict):
         try:
-            dict_["flag"] = MessageFlag.MESSAGE_LOAD
-            return cls(**dict_)
+            self: RoledMessage = super().from_dict(
+                {k: v for k, v in dict_.items() if v}
+            )
+            self._flag = MessageFlag.MESSAGE_LOAD
+            return self
         except Exception as e:
             raise ValueError(f"Invalid RoledMessage data: {e}")
 
@@ -125,15 +128,15 @@ class RoledMessage(Node, Sendable):
         Returns:
             bool: True if the message is a clone, False otherwise.
         """
-        return self.flag == MessageFlag.MESSAGE_CLONE
+        return self._flag == MessageFlag.MESSAGE_CLONE
 
     def clone(self, keep_role: bool = True) -> "RoledMessage":
         instance = self.__class__(
             content=self.content,
             role=self.role if keep_role else MessageRole.UNSET,
             metadata={"clone_from": self},
-            flag=MessageFlag.MESSAGE_CLONE,
         )
+        instance._flag = MessageFlag.MESSAGE_CLONE
         return instance
 
     def to_log(self) -> Log:

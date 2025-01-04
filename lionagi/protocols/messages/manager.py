@@ -30,12 +30,22 @@ class MessageManager(Manager):
         system: System | None = None,
     ):
         super().__init__()
-        self.messages: Pile[RoledMessage] = Pile(
-            collections=messages,
-            item_type={RoledMessage},
-            strict_type=False,
-            progression=progression,
-        )
+        m_ = []
+        if isinstance(messages, list):
+            for i in messages:
+                if isinstance(i, dict):
+                    i = RoledMessage.from_dict(i)
+                if isinstance(i, RoledMessage):
+                    m_.append(i)
+        if isinstance(messages, dict):
+            self.messages = Pile.from_dict(messages)
+        else:
+            self.messages: Pile[RoledMessage] = Pile(
+                collections=m_,
+                item_type={RoledMessage},
+                strict_type=False,
+                progression=progression,
+            )
         if system and not isinstance(system, System):
             raise ValueError("System message must be a System instance.")
         self.system = system  # system must be the first message

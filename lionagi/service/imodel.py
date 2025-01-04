@@ -103,7 +103,10 @@ class iModel:
                 case "groq":
                     api_key = "GROQ_API_KEY"
 
-        api_key = os.getenv(api_key, None) or api_key
+        if os.getenv(api_key, None) is not None:
+            self.api_key_scheme = api_key
+            api_key = os.getenv(api_key)
+
         kwargs["api_key"] = api_key
         model = kwargs.get("model", None)
         if model:
@@ -124,6 +127,10 @@ class iModel:
                 endpoint=endpoint,
                 endpoint_params=endpoint_params,
             )
+        if provider:
+            self.endpoint.config.provider = provider
+        if base_url:
+            self.endpoint.config.base_url = base_url
 
         self.should_invoke_endpoint = invoke_with_endpoint
         self.kwargs = kwargs
@@ -244,3 +251,47 @@ class iModel:
             messages; False otherwise.
         """
         return self.endpoint.sequential_exchange
+
+    def to_dict(self):
+        kwargs = self.kwargs
+        if "kwargs" in self.kwargs:
+            kwargs = self.kwargs["kwargs"]
+        return {
+            "provider": self.endpoint.config.provider,
+            "endpoint": self.endpoint.config.model_dump(),
+            "api_key": (
+                self.api_key_scheme
+                if hasattr(self, "api_key_scheme")
+                else None
+            ),
+            "processor_config": self.executor.config,
+            "invoke_with_endpoint": self.should_invoke_endpoint,
+            **{k: v for k, v in kwargs.items() if k != "api_key"},
+        }
+
+    @classmethod
+    def from_dict(cls, data: dict):
+        provider = data.pop("provider", None)
+        base_url = data.pop("base_url", None)
+        api_key = data.pop("api_key", None)
+        processor_config = data.pop("processor_config", {})
+
+        endpoint_config_params = data.pop("endpoint", {})
+        endpoint_ = endpoint_config_params.pop("endpoint", None)
+        endpoint_params = endpoint_config_params.get("endpoint_params", None)
+
+        endpoint = match_endpoint(
+            provider=provider,
+            base_url=base_url,
+            endpoint=endpoint_,
+            endpoint_params=endpoint_params,
+        )
+        endpoint.update_config(**endpoint_config_params)
+        return cls(
+            provider=provider,
+            base_url=base_url,
+            endpoint=endpoint,
+            api_key=api_key,
+            **data,
+            **processor_config,
+        )

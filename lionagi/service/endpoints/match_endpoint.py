@@ -51,8 +51,10 @@ def match_endpoint(
         return OpenRouterChatCompletionEndPoint()
 
     return OpenAIChatCompletionEndPoint(
-        provider=provider,
-        base_url=base_url,
-        endpoint=endpoint,
-        endpoint_params=endpoint_params,
+        config={
+            "provider": provider,
+            "base_url": base_url,
+            "endpoint": endpoint,
+            "endpoint_params": endpoint_params,
+        }
     )

@@ -134,6 +134,12 @@ class RateLimitedAPIExecutor(Executor):
             "limit_requests": limit_requests,
             "limit_tokens": limit_tokens,
         }
+
+        self.config = config
+        self.interval = interval
+        self.limit_requests = limit_requests
+        self.limit_tokens = limit_tokens
+
         super().__init__(
             processor_config=config, strict_event_type=strict_event_type
         )
