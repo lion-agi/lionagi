@@ -10,3 +10,5 @@ This section covers various tutorials.
    :maxdepth: 2
 
    get_started
+   get_started_pt2
+   get_started_pt3
