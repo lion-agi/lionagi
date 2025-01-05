@@ -1,0 +1,59 @@
+/* Container for the custom link */
+.my-custom-header {
+    /* If you prefer to separate from theme content: */
+    margin: 0.75rem 1rem 0 1rem;
+    display: flex;
+    justify-content: flex-end; /* Right align */
+    align-items: center;
+    /* Optional border or bottom line: */
+    border-bottom: 1px solid var(--color-border-muted, #ccc);
+    padding-bottom: 0.5rem;
+  }
+  
+  .my-custom-header .header-link {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.4rem;
+    text-decoration: none;
+    color: var(--color-text-primary, #222); /* fallback if CSS vars not set */
+    background: var(--color-background-accent, #f5f5f5);
+    padding: 0.4rem 0.75rem;
+    border-radius: 6px;
+    font-weight: 500;
+    transition: background-color 0.2s ease, color 0.2s ease;
+  }
+  
+  .my-custom-header .header-link:hover {
+    background: var(--color-background-accent-hover, #e6e6e6);
+    color: var(--color-text-primary-hover, #111);
+  }
+  
+  /* The GitHub icon: ensures it scales well with text size */
+  .my-custom-header .gh-icon {
+    width: 1.2em;
+    height: 1.2em;
+    flex-shrink: 0;
+    opacity: 0.8;
+    transition: opacity 0.2s ease;
+  }
+  
+  .my-custom-header .header-link:hover .gh-icon {
+    opacity: 1.0;
+  }
+  
+  /* Example support for dark mode if your theme doesn't handle it automatically. */
+  @media (prefers-color-scheme: dark) {
+    .my-custom-header .header-link {
+      background: var(--color-background-accent-dark, #333);
+      color: var(--color-text-primary-dark, #eee);
+    }
+    .my-custom-header .header-link:hover {
+      background: var(--color-background-accent-hover-dark, #444);
+    }
+    .my-custom-header .gh-icon {
+      opacity: 0.8;
+    }
+    .my-custom-header .header-link:hover .gh-icon {
+      opacity: 1.0;
+    }
+  }
