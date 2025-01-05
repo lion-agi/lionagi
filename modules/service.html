@@ -1,0 +1,578 @@
+<!doctype html>
+<html class="no-js" lang="en" data-content_root="../">
+  <head><meta charset="utf-8"/>
+    <meta name="viewport" content="width=device-width,initial-scale=1"/>
+    <meta name="color-scheme" content="light dark"><meta name="viewport" content="width=device-width, initial-scale=1" />
+<link rel="index" title="Index" href="../genindex.html" /><link rel="search" title="Search" href="../search.html" /><link rel="next" title="Session (lionagi.session.session)" href="session.html" /><link rel="prev" title="Pile &amp; Progression in lionagi.protocols" href="pile_progression.html" />
+
+    <!-- Generated with Sphinx 8.1.3 and Furo 2024.08.06 -->
+        <title>LionAGI Service System (service) - My LIONAGI Documentation</title>
+      <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=8f2a1f02" />
+    <link rel="stylesheet" type="text/css" href="../_static/styles/furo.css?v=354aac6f" />
+    <link rel="stylesheet" type="text/css" href="../_static/styles/furo-extensions.css?v=302659d7" />
+    <link rel="stylesheet" type="text/css" href="../_static/custom.css?v=9ac6386e" />
+    
+    
+
+
+<style>
+  body {
+    --color-code-background: #f8f8f8;
+  --color-code-foreground: black;
+  --color-brand-primary: #007ACC;
+  --color-brand-content: #006699;
+  
+  }
+  @media not print {
+    body[data-theme="dark"] {
+      --color-code-background: #202020;
+  --color-code-foreground: #d0d0d0;
+  --color-brand-primary: #4DC1FF;
+  --color-brand-content: #99C2FF;
+  
+    }
+    @media (prefers-color-scheme: dark) {
+      body:not([data-theme="light"]) {
+        --color-code-background: #202020;
+  --color-code-foreground: #d0d0d0;
+  --color-brand-primary: #4DC1FF;
+  --color-brand-content: #99C2FF;
+  
+      }
+    }
+  }
+</style></head>
+  <body>
+    
+    <script>
+      document.body.dataset.theme = localStorage.getItem("theme") || "auto";
+    </script>
+    
+
+<svg xmlns="http://www.w3.org/2000/svg" style="display: none;">
+  <symbol id="svg-toc" viewBox="0 0 24 24">
+    <title>Contents</title>
+    <svg stroke="currentColor" fill="currentColor" stroke-width="0" viewBox="0 0 1024 1024">
+      <path d="M408 442h480c4.4 0 8-3.6 8-8v-56c0-4.4-3.6-8-8-8H408c-4.4 0-8 3.6-8 8v56c0 4.4 3.6 8 8 8zm-8 204c0 4.4 3.6 8 8 8h480c4.4 0 8-3.6 8-8v-56c0-4.4-3.6-8-8-8H408c-4.4 0-8 3.6-8 8v56zm504-486H120c-4.4 0-8 3.6-8 8v56c0 4.4 3.6 8 8 8h784c4.4 0 8-3.6 8-8v-56c0-4.4-3.6-8-8-8zm0 632H120c-4.4 0-8 3.6-8 8v56c0 4.4 3.6 8 8 8h784c4.4 0 8-3.6 8-8v-56c0-4.4-3.6-8-8-8zM115.4 518.9L271.7 642c5.8 4.6 14.4.5 14.4-6.9V388.9c0-7.4-8.5-11.5-14.4-6.9L115.4 505.1a8.74 8.74 0 0 0 0 13.8z"/>
+    </svg>
+  </symbol>
+  <symbol id="svg-menu" viewBox="0 0 24 24">
+    <title>Menu</title>
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather-menu">
+      <line x1="3" y1="12" x2="21" y2="12"></line>
+      <line x1="3" y1="6" x2="21" y2="6"></line>
+      <line x1="3" y1="18" x2="21" y2="18"></line>
+    </svg>
+  </symbol>
+  <symbol id="svg-arrow-right" viewBox="0 0 24 24">
+    <title>Expand</title>
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather-chevron-right">
+      <polyline points="9 18 15 12 9 6"></polyline>
+    </svg>
+  </symbol>
+  <symbol id="svg-sun" viewBox="0 0 24 24">
+    <title>Light mode</title>
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="1" stroke-linecap="round" stroke-linejoin="round" class="feather-sun">
+      <circle cx="12" cy="12" r="5"></circle>
+      <line x1="12" y1="1" x2="12" y2="3"></line>
+      <line x1="12" y1="21" x2="12" y2="23"></line>
+      <line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line>
+      <line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line>
+      <line x1="1" y1="12" x2="3" y2="12"></line>
+      <line x1="21" y1="12" x2="23" y2="12"></line>
+      <line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line>
+      <line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line>
+    </svg>
+  </symbol>
+  <symbol id="svg-moon" viewBox="0 0 24 24">
+    <title>Dark mode</title>
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="1" stroke-linecap="round" stroke-linejoin="round" class="icon-tabler-moon">
+      <path stroke="none" d="M0 0h24v24H0z" fill="none" />
+      <path d="M12 3c.132 0 .263 0 .393 0a7.5 7.5 0 0 0 7.92 12.446a9 9 0 1 1 -8.313 -12.454z" />
+    </svg>
+  </symbol>
+  <symbol id="svg-sun-with-moon" viewBox="0 0 24 24">
+    <title>Auto light/dark, in light mode</title>
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="1" stroke-linecap="round" stroke-linejoin="round"
+      class="icon-custom-derived-from-feather-sun-and-tabler-moon">
+      <path style="opacity: 50%" d="M 5.411 14.504 C 5.471 14.504 5.532 14.504 5.591 14.504 C 3.639 16.319 4.383 19.569 6.931 20.352 C 7.693 20.586 8.512 20.551 9.25 20.252 C 8.023 23.207 4.056 23.725 2.11 21.184 C 0.166 18.642 1.702 14.949 4.874 14.536 C 5.051 14.512 5.231 14.5 5.411 14.5 L 5.411 14.504 Z"/>
+      <line x1="14.5" y1="3.25" x2="14.5" y2="1.25"/>
+      <line x1="14.5" y1="15.85" x2="14.5" y2="17.85"/>
+      <line x1="10.044" y1="5.094" x2="8.63" y2="3.68"/>
+      <line x1="19" y1="14.05" x2="20.414" y2="15.464"/>
+      <line x1="8.2" y1="9.55" x2="6.2" y2="9.55"/>
+      <line x1="20.8" y1="9.55" x2="22.8" y2="9.55"/>
+      <line x1="10.044" y1="14.006" x2="8.63" y2="15.42"/>
+      <line x1="19" y1="5.05" x2="20.414" y2="3.636"/>
+      <circle cx="14.5" cy="9.55" r="3.6"/>
+    </svg>
+  </symbol>
+  <symbol id="svg-moon-with-sun" viewBox="0 0 24 24">
+    <title>Auto light/dark, in dark mode</title>
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="1" stroke-linecap="round" stroke-linejoin="round"
+      class="icon-custom-derived-from-feather-sun-and-tabler-moon">
+      <path d="M 8.282 7.007 C 8.385 7.007 8.494 7.007 8.595 7.007 C 5.18 10.184 6.481 15.869 10.942 17.24 C 12.275 17.648 13.706 17.589 15 17.066 C 12.851 22.236 5.91 23.143 2.505 18.696 C -0.897 14.249 1.791 7.786 7.342 7.063 C 7.652 7.021 7.965 7 8.282 7 L 8.282 7.007 Z"/>
+      <line style="opacity: 50%" x1="18" y1="3.705" x2="18" y2="2.5"/>
+      <line style="opacity: 50%" x1="18" y1="11.295" x2="18" y2="12.5"/>
+      <line style="opacity: 50%" x1="15.316" y1="4.816" x2="14.464" y2="3.964"/>
+      <line style="opacity: 50%" x1="20.711" y1="10.212" x2="21.563" y2="11.063"/>
+      <line style="opacity: 50%" x1="14.205" y1="7.5" x2="13.001" y2="7.5"/>
+      <line style="opacity: 50%" x1="21.795" y1="7.5" x2="23" y2="7.5"/>
+      <line style="opacity: 50%" x1="15.316" y1="10.184" x2="14.464" y2="11.036"/>
+      <line style="opacity: 50%" x1="20.711" y1="4.789" x2="21.563" y2="3.937"/>
+      <circle style="opacity: 50%" cx="18" cy="7.5" r="2.169"/>
+    </svg>
+  </symbol>
+  <symbol id="svg-pencil" viewBox="0 0 24 24">
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="1" stroke-linecap="round" stroke-linejoin="round" class="icon-tabler-pencil-code">
+      <path d="M4 20h4l10.5 -10.5a2.828 2.828 0 1 0 -4 -4l-10.5 10.5v4" />
+      <path d="M13.5 6.5l4 4" />
+      <path d="M20 21l2 -2l-2 -2" />
+      <path d="M17 17l-2 2l2 2" />
+    </svg>
+  </symbol>
+  <symbol id="svg-eye" viewBox="0 0 24 24">
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="1" stroke-linecap="round" stroke-linejoin="round" class="icon-tabler-eye-code">
+      <path stroke="none" d="M0 0h24v24H0z" fill="none" />
+      <path d="M10 12a2 2 0 1 0 4 0a2 2 0 0 0 -4 0" />
+      <path
+        d="M11.11 17.958c-3.209 -.307 -5.91 -2.293 -8.11 -5.958c2.4 -4 5.4 -6 9 -6c3.6 0 6.6 2 9 6c-.21 .352 -.427 .688 -.647 1.008" />
+      <path d="M20 21l2 -2l-2 -2" />
+      <path d="M17 17l-2 2l2 2" />
+    </svg>
+  </symbol>
+</svg>
+
+<input type="checkbox" class="sidebar-toggle" name="__navigation" id="__navigation">
+<input type="checkbox" class="sidebar-toggle" name="__toc" id="__toc">
+<label class="overlay sidebar-overlay" for="__navigation">
+  <div class="visually-hidden">Hide navigation sidebar</div>
+</label>
+<label class="overlay toc-overlay" for="__toc">
+  <div class="visually-hidden">Hide table of contents sidebar</div>
+</label>
+
+<a class="skip-to-content muted-link" href="#furo-main-content">Skip to content</a>
+
+
+
+<div class="page">
+  <header class="mobile-header">
+    <div class="header-left">
+      <label class="nav-overlay-icon" for="__navigation">
+        <div class="visually-hidden">Toggle site navigation sidebar</div>
+        <i class="icon"><svg><use href="#svg-menu"></use></svg></i>
+      </label>
+    </div>
+    <div class="header-center">
+      <a href="../index.html"><div class="brand">My LIONAGI Documentation</div></a>
+    </div>
+    <div class="header-right">
+      <div class="theme-toggle-container theme-toggle-header">
+        <button class="theme-toggle">
+          <div class="visually-hidden">Toggle Light / Dark / Auto color theme</div>
+          <svg class="theme-icon-when-auto-light"><use href="#svg-sun-with-moon"></use></svg>
+          <svg class="theme-icon-when-auto-dark"><use href="#svg-moon-with-sun"></use></svg>
+          <svg class="theme-icon-when-dark"><use href="#svg-moon"></use></svg>
+          <svg class="theme-icon-when-light"><use href="#svg-sun"></use></svg>
+        </button>
+      </div>
+      <label class="toc-overlay-icon toc-header-icon" for="__toc">
+        <div class="visually-hidden">Toggle table of contents sidebar</div>
+        <i class="icon"><svg><use href="#svg-toc"></use></svg></i>
+      </label>
+    </div>
+  </header>
+  <aside class="sidebar-drawer">
+    <div class="sidebar-container">
+      
+      <div class="sidebar-sticky"><a class="sidebar-brand" href="../index.html">
+  
+  
+  
+</a><form class="sidebar-search-container" method="get" action="../search.html" role="search">
+  <input class="sidebar-search" placeholder="Search" name="q" aria-label="Search">
+  <input type="hidden" name="check_keywords" value="yes">
+  <input type="hidden" name="area" value="default">
+</form>
+<div id="searchbox"></div><div class="sidebar-scroll"><div class="sidebar-tree">
+  <p class="caption" role="heading"><span class="caption-text">Table of Contents:</span></p>
+<ul class="current">
+<li class="toctree-l1 current has-children"><a class="reference internal" href="index.html">LionAGI Modules Index</a><input checked="" class="toctree-checkbox" id="toctree-checkbox-1" name="toctree-checkbox-1" role="switch" type="checkbox"/><label for="toctree-checkbox-1"><div class="visually-hidden">Toggle navigation of LionAGI Modules Index</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="action.html">The <code class="docutils literal notranslate"><span class="pre">lionagi.action</span></code> Module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="adapter.html">LionAGI Adapter System (<code class="docutils literal notranslate"><span class="pre">adapter</span></code>)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="branch.html">Branch (<code class="docutils literal notranslate"><span class="pre">lionagi.session.branch</span></code>)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="concepts.html">LionAGI Core Concepts and IDs</a></li>
+<li class="toctree-l2"><a class="reference internal" href="concepts.html#module-lionagi.protocols._concepts">Abstract Concepts (<code class="docutils literal notranslate"><span class="pre">_concepts.py</span></code>)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="concepts.html#module-lionagi.protocols.generic.element">ID System and <code class="docutils literal notranslate"><span class="pre">Element</span></code> (<code class="docutils literal notranslate"><span class="pre">element.py</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="event.html">LionAGI Event Architecture</a></li>
+<li class="toctree-l2"><a class="reference internal" href="form.html">LionAGI Form System (<code class="docutils literal notranslate"><span class="pre">lionagi.form</span></code>)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="graph.html">LionAGI Graph Infrastructure</a></li>
+<li class="toctree-l2"><a class="reference internal" href="instruct.html">LionAGI Instruct System Overview</a></li>
+<li class="toctree-l2"><a class="reference internal" href="mail.html">LionAGI Mail System Reference</a></li>
+<li class="toctree-l2"><a class="reference internal" href="message.html">LionAGI Messages and Conversation Workflows</a></li>
+<li class="toctree-l2"><a class="reference internal" href="operations.html"><code class="docutils literal notranslate"><span class="pre">lionagi.operations</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="operative_step.html">Operative &amp; Step (<code class="docutils literal notranslate"><span class="pre">lionagi.operatives</span></code>)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="pile_progression.html">Pile &amp; Progression in <code class="docutils literal notranslate"><span class="pre">lionagi.protocols</span></code></a></li>
+<li class="toctree-l2 current current-page"><a class="current reference internal" href="#">LionAGI Service System (<code class="docutils literal notranslate"><span class="pre">service</span></code>)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="session.html">Session (<code class="docutils literal notranslate"><span class="pre">lionagi.session.session</span></code>)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="strategies.html"><code class="docutils literal notranslate"><span class="pre">lionagi.operations.strategies</span></code> (Execution Modes)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="utils.html">The <code class="docutils literal notranslate"><span class="pre">lionagi.utils</span></code> Module (General Purpose Helpers)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="lib_file.html">The <code class="docutils literal notranslate"><span class="pre">lionagi.libs.file</span></code> Subpackage</a></li>
+<li class="toctree-l2"><a class="reference internal" href="lib_nested.html">The <code class="docutils literal notranslate"><span class="pre">lionagi.libs.nested</span></code> Subpackage</a></li>
+<li class="toctree-l2"><a class="reference internal" href="lib_package.html">The <code class="docutils literal notranslate"><span class="pre">lionagi.libs.package</span></code> Subpackage</a></li>
+<li class="toctree-l2"><a class="reference internal" href="lib_schema.html">The <code class="docutils literal notranslate"><span class="pre">lionagi.libs.schema</span></code> Subpackage</a></li>
+<li class="toctree-l2"><a class="reference internal" href="lib_validate.html">The <code class="docutils literal notranslate"><span class="pre">lionagi.libs.validate</span></code> Subpackage</a></li>
+<li class="toctree-l2"><a class="reference internal" href="models.html">LionAGI Model System (<code class="docutils literal notranslate"><span class="pre">operatives/model</span></code>)</a></li>
+</ul>
+</li>
+<li class="toctree-l1 has-children"><a class="reference internal" href="../operations/index.html">LionAGI Operations</a><input class="toctree-checkbox" id="toctree-checkbox-2" name="toctree-checkbox-2" role="switch" type="checkbox"/><label for="toctree-checkbox-2"><div class="visually-hidden">Toggle navigation of LionAGI Operations</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l2"><a class="reference internal" href="../operations/core_operations.html">Core Operation Modules</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../operations/strategies.html">Execution Strategies &amp; Executors</a></li>
+</ul>
+</li>
+</ul>
+
+</div>
+</div>
+
+      </div>
+      
+    </div>
+  </aside>
+  <div class="main">
+    <div class="content">
+      <div class="article-container">
+        <a href="#" class="back-to-top muted-link">
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
+            <path d="M13 20h-2V8l-5.5 5.5-1.42-1.42L12 4.16l7.92 7.92-1.42 1.42L13 8v12z"></path>
+          </svg>
+          <span>Back to top</span>
+        </a>
+        <div class="content-icon-container">
+          <div class="view-this-page">
+  <a class="muted-link" href="../_sources/modules/service.rst.txt" title="View this page">
+    <svg><use href="#svg-eye"></use></svg>
+    <span class="visually-hidden">View this page</span>
+  </a>
+</div>
+<div class="theme-toggle-container theme-toggle-content">
+            <button class="theme-toggle">
+              <div class="visually-hidden">Toggle Light / Dark / Auto color theme</div>
+              <svg class="theme-icon-when-auto-light"><use href="#svg-sun-with-moon"></use></svg>
+              <svg class="theme-icon-when-auto-dark"><use href="#svg-moon-with-sun"></use></svg>
+              <svg class="theme-icon-when-dark"><use href="#svg-moon"></use></svg>
+              <svg class="theme-icon-when-light"><use href="#svg-sun"></use></svg>
+            </button>
+          </div>
+          <label class="toc-overlay-icon toc-content-icon" for="__toc">
+            <div class="visually-hidden">Toggle table of contents sidebar</div>
+            <i class="icon"><svg><use href="#svg-toc"></use></svg></i>
+          </label>
+        </div>
+        <article role="main" id="furo-main-content">
+          <section id="lionagi-service-system-service">
+<h1>LionAGI Service System (<code class="docutils literal notranslate"><span class="pre">service</span></code>)<a class="headerlink" href="#lionagi-service-system-service" title="Link to this heading">¶</a></h1>
+<p>The <strong>Service</strong> subsystem in LionAGI provides classes and utilities
+for <strong>API endpoint</strong> management (e.g., chat completions), <strong>rate-limiting</strong>,
+and orchestrating requests to external language model services. This
+system helps unify how LionAGI communicates with various model providers
+(OpenAI, Anthropic, Groq, etc.) while handling token usage, endpoint
+configuration, caching, and concurrency constraints.</p>
+<section id="endpointconfig-endpoint">
+<h2>1. EndpointConfig &amp; EndPoint<a class="headerlink" href="#endpointconfig-endpoint" title="Link to this heading">¶</a></h2>
+<p id="module-lionagi.service.endpoints.base">Describes the essential attributes of an API endpoint:</p>
+<ul class="simple">
+<li><p><code class="xref py py-attr docutils literal notranslate"><span class="pre">provider</span></code> (str|None): The backend provider name (e.g., “openai”).</p></li>
+<li><p><code class="xref py py-attr docutils literal notranslate"><span class="pre">base_url</span></code> (str|None): Base URL for requests.</p></li>
+<li><p><code class="xref py py-attr docutils literal notranslate"><span class="pre">endpoint</span></code> (str): Endpoint path (like “/v1/chat/completions”).</p></li>
+<li><p><code class="xref py py-attr docutils literal notranslate"><span class="pre">method</span></code> (Literal[“get”,”post”,”put”,”delete”]): HTTP method.</p></li>
+<li><p><code class="xref py py-attr docutils literal notranslate"><span class="pre">openai_compatible</span></code> (bool): If True, uses an OpenAI-like calling convention.</p></li>
+<li><p><code class="xref py py-attr docutils literal notranslate"><span class="pre">is_invokeable</span></code> (bool): If True, supports direct invocation.</p></li>
+<li><p><code class="xref py py-attr docutils literal notranslate"><span class="pre">is_streamable</span></code> (bool): If True, can stream partial results.</p></li>
+<li><p><code class="xref py py-attr docutils literal notranslate"><span class="pre">requires_tokens</span></code> (bool): If True, the system calculates tokens prior to the call.</p></li>
+<li><p><strong>Other</strong> fields:
+- <code class="xref py py-attr docutils literal notranslate"><span class="pre">required_kwargs</span></code>, <code class="xref py py-attr docutils literal notranslate"><span class="pre">optional_kwargs</span></code>, <code class="xref py py-attr docutils literal notranslate"><span class="pre">deprecated_kwargs</span></code>
+- <code class="xref py py-attr docutils literal notranslate"><span class="pre">api_version</span></code>, <code class="xref py py-attr docutils literal notranslate"><span class="pre">allowed_roles</span></code>
+- etc.</p></li>
+</ul>
+<p><strong>Key Methods</strong>:</p>
+<ul class="simple">
+<li><p><code class="xref py py-meth docutils literal notranslate"><span class="pre">create_payload(...)()</span></code> -&gt; dict:
+Accepts request parameters and merges them with the endpoint’s
+config (like <cite>required_kwargs</cite>) to create a final payload + headers.</p></li>
+<li><p><code class="xref py py-meth docutils literal notranslate"><span class="pre">invoke(payload,</span> <span class="pre">headers,</span> <span class="pre">is_cached=False,</span> <span class="pre">**kwargs)()</span></code>:
+Handles the actual or cached request.</p></li>
+<li><p><code class="xref py py-meth docutils literal notranslate"><span class="pre">_invoke(...)()</span></code> (abstract):
+The core HTTP request logic (subclasses must implement).</p></li>
+<li><p><code class="xref py py-meth docutils literal notranslate"><span class="pre">_stream(...)()</span></code> (abstract):
+Streaming request logic if the endpoint is streamable.</p></li>
+<li><p><code class="xref py py-meth docutils literal notranslate"><span class="pre">calculate_tokens(payload)()</span></code>:
+If <cite>requires_tokens=True</cite>, uses <code class="xref py py-class docutils literal notranslate"><span class="pre">TokenCalculator</span></code> to estimate
+usage.</p></li>
+</ul>
+<p><strong>Concrete Implementations</strong>:
+- <code class="xref py py-class docutils literal notranslate"><span class="pre">ChatCompletionEndPoint</span></code> in</p>
+<blockquote>
+<div><p><code class="docutils literal notranslate"><span class="pre">lionagi.service.endpoints.chat_completion.ChatCompletionEndPoint</span></code></p>
+</div></blockquote>
+<ul class="simple">
+<li><p>Additional provider-specific classes (OpenAI, Anthropic, etc.).</p></li>
+</ul>
+</section>
+<section id="module-lionagi.service.token_calculator">
+<span id="tokencalculator"></span><h2>2. TokenCalculator<a class="headerlink" href="#module-lionagi.service.token_calculator" title="Link to this heading">¶</a></h2>
+<dl class="py class">
+<dt class="sig sig-object py" id="lionagi.service.token_calculator.TokenCalculator">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">lionagi.service.token_calculator.</span></span><span class="sig-name descname"><span class="pre">TokenCalculator</span></span><a class="headerlink" href="#lionagi.service.token_calculator.TokenCalculator" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<p>Methods to estimate token usage for text or images:</p>
+<ul class="simple">
+<li><p><code class="xref py py-meth docutils literal notranslate"><span class="pre">calculate_message_tokens(messages,</span> <span class="pre">**kwargs)()</span></code> -&gt; int:
+Sums up tokens for each message in a chat scenario.</p></li>
+<li><p><code class="xref py py-meth docutils literal notranslate"><span class="pre">calcualte_embed_token(inputs,</span> <span class="pre">**kwargs)()</span></code> -&gt; int:
+Summation for embedding calls.</p></li>
+<li><p><code class="xref py py-meth docutils literal notranslate"><span class="pre">tokenize(...)()</span></code> -&gt; int|list[int]:
+Generic method to tokenize a string using <cite>tiktoken</cite>, returning either
+token count or the token IDs themselves.</p></li>
+</ul>
+</section>
+<section id="module-0">
+<span id="apicalling-event"></span><h2>3. APICalling (Event)<a class="headerlink" href="#module-0" title="Link to this heading">¶</a></h2>
+<p>Stores:
+- <code class="xref py py-attr docutils literal notranslate"><span class="pre">payload</span></code> (dict): Data to send in the request.
+- <code class="xref py py-attr docutils literal notranslate"><span class="pre">headers</span></code> (dict): Additional HTTP headers.
+- <code class="xref py py-attr docutils literal notranslate"><span class="pre">endpoint</span></code> (<code class="xref py py-class docutils literal notranslate"><span class="pre">EndPoint</span></code>): The endpoint to call.
+- <code class="xref py py-attr docutils literal notranslate"><span class="pre">is_cached</span></code> (bool): Whether this call uses caching.
+- <code class="xref py py-attr docutils literal notranslate"><span class="pre">should_invoke_endpoint</span></code> (bool): If False, no actual invocation.</p>
+<p>Implements:</p>
+<ul class="simple">
+<li><p><code class="xref py py-meth docutils literal notranslate"><span class="pre">invoke()</span></code> (async):
+The main method that performs the request, with retries if needed.</p></li>
+<li><p><code class="xref py py-meth docutils literal notranslate"><span class="pre">stream(...)()</span></code> (async generator):
+If endpoint supports streaming, yields partial results.</p></li>
+</ul>
+</section>
+<section id="chatcompletionendpoint-subclasses">
+<h2>4. ChatCompletionEndPoint &amp; Subclasses<a class="headerlink" href="#chatcompletionendpoint-subclasses" title="Link to this heading">¶</a></h2>
+<dl class="py class" id="module-lionagi.service.endpoints.chat_completion">
+<dt class="sig sig-object py" id="lionagi.service.endpoints.chat_completion.ChatCompletionEndPoint">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">lionagi.service.endpoints.chat_completion.</span></span><span class="sig-name descname"><span class="pre">ChatCompletionEndPoint</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">EndPoint</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#lionagi.service.endpoints.chat_completion.ChatCompletionEndPoint" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<p>A base class for chat-style endpoints that expects role-based messages
+(“system”, “user”, “assistant”, etc.). Subclasses override <cite>_invoke()</cite>
+and <cite>_stream()</cite> for each provider’s specifics.</p>
+<p><strong>Examples</strong> (subclasses):</p>
+<ul class="simple">
+<li><p><code class="xref py py-class docutils literal notranslate"><span class="pre">OpenAIChatCompletionEndPoint</span></code></p></li>
+<li><p><code class="xref py py-class docutils literal notranslate"><span class="pre">AnthropicChatCompletionEndPoint</span></code></p></li>
+<li><p><code class="xref py py-class docutils literal notranslate"><span class="pre">GroqChatCompletionEndPoint</span></code></p></li>
+<li><p><code class="xref py py-class docutils literal notranslate"><span class="pre">OpenRouterChatCompletionEndPoint</span></code></p></li>
+<li><p><code class="xref py py-class docutils literal notranslate"><span class="pre">PerplexityChatCompletionEndPoint</span></code></p></li>
+</ul>
+<p>Each provider sets up its own config with required/optional fields,
+and possibly different base URLs or roles.</p>
+</section>
+<section id="module-lionagi.service.endpoints.rate_limited_processor">
+<span id="rate-limited-execution"></span><h2>5. Rate-Limited Execution<a class="headerlink" href="#module-lionagi.service.endpoints.rate_limited_processor" title="Link to this heading">¶</a></h2>
+<p>A concurrency-limiting, rate-limiting processor dedicated
+to handling <code class="xref py py-class docutils literal notranslate"><span class="pre">APICalling</span></code> events. Supports:</p>
+<ul class="simple">
+<li><p><code class="xref py py-attr docutils literal notranslate"><span class="pre">limit_requests</span></code> (#requests per interval).</p></li>
+<li><p><code class="xref py py-attr docutils literal notranslate"><span class="pre">limit_tokens</span></code> (#tokens per interval).</p></li>
+<li><p><code class="xref py py-attr docutils literal notranslate"><span class="pre">interval</span></code> (seconds) for refreshing or replenishing capacity.</p></li>
+</ul>
+<p>Builds on the above <strong>Processor</strong>. For an iModel, it manages
+the queued or concurrent calls.
+<strong>Example</strong>:
+One can define a queue of max capacity 100, refreshing every 60s,
+limiting requests or tokens as needed.</p>
+</section>
+<section id="module-lionagi.service.imodel">
+<span id="imodel"></span><h2>6. iModel<a class="headerlink" href="#module-lionagi.service.imodel" title="Link to this heading">¶</a></h2>
+<dl class="py class">
+<dt class="sig sig-object py" id="lionagi.service.imodel.iModel">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">lionagi.service.imodel.</span></span><span class="sig-name descname"><span class="pre">iModel</span></span><a class="headerlink" href="#lionagi.service.imodel.iModel" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<p>Represents a single “model interface” to a provider’s chat or completion endpoint.
+Holds:</p>
+<ul class="simple">
+<li><p><code class="xref py py-attr docutils literal notranslate"><span class="pre">endpoint</span></code> (<code class="xref py py-class docutils literal notranslate"><span class="pre">EndPoint</span></code>):
+Typically a <code class="xref py py-class docutils literal notranslate"><span class="pre">ChatCompletionEndPoint</span></code> or custom.</p></li>
+<li><p><code class="xref py py-attr docutils literal notranslate"><span class="pre">executor</span></code> (<code class="xref py py-class docutils literal notranslate"><span class="pre">RateLimitedAPIExecutor</span></code>):
+A concurrency-limiting queue for calls.</p></li>
+<li><p><code class="xref py py-attr docutils literal notranslate"><span class="pre">kwargs</span></code>:
+Additional default parameters (like “model” name, “api_key”, etc.).</p></li>
+</ul>
+<p><strong>Methods</strong>:</p>
+<ul class="simple">
+<li><p><code class="xref py py-meth docutils literal notranslate"><span class="pre">invoke(**kwargs)</span> <span class="pre">-&gt;</span> <span class="pre">APICalling|None()</span></code>:
+Creates an APICalling from combined endpoint config + local kwargs,
+queues it in the executor, and awaits completion.</p></li>
+<li><p><code class="xref py py-meth docutils literal notranslate"><span class="pre">stream(**kwargs)</span> <span class="pre">-&gt;</span> <span class="pre">APICalling|None()</span></code>:
+Streams partial results if the endpoint is streamable.</p></li>
+<li><p><code class="xref py py-meth docutils literal notranslate"><span class="pre">create_api_calling(**kwargs)</span> <span class="pre">-&gt;</span> <span class="pre">APICalling()</span></code>:
+A utility to unify parameters into a final APICalling object.</p></li>
+</ul>
+<p><strong>Usage</strong>:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">lionagi.service.imodel</span><span class="w"> </span><span class="kn">import</span> <span class="n">iModel</span>
+
+<span class="c1"># Provide minimal config</span>
+<span class="n">my_model</span> <span class="o">=</span> <span class="n">iModel</span><span class="p">(</span><span class="n">provider</span><span class="o">=</span><span class="s2">&quot;openai&quot;</span><span class="p">,</span> <span class="n">base_url</span><span class="o">=</span><span class="s2">&quot;https://api.openai.com/v1&quot;</span><span class="p">,</span> <span class="n">model</span><span class="o">=</span><span class="s2">&quot;gpt-3.5-turbo&quot;</span><span class="p">)</span>
+<span class="c1"># -&gt; Creates an endpoint automatically</span>
+<span class="c1"># -&gt; Also sets up a RateLimitedAPIExecutor</span>
+
+<span class="c1"># Now we can call</span>
+<span class="n">result</span> <span class="o">=</span> <span class="k">await</span> <span class="n">my_model</span><span class="o">.</span><span class="n">invoke</span><span class="p">(</span><span class="n">messages</span><span class="o">=</span><span class="p">[{</span><span class="s2">&quot;role&quot;</span><span class="p">:</span><span class="s2">&quot;user&quot;</span><span class="p">,</span><span class="s2">&quot;content&quot;</span><span class="p">:</span><span class="s2">&quot;Hello!&quot;</span><span class="p">}])</span>
+<span class="nb">print</span><span class="p">(</span><span class="n">result</span><span class="o">.</span><span class="n">execution</span><span class="o">.</span><span class="n">response</span><span class="p">)</span>
+</pre></div>
+</div>
+</section>
+<section id="module-1">
+<span id="imodelmanager"></span><h2>7. iModelManager<a class="headerlink" href="#module-1" title="Link to this heading">¶</a></h2>
+<dl class="py class">
+<dt class="sig sig-object py" id="lionagi.service.imodel.iModelManager">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">lionagi.service.imodel.</span></span><span class="sig-name descname"><span class="pre">iModelManager</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">Manager</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#lionagi.service.imodel.iModelManager" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<p>Maintains a dictionary of named <a class="reference internal" href="#lionagi.service.imodel.iModel" title="lionagi.service.imodel.iModel"><code class="xref py py-class docutils literal notranslate"><span class="pre">iModel</span></code></a> objects:</p>
+<ul class="simple">
+<li><p><code class="xref py py-attr docutils literal notranslate"><span class="pre">chat</span></code>:
+The “chat” model if we define one as “chat” in the registry.</p></li>
+<li><p><code class="xref py py-attr docutils literal notranslate"><span class="pre">parse</span></code>:
+The “parse” model for secondary tasks like extracting structured data.</p></li>
+<li><p><code class="xref py py-meth docutils literal notranslate"><span class="pre">register_imodel(name,</span> <span class="pre">model)()</span></code>:
+Insert or update the registry with a specific name.</p></li>
+</ul>
+<p><strong>Example</strong>:</p>
+<blockquote>
+<div><p>from lionagi.service.imodel import iModel, iModelManager</p>
+<p>chat_mod = iModel(provider=”openai”, model=”gpt-3.5-turbo”)
+parse_mod = iModel(provider=”openai”, model=”text-davinci-003”)</p>
+<p>manager = iModelManager(chat=chat_mod, parse=parse_mod)
+# -&gt; manager.chat = chat_mod, manager.parse = parse_mod</p>
+</div></blockquote>
+</section>
+<section id="summary">
+<h2>Summary<a class="headerlink" href="#summary" title="Link to this heading">¶</a></h2>
+<p>The <strong>LionAGI Service</strong> system integrates everything needed to <strong>call external
+LLM services</strong>:</p>
+<ul class="simple">
+<li><p><strong>Endpoints</strong> for each provider (OpenAI, Anthropic, etc.).</p></li>
+<li><p><strong>APICalling</strong> event for tracking usage or partial streaming.</p></li>
+<li><p><strong>Rate-limiting</strong> structures (Processor, Executor) to handle concurrency or
+daily usage caps.</p></li>
+<li><p><strong>iModel</strong> as a top-level convenience object: one instance = one
+distinct provider + concurrency constraints.</p></li>
+<li><p><strong>iModelManager</strong> for multi-model usage in the same environment.</p></li>
+</ul>
+<p>By configuring endpoints properly and using the <strong>RateLimitedAPIExecutor</strong>,
+LionAGI can handle robust multi-provider or multi-model usage while avoiding
+throttling or over-limit errors.</p>
+</section>
+</section>
+
+        </article>
+      </div>
+      <footer>
+        
+        <div class="related-pages">
+          <a class="next-page" href="session.html">
+              <div class="page-info">
+                <div class="context">
+                  <span>Next</span>
+                </div>
+                <div class="title">Session (<code class="docutils literal notranslate"><span class="pre">lionagi.session.session</span></code>)</div>
+              </div>
+              <svg class="furo-related-icon"><use href="#svg-arrow-right"></use></svg>
+            </a>
+          <a class="prev-page" href="pile_progression.html">
+              <svg class="furo-related-icon"><use href="#svg-arrow-right"></use></svg>
+              <div class="page-info">
+                <div class="context">
+                  <span>Previous</span>
+                </div>
+                
+                <div class="title">Pile &amp; Progression in <code class="docutils literal notranslate"><span class="pre">lionagi.protocols</span></code></div>
+                
+              </div>
+            </a>
+        </div>
+        <div class="bottom-of-page">
+          <div class="left-details">
+            <div class="copyright">
+                Copyright &#169; 2025
+            </div>
+            Made with <a href="https://www.sphinx-doc.org/">Sphinx</a> and <a class="muted-link" href="https://pradyunsg.me">@pradyunsg</a>'s
+            
+            <a href="https://github.com/pradyunsg/furo">Furo</a>
+            
+          </div>
+          <div class="right-details">
+            
+          </div>
+        </div>
+        
+      </footer>
+    </div>
+    <aside class="toc-drawer">
+      
+      
+      <div class="toc-sticky toc-scroll">
+        <div class="toc-title-container">
+          <span class="toc-title">
+            On this page
+          </span>
+        </div>
+        <div class="toc-tree-container">
+          <div class="toc-tree">
+            <ul>
+<li><a class="reference internal" href="#">LionAGI Service System (<code class="docutils literal notranslate"><span class="pre">service</span></code>)</a><ul>
+<li><a class="reference internal" href="#endpointconfig-endpoint">1. EndpointConfig &amp; EndPoint</a></li>
+<li><a class="reference internal" href="#module-lionagi.service.token_calculator">2. TokenCalculator</a><ul>
+<li><a class="reference internal" href="#lionagi.service.token_calculator.TokenCalculator"><code class="docutils literal notranslate"><span class="pre">TokenCalculator</span></code></a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#module-0">3. APICalling (Event)</a></li>
+<li><a class="reference internal" href="#chatcompletionendpoint-subclasses">4. ChatCompletionEndPoint &amp; Subclasses</a><ul>
+<li><a class="reference internal" href="#lionagi.service.endpoints.chat_completion.ChatCompletionEndPoint"><code class="docutils literal notranslate"><span class="pre">ChatCompletionEndPoint</span></code></a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#module-lionagi.service.endpoints.rate_limited_processor">5. Rate-Limited Execution</a></li>
+<li><a class="reference internal" href="#module-lionagi.service.imodel">6. iModel</a><ul>
+<li><a class="reference internal" href="#lionagi.service.imodel.iModel"><code class="docutils literal notranslate"><span class="pre">iModel</span></code></a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#module-1">7. iModelManager</a><ul>
+<li><a class="reference internal" href="#lionagi.service.imodel.iModelManager"><code class="docutils literal notranslate"><span class="pre">iModelManager</span></code></a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#summary">Summary</a></li>
+</ul>
+</li>
+</ul>
+
+          </div>
+        </div>
+      </div>
+      
+      
+    </aside>
+  </div>
+</div><script src="../_static/documentation_options.js?v=f31a46f8"></script>
+    <script src="../_static/doctools.js?v=9bcbadda"></script>
+    <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script src="../_static/scripts/furo.js?v=5fa4622c"></script>
+    </body>
+</html>

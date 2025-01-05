@@ -1,0 +1,734 @@
+<!doctype html>
+<html class="no-js" lang="en" data-content_root="../">
+  <head><meta charset="utf-8"/>
+    <meta name="viewport" content="width=device-width,initial-scale=1"/>
+    <meta name="color-scheme" content="light dark"><meta name="viewport" content="width=device-width, initial-scale=1" />
+<link rel="index" title="Index" href="../genindex.html" /><link rel="search" title="Search" href="../search.html" /><link rel="next" title="LionAGI Adapter System (adapter)" href="adapter.html" /><link rel="prev" title="LionAGI Modules Index" href="index.html" />
+
+    <!-- Generated with Sphinx 8.1.3 and Furo 2024.08.06 -->
+        <title>The lionagi.action Module - My LIONAGI Documentation</title>
+      <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=8f2a1f02" />
+    <link rel="stylesheet" type="text/css" href="../_static/styles/furo.css?v=354aac6f" />
+    <link rel="stylesheet" type="text/css" href="../_static/styles/furo-extensions.css?v=302659d7" />
+    <link rel="stylesheet" type="text/css" href="../_static/custom.css?v=9ac6386e" />
+    
+    
+
+
+<style>
+  body {
+    --color-code-background: #f8f8f8;
+  --color-code-foreground: black;
+  --color-brand-primary: #007ACC;
+  --color-brand-content: #006699;
+  
+  }
+  @media not print {
+    body[data-theme="dark"] {
+      --color-code-background: #202020;
+  --color-code-foreground: #d0d0d0;
+  --color-brand-primary: #4DC1FF;
+  --color-brand-content: #99C2FF;
+  
+    }
+    @media (prefers-color-scheme: dark) {
+      body:not([data-theme="light"]) {
+        --color-code-background: #202020;
+  --color-code-foreground: #d0d0d0;
+  --color-brand-primary: #4DC1FF;
+  --color-brand-content: #99C2FF;
+  
+      }
+    }
+  }
+</style></head>
+  <body>
+    
+    <script>
+      document.body.dataset.theme = localStorage.getItem("theme") || "auto";
+    </script>
+    
+
+<svg xmlns="http://www.w3.org/2000/svg" style="display: none;">
+  <symbol id="svg-toc" viewBox="0 0 24 24">
+    <title>Contents</title>
+    <svg stroke="currentColor" fill="currentColor" stroke-width="0" viewBox="0 0 1024 1024">
+      <path d="M408 442h480c4.4 0 8-3.6 8-8v-56c0-4.4-3.6-8-8-8H408c-4.4 0-8 3.6-8 8v56c0 4.4 3.6 8 8 8zm-8 204c0 4.4 3.6 8 8 8h480c4.4 0 8-3.6 8-8v-56c0-4.4-3.6-8-8-8H408c-4.4 0-8 3.6-8 8v56zm504-486H120c-4.4 0-8 3.6-8 8v56c0 4.4 3.6 8 8 8h784c4.4 0 8-3.6 8-8v-56c0-4.4-3.6-8-8-8zm0 632H120c-4.4 0-8 3.6-8 8v56c0 4.4 3.6 8 8 8h784c4.4 0 8-3.6 8-8v-56c0-4.4-3.6-8-8-8zM115.4 518.9L271.7 642c5.8 4.6 14.4.5 14.4-6.9V388.9c0-7.4-8.5-11.5-14.4-6.9L115.4 505.1a8.74 8.74 0 0 0 0 13.8z"/>
+    </svg>
+  </symbol>
+  <symbol id="svg-menu" viewBox="0 0 24 24">
+    <title>Menu</title>
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather-menu">
+      <line x1="3" y1="12" x2="21" y2="12"></line>
+      <line x1="3" y1="6" x2="21" y2="6"></line>
+      <line x1="3" y1="18" x2="21" y2="18"></line>
+    </svg>
+  </symbol>
+  <symbol id="svg-arrow-right" viewBox="0 0 24 24">
+    <title>Expand</title>
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather-chevron-right">
+      <polyline points="9 18 15 12 9 6"></polyline>
+    </svg>
+  </symbol>
+  <symbol id="svg-sun" viewBox="0 0 24 24">
+    <title>Light mode</title>
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="1" stroke-linecap="round" stroke-linejoin="round" class="feather-sun">
+      <circle cx="12" cy="12" r="5"></circle>
+      <line x1="12" y1="1" x2="12" y2="3"></line>
+      <line x1="12" y1="21" x2="12" y2="23"></line>
+      <line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line>
+      <line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line>
+      <line x1="1" y1="12" x2="3" y2="12"></line>
+      <line x1="21" y1="12" x2="23" y2="12"></line>
+      <line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line>
+      <line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line>
+    </svg>
+  </symbol>
+  <symbol id="svg-moon" viewBox="0 0 24 24">
+    <title>Dark mode</title>
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="1" stroke-linecap="round" stroke-linejoin="round" class="icon-tabler-moon">
+      <path stroke="none" d="M0 0h24v24H0z" fill="none" />
+      <path d="M12 3c.132 0 .263 0 .393 0a7.5 7.5 0 0 0 7.92 12.446a9 9 0 1 1 -8.313 -12.454z" />
+    </svg>
+  </symbol>
+  <symbol id="svg-sun-with-moon" viewBox="0 0 24 24">
+    <title>Auto light/dark, in light mode</title>
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="1" stroke-linecap="round" stroke-linejoin="round"
+      class="icon-custom-derived-from-feather-sun-and-tabler-moon">
+      <path style="opacity: 50%" d="M 5.411 14.504 C 5.471 14.504 5.532 14.504 5.591 14.504 C 3.639 16.319 4.383 19.569 6.931 20.352 C 7.693 20.586 8.512 20.551 9.25 20.252 C 8.023 23.207 4.056 23.725 2.11 21.184 C 0.166 18.642 1.702 14.949 4.874 14.536 C 5.051 14.512 5.231 14.5 5.411 14.5 L 5.411 14.504 Z"/>
+      <line x1="14.5" y1="3.25" x2="14.5" y2="1.25"/>
+      <line x1="14.5" y1="15.85" x2="14.5" y2="17.85"/>
+      <line x1="10.044" y1="5.094" x2="8.63" y2="3.68"/>
+      <line x1="19" y1="14.05" x2="20.414" y2="15.464"/>
+      <line x1="8.2" y1="9.55" x2="6.2" y2="9.55"/>
+      <line x1="20.8" y1="9.55" x2="22.8" y2="9.55"/>
+      <line x1="10.044" y1="14.006" x2="8.63" y2="15.42"/>
+      <line x1="19" y1="5.05" x2="20.414" y2="3.636"/>
+      <circle cx="14.5" cy="9.55" r="3.6"/>
+    </svg>
+  </symbol>
+  <symbol id="svg-moon-with-sun" viewBox="0 0 24 24">
+    <title>Auto light/dark, in dark mode</title>
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="1" stroke-linecap="round" stroke-linejoin="round"
+      class="icon-custom-derived-from-feather-sun-and-tabler-moon">
+      <path d="M 8.282 7.007 C 8.385 7.007 8.494 7.007 8.595 7.007 C 5.18 10.184 6.481 15.869 10.942 17.24 C 12.275 17.648 13.706 17.589 15 17.066 C 12.851 22.236 5.91 23.143 2.505 18.696 C -0.897 14.249 1.791 7.786 7.342 7.063 C 7.652 7.021 7.965 7 8.282 7 L 8.282 7.007 Z"/>
+      <line style="opacity: 50%" x1="18" y1="3.705" x2="18" y2="2.5"/>
+      <line style="opacity: 50%" x1="18" y1="11.295" x2="18" y2="12.5"/>
+      <line style="opacity: 50%" x1="15.316" y1="4.816" x2="14.464" y2="3.964"/>
+      <line style="opacity: 50%" x1="20.711" y1="10.212" x2="21.563" y2="11.063"/>
+      <line style="opacity: 50%" x1="14.205" y1="7.5" x2="13.001" y2="7.5"/>
+      <line style="opacity: 50%" x1="21.795" y1="7.5" x2="23" y2="7.5"/>
+      <line style="opacity: 50%" x1="15.316" y1="10.184" x2="14.464" y2="11.036"/>
+      <line style="opacity: 50%" x1="20.711" y1="4.789" x2="21.563" y2="3.937"/>
+      <circle style="opacity: 50%" cx="18" cy="7.5" r="2.169"/>
+    </svg>
+  </symbol>
+  <symbol id="svg-pencil" viewBox="0 0 24 24">
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="1" stroke-linecap="round" stroke-linejoin="round" class="icon-tabler-pencil-code">
+      <path d="M4 20h4l10.5 -10.5a2.828 2.828 0 1 0 -4 -4l-10.5 10.5v4" />
+      <path d="M13.5 6.5l4 4" />
+      <path d="M20 21l2 -2l-2 -2" />
+      <path d="M17 17l-2 2l2 2" />
+    </svg>
+  </symbol>
+  <symbol id="svg-eye" viewBox="0 0 24 24">
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="1" stroke-linecap="round" stroke-linejoin="round" class="icon-tabler-eye-code">
+      <path stroke="none" d="M0 0h24v24H0z" fill="none" />
+      <path d="M10 12a2 2 0 1 0 4 0a2 2 0 0 0 -4 0" />
+      <path
+        d="M11.11 17.958c-3.209 -.307 -5.91 -2.293 -8.11 -5.958c2.4 -4 5.4 -6 9 -6c3.6 0 6.6 2 9 6c-.21 .352 -.427 .688 -.647 1.008" />
+      <path d="M20 21l2 -2l-2 -2" />
+      <path d="M17 17l-2 2l2 2" />
+    </svg>
+  </symbol>
+</svg>
+
+<input type="checkbox" class="sidebar-toggle" name="__navigation" id="__navigation">
+<input type="checkbox" class="sidebar-toggle" name="__toc" id="__toc">
+<label class="overlay sidebar-overlay" for="__navigation">
+  <div class="visually-hidden">Hide navigation sidebar</div>
+</label>
+<label class="overlay toc-overlay" for="__toc">
+  <div class="visually-hidden">Hide table of contents sidebar</div>
+</label>
+
+<a class="skip-to-content muted-link" href="#furo-main-content">Skip to content</a>
+
+
+
+<div class="page">
+  <header class="mobile-header">
+    <div class="header-left">
+      <label class="nav-overlay-icon" for="__navigation">
+        <div class="visually-hidden">Toggle site navigation sidebar</div>
+        <i class="icon"><svg><use href="#svg-menu"></use></svg></i>
+      </label>
+    </div>
+    <div class="header-center">
+      <a href="../index.html"><div class="brand">My LIONAGI Documentation</div></a>
+    </div>
+    <div class="header-right">
+      <div class="theme-toggle-container theme-toggle-header">
+        <button class="theme-toggle">
+          <div class="visually-hidden">Toggle Light / Dark / Auto color theme</div>
+          <svg class="theme-icon-when-auto-light"><use href="#svg-sun-with-moon"></use></svg>
+          <svg class="theme-icon-when-auto-dark"><use href="#svg-moon-with-sun"></use></svg>
+          <svg class="theme-icon-when-dark"><use href="#svg-moon"></use></svg>
+          <svg class="theme-icon-when-light"><use href="#svg-sun"></use></svg>
+        </button>
+      </div>
+      <label class="toc-overlay-icon toc-header-icon" for="__toc">
+        <div class="visually-hidden">Toggle table of contents sidebar</div>
+        <i class="icon"><svg><use href="#svg-toc"></use></svg></i>
+      </label>
+    </div>
+  </header>
+  <aside class="sidebar-drawer">
+    <div class="sidebar-container">
+      
+      <div class="sidebar-sticky"><a class="sidebar-brand" href="../index.html">
+  
+  
+  
+</a><form class="sidebar-search-container" method="get" action="../search.html" role="search">
+  <input class="sidebar-search" placeholder="Search" name="q" aria-label="Search">
+  <input type="hidden" name="check_keywords" value="yes">
+  <input type="hidden" name="area" value="default">
+</form>
+<div id="searchbox"></div><div class="sidebar-scroll"><div class="sidebar-tree">
+  <p class="caption" role="heading"><span class="caption-text">Table of Contents:</span></p>
+<ul class="current">
+<li class="toctree-l1 current has-children"><a class="reference internal" href="index.html">LionAGI Modules Index</a><input checked="" class="toctree-checkbox" id="toctree-checkbox-1" name="toctree-checkbox-1" role="switch" type="checkbox"/><label for="toctree-checkbox-1"><div class="visually-hidden">Toggle navigation of LionAGI Modules Index</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul class="current">
+<li class="toctree-l2 current current-page"><a class="current reference internal" href="#">The <code class="docutils literal notranslate"><span class="pre">lionagi.action</span></code> Module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="adapter.html">LionAGI Adapter System (<code class="docutils literal notranslate"><span class="pre">adapter</span></code>)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="branch.html">Branch (<code class="docutils literal notranslate"><span class="pre">lionagi.session.branch</span></code>)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="concepts.html">LionAGI Core Concepts and IDs</a></li>
+<li class="toctree-l2"><a class="reference internal" href="concepts.html#module-lionagi.protocols._concepts">Abstract Concepts (<code class="docutils literal notranslate"><span class="pre">_concepts.py</span></code>)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="concepts.html#module-lionagi.protocols.generic.element">ID System and <code class="docutils literal notranslate"><span class="pre">Element</span></code> (<code class="docutils literal notranslate"><span class="pre">element.py</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="event.html">LionAGI Event Architecture</a></li>
+<li class="toctree-l2"><a class="reference internal" href="form.html">LionAGI Form System (<code class="docutils literal notranslate"><span class="pre">lionagi.form</span></code>)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="graph.html">LionAGI Graph Infrastructure</a></li>
+<li class="toctree-l2"><a class="reference internal" href="instruct.html">LionAGI Instruct System Overview</a></li>
+<li class="toctree-l2"><a class="reference internal" href="mail.html">LionAGI Mail System Reference</a></li>
+<li class="toctree-l2"><a class="reference internal" href="message.html">LionAGI Messages and Conversation Workflows</a></li>
+<li class="toctree-l2"><a class="reference internal" href="operations.html"><code class="docutils literal notranslate"><span class="pre">lionagi.operations</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="operative_step.html">Operative &amp; Step (<code class="docutils literal notranslate"><span class="pre">lionagi.operatives</span></code>)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="pile_progression.html">Pile &amp; Progression in <code class="docutils literal notranslate"><span class="pre">lionagi.protocols</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="service.html">LionAGI Service System (<code class="docutils literal notranslate"><span class="pre">service</span></code>)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="session.html">Session (<code class="docutils literal notranslate"><span class="pre">lionagi.session.session</span></code>)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="strategies.html"><code class="docutils literal notranslate"><span class="pre">lionagi.operations.strategies</span></code> (Execution Modes)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="utils.html">The <code class="docutils literal notranslate"><span class="pre">lionagi.utils</span></code> Module (General Purpose Helpers)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="lib_file.html">The <code class="docutils literal notranslate"><span class="pre">lionagi.libs.file</span></code> Subpackage</a></li>
+<li class="toctree-l2"><a class="reference internal" href="lib_nested.html">The <code class="docutils literal notranslate"><span class="pre">lionagi.libs.nested</span></code> Subpackage</a></li>
+<li class="toctree-l2"><a class="reference internal" href="lib_package.html">The <code class="docutils literal notranslate"><span class="pre">lionagi.libs.package</span></code> Subpackage</a></li>
+<li class="toctree-l2"><a class="reference internal" href="lib_schema.html">The <code class="docutils literal notranslate"><span class="pre">lionagi.libs.schema</span></code> Subpackage</a></li>
+<li class="toctree-l2"><a class="reference internal" href="lib_validate.html">The <code class="docutils literal notranslate"><span class="pre">lionagi.libs.validate</span></code> Subpackage</a></li>
+<li class="toctree-l2"><a class="reference internal" href="models.html">LionAGI Model System (<code class="docutils literal notranslate"><span class="pre">operatives/model</span></code>)</a></li>
+</ul>
+</li>
+<li class="toctree-l1 has-children"><a class="reference internal" href="../operations/index.html">LionAGI Operations</a><input class="toctree-checkbox" id="toctree-checkbox-2" name="toctree-checkbox-2" role="switch" type="checkbox"/><label for="toctree-checkbox-2"><div class="visually-hidden">Toggle navigation of LionAGI Operations</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l2"><a class="reference internal" href="../operations/core_operations.html">Core Operation Modules</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../operations/strategies.html">Execution Strategies &amp; Executors</a></li>
+</ul>
+</li>
+</ul>
+
+</div>
+</div>
+
+      </div>
+      
+    </div>
+  </aside>
+  <div class="main">
+    <div class="content">
+      <div class="article-container">
+        <a href="#" class="back-to-top muted-link">
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
+            <path d="M13 20h-2V8l-5.5 5.5-1.42-1.42L12 4.16l7.92 7.92-1.42 1.42L13 8v12z"></path>
+          </svg>
+          <span>Back to top</span>
+        </a>
+        <div class="content-icon-container">
+          <div class="view-this-page">
+  <a class="muted-link" href="../_sources/modules/action.rst.txt" title="View this page">
+    <svg><use href="#svg-eye"></use></svg>
+    <span class="visually-hidden">View this page</span>
+  </a>
+</div>
+<div class="theme-toggle-container theme-toggle-content">
+            <button class="theme-toggle">
+              <div class="visually-hidden">Toggle Light / Dark / Auto color theme</div>
+              <svg class="theme-icon-when-auto-light"><use href="#svg-sun-with-moon"></use></svg>
+              <svg class="theme-icon-when-auto-dark"><use href="#svg-moon-with-sun"></use></svg>
+              <svg class="theme-icon-when-dark"><use href="#svg-moon"></use></svg>
+              <svg class="theme-icon-when-light"><use href="#svg-sun"></use></svg>
+            </button>
+          </div>
+          <label class="toc-overlay-icon toc-content-icon" for="__toc">
+            <div class="visually-hidden">Toggle table of contents sidebar</div>
+            <i class="icon"><svg><use href="#svg-toc"></use></svg></i>
+          </label>
+        </div>
+        <article role="main" id="furo-main-content">
+          <section id="the-lionagi-action-module">
+<span id="lionagi-action"></span><h1>The <code class="docutils literal notranslate"><span class="pre">lionagi.action</span></code> Module<a class="headerlink" href="#the-lionagi-action-module" title="Link to this heading">¶</a></h1>
+<p>This module provides a <strong>flexible event-driven framework</strong> for creating and managing
+<strong>callable “tools”</strong> in LionAGI, validating their inputs/outputs, and invoking them
+asynchronously with optional pre/post-processing steps. It integrates with the LionAGI
+<strong>event system</strong> (see <code class="xref py py-class docutils literal notranslate"><span class="pre">Event</span></code>), allowing each function call
+to be tracked as an event—complete with execution duration, status, and error handling.</p>
+<p>The primary components are:</p>
+<ul class="simple">
+<li><p><strong>Tool</strong>: A wrapper for a Python callable function with validation.</p></li>
+<li><p><strong>ActionManager</strong>: A registry that orchestrates tools.</p></li>
+<li><p><strong>FunctionCalling</strong>: An <code class="xref py py-class docutils literal notranslate"><span class="pre">Event</span></code> that tracks
+asynchronous function execution.</p></li>
+<li><p><strong>ActionRequestModel</strong> / <strong>ActionResponseModel</strong>: Pydantic models for structuring
+inputs/outputs.</p></li>
+</ul>
+<p>These classes can be combined with LionAGI’s concurrency architecture—such as
+<code class="xref py py-class docutils literal notranslate"><span class="pre">Processor</span></code> and
+<code class="xref py py-class docutils literal notranslate"><span class="pre">Executor</span></code>—to manage multiple function calls
+as events in a queue or stored in a <a class="reference internal" href="pile_progression.html#lionagi.protocols.generic.pile.Pile" title="lionagi.protocols.generic.pile.Pile"><code class="xref py py-class docutils literal notranslate"><span class="pre">Pile</span></code></a>
+(ordered by a <a class="reference internal" href="pile_progression.html#lionagi.protocols.generic.progression.Progression" title="lionagi.protocols.generic.progression.Progression"><code class="xref py py-class docutils literal notranslate"><span class="pre">Progression</span></code></a>).</p>
+<section id="module-organization-files">
+<h2>Module Organization &amp; Files<a class="headerlink" href="#module-organization-files" title="Link to this heading">¶</a></h2>
+<p>The <code class="docutils literal notranslate"><span class="pre">lionagi.action</span></code> package comprises:</p>
+<ul>
+<li><p><strong>function_calling.py</strong>:</p>
+<p>Contains <code class="xref py py-class docutils literal notranslate"><span class="pre">FunctionCalling</span></code>, which is an event class for executing a
+single tool call asynchronously, handling optional pre/post processing,
+and storing timing/status in its <code class="xref py py-attr docutils literal notranslate"><span class="pre">execution</span></code>.</p>
+</li>
+<li><p><strong>manager.py</strong>:</p>
+<p>Implements <code class="xref py py-class docutils literal notranslate"><span class="pre">ActionManager</span></code>, a central registry to:</p>
+<ul class="simple">
+<li><p>Register tools (functions).</p></li>
+<li><p>Match incoming requests (function name + arguments) to a registered tool.</p></li>
+<li><p>Create and run <code class="xref py py-class docutils literal notranslate"><span class="pre">FunctionCalling</span></code> events, returning outcomes or errors.</p></li>
+</ul>
+</li>
+<li><p><strong>request_response_model.py</strong>:</p>
+<p>Defines the data schemas for requests/responses:</p>
+<ul class="simple">
+<li><p><code class="xref py py-class docutils literal notranslate"><span class="pre">ActionRequestModel</span></code> — capturing the function name and arguments.</p></li>
+<li><p><code class="xref py py-class docutils literal notranslate"><span class="pre">ActionResponseModel</span></code> — capturing output after the call.</p></li>
+</ul>
+</li>
+<li><p><strong>tool.py</strong>:</p>
+<p>Provides the <code class="xref py py-class docutils literal notranslate"><span class="pre">Tool</span></code> class, wrapping a Python function with optional
+<strong>preprocessor</strong> / <strong>postprocessor</strong> steps, plus an auto-generated argument schema.</p>
+</li>
+</ul>
+<section id="tool">
+<span id="module-lionagi.action"></span><h3>Tool<a class="headerlink" href="#tool" title="Link to this heading">¶</a></h3>
+<dl class="py class">
+<dt class="sig sig-object py" id="lionagi.action.Tool">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">lionagi.action.</span></span><span class="sig-name descname"><span class="pre">Tool</span></span><a class="headerlink" href="#lionagi.action.Tool" title="Link to this definition">¶</a></dt>
+<dd><p>A <code class="docutils literal notranslate"><span class="pre">Tool</span></code> wraps a Python callable (function) with metadata and (optionally)
+preprocessing/postprocessing. It can <strong>strictly validate</strong> the function’s parameters,
+preventing extraneous or missing arguments.</p>
+<p><strong>Key Attributes</strong>:</p>
+<dl class="py attribute">
+<dt class="sig sig-object py" id="lionagi.action.Tool.func_callable">
+<span class="sig-name descname"><span class="pre">func_callable</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">Callable</span><span class="p"><span class="pre">[</span></span><span class="p"><span class="pre">...</span></span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">Any</span><span class="p"><span class="pre">]</span></span></em><a class="headerlink" href="#lionagi.action.Tool.func_callable" title="Link to this definition">¶</a></dt>
+<dd><p>The underlying Python function. This may be sync or async.</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="lionagi.action.Tool.tool_schema">
+<span class="sig-name descname"><span class="pre">tool_schema</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">dict</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">Any</span><span class="p"><span class="pre">]</span></span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></em><a class="headerlink" href="#lionagi.action.Tool.tool_schema" title="Link to this definition">¶</a></dt>
+<dd><p>An auto-generated JSON schema for the function’s parameters (unless provided explicitly).</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="lionagi.action.Tool.preprocessor">
+<span class="sig-name descname"><span class="pre">preprocessor</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">Callable</span><span class="p"><span class="pre">[</span></span><span class="p"><span class="pre">[</span></span><span class="pre">dict</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">Any</span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">dict</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">Any</span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></em><a class="headerlink" href="#lionagi.action.Tool.preprocessor" title="Link to this definition">¶</a></dt>
+<dd><p>Optional function that modifies/validates the incoming arguments.</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="lionagi.action.Tool.postprocessor">
+<span class="sig-name descname"><span class="pre">postprocessor</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">Callable</span><span class="p"><span class="pre">[</span></span><span class="p"><span class="pre">[</span></span><span class="pre">Any</span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">Any</span><span class="p"><span class="pre">]</span></span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></em><a class="headerlink" href="#lionagi.action.Tool.postprocessor" title="Link to this definition">¶</a></dt>
+<dd><p>Optional function that modifies/validates the function’s output.</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="lionagi.action.Tool.strict_func_call">
+<span class="sig-name descname"><span class="pre">strict_func_call</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">bool</span></em><a class="headerlink" href="#lionagi.action.Tool.strict_func_call" title="Link to this definition">¶</a></dt>
+<dd><p>If <code class="docutils literal notranslate"><span class="pre">True</span></code>, only the function’s exact parameters are allowed during invocation.</p>
+</dd></dl>
+
+<p><strong>Properties</strong>:</p>
+<dl class="py attribute">
+<dt class="sig sig-object py" id="lionagi.action.Tool.function">
+<span class="sig-name descname"><span class="pre">function</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">str</span></em><a class="headerlink" href="#lionagi.action.Tool.function" title="Link to this definition">¶</a></dt>
+<dd><p>The function’s name, inferred from the callable unless overridden.</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="lionagi.action.Tool.required_fields">
+<span class="sig-name descname"><span class="pre">required_fields</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">set</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">]</span></span></em><a class="headerlink" href="#lionagi.action.Tool.required_fields" title="Link to this definition">¶</a></dt>
+<dd><p>The parameter names that have no default in the function signature.</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="lionagi.action.Tool.minimum_acceptable_fields">
+<span class="sig-name descname"><span class="pre">minimum_acceptable_fields</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">set</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">]</span></span></em><a class="headerlink" href="#lionagi.action.Tool.minimum_acceptable_fields" title="Link to this definition">¶</a></dt>
+<dd><p>A less strict subset of required fields, determined by analyzing
+arguments vs. defaults.</p>
+</dd></dl>
+
+<p><strong>Example</strong>:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">lionagi.action.tool</span><span class="w"> </span><span class="kn">import</span> <span class="n">Tool</span>
+
+<span class="k">def</span><span class="w"> </span><span class="nf">add</span><span class="p">(</span><span class="n">x</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span> <span class="n">y</span><span class="p">:</span> <span class="nb">int</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">int</span><span class="p">:</span>
+    <span class="k">return</span> <span class="n">x</span> <span class="o">+</span> <span class="n">y</span>
+
+<span class="c1"># Wrap &#39;add&#39; with strict validation</span>
+<span class="n">add_tool</span> <span class="o">=</span> <span class="n">Tool</span><span class="p">(</span>
+    <span class="n">func_callable</span><span class="o">=</span><span class="n">add</span><span class="p">,</span>
+    <span class="n">strict_func_call</span><span class="o">=</span><span class="kc">True</span>
+<span class="p">)</span>
+</pre></div>
+</div>
+</dd></dl>
+
+</section>
+<section id="functioncalling">
+<h3>FunctionCalling<a class="headerlink" href="#functioncalling" title="Link to this heading">¶</a></h3>
+<dl class="py class">
+<dt class="sig sig-object py">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">lionagi.action.</span></span><span class="sig-name descname"><span class="pre">FunctionCalling</span></span></dt>
+<dd><p>An <strong>event</strong> class representing a single function invocation. It tracks:</p>
+<ul class="simple">
+<li><p><strong>Which tool</strong> to call (<code class="xref py py-attr docutils literal notranslate"><span class="pre">func_tool</span></code>).</p></li>
+<li><p><strong>Arguments</strong> to pass (<code class="xref py py-attr docutils literal notranslate"><span class="pre">arguments</span></code>).</p></li>
+<li><p><strong>Execution</strong> metadata (duration, status, response, error) via
+<code class="xref py py-attr docutils literal notranslate"><span class="pre">execution</span></code>.</p></li>
+</ul>
+<p><strong>Methods</strong>:</p>
+<dl class="py method">
+<dt class="sig sig-object py" id="lionagi.action.FunctionCalling.invoke">
+<em class="property"><span class="pre">async</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">invoke</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">None</span></span></span><a class="headerlink" href="#lionagi.action.FunctionCalling.invoke" title="Link to this definition">¶</a></dt>
+<dd><ol class="arabic simple">
+<li><p>Optionally run <code class="xref py py-attr docutils literal notranslate"><span class="pre">func_tool.preprocessor</span></code> on <code class="xref py py-attr docutils literal notranslate"><span class="pre">arguments</span></code>.</p></li>
+<li><p>Call the function (<code class="docutils literal notranslate"><span class="pre">await</span></code> if async).</p></li>
+<li><p>Optionally run <code class="xref py py-attr docutils literal notranslate"><span class="pre">func_tool.postprocessor</span></code> on the result.</p></li>
+<li><p>Set the execution status to COMPLETED or FAILED, plus store
+the output or error message.</p></li>
+</ol>
+</dd></dl>
+
+<p><strong>Usage Example</strong>:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">lionagi.action.function_calling</span><span class="w"> </span><span class="kn">import</span> <span class="n">FunctionCalling</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">lionagi.action.tool</span><span class="w"> </span><span class="kn">import</span> <span class="n">Tool</span>
+
+<span class="k">def</span><span class="w"> </span><span class="nf">greet</span><span class="p">(</span><span class="n">name</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+    <span class="k">return</span> <span class="sa">f</span><span class="s2">&quot;Hello, </span><span class="si">{</span><span class="n">name</span><span class="si">}</span><span class="s2">!&quot;</span>
+
+<span class="n">tool</span> <span class="o">=</span> <span class="n">Tool</span><span class="p">(</span><span class="n">greet</span><span class="p">)</span>
+<span class="n">call_event</span> <span class="o">=</span> <span class="n">FunctionCalling</span><span class="p">(</span><span class="n">func_tool</span><span class="o">=</span><span class="n">tool</span><span class="p">,</span> <span class="n">arguments</span><span class="o">=</span><span class="p">{</span><span class="s2">&quot;name&quot;</span><span class="p">:</span> <span class="s2">&quot;Alice&quot;</span><span class="p">})</span>
+
+<span class="c1"># In an async context:</span>
+<span class="k">await</span> <span class="n">call_event</span><span class="o">.</span><span class="n">invoke</span><span class="p">()</span>
+<span class="nb">print</span><span class="p">(</span><span class="n">call_event</span><span class="o">.</span><span class="n">execution</span><span class="o">.</span><span class="n">response</span><span class="p">)</span>  <span class="c1"># &quot;Hello, Alice!&quot;</span>
+<span class="nb">print</span><span class="p">(</span><span class="n">call_event</span><span class="o">.</span><span class="n">status</span><span class="p">)</span>              <span class="c1"># COMPLETED</span>
+</pre></div>
+</div>
+</dd></dl>
+
+</section>
+<section id="actionrequestmodel">
+<h3>ActionRequestModel<a class="headerlink" href="#actionrequestmodel" title="Link to this heading">¶</a></h3>
+<dl class="py class">
+<dt class="sig sig-object py">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">lionagi.action.</span></span><span class="sig-name descname"><span class="pre">ActionRequestModel</span></span></dt>
+<dd><p>Pydantic model that describes a requested function call. Typically used
+to parse inbound data that specifies which function to call and what
+arguments to provide.</p>
+<p><strong>Fields</strong>:</p>
+<dl class="py attribute">
+<dt class="sig sig-object py" id="lionagi.action.ActionRequestModel.function">
+<span class="sig-name descname"><span class="pre">function</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">str</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></em><a class="headerlink" href="#lionagi.action.ActionRequestModel.function" title="Link to this definition">¶</a></dt>
+<dd><p>The name of the function/tool to invoke. If None, no function is selected.</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="lionagi.action.ActionRequestModel.arguments">
+<span class="sig-name descname"><span class="pre">arguments</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">dict</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">Any</span><span class="p"><span class="pre">]</span></span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></em><a class="headerlink" href="#lionagi.action.ActionRequestModel.arguments" title="Link to this definition">¶</a></dt>
+<dd><p>The dictionary of arguments for the function call.</p>
+</dd></dl>
+
+<p><strong>Class Methods</strong>:</p>
+<dl class="py method">
+<dt class="sig sig-object py" id="lionagi.action.ActionRequestModel.create">
+<span class="sig-name descname"><span class="pre">create</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">content</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">list</span><span class="p"><span class="pre">[</span></span><span class="pre">ActionRequestModel</span><span class="p"><span class="pre">]</span></span></span></span><a class="headerlink" href="#lionagi.action.ActionRequestModel.create" title="Link to this definition">¶</a></dt>
+<dd><p>Attempts to parse a JSON string (or similar) into one or more
+<code class="xref py py-class docutils literal notranslate"><span class="pre">ActionRequestModel</span></code> objects. Returns an empty list on failure.</p>
+</dd></dl>
+
+</dd></dl>
+
+</section>
+<section id="actionresponsemodel">
+<h3>ActionResponseModel<a class="headerlink" href="#actionresponsemodel" title="Link to this heading">¶</a></h3>
+<dl class="py class">
+<dt class="sig sig-object py">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">lionagi.action.</span></span><span class="sig-name descname"><span class="pre">ActionResponseModel</span></span></dt>
+<dd><p>Pydantic model describing the <strong>result</strong> of a function call. Includes:</p>
+<ul class="simple">
+<li><p><code class="xref py py-attr docutils literal notranslate"><span class="pre">function</span></code>: The function name.</p></li>
+<li><p><code class="xref py py-attr docutils literal notranslate"><span class="pre">arguments</span></code>: The passed arguments.</p></li>
+<li><p><code class="xref py py-attr docutils literal notranslate"><span class="pre">output</span></code>: The function’s return value, if any.</p></li>
+</ul>
+</dd></dl>
+
+</section>
+<section id="actionmanager">
+<h3>ActionManager<a class="headerlink" href="#actionmanager" title="Link to this heading">¶</a></h3>
+<dl class="py class">
+<dt class="sig sig-object py">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">lionagi.action.</span></span><span class="sig-name descname"><span class="pre">ActionManager</span></span></dt>
+<dd><p>The <strong>central registry</strong> for function tools. You can register Python callables
+(or pre-wrapped <a class="reference internal" href="#lionagi.action.Tool" title="lionagi.action.Tool"><code class="xref py py-class docutils literal notranslate"><span class="pre">Tool</span></code></a> objects) and invoke them by name with the correct
+arguments.</p>
+<p><strong>Core Usage</strong>:</p>
+<ol class="arabic simple">
+<li><p>Instantiate <code class="xref py py-class docutils literal notranslate"><span class="pre">ActionManager</span></code>.</p></li>
+<li><p>Use <a class="reference internal" href="#lionagi.action.ActionManager.register_tool" title="lionagi.action.ActionManager.register_tool"><code class="xref py py-meth docutils literal notranslate"><span class="pre">register_tool()</span></code></a> or <a class="reference internal" href="#lionagi.action.ActionManager.register_tools" title="lionagi.action.ActionManager.register_tools"><code class="xref py py-meth docutils literal notranslate"><span class="pre">register_tools()</span></code></a> to add functions.</p></li>
+</ol>
+<p>3) Call <a class="reference internal" href="#lionagi.action.ActionManager.invoke" title="lionagi.action.ActionManager.invoke"><code class="xref py py-meth docutils literal notranslate"><span class="pre">invoke()</span></code></a> with a dictionary or <code class="xref py py-class docutils literal notranslate"><span class="pre">ActionRequestModel</span></code> specifying
+<code class="docutils literal notranslate"><span class="pre">{&quot;function&quot;:</span> <span class="pre">&quot;...&quot;,</span> <span class="pre">&quot;arguments&quot;:</span> <span class="pre">{...}}</span></code>.</p>
+<p>Under the hood, <a class="reference internal" href="#lionagi.action.ActionManager.invoke" title="lionagi.action.ActionManager.invoke"><code class="xref py py-meth docutils literal notranslate"><span class="pre">invoke()</span></code></a> creates a <code class="xref py py-class docutils literal notranslate"><span class="pre">FunctionCalling</span></code> event and
+runs <a class="reference internal" href="#lionagi.action.FunctionCalling.invoke" title="lionagi.action.FunctionCalling.invoke"><code class="xref py py-meth docutils literal notranslate"><span class="pre">FunctionCalling.invoke()</span></code></a>. The final or error outcome is contained
+in the event’s execution.</p>
+<p><strong>Key Methods</strong>:</p>
+<dl class="py method">
+<dt class="sig sig-object py" id="lionagi.action.ActionManager.__init__">
+<span class="sig-name descname"><span class="pre">__init__</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#lionagi.action.ActionManager.__init__" title="Link to this definition">¶</a></dt>
+<dd><p>Collect any tools provided via args/kwargs and register them.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="lionagi.action.ActionManager.register_tool">
+<span class="sig-name descname"><span class="pre">register_tool</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">tool</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">FuncTool</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">update</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">None</span></span></span><a class="headerlink" href="#lionagi.action.ActionManager.register_tool" title="Link to this definition">¶</a></dt>
+<dd><p>Register a single function or <a class="reference internal" href="#lionagi.action.Tool" title="lionagi.action.Tool"><code class="xref py py-class docutils literal notranslate"><span class="pre">Tool</span></code></a>. If the function name is already
+taken and <code class="docutils literal notranslate"><span class="pre">update=False</span></code>, raises <code class="docutils literal notranslate"><span class="pre">ValueError</span></code>.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="lionagi.action.ActionManager.register_tools">
+<span class="sig-name descname"><span class="pre">register_tools</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">tools</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">list</span><span class="p"><span class="pre">[</span></span><span class="pre">FuncTool</span><span class="p"><span class="pre">]</span></span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">FuncTool</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">update</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">None</span></span></span><a class="headerlink" href="#lionagi.action.ActionManager.register_tools" title="Link to this definition">¶</a></dt>
+<dd><p>Register multiple functions or tools at once.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="lionagi.action.ActionManager.invoke">
+<em class="property"><span class="pre">async</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">invoke</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">func_call</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">ActionRequestModel</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">dict</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">FunctionCalling</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span></span><a class="headerlink" href="#lionagi.action.ActionManager.invoke" title="Link to this definition">¶</a></dt>
+<dd><p>Matches the function name, builds a <code class="xref py py-class docutils literal notranslate"><span class="pre">FunctionCalling</span></code>, invokes it,
+and returns the event (or logs an error). The event’s <code class="xref py py-attr docutils literal notranslate"><span class="pre">execution</span></code> tracks
+success/failure.</p>
+<p><strong>Example</strong>:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">lionagi.action.manager</span><span class="w"> </span><span class="kn">import</span> <span class="n">ActionManager</span>
+
+<span class="n">manager</span> <span class="o">=</span> <span class="n">ActionManager</span><span class="p">()</span>
+
+<span class="k">def</span><span class="w"> </span><span class="nf">multiply</span><span class="p">(</span><span class="n">a</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span> <span class="n">b</span><span class="p">:</span> <span class="nb">int</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">int</span><span class="p">:</span>
+    <span class="k">return</span> <span class="n">a</span> <span class="o">*</span> <span class="n">b</span>
+
+<span class="n">manager</span><span class="o">.</span><span class="n">register_tool</span><span class="p">(</span><span class="n">multiply</span><span class="p">)</span>
+<span class="n">req</span> <span class="o">=</span> <span class="p">{</span><span class="s2">&quot;function&quot;</span><span class="p">:</span> <span class="s2">&quot;multiply&quot;</span><span class="p">,</span> <span class="s2">&quot;arguments&quot;</span><span class="p">:</span> <span class="p">{</span><span class="s2">&quot;a&quot;</span><span class="p">:</span> <span class="mi">3</span><span class="p">,</span> <span class="s2">&quot;b&quot;</span><span class="p">:</span> <span class="mi">5</span><span class="p">}}</span>
+
+<span class="n">result</span> <span class="o">=</span> <span class="k">await</span> <span class="n">manager</span><span class="o">.</span><span class="n">invoke</span><span class="p">(</span><span class="n">req</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="n">result</span><span class="o">.</span><span class="n">execution</span><span class="o">.</span><span class="n">response</span><span class="p">)</span>  <span class="c1"># 15</span>
+</pre></div>
+</div>
+</dd></dl>
+
+</dd></dl>
+
+</section>
+</section>
+<section id="integration-with-event-system">
+<h2>Integration with Event System<a class="headerlink" href="#integration-with-event-system" title="Link to this heading">¶</a></h2>
+<p>Because <strong>FunctionCalling</strong> can inherit from <code class="xref py py-class docutils literal notranslate"><span class="pre">Event</span></code>, it
+may be queued or stored in LionAGI’s concurrency structures. For instance, you could:</p>
+<ol class="arabic simple">
+<li><p>Create a <code class="xref py py-class docutils literal notranslate"><span class="pre">FunctionCalling</span></code> event for each function call you need.</p></li>
+<li><p>Add these events to a <code class="xref py py-class docutils literal notranslate"><span class="pre">Executor</span></code>, which
+uses a <code class="xref py py-class docutils literal notranslate"><span class="pre">Processor</span></code> to manage concurrency.</p></li>
+<li><p>The events might be stored in a <a class="reference internal" href="pile_progression.html#lionagi.protocols.generic.pile.Pile" title="lionagi.protocols.generic.pile.Pile"><code class="xref py py-class docutils literal notranslate"><span class="pre">Pile</span></code></a> and
+ordered by a <a class="reference internal" href="pile_progression.html#lionagi.protocols.generic.progression.Progression" title="lionagi.protocols.generic.progression.Progression"><code class="xref py py-class docutils literal notranslate"><span class="pre">Progression</span></code></a>.</p></li>
+<li><p>As the Processor runs, it calls <a class="reference internal" href="#lionagi.action.FunctionCalling.invoke" title="lionagi.action.FunctionCalling.invoke"><code class="xref py py-meth docutils literal notranslate"><span class="pre">FunctionCalling.invoke()</span></code></a> for each event,
+gathering results or errors in the <code class="xref py py-attr docutils literal notranslate"><span class="pre">execution</span></code> field.</p></li>
+</ol>
+<p>This unifies local function calls under LionAGI’s broader <strong>event-driven</strong> design,
+ensuring consistent logging, status tracking, and integration with other event types
+(like advanced scheduling).</p>
+</section>
+<section id="additional-examples">
+<h2>Additional Examples<a class="headerlink" href="#additional-examples" title="Link to this heading">¶</a></h2>
+<p><strong>Strict Validation</strong>:</p>
+<p>If <code class="docutils literal notranslate"><span class="pre">strict_func_call=True</span></code> on a <a class="reference internal" href="#lionagi.action.Tool" title="lionagi.action.Tool"><code class="xref py py-class docutils literal notranslate"><span class="pre">Tool</span></code></a>, the arguments <strong>must</strong> match the
+function’s signature exactly. Any extra or missing parameters raise a
+<code class="docutils literal notranslate"><span class="pre">ValueError</span></code>:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">lionagi.action.tool</span><span class="w"> </span><span class="kn">import</span> <span class="n">Tool</span>
+
+<span class="k">def</span><span class="w"> </span><span class="nf">greet</span><span class="p">(</span><span class="n">person</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">punctuation</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;!&quot;</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+    <span class="k">return</span> <span class="sa">f</span><span class="s2">&quot;Hello, </span><span class="si">{</span><span class="n">person</span><span class="si">}{</span><span class="n">punctuation</span><span class="si">}</span><span class="s2">&quot;</span>
+
+<span class="n">greet_tool</span> <span class="o">=</span> <span class="n">Tool</span><span class="p">(</span>
+    <span class="n">func_callable</span><span class="o">=</span><span class="n">greet</span><span class="p">,</span>
+    <span class="n">strict_func_call</span><span class="o">=</span><span class="kc">True</span>
+<span class="p">)</span>
+
+<span class="c1"># This fails if &#39;punctuation&#39; is missing but required, or if you add any unknown keys.</span>
+</pre></div>
+</div>
+<p><strong>Pre/Post Processing</strong>:</p>
+<p>You can attach a preprocessor and postprocessor to the <a class="reference internal" href="#lionagi.action.Tool" title="lionagi.action.Tool"><code class="xref py py-class docutils literal notranslate"><span class="pre">Tool</span></code></a>:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="k">def</span><span class="w"> </span><span class="nf">pre_check</span><span class="p">(</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+    <span class="k">if</span> <span class="n">args</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;x&quot;</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span> <span class="o">&lt;</span> <span class="mi">0</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;x must be &gt;= 0&quot;</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">args</span>
+
+<span class="k">def</span><span class="w"> </span><span class="nf">format_result</span><span class="p">(</span><span class="n">result</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+    <span class="k">return</span> <span class="sa">f</span><span class="s2">&quot;Computed: </span><span class="si">{</span><span class="n">result</span><span class="si">}</span><span class="s2">&quot;</span>
+
+<span class="kn">from</span><span class="w"> </span><span class="nn">lionagi.action.tool</span><span class="w"> </span><span class="kn">import</span> <span class="n">Tool</span>
+
+<span class="k">def</span><span class="w"> </span><span class="nf">add</span><span class="p">(</span><span class="n">x</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span> <span class="n">y</span><span class="p">:</span> <span class="nb">int</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">int</span><span class="p">:</span>
+    <span class="k">return</span> <span class="n">x</span> <span class="o">+</span> <span class="n">y</span>
+
+<span class="n">add_tool</span> <span class="o">=</span> <span class="n">Tool</span><span class="p">(</span>
+    <span class="n">func_callable</span><span class="o">=</span><span class="n">add</span><span class="p">,</span>
+    <span class="n">preprocessor</span><span class="o">=</span><span class="n">pre_check</span><span class="p">,</span>
+    <span class="n">postprocessor</span><span class="o">=</span><span class="n">format_result</span>
+<span class="p">)</span>
+
+<span class="c1"># The final result in FunctionCalling.execution.response will be &quot;Computed: &lt;int&gt;&quot;</span>
+</pre></div>
+</div>
+</section>
+</section>
+
+        </article>
+      </div>
+      <footer>
+        
+        <div class="related-pages">
+          <a class="next-page" href="adapter.html">
+              <div class="page-info">
+                <div class="context">
+                  <span>Next</span>
+                </div>
+                <div class="title">LionAGI Adapter System (<code class="docutils literal notranslate"><span class="pre">adapter</span></code>)</div>
+              </div>
+              <svg class="furo-related-icon"><use href="#svg-arrow-right"></use></svg>
+            </a>
+          <a class="prev-page" href="index.html">
+              <svg class="furo-related-icon"><use href="#svg-arrow-right"></use></svg>
+              <div class="page-info">
+                <div class="context">
+                  <span>Previous</span>
+                </div>
+                
+                <div class="title">LionAGI Modules Index</div>
+                
+              </div>
+            </a>
+        </div>
+        <div class="bottom-of-page">
+          <div class="left-details">
+            <div class="copyright">
+                Copyright &#169; 2025
+            </div>
+            Made with <a href="https://www.sphinx-doc.org/">Sphinx</a> and <a class="muted-link" href="https://pradyunsg.me">@pradyunsg</a>'s
+            
+            <a href="https://github.com/pradyunsg/furo">Furo</a>
+            
+          </div>
+          <div class="right-details">
+            
+          </div>
+        </div>
+        
+      </footer>
+    </div>
+    <aside class="toc-drawer">
+      
+      
+      <div class="toc-sticky toc-scroll">
+        <div class="toc-title-container">
+          <span class="toc-title">
+            On this page
+          </span>
+        </div>
+        <div class="toc-tree-container">
+          <div class="toc-tree">
+            <ul>
+<li><a class="reference internal" href="#">The <code class="docutils literal notranslate"><span class="pre">lionagi.action</span></code> Module</a><ul>
+<li><a class="reference internal" href="#module-organization-files">Module Organization &amp; Files</a><ul>
+<li><a class="reference internal" href="#tool">Tool</a><ul>
+<li><a class="reference internal" href="#lionagi.action.Tool"><code class="docutils literal notranslate"><span class="pre">Tool</span></code></a><ul>
+<li><a class="reference internal" href="#lionagi.action.Tool.func_callable"><code class="docutils literal notranslate"><span class="pre">Tool.func_callable</span></code></a></li>
+<li><a class="reference internal" href="#lionagi.action.Tool.tool_schema"><code class="docutils literal notranslate"><span class="pre">Tool.tool_schema</span></code></a></li>
+<li><a class="reference internal" href="#lionagi.action.Tool.preprocessor"><code class="docutils literal notranslate"><span class="pre">Tool.preprocessor</span></code></a></li>
+<li><a class="reference internal" href="#lionagi.action.Tool.postprocessor"><code class="docutils literal notranslate"><span class="pre">Tool.postprocessor</span></code></a></li>
+<li><a class="reference internal" href="#lionagi.action.Tool.strict_func_call"><code class="docutils literal notranslate"><span class="pre">Tool.strict_func_call</span></code></a></li>
+<li><a class="reference internal" href="#lionagi.action.Tool.function"><code class="docutils literal notranslate"><span class="pre">Tool.function</span></code></a></li>
+<li><a class="reference internal" href="#lionagi.action.Tool.required_fields"><code class="docutils literal notranslate"><span class="pre">Tool.required_fields</span></code></a></li>
+<li><a class="reference internal" href="#lionagi.action.Tool.minimum_acceptable_fields"><code class="docutils literal notranslate"><span class="pre">Tool.minimum_acceptable_fields</span></code></a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li><a class="reference internal" href="#functioncalling">FunctionCalling</a><ul>
+<li><a class="reference internal" href="#lionagi.action.FunctionCalling.invoke"><code class="docutils literal notranslate"><span class="pre">FunctionCalling.invoke()</span></code></a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#actionrequestmodel">ActionRequestModel</a><ul>
+<li><a class="reference internal" href="#lionagi.action.ActionRequestModel.function"><code class="docutils literal notranslate"><span class="pre">ActionRequestModel.function</span></code></a></li>
+<li><a class="reference internal" href="#lionagi.action.ActionRequestModel.arguments"><code class="docutils literal notranslate"><span class="pre">ActionRequestModel.arguments</span></code></a></li>
+<li><a class="reference internal" href="#lionagi.action.ActionRequestModel.create"><code class="docutils literal notranslate"><span class="pre">ActionRequestModel.create()</span></code></a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#actionresponsemodel">ActionResponseModel</a></li>
+<li><a class="reference internal" href="#actionmanager">ActionManager</a><ul>
+<li><a class="reference internal" href="#lionagi.action.ActionManager.__init__"><code class="docutils literal notranslate"><span class="pre">ActionManager.__init__()</span></code></a></li>
+<li><a class="reference internal" href="#lionagi.action.ActionManager.register_tool"><code class="docutils literal notranslate"><span class="pre">ActionManager.register_tool()</span></code></a></li>
+<li><a class="reference internal" href="#lionagi.action.ActionManager.register_tools"><code class="docutils literal notranslate"><span class="pre">ActionManager.register_tools()</span></code></a></li>
+<li><a class="reference internal" href="#lionagi.action.ActionManager.invoke"><code class="docutils literal notranslate"><span class="pre">ActionManager.invoke()</span></code></a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li><a class="reference internal" href="#integration-with-event-system">Integration with Event System</a></li>
+<li><a class="reference internal" href="#additional-examples">Additional Examples</a></li>
+</ul>
+</li>
+</ul>
+
+          </div>
+        </div>
+      </div>
+      
+      
+    </aside>
+  </div>
+</div><script src="../_static/documentation_options.js?v=f31a46f8"></script>
+    <script src="../_static/doctools.js?v=9bcbadda"></script>
+    <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script src="../_static/scripts/furo.js?v=5fa4622c"></script>
+    </body>
+</html>

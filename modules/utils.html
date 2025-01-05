@@ -1,0 +1,777 @@
+<!doctype html>
+<html class="no-js" lang="en" data-content_root="../">
+  <head><meta charset="utf-8"/>
+    <meta name="viewport" content="width=device-width,initial-scale=1"/>
+    <meta name="color-scheme" content="light dark"><meta name="viewport" content="width=device-width, initial-scale=1" />
+<link rel="index" title="Index" href="../genindex.html" /><link rel="search" title="Search" href="../search.html" /><link rel="next" title="The lionagi.libs.file Subpackage" href="lib_file.html" /><link rel="prev" title="lionagi.operations.strategies (Execution Modes)" href="strategies.html" />
+
+    <!-- Generated with Sphinx 8.1.3 and Furo 2024.08.06 -->
+        <title>The lionagi.utils Module (General Purpose Helpers) - My LIONAGI Documentation</title>
+      <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=8f2a1f02" />
+    <link rel="stylesheet" type="text/css" href="../_static/styles/furo.css?v=354aac6f" />
+    <link rel="stylesheet" type="text/css" href="../_static/styles/furo-extensions.css?v=302659d7" />
+    <link rel="stylesheet" type="text/css" href="../_static/custom.css?v=9ac6386e" />
+    
+    
+
+
+<style>
+  body {
+    --color-code-background: #f8f8f8;
+  --color-code-foreground: black;
+  --color-brand-primary: #007ACC;
+  --color-brand-content: #006699;
+  
+  }
+  @media not print {
+    body[data-theme="dark"] {
+      --color-code-background: #202020;
+  --color-code-foreground: #d0d0d0;
+  --color-brand-primary: #4DC1FF;
+  --color-brand-content: #99C2FF;
+  
+    }
+    @media (prefers-color-scheme: dark) {
+      body:not([data-theme="light"]) {
+        --color-code-background: #202020;
+  --color-code-foreground: #d0d0d0;
+  --color-brand-primary: #4DC1FF;
+  --color-brand-content: #99C2FF;
+  
+      }
+    }
+  }
+</style></head>
+  <body>
+    
+    <script>
+      document.body.dataset.theme = localStorage.getItem("theme") || "auto";
+    </script>
+    
+
+<svg xmlns="http://www.w3.org/2000/svg" style="display: none;">
+  <symbol id="svg-toc" viewBox="0 0 24 24">
+    <title>Contents</title>
+    <svg stroke="currentColor" fill="currentColor" stroke-width="0" viewBox="0 0 1024 1024">
+      <path d="M408 442h480c4.4 0 8-3.6 8-8v-56c0-4.4-3.6-8-8-8H408c-4.4 0-8 3.6-8 8v56c0 4.4 3.6 8 8 8zm-8 204c0 4.4 3.6 8 8 8h480c4.4 0 8-3.6 8-8v-56c0-4.4-3.6-8-8-8H408c-4.4 0-8 3.6-8 8v56zm504-486H120c-4.4 0-8 3.6-8 8v56c0 4.4 3.6 8 8 8h784c4.4 0 8-3.6 8-8v-56c0-4.4-3.6-8-8-8zm0 632H120c-4.4 0-8 3.6-8 8v56c0 4.4 3.6 8 8 8h784c4.4 0 8-3.6 8-8v-56c0-4.4-3.6-8-8-8zM115.4 518.9L271.7 642c5.8 4.6 14.4.5 14.4-6.9V388.9c0-7.4-8.5-11.5-14.4-6.9L115.4 505.1a8.74 8.74 0 0 0 0 13.8z"/>
+    </svg>
+  </symbol>
+  <symbol id="svg-menu" viewBox="0 0 24 24">
+    <title>Menu</title>
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather-menu">
+      <line x1="3" y1="12" x2="21" y2="12"></line>
+      <line x1="3" y1="6" x2="21" y2="6"></line>
+      <line x1="3" y1="18" x2="21" y2="18"></line>
+    </svg>
+  </symbol>
+  <symbol id="svg-arrow-right" viewBox="0 0 24 24">
+    <title>Expand</title>
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather-chevron-right">
+      <polyline points="9 18 15 12 9 6"></polyline>
+    </svg>
+  </symbol>
+  <symbol id="svg-sun" viewBox="0 0 24 24">
+    <title>Light mode</title>
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="1" stroke-linecap="round" stroke-linejoin="round" class="feather-sun">
+      <circle cx="12" cy="12" r="5"></circle>
+      <line x1="12" y1="1" x2="12" y2="3"></line>
+      <line x1="12" y1="21" x2="12" y2="23"></line>
+      <line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line>
+      <line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line>
+      <line x1="1" y1="12" x2="3" y2="12"></line>
+      <line x1="21" y1="12" x2="23" y2="12"></line>
+      <line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line>
+      <line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line>
+    </svg>
+  </symbol>
+  <symbol id="svg-moon" viewBox="0 0 24 24">
+    <title>Dark mode</title>
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="1" stroke-linecap="round" stroke-linejoin="round" class="icon-tabler-moon">
+      <path stroke="none" d="M0 0h24v24H0z" fill="none" />
+      <path d="M12 3c.132 0 .263 0 .393 0a7.5 7.5 0 0 0 7.92 12.446a9 9 0 1 1 -8.313 -12.454z" />
+    </svg>
+  </symbol>
+  <symbol id="svg-sun-with-moon" viewBox="0 0 24 24">
+    <title>Auto light/dark, in light mode</title>
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="1" stroke-linecap="round" stroke-linejoin="round"
+      class="icon-custom-derived-from-feather-sun-and-tabler-moon">
+      <path style="opacity: 50%" d="M 5.411 14.504 C 5.471 14.504 5.532 14.504 5.591 14.504 C 3.639 16.319 4.383 19.569 6.931 20.352 C 7.693 20.586 8.512 20.551 9.25 20.252 C 8.023 23.207 4.056 23.725 2.11 21.184 C 0.166 18.642 1.702 14.949 4.874 14.536 C 5.051 14.512 5.231 14.5 5.411 14.5 L 5.411 14.504 Z"/>
+      <line x1="14.5" y1="3.25" x2="14.5" y2="1.25"/>
+      <line x1="14.5" y1="15.85" x2="14.5" y2="17.85"/>
+      <line x1="10.044" y1="5.094" x2="8.63" y2="3.68"/>
+      <line x1="19" y1="14.05" x2="20.414" y2="15.464"/>
+      <line x1="8.2" y1="9.55" x2="6.2" y2="9.55"/>
+      <line x1="20.8" y1="9.55" x2="22.8" y2="9.55"/>
+      <line x1="10.044" y1="14.006" x2="8.63" y2="15.42"/>
+      <line x1="19" y1="5.05" x2="20.414" y2="3.636"/>
+      <circle cx="14.5" cy="9.55" r="3.6"/>
+    </svg>
+  </symbol>
+  <symbol id="svg-moon-with-sun" viewBox="0 0 24 24">
+    <title>Auto light/dark, in dark mode</title>
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="1" stroke-linecap="round" stroke-linejoin="round"
+      class="icon-custom-derived-from-feather-sun-and-tabler-moon">
+      <path d="M 8.282 7.007 C 8.385 7.007 8.494 7.007 8.595 7.007 C 5.18 10.184 6.481 15.869 10.942 17.24 C 12.275 17.648 13.706 17.589 15 17.066 C 12.851 22.236 5.91 23.143 2.505 18.696 C -0.897 14.249 1.791 7.786 7.342 7.063 C 7.652 7.021 7.965 7 8.282 7 L 8.282 7.007 Z"/>
+      <line style="opacity: 50%" x1="18" y1="3.705" x2="18" y2="2.5"/>
+      <line style="opacity: 50%" x1="18" y1="11.295" x2="18" y2="12.5"/>
+      <line style="opacity: 50%" x1="15.316" y1="4.816" x2="14.464" y2="3.964"/>
+      <line style="opacity: 50%" x1="20.711" y1="10.212" x2="21.563" y2="11.063"/>
+      <line style="opacity: 50%" x1="14.205" y1="7.5" x2="13.001" y2="7.5"/>
+      <line style="opacity: 50%" x1="21.795" y1="7.5" x2="23" y2="7.5"/>
+      <line style="opacity: 50%" x1="15.316" y1="10.184" x2="14.464" y2="11.036"/>
+      <line style="opacity: 50%" x1="20.711" y1="4.789" x2="21.563" y2="3.937"/>
+      <circle style="opacity: 50%" cx="18" cy="7.5" r="2.169"/>
+    </svg>
+  </symbol>
+  <symbol id="svg-pencil" viewBox="0 0 24 24">
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="1" stroke-linecap="round" stroke-linejoin="round" class="icon-tabler-pencil-code">
+      <path d="M4 20h4l10.5 -10.5a2.828 2.828 0 1 0 -4 -4l-10.5 10.5v4" />
+      <path d="M13.5 6.5l4 4" />
+      <path d="M20 21l2 -2l-2 -2" />
+      <path d="M17 17l-2 2l2 2" />
+    </svg>
+  </symbol>
+  <symbol id="svg-eye" viewBox="0 0 24 24">
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="1" stroke-linecap="round" stroke-linejoin="round" class="icon-tabler-eye-code">
+      <path stroke="none" d="M0 0h24v24H0z" fill="none" />
+      <path d="M10 12a2 2 0 1 0 4 0a2 2 0 0 0 -4 0" />
+      <path
+        d="M11.11 17.958c-3.209 -.307 -5.91 -2.293 -8.11 -5.958c2.4 -4 5.4 -6 9 -6c3.6 0 6.6 2 9 6c-.21 .352 -.427 .688 -.647 1.008" />
+      <path d="M20 21l2 -2l-2 -2" />
+      <path d="M17 17l-2 2l2 2" />
+    </svg>
+  </symbol>
+</svg>
+
+<input type="checkbox" class="sidebar-toggle" name="__navigation" id="__navigation">
+<input type="checkbox" class="sidebar-toggle" name="__toc" id="__toc">
+<label class="overlay sidebar-overlay" for="__navigation">
+  <div class="visually-hidden">Hide navigation sidebar</div>
+</label>
+<label class="overlay toc-overlay" for="__toc">
+  <div class="visually-hidden">Hide table of contents sidebar</div>
+</label>
+
+<a class="skip-to-content muted-link" href="#furo-main-content">Skip to content</a>
+
+
+
+<div class="page">
+  <header class="mobile-header">
+    <div class="header-left">
+      <label class="nav-overlay-icon" for="__navigation">
+        <div class="visually-hidden">Toggle site navigation sidebar</div>
+        <i class="icon"><svg><use href="#svg-menu"></use></svg></i>
+      </label>
+    </div>
+    <div class="header-center">
+      <a href="../index.html"><div class="brand">My LIONAGI Documentation</div></a>
+    </div>
+    <div class="header-right">
+      <div class="theme-toggle-container theme-toggle-header">
+        <button class="theme-toggle">
+          <div class="visually-hidden">Toggle Light / Dark / Auto color theme</div>
+          <svg class="theme-icon-when-auto-light"><use href="#svg-sun-with-moon"></use></svg>
+          <svg class="theme-icon-when-auto-dark"><use href="#svg-moon-with-sun"></use></svg>
+          <svg class="theme-icon-when-dark"><use href="#svg-moon"></use></svg>
+          <svg class="theme-icon-when-light"><use href="#svg-sun"></use></svg>
+        </button>
+      </div>
+      <label class="toc-overlay-icon toc-header-icon" for="__toc">
+        <div class="visually-hidden">Toggle table of contents sidebar</div>
+        <i class="icon"><svg><use href="#svg-toc"></use></svg></i>
+      </label>
+    </div>
+  </header>
+  <aside class="sidebar-drawer">
+    <div class="sidebar-container">
+      
+      <div class="sidebar-sticky"><a class="sidebar-brand" href="../index.html">
+  
+  
+  
+</a><form class="sidebar-search-container" method="get" action="../search.html" role="search">
+  <input class="sidebar-search" placeholder="Search" name="q" aria-label="Search">
+  <input type="hidden" name="check_keywords" value="yes">
+  <input type="hidden" name="area" value="default">
+</form>
+<div id="searchbox"></div><div class="sidebar-scroll"><div class="sidebar-tree">
+  <p class="caption" role="heading"><span class="caption-text">Table of Contents:</span></p>
+<ul class="current">
+<li class="toctree-l1 current has-children"><a class="reference internal" href="index.html">LionAGI Modules Index</a><input checked="" class="toctree-checkbox" id="toctree-checkbox-1" name="toctree-checkbox-1" role="switch" type="checkbox"/><label for="toctree-checkbox-1"><div class="visually-hidden">Toggle navigation of LionAGI Modules Index</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="action.html">The <code class="docutils literal notranslate"><span class="pre">lionagi.action</span></code> Module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="adapter.html">LionAGI Adapter System (<code class="docutils literal notranslate"><span class="pre">adapter</span></code>)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="branch.html">Branch (<code class="docutils literal notranslate"><span class="pre">lionagi.session.branch</span></code>)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="concepts.html">LionAGI Core Concepts and IDs</a></li>
+<li class="toctree-l2"><a class="reference internal" href="concepts.html#module-lionagi.protocols._concepts">Abstract Concepts (<code class="docutils literal notranslate"><span class="pre">_concepts.py</span></code>)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="concepts.html#module-lionagi.protocols.generic.element">ID System and <code class="docutils literal notranslate"><span class="pre">Element</span></code> (<code class="docutils literal notranslate"><span class="pre">element.py</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="event.html">LionAGI Event Architecture</a></li>
+<li class="toctree-l2"><a class="reference internal" href="form.html">LionAGI Form System (<code class="docutils literal notranslate"><span class="pre">lionagi.form</span></code>)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="graph.html">LionAGI Graph Infrastructure</a></li>
+<li class="toctree-l2"><a class="reference internal" href="instruct.html">LionAGI Instruct System Overview</a></li>
+<li class="toctree-l2"><a class="reference internal" href="mail.html">LionAGI Mail System Reference</a></li>
+<li class="toctree-l2"><a class="reference internal" href="message.html">LionAGI Messages and Conversation Workflows</a></li>
+<li class="toctree-l2"><a class="reference internal" href="operations.html"><code class="docutils literal notranslate"><span class="pre">lionagi.operations</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="operative_step.html">Operative &amp; Step (<code class="docutils literal notranslate"><span class="pre">lionagi.operatives</span></code>)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="pile_progression.html">Pile &amp; Progression in <code class="docutils literal notranslate"><span class="pre">lionagi.protocols</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="service.html">LionAGI Service System (<code class="docutils literal notranslate"><span class="pre">service</span></code>)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="session.html">Session (<code class="docutils literal notranslate"><span class="pre">lionagi.session.session</span></code>)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="strategies.html"><code class="docutils literal notranslate"><span class="pre">lionagi.operations.strategies</span></code> (Execution Modes)</a></li>
+<li class="toctree-l2 current current-page"><a class="current reference internal" href="#">The <code class="docutils literal notranslate"><span class="pre">lionagi.utils</span></code> Module (General Purpose Helpers)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="lib_file.html">The <code class="docutils literal notranslate"><span class="pre">lionagi.libs.file</span></code> Subpackage</a></li>
+<li class="toctree-l2"><a class="reference internal" href="lib_nested.html">The <code class="docutils literal notranslate"><span class="pre">lionagi.libs.nested</span></code> Subpackage</a></li>
+<li class="toctree-l2"><a class="reference internal" href="lib_package.html">The <code class="docutils literal notranslate"><span class="pre">lionagi.libs.package</span></code> Subpackage</a></li>
+<li class="toctree-l2"><a class="reference internal" href="lib_schema.html">The <code class="docutils literal notranslate"><span class="pre">lionagi.libs.schema</span></code> Subpackage</a></li>
+<li class="toctree-l2"><a class="reference internal" href="lib_validate.html">The <code class="docutils literal notranslate"><span class="pre">lionagi.libs.validate</span></code> Subpackage</a></li>
+<li class="toctree-l2"><a class="reference internal" href="models.html">LionAGI Model System (<code class="docutils literal notranslate"><span class="pre">operatives/model</span></code>)</a></li>
+</ul>
+</li>
+<li class="toctree-l1 has-children"><a class="reference internal" href="../operations/index.html">LionAGI Operations</a><input class="toctree-checkbox" id="toctree-checkbox-2" name="toctree-checkbox-2" role="switch" type="checkbox"/><label for="toctree-checkbox-2"><div class="visually-hidden">Toggle navigation of LionAGI Operations</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l2"><a class="reference internal" href="../operations/core_operations.html">Core Operation Modules</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../operations/strategies.html">Execution Strategies &amp; Executors</a></li>
+</ul>
+</li>
+</ul>
+
+</div>
+</div>
+
+      </div>
+      
+    </div>
+  </aside>
+  <div class="main">
+    <div class="content">
+      <div class="article-container">
+        <a href="#" class="back-to-top muted-link">
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
+            <path d="M13 20h-2V8l-5.5 5.5-1.42-1.42L12 4.16l7.92 7.92-1.42 1.42L13 8v12z"></path>
+          </svg>
+          <span>Back to top</span>
+        </a>
+        <div class="content-icon-container">
+          <div class="view-this-page">
+  <a class="muted-link" href="../_sources/modules/utils.rst.txt" title="View this page">
+    <svg><use href="#svg-eye"></use></svg>
+    <span class="visually-hidden">View this page</span>
+  </a>
+</div>
+<div class="theme-toggle-container theme-toggle-content">
+            <button class="theme-toggle">
+              <div class="visually-hidden">Toggle Light / Dark / Auto color theme</div>
+              <svg class="theme-icon-when-auto-light"><use href="#svg-sun-with-moon"></use></svg>
+              <svg class="theme-icon-when-auto-dark"><use href="#svg-moon-with-sun"></use></svg>
+              <svg class="theme-icon-when-dark"><use href="#svg-moon"></use></svg>
+              <svg class="theme-icon-when-light"><use href="#svg-sun"></use></svg>
+            </button>
+          </div>
+          <label class="toc-overlay-icon toc-content-icon" for="__toc">
+            <div class="visually-hidden">Toggle table of contents sidebar</div>
+            <i class="icon"><svg><use href="#svg-toc"></use></svg></i>
+          </label>
+        </div>
+        <article role="main" id="furo-main-content">
+          <section id="the-lionagi-utils-module-general-purpose-helpers">
+<h1>The <code class="docutils literal notranslate"><span class="pre">lionagi.utils</span></code> Module (General Purpose Helpers)<a class="headerlink" href="#the-lionagi-utils-module-general-purpose-helpers" title="Link to this heading">¶</a></h1>
+<p>The <code class="docutils literal notranslate"><span class="pre">lionagi.utils</span></code> module provides an extensive set of general-purpose utilities
+that facilitate everything from copying and flattening data structures, handling
+(asynchronous) bulk operations, concurrency/throttling, fuzzy JSON/XML parsing,
+and more. It also contains core definitions like <code class="xref py py-data docutils literal notranslate"><span class="pre">UNDEFINED</span></code> and
+<code class="xref py py-class docutils literal notranslate"><span class="pre">HashableModel</span></code>.</p>
+<section id="module-lionagi.utils">
+<span id="key-types-constant-undefined"></span><h2>Key Types &amp; Constant: <code class="docutils literal notranslate"><span class="pre">UNDEFINED</span></code><a class="headerlink" href="#module-lionagi.utils" title="Link to this heading">¶</a></h2>
+<dl class="py data">
+<dt class="sig sig-object py" id="lionagi.utils.UNDEFINED">
+<span class="sig-prename descclassname"><span class="pre">lionagi.utils.</span></span><span class="sig-name descname"><span class="pre">UNDEFINED</span></span><a class="headerlink" href="#lionagi.utils.UNDEFINED" title="Link to this definition">¶</a></dt>
+<dd><p>A global sentinel object used to represent an undefined or sentinel value
+that is distinct from Python’s built-ins like <code class="docutils literal notranslate"><span class="pre">None</span></code>. Often used in
+Pydantic contexts or to indicate the absence of a field.</p>
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="lionagi.utils.UndefinedType">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">lionagi.utils.</span></span><span class="sig-name descname"><span class="pre">UndefinedType</span></span><a class="headerlink" href="#lionagi.utils.UndefinedType" title="Link to this definition">¶</a></dt>
+<dd><p>A helper class representing the <a class="reference internal" href="#lionagi.utils.UNDEFINED" title="lionagi.utils.UNDEFINED"><code class="xref py py-data docutils literal notranslate"><span class="pre">UNDEFINED</span></code></a> sentinel. Once created,
+it is globally reused by LionAGI’s internal processing to consistently
+represent “no value.”</p>
+</dd></dl>
+
+</section>
+<section id="hashable-model-helpers">
+<h2>Hashable Model &amp; Helpers<a class="headerlink" href="#hashable-model-helpers" title="Link to this heading">¶</a></h2>
+<dl class="py function">
+<dt class="sig sig-object py" id="lionagi.utils.hash_dict">
+<span class="sig-prename descclassname"><span class="pre">lionagi.utils.</span></span><span class="sig-name descname"><span class="pre">hash_dict</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">data</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">int</span></span></span><a class="headerlink" href="#lionagi.utils.hash_dict" title="Link to this definition">¶</a></dt>
+<dd><p>Internal utility to recursively handle dictionary, list, or Pydantic
+objects by converting them into JSON-like strings for hashing.</p>
+</dd></dl>
+
+</section>
+<section id="general-utility-types">
+<h2>General Utility Types<a class="headerlink" href="#general-utility-types" title="Link to this heading">¶</a></h2>
+</section>
+<section id="time-path-management">
+<h2>Time &amp; Path Management<a class="headerlink" href="#time-path-management" title="Link to this heading">¶</a></h2>
+<dl class="py function">
+<dt class="sig sig-object py" id="lionagi.utils.time">
+<span class="sig-prename descclassname"><span class="pre">lionagi.utils.</span></span><span class="sig-name descname"><span class="pre">time</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">*</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">tz=...</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">type_=&quot;timestamp&quot;</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">...</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">float</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">str</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">datetime</span></span></span><a class="headerlink" href="#lionagi.utils.time" title="Link to this definition">¶</a></dt>
+<dd><p>Get the current time in various formats (timestamp, datetime, ISO8601, or custom).</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>tz</strong> – Timezone for the time (default: from <code class="xref py py-class docutils literal notranslate"><span class="pre">TIMEZONE</span></code>).</p></li>
+<li><p><strong>type</strong> – One of <code class="docutils literal notranslate"><span class="pre">&quot;timestamp&quot;</span></code>, <code class="docutils literal notranslate"><span class="pre">&quot;datetime&quot;</span></code>, <code class="docutils literal notranslate"><span class="pre">&quot;iso&quot;</span></code>, or <code class="docutils literal notranslate"><span class="pre">&quot;custom&quot;</span></code>.</p></li>
+<li><p><strong>sep</strong> – If type_=”iso”, a separator for date/time (default “T”).</p></li>
+<li><p><strong>custom_format</strong> – Required if type_=”custom”. A strftime format string.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>Time in the requested format.</p>
+</dd>
+</dl>
+<dl class="simple">
+<dt><strong>Raises</strong>:</dt><dd><ul class="simple">
+<li><p>ValueError if an invalid <code class="docutils literal notranslate"><span class="pre">type_</span></code> is used or missing format.</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="lionagi.utils.create_path">
+<span class="sig-prename descclassname"><span class="pre">lionagi.utils.</span></span><span class="sig-name descname"><span class="pre">create_path</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">directory</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">filename</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">extension=None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">timestamp=False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">...</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">Path</span></span></span><a class="headerlink" href="#lionagi.utils.create_path" title="Link to this definition">¶</a></dt>
+<dd><p>Generate a new file path, optionally ensuring unique or timestamped filenames.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>directory</strong> – The directory in which to place the file.</p></li>
+<li><p><strong>filename</strong> – Base name of the file (without extension, or includes).</p></li>
+<li><p><strong>extension</strong> – If not in <cite>filename</cite>, a separate extension.</p></li>
+<li><p><strong>timestamp</strong> – Whether to add a time string to the filename.</p></li>
+<li><p><strong>random_hash_digits</strong> – If &gt;0, a random hex is appended to avoid collisions.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>A <code class="xref py py-class docutils literal notranslate"><span class="pre">Path</span></code> to the final file location.</p>
+</dd>
+</dl>
+<p><strong>Example</strong>:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">lionagi.utils</span><span class="w"> </span><span class="kn">import</span> <span class="n">create_path</span>
+<span class="n">path</span> <span class="o">=</span> <span class="n">create_path</span><span class="p">(</span><span class="s2">&quot;./logs&quot;</span><span class="p">,</span> <span class="s2">&quot;session&quot;</span><span class="p">,</span> <span class="n">extension</span><span class="o">=</span><span class="s2">&quot;txt&quot;</span><span class="p">,</span> <span class="n">timestamp</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="n">path</span><span class="p">)</span>
+<span class="c1"># -&gt; something like ./logs/session_20231025.txt</span>
+</pre></div>
+</div>
+</dd></dl>
+
+</section>
+<section id="copy-flatten-list-ops">
+<h2>Copy, Flatten, &amp; List Ops<a class="headerlink" href="#copy-flatten-list-ops" title="Link to this heading">¶</a></h2>
+<dl class="py function">
+<dt class="sig sig-object py" id="lionagi.utils.copy">
+<span class="sig-prename descclassname"><span class="pre">lionagi.utils.</span></span><span class="sig-name descname"><span class="pre">copy</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">obj</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">/</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">*</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">deep</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">num</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">T</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">list</span><span class="p"><span class="pre">[</span></span><span class="pre">T</span><span class="p"><span class="pre">]</span></span></span></span><a class="headerlink" href="#lionagi.utils.copy" title="Link to this definition">¶</a></dt>
+<dd><p>Makes one or more copies of an object. Uses <code class="docutils literal notranslate"><span class="pre">deepcopy</span></code> by default (<code class="docutils literal notranslate"><span class="pre">deep=True</span></code>).</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>obj</strong> – The object to copy.</p></li>
+<li><p><strong>deep</strong> – Whether to perform a deep copy (default True).</p></li>
+<li><p><strong>num</strong> – Number of copies to produce; returns a single item if num=1, else a list.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>The copied object or list of copies.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="lionagi.utils.to_list">
+<span class="sig-prename descclassname"><span class="pre">lionagi.utils.</span></span><span class="sig-name descname"><span class="pre">to_list</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">input_</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">/</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">flatten=False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dropna=False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">unique=False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">...</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#lionagi.utils.to_list" title="Link to this definition">¶</a></dt>
+<dd><p>Convert an input (which could be a single item, str, mapping, or iterable)
+into a Python list with optional flattening, deduplication, or removing
+None/undefined items.</p>
+<dl class="simple">
+<dt><strong>Parameters</strong>:</dt><dd><ul class="simple">
+<li><p><strong>flatten</strong> (bool) - Recursively flatten nested lists.</p></li>
+<li><p><strong>dropna</strong> (bool) - Exclude None/<a class="reference internal" href="#lionagi.utils.UNDEFINED" title="lionagi.utils.UNDEFINED"><code class="xref py py-data docutils literal notranslate"><span class="pre">UNDEFINED</span></code></a> entries.</p></li>
+<li><p><strong>unique</strong> (bool) - Remove duplicates (requires flatten=True).</p></li>
+<li><p><strong>use_values</strong> (bool) - For enums or mappings, extract <cite>.value()</cite>.</p></li>
+</ul>
+</dd>
+</dl>
+<p><strong>Examples</strong>:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">to_list</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span>
+<span class="go">[1]</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">to_list</span><span class="p">([</span><span class="mi">1</span><span class="p">,</span> <span class="p">[</span><span class="mi">2</span><span class="p">,</span> <span class="mi">3</span><span class="p">],</span> <span class="kc">None</span><span class="p">],</span> <span class="n">flatten</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">dropna</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+<span class="go">[1, 2, 3]</span>
+</pre></div>
+</div>
+</dd></dl>
+
+</section>
+<section id="higher-order-calls-lcall-alcall-bcall">
+<h2>Higher-Order Calls: lcall, alcall, bcall<a class="headerlink" href="#higher-order-calls-lcall-alcall-bcall" title="Link to this heading">¶</a></h2>
+<dl class="py function">
+<dt class="sig sig-object py" id="lionagi.utils.lcall">
+<span class="sig-prename descclassname"><span class="pre">lionagi.utils.</span></span><span class="sig-name descname"><span class="pre">lcall</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">input_</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">func</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">/</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">*args</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">sanitize_input=False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">...</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#lionagi.utils.lcall" title="Link to this definition">¶</a></dt>
+<dd><p>Synchronously apply <strong>func</strong> to each item in an input list (with optional flattening,
+deduplication, removal of None, etc.). Returns a list of results.</p>
+<p>If you pass e.g. <code class="docutils literal notranslate"><span class="pre">sanitize_input=True</span></code>, it uses <a class="reference internal" href="#lionagi.utils.to_list" title="lionagi.utils.to_list"><code class="xref py py-func docutils literal notranslate"><span class="pre">to_list()</span></code></a> on the input.</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="lionagi.utils.alcall">
+<span class="sig-prename descclassname"><span class="pre">lionagi.utils.</span></span><span class="sig-name descname"><span class="pre">alcall</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">input_</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">func</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">/</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">...</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">sanitize_input=False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">max_concurrent=None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">...</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#lionagi.utils.alcall" title="Link to this definition">¶</a></dt>
+<dd><p>Asynchronously apply <strong>func</strong> to each item in the input. Supports:
+- optional concurrency limit
+- automatic retries
+- timeouts
+- pre/post flattening or dedup</p>
+<p>Returns a list of results once all tasks are done.</p>
+<p><strong>Example</strong>:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">lionagi.utils</span><span class="w"> </span><span class="kn">import</span> <span class="n">alcall</span>
+
+<span class="k">async</span> <span class="k">def</span><span class="w"> </span><span class="nf">process_item</span><span class="p">(</span><span class="n">x</span><span class="p">):</span>
+    <span class="k">return</span> <span class="n">x</span><span class="o">*</span><span class="n">x</span>
+
+<span class="n">results</span> <span class="o">=</span> <span class="k">await</span> <span class="n">alcall</span><span class="p">([</span><span class="mi">1</span><span class="p">,</span><span class="mi">2</span><span class="p">,</span><span class="mi">3</span><span class="p">],</span> <span class="n">process_item</span><span class="p">)</span>
+<span class="c1"># -&gt; [1,4,9]</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="lionagi.utils.bcall">
+<span class="sig-prename descclassname"><span class="pre">lionagi.utils.</span></span><span class="sig-name descname"><span class="pre">bcall</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">input_</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">func</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">/</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">batch_size</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">...</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#lionagi.utils.bcall" title="Link to this definition">¶</a></dt>
+<dd><p>Asynchronously process input in <strong>batches</strong>. Returns an async generator.
+Each yield is the result from a single batch processed via <a class="reference internal" href="#lionagi.utils.alcall" title="lionagi.utils.alcall"><code class="xref py py-func docutils literal notranslate"><span class="pre">alcall()</span></code></a>.</p>
+</dd></dl>
+
+</section>
+<section id="fuzzy-json-xml-parsing">
+<h2>Fuzzy JSON / XML Parsing<a class="headerlink" href="#fuzzy-json-xml-parsing" title="Link to this heading">¶</a></h2>
+<dl class="py function">
+<dt class="sig sig-object py" id="lionagi.utils.to_json">
+<span class="sig-prename descclassname"><span class="pre">lionagi.utils.</span></span><span class="sig-name descname"><span class="pre">to_json</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">input_data</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">/</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">fuzzy_parse</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">dict</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">list</span><span class="p"><span class="pre">[</span></span><span class="pre">dict</span><span class="p"><span class="pre">]</span></span></span></span><a class="headerlink" href="#lionagi.utils.to_json" title="Link to this definition">¶</a></dt>
+<dd><p>Extract and parse JSON from a string or list of strings,
+possibly reading <code class="docutils literal notranslate"><span class="pre">```json</span> <span class="pre">...</span> <span class="pre">`</span></code> code blocks. If multiple blocks
+exist, returns a list of them.</p>
+<p><strong>Examples</strong>:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">text</span> <span class="o">=</span> <span class="s2">&quot;some text ```json {</span><span class="se">\&quot;</span><span class="s2">a</span><span class="se">\&quot;</span><span class="s2">:1} ``` more text ```json {</span><span class="se">\&quot;</span><span class="s2">b</span><span class="se">\&quot;</span><span class="s2">:2} ```&quot;</span>
+<span class="n">data</span> <span class="o">=</span> <span class="n">to_json</span><span class="p">(</span><span class="n">text</span><span class="p">)</span>
+<span class="c1"># -&gt; [{&#39;a&#39;:1}, {&#39;b&#39;:2}]</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="lionagi.utils.fuzzy_parse_json">
+<span class="sig-prename descclassname"><span class="pre">lionagi.utils.</span></span><span class="sig-name descname"><span class="pre">fuzzy_parse_json</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">str_to_parse</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#lionagi.utils.fuzzy_parse_json" title="Link to this definition">¶</a></dt>
+<dd><p>Attempt to parse JSON via multiple cleanup heuristics (like
+replacing single quotes, adding missing brackets, etc.).</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="lionagi.utils.fix_json_string">
+<span class="sig-prename descclassname"><span class="pre">lionagi.utils.</span></span><span class="sig-name descname"><span class="pre">fix_json_string</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">str_to_parse</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#lionagi.utils.fix_json_string" title="Link to this definition">¶</a></dt>
+<dt class="sig sig-object py">
+<span class="sig-name descname"><span class="pre">Adds</span> <span class="pre">matching</span> <span class="pre">brackets</span> <span class="pre">if</span> <span class="pre">unbalanced.</span></span></dt>
+<dt class="sig sig-object py">
+<span class="sig-name descname"><span class="pre">Raises</span> <span class="pre">ValueError</span> <span class="pre">if</span> <span class="pre">the</span> <span class="pre">string</span> <span class="pre">is</span> <span class="pre">otherwise</span> <span class="pre">irreparable.</span></span></dt>
+<dd></dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="lionagi.utils.xml_to_dict">
+<span class="sig-prename descclassname"><span class="pre">lionagi.utils.</span></span><span class="sig-name descname"><span class="pre">xml_to_dict</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">xml_string</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">/</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">suppress</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">remove_root</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">root_tag</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'root'</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">dict</span></span></span><a class="headerlink" href="#lionagi.utils.xml_to_dict" title="Link to this definition">¶</a></dt>
+<dt class="sig sig-object py">
+<span class="sig-name descname"><span class="pre">Convert</span> <span class="pre">an</span> <span class="pre">XML</span> <span class="pre">string</span> <span class="pre">to</span> <span class="pre">a</span> <span class="pre">nested</span> <span class="pre">dictionary</span> <span class="pre">structure.</span> <span class="pre">Optionally</span> <span class="pre">remove</span></span></dt>
+<dt class="sig sig-object py">
+<span class="sig-name descname"><span class="pre">the</span> <span class="pre">root</span> <span class="pre">element</span> <span class="pre">from</span> <span class="pre">the</span> <span class="pre">output.</span></span></dt>
+<dd></dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="lionagi.utils.dict_to_xml">
+<span class="sig-prename descclassname"><span class="pre">lionagi.utils.</span></span><span class="sig-name descname"><span class="pre">dict_to_xml</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">data</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">dict</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">root_tag</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'root'</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">str</span></span></span><a class="headerlink" href="#lionagi.utils.dict_to_xml" title="Link to this definition">¶</a></dt>
+<dt class="sig sig-object py">
+<span class="sig-name descname"><span class="pre">Convert</span> <span class="pre">a</span> <span class="pre">dictionary</span> <span class="pre">to</span> <span class="pre">a</span> <span class="pre">simple</span> <span class="pre">XML</span> <span class="pre">string.</span></span></dt>
+<dd></dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py">
+<span class="sig-name descname"><span class="pre">to_dict(</span></span></dt>
+<dt class="sig sig-object py">
+<span class="sig-name descname"><span class="pre">input_,</span> <span class="pre">use_model_dump=True,</span> <span class="pre">fuzzy_parse=False,</span> <span class="pre">str_type=&quot;json&quot;,</span> <span class="pre">...</span></span></dt>
+<dd></dd></dl>
+
+<p>) -&gt; dict</p>
+<blockquote>
+<div><p>A universal “to dictionary” approach:
+- If <cite>input_</cite> is a str, tries JSON or XML parse (optionally fuzzy).
+- If <cite>input_</cite> is a Pydantic model, calls <cite>model_dump</cite> or other methods.
+- If <cite>input_</cite> is an iterable, tries to convert to a dict of index-&gt;value.
+- If <cite>input_</cite> is an Enum class, optionally uses enumerated values.</p>
+</div></blockquote>
+</section>
+<section id="fuzzy-checking-recursion">
+<h2>Fuzzy Checking &amp; Recursion<a class="headerlink" href="#fuzzy-checking-recursion" title="Link to this heading">¶</a></h2>
+<dl class="py function">
+<dt class="sig sig-object py">
+<span class="sig-name descname"><span class="pre">recursive_to_dict(</span></span></dt>
+<dt class="sig sig-object py">
+<span class="sig-name descname"><span class="pre">input_,</span> <span class="pre">max_recursive_depth=5,</span> <span class="pre">recursive_custom_types=False,</span> <span class="pre">...</span></span></dt>
+<dd></dd></dl>
+
+<p>) -&gt; Any</p>
+<blockquote>
+<div><p>Walks the structure of <cite>input_</cite> up to <cite>max_recursive_depth</cite> levels,
+converting each sub-part to a dictionary if it’s recognized (like
+a Pydantic model, string that can parse to JSON, etc.).
+Raises RecursionError if depth is too large.</p>
+</div></blockquote>
+<dl class="py function">
+<dt class="sig sig-object py" id="lionagi.utils.is_same_dtype">
+<span class="sig-prename descclassname"><span class="pre">lionagi.utils.</span></span><span class="sig-name descname"><span class="pre">is_same_dtype</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">input_</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dtype</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">return_dtype</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">bool</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">tuple</span><span class="p"><span class="pre">[</span></span><span class="pre">bool</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">type</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span><span class="p"><span class="pre">]</span></span></span></span><a class="headerlink" href="#lionagi.utils.is_same_dtype" title="Link to this definition">¶</a></dt>
+<dt class="sig sig-object py">
+<span class="sig-name descname"><span class="pre">Check</span> <span class="pre">if</span> <span class="pre">all</span> <span class="pre">items</span> <span class="pre">share</span> <span class="pre">the</span> <span class="pre">same</span> <span class="pre">type</span> <span class="pre">(optionally</span> <span class="pre">checking</span></span></dt>
+<dt class="sig sig-object py">
+<span class="sig-name descname"><span class="pre">against</span> <span class="pre">a</span> <span class="pre">known</span> <span class="pre">`dtype`).</span></span></dt>
+<dd></dd></dl>
+
+</section>
+<section id="concurrency-throttling-decorators">
+<h2>Concurrency/Throttling Decorators<a class="headerlink" href="#concurrency-throttling-decorators" title="Link to this heading">¶</a></h2>
+<dl class="py function">
+<dt class="sig sig-object py" id="lionagi.utils.throttle">
+<span class="sig-prename descclassname"><span class="pre">lionagi.utils.</span></span><span class="sig-name descname"><span class="pre">throttle</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">func</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">period</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#lionagi.utils.throttle" title="Link to this definition">¶</a></dt>
+<dd><p>Make <em>func</em> only callable once every <code class="docutils literal notranslate"><span class="pre">period</span></code> seconds.
+If <em>func</em> is async, internally uses a forced-async approach
+and a simple time-based check.</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="lionagi.utils.max_concurrent">
+<span class="sig-prename descclassname"><span class="pre">lionagi.utils.</span></span><span class="sig-name descname"><span class="pre">max_concurrent</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">func</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">limit</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#lionagi.utils.max_concurrent" title="Link to this definition">¶</a></dt>
+<dd><p>Limit concurrency of <em>func</em> calls to at most <cite>limit</cite> at once
+using an asyncio.Semaphore. If <em>func</em> is synchronous, it is
+forced to run in an async threadpool.</p>
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="lionagi.utils.Throttle">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">lionagi.utils.</span></span><span class="sig-name descname"><span class="pre">Throttle</span></span><a class="headerlink" href="#lionagi.utils.Throttle" title="Link to this definition">¶</a></dt>
+<dd><p>The underlying class used by <a class="reference internal" href="#lionagi.utils.throttle" title="lionagi.utils.throttle"><code class="xref py py-func docutils literal notranslate"><span class="pre">throttle()</span></code></a>.
+Provides a time-based gating mechanism for calls.</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="lionagi.utils.force_async">
+<span class="sig-prename descclassname"><span class="pre">lionagi.utils.</span></span><span class="sig-name descname"><span class="pre">force_async</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">fn</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#lionagi.utils.force_async" title="Link to this definition">¶</a></dt>
+<dd><p>Wrap a synchronous function <em>fn</em> in an async wrapper by
+using a threadpool executor.</p>
+</dd></dl>
+
+</section>
+<section id="numeric-conversions">
+<h2>Numeric Conversions<a class="headerlink" href="#numeric-conversions" title="Link to this heading">¶</a></h2>
+<dl class="py function">
+<dt class="sig sig-object py">
+<span class="sig-name descname"><span class="pre">to_num(</span></span></dt>
+<dt class="sig sig-object py">
+<span class="sig-name descname"><span class="pre">input_,</span> <span class="pre">upper_bound=None,</span> <span class="pre">lower_bound=None,</span> <span class="pre">num_type='float',</span> <span class="pre">precision=None,</span> <span class="pre">...</span></span></dt>
+<dd></dd></dl>
+
+<p>) -&gt; int|float|complex|list[int|float|complex]</p>
+<blockquote>
+<div><p>Convert a string or object to a numeric type, optionally handling
+scientific notation, fractions, percentages, complex numbers,
+or repeated matches within the string.</p>
+<dl class="field-list simple">
+<dt class="field-odd">param <a href="#id1"><span class="problematic" id="id2">input_</span></a><span class="colon">:</span></dt>
+<dd class="field-odd"><p>The data to convert (string, int, float, etc.).</p>
+</dd>
+<dt class="field-even">param upper_bound<span class="colon">:</span></dt>
+<dd class="field-even"><p>If not None, raise error if the parsed number &gt; this.</p>
+</dd>
+<dt class="field-odd">param lower_bound<span class="colon">:</span></dt>
+<dd class="field-odd"><p>Raise error if the parsed number &lt; this.</p>
+</dd>
+<dt class="field-even">param num_type<span class="colon">:</span></dt>
+<dd class="field-even"><p>‘int’, ‘float’, ‘complex’ (or the type objects).</p>
+</dd>
+<dt class="field-odd">param precision<span class="colon">:</span></dt>
+<dd class="field-odd"><p>Round floats to this many decimal places.</p>
+</dd>
+<dt class="field-even">param num_count<span class="colon">:</span></dt>
+<dd class="field-even"><p>If &gt; 1, tries to find that many numeric occurrences
+in the input string.</p>
+</dd>
+<dt class="field-odd">return<span class="colon">:</span></dt>
+<dd class="field-odd"><p>The converted numeric value or list of values.</p>
+</dd>
+</dl>
+<p><strong>Examples</strong>:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">to_num</span><span class="p">(</span><span class="s2">&quot;3.1415&quot;</span><span class="p">,</span> <span class="n">num_type</span><span class="o">=</span><span class="s2">&quot;float&quot;</span><span class="p">,</span> <span class="n">precision</span><span class="o">=</span><span class="mi">2</span><span class="p">)</span>
+<span class="c1"># -&gt; 3.14</span>
+
+<span class="n">to_num</span><span class="p">(</span><span class="s2">&quot;55%&quot;</span><span class="p">,</span> <span class="n">num_type</span><span class="o">=</span><span class="s2">&quot;float&quot;</span><span class="p">)</span>
+<span class="c1"># -&gt; 0.55</span>
+</pre></div>
+</div>
+</div></blockquote>
+<dl class="py function">
+<dt class="sig sig-object py" id="lionagi.utils.breakdown_pydantic_annotation">
+<span class="sig-prename descclassname"><span class="pre">lionagi.utils.</span></span><span class="sig-name descname"><span class="pre">breakdown_pydantic_annotation</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">model</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">type</span><span class="p"><span class="pre">[</span></span><span class="pre">BaseModel</span><span class="p"><span class="pre">]</span></span></span></em>, <em class="sig-param"><span class="n"><span class="pre">max_depth</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#lionagi.utils.breakdown_pydantic_annotation" title="Link to this definition">¶</a></dt>
+<dd><p>Recursively gather type hints from a Pydantic model, returning
+a dictionary describing its structure. Potentially used for
+advanced introspection or generating schema-like info.</p>
+</dd></dl>
+
+</section>
+<section id="system-helpers-others">
+<h2>System Helpers &amp; Others<a class="headerlink" href="#system-helpers-others" title="Link to this heading">¶</a></h2>
+<dl class="py function">
+<dt class="sig sig-object py" id="lionagi.utils.run_package_manager_command">
+<span class="sig-prename descclassname"><span class="pre">lionagi.utils.</span></span><span class="sig-name descname"><span class="pre">run_package_manager_command</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">args</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Sequence</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">]</span></span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">subprocess.CompletedProcess</span><span class="p"><span class="pre">[</span></span><span class="pre">bytes</span><span class="p"><span class="pre">]</span></span></span></span><a class="headerlink" href="#lionagi.utils.run_package_manager_command" title="Link to this definition">¶</a></dt>
+<dd><p>Tries to run a package manager command (like <code class="docutils literal notranslate"><span class="pre">uv</span></code> or fallback to
+<code class="docutils literal notranslate"><span class="pre">pip</span></code>). Used internally if you have a script that wants to
+install/uninstall Python packages in a consistent manner.</p>
+</dd></dl>
+
+</section>
+</section>
+
+        </article>
+      </div>
+      <footer>
+        
+        <div class="related-pages">
+          <a class="next-page" href="lib_file.html">
+              <div class="page-info">
+                <div class="context">
+                  <span>Next</span>
+                </div>
+                <div class="title">The <code class="docutils literal notranslate"><span class="pre">lionagi.libs.file</span></code> Subpackage</div>
+              </div>
+              <svg class="furo-related-icon"><use href="#svg-arrow-right"></use></svg>
+            </a>
+          <a class="prev-page" href="strategies.html">
+              <svg class="furo-related-icon"><use href="#svg-arrow-right"></use></svg>
+              <div class="page-info">
+                <div class="context">
+                  <span>Previous</span>
+                </div>
+                
+                <div class="title"><code class="docutils literal notranslate"><span class="pre">lionagi.operations.strategies</span></code> (Execution Modes)</div>
+                
+              </div>
+            </a>
+        </div>
+        <div class="bottom-of-page">
+          <div class="left-details">
+            <div class="copyright">
+                Copyright &#169; 2025
+            </div>
+            Made with <a href="https://www.sphinx-doc.org/">Sphinx</a> and <a class="muted-link" href="https://pradyunsg.me">@pradyunsg</a>'s
+            
+            <a href="https://github.com/pradyunsg/furo">Furo</a>
+            
+          </div>
+          <div class="right-details">
+            
+          </div>
+        </div>
+        
+      </footer>
+    </div>
+    <aside class="toc-drawer">
+      
+      
+      <div class="toc-sticky toc-scroll">
+        <div class="toc-title-container">
+          <span class="toc-title">
+            On this page
+          </span>
+        </div>
+        <div class="toc-tree-container">
+          <div class="toc-tree">
+            <ul>
+<li><a class="reference internal" href="#">The <code class="docutils literal notranslate"><span class="pre">lionagi.utils</span></code> Module (General Purpose Helpers)</a><ul>
+<li><a class="reference internal" href="#module-lionagi.utils">Key Types &amp; Constant: <code class="docutils literal notranslate"><span class="pre">UNDEFINED</span></code></a><ul>
+<li><a class="reference internal" href="#lionagi.utils.UNDEFINED"><code class="docutils literal notranslate"><span class="pre">UNDEFINED</span></code></a></li>
+<li><a class="reference internal" href="#lionagi.utils.UndefinedType"><code class="docutils literal notranslate"><span class="pre">UndefinedType</span></code></a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#hashable-model-helpers">Hashable Model &amp; Helpers</a><ul>
+<li><a class="reference internal" href="#lionagi.utils.hash_dict"><code class="docutils literal notranslate"><span class="pre">hash_dict()</span></code></a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#general-utility-types">General Utility Types</a></li>
+<li><a class="reference internal" href="#time-path-management">Time &amp; Path Management</a><ul>
+<li><a class="reference internal" href="#lionagi.utils.time"><code class="docutils literal notranslate"><span class="pre">time()</span></code></a></li>
+<li><a class="reference internal" href="#lionagi.utils.create_path"><code class="docutils literal notranslate"><span class="pre">create_path()</span></code></a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#copy-flatten-list-ops">Copy, Flatten, &amp; List Ops</a><ul>
+<li><a class="reference internal" href="#lionagi.utils.copy"><code class="docutils literal notranslate"><span class="pre">copy()</span></code></a></li>
+<li><a class="reference internal" href="#lionagi.utils.to_list"><code class="docutils literal notranslate"><span class="pre">to_list()</span></code></a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#higher-order-calls-lcall-alcall-bcall">Higher-Order Calls: lcall, alcall, bcall</a><ul>
+<li><a class="reference internal" href="#lionagi.utils.lcall"><code class="docutils literal notranslate"><span class="pre">lcall()</span></code></a></li>
+<li><a class="reference internal" href="#lionagi.utils.alcall"><code class="docutils literal notranslate"><span class="pre">alcall()</span></code></a></li>
+<li><a class="reference internal" href="#lionagi.utils.bcall"><code class="docutils literal notranslate"><span class="pre">bcall()</span></code></a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#fuzzy-json-xml-parsing">Fuzzy JSON / XML Parsing</a><ul>
+<li><a class="reference internal" href="#lionagi.utils.to_json"><code class="docutils literal notranslate"><span class="pre">to_json()</span></code></a></li>
+<li><a class="reference internal" href="#lionagi.utils.fuzzy_parse_json"><code class="docutils literal notranslate"><span class="pre">fuzzy_parse_json()</span></code></a></li>
+<li><a class="reference internal" href="#lionagi.utils.fix_json_string"><code class="docutils literal notranslate"><span class="pre">fix_json_string()</span></code></a></li>
+<li><a class="reference internal" href="#lionagi.utils.xml_to_dict"><code class="docutils literal notranslate"><span class="pre">xml_to_dict()</span></code></a></li>
+<li><a class="reference internal" href="#lionagi.utils.dict_to_xml"><code class="docutils literal notranslate"><span class="pre">dict_to_xml()</span></code></a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#fuzzy-checking-recursion">Fuzzy Checking &amp; Recursion</a><ul>
+<li><a class="reference internal" href="#lionagi.utils.is_same_dtype"><code class="docutils literal notranslate"><span class="pre">is_same_dtype()</span></code></a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#concurrency-throttling-decorators">Concurrency/Throttling Decorators</a><ul>
+<li><a class="reference internal" href="#lionagi.utils.throttle"><code class="docutils literal notranslate"><span class="pre">throttle()</span></code></a></li>
+<li><a class="reference internal" href="#lionagi.utils.max_concurrent"><code class="docutils literal notranslate"><span class="pre">max_concurrent()</span></code></a></li>
+<li><a class="reference internal" href="#lionagi.utils.Throttle"><code class="docutils literal notranslate"><span class="pre">Throttle</span></code></a></li>
+<li><a class="reference internal" href="#lionagi.utils.force_async"><code class="docutils literal notranslate"><span class="pre">force_async()</span></code></a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#numeric-conversions">Numeric Conversions</a><ul>
+<li><a class="reference internal" href="#lionagi.utils.breakdown_pydantic_annotation"><code class="docutils literal notranslate"><span class="pre">breakdown_pydantic_annotation()</span></code></a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#system-helpers-others">System Helpers &amp; Others</a><ul>
+<li><a class="reference internal" href="#lionagi.utils.run_package_manager_command"><code class="docutils literal notranslate"><span class="pre">run_package_manager_command()</span></code></a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+
+          </div>
+        </div>
+      </div>
+      
+      
+    </aside>
+  </div>
+</div><script src="../_static/documentation_options.js?v=f31a46f8"></script>
+    <script src="../_static/doctools.js?v=9bcbadda"></script>
+    <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script src="../_static/scripts/furo.js?v=5fa4622c"></script>
+    </body>
+</html>
