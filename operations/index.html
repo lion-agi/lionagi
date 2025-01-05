@@ -6,7 +6,7 @@
 <link rel="index" title="Index" href="../genindex.html" /><link rel="search" title="Search" href="../search.html" /><link rel="next" title="Core Operation Modules" href="core_operations.html" /><link rel="prev" title="LionAGI Model System (operatives/model)" href="../modules/models.html" />
 
     <!-- Generated with Sphinx 8.1.3 and Furo 2024.08.06 -->
-        <title>LionAGI Operations - LionAGI Documentation</title>
+        <title>Operations - LionAGI Documentation</title>
       <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=8f2a1f02" />
     <link rel="stylesheet" type="text/css" href="../_static/styles/furo.css?v=354aac6f" />
     <link rel="stylesheet" type="text/css" href="../_static/styles/furo-extensions.css?v=302659d7" />
@@ -206,7 +206,13 @@
 <div id="searchbox"></div><div class="sidebar-scroll"><div class="sidebar-tree">
   <p class="caption" role="heading"><span class="caption-text">Table of Contents:</span></p>
 <ul class="current">
-<li class="toctree-l1 has-children"><a class="reference internal" href="../modules/index.html">LionAGI Modules Index</a><input class="toctree-checkbox" id="toctree-checkbox-1" name="toctree-checkbox-1" role="switch" type="checkbox"/><label for="toctree-checkbox-1"><div class="visually-hidden">Toggle navigation of LionAGI Modules Index</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l1 has-children"><a class="reference internal" href="../tutorials/index.html">Tutorials</a><input class="toctree-checkbox" id="toctree-checkbox-1" name="toctree-checkbox-1" role="switch" type="checkbox"/><label for="toctree-checkbox-1"><div class="visually-hidden">Toggle navigation of Tutorials</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l2"><a class="reference internal" href="../tutorials/get_started.html">Get Started (Part 1): Automatic Code Generation</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../tutorials/get_started_pt2.html">Get Started (Part 2): Using a Custom iModel</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../tutorials/get_started_pt3.html">Get Started (Part 3): <code class="docutils literal notranslate"><span class="pre">operate</span></code> and Brainstorm</a></li>
+</ul>
+</li>
+<li class="toctree-l1 has-children"><a class="reference internal" href="../modules/index.html">Modules API Reference</a><input class="toctree-checkbox" id="toctree-checkbox-2" name="toctree-checkbox-2" role="switch" type="checkbox"/><label for="toctree-checkbox-2"><div class="visually-hidden">Toggle navigation of Modules API Reference</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
 <li class="toctree-l2"><a class="reference internal" href="../modules/action.html">The <code class="docutils literal notranslate"><span class="pre">lionagi.action</span></code> Module</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../modules/adapter.html">LionAGI Adapter System (<code class="docutils literal notranslate"><span class="pre">adapter</span></code>)</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../modules/branch.html">Branch (<code class="docutils literal notranslate"><span class="pre">lionagi.session.branch</span></code>)</a></li>
@@ -234,15 +240,9 @@
 <li class="toctree-l2"><a class="reference internal" href="../modules/models.html">LionAGI Model System (<code class="docutils literal notranslate"><span class="pre">operatives/model</span></code>)</a></li>
 </ul>
 </li>
-<li class="toctree-l1 current has-children current-page"><a class="current reference internal" href="#">LionAGI Operations</a><input checked="" class="toctree-checkbox" id="toctree-checkbox-2" name="toctree-checkbox-2" role="switch" type="checkbox"/><label for="toctree-checkbox-2"><div class="visually-hidden">Toggle navigation of LionAGI Operations</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l1 current has-children current-page"><a class="current reference internal" href="#">Operations</a><input checked="" class="toctree-checkbox" id="toctree-checkbox-3" name="toctree-checkbox-3" role="switch" type="checkbox"/><label for="toctree-checkbox-3"><div class="visually-hidden">Toggle navigation of Operations</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
 <li class="toctree-l2"><a class="reference internal" href="core_operations.html">Core Operation Modules</a></li>
 <li class="toctree-l2"><a class="reference internal" href="strategies.html">Execution Strategies &amp; Executors</a></li>
-</ul>
-</li>
-<li class="toctree-l1 has-children"><a class="reference internal" href="../tutorials/index.html">Tutorials</a><input class="toctree-checkbox" id="toctree-checkbox-3" name="toctree-checkbox-3" role="switch" type="checkbox"/><label for="toctree-checkbox-3"><div class="visually-hidden">Toggle navigation of Tutorials</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
-<li class="toctree-l2"><a class="reference internal" href="../tutorials/get_started.html">Get Started (Part 1): Automatic Code Generation</a></li>
-<li class="toctree-l2"><a class="reference internal" href="../tutorials/get_started_pt2.html">Get Started (Part 2): Using a Custom iModel</a></li>
-<li class="toctree-l2"><a class="reference internal" href="../tutorials/get_started_pt3.html">Get Started (Part 3): <code class="docutils literal notranslate"><span class="pre">operate</span></code> and Brainstorm</a></li>
 </ul>
 </li>
 </ul>
@@ -285,8 +285,8 @@
           </label>
         </div>
         <article role="main" id="furo-main-content">
-          <section id="lionagi-operations">
-<span id="lionagi-operations-index"></span><h1>LionAGI Operations<a class="headerlink" href="#lionagi-operations" title="Link to this heading">¶</a></h1>
+          <section id="operations">
+<span id="lionagi-operations-index"></span><h1>Operations<a class="headerlink" href="#operations" title="Link to this heading">¶</a></h1>
 <p>This section covers high-level operations like <cite>brainstorm</cite>, <cite>plan</cite>, or selection-based flows.</p>
 <div class="toctree-wrapper compound">
 <ul>

@@ -1,7 +1,7 @@
 .. _lionagi-operations-index:
 
 ========================
-LionAGI Operations
+Operations
 ========================
 
 This section covers high-level operations like `brainstorm`, `plan`, or selection-based flows.
