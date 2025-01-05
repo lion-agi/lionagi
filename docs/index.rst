@@ -24,6 +24,7 @@ Contents
 
    modules/index
    operations/index
+   tutorials/index
 
 Indices and tables
 ==================
