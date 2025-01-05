@@ -1,6 +1,6 @@
 # lionagi.protocols.generic.event
 
-"""
+```
 Execution state tracking system for async operations.
 
 This module provides:
@@ -15,7 +15,7 @@ Example:
     <EventStatus.PENDING>
     >>> event.execution.error is None
     True
-"""
+```
 
 ## EventStatus
 

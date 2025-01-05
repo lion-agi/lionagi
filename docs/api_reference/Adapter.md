@@ -1,6 +1,6 @@
 # lionagi.protocols.adapter
 
-"""
+```
 Format conversion system between LionAGI data structures and external formats.
 
 This module handles:
@@ -14,7 +14,7 @@ Example:
     >>> json_data = node.adapt_to("json")
     >>> # Load from DataFrame 
     >>> node = Node.adapt_from(df, "pd_dataframe")
-"""
+```
 
 ## Adapter
 

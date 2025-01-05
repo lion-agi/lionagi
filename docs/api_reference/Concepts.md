@@ -1,6 +1,6 @@
 # lionagi.protocols.concepts
 
-"""
+```
 Core protocols and abstract base classes defining fundamental interfaces in LionAGI.
 
 This module provides:
@@ -15,7 +15,7 @@ Example:
     ...     def __init__(self):
     ...         super().__init__()
     ...         self.id = IDType.create()
-"""
+```
 
 ## Observable
 

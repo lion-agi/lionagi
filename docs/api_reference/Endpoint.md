@@ -1,6 +1,6 @@
 # lionagi.service.endpoints
 
-"""
+```
 API endpoint configuration and request handling.
 
 This module provides:
@@ -16,7 +16,7 @@ Example:
     ...     method="post"
     ... )
     >>> endpoint = EndPoint(config)
-"""
+```
 
 ## EndpointConfig
 
