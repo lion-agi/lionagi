@@ -1,5 +1,5 @@
 =============================================
-LionAGI Messages and Conversation Workflows
+Messages & Conversation
 =============================================
 
 This document provides an overview of LionAGI’s **message system**, which

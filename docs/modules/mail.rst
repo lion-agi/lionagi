@@ -1,5 +1,5 @@
 ==============================
-LionAGI Mail System Reference
+Mail
 ==============================
 
 The LionAGI **mail system** provides a framework for sending and receiving

@@ -1,5 +1,5 @@
 ====================================
-LionAGI Adapter System (``adapter``)
+Adapter
 ====================================
 This module provides a **pluggable adaptation** framework for converting 
 LionAGI objects to or from various formats—such as JSON strings, 

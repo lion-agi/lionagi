@@ -1,5 +1,5 @@
 ===================================================
-The ``lionagi.utils`` Module (General Purpose Helpers)
+General Purpose Helpers
 ===================================================
 
 The ``lionagi.utils`` module provides an extensive set of general-purpose utilities 

@@ -1,5 +1,5 @@
 =======================================
-LionAGI Model System (``operatives/model``)
+Model System
 =======================================
 
 This module provides foundational classes and utilities for **dynamically** 

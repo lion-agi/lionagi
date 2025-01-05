@@ -1,7 +1,7 @@
 .. _lionagi-action:
 
 ===========================
-The ``lionagi.action`` Module
+Action
 ===========================
 
 This module provides a **flexible event-driven framework** for creating and managing

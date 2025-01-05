@@ -1,5 +1,5 @@
 ==================================
-LionAGI Service System (``service``)
+API Service System
 ==================================
 
 The **Service** subsystem in LionAGI provides classes and utilities
