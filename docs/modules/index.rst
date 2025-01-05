@@ -1,7 +1,7 @@
 .. _lionagi-modules-index:
 
 ====================
-LionAGI Modules Index
+Modules API Reference
 ====================
 
 Below is an overview of all modules in the LionAGI library:

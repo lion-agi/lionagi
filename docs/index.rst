@@ -22,9 +22,10 @@ Contents
    :maxdepth: 2
    :caption: Table of Contents:
 
+   tutorials/index
    modules/index
    operations/index
-   tutorials/index
+
 
 Indices and tables
 ==================
