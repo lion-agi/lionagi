@@ -1,5 +1,5 @@
 ========================================
-``lionagi.libs.validate`` Subpackage
+``libs.validate`` Subpackage
 ========================================
 
 This subpackage provides a variety of **validation utilities**. It includes:
