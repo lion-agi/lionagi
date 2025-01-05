@@ -1,5 +1,5 @@
 ========================================
-The ``lionagi.libs.schema`` Subpackage
+``lionagi.libs.schema`` Subpackage
 ========================================
 
 This subpackage contains helpers and utilities for rendering, extracting, 

@@ -1,5 +1,5 @@
 ==================================================
-``lionagi.operations.strategies`` (Execution Modes)
+Strategies
 ==================================================
 This subpackage orchestrates how multiple instructions get executed:
 - **Sequential** one-by-one steps.

@@ -1,5 +1,5 @@
 =========================================
-The ``lionagi.libs.package`` Subpackage
+``lionagi.libs.package`` Subpackage
 =========================================
 
 This subpackage provides utilities for **package management**—checking, installing, 

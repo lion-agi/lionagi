@@ -1,5 +1,5 @@
 =====================================
-The ``lionagi.libs.file`` Subpackage
+``lionagi.libs.file`` Subpackage
 =====================================
 
 This subpackage provides convenient file and directory manipulation utilities,

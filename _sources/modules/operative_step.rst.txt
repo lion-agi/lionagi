@@ -1,5 +1,5 @@
 =====================================
-Operative & Step (``lionagi.operatives``)
+Operative & Step
 =====================================
 
 The **Operative** and **Step** classes in LionAGI provide a **step-based** 

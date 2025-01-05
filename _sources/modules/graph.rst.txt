@@ -1,5 +1,5 @@
 ===========================
-LionAGI Graph Infrastructure
+Graph
 ===========================
 
 This module provides classes and logic for building and manipulating **directed

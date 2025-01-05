@@ -1,5 +1,5 @@
 ==========================
-LionAGI Event Architecture
+Event Architecture
 ==========================
 
 The **Event system** in LionAGI provides a uniform way to **track, log, and

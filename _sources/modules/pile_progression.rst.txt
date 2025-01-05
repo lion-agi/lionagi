@@ -1,5 +1,5 @@
 ============================================
-Pile & Progression in ``lionagi.protocols``
+Pile & Progression
 ============================================
 
 ``Pile`` and ``Progression`` are two powerful data structures that LionAGI

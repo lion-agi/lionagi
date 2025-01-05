@@ -1,5 +1,5 @@
 ================================
-LionAGI Instruct System Overview
+Instruct
 ================================
 
 The **Instruct System** provides a flexible way to define and manage **instruction parameters** 

@@ -1,5 +1,5 @@
 =============================
-LionAGI Core Concepts and IDs
+Core Concepts and IDs
 =============================
 The classes and interfaces described below are at the **heart** of LionAGI’s
 infrastructure. They define **abstract behaviors** for managers, observers, 
