@@ -2,6 +2,8 @@
 #
 # SPDX-License-Identifier: Apache-2.0
 
+from pydantic import BaseModel, Field
+
 from lionagi.operatives import types as ops_types
 from lionagi.protocols import types as types
 from lionagi.service.imodel import iModel
@@ -17,5 +19,7 @@ __all__ = (
     "LiteiModel",
     "types",
     "ops_types",
+    "BaseModel",
+    "Field",
     "__version__",
 )

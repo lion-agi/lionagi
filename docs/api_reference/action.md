@@ -1,226 +1,219 @@
-# LionAGI Action API Reference
+# lionagi.action
 
-This document provides a comprehensive reference for the classes and their APIs defined within the `action` module. These classes manage the lifecycle of actions, including creation, execution, logging, and tool invocation.
+```
+Function execution system providing validation and tracking.
 
-## Table of Contents
-- [Overview](#overview)
-- [Core Classes](#core-classes)
-  - [Action](#action)
-  - [ActionExecutor](#actionexecutor)
-  - [FunctionCalling](#functioncalling)
-  - [ActionManager](#actionmanager)
-  - [ActionProcessor](#actionprocessor)
-  - [Tool](#tool)
-  - [FuncTool](#functool)
+This module handles:
+- Function registration and execution through ActionManager
+- Function wrapping with Tool
+- Execution state tracking with FunctionCalling
 
-## Overview
-
-The `action` module provides a set of classes and utilities to define, manage, and execute asynchronous actions. Core concepts include:
-
-- **Action**: A base unit of work with associated status, results, and logging
-- **FunctionCalling**: A specialized `Action` for invoking asynchronous tools
-- **ActionExecutor**: Coordinates and processes a queue of actions
-- **ActionManager**: Manages a registry of tools and provides interfaces for registration/invocation
-- **ActionProcessor**: Handles the asynchronous processing lifecycle
-- **Tool**: Wraps callable functions with schema validation and metadata
-- **FuncTool**: A type alias for `Tool` or async callable function
-
-## Core Classes
-
-### Action
-**Location:** `lionagi/action/base.py`
-
-#### Description
-Represents an executable action with status tracking, timing, results, and error handling capabilities. Serves as a base class for more specialized actions.
-
-#### Attributes
-- `status` (`EventStatus`): Current status of the action (default: `EventStatus.PENDING`)
-- `execution_time` (`float | None`): Execution duration in seconds
-- `execution_result` (`Any | None`): Result upon completion
-- `error` (`str | None`): Error message if failure occurs
-- `created_at` (`datetime`): Creation timestamp (auto-populated with `datetime.utcnow()`)
-
-#### Methods
-- `to_log() -> Log`: Converts action to a `Log` object for auditing
-- `from_dict(...) -> NoReturn`: Raises `NotImplementedError`
-- `request` (property): Returns request payload dictionary
-
-#### Example
-```python
-from lionagi.action import Action, EventStatus
-
-action = Action()
-print(action.status)           # PENDING
-print(action.execution_time)   # None
-print(action.to_log())        # Returns a Log instance
+Example:
+    >>> from lionagi.action import ActionManager
+    >>> def add(x: int, y: int) -> int:
+    ...     return x + y
+    ...
+    >>> manager = ActionManager()
+    >>> manager.register_tool(add)
+    >>> result = await manager.invoke({
+    ...     "function": "add",
+    ...     "arguments": {"x": 1, "y": 2}
+    ... })
+    >>> result.execution.response
+    3
 ```
 
-### ActionExecutor
-**Location:** `lioncore/action/action_executor.py`
+## ActionManager
 
-#### Description
-Executes and manages asynchronous actions using a queue system. Ensures ordered processing, tracks completion, and interfaces with `ActionProcessor`.
+Central registry for managing function tools.
 
-#### Attributes
-- `processor_class` (`type[ActionProcessor]`): Processor class for queued actions
-- `strict` (`bool`): Enforces type checking for action pile
-- `pile` (`Pile[Action]`): Internal collection of actions
-- `pending` (`Progression`): Tracks pending actions
-- `processor` (`ActionProcessor | None`): Active processor instance
-
-#### Properties
-- `pending_action` (`Pile[Action]`): Actions with `EventStatus.PENDING`
-- `completed_action` (`Pile[Action]`): Actions with `EventStatus.COMPLETED`
-
-#### Methods
-- `__init__(*kwargs)`: Initialize with optional processor config
-- `append(action: Action) -> None` (async): Add new action to pile
-- `forward() -> None` (async): Process all pending actions
-
-#### Example
 ```python
-import asyncio
-from lionagi.action import ActionExecutor, Action
+class ActionManager:
+    """Function tool registry and execution manager.
 
-executor = ActionExecutor()
-async def run_actions():
-    await executor.append(Action())
-    await executor.forward()
-
-asyncio.run(run_actions())
+    Example:
+        >>> manager = ActionManager()
+        >>> manager.register_tool(add)
+        >>> result = await manager.invoke({
+        ...     "function": "add",
+        ...     "arguments": {"x": 1, "y": 2}
+        ... })
+    """
 ```
 
-### FunctionCalling
-**Location:** `lionagi/action/function_calling.py`
+### Methods
 
-#### Description
-Specialized Action for asynchronous tool invocation with execution tracking and error handling.
+#### register_tool(tool, *, update=False)
+Register a function or Tool object.
 
-#### Attributes
-- `arguments` (`dict[str, Any]`): Tool function arguments
-- `tool_id` (`IDType | None`): Tool identifier post-validation
+Parameters:
+- **tool** (*Callable | Tool*) - Function/Tool to register
+- **update** (*bool*) - Allow updating existing tools
 
-#### Methods
-- `invoke() -> None` (async): Executes tool function with timing and error handling
+Raises:
+- TypeError - Invalid tool type
+- ValueError - Tool exists and update=False
 
-#### Example
+Example:
 ```python
-import asyncio
-from lionagi.action import FunctionCalling, Tool
-
-async def async_func(param: str) -> str:
-    return f"Processed: {param}"
-
-tool = Tool(function=async_func)
-action = FunctionCalling(_tool=tool, arguments={"param": "data"})
-
-async def run():
-    await action.invoke()
-    print(action.execution_result)  # "Processed: data"
-
-asyncio.run(run())
+>>> def multiply(x: int, y: int) -> int:
+...     return x * y
+...
+>>> manager.register_tool(multiply)
 ```
 
-### ActionManager
-**Location:** `lionagi/action/manager.py`
+#### register_tools(tools, *, update=False) 
+Register multiple functions/tools.
 
-#### Description
-Manages tool registry with registration, validation, and invocation capabilities.
+Parameters:
+- **tools** (*list[Callable | Tool]*) - Items to register
+- **update** (*bool*) - Allow updates
 
-#### Attributes
-- `registry` (`dict[ToolName, Tool]`): Validated tool registry
-
-#### Methods
-- `__init__(registry: ToolRegistry = {})`: Initialize with optional registry
-- `register_tool(tool: FuncTool, update: bool = False, schema: Schema | None = None) -> None`
-- `register_tools(tools: ToolInput, update: bool = False) -> None`
-- `invoke(function_name: str, arguments: dict[str, Any]) -> FunctionCalling` (async)
-- `schema_list` (property): Returns all tool schemas
-- `get_tool_schema(tools: ToolSpecifier = False) -> list[Schema] | None`
-
-#### Example
+Example:
 ```python
-import asyncio
-from lionagi.action import ActionManager, FuncTool
-
-async def greet(name: str) -> str:
-    return f"Hello, {name}!"
-
-manager = ActionManager()
-manager.register_tool(greet)
-
-async def run():
-    action = await manager.invoke("greet", {"name": "Alice"})
-    print(action.execution_result)  # "Hello, Alice!"
-
-asyncio.run(run())
+>>> manager.register_tools([add, multiply])
 ```
 
-### ActionProcessor
-**Location:** `lionagi/action/processor.py`
+#### async invoke(func_call)
+Execute a registered function.
 
-#### Description
-Handles asynchronous action processing with concurrency control and permission management.
+Parameters:
+- **func_call** (*dict | ActionRequest*) - Function specification
 
-#### Class Variables
-- `observation_type`: Specifies processable action type
+Returns:
+- FunctionCalling - Contains execution results
 
-#### Methods
-- `process() -> None` (async): Process queued actions with capacity management
+Raises:
+- ValueError - Unknown function/invalid args
+- RuntimeError - Execution failed
 
-### Tool
-**Location:** `lionagi/action/tool.py`
-
-#### Description
-Function wrapper with schema validation support.
-
-#### Attributes
-- `function` (`Callable | AsyncCallable`): Wrapped function
-- `schema_` (`Schema | None`): Parameter/return schema
-- `tcall` (`TCallParams | None`): Timing/calling config
-
-#### Properties
-- `function_name` (`str`): Wrapped function name
-
-#### Example
+Example:
 ```python
-from lionagi.action import Tool
-
-async def compute(x: int, y: int) -> int:
-    return x + y
-
-tool = Tool(function=compute)
-print(tool.function_name)  # "compute"
+>>> result = await manager.invoke({
+...     "function": "add",
+...     "arguments": {"x": 1, "y": 2}
+... })
+>>> result.execution.response
+3
 ```
 
-### FuncTool
-**Type Alias:** `FuncTool = Tool | Callable[..., Awaitable[Any]]`
+## Tool
 
-#### Description
-Represents either a Tool instance or async callable.
+Function wrapper with validation.
 
-#### Example
 ```python
-from lionagi.action import FuncTool, Tool
-import asyncio
+class Tool:
+    """Function wrapper with validation.
 
-async def foo() -> str:
-    return "bar"
-
-ft: FuncTool = foo  # Direct function
-ft_tool: FuncTool = Tool(function=foo)  # Wrapped Tool
+    Example:
+        >>> def validate(args):
+        ...     if args["x"] <= 0:
+        ...         raise ValueError("x must be positive")
+        ...     return args
+        ...
+        >>> tool = Tool(add, pre_processor=validate)
+    """
 ```
 
-## Integration Patterns
+### Methods
 
-These components work together in a typical workflow:
+#### __init__(function, *, pre_processor=None, post_processor=None)
+Initialize function wrapper.
 
-1. Register tools with `ActionManager`
-2. Create actions (e.g., `FunctionCalling`) and queue in `ActionExecutor`
-3. Process with `ActionExecutor.forward()` using `ActionProcessor`
+Parameters:
+- **function** (*Callable*) - Function to wrap
+- **pre_processor** (*Callable, optional*) - Input validation
+- **post_processor** (*Callable, optional*) - Output processing
 
-This architecture ensures:
-- Flexible async operations
-- Robust error handling
-- Extensible design
-- Clear separation of concerns
+Example:
+```python
+>>> def validate(args):
+...     if args["x"] <= 0:
+...         raise ValueError("x must be positive")
+...     return args
+...
+>>> tool = Tool(add, pre_processor=validate)
+```
+
+## FunctionCalling
+
+Execution state tracker.
+
+```python
+class FunctionCalling:
+    """Track function execution state.
+
+    Example:
+        >>> caller = FunctionCalling(tool, arguments={"x": 1, "y": 2})
+        >>> await caller.invoke()
+        >>> caller.execution.status
+        'completed'
+    """
+```
+
+### Attributes
+
+#### status
+Current execution state.
+
+Type:
+- EventStatus
+
+Values:
+- PENDING - Initial state
+- PROCESSING - During execution
+- COMPLETED - Success
+- FAILED - Error occurred
+
+#### execution_time
+Execution duration in seconds.
+
+Type:
+- float | None
+
+#### execution_response
+Function result if successful.
+
+Type:
+- Any
+
+#### execution_error
+Error message if failed.
+
+Type:
+- str | None
+
+### Methods
+
+#### async invoke()
+Execute the function.
+
+Example:
+```python
+>>> caller = FunctionCalling(tool, arguments={"x": 1, "y": 2})
+>>> await caller.invoke()
+>>> print(caller.execution.status)
+'completed'
+```
+
+## Error Handling
+
+Basic error handling patterns:
+
+```python
+# Handle validation error
+try:
+    result = await manager.invoke({
+        "function": "add",
+        "arguments": {"x": "not a number", "y": 2}
+    })
+except ValueError as e:
+    print(f"Invalid arguments: {e}")
+
+# Handle execution error    
+try:
+    result = await manager.invoke(func_call)
+except RuntimeError as e:
+    print(f"Execution failed: {e}")
+    print(f"Status: {result.execution.status}")
+```
