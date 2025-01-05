@@ -27,9 +27,9 @@ from .prompt import EXPANSION_PROMPT, PLAN_PROMPT
 class PlanOperation(BaseModel):
     """
     Stores all relevant outcomes for a multi-step Plan:
-      * initial: The result of the initial plan prompt
-      * plan: A list of plan steps (Instruct objects) generated from the initial planning
-      * execute: Any responses from executing those plan steps
+        * initial: The result of the initial plan prompt
+        * plan: A list of plan steps (Instruct objects) generated from the initial planning
+        * execute: Any responses from executing those plan steps
     """
 
     initial: Any

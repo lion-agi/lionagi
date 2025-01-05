@@ -10,9 +10,25 @@ from lionagi.operatives.instruct.instruct import (
     LIST_INSTRUCT_FIELD_MODEL,
     Instruct,
 )
-from lionagi.protocols.types import FieldModel, SchemaModel
+from lionagi.operatives.types import FieldModel, SchemaModel
 from lionagi.session.session import Branch, Session
-from lionagi.utils import RCallParams
+
+
+class RCallParams(SchemaModel):
+    """Parameters for remote function calls."""
+
+    timeout: float = Field(
+        default=60, description="Timeout for remote function call"
+    )
+    max_retries: int = Field(
+        default=3, description="Maximum number of retries"
+    )
+    retry_delay: float = Field(
+        default=0.5, description="Delay between retries"
+    )
+    retry_backoff: float = Field(
+        default=2, description="Backoff factor for retry delay"
+    )
 
 
 class StrategyParams(SchemaModel):
