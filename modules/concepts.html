@@ -6,7 +6,7 @@
 <link rel="index" title="Index" href="../genindex.html" /><link rel="search" title="Search" href="../search.html" /><link rel="next" title="Event Architecture" href="event.html" /><link rel="prev" title="Branch" href="branch.html" />
 
     <!-- Generated with Sphinx 8.1.3 and Furo 2024.08.06 -->
-        <title>Core Concepts and IDs - LionAGI Documentation</title>
+        <title>Abstract Concepts - LionAGI Documentation</title>
       <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=8f2a1f02" />
     <link rel="stylesheet" type="text/css" href="../_static/styles/furo.css?v=354aac6f" />
     <link rel="stylesheet" type="text/css" href="../_static/styles/furo-extensions.css?v=302659d7" />
@@ -185,7 +185,7 @@
           <svg class="theme-icon-when-light"><use href="#svg-sun"></use></svg>
         </button>
       </div>
-      <label class="toc-overlay-icon toc-header-icon no-toc" for="__toc">
+      <label class="toc-overlay-icon toc-header-icon" for="__toc">
         <div class="visually-hidden">Toggle table of contents sidebar</div>
         <i class="icon"><svg><use href="#svg-toc"></use></svg></i>
       </label>
@@ -216,15 +216,14 @@
 <li class="toctree-l2"><a class="reference internal" href="action.html">Action</a></li>
 <li class="toctree-l2"><a class="reference internal" href="adapter.html">Adapter</a></li>
 <li class="toctree-l2"><a class="reference internal" href="branch.html">Branch</a></li>
-<li class="toctree-l2 current current-page"><a class="current reference internal" href="#">Core Concepts and IDs</a></li>
-<li class="toctree-l2"><a class="reference internal" href="#module-lionagi.protocols._concepts">Abstract Concepts (<code class="docutils literal notranslate"><span class="pre">_concepts.py</span></code>)</a></li>
-<li class="toctree-l2"><a class="reference internal" href="#module-lionagi.protocols.generic.element">ID System and <code class="docutils literal notranslate"><span class="pre">Element</span></code> (<code class="docutils literal notranslate"><span class="pre">element.py</span></code></a></li>
+<li class="toctree-l2 current current-page"><a class="current reference internal" href="#">Abstract Concepts</a></li>
 <li class="toctree-l2"><a class="reference internal" href="event.html">Event Architecture</a></li>
 <li class="toctree-l2"><a class="reference internal" href="form.html">Form &amp; Report</a></li>
 <li class="toctree-l2"><a class="reference internal" href="graph.html">Graph</a></li>
 <li class="toctree-l2"><a class="reference internal" href="instruct.html">Instruct</a></li>
 <li class="toctree-l2"><a class="reference internal" href="mail.html">Mail</a></li>
 <li class="toctree-l2"><a class="reference internal" href="message.html">Messages &amp; Conversation</a></li>
+<li class="toctree-l2"><a class="reference internal" href="models.html">Model System</a></li>
 <li class="toctree-l2"><a class="reference internal" href="operations.html"><code class="docutils literal notranslate"><span class="pre">lionagi.operations</span></code></a></li>
 <li class="toctree-l2"><a class="reference internal" href="operative_step.html">Operative &amp; Step</a></li>
 <li class="toctree-l2"><a class="reference internal" href="pile_progression.html">Pile &amp; Progression</a></li>
@@ -232,12 +231,11 @@
 <li class="toctree-l2"><a class="reference internal" href="session.html">Session</a></li>
 <li class="toctree-l2"><a class="reference internal" href="strategies.html">Strategies</a></li>
 <li class="toctree-l2"><a class="reference internal" href="utils.html">General Purpose Helpers</a></li>
-<li class="toctree-l2"><a class="reference internal" href="lib_file.html"><code class="docutils literal notranslate"><span class="pre">lionagi.libs.file</span></code> Subpackage</a></li>
-<li class="toctree-l2"><a class="reference internal" href="lib_nested.html"><code class="docutils literal notranslate"><span class="pre">lionagi.libs.nested</span></code> Subpackage</a></li>
-<li class="toctree-l2"><a class="reference internal" href="lib_package.html"><code class="docutils literal notranslate"><span class="pre">lionagi.libs.package</span></code> Subpackage</a></li>
-<li class="toctree-l2"><a class="reference internal" href="lib_schema.html"><code class="docutils literal notranslate"><span class="pre">lionagi.libs.schema</span></code> Subpackage</a></li>
-<li class="toctree-l2"><a class="reference internal" href="lib_validate.html"><code class="docutils literal notranslate"><span class="pre">lionagi.libs.validate</span></code> Subpackage</a></li>
-<li class="toctree-l2"><a class="reference internal" href="models.html">Model System</a></li>
+<li class="toctree-l2"><a class="reference internal" href="lib_file.html"><code class="docutils literal notranslate"><span class="pre">libs.file</span></code> Subpackage</a></li>
+<li class="toctree-l2"><a class="reference internal" href="lib_nested.html"><code class="docutils literal notranslate"><span class="pre">libs.nested</span></code> Subpackage</a></li>
+<li class="toctree-l2"><a class="reference internal" href="lib_package.html"><code class="docutils literal notranslate"><span class="pre">libs.package</span></code> Subpackage</a></li>
+<li class="toctree-l2"><a class="reference internal" href="lib_schema.html"><code class="docutils literal notranslate"><span class="pre">libs.schema</span></code> Subpackage</a></li>
+<li class="toctree-l2"><a class="reference internal" href="lib_validate.html"><code class="docutils literal notranslate"><span class="pre">libs.validate</span></code> Subpackage</a></li>
 </ul>
 </li>
 <li class="toctree-l1 has-children"><a class="reference internal" href="../operations/index.html">Operations</a><input class="toctree-checkbox" id="toctree-checkbox-3" name="toctree-checkbox-3" role="switch" type="checkbox"/><label for="toctree-checkbox-3"><div class="visually-hidden">Toggle navigation of Operations</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
@@ -279,23 +277,14 @@
               <svg class="theme-icon-when-light"><use href="#svg-sun"></use></svg>
             </button>
           </div>
-          <label class="toc-overlay-icon toc-content-icon no-toc" for="__toc">
+          <label class="toc-overlay-icon toc-content-icon" for="__toc">
             <div class="visually-hidden">Toggle table of contents sidebar</div>
             <i class="icon"><svg><use href="#svg-toc"></use></svg></i>
           </label>
         </div>
         <article role="main" id="furo-main-content">
-          <section id="core-concepts-and-ids">
-<h1>Core Concepts and IDs<a class="headerlink" href="#core-concepts-and-ids" title="Link to this heading">¶</a></h1>
-<p>The classes and interfaces described below are at the <strong>heart</strong> of LionAGI’s
-infrastructure. They define <strong>abstract behaviors</strong> for managers, observers,
-and message-oriented entities, as well as the <strong>ID system</strong> (unique UUID-based
-identifiers) and the <code class="xref py py-class docutils literal notranslate"><span class="pre">Element</span></code> base class. These models are essential
-building blocks for higher-level features like logging, action management,
-and graph structures.</p>
-</section>
-<section id="module-lionagi.protocols._concepts">
-<span id="abstract-concepts-concepts-py"></span><span id="lionagi-core-abc"></span><h1>Abstract Concepts (<code class="docutils literal notranslate"><span class="pre">_concepts.py</span></code>)<a class="headerlink" href="#module-lionagi.protocols._concepts" title="Link to this heading">¶</a></h1>
+          <section id="module-lionagi.protocols._concepts">
+<span id="abstract-concepts"></span><span id="lionagi-core-abc"></span><h1>Abstract Concepts<a class="headerlink" href="#module-lionagi.protocols._concepts" title="Link to this heading">¶</a></h1>
 <p>These abstract base classes (ABCs) describe fundamental “roles” or “capabilities”
 that a LionAGI component can fulfill. They do <strong>not</strong> provide direct implementation
 details, but establishing them ensures that different parts of the system
@@ -420,14 +409,9 @@ Must define how items are inserted or removed while preserving an order. E.g.,
 list of IDs.</p>
 </dd></dl>
 
-<section id="id-system-and-element-element-py">
-<h3>ID System and <code class="docutils literal notranslate"><span class="pre">Element</span></code> (<code class="docutils literal notranslate"><span class="pre">element.py</span></code>)<a class="headerlink" href="#id-system-and-element-element-py" title="Link to this heading">¶</a></h3>
-</section>
-</section>
-</section>
-<section id="module-lionagi.protocols.generic.element">
-<span id="id1"></span><span id="lionagi-id-system"></span><h1>ID System and <code class="docutils literal notranslate"><span class="pre">Element</span></code> (<code class="docutils literal notranslate"><span class="pre">element.py</span></code><a class="headerlink" href="#module-lionagi.protocols.generic.element" title="Link to this heading">¶</a></h1>
-<p>LionAGI uses a <strong>UUIDv4-based</strong> scheme to ensure each object is uniquely
+<section id="id-system-and-element">
+<h3>ID System and <code class="docutils literal notranslate"><span class="pre">Element</span></code><a class="headerlink" href="#id-system-and-element" title="Link to this heading">¶</a></h3>
+<p id="module-lionagi.protocols.generic.element"><span id="lionagi-id-system"></span>LionAGI uses a <strong>UUIDv4-based</strong> scheme to ensure each object is uniquely
 identifiable. These classes unify that approach, providing hashing/equality
 logic and a base class called <a class="reference internal" href="#lionagi.protocols.generic.element.Element" title="lionagi.protocols.generic.element.Element"><code class="xref py py-class docutils literal notranslate"><span class="pre">Element</span></code></a> that includes:</p>
 <ul class="simple">
@@ -435,6 +419,8 @@ logic and a base class called <a class="reference internal" href="#lionagi.proto
 <li><p>A creation timestamp,</p></li>
 <li><p>A metadata dictionary for user-defined data.</p></li>
 </ul>
+</section>
+</section>
 <section id="idtype">
 <h2>IDType<a class="headerlink" href="#idtype" title="Link to this heading">¶</a></h2>
 <dl class="py class">
@@ -552,8 +538,76 @@ signficant LionAGI component.</p></li>
         
       </footer>
     </div>
-    <aside class="toc-drawer no-toc">
+    <aside class="toc-drawer">
       
+      
+      <div class="toc-sticky toc-scroll">
+        <div class="toc-title-container">
+          <span class="toc-title">
+            On this page
+          </span>
+        </div>
+        <div class="toc-tree-container">
+          <div class="toc-tree">
+            <ul>
+<li><a class="reference internal" href="#">Abstract Concepts</a><ul>
+<li><a class="reference internal" href="#observer">Observer</a><ul>
+<li><a class="reference internal" href="#lionagi.protocols._concepts.Observer"><code class="docutils literal notranslate"><span class="pre">Observer</span></code></a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#manager">Manager</a><ul>
+<li><a class="reference internal" href="#lionagi.protocols._concepts.Manager"><code class="docutils literal notranslate"><span class="pre">Manager</span></code></a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#relational">Relational</a><ul>
+<li><a class="reference internal" href="#lionagi.protocols._concepts.Relational"><code class="docutils literal notranslate"><span class="pre">Relational</span></code></a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#sendable">Sendable</a><ul>
+<li><a class="reference internal" href="#lionagi.protocols._concepts.Sendable"><code class="docutils literal notranslate"><span class="pre">Sendable</span></code></a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#observable">Observable</a><ul>
+<li><a class="reference internal" href="#lionagi.protocols._concepts.Observable"><code class="docutils literal notranslate"><span class="pre">Observable</span></code></a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#communicatable">Communicatable</a><ul>
+<li><a class="reference internal" href="#lionagi.protocols._concepts.Communicatable"><code class="docutils literal notranslate"><span class="pre">Communicatable</span></code></a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#condition">Condition</a><ul>
+<li><a class="reference internal" href="#lionagi.protocols._concepts.Condition"><code class="docutils literal notranslate"><span class="pre">Condition</span></code></a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#collective">Collective</a><ul>
+<li><a class="reference internal" href="#lionagi.protocols._concepts.Collective"><code class="docutils literal notranslate"><span class="pre">Collective</span></code></a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#ordering">Ordering</a><ul>
+<li><a class="reference internal" href="#lionagi.protocols._concepts.Ordering"><code class="docutils literal notranslate"><span class="pre">Ordering</span></code></a></li>
+<li><a class="reference internal" href="#id-system-and-element">ID System and <code class="docutils literal notranslate"><span class="pre">Element</span></code></a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#idtype">IDType</a><ul>
+<li><a class="reference internal" href="#lionagi.protocols.generic.element.IDType"><code class="docutils literal notranslate"><span class="pre">IDType</span></code></a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#id">ID</a><ul>
+<li><a class="reference internal" href="#lionagi.protocols.generic.element.ID"><code class="docutils literal notranslate"><span class="pre">ID</span></code></a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#element">Element</a><ul>
+<li><a class="reference internal" href="#lionagi.protocols.generic.element.Element"><code class="docutils literal notranslate"><span class="pre">Element</span></code></a></li>
+<li><a class="reference internal" href="#summary">Summary</a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+
+          </div>
+        </div>
+      </div>
       
       
     </aside>

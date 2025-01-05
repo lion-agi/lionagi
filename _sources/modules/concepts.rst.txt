@@ -1,17 +1,7 @@
-=============================
-Core Concepts and IDs
-=============================
-The classes and interfaces described below are at the **heart** of LionAGI’s
-infrastructure. They define **abstract behaviors** for managers, observers, 
-and message-oriented entities, as well as the **ID system** (unique UUID-based 
-identifiers) and the :class:`Element` base class. These models are essential 
-building blocks for higher-level features like logging, action management, 
-and graph structures.
-
 .. _lionagi-core-abc:
 
 ====================================
-Abstract Concepts (``_concepts.py``)
+Abstract Concepts
 ====================================
 .. module:: lionagi.protocols._concepts
    :synopsis: Abstract base classes for LionAGI core concepts.
@@ -139,13 +129,10 @@ Ordering
 
 
 ------------------------------
-ID System and ``Element`` (``element.py``)
+ID System and ``Element``
 ------------------------------
 .. _lionagi-id-system:
 
-==========================================
-ID System and ``Element`` (``element.py``
-==========================================
 .. module:: lionagi.protocols.generic.element
    :synopsis: Core ID-based classes and the Element base class.
 

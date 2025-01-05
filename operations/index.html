@@ -3,7 +3,7 @@
   <head><meta charset="utf-8"/>
     <meta name="viewport" content="width=device-width,initial-scale=1"/>
     <meta name="color-scheme" content="light dark"><meta name="viewport" content="width=device-width, initial-scale=1" />
-<link rel="index" title="Index" href="../genindex.html" /><link rel="search" title="Search" href="../search.html" /><link rel="next" title="Core Operation Modules" href="core_operations.html" /><link rel="prev" title="Model System" href="../modules/models.html" />
+<link rel="index" title="Index" href="../genindex.html" /><link rel="search" title="Search" href="../search.html" /><link rel="next" title="Core Operation Modules" href="core_operations.html" /><link rel="prev" title="libs.validate Subpackage" href="../modules/lib_validate.html" />
 
     <!-- Generated with Sphinx 8.1.3 and Furo 2024.08.06 -->
         <title>Operations - LionAGI Documentation</title>
@@ -216,15 +216,14 @@
 <li class="toctree-l2"><a class="reference internal" href="../modules/action.html">Action</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../modules/adapter.html">Adapter</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../modules/branch.html">Branch</a></li>
-<li class="toctree-l2"><a class="reference internal" href="../modules/concepts.html">Core Concepts and IDs</a></li>
-<li class="toctree-l2"><a class="reference internal" href="../modules/concepts.html#module-lionagi.protocols._concepts">Abstract Concepts (<code class="docutils literal notranslate"><span class="pre">_concepts.py</span></code>)</a></li>
-<li class="toctree-l2"><a class="reference internal" href="../modules/concepts.html#module-lionagi.protocols.generic.element">ID System and <code class="docutils literal notranslate"><span class="pre">Element</span></code> (<code class="docutils literal notranslate"><span class="pre">element.py</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="../modules/concepts.html">Abstract Concepts</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../modules/event.html">Event Architecture</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../modules/form.html">Form &amp; Report</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../modules/graph.html">Graph</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../modules/instruct.html">Instruct</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../modules/mail.html">Mail</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../modules/message.html">Messages &amp; Conversation</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../modules/models.html">Model System</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../modules/operations.html"><code class="docutils literal notranslate"><span class="pre">lionagi.operations</span></code></a></li>
 <li class="toctree-l2"><a class="reference internal" href="../modules/operative_step.html">Operative &amp; Step</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../modules/pile_progression.html">Pile &amp; Progression</a></li>
@@ -232,12 +231,11 @@
 <li class="toctree-l2"><a class="reference internal" href="../modules/session.html">Session</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../modules/strategies.html">Strategies</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../modules/utils.html">General Purpose Helpers</a></li>
-<li class="toctree-l2"><a class="reference internal" href="../modules/lib_file.html"><code class="docutils literal notranslate"><span class="pre">lionagi.libs.file</span></code> Subpackage</a></li>
-<li class="toctree-l2"><a class="reference internal" href="../modules/lib_nested.html"><code class="docutils literal notranslate"><span class="pre">lionagi.libs.nested</span></code> Subpackage</a></li>
-<li class="toctree-l2"><a class="reference internal" href="../modules/lib_package.html"><code class="docutils literal notranslate"><span class="pre">lionagi.libs.package</span></code> Subpackage</a></li>
-<li class="toctree-l2"><a class="reference internal" href="../modules/lib_schema.html"><code class="docutils literal notranslate"><span class="pre">lionagi.libs.schema</span></code> Subpackage</a></li>
-<li class="toctree-l2"><a class="reference internal" href="../modules/lib_validate.html"><code class="docutils literal notranslate"><span class="pre">lionagi.libs.validate</span></code> Subpackage</a></li>
-<li class="toctree-l2"><a class="reference internal" href="../modules/models.html">Model System</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../modules/lib_file.html"><code class="docutils literal notranslate"><span class="pre">libs.file</span></code> Subpackage</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../modules/lib_nested.html"><code class="docutils literal notranslate"><span class="pre">libs.nested</span></code> Subpackage</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../modules/lib_package.html"><code class="docutils literal notranslate"><span class="pre">libs.package</span></code> Subpackage</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../modules/lib_schema.html"><code class="docutils literal notranslate"><span class="pre">libs.schema</span></code> Subpackage</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../modules/lib_validate.html"><code class="docutils literal notranslate"><span class="pre">libs.validate</span></code> Subpackage</a></li>
 </ul>
 </li>
 <li class="toctree-l1 current has-children current-page"><a class="current reference internal" href="#">Operations</a><input checked="" class="toctree-checkbox" id="toctree-checkbox-3" name="toctree-checkbox-3" role="switch" type="checkbox"/><label for="toctree-checkbox-3"><div class="visually-hidden">Toggle navigation of Operations</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
@@ -314,14 +312,14 @@
               </div>
               <svg class="furo-related-icon"><use href="#svg-arrow-right"></use></svg>
             </a>
-          <a class="prev-page" href="../modules/models.html">
+          <a class="prev-page" href="../modules/lib_validate.html">
               <svg class="furo-related-icon"><use href="#svg-arrow-right"></use></svg>
               <div class="page-info">
                 <div class="context">
                   <span>Previous</span>
                 </div>
                 
-                <div class="title">Model System</div>
+                <div class="title"><code class="docutils literal notranslate"><span class="pre">libs.validate</span></code> Subpackage</div>
                 
               </div>
             </a>

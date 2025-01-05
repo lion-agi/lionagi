@@ -1,5 +1,5 @@
 ====================================================
-``lionagi.libs.nested`` Subpackage
+``libs.nested`` Subpackage
 ====================================================
 
 The ``lionagi.libs.nested`` subpackage offers a range of functions and utilities
