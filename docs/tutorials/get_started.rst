@@ -1,20 +1,59 @@
 .. _lionagi-get-started-code-tutorial:
 
 ==========================================================
-Get Started: Automatic Code Generation & Checking
+Get Started (Part 1): Automatic Code Generation
 ==========================================================
 
-This tutorial walks you through a **basic “auto-coding” scenario** with LionAGI:
+
+This tutorial demonstrates a **basic “auto-coding” scenario** with LionAGI:
 we provide a **naive syntax check** as a tool, ask the LLM to generate Python
 code that meets a specification, and observe how LionAGI orchestrates the
 tool usage and final output.
 
+-------------------------
+0. Environment Setup
+-------------------------
+Before diving in, you'll need:
+
+1. **Install LionAGI** (and any required dependencies like `uv` or `pip`). 
+    - If you're installing from PyPI, run:
+        
+        .. code-block:: bash
+
+            pip install lionagi
+
+    - For advanced usage, you might want `uv` installed:
+        
+        .. code-block:: bash
+
+            uv pip install lionagi
+
+2. **Obtain an API key** for the underlying LLM (OpenAI or other provider). 
+    - Set it as an environment variable, e.g.:
+        
+        .. code-block:: bash
+
+            export OPENAI_API_KEY="<your_api_key_here>"
+        
+        or put it into a local `.env` file that you load.
+
+3. **A Python environment supporting async** (e.g., a Jupyter notebook).
+
+Once configured, you can import LionAGI modules (`lionagi.types`, `Session`,
+`Branch`, etc.) and proceed with the example below.
+
 
 ---------------------
-1. Prerequisites
+1. Introduction
 ---------------------
-- **LionAGI** library installed (which includes ``types``, ``Session``, ``Branch``, etc.).
-- A working Python environment supporting **async** (e.g., a Jupyter notebook).
+We'll build a small system that instructs an LLM to:
+
+- Generate minimal Python code fulfilling some spec.
+- Optionally call our custom “syntax_check” tool if needed.
+- Return a typed Pydantic model containing the generated code and an AI-provided reason.
+
+This is a simplified demonstration of **LionAGI**'s capabilities:
+**tool invocation**, **typed outputs**, and **branch** usage.
 
 ------------------------------
 2. Full Example:
@@ -188,6 +227,5 @@ This tutorial demonstrates a small but complete example of how to:
 	3.	Request typed model output (CodeModel).
 	4.	Inspect intermediate steps, including reasoned text or action logs.
 
-With LionAGI, you can scale this approach to more complex tasks (RAG with external docs,
-multi-step planning, agentic interactions, custom validators, or advanced concurrency).
+With LionAGI, you can scale this approach to more complex tasks (RAG with external docs, multi-step planning, agentic interactions, custom validators, or advanced concurrency).
 Enjoy building!
