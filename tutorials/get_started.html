@@ -3,10 +3,10 @@
   <head><meta charset="utf-8"/>
     <meta name="viewport" content="width=device-width,initial-scale=1"/>
     <meta name="color-scheme" content="light dark"><meta name="viewport" content="width=device-width, initial-scale=1" />
-<link rel="index" title="Index" href="../genindex.html" /><link rel="search" title="Search" href="../search.html" /><link rel="prev" title="Tutorials" href="index.html" />
+<link rel="index" title="Index" href="../genindex.html" /><link rel="search" title="Search" href="../search.html" /><link rel="next" title="Get Started (Part 2): Using a Custom iModel" href="get_started_pt2.html" /><link rel="prev" title="Tutorials" href="index.html" />
 
     <!-- Generated with Sphinx 8.1.3 and Furo 2024.08.06 -->
-        <title>Get Started: Automatic Code Generation &amp; Checking - My LIONAGI Documentation</title>
+        <title>Get Started (Part 1): Automatic Code Generation - My LIONAGI Documentation</title>
       <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=8f2a1f02" />
     <link rel="stylesheet" type="text/css" href="../_static/styles/furo.css?v=354aac6f" />
     <link rel="stylesheet" type="text/css" href="../_static/styles/furo-extensions.css?v=302659d7" />
@@ -240,7 +240,9 @@
 </ul>
 </li>
 <li class="toctree-l1 current has-children"><a class="reference internal" href="index.html">Tutorials</a><input checked="" class="toctree-checkbox" id="toctree-checkbox-3" name="toctree-checkbox-3" role="switch" type="checkbox"/><label for="toctree-checkbox-3"><div class="visually-hidden">Toggle navigation of Tutorials</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul class="current">
-<li class="toctree-l2 current current-page"><a class="current reference internal" href="#">Get Started: Automatic Code Generation &amp; Checking</a></li>
+<li class="toctree-l2 current current-page"><a class="current reference internal" href="#">Get Started (Part 1): Automatic Code Generation</a></li>
+<li class="toctree-l2"><a class="reference internal" href="get_started_pt2.html">Get Started (Part 2): Using a Custom iModel</a></li>
+<li class="toctree-l2"><a class="reference internal" href="get_started_pt3.html">Get Started (Part 3): <code class="docutils literal notranslate"><span class="pre">operate</span></code> and Brainstorm</a></li>
 </ul>
 </li>
 </ul>
@@ -283,18 +285,65 @@
           </label>
         </div>
         <article role="main" id="furo-main-content">
-          <section id="get-started-automatic-code-generation-checking">
-<span id="lionagi-get-started-code-tutorial"></span><h1>Get Started: Automatic Code Generation &amp; Checking<a class="headerlink" href="#get-started-automatic-code-generation-checking" title="Link to this heading">¶</a></h1>
-<p>This tutorial walks you through a <strong>basic “auto-coding” scenario</strong> with LionAGI:
+          <section id="get-started-part-1-automatic-code-generation">
+<span id="lionagi-get-started-code-tutorial"></span><h1>Get Started (Part 1): Automatic Code Generation<a class="headerlink" href="#get-started-part-1-automatic-code-generation" title="Link to this heading">¶</a></h1>
+<p>This tutorial demonstrates a <strong>basic “auto-coding” scenario</strong> with LionAGI:
 we provide a <strong>naive syntax check</strong> as a tool, ask the LLM to generate Python
 code that meets a specification, and observe how LionAGI orchestrates the
 tool usage and final output.</p>
-<section id="prerequisites">
-<h2>1. Prerequisites<a class="headerlink" href="#prerequisites" title="Link to this heading">¶</a></h2>
-<ul class="simple">
-<li><p><strong>LionAGI</strong> library installed (which includes <code class="docutils literal notranslate"><span class="pre">types</span></code>, <code class="docutils literal notranslate"><span class="pre">Session</span></code>, <code class="docutils literal notranslate"><span class="pre">Branch</span></code>, etc.).</p></li>
-<li><p>A working Python environment supporting <strong>async</strong> (e.g., a Jupyter notebook).</p></li>
+<section id="environment-setup">
+<h2>0. Environment Setup<a class="headerlink" href="#environment-setup" title="Link to this heading">¶</a></h2>
+<p>Before diving in, you’ll need:</p>
+<ol class="arabic">
+<li><dl>
+<dt><strong>Install LionAGI</strong> (and any required dependencies like <cite>uv</cite> or <cite>pip</cite>).</dt><dd><ul>
+<li><p>If you’re installing from PyPI, run:</p>
+<blockquote>
+<div><div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>pip<span class="w"> </span>install<span class="w"> </span>lionagi
+</pre></div>
+</div>
+</div></blockquote>
+</li>
+<li><p>For advanced usage, you might want <cite>uv</cite> installed:</p>
+<blockquote>
+<div><div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>uv<span class="w"> </span>pip<span class="w"> </span>install<span class="w"> </span>lionagi
+</pre></div>
+</div>
+</div></blockquote>
+</li>
 </ul>
+</dd>
+</dl>
+</li>
+<li><dl>
+<dt><strong>Obtain an API key</strong> for the underlying LLM (OpenAI or other provider).</dt><dd><ul>
+<li><p>Set it as an environment variable, e.g.:</p>
+<blockquote>
+<div><div class="highlight-bash notranslate"><div class="highlight"><pre><span></span><span class="nb">export</span><span class="w"> </span><span class="nv">OPENAI_API_KEY</span><span class="o">=</span><span class="s2">&quot;&lt;your_api_key_here&gt;&quot;</span>
+</pre></div>
+</div>
+<p>or put it into a local <cite>.env</cite> file that you load.</p>
+</div></blockquote>
+</li>
+</ul>
+</dd>
+</dl>
+</li>
+<li><p><strong>A Python environment supporting async</strong> (e.g., a Jupyter notebook).</p></li>
+</ol>
+<p>Once configured, you can import LionAGI modules (<cite>lionagi.types</cite>, <cite>Session</cite>,
+<cite>Branch</cite>, etc.) and proceed with the example below.</p>
+</section>
+<section id="introduction">
+<h2>1. Introduction<a class="headerlink" href="#introduction" title="Link to this heading">¶</a></h2>
+<p>We’ll build a small system that instructs an LLM to:</p>
+<ul class="simple">
+<li><p>Generate minimal Python code fulfilling some spec.</p></li>
+<li><p>Optionally call our custom “syntax_check” tool if needed.</p></li>
+<li><p>Return a typed Pydantic model containing the generated code and an AI-provided reason.</p></li>
+</ul>
+<p>This is a simplified demonstration of <strong>LionAGI</strong>’s capabilities:
+<strong>tool invocation</strong>, <strong>typed outputs</strong>, and <strong>branch</strong> usage.</p>
 </section>
 <section id="full-example">
 <h2>2. Full Example:<a class="headerlink" href="#full-example" title="Link to this heading">¶</a></h2>
@@ -472,8 +521,7 @@ And so on…
 </ol>
 </dd>
 </dl>
-<p>With LionAGI, you can scale this approach to more complex tasks (RAG with external docs,
-multi-step planning, agentic interactions, custom validators, or advanced concurrency).
+<p>With LionAGI, you can scale this approach to more complex tasks (RAG with external docs, multi-step planning, agentic interactions, custom validators, or advanced concurrency).
 Enjoy building!</p>
 </section>
 </section>
@@ -483,7 +531,15 @@ Enjoy building!</p>
       <footer>
         
         <div class="related-pages">
-          
+          <a class="next-page" href="get_started_pt2.html">
+              <div class="page-info">
+                <div class="context">
+                  <span>Next</span>
+                </div>
+                <div class="title">Get Started (Part 2): Using a Custom iModel</div>
+              </div>
+              <svg class="furo-related-icon"><use href="#svg-arrow-right"></use></svg>
+            </a>
           <a class="prev-page" href="index.html">
               <svg class="furo-related-icon"><use href="#svg-arrow-right"></use></svg>
               <div class="page-info">
@@ -525,8 +581,9 @@ Enjoy building!</p>
         <div class="toc-tree-container">
           <div class="toc-tree">
             <ul>
-<li><a class="reference internal" href="#">Get Started: Automatic Code Generation &amp; Checking</a><ul>
-<li><a class="reference internal" href="#prerequisites">1. Prerequisites</a></li>
+<li><a class="reference internal" href="#">Get Started (Part 1): Automatic Code Generation</a><ul>
+<li><a class="reference internal" href="#environment-setup">0. Environment Setup</a></li>
+<li><a class="reference internal" href="#introduction">1. Introduction</a></li>
 <li><a class="reference internal" href="#full-example">2. Full Example:</a></li>
 <li><a class="reference internal" href="#example-usage-output">3. Example Usage Output</a></li>
 <li><a class="reference internal" href="#explanation-next-steps">4.      Explanation &amp; Next Steps</a></li>

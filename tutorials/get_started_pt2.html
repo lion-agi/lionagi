@@ -1,0 +1,623 @@
+<!doctype html>
+<html class="no-js" lang="en" data-content_root="../">
+  <head><meta charset="utf-8"/>
+    <meta name="viewport" content="width=device-width,initial-scale=1"/>
+    <meta name="color-scheme" content="light dark"><meta name="viewport" content="width=device-width, initial-scale=1" />
+<link rel="index" title="Index" href="../genindex.html" /><link rel="search" title="Search" href="../search.html" /><link rel="next" title="Get Started (Part 3): operate and Brainstorm" href="get_started_pt3.html" /><link rel="prev" title="Get Started (Part 1): Automatic Code Generation" href="get_started.html" />
+
+    <!-- Generated with Sphinx 8.1.3 and Furo 2024.08.06 -->
+        <title>Get Started (Part 2): Using a Custom iModel - My LIONAGI Documentation</title>
+      <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=8f2a1f02" />
+    <link rel="stylesheet" type="text/css" href="../_static/styles/furo.css?v=354aac6f" />
+    <link rel="stylesheet" type="text/css" href="../_static/styles/furo-extensions.css?v=302659d7" />
+    <link rel="stylesheet" type="text/css" href="../_static/custom.css?v=9ac6386e" />
+    
+    
+
+
+<style>
+  body {
+    --color-code-background: #f8f8f8;
+  --color-code-foreground: black;
+  --color-brand-primary: #007ACC;
+  --color-brand-content: #006699;
+  
+  }
+  @media not print {
+    body[data-theme="dark"] {
+      --color-code-background: #202020;
+  --color-code-foreground: #d0d0d0;
+  --color-brand-primary: #4DC1FF;
+  --color-brand-content: #99C2FF;
+  
+    }
+    @media (prefers-color-scheme: dark) {
+      body:not([data-theme="light"]) {
+        --color-code-background: #202020;
+  --color-code-foreground: #d0d0d0;
+  --color-brand-primary: #4DC1FF;
+  --color-brand-content: #99C2FF;
+  
+      }
+    }
+  }
+</style></head>
+  <body>
+    
+    <script>
+      document.body.dataset.theme = localStorage.getItem("theme") || "auto";
+    </script>
+    
+
+<svg xmlns="http://www.w3.org/2000/svg" style="display: none;">
+  <symbol id="svg-toc" viewBox="0 0 24 24">
+    <title>Contents</title>
+    <svg stroke="currentColor" fill="currentColor" stroke-width="0" viewBox="0 0 1024 1024">
+      <path d="M408 442h480c4.4 0 8-3.6 8-8v-56c0-4.4-3.6-8-8-8H408c-4.4 0-8 3.6-8 8v56c0 4.4 3.6 8 8 8zm-8 204c0 4.4 3.6 8 8 8h480c4.4 0 8-3.6 8-8v-56c0-4.4-3.6-8-8-8H408c-4.4 0-8 3.6-8 8v56zm504-486H120c-4.4 0-8 3.6-8 8v56c0 4.4 3.6 8 8 8h784c4.4 0 8-3.6 8-8v-56c0-4.4-3.6-8-8-8zm0 632H120c-4.4 0-8 3.6-8 8v56c0 4.4 3.6 8 8 8h784c4.4 0 8-3.6 8-8v-56c0-4.4-3.6-8-8-8zM115.4 518.9L271.7 642c5.8 4.6 14.4.5 14.4-6.9V388.9c0-7.4-8.5-11.5-14.4-6.9L115.4 505.1a8.74 8.74 0 0 0 0 13.8z"/>
+    </svg>
+  </symbol>
+  <symbol id="svg-menu" viewBox="0 0 24 24">
+    <title>Menu</title>
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather-menu">
+      <line x1="3" y1="12" x2="21" y2="12"></line>
+      <line x1="3" y1="6" x2="21" y2="6"></line>
+      <line x1="3" y1="18" x2="21" y2="18"></line>
+    </svg>
+  </symbol>
+  <symbol id="svg-arrow-right" viewBox="0 0 24 24">
+    <title>Expand</title>
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather-chevron-right">
+      <polyline points="9 18 15 12 9 6"></polyline>
+    </svg>
+  </symbol>
+  <symbol id="svg-sun" viewBox="0 0 24 24">
+    <title>Light mode</title>
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="1" stroke-linecap="round" stroke-linejoin="round" class="feather-sun">
+      <circle cx="12" cy="12" r="5"></circle>
+      <line x1="12" y1="1" x2="12" y2="3"></line>
+      <line x1="12" y1="21" x2="12" y2="23"></line>
+      <line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line>
+      <line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line>
+      <line x1="1" y1="12" x2="3" y2="12"></line>
+      <line x1="21" y1="12" x2="23" y2="12"></line>
+      <line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line>
+      <line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line>
+    </svg>
+  </symbol>
+  <symbol id="svg-moon" viewBox="0 0 24 24">
+    <title>Dark mode</title>
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="1" stroke-linecap="round" stroke-linejoin="round" class="icon-tabler-moon">
+      <path stroke="none" d="M0 0h24v24H0z" fill="none" />
+      <path d="M12 3c.132 0 .263 0 .393 0a7.5 7.5 0 0 0 7.92 12.446a9 9 0 1 1 -8.313 -12.454z" />
+    </svg>
+  </symbol>
+  <symbol id="svg-sun-with-moon" viewBox="0 0 24 24">
+    <title>Auto light/dark, in light mode</title>
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="1" stroke-linecap="round" stroke-linejoin="round"
+      class="icon-custom-derived-from-feather-sun-and-tabler-moon">
+      <path style="opacity: 50%" d="M 5.411 14.504 C 5.471 14.504 5.532 14.504 5.591 14.504 C 3.639 16.319 4.383 19.569 6.931 20.352 C 7.693 20.586 8.512 20.551 9.25 20.252 C 8.023 23.207 4.056 23.725 2.11 21.184 C 0.166 18.642 1.702 14.949 4.874 14.536 C 5.051 14.512 5.231 14.5 5.411 14.5 L 5.411 14.504 Z"/>
+      <line x1="14.5" y1="3.25" x2="14.5" y2="1.25"/>
+      <line x1="14.5" y1="15.85" x2="14.5" y2="17.85"/>
+      <line x1="10.044" y1="5.094" x2="8.63" y2="3.68"/>
+      <line x1="19" y1="14.05" x2="20.414" y2="15.464"/>
+      <line x1="8.2" y1="9.55" x2="6.2" y2="9.55"/>
+      <line x1="20.8" y1="9.55" x2="22.8" y2="9.55"/>
+      <line x1="10.044" y1="14.006" x2="8.63" y2="15.42"/>
+      <line x1="19" y1="5.05" x2="20.414" y2="3.636"/>
+      <circle cx="14.5" cy="9.55" r="3.6"/>
+    </svg>
+  </symbol>
+  <symbol id="svg-moon-with-sun" viewBox="0 0 24 24">
+    <title>Auto light/dark, in dark mode</title>
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="1" stroke-linecap="round" stroke-linejoin="round"
+      class="icon-custom-derived-from-feather-sun-and-tabler-moon">
+      <path d="M 8.282 7.007 C 8.385 7.007 8.494 7.007 8.595 7.007 C 5.18 10.184 6.481 15.869 10.942 17.24 C 12.275 17.648 13.706 17.589 15 17.066 C 12.851 22.236 5.91 23.143 2.505 18.696 C -0.897 14.249 1.791 7.786 7.342 7.063 C 7.652 7.021 7.965 7 8.282 7 L 8.282 7.007 Z"/>
+      <line style="opacity: 50%" x1="18" y1="3.705" x2="18" y2="2.5"/>
+      <line style="opacity: 50%" x1="18" y1="11.295" x2="18" y2="12.5"/>
+      <line style="opacity: 50%" x1="15.316" y1="4.816" x2="14.464" y2="3.964"/>
+      <line style="opacity: 50%" x1="20.711" y1="10.212" x2="21.563" y2="11.063"/>
+      <line style="opacity: 50%" x1="14.205" y1="7.5" x2="13.001" y2="7.5"/>
+      <line style="opacity: 50%" x1="21.795" y1="7.5" x2="23" y2="7.5"/>
+      <line style="opacity: 50%" x1="15.316" y1="10.184" x2="14.464" y2="11.036"/>
+      <line style="opacity: 50%" x1="20.711" y1="4.789" x2="21.563" y2="3.937"/>
+      <circle style="opacity: 50%" cx="18" cy="7.5" r="2.169"/>
+    </svg>
+  </symbol>
+  <symbol id="svg-pencil" viewBox="0 0 24 24">
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="1" stroke-linecap="round" stroke-linejoin="round" class="icon-tabler-pencil-code">
+      <path d="M4 20h4l10.5 -10.5a2.828 2.828 0 1 0 -4 -4l-10.5 10.5v4" />
+      <path d="M13.5 6.5l4 4" />
+      <path d="M20 21l2 -2l-2 -2" />
+      <path d="M17 17l-2 2l2 2" />
+    </svg>
+  </symbol>
+  <symbol id="svg-eye" viewBox="0 0 24 24">
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="1" stroke-linecap="round" stroke-linejoin="round" class="icon-tabler-eye-code">
+      <path stroke="none" d="M0 0h24v24H0z" fill="none" />
+      <path d="M10 12a2 2 0 1 0 4 0a2 2 0 0 0 -4 0" />
+      <path
+        d="M11.11 17.958c-3.209 -.307 -5.91 -2.293 -8.11 -5.958c2.4 -4 5.4 -6 9 -6c3.6 0 6.6 2 9 6c-.21 .352 -.427 .688 -.647 1.008" />
+      <path d="M20 21l2 -2l-2 -2" />
+      <path d="M17 17l-2 2l2 2" />
+    </svg>
+  </symbol>
+</svg>
+
+<input type="checkbox" class="sidebar-toggle" name="__navigation" id="__navigation">
+<input type="checkbox" class="sidebar-toggle" name="__toc" id="__toc">
+<label class="overlay sidebar-overlay" for="__navigation">
+  <div class="visually-hidden">Hide navigation sidebar</div>
+</label>
+<label class="overlay toc-overlay" for="__toc">
+  <div class="visually-hidden">Hide table of contents sidebar</div>
+</label>
+
+<a class="skip-to-content muted-link" href="#furo-main-content">Skip to content</a>
+
+
+
+<div class="page">
+  <header class="mobile-header">
+    <div class="header-left">
+      <label class="nav-overlay-icon" for="__navigation">
+        <div class="visually-hidden">Toggle site navigation sidebar</div>
+        <i class="icon"><svg><use href="#svg-menu"></use></svg></i>
+      </label>
+    </div>
+    <div class="header-center">
+      <a href="../index.html"><div class="brand">My LIONAGI Documentation</div></a>
+    </div>
+    <div class="header-right">
+      <div class="theme-toggle-container theme-toggle-header">
+        <button class="theme-toggle">
+          <div class="visually-hidden">Toggle Light / Dark / Auto color theme</div>
+          <svg class="theme-icon-when-auto-light"><use href="#svg-sun-with-moon"></use></svg>
+          <svg class="theme-icon-when-auto-dark"><use href="#svg-moon-with-sun"></use></svg>
+          <svg class="theme-icon-when-dark"><use href="#svg-moon"></use></svg>
+          <svg class="theme-icon-when-light"><use href="#svg-sun"></use></svg>
+        </button>
+      </div>
+      <label class="toc-overlay-icon toc-header-icon" for="__toc">
+        <div class="visually-hidden">Toggle table of contents sidebar</div>
+        <i class="icon"><svg><use href="#svg-toc"></use></svg></i>
+      </label>
+    </div>
+  </header>
+  <aside class="sidebar-drawer">
+    <div class="sidebar-container">
+      
+      <div class="sidebar-sticky"><a class="sidebar-brand" href="../index.html">
+  
+  
+  
+</a><form class="sidebar-search-container" method="get" action="../search.html" role="search">
+  <input class="sidebar-search" placeholder="Search" name="q" aria-label="Search">
+  <input type="hidden" name="check_keywords" value="yes">
+  <input type="hidden" name="area" value="default">
+</form>
+<div id="searchbox"></div><div class="sidebar-scroll"><div class="sidebar-tree">
+  <p class="caption" role="heading"><span class="caption-text">Table of Contents:</span></p>
+<ul class="current">
+<li class="toctree-l1 has-children"><a class="reference internal" href="../modules/index.html">LionAGI Modules Index</a><input class="toctree-checkbox" id="toctree-checkbox-1" name="toctree-checkbox-1" role="switch" type="checkbox"/><label for="toctree-checkbox-1"><div class="visually-hidden">Toggle navigation of LionAGI Modules Index</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l2"><a class="reference internal" href="../modules/action.html">The <code class="docutils literal notranslate"><span class="pre">lionagi.action</span></code> Module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../modules/adapter.html">LionAGI Adapter System (<code class="docutils literal notranslate"><span class="pre">adapter</span></code>)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../modules/branch.html">Branch (<code class="docutils literal notranslate"><span class="pre">lionagi.session.branch</span></code>)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../modules/concepts.html">LionAGI Core Concepts and IDs</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../modules/concepts.html#module-lionagi.protocols._concepts">Abstract Concepts (<code class="docutils literal notranslate"><span class="pre">_concepts.py</span></code>)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../modules/concepts.html#module-lionagi.protocols.generic.element">ID System and <code class="docutils literal notranslate"><span class="pre">Element</span></code> (<code class="docutils literal notranslate"><span class="pre">element.py</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="../modules/event.html">LionAGI Event Architecture</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../modules/form.html">LionAGI Form System (<code class="docutils literal notranslate"><span class="pre">lionagi.form</span></code>)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../modules/graph.html">LionAGI Graph Infrastructure</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../modules/instruct.html">LionAGI Instruct System Overview</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../modules/mail.html">LionAGI Mail System Reference</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../modules/message.html">LionAGI Messages and Conversation Workflows</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../modules/operations.html"><code class="docutils literal notranslate"><span class="pre">lionagi.operations</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="../modules/operative_step.html">Operative &amp; Step (<code class="docutils literal notranslate"><span class="pre">lionagi.operatives</span></code>)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../modules/pile_progression.html">Pile &amp; Progression in <code class="docutils literal notranslate"><span class="pre">lionagi.protocols</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="../modules/service.html">LionAGI Service System (<code class="docutils literal notranslate"><span class="pre">service</span></code>)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../modules/session.html">Session (<code class="docutils literal notranslate"><span class="pre">lionagi.session.session</span></code>)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../modules/strategies.html"><code class="docutils literal notranslate"><span class="pre">lionagi.operations.strategies</span></code> (Execution Modes)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../modules/utils.html">The <code class="docutils literal notranslate"><span class="pre">lionagi.utils</span></code> Module (General Purpose Helpers)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../modules/lib_file.html">The <code class="docutils literal notranslate"><span class="pre">lionagi.libs.file</span></code> Subpackage</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../modules/lib_nested.html">The <code class="docutils literal notranslate"><span class="pre">lionagi.libs.nested</span></code> Subpackage</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../modules/lib_package.html">The <code class="docutils literal notranslate"><span class="pre">lionagi.libs.package</span></code> Subpackage</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../modules/lib_schema.html">The <code class="docutils literal notranslate"><span class="pre">lionagi.libs.schema</span></code> Subpackage</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../modules/lib_validate.html">The <code class="docutils literal notranslate"><span class="pre">lionagi.libs.validate</span></code> Subpackage</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../modules/models.html">LionAGI Model System (<code class="docutils literal notranslate"><span class="pre">operatives/model</span></code>)</a></li>
+</ul>
+</li>
+<li class="toctree-l1 has-children"><a class="reference internal" href="../operations/index.html">LionAGI Operations</a><input class="toctree-checkbox" id="toctree-checkbox-2" name="toctree-checkbox-2" role="switch" type="checkbox"/><label for="toctree-checkbox-2"><div class="visually-hidden">Toggle navigation of LionAGI Operations</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l2"><a class="reference internal" href="../operations/core_operations.html">Core Operation Modules</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../operations/strategies.html">Execution Strategies &amp; Executors</a></li>
+</ul>
+</li>
+<li class="toctree-l1 current has-children"><a class="reference internal" href="index.html">Tutorials</a><input checked="" class="toctree-checkbox" id="toctree-checkbox-3" name="toctree-checkbox-3" role="switch" type="checkbox"/><label for="toctree-checkbox-3"><div class="visually-hidden">Toggle navigation of Tutorials</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="get_started.html">Get Started (Part 1): Automatic Code Generation</a></li>
+<li class="toctree-l2 current current-page"><a class="current reference internal" href="#">Get Started (Part 2): Using a Custom iModel</a></li>
+<li class="toctree-l2"><a class="reference internal" href="get_started_pt3.html">Get Started (Part 3): <code class="docutils literal notranslate"><span class="pre">operate</span></code> and Brainstorm</a></li>
+</ul>
+</li>
+</ul>
+
+</div>
+</div>
+
+      </div>
+      
+    </div>
+  </aside>
+  <div class="main">
+    <div class="content">
+      <div class="article-container">
+        <a href="#" class="back-to-top muted-link">
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
+            <path d="M13 20h-2V8l-5.5 5.5-1.42-1.42L12 4.16l7.92 7.92-1.42 1.42L13 8v12z"></path>
+          </svg>
+          <span>Back to top</span>
+        </a>
+        <div class="content-icon-container">
+          <div class="view-this-page">
+  <a class="muted-link" href="../_sources/tutorials/get_started_pt2.rst.txt" title="View this page">
+    <svg><use href="#svg-eye"></use></svg>
+    <span class="visually-hidden">View this page</span>
+  </a>
+</div>
+<div class="theme-toggle-container theme-toggle-content">
+            <button class="theme-toggle">
+              <div class="visually-hidden">Toggle Light / Dark / Auto color theme</div>
+              <svg class="theme-icon-when-auto-light"><use href="#svg-sun-with-moon"></use></svg>
+              <svg class="theme-icon-when-auto-dark"><use href="#svg-moon-with-sun"></use></svg>
+              <svg class="theme-icon-when-dark"><use href="#svg-moon"></use></svg>
+              <svg class="theme-icon-when-light"><use href="#svg-sun"></use></svg>
+            </button>
+          </div>
+          <label class="toc-overlay-icon toc-content-icon" for="__toc">
+            <div class="visually-hidden">Toggle table of contents sidebar</div>
+            <i class="icon"><svg><use href="#svg-toc"></use></svg></i>
+          </label>
+        </div>
+        <article role="main" id="furo-main-content">
+          <section id="get-started-part-2-using-a-custom-imodel">
+<span id="lionagi-get-started-part2"></span><h1>Get Started (Part 2): Using a Custom iModel<a class="headerlink" href="#get-started-part-2-using-a-custom-imodel" title="Link to this heading">¶</a></h1>
+<p>In this second part of our <strong>Get Started</strong> tutorial, we’ll explore how to:</p>
+<ol class="arabic simple">
+<li><p><strong>Set up a Branch</strong> with a custom system prompt.</p></li>
+<li><p><strong>Configure</strong> an iModel from various providers (OpenAI, Anthropic, Perplexity).</p></li>
+<li><p><strong>Send instructions</strong> to produce typed outputs via Pydantic models.</p></li>
+<li><p><strong>Review</strong> the conversation and <strong>demonstrate</strong> the actual results.</p></li>
+</ol>
+<p>We’ll also <strong>show the outputs</strong> produced in a Python session so you know what to expect.</p>
+<section id="prerequisites-environment-setup">
+<h2>0. Prerequisites &amp; Environment Setup<a class="headerlink" href="#prerequisites-environment-setup" title="Link to this heading">¶</a></h2>
+<ol class="arabic">
+<li><p><strong>lionagi</strong>: Install or upgrade:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>pip<span class="w"> </span>install<span class="w"> </span>lionagi
+</pre></div>
+</div>
+</li>
+<li><p><strong>Provider API Keys</strong>:
+- <strong>OpenAI</strong>: get your key from <a class="reference external" href="https://openai.com">https://openai.com</a>.</p>
+<blockquote>
+<div><p>Set it: <code class="docutils literal notranslate"><span class="pre">export</span> <span class="pre">OPENAI_API_KEY='&lt;YOUR_KEY&gt;'</span></code>.</p>
+</div></blockquote>
+<ul class="simple">
+<li><p><strong>Anthropic</strong>: get your key from <a class="reference external" href="https://www.anthropic.com">https://www.anthropic.com</a>.
+Set it: <code class="docutils literal notranslate"><span class="pre">export</span> <span class="pre">ANTHROPIC_API_KEY='&lt;YOUR_KEY&gt;'</span></code>.</p></li>
+<li><p><strong>Perplexity</strong>: read <a class="reference external" href="https://docs.perplexity.ai/home">https://docs.perplexity.ai/home</a> to obtain a key.
+Set it: <code class="docutils literal notranslate"><span class="pre">export</span> <span class="pre">PERPLEXITY_API_KEY='&lt;YOUR_KEY&gt;'</span></code>.</p></li>
+</ul>
+</li>
+<li><p>A Python environment with an <strong>async</strong> runtime (e.g., Jupyter) or a
+standard Python script using <cite>asyncio</cite>.</p></li>
+</ol>
+<p>If you’re new to <strong>LionAGI</strong>, see Part 1 for how to run a simple code-generation
+task. In <strong>Part 2</strong>, we expand to multi-provider usage, with typed model outputs
+via Pydantic.</p>
+</section>
+<section id="create-a-branch-system-prompt">
+<h2>1. Create a Branch &amp; System Prompt<a class="headerlink" href="#create-a-branch-system-prompt" title="Link to this heading">¶</a></h2>
+<p>A <strong>Branch</strong> manages conversation messages, tools, and iModels.
+Below, we create a branch named “hunter,” giving it a <strong>system</strong> prompt
+so that any conversation with it follows certain style:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">lionagi</span><span class="w"> </span><span class="kn">import</span> <span class="n">iModel</span><span class="p">,</span> <span class="n">Branch</span>
+
+<span class="n">system_prompt</span> <span class="o">=</span> <span class="p">(</span>
+    <span class="s2">&quot;You are a hilarious dragon hunter who responds in 10 words rhymes&quot;</span>
+<span class="p">)</span>
+<span class="n">hunter</span> <span class="o">=</span> <span class="n">Branch</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s2">&quot;hunter&quot;</span><span class="p">,</span> <span class="n">system</span><span class="o">=</span><span class="n">system_prompt</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>If you want the branch to incorporate memory or logs from previous steps,
+just keep using the same <code class="docutils literal notranslate"><span class="pre">hunter</span></code> instance.</p>
+</section>
+<section id="using-openai-gpt-as-a-custom-imodel">
+<h2>2. Using OpenAI GPT as a Custom iModel<a class="headerlink" href="#using-openai-gpt-as-a-custom-imodel" title="Link to this heading">¶</a></h2>
+<p>We define an <strong>iModel</strong> referencing OpenAI’s endpoints.
+For example, we specify a hypothetical “gpt-4o” model:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">lionagi</span><span class="w"> </span><span class="kn">import</span> <span class="n">iModel</span>
+
+<span class="n">gpt4o</span> <span class="o">=</span> <span class="n">iModel</span><span class="p">(</span>
+    <span class="n">provider</span><span class="o">=</span><span class="s2">&quot;openai&quot;</span><span class="p">,</span>
+    <span class="n">task</span><span class="o">=</span><span class="s2">&quot;chat&quot;</span><span class="p">,</span>    <span class="c1"># &#39;chat&#39; or &#39;chat/completions&#39;</span>
+    <span class="n">model</span><span class="o">=</span><span class="s2">&quot;gpt-4o&quot;</span><span class="p">,</span>
+    <span class="c1"># We assume your environment variable is OPENAI_API_KEY</span>
+<span class="p">)</span>
+</pre></div>
+</div>
+<p>Then we call the branch’s <code class="xref py py-meth docutils literal notranslate"><span class="pre">communicate(...)()</span></code> method, specifying
+<code class="docutils literal notranslate"><span class="pre">imodel=gpt4o</span></code>:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">a</span> <span class="o">=</span> <span class="k">await</span> <span class="n">hunter</span><span class="o">.</span><span class="n">communicate</span><span class="p">(</span>
+    <span class="n">instruction</span><span class="o">=</span><span class="s2">&quot;I am a dragon&quot;</span><span class="p">,</span>
+    <span class="n">imodel</span><span class="o">=</span><span class="n">gpt4o</span>
+<span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="n">a</span><span class="p">)</span>
+</pre></div>
+</div>
+<p><strong>Expected Output</strong> (example; actual responses will vary):</p>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>Hello, ferocious beast of scales,
+Let me share comedic tales.
+
+# This is just an illustration of a &quot;10 words rhyme&quot; style, in practice
+# GPT&#39;s output might differ.
+</pre></div>
+</div>
+</section>
+<section id="structured-output-via-pydantic-model">
+<h2>3. Structured Output via Pydantic Model<a class="headerlink" href="#structured-output-via-pydantic-model" title="Link to this heading">¶</a></h2>
+<p>We can parse the model’s response into a typed <strong>Pydantic</strong> model:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">pydantic</span><span class="w"> </span><span class="kn">import</span> <span class="n">BaseModel</span>
+
+<span class="k">class</span><span class="w"> </span><span class="nc">Joke</span><span class="p">(</span><span class="n">BaseModel</span><span class="p">):</span>
+    <span class="n">joke</span><span class="p">:</span> <span class="nb">str</span>
+
+<span class="n">b</span> <span class="o">=</span> <span class="k">await</span> <span class="n">hunter</span><span class="o">.</span><span class="n">communicate</span><span class="p">(</span>
+    <span class="n">instruction</span><span class="o">=</span><span class="s2">&quot;I am a dragon&quot;</span><span class="p">,</span>
+    <span class="n">imodel</span><span class="o">=</span><span class="n">gpt4o</span><span class="p">,</span>
+    <span class="n">response_format</span><span class="o">=</span><span class="n">Joke</span><span class="p">,</span>  <span class="c1"># parse the LLM response into &#39;Joke&#39;</span>
+<span class="p">)</span>
+
+<span class="nb">print</span><span class="p">(</span><span class="nb">type</span><span class="p">(</span><span class="n">b</span><span class="p">))</span>
+<span class="nb">print</span><span class="p">(</span><span class="n">b</span><span class="p">)</span>
+</pre></div>
+</div>
+<p><strong>Example Output</strong>:</p>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>&lt;class &#39;__main__.Joke&#39;&gt;
+Joke(joke=&quot;Why do dragons never get the flu? They always keep it hot!&quot;)
+</pre></div>
+</div>
+</section>
+<section id="using-anthropic-s-claude-with-a-different-model">
+<h2>4. Using Anthropic’s “Claude” with a Different Model<a class="headerlink" href="#using-anthropic-s-claude-with-a-different-model" title="Link to this heading">¶</a></h2>
+<p>We can define an iModel referencing Anthropic (e.g., a “claude-3-5-sonnet-20241022”).
+Anthropic typically requires specifying a <cite>max_tokens</cite> field:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">sonnet</span> <span class="o">=</span> <span class="n">iModel</span><span class="p">(</span>
+    <span class="n">provider</span><span class="o">=</span><span class="s2">&quot;anthropic&quot;</span><span class="p">,</span>
+    <span class="n">model</span><span class="o">=</span><span class="s2">&quot;claude-3-5-sonnet-20241022&quot;</span><span class="p">,</span>
+    <span class="n">max_tokens</span><span class="o">=</span><span class="mi">1000</span><span class="p">,</span>  <span class="c1"># anthro requirement</span>
+<span class="p">)</span>
+</pre></div>
+</div>
+<p>Now let’s request the same Pydantic <cite>Joke</cite> output from it:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">c</span> <span class="o">=</span> <span class="k">await</span> <span class="n">hunter</span><span class="o">.</span><span class="n">communicate</span><span class="p">(</span>
+    <span class="n">instruction</span><span class="o">=</span><span class="s2">&quot;I am a dragon&quot;</span><span class="p">,</span>
+    <span class="n">response_format</span><span class="o">=</span><span class="n">Joke</span><span class="p">,</span>
+    <span class="n">clear_messages</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>  <span class="c1"># clear old conversation</span>
+    <span class="n">imodel</span><span class="o">=</span><span class="n">sonnet</span><span class="p">,</span>
+<span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="n">c</span><span class="p">)</span>
+</pre></div>
+</div>
+<p><strong>Possible Output</strong>:</p>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>Joke(joke=&quot;Why did the dragon cross the road?
+Because wizard spells can&#39;t hold it aboad!&quot;)
+</pre></div>
+</div>
+</section>
+<section id="perplexity-for-internet-search-or-q-a">
+<h2>5. Perplexity for “Internet-Search” or Q&amp;A<a class="headerlink" href="#perplexity-for-internet-search-or-q-a" title="Link to this heading">¶</a></h2>
+<p><strong>Perplexity</strong> is another provider. We can define an iModel if you have
+the correct plan &amp; key:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">pplx_small</span> <span class="o">=</span> <span class="n">iModel</span><span class="p">(</span>
+    <span class="n">provider</span><span class="o">=</span><span class="s2">&quot;perplexity&quot;</span><span class="p">,</span>
+    <span class="n">task</span><span class="o">=</span><span class="s2">&quot;chat/completions&quot;</span><span class="p">,</span>
+    <span class="n">model</span><span class="o">=</span><span class="s2">&quot;llama-3.1-sonar-small-128k-online&quot;</span><span class="p">,</span>
+    <span class="n">max_tokens</span><span class="o">=</span><span class="mi">1000</span><span class="p">,</span>
+<span class="p">)</span>
+
+<span class="n">b</span> <span class="o">=</span> <span class="k">await</span> <span class="n">hunter</span><span class="o">.</span><span class="n">communicate</span><span class="p">(</span>
+    <span class="n">instruction</span><span class="o">=</span><span class="s2">&quot;What makes a well-behaved dragon?&quot;</span><span class="p">,</span>
+    <span class="n">clear_messages</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+    <span class="n">imodel</span><span class="o">=</span><span class="n">pplx_small</span><span class="p">,</span>
+<span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="n">b</span><span class="p">)</span>
+</pre></div>
+</div>
+<p><strong>Sample Output</strong>:</p>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>A well-behaved dragon is polite, breathes no flame
+And helps lost travelers in all-lovely domain,
+No stolen gold, no hostage knights remain,
+Tame-lizard style is how they keep their fame.
+
+# Also might contain references or citations if Perplexity returns them.
+</pre></div>
+</div>
+</section>
+<section id="checking-the-conversation-messages">
+<h2>6. Checking the Conversation Messages<a class="headerlink" href="#checking-the-conversation-messages" title="Link to this heading">¶</a></h2>
+<p>Every request we do is tracked in the branch as messages. We can see them:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">lionagi</span><span class="w"> </span><span class="kn">import</span> <span class="n">types</span>
+
+<span class="k">for</span> <span class="n">msg</span> <span class="ow">in</span> <span class="n">hunter</span><span class="o">.</span><span class="n">messages</span><span class="p">:</span>
+    <span class="k">if</span> <span class="n">msg</span><span class="o">.</span><span class="n">role</span> <span class="o">==</span> <span class="n">types</span><span class="o">.</span><span class="n">MessageRole</span><span class="o">.</span><span class="n">SYSTEM</span><span class="p">:</span>
+        <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;System Prompt -&gt;&quot;</span><span class="p">,</span> <span class="n">msg</span><span class="o">.</span><span class="n">rendered</span><span class="p">)</span>
+    <span class="k">elif</span> <span class="n">msg</span><span class="o">.</span><span class="n">role</span> <span class="o">==</span> <span class="n">types</span><span class="o">.</span><span class="n">MessageRole</span><span class="o">.</span><span class="n">USER</span><span class="p">:</span>
+        <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;User Prompt -&gt;&quot;</span><span class="p">,</span> <span class="n">msg</span><span class="o">.</span><span class="n">rendered</span><span class="p">)</span>
+    <span class="k">elif</span> <span class="n">msg</span><span class="o">.</span><span class="n">role</span> <span class="o">==</span> <span class="n">types</span><span class="o">.</span><span class="n">MessageRole</span><span class="o">.</span><span class="n">ASSISTANT</span><span class="p">:</span>
+        <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Assistant Output -&gt;&quot;</span><span class="p">,</span> <span class="n">msg</span><span class="o">.</span><span class="n">rendered</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>We can also check low-level provider info:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="c1"># Last raw response from the model</span>
+<span class="n">raw</span> <span class="o">=</span> <span class="n">hunter</span><span class="o">.</span><span class="n">msgs</span><span class="o">.</span><span class="n">last_response</span><span class="o">.</span><span class="n">model_response</span>
+<span class="nb">print</span><span class="p">(</span><span class="n">raw</span><span class="p">)</span>
+</pre></div>
+</div>
+</section>
+<section id="putting-it-all-together-demonstration">
+<h2>7. Putting It All Together (Demonstration)<a class="headerlink" href="#putting-it-all-together-demonstration" title="Link to this heading">¶</a></h2>
+<p>Below is a <strong>complete snippet</strong> that sets up a branch, tries three providers,
+and shows the typed “Joke” result. We also print out the conversation messages.</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">lionagi</span><span class="w"> </span><span class="kn">import</span> <span class="n">iModel</span><span class="p">,</span> <span class="n">Branch</span><span class="p">,</span> <span class="n">types</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">pydantic</span><span class="w"> </span><span class="kn">import</span> <span class="n">BaseModel</span>
+
+<span class="k">class</span><span class="w"> </span><span class="nc">Joke</span><span class="p">(</span><span class="n">BaseModel</span><span class="p">):</span>
+    <span class="n">joke</span><span class="p">:</span> <span class="nb">str</span>
+
+<span class="c1"># 1) Create the branch</span>
+<span class="n">system_prompt</span> <span class="o">=</span> <span class="s2">&quot;You are a hilarious dragon hunter who responds in 10 words rhymes&quot;</span>
+<span class="n">hunter</span> <span class="o">=</span> <span class="n">Branch</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s2">&quot;hunter&quot;</span><span class="p">,</span> <span class="n">system</span><span class="o">=</span><span class="n">system_prompt</span><span class="p">)</span>
+
+<span class="c1"># 2) OpenAI model</span>
+<span class="n">gpt4o</span> <span class="o">=</span> <span class="n">iModel</span><span class="p">(</span><span class="n">provider</span><span class="o">=</span><span class="s2">&quot;openai&quot;</span><span class="p">,</span> <span class="n">model</span><span class="o">=</span><span class="s2">&quot;gpt-4o&quot;</span><span class="p">)</span>
+
+<span class="c1"># 3) Communicate with structured output</span>
+<span class="n">joke_res</span> <span class="o">=</span> <span class="k">await</span> <span class="n">hunter</span><span class="o">.</span><span class="n">communicate</span><span class="p">(</span>
+    <span class="n">instruction</span><span class="o">=</span><span class="s2">&quot;I am a dragon, amuse me&quot;</span><span class="p">,</span>
+    <span class="n">imodel</span><span class="o">=</span><span class="n">gpt4o</span><span class="p">,</span>
+    <span class="n">response_format</span><span class="o">=</span><span class="n">Joke</span>
+<span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="s2">&quot;OpenAI Joke =&gt;&quot;</span><span class="p">,</span> <span class="n">joke_res</span><span class="p">)</span>
+
+<span class="c1"># 4) Anthropic model</span>
+<span class="n">sonnet</span> <span class="o">=</span> <span class="n">iModel</span><span class="p">(</span><span class="n">provider</span><span class="o">=</span><span class="s2">&quot;anthropic&quot;</span><span class="p">,</span> <span class="n">model</span><span class="o">=</span><span class="s2">&quot;claude-3-5-sonnet-20241022&quot;</span><span class="p">,</span> <span class="n">max_tokens</span><span class="o">=</span><span class="mi">1000</span><span class="p">)</span>
+<span class="n">c</span> <span class="o">=</span> <span class="k">await</span> <span class="n">hunter</span><span class="o">.</span><span class="n">communicate</span><span class="p">(</span>
+    <span class="n">instruction</span><span class="o">=</span><span class="s2">&quot;Another comedic idea, short!&quot;</span><span class="p">,</span>
+    <span class="n">imodel</span><span class="o">=</span><span class="n">sonnet</span><span class="p">,</span>
+    <span class="n">response_format</span><span class="o">=</span><span class="n">Joke</span><span class="p">,</span>
+    <span class="n">clear_messages</span><span class="o">=</span><span class="kc">True</span>
+<span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Anthropic Joke =&gt;&quot;</span><span class="p">,</span> <span class="n">c</span><span class="p">)</span>
+
+<span class="c1"># 5) Print all messages in the conversation</span>
+<span class="k">for</span> <span class="n">msg</span> <span class="ow">in</span> <span class="n">hunter</span><span class="o">.</span><span class="n">messages</span><span class="p">:</span>
+    <span class="nb">print</span><span class="p">(</span><span class="n">msg</span><span class="o">.</span><span class="n">role</span><span class="p">,</span> <span class="s2">&quot;=&gt;&quot;</span><span class="p">,</span> <span class="n">msg</span><span class="o">.</span><span class="n">rendered</span><span class="p">)</span>
+</pre></div>
+</div>
+<p><strong>Potential Output</strong>:</p>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>OpenAI Joke =&gt; Joke(joke=&quot;How do dragons fix a leak? They use a scale!&quot;)
+Anthropic Joke =&gt; Joke(joke=&quot;When a dragon tries knitting, does it purl fiery threads?&quot;)
+system =&gt; You are a hilarious dragon hunter who responds in 10 words rhymes
+user =&gt; I am a dragon, amuse me
+assistant =&gt; ...
+user =&gt; Another comedic idea, short!
+assistant =&gt; ...
+</pre></div>
+</div>
+<p>In practice, the actual text depends on your model usage, tokens, etc.</p>
+</section>
+<section id="next-steps">
+<h2>Next Steps<a class="headerlink" href="#next-steps" title="Link to this heading">¶</a></h2>
+<p>Now you’ve seen how to:</p>
+<ol class="arabic simple">
+<li><p><strong>Setup</strong> multiple iModels in a single session.</p></li>
+<li><p><strong>Communicate</strong> with each to produce typed outputs.</p></li>
+<li><p><strong>Inspect</strong> messages for logs or debugging.</p></li>
+</ol>
+<p>You can extend this approach for more advanced tasks—<strong>agentic RAG</strong> flows,
+<strong>embedding-based</strong> retrieval, or hooking up advanced concurrency managers to
+<strong>queue</strong> these calls.</p>
+<p><strong>End of Part 2</strong>. Keep exploring or see more advanced tutorials for hooking
+<strong>LionAGI</strong> with concurrency and tool-based expansions!</p>
+</section>
+</section>
+
+        </article>
+      </div>
+      <footer>
+        
+        <div class="related-pages">
+          <a class="next-page" href="get_started_pt3.html">
+              <div class="page-info">
+                <div class="context">
+                  <span>Next</span>
+                </div>
+                <div class="title">Get Started (Part 3): <code class="docutils literal notranslate"><span class="pre">operate</span></code> and Brainstorm</div>
+              </div>
+              <svg class="furo-related-icon"><use href="#svg-arrow-right"></use></svg>
+            </a>
+          <a class="prev-page" href="get_started.html">
+              <svg class="furo-related-icon"><use href="#svg-arrow-right"></use></svg>
+              <div class="page-info">
+                <div class="context">
+                  <span>Previous</span>
+                </div>
+                
+                <div class="title">Get Started (Part 1): Automatic Code Generation</div>
+                
+              </div>
+            </a>
+        </div>
+        <div class="bottom-of-page">
+          <div class="left-details">
+            <div class="copyright">
+                Copyright &#169; 2025
+            </div>
+            Made with <a href="https://www.sphinx-doc.org/">Sphinx</a> and <a class="muted-link" href="https://pradyunsg.me">@pradyunsg</a>'s
+            
+            <a href="https://github.com/pradyunsg/furo">Furo</a>
+            
+          </div>
+          <div class="right-details">
+            
+          </div>
+        </div>
+        
+      </footer>
+    </div>
+    <aside class="toc-drawer">
+      
+      
+      <div class="toc-sticky toc-scroll">
+        <div class="toc-title-container">
+          <span class="toc-title">
+            On this page
+          </span>
+        </div>
+        <div class="toc-tree-container">
+          <div class="toc-tree">
+            <ul>
+<li><a class="reference internal" href="#">Get Started (Part 2): Using a Custom iModel</a><ul>
+<li><a class="reference internal" href="#prerequisites-environment-setup">0. Prerequisites &amp; Environment Setup</a></li>
+<li><a class="reference internal" href="#create-a-branch-system-prompt">1. Create a Branch &amp; System Prompt</a></li>
+<li><a class="reference internal" href="#using-openai-gpt-as-a-custom-imodel">2. Using OpenAI GPT as a Custom iModel</a></li>
+<li><a class="reference internal" href="#structured-output-via-pydantic-model">3. Structured Output via Pydantic Model</a></li>
+<li><a class="reference internal" href="#using-anthropic-s-claude-with-a-different-model">4. Using Anthropic’s “Claude” with a Different Model</a></li>
+<li><a class="reference internal" href="#perplexity-for-internet-search-or-q-a">5. Perplexity for “Internet-Search” or Q&amp;A</a></li>
+<li><a class="reference internal" href="#checking-the-conversation-messages">6. Checking the Conversation Messages</a></li>
+<li><a class="reference internal" href="#putting-it-all-together-demonstration">7. Putting It All Together (Demonstration)</a></li>
+<li><a class="reference internal" href="#next-steps">Next Steps</a></li>
+</ul>
+</li>
+</ul>
+
+          </div>
+        </div>
+      </div>
+      
+      
+    </aside>
+  </div>
+</div><script src="../_static/documentation_options.js?v=f31a46f8"></script>
+    <script src="../_static/doctools.js?v=9bcbadda"></script>
+    <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script src="../_static/scripts/furo.js?v=5fa4622c"></script>
+    </body>
+</html>

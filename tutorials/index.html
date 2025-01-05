@@ -3,7 +3,7 @@
   <head><meta charset="utf-8"/>
     <meta name="viewport" content="width=device-width,initial-scale=1"/>
     <meta name="color-scheme" content="light dark"><meta name="viewport" content="width=device-width, initial-scale=1" />
-<link rel="index" title="Index" href="../genindex.html" /><link rel="search" title="Search" href="../search.html" /><link rel="next" title="Get Started: Automatic Code Generation &amp; Checking" href="get_started.html" /><link rel="prev" title="Execution Strategies &amp; Executors" href="../operations/strategies.html" />
+<link rel="index" title="Index" href="../genindex.html" /><link rel="search" title="Search" href="../search.html" /><link rel="next" title="Get Started (Part 1): Automatic Code Generation" href="get_started.html" /><link rel="prev" title="Execution Strategies &amp; Executors" href="../operations/strategies.html" />
 
     <!-- Generated with Sphinx 8.1.3 and Furo 2024.08.06 -->
         <title>Tutorials - My LIONAGI Documentation</title>
@@ -240,7 +240,9 @@
 </ul>
 </li>
 <li class="toctree-l1 current has-children current-page"><a class="current reference internal" href="#">Tutorials</a><input checked="" class="toctree-checkbox" id="toctree-checkbox-3" name="toctree-checkbox-3" role="switch" type="checkbox"/><label for="toctree-checkbox-3"><div class="visually-hidden">Toggle navigation of Tutorials</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
-<li class="toctree-l2"><a class="reference internal" href="get_started.html">Get Started: Automatic Code Generation &amp; Checking</a></li>
+<li class="toctree-l2"><a class="reference internal" href="get_started.html">Get Started (Part 1): Automatic Code Generation</a></li>
+<li class="toctree-l2"><a class="reference internal" href="get_started_pt2.html">Get Started (Part 2): Using a Custom iModel</a></li>
+<li class="toctree-l2"><a class="reference internal" href="get_started_pt3.html">Get Started (Part 3): <code class="docutils literal notranslate"><span class="pre">operate</span></code> and Brainstorm</a></li>
 </ul>
 </li>
 </ul>
@@ -288,12 +290,32 @@
 <p>This section covers various tutorials.</p>
 <div class="toctree-wrapper compound">
 <ul>
-<li class="toctree-l1"><a class="reference internal" href="get_started.html">Get Started: Automatic Code Generation &amp; Checking</a><ul>
-<li class="toctree-l2"><a class="reference internal" href="get_started.html#prerequisites">1. Prerequisites</a></li>
+<li class="toctree-l1"><a class="reference internal" href="get_started.html">Get Started (Part 1): Automatic Code Generation</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="get_started.html#environment-setup">0. Environment Setup</a></li>
+<li class="toctree-l2"><a class="reference internal" href="get_started.html#introduction">1. Introduction</a></li>
 <li class="toctree-l2"><a class="reference internal" href="get_started.html#full-example">2. Full Example:</a></li>
 <li class="toctree-l2"><a class="reference internal" href="get_started.html#example-usage-output">3. Example Usage Output</a></li>
 <li class="toctree-l2"><a class="reference internal" href="get_started.html#explanation-next-steps">4.      Explanation &amp; Next Steps</a></li>
 <li class="toctree-l2"><a class="reference internal" href="get_started.html#conclusion">5.      Conclusion</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="get_started_pt2.html">Get Started (Part 2): Using a Custom iModel</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="get_started_pt2.html#prerequisites-environment-setup">0. Prerequisites &amp; Environment Setup</a></li>
+<li class="toctree-l2"><a class="reference internal" href="get_started_pt2.html#create-a-branch-system-prompt">1. Create a Branch &amp; System Prompt</a></li>
+<li class="toctree-l2"><a class="reference internal" href="get_started_pt2.html#using-openai-gpt-as-a-custom-imodel">2. Using OpenAI GPT as a Custom iModel</a></li>
+<li class="toctree-l2"><a class="reference internal" href="get_started_pt2.html#structured-output-via-pydantic-model">3. Structured Output via Pydantic Model</a></li>
+<li class="toctree-l2"><a class="reference internal" href="get_started_pt2.html#using-anthropic-s-claude-with-a-different-model">4. Using Anthropic’s “Claude” with a Different Model</a></li>
+<li class="toctree-l2"><a class="reference internal" href="get_started_pt2.html#perplexity-for-internet-search-or-q-a">5. Perplexity for “Internet-Search” or Q&amp;A</a></li>
+<li class="toctree-l2"><a class="reference internal" href="get_started_pt2.html#checking-the-conversation-messages">6. Checking the Conversation Messages</a></li>
+<li class="toctree-l2"><a class="reference internal" href="get_started_pt2.html#putting-it-all-together-demonstration">7. Putting It All Together (Demonstration)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="get_started_pt2.html#next-steps">Next Steps</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="get_started_pt3.html">Get Started (Part 3): <code class="docutils literal notranslate"><span class="pre">operate</span></code> and Brainstorm</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="get_started_pt3.html#prerequisites-recap">0. Prerequisites &amp; Recap</a></li>
+<li class="toctree-l2"><a class="reference internal" href="get_started_pt3.html#using-operate-for-summaries">1. Using <code class="docutils literal notranslate"><span class="pre">operate</span></code> for Summaries</a></li>
+<li class="toctree-l2"><a class="reference internal" href="get_started_pt3.html#brainstorm-generating-exploring-ideas">2. Brainstorm: Generating &amp; Exploring Ideas</a></li>
+<li class="toctree-l2"><a class="reference internal" href="get_started_pt3.html#conclusion-next-steps">Conclusion &amp; Next Steps</a></li>
 </ul>
 </li>
 </ul>
@@ -310,7 +332,7 @@
                 <div class="context">
                   <span>Next</span>
                 </div>
-                <div class="title">Get Started: Automatic Code Generation &amp; Checking</div>
+                <div class="title">Get Started (Part 1): Automatic Code Generation</div>
               </div>
               <svg class="furo-related-icon"><use href="#svg-arrow-right"></use></svg>
             </a>
