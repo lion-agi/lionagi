@@ -34,39 +34,63 @@ async def communicate(
     **kwargs,
 ):
     """
-    Simplified version of the chat flow without advanced tool invocation or
-    multi-step chaining.
+    A simpler orchestration than `operate()`, typically without tool invocation.
 
-    - Calls `branch.chat()`.
-    - (Optionally) parses the response using `branch.parse()` if a model is provided.
+    **Flow**:
+        1. Sends an instruction (or conversation) to the chat model.
+        2. Optionally parses the response into a structured model or fields.
+        3. Returns either the raw string, the parsed model, or a dict of fields.
 
     Args:
-        branch (Branch): The active branch context.
-        instruction (Any): Main user prompt or instruction.
-        guidance (Any): Additional system or user guidance text.
-        context (Any): Context data or disclaimers to pass.
-        plain_content (str): Additional plain text appended to the instruction.
-        sender (Any): The sender ID for the message.
-        recipient (Any): The recipient ID for the message.
-        progression (Any): Custom conversation order.
-        request_model (type[BaseModel]|BaseModel, optional): Expected structure for the response.
-        response_format (type[BaseModel], optional): Alias for request_model.
-        request_fields (dict|list[str], optional): Keys to extract from the response if no model used.
-        imodel (iModel, optional): Deprecated alias for chat_model.
-        chat_model (iModel, optional): The LLM used to handle conversation.
-        parse_model (iModel, optional): The LLM for parsing if needed.
-        skip_validation (bool, optional): If True, return raw text from LLM.
-        images (list, optional): A list of images.
-        image_detail (str, optional): "low", "high", or "auto".
-        num_parse_retries (int, optional): Max times to re-parse if it fails.
-        fuzzy_match_kwargs (dict, optional): Options for fuzzy field matching.
-        clear_messages (bool, optional): If True, clears existing messages.
-        operative_model (type[BaseModel], optional): Deprecated alias for response_format.
-        **kwargs: Additional arguments for the underlying LLM call.
+        instruction (Instruction | dict, optional):
+            The user's main query or data.
+        guidance (JsonValue, optional):
+            Additional instructions or context for the LLM.
+        context (JsonValue, optional):
+            Extra data or context.
+        plain_content (str, optional):
+            Plain text content appended to the instruction.
+        sender (SenderRecipient, optional):
+            Sender ID (defaults to `Branch.user`).
+        recipient (SenderRecipient, optional):
+            Recipient ID (defaults to `self.id`).
+        progression (ID.IDSeq, optional):
+            Custom ordering of messages.
+        request_model (type[BaseModel] | BaseModel | None, optional):
+            Model for validating or structuring the LLM's response.
+        response_format (type[BaseModel], optional):
+            Alias for `request_model`. If both are provided, raises ValueError.
+        request_fields (dict|list[str], optional):
+            If you only need certain fields from the LLM's response.
+        imodel (iModel, optional):
+            Deprecated alias for `chat_model`.
+        chat_model (iModel, optional):
+            An alternative to the default chat model.
+        parse_model (iModel, optional):
+            If parsing is needed, you can override the default parse model.
+        skip_validation (bool, optional):
+            If True, returns the raw response string unvalidated.
+        images (list, optional):
+            Any relevant images.
+        image_detail (Literal["low","high","auto"], optional):
+            Image detail level (if used).
+        num_parse_retries (int, optional):
+            Maximum parsing retries (capped at 5).
+        fuzzy_match_kwargs (dict, optional):
+            Additional settings for fuzzy field matching (if used).
+        clear_messages (bool, optional):
+            Whether to clear stored messages before sending.
+        operative_model (type[BaseModel], optional):
+            Deprecated, alias for `response_format`.
+        **kwargs:
+            Additional arguments for the underlying LLM call.
 
     Returns:
-        Any: The final LLM response as raw text, dict of requested fields,
-             or a validated Pydantic model, depending on params.
+        Any:
+            - Raw string (if `skip_validation=True`),
+            - A validated Pydantic model,
+            - A dict of the requested fields,
+            - or `None` if parsing fails and `handle_validation='return_none'`.
     """
     if operative_model:
         logging.warning(
