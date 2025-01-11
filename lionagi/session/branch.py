@@ -2,24 +2,20 @@
 #
 # SPDX-License-Identifier: Apache-2.0
 
-import logging
-from typing import Any, Literal
+from enum import Enum
+from typing import TYPE_CHECKING, Any, Literal
 
 import pandas as pd
 from jinja2 import Template
 from pydantic import BaseModel, Field, JsonValue, PrivateAttr
 
-from lionagi.libs.validate.fuzzy_validate_mapping import fuzzy_validate_mapping
 from lionagi.operatives.models.field_model import FieldModel
 from lionagi.operatives.models.model_params import ModelParams
 from lionagi.operatives.types import (
     ActionManager,
-    ActionResponseModel,
-    FunctionCalling,
     FuncTool,
     Instruct,
     Operative,
-    Step,
     Tool,
     ToolRef,
 )
@@ -38,7 +34,6 @@ from lionagi.protocols.types import (
     LogManagerConfig,
     Mail,
     Mailbox,
-    MessageFlag,
     MessageManager,
     MessageRole,
     Package,
@@ -52,49 +47,65 @@ from lionagi.protocols.types import (
 )
 from lionagi.service import iModel, iModelManager
 from lionagi.settings import Settings
-from lionagi.utils import (
-    UNDEFINED,
-    alcall,
-    breakdown_pydantic_annotation,
-    copy,
-)
+from lionagi.utils import UNDEFINED, alcall, copy
+
+if TYPE_CHECKING:
+    # Forward references for type checking (e.g., in operations or extended modules)
+    from lionagi.session.branch import Branch
 
 __all__ = ("Branch",)
 
 
 class Branch(Element, Communicatable, Relational):
-    """Manages a conversation 'branch' with messages, tools, and iModels.
+    """
+    Manages a conversation 'branch' with messages, tools, and iModels.
 
-    The Branch class orchestrates message handling, model invocation,
-    action (tool) execution, logging, and mailbox-based communication.
-    It maintains references to a MessageManager, ActionManager, iModelManager,
-    and a LogManager, providing high-level methods for combined operations.
+    The `Branch` class serves as a high-level interface or orchestrator that:
+      - Handles message management (`MessageManager`).
+      - Registers and invokes tools/actions (`ActionManager`).
+      - Manages model instances (`iModelManager`).
+      - Logs activity (`LogManager`).
+      - Communicates via mailboxes (`Mailbox`).
+
+    **Key responsibilities**:
+      1. Storing and organizing messages, including system instructions, user instructions, and model responses.
+      2. Handling asynchronous or synchronous execution of LLM calls and tool invocations.
+      3. Providing a consistent interface for “operate,” “chat,” “communicate,” “parse,” etc.
 
     Attributes:
         user (SenderRecipient | None):
-            The user or sender of this branch context (e.g., a session object).
+            The user or "owner" of this branch (often tied to a session).
         name (str | None):
             A human-readable name for this branch.
         mailbox (Mailbox):
-            A mailbox for sending and receiving `Package`s to/from other
-            branches or components.
+            A mailbox for sending and receiving `Package` objects to/from other branches.
+
+    Note:
+        Actual implementations for chat, parse, operate, etc., are referenced
+        via lazy loading or modular imports. You typically won't need to
+        subclass `Branch`, but you can instantiate it and call the
+        associated methods for complex orchestrations.
     """
 
     user: SenderRecipient | None = Field(
         None,
         description=(
-            "The user or sender of the branch, typically a session object or"
-            "an external user identifier. Please note that this is a distinct"
-            "concept from `user` parameter in LLM API calls."
+            "The user or sender of the branch, often a session object or "
+            "an external user identifier. Not to be confused with the "
+            "LLM API's user parameter."
         ),
     )
 
     name: str | None = Field(
         None,
-        description="A human readable name of the branch, if any.",
+        description="A human-readable name of the branch (optional).",
     )
 
-    mailbox: Mailbox = Field(default_factory=Mailbox, exclude=True)
+    mailbox: Mailbox = Field(
+        default_factory=Mailbox,
+        exclude=True,
+        description="Mailbox for cross-branch or external communication.",
+    )
 
     _message_manager: MessageManager | None = PrivateAttr(None)
     _action_manager: ActionManager | None = PrivateAttr(None)
@@ -109,52 +120,60 @@ class Branch(Element, Communicatable, Relational):
         messages: Pile[RoledMessage] = None,  # message manager kwargs
         system: System | JsonValue = None,
         system_sender: SenderRecipient = None,
-        chat_model: iModel = None,  # imodel manager kwargs
+        chat_model: iModel = None,  # iModelManager kwargs
         parse_model: iModel = None,
         imodel: iModel = None,  # deprecated, alias of chat_model
-        tools: FuncTool | list[FuncTool] = None,  # action manager kwargs
-        log_config: LogManagerConfig | dict = None,  # log manager kwargs
+        tools: FuncTool | list[FuncTool] = None,  # ActionManager kwargs
+        log_config: LogManagerConfig | dict = None,  # LogManager kwargs
         system_datetime: bool | str = None,
         system_template: Template | str = None,
         system_template_context: dict = None,
         logs: Pile[Log] = None,
         **kwargs,
     ):
-        """Initializes a Branch with references to managers and mailbox.
+        """
+        Initializes a `Branch` with references to managers and an optional mailbox.
 
         Args:
             user (SenderRecipient, optional):
-                The user or sender of the branch context.
+                The user or sender context for this branch.
             name (str | None, optional):
                 A human-readable name for this branch.
             messages (Pile[RoledMessage], optional):
-                Initial messages to seed the MessageManager.
+                Initial messages for seeding the MessageManager.
             system (System | JsonValue, optional):
-                A system message or data to configure system role.
+                Optional system-level configuration or message for the LLM.
             system_sender (SenderRecipient, optional):
-                Sender to assign if the system message is added.
+                Sender to attribute to the system message if it is added.
             chat_model (iModel, optional):
-                The chat model used by iModelManager (if not provided,
-                falls back to defaults).
+                The primary "chat" iModel for conversation. If not provided,
+                a default from `Settings.iModel.CHAT` is used.
             parse_model (iModel, optional):
-                The parse model used by iModelManager.
+                The "parse" iModel for structured data parsing.
+                Defaults to `Settings.iModel.PARSE`.
             imodel (iModel, optional):
-                Deprecated. Alias for chat_model.
+                Deprecated. Alias for `chat_model`.
             tools (FuncTool | list[FuncTool], optional):
-                Tools for the ActionManager.
+                Tools or a list of tools for the ActionManager.
             log_config (LogManagerConfig | dict, optional):
-                Configuration for the LogManager.
+                Configuration dict or object for the LogManager.
             system_datetime (bool | str, optional):
-                Whether to include timestamps in system messages.
+                Whether to include timestamps in system messages (True/False)
+                or a string format for datetime.
             system_template (Template | str, optional):
-                A Jinja2 template or template string for system messages.
+                Optional Jinja2 template for system messages.
             system_template_context (dict, optional):
-                Context variables for the system template.
-            **kwargs: Additional parameters passed to the Element parent init.
+                Context for rendering the system template.
+            logs (Pile[Log], optional):
+                Existing logs to seed the LogManager.
+            **kwargs:
+                Additional parameters passed to `Element` parent init.
         """
         super().__init__(user=user, name=name, **kwargs)
 
+        # --- MessageManager ---
         self._message_manager = MessageManager(messages=messages)
+        # If system instructions or templates are provided, add them
         if any(
             i is not None
             for i in [system, system_sender, system_datetime, system_template]
@@ -183,884 +202,127 @@ class Branch(Element, Communicatable, Relational):
         self._imodel_manager = iModelManager(
             chat=chat_model, parse=parse_model
         )
+
+        # --- ActionManager ---
         self._action_manager = ActionManager(tools)
 
+        # --- LogManager ---
         if log_config:
-            log_config = (
-                log_config
-                if isinstance(log_config, LogManagerConfig)
-                else LogManagerConfig(**log_config)
-            )
+            if isinstance(log_config, dict):
+                log_config = LogManagerConfig(**log_config)
             self._log_manager = LogManager.from_config(log_config, logs=logs)
         else:
             self._log_manager = LogManager(**Settings.Config.LOG, logs=logs)
 
+    # -------------------------------------------------------------------------
+    # Properties to expose managers and core data
+    # -------------------------------------------------------------------------
     @property
     def system(self) -> System | None:
-        """System | None: The system message or configuration."""
+        """The system message/configuration, if any."""
         return self._message_manager.system
 
     @property
     def msgs(self) -> MessageManager:
-        """MessageManager: Manages the conversation messages."""
+        """Returns the associated MessageManager."""
         return self._message_manager
 
     @property
     def acts(self) -> ActionManager:
-        """ActionManager: Manages available tools (actions)."""
+        """Returns the associated ActionManager for tool management."""
         return self._action_manager
 
     @property
     def mdls(self) -> iModelManager:
-        """iModelManager: Manages chat and parse models."""
+        """Returns the associated iModelManager."""
         return self._imodel_manager
 
     @property
     def messages(self) -> Pile[RoledMessage]:
-        """Pile[RoledMessage]: The collection of messages in this branch."""
+        """Convenience property to retrieve all messages from MessageManager."""
         return self._message_manager.messages
 
     @property
     def logs(self) -> Pile[Log]:
-        """Pile[Log]: The collection of log entries for this branch."""
+        """Convenience property to retrieve all logs from the LogManager."""
         return self._log_manager.logs
 
     @property
     def chat_model(self) -> iModel:
-        """iModel: The primary (chat) model in the iModelManager."""
+        """
+        The primary "chat" model (`iModel`) used for conversational LLM calls.
+        """
         return self._imodel_manager.chat
 
     @chat_model.setter
     def chat_model(self, value: iModel) -> None:
-        """Sets the chat model in the iModelManager.
+        """
+        Sets the primary "chat" model in the iModelManager.
 
         Args:
-            value (iModel): The new chat model.
+            value (iModel): The new chat model to register.
         """
         self._imodel_manager.register_imodel("chat", value)
 
     @property
     def parse_model(self) -> iModel:
-        """iModel: The parsing model in the iModelManager."""
+        """The "parse" model (`iModel`) used for structured data parsing."""
         return self._imodel_manager.parse
 
     @parse_model.setter
     def parse_model(self, value: iModel) -> None:
-        """Sets the parse model in the iModelManager.
+        """
+        Sets the "parse" model in the iModelManager.
 
         Args:
-            value (iModel): The new parse model.
+            value (iModel): The new parse model to register.
         """
         self._imodel_manager.register_imodel("parse", value)
 
     @property
     def tools(self) -> dict[str, Tool]:
-        """dict[str, Tool]: All tools registered in the ActionManager."""
+        """
+        All registered tools (actions) in the ActionManager,
+        keyed by their tool names or IDs.
+        """
         return self._action_manager.registry
 
+    # -------------------------------------------------------------------------
+    # Cloning
+    # -------------------------------------------------------------------------
     async def aclone(self, sender: ID.Ref = None) -> "Branch":
-        """Asynchronous clone of this Branch.
+        """
+        Asynchronously clones this `Branch` with optional new sender ID.
 
         Args:
             sender (ID.Ref, optional):
-                If provided, sets this sender ID on all cloned messages.
+                If provided, this ID is set as the sender for all cloned messages.
 
         Returns:
-            Branch: A new branch instance with cloned messages.
+            Branch: A new branch instance, containing cloned state.
         """
         async with self.msgs.messages:
             return self.clone(sender)
 
-    async def operate(
-        self,
-        *,
-        instruct: Instruct = None,
-        instruction: Instruction | JsonValue = None,
-        guidance: JsonValue = None,
-        context: JsonValue = None,
-        sender: SenderRecipient = None,
-        recipient: SenderRecipient = None,
-        progression: Progression = None,
-        imodel: iModel = None,  # deprecated, alias of chat_model
-        chat_model: iModel = None,
-        invoke_actions: bool = True,
-        tool_schemas: list[dict] = None,
-        images: list = None,
-        image_detail: Literal["low", "high", "auto"] = None,
-        parse_model: iModel = None,
-        skip_validation: bool = False,
-        tools: ToolRef = None,
-        operative: Operative = None,
-        response_format: type[
-            BaseModel
-        ] = None,  # alias of operative.request_type
-        return_operative: bool = False,
-        actions: bool = False,
-        reason: bool = False,
-        action_kwargs: dict = None,
-        field_models: list[FieldModel] = None,
-        exclude_fields: list | dict | None = None,
-        request_params: ModelParams = None,
-        request_param_kwargs: dict = None,
-        response_params: ModelParams = None,
-        response_param_kwargs: dict = None,
-        handle_validation: Literal[
-            "raise", "return_value", "return_none"
-        ] = "return_value",
-        operative_model: type[BaseModel] = None,
-        request_model: type[BaseModel] = None,
-        **kwargs,
-    ) -> list | BaseModel | None | dict | str:
-        """Orchestrates an 'operate' flow with optional tool invocation.
-
-        This method creates or updates an Operative, sends an instruction
-        to the chat model, optionally parses the response, and invokes
-        requested tools if `invoke_actions` is True.
-
-        Args:
-            instruct (Instruct):
-                The instruction containing context, guidance, etc.
-            sender (SenderRecipient, optional):
-                The sender of this operation.
-            recipient (SenderRecipient, optional):
-                The recipient of this operation.
-            progression (Progression, optional):
-                Specific progression of messages to use.
-            imodel (iModel, optional):
-                Deprecated, alias for chat_model.
-            chat_model (iModel, optional):
-                The chat model to invoke.
-            invoke_actions (bool, optional):
-                Whether to call requested tools (actions).
-            tool_schemas (list[dict], optional):
-                Overridden schemas for the tools to be used.
-            images (list, optional):
-                Additional images for the model context.
-            image_detail (Literal["low", "high", "auto"], optional):
-                The level of detail for images, if relevant.
-            parse_model (iModel, optional):
-                The parse model for validating or refining responses.
-            skip_validation (bool, optional):
-                If True, skip post-response validation steps.
-            tools (ToolRef, optional):
-                Specific tools to make available if `invoke_actions` is True.
-            operative (Operative, optional):
-                The operative describing how to handle the response.
-            response_format (type[BaseModel], optional):
-                An expected response schema (alias of `operative.request_type`).
-            fuzzy_match_kwargs (dict, optional):
-                Settings for fuzzy validation if used.
-            operative_kwargs (dict, optional):
-                Additional arguments for creating an Operative if none is given.
-            **kwargs: Additional arguments passed to the model invocation.
-
-        Returns:
-            list | BaseModel | None | dict | str:
-                The final parsed response, or an Operative object, or the
-                string/dict if skipping validation or no tools needed.
-        """
-        if operative_model:
-            logging.warning(
-                "operative_model is deprecated. Use response_format instead."
-            )
-        if (
-            (operative_model and response_format)
-            or (operative_model and request_model)
-            or (response_format and request_model)
-        ):
-            raise ValueError(
-                "Cannot specify both operative_model and response_format"
-                "or operative_model and request_model as they are aliases"
-                "for the same parameter."
-            )
-
-        response_format = response_format or operative_model or request_model
-        chat_model = chat_model or imodel or self.chat_model
-        parse_model = parse_model or chat_model
-
-        if isinstance(instruct, dict):
-            instruct = Instruct(**instruct)
-
-        instruct = instruct or Instruct(
-            instruction=instruction,
-            guidance=guidance,
-            context=context,
-        )
-
-        if reason:
-            instruct.reason = True
-        if actions:
-            instruct.actions = True
-
-        operative: Operative = Step.request_operative(
-            request_params=request_params,
-            reason=instruct.reason,
-            actions=instruct.actions,
-            exclude_fields=exclude_fields,
-            base_type=response_format,
-            field_models=field_models,
-            **(request_param_kwargs or {}),
-        )
-        if instruct.actions:
-            tools = tools or True
-        if invoke_actions and tools:
-            tool_schemas = self.acts.get_tool_schema(tools)
-
-        ins, res = await self.invoke_chat(
-            instruction=instruct.instruction,
-            guidance=instruct.guidance,
-            context=instruct.context,
-            sender=sender,
-            recipient=recipient,
-            response_format=operative.request_type,
-            progression=progression,
-            imodel=chat_model,
-            images=images,
-            image_detail=image_detail,
-            tool_schemas=tool_schemas,
-            **kwargs,
-        )
-        self.msgs.add_message(instruction=ins)
-        self.msgs.add_message(assistant_response=res)
-
-        operative.response_str_dict = res.response
-        if skip_validation:
-            if return_operative:
-                return operative
-            return operative.response_str_dict
-
-        response_model = operative.update_response_model(res.response)
-
-        if not isinstance(response_model, BaseModel):
-            response_model = await self.parse(
-                text=res.response,
-                request_type=operative.request_type,
-                max_retries=operative.max_retries,
-                handle_validation="return_value",
-            )
-            operative.response_model = operative.update_response_model(
-                response_model
-            )
-
-        if not isinstance(response_model, BaseModel):
-            match handle_validation:
-                case "return_value":
-                    return response_model
-                case "return_none":
-                    return None
-                case "raise":
-                    raise ValueError(
-                        "Failed to parse response into request format"
-                    )
-
-        if not invoke_actions:
-            return operative if return_operative else operative.response_model
-
-        if (
-            getattr(response_model, "action_required", None) is True
-            and getattr(response_model, "action_requests", None) is not None
-        ):
-            action_response_models = await self.invoke_action(
-                response_model.action_requests,
-                **(action_kwargs or {}),
-            )
-            operative = Step.respond_operative(
-                response_params=response_params,
-                operative=operative,
-                additional_data={"action_responses": action_response_models},
-                **(response_param_kwargs or {}),
-            )
-        return operative if return_operative else operative.response_model
-
-    async def interpret(
-        self,
-        user_input: str,
-        domain: str | None = None,
-        style: str | None = None,
-        **kwargs,
-    ) -> str:
-        """
-        Interprets (rewrites) a user's raw input into a more formal or structured
-        prompt for the LLM. This method acts as a "prompt translator," leveraging
-        the existing orchestrations (communicate/operate) behind the scenes.
-
-        Args:
-            user_input (str):
-                The raw user query or statement to interpret.
-            domain (str | None):
-                An optional domain hint (e.g. 'finance', 'marketing',
-                'devops'), so we can tailor the style or context.
-            style (str | None):
-                An optional style hint (e.g. 'concise', 'detailed', etc.).
-            **kwargs:
-                Additional arguments passed through to the underlying
-                self.communicate() method (such as parse_model, skip_validation,
-                etc.).
-
-        Returns:
-            str: A refined prompt string that can be fed to the LLM.
-        """
-        instruction = (
-            "Rewrite the following user input into a clear, structured "
-            "prompt or query for an LLM, ensuring any implicit details "
-            "are made explicit if possible. Only return the improved user prompt"
-        )
-        guidance = (
-            f"Domain hint: {domain or 'general'}. "
-            f"Desired style: {style or 'concise'}. "
-            "You can add or clarify context if needed."
-        )
-        context = [f"User input: {user_input}"]
-
-        kwargs["temperature"] = kwargs.get("temperature", 0.65)
-
-        refined_prompt = await self.communicate(
-            instruction=instruction,
-            guidance=guidance,
-            context=context,
-            skip_validation=True,
-            **kwargs,
-        )
-        return str(refined_prompt)
-
-    async def parse(
-        self,
-        text: str,
-        handle_validation: Literal[
-            "raise", "return_value", "return_none"
-        ] = "return_value",
-        max_retries: int = 3,
-        request_type: type[BaseModel] = None,
-        operative: Operative = None,
-        similarity_algo="jaro_winkler",
-        similarity_threshold: float = 0.85,
-        fuzzy_match: bool = True,
-        handle_unmatched: Literal[
-            "ignore", "raise", "remove", "fill", "force"
-        ] = "force",
-        fill_value: Any = None,
-        fill_mapping: dict[str, Any] | None = None,
-        strict: bool = False,
-        suppress_conversion_errors: bool = False,
-    ):
-        """Attempts to parse text into a structured Pydantic model.
-
-        Uses optional fuzzy matching to handle partial or unclear fields.
-
-        Args:
-            text (str): The raw text to parse.
-            handle_validation (Literal["raise","return_value","return_none"]):
-                What to do if parsing fails. Defaults to "return_value".
-            max_retries (int):
-                How many times to retry parsing if it fails.
-            request_type (type[BaseModel], optional):
-                The Pydantic model to parse into.
-            operative (Operative, optional):
-                If provided, uses its model and max_retries setting.
-            similarity_algo (str):
-                The similarity algorithm for fuzzy field matching.
-            similarity_threshold (float):
-                A threshold for fuzzy matching (0.0 - 1.0).
-            fuzzy_match (bool):
-                If True, tries to match unrecognized keys to known ones.
-            handle_unmatched (Literal["ignore","raise","remove","fill","force"]):
-                How to handle unmatched fields.
-            fill_value (Any):
-                A default value used when fill is needed.
-            fill_mapping (dict[str, Any] | None):
-                A mapping from field -> fill value override.
-            strict (bool):
-                If True, raises errors on ambiguous fields or data types.
-            suppress_conversion_errors (bool):
-                If True, logs or ignores errors during data conversion.
-
-        Returns:
-            BaseModel | Any | None:
-                The parsed model instance, or a dict/string/None depending
-                on the handling mode.
-        """
-        _should_try = True
-        num_try = 0
-        response_model = text
-        if operative is not None:
-            max_retries = operative.max_retries
-            request_type = operative.request_type
-
-        while (
-            _should_try
-            and num_try < max_retries
-            and not isinstance(response_model, BaseModel)
-        ):
-            num_try += 1
-            _, res = await self.invoke_chat(
-                instruction="reformat text into specified model",
-                guidane="follow the required response format, using the model schema as a guide",
-                context=[{"text_to_format": text}],
-                response_format=request_type,
-                sender=self.user,
-                recipient=self.id,
-                imodel=self.parse_model,
-            )
-            if operative is not None:
-                response_model = operative.update_response_model(res.response)
-            else:
-                response_model = fuzzy_validate_mapping(
-                    res.response,
-                    breakdown_pydantic_annotation(request_type),
-                    similarity_algo=similarity_algo,
-                    similarity_threshold=similarity_threshold,
-                    fuzzy_match=fuzzy_match,
-                    handle_unmatched=handle_unmatched,
-                    fill_value=fill_value,
-                    fill_mapping=fill_mapping,
-                    strict=strict,
-                    suppress_conversion_errors=suppress_conversion_errors,
-                )
-                response_model = request_type.model_validate(response_model)
-
-        if not isinstance(response_model, BaseModel):
-            match handle_validation:
-                case "return_value":
-                    return response_model
-                case "return_none":
-                    return None
-                case "raise":
-                    raise ValueError(
-                        "Failed to parse response into request format"
-                    )
-
-        return response_model
-
-    async def communicate(
-        self,
-        instruction: Instruction | JsonValue = None,
-        guidance: JsonValue = None,
-        context: JsonValue = None,
-        sender: SenderRecipient = None,
-        recipient: SenderRecipient = None,
-        progression: ID.IDSeq = None,
-        request_model: type[BaseModel] | BaseModel | None = None,
-        response_format: type[BaseModel] = None,
-        request_fields: dict | list[str] = None,
-        imodel: iModel = None,  # alias of chat_model
-        chat_model: iModel = None,
-        parse_model: iModel = None,
-        skip_validation: bool = False,
-        images: list = None,
-        image_detail: Literal["low", "high", "auto"] = None,
-        num_parse_retries: int = 3,
-        fuzzy_match_kwargs: dict = None,
-        clear_messages: bool = False,
-        operative_model: type[BaseModel] = None,
-        **kwargs,
-    ):
-        """Handles a general 'communicate' flow without tool invocation.
-
-        Sends messages to the model, optionally parses the response, and
-        can handle simpler field-level validation.
-
-        Args:
-            instruction (Instruction | JsonValue, optional):
-                The main user query or context.
-            guidance (JsonValue, optional):
-                Additional LLM instructions.
-            context (JsonValue, optional):
-                Context data to pass to the LLM.
-            sender (SenderRecipient, optional):
-                The sender of this message.
-            recipient (SenderRecipient, optional):
-                The recipient of this message.
-            progression (ID.IDSeq, optional):
-                A custom progression of conversation messages.
-            request_model (type[BaseModel] | BaseModel | None, optional):
-                Model for structured responses.
-            response_format (type[BaseModel], optional):
-                Alias for request_model if both are not given simultaneously.
-            request_fields (dict | list[str], optional):
-                Simpler field-level mapping if no model is used.
-            imodel (iModel, optional):
-                Deprecated, alias for chat_model.
-            chat_model (iModel, optional):
-                Model used for the conversation.
-            parse_model (iModel, optional):
-                Model used for any parsing operation.
-            skip_validation (bool, optional):
-                If True, returns the raw response without further checks.
-            images (list, optional):
-                Additional images if relevant to the LLM context.
-            image_detail (Literal["low","high","auto"], optional):
-                Level of image detail if used.
-            num_parse_retries (int, optional):
-                Max times to retry parsing on failure (capped at 5).
-            fuzzy_match_kwargs (dict, optional):
-                Settings passed to the fuzzy validation function.
-            clear_messages (bool, optional):
-                If True, clears previously stored messages.
-            **kwargs:
-                Additional arguments for the LLM call.
-
-        Returns:
-            Any:
-                The raw string, a validated Pydantic model, or a dict
-                of requested fields, depending on the parameters.
-        """
-        if operative_model:
-            logging.warning(
-                "operative_model is deprecated. Use response_format instead."
-            )
-        if (
-            (operative_model and response_format)
-            or (operative_model and request_model)
-            or (response_format and request_model)
-        ):
-            raise ValueError(
-                "Cannot specify both operative_model and response_format"
-                "or operative_model and request_model as they are aliases"
-                "for the same parameter."
-            )
-
-        response_format = response_format or operative_model or request_model
-
-        imodel = imodel or chat_model or self.chat_model
-        parse_model = parse_model or self.parse_model
-
-        if clear_messages:
-            self.msgs.clear_messages()
-
-        if num_parse_retries > 5:
-            logging.warning(
-                f"Are you sure you want to retry {num_parse_retries} "
-                "times? lowering retry attempts to 5. Suggestion is under 3"
-            )
-            num_parse_retries = 5
-
-        ins, res = await self.invoke_chat(
-            instruction=instruction,
-            guidance=guidance,
-            context=context,
-            sender=sender,
-            recipient=recipient,
-            response_format=response_format,
-            progression=progression,
-            imodel=imodel,
-            images=images,
-            image_detail=image_detail,
-            **kwargs,
-        )
-        self.msgs.add_message(instruction=ins)
-        self.msgs.add_message(assistant_response=res)
-
-        if skip_validation:
-            return res.response
-
-        if response_format is not None:
-            return await self.parse(
-                text=res.response,
-                request_type=response_format,
-                max_retries=num_parse_retries,
-                **(fuzzy_match_kwargs or {}),
-            )
-
-        if request_fields is not None:
-            _d = fuzzy_validate_mapping(
-                res.response,
-                request_fields,
-                handle_unmatched="force",
-                fill_value=UNDEFINED,
-            )
-            return {k: v for k, v in _d.items() if v != UNDEFINED}
-
-        return res.response
-
-    async def invoke_action(
-        self,
-        action_request: list | ActionRequest | BaseModel | dict,
-        /,
-        suppress_errors: bool = False,
-        sanitize_input: bool = False,
-        unique_input: bool = False,
-        num_retries: int = 0,
-        initial_delay: float = 0,
-        retry_delay: float = 0,
-        backoff_factor: float = 1,
-        retry_default: Any = UNDEFINED,
-        retry_timeout: float | None = None,
-        retry_timing: bool = False,
-        max_concurrent: int | None = None,
-        throttle_period: float | None = None,
-        flatten: bool = True,
-        dropna: bool = True,
-        unique_output: bool = False,
-        flatten_tuple_set: bool = False,
-    ):
-        params = locals()
-        params.pop("self")
-        params.pop("action_request")
-        return await alcall(
-            action_request,
-            self._invoke_action,
-            **params,
-        )
-
-    async def _invoke_action(
-        self,
-        action_request: ActionRequest | BaseModel | dict,
-        suppress_errors: bool = False,
-    ) -> ActionResponse:
-        """Invokes a tool (action) asynchronously.
-
-        Args:
-            action_request (ActionRequest | BaseModel | dict):
-                Contains the function name (`function`) and arguments.
-            suppress_errors (bool, optional):
-                If True, logs errors instead of raising.
-
-        Returns:
-            ActionResponse: The result of the tool call.
-        """
-        try:
-            func, args = None, None
-            if isinstance(action_request, BaseModel):
-                if hasattr(action_request, "function") and hasattr(
-                    action_request, "arguments"
-                ):
-                    func = action_request.function
-                    args = action_request.arguments
-            elif isinstance(action_request, dict):
-                if action_request.keys() >= {"function", "arguments"}:
-                    func = action_request["function"]
-                    args = action_request["arguments"]
-
-            func_call: FunctionCalling = await self._action_manager.invoke(
-                action_request
-            )
-            if isinstance(func_call, FunctionCalling):
-                self._log_manager.log(Log.create(func_call))
-
-                if not isinstance(action_request, ActionRequest):
-                    action_request = ActionRequest.create(
-                        function=func,
-                        arguments=args,
-                        sender=self.id,
-                        recipient=func_call.func_tool.id,
-                    )
-
-                if action_request not in self.messages:
-                    self.msgs.add_message(action_request=action_request)
-
-                self.msgs.add_message(
-                    action_request=action_request,
-                    action_output=func_call.response,
-                )
-
-                return ActionResponseModel(
-                    function=action_request.function,
-                    arguments=action_request.arguments,
-                    output=func_call.response,
-                )
-            if isinstance(func_call, Log):
-                self._log_manager.log(func_call)
-                return None
-
-        except Exception as e:
-            if suppress_errors:
-                logging.error(f"Error invoking action: {e}")
-            else:
-                raise e
-
-    async def invoke_chat(
-        self,
-        instruction=None,
-        guidance=None,
-        context=None,
-        sender=None,
-        recipient=None,
-        request_fields=None,
-        response_format: type[BaseModel] = None,
-        progression=None,
-        imodel: iModel = None,
-        tool_schemas=None,
-        images: list = None,
-        image_detail: Literal["low", "high", "auto"] = None,
-        **kwargs,
-    ) -> tuple[Instruction, AssistantResponse]:
-        """Invokes the chat model with the current conversation history.
-
-        This method constructs a sequence of messages from the stored
-        progression, merges any pending action responses into the context,
-        and calls the model. The result is then wrapped in an
-        AssistantResponse.
-
-        Args:
-            instruction (Any):
-                The main user instruction text or structured data.
-            guidance (Any):
-                Additional system or user guidance.
-            context (Any):
-                Context data to pass to the model.
-            sender (Any):
-                The user or entity sending this message.
-            recipient (Any):
-                The intended recipient of this message (default is self.id).
-            request_fields (Any):
-                A set of fields for partial validation (rarely used).
-            request_model (type[BaseModel], optional):
-                A specific Pydantic model to request from the LLM.
-            progression (Any):
-                The conversation flow or message ordering.
-            imodel (iModel, optional):
-                The chat model to use.
-            tool_schemas (Any, optional):
-                Additional schemas to pass if tools are invoked.
-            images (list, optional):
-                Optional list of images.
-            image_detail (Literal["low","high","auto"], optional):
-                The level of detail for images, if relevant.
-            **kwargs:
-                Additional model invocation parameters.
-
-        Returns:
-            tuple[Instruction, AssistantResponse]:
-                The instruction object (with context) and the final
-                AssistantResponse from the model call.
-        """
-        ins: Instruction = self.msgs.create_instruction(
-            instruction=instruction,
-            guidance=guidance,
-            context=context,
-            sender=sender or self.user or "user",
-            recipient=recipient or self.id,
-            response_format=response_format,
-            request_fields=request_fields,
-            images=images,
-            image_detail=image_detail,
-            tool_schemas=tool_schemas,
-        )
-
-        progression = progression or self.msgs.progression
-        messages: list[RoledMessage] = [
-            self.msgs.messages[i] for i in progression
-        ]
-
-        use_ins = None
-        _to_use = []
-        _action_responses: set[ActionResponse] = set()
-
-        for i in messages:
-            if isinstance(i, ActionResponse):
-                _action_responses.add(i)
-            if isinstance(i, AssistantResponse):
-                j = AssistantResponse(
-                    role=i.role,
-                    content=copy(i.content),
-                    sender=i.sender,
-                    recipient=i.recipient,
-                    template=i.template,
-                )
-                _to_use.append(j)
-            if isinstance(i, Instruction):
-                j = Instruction(
-                    role=i.role,
-                    content=copy(i.content),
-                    sender=i.sender,
-                    recipient=i.recipient,
-                    template=i.template,
-                )
-                j.tool_schemas = None
-                j.respond_schema_info = None
-                j.request_response_format = None
-
-                if _action_responses:
-                    d_ = [k.content for k in _action_responses]
-                    for z in d_:
-                        if z not in j.context:
-                            j.context.append(z)
-
-                    _to_use.append(j)
-                    _action_responses = set()
-                else:
-                    _to_use.append(j)
-
-        messages = _to_use
-        if _action_responses:
-            j = ins.model_copy()
-            d_ = [k.content for k in _action_responses]
-            for z in d_:
-                if z not in j.context:
-                    j.context.append(z)
-            use_ins = j
-
-        if messages and len(messages) > 1:
-            _msgs = [messages[0]]
-
-            for i in messages[1:]:
-                if isinstance(i, AssistantResponse):
-                    if isinstance(_msgs[-1], AssistantResponse):
-                        _msgs[-1].response = (
-                            f"{_msgs[-1].response}\n\n{i.response}"
-                        )
-                    else:
-                        _msgs.append(i)
-                else:
-                    if isinstance(_msgs[-1], AssistantResponse):
-                        _msgs.append(i)
-            messages = _msgs
-
-        if self.msgs.system and imodel.sequential_exchange:
-            messages = [msg for msg in messages if msg.role != "system"]
-            first_instruction = None
-
-            if len(messages) == 0:
-                first_instruction = ins.model_copy()
-                first_instruction.guidance = self.msgs.system.rendered + (
-                    first_instruction.guidance or ""
-                )
-                messages.append(first_instruction)
-            elif len(messages) >= 1:
-                first_instruction = messages[0]
-                if not isinstance(first_instruction, Instruction):
-                    raise ValueError(
-                        "First message in progression must be an Instruction or System"
-                    )
-                first_instruction = first_instruction.model_copy()
-                first_instruction.guidance = self.msgs.system.rendered + (
-                    first_instruction.guidance or ""
-                )
-                messages[0] = first_instruction
-                messages.append(use_ins or ins)
-
-        else:
-            messages.append(use_ins or ins)
-
-        kwargs["messages"] = [i.chat_msg for i in messages]
-        imodel = imodel or self.chat_model
-
-        api_call = await imodel.invoke(**kwargs)
-        self._log_manager.log(Log.create(api_call))
-
-        res = AssistantResponse.create(
-            assistant_response=api_call.response,
-            sender=self.id,
-            recipient=self.user,
-        )
-
-        return ins, res
-
     def clone(self, sender: ID.Ref = None) -> "Branch":
-        """Clones this Branch, creating a new instance with the same data.
+        """
+        Clones this `Branch` synchronously, optionally updating the sender ID.
 
         Args:
             sender (ID.Ref, optional):
-                If provided, sets this sender ID on the cloned messages.
-                Otherwise, uses self.id.
+                If provided, all messages in the clone will have this sender ID.
+                Otherwise, uses the current branch's ID.
+
+        Raises:
+            ValueError: If `sender` is not a valid ID.Ref.
 
         Returns:
-            Branch: A new branch with cloned messages and the same tools.
+            Branch: A new branch object with a copy of the messages, system info, etc.
         """
         if sender is not None:
             if not ID.is_id(sender):
                 raise ValueError(
-                    "Input value for branch.clone sender is not a valid sender"
+                    f"Cannot clone Branch: '{sender}' is not a valid sender ID."
                 )
             sender = ID.get_id(sender)
 
@@ -1073,27 +335,29 @@ class Branch(Element, Communicatable, Relational):
         branch_clone = Branch(
             system=system,
             user=self.user,
-            messages=[i.clone() for i in self.msgs.messages],
+            messages=[msg.clone() for msg in self.msgs.messages],
             tools=tools,
             metadata={"clone_from": self},
         )
         for message in branch_clone.msgs.messages:
             message.sender = sender or self.id
             message.recipient = branch_clone.id
+
         return branch_clone
 
+    # -------------------------------------------------------------------------
+    # Conversion / Serialization
+    # -------------------------------------------------------------------------
     def to_df(self, *, progression: Progression = None) -> pd.DataFrame:
-        """Converts messages in the branch to a Pandas DataFrame.
+        """
+        Convert branch messages into a `pandas.DataFrame`.
 
         Args:
             progression (Progression, optional):
-                A custom progression of messages to include. If None, uses
-                the existing stored progression.
+                A custom message ordering. If `None`, uses the stored progression.
 
         Returns:
-            pd.DataFrame:
-                A DataFrame containing message data for easy inspection
-                or serialization.
+            pd.DataFrame: Each row represents a message, with columns defined by MESSAGE_FIELDS.
         """
         if progression is None:
             progression = self.msgs.progression
@@ -1106,31 +370,9 @@ class Branch(Element, Communicatable, Relational):
         p = Pile(collections=msgs)
         return p.to_df(columns=MESSAGE_FIELDS)
 
-    async def _instruct(self, instruct: Instruct, /, **kwargs) -> Any:
-        """Convenience method for handling an 'Instruct'.
-
-        Checks if the instruct uses reserved kwargs for an 'operate' flow
-        (e.g., actions and a response format). Otherwise, falls back to a
-        simpler 'communicate' flow.
-
-        Args:
-            instruct (Instruct):
-                The instruction context and guidance.
-            **kwargs:
-                Additional arguments for operate or communicate.
-
-        Returns:
-            Any: The result of the chosen flow, e.g., a validated response.
-        """
-        config = {**instruct.to_dict(), **kwargs}
-        if any(i in config and config[i] for i in Instruct.reserved_kwargs):
-            if "response_format" in config or "request_model" in config:
-                return await self.operate(**config)
-            for i in Instruct.reserved_kwargs:
-                config.pop(i, None)
-
-        return await self.communicate(**config)
-
+    # -------------------------------------------------------------------------
+    # Mailbox Send / Receive
+    # -------------------------------------------------------------------------
     def send(
         self,
         recipient: IDType,
@@ -1138,17 +380,18 @@ class Branch(Element, Communicatable, Relational):
         item: Any,
         request_source: IDType | None = None,
     ) -> None:
-        """Sends a package (wrapped in Mail) to a specific recipient.
+        """
+        Sends a `Package` (wrapped in a `Mail` object) to a specified recipient.
 
         Args:
             recipient (IDType):
-                The ID of the recipient entity.
+                ID of the recipient branch or component.
             category (PackageCategory | None):
-                The category of the package (e.g., 'message', 'tool', etc.).
-            package (Any):
-                The payload to send (could be a message, tool, model, etc.).
+                The category/type of the package (e.g., 'message', 'tool', 'imodel').
+            item (Any):
+                The payload to send (e.g., a message, tool reference, model, etc.).
             request_source (IDType | None):
-                The ID that requested this send (if any).
+                The ID that prompted or requested this send operation (optional).
         """
         package = Package(
             category=category,
@@ -1165,39 +408,44 @@ class Branch(Element, Communicatable, Relational):
 
     def receive(
         self,
-        sender: IDType,
+        sender_id: IDType,
         message: bool = False,
         tool: bool = False,
         imodel: bool = False,
     ) -> None:
-        """Retrieves mail from a sender, processing it if enabled by parameters.
+        """
+        Retrieves and processes mail from a given sender according to the specified flags.
 
         Args:
             sender (IDType):
-                The ID of the sender.
+                The ID of the mail sender.
             message (bool):
-                If True, processes mails categorized as "message".
+                If `True`, process packages categorized as "message".
             tool (bool):
-                If True, processes mails categorized as "tool".
+                If `True`, process packages categorized as "tool".
             imodel (bool):
-                If True, processes mails categorized as "imodel".
+                If `True`, process packages categorized as "imodel".
 
         Raises:
-            ValueError:
-                If the sender doesn't exist or if the mail category is invalid
-                for the chosen processing options.
+            ValueError: If no mail exists from the specified sender,
+                        or if a package is invalid for the chosen category.
         """
+        sender_id = ID.get_id(sender_id)
+        if sender_id not in self.mailbox.pending_ins.keys():
+            raise ValueError(
+                f"No mail or package found from sender: {sender_id}"
+            )
+
         skipped_requests = Progression()
-        sender = ID.get_id(sender)
-        if sender not in self.mailbox.pending_ins.keys():
-            raise ValueError(f"No package from {sender}")
-        while self.mailbox.pending_ins[sender]:
-            mail_id = self.mailbox.pending_ins[sender].popleft()
+        while self.mailbox.pending_ins[sender_id]:
+            mail_id = self.mailbox.pending_ins[sender_id].popleft()
             mail: Mail = self.mailbox.pile_[mail_id]
 
             if mail.category == "message" and message:
                 if not isinstance(mail.package.item, RoledMessage):
-                    raise ValueError("Invalid message format")
+                    raise ValueError(
+                        "Invalid message package: The item must be a `RoledMessage`."
+                    )
                 new_message = mail.package.item.clone()
                 new_message.sender = mail.sender
                 new_message.recipient = self.id
@@ -1206,25 +454,30 @@ class Branch(Element, Communicatable, Relational):
 
             elif mail.category == "tool" and tool:
                 if not isinstance(mail.package.item, Tool):
-                    raise ValueError("Invalid tools format")
+                    raise ValueError(
+                        "Invalid tool package: The item must be a `Tool` instance."
+                    )
                 self._action_manager.register_tools(mail.package.item)
                 self.mailbox.pile_.pop(mail_id)
 
             elif mail.category == "imodel" and imodel:
                 if not isinstance(mail.package.item, iModel):
-                    raise ValueError("Invalid iModel format")
+                    raise ValueError(
+                        "Invalid iModel package: The item must be an `iModel` instance."
+                    )
                 self._imodel_manager.register_imodel(
-                    imodel.name or "chat", mail.package.item
+                    mail.package.item.name or "chat", mail.package.item
                 )
                 self.mailbox.pile_.pop(mail_id)
 
             else:
+                # If the category doesn't match the flags or is unhandled
                 skipped_requests.append(mail)
 
-        self.mailbox.pending_ins[sender] = skipped_requests
-
-        if len(self.mailbox.pending_ins[sender]) == 0:
-            self.mailbox.pending_ins.pop(sender)
+        # Requeue any skipped mail
+        self.mailbox.pending_ins[sender_id] = skipped_requests
+        if len(self.mailbox.pending_ins[sender_id]) == 0:
+            self.mailbox.pending_ins.pop(sender_id)
 
     async def asend(
         self,
@@ -1233,13 +486,18 @@ class Branch(Element, Communicatable, Relational):
         package: Any,
         request_source: IDType | None = None,
     ):
-        """Asynchronous version of send().
+        """
+        Async version of `send()`.
 
         Args:
-            recipient (IDType): The ID of the recipient.
-            category (PackageCategory | None): The category of the package.
-            package (Any): The item(s) to send.
-            request_source (IDType | None): The origin of this request.
+            recipient (IDType):
+                ID of the recipient branch or component.
+            category (PackageCategory | None):
+                The category/type of the package.
+            package (Any):
+                The item(s) to send (message/tool/model).
+            request_source (IDType | None):
+                The origin request ID (if any).
         """
         async with self.mailbox.pile_:
             self.send(recipient, category, package, request_source)
@@ -1251,26 +509,51 @@ class Branch(Element, Communicatable, Relational):
         tool: bool = False,
         imodel: bool = False,
     ) -> None:
-        """Asynchronous version of receive().
+        """
+        Async version of `receive()`.
 
         Args:
-            sender (IDType): The sender's ID.
-            message (bool): Whether to process message packages.
-            tool (bool): Whether to process tool packages.
-            imodel (bool): Whether to process iModel packages.
+            sender (IDType):
+                The ID of the mail sender.
+            message (bool):
+                If `True`, process packages categorized as "message".
+            tool (bool):
+                If `True`, process packages categorized as "tool".
+            imodel (bool):
+                If `True`, process packages categorized as "imodel".
         """
         async with self.mailbox.pile_:
             self.receive(sender, message, tool, imodel)
 
     def receive_all(self) -> None:
-        """Receives mail from all senders."""
-        for key in list(self.mailbox.pending_ins.keys()):
+        """
+        Receives mail from all known senders without filtering.
+
+        (Duplicate method included in your snippet; you may unify or remove.)
+        """
+        for key in self.mailbox.pending_ins:
             self.receive(key)
 
+    # -------------------------------------------------------------------------
+    # Dictionary Conversion
+    # -------------------------------------------------------------------------
     def to_dict(self):
+        """
+        Serializes the branch to a Python dictionary, including:
+         - Messages
+         - Logs
+         - Chat/Parse models
+         - System message
+         - LogManager config
+         - Metadata
+
+        Returns:
+            dict: A dictionary representing the branch's internal state.
+        """
         meta = {}
         if "clone_from" in self.metadata:
 
+            # Provide some reference info about the source from which we cloned
             meta["clone_from"] = {
                 "id": str(self.metadata["clone_from"].id),
                 "user": str(self.metadata["clone_from"].user),
@@ -1293,11 +576,21 @@ class Branch(Element, Communicatable, Relational):
             dict_["system"] = self.system.to_dict()
         dict_["log_config"] = self._log_manager._config.model_dump()
         dict_["metadata"] = meta
-
         return dict_
 
     @classmethod
     def from_dict(cls, data: dict):
+        """
+        Creates a `Branch` instance from a serialized dictionary.
+
+        Args:
+            data (dict):
+                Must include (or optionally include) `messages`, `logs`,
+                `chat_model`, `parse_model`, `system`, and `log_config`.
+
+        Returns:
+            Branch: A new `Branch` instance based on the deserialized data.
+        """
         dict_ = {
             "messages": data.pop("messages", UNDEFINED),
             "logs": data.pop("logs", UNDEFINED),
@@ -1307,32 +600,744 @@ class Branch(Element, Communicatable, Relational):
             "log_config": data.pop("log_config", UNDEFINED),
         }
         params = {}
+
+        # Merge in the rest of the data
         for k, v in data.items():
+            # If the item is a dict with an 'id', we expand it
             if isinstance(v, dict) and "id" in v:
                 params.update(v)
             else:
                 params[k] = v
 
         params.update(dict_)
+        # Remove placeholders (UNDEFINED) so we don't incorrectly assign them
         return cls(**{k: v for k, v in params.items() if v is not UNDEFINED})
 
-    def receive_all(self) -> None:
-        """Receives mail from all senders."""
-        for key in self.mailbox.pending_ins:
-            self.receive(key)
-
-    def flagged_messages(
+    # -------------------------------------------------------------------------
+    # Asynchronous Operations (chat, parse, operate, etc.)
+    # -------------------------------------------------------------------------
+    async def chat(
         self,
-        include_clone: bool = False,
-        include_load: bool = False,
-    ) -> None:
-        flags = []
-        if include_clone:
-            flags.append(MessageFlag.MESSAGE_CLONE)
-        if include_load:
-            flags.append(MessageFlag.MESSAGE_LOAD)
-        out = [i for i in self.messages if i._flag in flags]
-        return Pile(collections=out, item_type=RoledMessage, strict_type=False)
+        instruction=None,
+        guidance=None,
+        context=None,
+        sender=None,
+        recipient=None,
+        request_fields=None,
+        response_format: type[BaseModel] = None,
+        progression=None,
+        imodel: iModel = None,
+        tool_schemas=None,
+        images: list = None,
+        image_detail: Literal["low", "high", "auto"] = None,
+        plain_content: str = None,
+        **kwargs,
+    ) -> tuple[Instruction, AssistantResponse]:
+        """
+        Invokes the chat model with the current conversation history.
+
+        **High-level flow**:
+            1. Construct a sequence of messages from the stored progression.
+            2. Integrate any pending action responses into the context.
+            3. Invoke the chat model with the combined messages.
+            4. Capture and return the final response as an `AssistantResponse`.
+
+        Args:
+            instruction (Any):
+                Main user instruction text or structured data.
+            guidance (Any):
+                Additional system or user guidance text.
+            context (Any):
+                Context data to pass to the model.
+            sender (Any):
+                The user or entity sending this message (defaults to `Branch.user`).
+            recipient (Any):
+                The recipient of this message (defaults to `self.id`).
+            request_fields (Any):
+                Partial field-level validation reference (rarely used).
+            response_format (type[BaseModel], optional):
+                A Pydantic model type for structured model responses.
+            progression (Any):
+                Custom ordering of messages in the conversation.
+            imodel (iModel, optional):
+                An override for the chat model to use. If not provided, uses `self.chat_model`.
+            tool_schemas (Any, optional):
+                Additional schemas for tool invocation in function-calling.
+            images (list, optional):
+                Optional images relevant to the model's context.
+            image_detail (Literal["low", "high", "auto"], optional):
+                Level of detail for image-based context (if relevant).
+            plain_content (str, optional):
+                Plain text content appended to the instruction.
+            **kwargs:
+                Additional parameters for the LLM invocation.
+
+        Returns:
+            tuple[Instruction, AssistantResponse]:
+                The `Instruction` object and the final `AssistantResponse`.
+        """
+        from lionagi.operations.chat.chat import chat
+
+        return await chat(
+            self,
+            instruction=instruction,
+            guidance=guidance,
+            context=context,
+            sender=sender,
+            recipient=recipient,
+            request_fields=request_fields,
+            response_format=response_format,
+            progression=progression,
+            chat_model=imodel,
+            tool_schemas=tool_schemas,
+            images=images,
+            image_detail=image_detail,
+            plain_content=plain_content,
+            **kwargs,
+        )
+
+    async def parse(
+        self,
+        text: str,
+        handle_validation: Literal[
+            "raise", "return_value", "return_none"
+        ] = "return_value",
+        max_retries: int = 3,
+        request_type: type[BaseModel] = None,
+        operative: Operative = None,
+        similarity_algo="jaro_winkler",
+        similarity_threshold: float = 0.85,
+        fuzzy_match: bool = True,
+        handle_unmatched: Literal[
+            "ignore", "raise", "remove", "fill", "force"
+        ] = "force",
+        fill_value: Any = None,
+        fill_mapping: dict[str, Any] | None = None,
+        strict: bool = False,
+        suppress_conversion_errors: bool = False,
+    ):
+        """
+        Attempts to parse text into a structured Pydantic model using parse model logic.
+
+        If fuzzy matching is enabled, tries to map partial or uncertain keys
+        to the known fields of the model. Retries are performed if initial parsing fails.
+
+        Args:
+            text (str):
+                The raw text to parse.
+            handle_validation (Literal["raise","return_value","return_none"]):
+                What to do if parsing fails (default: "return_value").
+            max_retries (int):
+                Number of times to retry parsing on failure (default: 3).
+            request_type (type[BaseModel], optional):
+                The Pydantic model to parse into.
+            operative (Operative, optional):
+                An `Operative` object with known request model and settings.
+            similarity_algo (str):
+                Algorithm name for fuzzy field matching.
+            similarity_threshold (float):
+                Threshold for matching (0.0 - 1.0).
+            fuzzy_match (bool):
+                Whether to attempt fuzzy matching for unmatched fields.
+            handle_unmatched (Literal["ignore","raise","remove","fill","force"]):
+                Policy for unrecognized fields (default: "force").
+            fill_value (Any):
+                Default placeholder for missing fields (if fill is used).
+            fill_mapping (dict[str, Any] | None):
+                A mapping of specific fields to fill values.
+            strict (bool):
+                If True, raises errors on ambiguous fields or data types.
+            suppress_conversion_errors (bool):
+                If True, logs or ignores conversion errors instead of raising.
+
+        Returns:
+            BaseModel | dict | str | None:
+                Parsed model instance, or a fallback based on `handle_validation`.
+        """
+        from lionagi.operations.parse.parse import parse
+
+        return await parse(
+            self,
+            text=text,
+            handle_validation=handle_validation,
+            max_retries=max_retries,
+            request_type=request_type,
+            operative=operative,
+            similarity_algo=similarity_algo,
+            similarity_threshold=similarity_threshold,
+            fuzzy_match=fuzzy_match,
+            handle_unmatched=handle_unmatched,
+            fill_value=fill_value,
+            fill_mapping=fill_mapping,
+            strict=strict,
+            suppress_conversion_errors=suppress_conversion_errors,
+        )
+
+    async def operate(
+        self,
+        *,
+        instruct: Instruct = None,
+        instruction: Instruction | JsonValue = None,
+        guidance: JsonValue = None,
+        context: JsonValue = None,
+        sender: SenderRecipient = None,
+        recipient: SenderRecipient = None,
+        progression: Progression = None,
+        imodel: iModel = None,  # deprecated, alias of chat_model
+        chat_model: iModel = None,
+        invoke_actions: bool = True,
+        tool_schemas: list[dict] = None,
+        images: list = None,
+        image_detail: Literal["low", "high", "auto"] = None,
+        parse_model: iModel = None,
+        skip_validation: bool = False,
+        tools: ToolRef = None,
+        operative: Operative = None,
+        response_format: type[BaseModel] = None,
+        return_operative: bool = False,
+        actions: bool = False,
+        reason: bool = False,
+        action_kwargs: dict = None,
+        field_models: list[FieldModel] = None,
+        exclude_fields: list | dict | None = None,
+        request_params: ModelParams = None,
+        request_param_kwargs: dict = None,
+        response_params: ModelParams = None,
+        response_param_kwargs: dict = None,
+        handle_validation: Literal[
+            "raise", "return_value", "return_none"
+        ] = "return_value",
+        operative_model: type[BaseModel] = None,
+        request_model: type[BaseModel] = None,
+        **kwargs,
+    ) -> list | BaseModel | None | dict | str:
+        """
+        An advanced orchestrated flow that may combine LLM calls, parsing, and tool invocations.
+
+        **Typical usage**:
+          1. Provide instructions or an `Instruct` object containing your request,
+             context, and whether to reason about tools.
+          2. Optionally specify a desired `response_format` or `request_model`
+             to parse the LLM's reply.
+          3. If `invoke_actions` is True, any requested tool calls in the
+             model response are automatically invoked.
+
+        Args:
+            instruct (Instruct, optional):
+                A unified instruction container (includes `instruction`, `guidance`, `context`, etc.).
+            instruction (Instruction | dict, optional):
+                A direct `Instruction` object or JSON-like dict for the LLM.
+            guidance (JsonValue, optional):
+                Additional context or system instructions for the LLM.
+            context (JsonValue, optional):
+                Extra dynamic data for the LLM.
+            sender (SenderRecipient, optional):
+                The sender for newly added messages (defaults to `Branch.user`).
+            recipient (SenderRecipient, optional):
+                The recipient for newly added messages (defaults to `self.id`).
+            progression (Progression, optional):
+                Custom message progression to use.
+            imodel (iModel, optional):
+                Deprecated, alias for `chat_model`.
+            chat_model (iModel, optional):
+                Overrides the branch's default chat model.
+            invoke_actions (bool, optional):
+                Whether to automatically execute any requested tools.
+            tool_schemas (list[dict], optional):
+                Additional or overridden schemas for declared tools.
+            images (list, optional):
+                List of images for context.
+            image_detail (Literal["low","high","auto"], optional):
+                Level of detail for image-based context.
+            parse_model (iModel, optional):
+                Model to handle parsing if needed.
+            skip_validation (bool, optional):
+                If True, skip structured validation on the final response.
+            tools (ToolRef, optional):
+                Tools to make available if `invoke_actions` is True.
+            operative (Operative, optional):
+                Contains instructions on how to handle the LLM output
+                (e.g., expected schema, fuzzy matching policy).
+            response_format (type[BaseModel], optional):
+                A Pydantic model type for the LLM's response schema.
+            return_operative (bool, optional):
+                If True, returns the `Operative` object instead of the final result.
+            actions (bool, optional):
+                If True, instructs the LLM that function-calling is expected.
+            reason (bool, optional):
+                If True, instructs the LLM to show chain-of-thought or justification (where applicable).
+            action_kwargs (dict, optional):
+                Additional arguments for the tool invocation process.
+            field_models (list[FieldModel], optional):
+                Field-level overrides for the expected response schema.
+            exclude_fields (list|dict|None, optional):
+                Fields to exclude or transform in the final validation.
+            request_params (ModelParams, optional):
+                Additional config for the request model used in function-calling.
+            request_param_kwargs (dict, optional):
+                Extra parameters for constructing `request_params`.
+            response_params (ModelParams, optional):
+                Additional config for the response model returned after function calls.
+            response_param_kwargs (dict, optional):
+                Extra parameters for constructing `response_params`.
+            handle_validation (Literal["raise","return_value","return_none"], optional):
+                How to handle unsuccessful validation attempts (default: "return_value").
+            operative_model (type[BaseModel], optional):
+                Deprecated, alias for `response_format`.
+            request_model (type[BaseModel], optional):
+                Another alias for `response_format`.
+            **kwargs:
+                Additional arguments passed to the LLM call.
+
+        Returns:
+            list | BaseModel | None | dict | str:
+                The final structured or raw response, depending on your parameters.
+                If `return_operative=True`, returns the `Operative` instead.
+
+        See Also:
+            - `communicate()`
+            - `parse()`
+            - `act()`
+        """
+        from lionagi.operations.operate.operate import operate
+
+        return await operate(
+            self,
+            instruct=instruct,
+            instruction=instruction,
+            guidance=guidance,
+            context=context,
+            sender=sender,
+            recipient=recipient,
+            progression=progression,
+            chat_model=chat_model,
+            invoke_actions=invoke_actions,
+            tool_schemas=tool_schemas,
+            images=images,
+            image_detail=image_detail,
+            parse_model=parse_model,
+            skip_validation=skip_validation,
+            tools=tools,
+            operative=operative,
+            response_format=response_format,
+            return_operative=return_operative,
+            actions=actions,
+            reason=reason,
+            action_kwargs=action_kwargs,
+            field_models=field_models,
+            exclude_fields=exclude_fields,
+            request_params=request_params,
+            request_param_kwargs=request_param_kwargs,
+            response_params=response_params,
+            response_param_kwargs=response_param_kwargs,
+            handle_validation=handle_validation,
+            operative_model=operative_model,
+            request_model=request_model,
+            imodel=imodel,
+            **kwargs,
+        )
+
+    async def communicate(
+        self,
+        instruction: Instruction | JsonValue = None,
+        *,
+        guidance: JsonValue = None,
+        context: JsonValue = None,
+        plain_content: str = None,
+        sender: SenderRecipient = None,
+        recipient: SenderRecipient = None,
+        progression: ID.IDSeq = None,
+        request_model: type[BaseModel] | BaseModel | None = None,
+        response_format: type[BaseModel] = None,
+        request_fields: dict | list[str] = None,
+        imodel: iModel = None,  # alias of chat_model
+        chat_model: iModel = None,
+        parse_model: iModel = None,
+        skip_validation: bool = False,
+        images: list = None,
+        image_detail: Literal["low", "high", "auto"] = None,
+        num_parse_retries: int = 3,
+        fuzzy_match_kwargs: dict = None,
+        clear_messages: bool = False,
+        operative_model: type[BaseModel] = None,
+        **kwargs,
+    ):
+        """
+        A simpler orchestration than `operate()`, typically without tool invocation.
+
+        **Flow**:
+          1. Sends an instruction (or conversation) to the chat model.
+          2. Optionally parses the response into a structured model or fields.
+          3. Returns either the raw string, the parsed model, or a dict of fields.
+
+        Args:
+            instruction (Instruction | dict, optional):
+                The user's main query or data.
+            guidance (JsonValue, optional):
+                Additional instructions or context for the LLM.
+            context (JsonValue, optional):
+                Extra data or context.
+            plain_content (str, optional):
+                Plain text content appended to the instruction.
+            sender (SenderRecipient, optional):
+                Sender ID (defaults to `Branch.user`).
+            recipient (SenderRecipient, optional):
+                Recipient ID (defaults to `self.id`).
+            progression (ID.IDSeq, optional):
+                Custom ordering of messages.
+            request_model (type[BaseModel] | BaseModel | None, optional):
+                Model for validating or structuring the LLM's response.
+            response_format (type[BaseModel], optional):
+                Alias for `request_model`. If both are provided, raises ValueError.
+            request_fields (dict|list[str], optional):
+                If you only need certain fields from the LLM's response.
+            imodel (iModel, optional):
+                Deprecated alias for `chat_model`.
+            chat_model (iModel, optional):
+                An alternative to the default chat model.
+            parse_model (iModel, optional):
+                If parsing is needed, you can override the default parse model.
+            skip_validation (bool, optional):
+                If True, returns the raw response string unvalidated.
+            images (list, optional):
+                Any relevant images.
+            image_detail (Literal["low","high","auto"], optional):
+                Image detail level (if used).
+            num_parse_retries (int, optional):
+                Maximum parsing retries (capped at 5).
+            fuzzy_match_kwargs (dict, optional):
+                Additional settings for fuzzy field matching (if used).
+            clear_messages (bool, optional):
+                Whether to clear stored messages before sending.
+            operative_model (type[BaseModel], optional):
+                Deprecated, alias for `response_format`.
+            **kwargs:
+                Additional arguments for the underlying LLM call.
+
+        Returns:
+            Any:
+                - Raw string (if `skip_validation=True`),
+                - A validated Pydantic model,
+                - A dict of the requested fields,
+                - or `None` if parsing fails and `handle_validation='return_none'`.
+        """
+        from lionagi.operations.communicate.communicate import communicate
+
+        return await communicate(
+            self,
+            instruction=instruction,
+            guidance=guidance,
+            context=context,
+            plain_content=plain_content,
+            sender=sender,
+            recipient=recipient,
+            progression=progression,
+            request_model=request_model,
+            response_format=response_format,
+            request_fields=request_fields,
+            chat_model=chat_model or imodel,
+            parse_model=parse_model,
+            skip_validation=skip_validation,
+            images=images,
+            image_detail=image_detail,
+            num_parse_retries=num_parse_retries,
+            fuzzy_match_kwargs=fuzzy_match_kwargs,
+            clear_messages=clear_messages,
+            operative_model=operative_model,
+            **kwargs,
+        )
+
+    async def _act(
+        self,
+        action_request: ActionRequest | BaseModel | dict,
+        suppress_errors: bool = False,
+    ) -> ActionResponse:
+        """
+        Internal method to invoke a tool (action) asynchronously.
+
+        Args:
+            action_request (ActionRequest|BaseModel|dict):
+                Must contain `function` and `arguments`.
+            suppress_errors (bool, optional):
+                If True, errors are logged instead of raised.
+
+        Returns:
+            ActionResponse: Result of the tool invocation or `None` if suppressed.
+        """
+        from lionagi.operations.act.act import _act
+
+        return await _act(self, action_request, suppress_errors)
+
+    async def act(
+        self,
+        action_request: list | ActionRequest | BaseModel | dict,
+        /,
+        suppress_errors: bool = False,
+        sanitize_input: bool = False,
+        unique_input: bool = False,
+        num_retries: int = 0,
+        initial_delay: float = 0,
+        retry_delay: float = 0,
+        backoff_factor: float = 1,
+        retry_default: Any = UNDEFINED,
+        retry_timeout: float | None = None,
+        retry_timing: bool = False,
+        max_concurrent: int | None = None,
+        throttle_period: float | None = None,
+        flatten: bool = True,
+        dropna: bool = True,
+        unique_output: bool = False,
+        flatten_tuple_set: bool = False,
+    ) -> list[ActionResponse] | ActionResponse | Any:
+        """
+        Public, potentially batched, asynchronous interface to run one or multiple action requests.
+
+        Args:
+            action_request (list|ActionRequest|BaseModel|dict):
+                A single or list of action requests, each requiring
+                `function` and `arguments`.
+            suppress_errors (bool):
+                If True, log errors instead of raising exceptions.
+            sanitize_input (bool):
+                Reserved. Potentially sanitize the action arguments.
+            unique_input (bool):
+                Reserved. Filter out duplicate requests.
+            num_retries (int):
+                Number of times to retry on failure (default 0).
+            initial_delay (float):
+                Delay before first attempt (seconds).
+            retry_delay (float):
+                Base delay between retries.
+            backoff_factor (float):
+                Multiplier for the `retry_delay` after each attempt.
+            retry_default (Any):
+                Fallback value if all retries fail (if suppressing errors).
+            retry_timeout (float|None):
+                Overall timeout for all attempts (None = no limit).
+            retry_timing (bool):
+                If True, track time used for retries.
+            max_concurrent (int|None):
+                Maximum concurrent tasks (if batching).
+            throttle_period (float|None):
+                Minimum spacing (in seconds) between requests.
+            flatten (bool):
+                If a list of results is returned, flatten them if possible.
+            dropna (bool):
+                Remove `None` or invalid results from final output if True.
+            unique_output (bool):
+                Only return unique results if True.
+            flatten_tuple_set (bool):
+                Flatten nested tuples in results if True.
+
+        Returns:
+            Any:
+                The result or results from the invoked tool(s).
+        """
+        params = locals()
+        params.pop("self")
+        params.pop("action_request")
+        return await alcall(action_request, self._act, **params)
+
+    async def translate(
+        self,
+        text: str,
+        technique: Literal["SynthLang"] = "SynthLang",
+        technique_kwargs: dict = None,
+        compress: bool = False,
+        chat_model: iModel = None,
+        compress_model: iModel = None,
+        compression_ratio: float = 0.2,
+        compress_kwargs=None,
+        verbose: bool = True,
+        new_branch: bool = True,
+        **kwargs,
+    ) -> str:
+        """
+        An example "translate" operation that transforms text using a chosen technique
+        (e.g., "SynthLang"). Optionally compresses text with a custom `compress_model`.
+
+        Args:
+            text (str):
+                The text to be translated or transformed.
+            technique (Literal["SynthLang"]):
+                The translation/transform technique (currently only "SynthLang").
+            technique_kwargs (dict, optional):
+                Additional parameters for the chosen technique.
+            compress (bool):
+                Whether to compress the resulting text further.
+            chat_model (iModel, optional):
+                A custom model for the translation step (defaults to self.chat_model).
+            compress_model (iModel, optional):
+                A separate model for compression (if `compress=True`).
+            compression_ratio (float):
+                Desired compression ratio if compressing text (0.0 - 1.0).
+            compress_kwargs (dict, optional):
+                Additional arguments for the compression step.
+            verbose (bool):
+                If True, prints debug/logging info.
+            new_branch (bool):
+                If True, performs the translation in a new branch context.
+            **kwargs:
+                Additional parameters passed through to the technique function.
+
+        Returns:
+            str: The transformed (and optionally compressed) text.
+        """
+        from lionagi.operations.translate.translate import translate
+
+        return await translate(
+            branch=self,
+            text=text,
+            technique=technique,
+            technique_kwargs=technique_kwargs,
+            compress=compress,
+            chat_model=chat_model,
+            compress_model=compress_model,
+            compression_ratio=compression_ratio,
+            compress_kwargs=compress_kwargs,
+            verbose=verbose,
+            new_branch=new_branch,
+            **kwargs,
+        )
+
+    async def select(
+        self,
+        instruct: Instruct | dict[str, Any],
+        choices: list[str] | type[Enum] | dict[str, Any],
+        max_num_selections: int = 1,
+        branch_kwargs: dict[str, Any] | None = None,
+        verbose: bool = False,
+        **kwargs: Any,
+    ):
+        """
+        Performs a selection operation from given choices using an LLM-driven approach.
+
+        Args:
+            instruct (Instruct|dict[str, Any]):
+                The instruction model or dictionary for the LLM call.
+            choices (list[str]|type[Enum]|dict[str,Any]):
+                The set of options to choose from.
+            max_num_selections (int):
+                Maximum allowed selections (default = 1).
+            branch_kwargs (dict[str, Any]|None):
+                Extra arguments to create or configure a new branch if needed.
+            verbose (bool):
+                If True, prints debug info.
+            **kwargs:
+                Additional arguments for the underlying `operate()` call.
+
+        Returns:
+            Any:
+                A `SelectionModel` or similar that indicates the user's choice(s).
+        """
+        from lionagi.operations.select.select import select
+
+        return await select(
+            branch=self,
+            instruct=instruct,
+            choices=choices,
+            max_num_selections=max_num_selections,
+            branch_kwargs=branch_kwargs,
+            verbose=verbose,
+            **kwargs,
+        )
+
+    async def compress(
+        self,
+        text: str,
+        system_msg: str = None,
+        target_ratio: float = 0.2,
+        n_samples: int = 5,
+        max_tokens_per_sample=80,
+        verbose=True,
+    ) -> str:
+        """
+        Uses the `chat_model`'s built-in compression routine to shorten text.
+
+        Args:
+            text (str):
+                The text to compress.
+            system_msg (str, optional):
+                System-level instructions, appended to the prompt.
+            target_ratio (float):
+                Desired compression ratio (0.0-1.0).
+            n_samples (int):
+                How many compression attempts to combine or evaluate.
+            max_tokens_per_sample (int):
+                Max token count per sample chunk.
+            verbose (bool):
+                If True, logs or prints progress.
+
+        Returns:
+            str: The compressed text.
+        """
+        return await self.chat_model.compress_text(
+            text=text,
+            system_msg=system_msg,
+            target_ratio=target_ratio,
+            n_samples=n_samples,
+            max_tokens_per_sample=max_tokens_per_sample,
+            verbose=verbose,
+        )
+
+    async def interpret(
+        self,
+        text: str,
+        domain: str | None = None,
+        style: str | None = None,
+        **kwargs,
+    ) -> str:
+        """
+        Interprets (rewrites) a user's raw input into a more formal or structured prompt.
+
+        Leverages the existing `communicate()` behind the scenes to transform
+        the user input. Useful for clarifying ambiguous or incomplete queries.
+
+        Args:
+            text (str):
+                The raw user query or statement to interpret.
+            domain (str | None):
+                Optional domain hint (e.g. 'finance', 'marketing', 'devops').
+            style (str | None):
+                Optional style hint (e.g. 'concise', 'detailed').
+            **kwargs:
+                Additional arguments passed to `communicate()`.
+
+        Returns:
+            str: A refined or "translated" user prompt.
+        """
+        from lionagi.operations.interpret.interpret import interpret
+
+        return await interpret(
+            self, text=text, domain=domain, style=style, **kwargs
+        )
+
+    async def instruct(
+        self,
+        instruct: Instruct,
+        /,
+        **kwargs,
+    ):
+        """
+        A convenience method that chooses between `operate()` and `communicate()`
+        based on the contents of an `Instruct` object.
+
+        If the `Instruct` indicates tool usage or advanced response format,
+        `operate()` is used. Otherwise, it defaults to `communicate()`.
+
+        Args:
+            instruct (Instruct):
+                An object containing `instruction`, `guidance`, `context`, etc.
+            **kwargs:
+                Additional args forwarded to `operate()` or `communicate()`.
+
+        Returns:
+            Any:
+                The result of the underlying call (structured object, raw text, etc.).
+        """
+        from lionagi.operations.instruct.instruct import instruct as _ins
+
+        return await _ins(self, instruct, **kwargs)
 
 
 # File: lionagi/session/branch.py
