@@ -793,7 +793,9 @@ class Branch(Element, Communicatable, Relational):
         skip_validation: bool = False,
         tools: ToolRef = None,
         operative: Operative = None,
-        response_format: type[BaseModel] = None,
+        response_format: type[
+            BaseModel
+        ] = None,  # alias of operative.request_type
         return_operative: bool = False,
         actions: bool = False,
         reason: bool = False,
@@ -812,92 +814,96 @@ class Branch(Element, Communicatable, Relational):
         **kwargs,
     ) -> list | BaseModel | None | dict | str:
         """
-        An advanced orchestrated flow that may combine LLM calls, parsing, and tool invocations.
+        Orchestrates an "operate" flow with optional tool invocation and
+        structured response validation.
 
-        **Typical usage**:
-          1. Provide instructions or an `Instruct` object containing your request,
-             context, and whether to reason about tools.
-          2. Optionally specify a desired `response_format` or `request_model`
-             to parse the LLM's reply.
-          3. If `invoke_actions` is True, any requested tool calls in the
-             model response are automatically invoked.
+        **Workflow**:
+        1) Builds or updates an `Operative` object to specify how the LLM should respond.
+        2) Sends an instruction (`instruct`) or direct `instruction` text to `branch.chat()`.
+        3) Optionally validates/parses the result into a model or dictionary.
+        4) If `invoke_actions=True`, any requested tool calls are automatically invoked.
+        5) Returns either the final structure, raw response, or an updated `Operative`.
 
         Args:
+            branch (Branch):
+                The active branch that orchestrates messages, models, and logs.
             instruct (Instruct, optional):
-                A unified instruction container (includes `instruction`, `guidance`, `context`, etc.).
-            instruction (Instruction | dict, optional):
-                A direct `Instruction` object or JSON-like dict for the LLM.
+                Contains the instruction, guidance, context, etc. If not provided,
+                uses `instruction`, `guidance`, `context` directly.
+            instruction (Instruction | JsonValue, optional):
+                The main user instruction or content for the LLM.
             guidance (JsonValue, optional):
-                Additional context or system instructions for the LLM.
+                Additional system or user instructions.
             context (JsonValue, optional):
-                Extra dynamic data for the LLM.
+                Extra context data.
             sender (SenderRecipient, optional):
-                The sender for newly added messages (defaults to `Branch.user`).
+                The sender ID for newly added messages.
             recipient (SenderRecipient, optional):
-                The recipient for newly added messages (defaults to `self.id`).
+                The recipient ID for newly added messages.
             progression (Progression, optional):
-                Custom message progression to use.
-            imodel (iModel, optional):
-                Deprecated, alias for `chat_model`.
+                Custom ordering of conversation messages.
+            imodel (iModel, deprecated):
+                Alias of `chat_model`.
             chat_model (iModel, optional):
-                Overrides the branch's default chat model.
+                The LLM used for the main chat operation. Defaults to `branch.chat_model`.
             invoke_actions (bool, optional):
-                Whether to automatically execute any requested tools.
+                If `True`, executes any requested tools found in the LLM's response.
             tool_schemas (list[dict], optional):
-                Additional or overridden schemas for declared tools.
+                Additional schema definitions for tool-based function-calling.
             images (list, optional):
-                List of images for context.
+                Optional images appended to the LLM context.
             image_detail (Literal["low","high","auto"], optional):
-                Level of detail for image-based context.
+                The level of image detail, if relevant.
             parse_model (iModel, optional):
-                Model to handle parsing if needed.
+                Model used for deeper or specialized parsing, if needed.
             skip_validation (bool, optional):
-                If True, skip structured validation on the final response.
+                If `True`, bypasses final validation and returns raw text or partial structure.
             tools (ToolRef, optional):
-                Tools to make available if `invoke_actions` is True.
+                Tools to be registered or made available if `invoke_actions` is True.
             operative (Operative, optional):
-                Contains instructions on how to handle the LLM output
-                (e.g., expected schema, fuzzy matching policy).
+                If provided, reuses an existing operative's config for parsing/validation.
             response_format (type[BaseModel], optional):
-                A Pydantic model type for the LLM's response schema.
+                Expected Pydantic model for the final response (alias for `operative.request_type`).
             return_operative (bool, optional):
-                If True, returns the `Operative` object instead of the final result.
+                If `True`, returns the entire `Operative` object after processing
+                rather than the structured or raw output.
             actions (bool, optional):
-                If True, instructs the LLM that function-calling is expected.
+                If `True`, signals that function-calling or "action" usage is expected.
             reason (bool, optional):
-                If True, instructs the LLM to show chain-of-thought or justification (where applicable).
-            action_kwargs (dict, optional):
-                Additional arguments for the tool invocation process.
-            field_models (list[FieldModel], optional):
-                Field-level overrides for the expected response schema.
+                If `True`, signals that the LLM should provide chain-of-thought or reasoning (where applicable).
+            action_kwargs (dict | None, optional):
+                Additional parameters for the `branch.act()` call if tools are invoked.
+            field_models (list[FieldModel] | None, optional):
+                Field-level definitions or overrides for the model schema.
             exclude_fields (list|dict|None, optional):
-                Fields to exclude or transform in the final validation.
-            request_params (ModelParams, optional):
-                Additional config for the request model used in function-calling.
-            request_param_kwargs (dict, optional):
-                Extra parameters for constructing `request_params`.
-            response_params (ModelParams, optional):
-                Additional config for the response model returned after function calls.
-            response_param_kwargs (dict, optional):
-                Extra parameters for constructing `response_params`.
+                Which fields to exclude from final validation or model building.
+            request_params (ModelParams | None, optional):
+                Extra config for building the request model in the operative.
+            request_param_kwargs (dict|None, optional):
+                Additional kwargs passed to the `ModelParams` constructor for the request.
+            response_params (ModelParams | None, optional):
+                Config for building the response model after actions.
+            response_param_kwargs (dict|None, optional):
+                Additional kwargs passed to the `ModelParams` constructor for the response.
             handle_validation (Literal["raise","return_value","return_none"], optional):
-                How to handle unsuccessful validation attempts (default: "return_value").
-            operative_model (type[BaseModel], optional):
-                Deprecated, alias for `response_format`.
+                How to handle parsing failures (default: "return_value").
+            operative_model (type[BaseModel], deprecated):
+                Alias for `response_format`.
             request_model (type[BaseModel], optional):
                 Another alias for `response_format`.
             **kwargs:
-                Additional arguments passed to the LLM call.
+                Additional keyword arguments passed to the LLM via `branch.chat()`.
 
         Returns:
             list | BaseModel | None | dict | str:
-                The final structured or raw response, depending on your parameters.
-                If `return_operative=True`, returns the `Operative` instead.
+                - The parsed or raw response from the LLM,
+                - `None` if validation fails and `handle_validation='return_none'`,
+                - or the entire `Operative` object if `return_operative=True`.
 
-        See Also:
-            - `communicate()`
-            - `parse()`
-            - `act()`
+        Raises:
+            ValueError:
+                - If both `operative_model` and `response_format` or `request_model` are given.
+                - If the LLM's response cannot be parsed into the expected format and `handle_validation='raise'`.
         """
         from lionagi.operations.operate.operate import operate
 
@@ -1288,23 +1294,42 @@ class Branch(Element, Communicatable, Relational):
         **kwargs,
     ) -> str:
         """
-        Interprets (rewrites) a user's raw input into a more formal or structured prompt.
+        Interprets (rewrites) a user's raw input into a more formal or structured
+        LLM prompt. This function can be seen as a "prompt translator," which
+        ensures the user's original query is clarified or enhanced for better
+        LLM responses.
 
-        Leverages the existing `communicate()` behind the scenes to transform
-        the user input. Useful for clarifying ambiguous or incomplete queries.
+        The method calls `branch.communicate()` behind the scenes with a system prompt
+        that instructs the LLM to rewrite the input. You can provide additional
+        parameters in `**kwargs` (e.g., `parse_model`, `skip_validation`, etc.)
+        if you want to shape how the rewriting is done.
 
         Args:
+            branch (Branch):
+                The active branch context for messages, logging, etc.
             text (str):
-                The raw user query or statement to interpret.
-            domain (str | None):
-                Optional domain hint (e.g. 'finance', 'marketing', 'devops').
-            style (str | None):
-                Optional style hint (e.g. 'concise', 'detailed').
+                The raw user input or question that needs interpreting.
+            domain (str | None, optional):
+                Optional domain hint (e.g. "finance", "marketing", "devops").
+                The LLM can use this hint to tailor its rewriting approach.
+            style (str | None, optional):
+                Optional style hint (e.g. "concise", "detailed").
             **kwargs:
-                Additional arguments passed to `communicate()`.
+                Additional arguments passed to `branch.communicate()`,
+                such as `parse_model`, `skip_validation`, `temperature`, etc.
 
         Returns:
-            str: A refined or "translated" user prompt.
+            str:
+                A refined or "improved" user prompt string, suitable for feeding
+                back into the LLM as a clearer instruction.
+
+        Example:
+            refined = await interpret(
+                branch=my_branch, text="How do I do marketing analytics?",
+                domain="marketing", style="detailed"
+            )
+            # refined might be "Explain step-by-step how to set up a marketing analytics
+            #  pipeline to track campaign performance..."
         """
         from lionagi.operations.interpret.interpret import interpret
 
@@ -1338,6 +1363,94 @@ class Branch(Element, Communicatable, Relational):
         from lionagi.operations.instruct.instruct import instruct as _ins
 
         return await _ins(self, instruct, **kwargs)
+
+    async def ReAct(
+        self,
+        instruct: Instruct | dict[str, Any],
+        interpret: bool = False,
+        tools: Any = None,
+        tool_schemas: Any = None,
+        response_format: type[BaseModel] = None,
+        extension_allowed: bool = False,
+        max_extensions: int = None,
+        response_kwargs: dict | None = None,
+        return_analysis: bool = False,
+        analysis_model: iModel | None = None,
+        **kwargs,
+    ):
+        """
+        Performs a multi-step "ReAct" flow (inspired by the ReAct paradigm in LLM usage),
+        which may include:
+        1) Optionally interpreting the user's original instructions via `branch.interpret()`.
+        2) Generating chain-of-thought analysis or reasoning using a specialized schema (`ReActAnalysis`).
+        3) Optionally expanding the conversation multiple times if the analysis indicates more steps (extensions).
+        4) Producing a final answer by invoking the branch's `instruct()` method.
+
+        Args:
+            branch (Branch):
+                The active branch context that orchestrates messages, models, and actions.
+            instruct (Instruct | dict[str, Any]):
+                The user's instruction object or a dict with equivalent keys.
+            interpret (bool, optional):
+                If `True`, first interprets (`branch.interpret`) the instructions to refine them
+                before proceeding. Defaults to `False`.
+            tools (Any, optional):
+                Tools to be made available for the ReAct process. If omitted or `None`,
+                and if no `tool_schemas` are provided, it defaults to `True` (all tools).
+            tool_schemas (Any, optional):
+                Additional or custom schemas for tools if function calling is needed.
+            response_format (type[BaseModel], optional):
+                The final schema for the user-facing output after the ReAct expansions.
+                If `None`, the output is raw text or an unstructured response.
+            extension_allowed (bool, optional):
+                Whether to allow multiple expansions if the analysis indicates more steps.
+                Defaults to `False`.
+            max_extensions (int | None, optional):
+                The max number of expansions if `extension_allowed` is `True`.
+                If omitted, no upper limit is enforced (other than logic).
+            response_kwargs (dict | None, optional):
+                Extra kwargs passed into the final `_instruct()` call that produces the
+                final output. Defaults to `None`.
+            return_analysis (bool, optional):
+                If `True`, returns both the final output and the list of analysis objects
+                produced throughout expansions. Defaults to `False`.
+            analysis_model (iModel | None, optional):
+                A custom LLM model for generating the ReAct analysis steps. If `None`,
+                uses the branch's default `chat_model`.
+            **kwargs:
+                Additional keyword arguments passed into the initial `branch.operate()` call.
+
+        Returns:
+            Any | tuple[Any, list]:
+                - If `return_analysis=False`, returns only the final output (which may be
+                a raw string, dict, or structured model depending on `response_format`).
+                - If `return_analysis=True`, returns a tuple of (final_output, list_of_analyses).
+                The list_of_analyses is a sequence of the intermediate or extended
+                ReActAnalysis objects.
+
+        Notes:
+            - If `max_extensions` is greater than 5, a warning is logged, and it is set to 5.
+            - If `interpret=True`, the user instruction is replaced by the interpreted
+            string before proceeding.
+            - The expansions loop continues until either `analysis.extension_needed` is `False`
+            or `extensions` (the remaining allowed expansions) is `0`.
+        """
+        from lionagi.operations.ReAct.ReAct import ReAct
+
+        return await ReAct(
+            self,
+            instruct,
+            interpret=interpret,
+            tools=tools,
+            tool_schemas=tool_schemas,
+            response_format=response_format,
+            extension_allowed=extension_allowed,
+            max_extensions=max_extensions,
+            response_kwargs=response_kwargs,
+            return_analysis=return_analysis,
+            analysis_model=analysis_model,
+            **kwargs,
+        )
 
 
 # File: lionagi/session/branch.py
