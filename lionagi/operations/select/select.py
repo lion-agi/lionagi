@@ -2,56 +2,37 @@
 #
 # SPDX-License-Identifier: Apache-2.0
 
-
 from enum import Enum
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
-from pydantic import BaseModel, Field
+from pydantic import BaseModel
 
-from lionagi import Branch
 from lionagi.operatives.types import Instruct
 
-from .prompt import PROMPT
-from .utils import parse_selection, parse_to_representation
+if TYPE_CHECKING:
+    from lionagi.session.branch import Branch
 
-
-class SelectionModel(BaseModel):
-    """Model representing the selection output."""
-
-    selected: list[Any] = Field(default_factory=list)
+    from .utils import SelectionModel
 
 
 async def select(
+    branch: "Branch",
     instruct: Instruct | dict[str, Any],
     choices: list[str] | type[Enum] | dict[str, Any],
     max_num_selections: int = 1,
-    branch: Branch | None = None,
     branch_kwargs: dict[str, Any] | None = None,
     return_branch: bool = False,
     verbose: bool = False,
     **kwargs: Any,
-) -> SelectionModel | tuple[SelectionModel, Branch]:
-    """Perform a selection operation from given choices.
-
-    Args:
-        instruct: Instruction model or dictionary.
-        choices: Options to select from.
-        max_num_selections: Maximum selections allowed.
-        branch: Existing branch or None to create a new one.
-        branch_kwargs: Additional arguments for branch creation.
-        return_branch: If True, return the branch with the selection.
-        verbose: Whether to enable verbose output.
-        **kwargs: Additional keyword arguments.
-
-    Returns:
-        A SelectionModel instance, optionally with the branch.
-    """
+) -> "SelectionModel" | tuple["SelectionModel", "Branch"]:
     if verbose:
         print(f"Starting selection with up to {max_num_selections} choices.")
 
+    from .utils import SelectionModel, parse_selection, parse_to_representation
+
     branch = branch or Branch(**(branch_kwargs or {}))
     selections, contents = parse_to_representation(choices)
-    prompt = PROMPT.format(
+    prompt = SelectionModel.PROMPT.format(
         max_num_selections=max_num_selections, choices=selections
     )
 

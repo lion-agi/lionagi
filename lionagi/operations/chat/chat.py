@@ -1,3 +1,7 @@
+# Copyright (c) 2023 - 2024, HaiyangLi <quantocean.li at gmail dot com>
+#
+# SPDX-License-Identifier: Apache-2.0
+
 from typing import TYPE_CHECKING, Literal
 
 from pydantic import BaseModel
@@ -33,32 +37,6 @@ async def chat(
     plain_content: str = None,
     **kwargs,
 ) -> tuple[Instruction, AssistantResponse]:
-    """
-    Invokes the chat model with the current conversation history and merges
-    any pending ActionResponse objects into the context if needed.
-
-    Args:
-        branch (Branch): The active branch context.
-        instruction (Any): The main user prompt/instruction.
-        guidance (Any): Additional guidelines or system instructions.
-        context (Any): Extra context to pass along with the prompt.
-        sender (Any): Sender identifier.
-        recipient (Any): Recipient identifier.
-        request_fields (Any): If partial structured response is desired.
-        response_format (type[BaseModel], optional): Expected Pydantic model for the response.
-        progression (Any): Custom ordering for the conversation.
-        imodel (iModel, optional): Overrides the branch's default chat model.
-        tool_schemas (Any, optional): Additional tool schemas for function calling.
-        images (list, optional): A list of images to pass to the model.
-        image_detail (Literal["low","high","auto"], optional): The level of detail for images.
-        plain_content (str, optional): A plain text appended to the instruction.
-        **kwargs: Additional model call parameters.
-
-    Returns:
-        (Instruction, AssistantResponse):
-            - The constructed `Instruction`.
-            - The final `AssistantResponse` from the model.
-    """
     ins: Instruction = branch.msgs.create_instruction(
         instruction=instruction,
         guidance=guidance,

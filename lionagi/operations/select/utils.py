@@ -4,12 +4,23 @@
 
 import inspect
 from enum import Enum
-from typing import Any
+from typing import Any, ClassVar
 
-from pydantic import BaseModel, JsonValue
+from pydantic import BaseModel, Field, JsonValue
 
 from lionagi.libs.validate.string_similarity import string_similarity
 from lionagi.utils import is_same_dtype
+
+
+# TODO: Make select a field to be added into a model, much like reason and action
+class SelectionModel(BaseModel):
+    """Model representing the selection output."""
+
+    PROMPT: ClassVar[str] = (
+        "Please select up to {max_num_selections} items from the following list {choices}. Provide the selection(s) into appropriate field in format required, and no comments from you"
+    )
+
+    selected: list[Any] = Field(default_factory=list)
 
 
 def parse_to_representation(

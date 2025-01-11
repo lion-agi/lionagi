@@ -1,3 +1,7 @@
+# Copyright (c) 2023 - 2024, HaiyangLi <quantocean.li at gmail dot com>
+#
+# SPDX-License-Identifier: Apache-2.0
+
 import logging
 from typing import TYPE_CHECKING, Literal
 
@@ -51,98 +55,6 @@ async def operate(
     request_model: type[BaseModel] = None,
     **kwargs,
 ) -> list | BaseModel | None | dict | str:
-    """
-    Orchestrates an "operate" flow with optional tool invocation and
-    structured response validation.
-
-    **Workflow**:
-      1) Builds or updates an `Operative` object to specify how the LLM should respond.
-      2) Sends an instruction (`instruct`) or direct `instruction` text to `branch.chat()`.
-      3) Optionally validates/parses the result into a model or dictionary.
-      4) If `invoke_actions=True`, any requested tool calls are automatically invoked.
-      5) Returns either the final structure, raw response, or an updated `Operative`.
-
-    Args:
-        branch (Branch):
-            The active branch that orchestrates messages, models, and logs.
-        instruct (Instruct, optional):
-            Contains the instruction, guidance, context, etc. If not provided,
-            uses `instruction`, `guidance`, `context` directly.
-        instruction (Instruction | JsonValue, optional):
-            The main user instruction or content for the LLM.
-        guidance (JsonValue, optional):
-            Additional system or user instructions.
-        context (JsonValue, optional):
-            Extra context data.
-        sender (SenderRecipient, optional):
-            The sender ID for newly added messages.
-        recipient (SenderRecipient, optional):
-            The recipient ID for newly added messages.
-        progression (Progression, optional):
-            Custom ordering of conversation messages.
-        imodel (iModel, deprecated):
-            Alias of `chat_model`.
-        chat_model (iModel, optional):
-            The LLM used for the main chat operation. Defaults to `branch.chat_model`.
-        invoke_actions (bool, optional):
-            If `True`, executes any requested tools found in the LLM's response.
-        tool_schemas (list[dict], optional):
-            Additional schema definitions for tool-based function-calling.
-        images (list, optional):
-            Optional images appended to the LLM context.
-        image_detail (Literal["low","high","auto"], optional):
-            The level of image detail, if relevant.
-        parse_model (iModel, optional):
-            Model used for deeper or specialized parsing, if needed.
-        skip_validation (bool, optional):
-            If `True`, bypasses final validation and returns raw text or partial structure.
-        tools (ToolRef, optional):
-            Tools to be registered or made available if `invoke_actions` is True.
-        operative (Operative, optional):
-            If provided, reuses an existing operative's config for parsing/validation.
-        response_format (type[BaseModel], optional):
-            Expected Pydantic model for the final response (alias for `operative.request_type`).
-        return_operative (bool, optional):
-            If `True`, returns the entire `Operative` object after processing
-            rather than the structured or raw output.
-        actions (bool, optional):
-            If `True`, signals that function-calling or "action" usage is expected.
-        reason (bool, optional):
-            If `True`, signals that the LLM should provide chain-of-thought or reasoning (where applicable).
-        action_kwargs (dict | None, optional):
-            Additional parameters for the `branch.act()` call if tools are invoked.
-        field_models (list[FieldModel] | None, optional):
-            Field-level definitions or overrides for the model schema.
-        exclude_fields (list|dict|None, optional):
-            Which fields to exclude from final validation or model building.
-        request_params (ModelParams | None, optional):
-            Extra config for building the request model in the operative.
-        request_param_kwargs (dict|None, optional):
-            Additional kwargs passed to the `ModelParams` constructor for the request.
-        response_params (ModelParams | None, optional):
-            Config for building the response model after actions.
-        response_param_kwargs (dict|None, optional):
-            Additional kwargs passed to the `ModelParams` constructor for the response.
-        handle_validation (Literal["raise","return_value","return_none"], optional):
-            How to handle parsing failures (default: "return_value").
-        operative_model (type[BaseModel], deprecated):
-            Alias for `response_format`.
-        request_model (type[BaseModel], optional):
-            Another alias for `response_format`.
-        **kwargs:
-            Additional keyword arguments passed to the LLM via `branch.chat()`.
-
-    Returns:
-        list | BaseModel | None | dict | str:
-            - The parsed or raw response from the LLM,
-            - `None` if validation fails and `handle_validation='return_none'`,
-            - or the entire `Operative` object if `return_operative=True`.
-
-    Raises:
-        ValueError:
-            - If both `operative_model` and `response_format` or `request_model` are given.
-            - If the LLM's response cannot be parsed into the expected format and `handle_validation='raise'`.
-    """
     if operative_model:
         logging.warning(
             "`operative_model` is deprecated. Use `response_format` instead."

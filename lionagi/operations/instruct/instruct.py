@@ -1,3 +1,7 @@
+# Copyright (c) 2023 - 2024, HaiyangLi <quantocean.li at gmail dot com>
+#
+# SPDX-License-Identifier: Apache-2.0
+
 from typing import TYPE_CHECKING, Any
 
 from lionagi.operatives.types import Instruct
@@ -12,19 +16,6 @@ async def instruct(
     /,
     **kwargs,
 ) -> Any:
-    """
-    Determines whether to run `branch.operate()` or `branch.communicate()`
-    based on the content of an `Instruct` object (e.g., if actions or
-    structured response is requested).
-
-    Args:
-        branch (Branch): The branch context.
-        instruct (Instruct): Contains instruction, guidance, context, etc.
-        **kwargs: Additional arguments for `operate()` or `communicate()`.
-
-    Returns:
-        Any: The result from the chosen method.
-    """
     config = {
         **(instruct.to_dict() if isinstance(instruct, Instruct) else instruct),
         **kwargs,

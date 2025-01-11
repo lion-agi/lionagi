@@ -1,3 +1,7 @@
+# Copyright (c) 2023 - 2024, HaiyangLi <quantocean.li at gmail dot com>
+#
+# SPDX-License-Identifier: Apache-2.0
+
 import logging
 from typing import TYPE_CHECKING
 
@@ -14,21 +18,6 @@ async def _act(
     action_request: BaseModel | dict,
     suppress_errors: bool = False,
 ) -> ActionResponse:
-    """
-    Internal function to invoke a tool (action).
-
-    Args:
-        branch (Branch):
-            The branch context that holds the tool registry and logs.
-        action_request (BaseModel|dict):
-            Must include `function` and `arguments`.
-        suppress_errors (bool):
-            If True, errors are logged instead of raised.
-
-    Returns:
-        ActionResponse:
-            Contains the output of the tool call, or `None` if suppressed/error.
-    """
     try:
         func_name = None
         args = None
