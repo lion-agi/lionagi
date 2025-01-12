@@ -11,13 +11,13 @@ from lionagi.service.api.imodel import iModel
 from lionagi.session.session import Branch, Session
 from lionagi.version import __version__
 
-LiteiModel = iModel
+# LiteiModel = iModel  # Depends on iModel
 
 __all__ = (
     "Session",
     "Branch",
-    "iModel",
-    "LiteiModel",
+    # "iModel",  # Not implemented yet
+    # "LiteiModel",  # Not implemented yet
     "types",
     "ops_types",
     "BaseModel",

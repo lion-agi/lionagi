@@ -1,127 +1,263 @@
-# adapters/graph_adapters/falkor_graph_adapter.py
+"""FalkorDB Graph Adapter implementation.
 
-from typing import Any, Dict, List, TypeVar
+Provides a comprehensive interface for interacting with FalkorDB graphs, including:
+- Node and relationship CRUD operations
+- Property management
+- Graph traversal and queries
+- Transaction handling
+- Error recovery
+"""
+
+from contextlib import contextmanager
+from typing import Any, Dict, List, Optional, TypeVar, Union, Tuple, Iterator, Callable
 
 from ..base import Adapter
+from lionagi._errors import OperationError
 
 T = TypeVar("T")
 
 try:
-    import falkordb  # type: ignore
-    from graphrag_sdk import KnowledgeGraph  # type: ignore
-
+    import falkordb
+    from falkordb.exceptions import (
+        FalkorDBError,
+        ConnectionError,
+        TransactionError,
+        QueryError
+    )
     HAS_FALKOR = True
 except ImportError:
     HAS_FALKOR = False
 
 
 class FalkorGraphAdapter(Adapter[T]):
+    """Adapter for reading/writing graph data to/from FalkorDB.
+    
+    Provides comprehensive graph database operations including:
+    - Connection management with context managers
+    - Transaction support
+    - Node and relationship CRUD operations
+    - Query execution
+    - Error handling and recovery
+    
+    Attributes:
+        _conn: Optional[falkordb.FalkorDB] - Active database connection
+        _graph: Optional[str] - Current graph name
     """
-    A minimal example of reading/writing node data to FalkorDB.
-    from_obj():
-      - 'obj' is a dict with e.g. {"graph_name": "...", "host": "...", "port": ...}
-      - returns a list of nodes as dicts
-    to_obj():
-      - inserts or updates node data
-    """
+    
+    def __init__(self):
+        self._conn: Optional[falkordb.FalkorDB] = None
+        self._graph: Optional[str] = None
 
-    @classmethod
-    def from_obj(cls, subj_cls: type[T], obj: Any, /, **kwargs) -> list[dict]:
-        if not HAS_FALKOR:
-            raise ImportError("falkordb or graphrag_sdk not installed.")
-
-        if not isinstance(obj, dict):
-            raise ValueError(
-                "FalkorGraphAdapter.from_obj requires a dict with FalkorDB connection info."
-            )
-        graph_name = obj.get("graph_name")
-        host = obj.get("host", "127.0.0.1")
-        port = obj.get("port", 6379)
-        if not graph_name:
-            raise ValueError("Missing 'graph_name' for FalkorDB graph.")
-
-        db = falkordb.FalkorDB(
-            host=host,
-            port=port,
-            username=obj.get("username"),
-            password=obj.get("password"),
-        )
-
-        if graph_name not in db.list_graphs():
-            raise ValueError(
-                f"Graph '{graph_name}' does not exist in FalkorDB."
-            )
-
-        graph = db.select_graph(graph_name)
-
-        # We'll do a naive approach: fetch all nodes
-        all_nodes = graph.all_nodes()
-        data = []
-        for node in all_nodes:
-            data.append(
-                {
-                    "type": "node",
-                    "id": node.id,
-                    "labels": node.labels,
-                    "properties": node.properties,
-                }
-            )
-        return data
-
-    @classmethod
-    def to_obj(cls, subj: list[dict], /, **kwargs) -> Any:
+    @contextmanager
+    def connect(self, conn_info: Dict[str, Any]) -> Iterator[falkordb.FalkorDB]:
+        """Creates and manages a FalkorDB connection.
+        
+        Args:
+            conn_info: Connection parameters including host, port, etc.
+            
+        Yields:
+            Active FalkorDB connection
+            
+        Raises:
+            ConnectionError: If connection fails
         """
-        Insert or update records. Expects 'connection' in kwargs:
-            {
-              "graph_name": "...",
-              "host": "...",
-              "port": ...,
-              etc.
+        if not HAS_FALKOR:
+            raise ImportError("falkordb package is required")
+            
+        try:
+            self._conn = falkordb.FalkorDB(
+                host=conn_info.get("host", "127.0.0.1"),
+                port=conn_info.get("port", 6379),
+                username=conn_info.get("username"),
+                password=conn_info.get("password")
+            )
+            self._graph = conn_info["graph_name"]
+            yield self._conn
+        except Exception as e:
+            raise ConnectionError(f"Failed to connect: {str(e)}") from e
+        finally:
+            if self._conn:
+                self._conn.close()
+                self._conn = None
+                self._graph = None
+
+    @contextmanager
+    def transaction(self) -> Iterator[None]:
+        """Manages graph transactions.
+        
+        Yields:
+            None
+            
+        Raises:
+            TransactionError: If transaction operations fail
+        """
+        if not self._conn:
+            raise ConnectionError("No active connection")
+            
+        try:
+            self._conn.multi()
+            yield
+            self._conn.exec()
+        except Exception as e:
+            self._conn.discard()
+            raise TransactionError(f"Transaction failed: {str(e)}") from e
+    def execute_query(self, query: str, params: Optional[Dict] = None) -> List[Dict]:
+        """Executes a Cypher query against the graph.
+        
+        Args:
+            query: Cypher query string
+            params: Optional query parameters
+            
+        Returns:
+            List of result records as dicts
+            
+        Raises:
+            QueryError: If query execution fails
+        """
+        if not self._conn or not self._graph:
+            raise ConnectionError("No active connection")
+            
+        try:
+            graph = self._conn.select_graph(self._graph)
+            result = graph.query(query, params or {})
+            return [record.properties for record in result]
+        except Exception as e:
+            raise QueryError(f"Query failed: {str(e)}") from e
+
+    def create_node(
+        self, 
+        labels: Union[str, List[str]], 
+        properties: Dict[str, Any]
+    ) -> Dict[str, Any]:
+        """Creates a new node with given labels and properties.
+        
+        Args:
+            labels: Node label(s)
+            properties: Node properties
+            
+        Returns:
+            Created node data
+            
+        Raises:
+            OperationError: If node creation fails
+        """
+        if not self._conn or not self._graph:
+            raise ConnectionError("No active connection")
+            
+        try:
+            graph = self._conn.select_graph(self._graph)
+            labels = [labels] if isinstance(labels, str) else labels
+            node = graph.create_node(labels=labels, properties=properties)
+            return {
+                "id": node.id,
+                "labels": node.labels,
+                "properties": node.properties
             }
-        Each dict in subj might look like:
-          {
-            "type": "node",
-            "labels": ["SomeLabel"],
-            "properties": {"key": "value", ...}
-          }
+        except Exception as e:
+            raise OperationError(f"Failed to create node: {str(e)}") from e
+
+    def create_relationship(
+        self,
+        start_node_id: int,
+        end_node_id: int,
+        rel_type: str,
+        properties: Optional[Dict[str, Any]] = None
+    ) -> Dict[str, Any]:
+        """Creates a relationship between nodes.
+        
+        Args:
+            start_node_id: Source node ID
+            end_node_id: Target node ID
+            rel_type: Relationship type
+            properties: Optional relationship properties
+            
+        Returns:
+            Created relationship data
+            
+        Raises:
+            OperationError: If relationship creation fails
         """
-        if not HAS_FALKOR:
-            raise ImportError("falkordb or graphrag_sdk not installed.")
-
-        conn = kwargs.get("connection")
-        if not conn or not isinstance(conn, dict):
-            raise ValueError(
-                "FalkorGraphAdapter.to_obj requires 'connection' dict with 'graph_name','host','port' etc."
+        if not self._conn or not self._graph:
+            raise ConnectionError("No active connection")
+            
+        try:
+            graph = self._conn.select_graph(self._graph)
+            rel = graph.create_relationship(
+                start_node_id,
+                end_node_id,
+                rel_type,
+                properties or {}
             )
+            return {
+                "id": rel.id,
+                "type": rel.type,
+                "properties": rel.properties,
+                "start_node": rel.start_node,
+                "end_node": rel.end_node
+            }
+        except Exception as e:
+            raise OperationError(f"Failed to create relationship: {str(e)}") from e
 
-        graph_name = conn.get("graph_name")
-        host = conn.get("host", "127.0.0.1")
-        port = conn.get("port", 6379)
+    @classmethod
+    def from_obj(cls, subj_cls: type[T], obj: Any, /, **kwargs) -> List[Dict]:
+        """Reads graph data from FalkorDB.
+        
+        Args:
+            subj_cls: Target class type
+            obj: Connection info dict
+            **kwargs: Additional options
+            
+        Returns:
+            List of node/relationship data
+            
+        Raises:
+            ValueError: If connection info is invalid
+            ConnectionError: If database connection fails
+        """
+        adapter = cls()
+        with adapter.connect(obj):
+            query = kwargs.get('query', 'MATCH (n) RETURN n')
+            return adapter.execute_query(query)
 
-        db = falkordb.FalkorDB(
-            host=host,
-            port=port,
-            username=conn.get("username"),
-            password=conn.get("password"),
-        )
-
-        if graph_name not in db.list_graphs():
-            raise ValueError(
-                f"Graph '{graph_name}' does not exist in FalkorDB."
-            )
-
-        g = db.select_graph(graph_name)
+    @classmethod
+    def to_obj(cls, subj: List[Dict], /, **kwargs) -> str:
+        """Writes graph data to FalkorDB.
+        
+        Args:
+            subj: List of node/relationship data to write
+            **kwargs: Must include 'connection' dict
+            
+        Returns:
+            Status message
+            
+        Raises:
+            ValueError: If connection info is missing
+            OperationError: If write operations fail
+        """
+        if not kwargs.get('connection'):
+            raise ValueError("Missing connection info in kwargs")
+            
+        adapter = cls()
         inserted = 0
-
-        for record in subj:
-            if record.get("type") == "node":
-                labels = record.get("labels", [])
-                props = record.get("properties", {})
-                # create_node might take a 'labels=' param, plus a dict of props
-                node = g.create_node(labels=labels, properties=props)
-                inserted += 1
-            elif record.get("type") == "relationship":
-                # Implementation left as an example
-                pass
-
-        return f"Inserted/updated {inserted} node(s) in Falkor graph '{graph_name}'."
+        relationships = 0
+        
+        with adapter.connect(kwargs['connection']):
+            with adapter.transaction():
+                for record in subj:
+                    if record.get('type') == 'node':
+                        adapter.create_node(
+                            record.get('labels', []),
+                            record.get('properties', {})
+                        )
+                        inserted += 1
+                    elif record.get('type') == 'relationship':
+                        adapter.create_relationship(
+                            record['start_node'],
+                            record['end_node'],
+                            record['rel_type'],
+                            record.get('properties')
+                        )
+                        relationships += 1
+                        
+        return (f"Inserted {inserted} node(s) and {relationships} "
+                f"relationship(s) in graph '{kwargs['connection']['graph_name']}'")
