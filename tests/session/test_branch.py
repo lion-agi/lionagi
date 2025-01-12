@@ -80,14 +80,12 @@ def test_branch_init_system_message():
 
 
 @pytest.mark.asyncio
-async def test_invoke_chat_basic(branch_with_mock_imodel: Branch):
+async def test_chat_basic(branch_with_mock_imodel: Branch):
     """
     Checks that the mock iModel returns 'mocked_response' with no errors
     and doesn't automatically store any messages.
     """
-    ins, res = await branch_with_mock_imodel.invoke_chat(
-        instruction="Hello model!"
-    )
+    ins, res = await branch_with_mock_imodel.chat(instruction="Hello model!")
     assert isinstance(ins, Instruction)
     assert isinstance(res, AssistantResponse)
     assert res.response == """{"foo": "mocked_response", "bar": 123}"""
@@ -219,7 +217,7 @@ async def test_invoke_action_no_tools(branch_with_mock_imodel: Branch):
     req = ActionRequest.create(
         function="unregistered_tool", arguments={"x": 1}
     )
-    resp = await branch_with_mock_imodel.invoke_action(req)
+    resp = await branch_with_mock_imodel.act(req)
     assert resp == []
     # logs => check the last entry for 'not registered'
     assert len(branch_with_mock_imodel.logs) == 1
@@ -243,7 +241,7 @@ async def test_invoke_action_ok(branch_with_mock_imodel: Branch):
     req = ActionRequest.create(
         function="echo_tool", arguments={"text": "hello"}
     )
-    resp = await branch_with_mock_imodel.invoke_action(req)
+    resp = await branch_with_mock_imodel.act(req)
     # Should get ActionResponseModel with output = "ECHO: hello"
     assert resp is not None
     assert resp[0].output == "ECHO: hello"
@@ -264,9 +262,7 @@ async def test_invoke_action_suppress_errors(branch_with_mock_imodel: Branch):
     branch_with_mock_imodel.acts.register_tool(fail_tool)
     req = ActionRequest.create(function="fail_tool", arguments={})
 
-    result = await branch_with_mock_imodel.invoke_action(
-        req, suppress_errors=True
-    )
+    result = await branch_with_mock_imodel.act(req, suppress_errors=True)
     assert result == [
         ActionResponseModel(function="fail_tool", arguments={}, output=None)
     ]
@@ -348,7 +344,7 @@ def test_send_and_receive_sync(branch_with_mock_imodel: Branch):
     target_branch.mailbox.append_in(mail_obj)
 
     # Now target receives
-    target_branch.receive(sender=branch_with_mock_imodel, message=True)
+    target_branch.receive(sender_id=branch_with_mock_imodel, message=True)
     assert len(target_branch.messages) == 1
     rm = target_branch.messages[0]
     assert rm.content["text"] == "Message from outside"

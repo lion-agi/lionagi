@@ -15,7 +15,7 @@ from .action_request import ActionRequest
 from .action_response import ActionResponse
 from .assistant_response import AssistantResponse
 from .instruction import Instruction
-from .message import RoledMessage, SenderRecipient
+from .message import MessageFlag, RoledMessage, SenderRecipient
 from .system import System
 
 DEFAULT_SYSTEM = "You are a helpful AI assistant. Let's think step by step."
@@ -427,3 +427,16 @@ class MessageManager(Manager):
 
     def __contains__(self, message: RoledMessage) -> bool:
         return message in self.messages
+
+    def flagged_messages(
+        self,
+        include_clone: bool = False,
+        include_load: bool = False,
+    ) -> None:
+        flags = []
+        if include_clone:
+            flags.append(MessageFlag.MESSAGE_CLONE)
+        if include_load:
+            flags.append(MessageFlag.MESSAGE_LOAD)
+        out = [i for i in self.messages if i._flag in flags]
+        return Pile(collections=out, item_type=RoledMessage, strict_type=False)
