@@ -27,7 +27,7 @@ from typing_extensions import override
 from lionagi._errors import ItemExistsError, ItemNotFoundError
 from lionagi.utils import UNDEFINED, is_same_dtype, to_list
 
-from .._adapter import Adapter, AdapterRegistry, PileAdapterRegistry
+from .._adapter import Adapter, AdapterRegistry  # Use the existing adapter registry
 from .._concepts import Observable
 from .element import ID, Collective, E, Element, IDType, validate_order
 from .progression import Progression
@@ -93,7 +93,7 @@ class Pile(Element, Collective[E], Generic[E]):
         frozen=True,
     )
 
-    _adapter_registry: ClassVar[AdapterRegistry] = PileAdapterRegistry
+    _adapter_registry: ClassVar[AdapterRegistry] = AdapterRegistry
 
     def __pydantic_extra__(self) -> dict[str, FieldInfo]:
         return {

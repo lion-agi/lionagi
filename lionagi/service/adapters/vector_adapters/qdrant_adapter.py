@@ -1,158 +1,395 @@
 # adapters/vector/qdrant_adapter.py
-from typing import Any, Dict, List, TypeVar
+from typing import Any, Dict, List, Optional, Tuple, TypeVar, Union
+from dataclasses import dataclass
+from urllib.parse import urlparse
 
 from ..base import Adapter
+from ....._errors import ItemNotFoundError, OperationError
 
 T = TypeVar("T")
 
 try:
-    import qdrant_client  # type: ignore
-    from qdrant_client import QdrantClient  # type: ignore
-    from qdrant_client.http import models as qdrant_models  # type: ignore
-
+    import grpc
+    import numpy as np
+    from qdrant_client import QdrantClient, grpc as qdrant_grpc
+    from qdrant_client.conversions import common_types as types
+    from qdrant_client.http import models as rest_models
+    from qdrant_client.http.exceptions import UnexpectedResponse
     HAS_QDRANT = True
 except ImportError:
     HAS_QDRANT = False
 
+T = TypeVar("T")
+
+@dataclass
+class QdrantConfig:
+    """Configuration for Qdrant connection and operations."""
+    
+    host: str = "localhost"
+    port: int = 6333
+    grpc_port: int = 6334
+    api_key: Optional[str] = None
+    prefer_grpc: bool = True
+    timeout: float = 5.0
+    collection_name: str = "default"
+    vectors_config: Optional[Dict[str, Any]] = None
+    
+    @classmethod
+    def from_url(cls, url: str) -> "QdrantConfig":
+        """Create config from URL string."""
+        parsed = urlparse(url)
+        return cls(
+            host=parsed.hostname or "localhost",
+            port=parsed.port or 6333,
+            api_key=parsed.password,
+        )
 
 class QdrantAdapter(Adapter[T]):
     """
-    A minimal adapter to read/write data to a Qdrant vector database.
-
-    Expects 'obj' or 'connection' in kwargs to be a dict with:
-        {
-          "host": "...",
-          "port": 6333,
-          "api_key": "...",
-          "collection_name": "...",
-          "vectors_config": { ... } # optional Qdrant config
-        }
+    Advanced adapter for Qdrant vector database operations.
+    
+    Supports both REST and gRPC protocols with comprehensive vector operations:
+    - Collection management (create, delete, update)
+    - Point operations (upsert, delete, search, scroll)
+    - Batch operations with configurable size
+    - Advanced search with filtering and scoring
+    
+    Args:
+        config: QdrantConfig object or dict with connection settings
+        batch_size: Size of batches for bulk operations
+        
+    Example:
+        ```python
+        config = QdrantConfig(host="localhost", collection_name="vectors")
+        adapter = QdrantAdapter(config)
+        
+        # Search vectors
+        results = adapter.search(
+            query_vector=[0.1, 0.2, ...],
+            limit=10,
+            filter={"must": [{"key": "category", "match": {"value": "example"}}]}
+        )
+        ```
     """
 
-    @classmethod
-    def from_obj(cls, subj_cls: type[T], obj: Any, /, **kwargs) -> list[dict]:
-        """
-        from_obj is typically used to perform a vector search or retrieve from Qdrant.
-
-        'obj' is expected to be a dict containing Qdrant connection info and
-        at least a "collection_name". If we want to do a vector search, we can
-        pass a "search" key with the query vectors or text. This example is minimal.
-        """
+    def __init__(
+        self,
+        config: Union[QdrantConfig, Dict[str, Any]],
+        batch_size: int = 100
+    ):
         if not HAS_QDRANT:
             raise ImportError(
-                "qdrant-client is not installed. Please `pip install qdrant-client`."
+                "Required packages not installed. Please run:\n"
+                "pip install qdrant-client grpcio-tools numpy"
             )
-
-        if not isinstance(obj, dict):
-            raise ValueError(
-                "QdrantAdapter requires 'obj' to be a dict with connection config."
-            )
-
-        collection_name = obj.get("collection_name")
-        if not collection_name:
-            raise ValueError(
-                "No 'collection_name' provided in 'obj' for QdrantAdapter.from_obj()."
-            )
-
-        # Create or reuse a QdrantClient
-        client = QdrantClient(
-            host=obj.get("host", "localhost"),
-            port=obj.get("port", 6333),
-            api_key=obj.get("api_key"),
+            
+        self.config = (
+            config if isinstance(config, QdrantConfig)
+            else QdrantConfig(**config)
         )
+        self.batch_size = batch_size
+        self._client = None
 
-        # Let's assume user provided a 'search' dict, or we do a 'scroll' retrieval
-        search_conf = obj.get("search", {})
-        if "vector" in search_conf:
-            # We do a search with a single vector
-            query_vector = search_conf["vector"]
-            top_k = search_conf.get("limit", 5)
-            results = client.search(
-                collection_name=collection_name,
-                query_vector=query_vector,
-                limit=top_k,
-                with_payload=True,
-                with_vectors=search_conf.get("with_vectors", False),
+    @property
+    def client(self) -> QdrantClient:
+        """Lazy initialization of QdrantClient."""
+        if self._client is None:
+            self._client = QdrantClient(
+                host=self.config.host,
+                port=self.config.port,
+                grpc_port=self.config.grpc_port,
+                api_key=self.config.api_key,
+                prefer_grpc=self.config.prefer_grpc,
+                timeout=self.config.timeout
             )
-            # Convert results to list[dict]
-            # Each 'result' is a ScoredPoint
-            # We'll store them as { "id": ..., "score": ..., "payload": ..., "vector": ... }
-            data = []
-            for r in results:
-                row = {
+        return self._client
+
+    def create_collection(
+        self,
+        vectors_config: Optional[Dict[str, Any]] = None,
+        **kwargs
+    ) -> None:
+        """
+        Create a new collection with specified configuration.
+        
+        Args:
+            vectors_config: Vector parameters (dim, distance, etc)
+            **kwargs: Additional collection parameters
+        """
+        try:
+            config = vectors_config or self.config.vectors_config
+            if not config:
+                raise ValueError("vectors_config is required")
+                
+            self.client.create_collection(
+                collection_name=self.config.collection_name,
+                vectors_config=config,
+                **kwargs
+            )
+        except Exception as e:
+            raise OperationError(f"Failed to create collection: {str(e)}")
+
+    def delete_collection(self) -> None:
+        """Delete the current collection."""
+        try:
+            self.client.delete_collection(self.config.collection_name)
+        except Exception as e:
+            raise OperationError(f"Failed to delete collection: {str(e)}")
+
+    @classmethod
+    def from_obj(
+        cls,
+        subj_cls: type[T],
+        obj: Any,
+        /,
+        **kwargs
+    ) -> List[Dict[str, Any]]:
+        """
+        Retrieve or search vectors from Qdrant.
+        
+        Args:
+            obj: Dict with search parameters or collection info
+            **kwargs: Additional parameters
+            
+        Returns:
+            List of retrieved points as dictionaries
+        """
+        if not isinstance(obj, dict):
+            raise ValueError("obj must be a dict with Qdrant parameters")
+
+        adapter = cls(obj)
+        
+        search_params = obj.get("search", {})
+        if "vector" in search_params:
+            return adapter.search(
+                query_vector=search_params["vector"],
+                limit=search_params.get("limit", 10),
+                with_payload=True,
+                with_vectors=search_params.get("with_vectors", False),
+                filter=search_params.get("filter"),
+                score_threshold=search_params.get("score_threshold"),
+                **kwargs
+            )
+        else:
+            return adapter.scroll(
+                limit=obj.get("limit", 100),
+                with_payload=True,
+                with_vectors=True,
+                filter=obj.get("filter"),
+                **kwargs
+            )
+
+    @classmethod
+    def to_obj(
+        cls,
+        subj: List[Dict[str, Any]],
+        /,
+        **kwargs
+    ) -> str:
+        """
+        Upload vectors to Qdrant.
+        
+        Args:
+            subj: List of points to upload
+            **kwargs: Additional parameters including connection info
+            
+        Returns:
+            Status message
+        """
+        conn = kwargs.get("connection", {})
+        if not conn:
+            raise ValueError("connection info required in kwargs")
+            
+        adapter = cls(conn)
+        result = adapter.upsert(points=subj)
+        
+        return f"Upserted {len(subj)} points, status: {result.status}"
+
+    def upsert(
+        self,
+        points: List[Dict[str, Any]],
+        batch_size: Optional[int] = None,
+    ) -> rest_models.UpdateResult:
+        """
+        Upsert points in batches.
+        
+        Args:
+            points: List of points to upsert
+            batch_size: Optional custom batch size
+            
+        Returns:
+            UpdateResult with operation status
+        """
+        try:
+            batch_size = batch_size or self.batch_size
+            
+            # Validate points
+            for point in points:
+                if "id" not in point or "vector" not in point:
+                    raise ValueError("Each point must have 'id' and 'vector'")
+            
+            # Convert to PointStruct objects
+            point_structs = [
+                rest_models.PointStruct(
+                    id=p["id"],
+                    vector=p["vector"],
+                    payload=p.get("payload", {})
+                )
+                for p in points
+            ]
+            
+            # Upsert in batches
+            results = []
+            for i in range(0, len(point_structs), batch_size):
+                batch = point_structs[i:i + batch_size]
+                result = self.client.upsert(
+                    collection_name=self.config.collection_name,
+                    points=batch
+                )
+                results.append(result)
+                
+            return results[-1]  # Return last batch result
+            
+        except Exception as e:
+            raise OperationError(f"Upsert failed: {str(e)}")
+
+    def search(
+        self,
+        query_vector: List[float],
+        limit: int = 10,
+        offset: int = 0,
+        filter: Optional[Dict[str, Any]] = None,
+        with_payload: bool = True,
+        with_vectors: bool = False,
+        score_threshold: Optional[float] = None,
+        **kwargs
+    ) -> List[Dict[str, Any]]:
+        """
+        Search for similar vectors.
+        
+        Args:
+            query_vector: Vector to search for
+            limit: Max number of results
+            offset: Number of results to skip
+            filter: Filter conditions
+            with_payload: Include payloads
+            with_vectors: Include vectors
+            score_threshold: Minimum similarity threshold
+            **kwargs: Additional search parameters
+            
+        Returns:
+            List of search results
+        """
+        try:
+            results = self.client.search(
+                collection_name=self.config.collection_name,
+                query_vector=query_vector,
+                limit=limit,
+                offset=offset,
+                query_filter=filter,
+                with_payload=with_payload,
+                with_vectors=with_vectors,
+                score_threshold=score_threshold,
+                **kwargs
+            )
+            
+            return [
+                {
                     "id": r.id,
                     "score": r.score,
                     "payload": r.payload,
+                    **({"vector": r.vector} if r.vector is not None else {})
                 }
-                if r.vector:
-                    row["vector"] = r.vector
-                data.append(row)
-            return data
-        else:
-            # Return entire collection or do a 'scroll'
-            points, _next_page = client.scroll(
-                collection_name=collection_name, limit=100
-            )  # example
-            data = []
-            for p in points:
-                row = {
-                    "id": p.id,
-                    "payload": p.payload,
-                }
-                if p.vector:
-                    row["vector"] = p.vector
-                data.append(row)
-            return data
+                for r in results
+            ]
+            
+        except UnexpectedResponse as e:
+            if "not found" in str(e).lower():
+                raise ItemNotFoundError("Collection not found")
+            raise OperationError(f"Search failed: {str(e)}")
+        except Exception as e:
+            raise OperationError(f"Search failed: {str(e)}")
 
-    @classmethod
-    def to_obj(cls, subj: list[dict], /, **kwargs) -> Any:
+    def scroll(
+        self,
+        limit: int = 100,
+        offset: Optional[Union[str, int]] = None,
+        filter: Optional[Dict[str, Any]] = None,
+        with_payload: bool = True,
+        with_vectors: bool = False,
+        **kwargs
+    ) -> Tuple[List[Dict[str, Any]], Optional[str]]:
         """
-        Writes data to Qdrant. Expects 'connection' in kwargs as a dict, containing
-        Qdrant client info and 'collection_name'.
-
-        The subj is a list of dict: each must have at least "id" and "vector" fields.
-        e.g. [
-          {"id": 123, "vector": [...], "payload": {"text": "hello"}},
-          ...
-        ]
+        Scroll through collection points.
+        
+        Args:
+            limit: Points per page
+            offset: Offset ID or number
+            filter: Filter conditions
+            with_payload: Include payloads
+            with_vectors: Include vectors
+            **kwargs: Additional parameters
+            
+        Returns:
+            Tuple of (points, next_page_offset)
         """
-        if not HAS_QDRANT:
-            raise ImportError(
-                "qdrant-client is not installed. Please `pip install qdrant-client`."
+        try:
+            points, next_offset = self.client.scroll(
+                collection_name=self.config.collection_name,
+                limit=limit,
+                offset=offset,
+                filter=filter,
+                with_payload=with_payload,
+                with_vectors=with_vectors,
+                **kwargs
             )
-
-        conn = kwargs.get("connection")
-        if not conn or not isinstance(conn, dict):
-            raise ValueError(
-                "QdrantAdapter.to_obj requires 'connection' dict with Qdrant info."
+            
+            return (
+                [
+                    {
+                        "id": p.id,
+                        "payload": p.payload,
+                        **({"vector": p.vector} if p.vector is not None else {})
+                    }
+                    for p in points
+                ],
+                next_offset
             )
+            
+        except Exception as e:
+            raise OperationError(f"Scroll failed: {str(e)}")
 
-        collection_name = conn.get("collection_name")
-        if not collection_name:
-            raise ValueError(
-                "No 'collection_name' found in 'connection' for QdrantAdapter.to_obj."
-            )
-
-        client = QdrantClient(
-            host=conn.get("host", "localhost"),
-            port=conn.get("port", 6333),
-            api_key=conn.get("api_key"),
-        )
-
-        # Convert our list[dict] into Qdrant PointStruct
-        points = []
-        for record in subj:
-            if "id" not in record or "vector" not in record:
-                raise ValueError(
-                    "Each record must have 'id' and 'vector' keys to upsert in Qdrant."
+    def delete(
+        self,
+        points: Union[List[str], List[int], Dict[str, Any]],
+        **kwargs
+    ) -> rest_models.UpdateResult:
+        """
+        Delete points by IDs or filter.
+        
+        Args:
+            points: List of point IDs or filter dict
+            **kwargs: Additional parameters
+            
+        Returns:
+            UpdateResult with operation status
+        """
+        try:
+            if isinstance(points, (list, tuple)):
+                return self.client.delete(
+                    collection_name=self.config.collection_name,
+                    points_selector=rest_models.PointIdsList(
+                        points=points
+                    ),
+                    **kwargs
                 )
-            p = qdrant_models.PointStruct(
-                id=record["id"],
-                vector=record["vector"],
-                payload=record.get("payload", {}),
-            )
-            points.append(p)
-
-        # Upsert into Qdrant
-        result = client.upsert(collection_name=collection_name, points=points)
-        return f"Upserted {len(points)} points into {collection_name}, {result.status}"
+            else:
+                return self.client.delete(
+                    collection_name=self.config.collection_name,
+                    points_selector=rest_models.FilterSelector(
+                        filter=points
+                    ),
+                    **kwargs
+                )
+        except Exception as e:
+            raise OperationError(f"Delete failed: {str(e)}")

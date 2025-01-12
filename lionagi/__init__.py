@@ -4,17 +4,17 @@
 
 from lionagi.operatives import types as ops_types
 from lionagi.protocols import types as types
-from lionagi.service.imodel import iModel
+# from lionagi.service.imodel import iModel  # Module not implemented yet
 from lionagi.session.session import Branch, Session
 from lionagi.version import __version__
 
-LiteiModel = iModel
+# LiteiModel = iModel  # Depends on iModel
 
 __all__ = (
     "Session",
     "Branch",
-    "iModel",
-    "LiteiModel",
+    # "iModel",  # Not implemented yet 
+    # "LiteiModel",  # Not implemented yet
     "types",
     "ops_types",
     "__version__",

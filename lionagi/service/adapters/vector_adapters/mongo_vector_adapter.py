@@ -1,124 +1,291 @@
 # adapters/vector/mongo_vector_adapter.py
-from typing import Any, Dict, List, TypeVar
+"""MongoDB Vector Adapter implementation.
+
+Provides a comprehensive interface for vector similarity search and storage:
+- Vector similarity search using $vectorSearch
+- Batch operations for vectors and metadata
+- Connection pooling and management
+- Automatic index creation and maintenance
+- Comprehensive error handling
+"""
+
+from typing import Any, Dict, List, Optional, TypeVar, Union, Iterator
+from dataclasses import dataclass
+from contextlib import contextmanager
+import logging
+from datetime import datetime
+
+from pymongo import MongoClient, ASCENDING
+from pymongo.collection import Collection
+from pymongo.database import Database
+from pymongo.errors import (
+    ConnectionFailure, 
+    OperationFailure, 
+    BulkWriteError,
+    InvalidOperation
+)
 
 from ..base import Adapter
+from ....._errors import LionError
 
 T = TypeVar("T")
 
-try:
-    import pymongo  # type: ignore
-    from pymongo import MongoClient  # type: ignore
+# Configure logging
+logger = logging.getLogger(__name__)
 
-    HAS_PYMONGO = True
-except ImportError:
-    HAS_PYMONGO = False
+class MongoVectorError(LionError):
+    """Base exception for MongoDB Vector operations."""
+    pass
 
+class MongoConnectionError(MongoVectorError):
+    """Raised when connection to MongoDB fails."""
+    pass
+
+class MongoQueryError(MongoVectorError):
+    """Raised when query execution fails."""
+    pass
+
+class MongoIndexError(MongoVectorError):
+    """Raised when index operations fail."""
+    pass
+
+class MongoDataError(MongoVectorError):
+    """Raised when data validation fails."""
+    pass
+
+@dataclass
+class MongoConfig:
+    """MongoDB connection and collection configuration."""
+    connection_string: str
+    db_name: str
+    collection_name: str
+    vector_dim: int
+    index_name: str = "vector_index"
+    pool_size: int = 100
+    timeout_ms: int = 5000
+
+class MongoConnectionManager:
+    """Manages MongoDB connections and index creation."""
+    
+    def __init__(self, config: MongoConfig):
+        self.config = config
+        self._client: Optional[MongoClient] = None
+        self._db: Optional[Database] = None
+        self._collection: Optional[Collection] = None
+
+    @contextmanager
+    def connect(self):
+        """Context manager for MongoDB connections."""
+        try:
+            if not self._client:
+                self._client = MongoClient(
+                    self.config.connection_string,
+                    maxPoolSize=self.config.pool_size,
+                    serverSelectionTimeoutMS=self.config.timeout_ms
+                )
+                self._db = self._client[self.config.db_name]
+                self._collection = self._db[self.config.collection_name]
+                self._ensure_indexes()
+            
+            yield self._collection
+        
+        except ConnectionFailure as e:
+            raise MongoConnectionError(f"Failed to connect: {str(e)}")
+        except Exception as e:
+            raise MongoVectorError(f"Unexpected error: {str(e)}")
+        
+    def _ensure_indexes(self):
+        """Create required indexes if they don't exist."""
+        try:
+            # Create vector search index
+            index_model = {
+                "mappings": {
+                    "dynamic": True,
+                    "fields": {
+                        "vector": {
+                            "dimensions": self.config.vector_dim,
+                            "similarity": "cosine",
+                            "type": "knnVector"
+                        }
+                    }
+                }
+            }
+            
+            self._collection.create_search_index(
+                self.config.index_name,
+                index_model,
+                exist_ok=True
+            )
+            
+            # Create standard indexes
+            self._collection.create_index([("metadata.timestamp", ASCENDING)])
+            self._collection.create_index([("metadata.type", ASCENDING)])
+            
+        except OperationFailure as e:
+            raise MongoIndexError(f"Failed to create indexes: {str(e)}")
 
 class MongoVectorAdapter(Adapter[T]):
     """
-    A minimal vector adapter for MongoDB.
-    from_obj can query or retrieve documents by ID,
-    to_obj can insert or upsert documents with embeddings into a 'collection'.
-
-    'obj' or 'connection' dict should contain:
-      {
-        "connection_string": "...",
-        "db_name": "...",
-        "collection_name": "...",
-        -- optional "query" or "filter" or "search" to specify how we retrieve
-      }
+    MongoDB Vector Adapter supporting vector similarity search and storage.
+    
+    Features:
+    - Vector similarity search using $vectorSearch
+    - Metadata filtering
+    - Batch operations
+    - Connection pooling
+    - Automatic index creation
+    - Comprehensive error handling
+    
+    Usage:
+        config = MongoConfig(
+            connection_string="mongodb://...",
+            db_name="vector_db",
+            collection_name="embeddings",
+            vector_dim=1536
+        )
+        
+        adapter = MongoVectorAdapter(config)
+        
+        # Search similar vectors
+        results = adapter.from_obj(
+            Vector,
+            {
+                "vector": [0.1, 0.2, ...],
+                "filter": {"metadata.type": "document"},
+                "limit": 10
+            }
+        )
+        
+        # Store vectors
+        adapter.to_obj(
+            [
+                {
+                    "id": "doc1",
+                    "vector": [0.1, 0.2, ...],
+                    "metadata": {"type": "document"}
+                }
+            ]
+        )
     """
+    
+    def __init__(self, config: MongoConfig):
+        self.conn_manager = MongoConnectionManager(config)
 
     @classmethod
-    def from_obj(cls, subj_cls: type[T], obj: Any, /, **kwargs) -> list[dict]:
+    def from_obj(cls, subj_cls: type[T], obj: Dict[str, Any], /, **kwargs) -> List[Dict]:
         """
-        Retrieve or search vector data from Mongo. If 'obj' has 'filter' or 'query',
-        we do a normal find; if we want advanced Atlas Vector search, we need the
-        appropriate pipeline or call. This example is minimal.
+        Perform vector similarity search with optional metadata filtering.
+        
+        Args:
+            obj: Dict containing:
+                - vector: List[float] - Query vector
+                - filter: Optional[Dict] - Metadata filters
+                - limit: Optional[int] - Max results (default 10)
+                - min_score: Optional[float] - Minimum similarity score
+            
+        Returns:
+            List[Dict] containing matched documents with scores
+            
+        Raises:
+            MongoQueryError: If search operation fails
+            MongoDataError: If input validation fails
         """
-        if not HAS_PYMONGO:
-            raise ImportError(
-                "pymongo not installed. Please `pip install pymongo`."
-            )
-
-        if not isinstance(obj, dict):
-            raise ValueError(
-                "MongoVectorAdapter.from_obj expects a dict with connection details."
-            )
-        conn_str = obj.get("connection_string")
-        db_name = obj.get("db_name")
-        coll_name = obj.get("collection_name")
-        if not (conn_str and db_name and coll_name):
-            raise ValueError(
-                "Missing 'connection_string', 'db_name', or 'collection_name' in 'obj' dict."
-            )
-
-        client = MongoClient(conn_str)
-        db = client[db_name]
-        coll = db[coll_name]
-
-        # We'll do a basic find if there's a "filter" or return all if not
-        search_filter = obj.get("filter") or {}
-        cursor = coll.find(search_filter)
-        results = []
-        for doc in cursor:
-            # convert _id -> id
-            doc["id"] = doc.pop("_id", None)
-            results.append(doc)
-        return results
+        try:
+            if not isinstance(obj, dict):
+                raise MongoDataError("Input must be a dictionary")
+                
+            vector = obj.get("vector")
+            if not vector or not isinstance(vector, list):
+                raise MongoDataError("Valid vector required")
+                
+            filter_dict = obj.get("filter", {})
+            limit = obj.get("limit", 10)
+            min_score = obj.get("min_score", 0.0)
+            
+            pipeline = [
+                {
+                    "$vectorSearch": {
+                        "queryVector": vector,
+                        "path": "vector",
+                        "numCandidates": limit * 10,
+                        "limit": limit,
+                        "minScore": min_score,
+                        "filter": filter_dict
+                    }
+                },
+                {
+                    "$project": {
+                        "id": "$_id",
+                        "vector": 1,
+                        "metadata": 1,
+                        "score": {"$meta": "vectorSearchScore"}
+                    }
+                }
+            ]
+            
+            with cls.conn_manager.connect() as collection:
+                results = list(collection.aggregate(pipeline))
+                return results
+                
+        except OperationFailure as e:
+            raise MongoQueryError(f"Search failed: {str(e)}")
+        except Exception as e:
+            raise MongoVectorError(f"Unexpected error: {str(e)}")
 
     @classmethod
-    def to_obj(cls, subj: list[dict], /, **kwargs) -> Any:
+    def to_obj(cls, subj: List[Dict], /, **kwargs) -> str:
         """
-        Insert or update vector data. Expects 'connection' in kwargs:
-           {
-             "connection_string": "...",
-             "db_name": "...",
-             "collection_name": "...",
-             "upsert": True/False
-           }
-        Each record in subj might have a 'vector' key, 'id', 'content', 'metadata', etc.
-        We'll do a naive upsert with _id= record["id"].
+        Store or update vectors and metadata using bulk operations.
+        
+        Args:
+            subj: List[Dict] containing documents with:
+                - id: str
+                - vector: List[float]
+                - metadata: Optional[Dict]
+            
+        Returns:
+            str: Operation summary
+            
+        Raises:
+            MongoDataError: If document validation fails
+            MongoQueryError: If bulk write fails
         """
-        if not HAS_PYMONGO:
-            raise ImportError(
-                "pymongo not installed. Please `pip install pymongo`."
-            )
-
-        conn = kwargs.get("connection")
-        if not (conn and isinstance(conn, dict)):
-            raise ValueError(
-                "MongoVectorAdapter.to_obj requires 'connection' dict with 'connection_string', etc."
-            )
-        conn_str = conn.get("connection_string")
-        db_name = conn.get("db_name")
-        coll_name = conn.get("collection_name")
-        if not (conn_str and db_name and coll_name):
-            raise ValueError(
-                "Missing 'connection_string', 'db_name', or 'collection_name' in 'connection' dict."
-            )
-
-        client = MongoClient(conn_str)
-        db = client[db_name]
-        coll = db[coll_name]
-        upsert_flag = conn.get("upsert", True)
-
-        # Prepare bulk operations
-        ops = []
-        for record in subj:
-            if "id" not in record:
-                raise ValueError(
-                    "Each record must have an 'id' field to store in Mongo."
+        try:
+            if not isinstance(subj, list):
+                raise MongoDataError("Input must be a list of documents")
+                
+            ops = []
+            for doc in subj:
+                if "id" not in doc or "vector" not in doc:
+                    raise MongoDataError("Documents must have 'id' and 'vector' fields")
+                    
+                doc_id = doc.pop("id")
+                doc["_id"] = doc_id
+                doc["metadata"] = doc.get("metadata", {})
+                doc["metadata"]["timestamp"] = datetime.utcnow()
+                
+                ops.append(
+                    {
+                        "replaceOne": {
+                            "filter": {"_id": doc_id},
+                            "replacement": doc,
+                            "upsert": True
+                        }
+                    }
                 )
-            doc_id = record.pop("id")
-            # set _id = doc_id, if it's not ObjectId
-            record["_id"] = doc_id
-            ops.append(
-                pymongo.UpdateOne(
-                    {"_id": doc_id}, {"$set": record}, upsert=upsert_flag
+            
+            if not ops:
+                return "No documents to write"
+                
+            with cls.conn_manager.connect() as collection:
+                result = collection.bulk_write(ops, ordered=False)
+                return (
+                    f"Processed {len(ops)} documents: "
+                    f"inserted {result.upserted_count}, "
+                    f"modified {result.modified_count}"
                 )
-            )
-        if ops:
-            res = coll.bulk_write(ops)
-            return f"Upserted {res.upserted_count}, modified {res.modified_count} documents."
-        return "No documents to write."
+                
+        except BulkWriteError as e:
+            raise MongoQueryError(f"Bulk write failed: {str(e)}")
+        except Exception as e:
+            raise MongoVectorError(f"Unexpected error: {str(e)}")
