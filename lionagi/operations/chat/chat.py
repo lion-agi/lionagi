@@ -13,7 +13,7 @@ from lionagi.protocols.types import (
     Log,
     RoledMessage,
 )
-from lionagi.service import iModel
+from lionagi.service.api.imodel import iModel
 from lionagi.utils import copy
 
 if TYPE_CHECKING:

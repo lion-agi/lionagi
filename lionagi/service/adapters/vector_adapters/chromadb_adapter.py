@@ -1,9 +1,10 @@
 # adapters/vector/chromadb_adapter.py
-from functools import lru_cache
-from typing import Any, Dict, List, Optional, TypeVar, Union, Sequence
-from concurrent.futures import ThreadPoolExecutor
 import warnings
 from collections import defaultdict
+from collections.abc import Sequence
+from concurrent.futures import ThreadPoolExecutor
+from functools import lru_cache
+from typing import Any, Dict, List, Optional, TypeVar, Union
 
 from ..base import Adapter
 
@@ -13,9 +14,9 @@ try:
     import chromadb  # type: ignore
     import chromadb.utils.embedding_functions as ef  # type: ignore
     from chromadb.api import Collection  # type: ignore
-    from chromadb.config import Settings  # type: ignore
     from chromadb.api.models.Collection import QueryResult  # type: ignore
-    
+    from chromadb.config import Settings  # type: ignore
+
     HAS_CHROMA = True
 except ImportError:
     HAS_CHROMA = False
@@ -68,11 +69,15 @@ class ChromaDBAdapter(Adapter[T]):
         """Lazy initialization of ChromaDB client with connection pooling."""
         if not self._client:
             if not HAS_CHROMA:
-                raise ImportError("ChromaDB not installed. Please run: pip install chromadb")
-            self._client = chromadb.Client(Settings(
-                chroma_db_impl="duckdb+parquet",
-                persist_directory="tmp/chroma_db"
-            ))
+                raise ImportError(
+                    "ChromaDB not installed. Please run: pip install chromadb"
+                )
+            self._client = chromadb.Client(
+                Settings(
+                    chroma_db_impl="duckdb+parquet",
+                    persist_directory="tmp/chroma_db",
+                )
+            )
         return self._client
 
     def _get_collection(self, name: str) -> Collection:
@@ -82,13 +87,15 @@ class ChromaDBAdapter(Adapter[T]):
         return self._collection
 
     @lru_cache(maxsize=DEFAULT_CACHE_SIZE)
-    def _query_batch(self,
-                  query_texts: list[str],
-                  n_results: int = 5,
-                  where: Dict = None,
-                  offset: int = 0,
-                  limit: int = 100,
-                  query_strategy: str = "exhaustive") -> QueryResult:
+    def _query_batch(
+        self,
+        query_texts: list[str],
+        n_results: int = 5,
+        where: dict = None,
+        offset: int = 0,
+        limit: int = 100,
+        query_strategy: str = "exhaustive",
+    ) -> QueryResult:
         """Execute batched queries with caching."""
         collection = self._collection
         return collection.query(
@@ -97,62 +104,63 @@ class ChromaDBAdapter(Adapter[T]):
             where=where,
             offset=offset,
             limit=limit,
-            query_strategy=query_strategy
+            query_strategy=query_strategy,
         )
 
     @lru_cache(maxsize=DEFAULT_CACHE_SIZE)
-    def _get_batch(self,
-                 ids: List[str] = None,
-                 where: Dict = None,
-                 limit: int = 100,
-                 offset: int = 0,
-                 sort: str = None) -> QueryResult:
+    def _get_batch(
+        self,
+        ids: list[str] = None,
+        where: dict = None,
+        limit: int = 100,
+        offset: int = 0,
+        sort: str = None,
+    ) -> QueryResult:
         """Retrieve batched records with caching."""
         collection = self._collection
-        return collection.get(
-            ids=ids,
-            where=where,
-            limit=limit,
-            offset=offset
-        )
+        return collection.get(ids=ids, where=where, limit=limit, offset=offset)
 
-    def _add_batch(self,
-                 ids: List[str],
-                 documents: List[str],
-                 metadatas: List[Dict] = None,
-                 embeddings: List[List[float]] = None) -> bool:
+    def _add_batch(
+        self,
+        ids: list[str],
+        documents: list[str],
+        metadatas: list[dict] = None,
+        embeddings: list[list[float]] = None,
+    ) -> bool:
         """Add multiple records in a batch."""
         try:
             self._collection.add(
                 ids=ids,
                 documents=documents,
                 metadatas=metadatas,
-                embeddings=embeddings
+                embeddings=embeddings,
             )
             return True
         except Exception as e:
             warnings.warn(f"Batch add failed: {str(e)}")
             return False
 
-    def _update_batch(self,
-                    ids: List[str],
-                    documents: List[str] = None,
-                    metadatas: List[Dict] = None,
-                    embeddings: List[List[float]] = None) -> bool:
+    def _update_batch(
+        self,
+        ids: list[str],
+        documents: list[str] = None,
+        metadatas: list[dict] = None,
+        embeddings: list[list[float]] = None,
+    ) -> bool:
         """Update multiple records in a batch."""
         try:
             self._collection.update(
                 ids=ids,
                 documents=documents,
                 metadatas=metadatas,
-                embeddings=embeddings
+                embeddings=embeddings,
             )
             return True
         except Exception as e:
             warnings.warn(f"Batch update failed: {str(e)}")
             return False
 
-    def _delete_batch(self, ids: List[str]) -> bool:
+    def _delete_batch(self, ids: list[str]) -> bool:
         """Delete multiple records in a batch."""
         try:
             self._collection.delete(ids=ids)
@@ -161,73 +169,62 @@ class ChromaDBAdapter(Adapter[T]):
             warnings.warn(f"Batch delete failed: {str(e)}")
             return False
 
-    def count(self, where: Dict = None) -> int:
+    def count(self, where: dict = None) -> int:
         """Get count of records matching filter criteria."""
         result = self._collection.get(where=where)
-        return len(result['ids']) if result else 0
+        return len(result["ids"]) if result else 0
 
-    def get_nearest_neighbors(self,
-                           query_text: str,
-                           k: int = 5,
-                           where: Dict = None) -> List[Dict]:
+    def get_nearest_neighbors(
+        self, query_text: str, k: int = 5, where: dict = None
+    ) -> list[dict]:
         """Find k nearest neighbors for query text."""
         results = self._collection.query(
-            query_texts=[query_text],
-            n_results=k,
-            where=where
+            query_texts=[query_text], n_results=k, where=where
         )
         return [
-            {
-                'id': id,
-                'document': doc,
-                'metadata': meta,
-                'distance': dist
-            }
+            {"id": id, "document": doc, "metadata": meta, "distance": dist}
             for id, doc, meta, dist in zip(
-                results['ids'][0],
-                results['documents'][0],
-                results['metadatas'][0],
-                results.get('distances', [[]])[0]
+                results["ids"][0],
+                results["documents"][0],
+                results["metadatas"][0],
+                results.get("distances", [[]])[0],
             )
         ]
 
-    def search(self,
-              query_texts: Union[str, List[str]],
-              n_results: int = 5,
-              where: Dict = None,
-              **kwargs) -> List[Dict]:
+    def search(
+        self,
+        query_texts: str | list[str],
+        n_results: int = 5,
+        where: dict = None,
+        **kwargs,
+    ) -> list[dict]:
         """Enhanced search with filtering and options."""
         if isinstance(query_texts, str):
             query_texts = [query_texts]
-            
+
         results = self._query_batch(
-            query_texts=query_texts,
-            n_results=n_results,
-            where=where,
-            **kwargs
+            query_texts=query_texts, n_results=n_results, where=where, **kwargs
         )
-        
+
         return [
             {
-                'query': query,
-                'matches': [
+                "query": query,
+                "matches": [
                     {
-                        'id': id,
-                        'document': doc,
-                        'metadata': meta,
-                        'distance': dist
+                        "id": id,
+                        "document": doc,
+                        "metadata": meta,
+                        "distance": dist,
                     }
-                    for id, doc, meta, dist in zip(
-                        ids, docs, metas, distances
-                    )
-                ]
+                    for id, doc, meta, dist in zip(ids, docs, metas, distances)
+                ],
             }
             for query, ids, docs, metas, distances in zip(
                 query_texts,
-                results['ids'],
-                results['documents'],
-                results['metadatas'],
-                results.get('distances', [[]] * len(query_texts))
+                results["ids"],
+                results["documents"],
+                results["metadatas"],
+                results.get("distances", [[]] * len(query_texts)),
             )
         ]
 
@@ -309,27 +306,29 @@ class ChromaDBAdapter(Adapter[T]):
         # This is a placeholder for future optimization capabilities
         pass
 
-    def get_stats(self) -> Dict:
+    def get_stats(self) -> dict:
         """Get collection statistics."""
         if not self._collection:
             return {}
-            
+
         count = self.count()
         stats = {
-            'total_count': count,
-            'collection_name': self._collection.name,
+            "total_count": count,
+            "collection_name": self._collection.name,
         }
-        
+
         # Add additional stats if available
         try:
             peek = self._collection.peek()
-            stats.update({
-                'has_embeddings': bool(peek.get('embeddings')),
-                'has_metadata': bool(peek.get('metadatas')),
-            })
+            stats.update(
+                {
+                    "has_embeddings": bool(peek.get("embeddings")),
+                    "has_metadata": bool(peek.get("metadatas")),
+                }
+            )
         except:
             pass
-            
+
         return stats
 
     @classmethod

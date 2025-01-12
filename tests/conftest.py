@@ -1,9 +1,11 @@
-import pytest
-from typing import Generator
+from collections.abc import Generator
 
-from tests.mocks.vector_db import MockVectorDB
-from tests.mocks.graph_db import MockGraphDB
+import pytest
+
 from tests.fixtures.data import generate_test_documents
+from tests.mocks.graph_db import MockGraphDB
+from tests.mocks.vector_db import MockVectorDB
+
 
 @pytest.fixture
 def mock_vector_db() -> Generator[MockVectorDB, None, None]:
@@ -12,12 +14,14 @@ def mock_vector_db() -> Generator[MockVectorDB, None, None]:
     yield db
     db.clear()  # Cleanup after tests
 
+
 @pytest.fixture
 def mock_graph_db() -> Generator[MockGraphDB, None, None]:
     """Provides a mock graph database for testing."""
     db = MockGraphDB()
     yield db
     db.clear()  # Cleanup after tests
+
 
 @pytest.fixture
 def test_documents():

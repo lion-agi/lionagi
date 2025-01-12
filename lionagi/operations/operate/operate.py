@@ -11,7 +11,7 @@ from lionagi.operatives.models.field_model import FieldModel
 from lionagi.operatives.models.model_params import ModelParams
 from lionagi.operatives.types import Instruct, Operative, Step, ToolRef
 from lionagi.protocols.types import Instruction, Progression, SenderRecipient
-from lionagi.service import iModel
+from lionagi.service.api.imodel import iModel
 
 if TYPE_CHECKING:
     from lionagi.session.branch import Branch

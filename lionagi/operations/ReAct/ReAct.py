@@ -3,12 +3,12 @@
 # SPDX-License-Identifier: Apache-2.0
 
 import logging
-from typing import TYPE_CHECKING, Any, Optional
+from typing import TYPE_CHECKING, Any
 
 from pydantic import BaseModel
 
 from lionagi.operatives.types import Instruct
-from lionagi.service import iModel
+from lionagi.service.api.imodel import iModel
 from lionagi.utils import copy
 
 if TYPE_CHECKING:
