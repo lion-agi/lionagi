@@ -53,6 +53,7 @@ class iModel:
         limit_requests: int = None,
         limit_tokens: int = None,
         invoke_with_endpoint: bool = True,
+        costs: tuple | dict = None,
         **kwargs,
     ) -> None:
         """Initializes the iModel instance.
@@ -86,6 +87,12 @@ class iModel:
             invoke_with_endpoint (bool, optional):
                 If True, the endpoint is actually invoked. If False,
                 calls might be mocked or cached.
+            costs (tuple | dict, optional):
+                Cost values for prompt and completions, if
+                applicable. If a tuple, it should be costs per million tokens,
+                in the form (prompt_cost, completions_cost). if a dict, it should
+                be in the form {"prompt": prompt_cost, "completions": completions_cost, ...}, and additional costs can be added,
+                such as 'cache_hit' or 'cache_miss'.
             **kwargs:
                 Additional keyword arguments, such as `model`, or any other
                 provider-specific fields.
@@ -141,6 +148,14 @@ class iModel:
             limit_requests=limit_requests,
             limit_tokens=limit_tokens,
         )
+        if isinstance(costs, tuple) and len(costs) == 2:
+            costs = {"prompt": costs[0], "completions": costs[1]}
+        self.costs = costs
+
+    @property
+    def model_name(self) -> str:
+        """str: The model name (if provided in the keyword arguments)."""
+        return self.kwargs.get("model", "")
 
     def create_api_calling(self, **kwargs) -> APICalling:
         """Constructs an `APICalling` object from endpoint-specific payload.
@@ -295,3 +310,27 @@ class iModel:
             **data,
             **processor_config,
         )
+
+    async def compress_text(
+        self,
+        text: str,
+        system_msg: str = None,
+        target_ratio: float = 0.2,
+        n_samples: int = 5,
+        max_tokens_per_sample=80,
+        verbose=True,
+    ) -> str:
+        """
+        Convenience function that instantiates LLMCompressor and compresses text.
+        """
+        from lionagi.libs.token_transform.perplexity import LLMCompressor
+
+        compressor = LLMCompressor(
+            chat_model=self,
+            system_msg=system_msg,
+            target_ratio=target_ratio,
+            n_samples=n_samples,
+            max_tokens_per_sample=max_tokens_per_sample,
+            verbose=verbose,
+        )
+        return await compressor.compress(text)
