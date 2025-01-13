@@ -7,19 +7,21 @@ from pydantic import BaseModel, Field
 from lionagi.operations import ops as ops
 from lionagi.operatives import types as ops_types
 from lionagi.protocols import types as types
+from lionagi.service import types as srv_types
 from lionagi.service.api.imodel import iModel
 from lionagi.session.session import Branch, Session
 from lionagi.version import __version__
 
-# LiteiModel = iModel  # Depends on iModel
+LiteiModel = iModel  # Deprecated
 
 __all__ = (
     "Session",
     "Branch",
-    # "iModel",  # Not implemented yet
-    # "LiteiModel",  # Not implemented yet
+    "iModel",
+    "LiteiModel",
     "types",
     "ops_types",
+    "srv_types",
     "BaseModel",
     "Field",
     "__version__",

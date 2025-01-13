@@ -9,12 +9,12 @@ import pandas as pd
 from jinja2 import Template
 from pydantic import BaseModel, Field, JsonValue, PrivateAttr
 
-from lionagi.operatives.models.field_model import FieldModel
-from lionagi.operatives.models.model_params import ModelParams
 from lionagi.operatives.types import (
     ActionManager,
+    FieldModel,
     FuncTool,
     Instruct,
+    ModelParams,
     Operative,
     Tool,
     ToolRef,
@@ -45,7 +45,7 @@ from lionagi.protocols.types import (
     SenderRecipient,
     System,
 )
-from lionagi.service import iModel, iModelManager
+from lionagi.service.types import iModel, iModelManager
 from lionagi.settings import Settings
 from lionagi.utils import UNDEFINED, alcall, copy
 
@@ -1070,7 +1070,7 @@ class Branch(Element, Communicatable, Relational):
         Returns:
             ActionResponse: Result of the tool invocation or `None` if suppressed.
         """
-        from lionagi.operations.act.act import _act
+        from lionagi.operations._act.act import _act
 
         return await _act(self, action_request, suppress_errors)
 
