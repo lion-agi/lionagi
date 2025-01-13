@@ -328,6 +328,7 @@ def create_synthlang_system_prompt(
 ########################################################################
 
 
+# TODO: refactor using SynthLang package
 async def translate_to_synthlang(
     text: str,
     template_name: str = "symbolic_systems",
