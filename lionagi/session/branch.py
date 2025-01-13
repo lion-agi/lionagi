@@ -713,6 +713,7 @@ class Branch(Element, Communicatable, Relational):
         fill_mapping: dict[str, Any] | None = None,
         strict: bool = False,
         suppress_conversion_errors: bool = False,
+        response_format: type[BaseModel] = None,
     ):
         """
         Attempts to parse text into a structured Pydantic model using parse model logic.
@@ -769,6 +770,7 @@ class Branch(Element, Communicatable, Relational):
             fill_mapping=fill_mapping,
             strict=strict,
             suppress_conversion_errors=suppress_conversion_errors,
+            response_format=response_format,
         )
 
     async def operate(
