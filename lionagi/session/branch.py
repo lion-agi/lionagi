@@ -408,7 +408,7 @@ class Branch(Element, Communicatable, Relational):
 
     def receive(
         self,
-        sender_id: IDType,
+        sender: IDType,
         message: bool = False,
         tool: bool = False,
         imodel: bool = False,
@@ -430,15 +430,13 @@ class Branch(Element, Communicatable, Relational):
             ValueError: If no mail exists from the specified sender,
                         or if a package is invalid for the chosen category.
         """
-        sender_id = ID.get_id(sender_id)
-        if sender_id not in self.mailbox.pending_ins.keys():
-            raise ValueError(
-                f"No mail or package found from sender: {sender_id}"
-            )
+        sender = ID.get_id(sender)
+        if sender not in self.mailbox.pending_ins.keys():
+            raise ValueError(f"No mail or package found from sender: {sender}")
 
         skipped_requests = Progression()
-        while self.mailbox.pending_ins[sender_id]:
-            mail_id = self.mailbox.pending_ins[sender_id].popleft()
+        while self.mailbox.pending_ins[sender]:
+            mail_id = self.mailbox.pending_ins[sender].popleft()
             mail: Mail = self.mailbox.pile_[mail_id]
 
             if mail.category == "message" and message:
@@ -475,9 +473,9 @@ class Branch(Element, Communicatable, Relational):
                 skipped_requests.append(mail)
 
         # Requeue any skipped mail
-        self.mailbox.pending_ins[sender_id] = skipped_requests
-        if len(self.mailbox.pending_ins[sender_id]) == 0:
-            self.mailbox.pending_ins.pop(sender_id)
+        self.mailbox.pending_ins[sender] = skipped_requests
+        if len(self.mailbox.pending_ins[sender]) == 0:
+            self.mailbox.pending_ins.pop(sender)
 
     async def asend(
         self,
@@ -1077,8 +1075,8 @@ class Branch(Element, Communicatable, Relational):
     async def act(
         self,
         action_request: list | ActionRequest | BaseModel | dict,
-        /,
-        suppress_errors: bool = False,
+        *,
+        suppress_errors: bool = True,
         sanitize_input: bool = False,
         unique_input: bool = False,
         num_retries: int = 0,
