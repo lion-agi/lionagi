@@ -2,7 +2,9 @@
 #
 # SPDX-License-Identifier: Apache-2.0
 
-from lionagi.service.endpoints.chat_completion import ChatCompletionEndPoint
+from lionagi.service.api.endpoints.chat_completion import (
+    ChatCompletionEndPoint,
+)
 
 CHAT_COMPLETION_CONFIG = {
     "provider": "groq",
