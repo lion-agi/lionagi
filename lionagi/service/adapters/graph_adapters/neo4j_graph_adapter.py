@@ -1,3 +1,7 @@
+# Copyright (c) 2023 - 2024, HaiyangLi <quantocean.li at gmail dot com>
+#
+# SPDX-License-Identifier: Apache-2.0
+
 # adapters/graph_adapters/neo4j_graph_adapter.py
 
 from collections.abc import Callable, Iterator
