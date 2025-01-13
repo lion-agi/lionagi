@@ -172,3 +172,4 @@ notebooks/.lock
 notebooks/meta.json
 logs/
 temp_logs/
+.aider*
