@@ -1,6 +1,6 @@
 import pandas as pd
 
-from ...adapter import Adapter, T
+from ..adapter import Adapter, T
 
 
 class PandasSeriesAdapter(Adapter):

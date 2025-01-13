@@ -28,7 +28,7 @@ from lionagi.protocols.types import (
 )
 
 from .._errors import ItemNotFoundError
-from ..service.api.imodel import iModel
+from ..service.imodel import iModel
 from ..utils import lcall
 from .branch import Branch
 

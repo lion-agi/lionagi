@@ -12,7 +12,7 @@ from lionagi._class_registry import LION_CLASS_REGISTRY
 from .._concepts import Relational
 from ..adapters.adapter import AdapterRegistry
 from ..adapters.json_adapter import JsonAdapter, JsonFileAdapter
-from ..adapters.providers.pandas_.pd_series_adapter import PandasSeriesAdapter
+from ..adapters.pandas_.pd_series_adapter import PandasSeriesAdapter
 from ..generic.element import Element
 
 NODE_DEFAULT_ADAPTERS = (

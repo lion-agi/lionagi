@@ -2,7 +2,7 @@ from datetime import datetime
 
 import pandas as pd
 
-from ...adapter import Adapter, T
+from ..adapter import Adapter, T
 
 
 class PandasDataFrameAdapter(Adapter):

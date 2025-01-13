@@ -8,8 +8,8 @@ from typing import Any
 
 from pydantic import BaseModel, Field
 
-from lionagi import Branch
 from lionagi.operatives.types import Instruct
+from lionagi.session.branch import Branch
 
 from .prompt import PROMPT
 from .utils import parse_selection, parse_to_representation

@@ -5,7 +5,7 @@ import pandas as pd
 
 from lionagi.protocols._concepts import Collective
 
-from ...adapter import Adapter, T
+from ..adapter import Adapter, T
 
 
 class ExcelFileAdapter(Adapter):

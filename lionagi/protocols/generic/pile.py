@@ -30,11 +30,9 @@ from lionagi.utils import UNDEFINED, is_same_dtype, to_list
 from .._concepts import Observable
 from ..adapters.adapter import Adapter, AdapterRegistry
 from ..adapters.json_adapter import JsonAdapter, JsonFileAdapter
-from ..adapters.providers.pandas_.csv_adapter import CSVFileAdapter
-from ..adapters.providers.pandas_.excel_adapter import ExcelFileAdapter
-from ..adapters.providers.pandas_.pd_dataframe_adapter import (
-    PandasDataFrameAdapter,
-)
+from ..adapters.pandas_.csv_adapter import CSVFileAdapter
+from ..adapters.pandas_.excel_adapter import ExcelFileAdapter
+from ..adapters.pandas_.pd_dataframe_adapter import PandasDataFrameAdapter
 from .element import ID, Collective, E, Element, IDType, validate_order
 from .progression import Progression
 
