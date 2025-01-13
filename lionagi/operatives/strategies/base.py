@@ -6,9 +6,9 @@ from typing import ClassVar
 
 from pydantic import BaseModel, model_validator
 
-from lionagi.operatives.instruct.instruct import Instruct, InstructResponse
 from lionagi.session.session import Branch, Session
 
+from ..instruct.instruct import Instruct, InstructResponse
 from .params import StrategyParams
 
 

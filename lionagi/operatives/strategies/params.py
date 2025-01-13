@@ -6,12 +6,10 @@ from typing import Any, Literal
 
 from pydantic import Field, field_validator, model_validator
 
-from lionagi.operatives.instruct.instruct import (
-    LIST_INSTRUCT_FIELD_MODEL,
-    Instruct,
-)
 from lionagi.operatives.types import FieldModel, SchemaModel
 from lionagi.session.session import Branch, Session
+
+from ..instruct.instruct import LIST_INSTRUCT_FIELD_MODEL, Instruct
 
 
 class RCallParams(SchemaModel):

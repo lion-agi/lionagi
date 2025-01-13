@@ -2,8 +2,7 @@
 #
 # SPDX-License-Identifier: Apache-2.0
 
-from lionagi.operatives.instruct.instruct import Instruct, InstructResponse
-
+from ..instruct.instruct import Instruct, InstructResponse
 from .base import StrategyExecutor
 
 
