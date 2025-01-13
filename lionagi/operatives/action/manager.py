@@ -5,8 +5,7 @@
 from typing import Any
 
 from lionagi.protocols._concepts import Manager
-from lionagi.protocols.generic.event import EventStatus, Execution
-from lionagi.protocols.generic.log import Log
+from lionagi.protocols.generic.event import Execution
 from lionagi.protocols.messages.action_request import ActionRequest
 from lionagi.utils import to_list
 
@@ -113,19 +112,28 @@ class ActionManager(Manager):
         ]
 
     def match_tool(
-        self, action_request: ActionRequest | ActionRequestModel
+        self, action_request: ActionRequest | ActionRequestModel | dict
     ) -> FunctionCalling:
-        if not isinstance(action_request, ActionRequest | ActionRequestModel):
+        if not isinstance(
+            action_request, ActionRequest | ActionRequestModel | dict
+        ):
             raise TypeError(f"Unsupported type {type(action_request)}")
 
-        tool = self.registry.get(action_request.function, None)
-        if not isinstance(tool, Tool):
-            raise ValueError(
-                f"Function {action_request.function} is not registered."
-            )
-        return FunctionCalling(
-            func_tool=tool, arguments=action_request.arguments
+        func = (
+            action_request["function"]
+            if isinstance(action_request, dict)
+            else action_request.function
         )
+        args = (
+            action_request["arguments"]
+            if isinstance(action_request, dict)
+            else action_request.arguments
+        )
+        tool = self.registry.get(func, None)
+
+        if not isinstance(tool, Tool):
+            raise ValueError(f"Function {func} is not registered.")
+        return FunctionCalling(func_tool=tool, arguments=args)
 
     async def invoke(
         self, func_call: ActionRequestModel | ActionRequest
@@ -148,16 +156,7 @@ class ActionManager(Manager):
         Raises:
             ValueError: If function not registered or call format invalid.
         """
-        try:
-            function_calling = self.match_tool(func_call)
-        except ValueError as e:
-            return Log(
-                content={
-                    "event_type": "function_call",
-                    "status": EventStatus.FAILED,
-                    "error": str(e),
-                }
-            )
+        function_calling = self.match_tool(func_call)
         await function_calling.invoke()
         return function_calling
 

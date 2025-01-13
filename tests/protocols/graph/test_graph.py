@@ -1,14 +1,7 @@
 import pytest
-from pydantic import ConfigDict, Field
 
 from lionagi._errors import RelationError
 from lionagi.protocols.types import Edge, EdgeCondition, Graph, Node
-
-
-class TestNode(Node):
-    """Test node class for graph testing"""
-
-    pass
 
 
 @pytest.fixture
@@ -23,8 +16,8 @@ def simple_graph():
     graph = Graph()
 
     # Create nodes
-    node1 = TestNode()
-    node2 = TestNode()
+    node1 = Node()
+    node2 = Node()
 
     # Add nodes
     graph.add_node(node1)
@@ -43,7 +36,7 @@ def complex_graph():
     graph = Graph()
 
     # Create nodes
-    nodes = [TestNode() for _ in range(4)]
+    nodes = [Node() for _ in range(4)]
 
     # Add nodes
     for node in nodes:
@@ -70,7 +63,7 @@ def cyclic_graph():
     graph = Graph()
 
     # Create nodes
-    nodes = [TestNode() for _ in range(3)]
+    nodes = [Node() for _ in range(3)]
 
     # Add nodes
     for node in nodes:
@@ -101,7 +94,7 @@ class TestGraphBasics:
 
     def test_add_node(self, empty_graph):
         """Test adding a node"""
-        node = TestNode()
+        node = Node()
         empty_graph.add_node(node)
         assert node.id in empty_graph.internal_nodes
         assert empty_graph.node_edge_mapping[node.id] == {
@@ -116,7 +109,7 @@ class TestGraphBasics:
 
     def test_add_duplicate_node(self, empty_graph):
         """Test adding duplicate node"""
-        node = TestNode()
+        node = Node()
         empty_graph.add_node(node)
         with pytest.raises(RelationError):
             empty_graph.add_node(node)
@@ -135,8 +128,8 @@ class TestGraphBasics:
 
     def test_add_edge_missing_nodes(self, empty_graph):
         """Test adding edge with missing nodes"""
-        node1 = TestNode()
-        node2 = TestNode()
+        node1 = Node()
+        node2 = Node()
         edge = Edge(head=node1, tail=node2)
         with pytest.raises(RelationError):
             empty_graph.add_edge(edge)
@@ -232,9 +225,7 @@ class TestEdgeConditions:
             async def apply(self, *args, **kwargs):
                 return True
 
-        edge = Edge(
-            head=TestNode(), tail=TestNode(), condition=TrueCondition()
-        )
+        edge = Edge(head=Node(), tail=Node(), condition=TrueCondition())
         assert await edge.check_condition()
 
     @pytest.mark.asyncio
@@ -245,15 +236,13 @@ class TestEdgeConditions:
             async def apply(self, *args, **kwargs):
                 return False
 
-        edge = Edge(
-            head=TestNode(), tail=TestNode(), condition=FalseCondition()
-        )
+        edge = Edge(head=Node(), tail=Node(), condition=FalseCondition())
         assert not await edge.check_condition()
 
     @pytest.mark.asyncio
     async def test_edge_no_condition(self):
         """Test edge with no condition"""
-        edge = Edge(head=TestNode(), tail=TestNode())
+        edge = Edge(head=Node(), tail=Node())
         assert await edge.check_condition()
 
 
@@ -265,10 +254,10 @@ class TestGraphContainment:
         graph, node1, node2, _ = simple_graph
         assert node1 in graph
         assert node2 in graph
-        assert TestNode() not in graph
+        assert Node() not in graph
 
     def test_contains_edge(self, simple_graph):
         """Test edge containment check"""
         graph, _, _, edge = simple_graph
         assert edge in graph
-        assert Edge(head=TestNode(), tail=TestNode()) not in graph
+        assert Edge(head=Node(), tail=Node()) not in graph

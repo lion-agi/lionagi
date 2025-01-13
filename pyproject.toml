@@ -1,6 +1,6 @@
 [project]
 name = "lionagi"
-version = "0.6.1"
+version = "0.7.0"
 description = "An AGentic Intelligence Operating System."
 authors = [
     { name = "HaiyangLi", email = "quantocean.li@gmail.com" },
@@ -56,8 +56,13 @@ exclude = [".git", "__pycache__", "build", "dist", ".venv"]
 
 [tool.pytest.ini_options]
 asyncio_mode = "auto"
+asyncio_default_fixture_loop_scope = "function"
 testpaths = ["tests"]
 python_files = ["test_*.py"]
+markers = [
+    "performance: marks tests as performance",
+    "slow: marks tests as slow",
+]
 
 [build-system]
 requires = ["hatchling"]

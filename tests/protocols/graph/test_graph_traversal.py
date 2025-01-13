@@ -1,8 +1,6 @@
 import pytest
-from pydantic import ConfigDict, Field
 
-from lionagi._errors import RelationError
-from lionagi.protocols.types import Edge, Graph, Node, Pile
+from lionagi.protocols.types import Edge, Graph, Pile
 
 from .test_graph_base import create_test_node
 

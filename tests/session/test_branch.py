@@ -85,8 +85,8 @@ async def test_invoke_chat_basic(branch_with_mock_imodel: Branch):
     Checks that the mock iModel returns 'mocked_response' with no errors
     and doesn't automatically store any messages.
     """
-    ins, res = await branch_with_mock_imodel.invoke_chat(
-        instruction="Hello model!"
+    ins, res = await branch_with_mock_imodel.chat(
+        instruction="Hello model!", return_ins_res_message=True
     )
     assert isinstance(ins, Instruction)
     assert isinstance(res, AssistantResponse)
@@ -219,7 +219,7 @@ async def test_invoke_action_no_tools(branch_with_mock_imodel: Branch):
     req = ActionRequest.create(
         function="unregistered_tool", arguments={"x": 1}
     )
-    resp = await branch_with_mock_imodel.invoke_action(req)
+    resp = await branch_with_mock_imodel.act(req)
     assert resp == []
     # logs => check the last entry for 'not registered'
     assert len(branch_with_mock_imodel.logs) == 1
@@ -243,7 +243,7 @@ async def test_invoke_action_ok(branch_with_mock_imodel: Branch):
     req = ActionRequest.create(
         function="echo_tool", arguments={"text": "hello"}
     )
-    resp = await branch_with_mock_imodel.invoke_action(req)
+    resp = await branch_with_mock_imodel.act(req)
     # Should get ActionResponseModel with output = "ECHO: hello"
     assert resp is not None
     assert resp[0].output == "ECHO: hello"
@@ -264,9 +264,7 @@ async def test_invoke_action_suppress_errors(branch_with_mock_imodel: Branch):
     branch_with_mock_imodel.acts.register_tool(fail_tool)
     req = ActionRequest.create(function="fail_tool", arguments={})
 
-    result = await branch_with_mock_imodel.invoke_action(
-        req, suppress_errors=True
-    )
+    result = await branch_with_mock_imodel.act(req, suppress_errors=True)
     assert result == [
         ActionResponseModel(function="fail_tool", arguments={}, output=None)
     ]
@@ -413,7 +411,7 @@ async def test_instruct_calls_communicate_when_no_actions(
     If Instruct has no 'actions', _instruct => communicate => returns 'mocked_response' by default.
     """
     instruct = Instruct(instruction="No actions needed")
-    await branch_with_mock_imodel._instruct(instruct)
+    await branch_with_mock_imodel.instruct(instruct)
     # user + assistant in messages
     assert len(branch_with_mock_imodel.messages) == 2
 
@@ -423,10 +421,10 @@ async def test_instruct_calls_operate_when_actions_true(
     branch_with_mock_imodel: Branch,
 ):
     """
-    If instruct.actions=True, _instruct => operate => returns 'mocked_response' unless skip_validation or parse is customized.
+    If instruct.actions=True, instruct => operate => returns 'mocked_response' unless skip_validation or parse is customized.
     """
     instruct = Instruct(instruction="Need actions", actions=True)
-    result = await branch_with_mock_imodel._instruct(
+    result = await branch_with_mock_imodel.instruct(
         instruct, skip_validation=True
     )
     assert result == """{"foo": "mocked_response", "bar": 123}"""
