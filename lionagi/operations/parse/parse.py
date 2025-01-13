@@ -33,6 +33,7 @@ async def parse(
     fill_mapping: dict[str, Any] | None = None,
     strict: bool = False,
     suppress_conversion_errors: bool = False,
+    response_format=None,
 ):
     """Attempts to parse text into a structured Pydantic model.
 
@@ -75,7 +76,7 @@ async def parse(
     response_model = text
     if operative is not None:
         max_retries = operative.max_retries
-        request_type = operative.request_type
+        response_format = operative.request_type
 
     while (
         _should_try
@@ -87,10 +88,11 @@ async def parse(
             instruction="reformat text into specified model",
             guidane="follow the required response format, using the model schema as a guide",
             context=[{"text_to_format": text}],
-            response_format=request_type,
+            response_format=response_format or request_type,
             sender=branch.user,
             recipient=branch.id,
             imodel=branch.parse_model,
+            return_ins_res_message=True,
         )
         if operative is not None:
             response_model = operative.update_response_model(res.response)

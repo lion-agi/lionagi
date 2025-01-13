@@ -54,7 +54,7 @@ async def select(
     instruct["context"] = context
 
     response_model: SelectionModel = await branch.operate(
-        operative_model=SelectionModel,
+        response_format=SelectionModel,
         **kwargs,
         **instruct,
     )

@@ -138,6 +138,7 @@ async def communicate(
         images=images,
         image_detail=image_detail,
         plain_content=plain_content,
+        return_ins_res_message=True,
         **kwargs,
     )
     branch.msgs.add_message(instruction=ins)

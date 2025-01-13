@@ -125,6 +125,7 @@ async def operate(
         images=images,
         image_detail=image_detail,
         tool_schemas=tool_schemas,
+        return_ins_res_message=True,
         **kwargs,
     )
     branch.msgs.add_message(instruction=ins)

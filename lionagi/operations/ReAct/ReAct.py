@@ -87,10 +87,12 @@ async def ReAct(
     ):
         new_instruction = None
         if extensions == max_extensions:
-            new_instruction = ReActAnalysis.FIRST_EXT_PROMPT.format(extensions)
+            new_instruction = ReActAnalysis.FIRST_EXT_PROMPT.format(
+                extensions=extensions
+            )
         else:
             new_instruction = ReActAnalysis.CONTINUE_EXT_PROMPT.format(
-                extensions
+                extensions=extensions
             )
 
         # Each expansion uses a fresh copy of instruct_dict + forcibly "reason" + "actions"
@@ -112,10 +114,10 @@ async def ReAct(
 
     # Step 3: Produce final answer by calling branch._instruct with an answer prompt
     answer_prompt = ReActAnalysis.ANSWER_PROMPT.format(
-        instruct_dict["instruction"]
+        instruction=instruct_dict["instruction"]
     )
-    out = await branch.instruct(
-        {"instruction": answer_prompt},
+    out = await branch.communicate(
+        instruction=answer_prompt,
         response_format=response_format,
         **(response_kwargs or {}),
     )

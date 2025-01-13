@@ -35,6 +35,7 @@ async def chat(
     images: list = None,
     image_detail: Literal["low", "high", "auto"] = None,
     plain_content: str = None,
+    return_ins_res_message: bool = False,
     **kwargs,
 ) -> tuple[Instruction, AssistantResponse]:
     ins: Instruction = branch.msgs.create_instruction(
@@ -120,6 +121,7 @@ async def chat(
                     _msgs.append(i)
         messages = _msgs
 
+    imodel = imodel or branch.chat_model
     if branch.msgs.system and imodel.sequential_exchange:
         messages = [msg for msg in messages if msg.role != "system"]
         first_instruction = None
@@ -157,9 +159,15 @@ async def chat(
 
     branch._log_manager.log(Log.create(api_call))
 
-    # Wrap result in `AssistantResponse` and return
-    return ins, AssistantResponse.create(
+    if return_ins_res_message:
+        # Wrap result in `AssistantResponse` and return
+        return ins, AssistantResponse.create(
+            assistant_response=api_call.response,
+            sender=branch.id,
+            recipient=branch.user,
+        )
+    return AssistantResponse.create(
         assistant_response=api_call.response,
         sender=branch.id,
         recipient=branch.user,
-    )
+    ).response
