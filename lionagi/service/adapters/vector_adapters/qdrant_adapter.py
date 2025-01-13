@@ -1,21 +1,24 @@
 # adapters/vector/qdrant_adapter.py
 from dataclasses import dataclass
-from typing import Any, Dict, List, Optional, Tuple, TypeVar, Union
+from typing import Any, TypeVar
 from urllib.parse import urlparse
 
-from ....._errors import ItemNotFoundError, OperationError
+from lionagi._errors import ItemNotFoundError, OperationError
+
 from ..base import Adapter
 
 T = TypeVar("T")
 
 try:
-    import grpc
+    import grpc  # type: ignore
     import numpy as np
-    from qdrant_client import QdrantClient
-    from qdrant_client import grpc as qdrant_grpc
-    from qdrant_client.conversions import common_types as types
-    from qdrant_client.http import models as rest_models
-    from qdrant_client.http.exceptions import UnexpectedResponse
+    from qdrant_client import QdrantClient  # type: ignore
+    from qdrant_client import grpc as qdrant_grpc  # type: ignore
+    from qdrant_client.conversions import common_types as types  # type: ignore
+    from qdrant_client.http import models as rest_models  # type: ignore
+    from qdrant_client.http.exceptions import (  # type: ignore
+        UnexpectedResponse,
+    )
 
     HAS_QDRANT = True
 except ImportError:

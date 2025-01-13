@@ -1,5 +1,5 @@
 # adapters/db_adapters.py
-from typing import Any, Dict, List, TypeVar
+from typing import Any, TypeVar
 
 from .base import Adapter
 
@@ -14,7 +14,6 @@ try:
         Float,
         Integer,
         MetaData,
-        String,
         Table,
         Text,
         select,

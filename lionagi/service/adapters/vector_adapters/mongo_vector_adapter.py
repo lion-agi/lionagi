@@ -10,24 +10,30 @@ Provides a comprehensive interface for vector similarity search and storage:
 """
 
 import logging
-from collections.abc import Iterator
 from contextlib import contextmanager
 from dataclasses import dataclass
 from datetime import datetime
-from typing import Any, Dict, List, Optional, TypeVar, Union
+from typing import Any, TypeVar
 
-from pymongo import ASCENDING, MongoClient
-from pymongo.collection import Collection
-from pymongo.database import Database
-from pymongo.errors import (
-    BulkWriteError,
-    ConnectionFailure,
-    InvalidOperation,
-    OperationFailure,
-)
+from lionagi._errors import LionError
 
-from ....._errors import LionError
 from ..base import Adapter
+
+try:
+    from pymongo import ASCENDING, MongoClient  # type: ignore
+    from pymongo.collection import Collection  # type: ignore
+    from pymongo.database import Database  # type: ignore
+    from pymongo.errors import (  # type: ignore
+        BulkWriteError,
+        ConnectionFailure,
+        InvalidOperation,
+        OperationFailure,
+    )
+
+    HAS_PYMONGO = True
+except:
+    HAS_PYMONGO = False
+
 
 T = TypeVar("T")
 

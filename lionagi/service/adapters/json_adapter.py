@@ -1,6 +1,6 @@
 # adapters/json_adapter.py
 import json
-from typing import Any, Dict, List, TypeVar
+from typing import Any, TypeVar
 
 from .base import Adapter
 

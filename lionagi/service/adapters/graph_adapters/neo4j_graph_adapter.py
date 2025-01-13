@@ -4,24 +4,25 @@ from collections.abc import Callable, Iterator
 from contextlib import contextmanager
 from dataclasses import dataclass
 from functools import wraps
-from typing import Any, ContextManager, Dict, List, Optional, TypeVar
-
-from neo4j import (  # type: ignore
-    Driver,
-    GraphDatabase,
-    Result,
-    Session,
-    Transaction,
-    unit_of_work,
-)
-from neo4j.exceptions import ServiceUnavailable, SessionExpired  # type: ignore
+from typing import Any, ContextManager, TypeVar
 
 from ..base import Adapter
 
 T = TypeVar("T")
 
 try:
-    from neo4j import GraphDatabase
+    from neo4j import (  # type: ignore
+        Driver,
+        GraphDatabase,
+        Result,
+        Session,
+        Transaction,
+        unit_of_work,
+    )
+    from neo4j.exceptions import (  # type: ignore
+        ServiceUnavailable,
+        SessionExpired,
+    )
 
     HAS_NEO4J = True
 except ImportError:

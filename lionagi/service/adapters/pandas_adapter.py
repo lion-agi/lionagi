@@ -1,5 +1,5 @@
 # adapters/pandas_adapter.py
-from typing import Any, Dict, List, TypeVar
+from typing import Any, TypeVar
 
 import pandas as pd
 

@@ -1,10 +1,8 @@
 # adapters/vector/chromadb_adapter.py
 import warnings
-from collections import defaultdict
-from collections.abc import Sequence
 from concurrent.futures import ThreadPoolExecutor
 from functools import lru_cache
-from typing import Any, Dict, List, Optional, TypeVar, Union
+from typing import Any, TypeVar
 
 from ..base import Adapter
 

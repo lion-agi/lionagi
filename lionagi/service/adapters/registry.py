@@ -1,5 +1,5 @@
 # adapters/registry.py
-from typing import Any, Dict, List, Type, TypeVar
+from typing import Any, TypeVar
 
 from .base import Adapter
 

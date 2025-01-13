@@ -8,9 +8,9 @@ Provides a comprehensive interface for interacting with FalkorDB graphs, includi
 - Error recovery
 """
 
-from collections.abc import Callable, Iterator
+from collections.abc import Iterator
 from contextlib import contextmanager
-from typing import Any, Dict, List, Optional, Tuple, TypeVar, Union
+from typing import Any, TypeVar
 
 from lionagi._errors import OperationError
 
@@ -19,8 +19,8 @@ from ..base import Adapter
 T = TypeVar("T")
 
 try:
-    import falkordb
-    from falkordb.exceptions import (
+    import falkordb  # type: ignore
+    from falkordb.exceptions import (  # type: ignore
         ConnectionError,
         FalkorDBError,
         QueryError,

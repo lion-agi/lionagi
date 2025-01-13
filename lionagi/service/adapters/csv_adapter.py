@@ -1,6 +1,6 @@
 # adapters/csv_adapter.py
 import csv
-from typing import Any, Dict, List, TypeVar
+from typing import Any, TypeVar
 
 from .base import Adapter
 
