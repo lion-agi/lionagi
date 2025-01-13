@@ -12,7 +12,7 @@ from aiocache import cached
 from pydantic import BaseModel, ConfigDict, Field
 
 from lionagi._errors import ExecutionError, RateLimitError
-from lionagi.protocols.types import Event, EventStatus
+from lionagi.protocols.generic.event import Event, EventStatus
 from lionagi.settings import Settings
 
 from .token_calculator import TokenCalculator

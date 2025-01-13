@@ -2,7 +2,6 @@
 #
 # SPDX-License-Identifier: Apache-2.0
 
-from ._adapter import Adapter, AdapterRegistry
 from ._concepts import (
     Collective,
     Communicatable,
@@ -14,6 +13,7 @@ from ._concepts import (
     Relational,
     Sendable,
 )
+from .adapters.adapter import Adapter, AdapterRegistry
 from .generic.element import ID, Element, IDError, IDType, validate_order
 from .generic.event import Event, EventStatus, Execution
 from .generic.log import Log, LogManager, LogManagerConfig
@@ -89,8 +89,8 @@ __all__ = (
     "MessageField",
     "MESSAGE_FIELDS",
     "validate_sender_recipient",
-    "Adapter",
-    "AdapterRegistry",
     "MessageManager",
     "to_list_type",
+    "Adapter",
+    "AdapterRegistry",
 )

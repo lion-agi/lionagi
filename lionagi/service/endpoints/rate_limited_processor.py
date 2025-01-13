@@ -8,7 +8,8 @@ from typing import Self
 
 from typing_extensions import override
 
-from ...protocols.types import Executor, Processor
+from lionagi.protocols.generic.processor import Executor, Processor
+
 from .base import APICalling
 
 __all__ = (

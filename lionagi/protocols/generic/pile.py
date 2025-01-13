@@ -27,13 +27,34 @@ from typing_extensions import override
 from lionagi._errors import ItemExistsError, ItemNotFoundError
 from lionagi.utils import UNDEFINED, is_same_dtype, to_list
 
-from .._adapter import Adapter, AdapterRegistry, PileAdapterRegistry
 from .._concepts import Observable
+from ..adapters.adapter import Adapter, AdapterRegistry
+from ..adapters.json_adapter import JsonAdapter, JsonFileAdapter
+from ..adapters.pandas_.csv_adapter import CSVFileAdapter
+from ..adapters.pandas_.excel_adapter import ExcelFileAdapter
+from ..adapters.pandas_.pd_dataframe_adapter import PandasDataFrameAdapter
 from .element import ID, Collective, E, Element, IDType, validate_order
 from .progression import Progression
 
 D = TypeVar("D")
 T = TypeVar("T", bound=E)
+
+
+PILE_DEFAULT_ADAPTERS = (
+    JsonAdapter,
+    JsonFileAdapter,
+    CSVFileAdapter,
+    ExcelFileAdapter,
+    PandasDataFrameAdapter,
+)
+
+
+class PileAdapterRegistry(AdapterRegistry):
+    pass
+
+
+for i in PILE_DEFAULT_ADAPTERS:
+    PileAdapterRegistry.register(i)
 
 
 __all__ = (

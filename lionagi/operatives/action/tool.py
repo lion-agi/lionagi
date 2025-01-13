@@ -10,7 +10,7 @@ from pydantic import Field, field_validator, model_validator
 
 from lionagi.libs.schema.function_to_schema import function_to_schema
 from lionagi.libs.validate.common_field_validators import validate_callable
-from lionagi.protocols.types import Element
+from lionagi.protocols.generic.element import Element
 
 __all__ = (
     "Tool",

@@ -2,9 +2,9 @@
 #
 # SPDX-License-Identifier: Apache-2.0
 
+from lionagi.protocols._concepts import Manager
 from lionagi.utils import is_same_dtype
 
-from ..protocols._concepts import Manager
 from .endpoints.chat_completion import ChatCompletionEndPoint
 from .imodel import iModel
 
