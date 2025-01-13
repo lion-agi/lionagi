@@ -39,7 +39,10 @@ def make_mocked_branch_for_chat():
     async_mock_invoke = AsyncMock(side_effect=_fake_invoke)
 
     mock_chat_model = iModel(
-        provider="test_mock", model="test_chat_model", api_key="test_key"
+        provider="test_mock",
+        model="test_chat_model",
+        api_key="test_key",
+        invoke_with_endpoint=False,
     )
     mock_chat_model.invoke = async_mock_invoke
 
