@@ -15,7 +15,7 @@ from lionagi.protocols.types import (
     PackageCategory,
     RoledMessage,
 )
-from lionagi.service.manager import iModel
+from lionagi.service.api.manager import iModel
 from lionagi.session.branch import Branch
 
 
