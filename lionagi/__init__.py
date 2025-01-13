@@ -4,7 +4,7 @@
 
 from lionagi.operatives import types as ops_types
 from lionagi.protocols import types as types
-from lionagi.service.imodel import iModel
+from lionagi.service.types import iModel
 from lionagi.session.session import Branch, Session
 from lionagi.version import __version__
 
