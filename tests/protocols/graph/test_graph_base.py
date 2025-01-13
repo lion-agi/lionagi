@@ -2,8 +2,7 @@
 
 from pydantic import ConfigDict, Field
 
-from lionagi._errors import RelationError
-from lionagi.protocols.types import Edge, Graph, Node
+from lionagi.protocols.types import Node
 
 
 class TestNode(Node):

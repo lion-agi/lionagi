@@ -1,8 +1,6 @@
 import pytest
-from pydantic import ConfigDict, Field
 
-from lionagi._errors import RelationError
-from lionagi.protocols.types import Edge, Graph, Node
+from lionagi.protocols.types import Edge, Graph
 
 from .test_graph_base import TestNode
 
@@ -22,9 +20,6 @@ class TypeBNode(TestNode):
 class WeightedEdge(Edge):
     """Test weighted edge type"""
 
-    def __init__(self, head, tail, weight: float):
-        super().__init__(head=head, tail=tail, weight=weight)
-
     @property
     def weight(self) -> float:
         return self.properties.get("weight")
@@ -32,10 +27,6 @@ class WeightedEdge(Edge):
 
 class LabeledEdge(Edge):
     """Test labeled edge type"""
-
-    def __init__(self, head, tail, labels: list[str]):
-        super().__init__(head=head, tail=tail)
-        self.update_property("labels", labels)
 
     @property
     def labels(self) -> list[str]:
