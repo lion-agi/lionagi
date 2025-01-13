@@ -4,13 +4,10 @@
 
 from typing import Any
 
-from lionagi.protocols.types import (
-    ActionRequest,
-    EventStatus,
-    Execution,
-    Log,
-    Manager,
-)
+from lionagi.protocols._concepts import Manager
+from lionagi.protocols.generic.event import EventStatus, Execution
+from lionagi.protocols.generic.log import Log
+from lionagi.protocols.messages.action_request import ActionRequest
 from lionagi.utils import to_list
 
 from .function_calling import FunctionCalling

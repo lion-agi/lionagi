@@ -8,13 +8,11 @@ from typing import Any, ClassVar
 from pydantic import field_validator
 
 from lionagi._class_registry import LION_CLASS_REGISTRY
-from lionagi.service.adapters.adapter import AdapterRegistry
-from lionagi.service.adapters.json_adapter import JsonAdapter, JsonFileAdapter
-from lionagi.service.adapters.providers.pandas_.pd_series_adapter import (
-    PandasSeriesAdapter,
-)
 
 from .._concepts import Relational
+from ..adapters.adapter import AdapterRegistry
+from ..adapters.json_adapter import JsonAdapter, JsonFileAdapter
+from ..adapters.providers.pandas_.pd_series_adapter import PandasSeriesAdapter
 from ..generic.element import Element
 
 NODE_DEFAULT_ADAPTERS = (

@@ -25,20 +25,16 @@ from pydantic.fields import FieldInfo
 from typing_extensions import override
 
 from lionagi._errors import ItemExistsError, ItemNotFoundError
-from lionagi.service.adapters.adapter import Adapter, AdapterRegistry
-from lionagi.service.adapters.json_adapter import JsonAdapter, JsonFileAdapter
-from lionagi.service.adapters.providers.pandas_.csv_adapter import (
-    CSVFileAdapter,
-)
-from lionagi.service.adapters.providers.pandas_.excel_adapter import (
-    ExcelFileAdapter,
-)
-from lionagi.service.adapters.providers.pandas_.pd_dataframe_adapter import (
-    PandasDataFrameAdapter,
-)
 from lionagi.utils import UNDEFINED, is_same_dtype, to_list
 
 from .._concepts import Observable
+from ..adapters.adapter import Adapter, AdapterRegistry
+from ..adapters.json_adapter import JsonAdapter, JsonFileAdapter
+from ..adapters.providers.pandas_.csv_adapter import CSVFileAdapter
+from ..adapters.providers.pandas_.excel_adapter import ExcelFileAdapter
+from ..adapters.providers.pandas_.pd_dataframe_adapter import (
+    PandasDataFrameAdapter,
+)
 from .element import ID, Collective, E, Element, IDType, validate_order
 from .progression import Progression
 

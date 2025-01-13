@@ -13,6 +13,7 @@ from ._concepts import (
     Relational,
     Sendable,
 )
+from .adapters.adapter import Adapter, AdapterRegistry
 from .generic.element import ID, Element, IDError, IDType, validate_order
 from .generic.event import Event, EventStatus, Execution
 from .generic.log import Log, LogManager, LogManagerConfig
@@ -90,4 +91,6 @@ __all__ = (
     "validate_sender_recipient",
     "MessageManager",
     "to_list_type",
+    "Adapter",
+    "AdapterRegistry",
 )
