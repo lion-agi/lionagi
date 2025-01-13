@@ -81,7 +81,7 @@ def dir_to_files(
 
 def file_to_chunks(
     file_path: str | Path,
-    chunk_func: Callable[[str, int, float, int], list[str]],
+    chunk_by="chars",
     chunk_size: int = 1500,
     overlap: float = 0.1,
     threshold: int = 200,
@@ -119,8 +119,9 @@ def file_to_chunks(
     """
     try:
         file_path = Path(file_path)
-        with open(file_path, encoding=encoding) as f:
-            content = f.read()
+        content = None
+        if file_path.is_file():
+            content = file_path.read_text(encoding=encoding)
 
         metadata = {
             "file_path": str(file_path),
@@ -130,12 +131,20 @@ def file_to_chunks(
         }
 
         chunks = chunk_content(
-            content, chunk_func, chunk_size, overlap, threshold, metadata
+            content=content,
+            chunk_by=chunk_by,
+            chunk_size=chunk_size,
+            overlap=overlap,
+            metadata=metadata,
         )
 
         if output_dir:
             save_chunks(
-                chunks, output_dir, verbose, timestamp, random_hash_digits
+                chunks=chunks,
+                output_dir=output_dir,
+                verbose=verbose,
+                timestamp=timestamp,
+                random_hash_digits=random_hash_digits,
             )
 
         return chunks

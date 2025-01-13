@@ -9,7 +9,7 @@ from pydantic import field_validator
 
 from lionagi._class_registry import LION_CLASS_REGISTRY
 
-from .._adapter import AdapterRegistry, NodeAdapterRegistry
+from .._adapter import AdapterRegistry  # Use the existing adapter registry
 from .._concepts import Relational
 from ..generic.element import Element
 
@@ -25,7 +25,7 @@ class Node(Element, Relational):
       - Automatic subclass registration
     """
 
-    _adapter_registry: ClassVar[AdapterRegistry] = NodeAdapterRegistry
+    _adapter_registry: ClassVar[AdapterRegistry] = AdapterRegistry
 
     content: Any = None
     embedding: list[float] | None = None

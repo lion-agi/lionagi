@@ -9,14 +9,15 @@ from typing import Self
 import pandas as pd
 from pydantic import Field, JsonValue, model_validator
 
+from lionagi._errors import ItemNotFoundError
 from lionagi.operatives.types import ActionManager, Tool
-from lionagi.protocols.mail.exchange import Exchange
-from lionagi.protocols.mail.manager import MailManager
-from lionagi.protocols.messages.base import MessageFlag
 from lionagi.protocols.types import (
     ID,
     MESSAGE_FIELDS,
     Communicatable,
+    Exchange,
+    MailManager,
+    MessageFlag,
     Node,
     Pile,
     Progression,
@@ -26,10 +27,9 @@ from lionagi.protocols.types import (
     System,
     pile,
 )
+from lionagi.service.types import iModel
+from lionagi.utils import lcall
 
-from .._errors import ItemNotFoundError
-from ..service.imodel import iModel
-from ..utils import lcall
 from .branch import Branch
 
 msg_pile = partial(pile, item_type={RoledMessage}, strict_type=False)

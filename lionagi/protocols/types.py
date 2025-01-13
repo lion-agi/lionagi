@@ -2,7 +2,6 @@
 #
 # SPDX-License-Identifier: Apache-2.0
 
-from ._adapter import Adapter, AdapterRegistry
 from ._concepts import (
     Collective,
     Communicatable,
@@ -23,6 +22,7 @@ from .generic.progression import Progression, prog
 from .graph.edge import EdgeCondition
 from .graph.graph import Edge, Graph, Node
 from .mail.exchange import Exchange, Mail, Mailbox, Package, PackageCategory
+from .mail.manager import MailManager
 from .messages.base import (
     MESSAGE_FIELDS,
     MessageField,
@@ -89,8 +89,7 @@ __all__ = (
     "MessageField",
     "MESSAGE_FIELDS",
     "validate_sender_recipient",
-    "Adapter",
-    "AdapterRegistry",
     "MessageManager",
     "to_list_type",
+    "MailManager",
 )
