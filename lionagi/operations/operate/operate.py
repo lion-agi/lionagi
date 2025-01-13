@@ -18,7 +18,7 @@ if TYPE_CHECKING:
 
 
 async def operate(
-    branch: Branch,
+    branch: "Branch",
     *,
     instruct: Instruct = None,
     instruction: Instruction | JsonValue = None,

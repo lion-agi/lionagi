@@ -9,10 +9,10 @@ from pydantic import BaseModel
 
 from lionagi.operatives.types import Instruct
 
+from .utils import SelectionModel
+
 if TYPE_CHECKING:
     from lionagi.session.branch import Branch
-
-    from .utils import SelectionModel
 
 
 async def select(
@@ -24,7 +24,7 @@ async def select(
     return_branch: bool = False,
     verbose: bool = False,
     **kwargs: Any,
-) -> "SelectionModel" | tuple["SelectionModel", "Branch"]:
+) -> SelectionModel | tuple[SelectionModel, "Branch"]:
     if verbose:
         print(f"Starting selection with up to {max_num_selections} choices.")
 
