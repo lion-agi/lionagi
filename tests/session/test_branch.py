@@ -85,7 +85,9 @@ async def test_invoke_chat_basic(branch_with_mock_imodel: Branch):
     Checks that the mock iModel returns 'mocked_response' with no errors
     and doesn't automatically store any messages.
     """
-    ins, res = await branch_with_mock_imodel.chat(instruction="Hello model!")
+    ins, res = await branch_with_mock_imodel.chat(
+        instruction="Hello model!", return_ins_res_message=True
+    )
     assert isinstance(ins, Instruction)
     assert isinstance(res, AssistantResponse)
     assert res.response == """{"foo": "mocked_response", "bar": 123}"""
