@@ -72,42 +72,15 @@ ADAPTER_MEMBERS = get_protocol_members(Adapter)  # duck typing
 
 
 class AdapterRegistry:
-    """
-    A registry that allows users to register multiple adapter types under
-    a key (usually a file extension or a short string like "json").
-    Then, code can call `adapt_from` or `adapt_to` using that key.
-    """
 
     _adapters: dict[str, Adapter] = {}
 
     @classmethod
-    def list_adapters(cls) -> list[str]:
-        """
-        Returns the list of adapter keys currently registered.
-
-        Returns
-        -------
-        list[str]
-            All keys under which adapters have been registered.
-        """
+    def list_adapters(cls) -> list[tuple[str | type, ...]]:
         return list(cls._adapters.keys())
 
     @classmethod
     def register(cls, adapter: type[Adapter]) -> None:
-        """
-        Register a new adapter class or instance with the registry.
-        The adapter must provide all members of the `Adapter` protocol.
-
-        Parameters
-        ----------
-        adapter : type[Adapter]
-            The adapter class (or instance) to register.
-
-        Raises
-        ------
-        AttributeError
-            If the adapter is missing one of the required methods/attributes.
-        """
         for member in ADAPTER_MEMBERS:
             if not hasattr(adapter, member):
                 _str = getattr(adapter, "obj_key", None) or repr(adapter)
@@ -115,103 +88,33 @@ class AdapterRegistry:
                 raise AttributeError(
                     f"Adapter {_str} missing required methods."
                 )
+
         if isinstance(adapter, type):
-            # If it's a class, instantiate
             cls._adapters[adapter.obj_key] = adapter()
         else:
-            # Otherwise assume it's already an instance
             cls._adapters[adapter.obj_key] = adapter
 
     @classmethod
-    def get(cls, obj_key: str) -> Adapter:
-        """
-        Retrieve an adapter by its registered key.
-
-        Parameters
-        ----------
-        obj_key : str
-            The key or extension (e.g., ".csv").
-
-        Returns
-        -------
-        Adapter
-            The adapter instance matching this key, or None if not found.
-
-        Raises
-        ------
-        KeyError
-            If no adapter is found under that key.
-        """
-        if obj_key not in cls._adapters:
-            raise KeyError(
-                f"No adapter registered under key '{obj_key}'. "
-                f"Available: {cls.list_adapters()}"
-            )
+    def get(cls, obj_key: type | str) -> Adapter:
+        try:
+            return cls._adapters[obj_key]
+        except Exception as e:
+            logging.error(f"Error getting adapter for {obj_key}. Error: {e}")
 
     @classmethod
     def adapt_from(
-        cls,
-        subj_cls: type[T],
-        obj: Any,
-        obj_key: str,
-        **kwargs,
+        cls, subj_cls: type[T], obj: Any, obj_key: type | str, **kwargs
     ) -> dict | list[dict]:
-        """
-        Use the appropriate adapter to convert `obj` -> dict/list-of-dict.
-
-        Parameters
-        ----------
-        subj_cls : type[T]
-            The internal class or type we are eventually constructing.
-        obj : Any
-            The external data source (file path, raw JSON, etc.).
-        obj_key : str
-            The adapter key or extension (e.g. "json", ".csv").
-        **kwargs
-            Extra arguments passed to the adapter's 'from_obj' method.
-
-        Returns
-        -------
-        dict|list[dict]
-            The dictionary representation or a list of them.
-
-        Raises
-        ------
-        Exception
-            If the adapter fails to parse or transform the data.
-        """
         try:
             return cls.get(obj_key).from_obj(subj_cls, obj, **kwargs)
         except Exception as e:
-            logging.error(
-                f"Failed `adapt_from` using key={obj_key}. Error: {e}"
-            )
-            raise
+            logging.error(f"Error adapting data from {obj_key}. Error: {e}")
+            raise e
 
     @classmethod
-    def adapt_to(cls, subj: T, obj_key: str, **kwargs) -> Any:
-        """
-        Use the appropriate adapter to serialize `subj` -> external format.
-
-        Parameters
-        ----------
-        subj : T
-            The internal object to serialize.
-        obj_key : str
-            The adapter key or extension.
-        **kwargs
-            Extra arguments for the adapter's 'to_obj' method.
-
-        Returns
-        -------
-        Any
-            The transformed object (e.g., string data, or writing to file).
-        """
+    def adapt_to(cls, subj: T, obj_key: type | str, **kwargs) -> Any:
         try:
             return cls.get(obj_key).to_obj(subj, **kwargs)
         except Exception as e:
-            logging.error(f"Failed `adapt_to` using key={obj_key}. Error: {e}")
-            raise
-
-
-# File: lionagi/protocols/adapters/adapter.py
+            logging.error(f"Error adapting data to {obj_key}. Error: {e}")
+            raise e
