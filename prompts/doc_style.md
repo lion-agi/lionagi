@@ -118,7 +118,7 @@ def compute_stats(data, axis=0):
 4.3. Examples of Method & Class Docstrings
 
 For classes, include:
-	•	Short description of the class’s purpose.
+	•	Short description of the class's purpose.
 	•	Attributes: List them in a NumPy-style “Attributes” section or mention in constructor docstring.
 	•	Public methods can each follow the format above with “Parameters,” “Returns,” “Raises,” etc.
 
@@ -171,7 +171,7 @@ See also :class:`lionagi.protocols.generic.pile.Pile` for a concurrency-safe col
 
 6.2. Fonts & Color
 	•	Fonts: Rely on the Sphinx theme defaults (e.g., standard sans-serif for headings, monospace for code blocks). Avoid custom fonts for the official docs.
-	•	Colors: Use standard Python/syntax highlighting from Pygments or the theme’s built-in styles. Avoid custom color coding in docstrings or references unless absolutely necessary (e.g., emphasis in a table).
+	•	Colors: Use standard Python/syntax highlighting from Pygments or the theme's built-in styles. Avoid custom color coding in docstrings or references unless absolutely necessary (e.g., emphasis in a table).
 
 6.3. Headings & Hierarchy
 	•	Maintain a consistent heading hierarchy in .rst files:
@@ -195,7 +195,7 @@ Sub-subsection
 7. Content Structure
 
 7.1. Module-Level Documentation
-	•	At the top of each module’s .rst or docstring, explain the purpose of the module, key classes or functions, and a simple usage note.
+	•	At the top of each module's .rst or docstring, explain the purpose of the module, key classes or functions, and a simple usage note.
 	•	Provide references to deeper classes or method docs below or cross-reference them.
 
 7.2. Class & Function Documentation
@@ -214,10 +214,10 @@ Sub-subsection
 
 9. Handling Errors, Exceptions, & Edge Cases
 	•	Document known exceptions in the Raises section of the docstring.
-	•	For complex error-handling logic, add a note or short example clarifying the scenario (only if it’s highly relevant and can be shown succinctly).
+	•	For complex error-handling logic, add a note or short example clarifying the scenario (only if it's highly relevant and can be shown succinctly).
 
 10. Examples & Sample Outputs
-	•	Keep examples factual and testable. Avoid showing code that doesn’t exist or cannot be inferred from the current context.
+	•	Keep examples factual and testable. Avoid showing code that doesn't exist or cannot be inferred from the current context.
 	•	If the function is easily tested in a Python shell, provide a short >>> example.
 	•	For classes, show minimal usage, focusing on the constructor or key methods.
 

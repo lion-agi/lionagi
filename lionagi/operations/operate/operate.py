@@ -143,7 +143,7 @@ async def operate(
     if skip_validation:
         return operative if return_operative else operative.response_str_dict
 
-    # 5) Parse or validate the response into the operative’s model
+    # 5) Parse or validate the response into the operative's model
     response_model = operative.update_response_model(res.response)
     if not isinstance(response_model, BaseModel):
         # If the response isn't directly a model, attempt a parse

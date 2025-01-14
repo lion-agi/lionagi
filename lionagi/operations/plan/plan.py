@@ -293,7 +293,7 @@ async def plan(
             # ---------------------------------------------------------
             # Strategy C: SEQUENTIAL_CONCURRENT_CHUNK
             #   - process plan steps in chunks (one chunk after another),
-            #   - each chunk’s steps run in parallel.
+            #   - each chunk's steps run in parallel.
             # ---------------------------------------------------------
             case "sequential_concurrent_chunk":
                 chunk_size = (execution_kwargs or {}).get("chunk_size", 5)
@@ -334,7 +334,7 @@ async def plan(
             # Strategy D: CONCURRENT_SEQUENTIAL_CHUNK
             #   - split plan steps into chunks,
             #   - run all chunks in parallel,
-            #   - but each chunk’s steps run sequentially.
+            #   - but each chunk's steps run sequentially.
             # ---------------------------------------------------------
             case "concurrent_sequential_chunk":
                 chunk_size = (execution_kwargs or {}).get("chunk_size", 5)

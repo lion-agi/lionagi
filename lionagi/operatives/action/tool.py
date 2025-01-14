@@ -2,6 +2,12 @@
 #
 # SPDX-License-Identifier: Apache-2.0
 
+"""
+Defines the `Tool` class, which wraps a Python callable (function/method)
+with optional pre/post-processing and schema auto-generation. Also includes
+type aliases for function references.
+"""
+
 import inspect
 from collections.abc import Callable
 from typing import Any, Self, TypeAlias
@@ -22,10 +28,13 @@ __all__ = (
 
 
 class Tool(Element):
-    """A class for handling function calls with schema validation and processing.
+    """
+    Wraps a callable function with optional:
+      - Preprocessing of arguments,
+      - Postprocessing of results,
+      - Strict or partial argument matching.
 
-    This class wraps callable objects with optional pre and post processing,
-    schema validation, and provides utility methods for function inspection.
+    `tool_schema` is auto-generated from the function signature if not provided.
     """
 
     func_callable: Callable[..., Any] = Field(
@@ -82,28 +91,19 @@ class Tool(Element):
 
     @property
     def function(self) -> str:
-        """Get the name of the function from the schema.
-
-        Returns:
-            str: The name of the function as defined in the schema.
-        """
+        """Return the function name from the auto-generated schema."""
         return self.tool_schema["function"]["name"]
 
     @property
     def required_fields(self) -> set[str]:
-        """Get the required fields from the schema.
-
-        Returns:
-            set[str]: Set of required field names.
-        """
+        """Return the set of required parameter names from the schema."""
         return set(self.tool_schema["function"]["parameters"]["required"])
 
     @property
     def minimum_acceptable_fields(self) -> set[str]:
-        """Get the minimum required fields from function signature.
-
-        Returns:
-            set[str]: Set of minimum required field names.
+        """
+        Return the set of parameters that have no default values,
+        ignoring `*args` or `**kwargs`.
         """
         try:
             a = {
@@ -123,13 +123,15 @@ class Tool(Element):
 
     @classmethod
     def from_dict(cls, data: dict[str, Any]):
-        raise NotImplementedError("Tool.from_dict is not implemented.")
+        """This is not implemented, as Tools are not typically created from arbitrary dicts."""
+        raise NotImplementedError("`Tool.from_dict` is not supported.")
 
     def to_dict(self) -> dict[str, Any]:
-        """Convert Tool instance to dictionary.
+        """
+        Serialize the Tool to a dict, including the `function` name.
 
         Returns:
-            dict[str, Any]: Dictionary representation of the Tool.
+            dict[str, Any]: The dictionary form (excluding callables).
         """
         dict_ = super().to_dict()
         dict_["function"] = self.function
@@ -137,5 +139,31 @@ class Tool(Element):
 
 
 FuncTool: TypeAlias = Tool | Callable[..., Any]
+"""Represents either a `Tool` instance or a raw callable function."""
+
 FuncToolRef: TypeAlias = FuncTool | str
+"""
+A reference to a function-based tool, by either the actual object,
+the raw callable, or the function name as a string.
+"""
+
 ToolRef: TypeAlias = FuncToolRef | list[FuncToolRef] | bool
+"""
+Used for specifying one or more tool references, or a boolean
+indicating 'all' or 'none'.
+"""
+
+def func_to_tool(func: Callable[..., Any], **kwargs) -> Tool:
+    """
+    Convenience function that wraps a raw function in a `Tool`.
+
+    Args:
+        func (Callable[..., Any]): The function to wrap.
+        **kwargs: Additional arguments passed to the `Tool` constructor.
+
+    Returns:
+        Tool: A new Tool instance wrapping `func`.
+    """
+    return Tool(func_callable=func, **kwargs)
+
+# File: lionagi/operatives/action/tool.py
