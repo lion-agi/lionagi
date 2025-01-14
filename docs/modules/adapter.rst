@@ -16,12 +16,6 @@ DataFrame, etc.), and vice versa. Adapters are registered in a global
 ``"pd_dataframe"``), allowing other code to call ``adapt_from`` or
 ``adapt_to`` generically.
 
-Contents
---------
-.. contents::
-   :local:
-   :depth: 2
-
 
 Adapter and Registry
 --------------------

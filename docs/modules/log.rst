@@ -16,12 +16,6 @@ This module introduces:
 - A :class:`LogManager` class, which manages collections of :class:`Log` objects,
   handles persistence (CSV/JSON), and enforces capacity-based auto-saving.
 
-Contents
---------
-.. contents::
-   :local:
-   :depth: 2
-
 
 LogManagerConfig
 ----------------

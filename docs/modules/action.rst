@@ -15,13 +15,7 @@ The **action** system enables **function calling** within LionAGI:
 - **ActionManager** registers multiple Tools for invocation by requests.
 - **ActionRequestModel** and **ActionResponseModel** define standardized message formats
   for specifying which function to call, with what arguments, and returning the function's output.
-
-Contents
---------
-.. contents::
-   :local:
-   :depth: 2
-
+  
 
 FunctionCalling
 ---------------
