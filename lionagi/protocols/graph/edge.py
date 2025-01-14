@@ -163,4 +163,4 @@ class Edge(Element):
             cond.source = source
 
 
-# File: protocols/graph/edge.py
+# File: lionagi/protocols/graph/edge.py
