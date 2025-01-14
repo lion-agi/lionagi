@@ -4,19 +4,19 @@
 Branch-Level Operations
 =================================================
 These operations define how a :class:`~lionagi.session.branch.Branch` 
-actually **does** things—ranging from direct LLM calls (`chat`, `communicate`) 
-to advanced flows (`operate`, `instruct`, `interpret`, `ReAct`, etc.). Each 
+actually **does** things—ranging from direct LLM calls (`chat`, `interpret`, `communicate`) 
+to advanced flows (`operate`, `instruct`, `ReAct`, etc.). Each 
 is implemented as a separate function and exposed as an **asynchronous** 
 method on ``Branch``.
 
 For convenience, they can be categorized as:
 
-- **Simple conversation**: :func:`chat`, :func:`communicate`
-- **Structured conversation**: :func:`operate`, :func:`instruct`
+- **Simple conversation**: :func:`chat`
+- **Structured in-memory conversation**: :func:`communicate`, :func:`operate`, :func:`instruct`
 - **Short or specialized**: :func:`interpret`, :func:`translate`
 - **Action invocation**: :func:`_act`, :func:`act`
 - **Selection**: :func:`select`
-- **ReAct**: :func:`ReAct` for multi-step reasoning
+- **in-memory ReAct**: :func:`ReAct` for multi-step reasoning
 - **Parsing**: :func:`parse` to convert text to a structured model
 
 
@@ -25,7 +25,7 @@ For convenience, they can be categorized as:
 
 A **low-level** method invoked by :meth:`branch.act()`. It matches an 
 action request (function + arguments) to the :class:`ActionManager` 
-and executes it, returning an :class:`ActionResponse`. Typically 
+and executes it, returning an :class:`ActionResponseModel`. Typically 
 you won't call ``_act`` directly; use :meth:`act` instead.
 
 .. function:: _act(branch, action_request, suppress_errors=False)
@@ -43,7 +43,7 @@ you won't call ``_act`` directly; use :meth:`act` instead.
 
     Returns
     -------
-    ActionResponse
+    ActionResponseModel
         Result of the tool invocation or None if suppressed
 
     Notes
@@ -244,9 +244,9 @@ If you do not need advanced flows like action calls,
     Notes
     -----
     Flow:
-    1. Sends an instruction (or conversation) to the chat model
-    2. Optionally parses the response into a structured model or fields
-    3. Returns either the raw string, the parsed model, or a dict of fields
+    - Sends an instruction (or conversation) to the chat model
+    - Optionally parses the response into a structured model or fields
+    - Returns either the raw string, the parsed model, or a dict of fields
 
 
 ``operate``

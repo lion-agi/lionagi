@@ -21,7 +21,6 @@ Processor
 ---------
 .. class:: Processor(Observer)
    :module: lionagi.protocols.generic.processor
-   :show-inheritance:
 
    **Inherits from**: :class:`~lionagi.protocols._concepts.Observer`
 
@@ -110,8 +109,7 @@ Processor
    .. classmethod:: create(**kwargs: Any) -> Processor
       :async:
 
-      Asynchronously constructs a new instance of ``Processor``, 
-      forwarding any kwargs to the constructor.
+      Creates a new instance of ``Processor``, forwarding any kwargs to the constructor.
 
    .. method:: process() -> None
       :async:
@@ -138,7 +136,6 @@ Executor
 --------
 .. class:: Executor(Observer)
    :module: lionagi.protocols.generic.processor
-   :show-inheritance:
 
    **Inherits from**: :class:`~lionagi.protocols._concepts.Observer`
 
@@ -221,11 +218,12 @@ Executor
 
       Checks if a given event or event ID reference is stored in :attr:`pile`.
 
-   Internal Methods
+   Private Methods
    ----------------
    .. method:: _create_processor() -> None
       :async:
-      Instantiates the :attr:`processor` using the stored :attr:`processor_config`.
+
+      Private instance method that instantiates the :attr:`processor` using the stored :attr:`processor_config`.
 
 File Location
 -------------

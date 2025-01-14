@@ -17,7 +17,8 @@ configuration, caching, and concurrency constraints.
    :synopsis: Defines the base classes for endpoint configuration and invocation.
 
 .. class:: EndpointConfig
-   :extends: pydantic.BaseModel
+
+   **Inherits from**: :class:`pydantic.BaseModel`
 
 Describes the essential attributes of an API endpoint:
 
@@ -36,8 +37,9 @@ Describes the essential attributes of an API endpoint:
 
 
 .. class:: EndPoint
-   :abstract:
    :synopsis: An abstract base for a particular API endpoint.
+
+   Abstract base class that defines the interface for API endpoints.
 
 **Key Methods**:
 
@@ -86,9 +88,10 @@ Methods to estimate token usage for text or images:
    :synopsis: An event representing a single API call.
 
 .. class:: APICalling
-   :extends: Event
 
-Stores:
+   **Inherits from**: :class:`Event`
+
+   An event class representing a single API call. Stores:
 - :attr:`payload` (dict): Data to send in the request.
 - :attr:`headers` (dict): Additional HTTP headers.
 - :attr:`endpoint` (:class:`EndPoint`): The endpoint to call.
@@ -132,24 +135,26 @@ and possibly different base URLs or roles.
 .. module:: lionagi.service.endpoints.rate_limited_processor
 
 .. class:: RateLimitedAPIProcessor
-   :extends: Processor
 
-A concurrency-limiting, rate-limiting processor dedicated 
-to handling :class:`APICalling` events. Supports:
+   **Inherits from**: :class:`Processor`
 
-- :attr:`limit_requests` (#requests per interval).
-- :attr:`limit_tokens` (#tokens per interval).
-- :attr:`interval` (seconds) for refreshing or replenishing capacity.
+   A concurrency-limiting, rate-limiting processor dedicated 
+   to handling :class:`APICalling` events. Supports:
+
+   - :attr:`limit_requests` (#requests per interval).
+   - :attr:`limit_tokens` (#tokens per interval).
+   - :attr:`interval` (seconds) for refreshing or replenishing capacity.
 
 
 .. class:: RateLimitedAPIExecutor
-   :extends: Executor
 
-Builds on the above **Processor**. For an iModel, it manages 
-the queued or concurrent calls.  
-**Example**:  
-One can define a queue of max capacity 100, refreshing every 60s, 
-limiting requests or tokens as needed.
+   **Inherits from**: :class:`Executor`
+
+   Builds on the above **Processor**. For an iModel, it manages 
+   the queued or concurrent calls.  
+   **Example**:  
+   One can define a queue of max capacity 100, refreshing every 60s, 
+   limiting requests or tokens as needed.
 
 
 ----------------

@@ -11,7 +11,7 @@ The **action** system enables **function calling** within LionAGI:
 - **Tools** wrap a Python callable with optional pre/post processors and schema-based validation.
 - **FunctionCalling** is a specialized `Event` that executes these tools.
 - **ActionManager** registers multiple Tools for invocation by requests.
-- **ActionRequestModel** and **ActionResponseModel** define standardized message formats
+- **ActionRequestModel** and **ActionResponseModel** define standardized protocols
   for specifying which function to call, with what arguments, and returning the function's output.
 
 Contents
@@ -33,9 +33,11 @@ Class Documentation
 ^^^^^^^^^^^^^^^^^
 
 .. class:: FunctionCalling
+   :module: lionagi.operatives.action.function_calling
 
-    Handles asynchronous function execution with pre/post processing.
-    
+   **Inherits from**: :class:`~lionagi.protocols.generic.event.Event`
+
+   Handles asynchronous function execution with pre/post processing.
     This class manages function calls with optional preprocessing and
     postprocessing, handling both synchronous and asynchronous functions.
 
@@ -62,7 +64,7 @@ Class Documentation
     --------
     >>> def multiply(x, y):
     ...     return x * y
-    >>> tool = Tool(multiply)
+    >>> tool = Tool(func_callable=multiply)
     >>> func_call = FunctionCalling(func_tool=tool, arguments={"x": 3, "y": 4})
     >>> await func_call.invoke()
     >>> print(func_call.execution.response)  # Should show 12
@@ -105,8 +107,11 @@ Class Documentation
 ^^^^^^^^^^^^^^^^^
 
 .. class:: ActionManager
+   :module: lionagi.operatives.action.manager
 
-    A manager that registers function-based tools and invokes them
+   **Inherits from**: :class:`~lionagi.protocols._concepts.Manager`
+
+   A manager that registers function-based tools and invokes them
     when triggered by an ActionRequest. Tools can be registered
     individually or in bulk, and each tool must have a unique name.
 
@@ -259,9 +264,12 @@ Class Documentation
 ^^^^^^^^^^^^^^^^^
 
 .. class:: ActionRequestModel
+   :module: lionagi.operatives.action.request_response_model
 
-    Captures a single action request, typically from a user or system message.
-    Includes the name of the function and the arguments to be passed.
+   **Inherits from**: :class:`pydantic.BaseModel`
+
+   Captures a single action request.
+    Includes the name of the function and the arguments.
 
     Attributes
     ----------
@@ -293,7 +301,7 @@ Method Documentation
     Parameters
     ----------
     content : str
-        String content to parse, typically from a conversation or JSON.
+        String content to parse.
 
     Returns
     -------
@@ -301,8 +309,11 @@ Method Documentation
         List of parsed request models. Returns empty list if no valid structure found.
 
 .. class:: ActionResponseModel
+   :module: lionagi.operatives.action.request_response_model
 
-    Encapsulates a function's output after being called. Typically
+   **Inherits from**: :class:`pydantic.BaseModel`
+
+   Encapsulates a function's output after being called. Typically
     references the original function name, arguments, and the result.
 
     Attributes
@@ -341,8 +352,11 @@ Class Documentation
 ^^^^^^^^^^^^^^^^^
 
 .. class:: Tool
+   :module: lionagi.operatives.action.tool
 
-    Wraps a callable function with optional preprocessing of arguments,
+   **Inherits from**: :class:`pydantic.BaseModel`
+
+   Wraps a callable function with optional preprocessing of arguments,
     postprocessing of results, and strict or partial argument matching.
     The tool_schema is auto-generated from the function signature if not provided.
 

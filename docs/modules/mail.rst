@@ -28,10 +28,13 @@ Contents
 Exchange
 --------
 .. class:: Exchange
+   :module: lionagi.protocols.mail.exchange
 
-    Manages mail exchange operations among a set of sources that are Communicatable. Each source has an associated Mailbox to store inbound and outbound mail.
+   **Inherits from**: :class:`~lionagi.protocols.generic.element.Element`
 
-    The Exchange uses an internal buffer for collecting mail from each sender's mailbox and delivering messages to the correct recipient's mailbox.
+   Manages mail exchange operations among a set of sources that are Communicatable. Each source has an associated Mailbox to store inbound and outbound mail.
+
+   The Exchange uses an internal buffer for collecting mail from each sender's mailbox and delivering messages to the correct recipient's mailbox.
 
     Attributes
     ----------
@@ -85,8 +88,9 @@ Exchange
 Mail
 ----
 .. class:: Mail(Element, Sendable)
+   :module: lionagi.protocols.mail.mail
 
-    A single mail message that can be sent between communicatable entities. It includes a sender, recipient, and a package that describes the mail's content.
+   A single mail message that can be sent between communicatable entities. It includes a sender, recipient, and a package that describes the mail's content.
 
     Encapsulates a single unit of mail with a sender, recipient, and a :class:`Package`. As a subclass of :class:`~lionagi.protocols.generic.element.Element`, it is also observable and can be tracked or logged.
 

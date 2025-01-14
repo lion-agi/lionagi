@@ -7,9 +7,10 @@ from typing import TYPE_CHECKING
 
 from pydantic import BaseModel
 
-from lionagi.protocols.types import ActionResponse, Log
+from lionagi.protocols.types import Log
 
 if TYPE_CHECKING:
+    from lionagi.operatives.types import ActionResponseModel
     from lionagi.session.branch import Branch
 
 
@@ -17,7 +18,7 @@ async def _act(
     branch: "Branch",
     action_request: BaseModel | dict,
     suppress_errors: bool = False,
-) -> ActionResponse:
+) -> "ActionResponseModel" | None:
 
     _request = {}
 
@@ -35,7 +36,13 @@ async def _act(
     try:
         func_call = await branch._action_manager.invoke(_request)
     except Exception as e:
-        branch._log_manager.log(Log(content={"error": str(e)}))
+        content = {
+            "error": str(e),
+            "function": _request.get("function"),
+            "arguments": _request.get("arguments"),
+            "branch": branch.id,
+        }
+        branch._log_manager.log(Log(content=content))
         if suppress_errors:
             logging.error(
                 f"Error invoking action '{_request['function']}': {e}"

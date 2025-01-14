@@ -33,8 +33,9 @@ Protocol Documentation
 ^^^^^^^^^^^^^^^^^^^
 
 .. class:: Adapter
+   :module: lionagi.protocols.adapters.adapter
 
-    A protocol (formal interface) describing a two-way converter that transforms
+   **Protocol**: A formal interface describing a two-way converter that transforms
     objects between external representations and internal formats.
 
     Attributes
@@ -97,8 +98,9 @@ Registry Documentation
 ^^^^^^^^^^^^^^^^^^^
 
 .. class:: AdapterRegistry
+   :module: lionagi.protocols.adapters.adapter
 
-    A container that maps string/file extensions or object keys to
+   A container that maps string/file extensions or object keys to
     specific adapter implementations.
 
     Class Methods
@@ -203,8 +205,11 @@ Class Documentation
 ^^^^^^^^^^^^^^^^^
 
 .. class:: JsonAdapter
+   :module: lionagi.protocols.adapters.json_adapter
 
-    Adapter that converts to/from JSON **strings** in memory.
+   **Inherits from**: :class:`~lionagi.protocols.adapters.adapter.Adapter`
+
+   Adapter that converts to/from JSON **strings** in memory.
     Example usage: taking a Python dictionary and making JSON,
     or parsing JSON string to a dict.
 
@@ -266,8 +271,11 @@ File Adapter Documentation
 ^^^^^^^^^^^^^^^^^^^^^^^
 
 .. class:: JsonFileAdapter
+   :module: lionagi.protocols.adapters.json_adapter
 
-    Adapter that reads/writes JSON data to/from a file on disk.
+   **Inherits from**: :class:`~lionagi.protocols.adapters.adapter.Adapter`
+
+   Adapter that reads/writes JSON data to/from a file on disk.
     The file extension key is ".json".
 
     Attributes
@@ -337,8 +345,11 @@ CSV Adapter Documentation
 ^^^^^^^^^^^^^^^^^^^^^
 
 .. class:: CSVFileAdapter
+   :module: lionagi.protocols.adapters.pandas_.csv_adapter
 
-    Reads/writes CSV files to a list of dicts or vice versa,
+   **Inherits from**: :class:`~lionagi.protocols.adapters.adapter.Adapter`
+
+   Reads/writes CSV files to a list of dicts or vice versa,
     using `pandas`.
 
     Attributes
@@ -400,8 +411,11 @@ Excel Adapter Documentation
 ^^^^^^^^^^^^^^^^^^^^^^^
 
 .. class:: ExcelFileAdapter
+   :module: lionagi.protocols.adapters.pandas_.excel_adapter
 
-    Reads/writes Excel (XLSX) files, using `pandas`.
+   **Inherits from**: :class:`~lionagi.protocols.adapters.adapter.Adapter`
+
+   Reads/writes Excel (XLSX) files, using `pandas`.
 
     Attributes
     ----------
@@ -468,8 +482,11 @@ DataFrame Adapter Documentation
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 .. class:: PandasDataFrameAdapter
+   :module: lionagi.protocols.adapters.pandas_.pd_dataframe_adapter
 
-    Converts a set of objects to a single `pd.DataFrame`, or
+   **Inherits from**: :class:`~lionagi.protocols.adapters.adapter.Adapter`
+
+   Converts a set of objects to a single `pd.DataFrame`, or
     a DataFrame to a list of dictionaries. Typically used in memory,
     not for saving to file.
 
@@ -528,8 +545,11 @@ Series Adapter Documentation
 ^^^^^^^^^^^^^^^^^^^^^^^^^
 
 .. class:: PandasSeriesAdapter
+   :module: lionagi.protocols.adapters.pandas_.pd_series_adapter
 
-    Converts a single item to a Pandas Series and vice versa.
+   **Inherits from**: :class:`~lionagi.protocols.adapters.adapter.Adapter`
+
+   Converts a single item to a Pandas Series and vice versa.
     Great for 1-row data or simpler key-value pairs.
 
     Attributes

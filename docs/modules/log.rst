@@ -57,15 +57,13 @@ LogManagerConfig
    ----------
    .. method:: _validate_non_negative(value) -> int
       :classmethod:
-      :private:
 
-      Ensures that ``capacity`` and ``hash_digits`` are non-negative integers.
+      Private class method that ensures that ``capacity`` and ``hash_digits`` are non-negative integers.
 
    .. method:: _ensure_dot_extension(value) -> str
       :classmethod:
-      :private:
 
-      Ensures the extension starts with a dot and is one of the supported formats.
+      Private class method that ensures the extension starts with a dot and is one of the supported formats.
 
    Example
    -------
@@ -86,7 +84,6 @@ Log
 ---
 .. class:: Log(Element)
    :module: lionagi.protocols.generic.log
-   :show-inheritance:
 
    **Inherits from**: :class:`~lionagi.protocols.generic.element.Element`
 
@@ -103,9 +100,8 @@ Log
    Private Attributes
    ------------------
    .. attribute:: _immutable : bool
-      :private:
 
-      A flag indicating whether this log entry is locked from further changes.
+      Private flag indicating whether this log entry is locked from further changes.
 
    Methods
    -------
@@ -145,7 +141,6 @@ LogManager
 ----------
 .. class:: LogManager(Manager)
    :module: lionagi.protocols.generic.log
-   :show-inheritance:
 
    **Inherits from**: :class:`~lionagi.protocols._concepts.Manager`
 

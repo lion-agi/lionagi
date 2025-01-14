@@ -29,8 +29,11 @@ Three core classes are provided:
    :synopsis: Core functionality for form handling.
 
 .. class:: BaseForm
+   :module: lionagi.form.base
 
-A minimal form that tracks:
+   **Inherits from**: :class:`OperableModel`
+
+   A minimal form that tracks:
 
 - **Assignment**: The objective or mapping from inputs to outputs.
 - **Output fields**: The subset of fields to present as results.
@@ -72,8 +75,11 @@ A minimal form that tracks:
    :synopsis: Extended form with distinct input and request fields.
 
 .. class:: Form
+   :module: lionagi.form.form
 
-This class distinguishes three sets of fields:
+   **Inherits from**: :class:`BaseForm`
+
+   This class distinguishes three sets of fields:
 
 1. **input_fields** (provided by user or environment).
 2. **request_fields** (which an “intelligent process” should fill).
@@ -132,8 +138,11 @@ parses them if you pass an ``assignment``.
    :synopsis: Aggregates multiple completed :class:`Form` objects.
 
 .. class:: Report
+   :module: lionagi.form.report
 
-Designed to collect **multiple tasks** (forms) into one object:
+   **Inherits from**: :class:`Form`
+
+   Designed to collect **multiple tasks** (forms) into one object:
 
 - :attr:`completed_tasks`: A pile of :class:`Form` instances that are done.
 - :meth:`save_completed_form(form, update_results=False)`:

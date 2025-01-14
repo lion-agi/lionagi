@@ -33,8 +33,11 @@ Branch
 ------
 
 .. class:: Branch
+   :module: lionagi.session.branch
 
-    Manages a conversation 'branch' with messages, tools, and iModels.
+   **Inherits from**: :class:`~lionagi.protocols.generic.element.Element`, :class:`~lionagi.protocols.types.Communicatable`, :class:`~lionagi.protocols.types.Relational`
+
+   Manages a conversation 'branch' with messages, tools, and iModels.
 
     The Branch class serves as a high-level interface or orchestrator that:
     
