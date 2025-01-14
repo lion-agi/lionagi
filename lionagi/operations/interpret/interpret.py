@@ -30,11 +30,10 @@ async def interpret(
     # Default temperature if none provided
     kwargs["temperature"] = kwargs.get("temperature", 0.1)
 
-    refined_prompt = await branch.communicate(
+    refined_prompt = await branch.chat(
         instruction=instruction,
         guidance=guidance,
         context=context,
-        skip_validation=True,
         **kwargs,
     )
     return str(refined_prompt)

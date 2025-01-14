@@ -61,16 +61,16 @@ class Branch(Element, Communicatable, Relational):
     Manages a conversation 'branch' with messages, tools, and iModels.
 
     The `Branch` class serves as a high-level interface or orchestrator that:
-      - Handles message management (`MessageManager`).
-      - Registers and invokes tools/actions (`ActionManager`).
-      - Manages model instances (`iModelManager`).
-      - Logs activity (`LogManager`).
-      - Communicates via mailboxes (`Mailbox`).
+        - Handles message management (`MessageManager`).
+        - Registers and invokes tools/actions (`ActionManager`).
+        - Manages model instances (`iModelManager`).
+        - Logs activity (`LogManager`).
+        - Communicates via mailboxes (`Mailbox`).
 
     **Key responsibilities**:
-      1. Storing and organizing messages, including system instructions, user instructions, and model responses.
-      2. Handling asynchronous or synchronous execution of LLM calls and tool invocations.
-      3. Providing a consistent interface for “operate,” “chat,” “communicate,” “parse,” etc.
+        - Storing and organizing messages, including system instructions, user instructions, and model responses.
+        - Handling asynchronous or synchronous execution of LLM calls and tool invocations.
+        - Providing a consistent interface for “operate,” “chat,” “communicate,” “parse,” etc.
 
     Attributes:
         user (SenderRecipient | None):
@@ -120,8 +120,8 @@ class Branch(Element, Communicatable, Relational):
         messages: Pile[RoledMessage] = None,  # message manager kwargs
         system: System | JsonValue = None,
         system_sender: SenderRecipient = None,
-        chat_model: iModel = None,  # iModelManager kwargs
-        parse_model: iModel = None,
+        chat_model: iModel | dict = None,  # iModelManager kwargs
+        parse_model: iModel | dict = None,
         imodel: iModel = None,  # deprecated, alias of chat_model
         tools: FuncTool | list[FuncTool] = None,  # ActionManager kwargs
         log_config: LogManagerConfig | dict = None,  # LogManager kwargs
@@ -538,12 +538,12 @@ class Branch(Element, Communicatable, Relational):
     def to_dict(self):
         """
         Serializes the branch to a Python dictionary, including:
-         - Messages
-         - Logs
-         - Chat/Parse models
-         - System message
-         - LogManager config
-         - Metadata
+            - Messages
+            - Logs
+            - Chat/Parse models
+            - System message
+            - LogManager config
+            - Metadata
 
         Returns:
             dict: A dictionary representing the branch's internal state.
@@ -616,23 +616,25 @@ class Branch(Element, Communicatable, Relational):
     # -------------------------------------------------------------------------
     async def chat(
         self,
-        instruction=None,
-        guidance=None,
-        context=None,
-        sender=None,
-        recipient=None,
-        request_fields=None,
-        response_format: type[BaseModel] = None,
-        progression=None,
+        instruction: Instruction | JsonValue = None,
+        guidance: JsonValue = None,
+        context: JsonValue = None,
+        sender: ID.Ref = None,
+        recipient: ID.Ref = None,
+        request_fields: list[str] | dict[str, JsonValue] = None,
+        response_format: type[BaseModel] | BaseModel = None,
+        progression: Progression | list[ID[RoledMessage].ID] = None,
         imodel: iModel = None,
-        tool_schemas=None,
+        tool_schemas: list[dict] = None,
         images: list = None,
         image_detail: Literal["low", "high", "auto"] = None,
         plain_content: str = None,
+        return_ins_res_message: bool = False,
         **kwargs,
     ) -> tuple[Instruction, AssistantResponse]:
         """
-        Invokes the chat model with the current conversation history.
+        Invokes the chat model with the current conversation history. This method does not
+        automatically add messages to the branch. It is typically used for orchestrating.
 
         **High-level flow**:
             1. Construct a sequence of messages from the stored progression.
@@ -666,7 +668,10 @@ class Branch(Element, Communicatable, Relational):
             image_detail (Literal["low", "high", "auto"], optional):
                 Level of detail for image-based context (if relevant).
             plain_content (str, optional):
-                Plain text content appended to the instruction.
+                Plain text content, will override any other content.
+            return_ins_res_message:
+                If `True`, returns the final `Instruction` and `AssistantResponse` objects.
+                else, returns only the response content.
             **kwargs:
                 Additional parameters for the LLM invocation.
 
@@ -691,6 +696,7 @@ class Branch(Element, Communicatable, Relational):
             images=images,
             image_detail=image_detail,
             plain_content=plain_content,
+            return_ins_res_message=return_ins_res_message,
             **kwargs,
         )
 
@@ -716,7 +722,7 @@ class Branch(Element, Communicatable, Relational):
         response_format: type[BaseModel] = None,
     ):
         """
-        Attempts to parse text into a structured Pydantic model using parse model logic.
+        Attempts to parse text into a structured Pydantic model using parse model logic. New messages are not appeneded to conversation context.
 
         If fuzzy matching is enabled, tries to map partial or uncertain keys
         to the known fields of the model. Retries are performed if initial parsing fails.
@@ -815,7 +821,8 @@ class Branch(Element, Communicatable, Relational):
     ) -> list | BaseModel | None | dict | str:
         """
         Orchestrates an "operate" flow with optional tool invocation and
-        structured response validation.
+        structured response validation. Messages **are** automatically
+        added to the conversation.
 
         **Workflow**:
         1) Builds or updates an `Operative` object to specify how the LLM should respond.
@@ -969,7 +976,7 @@ class Branch(Element, Communicatable, Relational):
         **kwargs,
     ):
         """
-        A simpler orchestration than `operate()`, typically without tool invocation.
+        A simpler orchestration than `operate()`, typically without tool invocation. Messages are automatically added to the conversation.
 
         **Flow**:
           1. Sends an instruction (or conversation) to the chat model.
@@ -1297,9 +1304,9 @@ class Branch(Element, Communicatable, Relational):
         Interprets (rewrites) a user's raw input into a more formal or structured
         LLM prompt. This function can be seen as a "prompt translator," which
         ensures the user's original query is clarified or enhanced for better
-        LLM responses.
+        LLM responses. Messages are not automatically added to the conversation.
 
-        The method calls `branch.communicate()` behind the scenes with a system prompt
+        The method calls `branch.chat()` behind the scenes with a system prompt
         that instructs the LLM to rewrite the input. You can provide additional
         parameters in `**kwargs` (e.g., `parse_model`, `skip_validation`, etc.)
         if you want to shape how the rewriting is done.
@@ -1429,6 +1436,7 @@ class Branch(Element, Communicatable, Relational):
                 ReActAnalysis objects.
 
         Notes:
+            - Messages are automatically added to the branch context during the ReAct process.
             - If `max_extensions` is greater than 5, a warning is logged, and it is set to 5.
             - If `interpret=True`, the user instruction is replaced by the interpreted
             string before proceeding.

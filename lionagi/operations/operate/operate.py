@@ -7,9 +7,14 @@ from typing import TYPE_CHECKING, Literal
 
 from pydantic import BaseModel, JsonValue
 
-from lionagi.operatives.models.field_model import FieldModel
-from lionagi.operatives.models.model_params import ModelParams
-from lionagi.operatives.types import Instruct, Operative, Step, ToolRef
+from lionagi.operatives.types import (
+    FieldModel,
+    Instruct,
+    ModelParams,
+    Operative,
+    Step,
+    ToolRef,
+)
 from lionagi.protocols.types import Instruction, Progression, SenderRecipient
 from lionagi.service.imodel import iModel
 
@@ -110,7 +115,7 @@ async def operate(
 
     # If we want to auto-invoke tools, fetch or generate the schemas
     if invoke_actions and tools:
-        tool_schemas = branch.acts.get_tool_schema(tools=tools)
+        tool_schemas = tool_schemas or branch.acts.get_tool_schema(tools=tools)
 
     # 2) Send the instruction to the chat model
     ins, res = await branch.chat(

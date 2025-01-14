@@ -21,7 +21,7 @@ async def ReAct(
     interpret: bool = False,
     tools: Any = None,
     tool_schemas: Any = None,
-    response_format: type[BaseModel] = None,
+    response_format: type[BaseModel] | BaseModel = None,
     extension_allowed: bool = False,
     max_extensions: int | None = None,
     response_kwargs: dict | None = None,
