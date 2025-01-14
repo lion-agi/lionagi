@@ -1,238 +1,277 @@
-===========================
-Graph
-===========================
+.. _lionagi_protocols_graph:
 
-This module provides classes and logic for building and manipulating **directed
-graphs** within LionAGI. By representing nodes and edges as **Elements** 
-(with unique IDs, timestamps, and metadata), the system enables:
+=====================================================
+Graph Components: Node, Edge, and Graph
+=====================================================
+.. module:: lionagi.protocols.graph
+   :synopsis: Provides relational abstractions for nodes, edges, and graphs.
 
-- Adding and removing nodes/edges dynamically,
-- Tracking relationships between nodes (predecessors, successors),
-- Enforcing optional edge conditions for traversal,
-- Visualizing graphs via NetworkX (if installed).
+Overview
+--------
+This documentation covers the **graph** structures in LionAGI, comprising 
+individual :class:`Node` objects, :class:`Edge` objects that link them, and 
+the overarching :class:`Graph` class that manages these relationships. Also 
+included is an :class:`EdgeCondition` mechanism for conditional traversal.
 
-Key classes include:
-
-- :class:`Node`: The fundamental vertex, storing arbitrary content, metadata,
-  and optional numeric embeddings.
-- :class:`Edge`: Directed link from a **head** node to a **tail** node, 
-  optionally associated with a :class:`EdgeCondition`.
-- :class:`Graph`: An element containing a collection of internal nodes 
-  and edges, plus mapping for quick in-/out-edge lookups.
-
-These classes comply with LionAGI’s base **Relational** concept, so they can 
-easily integrate with other LionAGI frameworks (e.g., :class:`~lionagi.protocols.generic.pile.Pile`).
-
-
-
---------------------
-1. **Node** 
---------------------
-.. module:: lionagi.protocols.graph.node
-   :synopsis: Base class for nodes in a graph.
-
-.. class:: Node
-   :extends: Element, Relational
-
-   Represents a graph node, storing:
-
-   - :attr:`content`: Arbitrary data relevant to this node.
-   - :attr:`embedding`: Optional list of floats (e.g., vector embeddings in ML).
-   - :attr:`metadata`: (inherited) Additional dictionary fields.
-
-   **Example**::
-
-      from lionagi.protocols.graph.node import Node
-
-      class MyNode(Node):
-          pass
-
-      node = MyNode(content="Hello Node", embedding=[0.1, 0.2, 0.3])
-      print(node.id)          # => Unique ID
-      print(node.content)     # => "Hello Node"
-      print(node.embedding)   # => [0.1, 0.2, 0.3]
-
-
-Adapters
-~~~~~~~~
-:class:`Node` integrates with LionAGI’s 
-:class:`~lionagi.protocols.adapter.AdapterRegistry`, allowing easy 
-serialization to JSON, CSV, etc. (via :meth:`adapt_to` and 
-:meth:`adapt_from`).
-
-
---------------------
-2. **Edge** 
---------------------
-.. module:: lionagi.protocols.graph.edge
-   :synopsis: Represents a directed link between two nodes.
-
-.. class:: Edge
-   :extends: Element
-
-   A directed edge from :attr:`head` (node ID) to :attr:`tail` (node ID).
-   Optionally includes:
-
-   - :attr:`condition`: An :class:`EdgeCondition` controlling traversal.
-   - :attr:`label`: One or more string labels describing this edge.
-   - :attr:`properties`: A dictionary for any additional fields (like 
-     weights, timestamps, or custom metadata).
-
-   **Initialization**::
-
-      edge = Edge(
-         head=nodeA,
-         tail=nodeB,
-         condition=some_condition,
-         label=["requires_login"]
-      )
-
-   **Example**::
-
-      from lionagi.protocols.graph.edge import Edge, EdgeCondition
-
-      cond = EdgeCondition(source="some param")
-      edge = Edge(
-          head="nodeA",
-          tail="nodeB",
-          condition=cond,
-          label=["example"]
-      )
-      print(edge.label)        # => ["example"]
-      print(edge.condition)    # => EdgeCondition(source="some param")
+Contents
+--------
+.. contents::
+   :local:
+   :depth: 2
 
 
 EdgeCondition
-~~~~~~~~~~~~~
+-------------
 .. class:: EdgeCondition
-   :extends: pydantic.BaseModel, Condition
+   :module: lionagi.protocols.graph.edge
 
-   Optionally attached to an Edge, controlling whether that edge can 
-   be traversed. Must implement an async :meth:`apply(...) -> bool` 
-   method from the **Condition** interface, returning ``True``/``False`` 
-   to indicate if traversal is permitted.
+   **Inherits from**: :class:`pydantic.BaseModel`, :class:`~lionagi.protocols._concepts.Condition`
 
+   A **condition** that can be attached to an :class:`Edge` to control or 
+   constrain its traversability. This class also integrates with Pydantic for 
+   data validation and serialization.
 
---------------------
-3. **Graph** 
---------------------
-.. module:: lionagi.protocols.graph.graph
-   :synopsis: A container managing nodes/edges in a coherent graph structure.
+   Attributes
+   ----------
+   source : Any
+       The source object or data used for evaluating the condition.
 
-.. class:: Graph
-   :extends: Element, Relational
+   Example
+   -------
+   .. code-block:: python
 
-   Stores two main Piles:
+       from lionagi.protocols.graph.edge import EdgeCondition
 
-   - :attr:`internal_nodes`: A :class:`~lionagi.protocols.generic.pile.Pile`
-     of :class:`Node` objects.
-   - :attr:`internal_edges`: A Pile of :class:`Edge` objects.
-
-   A :attr:`node_edge_mapping` dictionary tracks incoming (“in”) and 
-   outgoing (“out”) edges for each node ID, enabling quick lookups. 
-   Some important methods:
-
-   **Adding & Removing**:
-   - :meth:`add_node(node)`: Add a :class:`Node`.
-   - :meth:`add_edge(edge)`: Add an :class:`Edge`.
-   - :meth:`remove_node(...)`: Remove a node and all edges referencing it.
-   - :meth:`remove_edge(...)`: Remove a specific edge by object or ID.
-
-   **Navigation**:
-   - :meth:`get_predecessors(node)`: Return nodes that have an outgoing edge 
-     to ``node``.
-   - :meth:`get_successors(node)`: Return nodes that have an incoming edge 
-     from ``node``.
-   - :meth:`find_node_edge(node, direction='both')`: Return edges going 
-     “in”, “out”, or “both.”
-
-   **NetworkX Integration**:
-   - :meth:`to_networkx(...)`: Build a NetworkX ``DiGraph`` from 
-     the graph’s nodes/edges.
-   - :meth:`display(...)`: Visualize the graph with matplotlib + NetworkX 
-     (if installed).
-
-   **Acyclic Check**:
-   - :meth:`is_acyclic()`: Returns ``True`` if the graph has no cycles.
-
-   **Example**::
-
-      from lionagi.protocols.graph.node import Node
-      from lionagi.protocols.graph.edge import Edge
-      from lionagi.protocols.graph.graph import Graph
-
-      # Create some nodes
-      n1 = Node(content="Node1")
-      n2 = Node(content="Node2")
-
-      g = Graph()
-      g.add_node(n1)
-      g.add_node(n2)
-
-      # Link n1 -> n2
-      e12 = Edge(head=n1, tail=n2, label=["example-edge"])
-      g.add_edge(e12)
-
-      # Check successors
-      successors_of_n1 = g.get_successors(n1)
-      print([n.id for n in successors_of_n1])  # => [id of n2]
+       class CustomCondition(EdgeCondition):
+           async def apply(self, *args, **kwargs) -> bool:
+               # implement custom logic here
+               return True
 
 
------------------------
-4. Putting It All Together
------------------------
-A typical usage pattern:
+Edge
+----
+.. class:: Edge(Element)
+   :module: lionagi.protocols.graph.edge
+   :show-inheritance:
 
-1. **Create** a :class:`Graph`.
-2. **Add** nodes (each possibly storing content, embeddings, etc.).
-3. **Add** edges referencing existing nodes, optionally labeling them 
-   or providing an :class:`EdgeCondition`.
-4. **Query** the graph for predecessors/successors, or remove nodes/edges 
-   as needed.
-5. **Visualize** (if you have networkx + matplotlib) with 
-   :meth:`Graph.display(...)`.
+   **Inherits from**:
+   :class:`~lionagi.protocols.generic.element.Element`
 
-If you want advanced logic on edges (like checking user permission or
-some dynamic condition), implement an :class:`EdgeCondition` that returns 
-``True`` or ``False`` in its :meth:`apply(...)``. Then, an AI or 
-some controlling code can call :meth:`Edge.check_condition(...)`` 
-to see if the path is allowed.
+   Represents a **directed connection** from a head node to a tail node in a
+   LionAGI graph. An optional :attr:`condition` determines if traversal is 
+   allowed. Additional metadata (like :attr:`label`) or properties can be 
+   stored in :attr:`properties`.
 
-**Example** (short version):
+   Attributes
+   ----------
+   head : IDType
+       The ID of the head node. 
+   tail : IDType
+       The ID of the tail node.
+   properties : dict[str, Any]
+       A dictionary holding additional properties, such as labels or 
+       an :class:`EdgeCondition`.
 
-.. code-block:: python
+   Properties
+   ----------
+   .. attribute:: label
+      :type: list[str] | None
 
-   from lionagi.protocols.graph.graph import Graph
-   from lionagi.protocols.graph.node import Node
-   from lionagi.protocols.graph.edge import Edge
+      Read or set a list of labels describing this edge.
 
-   # Setup
-   graph = Graph(name="MyGraph")
+   .. attribute:: condition
+      :type: EdgeCondition | None
 
-   # Make nodes
-   nA = Node(content="A")
-   nB = Node(content="B")
-   graph.add_node(nA)
-   graph.add_node(nB)
+      A condition that determines if this edge is traversable. If None, 
+      traversal is unrestricted.
 
-   # Make edge
-   eAB = Edge(head=nA, tail=nB, label=["A->B"])
-   graph.add_edge(eAB)
+   Methods
+   -------
+   .. method:: check_condition(*args, **kwargs) -> bool
+      :async:
 
-   # Retrieve successors
-   print(graph.get_successors(nA))  
-   # => Pile containing node B
+      Evaluates the :attr:`condition` (if any). Returns True if 
+      no condition is assigned or if the condition passes.
 
-   # Visualize if you have networkx + matplotlib
-   # graph.display()
+   .. method:: update_property(key: str, value: Any) -> None
+
+      Adds or updates a custom property in :attr:`properties`.
+
+   .. method:: update_condition_source(source: Any) -> None
+
+      Updates the :attr:`.source` field in the assigned :attr:`condition` 
+      without replacing the entire condition object.
+
+   Example
+   -------
+   .. code-block:: python
+
+       from lionagi.protocols.graph.edge import Edge, EdgeCondition
+
+       edge_condition = EdgeCondition(source="some_source")
+       edge = Edge(head=my_head_node, tail=my_tail_node, condition=edge_condition, label=["friendship"])
+       # edge now connects two nodes with a condition and a descriptive label.
 
 
------------
-Summary
------------
-The LionAGI **graph** subsystem allows flexible, **ID-based** linking of 
-nodes and edges, storing additional data (embedding, conditions, etc.)
-as needed. Combined with concurrency (e.g., 
-:class:`~lionagi.protocols.generic.processor.Processor`) or other 
-LionAGI features, it forms the foundation for knowledge graphs, 
-state machines, or agent-based world models.
+Node
+----
+.. class:: Node(Element, Relational)
+   :module: lionagi.protocols.graph.node
+   :show-inheritance:
+
+   **Inherits from**:
+   :class:`~lionagi.protocols.generic.element.Element`,
+   :class:`~lionagi.protocols._concepts.Relational`
+
+   A **graph node** that can store arbitrary content, an optional numeric 
+   embedding, and metadata in :attr:`metadata`. Nodes integrate with the 
+   LionAGI adapter system, enabling easy import/export to JSON, pandas 
+   Series, etc.
+
+   Attributes
+   ----------
+   content : Any
+       Arbitrary payload or data associated with this node.
+   embedding : list[float] | None
+       An optional vector representation (e.g., for search or similarity).
+
+   Methods
+   -------
+   .. classmethod:: adapt_to(obj_key: str, /, many: bool = False, **kwargs) -> Any
+
+      Converts this node to a specified format using a registered adapter.
+
+   .. classmethod:: adapt_from(obj: Any, obj_key: str, /, many: bool = False, **kwargs) -> Node
+
+      Constructs a node from an external representation, possibly returning
+      a subclass if ``lion_class`` data is present.
+
+   .. classmethod:: list_adapters() -> list[str]
+
+      Lists all available adapter keys for node conversions.
+
+   Example
+   -------
+   .. code-block:: python
+
+       from lionagi.protocols.graph.node import Node
+
+       class PersonNode(Node):
+           pass
+
+       person = PersonNode(content={"name": "Alice"}, embedding=[0.1, 0.2, 0.3])
+       print(person.content)   # => {'name': 'Alice'}
+       print(person.embedding) # => [0.1, 0.2, 0.3]
+
+
+Graph
+-----
+.. class:: Graph(Element, Relational)
+   :module: lionagi.protocols.graph.graph
+   :show-inheritance:
+
+   **Inherits from**:
+   :class:`~lionagi.protocols.generic.element.Element`,
+   :class:`~lionagi.protocols._concepts.Relational`
+
+   Represents an entire **directed graph** of :class:`Node` and :class:`Edge` objects. 
+   Internally, it uses two :class:`~lionagi.protocols.generic.pile.Pile` instances 
+   (one for nodes, one for edges) and a `node_edge_mapping` for quick lookups.
+
+   Attributes
+   ----------
+   internal_nodes : Pile[Node]
+       Stores all nodes in the graph.
+   internal_edges : Pile[Edge]
+       Stores all edges in the graph.
+   node_edge_mapping : dict
+       Maps each node ID to its incoming and outgoing edges for quick access.
+
+   Methods
+   -------
+   .. method:: add_node(node: Relational) -> None
+
+      Inserts a node into the graph. Raises :exc:`RelationError` if invalid 
+      or already present.
+
+   .. method:: add_edge(edge: Edge) -> None
+
+      Inserts an edge into the graph, linking two existing nodes. 
+      Raises :exc:`RelationError` if invalid or if referenced nodes 
+      are not found.
+
+   .. method:: remove_node(node: ID[Node].Ref) -> None
+
+      Removes a node and all associated edges from the graph.
+
+   .. method:: remove_edge(edge: Edge | str) -> None
+
+      Removes a specific edge by object or ID.
+
+   .. method:: find_node_edge(node: Any, direction: Literal["both", "in", "out"] = "both") -> list[Edge]
+
+      Finds edges connected to the given node in a specified direction.
+
+   .. method:: get_heads() -> Pile[Node]
+
+      Returns all nodes with no incoming edges (i.e., “head” nodes of subgraphs).
+
+   .. method:: get_predecessors(node: Node) -> Pile[Node]
+
+      Retrieves nodes that point to the given node.
+
+   .. method:: get_successors(node: Node) -> Pile[Node]
+
+      Retrieves nodes that are pointed to by the given node.
+
+   .. method:: to_networkx(**kwargs) -> Any
+
+      Converts this graph to a `networkx.DiGraph` object, including node 
+      and edge properties.
+
+   .. method:: display(node_label="lion_class", edge_label="label", draw_kwargs={}, **kwargs) -> None
+
+      Visualizes the graph using networkx and matplotlib (if installed).
+
+   .. method:: is_acyclic() -> bool
+
+      Checks whether the graph has any cycles. Returns True if acyclic.
+
+   Dunder Methods
+   --------------
+   .. method:: __contains__(item: object) -> bool
+
+      Checks if a given node or edge is in the graph.
+
+   Example
+   -------
+   .. code-block:: python
+
+       from lionagi.protocols.graph.node import Node
+       from lionagi.protocols.graph.edge import Edge
+       from lionagi.protocols.graph.graph import Graph
+
+       g = Graph()
+       node_a, node_b = Node(), Node()
+       g.add_node(node_a)
+       g.add_node(node_b)
+
+       e = Edge(head=node_a, tail=node_b, label=["relation"])
+       g.add_edge(e)
+
+       print(g.get_heads())  # node_a is a "head" if no inbound edges
+       print(g.is_acyclic()) # likely True unless you create a cycle
+
+File Locations
+--------------
+- **EdgeCondition** and **Edge**:  
+  ``lionagi/protocols/graph/edge.py``  
+
+- **Node**:  
+  ``lionagi/protocols/graph/node.py``  
+
+- **Graph**:  
+  ``lionagi/protocols/graph/graph.py``  
+
+``Copyright (c) 2023 - 2024, HaiyangLi <quantocean.li at gmail dot com>``
+``SPDX-License-Identifier: Apache-2.0``
